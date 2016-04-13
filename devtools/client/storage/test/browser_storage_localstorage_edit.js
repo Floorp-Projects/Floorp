@@ -10,7 +10,6 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
 
   yield selectTreeItem(["localStorage", "http://test1.example.org"]);
-  yield gUI.table.once(TableWidget.EVENTS.FIELDS_EDITABLE);
 
   yield editCell("TestLS1", "name", "newTestLS1");
   yield editCell("newTestLS1", "value", "newValueLS1");

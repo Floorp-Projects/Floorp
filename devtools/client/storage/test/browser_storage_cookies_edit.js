@@ -8,8 +8,6 @@
 
 add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
-  yield gUI.table.once(TableWidget.EVENTS.FIELDS_EDITABLE);
-
   showAllColumns(true);
 
   yield editCell("test3", "name", "newTest3");
