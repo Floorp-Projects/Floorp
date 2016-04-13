@@ -170,12 +170,17 @@ function createDrawFunc(canvas) {
     }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
+    checkGLError(prefix + "[viewport]");
 
     preDraw(prefix);
+    checkGLError(prefix + "[predraw]");
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    checkGLError(prefix + "[drawarrays]");
     postDraw(prefix);
+    checkGLError(prefix + "[postdraw]");
     if (needCommitFrame) {
       gl.commit();
+      checkGLError(prefix + "[commit]");
     }
     checkGLError(prefix);
   };
