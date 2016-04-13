@@ -622,8 +622,8 @@ var ActionBarHandler = {
         toStringWithFormat("text/plain", flags, 0);
     }
 
-    // Selection text gets trimmed up.
-    return selection.toString().trim();
+    // Return explicitly selected text.
+    return selection.toString();
   },
 
   /**
