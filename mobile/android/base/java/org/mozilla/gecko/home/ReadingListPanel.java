@@ -11,9 +11,12 @@ import java.util.EnumSet;
 import java.util.Locale;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SnackbarHelper;
 
+import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,8 +36,16 @@ public class ReadingListPanel extends HomeFragment {
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mUrlOpenListener.onUrlOpen("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS),
-                        EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+                boolean bookmarksEnabled = GeckoSharedPrefs.forProfile(getContext()).getBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, true);
+
+                if (bookmarksEnabled) {
+                    mUrlOpenListener.onUrlOpen("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS),
+                            EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+                } else {
+                    SnackbarHelper.showSnackbar(getActivity(),
+                            getResources().getString(R.string.reading_list_migration_bookmarks_hidden),
+                            Snackbar.LENGTH_LONG);
+                }
             }
         });
 
