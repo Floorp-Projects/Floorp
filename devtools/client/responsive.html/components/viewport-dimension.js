@@ -11,14 +11,13 @@ const Constants = require("../constants");
 const Types = require("../types");
 
 module.exports = createClass({
-
-  displayName: "ViewportDimension",
-
   propTypes: {
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
   },
+
+  displayName: "ViewportDimension",
 
   getInitialState() {
     let { width, height } = this.props.viewport;

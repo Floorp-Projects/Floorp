@@ -18,9 +18,6 @@ const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;
 
 module.exports = createClass({
-
-  displayName: "ResizableViewport",
-
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
@@ -32,6 +29,8 @@ module.exports = createClass({
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
+
+  displayName: "ResizableViewport",
 
   getInitialState() {
     return {
