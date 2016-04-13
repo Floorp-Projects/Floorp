@@ -211,7 +211,7 @@ class JavaPanZoomController
         // ease-out approx.
         // -(t-1)^2+1
         t = t-1;
-        return -t*t+1;
+        return -t * t + 1;
     }
 
     private void setState(PanZoomState state) {

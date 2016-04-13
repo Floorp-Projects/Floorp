@@ -435,7 +435,7 @@ public class GeckoEvent {
                 // s.values[3] was optional in API <= 18, so we need to compute it
                 // The values form a unit quaternion, so we can compute the angle of
                 // rotation purely based on the given 3 values.
-                event.mW = 1 - s.values[0]*s.values[0] - s.values[1]*s.values[1] - s.values[2]*s.values[2];
+                event.mW = 1 - s.values[0] * s.values[0] - s.values[1] * s.values[1] - s.values[2] * s.values[2];
                 event.mW = (event.mW > 0.0) ? Math.sqrt(event.mW) : 0.0;
             }
             break;
