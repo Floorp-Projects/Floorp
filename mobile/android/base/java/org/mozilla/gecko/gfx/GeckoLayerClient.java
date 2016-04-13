@@ -495,7 +495,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 !FloatUtils.fuzzyEquals(x + width, mProgressiveUpdateDisplayPort.getRight()) ||
                 !FloatUtils.fuzzyEquals(y + height, mProgressiveUpdateDisplayPort.getBottom())) {
                 mProgressiveUpdateDisplayPort =
-                    new DisplayPortMetrics(x, y, x+width, y+height, resolution);
+                    new DisplayPortMetrics(x, y, x + width, y + height, resolution);
             }
         }
 

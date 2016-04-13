@@ -238,7 +238,7 @@ public final class GeckoJarReader {
         if (url.startsWith("jar:")) {
             int jarEnd = url.lastIndexOf("!");
             String subStr = url.substring(4, jarEnd);
-            results.push(url.substring(jarEnd+2)); // remove the !/ characters
+            results.push(url.substring(jarEnd + 2)); // remove the !/ characters
             return parseUrl(subStr, results);
         } else {
             results.push(url);
