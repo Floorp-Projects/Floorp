@@ -5103,6 +5103,34 @@
     "kind": "flag",
     "description": "Set if Telemetry failed to save the session data to disk."
   },
+  "TELEMETRY_ASSEMBLE_PAYLOAD_EXCEPTION": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1250640],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Count of exceptions in TelemetrySession.getSessionPayload()."
+  },
+  "TELEMETRY_SCHEDULER_TICK_EXCEPTION": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1250640],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Count of exceptions during executing the TelemetrySession scheduler tick logic."
+  },
+  "TELEMETRY_SCHEDULER_WAKEUP": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1250640],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Count of TelemetrySession scheduler ticks that were delayed long enough to suspect sleep."
+  },
+  "TELEMETRY_SCHEDULER_SEND_DAILY": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1250640],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Count of TelemetrySession triggering a daily ping."
+  },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
