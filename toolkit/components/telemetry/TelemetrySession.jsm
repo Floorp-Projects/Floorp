@@ -320,6 +320,12 @@ var TelemetryScheduler = {
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
   },
 
+  _clearTimeout: function() {
+    if (this._schedulerTimer) {
+      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
+    }
+  },
+
   /**
    * Reschedules the tick timer.
    */
@@ -330,9 +336,7 @@ var TelemetryScheduler = {
       return;
     }
 
-    if (this._schedulerTimer) {
-      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
-    }
+    this._clearTimeout();
 
     const now = Policy.now();
     let timeout = SCHEDULER_TICK_INTERVAL_MS;
@@ -421,6 +425,10 @@ var TelemetryScheduler = {
    *                   operation completes.
    */
   _onSchedulerTick: function() {
+    // This call might not be triggered from a timeout. In that case we don't want to
+    // leave any previously scheduled timeouts pending.
+    this._clearTimeout();
+
     if (this._shuttingDown) {
       this._log.warn("_onSchedulerTick - already shutdown.");
       return Promise.reject(new Error("Already shutdown."));
