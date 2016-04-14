@@ -281,8 +281,6 @@ public:
   explicit nsTextPaintStyle(nsTextFrame* aFrame);
 
   void SetResolveColors(bool aResolveColors) {
-    NS_ASSERTION(mFrame->IsSVGText() || aResolveColors,
-                 "must resolve colors is frame is not for SVG text");
     mResolveColors = aResolveColors;
   }
 
@@ -4799,9 +4797,11 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   pixelVisible.Inflate(2);
   pixelVisible.RoundOut();
 
-  ctx->NewPath();
-  ctx->Rectangle(pixelVisible);
-  ctx->Clip();
+  if (!aBuilder->IsForGenerateGlyphPath()) {
+    ctx->NewPath();
+    ctx->Rectangle(pixelVisible);
+    ctx->Clip();
+  }
 
   NS_ASSERTION(mVisIStartEdge >= 0, "illegal start edge");
   NS_ASSERTION(mVisIEndEdge >= 0, "illegal end edge");
@@ -4809,7 +4809,13 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint framePt = ToReferenceFrame();
   nsTextFrame::PaintTextParams params(aCtx->ThebesContext());
   params.framePt = gfxPoint(framePt.x, framePt.y);
+
   params.dirtyRect = extraVisible;
+  nsTextFrame::DrawPathCallbacks callbacks;
+  if (aBuilder->IsForGenerateGlyphPath()) {
+    params.callbacks = &callbacks;
+  }
+
   f->PaintText(params, *this, mOpacity);
 }
 
