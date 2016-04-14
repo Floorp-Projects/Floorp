@@ -76,8 +76,8 @@ protected:
 private:
   gint GetTabMarginPixels(nsIFrame* aFrame);
   bool GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
-                              GtkThemeWidgetType& aGtkWidgetType,
-                              GtkWidgetState* aState, gint* aWidgetFlags);
+                            WidgetNodeType& aGtkWidgetType,
+                            GtkWidgetState* aState, gint* aWidgetFlags);
   bool GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
                                nsIntMargin* aExtra);
 

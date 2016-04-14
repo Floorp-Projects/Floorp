@@ -1177,7 +1177,7 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
+moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                cairo_t *cr, GdkRectangle* rect,
                                GtkWidgetState* state,
                                GtkScrollbarTrackFlags flags,
@@ -1216,7 +1216,7 @@ moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
 }
 
 static gint
-moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
+moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
                               cairo_t *cr, GdkRectangle* rect,
                               GtkWidgetState* state,
                               GtkTextDirection direction)
@@ -2033,7 +2033,7 @@ moz_gtk_progressbar_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
                              GtkTextDirection direction,
-                             GtkThemeWidgetType widget)
+                             WidgetNodeType widget)
 {
     GtkStyleContext* style;
 
@@ -2690,7 +2690,7 @@ moz_gtk_add_style_padding(GtkStyleContext* style,
 }
 
 gint
-moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
+moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                           gint* right, gint* bottom, GtkTextDirection direction,
                           gboolean inhtml)
 {
@@ -3002,7 +3002,7 @@ moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height)
 }
 
 void
-moz_gtk_get_arrow_size(GtkThemeWidgetType widgetType, gint* width, gint* height)
+moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width, gint* height)
 {
     GtkWidget* widget;
     switch (widgetType) {
@@ -3201,7 +3201,7 @@ moz_gtk_images_in_buttons()
 
 /* cairo_t *cr argument has to be a system-cairo. */
 gint
-moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
+moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                      GdkRectangle* rect,
                      GtkWidgetState* state, gint flags,
                      GtkTextDirection direction)
