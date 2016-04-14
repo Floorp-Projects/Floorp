@@ -97,6 +97,21 @@ struct TimingParams
   dom::FillMode mFill = dom::FillMode::Auto;
   Maybe<ComputedTimingFunction> mFunction;
 
+  // Return the duration of the active interval calculated by duration and
+  // iteration count.
+  StickyTimeDuration ActiveDuration() const
+  {
+    // If either the iteration duration or iteration count is zero,
+    // Web Animations says that the active duration is zero. This is to
+    // ensure that the result is defined when the other argument is Infinity.
+    static const StickyTimeDuration zeroDuration;
+    if (!mDuration || *mDuration == zeroDuration || mIterations == 0.0) {
+      return zeroDuration;
+    }
+
+    return mDuration->MultDouble(mIterations);
+  }
+
   bool operator==(const TimingParams& aOther) const;
   bool operator!=(const TimingParams& aOther) const
   {
