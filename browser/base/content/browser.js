@@ -4157,6 +4157,10 @@ var XULBrowserWindow = {
     elt.hidePopup();
   },
 
+  getTabCount: function () {
+    return gBrowser.tabs.length;
+  },
+
   updateStatusField: function () {
     var text, type, types = ["overLink"];
     if (this._busyUI)
