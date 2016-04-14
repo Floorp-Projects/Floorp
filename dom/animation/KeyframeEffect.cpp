@@ -254,8 +254,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   result.mIterationStart = aTiming.mIterationStart;
 
   result.mActiveDuration = aTiming.ActiveDuration();
-  result.mEndTime = aTiming.mDelay + result.mActiveDuration +
-                    aTiming.mEndDelay;
+  result.mEndTime = aTiming.EndTime();
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;
