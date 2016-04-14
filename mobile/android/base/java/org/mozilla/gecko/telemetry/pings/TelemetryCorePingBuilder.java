@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry;
+package org.mozilla.gecko.telemetry.pings;
 
 import android.content.Context;
 import android.os.Build;
@@ -24,7 +24,7 @@ import java.util.Locale;
  * See https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/core-ping.html
  * for details on the core ping.
  */
-class TelemetryCorePingBuilder extends TelemetryPingBuilder {
+public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
 
     private static final String NAME = "core";
     private static final int VERSION_VALUE = 4; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
