@@ -20,7 +20,6 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
-#include <algorithm> // For std::max
 
 namespace mozilla {
 
@@ -248,7 +247,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
                        1.0f :
                        aTiming.mIterations;
-  result.mIterationStart = std::max(aTiming.mIterationStart, 0.0);
+  MOZ_ASSERT(aTiming.mIterationStart >= 0.0,
+             "mIterationStart should be nonnegative, as ensured by "
+             "ValidateIterationStart");
+  result.mIterationStart = aTiming.mIterationStart;
 
   result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
   result.mEndTime = aTiming.mDelay + result.mActiveDuration +
