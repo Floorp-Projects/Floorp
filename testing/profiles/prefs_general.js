@@ -14,7 +14,6 @@ user_pref("dom.forms.color", true); // on for testing
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("hangmonitor.timeout", 0); // no hang monitor
 user_pref("dom.max_chrome_script_run_time", 0);
-user_pref("dom.max_child_script_run_time", 0);
 user_pref("dom.ipc.reportProcessHangs", false); // process hang monitor
 user_pref("dom.popup_maximum", -1);
 user_pref("dom.send_after_paint_to_content", true);
