@@ -870,7 +870,7 @@ protected:
   /**
    * Set the fields of aEvent to reflect the mouse position and modifier keys
    * that were set when the user first pressed the mouse button (stored by
-   * BeginTrackingDragGesture). aEvent->widget must be
+   * BeginTrackingDragGesture). aEvent->mWidget must be
    * mCurrentTarget->GetNearestWidget().
    */
   void FillInEventFromGestureDown(WidgetMouseEvent* aEvent);

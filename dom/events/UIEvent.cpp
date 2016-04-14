@@ -125,7 +125,7 @@ UIEvent::GetMovementPoint()
        mEvent->mClass != eDragEventClass &&
        mEvent->mClass != ePointerEventClass &&
        mEvent->mClass != eSimpleGestureEventClass) ||
-       !mEvent->AsGUIEvent()->widget) {
+       !mEvent->AsGUIEvent()->mWidget) {
     return nsIntPoint(0, 0);
   }
 
