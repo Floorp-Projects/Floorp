@@ -72,6 +72,8 @@ const FRAME2 = BASE + "/file_WebNavigation_page3.html";
 const FRAME_PUSHSTATE = BASE + "/file_WebNavigation_page3_pushState.html";
 const REDIRECT = BASE + "/redirection.sjs";
 const REDIRECTED = BASE + "/dummy_page.html";
+const CLIENT_REDIRECT = BASE + "/file_webNavigation_clientRedirect.html";
+const CLIENT_REDIRECT_HTTPHEADER = BASE + "/file_webNavigation_clientRedirect_httpHeaders.html";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -215,6 +217,45 @@ add_task(function* webnav_transitions_props() {
     ok(Array.isArray(found.details.transitionQualifiers) &&
        found.details.transitionQualifiers.find((q) => q == "forward_back"),
        "Got the expected 'forward_back' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect
+  // (from meta http-equiv tag)
+  received = [];
+  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = CLIENT_REDIRECT;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect
+  // (from meta http-equiv tag)
+  received = [];
+  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = CLIENT_REDIRECT_HTTPHEADER;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" &&
+                                   data.url == CLIENT_REDIRECT_HTTPHEADER));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
   }
 
   // cleanup phase

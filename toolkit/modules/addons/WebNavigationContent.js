@@ -67,9 +67,13 @@ var WebProgressListener = {
       this.previousURIMap.set(win, currentURI);
     }
 
+    // This WeakSet of DOMWindows keeps track of the attempted refresh.
+    this.refreshAttemptedDOMWindows = new WeakSet();
+
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+                                          Ci.nsIWebProgress.NOTIFY_REFRESH |
                                           Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
@@ -80,6 +84,13 @@ var WebProgressListener = {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this);
+  },
+
+  onRefreshAttempted: function onRefreshAttempted(webProgress, URI, delay, sameURI) {
+    this.refreshAttemptedDOMWindows.add(webProgress.DOMWindow);
+
+    // If this function doesn't return true, the attempted refresh will be blocked.
+    return true;
   },
 
   onStateChange: function onStateChange(webProgress, request, stateFlags, status) {
@@ -227,11 +238,19 @@ var WebProgressListener = {
       frameTransitionData.form_submit = true;
     }
 
+    if (this.refreshAttemptedDOMWindows.has(DOMWindow)) {
+      this.refreshAttemptedDOMWindows.delete(DOMWindow);
+      frameTransitionData.client_redirect = true;
+    }
 
     return frameTransitionData;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsIWebProgressListener2,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 var disabled = false;
