@@ -107,9 +107,9 @@ child:
                            nsresult  transportStatus,
                            uint64_t  progress,
                            uint64_t  progressMax,
-                           nsCString data,
                            uint64_t  offset,
-                           uint32_t  count);
+                           uint32_t  count,
+                           nsCString data);
 
   async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
 
