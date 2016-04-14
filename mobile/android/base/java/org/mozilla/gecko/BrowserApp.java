@@ -3219,6 +3219,8 @@ public class BrowserApp extends GeckoApp
                                                         new HashSet<String>()).isEmpty();
         aMenu.findItem(R.id.quit).setVisible(visible);
 
+        // If tab data is unavailable we disable most of the context menu and related items and
+        // return early.
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
             back.setEnabled(false);
@@ -3242,8 +3244,14 @@ public class BrowserApp extends GeckoApp
             return true;
         }
 
+        // If tab data IS available we need to manually enable items as necessary. They may have
+        // been disabled if returning early above, hence every item must be toggled, even if it's
+        // always expected to be enabled (e.g. the bookmark star is always enabled, except when
+        // we don't have tab data).
+
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
 
+        bookmark.setEnabled(true); // Might have been disabled above, ensure it's reenabled
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
