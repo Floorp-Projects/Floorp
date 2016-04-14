@@ -221,10 +221,13 @@ class ConfigureSandbox(dict):
 
         # All implied options should exist.
         for implied_option in self._implied_options:
-            raise ConfigureError(
-                '`%s`, emitted from `%s` line %d, is unknown.'
-                % (implied_option.option, implied_option.caller[1],
-                   implied_option.caller[2]))
+            value = self._resolve(implied_option.value,
+                                  need_help_dependency=False)
+            if value is not None:
+                raise ConfigureError(
+                    '`%s`, emitted from `%s` line %d, is unknown.'
+                    % (implied_option.option, implied_option.caller[1],
+                       implied_option.caller[2]))
 
         # All options should have been removed (handled) by now.
         for arg in self._helper:
