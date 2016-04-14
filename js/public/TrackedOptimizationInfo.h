@@ -16,6 +16,7 @@ namespace JS {
     _(GetProp_ArgumentsCallee)                          \
     _(GetProp_InferredConstant)                         \
     _(GetProp_Constant)                                 \
+    _(GetProp_NotDefined)                               \
     _(GetProp_StaticName)                               \
     _(GetProp_SimdGetter)                               \
     _(GetProp_TypedObject)                              \
@@ -80,6 +81,7 @@ namespace JS {
     _(NotObject)                                                        \
     _(NotStruct)                                                        \
     _(NotUnboxed)                                                       \
+    _(NotUndefined)                                                     \
     _(UnboxedConvertedToNative)                                         \
     _(StructNoField)                                                    \
     _(InconsistentFieldType)                                            \
