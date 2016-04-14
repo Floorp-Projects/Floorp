@@ -1157,6 +1157,7 @@ var Scratchpad = {
     let channel = NetUtil.newChannel({
       uri: NetUtil.newURI(aFile),
       loadingNode: window.document,
+      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
     channel.contentType = "application/javascript";
 
