@@ -443,7 +443,7 @@ MBasicBlock::NewAsmJS(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pre
                     phi = phis + (i - nfree);
                 new(phi) MPhi(alloc, predSlot->type());
 
-                phi->addInput(predSlot);
+                phi->addInlineInput(predSlot);
 
                 // Add append Phis in the block.
                 block->addPhi(phi);
@@ -559,7 +559,7 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
             size_t i = 0;
             for (i = 0; i < info().firstStackSlot(); i++) {
                 MPhi* phi = MPhi::New(alloc);
-                phi->addInput(pred->getSlot(i));
+                phi->addInlineInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -579,7 +579,7 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
 
             for (; i < stackDepth(); i++) {
                 MPhi* phi = MPhi::New(alloc);
-                phi->addInput(pred->getSlot(i));
+                phi->addInlineInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
@@ -1351,8 +1351,9 @@ MBasicBlock::setBackedgeAsmJS(MBasicBlock* pred)
             exitDef = entryDef->getOperand(0);
         }
 
-        // Phis always have room for 2 operands, so we can use addInput.
-        entryDef->addInput(exitDef);
+        // Phis always have room for 2 operands, so this can't fail.
+        MOZ_ASSERT(phi->numOperands() == 1);
+        entryDef->addInlineInput(exitDef);
 
         MOZ_ASSERT(slot < pred->stackDepth());
         setSlot(slot, entryDef);
