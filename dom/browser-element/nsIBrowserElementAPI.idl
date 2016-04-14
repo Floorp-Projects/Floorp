@@ -97,10 +97,6 @@ interface nsIBrowserElementAPI : nsISupports
 
   nsIDOMDOMRequest isAudioChannelActive(in uint32_t audioChannel);
 
-  nsIDOMDOMRequest notifyChannel(in DOMString event,
-                                 in DOMString manifest,
-                                 in uint32_t audioChannel);
-
   void setNFCFocus(in boolean isFocus);
 
   nsIDOMDOMRequest executeScript(in DOMString script, in jsval options);
