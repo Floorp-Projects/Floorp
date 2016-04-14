@@ -1274,14 +1274,8 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
   if (NS_SUCCEEDED(rv)) {
     if (mRedirectChannelChild) {
       mRedirectChannelChild->ConnectParent(newChannelId);
-      rv = gHttpHandler->AsyncOnChannelRedirect(this,
-                                                newChannel,
-                                                redirectFlags);
-    } else {
-      LOG(("  redirecting to a protocol that doesn't implement"
-           " nsIChildChannel"));
-      rv = NS_ERROR_FAILURE;
     }
+    rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
   }
 
   if (NS_FAILED(rv))
@@ -1541,6 +1535,17 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   OptionalURIParams redirectURI;
   nsCOMPtr<nsIHttpChannel> newHttpChannel =
       do_QueryInterface(mRedirectChannelChild);
+
+  if (NS_SUCCEEDED(result) && !mRedirectChannelChild) {
+    // mRedirectChannelChild doesn't exist means we're redirecting to a protocol
+    // that doesn't implement nsIChildChannel. The redirect result should be set
+    // as failed by veto listeners and shouldn't enter this condition. As the
+    // last resort, we synthesize the error result as NS_ERROR_DOM_BAD_URI here
+    // to let nsHttpChannel::ContinueProcessResponse2 know it's redirecting to
+    // another protocol and throw an error.
+    LOG(("  redirecting to a protocol that doesn't implement nsIChildChannel"));
+    result = NS_ERROR_DOM_BAD_URI;
+  }
 
   if (newHttpChannel) {
     // Must not be called until after redirect observers called.
