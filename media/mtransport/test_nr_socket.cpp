@@ -706,10 +706,6 @@ void TestNrSocket::on_socket_readable(NrSocketBase *real_socket) {
 
 void TestNrSocket::fire_readable_callback() {
   MOZ_ASSERT(poll_flags() & PR_POLL_READ);
-  // Stop listening on all real sockets; we will start listening again
-  // if the app starts listening to us again.
-  cancel_port_mapping_async_wait(NR_ASYNC_WAIT_READ);
-  internal_socket_->cancel(NR_ASYNC_WAIT_READ);
   r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s ready for read",
         internal_socket_->my_addr().as_string);
   fire_callback(NR_ASYNC_WAIT_READ);
