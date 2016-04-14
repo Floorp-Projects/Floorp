@@ -147,11 +147,19 @@ this.PushServiceAndroidGCM = {
     prefs.observe("debug", this);
     Services.obs.addObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage", false);
 
-    return this._configure(serverURL, !!prefs.get("debug"));
+    return this._configure(serverURL, !!prefs.get("debug")).then(() => {
+      Messaging.sendRequestForResult({
+        type: "PushServiceAndroidGCM:Initialized"
+      });
+    });
   },
 
   uninit: function() {
     console.debug("uninit()");
+    Messaging.sendRequestForResult({
+      type: "PushServiceAndroidGCM:Uninitialized"
+    });
+
     this._mainPushService = null;
     Services.obs.removeObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage");
     prefs.ignore("debug", this);

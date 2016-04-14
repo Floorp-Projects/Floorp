@@ -19,7 +19,7 @@ dictionary PermissionDescriptor {
 };
 
 dictionary PushPermissionDescriptor : PermissionDescriptor {
-  boolean userVisible = false;
+  boolean userVisibleOnly = false;
 };
 
 [Exposed=(Window)]

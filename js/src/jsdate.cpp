@@ -2553,17 +2553,7 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Step 6. */
-    InvokeArgs args2(cx);
-    if (!args2.init(0))
-        return false;
-
-    args2.setCallee(toISO);
-    args2.setThis(ObjectValue(*obj));
-
-    if (!Invoke(cx, args2))
-        return false;
-    args.rval().set(args2.rval());
-    return true;
+    return Call(cx, toISO, obj, args.rval());
 }
 
 /* for Date.toLocaleFormat; interface to PRMJTime date struct.

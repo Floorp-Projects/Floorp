@@ -161,7 +161,7 @@ option(env='PYTHON', nargs=1, help='Python interpreter')
 
 # Setup python virtualenv
 # ==============================================================
-@depends('PYTHON', check_build_environment, mozconfig)
+@depends('PYTHON', check_build_environment, mozconfig, '--help')
 @imports('os')
 @imports('sys')
 @imports('subprocess')
@@ -169,7 +169,10 @@ option(env='PYTHON', nargs=1, help='Python interpreter')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
 @imports(_from='mozbuild.virtualenv', _import='verify_python_version')
 @imports('distutils.sysconfig')
-def virtualenv_python(env_python, build_env, mozconfig):
+def virtualenv_python(env_python, build_env, mozconfig, help):
+    if help:
+        return
+
     python = env_python[0] if env_python else None
 
     # Ideally we'd rely on the mozconfig injection from mozconfig_options,

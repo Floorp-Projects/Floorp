@@ -28,6 +28,7 @@ from mozbuild.configure.util import (
     LineIO,
 )
 from mozbuild.util import (
+    memoize,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -117,20 +118,19 @@ class ConfigureSandbox(dict):
         self._imports = {}
 
         self._options = OrderedDict()
-        # Store the raw values returned by @depends functions
-        self._results = {}
-        # Store values for each Option, as per returned by Option.get_value
-        self._option_values = {}
         # Store raw option (as per command line or environment) for each Option
         self._raw_options = {}
 
         # Store options added with `imply_option`, and the reason they were
         # added (which can either have been given to `imply_option`, or
-        # inferred.
-        self._implied_options = {}
+        # inferred. Their order matters, so use a list.
+        self._implied_options = []
 
         # Store all results from _prepare_function
         self._prepared_functions = set()
+
+        # Queue of functions to execute, with their arguments
+        self._execution_queue = []
 
         self._helper = CommandLineHelper(environ, argv)
 
@@ -164,9 +164,7 @@ class ConfigureSandbox(dict):
         self._help_option = self.option_impl('--help',
                                              help='print this message')
         self._seen.add(self._help_option)
-        # self._option_impl('--help') will have set this if --help was on the
-        # command line.
-        if self._option_values[self._help_option]:
+        if self._value_for(self._help_option):
             self._help = HelpFormatter(argv[0])
             self._help.add(self._help_option)
         elif moz_logger:
@@ -174,9 +172,12 @@ class ConfigureSandbox(dict):
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
-    def exec_file(self, path):
-        '''Execute one file within the sandbox. Users of this class probably
-        want to use `run` instead.'''
+    def include_file(self, path):
+        '''Include one file in the sandbox. Users of this class probably want
+
+        Note: this will execute all template invocations, as well as @depends
+        functions that depend on '--help', but nothing else.
+        '''
 
         if self._paths:
             path = mozpath.join(mozpath.dirname(self._paths[-1]), path)
@@ -201,28 +202,38 @@ class ConfigureSandbox(dict):
 
         self._paths.pop(-1)
 
-    def run(self, path):
-        '''Executes the given file within the sandbox, and ensure the overall
-        consistency of the executed script.'''
-        self.exec_file(path)
+    def run(self, path=None):
+        '''Executes the given file within the sandbox, as well as everything
+        pending from any other included file, and ensure the overall
+        consistency of the executed script(s).'''
+        if path:
+            self.include_file(path)
 
-        # All command line arguments should have been removed (handled) by now.
-        for arg in self._helper:
-            without_value = arg.split('=', 1)[0]
-            if arg in self._implied_options:
-                frameinfo, reason = self._implied_options[arg]
-                raise ConfigureError(
-                    '`%s`, emitted from `%s` line %d, is unknown.'
-                    % (without_value, frameinfo[1], frameinfo[2]))
-            raise InvalidOptionError('Unknown option: %s' % without_value)
-
-        # All options must be referenced by some @depends function
         for option in self._options.itervalues():
+            # All options must be referenced by some @depends function
             if option not in self._seen:
                 raise ConfigureError(
                     'Option `%s` is not handled ; reference it with a @depends'
                     % option.option
                 )
+
+            self._value_for(option)
+
+        # All implied options should exist.
+        for implied_option in self._implied_options:
+            raise ConfigureError(
+                '`%s`, emitted from `%s` line %d, is unknown.'
+                % (implied_option.option, implied_option.caller[1],
+                   implied_option.caller[2]))
+
+        # All options should have been removed (handled) by now.
+        for arg in self._helper:
+            without_value = arg.split('=', 1)[0]
+            raise InvalidOptionError('Unknown option: %s' % without_value)
+
+        # Run the execution queue
+        for func, args in self._execution_queue:
+            func(*args)
 
         if self._help:
             with LineIO(self.log_impl.info) as out:
@@ -256,14 +267,86 @@ class ConfigureSandbox(dict):
         if isinstance(arg, DependsFunction):
             assert arg in self._depends
             func, deps = self._depends[arg]
-            assert not inspect.isgeneratorfunction(func)
-            assert func in self._results
             if need_help_dependency and self._help_option not in deps:
                 raise ConfigureError("Missing @depends for `%s`: '--help'" %
                                      func.__name__)
-            result = self._results[func]
-            return result
+            return self._value_for(arg)
         return arg
+
+    def _value_for(self, obj):
+        if isinstance(obj, DependsFunction):
+            return self._value_for_depends(obj)
+
+        elif isinstance(obj, Option):
+            return self._value_for_option(obj)
+
+        assert False
+
+    @memoize
+    def _value_for_depends(self, obj):
+        assert obj in self._depends
+        func, dependencies = self._depends[obj]
+        assert not inspect.isgeneratorfunction(func)
+        with_help = self._help_option in dependencies
+        if with_help:
+            for arg in dependencies:
+                if isinstance(arg, DependsFunction):
+                    _, deps = self._depends[arg]
+                    if self._help_option not in deps:
+                        raise ConfigureError(
+                            "`%s` depends on '--help' and `%s`. "
+                            "`%s` must depend on '--help'"
+                            % (func.__name__, arg.__name__, arg.__name__))
+        elif self._help:
+            raise ConfigureError("Missing @depends for `%s`: '--help'" %
+                                 func.__name__)
+
+        resolved_args = [self._value_for(d) for d in dependencies]
+        return func(*resolved_args)
+
+    @memoize
+    def _value_for_option(self, option):
+        implied = {}
+        for implied_option in self._implied_options[:]:
+            if implied_option.name not in (option.name, option.env):
+                continue
+            self._implied_options.remove(implied_option)
+
+            value = self._resolve(implied_option.value,
+                                  need_help_dependency=False)
+
+            if value is not None:
+                if isinstance(value, OptionValue):
+                    pass
+                elif value is True:
+                    value = PositiveOptionValue()
+                elif value is False or value == ():
+                    value = NegativeOptionValue()
+                elif isinstance(value, types.StringTypes):
+                    value = PositiveOptionValue((value,))
+                elif isinstance(value, tuple):
+                    value = PositiveOptionValue(value)
+                else:
+                    raise TypeError("Unexpected type: '%s'"
+                                    % type(value).__name__)
+
+                opt = value.format(implied_option.option)
+                self._helper.add(opt, 'implied')
+                implied[opt] = implied_option
+
+        try:
+            value, option_string = self._helper.handle(option)
+        except ConflictingOptionError as e:
+            reason = implied[e.arg].reason
+            reason = self._raw_options.get(reason) or reason.option
+            raise InvalidOptionError(
+                "'%s' implied by '%s' conflicts with '%s' from the %s"
+                % (e.arg, reason, e.old_arg, e.old_origin))
+
+        self._raw_options[option] = (option_string.split('=', 1)[0]
+                                     if option_string else option_string)
+
+        return value
 
     def option_impl(self, *args, **kwargs):
         '''Implementation of option()
@@ -286,20 +369,9 @@ class ConfigureSandbox(dict):
         if option.env:
             self._options[option.env] = option
 
-        try:
-            value, option_string = self._helper.handle(option)
-        except ConflictingOptionError as e:
-            frameinfo, reason = self._implied_options[e.arg]
-            raise InvalidOptionError(
-                "'%s' implied by '%s' conflicts with '%s' from the %s"
-                % (e.arg, reason, e.old_arg, e.old_origin))
-
         if self._help:
             self._help.add(option)
 
-        self._option_values[option] = value
-        self._raw_options[option] = (option_string.split('=', 1)[0]
-                                     if option_string else option_string)
         return option
 
     def depends_impl(self, *args):
@@ -323,7 +395,6 @@ class ConfigureSandbox(dict):
         if not args:
             raise ConfigureError('@depends needs at least one argument')
 
-        resolved_args = []
         dependencies = []
         for arg in args:
             if isinstance(arg, types.StringTypes):
@@ -337,18 +408,13 @@ class ConfigureSandbox(dict):
                 arg = self._options[name]
                 self._seen.add(arg)
                 dependencies.append(arg)
-                assert arg in self._option_values or self._help
-                resolved_arg = self._option_values.get(arg)
             elif isinstance(arg, DependsFunction):
                 assert arg in self._depends
                 dependencies.append(arg)
-                arg, _ = self._depends[arg]
-                resolved_arg = self._results.get(arg)
             else:
                 raise TypeError(
                     "Cannot use object of type '%s' as argument to @depends"
                     % type(arg).__name__)
-            resolved_args.append(resolved_arg)
         dependencies = tuple(dependencies)
 
         def decorator(func):
@@ -358,19 +424,14 @@ class ConfigureSandbox(dict):
             func, glob = self._prepare_function(func)
             dummy = wraps(func)(DependsFunction())
             self._depends[dummy] = func, dependencies
-            with_help = self._help_option in dependencies
-            if with_help:
-                for arg in args:
-                    if isinstance(arg, DependsFunction):
-                        _, deps = self._depends[arg]
-                        if self._help_option not in deps:
-                            raise ConfigureError(
-                                "`%s` depends on '--help' and `%s`. "
-                                "`%s` must depend on '--help'"
-                                % (func.__name__, arg.__name__, arg.__name__))
 
-            if not self._help or with_help:
-                self._results[func] = func(*resolved_args)
+            # Only @depends functions with a dependency on '--help' are
+            # executed immediately. Everything else is queued for later
+            # execution.
+            if self._help_option in dependencies:
+                self._value_for(dummy)
+            elif not self._help:
+                self._execution_queue.append((self._value_for, (dummy,)))
 
             return dummy
 
@@ -387,7 +448,7 @@ class ConfigureSandbox(dict):
         if what:
             if not isinstance(what, types.StringTypes):
                 raise TypeError("Unexpected type: '%s'" % type(what).__name__)
-            self.exec_file(what)
+            self.include_file(what)
 
     def template_impl(self, func):
         '''Implementation of @template.
@@ -524,7 +585,8 @@ class ConfigureSandbox(dict):
         in which case the result from these functions is used. If the result
         of either function is None, the configuration item is not set.
         '''
-        self._resolve_and_set(self._config, name, value)
+        self._execution_queue.append((
+            self._resolve_and_set, (self._config, name, value)))
 
     def set_define_impl(self, name, value):
         '''Implementation of set_define().
@@ -535,7 +597,8 @@ class ConfigureSandbox(dict):
         explicitly undefined (-U).
         '''
         defines = self._config.setdefault('DEFINES', {})
-        self._resolve_and_set(defines, name, value)
+        self._execution_queue.append((
+            self._resolve_and_set, (defines, name, value)))
 
     def imply_option_impl(self, option, value, reason=None):
         '''Implementation of imply_option().
@@ -589,8 +652,7 @@ class ConfigureSandbox(dict):
             possible_reasons = [d for d in deps if d != self._help_option]
             if len(possible_reasons) == 1:
                 if isinstance(possible_reasons[0], Option):
-                    reason = (self._raw_options.get(possible_reasons[0]) or
-                              possible_reasons[0].option)
+                    reason = possible_reasons[0]
 
         if not reason:
             raise ConfigureError(
@@ -598,24 +660,18 @@ class ConfigureSandbox(dict):
                 "the `imply_option` call."
                 % option)
 
-        value = self._resolve(value, need_help_dependency=False)
-        if value is not None:
-            if isinstance(value, OptionValue):
-                pass
-            elif value is True:
-                value = PositiveOptionValue()
-            elif value is False or value == ():
-                value = NegativeOptionValue()
-            elif isinstance(value, types.StringTypes):
-                value = PositiveOptionValue((value,))
-            elif isinstance(value, tuple):
-                value = PositiveOptionValue(value)
-            else:
-                raise TypeError("Unexpected type: '%s'" % type(value).__name__)
+        prefix, name, values = Option.split_option(option)
+        if values != ():
+            raise ConfigureError("Implied option must not contain an '='")
 
-            option = value.format(option)
-            self._helper.add(option, 'implied')
-            self._implied_options[option] = inspect.stack()[1], reason
+        self._implied_options.append(ReadOnlyNamespace(
+            option=option,
+            prefix=prefix,
+            name=name,
+            value=value,
+            caller=inspect.stack()[1],
+            reason=reason,
+        ))
 
     def _prepare_function(self, func):
         '''Alter the given function global namespace with the common ground
@@ -638,12 +694,31 @@ class ConfigureSandbox(dict):
             log=self.log_impl,
         )
         self._apply_imports(func, glob)
+
+        # The execution model in the sandbox doesn't guarantee the execution
+        # order will always be the same for a given function, and if it uses
+        # variables from a closure that are changed after the function is
+        # declared, depending when the function is executed, the value of the
+        # variable can differ. For consistency, we force the function to use
+        # the value from the earliest it can be run, which is at declaration.
+        # Note this is not entirely bullet proof (if the value is e.g. a list,
+        # the list contents could have changed), but covers the bases.
+        closure = None
+        if func.func_closure:
+            def makecell(content):
+                def f():
+                    content
+                return f.func_closure[0]
+
+            closure = tuple(makecell(cell.cell_contents)
+                            for cell in func.func_closure)
+
         func = wraps(func)(types.FunctionType(
             func.func_code,
             glob,
             func.__name__,
             func.func_defaults,
-            func.func_closure
+            closure
         ))
         self._prepared_functions.add(func)
         return func, glob

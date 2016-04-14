@@ -105,7 +105,7 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
         bool isOriginalAdder = IsFunctionObject(adderVal, &adder) &&
                                IsSelfHostedFunctionWithName(adder, cx->names().WeakSet_add);
         RootedValue setVal(cx, ObjectValue(*obj));
-        FastInvokeGuard fig(cx, adderVal);
+        FastCallGuard fig(cx, adderVal);
         InvokeArgs& args2 = fig.args();
 
         JS::ForOfIterator iter(cx);
@@ -114,6 +114,7 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
         RootedValue keyVal(cx);
         RootedObject keyObject(cx);
+        RootedValue dummy(cx);
         RootedValue placeholder(cx, BooleanValue(true));
         while (true) {
             bool done;
@@ -139,11 +140,9 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                 if (!args2.init(1))
                     return false;
 
-                args2.setCallee(adderVal);
-                args2.setThis(setVal);
                 args2[0].set(keyVal);
 
-                if (!fig.invoke(cx))
+                if (!fig.call(cx, adderVal, setVal, &dummy))
                     return false;
             }
         }
