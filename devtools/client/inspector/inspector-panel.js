@@ -1052,9 +1052,8 @@ InspectorPanel.prototype = {
    * Create a new node as the last child of the current selection, expand the
    * parent and select the new node.
    */
-  addNode: Task.async(function*() {
-    let root = this.selection.nodeFront;
-    if (!this.canAddHTMLChild(root)) {
+  addNode: Task.async(function* () {
+    if (!this.canAddHTMLChild()) {
       return;
     }
 
@@ -1062,7 +1061,8 @@ InspectorPanel.prototype = {
 
     // Insert the html and expect a childList markup mutation.
     let onMutations = this.once("markupmutation");
-    let {nodes} = yield this.walker.insertAdjacentHTML(root, "beforeEnd", html);
+    let {nodes} = yield this.walker.insertAdjacentHTML(this.selection.nodeFront,
+                                                       "beforeEnd", html);
     yield onMutations;
 
     // Select the new node (this will auto-expand its parent).
