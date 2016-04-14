@@ -83,10 +83,22 @@ function reload(event) {
 
   // Invalidate xul cache in order to see changes made to chrome:// files
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
-  Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 
-  // Ask the loader to update itself and reopen the toolbox if needed
-  const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  // This frame script is going to be executed in all processes: parent and childs
+  Services.ppmm.loadProcessScript("data:,new " + function () {
+    /* Flush message manager cached frame scripts as well as chrome locales */
+    let obs = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    obs.notifyObservers(null, "message-manager-flush-caches", null);
+
+    /* Also purge cached modules in child processes, we do it a few lines after
+       in the parent process */
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.notifyObservers(null, "devtools-unload", "reload");
+    }
+  }, false);
+
+  const {devtools} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   devtools.reload();
 
   // Go over all top level windows to reload all devtools related things
