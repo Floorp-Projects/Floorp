@@ -127,9 +127,10 @@ HTMLBreadcrumbs.prototype = {
    * @param {Error} err
    */
   selectionGuardEnd: function(err) {
-    if (err === "selection-changed") {
-      console.warn("Asynchronous operation was aborted as selection changed.");
-    } else {
+    // If the error is selection-changed, this is expected, the selection
+    // changed while we were waiting for a promise to resolve, so there's no
+    // need to proceed with the current update, and we should be silent.
+    if (err !== "selection-changed") {
       console.error(err);
     }
   },
@@ -618,7 +619,7 @@ HTMLBreadcrumbs.prototype = {
           return;
         }
         moreChildren();
-      }).then(null, this.selectionGuardEnd);
+      }).catch(this.selectionGuardEnd);
     };
 
     moreChildren();
@@ -816,7 +817,7 @@ HTMLBreadcrumbs.prototype = {
         this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
         doneUpdating();
       });
-    }).then(null, err => {
+    }).catch(err => {
       doneUpdating(this.selection.nodeFront);
       this.selectionGuardEnd(err);
     });
