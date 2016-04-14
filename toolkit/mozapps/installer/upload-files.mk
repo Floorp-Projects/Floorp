@@ -382,16 +382,6 @@ ifndef MOZ_PKG_MANIFEST
   endif # MOZ_PKG_MANIFEST_P
 endif # MOZ_PKG_MANIFEST
 
-# For smooth transition of comm-central
-ifndef MOZ_PACKAGER_FORMAT
-  ifeq ($(MOZ_CHROME_FILE_FORMAT),flat)
-    ifdef MOZ_OMNIJAR
-      MOZ_PACKAGER_FORMAT := omni
-    else
-      MOZ_PACKAGER_FORMAT := flat
-    endif
-  endif
-endif
 ifndef MOZ_PACKAGER_FORMAT
   MOZ_PACKAGER_FORMAT = $(error MOZ_PACKAGER_FORMAT is not set)
 endif
