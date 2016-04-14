@@ -1680,58 +1680,58 @@ public:
    */
   struct InlineIntrinsicISizeData {
     InlineIntrinsicISizeData()
-      : line(nullptr)
-      , lineContainer(nullptr)
-      , prevLines(0)
-      , currentLine(0)
-      , trailingWhitespace(0)
-      , skipWhitespace(true)
+      : mLine(nullptr)
+      , mLineContainer(nullptr)
+      , mPrevLines(0)
+      , mCurrentLine(0)
+      , mTrailingWhitespace(0)
+      , mSkipWhitespace(true)
     {}
 
     // The line. This may be null if the inlines are not associated with
     // a block or if we just don't know the line.
-    const nsLineList_iterator* line;
+    const nsLineList_iterator* mLine;
 
     // The line container. Private, to ensure we always use SetLineContainer
-    // to update it (so that we have a chance to store the lineContainerWM).
+    // to update it (so that we have a chance to store the mLineContainerWM).
     //
     // Note that nsContainerFrame::DoInlineIntrinsicISize will clear the
-    // |line| and |lineContainer| fields when following a next-in-flow link,
+    // |mLine| and |mLineContainer| fields when following a next-in-flow link,
     // so we must not assume these can always be dereferenced.
   private:
-    nsIFrame* lineContainer;
+    nsIFrame* mLineContainer;
 
     // Setter and getter for the lineContainer field:
   public:
     void SetLineContainer(nsIFrame* aLineContainer)
     {
-      lineContainer = aLineContainer;
-      if (lineContainer) {
-        lineContainerWM = lineContainer->GetWritingMode();
+      mLineContainer = aLineContainer;
+      if (mLineContainer) {
+        mLineContainerWM = mLineContainer->GetWritingMode();
       }
     }
-    nsIFrame* LineContainer() const { return lineContainer; }
+    nsIFrame* LineContainer() const { return mLineContainer; }
 
     // The maximum intrinsic width for all previous lines.
-    nscoord prevLines;
+    nscoord mPrevLines;
 
     // The maximum intrinsic width for the current line.  At a line
     // break (mandatory for preferred width; allowed for minimum width),
     // the caller should call |Break()|.
-    nscoord currentLine;
+    nscoord mCurrentLine;
 
     // This contains the width of the trimmable whitespace at the end of
-    // |currentLine|; it is zero if there is no such whitespace.
-    nscoord trailingWhitespace;
+    // |mCurrentLine|; it is zero if there is no such whitespace.
+    nscoord mTrailingWhitespace;
 
     // True if initial collapsable whitespace should be skipped.  This
     // should be true at the beginning of a block, after hard breaks
     // and when the last text ended with whitespace.
-    bool skipWhitespace;
+    bool mSkipWhitespace;
 
     // Writing mode of the line container (stored here so that we don't
-    // lose track of it if the lineContainer field is reset).
-    mozilla::WritingMode lineContainerWM;
+    // lose track of it if the mLineContainer field is reset).
+    mozilla::WritingMode mLineContainerWM;
 
     // Floats encountered in the lines.
     class FloatInfo {
@@ -1747,14 +1747,18 @@ public:
       nscoord         mWidth;
     };
 
-    nsTArray<FloatInfo> floats;
+    nsTArray<FloatInfo> mFloats;
   };
 
   struct InlineMinISizeData : public InlineIntrinsicISizeData {
     InlineMinISizeData()
-      : trailingTextFrame(nullptr)
-      , atStartOfLine(true)
+      : mAtStartOfLine(true)
     {}
+
+    // The default implementation for nsIFrame::AddInlineMinISize.
+    void DefaultAddInlineMinISize(nsIFrame* aFrame,
+                                  nscoord   aISize,
+                                  bool      aAllowBreak = true);
 
     // We need to distinguish forced and optional breaks for cases where the
     // current line total is negative.  When it is, we need to ignore
@@ -1766,19 +1770,17 @@ public:
     // width of the current line.
     void OptionallyBreak(nscoord aHyphenWidth = 0);
 
-    // The last text frame processed so far in the current line, when
-    // the last characters in that text frame are relevant for line
-    // break opportunities.
-    nsIFrame *trailingTextFrame;
-
     // Whether we're currently at the start of the line.  If we are, we
     // can't break (for example, between the text-indent and the first
     // word).
-    bool atStartOfLine;
+    bool mAtStartOfLine;
   };
 
   struct InlinePrefISizeData : public InlineIntrinsicISizeData {
     void ForceBreak();
+
+    // The default implementation for nsIFrame::AddInlinePrefISize.
+    void DefaultAddInlinePrefISize(nscoord aISize);
   };
 
   /**
@@ -1789,7 +1791,7 @@ public:
    *
    * All *allowed* breakpoints within the frame determine what counts as
    * a line for the |InlineIntrinsicISizeData|.  This means that
-   * |aData->trailingWhitespace| will always be zero (unlike for
+   * |aData->mTrailingWhitespace| will always be zero (unlike for
    * AddInlinePrefISize).
    *
    * All the comments for |GetMinISize| apply, except that this function

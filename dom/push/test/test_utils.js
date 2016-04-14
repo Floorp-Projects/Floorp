@@ -61,9 +61,13 @@
 
   function teardownMockPushSocket() {
     if (currentMockSocket) {
-      currentMockSocket._isActive = false;
-      chromeScript.sendSyncMessage("socket-teardown");
+      return new Promise(resolve => {
+        currentMockSocket._isActive = false;
+        chromeScript.addMessageListener("socket-server-teardown", resolve);
+        chromeScript.sendSyncMessage("socket-teardown");
+      });
     }
+    return Promise.resolve();
   }
 
   /**
@@ -146,13 +150,13 @@
 
 // Remove permissions and prefs when the test finishes.
 SimpleTest.registerCleanupFunction(() => {
-  new Promise(resolve => {
+  return new Promise(resolve => {
     SpecialPowers.flushPermissions(_ => {
       SpecialPowers.flushPrefEnv(resolve);
     });
   }).then(_ => {
-    teardownMockPushSocket();
     restorePushService();
+    return teardownMockPushSocket();
   });
 });
 

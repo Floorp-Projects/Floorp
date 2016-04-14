@@ -237,11 +237,9 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
     // Step 7.
     bool booleanTrapResult;
     {
-        Value argv[] = {
-            ObjectValue(*target)
-        };
+        RootedValue arg(cx, ObjectValue(*target));
         RootedValue trapResult(cx);
-        if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+        if (!Call(cx, trap, handler, arg, &trapResult))
             return false;
 
         booleanTrapResult = ToBoolean(trapResult);
@@ -293,14 +291,15 @@ ScriptedDirectProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool
         return IsExtensible(cx, target, extensible);
 
     // Step 7.
-    Value argv[] = {
-        ObjectValue(*target)
-    };
-    RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
+    bool booleanTrapResult;
+    {
+        RootedValue arg(cx, ObjectValue(*target));
+        RootedValue trapResult(cx);
+        if (!Call(cx, trap, handler, arg, &trapResult))
+            return false;
 
-    bool booleanTrapResult = ToBoolean(trapResult);
+        booleanTrapResult = ToBoolean(trapResult);
+    }
 
     // Steps 8.
     bool targetResult;
@@ -348,12 +347,9 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject
     if (!IdToStringOrSymbol(cx, id, &propKey))
         return false;
 
-    Value argv[] = {
-        ObjectValue(*target),
-        propKey
-    };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+    RootedValue targetVal(cx, ObjectValue(*target));
+    if (!Call(cx, trap, handler, targetVal, propKey, &trapResult))
         return false;
 
     // Step 9.
@@ -476,14 +472,18 @@ ScriptedDirectProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, Ha
     if (!IdToStringOrSymbol(cx, id, &propKey))
         return false;
 
-    Value argv[] = {
-        ObjectValue(*target),
-        propKey,
-        descObj
-    };
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
+    {
+        FixedInvokeArgs<3> args(cx);
+
+        args[0].setObject(*target);
+        args[1].set(propKey);
+        args[2].set(descObj);
+
+        RootedValue thisv(cx, ObjectValue(*handler));
+        if (!Call(cx, trap, thisv, args, &trapResult))
+            return false;
+    }
 
     // Step 10.
     if (!ToBoolean(trapResult))
@@ -603,11 +603,9 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
         return GetPropertyKeys(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
 
     // Step 7.
-    Value argv[] = {
-        ObjectValue(*target)
-    };
     RootedValue trapResultArray(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResultArray))
+    RootedValue targetVal(cx, ObjectValue(*target));
+    if (!Call(cx, trap, handler, targetVal, &trapResultArray))
         return false;
 
     // Step 8.
@@ -750,12 +748,9 @@ ScriptedDirectProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId 
         if (!IdToStringOrSymbol(cx, id, &value))
             return false;
 
-        Value argv[] = {
-            ObjectValue(*target),
-            value
-        };
+        RootedValue targetVal(cx, ObjectValue(*target));
         RootedValue trapResult(cx);
-        if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+        if (!Call(cx, trap, handler, targetVal, value, &trapResult))
             return false;
 
         booleanTrapResult = ToBoolean(trapResult);
@@ -809,12 +804,10 @@ ScriptedDirectProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, 
     RootedValue value(cx);
     if (!IdToStringOrSymbol(cx, id, &value))
         return false;
-    Value argv[] = {
-        ObjectOrNullValue(target),
-        value
-    };
+
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+    RootedValue targetVal(cx, ObjectValue(*target));
+    if (!Call(cx, trap, handler, targetVal, value, &trapResult))
         return false;
 
     bool booleanTrapResult = ToBoolean(trapResult);
@@ -881,14 +874,19 @@ ScriptedDirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue r
     RootedValue value(cx);
     if (!IdToStringOrSymbol(cx, id, &value))
         return false;
-    Value argv[] = {
-        ObjectOrNullValue(target),
-        value,
-        receiver
-    };
+
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
+    {
+        FixedInvokeArgs<3> args(cx);
+
+        args[0].setObject(*target);
+        args[1].set(value);
+        args[2].set(receiver);
+
+        RootedValue thisv(cx, ObjectValue(*handler));
+        if (!Call(cx, trap, thisv, args, &trapResult))
+            return false;
+    }
 
     // Step 9.
     Rooted<PropertyDescriptor> desc(cx);
@@ -951,15 +949,20 @@ ScriptedDirectProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, 
     RootedValue value(cx);
     if (!IdToStringOrSymbol(cx, id, &value))
         return false;
-    Value argv[] = {
-        ObjectOrNullValue(target),
-        value,
-        v.get(),
-        receiver.get()
-    };
+
     RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
+    {
+        FixedInvokeArgs<4> args(cx);
+
+        args[0].setObject(*target);
+        args[1].set(value);
+        args[2].set(v);
+        args[3].set(receiver);
+
+        RootedValue thisv(cx, ObjectValue(*handler));
+        if (!Call(cx, trap, thisv, args, &trapResult))
+            return false;
+    }
 
     // Step 9.
     if (!ToBoolean(trapResult))
@@ -1017,8 +1020,12 @@ ScriptedDirectProxyHandler::call(JSContext* cx, HandleObject proxy, const CallAr
 
     // Step 6.
     if (trap.isUndefined()) {
-        RootedValue targetv(cx, ObjectValue(*target));
-        return Invoke(cx, args.thisv(), targetv, args.length(), args.array(), args.rval());
+        InvokeArgs iargs(cx);
+        if (!FillArgumentsFromArraylike(cx, iargs, args))
+            return false;
+
+        RootedValue fval(cx, ObjectValue(*target));
+        return js::Call(cx, fval, args.thisv(), iargs, args.rval());
     }
 
     // Step 7.
@@ -1027,13 +1034,14 @@ ScriptedDirectProxyHandler::call(JSContext* cx, HandleObject proxy, const CallAr
         return false;
 
     // Step 8.
-    Value argv[] = {
-        ObjectValue(*target),
-        args.thisv(),
-        ObjectValue(*argArray)
-    };
-    RootedValue thisValue(cx, ObjectValue(*handler));
-    return Invoke(cx, thisValue, trap, ArrayLength(argv), argv, args.rval());
+    FixedInvokeArgs<3> iargs(cx);
+
+    iargs[0].setObject(*target);
+    iargs[1].set(args.thisv());
+    iargs[2].setObject(*argArray);
+
+    RootedValue thisv(cx, ObjectValue(*handler));
+    return js::Call(cx, trap, thisv, iargs, args.rval());
 }
 
 // ES7 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.14 Proxy.[[Construct]]
@@ -1078,14 +1086,17 @@ ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const C
         return false;
 
     // Steps 8, 10.
-    Value constructArgv[] = {
-        ObjectValue(*target),
-        ObjectValue(*argArray),
-        args.newTarget()
-    };
-    RootedValue thisValue(cx, ObjectValue(*handler));
-    if (!Invoke(cx, thisValue, trap, ArrayLength(constructArgv), constructArgv, args.rval()))
-        return false;
+    {
+        FixedInvokeArgs<3> iargs(cx);
+
+        iargs[0].setObject(*target);
+        iargs[1].setObject(*argArray);
+        iargs[2].set(args.newTarget());
+
+        RootedValue thisv(cx, ObjectValue(*handler));
+        if (!Call(cx, trap, thisv, iargs, args.rval()))
+            return false;
+    }
 
     // Step 9.
     if (!args.rval().isObject()) {

@@ -7581,7 +7581,7 @@ HandleDynamicLinkFailure(JSContext* cx, const CallArgs& args, AsmJSModule& modul
 
     // Call the function we just recompiled.
     args.setCallee(ObjectValue(*fun));
-    return Invoke(cx, args, args.isConstructing() ? CONSTRUCT : NO_CONSTRUCT);
+    return InternalCallOrConstruct(cx, args, args.isConstructing() ? CONSTRUCT : NO_CONSTRUCT);
 }
 
 static WasmModuleObject*

@@ -76,17 +76,17 @@ private:
   void InitFromProfile();
   void InitMemoryReporter();
   void LoadSheetURL(const char* aURL,
-                    mozilla::StyleSheetHandle::RefPtr& aSheet,
+                    mozilla::StyleSheetHandle::RefPtr* aSheet,
                     mozilla::css::SheetParsingMode aParsingMode);
   void LoadSheetFile(nsIFile* aFile,
-                     mozilla::StyleSheetHandle::RefPtr& aSheet,
+                     mozilla::StyleSheetHandle::RefPtr* aSheet,
                      mozilla::css::SheetParsingMode aParsingMode);
-  void LoadSheet(nsIURI* aURI, mozilla::StyleSheetHandle::RefPtr& aSheet,
+  void LoadSheet(nsIURI* aURI, mozilla::StyleSheetHandle::RefPtr* aSheet,
                  mozilla::css::SheetParsingMode aParsingMode);
   static void InvalidateSheet(mozilla::StyleSheetHandle::RefPtr* aGeckoSheet,
                               mozilla::StyleSheetHandle::RefPtr* aServoSheet);
   static void DependentPrefChanged(const char* aPref, void* aData);
-  void BuildPreferenceSheet(mozilla::StyleSheetHandle::RefPtr& aSheet,
+  void BuildPreferenceSheet(mozilla::StyleSheetHandle::RefPtr* aSheet,
                             nsPresContext* aPresContext);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Gecko;

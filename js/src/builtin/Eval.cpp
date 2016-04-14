@@ -224,8 +224,8 @@ enum EvalType { DIRECT_EVAL, INDIRECT_EVAL };
 //
 // On success, store the completion value in call.rval and return true.
 static bool
-EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFramePtr caller,
-           HandleObject scopeobj, jsbytecode* pc)
+EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr caller,
+           HandleObject scopeobj, jsbytecode* pc, MutableHandleValue vp)
 {
     MOZ_ASSERT((evalType == INDIRECT_EVAL) == !caller);
     MOZ_ASSERT((evalType == INDIRECT_EVAL) == !pc);
@@ -239,15 +239,11 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
     }
 
     // ES5 15.1.2.1 step 1.
-    if (args.length() < 1) {
-        args.rval().setUndefined();
+    if (!v.isString()) {
+        vp.set(v);
         return true;
     }
-    if (!args[0].isString()) {
-        args.rval().set(args[0]);
-        return true;
-    }
-    RootedString str(cx, args[0].toString());
+    RootedString str(cx, v.toString());
 
     // ES5 15.1.2.1 steps 2-8.
 
@@ -255,14 +251,14 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
     // way so that the compiler can make assumptions about what bindings may or
     // may not exist in the current frame if it doesn't see 'eval'.)
     MOZ_ASSERT_IF(evalType != DIRECT_EVAL,
-                  args.callee().global() == scopeobj->as<ClonedBlockObject>().global());
+                  cx->global() == &scopeobj->as<ClonedBlockObject>().global());
 
     RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
     RootedScript callerScript(cx, caller ? caller.script() : nullptr);
-    EvalJSONResult ejr = TryEvalJSON(cx, linearStr, args.rval());
+    EvalJSONResult ejr = TryEvalJSON(cx, linearStr, vp);
     if (ejr != EvalJSON_NotJSON)
         return ejr == EvalJSON_Success;
 
@@ -329,7 +325,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
     // Look up the newTarget from the frame iterator.
     Value newTargetVal = NullValue();
     return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetVal,
-                         NullFramePtr() /* evalInFrame */, args.rval().address());
+                         NullFramePtr() /* evalInFrame */, vp.address());
 }
 
 bool
@@ -416,19 +412,23 @@ bool
 js::IndirectEval(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
     Rooted<GlobalObject*> global(cx, &args.callee().global());
     RootedObject globalLexical(cx, &global->lexicalScope());
-    return EvalKernel(cx, args, INDIRECT_EVAL, NullFramePtr(), globalLexical, nullptr);
+
+    // Note we'll just pass |undefined| here, then return it directly (or throw
+    // if runtime codegen is disabled), if no argument is provided.
+    return EvalKernel(cx, args.get(0), INDIRECT_EVAL, NullFramePtr(), globalLexical, nullptr,
+                      args.rval());
 }
 
 bool
-js::DirectEval(JSContext* cx, const CallArgs& args)
+js::DirectEval(JSContext* cx, HandleValue v, MutableHandleValue vp)
 {
     // Direct eval can assume it was called from an interpreted or baseline frame.
     ScriptFrameIter iter(cx);
     AbstractFramePtr caller = iter.abstractFramePtr();
 
-    MOZ_ASSERT(caller.scopeChain()->global().valueIsEval(args.calleev()));
     MOZ_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
                JSOp(*iter.pc()) == JSOP_STRICTEVAL ||
                JSOp(*iter.pc()) == JSOP_SPREADEVAL ||
@@ -436,7 +436,7 @@ js::DirectEval(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(caller.compartment() == caller.script()->compartment());
 
     RootedObject scopeChain(cx, caller.scopeChain());
-    return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain, iter.pc());
+    return EvalKernel(cx, v, DIRECT_EVAL, caller, scopeChain, iter.pc(), vp);
 }
 
 bool

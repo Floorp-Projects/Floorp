@@ -681,6 +681,42 @@ nsBulletFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   return metrics.ISize(wm);
 }
 
+// If a bullet has zero size and is "ignorable" from its styling, we behave
+// as if it doesn't exist, from a line-breaking/isize-computation perspective.
+// Otherwise, we use the default implementation, same as nsFrame.
+static inline bool
+IsIgnoreable(const nsIFrame* aFrame, nscoord aISize)
+{
+  if (aISize != nscoord(0)) {
+    return false;
+  }
+  auto listStyle = aFrame->StyleList();
+  return listStyle->GetCounterStyle()->IsNone() &&
+         !listStyle->GetListStyleImage();
+}
+
+/* virtual */ void
+nsBulletFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
+                                 nsIFrame::InlineMinISizeData* aData)
+{
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::MIN_ISIZE);
+  if (MOZ_LIKELY(!::IsIgnoreable(this, isize))) {
+    aData->DefaultAddInlineMinISize(this, isize);
+  }
+}
+
+/* virtual */ void
+nsBulletFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
+                                  nsIFrame::InlinePrefISizeData* aData)
+{
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::PREF_ISIZE);
+  if (MOZ_LIKELY(!::IsIgnoreable(this, isize))) {
+    aData->DefaultAddInlinePrefISize(isize);
+  }
+}
+
 NS_IMETHODIMP
 nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
 {
