@@ -22,7 +22,7 @@ REF_MANIFEST = $(if $(USE_EXTENSION_MANIFEST),chrome.manifest,test.manifest)
 
 check-%::
 	if test -d $(FINAL_TARGET); then rm -rf $(FINAL_TARGET); fi;
-	$(MAKE) realchrome MOZ_CHROME_FILE_FORMAT=$*
+	$(MAKE) realchrome MOZ_JAR_MAKER_FILE_FORMAT=$*
 	@echo 'Comparing manifests...'
 	@if ! sort $(MY_MANIFEST) | diff --text -U 0 $(srcdir)/../$(REF_MANIFEST).$* - ; then \
 	  echo 'TEST-UNEXPECTED-FAIL | config/tests/$(REF_MANIFEST).$* | differing content in manifest!' ; \

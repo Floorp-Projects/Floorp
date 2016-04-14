@@ -355,3 +355,36 @@ def eme_modules(value):
 set_config('MOZ_EME', eme)
 set_define('MOZ_EME', eme)
 set_config('MOZ_EME_MODULES', eme_modules)
+
+option(name='--enable-chrome-format',
+       help='Select FORMAT of chrome files during packaging.',
+       nargs=1,
+       choices=('omni', 'jar', 'flat'),
+       default='omni')
+
+@depends('--enable-chrome-format')
+def packager_format(value):
+    return value[0]
+
+set_config('MOZ_PACKAGER_FORMAT', packager_format)
+
+@depends(host)
+def jar_maker_format(host):
+    return 'flat' if host.os == 'WINNT' else 'symlink'
+
+set_config('MOZ_JAR_MAKER_FILE_FORMAT', jar_maker_format)
+
+@depends(toolkit)
+def omnijar_name(toolkit):
+    # Fennec's static resources live in the assets/ folder of the
+    # APK.  Adding a path to the name here works because we only
+    # have one omnijar file in the final package (which is not the
+    # case on desktop), and necessitates some contortions during
+    # packaging so that the resources in the omnijar are considered
+    # as rooted at / and not as rooted at assets/ (which again is
+    # not the case on desktop: there are omnijars rooted at webrtc/,
+    # etc). packager.mk handles changing the rooting of the single
+    # omnijar.
+    return 'assets/omni.ja' if toolkit == 'android' else 'omni.ja'
+
+set_config('OMNIJAR_NAME', omnijar_name)
