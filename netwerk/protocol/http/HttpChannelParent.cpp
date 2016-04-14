@@ -1164,7 +1164,7 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
     // child doesn't use them.
     if (mIPCClosed || !SendOnTransportAndData(channelStatus, mStoredStatus,
                                               mStoredProgress, mStoredProgressMax,
-                                              data, aOffset, toRead)) {
+                                              aOffset, toRead, data)) {
       return NS_ERROR_UNEXPECTED;
     }
 
