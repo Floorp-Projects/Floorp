@@ -41,19 +41,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SimpleGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
 NS_INTERFACE_MAP_END
 
-static bool
-SimpleGlobal_enumerate(JSContext *cx, JS::Handle<JSObject *> obj)
-{
-  return JS_EnumerateStandardClasses(cx, obj);
-}
-
-static bool
-SimpleGlobal_resolve(JSContext *cx, JS::Handle<JSObject *> obj,
-                    JS::Handle<jsid> id, bool *resolvedp)
-{
-  return JS_ResolveStandardClass(cx, obj, id, resolvedp);
-}
-
 static void
 SimpleGlobal_finalize(js::FreeOp *fop, JSObject *obj)
 {
@@ -75,9 +62,9 @@ static const js::ClassOps SimpleGlobalClassOps = {
     nullptr,
     nullptr,
     nullptr,
-    SimpleGlobal_enumerate,
-    SimpleGlobal_resolve,
-    nullptr,
+    JS_EnumerateStandardClasses,
+    JS_ResolveStandardClass,
+    JS_MayResolveStandardClass,
     SimpleGlobal_finalize,
     nullptr,
     nullptr,
