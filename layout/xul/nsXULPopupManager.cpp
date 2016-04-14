@@ -617,7 +617,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
           if ((event->mClass == eMouseEventClass || 
                event->mClass == eMouseScrollEventClass ||
                event->mClass == eWheelEventClass) &&
-               !event->AsGUIEvent()->widget) {
+               !event->AsGUIEvent()->mWidget) {
             // no widget, so just use the client point if available
             nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
             nsIntPoint clientPt;
@@ -1415,10 +1415,10 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     presShell->GetPresContext()->GetRootPresContext();
   if (rootPresContext) {
     rootPresContext->PresShell()->GetViewManager()->
-      GetRootWidget(getter_AddRefs(event.widget));
+      GetRootWidget(getter_AddRefs(event.mWidget));
   }
   else {
-    event.widget = nullptr;
+    event.mWidget = nullptr;
   }
 
   event.refPoint = mCachedMousePoint;
