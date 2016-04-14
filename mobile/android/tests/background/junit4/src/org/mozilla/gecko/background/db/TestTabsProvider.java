@@ -62,16 +62,16 @@ public class TestTabsProvider {
 
     protected int deleteTestClient(final ContentProviderClient clientsClient) throws RemoteException {
         if (clientsClient == null) {
-            return -1;
+            throw new IllegalStateException("Provided ContentProviderClient is null");
         }
         return clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, CLIENTS_GUID_IS, new String[] { TEST_CLIENT_GUID });
     }
 
     protected int deleteAllTestTabs(final ContentProviderClient tabsClient) throws RemoteException {
         if (tabsClient == null) {
-            return -1;
+            throw new IllegalStateException("Provided ContentProviderClient is null");
         }
-        return tabsClient.delete(BrowserContractHelpers.TABS_CONTENT_URI, TABS_CLIENT_GUID_IS, new String[]{TEST_CLIENT_GUID});
+        return tabsClient.delete(BrowserContractHelpers.TABS_CONTENT_URI, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID });
     }
 
     protected void insertTestClient(final ContentProviderClient clientsClient) throws RemoteException {
@@ -116,7 +116,7 @@ public class TestTabsProvider {
     }
 
     @Test
-    public void testWipeClients() throws RemoteException {
+    public void testDeleteEmptyClients() throws RemoteException {
         final Uri uri = BrowserContractHelpers.CLIENTS_CONTENT_URI;
         final ContentProviderClient clientsClient = getClientsClient();
 
@@ -128,7 +128,7 @@ public class TestTabsProvider {
     }
 
     @Test
-    public void testWipeTabs() throws RemoteException {
+    public void testDeleteEmptyTabs() throws RemoteException {
         final ContentProviderClient tabsClient = getTabsClient();
 
         // Have to ensure that it's empty…
