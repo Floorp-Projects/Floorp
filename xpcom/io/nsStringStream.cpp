@@ -407,14 +407,6 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
 }
 
 nsresult
-NS_NewStringInputStream(nsIInputStream** aStreamResult,
-                        const nsAString& aStringToRead)
-{
-  NS_LossyConvertUTF16toASCII data(aStringToRead); // truncates high-order bytes
-  return NS_NewCStringInputStream(aStreamResult, data);
-}
-
-nsresult
 NS_NewCStringInputStream(nsIInputStream** aStreamResult,
                          const nsACString& aStringToRead)
 {
