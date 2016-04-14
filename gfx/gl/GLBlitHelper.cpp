@@ -68,6 +68,9 @@ GLBlitHelper::GLBlitHelper(GLContext* gl)
 
 GLBlitHelper::~GLBlitHelper()
 {
+    if (!mGL->MakeCurrent())
+        return;
+
     DeleteTexBlitProgram();
 
     GLuint tex[] = {
