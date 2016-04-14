@@ -38,6 +38,7 @@ tasks:
         - "docker-worker:cache:level-{{level}}-{{project}}-gecko-decision"
         - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
         - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
+        - "scheduler:extend-task-graph:*"
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"

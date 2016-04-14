@@ -38,6 +38,7 @@ tasks:
 
       scopes:
         - "docker-worker:cache:level-{{level}}-{{project}}-tc-vcs-public-sources"
+        - "scheduler:extend-task-graph:*"
 
       payload:
         env:
