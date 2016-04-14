@@ -28,14 +28,11 @@
     const kAddElm = 3;
     const kShowElm = 4;
 
-    const kToDo = true;
-
     /**
      * Base class to test of mutation events coalescence.
      */
     function coalescenceBase(aChildAction, aParentAction,
-                             aPerformActionOnChildInTheFirstPlace,
-                             aIsChildsToDo)
+                             aPerformActionOnChildInTheFirstPlace)
     {
       // Invoker interface
 
@@ -63,13 +60,12 @@
 
       this.finalCheck = function coalescenceBase_check()
       {
-        if (!aIsChildsToDo)
-          return;
-
-        var eventType = eventTypeToString(this.getEventType(aChildAction));
-        todo(false,
-             "Unexpected event " + eventType +
-             " for child in the test '" + this.getID() + "'");
+        if (this.getEventType(aChildAction) == EVENT_HIDE) {
+          testIsDefunct(this.child);
+        }
+        if (this.getEventType(aParentAction) == EVENT_HIDE) {
+          testIsDefunct(this.parent);
+        }
       }
 
       // Implementation details
@@ -138,14 +134,9 @@
 
         // unexpected events
         this.unexpectedEventSeq = [
+          new invokerChecker(this.getEventType(aChildAction), this.childNode),
           new invokerChecker(EVENT_REORDER, this.parentNode)
         ];
-
-        if (!aIsChildsToDo) {
-          var eventType = this.getEventType(aChildAction);
-          var checker = new invokerChecker(eventType, this.childNode);
-          this.unexpectedEventSeq.unshift(checker);
-        }
       }
     }
 
@@ -154,21 +145,18 @@
      */
     function removeOrHideCoalescenceBase(aChildID, aParentID,
                                          aChildAction, aParentAction,
-                                         aPerformActionOnChildInTheFirstPlace,
-                                         aIsChildsToDo)
+                                         aPerformActionOnChildInTheFirstPlace)
     {
       this.__proto__ = new coalescenceBase(aChildAction, aParentAction,
-                                           aPerformActionOnChildInTheFirstPlace,
-                                           aIsChildsToDo);
+                                           aPerformActionOnChildInTheFirstPlace);
 
       this.init = function removeOrHideCoalescenceBase_init()
       {
         this.childNode = getNode(aChildID);
         this.parentNode = getNode(aParentID);
+        this.child = getAccessible(this.childNode);
+        this.parent = getAccessible(this.parentNode);
         this.hostNode = this.parentNode.parentNode;
-
-        // ensure child accessible is created
-        getAccessible(this.childNode);
       }
 
       // Initalization
@@ -187,7 +175,7 @@
     {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kRemoveElm,
-                                                       true, kToDo);
+                                                       true);
     }
 
     /**
@@ -235,13 +223,9 @@
      */
     function hideParentNRemoveChild(aChildID, aParentID)
     {
-      // Because of async layout changes we handle remove child node change
-      // before than hide parent node change even we hide parent before we
-      // remove a child. Therefore mark this as todo until we have more smart
-      // events coalescence.
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
-                                                       false, kToDo);
+                                                       false);
     }
 
     /**
@@ -251,7 +235,7 @@
     {
       this.__proto__ = new removeOrHideCoalescenceBase(aChildID, aParentID,
                                                        kRemoveElm, kHideElm,
-                                                       true, kToDo);
+                                                       true);
     }
 
     /**
