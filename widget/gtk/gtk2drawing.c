@@ -1283,7 +1283,7 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
+moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                GdkDrawable* drawable, GdkRectangle* rect,
                                GdkRectangle* cliprect, GtkWidgetState* state,
                                GtkTextDirection direction)
@@ -1321,7 +1321,7 @@ moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
 }
 
 static gint
-moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
+moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
                               GdkDrawable* drawable, GdkRectangle* rect,
                               GdkRectangle* cliprect, GtkWidgetState* state,
                               GtkTextDirection direction)
@@ -2228,7 +2228,7 @@ moz_gtk_progressbar_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_progress_chunk_paint(GdkDrawable* drawable, GdkRectangle* rect,
                              GdkRectangle* cliprect, GtkTextDirection direction,
-                             GtkThemeWidgetType widget)
+                             WidgetNodeType widget)
 {
     GtkStyle* style;
 
@@ -2740,7 +2740,7 @@ moz_gtk_window_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 gint
-moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
+moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                           gint* right, gint* bottom, GtkTextDirection direction,
                           gboolean inhtml)
 {
@@ -3065,7 +3065,7 @@ moz_gtk_get_tab_scroll_arrow_size(gint* width, gint* height)
 }
 
 void
-moz_gtk_get_arrow_size(GtkThemeWidgetType widgetType, gint* width, gint* height)
+moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width, gint* height)
 {
     GtkWidget* widget;
     switch (widgetType) {
@@ -3220,7 +3220,7 @@ moz_gtk_images_in_buttons()
 }
 
 gint
-moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
+moz_gtk_widget_paint(WidgetNodeType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
                      GtkWidgetState* state, gint flags,
                      GtkTextDirection direction)
