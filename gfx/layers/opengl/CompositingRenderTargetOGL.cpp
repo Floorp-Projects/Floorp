@@ -81,7 +81,7 @@ already_AddRefed<DataSourceSurface>
 CompositingRenderTargetOGL::Dump(Compositor* aCompositor)
 {
   MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
-  CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(aCompositor);
+  CompositorOGL* compositorOGL = aCompositor->AsCompositorOGL();
   return ReadBackSurface(mGL, mTextureHandle, true, compositorOGL->GetFBOFormat());
 }
 #endif
