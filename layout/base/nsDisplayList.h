@@ -2186,6 +2186,8 @@ private:
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
 
+  // This is set by ComputeVisibility
+  nsRect mVisibleRect;
   // This is set to true by FrameLayerBuilder if the final visible region
   // is empty (i.e. everything that was visible is covered by some
   // opaque content in this list).
