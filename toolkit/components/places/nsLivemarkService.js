@@ -535,7 +535,7 @@ Livemark.prototype = {
       let channel = NetUtil.newChannel({
         uri: this.feedURI,
         loadingPrincipal: Services.scriptSecurityManager.createCodebasePrincipal(this.feedURI, {}),
-        securityFlags: Ci.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST
       }).QueryInterface(Ci.nsIHttpChannel);
       channel.loadGroup = loadgroup;
