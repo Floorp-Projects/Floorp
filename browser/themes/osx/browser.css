@@ -1834,9 +1834,9 @@ html|span.ac-emphasize-text-url {
 #urlbar-go-button,
 #urlbar-reload-button,
 #urlbar-stop-button {
-  margin: 0;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  padding: 0 9px;
+  margin: -2px 0;
+  padding: 3px 9px;
   margin-inline-start: 5px;
   border-inline-start: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%,
