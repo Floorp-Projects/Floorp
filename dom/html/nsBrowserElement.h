@@ -122,8 +122,6 @@ public:
                  nsPIDOMWindowInner* aWindow,
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
-                 const nsAString& aManifestURL,
-                 mozIApplication* aParentApp,
                  nsTArray<RefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv);
 
