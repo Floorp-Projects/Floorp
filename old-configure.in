@@ -6255,10 +6255,6 @@ dnl things were flat packaged. After packaging, all files
 dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
 dnl is set to flat since putting files into jars is only
 dnl done during packaging with omnijar.
-if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
-    MOZ_OMNIJAR=1
-    AC_DEFINE(MOZ_OMNIJAR)
-fi
 MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
 if test "$OS_ARCH" = "WINNT"; then
     MOZ_CHROME_FILE_FORMAT=flat
@@ -6282,7 +6278,6 @@ else
 fi
 
 AC_SUBST(OMNIJAR_NAME)
-AC_SUBST(MOZ_OMNIJAR)
 AC_SUBST(MOZ_PACKAGER_FORMAT)
 
 dnl ========================================================
