@@ -890,6 +890,10 @@ IonBuilder::inlineArraySlice(CallInfo& callInfo)
 
     if (!resumeAfter(ins))
         return InliningStatus_Error;
+
+    if (!pushTypeBarrier(ins, getInlineReturnTypeSet(), BarrierKind::TypeSet))
+        return InliningStatus_Error;
+
     return InliningStatus_Inlined;
 }
 
