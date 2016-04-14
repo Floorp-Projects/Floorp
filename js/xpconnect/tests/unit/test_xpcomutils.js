@@ -8,6 +8,7 @@
  * This file tests the methods on XPCOMUtils.jsm.
  */
 
+Components.utils.import("resource://gre/modules/Preferences.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Cc = Components.classes;
@@ -112,6 +113,44 @@ add_test(function test_defineLazyServiceGetter()
         do_check_true(prop in service);
     for (let prop in service)
         do_check_true(prop in obj.service);
+    run_next_test();
+});
+
+
+add_test(function test_defineLazyPreferenceGetter()
+{
+    const PREF = "xpcomutils.test.pref";
+
+    let obj = {};
+    XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", PREF, "defaultValue");
+
+
+    equal(obj.pref, "defaultValue", "Should return the default value before pref is set");
+
+    Preferences.set(PREF, "currentValue");
+
+
+    do_print("Create second getter on new object");
+
+    obj = {};
+    XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", PREF, "defaultValue");
+
+
+    equal(obj.pref, "currentValue", "Should return the current value on initial read when pref is already set");
+
+    Preferences.set(PREF, "newValue");
+
+    equal(obj.pref, "newValue", "Should return new value after preference change");
+
+    Preferences.set(PREF, "currentValue");
+
+    equal(obj.pref, "currentValue", "Should return new value after second preference change");
+
+
+    Preferences.reset(PREF);
+
+    equal(obj.pref, "defaultValue", "Should return default value after pref is reset");
+
     run_next_test();
 });
 
