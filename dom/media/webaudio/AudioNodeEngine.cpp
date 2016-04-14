@@ -135,6 +135,14 @@ BufferComplexMultiply(const float* aInput,
                       float* aOutput,
                       uint32_t aSize)
 {
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse()) {
+    BufferComplexMultiply_SSE(aInput, aScale, aOutput, aSize);
+    return;
+  }
+#endif
+
   for (uint32_t i = 0; i < aSize * 2; i += 2) {
     float real1 = aInput[i];
     float imag1 = aInput[i + 1];
@@ -313,6 +321,27 @@ float
 AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
 {
   float sum = 0.0f;
+
+#ifdef USE_SSE2
+  if (mozilla::supports_sse()) {
+    const float* alignedInput = ALIGNED16(aInput);
+    float vLength = (aLength >> 4) << 4;
+
+    // use scalar operations for any unaligned data at the beginning
+    while (aInput != alignedInput) {
+        sum += *aInput * *aInput;
+        ++aInput;
+    }
+
+    sum += AudioBufferSumOfSquares_SSE(alignedInput, vLength);
+
+    // adjust aInput and aLength to use scalar operations for any
+    // remaining values
+    aInput = alignedInput + 1;
+    aLength -= vLength;
+  }
+#endif
+
   while (aLength--) {
     sum += *aInput * *aInput;
     ++aInput;
