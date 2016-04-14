@@ -1995,25 +1995,6 @@ Parser<SyntaxParseHandler>::leaveFunction(Node fn, ParseContext<SyntaxParseHandl
     return addFreeVariablesFromLazyFunction(funbox->function(), outerpc);
 }
 
-template <typename ParseHandler>
-JSAtom*
-Parser<ParseHandler>::prefixAccessorName(PropertyType propType, HandleAtom propAtom)
-{
-    RootedAtom prefix(context);
-    if (propType == PropertyType::Setter || propType == PropertyType::SetterNoExpressionClosure) {
-        prefix = context->names().setPrefix;
-    } else {
-        MOZ_ASSERT(propType == PropertyType::Getter || propType == PropertyType::GetterNoExpressionClosure);
-        prefix = context->names().getPrefix;
-    }
-
-    RootedString str(context, ConcatStrings<CanGC>(context, prefix, propAtom));
-    if (!str)
-        return nullptr;
-
-    return AtomizeString(context, str);
-}
-
 /*
  * defineArg is called for both the arguments of a regular function definition
  * and the arguments specified by the Function constructor.
@@ -2417,7 +2398,7 @@ Parser<FullParseHandler>::bindLexicalFunctionName(HandlePropertyName funName,
 
 template <>
 bool
-Parser<FullParseHandler>::checkFunctionDefinition(HandleAtom funAtom,
+Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
                                                   ParseNode** pn_, FunctionSyntaxKind kind,
                                                   bool* pbodyProcessed,
                                                   ParseNode** assignmentForAnnexBOut)
@@ -2426,7 +2407,6 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandleAtom funAtom,
     *pbodyProcessed = false;
 
     if (kind == Statement) {
-        RootedPropertyName funName(context, funAtom->asPropertyName());
         MOZ_ASSERT(assignmentForAnnexBOut);
         *assignmentForAnnexBOut = nullptr;
 
@@ -2671,7 +2651,7 @@ Parser<ParseHandler>::addFreeVariablesFromLazyFunction(JSFunction* fun,
 
 template <>
 bool
-Parser<SyntaxParseHandler>::checkFunctionDefinition(HandleAtom funAtom,
+Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
                                                     Node* pn, FunctionSyntaxKind kind,
                                                     bool* pbodyProcessed,
                                                     Node* assignmentForAnnexBOut)
@@ -2682,7 +2662,6 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandleAtom funAtom,
     bool bodyLevel = pc->atBodyLevel();
 
     if (kind == Statement) {
-        RootedPropertyName funName(context, funAtom->asPropertyName());
         *assignmentForAnnexBOut = null();
 
         if (!bodyLevel) {
@@ -2791,7 +2770,7 @@ Parser<ParseHandler>::templateLiteral(YieldHandling yieldHandling)
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::functionDef(InHandling inHandling, YieldHandling yieldHandling,
-                                  HandleAtom funName, FunctionSyntaxKind kind,
+                                  HandlePropertyName funName, FunctionSyntaxKind kind,
                                   GeneratorKind generatorKind, InvokedPrediction invoked,
                                   Node* assignmentForAnnexBOut)
 {
@@ -7243,23 +7222,21 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
         // FIXME: Implement ES6 function "name" property semantics
         // (bug 883377).
-        RootedAtom funName(context);
+        RootedPropertyName funName(context);
         switch (propType) {
           case PropertyType::GetterNoExpressionClosure:
           case PropertyType::SetterNoExpressionClosure:
-            if (!tokenStream.isCurrentTokenType(TOK_RB)) {
-                funName = prefixAccessorName(propType, propAtom);
-                if (!funName)
-                    return null();
-            }
+            funName = nullptr;
             break;
           case PropertyType::Constructor:
           case PropertyType::DerivedConstructor:
             funName = name;
             break;
           default:
-            if (!tokenStream.isCurrentTokenType(TOK_RB))
-                funName = propAtom;
+            if (tokenStream.isCurrentTokenType(TOK_NAME))
+                funName = tokenStream.currentName();
+            else
+                funName = nullptr;
         }
         ParseNode* fn = methodDefinition(yieldHandling, propType, funName);
         if (!fn)
@@ -9386,17 +9363,18 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
         } else {
             // FIXME: Implement ES6 function "name" property semantics
             // (bug 883377).
-            RootedAtom funName(context);
-            if (!tokenStream.isCurrentTokenType(TOK_RB)) {
-                funName = propAtom;
-
-                if (propType == PropertyType::Getter || propType == PropertyType::Setter) {
-                    funName = prefixAccessorName(propType, propAtom);
-                    if (!funName)
-                        return null();
-                }
+            RootedPropertyName funName(context);
+            switch (propType) {
+              case PropertyType::Getter:
+              case PropertyType::Setter:
+                funName = nullptr;
+                break;
+              default:
+                if (tokenStream.isCurrentTokenType(TOK_NAME))
+                    funName = tokenStream.currentName();
+                else
+                    funName = nullptr;
             }
-
             Node fn = methodDefinition(yieldHandling, propType, funName);
             if (!fn)
                 return null();
@@ -9423,7 +9401,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::methodDefinition(YieldHandling yieldHandling, PropertyType propType,
-                                       HandleAtom funName)
+                                       HandlePropertyName funName)
 {
     FunctionSyntaxKind kind = FunctionSyntaxKindFromPropertyType(propType);
     GeneratorKind generatorKind = GeneratorKindFromPropertyType(propType);
