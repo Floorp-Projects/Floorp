@@ -13,6 +13,7 @@
 #include <math.h>
 #include <time.h>
 #if defined(__ANDROID__)
+#include <dlfcn.h>
 #include <sys/system_properties.h>
 #include "android/sles_definitions.h"
 #include <SLES/OpenSLES_Android.h>
@@ -20,6 +21,8 @@
 #include <android/api-level.h>
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Cubeb_OpenSL" , ## args)
 #define ANDROID_VERSION_GINGERBREAD_MR1 10
+#define ANDROID_VERSION_LOLLIPOP 21
+#define ANDROID_VERSION_MARSHMALLOW 23
 #endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -182,7 +185,29 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
 
 static void opensl_destroy(cubeb * ctx);
 
-#if defined(__ANDROID__) && (__ANDROID_API__ <= ANDROID_VERSION_GINGERBREAD_MR1)
+#if defined(__ANDROID__)
+
+#if (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
+typedef int (system_property_get)(const char*, char*);
+
+static int
+__system_property_get(const char* name, char* value)
+{
+  void* libc = dlopen("libc.so", RTLD_LAZY);
+  if (!libc) {
+    LOG("Failed to open libc.so");
+    return -1;
+  }
+  system_property_get* func = (system_property_get*)
+                              dlsym(libc, "__system_property_get");
+  int ret = -1;
+  if (func) {
+    ret = func(name, value);
+  }
+  dlclose(libc);
+  return ret;
+}
+#endif
 
 static int
 get_android_version(void)
@@ -197,7 +222,9 @@ get_android_version(void)
     return len;
   }
 
-  return (int)strtol(version_string, NULL, 10);
+  int version = (int)strtol(version_string, NULL, 10);
+  LOG("%d", version);
+  return version;
 }
 #endif
 
@@ -206,7 +233,7 @@ opensl_init(cubeb ** context, char const * context_name)
 {
   cubeb * ctx;
 
-#if defined(__ANDROID__) && (__ANDROID_API__ <= ANDROID_VERSION_GINGERBREAD_MR1)
+#if defined(__ANDROID__)
   int android_version = get_android_version();
   if (android_version > 0 && android_version <= ANDROID_VERSION_GINGERBREAD_MR1) {
     // Don't even attempt to run on Gingerbread and lower
@@ -556,10 +583,26 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   const SLboolean req[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 #endif
   assert(NELEMS(ids) == NELEMS(req));
-  SLresult res = (*ctx->eng)->CreateAudioPlayer(ctx->eng, &stm->playerObj,
-                                                &source, &sink, NELEMS(ids), ids, req);
 
   uint32_t preferred_sampling_rate = stm->inputrate;
+#if defined(__ANDROID__)
+  if (get_android_version() >= ANDROID_VERSION_MARSHMALLOW) {
+    // Reset preferred samping rate to trigger fallback to native sampling rate.
+    preferred_sampling_rate = 0;
+    if (opensl_get_min_latency(ctx, *output_stream_params, &latency) != CUBEB_OK) {
+      // Default to AudioFlinger's advertised fast track latency of 10ms.
+      latency = 10;
+    }
+    stm->latency = latency;
+  }
+#endif
+
+  SLresult res = SL_RESULT_CONTENT_UNSUPPORTED;
+  if (preferred_sampling_rate) {
+    res = (*ctx->eng)->CreateAudioPlayer(ctx->eng, &stm->playerObj, &source,
+                                         &sink, NELEMS(ids), ids, req);
+  }
+
   // Sample rate not supported? Try again with primary sample rate!
   if (res == SL_RESULT_CONTENT_UNSUPPORTED) {
     if (opensl_get_preferred_sample_rate(ctx, &preferred_sampling_rate)) {
@@ -578,15 +621,18 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   }
 
   stm->outputrate = preferred_sampling_rate;
-  stm->bytespersec = preferred_sampling_rate * stm->framesize;
+  stm->bytespersec = stm->outputrate * stm->framesize;
   stm->queuebuf_len = (stm->bytespersec * latency) / (1000 * NBUFS);
   // round up to the next multiple of stm->framesize, if needed.
   if (stm->queuebuf_len % stm->framesize) {
     stm->queuebuf_len += stm->framesize - (stm->queuebuf_len % stm->framesize);
   }
 
-  stm->resampler = cubeb_resampler_create(stm, NULL, output_stream_params,
-                                          preferred_sampling_rate,
+  cubeb_stream_params params = *output_stream_params;
+  params.rate = preferred_sampling_rate;
+
+  stm->resampler = cubeb_resampler_create(stm, NULL, &params,
+                                          output_stream_params->rate,
                                           data_callback,
                                           user_ptr,
                                           CUBEB_RESAMPLER_QUALITY_DEFAULT);
