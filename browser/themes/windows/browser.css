@@ -1166,11 +1166,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
     .searchbar-textbox:not(:-moz-lwtheme)[focused] {
       box-shadow: 0 0 0 1px Highlight inset;
     }
-
-    /* overlap the urlbar's border and inset box-shadow */
-    #PopupAutoCompleteRichResult:not(:-moz-lwtheme) {
-      margin-top: -2px;
-    }
   }
 
   @media not all and (-moz-os-version: windows-xp) {
