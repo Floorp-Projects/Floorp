@@ -18,7 +18,7 @@ u2f.register("https://test1.example.com/appId", [{
   version: version,
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
-  local_is(res.errorCode, 0, "AppID should work from a subfolder of this domain");
+  local_is(res.errorCode, 0, "AppID should work from a different path of this domain");
   step2();
 });
 
@@ -28,7 +28,7 @@ function step2() {
     version: version,
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
-    local_isnot(res.errorCode, 0, "AppID should work from a subfolder of this domain");
+    local_isnot(res.errorCode, 0, "AppID should not work when using a different scheme");
     step3();
   });
 }
