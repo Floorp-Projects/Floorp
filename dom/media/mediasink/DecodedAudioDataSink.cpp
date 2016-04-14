@@ -317,6 +317,12 @@ DecodedAudioDataSink::NotifyAudioNeeded()
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn(),
              "Not called from the owner's thread");
 
+  if (AudioQueue().IsFinished() && !AudioQueue().GetSize()) {
+    // We have reached the end of the data, drain the resampler.
+    DrainConverter();
+    return;
+  }
+
   // Always ensure we have two processed frames pending to allow for processing
   // latency.
   while (AudioQueue().GetSize() && mProcessedQueue.GetSize() < 2) {
@@ -335,6 +341,8 @@ DecodedAudioDataSink::NotifyAudioNeeded()
                  mConverter? mConverter->InputConfig().Channels() : 0,
                  mConverter ? mConverter->InputConfig().Rate() : 0,
                  data->mChannels, data->mRate);
+
+      DrainConverter();
 
       // mFramesParsed indicates the current playtime in frames at the current
       // input sampling rate. Recalculate it per the new sampling rate.
@@ -382,15 +390,20 @@ DecodedAudioDataSink::NotifyAudioNeeded()
       // time.
       missingFrames = std::min<int64_t>(INT32_MAX, missingFrames.value());
       mFramesParsed += missingFrames.value();
-      AlignedAudioBuffer silenceData(missingFrames.value() * mOutputChannels);
-      if (!silenceData) {
-        NS_WARNING("OOM in DecodedAudioDataSink");
-        mErrored = true;
-        return;
-      }
-      RefPtr<AudioData> silence = CreateAudioFromBuffer(Move(silenceData), data);
-      if (silence) {
-        mProcessedQueue.Push(silence);
+      // We need to insert silence, first use drained frames if any.
+      missingFrames -= DrainConverter(missingFrames.value());
+      // Insert silence is still needed.
+      if (missingFrames.value()) {
+        AlignedAudioBuffer silenceData(missingFrames.value() * mOutputChannels);
+        if (!silenceData) {
+          NS_WARNING("OOM in DecodedAudioDataSink");
+          mErrored = true;
+          return;
+        }
+        RefPtr<AudioData> silence = CreateAudioFromBuffer(Move(silenceData), data);
+        if (silence) {
+          mProcessedQueue.Push(silence);
+        }
       }
     }
 
@@ -406,6 +419,7 @@ DecodedAudioDataSink::NotifyAudioNeeded()
       }
     }
     mProcessedQueue.Push(data);
+    mLastProcessedPacket = Some(data);
   }
 }
 
@@ -432,6 +446,39 @@ DecodedAudioDataSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
                   mOutputChannels,
                   mOutputRate);
   return data.forget();
+}
+
+uint32_t
+DecodedAudioDataSink::DrainConverter(uint32_t aMaxFrames)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+
+  if (!mConverter || !mLastProcessedPacket) {
+    // nothing to drain.
+    return 0;
+  }
+
+  RefPtr<AudioData> lastPacket = mLastProcessedPacket.ref();
+  mLastProcessedPacket.reset();
+
+  // To drain we simply provide an empty packet to the audio converter.
+  AlignedAudioBuffer convertedData =
+    mConverter->Process(AudioSampleBuffer(AlignedAudioBuffer())).Forget();
+
+  uint32_t frames = convertedData.Length() / mOutputChannels;
+  if (!convertedData.SetLength(std::min(frames, aMaxFrames) * mOutputChannels)) {
+    // This can never happen as we were reducing the length of convertData.
+    mErrored = true;
+    return 0;
+  }
+
+  RefPtr<AudioData> data =
+    CreateAudioFromBuffer(Move(convertedData), lastPacket);
+  if (!data) {
+    return 0;
+  }
+  mProcessedQueue.Push(data);
+  return data->mFrames;
 }
 
 } // namespace media
