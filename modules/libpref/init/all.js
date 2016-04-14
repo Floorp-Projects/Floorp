@@ -2587,7 +2587,6 @@ pref("editor.positioning.offset",            0);
 
 pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
-pref("dom.max_child_script_run_time", 10);
 pref("dom.max_script_run_time", 10);
 
 // If true, ArchiveReader will be enabled
