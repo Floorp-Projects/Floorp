@@ -196,7 +196,6 @@ if test -n "$gonkdir" ; then
     AC_SUBST(ANDROID_VERSION)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
-    MOZ_CHROME_FILE_FORMAT=omni
     direct_nspr_config=1
     android_cxx_stl=mozstlport
 else
@@ -206,7 +205,6 @@ else
 
     case "$target" in
     *-android*|*-linuxandroid*)
-        MOZ_CHROME_FILE_FORMAT=omni
         ZLIB_DIR=yes
         AC_DEFINE(ANDROID)
         ;;
@@ -6224,62 +6222,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
 
-dnl =========================================================
-dnl = Chrome format
-dnl =========================================================
-MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|omni
-                          Select FORMAT of chrome files during packaging],
-    MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
-
-if test -z "$MOZ_CHROME_FILE_FORMAT"; then
-    MOZ_CHROME_FILE_FORMAT=jar
-fi
-
-if test "$MOZ_CHROME_FILE_FORMAT" = "symlink"; then
-    AC_MSG_ERROR([--enable-chrome-format=symlink has been deprecated. It is now used by default in $DIST/bin on platforms that support it])
-fi
-
-if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
-fi
-
-dnl =========================================================
-dnl Omnijar packaging (bug 552121)
-dnl =========================================================
-dnl Omnijar packaging is compatible with flat packaging.
-dnl In unpackaged builds, omnijar looks for files as if
-dnl things were flat packaged. After packaging, all files
-dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
-dnl is set to flat since putting files into jars is only
-dnl done during packaging with omnijar.
-MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
-if test "$OS_ARCH" = "WINNT"; then
-    MOZ_CHROME_FILE_FORMAT=flat
-else
-    MOZ_CHROME_FILE_FORMAT=symlink
-fi
-
-if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
-    dnl Fennec's static resources live in the assets/ folder of the
-    dnl APK.  Adding a path to the name here works because we only
-    dnl have one omnijar file in the final package (which is not the
-    dnl case on desktop), and necessitates some contortions during
-    dnl packaging so that the resources in the omnijar are considered
-    dnl as rooted at / and not as rooted at assets/ (which again is
-    dnl not the case on desktop: there are omnijars rooted at webrtc/,
-    dnl etc). packager.mk handles changing the rooting of the single
-    dnl omnijar.
-    OMNIJAR_NAME=assets/omni.ja
-else
-    OMNIJAR_NAME=omni.ja
-fi
-
-AC_SUBST(OMNIJAR_NAME)
-AC_SUBST(MOZ_PACKAGER_FORMAT)
-
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
@@ -7325,8 +7267,6 @@ AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 AC_SUBST(HAVE_X86_AVX2)
 AC_SUBST(GCC_USE_GNU_LD)
-
-AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 
 AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
