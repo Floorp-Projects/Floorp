@@ -115,8 +115,11 @@ class MachCommands(MachCommandBase):
             file_displayed_test = []  # Used as a boolean.
 
             def _line_handler(line):
-                if not file_displayed_test and line.startswith('TEST-'):
-                    file_displayed_test.append(True)
+                if not file_displayed_test:
+                    output = ('Ran' in line or 'collected' in line or
+                              line.startswith('TEST-'))
+                    if output:
+                        file_displayed_test.append(True)
 
             inner_return_code = self.run_process(
                 [self.virtualenv_manager.python_path, f],
