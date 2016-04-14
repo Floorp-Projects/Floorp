@@ -10723,6 +10723,7 @@ CodeGenerator::visitIsCallable(LIsCallable* ins)
     masm.jump(&done);
 
     masm.bind(&hasCOps);
+    masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
     masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, call)),
                    ImmPtr(nullptr), output);
 
@@ -10801,6 +10802,7 @@ CodeGenerator::visitIsConstructor(LIsConstructor* ins)
     masm.jump(&done);
 
     masm.bind(&hasCOps);
+    masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
     masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, construct)),
                    ImmPtr(nullptr), output);
 
