@@ -386,8 +386,14 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
     if (!r) {
       PortMapping *port_mapping_used;
       ingress_allowed = allow_ingress(*from, &port_mapping_used);
-      if (ingress_allowed && nat_->refresh_on_ingress_ && port_mapping_used) {
-        port_mapping_used->last_used_ = PR_IntervalNow();
+      if (ingress_allowed) {
+        r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s received from %s via %s",
+              internal_socket_->my_addr().as_string,
+              from->as_string,
+              port_mapping_used->external_socket_->my_addr().as_string);
+        if (nat_->refresh_on_ingress_) {
+          port_mapping_used->last_used_ = PR_IntervalNow();
+        }
       }
     }
   } else {
@@ -402,9 +408,13 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
                          nat_->is_an_internal_tuple(*from));
       if (!ingress_allowed) {
         r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s denying ingress from %s: "
-                                     "Not behind the same NAT",
-                                     internal_socket_->my_addr().as_string,
-                                     from->as_string);
+              "Not behind the same NAT",
+              internal_socket_->my_addr().as_string,
+              from->as_string);
+      } else {
+        r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s received from %s",
+              internal_socket_->my_addr().as_string,
+              from->as_string);
       }
     }
   }
@@ -425,12 +435,9 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
 
 bool TestNrSocket::allow_ingress(const nr_transport_addr &from,
                                  PortMapping **port_mapping_used) const {
-  *port_mapping_used = nullptr;
-  if (!nat_->enabled_)
-    return true;
-
-  if (nat_->is_an_internal_tuple(from))
-    return true;
+  // This is only called for traffic arriving at a port mapping
+  MOZ_ASSERT(nat_->enabled_);
+  MOZ_ASSERT(!nat_->is_an_internal_tuple(from));
 
   *port_mapping_used = get_port_mapping(from, nat_->filtering_type_);
   if (!(*port_mapping_used)) {
