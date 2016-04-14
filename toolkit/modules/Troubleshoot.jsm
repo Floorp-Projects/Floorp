@@ -243,7 +243,11 @@ var dataProviders = {
       extensions.sort(function (a, b) {
         if (a.isActive != b.isActive)
           return b.isActive ? 1 : -1;
-        let lc = a.name.localeCompare(b.name);
+
+        // In some unfortunate cases addon names can be null.
+        let aname = a.name || null;
+        let bname = b.name || null;
+        let lc = aname.localeCompare(bname);
         if (lc != 0)
           return lc;
         if (a.version != b.version)
