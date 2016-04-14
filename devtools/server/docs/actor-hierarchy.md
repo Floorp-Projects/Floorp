@@ -60,6 +60,11 @@ and returns its `actorID`. That's the main role of RootActor.
    |   Returned by "listWorkers" request to a ChildProcessActor to get workers
    |   for the chrome of the child process.
    |
+   |-- WindowActor (window.js)
+   |   Targets a single window, such as a browser window in Firefox, but it can
+   |   be used to reach any window in the parent process.
+   |   Returned by "getWindow" request to the root actor.
+   |
    |-- ChromeActor (chrome.js)
    |   Targets all resources in the parent process of firefox
    |   (chrome documents, JSM, JS XPCOM, etc.).
