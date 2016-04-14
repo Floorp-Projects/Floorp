@@ -66,6 +66,7 @@ set_define('MOZ_DMD', dmd)
 add_old_configure_assignment('MOZ_DMD', dmd)
 imply_option('--enable-profiling', dmd)
 imply_option('--enable-jemalloc', dmd)
+imply_option('--enable-replace-malloc', dmd)
 
 # Javascript engine
 # ==============================================================
