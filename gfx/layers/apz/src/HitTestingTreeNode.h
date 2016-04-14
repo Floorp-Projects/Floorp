@@ -92,7 +92,10 @@ public:
 
   /* Scrollbar info */
 
-  void SetScrollbarData(FrameMetrics::ViewID aScrollViewId, Layer::ScrollDirection aDir, int32_t aScrollSize);
+  void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
+                        Layer::ScrollDirection aDir,
+                        int32_t aScrollSize,
+                        bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   int32_t GetScrollSize() const;
   bool IsScrollbarNode() const;
@@ -124,6 +127,7 @@ private:
   FrameMetrics::ViewID mScrollViewId;
   Layer::ScrollDirection mScrollDir;
   int32_t mScrollSize;
+  bool mIsScrollbarContainer;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

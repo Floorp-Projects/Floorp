@@ -367,7 +367,8 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
         GetEventRegionsOverride(aParent, aLayer));
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarDirection(),
-                           aLayer.GetScrollbarSize());
+                           aLayer.GetScrollbarSize(),
+                           aLayer.IsScrollbarContainer());
     return node;
   }
 
@@ -546,7 +547,8 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
 
   node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                          aLayer.GetScrollbarDirection(),
-                         aLayer.GetScrollbarSize());
+                         aLayer.GetScrollbarSize(),
+                         aLayer.IsScrollbarContainer());
   return node;
 }
 
