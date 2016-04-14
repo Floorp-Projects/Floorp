@@ -7993,6 +7993,50 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id)
 }
 
 bool
+IonBuilder::testNotDefinedProperty(MDefinition* obj, jsid id)
+{
+    TemporaryTypeSet* types = obj->resultTypeSet();
+    if (!types || types->unknownObject() || types->getKnownMIRType() != MIRType_Object)
+        return false;
+
+    for (unsigned i = 0, count = types->getObjectCount(); i < count; i++) {
+        TypeSet::ObjectKey* key = types->getObject(i);
+        if (!key)
+            continue;
+
+        while (true) {
+            if (!key->hasStableClassAndProto(constraints()) || key->unknownProperties())
+                return false;
+
+            const Class* clasp = key->clasp();
+            if (!ClassHasEffectlessLookup(clasp) || ObjectHasExtraOwnProperty(compartment, key, id))
+                return false;
+
+            // If the object is a singleton, we can do a lookup now to avoid
+            // unnecessary invalidations later on, in case the property types
+            // have not yet been instantiated.
+            if (key->isSingleton() &&
+                key->singleton()->is<NativeObject>() &&
+                key->singleton()->as<NativeObject>().lookupPure(id))
+            {
+                return false;
+            }
+
+            HeapTypeSetKey property = key->property(id);
+            if (property.isOwnProperty(constraints()))
+                return false;
+
+            JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
+            if (!proto)
+                break;
+            key = TypeSet::ObjectKey::get(proto);
+        }
+    }
+
+    return true;
+}
+
+bool
 IonBuilder::pushTypeBarrier(MDefinition* def, TemporaryTypeSet* observed, BarrierKind kind)
 {
     MOZ_ASSERT(def == current->peek(-1));
@@ -9014,6 +9058,13 @@ IonBuilder::getElemTryGetProp(bool* emitted, MDefinition* obj, MDefinition* inde
 
     trackOptimizationAttempt(TrackedStrategy::GetProp_Constant);
     if (!getPropTryConstant(emitted, obj, id, types) || *emitted) {
+        if (*emitted)
+            index->setImplicitlyUsedUnchecked();
+        return *emitted;
+    }
+
+    trackOptimizationAttempt(TrackedStrategy::GetProp_NotDefined);
+    if (!getPropTryNotDefined(emitted, obj, id, types) || *emitted) {
         if (*emitted)
             index->setImplicitlyUsedUnchecked();
         return *emitted;
@@ -11094,6 +11145,11 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (!getPropTryConstant(&emitted, obj, NameToId(name), types) || emitted)
             return emitted;
 
+        // Try to hardcode known not-defined
+        trackOptimizationAttempt(TrackedStrategy::GetProp_NotDefined);
+        if (!getPropTryNotDefined(&emitted, obj, NameToId(name), types) || emitted)
+            return emitted;
+
         // Try to emit loads from known binary data blocks
         trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
         if (!getPropTryTypedObject(&emitted, obj, name) || emitted)
@@ -11329,6 +11385,30 @@ IonBuilder::getPropTryConstant(bool* emitted, MDefinition* obj, jsid id, Tempora
     obj->setImplicitlyUsedUnchecked();
 
     pushConstant(ObjectValue(*singleton));
+
+    trackOptimizationSuccess();
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getPropTryNotDefined(bool* emitted, MDefinition* obj, jsid id, TemporaryTypeSet* types)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    if (!types->mightBeMIRType(MIRType_Undefined)) {
+        // Only optimize if we expect this property access to return undefined.
+        trackOptimizationOutcome(TrackedOutcome::NotUndefined);
+        return true;
+    }
+
+    if (!testNotDefinedProperty(obj, id)) {
+        trackOptimizationOutcome(TrackedOutcome::GenericFailure);
+        return true;
+    }
+
+    obj->setImplicitlyUsedUnchecked();
+    pushConstant(UndefinedValue());
 
     trackOptimizationSuccess();
     *emitted = true;
@@ -13441,43 +13521,8 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
     if (propId != IdToTypeId(propId))
         return true;
 
-    TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject() || types->getKnownMIRType() != MIRType_Object)
+    if (!testNotDefinedProperty(obj, propId))
         return true;
-
-    for (unsigned i = 0, count = types->getObjectCount(); i < count; i++) {
-        TypeSet::ObjectKey* key = types->getObject(i);
-        if (!key)
-            continue;
-
-        while (true) {
-            if (!key->hasStableClassAndProto(constraints()) || key->unknownProperties())
-                return true;
-
-            const Class* clasp = key->clasp();
-            if (!ClassHasEffectlessLookup(clasp) || ObjectHasExtraOwnProperty(compartment, key, propId))
-                return true;
-
-            // If the object is a singleton, we can do a lookup now to avoid
-            // unnecessary invalidations later on, in case the property types
-            // have not yet been instantiated.
-            if (key->isSingleton() &&
-                key->singleton()->is<NativeObject>() &&
-                key->singleton()->as<NativeObject>().lookupPure(propId))
-            {
-                return true;
-            }
-
-            HeapTypeSetKey property = key->property(propId);
-            if (property.isOwnProperty(constraints()))
-                return true;
-
-            JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
-            if (!proto)
-                break;
-            key = TypeSet::ObjectKey::get(proto);
-        }
-    }
 
     *emitted = true;
 
