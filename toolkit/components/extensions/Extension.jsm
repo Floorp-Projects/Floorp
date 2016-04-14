@@ -1164,7 +1164,13 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     }
     this.whiteListedHosts = new MatchPattern(whitelist);
 
-    this.webAccessibleResources = new MatchGlobs(manifest.web_accessible_resources || []);
+    // Strip leading slashes from web_accessible_resources.
+    let strippedWebAccessibleResources = [];
+    if (manifest.web_accessible_resources) {
+      strippedWebAccessibleResources = manifest.web_accessible_resources.map(path => path.replace(/^\/+/, ""));
+    }
+
+    this.webAccessibleResources = new MatchGlobs(strippedWebAccessibleResources);
 
     for (let directive in manifest) {
       if (manifest[directive] !== null) {
