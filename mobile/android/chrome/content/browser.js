@@ -4086,9 +4086,15 @@ Tab.prototype = {
         break;
       }
 
-      case "DOMAudioPlaybackStarted":
-      case "DOMAudioPlaybackStopped":
       case "TabPreZombify": {
+        if (!this.playingAudio) {
+          return;
+        }
+        // Fall through to the DOMAudioPlayback events, so the
+        // audio playback indicator gets reset upon zombification.
+      }
+      case "DOMAudioPlaybackStarted":
+      case "DOMAudioPlaybackStopped": {
         if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
             !aEvent.isTrusted) {
           return;
