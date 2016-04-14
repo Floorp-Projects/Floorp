@@ -2309,6 +2309,9 @@ js::str_replace_string_raw(JSContext* cx, HandleString string, HandleString patt
         return nullptr;
 
     RootedAtom pat(cx, AtomizeString(cx, pattern));
+    if (!pat)
+        return nullptr;
+
     size_t patternLength = pat->length();
     int32_t match;
     uint32_t dollarIndex;
