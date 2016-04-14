@@ -95,6 +95,7 @@ hardware (via AudioStream).
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"
+#include "SeekTask.h"
 
 namespace mozilla {
 
@@ -513,53 +514,6 @@ protected:
   void EnqueueLoadedMetadataEvent();
 
   void EnqueueFirstFrameLoadedEvent();
-
-  struct SeekJob {
-    SeekJob() {}
-
-    SeekJob(SeekJob&& aOther) : mTarget(aOther.mTarget)
-    {
-      aOther.mTarget.Reset();
-      mPromise = Move(aOther.mPromise);
-    }
-
-    SeekJob& operator=(SeekJob&& aOther)
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!Exists());
-      mTarget = aOther.mTarget;
-      aOther.mTarget.Reset();
-      mPromise = Move(aOther.mPromise);
-      return *this;
-    }
-
-    bool Exists()
-    {
-      MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
-      return mTarget.IsValid();
-    }
-
-    void Resolve(bool aAtEnd, const char* aCallSite)
-    {
-      mTarget.Reset();
-      MediaDecoder::SeekResolveValue val(aAtEnd, mTarget.mEventVisibility);
-      mPromise.Resolve(val, aCallSite);
-    }
-
-    void RejectIfExists(const char* aCallSite)
-    {
-      mTarget.Reset();
-      mPromise.RejectIfExists(true, aCallSite);
-    }
-
-    ~SeekJob()
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!mTarget.IsValid());
-      MOZ_DIAGNOSTIC_ASSERT(mPromise.IsEmpty());
-    }
-
-    SeekTarget mTarget;
-    MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
-  };
 
   // Clears any previous seeking state and initiates a new see on the decoder.
   // The decoder monitor must be held.
