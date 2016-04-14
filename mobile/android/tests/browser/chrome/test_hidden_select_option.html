@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1178722
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1178722</title>
+    <style>
+        .hideme {display:none}
+    </style>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+    <script type="application/javascript" src="head.js"></script>
+    <script type="application/javascript;version=1.7">
+    "use strict";
+
+    const VISIBLE_OPTION_COUNT = 5;
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let SelectHelper = win.SelectHelper;
+
+    // Returns whether an element should be visible according to its text content.
+    function shouldBeVisible(e){
+      return e.label.indexOf("visible") > 0;
+    }
+
+    // Returns an object for the callback method that would normally be created by Prompt.java's
+    // addListResult(..) method.
+    function createCallBackDummyData(select){
+      var dummyList = new Array();
+      let listElements = SelectHelper.getListForElement(select);
+      for (var i = 0; i < listElements.length; i++) {
+        dummyList.push(i);
+      }
+      return {list:dummyList};
+    }
+
+    // Wait until the page has loaded so that we can access the DOM.
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function () {
+      let select = document.getElementById("sample-select");
+
+      // ##############################################
+      // ### Testing SelectHelper.getListForElement ###
+      // ##############################################
+
+      // Check that SelectHelper.getListForElement only includes visible options...
+      let listElements = SelectHelper.getListForElement(select);
+      for (var i = 0; i < listElements.length; i++) {
+        ok(shouldBeVisible(listElements[i]), "Element should be visible: " + listElements[i]);
+      }
+
+      // Check SelectHelper.getListForElement does not include additional options...
+      is(listElements.length, VISIBLE_OPTION_COUNT, "Correct number of elements were returned.");
+
+      // ############################################
+      // ### Testing SelectHelper._promptCallBack ###
+      // ############################################
+
+      // We will simulate "selecting" (ie choosing via the prompt) all the visible options...
+      is(select.selectedOptions.length, 0, "No options selected yet.");
+      let dummyData = createCallBackDummyData(select);
+      SelectHelper._promptCallBack(dummyData,select);
+
+      // Check that only the visible options had the "selected" attribute set...
+      let selectedOptions = select.selectedOptions;
+      for (var i = 0; i < selectedOptions.length; i++) {
+        ok(shouldBeVisible(selectedOptions[i]), "Element should be visible.");
+      }
+
+      // Check that no additional options had the "selected" attribute set...
+      is(selectedOptions.length, VISIBLE_OPTION_COUNT, "Correct number of options were selected.");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+
+<p id="display">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1178722">Mozilla Bug 1178722</a>
+    <select multiple id="sample-select">
+        <option value="1">1 - visible</option> 0
+        <option value="2" style="display: none">2 - hidden</option> 1
+        <option value="3">3 - visible</option> 2
+        <option value="4" style="display: nOnE">4 - hidden </option> 3
+        <option value="5">5 - visible</option> 4
+        <option value="6" class="hideme">6 - hidden</option> 5
+        <option value="7">7 - visible</option> 6
+        <option value="8" hiddEn>8 - hidden</option> 7
+        <option value="9">9 - visible</option> 8
+    </select>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

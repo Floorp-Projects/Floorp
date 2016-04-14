@@ -6,29 +6,60 @@
 var SelectHelper = {
   _uiBusy: false,
 
-  handleEvent: function(aEvent) {
-    this.handleClick(aEvent.target);
+  handleEvent: function(event) {
+    this.handleClick(event.target);
   },
 
-  handleClick: function(aTarget) {
+  handleClick: function(target) {
     // if we're busy looking at a select we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this._isMenu(aTarget) || this._isDisabledElement(aTarget))
-        return;
+    if (this._uiBusy || !this._isMenu(target) || this._isDisabledElement(target)) {
+      return;
+    }
 
     this._uiBusy = true;
-    this.show(aTarget);
+    this.show(target);
     this._uiBusy = false;
   },
 
-  show: function(aElement) {
-    let list = this.getListForElement(aElement);
+  // This is a callback function to be provided to prompt.show(callBack).
+  // It will update which Option elements in a Select have been selected
+  // or unselected and fire the onChange event.
+  _promptCallBack: function(data, element) {
+    let selected = data.list;
 
+    if (element instanceof Ci.nsIDOMXULMenuListElement) {
+      if (element.selectedIndex != selected[0]) {
+        element.selectedIndex = selected[0];
+        this.fireOnCommand(element);
+      }
+    } else if (element instanceof HTMLSelectElement) {
+      let changed = false;
+      let i = 0; // The index for the element from `data.list` that we are currently examining.
+      this.forVisibleOptions(element, function(node) {
+        if (node.selected && selected.indexOf(i) == -1) {
+          changed = true;
+          node.selected = false;
+        } else if (!node.selected && selected.indexOf(i) != -1) {
+          changed = true;
+          node.selected = true;
+        }
+        i++;
+      });
+
+      if (changed) {
+        this.fireOnChange(element);
+      }
+    }
+  },
+
+  show: function(element) {
+    let list = this.getListForElement(element);
     let p = new Prompt({
-      window: aElement.contentDocument
+      window: element.contentDocument
     });
 
-    if (aElement.multiple) {
+    if (element.multiple) {
       p.addButton({
         label: Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog")
       }).setMultiChoiceItems(list);
@@ -36,121 +67,92 @@ var SelectHelper = {
       p.setSingleChoiceItems(list);
     }
 
-    p.show((function(data) {
-      let selected = data.list;
-
-      if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
-        if (aElement.selectedIndex != selected[0]) {
-          aElement.selectedIndex = selected[0];
-          this.fireOnCommand(aElement);
-        }
-      } else if (aElement instanceof HTMLSelectElement) {
-        let changed = false;
-        let i = 0;
-        this.forOptions(aElement, function(aNode) {
-          if (aNode.selected && selected.indexOf(i) == -1) {
-            changed = true;
-            aNode.selected = false;
-          } else if (!aNode.selected && selected.indexOf(i) != -1) {
-            changed = true;
-            aNode.selected = true;
-          }
-          if (SelectHelper._isListItemVisible(aNode)) {
-            i++;
-          }
-        });
-
-        if (changed)
-          this.fireOnChange(aElement);
-      }
-    }).bind(this));
+    p.show((data) => {
+      this._promptCallBack(data,element)
+    });
   },
 
-
-  _isListItemVisible: function(aNode){
-    return (aNode.style.display !== "none");
+  _isMenu: function(element) {
+    return (element instanceof HTMLSelectElement || element instanceof Ci.nsIDOMXULMenuListElement);
   },
 
-  _isMenu: function(aElement) {
-    return (aElement instanceof HTMLSelectElement ||
-            aElement instanceof Ci.nsIDOMXULMenuListElement);
-  },
-
-  getListForElement: function(aElement) {
+  // Return a list of Option elements within a Select excluding
+  // any that were not visible.
+  getListForElement: function(element) {
     let index = 0;
     let items = [];
-    this.forOptions(aElement, function(aNode, aOptions, aParent) {
-      if (SelectHelper._isListItemVisible(aNode)) {
-        let item = {
-          label: aNode.text || aNode.label,
-          header: aOptions.isGroup,
-          disabled: aNode.disabled,
-          id: index,
-          selected: aNode.selected,
-          visible: (aNode.style.display!=="none")
-        };
+    this.forVisibleOptions(element, function(node, options,parent) {
+      let item = {
+        label: node.text || node.label,
+        header: options.isGroup,
+        disabled: node.disabled,
+        id: index,
+        selected: node.selected,
+      };
 
-        if (aParent) {
-          item.child = true;
-          item.disabled = item.disabled || aParent.disabled;
-        }
-        items.push(item);
+      if (parent) {
+        item.child = true;
+        item.disabled = item.disabled || parent.disabled;
       }
+      items.push(item);
       index++;
     });
     return items;
   },
 
-  forOptions: function(aElement, aFunction, aParent = null) {
-    let element = aElement;
-    if (aElement instanceof Ci.nsIDOMXULMenuListElement)
-      element = aElement.menupopup;
+  // Apply a function to all visible Option elements in a Select
+  forVisibleOptions: function(element, aFunction, parent = null) {
+    if (element instanceof Ci.nsIDOMXULMenuListElement) {
+      element = element.menupopup;
+    }
     let children = element.children;
     let numChildren = children.length;
 
+
     // if there are no children in this select, we add a dummy row so that at least something appears
-    if (numChildren == 0)
-      aFunction.call(this, { label: "" }, { isGroup: false }, aParent);
+    if (numChildren == 0) {
+      aFunction.call(this, {label: ""}, {isGroup: false}, parent);
+    }
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      if (child instanceof HTMLOptionElement ||
-          child instanceof Ci.nsIDOMXULSelectControlItemElement) {
-        aFunction.call(this, child, { isGroup: false }, aParent);
-      } else if (child instanceof HTMLOptGroupElement) {
-        aFunction.call(this, child, { isGroup: true });
-        this.forOptions(child, aFunction, child);
-
+      let style = window.getComputedStyle(child, null);
+      if (style.display !== "none") {
+        if (child instanceof HTMLOptionElement ||
+            child instanceof Ci.nsIDOMXULSelectControlItemElement) {
+          aFunction.call(this, child, {isGroup: false}, parent);
+        } else if (child instanceof HTMLOptGroupElement) {
+          aFunction.call(this, child, {isGroup: true});
+          this.forVisibleOptions(child, aFunction, child);
+        }
       }
     }
   },
 
-  fireOnChange: function(aElement) {
-    let evt = aElement.ownerDocument.createEvent("Events");
-    evt.initEvent("change", true, true, aElement.defaultView, 0,
-                  false, false,
-                  false, false, null);
+  fireOnChange: function(element) {
+    let event = element.ownerDocument.createEvent("Events");
+    event.initEvent("change", true, true, element.defaultView, 0,
+        false, false, false, false, null);
     setTimeout(function() {
-      aElement.dispatchEvent(evt);
+      element.dispatchEvent(event);
     }, 0);
   },
 
-  fireOnCommand: function(aElement) {
-    let evt = aElement.ownerDocument.createEvent("XULCommandEvent");
-    evt.initCommandEvent("command", true, true, aElement.defaultView, 0,
-                  false, false,
-                  false, false, null);
+  fireOnCommand: function(element) {
+    let event = element.ownerDocument.createEvent("XULCommandEvent");
+    event.initCommandEvent("command", true, true, element.defaultView, 0,
+        false, false, false, false, null);
     setTimeout(function() {
-      aElement.dispatchEvent(evt);
+      element.dispatchEvent(event);
     }, 0);
   },
 
-  _isDisabledElement : function(aElement) {
-    let currentElement = aElement;
+  _isDisabledElement : function(element) {
+    let currentElement = element;
     while (currentElement) {
-      if (currentElement.disabled)
-	return true;
-
+      if (currentElement.disabled) {
+        return true;
+      }
       currentElement = currentElement.parentElement;
     }
     return false;
