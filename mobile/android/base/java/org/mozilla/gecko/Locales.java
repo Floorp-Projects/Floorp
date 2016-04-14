@@ -14,6 +14,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 
 /**
  * This is a helper class to do typical locale switching operations without
@@ -47,6 +48,14 @@ public class Locales {
         }
     }
 
+    public static class LocaleAwareAppCompatActivity extends AppCompatActivity {
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            Locales.initializeLocale(getApplicationContext());
+            super.onCreate(savedInstanceState);
+        }
+
+    }
     public static class LocaleAwareFragmentActivity extends FragmentActivity {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
