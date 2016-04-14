@@ -99,6 +99,11 @@ GetBitmapForSurface(SourceSurface* aSurface)
 {
   SkBitmap bitmap;
 
+  if (!aSurface) {
+    gfxDebug() << "Creating empty Skia bitmap from null SourceSurface";
+    return bitmap;
+  }
+
   if (aSurface->GetType() == SurfaceType::SKIA) {
     bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
     return bitmap;
