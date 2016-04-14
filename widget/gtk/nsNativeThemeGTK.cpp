@@ -188,7 +188,7 @@ static bool ShouldScrollbarButtonBeDisabled(int32_t aCurpos, int32_t aMaxpos,
 
 bool
 nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
-                                       GtkThemeWidgetType& aGtkWidgetType,
+                                       WidgetNodeType& aGtkWidgetType,
                                        GtkWidgetState* aState,
                                        gint* aWidgetFlags)
 {
@@ -710,7 +710,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
 #if (MOZ_WIDGET_GTK == 2)
 class ThemeRenderer : public gfxGdkNativeRenderer {
 public:
-  ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
+  ThemeRenderer(GtkWidgetState aState, WidgetNodeType aGTKWidgetType,
                 gint aFlags, GtkTextDirection aDirection,
                 const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
@@ -719,7 +719,7 @@ public:
                        GdkRectangle * clipRects, uint32_t numClipRects);
 private:
   GtkWidgetState mState;
-  GtkThemeWidgetType mGTKWidgetType;
+  WidgetNodeType mGTKWidgetType;
   gint mFlags;
   GtkTextDirection mDirection;
   const GdkRectangle& mGDKRect;
@@ -832,7 +832,7 @@ private:
 
 static void
 DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
-                   GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
+                   GtkWidgetState aState, WidgetNodeType aGTKWidgetType,
                    gint aFlags, GtkTextDirection aDirection, gint aScaleFactor,
                    bool aSnapped, const Point& aDrawOrigin, const nsIntSize& aDrawSize,
                    GdkRectangle& aGDKRect, nsITheme::Transparency aTransparency)
@@ -1089,7 +1089,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
                                        const nsRect& aDirtyRect)
 {
   GtkWidgetState state;
-  GtkThemeWidgetType gtkWidgetType;
+  WidgetNodeType gtkWidgetType;
   GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
@@ -1266,7 +1266,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     break;
   case NS_THEME_TAB:
     {
-      GtkThemeWidgetType gtkWidgetType;
+      WidgetNodeType gtkWidgetType;
       gint flags;
 
       if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
@@ -1289,7 +1289,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     MOZ_FALLTHROUGH;
   default:
     {
-      GtkThemeWidgetType gtkWidgetType;
+      WidgetNodeType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
                                nullptr)) {
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
@@ -1341,7 +1341,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
           return false;
 
         aResult->SizeTo(0, 0, 0, 0);
-        GtkThemeWidgetType gtkWidgetType;
+        WidgetNodeType gtkWidgetType;
         if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
                                  nullptr)) {
           moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
