@@ -98,6 +98,16 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+void
+nsTextFrame::DrawPathCallbacks::NotifySelectionBackgroundNeedsFill(
+                                                    const Rect& aBackgroundRect,
+                                                    nscolor aColor,
+                                                    DrawTarget& aDrawTarget)
+{
+  ColorPattern color(ToDeviceColor(aColor));
+  aDrawTarget.FillRect(aBackgroundRect, color);
+}
+
 struct TabWidth {
   TabWidth(uint32_t aOffset, uint32_t aWidth)
     : mOffset(aOffset), mWidth(float(aWidth))
@@ -5883,7 +5893,6 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   }
 
   aParams.context->Save();
-  aParams.context->NewPath();
   aParams.context->SetColor(Color::FromABGR(shadowColor));
 
   // Draw the text onto our alpha-only surface to capture the alpha values.
@@ -6038,7 +6047,7 @@ nsTextFrame::PaintTextWithSelectionColors(
     // or from the ::-moz-selection pseudo-class if specified there
     nsCSSShadowArray* shadow = textStyle->GetTextShadow();
     GetSelectionTextShadow(this, type, *aParams.textPaintStyle, &shadow);
-    if (shadow) {
+    if (shadow && !aParams.callbacks) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
         startEdge -= hyphenWidth +
@@ -6442,6 +6451,39 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   }
 }
 
+static bool
+ShouldDrawSelection(const nsIFrame* aFrame,
+                    const nsTextFrame::PaintTextParams& aParams)
+{
+  // Normal text-with-selection rendering sequence is:
+  //   * Paint background > Paint text-selection-color > Paint text
+  // When we have an parent frame with background-clip-text style, rendering
+  // sequence changes to:
+  //   * Paint text-selection-color > Paint background > Paint text
+  //
+  // If there is a parent frame has background-clip:text style,
+  // text-selection-color should be drawn with the background of that parent
+  // frame, so we should not draw it again while painting text frames.
+  //
+  // "aParams.callbacks != nullptr": it means we are currently painting
+  // background. We should paint text-selection-color.
+  // "aParams.callbacks == nullptr": it means we are currently painting text
+  // frame itself. We should not paint text-selection-color.
+  if (!aFrame || aParams.callbacks) {
+    return true;
+  }
+
+  const nsStyleBackground* bg = aFrame->StyleContext()->StyleBackground();
+  const nsStyleImageLayers& layers = bg->mImage;
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
+    if (layers.mLayers[i].mClip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+      return false;
+    }
+  }
+
+  return ShouldDrawSelection(aFrame->GetParent(), aParams);
+}
+
 void
 nsTextFrame::PaintText(const PaintTextParams& aParams,
                        const nsCharClipDisplayItem& aItem,
@@ -6505,7 +6547,8 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   textPaintStyle.SetResolveColors(!aParams.callbacks);
 
   // Fork off to the (slower) paint-with-selection path if necessary.
-  if (aItem.mIsFrameSelected.value()) {
+  if (aItem.mIsFrameSelected.value() &&
+      ShouldDrawSelection(this->GetParent(), aParams)) {
     MOZ_ASSERT(aOpacity == 1.0f, "We don't support opacity with selections!");
     gfxSkipCharsIterator tmp(provider.GetStart());
     Range contentRange(
