@@ -121,7 +121,7 @@ void Fake_AudioStreamSource::Periodic() {
   segment.AppendFrames(samples.forget(),
                        channels,
                        AUDIO_BUFFER_SIZE,
-                       mozilla::PRINCIPAL_HANDLE_NONE);
+                       PRINCIPAL_HANDLE_NONE);
 
   for(std::set<RefPtr<Fake_MediaStreamListener>>::iterator it = mListeners.begin();
        it != mListeners.end(); ++it) {
