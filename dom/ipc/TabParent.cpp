@@ -3244,6 +3244,20 @@ TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
   }
 }
 
+bool
+TabParent::RecvGetTabCount(uint32_t* aValue)
+{
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  NS_ENSURE_TRUE(xulBrowserWindow, false);
+
+  uint32_t tabCount;
+  nsresult rv = xulBrowserWindow->GetTabCount(&tabCount);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  *aValue = tabCount;
+  return true;
+}
+
 NS_IMETHODIMP
 FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
 {

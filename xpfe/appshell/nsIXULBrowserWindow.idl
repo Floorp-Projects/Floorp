@@ -67,5 +67,10 @@ interface nsIXULBrowserWindow : nsISupports
    */
   void showTooltip(in long x, in long y, in AString tooltip, in AString direction);
   void hideTooltip();
+
+  /**
+   * Return the number of tabs in this window.
+   */
+  uint32_t getTabCount();
 };
 
