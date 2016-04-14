@@ -4,12 +4,12 @@
 
 "use strict";
 
-// Test that adding nodes does work as expected: the parent gets expanded and
-// the new node gets selected.
+// Test that adding nodes does work as expected: the parent gets expanded, the
+// new node gets selected and the corresponding markup-container focused.
 
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 
-add_task(function*() {
+add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Adding in element that has no children and is collapsed");
@@ -37,13 +37,14 @@ add_task(function*() {
 
 function* testAddNode(parentNode, inspector) {
   let btn = inspector.panelDoc.querySelector("#inspector-element-add-button");
+  let markupWindow = inspector.markup.win;
 
-  info("Clicking on the 'add node' button and expecting a markup mutation");
+  info("Clicking 'add node' and expecting a markup mutation and focus event");
   let onMutation = inspector.once("markupmutation");
   btn.click();
   let mutations = yield onMutation;
 
-  info("Expecting an inspector-updated event right after the mutation event "+
+  info("Expecting an inspector-updated event right after the mutation event " +
        "to wait for the new node selection");
   yield inspector.once("inspector-updated");
 
@@ -60,6 +61,13 @@ function* testAddNode(parentNode, inspector) {
 
   is(inspector.selection.nodeFront.parentNode(), parentNode,
      "The new node is inside the right parent");
+
+  let focusedElement = markupWindow.document.activeElement;
+  let focusedContainer = focusedElement.closest(".child").container;
+  is(focusedContainer.node, inspector.selection.nodeFront,
+     "The right container is focused in the markup-view");
+  ok(focusedElement.classList.contains("tag"),
+     "The tagName part of the container is focused");
 }
 
 function collapseNode(node, inspector) {
