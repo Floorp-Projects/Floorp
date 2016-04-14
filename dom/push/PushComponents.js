@@ -271,12 +271,12 @@ Object.assign(PushServiceParent.prototype, {
   // Methods used for mocking in tests.
 
   replaceServiceBackend(options) {
-    this.service.changeTestServer(options.serverURI, options);
+    return this.service.changeTestServer(options.serverURI, options);
   },
 
   restoreServiceBackend() {
     var defaultServerURL = Services.prefs.getCharPref("dom.push.serverURL");
-    this.service.changeTestServer(defaultServerURL);
+    return this.service.changeTestServer(defaultServerURL);
   },
 });
 

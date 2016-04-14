@@ -4265,77 +4265,88 @@ nsFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ void
-nsFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                           nsIFrame::InlineMinISizeData *aData)
+nsFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
+                           nsIFrame::InlineMinISizeData* aData)
 {
-  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
-  nsIFrame* parent = GetParent();
-  bool canBreak = !CanContinueTextRun() &&
-    !parent->StyleContext()->ShouldSuppressLineBreak() &&
-    parent->StyleText()->WhiteSpaceCanWrap(parent);
-
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
-  aData->trailingWhitespace = 0;
-  aData->skipWhitespace = false;
-  aData->trailingTextFrame = nullptr;
-  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                            this, nsLayoutUtils::MIN_ISIZE);
-  aData->atStartOfLine = false;
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::MIN_ISIZE);
+  aData->DefaultAddInlineMinISize(this, isize);
 }
 
 /* virtual */ void
-nsFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
-                            nsIFrame::InlinePrefISizeData *aData)
+nsFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
+                            nsIFrame::InlinePrefISizeData* aData)
 {
-  aData->trailingWhitespace = 0;
-  aData->skipWhitespace = false;
-  nscoord myPref = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, 
-                       this, nsLayoutUtils::PREF_ISIZE);
-  aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, myPref);
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::PREF_ISIZE);
+  aData->DefaultAddInlinePrefISize(isize);
+}
+
+void
+nsIFrame::InlineMinISizeData::DefaultAddInlineMinISize(nsIFrame* aFrame,
+                                                       nscoord   aISize,
+                                                       bool      aAllowBreak)
+{
+  auto parent = aFrame->GetParent();
+  MOZ_ASSERT(parent, "Must have a parent if we get here!");
+  const bool mayBreak = aAllowBreak &&
+    !aFrame->CanContinueTextRun() &&
+    !parent->StyleContext()->ShouldSuppressLineBreak() &&
+    parent->StyleText()->WhiteSpaceCanWrap(parent);
+  if (mayBreak) {
+    OptionallyBreak();
+  }
+  mTrailingWhitespace = 0;
+  mSkipWhitespace = false;
+  mCurrentLine += aISize;
+  mAtStartOfLine = false;
+  if (mayBreak) {
+    OptionallyBreak();
+  }
+}
+
+void
+nsIFrame::InlinePrefISizeData::DefaultAddInlinePrefISize(nscoord aISize)
+{
+  mCurrentLine = NSCoordSaturatingAdd(mCurrentLine, aISize);
+  mTrailingWhitespace = 0;
+  mSkipWhitespace = false;
 }
 
 void
 nsIFrame::InlineMinISizeData::ForceBreak()
 {
-  currentLine -= trailingWhitespace;
-  prevLines = std::max(prevLines, currentLine);
-  currentLine = trailingWhitespace = 0;
+  mCurrentLine -= mTrailingWhitespace;
+  mPrevLines = std::max(mPrevLines, mCurrentLine);
+  mCurrentLine = mTrailingWhitespace = 0;
 
-  for (uint32_t i = 0, i_end = floats.Length(); i != i_end; ++i) {
-    nscoord float_min = floats[i].Width();
-    if (float_min > prevLines)
-      prevLines = float_min;
+  for (uint32_t i = 0, i_end = mFloats.Length(); i != i_end; ++i) {
+    nscoord float_min = mFloats[i].Width();
+    if (float_min > mPrevLines)
+      mPrevLines = float_min;
   }
-  floats.Clear();
-  trailingTextFrame = nullptr;
-  skipWhitespace = true;
+  mFloats.Clear();
+  mSkipWhitespace = true;
 }
 
 void
 nsIFrame::InlineMinISizeData::OptionallyBreak(nscoord aHyphenWidth)
 {
-  trailingTextFrame = nullptr;
-
   // If we can fit more content into a smaller width by staying on this
   // line (because we're still at a negative offset due to negative
   // text-indent or negative margin), don't break.  Otherwise, do the
   // same as ForceBreak.  it doesn't really matter when we accumulate
   // floats.
-  if (currentLine + aHyphenWidth < 0 || atStartOfLine)
+  if (mCurrentLine + aHyphenWidth < 0 || mAtStartOfLine)
     return;
-  currentLine += aHyphenWidth;
+  mCurrentLine += aHyphenWidth;
   ForceBreak();
 }
 
 void
 nsIFrame::InlinePrefISizeData::ForceBreak()
 {
-  if (floats.Length() != 0) {
+  if (mFloats.Length() != 0) {
             // preferred widths accumulated for floats that have already
             // been cleared past
     nscoord floats_done = 0,
@@ -4344,10 +4355,10 @@ nsIFrame::InlinePrefISizeData::ForceBreak()
             floats_cur_left = 0,
             floats_cur_right = 0;
 
-    for (uint32_t i = 0, i_end = floats.Length(); i != i_end; ++i) {
-      const FloatInfo& floatInfo = floats[i];
-      const nsStyleDisplay *floatDisp = floatInfo.Frame()->StyleDisplay();
-      uint8_t breakType = floatDisp->PhysicalBreakType(lineContainerWM);
+    for (uint32_t i = 0, i_end = mFloats.Length(); i != i_end; ++i) {
+      const FloatInfo& floatInfo = mFloats[i];
+      const nsStyleDisplay* floatDisp = floatInfo.Frame()->StyleDisplay();
+      uint8_t breakType = floatDisp->PhysicalBreakType(mLineContainerWM);
       if (breakType == NS_STYLE_CLEAR_LEFT ||
           breakType == NS_STYLE_CLEAR_RIGHT ||
           breakType == NS_STYLE_CLEAR_BOTH) {
@@ -4364,7 +4375,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak()
         }
       }
 
-      uint8_t floatStyle = floatDisp->PhysicalFloats(lineContainerWM);
+      uint8_t floatStyle = floatDisp->PhysicalFloats(mLineContainerWM);
       nscoord& floats_cur = floatStyle == NS_STYLE_FLOAT_LEFT
                               ? floats_cur_left : floats_cur_right;
       nscoord floatWidth = floatInfo.Width();
@@ -4379,16 +4390,16 @@ nsIFrame::InlinePrefISizeData::ForceBreak()
     if (floats_cur > floats_done)
       floats_done = floats_cur;
 
-    currentLine = NSCoordSaturatingAdd(currentLine, floats_done);
+    mCurrentLine = NSCoordSaturatingAdd(mCurrentLine, floats_done);
 
-    floats.Clear();
+    mFloats.Clear();
   }
 
-  currentLine =
-    NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
-  prevLines = std::max(prevLines, currentLine);
-  currentLine = trailingWhitespace = 0;
-  skipWhitespace = true;
+  mCurrentLine =
+    NSCoordSaturatingSubtract(mCurrentLine, mTrailingWhitespace, nscoord_MAX);
+  mPrevLines = std::max(mPrevLines, mCurrentLine);
+  mCurrentLine = mTrailingWhitespace = 0;
+  mSkipWhitespace = true;
 }
 
 static void

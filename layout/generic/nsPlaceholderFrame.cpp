@@ -66,9 +66,9 @@ nsPlaceholderFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
                                       nsIFrame::InlineMinISizeData* aData)
 {
   // Override AddInlineMinWith so that *nothing* happens.  In
-  // particular, we don't want to zero out |aData->trailingWhitespace|,
+  // particular, we don't want to zero out |aData->mTrailingWhitespace|,
   // since nsLineLayout skips placeholders when trimming trailing
-  // whitespace, and we don't want to set aData->skipWhitespace to
+  // whitespace, and we don't want to set aData->mSkipWhitespace to
   // false.
 
   // ...but push floats onto the list
@@ -77,7 +77,7 @@ nsPlaceholderFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                            mOutOfFlowFrame,
                                            nsLayoutUtils::MIN_ISIZE);
-    aData->floats.AppendElement(
+    aData->mFloats.AppendElement(
       InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
 }
@@ -87,9 +87,9 @@ nsPlaceholderFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                                        nsIFrame::InlinePrefISizeData* aData)
 {
   // Override AddInlinePrefWith so that *nothing* happens.  In
-  // particular, we don't want to zero out |aData->trailingWhitespace|,
+  // particular, we don't want to zero out |aData->mTrailingWhitespace|,
   // since nsLineLayout skips placeholders when trimming trailing
-  // whitespace, and we don't want to set aData->skipWhitespace to
+  // whitespace, and we don't want to set aData->mSkipWhitespace to
   // false.
 
   // ...but push floats onto the list
@@ -98,7 +98,7 @@ nsPlaceholderFrame::AddInlinePrefISize(nsRenderingContext* aRenderingContext,
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                            mOutOfFlowFrame,
                                            nsLayoutUtils::PREF_ISIZE);
-    aData->floats.AppendElement(
+    aData->mFloats.AppendElement(
       InlineIntrinsicISizeData::FloatInfo(mOutOfFlowFrame, floatWidth));
   }
 }

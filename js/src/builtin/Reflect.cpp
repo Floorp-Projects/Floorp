@@ -70,18 +70,13 @@ Reflect_apply(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 2-3.
-    FastInvokeGuard fig(cx, args.get(0));
+    FastCallGuard fig(cx, args.get(0));
     InvokeArgs& invokeArgs = fig.args();
     if (!InitArgsFromArrayLike(cx, args.get(2), &invokeArgs))
         return false;
-    invokeArgs.setCallee(args.get(0));
-    invokeArgs.setThis(args.get(1));
 
     // Steps 4-5. This is specified to be a tail call, but isn't.
-    if (!fig.invoke(cx))
-        return false;
-    args.rval().set(invokeArgs.rval());
-    return true;
+    return fig.call(cx, args.get(0), args.get(1), args.rval());
 }
 
 /* ES6 26.1.2 Reflect.construct(target, argumentsList [, newTarget]) */

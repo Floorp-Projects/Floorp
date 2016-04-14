@@ -3017,7 +3017,8 @@ MaybeCallMethod(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
         vp.setObject(*obj);
         return true;
     }
-    return Invoke(cx, ObjectValue(*obj), vp, 0, nullptr, vp);
+
+    return js::Call(cx, vp, obj, vp);
 }
 
 static bool
@@ -3127,18 +3128,19 @@ js::ToPrimitiveSlow(JSContext* cx, JSType preferredType, MutableHandleValue vp)
 
     // Step 6.
     if (!method.isUndefined()) {
-        // Step 6 of GetMethod. Invoke() below would do this check and throw a
+        // Step 6 of GetMethod. js::Call() below would do this check and throw a
         // TypeError anyway, but this produces a better error message.
         if (!IsCallable(method))
             return ReportCantConvert(cx, JSMSG_TOPRIMITIVE_NOT_CALLABLE, obj, preferredType);
 
-        // Steps 1-3.
-        RootedValue hint(cx, StringValue(preferredType == JSTYPE_STRING ? cx->names().string :
-                                         preferredType == JSTYPE_NUMBER ? cx->names().number :
-                                         cx->names().default_));
+        // Steps 1-3, 6.a-b.
+        RootedValue arg0(cx, StringValue(preferredType == JSTYPE_STRING
+                                         ? cx->names().string
+                                         : preferredType == JSTYPE_NUMBER
+                                         ? cx->names().number
+                                         : cx->names().default_));
 
-        // Steps 6.a-b.
-        if (!Invoke(cx, vp, method, 1, hint.address(), vp))
+        if (!js::Call(cx, method, vp, arg0, vp))
             return false;
 
         // Steps 6.c-d.
@@ -3949,14 +3951,13 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor,
     RootedValue func(cx);
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, shName, 2, &func))
         return false;
-    InvokeArgs args(cx);
-    if (!args.init(2))
-        return false;
-    args.setCallee(func);
-    args.setThis(UndefinedValue());
+
+    FixedInvokeArgs<2> args(cx);
+
     args[0].setObject(*obj);
     args[1].set(defaultCtor);
-    if (!Invoke(cx, args))
+
+    if (!Call(cx, func, UndefinedHandleValue, args, pctor))
         return false;
 
     pctor.set(args.rval());

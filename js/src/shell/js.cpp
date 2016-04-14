@@ -3364,9 +3364,13 @@ InvokeInterruptCallbackWrapper(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     JS::AutoSaveExceptionState savedExc(cx);
-    Value argv[1] = { BooleanValue(interruptRv) };
+
+    FixedInvokeArgs<1> iargs(cx);
+
+    iargs[0].setBoolean(interruptRv);
+
     RootedValue rv(cx);
-    if (!Invoke(cx, UndefinedValue(), args[0], 1, argv, &rv))
+    if (!js::Call(cx, args[0], UndefinedHandleValue, iargs, &rv))
         return false;
 
     args.rval().setUndefined();
