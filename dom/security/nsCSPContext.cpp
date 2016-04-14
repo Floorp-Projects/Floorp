@@ -945,7 +945,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       continue;
     }
 
-    rv = uploadChannel->SetUploadStream(sis, NS_LITERAL_CSTRING("application/json"), -1);
+    rv = uploadChannel->SetUploadStream(sis, NS_LITERAL_CSTRING("application/csp-report"), -1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // if this is an HTTP channel, set the request method to post
