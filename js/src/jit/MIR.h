@@ -9923,7 +9923,6 @@ class MArraySlice
         unboxedType_(unboxedType)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(obj->resultTypeSet());
     }
 
   public:
