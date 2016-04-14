@@ -63,13 +63,11 @@ function defineCohort() {
     setCohort("optedOut");
   } else if (userOptedIn) {
     setCohort("optedIn");
-  } else if (disqualified) {
-    setCohort("disqualified");
   } else if (testGroup) {
-    setCohort("test");
+    setCohort(disqualified ? "disqualified-test" : "test");
     Preferences.set(PREF_TOGGLE_E10S, true);
   } else {
-    setCohort("control");
+    setCohort(disqualified ? "disqualified-control" : "control");
     Preferences.reset(PREF_TOGGLE_E10S);
   }
 }
