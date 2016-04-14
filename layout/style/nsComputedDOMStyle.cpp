@@ -1845,7 +1845,7 @@ nsComputedDOMStyle::DoGetBackgroundClip()
   return GetBackgroundList(&nsStyleImageLayers::Layer::mClip,
                            &nsStyleImageLayers::mClipCount,
                            StyleBackground()->mImage,
-                           nsCSSProps::kBackgroundClipKTable);
+                           nsCSSProps::kImageLayerOriginKTable);
 }
 
 already_AddRefed<CSSValue>

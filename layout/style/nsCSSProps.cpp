@@ -890,30 +890,13 @@ const KTableEntry nsCSSProps::kImageLayerAttachmentKTable[] = {
 static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER == NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
               NS_STYLE_IMAGELAYER_CLIP_PADDING == NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
               NS_STYLE_IMAGELAYER_CLIP_CONTENT == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
-              "Except background-clip:text, all {background,mask}-clip and "
-              "{background,mask}-origin style constants must agree");
-
+              "bg-clip and bg-origin style constants must agree");
 const KTableEntry nsCSSProps::kImageLayerOriginKTable[] = {
   { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
   { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
   { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
   { eCSSKeyword_UNKNOWN, -1 }
 };
-
-KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_CLIP_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_CLIP_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_CLIP_CONTENT },
-  // The next entry is controlled by the layout.css.background-clip-text.enabled
-  // pref.
-  { eCSSKeyword_text, NS_STYLE_IMAGELAYER_CLIP_TEXT },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
-static_assert(ArrayLength(nsCSSProps::kImageLayerOriginKTable) ==
-              ArrayLength(nsCSSProps::kBackgroundClipKTable) - 1,
-              "background-clip has one extra value, which is text, compared"
-              "to {background,mask}-origin");
 
 // Note: Don't change this table unless you update
 // ParseImageLayerPosition!

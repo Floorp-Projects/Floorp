@@ -267,12 +267,10 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL         2
 
 // See nsStyleImageLayers
-// Code depends on these constants having the same values as IMAGELAYER_ORIGIN_*
+// Code depends on these constants having the same values as BG_ORIGIN_*
 #define NS_STYLE_IMAGELAYER_CLIP_BORDER              0
 #define NS_STYLE_IMAGELAYER_CLIP_PADDING             1
 #define NS_STYLE_IMAGELAYER_CLIP_CONTENT             2
-// One extra constant which does not exist in IMAGELAYER_ORIGIN_*
-#define NS_STYLE_IMAGELAYER_CLIP_TEXT                3
 
 // A magic value that we use for our "pretend that background-clip is
 // 'padding' when we have a solid border" optimization.  This isn't
