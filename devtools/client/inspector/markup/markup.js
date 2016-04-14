@@ -550,19 +550,25 @@ MarkupView.prototype = {
   },
 
   /**
-   * Focus the current node selection's MarkupContainer if the selection
-   * happened because the user picked an element using the element picker or
-   * browser context menu.
+   * Maybe focus the current node selection's MarkupContainer depending on why
+   * the current node got selected.
    */
   maybeFocusNewSelection: function() {
     let {reason, nodeFront} = this._inspector.selection;
 
-    if (reason !== "browser-context-menu" &&
-        reason !== "picker-node-picked") {
-      return;
-    }
+    // The list of reasons that should lead to focusing the node.
+    let reasonsToFocus = [
+      // If the user picked an element with the element picker.
+      "picker-node-picked",
+      // If the user selected an element with the browser context menu.
+      "browser-context-menu",
+      // If the user added a new node by clicking in the inspector toolbar.
+      "node-inserted"
+    ];
 
-    this.getContainer(nodeFront).focus();
+    if (reasonsToFocus.includes(reason)) {
+      this.getContainer(nodeFront).focus();
+    }
   },
 
   /**
