@@ -14,6 +14,7 @@ Cu.import("resource://gre/modules/Preferences.jsm")
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 var { computeHash } = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 do_get_profile();
 
@@ -496,7 +497,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   } catch(ex) {
     zipFile.remove(false);
     if (!wantInstallReject) {
-      do_throw("install update should not reject");
+      do_throw("install update should not reject " + ex.message);
     }
   }
 }
@@ -773,15 +774,10 @@ xhr.prototype = {
  * @param response The response you want to get back when an XHR request is made
  */
 function overrideXHR(status, response, options) {
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  if (overrideXHR.myxhr) {
-    registrar.unregisterFactory(overrideXHR.myxhr.classID, overrideXHR.myxhr);
-  }
   overrideXHR.myxhr = new xhr(status, response, options);
-  registrar.registerFactory(overrideXHR.myxhr.classID,
-                            overrideXHR.myxhr.classDescription,
-                            overrideXHR.myxhr.contractID,
-                            overrideXHR.myxhr);
+  ProductAddonCheckerScope.CreateXHR = function() {
+    return overrideXHR.myxhr;
+  };
   return overrideXHR.myxhr;
 }
 

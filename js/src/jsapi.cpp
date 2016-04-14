@@ -2849,7 +2849,12 @@ JS_CallFunctionValue(JSContext* cx, HandleObject obj, HandleValue fval, const Ha
     assertSameCompartment(cx, obj, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, ObjectOrNullValue(obj), fval, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2862,7 +2867,13 @@ JS_CallFunction(JSContext* cx, HandleObject obj, HandleFunction fun, const Handl
     assertSameCompartment(cx, obj, fun, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, ObjectOrNullValue(obj), ObjectValue(*fun), args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue fval(cx, ObjectValue(*fun));
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2879,12 +2890,17 @@ JS_CallFunctionName(JSContext* cx, HandleObject obj, const char* name, const Han
     if (!atom)
         return false;
 
-    RootedValue v(cx);
+    RootedValue fval(cx);
     RootedId id(cx, AtomToId(atom));
-    if (!GetProperty(cx, obj, obj, id, &v))
+    if (!GetProperty(cx, obj, obj, id, &fval))
         return false;
 
-    return Invoke(cx, ObjectOrNullValue(obj), v, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    RootedValue thisv(cx, ObjectOrNullValue(obj));
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -2896,7 +2912,11 @@ JS::Call(JSContext* cx, HandleValue thisv, HandleValue fval, const JS::HandleVal
     assertSameCompartment(cx, thisv, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return Invoke(cx, thisv, fval, args.length(), args.begin(), rval);
+    InvokeArgs iargs(cx);
+    if (!FillArgumentsFromArraylike(cx, iargs, args))
+        return false;
+
+    return Call(cx, fval, thisv, iargs, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -4715,19 +4735,24 @@ JS::GetPromiseResolutionSite(JS::HandleObject promise)
 JS_PUBLIC_API(JSObject*)
 JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
 {
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return nullptr;
     RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
     if (!promiseCtor)
         return nullptr;
-    args.setThis(ObjectValue(*promiseCtor));
-    args[0].set(resolutionValue);
 
-    if (!CallSelfHostedFunction(cx, "Promise_static_resolve", args))
-        return nullptr;
-    MOZ_ASSERT(args.rval().isObject());
-    JSObject* obj = &args.rval().toObject();
+    JSObject* obj;
+    {
+        FixedInvokeArgs<1> args(cx);
+
+        args[0].set(resolutionValue);
+
+        RootedValue thisvOrRval(cx, ObjectValue(*promiseCtor));
+        if (!CallSelfHostedFunction(cx, "Promise_static_resolve", thisvOrRval, args, &thisvOrRval))
+            return nullptr;
+
+        MOZ_ASSERT(thisvOrRval.isObject());
+        obj = &thisvOrRval.toObject();
+    }
+
     MOZ_ASSERT(obj->is<PromiseObject>());
     return obj;
 }
@@ -4735,19 +4760,24 @@ JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
 JS_PUBLIC_API(JSObject*)
 JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
 {
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return nullptr;
     RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
     if (!promiseCtor)
         return nullptr;
-    args.setThis(ObjectValue(*promiseCtor));
-    args[0].set(rejectionValue);
 
-    if (!CallSelfHostedFunction(cx, "Promise_static_reject", args))
-        return nullptr;
-    MOZ_ASSERT(args.rval().isObject());
-    JSObject* obj = &args.rval().toObject();
+    JSObject* obj;
+    {
+        FixedInvokeArgs<1> args(cx);
+
+        args[0].set(rejectionValue);
+
+        RootedValue thisvOrRval(cx, ObjectValue(*promiseCtor));
+        if (!CallSelfHostedFunction(cx, "Promise_static_reject", thisvOrRval, args, &thisvOrRval))
+            return nullptr;
+
+        MOZ_ASSERT(thisvOrRval.isObject());
+        obj = &thisvOrRval.toObject();
+    }
+
     MOZ_ASSERT(obj->is<PromiseObject>());
     return obj;
 }
@@ -4773,17 +4803,22 @@ JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promise,
     MOZ_ASSERT(promise->is<PromiseObject>());
     MOZ_ASSERT(onResolve == nullptr || IsCallable(onResolve));
     MOZ_ASSERT(onReject == nullptr || IsCallable(onReject));
-    InvokeArgs args(cx);
-    if (!args.init(2))
-        return nullptr;
-    args.setThis(ObjectValue(*promise));
-    args[0].setObjectOrNull(onResolve);
-    args[1].setObjectOrNull(onReject);
 
-    if (!CallSelfHostedFunction(cx, "Promise_then", args))
-        return nullptr;
-    MOZ_ASSERT(args.rval().isObject());
-    JSObject* obj = &args.rval().toObject();
+    JSObject* obj;
+    {
+        FixedInvokeArgs<2> args(cx);
+
+        args[0].setObjectOrNull(onResolve);
+        args[1].setObjectOrNull(onReject);
+
+        RootedValue thisvOrRval(cx, ObjectValue(*promise));
+        if (!CallSelfHostedFunction(cx, "Promise_then", thisvOrRval, args, &thisvOrRval))
+            return nullptr;
+
+        MOZ_ASSERT(thisvOrRval.isObject());
+        obj = &thisvOrRval.toObject();
+    }
+
     MOZ_ASSERT(obj->is<PromiseObject>());
     return obj;
 }
@@ -4795,15 +4830,17 @@ JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
     MOZ_ASSERT(promise->is<PromiseObject>());
     MOZ_ASSERT(IsCallable(onResolve));
     MOZ_ASSERT(IsCallable(onReject));
-    InvokeArgs args(cx);
-    if (!args.init(4))
-        return false;
+
+    FixedInvokeArgs<4> args(cx);
+
     args[0].setObject(*promise);
     args[1].setNull();
     args[2].setObject(*onResolve);
     args[3].setObject(*onReject);
 
-    return js::CallSelfHostedFunction(cx, "EnqueuePromiseReactions", args);
+    RootedValue dummy(cx);
+    return CallSelfHostedFunction(cx, "EnqueuePromiseReactions", UndefinedHandleValue, args,
+                                  &dummy);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4823,15 +4860,20 @@ JS::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
         arr->setDenseElement(i, ObjectValue(*promises[i]));
     }
 
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return nullptr;
-    args[0].setObject(*arr);
+    JSObject* obj;
+    {
+        FixedInvokeArgs<1> args(cx);
 
-    if (!js::CallSelfHostedFunction(cx, "GetWaitForAllPromise", args))
-        return nullptr;
-    MOZ_ASSERT(args.rval().isObject());
-    JSObject* obj = &args.rval().toObject();
+        args[0].setObject(*arr);
+
+        RootedValue thisvOrRval(cx, UndefinedValue());
+        if (!CallSelfHostedFunction(cx, "GetWaitForAllPromise", thisvOrRval, args, &thisvOrRval))
+            return nullptr;
+
+        MOZ_ASSERT(thisvOrRval.isObject());
+        obj = &thisvOrRval.toObject();
+    }
+
     MOZ_ASSERT(obj->is<PromiseObject>());
     return obj;
 }

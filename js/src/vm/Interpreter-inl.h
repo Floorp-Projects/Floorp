@@ -776,12 +776,12 @@ ReportIfNotFunction(JSContext* cx, HandleValue v, MaybeConstruct construct = NO_
 }
 
 /*
- * FastInvokeGuard is used to optimize calls to JS functions from natives written
- * in C++, for instance Array.map. If the callee is not Ion-compiled, this will
- * just call Invoke. If the callee has a valid IonScript, however, it will enter
- * Ion directly.
+ * FastCallGuard is used to optimize calls to JS functions from natives written
+ * in C++, e.g. Array.prototype.map.  If the callee is not Ion-compiled, this
+ * will just call js::Call.  If the callee has a valid IonScript, however, it
+ * will enter Ion directly.
  */
-class FastInvokeGuard
+class FastCallGuard
 {
     InvokeArgs args_;
     RootedFunction fun_;
@@ -792,7 +792,7 @@ class FastInvokeGuard
     bool useIon_;
 
   public:
-    FastInvokeGuard(JSContext* cx, const Value& fval)
+    FastCallGuard(JSContext* cx, const Value& fval)
       : args_(cx)
       , fun_(cx)
       , script_(cx)
@@ -813,7 +813,10 @@ class FastInvokeGuard
         return args_;
     }
 
-    bool invoke(JSContext* cx) {
+    bool call(JSContext* cx, HandleValue callee, HandleValue thisv, MutableHandleValue rval) {
+        args_.CallArgs::setCallee(callee);
+        args_.CallArgs::setThis(thisv);
+
         if (useIon_ && fun_) {
             if (!script_) {
                 script_ = fun_->getOrCreateScript(cx);
@@ -831,6 +834,7 @@ class FastInvokeGuard
                     return false;
 
                 MOZ_ASSERT(result == jit::JitExec_Ok);
+                rval.set(args_.CallArgs::rval());
                 return true;
             }
 
@@ -843,12 +847,16 @@ class FastInvokeGuard
             }
         }
 
-        return Invoke(cx, args_);
+        if (!InternalCallOrConstruct(cx, args_, NO_CONSTRUCT))
+            return false;
+
+        rval.set(args_.CallArgs::rval());
+        return true;
     }
 
   private:
-    FastInvokeGuard(const FastInvokeGuard& other) = delete;
-    const FastInvokeGuard& operator=(const FastInvokeGuard& other) = delete;
+    FastCallGuard(const FastCallGuard& other) = delete;
+    void operator=(const FastCallGuard& other) = delete;
 };
 
 }  /* namespace js */

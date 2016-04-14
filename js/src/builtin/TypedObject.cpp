@@ -114,16 +114,12 @@ ConvertAndCopyTo(JSContext* cx,
                  HandleAtom name,
                  HandleValue val)
 {
-    RootedFunction func(
-        cx, SelfHostedFunction(cx, cx->names().ConvertAndCopyTo));
+    RootedFunction func(cx, SelfHostedFunction(cx, cx->names().ConvertAndCopyTo));
     if (!func)
         return false;
 
-    InvokeArgs args(cx);
-    if (!args.init(5))
-        return false;
+    FixedInvokeArgs<5> args(cx);
 
-    args.setCallee(ObjectValue(*func));
     args[0].setObject(*typeObj);
     args[1].setObject(*typedObj);
     args[2].setInt32(offset);
@@ -133,7 +129,9 @@ ConvertAndCopyTo(JSContext* cx,
         args[3].setNull();
     args[4].set(val);
 
-    return Invoke(cx, args);
+    RootedValue fval(cx, ObjectValue(*func));
+    RootedValue dummy(cx); // ignored by ConvertAndCopyTo
+    return js::Call(cx, fval, dummy, args, &dummy);
 }
 
 static bool
@@ -158,20 +156,14 @@ Reify(JSContext* cx,
     if (!func)
         return false;
 
-    InvokeArgs args(cx);
-    if (!args.init(3))
-        return false;
+    FixedInvokeArgs<3> args(cx);
 
-    args.setCallee(ObjectValue(*func));
     args[0].setObject(*type);
     args[1].setObject(*typedObj);
     args[2].setInt32(offset);
 
-    if (!Invoke(cx, args))
-        return false;
-
-    to.set(args.rval());
-    return true;
+    RootedValue fval(cx, ObjectValue(*func));
+    return js::Call(cx, fval, UndefinedHandleValue, args, to);
 }
 
 // Extracts the `prototype` property from `obj`, throwing if it is

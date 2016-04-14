@@ -530,12 +530,13 @@ private:
   /* This is atomic and is set by the audio callback thread. It can be read by
    * any thread safely. */
   Atomic<bool> mInCallback;
+
+#ifdef XP_MACOSX
   /**
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
   bool mMicrophoneActive;
 
-#ifdef XP_MACOSX
   /* Implements the workaround for the osx audio stack when changing output
    * devices. See comments in .cpp */
   bool OSXDeviceSwitchingWorkaround();

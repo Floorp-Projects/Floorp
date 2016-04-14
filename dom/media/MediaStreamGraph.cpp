@@ -420,6 +420,8 @@ namespace {
 bool
 MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
 {
+  AssertOnGraphThreadOrNotRunning();
+
   bool audioTrackPresent = false;
   for (uint32_t i = 0; i < mStreams.Length() && audioTrackPresent == false; ++i) {
     MediaStream* stream = mStreams[i];
@@ -501,13 +503,21 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   }
 
 #ifdef MOZ_WEBRTC
+  // Whenever we change AEC state, notify the current driver, which also
+  // will sample the state when the driver inits
   if (shouldAEC && !mFarendObserverRef && gFarendObserver) {
     mFarendObserverRef = gFarendObserver;
     mMixer.AddCallback(mFarendObserverRef);
+    if (CurrentDriver()->AsAudioCallbackDriver()) {
+      CurrentDriver()->AsAudioCallbackDriver()->SetMicrophoneActive(true);
+    }
   } else if (!shouldAEC && mFarendObserverRef){
     if (mMixer.FindCallback(mFarendObserverRef)) {
       mMixer.RemoveCallback(mFarendObserverRef);
       mFarendObserverRef = nullptr;
+      if (CurrentDriver()->AsAudioCallbackDriver()) {
+        CurrentDriver()->AsAudioCallbackDriver()->SetMicrophoneActive(false);
+      }
     }
   }
 #endif

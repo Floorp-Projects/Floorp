@@ -11,6 +11,14 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+
+// Since this test creates a TYPE_DOCUMENT channel via javascript, it will
+// end up using the wrong LoadInfo constructor. Setting this pref will disable
+// the ContentPolicyType assertion in the constructor.
+prefs.setBoolPref("network.loadinfo.skip_type_assertion", true);
+
 var NS_ERROR_INVALID_ARG = Components.results.NS_ERROR_INVALID_ARG;
 
 function do_check_throws(f, result, stack)

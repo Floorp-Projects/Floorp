@@ -569,19 +569,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                         return nullptr;
                 }
 
-                InvokeArgs args(cx);
-                if (!args.init(3))
-                    return nullptr;
+                FixedInvokeArgs<3> args(cx);
 
-                args.setCallee(cx->compartment()->maybeGlobal()->createArrayFromBuffer<NativeType>());
-                args.setThis(ObjectValue(*bufobj));
                 args[0].setNumber(byteOffset);
                 args[1].setInt32(lengthInt);
                 args[2].setObject(*protoRoot);
 
-                if (!Invoke(cx, args))
+                RootedValue fval(cx, cx->global()->createArrayFromBuffer<NativeType>());
+                RootedValue thisv(cx, ObjectValue(*bufobj));
+                RootedValue rval(cx);
+                if (!js::Call(cx, fval, thisv, args, &rval))
                     return nullptr;
-                return &args.rval().toObject();
+
+                return &rval.toObject();
             }
         }
 
@@ -1457,18 +1457,15 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
             return false;
     }
 
-    InvokeArgs args2(cx);
-    if (!args2.init(3))
-        return false;
-    args2.setCallee(global->createDataViewForThis());
-    args2.setThis(ObjectValue(*bufobj));
+    FixedInvokeArgs<3> args2(cx);
+
     args2[0].set(PrivateUint32Value(byteOffset));
     args2[1].set(PrivateUint32Value(byteLength));
     args2[2].setObject(*proto);
-    if (!Invoke(cx, args2))
-        return false;
-    args.rval().set(args2.rval());
-    return true;
+
+    RootedValue fval(cx, global->createDataViewForThis());
+    RootedValue thisv(cx, ObjectValue(*bufobj));
+    return js::Call(cx, fval, thisv, args2, args.rval());
 }
 
 bool

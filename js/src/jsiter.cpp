@@ -497,9 +497,16 @@ GetCustomIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandle
         ++sCustomIteratorCount;
 
     /* Otherwise call it and return that object. */
-    Value arg = BooleanValue((flags & JSITER_FOREACH) == 0);
-    if (!Invoke(cx, ObjectValue(*obj), rval, 1, &arg, &rval))
-        return false;
+    {
+        FixedInvokeArgs<1> args(cx);
+
+        args[0].setBoolean((flags & JSITER_FOREACH) == 0);
+
+        RootedValue thisv(cx, ObjectValue(*obj));
+        if (!js::Call(cx, rval, thisv, args, &rval))
+            return false;
+    }
+
     if (rval.isPrimitive()) {
         // Ignore the stack when throwing. We can't tell whether we were
         // supposed to skip over a new.target or not.
@@ -1404,7 +1411,12 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     if (!GetProperty(cx, iterobj, iterobj, cx->names().next, rval))
         return false;
 
-    if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
+    // Call the .next method.  Fall through to the error-handling cases in the
+    // unlikely event that either one of the fallible operations performed
+    // during the call process fails.
+    FixedInvokeArgs<0> args(cx);
+    RootedValue iterval(cx, ObjectValue(*iterobj));
+    if (!js::Call(cx, rval, iterval, args, rval)) {
         // Check for StopIteration.
         if (!cx->isExceptionPending())
             return false;
@@ -1416,7 +1428,6 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
 
         cx->clearPendingException();
         rval.setMagic(JS_NO_ITER_VALUE);
-        return true;
     }
 
     return true;

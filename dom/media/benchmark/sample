@@ -1,5 +1,7 @@
 #!/bin/bash -e
-ffmpeg -i bbb-31.webm -frames:v 8 -map 0:0 sWebMSample.webm -y
+wget http://people.mozilla.org/~ajones/frame-drop-test/bbb-31.webm -O bbb-31.webm
+ffmpeg -i bbb-31.webm -frames:v 8 -codec copy -map 0:0 sWebMSample.webm -y
 mv sWebMSample.webm sWebMSample
-xxd -i sWebMSample |head --lines=-1 | sed 's/unsigned char/static uint8_t/' > ../WebMSample.h
+xxd -i sWebMSample |head --lines=-1 | sed 's/unsigned char/static const uint8_t/' > ../WebMSample.h
 rm sWebMSample
+rm bbb-31.webm

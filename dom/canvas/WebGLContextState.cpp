@@ -569,8 +569,15 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_DEPTH_RANGE:
         case LOCAL_GL_ALIASED_POINT_SIZE_RANGE:
         case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE: {
+            GLenum driverPName = pname;
+            if (gl->IsCoreProfile() &&
+                driverPName == LOCAL_GL_ALIASED_POINT_SIZE_RANGE)
+            {
+                driverPName = LOCAL_GL_POINT_SIZE_RANGE;
+            }
+
             GLfloat fv[2] = { 0 };
-            gl->fGetFloatv(pname, fv);
+            gl->fGetFloatv(driverPName, fv);
             JSObject* obj = dom::Float32Array::Create(cx, this, 2, fv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;

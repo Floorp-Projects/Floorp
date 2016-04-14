@@ -867,9 +867,14 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
     // if 'aLoadingNode' or 'aLoadingPrincipal' are provided. Note, that
     // either aLoadingNode or aLoadingPrincipal is required to succesfully
     // create a LoadInfo object.
+    // Except in the case of top level TYPE_DOCUMENT loads, where the
+    // loadingNode and loadingPrincipal are allowed to have null values.
     nsCOMPtr<nsILoadInfo> loadInfo;
 
-    if (aLoadingNode || aLoadingPrincipal) {
+    // TYPE_DOCUMENT loads don't require a loadingNode or principal, but other
+    // types do.
+    if (aLoadingNode || aLoadingPrincipal ||
+        aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
       nsCOMPtr<nsINode> loadingNode(do_QueryInterface(aLoadingNode));
       loadInfo = new mozilla::LoadInfo(aLoadingPrincipal,
                                        aTriggeringPrincipal,

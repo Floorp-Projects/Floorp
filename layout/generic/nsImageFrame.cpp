@@ -2396,29 +2396,11 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
 }
 
 /* virtual */ void
-nsImageFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                                nsIFrame::InlineMinISizeData *aData)
+nsImageFrame::AddInlineMinISize(nsRenderingContext* aRenderingContext,
+                                nsIFrame::InlineMinISizeData* aData)
 {
-
-  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
-  
-  nsIFrame* parent = GetParent();
-  bool canBreak =
-    !CanContinueTextRun() &&
-    parent->StyleText()->WhiteSpaceCanWrap(parent) &&
-    !IsInAutoWidthTableCellForQuirk(this);
-
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
-  aData->trailingWhitespace = 0;
-  aData->skipWhitespace = false;
-  aData->trailingTextFrame = nullptr;
-  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                            this, nsLayoutUtils::MIN_ISIZE);
-  aData->atStartOfLine = false;
-
-  if (canBreak) {
-    aData->OptionallyBreak();
-  }
+  nscoord isize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                    this, nsLayoutUtils::MIN_ISIZE);
+  bool canBreak = !IsInAutoWidthTableCellForQuirk(this);
+  aData->DefaultAddInlineMinISize(this, isize, canBreak);
 }

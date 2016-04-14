@@ -307,8 +307,11 @@ class ExecutableAllocator
     ExecutableAllocator(const ExecutableAllocator&) = delete;
     void operator=(const ExecutableAllocator&) = delete;
 
+#ifdef NON_WRITABLE_JIT_CODE
     MOZ_WARN_UNUSED_RESULT
     static bool reprotectRegion(void*, size_t, ProtectionSetting);
+#endif
+
     void reprotectAll(ProtectionSetting);
 
     // These are strong references;  they keep pools alive.

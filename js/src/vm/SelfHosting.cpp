@@ -1712,38 +1712,33 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     if (!args2.init(args.length() - 1))
         return false;
 
-    args2.setCallee(selfHostedFun);
-    args2.setThis(args.thisv());
-
     for (size_t i = 0; i < args.length() - 1; i++)
         args2[i].set(args[i]);
 
-    if (!Invoke(cx, args2))
-        return false;
-
-    args.rval().set(args2.rval());
-    return true;
+    return js::Call(cx, selfHostedFun, args.thisv(), args2, args.rval());
 }
 
 bool
-js::CallSelfHostedFunction(JSContext* cx, const char* name, InvokeArgs& args)
+js::CallSelfHostedFunction(JSContext* cx, const char* name, HandleValue thisv,
+                           const AnyInvokeArgs& args, MutableHandleValue rval)
 {
     RootedAtom funAtom(cx, Atomize(cx, name, strlen(name)));
     if (!funAtom)
         return false;
     RootedPropertyName funName(cx, funAtom->asPropertyName());
-    return CallSelfHostedFunction(cx, funName, args);
+    return CallSelfHostedFunction(cx, funName, thisv, args, rval);
 }
 
 bool
-js::CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, InvokeArgs& args)
+js::CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, HandleValue thisv,
+                           const AnyInvokeArgs& args, MutableHandleValue rval)
 {
     RootedValue fun(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &fun))
         return false;
     MOZ_ASSERT(fun.toObject().is<JSFunction>());
-    args.setCallee(fun);
-    return Invoke(cx, args);
+
+    return Call(cx, fun, thisv, args, rval);
 }
 
 template<typename T>
@@ -1984,17 +1979,12 @@ intrinsic_RejectUnwrappedPromise(JSContext* cx, unsigned argc, Value* vp)
         return false;
     RootedPropertyName name(cx, atom->asPropertyName());
 
-    InvokeArgs args2(cx);
-    if (!args2.init(2))
-        return false;
+    FixedInvokeArgs<2> args2(cx);
+
     args2[0].setObject(*promise);
     args2[1].set(reasonVal);
 
-    if (!CallSelfHostedFunction(cx, name, args2))
-        return false;
-
-    args.rval().set(args2.rval());
-    return true;
+    return CallSelfHostedFunction(cx, name, UndefinedHandleValue, args2, args.rval());
 }
 
 static bool

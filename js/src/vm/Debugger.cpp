@@ -792,8 +792,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
 
                 /* Call the onPop handler. */
                 RootedValue rval(cx);
-                bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
-                                     &rval);
+                bool hookOk = js::Call(cx, handler, frameobj, completion, &rval);
                 RootedValue nextValue(cx);
                 JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval,
                                                                     frame, pc, &nextValue);
@@ -1173,9 +1172,10 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             if (!cx->getPendingException(&exc))
                 return JSTRAP_ERROR;
             cx->clearPendingException();
+
             RootedValue fval(cx, ObjectValue(*uncaughtExceptionHook));
             RootedValue rv(cx);
-            if (Invoke(cx, ObjectValue(*object), fval, 1, exc.address(), &rv)) {
+            if (js::Call(cx, fval, object, exc, &rv)) {
                 return vp ? parseResumptionValueHelper(ac, true, rv, thisVForCheck, frame, *vp, false)
                           : JSTRAP_CONTINUE;
             }
@@ -1431,7 +1431,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value&
 }
 
 static bool
-CallMethodIfPresent(JSContext* cx, HandleObject obj, const char* name, int argc, Value* argv,
+CallMethodIfPresent(JSContext* cx, HandleObject obj, const char* name, size_t argc, Value* argv,
                     MutableHandleValue rval)
 {
     rval.setUndefined();
@@ -1441,8 +1441,21 @@ CallMethodIfPresent(JSContext* cx, HandleObject obj, const char* name, int argc,
 
     RootedId id(cx, AtomToId(atom));
     RootedValue fval(cx);
-    return GetProperty(cx, obj, obj, id, &fval) &&
-           (!IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
+    if (!GetProperty(cx, obj, obj, id, &fval))
+        return false;
+
+    if (!IsCallable(fval))
+        return true;
+
+    InvokeArgs args(cx);
+    if (!args.init(argc))
+        return false;
+
+    for (size_t i = 0; i < argc; i++)
+        args[i].set(argv[i]);
+
+    rval.setObject(*obj); // overwritten by successful Call
+    return js::Call(cx, fval, rval, args, rval);
 }
 
 JSTrapStatus
@@ -1460,8 +1473,9 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
     if (!getScriptFrame(cx, iter, &scriptFrame))
         return handleUncaughtException(ac, false);
 
+    RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, scriptFrame.address(), &rv);
+    bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
     return parseResumptionValue(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
 }
 
@@ -1480,16 +1494,16 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, object);
 
-    JS::AutoValueArray<2> argv(cx);
-    argv[0].setUndefined();
-    argv[1].set(exc);
+    RootedValue scriptFrame(cx);
+    RootedValue wrappedExc(cx, exc);
 
     ScriptFrameIter iter(cx);
-    if (!getScriptFrame(cx, iter, argv[0]) || !wrapDebuggeeValue(cx, argv[1]))
+    if (!getScriptFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
         return handleUncaughtException(ac, false);
 
+    RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 2, argv.begin(), &rv);
+    bool ok = js::Call(cx, fval, object, scriptFrame, wrappedExc, &rv);
     JSTrapStatus st = parseResumptionValue(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
@@ -1510,8 +1524,9 @@ Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleVal
     if (!getScriptFrame(cx, frame, &scriptFrame))
         return handleUncaughtException(ac, false);
 
+    RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, scriptFrame.address(), &rv);
+    bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
 
     return parseResumptionValue(ac, ok, rv, MagicValue(JS_UNINITIALIZED_LEXICAL), frame, vp);
 }
@@ -1532,9 +1547,10 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
         return;
     }
 
-    RootedValue scriptObject(cx, ObjectValue(*dsobj));
+    RootedValue fval(cx, ObjectValue(*hook));
+    RootedValue dsval(cx, ObjectValue(*dsobj));
     RootedValue rv(cx);
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, scriptObject.address(), &rv))
+    if (!js::Call(cx, fval, object, dsval, &rv))
         handleUncaughtException(ac, true);
 }
 
@@ -1558,9 +1574,10 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
         return;
     }
 
+    RootedValue fval(cx, ObjectValue(*hook));
     RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, dataVal.address(), &rv))
+    if (!js::Call(cx, fval, object, dataVal, &rv))
         handleUncaughtException(ac, true);
 }
 
@@ -1784,10 +1801,9 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         Maybe<AutoCompartment> ac;
         ac.emplace(cx, dbg->object);
 
-        const Value& handler = frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER);
+        RootedValue fval(cx, frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
         RootedValue rval(cx);
-
-        bool ok = Invoke(cx, ObjectValue(*frame), handler, 0, nullptr, &rval);
+        bool ok = js::Call(cx, fval, frame, &rval);
         JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rval, iter.abstractFramePtr(),
                                                     iter.pc(), vp);
         if (st != JSTRAP_CONTINUE)
@@ -1814,15 +1830,15 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
     if (!wrapDebuggeeValue(cx, &wrappedGlobal))
         return handleUncaughtException(ac, false);
 
-    RootedValue rv(cx);
-
     // onNewGlobalObject is infallible, and thus is only allowed to return
     // undefined as a resumption value. If it returns anything else, we throw.
     // And if that happens, or if the hook itself throws, we invoke the
     // uncaughtExceptionHook so that we never leave an exception pending on the
     // cx. This allows JS_NewGlobalObject to avoid handling failures from debugger
     // hooks.
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, wrappedGlobal.address(), &rv);
+    RootedValue rv(cx);
+    RootedValue fval(cx, ObjectValue(*hook));
+    bool ok = js::Call(cx, fval, object, wrappedGlobal, &rv);
     if (ok && !rv.isUndefined()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED);
@@ -1990,9 +2006,9 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
 
     // Like onNewGlobalObject, the Promise hooks are infallible and the comments
     // in |Debugger::fireNewGlobalObject| apply here as well.
-
+    RootedValue fval(cx, ObjectValue(*hookObj));
     RootedValue rv(cx);
-    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hookObj), 1, dbgObj.address(), &rv);
+    bool ok = js::Call(cx, fval, object, dbgObj, &rv);
     if (ok && !rv.isUndefined()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED);
@@ -8487,8 +8503,21 @@ ApplyOrCall(JSContext* cx, unsigned argc, Value* vp, ApplyOrCallMode mode)
      * compartment and populate args.rval().
      */
     LeaveDebuggeeNoExecute nnx(cx);
+
     RootedValue rval(cx);
-    bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
+    bool ok;
+    {
+        InvokeArgs args(cx);
+
+        ok = args.init(callArgc);
+        if (ok) {
+            for (size_t i = 0; i < callArgc; i++)
+                args[i].set(callArgv[i]);
+
+            ok = js::Call(cx, calleev, thisv, args, &rval);
+        }
+    }
+
     return dbg->receiveCompletionValue(ac, ok, rval, args.rval());
 }
 

@@ -1295,6 +1295,8 @@ NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
 {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
   MOZ_RELEASE_ASSERT(loadInfo, "Origin tracking only works for channels created with a loadinfo");
+  MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT,
+             "calling NS_HasBeenCrossOrigin on a top level load");
 
   // Always treat tainted channels as cross-origin.
   if (loadInfo->GetTainting() != LoadTainting::Basic) {
@@ -2256,9 +2258,11 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
       // Please note that cross origin top level navigations are not subject
       // to upgrade-insecure-requests, see:
       // http://www.w3.org/TR/upgrade-insecure-requests/#examples
+      // Compare the principal we are navigating to (aChannelResultPrincipal)
+      // with the referring/triggering Principal.
       bool crossOriginNavigation =
         (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
-        (!aChannelResultPrincipal->Equals(aLoadInfo->LoadingPrincipal()));
+        (!aChannelResultPrincipal->Equals(aLoadInfo->TriggeringPrincipal()));
 
       if (aLoadInfo->GetUpgradeInsecureRequests() && !crossOriginNavigation) {
         // let's log a message to the console that we are upgrading a request

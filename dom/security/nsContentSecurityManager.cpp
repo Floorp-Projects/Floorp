@@ -55,11 +55,14 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     flags |= nsIScriptSecurityManager::ALLOW_CHROME;
   }
 
-  rv = nsContentUtils::GetSecurityManager()->
-    CheckLoadURIWithPrincipal(loadingPrincipal,
-                              aURI,
-                              flags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We don't have a loadingPrincipal for TYPE_DOCUMENT
+  if (aLoadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
+    rv = nsContentUtils::GetSecurityManager()->
+      CheckLoadURIWithPrincipal(loadingPrincipal,
+                                aURI,
+                                flags);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // If the loadingPrincipal and the triggeringPrincipal are different, then make
   // sure the triggeringPrincipal is allowed to access that URI.
@@ -467,6 +470,10 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   // Handle cookie policies
   uint32_t cookiePolicy = loadInfo->GetCookiePolicy();
   if (cookiePolicy == nsILoadInfo::SEC_COOKIES_SAME_ORIGIN) {
+
+    // We shouldn't have the SEC_COOKIES_SAME_ORIGIN flag for top level loads
+    MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() !=
+               nsIContentPolicy::TYPE_DOCUMENT);
     nsIPrincipal* loadingPrincipal = loadInfo->LoadingPrincipal();
 
     // It doesn't matter what we pass for the third, data-inherits, argument.
