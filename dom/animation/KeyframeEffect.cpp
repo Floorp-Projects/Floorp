@@ -253,7 +253,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
              "ValidateIterationStart");
   result.mIterationStart = aTiming.mIterationStart;
 
-  result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
+  result.mActiveDuration = aTiming.ActiveDuration();
   result.mEndTime = aTiming.mDelay + result.mActiveDuration +
                     aTiming.mEndDelay;
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
@@ -404,23 +404,6 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   }
 
   return result;
-}
-
-StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(
-  const StickyTimeDuration& aIterationDuration,
-  double aIterationCount)
-{
-  // If either the iteration duration or iteration count is zero,
-  // Web Animations says that the active duration is zero. This is to
-  // ensure that the result is defined when the other argument is Infinity.
-  const StickyTimeDuration zeroDuration;
-  if (aIterationDuration == zeroDuration ||
-      aIterationCount == 0.0) {
-    return zeroDuration;
-  }
-
-  return aIterationDuration.MultDouble(aIterationCount);
 }
 
 // https://w3c.github.io/web-animations/#in-play
