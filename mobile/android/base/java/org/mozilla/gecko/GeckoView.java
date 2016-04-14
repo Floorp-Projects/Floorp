@@ -543,7 +543,7 @@ public class GeckoView extends LayerView
             JSONObject result = new JSONObject();
             try {
                 result.put("button", resultCode);
-            } catch(JSONException ex) { }
+            } catch (JSONException ex) { }
             return result;
         }
 
@@ -563,7 +563,7 @@ public class GeckoView extends LayerView
             JSONObject result = makeResult(RESULT_OK);
             try {
                 result.put("textbox0", value);
-            } catch(JSONException ex) { }
+            } catch (JSONException ex) { }
             EventDispatcher.sendResponse(mMessage, result);
         }
 

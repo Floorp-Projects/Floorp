@@ -54,7 +54,7 @@ public class LocaleListPreference extends ListPreference {
             this.missingCharacter = getPixels(drawBitmap(missing));
         }
 
-        private Bitmap drawBitmap(String text){
+        private Bitmap drawBitmap(String text) {
             Bitmap b = Bitmap.createBitmap(BITMAP_WIDTH, BITMAP_HEIGHT, Bitmap.Config.ALPHA_8);
             Canvas c = new Canvas(b);
             c.drawText(text, 0, BITMAP_HEIGHT / 2, this.paint);

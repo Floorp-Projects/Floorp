@@ -304,7 +304,7 @@ class ChromeCast implements GeckoMediaPlayer {
                     }
                 }
             });
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // The media player may throw if the session has been killed. For now, we're just catching this here.
             sendError(callback, "Error playing");
         }
@@ -329,7 +329,7 @@ class ChromeCast implements GeckoMediaPlayer {
                     }
                 }
             });
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // The media player may throw if the session has been killed. For now, we're just catching this here.
             sendError(callback, "Error pausing");
         }
@@ -358,7 +358,7 @@ class ChromeCast implements GeckoMediaPlayer {
                             }
 
                             return;
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             debug("Error ending", ex);
                         }
                     }
@@ -368,7 +368,7 @@ class ChromeCast implements GeckoMediaPlayer {
                     }
                 }
             });
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // The media player may throw if the session has been killed. For now, we're just catching this here.
             sendError(callback, "Error stopping");
         }

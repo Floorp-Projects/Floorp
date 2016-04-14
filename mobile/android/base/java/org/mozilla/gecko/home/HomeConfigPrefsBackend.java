@@ -172,11 +172,15 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             } else if (type == PanelType.REMOTE_TABS) {
                 syncIndex = i;
                 syncFlags = panelConfig.getFlags();
+            } else if (type == PanelType.COMBINED_HISTORY) {
+                // Partial landing of bug 1220928 combined the History and Sync panels of users who didn't
+                // have home panel customizations (including new users), thus they don't this migration.
+                return jsonPanels;
             }
         }
 
         if (historyIndex == -1 || syncIndex == -1) {
-            throw new IllegalArgumentException("Missing default panels");
+            throw new IllegalArgumentException("Expected both History and Sync panels to be present prior to Combined History.");
         }
 
         PanelConfig newPanel;

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <browser id="frame" disablehistory="true" flex="1" type="content"
+           src="https://example.com/browser/toolkit/mozapps/extensions/test/browser/webapi_checkavailable.html"/>
+</window>

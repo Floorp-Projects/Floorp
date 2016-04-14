@@ -319,7 +319,7 @@ public final class ANRReporter extends BroadcastReceiver
                 "\"OS\":" + JSONObject.quote(SysInfo.getName()) + "," +
                 "\"version\":\"" + String.valueOf(SysInfo.getVersion()) + "\"," +
                 "\"appID\":" + JSONObject.quote(AppConstants.MOZ_APP_ID) + "," +
-                "\"appVersion\":" + JSONObject.quote(AppConstants.MOZ_APP_VERSION)+ "," +
+                "\"appVersion\":" + JSONObject.quote(AppConstants.MOZ_APP_VERSION) + "," +
                 "\"appName\":" + JSONObject.quote(AppConstants.MOZ_APP_BASENAME) + "," +
                 "\"appBuildID\":" + JSONObject.quote(AppConstants.MOZ_APP_BUILDID) + "," +
                 "\"appUpdateChannel\":" + JSONObject.quote(AppConstants.MOZ_UPDATE_CHANNEL) + "," +

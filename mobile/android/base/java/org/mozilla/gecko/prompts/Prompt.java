@@ -90,7 +90,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             try {
                 mInputs[i] = PromptInput.getInput(inputs.getJSONObject(i));
                 mInputs[i].setListener(this);
-            } catch(Exception ex) { }
+            } catch (Exception ex) { }
         }
 
         PromptListItem[] menuitems = PromptListItem.getArray(message.optJSONArray("listitems"));
@@ -115,7 +115,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         try {
             create(title, text, listItems, choiceMode);
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             Log.i(LOGTAG, "Error building dialog", ex);
             return;
         }
@@ -138,7 +138,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             return;
         }
 
-        switch(msg) {
+        switch (msg) {
             case SELECTED:
                 Log.i(LOGTAG, "Selected");
                 mDialog.show();
@@ -232,7 +232,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             }
 
             result.put("list", selected);
-        } catch(JSONException ex) { }
+        } catch (JSONException ex) { }
     }
 
     /* Adds to a result value from the inputs that can be shown in dialogs.
@@ -247,7 +247,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
                     }
                 }
             }
-        } catch(JSONException ex) { }
+        } catch (JSONException ex) { }
     }
 
     /* Adds the selected button to a result. This should only be called if there
@@ -256,14 +256,14 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      */
     private void addButtonResult(final JSONObject result, int which) {
         int button = -1;
-        switch(which) {
+        switch (which) {
             case DialogInterface.BUTTON_POSITIVE : button = 0; break;
             case DialogInterface.BUTTON_NEUTRAL  : button = 1; break;
             case DialogInterface.BUTTON_NEGATIVE : button = 2; break;
         }
         try {
             result.put("button", button);
-        } catch(JSONException ex) { }
+        } catch (JSONException ex) { }
     }
 
     @Override
@@ -283,7 +283,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      *        One of the ListView.CHOICE_MODE constants to designate whether this list shows checkmarks, radios buttons, or nothing.
     */
     private void addListItems(AlertDialog.Builder builder, PromptListItem[] listItems, int choiceMode) {
-        switch(choiceMode) {
+        switch (choiceMode) {
             case ListView.CHOICE_MODE_MULTIPLE_MODAL:
             case ListView.CHOICE_MODE_MULTIPLE:
                 addMultiSelectList(builder, listItems);
@@ -408,7 +408,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
                 view.addView(root);
                 builder.setView(view);
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             Log.e(LOGTAG, "Error showing prompt inputs", ex);
             // We cannot display these input widgets with this sdk version,
             // do not display any dialog and finish the prompt now.
@@ -462,7 +462,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         JSONObject ret = new JSONObject();
         try {
             ret.put("button", -1);
-        } catch(Exception ex) { }
+        } catch (Exception ex) { }
         addInputValues(ret);
         notifyClosing(ret);
     }
@@ -487,7 +487,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private void notifyClosing(JSONObject aReturn) {
         try {
             aReturn.put("guid", mGuid);
-        } catch(JSONException ex) { }
+        } catch (JSONException ex) { }
 
         if (mTabId != Tabs.INVALID_TAB_ID) {
             Tabs.unregisterOnTabsChangedListener(this);
@@ -525,7 +525,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         for (int i = 0; i < length; i++) {
             try {
                 list[i] = items.getString(i);
-            } catch(Exception ex) { }
+            } catch (Exception ex) { }
         }
         return list;
     }
@@ -534,13 +534,13 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         JSONArray items = new JSONArray();
         try {
             items = aObject.getJSONArray(aName);
-        } catch(Exception ex) { return null; }
+        } catch (Exception ex) { return null; }
         int length = items.length();
         boolean[] list = new boolean[length];
         for (int i = 0; i < length; i++) {
             try {
                 list[i] = items.getBoolean(i);
-            } catch(Exception ex) { }
+            } catch (Exception ex) { }
         }
         return list;
     }

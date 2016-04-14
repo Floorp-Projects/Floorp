@@ -17,7 +17,6 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -37,15 +36,15 @@ public class LocalURLMetadata implements URLMetadata {
         uriWithProfile = DBUtils.appendProfileWithDefault(mProfile, URLMetadataTable.CONTENT_URI);
     }
 
-    // This returns a list of columns in the table. It's used to simplify some loops for reading/writing data.
-    @SuppressWarnings("serial")
-    private final Set<String> getModel() {
-        return new HashSet<String>() {{
-            add(URLMetadataTable.URL_COLUMN);
-            add(URLMetadataTable.TILE_IMAGE_URL_COLUMN);
-            add(URLMetadataTable.TILE_COLOR_COLUMN);
-            add(URLMetadataTable.TOUCH_ICON_COLUMN);
-        }};
+    // A list of columns in the table. It's used to simplify some loops for reading/writing data.
+    private static final Set<String> COLUMNS;
+    static {
+        final HashSet<String> tempModel = new HashSet<>(4);
+        tempModel.add(URLMetadataTable.URL_COLUMN);
+        tempModel.add(URLMetadataTable.TILE_IMAGE_URL_COLUMN);
+        tempModel.add(URLMetadataTable.TILE_COLOR_COLUMN);
+        tempModel.add(URLMetadataTable.TOUCH_ICON_COLUMN);
+        COLUMNS = Collections.unmodifiableSet(tempModel);
     }
 
     // Store a cache of recent results. This number is chosen to match the max number of tiles on about:home
@@ -60,15 +59,12 @@ public class LocalURLMetadata implements URLMetadata {
      * Incoming data can include a list like: {touchIconList:{56:"http://x.com/56.png", 76:"http://x.com/76.png"}}.
      * This will then be filtered to find the most appropriate touchIcon, i.e. the closest icon size that is larger
      * than (or equal to) the preferred homescreen launcher icon size, which is then stored in the "touchIcon" property.
-     *
-     * @see #getModel() Returns the list of properties that will be stored in the database.
      */
     @Override
     public Map<String, Object> fromJSON(JSONObject obj) {
         Map<String, Object> data = new HashMap<String, Object>();
 
-        Set<String> model = getModel();
-        for (String key : model) {
+        for (String key : COLUMNS) {
             if (obj.has(key)) {
                 data.put(key, obj.optString(key));
             }
@@ -108,10 +104,9 @@ public class LocalURLMetadata implements URLMetadata {
     private Map<String, Object> fromCursor(Cursor c) {
         Map<String, Object> data = new HashMap<String, Object>();
 
-        Set<String> model = getModel();
         String[] columns = c.getColumnNames();
         for (String column : columns) {
-            if (model.contains(column)) {
+            if (COLUMNS.contains(column)) {
                 try {
                     data.put(column, c.getString(c.getColumnIndexOrThrow(column)));
                 } catch (Exception ex) {
@@ -199,7 +194,7 @@ public class LocalURLMetadata implements URLMetadata {
 
                 data.put(url, metadata);
                 cache.put(url, metadata);
-            } while(cursor.moveToNext());
+            } while (cursor.moveToNext());
 
         } finally {
             cursor.close();
@@ -221,8 +216,7 @@ public class LocalURLMetadata implements URLMetadata {
         try {
             ContentValues values = new ContentValues();
 
-            Set<String> model = getModel();
-            for (String key : model) {
+            for (String key : COLUMNS) {
                 if (data.containsKey(key)) {
                     values.put(key, (String) data.get(key));
                 }

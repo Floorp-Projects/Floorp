@@ -609,12 +609,12 @@ public class UpdateService extends IntentService {
             try {
                 if (input != null)
                     input.close();
-            } catch (java.io.IOException e) {}
+            } catch (java.io.IOException e) { }
 
             try {
                 if (output != null)
                     output.close();
-            } catch (java.io.IOException e) {}
+            } catch (java.io.IOException e) { }
 
             mDownloading = false;
 
@@ -646,7 +646,7 @@ public class UpdateService extends IntentService {
             try {
                 if (input != null)
                     input.close();
-            } catch(java.io.IOException e) {}
+            } catch (java.io.IOException e) { }
         }
 
         String hex = Hex.encodeHexString(digest.digest());

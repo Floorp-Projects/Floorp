@@ -20,6 +20,11 @@ const Strings = Services.strings.createBundle(
 module.exports = createClass({
   displayName: "AddonTarget",
 
+  debug() {
+    let { target } = this.props;
+    BrowserToolboxProcess.init({ addonID: target.addonID });
+  },
+
   render() {
     let { target, debugDisabled } = this.props;
 
@@ -38,10 +43,5 @@ module.exports = createClass({
         disabled: debugDisabled,
       }, Strings.GetStringFromName("debug"))
     );
-  },
-
-  debug() {
-    let { target } = this.props;
-    BrowserToolboxProcess.init({ addonID: target.addonID });
-  },
+  }
 });

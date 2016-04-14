@@ -118,7 +118,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     }
 
     @Override
-    protected String getDBName(){
+    protected String getDBName() {
         return DB_FILENAME;
     }
 
@@ -128,7 +128,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     }
 
     @Override
-    protected int getDBVersion(){
+    protected int getDBVersion() {
         return DB_VERSION;
     }
 
@@ -324,10 +324,10 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
         try {
             passwordIndex = cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_PASSWORD);
-        } catch(Exception ex) { }
+        } catch (Exception ex) { }
         try {
             usernameIndex = cursor.getColumnIndexOrThrow(Passwords.ENCRYPTED_USERNAME);
-        } catch(Exception ex) { }
+        } catch (Exception ex) { }
 
         if (passwordIndex > -1 || usernameIndex > -1) {
             MatrixBlobCursor m = (MatrixBlobCursor)cursor;
@@ -342,7 +342,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
                         String decrypted = doCrypto(cursor.getString(usernameIndex), uri, false);
                         m.set(usernameIndex, decrypted);
                     }
-                } while(cursor.moveToNext());
+                } while (cursor.moveToNext());
             }
         }
     }

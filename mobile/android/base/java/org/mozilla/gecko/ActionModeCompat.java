@@ -121,7 +121,7 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
         int yOffset = location[1] + view.getHeight() / 2;
 
         Toast toast = Toast.makeText(view.getContext(), item.getTitle(), Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.TOP|Gravity.LEFT, xOffset, yOffset);
+        toast.setGravity(Gravity.TOP | Gravity.LEFT, xOffset, yOffset);
         toast.show();
     }
 }

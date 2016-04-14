@@ -290,7 +290,7 @@ class GeckoInputConnection
         }
         try {
             imm.restartInput(v);
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             Log.e(LOGTAG, "Error restarting input", e);
         }
     }

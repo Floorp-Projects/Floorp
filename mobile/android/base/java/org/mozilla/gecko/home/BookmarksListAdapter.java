@@ -196,7 +196,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
 
     public void swapCursor(Cursor c, FolderInfo folderInfo, RefreshType refreshType) {
         updateOpenFolderType(folderInfo);
-        switch(refreshType) {
+        switch (refreshType) {
             case PARENT:
                 if (!isCurrentFolder(folderInfo)) {
                     mParentStack.removeFirst();

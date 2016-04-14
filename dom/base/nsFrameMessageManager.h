@@ -377,6 +377,7 @@ struct nsMessageManagerScriptHolder
 class nsMessageManagerScriptExecutor
 {
 public:
+  static void PurgeCache();
   static void Shutdown();
   already_AddRefed<nsIXPConnectJSObjectHolder> GetGlobal()
   {
@@ -417,15 +418,21 @@ class nsScriptCacheCleaner final : public nsIObserver
   nsScriptCacheCleaner()
   {
     nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-    if (obsSvc)
+    if (obsSvc) {
+      obsSvc->AddObserver(this, "message-manager-flush-caches", false);
       obsSvc->AddObserver(this, "xpcom-shutdown", false);
+    }
   }
 
   NS_IMETHODIMP Observe(nsISupports *aSubject,
                         const char *aTopic,
                         const char16_t *aData) override
   {
-    nsMessageManagerScriptExecutor::Shutdown();
+    if (strcmp("message-manager-flush-caches", aTopic) == 0) {
+      nsMessageManagerScriptExecutor::PurgeCache();
+    } else if (strcmp("xpcom-shutdown", aTopic) == 0) {
+      nsMessageManagerScriptExecutor::Shutdown();
+    }
     return NS_OK;
   }
 };

@@ -208,7 +208,7 @@ public final class NotificationHelper implements GeckoEventListener {
         try {
             // Action name must be in query uri, otherwise buttons pending intents
             // would be collapsed.
-            if(action.has(ACTION_ID_ATTR)) {
+            if (action.has(ACTION_ID_ATTR)) {
                 builder.appendQueryParameter(ACTION_ID_ATTR, action.getString(ACTION_ID_ATTR));
             } else {
                 Log.i(LOGTAG, "button event with no name");
@@ -361,7 +361,7 @@ public final class NotificationHelper implements GeckoEventListener {
             JSONObject obj;
             try {
                 obj = new JSONObject(json);
-            } catch(JSONException ex) {
+            } catch (JSONException ex) {
                 obj = new JSONObject();
             }
 

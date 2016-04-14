@@ -92,6 +92,7 @@ import android.widget.ListView;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -180,6 +181,14 @@ OnSharedPreferenceChangeListener
     public static final int RESULT_CODE_LOCALE_DID_CHANGE = 7;
 
     private static final int REQUEST_CODE_TAB_QUEUE = 8;
+
+    private final Map<String, PrefHandler> HANDLERS;
+    {
+        final HashMap<String, PrefHandler> tempHandlers = new HashMap<>(2);
+        tempHandlers.put(ClearOnShutdownPref.PREF, new ClearOnShutdownPref());
+        tempHandlers.put(AndroidImportPreference.PREF_KEY, new AndroidImportPreference.Handler());
+        HANDLERS = Collections.unmodifiableMap(tempHandlers);
+    }
 
     private SwitchPreference tabQueuePreference;
 
@@ -690,8 +699,8 @@ OnSharedPreferenceChangeListener
                 }
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
-                if (handlers.containsKey(key)) {
-                    PrefHandler handler = handlers.get(key);
+                if (HANDLERS.containsKey(key)) {
+                    PrefHandler handler = HANDLERS.get(key);
                     if (!handler.setupPref(this, pref)) {
                         preferences.removePreference(pref);
                         i--;
@@ -1147,12 +1156,6 @@ OnSharedPreferenceChangeListener
         public void onChange(Context context, Preference pref, Object newValue);
     }
 
-    @SuppressWarnings("serial")
-    private final Map<String, PrefHandler> handlers = new HashMap<String, PrefHandler>() {{
-        put(ClearOnShutdownPref.PREF, new ClearOnShutdownPref());
-        put(AndroidImportPreference.PREF_KEY, new AndroidImportPreference.Handler());
-    }};
-
     private void recordSettingChangeTelemetry(String prefName, Object newValue) {
         final String value;
         if (newValue instanceof Boolean) {
@@ -1224,8 +1227,8 @@ OnSharedPreferenceChangeListener
             }
         } else if (PREFS_NOTIFICATIONS_CONTENT.equals(prefName)) {
             FeedService.setup(this);
-        } else if (handlers.containsKey(prefName)) {
-            PrefHandler handler = handlers.get(prefName);
+        } else if (HANDLERS.containsKey(prefName)) {
+            PrefHandler handler = HANDLERS.get(prefName);
             handler.onChange(this, preference, newValue);
         }
 
@@ -1343,7 +1346,7 @@ OnSharedPreferenceChangeListener
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         AlertDialog dialog;
-        switch(id) {
+        switch (id) {
             case DIALOG_CREATE_MASTER_PASSWORD:
                 final TextInputLayout inputLayout1 = getTextBox(R.string.masterpassword_password);
                 final TextInputLayout inputLayout2 = getTextBox(R.string.masterpassword_confirm);

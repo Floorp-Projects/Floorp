@@ -86,30 +86,8 @@ function getFormSubmitButton(formNum) {
   return button;
 }
 
+runChecksAfterCommonInit(startTest)
 
-// Counts the number of logins currently stored by password manager.
-function countLogins() {
-  var logins = pwmgr.getAllLogins();
-
-  return logins.length;
-}
-
-commonInit();
-
-// Get the pwmgr service
-var Cc_pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
-
-var Ci_pwmgr = SpecialPowers.Ci.nsILoginManager;
-ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
-
-var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
-ok(pwmgr != null, "pwmgr getService()");
-
-
-window.addEventListener("runTests", startTest);
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 <div id="content" style="display: none">
@@ -126,4 +104,3 @@ SimpleTest.waitForExplicitFinish();
 
 </body>
 </html>
-

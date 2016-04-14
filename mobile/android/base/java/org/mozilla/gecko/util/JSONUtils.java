@@ -58,7 +58,7 @@ public final class JSONUtils {
         for (int i = 0; i < json.length(); i++) {
             try {
                 ret.add(json.getString(i));
-            } catch(JSONException ex) {
+            } catch (JSONException ex) {
                 Log.i(LOGTAG, "Error parsing json", ex);
             }
         }

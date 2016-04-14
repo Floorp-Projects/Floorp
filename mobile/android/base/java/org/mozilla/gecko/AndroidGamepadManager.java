@@ -301,7 +301,7 @@ public class AndroidGamepadManager {
         if (deviceIds == null) {
             return;
         }
-        for (int i=0; i < deviceIds.length; i++) {
+        for (int i = 0; i < deviceIds.length; i++) {
             InputDevice device = InputDevice.getDevice(deviceIds[i]);
             if (device == null) {
                 continue;

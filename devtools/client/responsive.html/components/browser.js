@@ -16,11 +16,6 @@ const Types = require("../types");
 const { waitForMessage } = require("../utils/e10s");
 
 module.exports = createClass({
-
-  displayName: "Browser",
-
-  mixins: [ addons.PureRenderMixin ],
-
   /**
    * This component is not allowed to depend directly on frequently changing
    * data (width, height) due to the use of `dangerouslySetInnerHTML` below.
@@ -32,6 +27,10 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
   },
+
+  displayName: "Browser",
+
+  mixins: [ addons.PureRenderMixin ],
 
   /**
    * Once the browser element has mounted, load the frame script and enable

@@ -51,28 +51,6 @@ module.exports = createClass({
       this.updateDebugStatus);
   },
 
-  render() {
-    let { client } = this.props;
-    let { debugDisabled, extensions: targets } = this.state;
-    let name = Strings.GetStringFromName("extensions");
-    let targetClass = AddonTarget;
-
-    return dom.div({
-      id: "tab-addons",
-      className: "tab",
-      role: "tabpanel",
-      "aria-labelledby": "tab-addons-header-name"
-    },
-    TabHeader({
-      id: "tab-addons-header-name",
-      name: Strings.GetStringFromName("addons")
-    }),
-    AddonsControls({ debugDisabled }),
-    dom.div({ id: "addons" },
-      TargetList({ name, targets, client, debugDisabled, targetClass })
-    ));
-  },
-
   updateDebugStatus() {
     let debugDisabled =
       !Services.prefs.getBoolPref(CHROME_ENABLED_PREF) ||
@@ -122,4 +100,26 @@ module.exports = createClass({
   onDisabled() {
     this.updateAddonsList();
   },
+
+  render() {
+    let { client } = this.props;
+    let { debugDisabled, extensions: targets } = this.state;
+    let name = Strings.GetStringFromName("extensions");
+    let targetClass = AddonTarget;
+
+    return dom.div({
+      id: "tab-addons",
+      className: "tab",
+      role: "tabpanel",
+      "aria-labelledby": "tab-addons-header-name"
+    },
+    TabHeader({
+      id: "tab-addons-header-name",
+      name: Strings.GetStringFromName("addons")
+    }),
+    AddonsControls({ debugDisabled }),
+    dom.div({ id: "addons" },
+      TargetList({ name, targets, client, debugDisabled, targetClass })
+    ));
+  }
 });
