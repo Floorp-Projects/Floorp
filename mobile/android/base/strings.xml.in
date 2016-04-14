@@ -129,14 +129,14 @@
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
   <string name="pref_category_general">&pref_category_general;</string>
-  <string name="pref_category_general_summary">&pref_category_general_summary2;</string>
+  <string name="pref_category_general_summary">&pref_category_general_summary3;</string>
 
   <string name="pref_category_search">&pref_category_search3;</string>
-  <string name="pref_category_search_summary">&pref_category_search_summary;</string>
+  <string name="pref_category_search_summary">&pref_category_search_summary2;</string>
   <string name="pref_category_accessibility">&pref_category_accessibility;</string>
   <string name="pref_category_accessibility_summary">&pref_category_accessibility_summary2;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
-  <string name="pref_category_privacy_summary">&pref_category_privacy_summary3;</string>
+  <string name="pref_category_privacy_summary">&pref_category_privacy_summary4;</string>
   <string name="pref_category_vendor">&pref_category_vendor2;</string>
   <string name="pref_category_vendor_summary">&pref_category_vendor_summary2;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
@@ -154,7 +154,7 @@
   <string name="locale_system_default">&locale_system_default;</string>
 
   <string name="pref_category_advanced">&pref_category_advanced;</string>
-  <string name="pref_category_advanced_summary">&pref_category_advanced_summary2;</string>
+  <string name="pref_category_advanced_summary">&pref_category_advanced_summary3;</string>
   <string name="pref_developer_remotedebugging_usb">&pref_developer_remotedebugging_usb;</string>
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
