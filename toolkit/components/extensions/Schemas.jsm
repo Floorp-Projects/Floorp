@@ -638,7 +638,15 @@ class ObjectType extends Type {
     for (let prop of Object.keys(this.properties)) {
       let error = checkProperty(prop, this.properties[prop], result);
       if (error) {
-        return error;
+        let {onError} = this.properties[prop];
+        if (onError == "warn") {
+          context.logError(error.error);
+        } else if (onError != "ignore") {
+          return error;
+        }
+
+        result[prop] = null;
+        remainingProps.delete(prop);
       }
     }
 
@@ -1178,9 +1186,10 @@ this.Schemas = {
       let parseProperty = (type, extraProps = []) => {
         return {
           type: this.parseType(path, type,
-                               ["unsupported", ...extraProps]),
+                               ["unsupported", "onError", ...extraProps]),
           optional: type.optional || false,
           unsupported: type.unsupported || false,
+          onError: type.onError || null,
         };
       };
 
