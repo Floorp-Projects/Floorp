@@ -71,7 +71,7 @@ inline PrincipalHandle MakePrincipalHandle(nsIPrincipal* aPrincipal)
   return PrincipalHandle(holder);
 }
 
-const PrincipalHandle PRINCIPAL_HANDLE_NONE(nullptr);
+#define PRINCIPAL_HANDLE_NONE nullptr
 
 inline nsIPrincipal* GetPrincipalFromHandle(PrincipalHandle& aPrincipalHandle)
 {
