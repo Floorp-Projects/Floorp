@@ -3842,6 +3842,7 @@ GetManifestContents(const NS_tchar *manifest)
     size_t c = fread(rb, 1, count, mfile);
     if (c != count) {
       LOG(("GetManifestContents: error reading manifest file: " LOG_S, manifest));
+      free(mbuf);
       return nullptr;
     }
 
@@ -3855,8 +3856,10 @@ GetManifestContents(const NS_tchar *manifest)
   return rb;
 #else
   NS_tchar *wrb = (NS_tchar *) malloc((ms.st_size + 1) * sizeof(NS_tchar));
-  if (!wrb)
+  if (!wrb) {
+    free(mbuf);
     return nullptr;
+  }
 
   if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, rb, -1, wrb,
                            ms.st_size + 1)) {
