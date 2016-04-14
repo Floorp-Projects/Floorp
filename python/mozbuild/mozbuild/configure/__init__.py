@@ -497,6 +497,14 @@ class ConfigureSandbox(dict):
                           for k, v in kwargs.iteritems()}
                 ret = template(*args, **kwargs)
                 if isfunction(ret):
+                    # We can't expect the sandboxed code to think about all the
+                    # details of implementing decorators, so do some of the
+                    # work for them. If the function takes exactly one function
+                    # as argument and returns a function, it must be a
+                    # decorator, so mark the returned function as wrapping the
+                    # function passed in.
+                    if len(args) == 1 and not kwargs and isfunction(args[0]):
+                        ret = wraps(args[0])(ret)
                     return wrap_template(ret)
                 return ret
             return wrapper
