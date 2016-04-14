@@ -180,7 +180,7 @@ CallGetClassObject(const char* aContractID, const nsIID& aIID, void** aResult)
 nsresult
 nsCreateInstanceByCID::operator()(const nsIID& aIID, void** aInstancePtr) const
 {
-  nsresult status = CallCreateInstance(mCID, mOuter, aIID, aInstancePtr);
+  nsresult status = CallCreateInstance(mCID, nullptr, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
     *aInstancePtr = 0;
   }
@@ -194,7 +194,7 @@ nsresult
 nsCreateInstanceByContractID::operator()(const nsIID& aIID,
                                          void** aInstancePtr) const
 {
-  nsresult status = CallCreateInstance(mContractID, mOuter, aIID, aInstancePtr);
+  nsresult status = CallCreateInstance(mContractID, nullptr, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
     *aInstancePtr = 0;
   }
@@ -208,7 +208,7 @@ nsresult
 nsCreateInstanceFromFactory::operator()(const nsIID& aIID,
                                         void** aInstancePtr) const
 {
-  nsresult status = mFactory->CreateInstance(mOuter, aIID, aInstancePtr);
+  nsresult status = mFactory->CreateInstance(nullptr, aIID, aInstancePtr);
   if (NS_FAILED(status)) {
     *aInstancePtr = 0;
   }
