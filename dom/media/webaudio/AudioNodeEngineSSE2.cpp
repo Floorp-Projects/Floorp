@@ -223,6 +223,11 @@ void BufferComplexMultiply_SSE(const float* aInput,
          outreal0, outreal1, outreal2, outreal3,
          outimag0, outimag1, outimag2, outimag3;
 
+  ASSERT_ALIGNED16(aInput);
+  ASSERT_ALIGNED16(aScale);
+  ASSERT_ALIGNED16(aOutput);
+  ASSERT_MULTIPLE16(aSize);
+
   for (i = 0; i < aSize * 2; i += 16) {
     in0 = _mm_load_ps(&aInput[i]);
     in1 = _mm_load_ps(&aInput[i + 4]);
@@ -272,6 +277,9 @@ AudioBufferSumOfSquares_SSE(const float* aInput, uint32_t aLength)
   __m128 in0, in1, in2, in3,
          acc0, acc1, acc2, acc3;
   float out[4];
+
+  ASSERT_ALIGNED16(aInput);
+  ASSERT_MULTIPLE16(aLength);
 
   acc0 = _mm_setzero_ps();
   acc1 = _mm_setzero_ps();
