@@ -39,15 +39,16 @@
     "mozilla/var-only-at-top-level": 1,
 
     // Rules from the React plugin
-    "react/display-name": 1,
-    "react/no-danger": 1,
-    "react/no-did-mount-set-state": 1,
-    "react/no-did-update-set-state": 1,
-    "react/no-direct-mutation-state": 1,
-    "react/no-unknown-property": 1,
+    "react/display-name": 2,
+    "react/no-danger": 2,
+    "react/no-did-mount-set-state": 2,
+    "react/no-did-update-set-state": 2,
+    "react/no-direct-mutation-state": 2,
+    "react/no-unknown-property": 2,
     "react/prefer-es6-class": [1, "never"],
-    "react/prop-types": 1,
-    "react/sort-comp": [1, {
+    // Disabled temporarily until errors are fixed.
+    "react/prop-types": 0,
+    "react/sort-comp": [2, {
       order: [
         "propTypes",
         "everything-else",

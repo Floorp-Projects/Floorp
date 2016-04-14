@@ -44,7 +44,7 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
                 JSONArray items = tab.getJSONArray("items");
                 mTabs.put(title, PromptListItem.getArray(items));
             }
-        } catch(JSONException ex) {
+        } catch (JSONException ex) {
             Log.e(LOGTAG, "Exception", ex);
         }
     }
@@ -82,7 +82,7 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
         try {
             obj.put("tab", mHost.getCurrentTab());
             obj.put("item", mPosition);
-        } catch(JSONException ex) { }
+        } catch (JSONException ex) { }
 
         return obj;
     }

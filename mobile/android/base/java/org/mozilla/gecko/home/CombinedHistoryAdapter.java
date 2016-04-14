@@ -218,7 +218,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
             return position;
         } else if (type == ItemType.SECTION_HEADER) {
             return position - remoteClients.size();
-        } else if (type == ItemType.HISTORY){
+        } else if (type == ItemType.HISTORY) {
             return position - remoteClients.size() - getHeadersBefore(position);
         } else {
             return position;

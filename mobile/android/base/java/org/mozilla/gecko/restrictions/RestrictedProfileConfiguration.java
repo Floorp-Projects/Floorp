@@ -52,7 +52,7 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         hiddenRestrictions.add(Restrictable.DEFAULT_THEME);
 
         // Hold behind Nightly flag until we have an actual block list deployed.
-        if (!AppConstants.NIGHTLY_BUILD){
+        if (!AppConstants.NIGHTLY_BUILD) {
             hiddenRestrictions.add(Restrictable.BLOCK_LIST);
         }
     }

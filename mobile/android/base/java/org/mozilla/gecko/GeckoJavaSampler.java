@@ -102,7 +102,7 @@ public class GeckoJavaSampler {
                     if (!mPauseSampler) {
                         StackTraceElement[] bt = sMainThread.getStackTrace();
                         mSamples.get(0)[mSamplePos] = new Sample(bt);
-                        mSamplePos = (mSamplePos+1) % mSamples.get(0).length;
+                        mSamplePos = (mSamplePos + 1) % mSamples.get(0).length;
                     }
                     if (mStopSampler) {
                         break;

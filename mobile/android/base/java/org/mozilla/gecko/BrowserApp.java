@@ -24,6 +24,8 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.distribution.Distribution.DistributionDescriptor;
+import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.favicons.Favicons;
@@ -324,7 +326,7 @@ public class BrowserApp extends GeckoApp
         }
 
         Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
-        switch(msg) {
+        switch (msg) {
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab) && mDynamicToolbar.isEnabled()) {
                     mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
@@ -688,7 +690,9 @@ public class BrowserApp extends GeckoApp
 
         // We want to upload the telemetry core ping as soon after startup as possible. It relies on the
         // Distribution being initialized. If you move this initialization, ensure it plays well with telemetry.
-        Distribution distribution = Distribution.init(this);
+        final Distribution distribution = Distribution.init(this);
+        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, getProfile().getName()));
+
         searchEngineManager = new SearchEngineManager(this, distribution);
 
         // Init suggested sites engine in BrowserDB.
@@ -915,7 +919,7 @@ public class BrowserApp extends GeckoApp
         if (AppConstants.MOZ_MEDIA_PLAYER) {
             try {
                 return Class.forName("org.mozilla.gecko.MediaPlayerManager");
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 // Ignore failures
                 Log.e(LOGTAG, "No native casting support", ex);
             }
@@ -1182,7 +1186,7 @@ public class BrowserApp extends GeckoApp
                 int itemId = -1;
                 try {
                   itemId = new JSONObject(result).getInt("button");
-                } catch(JSONException ex) {
+                } catch (JSONException ex) {
                     Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
                 }
 
@@ -3622,7 +3626,7 @@ public class BrowserApp extends GeckoApp
 
                         doRestart(args);
                     }
-                } catch(JSONException ex) {
+                } catch (JSONException ex) {
                     Log.e(LOGTAG, "Exception reading guest mode prompt result", ex);
                 }
             }

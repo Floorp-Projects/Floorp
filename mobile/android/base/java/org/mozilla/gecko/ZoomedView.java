@@ -606,7 +606,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     }
 
     private void setTextInZoomFactorButton(float zoom) {
-        final String percentageValue = Integer.toString((int) (100*zoom));
+        final String percentageValue = Integer.toString((int) (100 * zoom));
         changeZoomFactorButton.setText("- " + getResources().getString(R.string.percent, percentageValue) + " +");
     }
 

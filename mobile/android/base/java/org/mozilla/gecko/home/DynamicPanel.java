@@ -191,7 +191,7 @@ public class DynamicPanel extends HomeFragment {
             }
         };
 
-        switch(mPanelConfig.getLayoutType()) {
+        switch (mPanelConfig.getLayoutType()) {
             case FRAME:
                 final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
                 mPanelLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler,
@@ -215,7 +215,7 @@ public class DynamicPanel extends HomeFragment {
     }
 
     private void setUIMode(UIMode mode) {
-        switch(mode) {
+        switch (mode) {
             case PANEL:
                 if (mPanelAuthLayout != null) {
                     mPanelAuthLayout.setVisibility(View.GONE);

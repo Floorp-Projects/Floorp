@@ -75,7 +75,7 @@ public class PanelInfoManager implements GeckoEventListener {
     public void requestPanelsById(Set<String> ids, RequestCallback callback) {
         final int requestId = sRequestId.getAndIncrement();
 
-        synchronized(sCallbacks) {
+        synchronized (sCallbacks) {
             // If there are no pending callbacks, register the event listener.
             if (sCallbacks.size() == 0) {
                 EventDispatcher.getInstance().registerGeckoThreadListener(this,
@@ -131,7 +131,7 @@ public class PanelInfoManager implements GeckoEventListener {
             final RequestCallback callback;
             final int requestId = message.getInt("requestId");
 
-            synchronized(sCallbacks) {
+            synchronized (sCallbacks) {
                 callback = sCallbacks.get(requestId);
                 sCallbacks.delete(requestId);
 

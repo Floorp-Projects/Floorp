@@ -26,7 +26,9 @@ if (gTestInWindow) {
 const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";
 
 const TESTROOT = "http://example.com/" + RELATIVE_DIR;
+const SECURE_TESTROOT = "https://example.com/" + RELATIVE_DIR;
 const TESTROOT2 = "http://example.org/" + RELATIVE_DIR;
+const SECURE_TESTROOT2 = "https://example.org/" + RELATIVE_DIR;
 const CHROMEROOT = pathParts.join("/") + "/";
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";

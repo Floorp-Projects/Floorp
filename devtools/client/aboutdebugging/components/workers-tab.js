@@ -48,45 +48,6 @@ module.exports = createClass({
     client.removeListener("workerListChanged", this.update);
   },
 
-  render() {
-    let { client } = this.props;
-    let { workers } = this.state;
-
-    return dom.div({
-      id: "tab-workers",
-      className: "tab",
-      role: "tabpanel",
-      "aria-labelledby": "tab-workers-header-name"
-    },
-    TabHeader({
-      id: "tab-workers-header-name",
-      name: Strings.GetStringFromName("workers")
-    }),
-    dom.div({ id: "workers", className: "inverted-icons" },
-      TargetList({
-        client,
-        id: "service-workers",
-        name: Strings.GetStringFromName("serviceWorkers"),
-        targetClass: ServiceWorkerTarget,
-        targets: workers.service
-      }),
-      TargetList({
-        client,
-        id: "shared-workers",
-        name: Strings.GetStringFromName("sharedWorkers"),
-        targetClass: WorkerTarget,
-        targets: workers.shared
-      }),
-      TargetList({
-        client,
-        id: "other-workers",
-        name: Strings.GetStringFromName("otherWorkers"),
-        targetClass: WorkerTarget,
-        targets: workers.other
-      })
-    ));
-  },
-
   update() {
     let workers = this.getInitialState().workers;
 
@@ -136,5 +97,44 @@ module.exports = createClass({
 
       this.setState({ workers });
     });
+  },
+
+  render() {
+    let { client } = this.props;
+    let { workers } = this.state;
+
+    return dom.div({
+      id: "tab-workers",
+      className: "tab",
+      role: "tabpanel",
+      "aria-labelledby": "tab-workers-header-name"
+    },
+    TabHeader({
+      id: "tab-workers-header-name",
+      name: Strings.GetStringFromName("workers")
+    }),
+    dom.div({ id: "workers", className: "inverted-icons" },
+      TargetList({
+        client,
+        id: "service-workers",
+        name: Strings.GetStringFromName("serviceWorkers"),
+        targetClass: ServiceWorkerTarget,
+        targets: workers.service
+      }),
+      TargetList({
+        client,
+        id: "shared-workers",
+        name: Strings.GetStringFromName("sharedWorkers"),
+        targetClass: WorkerTarget,
+        targets: workers.shared
+      }),
+      TargetList({
+        client,
+        id: "other-workers",
+        name: Strings.GetStringFromName("otherWorkers"),
+        targetClass: WorkerTarget,
+        targets: workers.other
+      })
+    ));
   }
 });

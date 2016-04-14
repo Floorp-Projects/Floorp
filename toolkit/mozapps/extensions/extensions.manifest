@@ -23,3 +23,5 @@ category addon-provider-module PluginProvider resource://gre/modules/addons/Plug
 #endif
 category addon-provider-module GMPProvider resource://gre/modules/addons/GMPProvider.jsm
 #endif
+component {8866d8e3-4ea5-48b7-a891-13ba0ac15235} amWebAPI.js
+contract @mozilla.org/addon-web-api/manager;1 {8866d8e3-4ea5-48b7-a891-13ba0ac15235}

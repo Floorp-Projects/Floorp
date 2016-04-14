@@ -129,14 +129,24 @@ NewURI(const nsACString &aSpec,
 #ifdef ANDROID
 static nsCString
 GetDeviceModelId() {
+    // Assumed to be running on the main thread
+    // We need the device property in either case
+    nsAutoCString deviceModelId;
     nsCOMPtr<nsIPropertyBag2> infoService = do_GetService("@mozilla.org/system-info;1");
     MOZ_ASSERT(infoService, "Could not find a system info service");
     nsAutoString androidDevice;
     nsresult rv = infoService->GetPropertyAsAString(NS_LITERAL_STRING("device"), androidDevice);
     if (NS_SUCCEEDED(rv)) {
-        return NS_LossyConvertUTF16toASCII(androidDevice);
+        deviceModelId = NS_LossyConvertUTF16toASCII(androidDevice);
     }
-    return EmptyCString();
+    nsAutoCString deviceString;
+    rv = Preferences::GetCString(UA_PREF("device_string"), &deviceString);
+    if (NS_SUCCEEDED(rv)) {
+        deviceString.Trim(" ", true, true);
+        deviceString.ReplaceSubstring(NS_LITERAL_CSTRING("%DEVICEID%"), deviceModelId);
+        return deviceString;
+    }
+    return deviceModelId;
 }
 #endif
 

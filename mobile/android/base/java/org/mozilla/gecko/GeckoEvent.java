@@ -322,11 +322,11 @@ public class GeckoEvent {
             // reverse which radius is major and minor
             if (mOrientations[index] < 0) {
                 mOrientations[index] += 90;
-                mPointRadii[index] = new Point((int)event.getToolMajor(eventIndex)/2,
-                                               (int)event.getToolMinor(eventIndex)/2);
+                mPointRadii[index] = new Point((int) event.getToolMajor(eventIndex) / 2,
+                                               (int) event.getToolMinor(eventIndex) / 2);
             } else {
-                mPointRadii[index] = new Point((int)event.getToolMinor(eventIndex)/2,
-                                               (int)event.getToolMajor(eventIndex)/2);
+                mPointRadii[index] = new Point((int) event.getToolMinor(eventIndex) / 2,
+                                               (int) event.getToolMajor(eventIndex) / 2);
             }
 
             if (!keepInViewCoordinates) {
@@ -365,7 +365,7 @@ public class GeckoEvent {
         int sensor_type = s.sensor.getType();
         GeckoEvent event = null;
 
-        switch(sensor_type) {
+        switch (sensor_type) {
 
         case Sensor.TYPE_ACCELEROMETER:
             event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
@@ -435,7 +435,7 @@ public class GeckoEvent {
                 // s.values[3] was optional in API <= 18, so we need to compute it
                 // The values form a unit quaternion, so we can compute the angle of
                 // rotation purely based on the given 3 values.
-                event.mW = 1 - s.values[0]*s.values[0] - s.values[1]*s.values[1] - s.values[2]*s.values[2];
+                event.mW = 1 - s.values[0] * s.values[0] - s.values[1] * s.values[1] - s.values[2] * s.values[2];
                 event.mW = (event.mW > 0.0) ? Math.sqrt(event.mW) : 0.0;
             }
             break;
@@ -601,7 +601,7 @@ public class GeckoEvent {
         int bits = 0;
         for (int i = 0; i < array.length; i++) {
             if (array[i]) {
-                bits |= 1<<i;
+                bits |= 1 << i;
             }
         }
         return bits;

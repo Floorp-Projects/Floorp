@@ -119,7 +119,7 @@ public class ImmutableViewportMetrics {
     }
 
     public RectF getCssViewport() {
-        return RectUtils.scale(getViewport(), 1/zoomFactor);
+        return RectUtils.scale(getViewport(), 1 / zoomFactor);
     }
 
     public RectF getPageRect() {

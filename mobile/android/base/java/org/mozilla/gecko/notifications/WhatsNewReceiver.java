@@ -40,7 +40,7 @@ public class WhatsNewReceiver extends BroadcastReceiver {
         }
 
         final String dataString = intent.getDataString();
-        if (TextUtils.isEmpty(dataString) || !dataString.contains(AppConstants.ANDROID_PACKAGE_NAME)){
+        if (TextUtils.isEmpty(dataString) || !dataString.contains(AppConstants.ANDROID_PACKAGE_NAME)) {
             return;
         }
 

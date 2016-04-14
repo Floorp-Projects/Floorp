@@ -65,15 +65,16 @@ public class TelemetryPingGenerator {
      */
     public static TelemetryPing createCorePing(final Context context, final String docId, final String clientId,
             final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays,
-            @Nullable final String defaultSearchEngine) {
+            @Nullable final String distributionId, @Nullable final String defaultSearchEngine) {
         final String serverURL = getTelemetryServerURL(docId, serverURLSchemeHostPort, CorePing.NAME);
         final ExtendedJSONObject payload =
-                createCorePingPayload(context, clientId, seq, profileCreationDateDays, defaultSearchEngine);
+                createCorePingPayload(context, clientId, seq, profileCreationDateDays, distributionId, defaultSearchEngine);
         return new TelemetryPing(serverURL, payload);
     }
 
     private static ExtendedJSONObject createCorePingPayload(final Context context, final String clientId,
-            final int seq, final long profileCreationDate, @Nullable final String defaultSearchEngine) {
+            final int seq, final long profileCreationDate, @Nullable final String distributionId,
+            @Nullable final String defaultSearchEngine) {
         final ExtendedJSONObject ping = new ExtendedJSONObject();
         ping.put(CorePing.VERSION_ATTR, CorePing.VERSION_VALUE);
         ping.put(CorePing.OS_ATTR, CorePing.OS_VALUE);
@@ -92,6 +93,11 @@ public class TelemetryPingGenerator {
         ping.put(CorePing.OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
         ping.put(CorePing.SEQ, seq);
         ping.putArray(CorePing.EXPERIMENTS, Experiments.getActiveExperiments(context));
+
+        // Optional.
+        if (distributionId != null) {
+            ping.put(CorePing.DISTRIBUTION_ID, distributionId);
+        }
 
         // `null` indicates failure more clearly than < 0.
         final Long finalProfileCreationDate = (profileCreationDate < 0) ? null : profileCreationDate;

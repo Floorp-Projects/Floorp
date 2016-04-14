@@ -91,7 +91,7 @@ public class Tabs implements GeckoEventListener {
         public void run() {
             try {
                 db.getTabsAccessor().persistLocalTabs(context.getContentResolver(), tabs);
-            } catch(SQLiteException e) {
+            } catch (SQLiteException e) {
                 Log.w(LOGTAG, "Error persisting local tabs", e);
             }
         }

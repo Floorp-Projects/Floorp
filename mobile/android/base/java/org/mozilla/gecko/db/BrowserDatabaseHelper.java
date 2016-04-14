@@ -1369,7 +1369,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         // We have to do incremental upgrades until we reach the current
         // database schema version.
         for (int v = oldVersion + 1; v <= newVersion; v++) {
-            switch(v) {
+            switch (v) {
                 case 4:
                     upgradeDatabaseFrom3to4(db);
                     break;

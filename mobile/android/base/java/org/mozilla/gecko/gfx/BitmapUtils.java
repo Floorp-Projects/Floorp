@@ -224,7 +224,7 @@ public final class BitmapUtils {
 
         try {
             url = new URL(urlString);
-        } catch(MalformedURLException e) {
+        } catch (MalformedURLException e) {
             Log.w(LOGTAG, "decodeUrl: malformed URL " + urlString);
             return null;
         }
@@ -237,7 +237,7 @@ public final class BitmapUtils {
 
         try {
             stream = url.openStream();
-        } catch(IOException e) {
+        } catch (IOException e) {
             Log.w(LOGTAG, "decodeUrl: IOException downloading " + url);
             return null;
         }
@@ -251,7 +251,7 @@ public final class BitmapUtils {
 
         try {
             stream.close();
-        } catch(IOException e) {
+        } catch (IOException e) {
             Log.w(LOGTAG, "decodeUrl: IOException closing stream " + url, e);
         }
 
@@ -334,9 +334,9 @@ public final class BitmapUtils {
         return Color.argb(255, 255, 255, 255);
 
       // Return a color with the average hue/saturation/value of the bin with the most colors.
-      hsv[0] = sumHue[maxBin]/colorBins[maxBin];
-      hsv[1] = sumSat[maxBin]/colorBins[maxBin];
-      hsv[2] = sumVal[maxBin]/colorBins[maxBin];
+      hsv[0] = sumHue[maxBin] / colorBins[maxBin];
+      hsv[1] = sumSat[maxBin] / colorBins[maxBin];
+      hsv[2] = sumVal[maxBin] / colorBins[maxBin];
       return Color.HSVToColor(hsv);
     }
 
@@ -406,7 +406,7 @@ public final class BitmapUtils {
 
             try {
                 return Integer.parseInt(resource);
-            } catch(NumberFormatException ex) {
+            } catch (NumberFormatException ex) {
                 // This isn't a resource id, try looking for a string
             }
 
@@ -423,7 +423,7 @@ public final class BitmapUtils {
                     icon = f.getInt(null);
                 } catch (final NoSuchFieldException e2) {
                     // This drawable doesn't seem to exist...
-                } catch(Exception e3) {
+                } catch (Exception e3) {
                     Log.i(LOGTAG, "Exception getting drawable", e3);
                 }
 

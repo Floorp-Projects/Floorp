@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var gPopupShownExpected = false;
 var gPopupShownListener;
 var gLastAutoCompleteResults;
 var gChromeScript;
@@ -225,13 +226,23 @@ function getPopupState(then = null) {
   });
 }
 
+function listenForUnexpectedPopupShown() {
+  gChromeScript.addMessageListener("onpopupshown", function onPopupShown() {
+    if (!gPopupShownExpected) {
+      ok(false, "Unexpected autocomplete popupshown event");
+    }
+  });
+}
+
 /**
  * Resolve at the next popupshown event for the autocomplete popup
  * @return {Promise} with the results
  */
 function promiseACShown() {
+  gPopupShownExpected = true;
   return new Promise(resolve => {
     gChromeScript.addMessageListener("onpopupshown", ({ results }) => {
+      gPopupShownExpected = false;
       resolve(results);
     });
   });

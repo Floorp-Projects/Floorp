@@ -11,9 +11,6 @@ const Types = require("../types");
 const Viewport = createFactory(require("./viewport"));
 
 module.exports = createClass({
-
-  displayName: "Viewports",
-
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
@@ -25,6 +22,8 @@ module.exports = createClass({
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
   },
+
+  displayName: "Viewports",
 
   render() {
     let {

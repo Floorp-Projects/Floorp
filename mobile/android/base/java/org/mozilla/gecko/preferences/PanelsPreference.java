@@ -125,7 +125,7 @@ public class PanelsPreference extends CustomListPreference {
 
     @Override
     protected void onDialogIndexClicked(int index) {
-        switch(index) {
+        switch (index) {
             case INDEX_SET_DEFAULT_BUTTON:
                 mParentCategory.setDefault(this);
                 break;

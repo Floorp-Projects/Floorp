@@ -48,7 +48,7 @@ public final class Clipboard {
                 String text = getClipboardTextImpl();
                 try {
                     sClipboardQueue.put(text != null ? text : "");
-                } catch (InterruptedException ie) {}
+                } catch (InterruptedException ie) { }
             }
         });
 

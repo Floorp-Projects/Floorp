@@ -495,7 +495,7 @@ public final class GeckoProfile {
                 mLocked = LockState.UNLOCKED;
             }
             return result;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Log.e(LOGTAG, "Error locking profile", ex);
         }
         mLocked = LockState.UNLOCKED;
@@ -527,7 +527,7 @@ public final class GeckoProfile {
                 mLocked = LockState.LOCKED;
             }
             return result;
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Log.e(LOGTAG, "Error unlocking profile", ex);
         }
 
@@ -625,7 +625,7 @@ public final class GeckoProfile {
         } catch (final IOException e) {
             // Avoid log spam: don't log the full Exception w/ the stack trace.
             Log.d(LOGTAG, "Could not migrate client ID from FHR – creating a new one: " + e.getLocalizedMessage());
-            clientIdToWrite = UUID.randomUUID().toString();
+            clientIdToWrite = generateNewClientId();
         }
 
         // There is a possibility Gecko is running and the Gecko telemetry implementation decided it's time to generate
@@ -639,6 +639,10 @@ public final class GeckoProfile {
         // In any case, if we get an exception, intentionally throw - there's nothing more to do here.
         persistClientId(clientIdToWrite);
         return getValidClientIdFromDisk(CLIENT_ID_FILE_PATH);
+    }
+
+    protected static String generateNewClientId() {
+        return UUID.randomUUID().toString();
     }
 
     /**
@@ -655,6 +659,9 @@ public final class GeckoProfile {
         throw new IOException("Received client ID is invalid: " + clientId);
     }
 
+    /**
+     * Persists the given client ID to disk. This will overwrite any existing files.
+     */
     @WorkerThread
     private void persistClientId(final String clientId) throws IOException {
         if (!ensureParentDirs(CLIENT_ID_FILE_PATH)) {
@@ -917,7 +924,7 @@ public final class GeckoProfile {
                     try {
                         int sectionNumber = Integer.parseInt(section.getName().substring("Profile".length()));
                         String curSection = "Profile" + sectionNumber;
-                        String nextSection = "Profile" + (sectionNumber+1);
+                        String nextSection = "Profile" + (sectionNumber + 1);
 
                         sections.remove(curSection);
 
@@ -926,7 +933,7 @@ public final class GeckoProfile {
                             sectionNumber++;
 
                             curSection = nextSection;
-                            nextSection = "Profile" + (sectionNumber+1);
+                            nextSection = "Profile" + (sectionNumber + 1);
                         }
                     } catch (NumberFormatException nex) {
                         // uhm, malformed Profile thing; we can't do much.
@@ -983,6 +990,7 @@ public final class GeckoProfile {
         return GeckoProfileDirectories.findProfileDir(mMozillaDir, mName);
     }
 
+    @WorkerThread
     private File createProfileDir() throws IOException {
         if (isCustomProfile()) {
             // Custom profiles must already exist.
@@ -1057,6 +1065,11 @@ public final class GeckoProfile {
             // Best-effort.
             Log.w(LOGTAG, "Couldn't write " + TIMES_PATH, e);
         }
+
+        // Create the client ID file before Gecko starts (we assume this method
+        // is called before Gecko starts). If we let Gecko start, the JS telemetry
+        // code may try to write to the file at the same time Java does.
+        persistClientId(generateNewClientId());
 
         // Initialize pref flag for displaying the start pane for a new profile.
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
