@@ -185,7 +185,10 @@ EventTree::Process()
 {
   EventTree* node = mFirst;
   while (node) {
-    node->Process();
+    // Skip a node and its subtree if its container is not in the document.
+    if (node->mContainer->IsInDocument()) {
+      node->Process();
+    }
     node = node->mNext;
   }
 
@@ -337,7 +340,7 @@ EventTree::FindOrInsert(Accessible* aContainer)
   // If 'this' node contains the given container accessible, then
   //   do not emit a reorder event for the container
   //   if a dependent show event target contains the given container then do not
-  //      emit show / hide events (to be done)
+  //   emit show / hide events (see Process() method)
 
   return prevNode->mNext = new EventTree(aContainer, mDependentEvents.IsEmpty());
 }
