@@ -4369,10 +4369,6 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
   // NOTE: aElement will be nullptr when unlocking.
   sIsPointerLocked = !!aElement;
 
-  if (!aWidget) {
-    return;
-  }
-
   // Reset mouse wheel transaction
   WheelTransaction::EndTransaction();
 
@@ -4381,6 +4377,8 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     do_GetService("@mozilla.org/widget/dragservice;1");
 
   if (sIsPointerLocked) {
+    MOZ_ASSERT(aWidget, "Locking pointer requires a widget");
+
     // Store the last known ref point so we can reposition the pointer after unlock.
     mPreLockPoint = sLastRefPoint;
 
@@ -4390,8 +4388,8 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     sLastRefPoint = GetWindowInnerRectCenter(aElement->OwnerDoc()->GetWindow(),
                                              aWidget,
                                              mPresContext);
-    aWidget->SynthesizeNativeMouseMove(sLastRefPoint + aWidget->WidgetToScreenOffset(),
-                                       nullptr);
+    aWidget->SynthesizeNativeMouseMove(
+      sLastRefPoint + aWidget->WidgetToScreenOffset(), nullptr);
 
     // Retarget all events to this element via capture.
     nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
@@ -4406,8 +4404,10 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     // pre-pointerlock position, so that the synthetic mouse event reports
     // no movement.
     sLastRefPoint = mPreLockPoint;
-    aWidget->SynthesizeNativeMouseMove(mPreLockPoint + aWidget->WidgetToScreenOffset(),
-                                       nullptr);
+    if (aWidget) {
+      aWidget->SynthesizeNativeMouseMove(
+        mPreLockPoint + aWidget->WidgetToScreenOffset(), nullptr);
+    }
 
     // Don't retarget events to this element any more.
     nsIPresShell::SetCapturingContent(nullptr, CAPTURE_POINTERLOCK);
