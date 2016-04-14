@@ -471,6 +471,11 @@ class BaseMarionetteArguments(ArgumentParser):
             print 'must specify one or more test files, manifests, or directories'
             sys.exit(1)
 
+        for path in args.tests:
+            if not os.path.exists(path):
+                print '{0} does not exist'.format(path)
+                sys.exit(1)
+
         if not args.emulator and not args.address and not args.binary:
             print 'must specify --binary, --emulator or --address'
             sys.exit(1)
