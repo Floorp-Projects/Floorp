@@ -5711,24 +5711,7 @@ else
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
   case "${target}" in
-  *-darwin*)
-    AC_DEFINE(MOZ_MEMORY_DARWIN)
-    ;;
-  *-*freebsd*)
-    AC_DEFINE(MOZ_MEMORY_BSD)
-    ;;
-  *-android*|*-linuxandroid*)
-    AC_DEFINE(MOZ_MEMORY_LINUX)
-    AC_DEFINE(MOZ_MEMORY_ANDROID)
-    ;;
-  *-*linux*)
-    AC_DEFINE(MOZ_MEMORY_LINUX)
-    ;;
-  *-netbsd*)
-    AC_DEFINE(MOZ_MEMORY_BSD)
-    ;;
   *-mingw*)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
     if test "$MSVS_VERSION" != "2015"; then
         WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
@@ -5740,9 +5723,6 @@ else
         fi
         rm crtdll.obj
     fi
-    ;;
-  *)
-    AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
 fi # MOZ_MEMORY
