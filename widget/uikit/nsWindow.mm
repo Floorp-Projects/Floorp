@@ -821,7 +821,7 @@ nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                         nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
-  nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(aEvent->widget);
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(aEvent->mWidget);
 
   if (mWidgetListener)
     aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);

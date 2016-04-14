@@ -672,7 +672,6 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = nsContentUtils::GetButtonsFlagForButton(aButton);
-  event.widget = widget;
   event.pressure = aPressure;
   event.inputSource = aInputSourceArg;
   event.pointerId = aPointerId;
@@ -805,7 +804,6 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
     (aOptions & WHEEL_EVENT_CUSTOMIZED_BY_USER_PREFS) != 0;
   wheelEvent.mLineOrPageDeltaX = aLineOrPageDeltaX;
   wheelEvent.mLineOrPageDeltaY = aLineOrPageDeltaY;
-  wheelEvent.widget = widget;
 
   wheelEvent.mTime = PR_Now() / 1000;
 
@@ -938,7 +936,6 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   }
   WidgetTouchEvent event(true, msg, widget);
   event.mModifiers = nsContentUtils::GetWidgetModifiers(aModifiers);
-  event.widget = widget;
   event.mTime = PR_Now();
 
   nsPresContext* presContext = GetPresContext();

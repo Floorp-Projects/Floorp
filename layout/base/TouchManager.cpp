@@ -65,7 +65,6 @@ EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
           nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
           if (widget) {
             WidgetTouchEvent event(true, eTouchEnd, widget);
-            event.widget = widget;
             event.mTime = PR_IntervalNow();
             event.mTouches.AppendElement(aTouch);
             nsEventStatus status;
