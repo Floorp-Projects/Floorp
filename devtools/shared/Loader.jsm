@@ -26,7 +26,6 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 var loaderModules = {
   "Services": Object.create(Services),
   "toolkit/loader": Loader,
-  promise,
   PromiseDebugging,
   ChromeUtils,
   ThreadSafeChromeUtils,
@@ -82,6 +81,24 @@ XPCOMUtils.defineLazyGetter(loaderModules, "URL", () => {
   return sandbox.URL;
 });
 
+const loaderPaths = {
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "": "resource://gre/modules/commonjs/",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "devtools": "resource://devtools",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "acorn": "resource://devtools/acorn",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "acorn/util/walk": "resource://devtools/acorn/walk.js",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  "source-map": "resource://devtools/shared/sourcemap/source-map.js",
+  // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+  // Allow access to xpcshell test items from the loader.
+  "xpcshell-test": "resource://test",
+};
+
 var sharedGlobalBlocklist = ["sdk/indexed-db"];
 
 /**
@@ -91,27 +108,31 @@ var sharedGlobalBlocklist = ["sdk/indexed-db"];
 function BuiltinProvider() {}
 BuiltinProvider.prototype = {
   load: function() {
+    // Copy generic paths and modules for this loader instance
+    let paths = {};
+    for (let path in loaderPaths) {
+      paths[path] = loaderPaths[path];
+    }
+    let modules = {};
+    for (let name in loaderModules) {
+      XPCOMUtils.defineLazyGetter(modules, name, (function (name) {
+        return loaderModules[name];
+      }).bind(null, name));
+    }
+    // When creating a Loader invisible to the Debugger, we have to ensure
+    // using only modules and not depend on any JSM. As everything that is
+    // not loaded with Loader isn't going to respect `invisibleToDebugger`.
+    // But we have to keep using Promise.jsm for other loader to prevent
+    // breaking unhandled promise rejection in tests.
+    if (this.invisibleToDebugger) {
+      paths["promise"] = "resource://gre/modules/Promise-backend.js";
+    } else {
+      modules["promise"] = promise;
+    }
     this.loader = new Loader.Loader({
       id: "fx-devtools",
-      modules: loaderModules,
-      paths: {
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "": "resource://gre/modules/commonjs/",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "devtools": "resource://devtools",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn": "resource://devtools/acorn",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn/util/walk": "resource://devtools/acorn/walk.js",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "source-map": "resource://devtools/shared/sourcemap/source-map.js",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        // Allow access to xpcshell test items from the loader.
-        "xpcshell-test": "resource://test"
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-      },
+      modules,
+      paths,
       globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
