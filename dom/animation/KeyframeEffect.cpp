@@ -244,9 +244,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     result.mDuration = aTiming.mDuration.ref();
   }
 
-  result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
-                       1.0f :
-                       aTiming.mIterations;
+  MOZ_ASSERT(aTiming.mIterations >= 0.0 && !IsNaN(aTiming.mIterations),
+             "mIterations should be nonnegative & finite, as ensured by "
+             "ValidateIterations or CSSParser");
+  result.mIterations = aTiming.mIterations;
   MOZ_ASSERT(aTiming.mIterationStart >= 0.0,
              "mIterationStart should be nonnegative, as ensured by "
              "ValidateIterationStart");
