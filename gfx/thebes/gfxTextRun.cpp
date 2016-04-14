@@ -2577,26 +2577,6 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
 }
 
 already_AddRefed<gfxFont>
-gfxFontGroup::FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
-{
-    NS_ASSERTION(mStyle.style != NS_FONT_STYLE_NORMAL,
-                 "should only be called in the italic/oblique case");
-
-    gfxFontStyle regularStyle = mStyle;
-    regularStyle.style = NS_FONT_STYLE_NORMAL;
-    bool needsBold;
-    gfxFontEntry *fe = aFamily->FindFontForStyle(regularStyle, needsBold);
-    NS_ASSERTION(!fe->mIsUserFontContainer,
-                 "should only be searching platform fonts");
-    if (!fe->HasCharacter(aCh)) {
-        return nullptr;
-    }
-
-    RefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, needsBold);
-    return font.forget();
-}
-
-already_AddRefed<gfxFont>
 gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh,
                                       int32_t aRunScript)
 {
@@ -2677,23 +2657,29 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                 return firstFont.forget();
             }
 
+            RefPtr<gfxFont> font;
             if (mFonts[0].CheckForFallbackFaces()) {
-                RefPtr<gfxFont> font =
-                    FindFallbackFaceForChar(mFonts[0].Family(), aCh, aRunScript);
-                if (font) {
-                    *aMatchType = gfxTextRange::kFontGroup;
-                    return font.forget();
+                font = FindFallbackFaceForChar(mFonts[0].Family(), aCh,
+                                               aRunScript);
+            } else if (!firstFont->GetFontEntry()->IsUserFont()) {
+                // For platform fonts (but not userfonts), we may need to do
+                // fallback within the family to handle cases where some faces
+                // such as Italic or Black have reduced character sets compared
+                // to the family's Regular face.
+                gfxFontEntry* fe = firstFont->GetFontEntry();
+                if (!fe->IsUpright() ||
+                    fe->Weight() != NS_FONT_WEIGHT_NORMAL ||
+                    fe->Stretch() != NS_FONT_STRETCH_NORMAL) {
+                    // If style/weight/stretch was not Normal, see if we can
+                    // fall back to a next-best face (e.g. Arial Black -> Bold,
+                    // or Arial Narrow -> Regular).
+                    font = FindFallbackFaceForChar(mFonts[0].Family(), aCh,
+                                                   aRunScript);
                 }
-            } else if (mStyle.style != NS_FONT_STYLE_NORMAL &&
-                       !firstFont->GetFontEntry()->IsUserFont()) {
-                // If italic, test the regular face to see if it supports
-                // character. Only do this for platform fonts, not userfonts.
-                RefPtr<gfxFont> font =
-                    FindNonItalicFaceForChar(mFonts[0].Family(), aCh);
-                if (font) {
-                    *aMatchType = gfxTextRange::kFontGroup;
-                    return font.forget();
-                }
+            }
+            if (font) {
+                *aMatchType = gfxTextRange::kFontGroup;
+                return font.forget();
             }
         }
 
@@ -2799,13 +2785,15 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                 return font.forget();
             }
         } else {
-            // If italic, test the regular face to see if it supports the
-            // character. Only do this for platform fonts, not userfonts.
+            // For platform fonts, but not user fonts, consider intra-family
+            // fallback to handle styles with reduced character sets (see
+            // also above).
             fe = ff.FontEntry();
-            if (mStyle.style != NS_FONT_STYLE_NORMAL &&
-                !fe->mIsUserFontContainer &&
-                !fe->IsUserFont()) {
-                font = FindNonItalicFaceForChar(ff.Family(), aCh);
+            if (!fe->mIsUserFontContainer && !fe->IsUserFont() &&
+                (!fe->IsUpright() ||
+                 fe->Weight() != NS_FONT_WEIGHT_NORMAL ||
+                 fe->Stretch() != NS_FONT_STRETCH_NORMAL)) {
+                font = FindFallbackFaceForChar(ff.Family(), aCh, aRunScript);
                 if (font) {
                     *aMatchType = gfxTextRange::kFontGroup;
                     return font.forget();
