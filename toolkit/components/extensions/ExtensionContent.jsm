@@ -155,6 +155,7 @@ function Script(options, deferred = PromiseUtils.defer()) {
   this.run_at = this.options.run_at;
   this.js = this.options.js || [];
   this.css = this.options.css || [];
+  this.remove_css = this.options.remove_css;
 
   this.deferred = deferred;
 
@@ -211,15 +212,25 @@ Script.prototype = {
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
-      for (let url of this.css) {
-        url = extension.baseURI.resolve(url);
-        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
-        this.deferred.resolve();
+      // We can handle CSS urls (css) and CSS code (cssCode).
+      let cssUrls = [];
+      for (let cssUrl of this.css) {
+        cssUrl = extension.baseURI.resolve(cssUrl);
+        cssUrls.push(cssUrl);
       }
 
       if (this.options.cssCode) {
-        let url = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
-        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+        let cssUrl = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
+        cssUrls.push(cssUrl);
+      }
+
+      // We can insertCSS and removeCSS.
+      let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
+      for (let cssUrl of cssUrls) {
+        runSafeSyncWithoutClone(method, cssUrl, winUtils.AUTHOR_SHEET);
+      }
+
+      if (cssUrls.length > 0) {
         this.deferred.resolve();
       }
     }
@@ -548,6 +559,7 @@ DocumentManager = {
     }
   },
 
+  // Used to executeScript, insertCSS and removeCSS.
   executeScript(global, extensionId, options) {
     let executeInWin = (window) => {
       let deferred = PromiseUtils.defer();
@@ -881,6 +893,7 @@ class ExtensionGlobal {
     });
   }
 
+  // Used to executeScript, insertCSS and removeCSS.
   handleExtensionExecute(target, extensionId, options) {
     return DocumentManager.executeScript(target, extensionId, options).then(result => {
       try {
