@@ -116,17 +116,20 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     {
         return nullptr;
     }
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return nullptr;
-    args.setCallee(resolvingFunctionsVal);
-    args.setThis(UndefinedValue());
-    args[0].set(promiseVal);
 
-    if (!Invoke(cx, args))
-        return nullptr;
+    RootedArrayObject resolvingFunctions(cx);
+    {
+        FixedInvokeArgs<1> args(cx);
 
-    RootedArrayObject resolvingFunctions(cx, &args.rval().toObject().as<ArrayObject>());
+        args[0].set(promiseVal);
+
+        RootedValue rval(cx);
+        if (!Call(cx, resolvingFunctionsVal, UndefinedHandleValue, args, &rval))
+            return nullptr;
+
+        resolvingFunctions = &rval.toObject().as<ArrayObject>();
+    }
+
     RootedValue resolveVal(cx, resolvingFunctions->getDenseElement(0));
     MOZ_ASSERT(IsCallable(resolveVal));
     RootedValue rejectVal(cx, resolvingFunctions->getDenseElement(1));
@@ -150,14 +153,16 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
     }
 
     // Step 9.
-    InvokeArgs args2(cx);
-    if (!args2.init(2))
-        return nullptr;
-    args2.setCallee(ObjectValue(*executor));
-    args2.setThis(UndefinedValue());
-    args2[0].set(resolveVal);
-    args2[1].set(rejectVal);
-    bool success = Invoke(cx, args2);
+    bool success;
+    {
+        FixedInvokeArgs<2> args(cx);
+
+        args[0].set(resolveVal);
+        args[1].set(rejectVal);
+
+        RootedValue calleeOrRval(cx, ObjectValue(*executor));
+        success = Call(cx, calleeOrRval, UndefinedHandleValue, args, &calleeOrRval);
+    }
 
     // Step 10.
     if (!success) {
@@ -166,14 +171,13 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
         // for those.
         if (!cx->isExceptionPending() || !GetAndClearException(cx, &exceptionVal))
             return nullptr;
-        InvokeArgs args(cx);
-        if (!args.init(1))
-            return nullptr;
-        args.setCallee(rejectVal);
-        args.setThis(UndefinedValue());
+
+        FixedInvokeArgs<1> args(cx);
+
         args[0].set(exceptionVal);
 
-        if (!Invoke(cx, args))
+        // |rejectVal| is unused after this, so we can safely write to it.
+        if (!Call(cx, rejectVal, UndefinedHandleValue, args, &rejectVal))
             return nullptr;
     }
 
@@ -362,13 +366,12 @@ PromiseObject::resolve(JSContext* cx, HandleValue resolutionValue)
     RootedValue funVal(cx, this->getReservedSlot(PROMISE_RESOLVE_FUNCTION_SLOT));
     MOZ_ASSERT(funVal.toObject().is<JSFunction>());
 
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return false;
-    args.setCallee(funVal);
-    args.setThis(UndefinedValue());
+    FixedInvokeArgs<1> args(cx);
+
     args[0].set(resolutionValue);
-    return Invoke(cx, args);
+
+    RootedValue dummy(cx);
+    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
 bool
@@ -380,13 +383,12 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
     RootedValue funVal(cx, this->getReservedSlot(PROMISE_REJECT_FUNCTION_SLOT));
     MOZ_ASSERT(funVal.toObject().is<JSFunction>());
 
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return false;
-    args.setCallee(funVal);
-    args.setThis(UndefinedValue());
+    FixedInvokeArgs<1> args(cx);
+
     args[0].set(rejectionValue);
-    return Invoke(cx, args);
+
+    RootedValue dummy(cx);
+    return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
 } // namespace js

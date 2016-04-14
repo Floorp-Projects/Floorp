@@ -499,8 +499,12 @@ nsChannelClassifier::SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel)
   if (!channelLoadInfo || !docURI) {
     return false;
   }
+
   nsCOMPtr<nsIPrincipal> channelLoadingPrincipal = channelLoadInfo->LoadingPrincipal();
   if (!channelLoadingPrincipal) {
+    // TYPE_DOCUMENT loads will not have a channelLoadingPrincipal. But top level
+    // loads should not be blocked by Tracking Protection, so we will return
+    // false
     return false;
   }
   nsCOMPtr<nsIURI> channelLoadingURI;

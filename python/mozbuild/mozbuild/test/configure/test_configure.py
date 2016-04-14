@@ -372,7 +372,7 @@ class TestConfigure(unittest.TestCase):
         out = StringIO()
         sandbox = ConfigureSandbox(config, {}, [], out, out)
 
-        sandbox.exec_file(mozpath.join(test_data_path, 'decorators.configure'))
+        sandbox.include_file(mozpath.join(test_data_path, 'decorators.configure'))
 
         self.assertNotIn('FOO', sandbox)
         self.assertNotIn('BAR', sandbox)

@@ -2893,10 +2893,11 @@ js::ValueToSource(JSContext* cx, HandleValue v)
     if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval))
         return nullptr;
     if (IsCallable(fval)) {
-        RootedValue rval(cx);
-        if (!Invoke(cx, ObjectValue(*obj), fval, 0, nullptr, &rval))
+        RootedValue v(cx);
+        if (!js::Call(cx, fval, obj, &v))
             return nullptr;
-        return ToString<CanGC>(cx, rval);
+
+        return ToString<CanGC>(cx, v);
     }
 
     return ObjectToSource(cx, obj);
@@ -3826,15 +3827,13 @@ CallIsStringOptimizable(JSContext* cx, const char* name, bool* result)
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), propName, propName, 0, &funcVal))
         return false;
 
-    InvokeArgs args(cx);
-    if (!args.init(0))
-        return false;
-    args.setCallee(funcVal);
-    args.setThis(UndefinedValue());
-    if (!Invoke(cx, args))
+    FixedInvokeArgs<0> args(cx);
+
+    RootedValue rval(cx);
+    if (!Call(cx, funcVal, UndefinedHandleValue, args, &rval))
         return false;
 
-    *result = args.rval().toBoolean();
+    *result = rval.toBoolean();
     return true;
 }
 #endif

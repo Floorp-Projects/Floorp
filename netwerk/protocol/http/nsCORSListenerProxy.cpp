@@ -1345,6 +1345,10 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
              "how did we end up here?");
 
   nsCOMPtr<nsIPrincipal> principal = originalLoadInfo->LoadingPrincipal();
+  MOZ_ASSERT(principal &&
+             originalLoadInfo->GetExternalContentPolicyType() !=
+               nsIContentPolicy::TYPE_DOCUMENT,
+             "Should not do CORS loads for top-level loads, so a loadingPrincipal should always exist.");
   bool withCredentials = originalLoadInfo->GetCookiePolicy() ==
     nsILoadInfo::SEC_COOKIES_INCLUDE;
 

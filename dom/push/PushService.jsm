@@ -121,8 +121,17 @@ this.PushService = {
     }
 
     this._stateChangeProcessQueue = this._stateChangeProcessQueue
-                                    .then(op)
-                                    .catch(_ => {});
+      .then(op)
+      .catch(error => {
+        console.error(
+          "stateChangeProcessEnqueue: Error transitioning state", error);
+        return this._shutdownService();
+      })
+      .catch(error => {
+        console.error(
+          "stateChangeProcessEnqueue: Error shutting down service", error);
+      });
+    return this._stateChangeProcessQueue;
   },
 
   // Pending request. If a worker try to register for the same scope again, do
@@ -174,7 +183,6 @@ this.PushService = {
     if (this._state == PUSH_SERVICE_ACTIVATING) {
       // It is not important what is the new state as soon as we leave
       // PUSH_SERVICE_ACTIVATING
-      this._state = aNewState;
       if (this._notifyActivated) {
         if (aNewState < PUSH_SERVICE_ACTIVATING) {
           this._notifyActivated.reject(new Error("Push service not active"));
@@ -194,7 +202,7 @@ this.PushService = {
     if (this._state < PUSH_SERVICE_ACTIVE_OFFLINE &&
         this._state != PUSH_SERVICE_ACTIVATING &&
         !calledFromConnEnabledEvent) {
-      return;
+      return Promise.resolve();
     }
 
     if (offline) {
@@ -202,22 +210,22 @@ this.PushService = {
         this._service.disconnect();
       }
       this._setState(PUSH_SERVICE_ACTIVE_OFFLINE);
-    } else {
-      if (this._state == PUSH_SERVICE_RUNNING) {
-        // PushService was not in the offline state, but got notification to
-        // go online (a offline notification has not been sent).
-        // Disconnect first.
-        this._service.disconnect();
-      }
-      this._db.getAllUnexpired()
-        .then(records => {
-          if (records.length > 0) {
-            // if there are request waiting
-            this._service.connect(records);
-          }
-        });
-      this._setState(PUSH_SERVICE_RUNNING);
+      return Promise.resolve();
     }
+
+    if (this._state == PUSH_SERVICE_RUNNING) {
+      // PushService was not in the offline state, but got notification to
+      // go online (a offline notification has not been sent).
+      // Disconnect first.
+      this._service.disconnect();
+    }
+    return this.getAllUnexpired().then(records => {
+      this._setState(PUSH_SERVICE_RUNNING);
+      if (records.length > 0) {
+        // if there are request waiting
+        this._service.connect(records);
+      }
+    });
   },
 
   _changeStateConnectionEnabledEvent: function(enabled) {
@@ -225,24 +233,25 @@ this.PushService = {
 
     if (this._state < PUSH_SERVICE_CONNECTION_DISABLE &&
         this._state != PUSH_SERVICE_ACTIVATING) {
-      return;
+      return Promise.resolve();
     }
 
     if (enabled) {
-      this._changeStateOfflineEvent(Services.io.offline, true);
-    } else {
-      if (this._state == PUSH_SERVICE_RUNNING) {
-        this._service.disconnect();
-      }
-      this._setState(PUSH_SERVICE_CONNECTION_DISABLE);
+      return this._changeStateOfflineEvent(Services.io.offline, true);
     }
+
+    if (this._state == PUSH_SERVICE_RUNNING) {
+      this._service.disconnect();
+    }
+    this._setState(PUSH_SERVICE_CONNECTION_DISABLE);
+    return Promise.resolve();
   },
 
   // Used for testing.
   changeTestServer(url, options = {}) {
     console.debug("changeTestServer()");
 
-    this._stateChangeProcessEnqueue(_ => {
+    return this._stateChangeProcessEnqueue(_ => {
       if (this._state < PUSH_SERVICE_ACTIVATING) {
         console.debug("changeTestServer: PushService not activated?");
         return Promise.resolve();
@@ -403,9 +412,8 @@ this.PushService = {
           this._setState(PUSH_SERVICE_INIT);
           return Promise.resolve();
         }
-        return this._startService(service, uri)
-          .then(_ => this._stateChangeProcessEnqueue(_ =>
-            this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
+        return this._startService(service, uri, options)
+          .then(_ => this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
           );
       }
       case CHANGING_SERVICE_EVENT:
@@ -415,8 +423,7 @@ this.PushService = {
             this._setState(PUSH_SERVICE_ACTIVATING);
             // The service has not been running - start it.
             return this._startService(service, uri, options)
-              .then(_ => this._stateChangeProcessEnqueue(_ =>
-                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
+              .then(_ => this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
               );
 
           } else {
@@ -428,8 +435,7 @@ this.PushService = {
               .then(_ =>
                  this._startService(service, uri, options)
               )
-              .then(_ => this._stateChangeProcessEnqueue(_ =>
-                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
+              .then(_ => this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
               );
 
           }
@@ -478,18 +484,8 @@ this.PushService = {
     if (options.serverURI) {
       // this is use for xpcshell test.
 
-      let [service, uri] = this._findService(options.serverURI);
-      if (!service) {
-        this._setState(PUSH_SERVICE_INIT);
-        return;
-      }
-
-      // Start service.
-      this._startService(service, uri, options).then(_ => {
-        // Before completing the activation check prefs. This will first check
-        // connection.enabled pref and then check offline state.
-        this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"));
-      }).catch(Cu.reportError);
+      this._stateChangeProcessEnqueue(_ =>
+        this._changeServerURL(options.serverURI, STARTING_SERVICE_EVENT, options));
 
     } else {
       // This is only used for testing. Different tests require connecting to
@@ -542,7 +538,7 @@ this.PushService = {
     Services.obs.addObserver(this, "perm-changed", false);
   },
 
-  _startService: function(service, serverURI, options = {}) {
+  _startService(service, serverURI, options) {
     console.debug("startService()");
 
     if (this._state != PUSH_SERVICE_ACTIVATING) {
@@ -623,6 +619,13 @@ this.PushService = {
     Services.obs.removeObserver(this, "perm-changed");
   },
 
+  _shutdownService() {
+    let promiseChangeURL = this._changeServerURL("", UNINIT_EVENT);
+    this._setState(PUSH_SERVICE_UNINIT);
+    console.debug("shutdownService: shutdown complete!");
+    return promiseChangeURL;
+  },
+
   uninit: function() {
     console.debug("uninit()");
 
@@ -633,13 +636,7 @@ this.PushService = {
     prefs.ignore("serverURL", this);
     Services.obs.removeObserver(this, "quit-application");
 
-    this._stateChangeProcessEnqueue(_ =>
-      {
-        var p = this._changeServerURL("", UNINIT_EVENT);
-        this._setState(PUSH_SERVICE_UNINIT);
-        console.debug("uninit: shutdown complete!");
-        return p;
-      });
+    this._stateChangeProcessEnqueue(_ => this._shutdownService());
   },
 
   /**
@@ -1001,13 +998,18 @@ this.PushService = {
       }
       return Promise.reject(new Error("Push service offline"));
     }
-    switch (action) {
-      case "register":
-        return this._service.register(...params);
-      case "unregister":
-        return this._service.unregister(...params);
-    }
-    return Promise.reject(new Error("Unknown request type: " + action));
+    // Ensure the backend is ready. `getByPageRecord` already checks this, but
+    // we need to check again here in case the service was restarted in the
+    // meantime.
+    return this._checkActivated().then(_ => {
+      switch (action) {
+        case "register":
+          return this._service.register(...params);
+        case "unregister":
+          return this._service.unregister(...params);
+      }
+      return Promise.reject(new Error("Unknown request type: " + action));
+    });
   },
 
   /**
@@ -1071,7 +1073,7 @@ this.PushService = {
     Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
     if (!reply.error) {
       console.warn("onRegisterError: Called without valid error message!",
-        reply);
+        reply, String(reply));
       throw new Error("Registration error");
     }
     throw reply.error;
