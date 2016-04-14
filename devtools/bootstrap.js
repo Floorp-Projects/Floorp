@@ -83,6 +83,7 @@ function reload(event) {
 
   // Invalidate xul cache in order to see changes made to chrome:// files
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+  Services.obs.notifyObservers(null, "chrome-flush-caches", null);
 
   // Ask the loader to update itself and reopen the toolbox if needed
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
