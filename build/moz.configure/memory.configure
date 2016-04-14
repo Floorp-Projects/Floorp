@@ -55,3 +55,26 @@ def jemalloc_for_old_configure(jemalloc, jemalloc4):
     return '--disable-jemalloc'
 
 add_old_configure_arg(jemalloc_for_old_configure)
+
+
+@depends(jemalloc, jemalloc4, target)
+def jemalloc_os_define(jemalloc, jemalloc4, target):
+    if jemalloc and not jemalloc4:
+        if target.kernel == 'WINNT':
+            return 'MOZ_MEMORY_WINDOWS'
+        if target.kernel == 'Linux':
+            return 'MOZ_MEMORY_LINUX'
+        if target.kernel == 'Darwin':
+            return 'MOZ_MEMORY_DARWIN'
+        if target.kernel in ('kFreeBSD', 'FreeBSD', 'NetBSD'):
+            return 'MOZ_MEMORY_BSD'
+        die('--enable-jemalloc is not supported on %s', target.kernel)
+
+set_define(jemalloc_os_define, '1')
+
+@depends(jemalloc, jemalloc4, target)
+def jemalloc_os_define_android(jemalloc, jemalloc4, target):
+    if jemalloc and not jemalloc4 and target.os == 'Android':
+        return 'MOZ_MEMORY_ANDROID'
+
+set_define(jemalloc_os_define_android, '1')
