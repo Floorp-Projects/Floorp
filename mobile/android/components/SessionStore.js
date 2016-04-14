@@ -265,12 +265,14 @@ SessionStore.prototype = {
 
   onWindowOpen: function ss_onWindowOpen(aWindow) {
     // Return if window has already been initialized
-    if (aWindow && aWindow.__SSID && this._windows[aWindow.__SSID])
+    if (aWindow && aWindow.__SSID && this._windows[aWindow.__SSID]) {
       return;
+    }
 
     // Ignore non-browser windows and windows opened while shutting down
-    if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser")
+    if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
       return;
+    }
 
     // Assign it a unique identifier (timestamp) and create its data object
     aWindow.__SSID = "window" + Date.now();
@@ -298,8 +300,9 @@ SessionStore.prototype = {
 
   onWindowClose: function ss_onWindowClose(aWindow) {
     // Ignore windows not tracked by SessionStore
-    if (!aWindow.__SSID || !this._windows[aWindow.__SSID])
+    if (!aWindow.__SSID || !this._windows[aWindow.__SSID]) {
       return;
+    }
 
     let browsers = aWindow.document.getElementById("browsers");
     browsers.removeEventListener("TabOpen", this, true);
@@ -338,8 +341,9 @@ SessionStore.prototype = {
     aBrowser.addEventListener("input", this, true);
     aBrowser.addEventListener("DOMAutoComplete", this, true);
 
-    if (!aNoNotification)
+    if (!aNoNotification) {
       this.saveStateDelayed();
+    }
     this._updateCrashReportURL(aWindow);
   },
 
@@ -352,18 +356,21 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
 
     // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore)
+    if (aBrowser.__SS_restore) {
       return;
+    }
 
     delete aBrowser.__SS_data;
 
-    if (!aNoNotification)
+    if (!aNoNotification) {
       this.saveStateDelayed();
+    }
   },
 
   onTabClose: function ss_onTabClose(aWindow, aBrowser, aTabIndex) {
-    if (this._maxTabsUndo == 0)
+    if (this._maxTabsUndo == 0) {
       return;
+    }
 
     if (aWindow.BrowserApp.tabs.length > 0) {
       // Bundle this browser's data and extra data and save in the closedTabs
@@ -373,8 +380,9 @@ SessionStore.prototype = {
 
       this._windows[aWindow.__SSID].closedTabs.unshift(data);
       let length = this._windows[aWindow.__SSID].closedTabs.length;
-      if (length > this._maxTabsUndo)
+      if (length > this._maxTabsUndo) {
         this._windows[aWindow.__SSID].closedTabs.splice(this._maxTabsUndo, length - this._maxTabsUndo);
+      }
 
       this._lastClosedTabIndex = aTabIndex;
 
@@ -389,12 +397,14 @@ SessionStore.prototype = {
 
   onTabLoad: function ss_onTabLoad(aWindow, aBrowser) {
     // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore)
+    if (aBrowser.__SS_restore) {
       return;
+    }
 
     // Ignore a transient "about:blank"
-    if (!aBrowser.canGoBack && aBrowser.currentURI.spec == "about:blank")
+    if (!aBrowser.canGoBack && aBrowser.currentURI.spec == "about:blank") {
       return;
+    }
 
     let history = aBrowser.sessionHistory;
 
@@ -406,8 +416,9 @@ SessionStore.prototype = {
       // Don't try to restore wyciwyg URLs
       if (historyEntry.URI.schemeIs("wyciwyg")) {
         // Adjust the index to account for skipped history entries
-        if (i <= history.index)
+        if (i <= history.index) {
           index--;
+        }
         continue;
       }
       let entry = this._serializeHistoryEntry(historyEntry);
@@ -443,8 +454,9 @@ SessionStore.prototype = {
   },
 
   onTabSelect: function ss_onTabSelect(aWindow, aBrowser) {
-    if (this._loadState != STATE_RUNNING)
+    if (this._loadState != STATE_RUNNING) {
       return;
+    }
 
     let browsers = aWindow.document.getElementById("browsers");
     let index = browsers.selectedIndex;
@@ -617,8 +629,9 @@ SessionStore.prototype = {
 
   _collectTabData: function ss__collectTabData(aWindow, aBrowser, aHistory) {
     // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore)
+    if (aBrowser.__SS_restore) {
       return;
+    }
 
     aHistory = aHistory || { entries: [{ url: aBrowser.currentURI.spec, title: aBrowser.contentTitle }], index: 1 };
 
@@ -634,8 +647,9 @@ SessionStore.prototype = {
 
   _collectWindowData: function ss__collectWindowData(aWindow) {
     // Ignore windows not tracked by SessionStore
-    if (!aWindow.__SSID || !this._windows[aWindow.__SSID])
+    if (!aWindow.__SSID || !this._windows[aWindow.__SSID]) {
       return;
+    }
 
     let winData = this._windows[aWindow.__SSID];
     winData.tabs = [];
@@ -649,8 +663,9 @@ SessionStore.prototype = {
       let browser = tabs[i].browser;
       if (browser.__SS_data) {
         let tabData = browser.__SS_data;
-        if (browser.__SS_extdata)
+        if (browser.__SS_extdata) {
           tabData.extData = browser.__SS_extdata;
+        }
         winData.tabs.push(tabData);
       }
     }
@@ -660,8 +675,9 @@ SessionStore.prototype = {
     let windowsEnum = Services.wm.getEnumerator("navigator:browser");
     while (windowsEnum.hasMoreElements()) {
       let window = windowsEnum.getNext();
-      if (window.__SSID && !window.closed)
+      if (window.__SSID && !window.closed) {
         aFunc.call(this, window);
+      }
     }
   },
 
@@ -1159,26 +1175,30 @@ SessionStore.prototype = {
   },
 
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {
-    if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID])
+    if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID]) {
       return 0; // not a browser window, or not otherwise tracked by SS.
+    }
 
     return this._windows[aWindow.__SSID].closedTabs.length;
   },
 
   getClosedTabs: function ss_getClosedTabs(aWindow) {
-    if (!aWindow.__SSID)
+    if (!aWindow.__SSID) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    }
 
     return this._windows[aWindow.__SSID].closedTabs;
   },
 
   undoCloseTab: function ss_undoCloseTab(aWindow, aCloseTabData) {
-    if (!aWindow.__SSID)
+    if (!aWindow.__SSID) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    }
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
-    if (!closedTabs)
+    if (!closedTabs) {
       return null;
+    }
 
     // If the tab data is in the closedTabs array, remove it.
     closedTabs.find(function (tabData, i) {
@@ -1210,15 +1230,17 @@ SessionStore.prototype = {
   },
 
   forgetClosedTab: function ss_forgetClosedTab(aWindow, aIndex) {
-    if (!aWindow.__SSID)
+    if (!aWindow.__SSID) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    }
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
 
     // default to the most-recently closed tab
     aIndex = aIndex || 0;
-    if (!(aIndex in closedTabs))
+    if (!(aIndex in closedTabs)) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    }
 
     // remove closed tab from the array
     closedTabs.splice(aIndex, 1);
@@ -1233,8 +1255,9 @@ SessionStore.prototype = {
   },
 
   _sendClosedTabsToJava: function ss_sendClosedTabsToJava(aWindow) {
-    if (!aWindow.__SSID)
+    if (!aWindow.__SSID) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    }
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aWindow.BrowserApp.selectedBrowser);
@@ -1294,8 +1317,9 @@ SessionStore.prototype = {
   }),
 
   removeWindow: function ss_removeWindow(aWindow) {
-    if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID])
+    if (!aWindow || !aWindow.__SSID || !this._windows[aWindow.__SSID]) {
       return;
+    }
 
     delete this._windows[aWindow.__SSID];
     delete aWindow.__SSID;
