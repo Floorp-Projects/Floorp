@@ -239,10 +239,11 @@ ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
     DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
+#if defined(NON_WRITABLE_JIT_CODE)
+
 bool
 ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting setting)
 {
-    MOZ_ASSERT(NON_WRITABLE_JIT_CODE);
     MOZ_ASSERT(pageSize);
 
     // Calculate the start of the page containing this region,
@@ -260,6 +261,8 @@ ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting
     int flags = (setting == Writable) ? PAGE_READWRITE : PAGE_EXECUTE_READ;
     return VirtualProtect(pageStart, size, flags, &oldProtect);
 }
+
+#endif // defined(NON_WRITABLE_JIT_CODE)
 
 /* static */ unsigned
 ExecutableAllocator::initialProtectionFlags(ProtectionSetting protection)
