@@ -98,8 +98,14 @@ function reload(event) {
     }
   }, false);
 
-  const {devtools} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-  devtools.reload();
+  // As we can't get a reference to existing Loader.jsm instances, we send them
+  // an observer service notification to unload them.
+  Services.obs.notifyObservers(null, "devtools-unload", "reload");
+
+  // Then spawn a brand new Loader.jsm instance and start the main module
+  Cu.unload("resource://devtools/shared/Loader.jsm");
+  const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  devtools.require("devtools/client/framework/devtools-browser");
 
   // Go over all top level windows to reload all devtools related things
   let windowsEnum = Services.wm.getEnumerator(null);
