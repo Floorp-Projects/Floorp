@@ -387,8 +387,6 @@ public:
      * has been emitted to the gfxContext.
      */
     virtual void NotifySelectionDecorationLinePathEmitted() { }
-
-    virtual void NotifyGlyphPathEmitted() override {}
   };
 
   struct PaintTextParams
