@@ -206,6 +206,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'BootReceiver.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
+    'cleanup/FileCleanupController.java',
     'cleanup/FileCleanupService.java',
     'ContactService.java',
     'ContextGetter.java',
