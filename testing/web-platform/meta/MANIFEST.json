@@ -34734,15 +34734,7 @@
             "url": "/html/browsers/history/the-location-interface/non-automated/manual_click_replace_during_load-manual.html"
           }
         ]
-      },
-      "testharness": {
-        "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html": [
-          {
-            "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
-            "url": "/html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html"
-          }
-        ],
-      },
+      }
     },
     "reftest_nodes": {}
   },
