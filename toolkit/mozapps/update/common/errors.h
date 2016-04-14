@@ -84,6 +84,7 @@
 #define WRITE_ERROR_EXTRACT 70
 #define REMOVE_FILE_SPEC_ERROR 71
 #define INVALID_STAGED_PARENT_ERROR 72
+#define LOCK_ERROR_PATCH_FILE 73
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js
 
