@@ -53,6 +53,12 @@ th {
   color: var(--in-content-selected-text);
 }
 
+th.title-column {
+  white-space: nowrap;
+  width: 0px;
+  font-size: medium;
+}
+
 th.column {
   white-space: nowrap;
   width: 0px;
