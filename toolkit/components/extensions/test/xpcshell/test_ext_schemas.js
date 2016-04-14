@@ -263,6 +263,36 @@ let json = [
      },
 
      {
+       name: "errors",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           type: "object",
+           properties: {
+             warn: {
+               type: "string",
+               pattern: "^\\d+$",
+               optional: true,
+               onError: "warn",
+             },
+             ignore: {
+               type: "string",
+               pattern: "^\\d+$",
+               optional: true,
+               onError: "ignore",
+             },
+             default: {
+               type: "string",
+               pattern: "^\\d+$",
+               optional: true,
+             },
+           },
+         },
+       ],
+     },
+
+     {
        name: "localize",
        type: "function",
        parameters: [
@@ -634,6 +664,24 @@ add_task(function* () {
   Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {required: 12, optional: 42}}]}}),
                 /Type error for parameter arg \(Error processing foo\.bar\.0\.baz\.optional: Expected string instead of 42\) for testing\.deep/,
                 "should throw with the correct object path");
+
+
+  talliedErrors.length = 0;
+
+  root.testing.errors({warn: "0123", ignore: "0123", default: "0123"});
+  verify("call", "testing", "errors", [{warn: "0123", ignore: "0123", default: "0123"}]);
+  checkErrors([]);
+
+  root.testing.errors({warn: "0123", ignore: "x123", default: "0123"});
+  verify("call", "testing", "errors", [{warn: "0123", ignore: null, default: "0123"}]);
+  checkErrors([]);
+
+  root.testing.errors({warn: "x123", ignore: "0123", default: "0123"});
+  verify("call", "testing", "errors", [{warn: null, ignore: "0123", default: "0123"}]);
+  checkErrors([
+    'String "x123" must match /^\\d+$/',
+  ]);
+
 
   root.testing.onFoo.addListener(f);
   do_check_eq(JSON.stringify(tallied.slice(0, -1)), JSON.stringify(["addListener", "testing", "onFoo"]));
