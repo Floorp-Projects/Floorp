@@ -7,7 +7,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="FxAccountTheme" parent="@style/Gecko" />
+    <style name="FxAccountTheme" parent="Gecko.Preferences" />
 
     <style name="FxAccountTheme.FxAccountStatusActivity" parent="@style/FxAccountTheme">
         <item name="android:windowNoTitle">false</item>
