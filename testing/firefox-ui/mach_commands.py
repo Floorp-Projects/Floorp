@@ -60,16 +60,15 @@ def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):
         kwargs['server_root'] = os.path.join(fxui_dir, 'resources')
 
     # If no tests have been selected, set default ones
-    if kwargs.get('tests'):
-        tests = kwargs.get('tests')
-    else:
-        tests = [os.path.join(fxui_dir, 'tests', test)
+    if not kwargs.get('tests'):
+        kwargs['tests'] = [os.path.join(fxui_dir, 'tests', test)
                            for test in test_types[testtype]['default_tests']]
 
     kwargs['logger'] = commandline.setup_logging('Firefox UI - {} Tests'.format(testtype),
                                                  {"mach": sys.stdout})
 
-    args = parser.parse_args(args=tests)
+    # pass tests to parse_args to avoid rereading sys.argv
+    args = parser.parse_args(args=kwargs['tests'])
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
