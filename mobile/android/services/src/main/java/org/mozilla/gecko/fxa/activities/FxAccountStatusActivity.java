@@ -10,7 +10,6 @@ import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -18,13 +17,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Locales.LocaleAwareFragmentActivity;
+import org.mozilla.gecko.Locales.LocaleAwareAppCompatActivity;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -36,7 +36,7 @@ import org.mozilla.gecko.sync.Utils;
 /**
  * Activity which displays account status.
  */
-public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
+public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
   private static final String LOG_TAG = FxAccountStatusActivity.class.getSimpleName();
 
   protected FxAccountStatusFragment statusFragment;
@@ -67,10 +67,11 @@ public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
       Logger.debug(LOG_TAG, "Not enabling home button; version too low.");
       return;
     }
-    final ActionBar actionBar = getActionBar();
+    final ActionBar actionBar = getSupportActionBar();
     if (actionBar != null) {
       Logger.debug(LOG_TAG, "Enabling home button.");
       actionBar.setHomeButtonEnabled(true);
+      actionBar.setDisplayHomeAsUpEnabled(true);
       return;
     }
     Logger.debug(LOG_TAG, "Not enabling home button.");
