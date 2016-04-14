@@ -66,6 +66,7 @@ DevToolsModules(
     'webextension-inspected-window.js',
     'webextension.js',
     'webgl.js',
+    'window.js',
     'worker-list.js',
     'worker.js',
 )
