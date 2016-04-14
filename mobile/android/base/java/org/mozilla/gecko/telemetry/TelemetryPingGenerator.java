@@ -7,6 +7,7 @@ package org.mozilla.gecko.telemetry;
 
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import java.io.IOException;
 import java.util.Locale;
 
@@ -62,14 +63,16 @@ public class TelemetryPingGenerator {
      * @throws IOException when client ID could not be created
      */
     public static TelemetryPing createCorePing(final Context context, final String docId, final String clientId,
-            final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays) {
+            final String serverURLSchemeHostPort, final int seq, final long profileCreationDateDays,
+            @Nullable final String distributionId) {
         final String serverURL = getTelemetryServerURL(docId, serverURLSchemeHostPort, CorePing.NAME);
-        final ExtendedJSONObject payload = createCorePingPayload(context, clientId, seq, profileCreationDateDays);
+        final ExtendedJSONObject payload =
+                createCorePingPayload(context, clientId, seq, profileCreationDateDays, distributionId);
         return new TelemetryPing(serverURL, payload);
     }
 
     private static ExtendedJSONObject createCorePingPayload(final Context context, final String clientId,
-            final int seq, final long profileCreationDate) {
+            final int seq, final long profileCreationDate, @Nullable final String distributionId) {
         final ExtendedJSONObject ping = new ExtendedJSONObject();
         ping.put(CorePing.VERSION_ATTR, CorePing.VERSION_VALUE);
         ping.put(CorePing.OS_ATTR, CorePing.OS_VALUE);
@@ -89,6 +92,12 @@ public class TelemetryPingGenerator {
         if (AppConstants.MOZ_SWITCHBOARD) {
             ping.put(CorePing.EXPERIMENTS, getActiveExperiments(context));
         }
+
+        // Optional.
+        if (distributionId != null) {
+            ping.put(CorePing.DISTRIBUTION_ID, distributionId);
+        }
+
         // TODO (bug 1246816): Remove this "optional" parameter work-around when
         // GeckoProfile.getAndPersistProfileCreationDateFromFilesystem is implemented. That method returns -1
         // while it's not implemented so we don't include the parameter in the ping if that's the case.

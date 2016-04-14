@@ -28,12 +28,13 @@ public class TelemetryConstants {
         private CorePing() { /* To prevent instantiation */ }
 
         public static final String NAME = "core";
-        public static final int VERSION_VALUE = 1;
+        public static final int VERSION_VALUE = 2; // For version history, see toolkit/components/telemetry/docs/core-ping.rst
         public static final String OS_VALUE = "Android";
 
         public static final String ARCHITECTURE = "arch";
         public static final String CLIENT_ID = "clientId";
         public static final String DEVICE = "device";
+        public static final String DISTRIBUTION_ID = "distributionId";
         public static final String EXPERIMENTS = "experiments";
         public static final String LOCALE = "locale";
         public static final String OS_ATTR = "os";
