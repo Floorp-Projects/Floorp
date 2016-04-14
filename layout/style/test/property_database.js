@@ -2229,10 +2229,6 @@ var gCSSProperties = {
       /* error inside functions */
       "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), rubbish, 50%, 30%, 0) transparent",
       "-moz-element(#a rubbish) black",
-      "text",
-      "text border-box",
-      "content-box text text",
-      "padding-box text url(404.png) text",
     ]
   },
   "background-attachment": {
@@ -7394,30 +7390,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-emphasis.enabled")) {
     invalid_values: [ "rubbish", "dot rubbish", "rubbish dot", "open rubbish", "rubbish open", "open filled", "dot circle",
                       "open '#'", "'#' filled", "dot '#'", "'#' circle", "1", "1 open", "open 1" ]
   };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.background-clip-text.enabled")) {
-  gCSSProperties["background-clip"].other_values.push(
-    "text",
-    "content-box, text",
-    "text, border-box",
-    "text, text"
-  );
-  gCSSProperties["background"].other_values.push(
-    "url(404.png) green padding-box text",
-    "content-box text url(404.png) blue"
-  );
-} else {
-  gCSSProperties["background-clip"].invalid_values.push(
-    "text",
-    "content-box, text",
-    "text, border-box",
-    "text, text"
-  );
-  gCSSProperties["background"].invalid_values.push(
-    "url(404.png) green padding-box text",
-    "content-box text url(404.png) blue"
-  );
 }
 
 // Copy aliased properties' fields from their alias targets.
