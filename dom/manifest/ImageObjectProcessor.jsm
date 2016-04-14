@@ -128,9 +128,9 @@ ImageObjectProcessor.prototype.process = function(
       // Split on whitespace and filter out invalid values.
       value.split(/\s+/)
         .filter(isValidSizeValue)
-        .forEach(size => sizes.add(size));
+        .reduce((collector, size) => collector.add(size), sizes);
     }
-    return sizes;
+    return (sizes.size) ? Array.from(sizes).join(" ") : undefined;
     // Implementation of HTML's link@size attribute checker.
     function isValidSizeValue(aSize) {
       const size = aSize.toLowerCase();
