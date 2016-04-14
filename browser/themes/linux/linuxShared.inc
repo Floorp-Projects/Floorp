@@ -6,6 +6,8 @@
 
 %define toolbarHighlight hsla(0,0%,100%,.05)
 %define toolbarHighlightLWT rgba(255,255,255,.4)
+/* navbarInsetHighlight is tightly coupled to the toolbarHighlight constant. */
+%define navbarInsetHighlight hsla(0,0%,100%,.4)
 %define fgTabTexture linear-gradient(transparent 2px, @toolbarHighlight@ 2px, @toolbarHighlight@)
 %define fgTabTextureLWT linear-gradient(transparent 2px, @toolbarHighlightLWT@ 2px, @toolbarHighlightLWT@)
 %define fgTabBackgroundColor -moz-dialog
