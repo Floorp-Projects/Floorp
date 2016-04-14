@@ -126,9 +126,9 @@ protected:
                               const nsresult& status,
                               const uint64_t& progress,
                               const uint64_t& progressMax,
-                              const nsCString& data,
                               const uint64_t& offset,
-                              const uint32_t& count) override;
+                              const uint32_t& count,
+                              const nsCString& data) override;
   bool RecvOnStopRequest(const nsresult& statusCode, const ResourceTimingStruct& timing) override;
   bool RecvOnProgress(const int64_t& progress, const int64_t& progressMax) override;
   bool RecvOnStatus(const nsresult& status) override;
@@ -268,9 +268,9 @@ private:
                           const nsresult& status,
                           const uint64_t progress,
                           const uint64_t& progressMax,
-                          const nsCString& data,
                           const uint64_t& offset,
-                          const uint32_t& count);
+                          const uint32_t& count,
+                          const nsCString& data);
   void OnStopRequest(const nsresult& channelStatus, const ResourceTimingStruct& timing);
   void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void OnProgress(const int64_t& progress, const int64_t& progressMax);
