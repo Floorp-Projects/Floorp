@@ -95,6 +95,9 @@ TabListView.prototype = {
         this._renderClient(client);
       }
     }
+    if (this.list.firstChild) {
+      this.list.firstChild.querySelector(".item.tab:first-child .item-title").setAttribute("tabindex", 2);
+    }
   },
 
   destroy() {
