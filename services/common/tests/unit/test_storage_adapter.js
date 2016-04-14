@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/moz-kinto-client.js");
+Cu.import("resource://services-common/kinto-offline-client.js");
 
 // set up what we need to make storage adapters
 const Kinto = loadKinto();

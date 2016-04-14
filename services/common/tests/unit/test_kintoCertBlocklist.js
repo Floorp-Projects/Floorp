@@ -4,7 +4,7 @@
 const { Constructor: CC } = Components;
 
 Cu.import("resource://services-common/KintoCertificateBlocklist.js");
-Cu.import("resource://services-common/moz-kinto-client.js")
+Cu.import("resource://services-common/kinto-offline-client.js");
 Cu.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
@@ -145,7 +145,7 @@ function getSampleResponse(req, port) {
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"settings":{"cliquet.batch_max_requests":25}, "url":`http://localhost:${port}/v1/`, "documentation":"https://kinto.readthedocs.org/", "version":"1.5.1", "commit":"cbc6f58", "hello":"kinto"})
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?": {
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -161,7 +161,7 @@ function getSampleResponse(req, port) {
         "last_modified":3000
       }]})
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_since=3000": {
+    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
