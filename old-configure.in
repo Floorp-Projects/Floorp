@@ -6260,7 +6260,7 @@ if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     AC_DEFINE(MOZ_OMNIJAR)
 fi
 MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
-if test "$OS_ARCH" = "WINNT" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
+if test "$OS_ARCH" = "WINNT"; then
     MOZ_CHROME_FILE_FORMAT=flat
 else
     MOZ_CHROME_FILE_FORMAT=symlink
