@@ -1562,6 +1562,11 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     masm.createGCObject(object, temp2, templateObject, gc::DefaultHeap, &matchResultFallback);
     masm.bind(&matchResultJoin);
 
+    // Initialize slots of result object.
+    masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
+    masm.storeValue(templateObject->getSlot(0), Address(temp2, 0));
+    masm.storeValue(templateObject->getSlot(1), Address(temp2, sizeof(Value)));
+
     size_t elementsOffset = NativeObject::offsetOfFixedElements();
 
 #ifdef DEBUG
