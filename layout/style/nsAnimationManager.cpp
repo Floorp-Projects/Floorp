@@ -583,6 +583,9 @@ private:
 			       aStyleAnimation.GetDuration()));
     timing.mDelay = TimeDuration::FromMilliseconds(aStyleAnimation.GetDelay());
     timing.mIterations = aStyleAnimation.GetIterationCount();
+    MOZ_ASSERT(timing.mIterations >= 0.0 && !IsNaN(timing.mIterations),
+               "mIterations should be nonnegative & finite, as ensured by "
+               "CSSParser");
     timing.mDirection = aStyleAnimation.GetDirection();
     timing.mFill = aStyleAnimation.GetFillMode();
 
