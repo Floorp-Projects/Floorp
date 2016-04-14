@@ -86,7 +86,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
         final int viewType = getAdapter().getItemViewType(position);
         final CombinedHistoryAdapter.ItemType itemType = CombinedHistoryAdapter.ItemType.viewTypeToItemType(viewType);
 
-        switch(itemType) {
+        switch (itemType) {
             case CLIENT:
                 mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.CHILD);
                 ((CombinedHistoryAdapter) getAdapter()).showChildView(position);

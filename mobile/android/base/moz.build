@@ -245,6 +245,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/URLMetadataTable.java',
     'DevToolsAuthHelper.java',
     'distribution/Distribution.java',
+    'distribution/DistributionStoreCallback.java',
     'distribution/ReferrerDescriptor.java',
     'distribution/ReferrerReceiver.java',
     'dlc/BaseAction.java',

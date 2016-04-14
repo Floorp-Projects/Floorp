@@ -119,7 +119,7 @@ class PanelItemView extends LinearLayout {
     }
 
     public static PanelItemView create(Context context, ItemType itemType) {
-        switch(itemType) {
+        switch (itemType) {
             case ARTICLE:
                 return new ArticleItemView(context);
 

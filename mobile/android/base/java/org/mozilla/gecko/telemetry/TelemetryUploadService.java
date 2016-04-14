@@ -16,6 +16,7 @@ import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.background.BackgroundService;
+import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
@@ -183,9 +184,9 @@ public class TelemetryUploadService extends BackgroundService {
         // TODO (bug 1241685): Sync this preference with the gecko preference.
         final String serverURLSchemeHostPort =
                 sharedPrefs.getString(TelemetryConstants.PREF_SERVER_URL, TelemetryConstants.DEFAULT_SERVER_URL);
-
+        final String distributionId = sharedPrefs.getString(DistributionStoreCallback.PREF_DISTRIBUTION_ID, null);
         final TelemetryPing corePing = TelemetryPingGenerator.createCorePing(this, docId, clientId,
-                serverURLSchemeHostPort, seq, profileCreationDate, defaultSearchEngine);
+                serverURLSchemeHostPort, seq, profileCreationDate, distributionId, defaultSearchEngine);
         final CorePingResultDelegate resultDelegate = new CorePingResultDelegate();
         uploadPing(corePing, resultDelegate);
     }

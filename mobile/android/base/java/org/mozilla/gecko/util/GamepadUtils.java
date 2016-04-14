@@ -127,7 +127,7 @@ public final class GamepadUtils {
         boolean swapped = false;
         int[] deviceIds = InputDevice.getDeviceIds();
 
-        for (int i= 0; deviceIds != null && i < deviceIds.length; i++) {
+        for (int i = 0; deviceIds != null && i < deviceIds.length; i++) {
             KeyCharacterMap keyCharacterMap = KeyCharacterMap.load(deviceIds[i]);
             if (keyCharacterMap != null && DEFAULT_O_BUTTON_LABEL ==
                 keyCharacterMap.getDisplayLabel(KeyEvent.KEYCODE_DPAD_CENTER)) {

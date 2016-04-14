@@ -57,7 +57,7 @@ class JavaPanZoomController
     private static final double AXIS_BREAKOUT_ANGLE = Math.PI / 8.0;
 
     // The distance the user has to pan before we consider breaking out of a locked axis
-    public static final float AXIS_BREAKOUT_THRESHOLD = 1/32f * GeckoAppShell.getDpi();
+    public static final float AXIS_BREAKOUT_THRESHOLD = 1 / 32f * GeckoAppShell.getDpi();
 
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
@@ -210,8 +210,8 @@ class JavaPanZoomController
     private final static float easeOut(float t) {
         // ease-out approx.
         // -(t-1)^2+1
-        t = t-1;
-        return -t*t+1;
+        t = t - 1;
+        return -t * t + 1;
     }
 
     private void setState(PanZoomState state) {
@@ -266,9 +266,9 @@ class JavaPanZoomController
                 float newHeight = viewableRect.height() * cssPageRect.width() / viewableRect.width();
                 float dh = viewableRect.height() - newHeight; // increase in the height
                 final RectF r = new RectF(0.0f,
-                                    y + dh/2,
+                                    y + dh / 2,
                                     cssPageRect.width(),
-                                    y + dh/2 + newHeight);
+                                    y + dh / 2 + newHeight);
                 if (message.optBoolean("animate", true)) {
                     mTarget.post(new Runnable() {
                         @Override

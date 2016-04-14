@@ -657,7 +657,7 @@ public class ContactService implements GeckoEventListener {
         if (DEBUG) {
             try {
                 Log.d(LOGTAG, "Got contact: " + contact.toString(3));
-            } catch (JSONException e) {}
+            } catch (JSONException e) { }
         }
 
         return contact;
@@ -946,7 +946,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         String returnStatus = "KO";
-        if(deleteContact(rawContactId)) {
+        if (deleteContact(rawContactId)) {
             returnStatus = "OK";
         }
 
@@ -1730,7 +1730,7 @@ public class ContactService implements GeckoEventListener {
         long[] ids = new long[cursor.getCount()];
         int index = 0;
         cursor.moveToPosition(-1);
-        while(cursor.moveToNext()) {
+        while (cursor.moveToNext()) {
             ids[index] = cursor.getLong(cursor.getColumnIndex(RawContacts._ID));
             index++;
         }
@@ -1821,7 +1821,7 @@ public class ContactService implements GeckoEventListener {
         return max;
     }
 
-    private static void putPossibleNullValueInJSONObject(final String key, final Object value, JSONObject jsonObject) throws JSONException{
+    private static void putPossibleNullValueInJSONObject(final String key, final Object value, JSONObject jsonObject) throws JSONException {
         if (value != null) {
             jsonObject.put(key, value);
         } else {

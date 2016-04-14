@@ -8709,7 +8709,7 @@
   },
   "E10S_ADDONS_BLOCKER_RAN": {
     "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "48",
+    "expires_in_version": "49",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1248796],

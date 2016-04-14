@@ -71,7 +71,7 @@ public final class GeckoLoader {
                 pluginSearchPath.append(pluginDirs[i]);
                 pluginSearchPath.append(":");
             }
-            putenv("MOZ_PLUGIN_PATH="+pluginSearchPath);
+            putenv("MOZ_PLUGIN_PATH=" + pluginSearchPath);
 
             File pluginDataDir = context.getDir("plugins", 0);
             putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());

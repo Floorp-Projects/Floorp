@@ -58,7 +58,7 @@ public abstract class SessionParser {
      * @param closedTabs, JSONArray of recently closed tab entries.
      * @throws JSONException
      */
-    public void onClosedTabsRead(final JSONArray closedTabs) throws JSONException{
+    public void onClosedTabsRead(final JSONArray closedTabs) throws JSONException {
     }
 
     public void parse(String... sessionStrings) {
@@ -100,7 +100,7 @@ public abstract class SessionParser {
 
                     totalCount++;
                     boolean selected = false;
-                    if (optSelected == i+1) {
+                    if (optSelected == i + 1) {
                         selected = true;
                         selectedIndex = totalCount;
                     }

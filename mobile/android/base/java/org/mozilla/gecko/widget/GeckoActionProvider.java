@@ -356,7 +356,7 @@ public class GeckoActionProvider {
                     IOUtils.safeStreamClose(is);
                 }
             }
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             // If something went wrong, we'll just leave the intent un-changed
         } finally {
             IOUtils.safeStreamClose(os);

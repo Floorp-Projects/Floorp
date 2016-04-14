@@ -364,7 +364,7 @@ abstract class PanelLayout extends FrameLayout {
 
         View view = viewState.getView();
         if (view == null) {
-            switch(viewConfig.getType()) {
+            switch (viewConfig.getType()) {
                 case LIST:
                     view = new PanelListView(getContext(), viewConfig);
                     break;

@@ -79,7 +79,7 @@ class Envelope
     mRemainingParts = new int[size];
     mFailing = new boolean[size];
 
-    for (int i=0; i<size; ++i) {
+    for (int i = 0; i < size; ++i) {
       mRemainingParts[i] = aParts;
       mFailing[i] = false;
     }
@@ -155,7 +155,7 @@ class Postman
      */
     int size = mEnvelopes.size();
 
-    for (int i=0; i<size; ++i) {
+    for (int i = 0; i < size; ++i) {
       if (mEnvelopes.get(i) == null) {
         mEnvelopes.set(i, new Envelope(i, aParts));
         return i;
@@ -598,7 +598,7 @@ public class GeckoSmsManager
         ArrayList<PendingIntent> deliveredPendingIntents =
           new ArrayList<PendingIntent>(parts.size());
 
-        for (int i=0; i<parts.size(); ++i) {
+        for (int i = 0; i < parts.size(); ++i) {
           sentPendingIntents.add(
             PendingIntent.getBroadcast(GeckoAppShell.getContext(),
                                        pendingIntentGuid.incrementAndGet(), sentIntent,

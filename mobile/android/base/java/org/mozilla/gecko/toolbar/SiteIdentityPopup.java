@@ -389,7 +389,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private void setSecurityStateIcon(int resource, int factor) {
         final Drawable stateIcon = ContextCompat.getDrawable(mContext, resource);
-        stateIcon.setBounds(0, 0, stateIcon.getIntrinsicWidth()/factor, stateIcon.getIntrinsicHeight()/factor);
+        stateIcon.setBounds(0, 0, stateIcon.getIntrinsicWidth() / factor, stateIcon.getIntrinsicHeight() / factor);
         mSecurityState.setCompoundDrawables(stateIcon, null, null, null);
         mSecurityState.setCompoundDrawablePadding((int) mResources.getDimension(R.dimen.doorhanger_drawable_padding));
     }
@@ -422,7 +422,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
-        final int icon = blocked ? R.drawable.shield_enabled: R.drawable.shield_disabled;
+        final int icon = blocked ? R.drawable.shield_enabled : R.drawable.shield_disabled;
 
         final JSONObject options = new JSONObject();
         final JSONObject tracking = new JSONObject();

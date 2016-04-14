@@ -84,7 +84,7 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
 
         // Extract the image dimensions.
         int imageWidth = buffer[entryOffset] & 0xFF;
-        int imageHeight = buffer[entryOffset+1] & 0xFF;
+        int imageHeight = buffer[entryOffset + 1] & 0xFF;
 
         // Because Microsoft, a size value of zero represents an image size of 256.
         if (imageWidth == 0) {

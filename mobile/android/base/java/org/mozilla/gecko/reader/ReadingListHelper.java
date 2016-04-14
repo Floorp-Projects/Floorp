@@ -44,7 +44,7 @@ public final class ReadingListHelper implements NativeEventListener {
     @Override
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
-        switch(event) {
+        switch (event) {
             case "Reader:FaviconRequest": {
                 handleReaderModeFaviconRequest(callback, message.getString("url"));
                 break;

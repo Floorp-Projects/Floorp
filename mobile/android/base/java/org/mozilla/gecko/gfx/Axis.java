@@ -135,7 +135,7 @@ abstract class Axis {
 
     static final float MS_PER_FRAME = 1000.0f / 60.0f;
     static final long NS_PER_FRAME = Math.round(1000000000f / 60f);
-    private static final float FRAMERATE_MULTIPLIER = (1000f/60f) / MS_PER_FRAME;
+    private static final float FRAMERATE_MULTIPLIER = (1000f / 60f) / MS_PER_FRAME;
     private static final int FLING_VELOCITY_POINTS = 8;
 
     //  The values we use for friction are based on a 16.6ms frame, adjust them to currentNsPerFrame:
@@ -265,8 +265,8 @@ abstract class Axis {
 
     // Calculates and returns the value of the bezier curve with the given parameter t and control points p1 and p2
     float cubicBezier(float p1, float p2, float t) {
-        return (3 * t * (1-t) * (1-t) * p1)
-             + (3 * t * t * (1-t) * p2)
+        return (3 * t * (1 - t) * (1 - t) * p1)
+             + (3 * t * t * (1 - t) * p2)
              + (t * t * t);
     }
 
@@ -279,7 +279,7 @@ abstract class Axis {
         guess[0] = By;
 
         for (int i = 1; i < ni; i++) {
-            guess[i] = guess[i-1] - (cubicBezier(y1, y2, guess[i-1]) - By) / getSlope(guess[i-1]);
+            guess[i] = guess[i - 1] - (cubicBezier(y1, y2, guess[i - 1]) - By) / getSlope(guess[i - 1]);
         }
         // guess[4] is the final approximate root the cubic equation.
         float t = guess[4];
@@ -409,7 +409,7 @@ abstract class Axis {
         return average / usablePoints;
     }
 
-    float accelerate(float velocity, float lastFlingVelocity){
+    float accelerate(float velocity, float lastFlingVelocity) {
         return (FLING_ACCEL_BASE_MULTIPLIER * velocity + FLING_ACCEL_SUPPLEMENTAL_MULTIPLIER * lastFlingVelocity);
     }
 

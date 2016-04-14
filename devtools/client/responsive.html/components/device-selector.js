@@ -11,15 +11,14 @@ const { DOM: dom, createClass, PropTypes, addons } =
 const Types = require("../types");
 
 module.exports = createClass({
-
-  displayName: "DeviceSelector",
-
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
   },
+
+  displayName: "DeviceSelector",
 
   mixins: [ addons.PureRenderMixin ],
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html>
+<body>
+<script type="text/javascript">
+var nav, win;
+
+function openWindow() {
+  return new Promise(resolve => {
+    win = window.open(window.location);
+
+    win.addEventListener("load", function listener() {
+      nav = win.navigator;
+      resolve();
+    }, false);
+  });
+}
+
+function navigate() {
+  win.location = "http://example.com/";
+}
+
+function check() {
+  return "mozAddonManager" in nav;
+}
+</script>
+</body>
+</html>

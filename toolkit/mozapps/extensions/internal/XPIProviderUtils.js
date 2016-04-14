@@ -8,7 +8,7 @@
 /*globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
           AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
           isUsableAddon, recordAddonTelemetry, applyBlocklistChanges,
-          flushStartupCache, canRunInSafeMode*/
+          flushChromeCaches, canRunInSafeMode*/
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -2120,7 +2120,7 @@ this.XPIDatabaseReconcile = {
           }
 
           // Make sure to flush the cache when an old add-on has gone away
-          flushStartupCache();
+          flushChromeCaches();
 
           if (currentAddon.bootstrap) {
             // Visible bootstrapped add-ons need to have their install method called
@@ -2177,7 +2177,7 @@ this.XPIDatabaseReconcile = {
       AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
 
       // Make sure to flush the cache when an old add-on has gone away
-      flushStartupCache();
+      flushChromeCaches();
     }
 
     // Make sure add-ons from hidden locations are marked invisible and inactive

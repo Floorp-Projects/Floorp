@@ -177,7 +177,7 @@ public class TabQueueHelper {
             } catch (JSONException e) {
                 url = "";
             }
-            if(!TextUtils.isEmpty(url) && !urlToRemove.equals(url)) {
+            if (!TextUtils.isEmpty(url) && !urlToRemove.equals(url)) {
                 newArray.put(url);
             }
         }

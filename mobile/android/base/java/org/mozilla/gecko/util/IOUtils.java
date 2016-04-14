@@ -115,7 +115,7 @@ public class IOUtils {
         try {
             if (stream != null)
                 stream.close();
-        } catch (IOException e) {}
+        } catch (IOException e) { }
     }
 
     public static void copy(InputStream in, OutputStream out) throws IOException {

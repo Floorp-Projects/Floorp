@@ -32,36 +32,6 @@ module.exports = createClass({
     };
   },
 
-  render() {
-    let { debugDisabled } = this.props;
-
-    return dom.div({ className: "addons-top" },
-      dom.div({ className: "addons-controls" },
-        dom.div({ className: "addons-options" },
-          dom.input({
-            id: "enable-addon-debugging",
-            type: "checkbox",
-            checked: !debugDisabled,
-            onChange: this.onEnableAddonDebuggingChange,
-          }),
-          dom.label({
-            className: "addons-debugging-label",
-            htmlFor: "enable-addon-debugging",
-            title: Strings.GetStringFromName("addonDebugging.tooltip")
-          }, Strings.GetStringFromName("addonDebugging.label")),
-          "(",
-          dom.a({ href: MORE_INFO_URL, target: "_blank" },
-            Strings.GetStringFromName("addonDebugging.moreInfo")),
-          ")"
-        ),
-        dom.button({
-          id: "load-addon-from-file",
-          onClick: this.loadAddonFromFile,
-        }, Strings.GetStringFromName("loadTemporaryAddon"))
-      ),
-      AddonsInstallError({ error: this.state.installError }));
-  },
-
   onEnableAddonDebuggingChange(event) {
     let enabled = event.target.checked;
     Services.prefs.setBoolPref("devtools.chrome.enabled", enabled);
@@ -90,4 +60,34 @@ module.exports = createClass({
         this.setState({ installError: e.message });
       });
   },
+
+  render() {
+    let { debugDisabled } = this.props;
+
+    return dom.div({ className: "addons-top" },
+      dom.div({ className: "addons-controls" },
+        dom.div({ className: "addons-options" },
+          dom.input({
+            id: "enable-addon-debugging",
+            type: "checkbox",
+            checked: !debugDisabled,
+            onChange: this.onEnableAddonDebuggingChange,
+          }),
+          dom.label({
+            className: "addons-debugging-label",
+            htmlFor: "enable-addon-debugging",
+            title: Strings.GetStringFromName("addonDebugging.tooltip")
+          }, Strings.GetStringFromName("addonDebugging.label")),
+          "(",
+          dom.a({ href: MORE_INFO_URL, target: "_blank" },
+            Strings.GetStringFromName("addonDebugging.moreInfo")),
+          ")"
+        ),
+        dom.button({
+          id: "load-addon-from-file",
+          onClick: this.loadAddonFromFile,
+        }, Strings.GetStringFromName("loadTemporaryAddon"))
+      ),
+      AddonsInstallError({ error: this.state.installError }));
+  }
 });

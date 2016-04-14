@@ -6424,11 +6424,19 @@ var gIdentityHandler = {
   },
 
   get _isSecure() {
-    return this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
+    // If a <browser> is included within a chrome document, then this._state
+    // will refer to the security state for the <browser> and not the top level
+    // document. In this case, don't upgrade the security state in the UI
+    // with the secure state of the embedded <browser>.
+    return !this._isURILoadedFromFile && this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
   },
 
   get _isEV() {
-    return this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+    // If a <browser> is included within a chrome document, then this._state
+    // will refer to the security state for the <browser> and not the top level
+    // document. In this case, don't upgrade the security state in the UI
+    // with the EV state of the embedded <browser>.
+    return !this._isURILoadedFromFile && this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
   },
 
   get _isMixedActiveContentLoaded() {
@@ -6620,21 +6628,10 @@ var gIdentityHandler = {
   updateIdentity(state, uri) {
     let shouldHidePopup = this._uri && (this._uri.spec != uri.spec);
     this._state = state;
-    this._uri = uri;
 
     // Firstly, populate the state properties required to display the UI. See
     // the documentation of the individual properties for details.
-
-    try {
-      this._uri.host;
-      this._uriHasHost = true;
-    } catch (ex) {
-      this._uriHasHost = false;
-    }
-
-    let whitelist = /^(?:accounts|addons|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
-    this._isSecureInternalUI = uri.schemeIs("about") && whitelist.test(uri.path);
-
+    this.setURI(uri);
     this._sslStatus = gBrowser.securityUI
                               .QueryInterface(Ci.nsISSLStatusProvider)
                               .SSLStatus;
@@ -6974,9 +6971,22 @@ var gIdentityHandler = {
     this.updateSitePermissions();
   },
 
-  get _isURILoadedFromFile() {
+  setURI(uri) {
+    this._uri = uri;
+
+    try {
+      this._uri.host;
+      this._uriHasHost = true;
+    } catch (ex) {
+      this._uriHasHost = false;
+    }
+
+    let whitelist = /^(?:accounts|addons|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
+    this._isSecureInternalUI = uri.schemeIs("about") && whitelist.test(uri.path);
+
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.
+    this._isURILoadedFromFile = false;
     let chanOptions = {uri: this._uri, loadUsingSystemPrincipal: true};
     let resolvedURI;
     try {
@@ -6986,13 +6996,11 @@ var gIdentityHandler = {
         // create a new URI using <jar-file-uri>!/<jar-entry>
         resolvedURI = NetUtil.newURI(resolvedURI.path);
       }
+      // Check the URI again after resolving.
+      this._isURILoadedFromFile = resolvedURI.schemeIs("file");
     } catch (ex) {
       // NetUtil's methods will throw for malformed URIs and the like
-      return false;
     }
-
-    // Check the URI again after resolving.
-    return resolvedURI.schemeIs("file");
   },
 
   /**

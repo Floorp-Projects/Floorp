@@ -53,6 +53,11 @@
             <!-- TODO: (bug 1263059) Remove specific tokens to enable CAST check. -->
             <property name="tokens" value="COMMA, SEMI"/>
         </module>
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+        </module>
     </module>
 
 </module>

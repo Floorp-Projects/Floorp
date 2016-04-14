@@ -55,7 +55,7 @@ import android.view.View;
  */
 public abstract class HomeFragment extends Fragment {
     // Log Tag.
-    private static final String LOGTAG="GeckoHomeFragment";
+    private static final String LOGTAG = "GeckoHomeFragment";
 
     // Share MIME type.
     protected static final String SHARE_MIME_TYPE = "text/plain";
@@ -378,7 +378,7 @@ public abstract class HomeFragment extends Fragment {
                 }
             }
 
-            switch(mType) {
+            switch (mType) {
                 case BOOKMARKS:
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.CONTEXT_MENU, "bookmark");
                     mDB.removeBookmarksWithURL(cr, mUrl);

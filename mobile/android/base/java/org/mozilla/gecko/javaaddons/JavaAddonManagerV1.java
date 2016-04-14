@@ -39,7 +39,7 @@ public class JavaAddonManagerV1 implements NativeEventListener {
 
     private final org.mozilla.gecko.EventDispatcher mDispatcher;
 
-    // Protected by synchronized(this).
+    // Protected by synchronized (this).
     private final Map<String, EventDispatcherImpl> mGUIDToDispatcherMap = new HashMap<>();
 
     public static synchronized JavaAddonManagerV1 getInstance() {
@@ -153,7 +153,7 @@ public class JavaAddonManagerV1 implements NativeEventListener {
         private final String guid;
         private final String dexFileName;
 
-        // Protected by synchronized(this).
+        // Protected by synchronized (this).
         private final Map<JavaAddonInterfaceV1.EventListener, Pair<NativeEventListener, String[]>> mListenerToWrapperMap = new IdentityHashMap<>();
 
         public EventDispatcherImpl(String guid, String dexFileName) {

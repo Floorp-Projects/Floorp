@@ -235,7 +235,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
                     if (tabId > -1 && !TextUtils.isEmpty(tempFile)) {
                         Tabs.registerOnTabsChangedListener(this);
                     }
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     Log.i(LOGTAG, "Error writing file", ex);
                 } finally {
                     if (fos != null) {
