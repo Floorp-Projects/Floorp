@@ -25,6 +25,8 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.distribution.Distribution.DistributionDescriptor;
+import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
@@ -705,7 +707,8 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch");
 
-        Distribution distribution = Distribution.init(this);
+        final Distribution distribution = Distribution.init(this);
+        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, getProfile().getName()));
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
