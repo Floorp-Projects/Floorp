@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.background.db;
 
 import android.content.ContentProvider;
@@ -28,12 +32,7 @@ public class DelegatingTestContentProvider extends ContentProvider {
     }
 
     private Uri appendTestParam(Uri uri) {
-        try {
-            return appendUriParam(uri, BrowserContract.PARAM_IS_TEST, "1");
-        } catch (Exception e) {
-        }
-
-        return null;
+        return appendUriParam(uri, BrowserContract.PARAM_IS_TEST, "1");
     }
 
     @Override
