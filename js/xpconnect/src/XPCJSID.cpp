@@ -454,8 +454,8 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative* wrapper,
  * This static method handles both complexities, returning either an XPCWN, a
  * DOM object, or null. The object may well be cross-compartment from |cx|.
  */
-static JSObject*
-FindObjectForHasInstance(JSContext* cx, HandleObject objArg)
+static nsresult
+FindObjectForHasInstance(JSContext* cx, HandleObject objArg, MutableHandleObject target)
 {
     RootedObject obj(cx, objArg), proto(cx);
 
@@ -466,11 +466,18 @@ FindObjectForHasInstance(JSContext* cx, HandleObject objArg)
             obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
             continue;
         }
-        if (!js::GetObjectProto(cx, obj, &proto))
-            return nullptr;
+
+        {
+            JSAutoCompartment ac(cx, obj);
+            if (!js::GetObjectProto(cx, obj, &proto))
+                return NS_ERROR_FAILURE;
+        }
+
         obj = proto;
     }
-    return obj;
+
+    target.set(obj);
+    return NS_OK;
 }
 
 nsresult
@@ -478,7 +485,11 @@ xpc::HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid, bool* bp)
 {
     *bp = false;
 
-    RootedObject obj(cx, FindObjectForHasInstance(cx, objArg));
+    RootedObject obj(cx);
+    nsresult rv = FindObjectForHasInstance(cx, objArg, &obj);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
+
     if (!obj)
         return NS_OK;
 
@@ -720,32 +731,32 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative* wrapper,
                      HandleValue val, bool* bp, bool* _retval)
 {
     *bp = false;
-    nsresult rv = NS_OK;
 
-    if (val.isObject()) {
-        // we have a JSObject
-        RootedObject obj(cx, &val.toObject());
+    if (!val.isObject())
+        return NS_OK;
 
-        MOZ_ASSERT(obj, "when is an object not an object?");
+    RootedObject obj(cx, &val.toObject());
 
-        // is this really a native xpcom object with a wrapper?
-        nsIClassInfo* ci = nullptr;
-        obj = FindObjectForHasInstance(cx, obj);
-        if (!obj || !IS_WN_REFLECTOR(obj))
-            return rv;
-        if (XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(obj))
-            ci = other_wrapper->GetClassInfo();
+    // is this really a native xpcom object with a wrapper?
+    RootedObject target(cx);
+    nsresult rv = FindObjectForHasInstance(cx, obj, &target);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
-        // We consider CID equality to be the thing that matters here.
-        // This is perhaps debatable.
-        if (ci) {
+    if (!target || !IS_WN_REFLECTOR(target))
+        return NS_OK;
+
+    if (XPCWrappedNative* other_wrapper = XPCWrappedNative::Get(target)) {
+        if (nsIClassInfo* ci = other_wrapper->GetClassInfo()) {
+            // We consider CID equality to be the thing that matters here.
+            // This is perhaps debatable.
             nsID cid;
             if (NS_SUCCEEDED(ci->GetClassIDNoAlloc(&cid)))
                 *bp = cid.Equals(mDetails->ID());
         }
     }
 
-    return rv;
+    return NS_OK;
 }
 
 /***************************************************************************/
