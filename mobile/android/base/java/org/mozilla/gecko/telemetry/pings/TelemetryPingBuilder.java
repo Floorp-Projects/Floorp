@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry;
+package org.mozilla.gecko.telemetry.pings;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
