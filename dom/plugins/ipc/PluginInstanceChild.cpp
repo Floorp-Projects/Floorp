@@ -140,6 +140,8 @@ CreateDrawTargetForSurface(gfxASurface *aSurface)
   return drawTarget;
 }
 
+bool PluginInstanceChild::sIsIMEComposing = false;
+
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsCString& aMimeType,
                                          const uint16_t& aMode,
@@ -154,6 +156,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mContentsScaleFactor(1.0)
 #endif
     , mPostingKeyEvents(0)
+    , mPostingKeyEventsOutdated(0)
     , mDrawingModel(kDefaultDrawingModel)
     , mCurrentDirectSurface(nullptr)
     , mAsyncInvalidateMutex("PluginInstanceChild::mAsyncInvalidateMutex")
@@ -1443,12 +1446,24 @@ PluginInstanceChild::RecvHandledWindowedPluginKeyEvent(
     // Unknown key input shouldn't be sent to plugin for security.
     // XXX Is this possible if a plugin process which posted the message
     //     already crashed and this plugin process is recreated?
-    if (NS_WARN_IF(!mPostingKeyEvents)) {
+    if (NS_WARN_IF(!mPostingKeyEvents && !mPostingKeyEventsOutdated)) {
+        return true;
+    }
+
+    // If there is outdated posting key events, we should consume the key
+    // events.
+    if (mPostingKeyEventsOutdated) {
+        mPostingKeyEventsOutdated--;
         return true;
     }
 
     mPostingKeyEvents--;
-    if (aIsConsumed) {
+
+    // If composition has been started after posting the key event,
+    // we should discard the event since if we send the event to plugin,
+    // the plugin may be confused and the result may be broken because
+    // the event order is shuffled.
+    if (aIsConsumed || sIsIMEComposing) {
         return true;
     }
 
@@ -1624,6 +1639,7 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
     NS_ASSERTION(self->mPluginWindowHWND == hWnd, "Wrong window!");
     NS_ASSERTION(self->mPluginWndProc != PluginWindowProc, "Self-referential windowproc. Infinite recursion will happen soon.");
 
+    bool isIMECompositionMessage = false;
     switch (message) {
         // Adobe's shockwave positions the plugin window relative to the browser
         // frame when it initializes. With oopp disabled, this wouldn't have an
@@ -1693,11 +1709,36 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
             message = WM_SYSDEADCHAR;
             break;
 
+        case WM_IME_STARTCOMPOSITION:
+            isIMECompositionMessage = true;
+            sIsIMEComposing = true;
+            break;
+        case WM_IME_ENDCOMPOSITION:
+            isIMECompositionMessage = true;
+            sIsIMEComposing = false;
+            break;
+        case WM_IME_COMPOSITION:
+            isIMECompositionMessage = true;
+            // XXX Some old IME may not send WM_IME_COMPOSITION_START or
+            //     WM_IME_COMPSOITION_END properly.  So, we need to check
+            //     WM_IME_COMPSOITION and if it includes commit string.
+            sIsIMEComposing = !(lParam & GCS_RESULTSTR);
+            break;
+
         // The plugin received keyboard focus, let the parent know so the dom
         // is up to date.
         case WM_MOUSEACTIVATE:
             self->CallPluginFocusChange(true);
             break;
+    }
+
+    // When a composition is committed, there may be pending key
+    // events which were posted to the parent process before starting
+    // the composition.  Then, we shouldn't handle it since they are
+    // now outdated.
+    if (isIMECompositionMessage && !sIsIMEComposing) {
+        self->mPostingKeyEventsOutdated += self->mPostingKeyEvents;
+        self->mPostingKeyEvents = 0;
     }
 
     // Prevent lockups due to plugins making rpc calls when the parent
@@ -1761,6 +1802,14 @@ PluginInstanceChild::ShouldPostKeyMessage(UINT message,
                                           WPARAM wParam,
                                           LPARAM lParam)
 {
+    // If there is a composition, we shouldn't post the key message to the
+    // parent process because we cannot handle IME messages asynchronously.
+    // Therefore, if we posted key events to the parent process, the event
+    // order of the posted key events and IME events are shuffled.
+    if (sIsIMEComposing) {
+      return false;
+    }
+
     // If there are some pending keyboard events which are not handled in
     // the parent process, we should post the message for avoiding to shuffle
     // the key event order.

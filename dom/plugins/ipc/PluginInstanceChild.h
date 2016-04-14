@@ -415,6 +415,7 @@ private:
 #endif
     double mCSSZoomFactor;
     uint32_t mPostingKeyEvents;
+    uint32_t mPostingKeyEventsOutdated;
     int16_t               mDrawingModel;
 
     NPAsyncSurface* mCurrentDirectSurface;
@@ -669,6 +670,10 @@ private:
 
     // Has this instance been destroyed, either by ActorDestroy or NPP_Destroy?
     bool mDestroyed;
+
+    // While IME in the process has composition, this is set to true.
+    // Otherwise, false.
+    static bool sIsIMEComposing;
 
     // A counter is incremented by AutoStackHelper to indicate that there is an
     // active plugin call which should be preventing shutdown.
