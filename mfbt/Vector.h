@@ -1031,6 +1031,11 @@ Vector<T, N, AP>::growByUninitialized(size_t aIncr)
   } else if (!maybeCheckSimulatedOOM(mLength + aIncr)) {
     return false;
   }
+#ifdef DEBUG
+  if (mLength + aIncr > mReserved) {
+    mReserved = mLength + aIncr;
+  }
+#endif
   infallibleGrowByUninitialized(aIncr);
   return true;
 }
@@ -1039,13 +1044,8 @@ template<typename T, size_t N, class AP>
 MOZ_ALWAYS_INLINE void
 Vector<T, N, AP>::infallibleGrowByUninitialized(size_t aIncr)
 {
-  MOZ_ASSERT(mLength + aIncr <= mCapacity);
+  MOZ_ASSERT(mLength + aIncr <= reserved());
   mLength += aIncr;
-#ifdef DEBUG
-  if (mLength > mReserved) {
-    mReserved = mLength;
-  }
-#endif
 }
 
 template<typename T, size_t N, class AP>
