@@ -19,6 +19,8 @@ interface nsITabChild : nsISupports
 
   [notxpcom] void sendRequestFocus(in boolean canFocus);
 
+  [notxpcom] void sendGetTabCount(out uint32_t tabCount);
+
   [noscript, notxpcom] void enableDisableCommands(in AString action,
                                                   in CommandsArrayRef enabledCommands,
                                                   in CommandsArrayRef disabledCommands);

@@ -470,6 +470,8 @@ parent:
                                    bool aLongTap,
                                    uint64_t aObserverId);
     async ClearNativeTouchSequence(uint64_t aObserverId);
+
+    sync GetTabCount() returns (uint32_t value);
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
 
