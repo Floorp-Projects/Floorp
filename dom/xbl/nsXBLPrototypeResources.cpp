@@ -154,7 +154,7 @@ nsXBLPrototypeResources::GatherRuleProcessor()
                "backends");
     sheets.AppendElement(sheet->AsGecko());
   }
-  mRuleProcessor = new nsCSSRuleProcessor(sheets,
+  mRuleProcessor = new nsCSSRuleProcessor(Move(sheets),
                                           SheetType::Doc,
                                           nullptr,
                                           mRuleProcessor);
