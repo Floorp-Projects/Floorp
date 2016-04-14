@@ -113,12 +113,15 @@ skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.ht
 != italic-oblique-kinnari.html italic-oblique-kinnari-ref.html
 
 # system font generic per-language tests, only works under OSX currently
-random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1-ref.html
-random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2-ref.html
-random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3-ref.html
-random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4-ref.html
-random-if(!OSX) != system-generic-fallback-ko.html system-generic-fallback-ja.html
-random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-ja.html
-random-if(!OSX) != system-generic-fallback-zh-cn.html system-generic-fallback-ja.html
-random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-zh-cn.html
+# Bug 1212731 - initial implementation caused startup regression and
+# regression with full-width digits display in UI elements. Disable
+# tests until these problems are corrected.
+# random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1-ref.html
+# random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2-ref.html
+# random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3-ref.html
+# random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4-ref.html
+# random-if(!OSX) != system-generic-fallback-ko.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-cn.html system-generic-fallback-ja.html
+# random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-zh-cn.html
 
