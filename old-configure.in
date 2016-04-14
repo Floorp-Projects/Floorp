@@ -1146,8 +1146,6 @@ if test "$MOZ_DMD"; then
         CFLAGS="$CFLAGS -funwind-tables"
         CXXFLAGS="$CXXFLAGS -funwind-tables"
     fi
-
-    MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
 fi
 
 dnl ========================================================
@@ -5608,24 +5606,7 @@ Android|WINNT|Darwin)
   ;;
 esac
 
-dnl ========================================================
-dnl = Enable dynamic replacement of malloc implementation
-dnl ========================================================
-if test -n "$NIGHTLY_BUILD" -a -n "$MOZ_MEMORY"; then
-  # Enable on central for the debugging opportunities it adds.
-  MOZ_REPLACE_MALLOC=1
-fi
-MOZ_ARG_ENABLE_BOOL(replace-malloc,
-[  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
-    MOZ_REPLACE_MALLOC=1,
-    MOZ_REPLACE_MALLOC= )
-
-if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
-    dnl We don't want to enable jemalloc unconditionally because it may be a
-    dnl deliberate choice not to enable it (bug 702250, for instance)
-    AC_MSG_ERROR([--enable-replace-malloc requires --enable-jemalloc])
-elif test -n "$MOZ_REPLACE_MALLOC"; then
-    AC_DEFINE(MOZ_REPLACE_MALLOC)
+if test -n "$MOZ_REPLACE_MALLOC"; then
     MOZ_SYSTEM_JEMALLOC=
 
     dnl Replace-malloc Mac linkage quirks
@@ -5680,7 +5661,6 @@ elif test -n "$MOZ_REPLACE_MALLOC"; then
         MOZ_REPLACE_MALLOC_LINKAGE="$ac_cv_weak_dynamic_linking"
     fi
 fi
-AC_SUBST(MOZ_REPLACE_MALLOC)
 AC_SUBST(MOZ_REPLACE_MALLOC_LINKAGE)
 
 dnl ========================================================

@@ -78,3 +78,20 @@ def jemalloc_os_define_android(jemalloc, jemalloc4, target):
         return 'MOZ_MEMORY_ANDROID'
 
 set_define(jemalloc_os_define_android, '1')
+
+
+option('--enable-replace-malloc',
+       help='Enable ability to dynamically replace the malloc implementation')
+
+@depends('--enable-replace-malloc', jemalloc, milestone, build_project)
+def replace_malloc(value, jemalloc, milestone, build_project):
+    # Enable on central for the debugging opportunities it adds.
+    if milestone.is_nightly and jemalloc and build_project != 'js':
+        return True
+    if value and not jemalloc:
+        die('--enable-replace-malloc requires --enable-jemalloc')
+    return bool(value) or None
+
+set_config('MOZ_REPLACE_MALLOC', replace_malloc)
+set_define('MOZ_REPLACE_MALLOC', replace_malloc)
+add_old_configure_assignment('MOZ_REPLACE_MALLOC', replace_malloc)
