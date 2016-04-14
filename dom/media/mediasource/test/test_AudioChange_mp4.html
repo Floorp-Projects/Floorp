@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test checks loading a stereo segment, followed by a 5.1 segment plays without error.
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    function logEvent(e) {
+      var v = e.target;
+      info("got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      el.addEventListener(e, logEvent, false);
+    });
+
+    ok(true, "Receive a sourceopen event");
+    var audiosb = ms.addSourceBuffer("audio/mp4");
+    el.addEventListener("error", function(e) {
+      ok(false, "should not fire '" + e.type + "' event");
+      SimpleTest.finish();
+    });
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    fetchAndLoad(audiosb, 'aac20-48000-64000-', ['init'], '.mp4')
+    .then(once.bind(null, el, 'loadedmetadata'))
+    .then(function() {
+      ok(true, "got loadedmetadata event");
+      var promises = [];
+      promises.push(once(el, 'loadeddata'));
+      promises.push(once(el, 'canplay'));
+      promises.push(fetchAndLoad(audiosb, 'aac20-48000-64000-', ['1'], '.m4s'));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      ok(true, "got canplay event");
+      el.play();
+      return fetchAndLoad(audiosb, 'aac51-48000-128000-', ['init'], '.mp4');
+    })
+    .then(fetchAndLoad.bind(null, audiosb, 'aac51-48000-128000-', ['2'], '.m4s'))
+    .then(function() {
+      var promises = [];
+      ms.endOfStream();
+      promises.push(once(el, 'ended'));
+      promises.push(once(audiosb, 'updateend'));
+      return Promise.all(promises);
+    })
+    .then(function() {
+      ok(el.currentTime >= 6, "played to the end");
+      SimpleTest.finish();
+    })
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
