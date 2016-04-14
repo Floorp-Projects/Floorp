@@ -226,3 +226,19 @@ function createRAFMock() {
   };
   return mock;
 }
+
+/**
+ * Test to see if two floats are equivalent.
+ *
+ * @param {Float} a
+ * @param {Float} b
+ * @return {Boolean}
+ */
+function floatEquality(a, b) {
+  const EPSILON = 0.00000000001;
+  const equals = Math.abs(a - b) < EPSILON;
+  if (!equals) {
+    info(`${a} not equal to ${b}`);
+  }
+  return equals;
+}

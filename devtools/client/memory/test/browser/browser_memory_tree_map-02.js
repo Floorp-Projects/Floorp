@@ -33,21 +33,26 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
 
   let canvases = new CanvasUtils(div, 0);
   let dragZoom = new DragZoom(canvases.container, 0, rafMock.raf);
+  let style = canvases.container.style;
 
   info("Check initial state of dragZoom");
   {
     is(dragZoom.zoom, 0, "Zooming starts at 0");
     is(dragZoom.smoothZoom, 0, "Smoothed zooming starts at 0");
     is(rafMock.timesCalled, 0, "No RAFs have been queued");
+    is(style.transform, "translate(0px, 0px) scale(1)",
+       "No transforms have been done.");
 
-    panelWin.dispatchEvent(new WheelEvent("wheel", {
+    canvases.container.dispatchEvent(new WheelEvent("wheel", {
       deltaY: -PIXEL_DELTA,
       deltaMode: PIXEL_SCROLL_MODE
     }));
 
+    is(style.transform, "translate(0px, 0px) scale(1.05)",
+       "The div has been slightly scaled.");
     is(dragZoom.zoom, PIXEL_DELTA * dragZoom.ZOOM_SPEED,
       "The zoom was increased");
-    ok(dragZoom.smoothZoom < dragZoom.zoom && dragZoom.smoothZoom > 0,
+    ok(floatEquality(dragZoom.smoothZoom, 0.05),
       "The smooth zoom is between the initial value and the target");
     is(rafMock.timesCalled, 1, "A RAF has been queued");
   }
@@ -63,7 +68,8 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
       lastCallCount = rafMock.timesCalled;
       rafMock.nextFrame();
     }
-
+    is(style.transform, "translate(0px, 0px) scale(1.1)",
+       "The scale has been fully applied");
     is(dragZoom.zoom, dragZoom.smoothZoom,
       "The smooth and target zoom values match");
     isnot(MAX_RAF_LOOP, i,
@@ -85,10 +91,36 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
     }));
     div.dispatchEvent(new MouseEvent("mouseup"));
 
-    ok(dragZoom.translateX - initialX > 0,
+    is(style.transform, "translate(2.5px, 5px) scale(1.1)",
+      "The style is correctly translated");
+    ok(floatEquality(dragZoom.translateX, 5),
       "Translate X moved by some pixel amount");
-    ok(dragZoom.translateY - initialY > 0,
+    ok(floatEquality(dragZoom.translateY, 10),
       "Translate Y moved by some pixel amount");
+  }
+
+  info("Zooming centers around the mouse");
+  {
+    canvases.container.dispatchEvent(new WheelEvent("wheel", {
+      deltaY: -PIXEL_DELTA,
+      deltaMode: PIXEL_SCROLL_MODE
+    }));
+    // Run through the RAF loop to zoom in towards that value.
+    let lastCallCount;
+    for (let i = 0; i < MAX_RAF_LOOP; i++) {
+      if (lastCallCount === rafMock.timesCalled) {
+        break;
+      }
+      lastCallCount = rafMock.timesCalled;
+      rafMock.nextFrame();
+    }
+    is(style.transform, "translate(8.18182px, 18.1818px) scale(1.2)",
+       "Zooming affects the translation to keep the mouse centered");
+    ok(floatEquality(dragZoom.translateX, 8.181818181818185),
+       "Translate X was affected by the mouse position");
+    ok(floatEquality(dragZoom.translateY, 18.18181818181817),
+       "Translate Y was affected by the mouse position");
+    is(dragZoom.zoom, 0.2, "Zooming starts at 0");
   }
 
   dragZoom.destroy();
@@ -98,7 +130,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
     let previousZoom = dragZoom.zoom;
     let previousSmoothZoom = dragZoom.smoothZoom;
 
-    panelWin.dispatchEvent(new WheelEvent("wheel", {
+    canvases.container.dispatchEvent(new WheelEvent("wheel", {
       deltaY: -PIXEL_DELTA,
       deltaMode: PIXEL_SCROLL_MODE
     }));
