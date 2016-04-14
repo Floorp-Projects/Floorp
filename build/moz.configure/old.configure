@@ -198,7 +198,6 @@ def old_configure_options(*options):
     '--enable-ion',
     '--enable-ios-target',
     '--enable-ipdl-tests',
-    '--enable-jemalloc',
     '--enable-jitspew',
     '--enable-libjpeg-turbo',
     '--enable-libproxy',

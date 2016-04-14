@@ -1975,18 +1975,6 @@ dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
 
-LOCAL_MOZ_MEMORY=1
-MOZ_ARG_DISABLE_BOOL(jemalloc,
-[  --disable-jemalloc       Don't replace memory allocator with jemalloc],
-    LOCAL_MOZ_MEMORY=)
-
-dnl Consult the command-line arguments in stand alone-builds only. In
-dnl non-stand-alone builds, we always use the value of MOZ_MEMORY inherited from
-dnl the top-level configure script.
-if test "$JS_STANDALONE"; then
-    MOZ_MEMORY=$LOCAL_MOZ_MEMORY
-fi
-
 case "${OS_TARGET}" in
 Android|WINNT|Darwin)
   MOZ_GLUE_IN_PROGRAM=
@@ -1999,7 +1987,6 @@ Android|WINNT|Darwin)
 esac
 
 if test "$MOZ_MEMORY"; then
-  AC_DEFINE(MOZ_MEMORY)
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
   fi
@@ -2031,11 +2018,6 @@ if test "$MOZ_MEMORY"; then
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
     ;;
   esac
-fi
-AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_JEMALLOC4)
-if test -n "$MOZ_JEMALLOC4"; then
-  AC_DEFINE(MOZ_JEMALLOC4)
 fi
 AC_SUBST(MOZ_CRT)
 AC_SUBST(MOZ_GLUE_IN_PROGRAM)
