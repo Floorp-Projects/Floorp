@@ -94,7 +94,7 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
-  class NonMemMovableChecker : public MatchFinder::MatchCallback {
+  class NonMemMovableTemplateArgChecker : public MatchFinder::MatchCallback {
   public:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
@@ -128,7 +128,7 @@ private:
   ExplicitOperatorBoolChecker explicitOperatorBoolChecker;
   NoDuplicateRefCntMemberChecker noDuplicateRefCntMemberChecker;
   NeedsNoVTableTypeChecker needsNoVTableTypeChecker;
-  NonMemMovableChecker nonMemMovableChecker;
+  NonMemMovableTemplateArgChecker nonMemMovableTemplateArgChecker;
   ExplicitImplicitChecker explicitImplicitChecker;
   NoAutoTypeChecker noAutoTypeChecker;
   NoExplicitMoveConstructorChecker noExplicitMoveConstructorChecker;
@@ -707,7 +707,7 @@ AST_MATCHER(QualType, isNonMemMovable) {
 }
 
 /// This matcher will select classes which require a memmovable template arg
-AST_MATCHER(CXXRecordDecl, needsMemMovable) {
+AST_MATCHER(CXXRecordDecl, needsMemMovableTemplateArg) {
   return MozChecker::hasCustomAnnotation(&Node, "moz_needs_memmovable_type");
 }
 
@@ -1012,10 +1012,10 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
   // Handle non-mem-movable template specializations
   astMatcher.addMatcher(
       classTemplateSpecializationDecl(
-          allOf(needsMemMovable(),
+          allOf(needsMemMovableTemplateArg(),
                 hasAnyTemplateArgument(refersToType(isNonMemMovable()))))
           .bind("specialization"),
-      &nonMemMovableChecker);
+      &nonMemMovableTemplateArgChecker);
 
   astMatcher.addMatcher(cxxConstructorDecl(isInterestingImplicitCtor(),
                                            ofClass(allOf(isConcreteClass(),
@@ -1382,7 +1382,7 @@ void DiagnosticsMatcher::NeedsNoVTableTypeChecker::run(
       << specialization;
 }
 
-void DiagnosticsMatcher::NonMemMovableChecker::run(
+void DiagnosticsMatcher::NonMemMovableTemplateArgChecker::run(
     const MatchFinder::MatchResult &Result) {
   DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
   unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
@@ -1401,7 +1401,7 @@ void DiagnosticsMatcher::NonMemMovableChecker::run(
       specialization->getTemplateInstantiationArgs();
   for (unsigned i = 0; i < args.size(); ++i) {
     QualType argType = args[i].getAsType();
-    if (NonMemMovable.hasEffectiveAnnotation(args[i].getAsType())) {
+    if (NonMemMovable.hasEffectiveAnnotation(argType)) {
       Diag.Report(specialization->getLocation(), errorID) << specialization
                                                           << argType;
       // XXX It would be really nice if we could get the instantiation stack
