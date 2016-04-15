@@ -132,6 +132,11 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       }
     }
 
+    // When a block is confirmed, the removal of blocked data will not trigger a
+    // state change for the download, so this class must be updated here.
+    this.element.classList.toggle("temporary-block",
+                                  !!this.download.hasBlockedData);
+
     // The progress bar is only displayed for in-progress downloads.
     if (this.download.hasProgress) {
       this.element.setAttribute("progressmode", "normal");
