@@ -1076,7 +1076,7 @@ protected:
 
     // Cache a textrun representing an ellipsis (useful for CSS text-overflow)
     // at a specific appUnitsPerDevPixel size and orientation
-    nsAutoPtr<gfxTextRun>   mCachedEllipsisTextRun;
+    mozilla::UniquePtr<gfxTextRun>   mCachedEllipsisTextRun;
 
     // cache the most recent pref font to avoid general pref font lookup
     RefPtr<gfxFontFamily> mLastPrefFamily;

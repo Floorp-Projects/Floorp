@@ -2061,7 +2061,7 @@ gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
     if (mHyphenWidth < 0) {
         RefPtr<DrawTarget> dt(aProvider->GetDrawTarget());
         if (dt) {
-            nsAutoPtr<gfxTextRun>
+            UniquePtr<gfxTextRun>
                 hyphRun(MakeHyphenTextRun(dt,
                                           aProvider->GetAppUnitsPerDevUnit()));
             mHyphenWidth = hyphRun.get() ? hyphRun->GetAdvanceWidth() : 0;
@@ -2548,7 +2548,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
     if (mCachedEllipsisTextRun &&
         (mCachedEllipsisTextRun->GetFlags() & TEXT_ORIENT_MASK) == aFlags &&
         mCachedEllipsisTextRun->GetAppUnitsPerDevUnit() == aAppUnitsPerDevPixel) {
-        return mCachedEllipsisTextRun;
+        return mCachedEllipsisTextRun.get();
     }
 
     // Use a Unicode ellipsis if the font supports it,
@@ -2570,7 +2570,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
     if (!textRun) {
         return nullptr;
     }
-    mCachedEllipsisTextRun = textRun;
+    mCachedEllipsisTextRun.reset(textRun);
     textRun->ReleaseFontGroup(); // don't let the presence of a cached ellipsis
                                  // textrun prolong the fontgroup's life
     return textRun;

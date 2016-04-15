@@ -93,7 +93,7 @@ protected:
 
     cairo_font_face_t    *mFontFace;
 
-    nsAutoPtr<gfxFontShaper> mCoreTextShaper;
+    mozilla::UniquePtr<gfxFontShaper> mCoreTextShaper;
 
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;
