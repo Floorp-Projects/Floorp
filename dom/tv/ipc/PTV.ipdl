@@ -1,0 +1,88 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PTVRequest;
+include PTVTypes;
+
+namespace mozilla {
+namespace dom {
+
+struct TVGetTunersRequest {
+};
+
+struct TVSetSourceRequest {
+  nsString tunerId;
+  nsString sourceType;
+};
+
+struct TVStartScanningChannelsRequest {
+  nsString tunerId;
+  nsString sourceType;
+};
+
+struct TVStopScanningChannelsRequest {
+  nsString tunerId;
+  nsString sourceType;
+};
+
+struct TVClearScannedChannelsCacheRequest {
+};
+
+struct TVSetChannelRequest {
+  nsString tunerId;
+  nsString sourceType;
+  nsString channelNumber;
+};
+
+struct TVGetChannelsRequest {
+  nsString tunerId;
+  nsString sourceType;
+};
+
+struct TVGetProgramsRequest {
+  nsString tunerId;
+  nsString sourceType;
+  nsString channelNumber;
+  uint64_t startTime;
+  uint64_t endTime;
+};
+
+union TVIPCRequest {
+  TVGetTunersRequest;
+  TVSetSourceRequest;
+  TVStartScanningChannelsRequest;
+  TVStopScanningChannelsRequest;
+  TVClearScannedChannelsCacheRequest;
+  TVSetChannelRequest;
+  TVGetChannelsRequest;
+  TVGetProgramsRequest;
+};
+
+protocol PTV {
+  manager PContent;
+  manages PTVRequest;
+
+child:
+  async NotifyChannelScanned(nsString tunerId, nsString sourceType,
+                             TVIPCChannelData channelData);
+  async NotifyChannelScanComplete(nsString tunerId, nsString sourceType);
+  async NotifyChannelScanStopped(nsString tunerId, nsString sourceType);
+  async NotifyEITBroadcasted(nsString tunerId, nsString sourceType,
+                             TVIPCChannelData channelData,
+                             TVIPCProgramData[] programData);
+
+parent:
+  async __delete__();
+
+  async PTVRequest(TVIPCRequest aRequest);
+
+  async RegisterSourceHandler(nsString tunerId, nsString sourceType);
+  async UnregisterSourceHandler(nsString tunerId, nsString sourceType);
+};
+
+} // namespace dom
+} // namespace mozilla

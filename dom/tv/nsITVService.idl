@@ -7,11 +7,16 @@
 interface nsIArray;
 
 %{C++
+#include "nsTArray.h"
+
 #define TV_TUNER_DATA_CID \
   { 0x1f36be28, 0xf9fe, 0x2dc3, { 0xbf, 0x2a, 0x17, 0x97, 0x93, 0x40, 0xff, 0xe1 } }
 #define TV_TUNER_DATA_CONTRACTID \
   "@mozilla.org/tv/tvtunerdata;1"
 %}
+
+[ref] native CStringArray(nsTArray<nsCString>);
+[ref] native ConstCStringArray(const nsTArray<nsCString>);
 
 /**
  * XPCOM component which acts as the container for tuner data.
@@ -45,6 +50,8 @@ interface nsITVTunerData : nsISupports
   void getSupportedSourceTypes([optional] out unsigned long count,
                                [retval, array, size_is(count)] out string sourceTypes);
 
+  [noscript] CStringArray getSupportedSourceTypesByString();
+
   /**
    * Set the supported source types of the tuner. Please refer to
    * http://seanyhlin.github.io/TV-Manager-API/ for available values.
@@ -54,6 +61,9 @@ interface nsITVTunerData : nsISupports
    */
   void setSupportedSourceTypes(in unsigned long count,
                                [array, size_is(count)] in string sourceTypes);
+
+  [noscript] void setSupportedSourceTypesByString(
+                    in ConstCStringArray sourceTypes);
 };
 
 %{C++
@@ -117,6 +127,9 @@ interface nsITVProgramData : nsISupports
   void getAudioLanguages([optional] out unsigned long count,
                          [retval, array, size_is(count)] out string languages);
 
+  [noscript] CStringArray getAudioLanguagesByString();
+
+
   /**
    * Set the audio languages of the program. Please refer to
    * http://seanyhlin.github.io/TV-Manager-API/ for available values.
@@ -126,6 +139,8 @@ interface nsITVProgramData : nsISupports
    */
   void setAudioLanguages(in unsigned long count,
                          [array, size_is(count)] in string languages);
+
+  [noscript] void setAudioLanguagesByString(in ConstCStringArray languages);
 
   /**
    * Get the subtitle languages of the program. Please refer to
@@ -137,6 +152,8 @@ interface nsITVProgramData : nsISupports
   void getSubtitleLanguages([optional] out unsigned long count,
                             [retval, array, size_is(count)] out string languages);
 
+  [noscript] CStringArray getSubtitleLanguagesByString();
+
   /**
    * Set the subtitle languages of the program. Please refer to
    * http://seanyhlin.github.io/TV-Manager-API/ for available values.
@@ -146,6 +163,9 @@ interface nsITVProgramData : nsISupports
    */
   void setSubtitleLanguages(in unsigned long count,
                             [array, size_is(count)] in string languages);
+
+  [noscript] void setSubtitleLanguagesByString(in ConstCStringArray languages);
+
 };
 
 [scriptable, builtinclass, uuid(47746633-1b77-4df4-9424-d315bde3d455)]

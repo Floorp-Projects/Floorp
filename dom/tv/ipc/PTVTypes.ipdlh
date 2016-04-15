@@ -1,0 +1,54 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using struct mozilla::layers::GonkNativeHandle from "mozilla/layers/GonkNativeHandleUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct TVIPCTunerData {
+  nsString id;
+  uint16_t streamType;
+  uint32_t sourceTypeCount;
+  nsCString[] sourceTypes;
+};
+
+struct TVIPCChannelData {
+  nsCString networkId;
+  nsCString transportStreamId;
+  nsCString serviceId;
+  nsCString type;
+  nsCString number;
+  nsCString name;
+  bool isEmergency;
+  bool isFree;
+};
+
+struct TVIPCProgramData {
+  nsCString eventId;
+  nsCString title;
+  uint64_t startTime;
+  uint64_t duration;
+  nsCString description;
+  nsCString rating;
+  uint32_t audioLanguageCount;
+  nsCString[] audioLanguages;
+  uint32_t subtitleLanguageCount;
+  nsCString[] subtitleLanguages;
+};
+
+union StreamHandle {
+  GonkNativeHandle;
+  null_t;
+};
+
+struct TVIPCGonkNativeHandleData {
+  StreamHandle handle;
+};
+
+} // namespace dom
+} // namespace mozilla
