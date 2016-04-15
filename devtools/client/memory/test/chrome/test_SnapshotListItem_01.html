@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test to verify that the delete button only shows up for a snapshot when it has a
+path.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+          try {
+            const container = document.getElementById("container");
+
+            yield renderComponent(
+              SnapshotListItem(TEST_SNAPSHOT_LIST_ITEM_PROPS),
+              container
+            );
+
+            ok(container.querySelector('.delete'),
+               "Should have delete button when there is a path");
+
+            const pathlessProps = immutableUpdate(
+                TEST_SNAPSHOT_LIST_ITEM_PROPS,
+                {item: immutableUpdate(TEST_SNAPSHOT, {path: null})}
+            );
+
+            yield renderComponent(
+              SnapshotListItem(pathlessProps),
+              container
+            );
+
+            ok(!container.querySelector('.delete'),
+               "No delete button should be found if there is no path\n");
+
+          } catch(e) {
+            ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+          } finally {
+            SimpleTest.finish();
+          }
+         });
+        </script>
+    </pre>
+</body>
+</html>
