@@ -2423,6 +2423,33 @@
     "n_buckets": 50,
     "description": "How many actual predictions (preresolves, preconnects, ...) happen"
   },
+  "PREDICTOR_TOTAL_PREFETCHES": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 50,
+    "description": "How many actual prefetches happen"
+  },
+  "PREDICTOR_TOTAL_PREFETCHES_USED": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 50,
+    "description": "How many prefetches are actually used by a channel"
+  },
+  "PREDICTOR_PREFETCH_TIME": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "How long it takes from OnStartRequest to OnStopRequest for a prefetch"
+  },
   "PREDICTOR_TOTAL_PRECONNECTS": {
     "expires_in_version": "never",
     "kind": "exponential",
