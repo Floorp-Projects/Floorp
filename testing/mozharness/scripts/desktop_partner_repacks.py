@@ -77,7 +77,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             'all_actions': DesktopPartnerRepacks.actions,
             'default_actions': DesktopPartnerRepacks.actions,
             'config': {
-                'buildbot_json_path': os.environ.get('PROPERTIES_FILE'),
+                'buildbot_json_path': 'buildprops.json',
                 "log_name": "partner-repacks",
                 "hashType": "sha512",
                 'virtualenv_modules': [
