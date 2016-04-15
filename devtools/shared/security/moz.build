@@ -6,18 +6,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-XPIDL_SOURCES += [
-    'nsILocalCertService.idl',
-]
-
-XPIDL_MODULE = 'devtools_security'
-
-UNIFIED_SOURCES += [
-    'LocalCertService.cpp',
-]
-
-FINAL_LIBRARY = 'xul'
-
 DevToolsModules(
     'auth.js',
     'cert.js',
