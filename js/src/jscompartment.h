@@ -735,8 +735,28 @@ struct JSCompartment
      */
     js::NativeIterator* enumerators;
 
+  private:
     /* Used by memory reporters and invalid otherwise. */
-    void*              compartmentStats;
+    JS::CompartmentStats* compartmentStats_;
+
+  public:
+    // This should only be called when it is non-null, i.e. during memory
+    // reporting.
+    JS::CompartmentStats& compartmentStats() {
+        // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
+        // (inconclusive) evidence that compartmentStats_ can be nullptr
+        // unexpectedly.
+        MOZ_RELEASE_ASSERT(compartmentStats_);
+        return *compartmentStats_;
+    }
+    void nullCompartmentStats() {
+        MOZ_ASSERT(compartmentStats_);
+        compartmentStats_ = nullptr;
+    }
+    void setCompartmentStats(JS::CompartmentStats* newStats) {
+        MOZ_ASSERT(!compartmentStats_ && newStats);
+        compartmentStats_ = newStats;
+    }
 
     // These flags help us to discover if a compartment that shouldn't be alive
     // manages to outlive a GC.
