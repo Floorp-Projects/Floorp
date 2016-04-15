@@ -133,7 +133,18 @@ var ReaderParent = {
   toggleReaderMode: function(event) {
     let win = event.target.ownerDocument.defaultView;
     let browser = win.gBrowser.selectedBrowser;
-    browser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
+    let url = browser.currentURI.spec;
+
+    if (url.startsWith("about:reader")) {
+      let originalURL = ReaderMode.getOriginalUrl(url);
+      if (!originalURL) {
+        Cu.reportError("Error finding original URL for about:reader URL: " + url);
+      } else {
+        win.openUILinkIn(originalURL, "current", {"allowPinnedTabHostChange": true});
+      }
+    } else {
+      browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
+    }
   },
 
   /**
