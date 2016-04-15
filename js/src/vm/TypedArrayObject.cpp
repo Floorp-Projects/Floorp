@@ -636,25 +636,19 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static bool
-    maybeCreateArrayBuffer(JSContext* cx, uint32_t nelements, HandleObject nonDefaultProto,
+    maybeCreateArrayBuffer(JSContext* cx, uint32_t byteLength, HandleObject nonDefaultProto,
                            MutableHandle<ArrayBufferObject*> buffer)
     {
+        MOZ_ASSERT(byteLength < INT32_MAX);
         static_assert(INLINE_BUFFER_LIMIT % sizeof(NativeType) == 0,
                       "ArrayBuffer inline storage shouldn't waste any space");
 
-        if (!nonDefaultProto && nelements <= INLINE_BUFFER_LIMIT / sizeof(NativeType)) {
+        if (!nonDefaultProto && byteLength <= INLINE_BUFFER_LIMIT) {
             // The array's data can be inline, and the buffer created lazily.
             return true;
         }
 
-        if (nelements >= INT32_MAX / sizeof(NativeType)) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_NEED_DIET, "size and count");
-            return false;
-        }
-
-        ArrayBufferObject* buf = ArrayBufferObject::create(cx, nelements * sizeof(NativeType),
-                                                           nonDefaultProto);
+        ArrayBufferObject* buf = ArrayBufferObject::create(cx, byteLength, nonDefaultProto);
         if (!buf)
             return false;
 
@@ -669,15 +663,20 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!GetPrototypeForInstance(cx, newTarget, &proto))
             return nullptr;
 
+        if (nelements >= INT32_MAX / BYTES_PER_ELEMENT) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_NEED_DIET, "size and count");
+            return nullptr;
+        }
         Rooted<ArrayBufferObject*> buffer(cx);
-        if (!maybeCreateArrayBuffer(cx, nelements, nullptr, &buffer))
+        if (!maybeCreateArrayBuffer(cx, nelements * BYTES_PER_ELEMENT, nullptr, &buffer))
             return nullptr;
 
         return makeInstance(cx, buffer, 0, nelements, proto);
     }
 
     static bool
-    AllocateArrayBuffer(JSContext* cx, HandleValue ctor, uint32_t elementLength,
+    AllocateArrayBuffer(JSContext* cx, HandleValue ctor, uint32_t byteLength,
                         MutableHandle<ArrayBufferObject*> buffer);
 
     static bool
@@ -734,7 +733,7 @@ struct TypedArrayObject::OfType
 template<typename T>
 /* static */ bool
 TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleValue ctor,
-                                                 uint32_t elementLength,
+                                                 uint32_t byteLength,
                                                  MutableHandle<ArrayBufferObject*> buffer)
 {
     // ES 2016 draft Mar 25, 2016 24.1.1.1 step 1 (partially).
@@ -750,8 +749,14 @@ TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleValue ctor
     if (proto == arrayBufferProto)
         proto = nullptr;
 
+    if (byteLength >= INT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NEED_DIET, "size and count");
+        return false;
+    }
+
     // ES 2016 draft Mar 25, 2016 24.1.1.1 steps 1 (remaining part), 2-6.
-    if (!maybeCreateArrayBuffer(cx, elementLength, proto, buffer))
+    if (!maybeCreateArrayBuffer(cx, byteLength, proto, buffer))
         return false;
 
     return true;
@@ -847,8 +852,7 @@ TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
     // Step 7 (skipped).
 
     // Steps 8.
-    MOZ_ASSERT(cloneLength % BYTES_PER_ELEMENT == 0);
-    if (!AllocateArrayBuffer(cx, cloneCtor, cloneLength / BYTES_PER_ELEMENT, buffer))
+    if (!AllocateArrayBuffer(cx, cloneCtor, cloneLength, buffer))
         return false;
 
     // Step 9.
@@ -938,8 +942,8 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     // Step 14.
     uint32_t srcByteOffset = srcArray->byteOffset();
 
-    // Steps 15-16 (skipped).
-    // Our AllocateArrayBuffer receives elementLength instead of byteLength.
+    // Steps 15-16.
+    uint32_t byteLength = BYTES_PER_ELEMENT * elementLength;
 
     // Steps 8-9, 17.
     Rooted<ArrayBufferObject*> buffer(cx);
@@ -954,7 +958,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
             return nullptr;
 
         // Step 18.b.
-        if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, &buffer))
+        if (!AllocateArrayBuffer(cx, bufferCtor, byteLength, &buffer))
             return nullptr;
 
         // Step 18.c.
@@ -991,7 +995,12 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
         return nullptr;
     if (!GetPrototypeForInstance(cx, newTarget, &proto))
         return nullptr;
-    if (!maybeCreateArrayBuffer(cx, len, nullptr, &buffer))
+    if (len >= INT32_MAX / BYTES_PER_ELEMENT) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NEED_DIET, "size and count");
+        return nullptr;
+    }
+    if (!maybeCreateArrayBuffer(cx, len * BYTES_PER_ELEMENT, nullptr, &buffer))
         return nullptr;
 
     Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
