@@ -27,6 +27,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "nsIScrollableFrame.h"
 #include "nsRegion.h"
+#include "nsTArray.h"
 #include "PotentialCheckerboardDurationTracker.h"
 
 #include "base/message_loop.h"
@@ -161,7 +162,7 @@ public:
   bool AdvanceAnimations(const TimeStamp& aSampleTime);
 
   bool UpdateAnimation(const TimeStamp& aSampleTime,
-                       Vector<Task*>* aOutDeferredTasks);
+                       nsTArray<Task*>* aOutDeferredTasks);
 
   /**
    * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
