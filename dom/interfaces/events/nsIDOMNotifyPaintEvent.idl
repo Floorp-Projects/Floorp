@@ -35,5 +35,7 @@ interface nsIDOMNotifyPaintEvent : nsISupports
   readonly attribute nsIDOMClientRect boundingClientRect;
 
   readonly attribute nsISupports /* PaintRequestList */ paintRequests;
+
+  readonly attribute unsigned long long transactionId;
 };
 

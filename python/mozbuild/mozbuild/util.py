@@ -5,7 +5,7 @@
 # This file contains miscellaneous utility functions that don't belong anywhere
 # in particular.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 
 import argparse
 import collections
@@ -40,6 +40,22 @@ else:
 if sys.platform == 'win32':
     _kernel32 = ctypes.windll.kernel32
     _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
+
+
+def exec_(object, globals=None, locals=None):
+    """Wrapper around the exec statement to avoid bogus errors like:
+
+    SyntaxError: unqualified exec is not allowed in function ...
+    it is a nested function.
+
+    or
+
+    SyntaxError: unqualified exec is not allowed in function ...
+    it contains a nested function with free variable
+
+    which happen with older versions of python 2.7.
+    """
+    exec(object, globals, locals)
 
 
 def hash_file(path, hasher=None):

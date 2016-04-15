@@ -1142,12 +1142,6 @@ protected:
                        gfxMissingFontRecorder *aMFR);
 
     // Helper for font-matching:
-    // When matching the italic case, allow use of the regular face
-    // if it supports a character but the italic one doesn't.
-    // Return null if regular face doesn't support aCh
-    already_AddRefed<gfxFont>
-    FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh);
-
     // search all faces in a family for a fallback in cases where it's unclear
     // whether the family might have a font for a given character
     already_AddRefed<gfxFont>
