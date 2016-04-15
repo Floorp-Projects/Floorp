@@ -56,6 +56,7 @@ pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-r
 == details-three-columns.html details-three-columns-ref.html
 == details-writing-mode.html details-writing-mode-ref.html
 == details-in-ol.html details-in-ol-ref.html
+== summary-three-columns.html summary-three-columns-ref.html
 
 # Dispatch mouse click to summary
 == mouse-click-single-summary.html open-single-summary.html
