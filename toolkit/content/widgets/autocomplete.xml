@@ -1239,6 +1239,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
+              item.setAttribute("dir", this.style.direction);
 
               // Completely reuse the existing richlistitem for invalidation
               // due to new results, but only when: the item is the same, *OR*
@@ -1249,8 +1250,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                   invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
                   (item.getAttribute("url") == url ||
                    this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
-                item.handleOverUnderflow();
                 item.collapsed = false;
+                // Call adjustSiteIconStart only after setting collapsed=false.
+                // The calculations it does may be wrong otherwise.
+                item.adjustSiteIconStart(this._siteIconStart);
+                // The popup may have changed size between now and the last time
+                // the item was shown, so always handle over/underflow.
+                item.handleOverUnderflow();
                 this._currentIndex++;
                 continue;
               }
@@ -1258,6 +1264,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             else {
               // need to create a new item
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
+              item.setAttribute("dir", this.style.direction);
             }
 
             // set these attributes before we set the class
@@ -1281,6 +1288,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
+            let changed = item.adjustSiteIconStart(this._siteIconStart);
+            if (changed) {
+              item.handleOverUnderflow();
+            }
+
             this._currentIndex++;
           }
 
@@ -1295,6 +1307,26 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         ]]>
         </body>
       </method>
+
+      <!-- The x-coordinate relative to the leading edge of the window of the
+           items' site icons (favicons). -->
+      <property name="siteIconStart"
+                onget="return this._siteIconStart;">
+        <setter>
+          <![CDATA[
+          if (val != this._siteIconStart) {
+            this._siteIconStart = val;
+            for (let item of this.richlistbox.childNodes) {
+              let changed = item.adjustSiteIconStart(val);
+              if (changed) {
+                item.handleOverUnderflow();
+              }
+            }
+          }
+          return val;
+          ]]>
+        </setter>
+      </property>
 
       <method name="selectBy">
         <parameter name="aReverse"/>
@@ -1997,6 +2029,37 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
+      <!-- Sets the x-coordinate of the leading edge of the site icon (favicon)
+           relative the the leading edge of the window.
+           @param newStart The new x-coordinate, relative to the leading edge of
+                  the window.  Pass undefined to reset the icon's position to
+                  whatever is specified in CSS.
+           @return True if the icon's position changed, false if not. -->
+      <method name="adjustSiteIconStart">
+        <parameter name="newStart"/>
+        <body>
+          <![CDATA[
+          if (typeof(newStart) != "number") {
+            this._typeIcon.style.removeProperty("-moz-margin-start");
+            return true;
+          }
+          let rect = this._siteIcon.getBoundingClientRect();
+          let dir = this.getAttribute("dir");
+          let delta = dir == "rtl" ? rect.right - newStart
+                                   : newStart - rect.left;
+          let px = this._typeIcon.style.MozMarginStart;
+          if (!px) {
+            // Allow -moz-margin-start not to be specified in CSS initially.
+            let style = window.getComputedStyle(this._typeIcon);
+            px = dir == "rtl" ? style.marginRight : style.marginLeft;
+          }
+          let typeIconStart = Number(px.substr(0, px.length - 2));
+          this._typeIcon.style.MozMarginStart = (typeIconStart + delta) + "px";
+          return delta > 0;
+          ]]>
+        </body>
+      </method>
+
       <!-- This method truncates the displayed strings as necessary. -->
       <method name="_handleOverflow">
         <body><![CDATA[
@@ -2014,8 +2077,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // This extra padding amount is basically arbitrary but keeps the text
           // from getting too close to the popup's edge.
           let extraPadding = 30;
-          let dir =
-            this.ownerDocument.defaultView.getComputedStyle(this).direction;
+          let dir = this.getAttribute("dir");
           let titleStart = dir == "rtl" ? itemRect.right - titleRect.right
                                         : titleRect.left - itemRect.left;
           let itemWidth = itemRect.width - titleStart - extraPadding;
