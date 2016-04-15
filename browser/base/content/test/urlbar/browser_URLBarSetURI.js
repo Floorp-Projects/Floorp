@@ -37,19 +37,17 @@ var tests = [
     });
   },
   function customize(next) {
-    whenNewWindowLoaded(undefined, function (win) {
-      // Need to wait for delayedStartup for the customization part of the test,
-      // since that's where BrowserToolboxCustomizeDone is set.
-      whenDelayedStartupFinished(win, function () {
-        loadTabInWindow(win, function () {
-          openToolbarCustomizationUI(function () {
-            closeToolbarCustomizationUI(function () {
-              is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped after customize");
-              win.close();
-              next();
-            }, win);
+    // Need to wait for delayedStartup for the customization part of the test,
+    // since that's where BrowserToolboxCustomizeDone is set.
+    BrowserTestUtils.openNewBrowserWindow().then(function(win) {
+      loadTabInWindow(win, function () {
+        openToolbarCustomizationUI(function () {
+          closeToolbarCustomizationUI(function () {
+            is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped after customize");
+            win.close();
+            next();
           }, win);
-        });
+        }, win);
       });
     });
   },
@@ -76,3 +74,27 @@ function loadTabInWindow(win, callback) {
     callback(tab);
   }, true);
 }
+
+function openToolbarCustomizationUI(aCallback, aBrowserWin) {
+  if (!aBrowserWin)
+    aBrowserWin = window;
+
+  aBrowserWin.gCustomizeMode.enter();
+
+  aBrowserWin.gNavToolbox.addEventListener("customizationready", function UI_loaded() {
+    aBrowserWin.gNavToolbox.removeEventListener("customizationready", UI_loaded);
+    executeSoon(function() {
+      aCallback(aBrowserWin)
+    });
+  });
+}
+
+function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
+  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function unloaded() {
+    aBrowserWin.gNavToolbox.removeEventListener("aftercustomization", unloaded);
+    executeSoon(aCallback);
+  });
+
+  aBrowserWin.gCustomizeMode.exit();
+}
+

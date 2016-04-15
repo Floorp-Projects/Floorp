@@ -35,7 +35,7 @@ add_task(function* alt_left_click_test() {
 add_task(function* shift_left_click_test() {
   info("Running test: Shift left click");
 
-  let newWindowPromise = promiseWaitForNewWindow();
+  let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   triggerCommand(true, {shiftKey: true});
   let win = yield newWindowPromise;
 
@@ -196,25 +196,6 @@ function promiseNewTabSwitched() {
       gBrowser.removeEventListener("TabSwitchDone", onSwitch);
       executeSoon(resolve);
     });
-  });
-}
-
-function promiseWaitForNewWindow() {
-  return new Promise(resolve => {
-    let listener = {
-      onOpenWindow(xulWindow) {
-        let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindow);
-
-        Services.wm.removeListener(listener);
-        whenDelayedStartupFinished(win, () => resolve(win));
-      },
-
-      onCloseWindow() {},
-      onWindowTitleChange() {}
-    };
-
-    Services.wm.addListener(listener);
   });
 }
 
