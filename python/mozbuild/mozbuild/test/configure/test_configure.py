@@ -342,6 +342,31 @@ class TestConfigure(unittest.TestCase):
         self.assertEquals(sandbox.keys(), ['__builtins__', 'foo'])
         self.assertEquals(sandbox['__builtins__'], ConfigureSandbox.BUILTINS)
 
+    def test_apply_imports(self):
+        imports = []
+
+        class CountApplyImportsSandbox(ConfigureSandbox):
+            def _apply_imports(self, *args, **kwargs):
+                imports.append((args, kwargs))
+                super(CountApplyImportsSandbox, self)._apply_imports(
+                    *args, **kwargs)
+
+        config = {}
+        out = StringIO()
+        sandbox = CountApplyImportsSandbox(config, {}, [], out, out)
+
+        exec_(textwrap.dedent('''
+            @template
+            @imports('sys')
+            def foo():
+                return sys
+            foo()
+            foo()'''),
+            sandbox
+        )
+
+        self.assertEquals(len(imports), 1)
+
     def test_os_path(self):
         config = self.get_config(['--with-imports=%s' % __file__])
         self.assertIn('IS_FILE', config)
