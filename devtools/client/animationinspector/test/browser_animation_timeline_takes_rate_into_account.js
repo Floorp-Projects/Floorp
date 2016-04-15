@@ -12,12 +12,6 @@
 // rate changed have a delay = delay/rate and a duration = duration/rate.
 
 add_task(function* () {
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["dom.animations-api.core.enabled", true]
-    ]}, resolve);
-  });
-
   yield addTab(URL_ROOT + "doc_modify_playbackRate.html");
 
   let {panel} = yield openAnimationInspector();
