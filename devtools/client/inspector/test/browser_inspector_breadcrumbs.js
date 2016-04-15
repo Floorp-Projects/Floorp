@@ -8,15 +8,15 @@
 const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 const NODES = [
   {selector: "#i1111", result: "i1 i11 i111 i1111"},
-  {selector: "#i22", result: "i2 i22 i221"},
+  {selector: "#i22", result: "i2 i22"},
   {selector: "#i2111", result: "i2 i21 i211 i2111"},
   {selector: "#i21", result: "i2 i21 i211 i2111"},
   {selector: "#i22211", result: "i2 i22 i222 i2221 i22211"},
   {selector: "#i22", result: "i2 i22 i222 i2221 i22211"},
-  {selector: "#i3", result: "i3 i31"},
+  {selector: "#i3", result: "i3"},
 ];
 
-add_task(function*() {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
   let container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
 
@@ -54,21 +54,23 @@ add_task(function*() {
 });
 
 function* testPseudoElements(inspector, container) {
-  info ("Checking for pseudo elements");
+  info("Checking for pseudo elements");
 
   let pseudoParent = yield getNodeFront("#pseudo-container", inspector);
   let children = yield inspector.walker.children(pseudoParent);
-  is (children.nodes.length, 2, "Pseudo children returned from walker");
+  is(children.nodes.length, 2, "Pseudo children returned from walker");
 
   let beforeElement = children.nodes[0];
   let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   yield selectNode(beforeElement, inspector);
   yield breadcrumbsUpdated;
-  is(container.childNodes[3].textContent, "::before", "::before shows up in breadcrumb");
+  is(container.childNodes[3].textContent, "::before",
+     "::before shows up in breadcrumb");
 
   let afterElement = children.nodes[1];
   breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   yield selectNode(afterElement, inspector);
   yield breadcrumbsUpdated;
-  is(container.childNodes[3].textContent, "::after", "::before shows up in breadcrumb");
+  is(container.childNodes[3].textContent, "::after",
+     "::before shows up in breadcrumb");
 }

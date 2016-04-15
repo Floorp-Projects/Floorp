@@ -6,8 +6,7 @@
 
 "use strict";
 
-const {Cu, Ci} = require("chrome");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const {Ci} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 const FocusManager = Services.focus;
@@ -18,17 +17,6 @@ const ELLIPSIS = Services.prefs.getComplexValue(
     "intl.ellipsis",
     Ci.nsIPrefLocalizedString).data;
 const MAX_LABEL_LENGTH = 40;
-const LOW_PRIORITY_ELEMENTS = {
-  "HEAD": true,
-  "BASE": true,
-  "BASEFONT": true,
-  "ISINDEX": true,
-  "LINK": true,
-  "META": true,
-  "SCRIPT": true,
-  "STYLE": true,
-  "TITLE": true
-};
 
 /**
  * Display the ancestors of the current node and its children.
@@ -111,34 +99,7 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * Include in a promise's then() chain to reject the chain
-   * when the breadcrumbs' selection has changed while the promise
-   * was outstanding.
-   */
-  selectionGuard: function () {
-    let selection = this.selection.nodeFront;
-    return result => {
-      if (selection != this.selection.nodeFront) {
-        return promise.reject("selection-changed");
-      }
-      return result;
-    };
-  },
 
-  /**
-   * Warn if rejection was caused by selection change, print an error otherwise.
-   * @param {Error} err
-   */
-  selectionGuardEnd: function (err) {
-    // If the error is selection-changed, this is expected, the selection
-    // changed while we were waiting for a promise to resolve, so there's no
-    // need to proceed with the current update, and we should be silent.
-    if (err !== "selection-changed") {
-      console.error(err);
-    }
-  },
-
-  /**
    * Build a string that represents the node: tagName#id.class1.class2.
    * @param {NodeFront} node The node to pretty-print
    * @return {String}
@@ -299,63 +260,60 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * On key press, navigate the node hierarchy.
+   * On keypress, navigate through the list of breadcrumbs with the left/right
+   * arrow keys.
    * @param {DOMEvent} event.
    */
   handleKeyPress: function (event) {
-    let navigate = promise.resolve(null);
+    let win = this.chromeWin;
+    let {keyCode, shiftKey, metaKey, ctrlKey, altKey} = event;
 
-    this._keyPromise = (this._keyPromise || promise.resolve(null)).then(() => {
-      switch (event.keyCode) {
-        case this.chromeWin.KeyEvent.DOM_VK_LEFT:
-          if (this.currentIndex != 0) {
-            navigate = promise.resolve(
-              this.nodeHierarchy[this.currentIndex - 1].node);
-          }
-          break;
-        case this.chromeWin.KeyEvent.DOM_VK_RIGHT:
-          if (this.currentIndex < this.nodeHierarchy.length - 1) {
-            navigate = promise.resolve(
-              this.nodeHierarchy[this.currentIndex + 1].node);
-          }
-          break;
-        case this.chromeWin.KeyEvent.DOM_VK_UP:
-          navigate = this.walker.previousSibling(this.selection.nodeFront, {
-            whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
-          });
-          break;
-        case this.chromeWin.KeyEvent.DOM_VK_DOWN:
-          navigate = this.walker.nextSibling(this.selection.nodeFront, {
-            whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
-          });
-          break;
-        case this.chromeWin.KeyEvent.DOM_VK_TAB:
-          // Tabbing when breadcrumbs or its contents are focused should move
-          // focus to next/previous focusable element relative to breadcrumbs
-          // themselves.
-          let elm, type;
-          if (event.shiftKey) {
-            elm = this.container;
-            type = FocusManager.MOVEFOCUS_BACKWARD;
-          } else {
-            // To move focus to next element following the breadcrumbs, relative
-            // element needs to be the last element in breadcrumbs' subtree.
-            let last = this.container.lastChild;
-            while (last && last.lastChild) {
-              last = last.lastChild;
-            }
-            elm = last;
-            type = FocusManager.MOVEFOCUS_FORWARD;
-          }
-          FocusManager.moveFocus(this.chromeWin, elm, type, 0);
-          break;
-      }
+    // Only handle left, right, tab and shift tab, let anything else bubble up
+    // so native shortcuts work.
+    let hasModifier = metaKey || ctrlKey || altKey || shiftKey;
+    let isLeft = keyCode === win.KeyEvent.DOM_VK_LEFT && !hasModifier;
+    let isRight = keyCode === win.KeyEvent.DOM_VK_RIGHT && !hasModifier;
+    let isTab = keyCode === win.KeyEvent.DOM_VK_TAB && !hasModifier;
+    let isShiftTab = keyCode === win.KeyEvent.DOM_VK_TAB && shiftKey &&
+                     !metaKey && !ctrlKey && !altKey;
 
-      return navigate.then(node => this.navigateTo(node));
-    });
+    if (!isLeft && !isRight && !isTab && !isShiftTab) {
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
+
+    this.keyPromise = (this.keyPromise || promise.resolve(null)).then(() => {
+      if (isLeft && this.currentIndex != 0) {
+        let node = this.nodeHierarchy[this.currentIndex - 1].node;
+        return this.selection.setNodeFront(node, "breadcrumbs");
+      } else if (isRight && this.currentIndex < this.nodeHierarchy.length - 1) {
+        let node = this.nodeHierarchy[this.currentIndex + 1].node;
+        return this.selection.setNodeFront(node, "breadcrumbs");
+      } else if (isTab || isShiftTab) {
+        // Tabbing when breadcrumbs or its contents are focused should move
+        // focus to next/previous focusable element relative to breadcrumbs
+        // themselves.
+        let elm, type;
+        if (shiftKey) {
+          elm = this.container;
+          type = FocusManager.MOVEFOCUS_BACKWARD;
+        } else {
+          // To move focus to next element following the breadcrumbs, relative
+          // element needs to be the last element in breadcrumbs' subtree.
+          let last = this.container.lastChild;
+          while (last && last.lastChild) {
+            last = last.lastChild;
+          }
+          elm = last;
+          type = FocusManager.MOVEFOCUS_FORWARD;
+        }
+        FocusManager.moveFocus(win, elm, type, 0);
+      }
+
+      return null;
+    });
   },
 
   /**
@@ -368,9 +326,9 @@ HTMLBreadcrumbs.prototype = {
     this.inspector.off("markupmutation", this.update);
 
     this.container.removeEventListener("underflow",
-        this.onscrollboxreflow, false);
+      this.onscrollboxreflow, false);
     this.container.removeEventListener("overflow",
-        this.onscrollboxreflow, false);
+      this.onscrollboxreflow, false);
     this.container.removeEventListener("click", this, true);
     this.container.removeEventListener("keypress", this, true);
     this.container.removeEventListener("mouseover", this, true);
@@ -442,14 +400,6 @@ HTMLBreadcrumbs.prototype = {
     }
   },
 
-  navigateTo: function (node) {
-    if (node) {
-      this.selection.setNodeFront(node, "breadcrumbs");
-    } else {
-      this.inspector.emit("breadcrumbs-navigation-cancelled");
-    }
-  },
-
   /**
    * Build a button representing the node.
    * @param {NodeFront} node The node from the page.
@@ -474,7 +424,7 @@ HTMLBreadcrumbs.prototype = {
     };
 
     button.onBreadcrumbsClick = () => {
-      this.navigateTo(node);
+      this.selection.setNodeFront(node, "breadcrumbs");
     };
 
     button.onBreadcrumbsHover = () => {
@@ -513,46 +463,6 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * Get a child of a node that can be displayed in the breadcrumbs and that is
-   * probably visible. See LOW_PRIORITY_ELEMENTS.
-   * @param {NodeFront} node The parent node.
-   * @return {Promise} Resolves to the NodeFront.
-   */
-  getInterestingFirstNode: function (node) {
-    let deferred = promise.defer();
-
-    let fallback = null;
-    let lastNode = null;
-
-    let moreChildren = () => {
-      this.walker.children(node, {
-        start: lastNode,
-        maxNodes: 10,
-        whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
-      }).then(this.selectionGuard()).then(response => {
-        for (let childNode of response.nodes) {
-          if (!(childNode.tagName in LOW_PRIORITY_ELEMENTS)) {
-            deferred.resolve(childNode);
-            return;
-          }
-          if (!fallback) {
-            fallback = childNode;
-          }
-          lastNode = childNode;
-        }
-        if (response.hasLast) {
-          deferred.resolve(fallback);
-          return;
-        }
-        moreChildren();
-      }).catch(this.selectionGuardEnd);
-    };
-
-    moreChildren();
-    return deferred.promise;
-  },
-
-  /**
    * Find the "youngest" ancestor of a node which is already in the breadcrumbs.
    * @param {NodeFront} node.
    * @return {Number} Index of the ancestor in the cache, or -1 if not found.
@@ -566,27 +476,6 @@ HTMLBreadcrumbs.prototype = {
       node = node.parentNode();
     }
     return -1;
-  },
-
-  /**
-   * Make sure that the latest node in the breadcrumbs is not the selected node
-   * if the selected node still has children.
-   * @return {Promise}
-   */
-  ensureFirstChild: function () {
-    // If the last displayed node is the selected node
-    if (this.currentIndex == this.nodeHierarchy.length - 1) {
-      let node = this.nodeHierarchy[this.currentIndex].node;
-      return this.getInterestingFirstNode(node).then(child => {
-        // If the node has a child and we've not been destroyed in the meantime
-        if (child && !this.isDestroyed) {
-          // Show this child
-          this.expand(child);
-        }
-      });
-    }
-
-    return waitForTick().then(() => true);
   },
 
   /**
@@ -650,11 +539,9 @@ HTMLBreadcrumbs.prototype = {
     for (let {type, added, removed, target, attributeName} of mutations) {
       if (type === "childList") {
         // Only interested in childList mutations if the added or removed
-        // nodes are currently displayed, or if it impacts the last element in
-        // the breadcrumbs.
+        // nodes are currently displayed.
         return added.some(node => this.indexOf(node) > -1) ||
-               removed.some(node => this.indexOf(node) > -1) ||
-               this.indexOf(target) === this.nodeHierarchy.length - 1;
+               removed.some(node => this.indexOf(node) > -1);
       } else if (type === "attributes" && this.indexOf(target) > -1) {
         // Only interested in attributes mutations if the target is
         // currently displayed, and the attribute is either id or class.
@@ -729,23 +616,14 @@ HTMLBreadcrumbs.prototype = {
     }
 
     let doneUpdating = this.inspector.updating("breadcrumbs");
-    // Add the first child of the very last node of the breadcrumbs if possible.
-    this.ensureFirstChild().then(this.selectionGuard()).then(() => {
-      if (this.isDestroyed) {
-        return null;
-      }
 
-      this.updateSelectors();
+    this.updateSelectors();
 
-      // Make sure the selected node and its neighbours are visible.
-      this.scroll();
-      return waitForTick().then(() => {
-        this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
-        doneUpdating();
-      });
-    }).catch(err => {
-      doneUpdating(this.selection.nodeFront);
-      this.selectionGuardEnd(err);
+    // Make sure the selected node and its neighbours are visible.
+    this.scroll();
+    waitForTick().then(() => {
+      this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
+      doneUpdating();
     });
   }
 };

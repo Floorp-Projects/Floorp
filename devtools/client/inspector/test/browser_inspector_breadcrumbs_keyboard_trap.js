@@ -31,7 +31,8 @@ const TEST_DATA = [
     options: { shiftKey: true }
   },
   {
-    desc: "Move the focus back away from breadcrumbs to a previous focusable element",
+    desc: "Move the focus back away from breadcrumbs to a previous focusable " +
+          "element",
     focused: false,
     key: "VK_TAB",
     options: { shiftKey: true }
@@ -44,9 +45,10 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function*() {
+add_task(function* () {
   let { toolbox, inspector } = yield openInspectorForURL(TEST_URL);
   let doc = inspector.panelDoc;
+  let {breadcrumbs} = inspector;
 
   yield selectNode("#i2", inspector);
 
@@ -64,15 +66,13 @@ add_task(function*() {
   for (let { desc, focused, key, options } of TEST_DATA) {
     info(desc);
 
-    let onUpdated;
-    if (!focused) {
-      onUpdated = inspector.once("breadcrumbs-navigation-cancelled");
-    }
     EventUtils.synthesizeKey(key, options);
+    // Wait until the keyPromise promise resolves.
+    yield breadcrumbs.keyPromise;
+
     if (focused) {
       is(doc.activeElement, button, "Focus is on selected breadcrumb");
     } else {
-      yield onUpdated;
       ok(!containsFocus(doc, container), "Focus is outside of breadcrumbs");
     }
   }

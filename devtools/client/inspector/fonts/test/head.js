@@ -10,9 +10,23 @@ Services.scriptloader.loadSubScript(
   this);
 
 Services.prefs.setBoolPref("devtools.fontinspector.enabled", true);
+Services.prefs.setCharPref("devtools.inspector.activeSidebar", "fontinspector");
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.fontinspector.enabled");
 });
+
+/**
+ * The font-inspector doesn't participate in the inspector's update mechanism
+ * (i.e. it doesn't call inspector.updating() when updating), so simply calling
+ * the default selectNode isn't enough to guaranty that the panel has finished
+ * updating. We also need to wait for the fontinspector-updated event.
+ */
+var _selectNode = selectNode;
+selectNode = function* (node, inspector, reason) {
+  let onUpdated = inspector.once("fontinspector-updated");
+  yield _selectNode(node, inspector, reason);
+  yield onUpdated;
+};
 
 /**
  * Adds a new tab with the given URL, opens the inspector and selects the
@@ -21,22 +35,12 @@ registerCleanupFunction(() => {
  */
 var openFontInspectorForURL = Task.async(function*(url) {
   yield addTab(url);
-  let {toolbox, inspector} = yield openInspectorSidebarTab("fontinspector");
+  let {toolbox, inspector} = yield openInspector();
 
-  /**
-   * Call selectNode to trigger font-inspector update so that we don't timeout
-   * if following conditions hold
-   * a) the initial 'fontinspector-updated' was emitted while we were waiting
-   *    for openInspector to resolve
-   * b) the font-inspector tab was selected by default which means the call to
-   *    select will not trigger another update.
-   *
-   * selectNode calls setNodeFront which always emits 'new-node' which calls
-   * FontInspector.update that emits the 'fontinspector-updated' event.
-   */
-  let onUpdated = inspector.once("fontinspector-updated");
+  // Call selectNode again here to force a fontinspector update since we don't
+  // know if the fontinspector-updated event has been sent while the inspector
+  // was being opened or not.
   yield selectNode("body", inspector);
-  yield onUpdated;
 
   return {
     toolbox,
