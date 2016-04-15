@@ -1,8 +1,8 @@
 if (!('oomTest' in this))
     quit();
 
-var lfGlobal = newGlobal();
 oomTest(() => {
+    var lfGlobal = newGlobal();
     var lfVarx = `
         gczeal(8, 1);
         try {
