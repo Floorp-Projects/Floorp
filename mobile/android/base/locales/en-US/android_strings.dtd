@@ -70,6 +70,12 @@
 <!ENTITY screenshot_folder_label_in_bookmarks "Screenshots">
 <!ENTITY readinglist_smartfolder_label_in_bookmarks "Reading List">
 
+<!ENTITY reader_saved_offline "Saved offline">
+<!-- Localization note (reader_switch_to_bookmarks) : This
+     string is used as an action in a snackbar - it lets you
+     "switch" to the bookmarks (saved items) panel. -->
+<!ENTITY reader_switch_to_bookmarks "Switch">
+
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
 <!ENTITY history_week_section3 "Last 7 days">

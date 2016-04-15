@@ -7,16 +7,16 @@ package org.mozilla.gecko;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
-import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
@@ -25,10 +25,8 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.distribution.Distribution.DistributionDescriptor;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.dlc.DownloadContentService;
-import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
@@ -86,6 +84,7 @@ import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.FloatUtils;
@@ -130,6 +129,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -363,7 +363,15 @@ public class BrowserApp extends GeckoApp
                 tab.loadFavicon();
                 break;
             case BOOKMARK_ADDED:
-                showBookmarkAddedSnackbar();
+                // We always show the special offline snackbar whenever we bookmark a reader page.
+                // It's possible that the page is already stored offline, however this is highly
+                // unlikely, and even so it is probably nicer to show the same offline notification
+                // every time we bookmark an about:reader page.
+                if (!AboutPages.isAboutReader(tab.getURL())) {
+                    showBookmarkAddedSnackbar();
+                } else {
+                    showReaderModeBookmarkAddedSnackbar();
+                }
                 break;
             case BOOKMARK_REMOVED:
                 showBookmarkRemovedSnackbar();
@@ -440,6 +448,26 @@ public class BrowserApp extends GeckoApp
                 Snackbar.LENGTH_LONG,
                 getResources().getString(R.string.bookmark_options),
                 callback);
+    }
+
+    private void showReaderModeBookmarkAddedSnackbar() {
+        final Drawable iconDownloaded = DrawableUtil.tintDrawable(getContext(), R.drawable.status_icon_readercache, Color.WHITE);
+
+        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(PanelType.BOOKMARKS));
+            }
+        };
+
+        SnackbarHelper.showSnackbarWithActionAndColors(this,
+                getResources().getString(R.string.reader_saved_offline),
+                Snackbar.LENGTH_LONG,
+                getResources().getString(R.string.reader_switch_to_bookmarks),
+                callback,
+                iconDownloaded,
+                ContextCompat.getColor(this, R.color.link_blue),
+                Color.WHITE);
     }
 
     private void showBookmarkRemovedSnackbar() {
@@ -3191,6 +3219,8 @@ public class BrowserApp extends GeckoApp
                                                         new HashSet<String>()).isEmpty();
         aMenu.findItem(R.id.quit).setVisible(visible);
 
+        // If tab data is unavailable we disable most of the context menu and related items and
+        // return early.
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
             back.setEnabled(false);
@@ -3214,8 +3244,14 @@ public class BrowserApp extends GeckoApp
             return true;
         }
 
+        // If tab data IS available we need to manually enable items as necessary. They may have
+        // been disabled if returning early above, hence every item must be toggled, even if it's
+        // always expected to be enabled (e.g. the bookmark star is always enabled, except when
+        // we don't have tab data).
+
         final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
 
+        bookmark.setEnabled(true); // Might have been disabled above, ensure it's reenabled
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());

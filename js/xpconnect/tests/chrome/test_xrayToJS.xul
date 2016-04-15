@@ -539,7 +539,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // low value.
     let propsToSkip = ['length', Symbol.unscopables];
 
-    testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip);
+    // On the constructor, we want to skip all the non-standard "generic"
+    // functions.  We're trying to remove them anyway; no point doing extra work
+    // to expose them over Xrays.
+    let ctorPropsToSkip = ["join", "reverse", "sort", "push", "pop", "shift",
+                           "unshift", "splice", "slice"];
+    testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip,
+             ctorPropsToSkip);
 
     let symbolProps = '';
     uniqueSymbol = iwin.eval('var uniqueSymbol = Symbol("uniqueSymbol"); uniqueSymbol');

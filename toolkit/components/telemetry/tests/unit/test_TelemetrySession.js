@@ -365,10 +365,8 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
 
   Assert.ok("keyedHistograms" in payload);
   let keyedHistograms = payload.keyedHistograms;
-  Assert.ok(TELEMETRY_TEST_KEYED_FLAG in keyedHistograms);
+  Assert.ok(!(TELEMETRY_TEST_KEYED_FLAG in keyedHistograms));
   Assert.ok(TELEMETRY_TEST_KEYED_COUNT in keyedHistograms);
-
-  Assert.deepEqual({}, keyedHistograms[TELEMETRY_TEST_KEYED_FLAG]);
 
   const expected_keyed_count = {
     "a": {
@@ -643,10 +641,8 @@ add_task(function* test_checkSubsessionHistograms() {
   Assert.equal(subsession.info.reason, "environment-change");
   Assert.ok(!(COUNT_ID in classic.histograms));
   Assert.ok(!(COUNT_ID in subsession.histograms));
-  Assert.ok(KEYED_ID in classic.keyedHistograms);
-  Assert.ok(KEYED_ID in subsession.keyedHistograms);
-  Assert.deepEqual(classic.keyedHistograms[KEYED_ID], {});
-  Assert.deepEqual(subsession.keyedHistograms[KEYED_ID], {});
+  Assert.ok(!(KEYED_ID in classic.keyedHistograms));
+  Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
 
   checkHistograms(classic.histograms, subsession.histograms);
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
@@ -677,9 +673,8 @@ add_task(function* test_checkSubsessionHistograms() {
 
   Assert.ok(!(COUNT_ID in classic.histograms));
   Assert.ok(!(COUNT_ID in subsession.histograms));
-  Assert.ok(KEYED_ID in classic.keyedHistograms);
-  Assert.ok(KEYED_ID in subsession.keyedHistograms);
-  Assert.deepEqual(classic.keyedHistograms[KEYED_ID], {});
+  Assert.ok(!(KEYED_ID in classic.keyedHistograms));
+  Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
 
   checkHistograms(classic.histograms, subsession.histograms);
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
@@ -725,10 +720,9 @@ add_task(function* test_checkSubsessionHistograms() {
   Assert.equal(subsession.histograms[COUNT_ID].sum, 0);
 
   Assert.ok(KEYED_ID in classic.keyedHistograms);
-  Assert.ok(KEYED_ID in subsession.keyedHistograms);
+  Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
   Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
-  Assert.deepEqual(subsession.keyedHistograms[KEYED_ID], {});
 
   // Adding values should get picked up in both again.
   count.add(1);
@@ -872,7 +866,7 @@ add_task(function* test_dailyCollection() {
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
-  Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
+  Assert.ok(!(KEYED_ID in ping.payload.keyedHistograms));
 
   // Trigger and collect another daily ping, with the histograms being set again.
   count.add(1);
@@ -1079,7 +1073,7 @@ add_task(function* test_environmentChange() {
   Assert.equal(subsessionStartDate.toISOString(), startDay.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
-  Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
+  Assert.ok(!(KEYED_ID in ping.payload.keyedHistograms));
 });
 
 add_task(function* test_savedPingsOnShutdown() {

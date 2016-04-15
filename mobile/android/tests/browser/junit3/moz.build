@@ -21,7 +21,6 @@ jar.sources += [
     'src/org/mozilla/tests/browser/junit3/TestImageDownloader.java',
     'src/org/mozilla/tests/browser/junit3/TestJarReader.java',
     'src/org/mozilla/tests/browser/junit3/TestRawResource.java',
-    'src/org/mozilla/tests/browser/junit3/TestRemoteTabs.java',
     'src/org/mozilla/tests/browser/junit3/TestSuggestedSites.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
