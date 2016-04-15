@@ -1020,6 +1020,10 @@ IonScript::trace(JSTracer* trc)
         ICEntry& ent = sharedStubList()[i];
         ent.trace(trc);
     }
+
+    // Trace caches so that the JSScript pointer can be updated if moved.
+    for (size_t i = 0; i < numCaches(); i++)
+        getCacheFromIndex(i).trace(trc);
 }
 
 /* static */ void
