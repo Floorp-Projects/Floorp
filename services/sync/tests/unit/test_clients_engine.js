@@ -495,6 +495,11 @@ add_test(function test_process_incoming_commands() {
 
   var handler = function() {
     Svc.Obs.remove(ev, handler);
+
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+    engine._resetClient();
+
     run_next_test();
   };
 
@@ -502,6 +507,114 @@ add_test(function test_process_incoming_commands() {
 
   // logout command causes processIncomingCommands to return explicit false.
   do_check_false(engine.processIncomingCommands());
+});
+
+add_test(function test_filter_duplicate_names() {
+  _("Ensure that we exclude clients with identical names that haven't synced in a week.");
+
+  let now = Date.now() / 1000;
+  let contents = {
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
+    clients: {},
+    crypto: {}
+  };
+  let server = serverForUsers({"foo": "password"}, contents);
+  let user   = server.user("foo");
+
+  new SyncTestingInfrastructure(server.server);
+  generateNewKeys(Service.collectionKeys);
+
+  // Synced recently.
+  let recentID = Utils.makeGUID();
+  server.insertWBO("foo", "clients", new ServerWBO(recentID, encryptPayload({
+    id: recentID,
+    name: "My Phone",
+    type: "mobile",
+    commands: [],
+    version: "48",
+    protocols: ["1.5"],
+  }), now - 10));
+
+  // Dupe of our client, synced more than 1 week ago.
+  let dupeID = Utils.makeGUID();
+  server.insertWBO("foo", "clients", new ServerWBO(dupeID, encryptPayload({
+    id: dupeID,
+    name: engine.localName,
+    type: "desktop",
+    commands: [],
+    version: "48",
+    protocols: ["1.5"],
+  }), now - 604810));
+
+  // Synced more than 1 week ago, but not a dupe.
+  let oldID = Utils.makeGUID();
+  server.insertWBO("foo", "clients", new ServerWBO(oldID, encryptPayload({
+    id: oldID,
+    name: "My old desktop",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    protocols: ["1.5"],
+  }), now - 604820));
+
+  try {
+    let store = engine._store;
+
+    _("First sync");
+    strictEqual(engine.lastRecordUpload, 0);
+    engine._sync();
+    ok(engine.lastRecordUpload > 0);
+    deepEqual(user.collection("clients").keys().sort(),
+              [recentID, dupeID, oldID, engine.localID].sort(),
+              "Our record should be uploaded on first sync");
+    deepEqual(Object.keys(store.getAllIDs()).sort(),
+              [recentID, oldID, engine.localID].sort(),
+              "Fresh clients should be downloaded on first sync");
+
+    _("Broadcast logout to all clients");
+    engine.sendCommand("logout", []);
+    engine._sync();
+
+    let collection = server.getCollection("foo", "clients");
+    let recentPayload = JSON.parse(JSON.parse(collection.payload(recentID)).ciphertext);
+    deepEqual(recentPayload.commands, [{ command: "logout", args: [] }],
+              "Should send commands to the recent client");
+
+    let oldPayload = JSON.parse(JSON.parse(collection.payload(oldID)).ciphertext);
+    deepEqual(oldPayload.commands, [{ command: "logout", args: [] }],
+              "Should send commands to the week-old client");
+
+    let dupePayload = JSON.parse(JSON.parse(collection.payload(dupeID)).ciphertext);
+    deepEqual(dupePayload.commands, [],
+              "Should not send commands to the dupe client");
+
+    _("Update the dupe client's modified time");
+    server.insertWBO("foo", "clients", new ServerWBO(dupeID, encryptPayload({
+      id: dupeID,
+      name: engine.localName,
+      type: "desktop",
+      commands: [],
+      version: "48",
+      protocols: ["1.5"],
+    }), now - 10));
+
+    _("Second sync.");
+    engine._sync();
+
+    deepEqual(Object.keys(store.getAllIDs()).sort(),
+              [recentID, oldID, dupeID, engine.localID].sort(),
+              "Stale client synced, so it should no longer be marked as a dupe");
+  } finally {
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+
+    try {
+      server.deleteCollections("foo");
+    } finally {
+      server.stop(run_next_test);
+    }
+  }
 });
 
 add_test(function test_command_sync() {
