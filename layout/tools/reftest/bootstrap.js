@@ -44,6 +44,8 @@ function startup(data, reason) {
     return;
   }
 
+  let orig = Services.wm.getMostRecentWindow("navigator:browser");
+
   let ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService2);
   ios.manageOfflineStatus = false;
@@ -54,6 +56,9 @@ function startup(data, reason) {
   let dummy = wwatch.openWindow(null, "about:blank", "dummy",
                                 "chrome,dialog=no,left=800,height=200,width=200,all",null);
   dummy.onload = function() {
+    // Close pre-existing window
+    orig.close();
+
     dummy.focus();
     wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",
                       "chrome,dialog=no,all", {});

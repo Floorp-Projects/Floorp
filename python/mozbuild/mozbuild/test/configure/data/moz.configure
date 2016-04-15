@@ -160,7 +160,6 @@ set_config('IS_FILE', with_imports)
 # It is also possible to cherry-pick builtins.
 @depends('--with-imports')
 @imports('os.path')
-@imports(_from='__builtin__', _import='hasattr')
 def with_imports(value):
     if len(value):
         return hasattr(os.path, 'getatime')
@@ -168,7 +167,6 @@ def with_imports(value):
 set_config('HAS_GETATIME', with_imports)
 
 @depends('--with-imports')
-@imports(_from='__builtin__', _import='hasattr')
 def with_imports(value):
     if len(value):
         return hasattr(os.path, 'getatime')

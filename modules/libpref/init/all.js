@@ -2421,8 +2421,12 @@ pref("layout.css.scope-pseudo.enabled", true);
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
 
-// Is support for background-clip:text enabled? (bug 1263516)
+// Is support for background-clip:text enabled? (bug 1264905)
+#ifdef RELEASE_BUILD
 pref("layout.css.background-clip-text.enabled", false);
+#else
+pref("layout.css.background-clip-text.enabled", true);
+#endif
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);
@@ -2587,7 +2591,6 @@ pref("editor.positioning.offset",            0);
 
 pref("dom.use_watchdog", true);
 pref("dom.max_chrome_script_run_time", 20);
-pref("dom.max_child_script_run_time", 10);
 pref("dom.max_script_run_time", 10);
 
 // If true, ArchiveReader will be enabled

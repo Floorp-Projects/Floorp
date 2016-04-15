@@ -29,6 +29,13 @@ public:
   virtual uint64_t GetTransactionId() = 0;
 
   /**
+   * Return the transaction id that for the last non-revoked transaction.
+   * This allows the caller to tell whether a composite was triggered by
+   * a paint that occurred after a call to TransactionId().
+   */
+  virtual uint64_t LastTransactionId() const = 0;
+
+  /**
    * Notify that all work (including asynchronous composites)
    * for a given transaction id has been completed.
    *

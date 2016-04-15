@@ -19,7 +19,8 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
                                    EventMessage aEventMessage,
-                                   nsInvalidateRequestList* aInvalidateRequests)
+                                   nsInvalidateRequestList* aInvalidateRequests,
+                                   uint64_t aTransactionId)
   : Event(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
@@ -28,6 +29,8 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
   if (aInvalidateRequests) {
     mInvalidateRequests.AppendElements(Move(aInvalidateRequests->mRequests));
   }
+
+  mTransactionId = aTransactionId;
 }
 
 NS_INTERFACE_MAP_BEGIN(NotifyPaintEvent)
@@ -154,6 +157,19 @@ NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   return true;
 }
 
+NS_IMETHODIMP
+NotifyPaintEvent::GetTransactionId(uint64_t* aTransactionId)
+{
+  *aTransactionId = mTransactionId;
+  return NS_OK;
+}
+
+uint64_t
+NotifyPaintEvent::TransactionId()
+{
+  return mTransactionId;
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -165,10 +181,11 @@ NS_NewDOMNotifyPaintEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
                           EventMessage aEventMessage,
-                          nsInvalidateRequestList* aInvalidateRequests) 
+                          nsInvalidateRequestList* aInvalidateRequests,
+                          uint64_t aTransactionId)
 {
   RefPtr<NotifyPaintEvent> it =
     new NotifyPaintEvent(aOwner, aPresContext, aEvent, aEventMessage,
-                         aInvalidateRequests);
+                         aInvalidateRequests, aTransactionId);
   return it.forget();
 }
