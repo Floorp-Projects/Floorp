@@ -151,7 +151,7 @@ Object.assign(SyncedTabsListStore.prototype, EventEmitter.prototype, {
     if (parent <= -1) {
       parentRow = 0;
     } else if (parent >= maxParentRow) {
-      parentRow = maxParentRow - 1;
+      return;
     }
 
     let childRow = child;

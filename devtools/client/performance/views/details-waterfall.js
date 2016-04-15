@@ -82,6 +82,9 @@ var WaterfallView = Heritage.extend(DetailsSubview, {
    */
   render: function(interval={}) {
     let recording = PerformanceController.getCurrentRecording();
+    if (recording.isRecording()) {
+      return;
+    }
     let startTime = interval.startTime || 0;
     let endTime = interval.endTime || recording.getDuration();
     let markers = recording.getMarkers();

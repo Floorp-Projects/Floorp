@@ -66,7 +66,7 @@
 
     <template id="tabs-container-template">
       <div class="tabs-container">
-        <div class="list" role="listbox" tabindex="1"></div>
+        <div class="list" role="listbox"></div>
       </div>
     </template>
 
@@ -97,7 +97,7 @@
         <div class="sidebar-search-container tabs-container sync-state">
           <div class="search-box compact">
             <div class="textbox-input-box">
-              <input type="text" class="tabsFilter textbox-input"/>
+              <input type="text" class="tabsFilter textbox-input" tabindex="1"/>
               <div class="textbox-search-icons">
                 <a class="textbox-search-clear"></a>
                 <a class="textbox-search-icon"></a>
@@ -107,7 +107,7 @@
         </div>
       </div>
       <!-- the scrollable content area where our templates are inserted -->
-      <div id="template-container" class="content-scrollable">
+      <div id="template-container" class="content-scrollable" tabindex="-1">
       </div>
     </div>
   </body>
