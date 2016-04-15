@@ -139,6 +139,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIMutable.h"
+#include "nsINSSU2FToken.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIRemoteWindowContext.h"
@@ -4244,6 +4245,81 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
     history->SetURITitle(ourURI, title);
   }
   return true;
+}
+
+bool
+ContentParent::RecvNSSU2FTokenIsCompatibleVersion(const nsString& version,
+                                                  bool* isCompatible)
+{
+  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
+  if (NS_WARN_IF(!nssToken)) {
+    return false;
+  }
+
+  nsresult rv = nssToken->IsCompatibleVersion(version, isCompatible);
+  return NS_SUCCEEDED(rv);
+}
+
+bool
+ContentParent::RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& keyHandle,
+                                           bool* isValidKeyHandle)
+{
+  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
+  if (NS_WARN_IF(!nssToken)) {
+    return false;
+  }
+
+  nsresult rv = nssToken->IsRegistered(keyHandle.Elements(), keyHandle.Length(),
+                                       isValidKeyHandle);
+  return  NS_SUCCEEDED(rv);
+}
+
+bool
+ContentParent::RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& application,
+                                       nsTArray<uint8_t>&& challenge,
+                                       nsTArray<uint8_t>* registration)
+{
+  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
+  if (NS_WARN_IF(!nssToken)) {
+    return false;
+  }
+  uint8_t* buffer;
+  uint32_t bufferlen;
+  nsresult rv = nssToken->Register(application.Elements(), application.Length(),
+                                   challenge.Elements(), challenge.Length(),
+                                   &buffer, &bufferlen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  registration->ReplaceElementsAt(0, registration->Length(), buffer, bufferlen);
+  free(buffer);
+  return NS_SUCCEEDED(rv);
+}
+
+bool
+ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& application,
+                                   nsTArray<uint8_t>&& challenge,
+                                   nsTArray<uint8_t>&& keyHandle,
+                                   nsTArray<uint8_t>* signature)
+{
+  nsCOMPtr<nsINSSU2FToken> nssToken(do_GetService(NS_NSSU2FTOKEN_CONTRACTID));
+  if (NS_WARN_IF(!nssToken)) {
+    return false;
+  }
+  uint8_t* buffer;
+  uint32_t bufferlen;
+  nsresult rv = nssToken->Sign(application.Elements(), application.Length(),
+                               challenge.Elements(), challenge.Length(),
+                               keyHandle.Elements(), keyHandle.Length(),
+                               &buffer, &bufferlen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  signature->ReplaceElementsAt(0, signature->Length(), buffer, bufferlen);
+  free(buffer);
+  return NS_SUCCEEDED(rv);
 }
 
 bool

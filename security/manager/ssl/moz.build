@@ -23,6 +23,7 @@ XPIDL_SOURCES += [
     'nsIGenKeypairInfoDlg.idl',
     'nsIKeygenThread.idl',
     'nsIKeyModule.idl',
+    'nsINSSU2FToken.idl',
     'nsINSSVersion.idl',
     'nsIPK11Token.idl',
     'nsIPK11TokenDB.idl',
@@ -61,6 +62,7 @@ EXPORTS += [
     'nsNSSComponent.h',
     'nsNSSHelper.h',
     'nsNSSShutDown.h',
+    'nsNSSU2FToken.h',
     'nsRandomGenerator.h',
     'nsSecurityHeaderParser.h',
     'NSSErrorsService.h',
@@ -112,6 +114,7 @@ UNIFIED_SOURCES += [
     'nsNSSIOLayer.cpp',
     'nsNSSModule.cpp',
     'nsNSSShutDown.cpp',
+    'nsNSSU2FToken.cpp',
     'nsNSSVersion.cpp',
     'nsNTLMAuthModule.cpp',
     'nsPK11TokenDB.cpp',
@@ -161,6 +164,7 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/dom/crypto',
     '/security/certverifier',
     '/security/pkix/include',
 ]
