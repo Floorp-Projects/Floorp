@@ -387,13 +387,13 @@ WpaSupplicant::WpaSupplicant()
   mSdkVersion = strtol(propVersion, nullptr, 10);
 
   if (mSdkVersion < 16) {
-    mImpl = new ICSWpaSupplicantImpl();
+    mImpl = MakeUnique<ICSWpaSupplicantImpl>();
   } else if (mSdkVersion < 19) {
-    mImpl = new JBWpaSupplicantImpl();
+    mImpl = MakeUnique<JBWpaSupplicantImpl>();
   } else {
-    mImpl = new KKWpaSupplicantImpl();
+    mImpl = MakeUnique<KKWpaSupplicantImpl>();
   }
-  mWifiHotspotUtils = new WifiHotspotUtils();
+  mWifiHotspotUtils = MakeUnique<WifiHotspotUtils>();
 };
 
 void WpaSupplicant::WaitForEvent(nsAString& aEvent, const nsCString& aInterface)
