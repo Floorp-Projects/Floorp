@@ -7,6 +7,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/RemotePageManager.jsm");
 
 let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
                            .getService(Ci.nsIAboutNewTabService);
@@ -430,7 +431,13 @@ function test(window) {
     win.gBrowser.removeAllTabsBut(resultsTab);
     if (pref)
       Services.prefs.setBoolPref("browser.tabs.warnOnCloseOtherTabs", pref);
-    Services.obs.notifyObservers(win, 'tabswitch-test-results', JSON.stringify({'times': times, 'urls': testURLs}));
+
+    remotePage.sendAsyncMessage("tabswitch-test-results", {
+      times,
+      urls: testURLs,
+    });
+
+    win.close();
   });
 }
 
@@ -476,7 +483,8 @@ function shutdown(aData, aReason) {
     unloadFromWindow(window);
   }
   Services.obs.removeObserver(observer, "tabswitch-urlfile");
-  Services.obs.removeObserver(observer, "tabswitch-do-test");
+
+  remotePage.destroy();
 }
 
 function handleFile(win, file) {
@@ -510,13 +518,13 @@ function handleFile(win, file) {
 
 var observer = {
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "tabswitch-do-test") {
-      test(aSubject);
-    } else if (aTopic == "tabswitch-urlfile") {
+    if (aTopic == "tabswitch-urlfile") {
       handleFile(aSubject, aData);
     }
   }
 };
+
+var remotePage;
 
 function startup(aData, aReason) {
   // Load into any existing windows
@@ -531,5 +539,11 @@ function startup(aData, aReason) {
   Services.wm.addListener(windowListener);
 
   Services.obs.addObserver(observer, "tabswitch-urlfile", false);
-  Services.obs.addObserver(observer, "tabswitch-do-test", false);
+
+  Services.ppmm.loadProcessScript("chrome://tabswitch/content/tabswitch-content-process.js", true);
+
+  remotePage = new RemotePages("about:tabswitch");
+  remotePage.addMessageListener("tabswitch-do-test", function doTest(msg) {
+    test(msg.target.browser.ownerGlobal);
+  });
 }
