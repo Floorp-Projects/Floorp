@@ -4,7 +4,7 @@
 /* eslint-env browser */
 /* eslint-disable mozilla/no-cpows-in-tests */
 /* exported openAboutDebugging, closeAboutDebugging, installAddon,
-   uninstallAddon, waitForMutation, assertHasTarget,
+   uninstallAddon, waitForMutation, assertHasTarget, getServiceWorkerList,
    waitForInitialAddonList, waitForServiceWorkerRegistered,
    unregisterServiceWorker */
 /* global sendAsyncMessage */
@@ -93,6 +93,28 @@ function getSupportsFile(path) {
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }
 
+/**
+ * Depending on whether there are addons installed, return either a target list
+ * element or its container.
+ * @param  {DOMDocument}  document   #addons section container document
+ * @return {DOMNode}                 target list or container element
+ */
+function getAddonList(document) {
+  return document.querySelector("#addons .target-list") ||
+    document.querySelector("#addons .targets");
+}
+
+/**
+ * Depending on whether there are service workers installed, return either a
+ * target list element or its container.
+ * @param  {DOMDocument}  document   #service-workers section container document
+ * @return {DOMNode}                 target list or container element
+ */
+function getServiceWorkerList(document) {
+  return document.querySelector("#service-workers .target-list") ||
+    document.querySelector("#service-workers.targets");
+}
+
 function* installAddon(document, path, name, evt) {
   // Mock the file picker to select a test addon
   let MockFilePicker = SpecialPowers.MockFilePicker;
@@ -100,7 +122,7 @@ function* installAddon(document, path, name, evt) {
   let file = getSupportsFile(path);
   MockFilePicker.returnFiles = [file.file];
 
-  let addonList = document.querySelector("#addons .targets");
+  let addonList = getAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
   // Wait for a message sent by the addon's bootstrap.js file
@@ -126,7 +148,7 @@ function* installAddon(document, path, name, evt) {
 }
 
 function* uninstallAddon(document, addonId, addonName) {
-  let addonList = document.querySelector("#addons .targets");
+  let addonList = getAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
   // Now uninstall this addon
@@ -163,7 +185,7 @@ function* uninstallAddon(document, addonId, addonName) {
  * @return {Promise}
  */
 function waitForInitialAddonList(document) {
-  const addonListContainer = document.querySelector("#addons .targets");
+  const addonListContainer = getAddonList(document);
   let addonCount = addonListContainer.querySelectorAll(".target");
   addonCount = addonCount ? [...addonCount].length : -1;
   info("Waiting for add-ons to load. Current add-on count: " + addonCount);
