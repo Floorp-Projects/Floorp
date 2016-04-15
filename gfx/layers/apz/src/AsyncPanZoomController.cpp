@@ -516,11 +516,10 @@ public:
       //   while holding mMonitor, because otherwise, if the overscrolled APZC
       //   is this one, then the SetState(NOTHING) in UpdateAnimation will
       //   stomp on the SetState(SNAP_BACK) it does.
-      if (!mDeferredTasks.append(NewRunnableMethod(mOverscrollHandoffChain.get(),
-                                                   &OverscrollHandoffChain::SnapBackOverscrolledApzc,
-                                                   &mApzc))) {
-        MOZ_CRASH();
-      }
+      mDeferredTasks.AppendElement(
+            NewRunnableMethod(mOverscrollHandoffChain.get(),
+                              &OverscrollHandoffChain::SnapBackOverscrolledApzc,
+                              &mApzc));
       return false;
     }
 
@@ -569,13 +568,12 @@ public:
       // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
       // called after mMonitor is released.
       APZC_LOG("%p fling went into overscroll, handing off with velocity %s\n", &mApzc, Stringify(velocity).c_str());
-      if (!mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                                   &AsyncPanZoomController::HandleFlingOverscroll,
-                                                   velocity,
-                                                   mOverscrollHandoffChain,
-                                                   mScrolledApzc))) {
-        MOZ_CRASH();
-      }
+      mDeferredTasks.AppendElement(
+            NewRunnableMethod(&mApzc,
+                              &AsyncPanZoomController::HandleFlingOverscroll,
+                              velocity,
+                              mOverscrollHandoffChain,
+                              mScrolledApzc));
 
       // If there is a remaining velocity on this APZC, continue this fling
       // as well. (This fling and the handed-off fling will run concurrently.)
@@ -703,10 +701,9 @@ public:
       // The scroll snapping is done in a deferred task, otherwise the state
       // change to NOTHING caused by the overscroll animation ending would
       // clobber a possible state change to SMOOTH_SCROLL in ScrollSnap().
-      if (!mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                                   &AsyncPanZoomController::ScrollSnap))) {
-        MOZ_CRASH();
-      }
+      mDeferredTasks.AppendElement(
+            NewRunnableMethod(&mApzc,
+            &AsyncPanZoomController::ScrollSnap));
       return false;
     }
     return true;
@@ -822,12 +819,10 @@ public:
       // HandleSmoothScrollOverscroll() (which acquires the tree lock) would violate
       // the lock ordering. Instead we schedule HandleSmoothScrollOverscroll() to be
       // called after mMonitor is released.
-      if (!mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                                   &AsyncPanZoomController::HandleSmoothScrollOverscroll,
-                                                   velocity))) {
-        MOZ_CRASH();
-      }
-
+      mDeferredTasks.AppendElement(
+            NewRunnableMethod(&mApzc,
+                              &AsyncPanZoomController::HandleSmoothScrollOverscroll,
+                              velocity));
       return false;
     }
 
@@ -3065,7 +3060,7 @@ AsyncPanZoomController::RequestContentRepaint(const FrameMetrics& aFrameMetrics,
 }
 
 bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
-                                             Vector<Task*>* aOutDeferredTasks)
+                                             nsTArray<Task*>* aOutDeferredTasks)
 {
   APZThreadUtils::AssertOnCompositorThread();
 
@@ -3166,7 +3161,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   // responsibility to schedule a composite.
   mAsyncTransformAppliedToContent = false;
   bool requestAnimationFrame = false;
-  Vector<Task*> deferredTasks;
+  nsTArray<Task*> deferredTasks;
 
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
@@ -3188,7 +3183,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   // UpdateAnimation()). This needs to be done after the monitor is released
   // since the tasks are allowed to call APZCTreeManager methods which can grab
   // the tree lock.
-  for (uint32_t i = 0; i < deferredTasks.length(); ++i) {
+  for (uint32_t i = 0; i < deferredTasks.Length(); ++i) {
     deferredTasks[i]->Run();
     delete deferredTasks[i];
   }

@@ -10,9 +10,9 @@
 #include "base/message_loop.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Vector.h"
 #include "FrameMetrics.h"
 #include "nsISupportsImpl.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {
@@ -46,7 +46,7 @@ public:
    * Get the deferred tasks in |mDeferredTasks| and place them in |aTasks|. See
    * |mDeferredTasks| for more information.  Clears |mDeferredTasks|.
    */
-  Vector<Task*> TakeDeferredTasks() {
+  nsTArray<Task*> TakeDeferredTasks() {
     return Move(mDeferredTasks);
   }
 
@@ -71,7 +71,7 @@ protected:
    * Derived classes can add tasks here in Sample(), and the APZC can call
    * ExecuteDeferredTasks() to execute them.
    */
-  Vector<Task*> mDeferredTasks;
+  nsTArray<Task*> mDeferredTasks;
 };
 
 } // namespace layers
