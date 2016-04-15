@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24">
+  <style>
+    @keyframes grow {
+      0%   { transform: scaleY(1);   }
+      15%  { transform: scaleY(1.5); }
+      15%  { transform: scaleY(1.5); }
+      30%  { transform: scaleY(1);   }
+      100% { transform: scaleY(1);   }
+    }
+
+    @keyframes shrink {
+      0%   { transform: scaleY(1);   }
+      15%  { transform: scaleY(.5); }
+      15%  { transform: scaleY(.5); }
+      30%  { transform: scaleY(1);   }
+      100% { transform: scaleY(1);   }
+    }
+
+    .barAnimation {
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation-name: grow;
+      animation-duration: 1750ms;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+    }
+
+    .barAnimation01 { animation-delay: 0; }
+    .barAnimation02 { animation-delay: 250ms; }
+    .barAnimation03 { animation-delay: 500ms; }
+    .barAnimation04 { animation-delay: 750ms; }
+    .barAnimation05 { animation-delay: 1000ms; }
+    .barAnimation06 { animation-delay: 1250ms; }
+    .barAnimation07 { animation-delay: 1500ms; }
+  </style>
+
+  <g id="glyph-waveform" fill="#58bf43">
+    <rect x="1"  y="8" width="2" height="8"  rx=".5" ry=".5" class="barAnimation barAnimation01" />
+    <rect x="4"  y="5" width="2" height="14" rx=".5" ry=".5" class="barAnimation barAnimation02" />
+    <rect x="7"  y="8" width="2" height="8"  rx=".5" ry=".5" class="barAnimation barAnimation03" />
+    <rect x="10" y="4" width="2" height="16" rx=".5" ry=".5" class="barAnimation barAnimation04" />
+    <rect x="13" y="2" width="2" height="20" rx=".5" ry=".5" class="barAnimation barAnimation05" />
+    <rect x="16" y="4" width="2" height="16" rx=".5" ry=".5" class="barAnimation barAnimation06" />
+    <rect x="19" y="7" width="2" height="10" rx=".5" ry=".5" class="barAnimation barAnimation07" />
+  </g>
+
+</svg>
