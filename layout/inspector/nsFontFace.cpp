@@ -187,7 +187,7 @@ nsFontFace::GetMetadata(nsAString & aMetadata)
   aMetadata.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    const gfxUserFontData* userFontData = mFontEntry->mUserFontData;
+    const gfxUserFontData* userFontData = mFontEntry->mUserFontData.get();
     if (userFontData->mMetadata.Length() && userFontData->mMetaOrigLen) {
       nsAutoCString str;
       str.SetLength(userFontData->mMetaOrigLen);

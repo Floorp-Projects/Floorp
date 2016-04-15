@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 #include "gfxTypes.h"
 #include "gfxFontFamilyList.h"

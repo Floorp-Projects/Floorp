@@ -7,7 +7,6 @@
 
 #include "gfxImageSurface.h"
 #include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 
 
 /**
