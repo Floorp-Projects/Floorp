@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(TVManager, DOMEventTargetHelper, mTVService,
-                                   mTuners, mPendingGetTunersPromises)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TVManager, DOMEventTargetHelper, mTuners,
+                                   mPendingGetTunersPromises)
 
 NS_IMPL_ADDREF_INHERITED(TVManager, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TVManager, DOMEventTargetHelper)
@@ -45,11 +45,13 @@ TVManager::Create(nsPIDOMWindowInner* aWindow)
 bool
 TVManager::Init()
 {
-  mTVService = TVServiceFactory::AutoCreateTVService();
-  NS_ENSURE_TRUE(mTVService, false);
+  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return false;
+  }
 
   nsCOMPtr<nsITVServiceCallback> callback = new TVServiceTunerGetterCallback(this);
-  nsresult rv = mTVService->GetTuners(callback);
+  nsresult rv = service->GetTuners(callback);
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;

@@ -47,13 +47,31 @@ TVServiceSourceSetterCallback::~TVServiceSourceSetterCallback()
 /* virtual */ NS_IMETHODIMP
 TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
 {
-  // |aDataList| is expected to be null for setter callbacks.
-  if (aDataList) {
+  // |aDataList| is expected to be with only one element.
+  if (!aDataList) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv = mTuner->SetCurrentSource(mSourceType);
+  uint32_t length;
+  nsresult rv = aDataList->GetLength(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
+  if (length != 1) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsITVGonkNativeHandleData> handleData =
+    do_QueryElementAt(aDataList, 0);
+  if (NS_WARN_IF(!handleData)) {
+    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return rv;
+  }
+
+  rv = mTuner->SetCurrentSource(mSourceType, handleData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mPromise->MaybeReject(rv);
     return rv;

@@ -9,8 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 
-class nsITVService;
-
 namespace mozilla {
 namespace dom {
 
@@ -46,7 +44,6 @@ private:
 
   bool Init();
 
-  nsCOMPtr<nsITVService> mTVService;
   nsTArray<RefPtr<TVTuner>> mTuners;
   bool mIsReady;
   nsTArray<RefPtr<Promise>> mPendingGetTunersPromises;

@@ -16,7 +16,7 @@
 
 class nsITVChannelData;
 class nsITVProgramData;
-class nsITVService;
+class nsITVSourceListener;
 
 namespace mozilla {
 namespace dom {
@@ -92,8 +92,6 @@ private:
 
   bool Init();
 
-  void Shutdown();
-
   nsresult DispatchCurrentChannelChangedEvent(TVChannel* aChannel);
 
   nsresult DispatchScanningStateChangedEvent(TVScanningState aState,
@@ -101,9 +99,9 @@ private:
 
   nsresult DispatchEITBroadcastedEvent(const Sequence<OwningNonNull<TVProgram>>& aPrograms);
 
-  nsCOMPtr<nsITVService> mTVService;
   RefPtr<TVTuner> mTuner;
   RefPtr<TVChannel> mCurrentChannel;
+  nsCOMPtr<nsITVSourceListener> mSourceListener;
   TVSourceType mType;
   bool mIsScanning;
 };

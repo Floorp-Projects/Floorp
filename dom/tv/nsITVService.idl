@@ -208,6 +208,29 @@ interface nsITVSourceListener : nsISupports
                             in unsigned long count);
 };
 
+%{C++
+#include "mozilla/layers/GonkNativeHandle.h"
+
+#define TV_GONK_NATIVE_HANDLE_DATA_CID \
+  { 0x1e72877a, 0xaacc, 0x425a, { 0xa3, 0x33, 0x85, 0xe1, 0xb2, 0x66, 0xcb, 0xb3 } }
+#define TV_GONK_NATIVE_HANDLE_DATA_CONTRACTID \
+  "@mozilla.org/tv/tvgonknativehandledata;1"
+%}
+
+[ref] native GonkNativeHandle(mozilla::layers::GonkNativeHandle);
+
+[scriptable, builtinclass, uuid(64acaf2e-3dc5-467a-962d-b4c2c920ec30)]
+interface nsITVGonkNativeHandleData : nsISupports
+{
+  /**
+   * A native handle associated with the TV stream.
+   *
+   * NOTE: It's only available for stream type |nsITVTunerData::TV_STREAM_TYPE_HW|.
+   */
+  [noscript]
+  attribute GonkNativeHandle handle;
+};
+
 [scriptable, builtinclass, uuid(01582a11-4707-455d-8d2a-2c8de8227dad)]
 interface nsITVServiceCallback : nsISupports
 {
@@ -233,10 +256,10 @@ interface nsITVServiceCallback : nsISupports
    *                 Channel Number) when used for |getChannels()|.
    *                 An array of |nsITVProgramData| ordered by the start time
    *                 for |getPrograms()|.
+   *                 An array of |nsITVGonkNativeHandleData| with only one
+   *                 element for |setSource()|.
    *                 An array of |nsITVChannelData| with only one element for
    *                 |setChannel()|.
-   *                 An array of |nsISupportsString| with only one element for
-   *                 |getOverlayId()|.
    *
    * NOTE: |nsIArray| is adopted to prevent this interface from being split into
    * multiple interfaces with different |notifySuccess|. Though the
@@ -251,27 +274,30 @@ interface nsITVServiceCallback : nsISupports
   "@mozilla.org/tv/tvservice;1"
 %}
 
-/**
- * XPCOM component which interacts with the underlying TV components.
- *
- * NOTE: The implementation is expected to be done by TV vendors to cooperate
- * with their own TV stack. The methods should not be called on any thread
- * except for the XPCOM main thread.
- *
- * NOTE: The callbacks passing in the methods must be called asynchronously. In
- * the implementation, actual runnable objects may need to be created and call
- * the callback off of the runnables, after the function returns.
- * TVServiceRunnables.h provides some ready-made runnables and could be used in
- * the following way.
- *
- * nsCOMPtr<nsIRunnable> runnable =
- *   new TVServiceNotifyRunnable(callback, dataList, optional errorCode);
- * return NS_DispatchToCurrentThread(runnable);
- */
-[scriptable, uuid(e52f93f1-6071-468b-a198-d8e6bc5ca348)]
+[scriptable, uuid(827f4e94-430a-47a6-954a-0c7470cfc5fe)]
 interface nsITVService : nsISupports
 {
-  attribute nsITVSourceListener sourceListener;
+  /**
+   * Register a source listener.
+   *
+   * @param tunerId    The ID of the tuner.
+   * @param sourceType The source type to be used.
+   * @param listener   The listener to register.
+   */
+  void registerSourceListener(in DOMString tunerId,
+                              in DOMString sourceType,
+                              in nsITVSourceListener listener);
+
+  /**
+   * Unregister a source listener.
+   *
+   * @param tunerId    The ID of the tuner.
+   * @param sourceType The source type to be used.
+   * @param listener   The listener to register.
+   */
+  void unregisterSourceListener(in DOMString tunerId,
+                                in DOMString sourceType,
+                                in nsITVSourceListener listener);
 
   /**
    * Get all tuners.
@@ -378,16 +404,4 @@ interface nsITVService : nsISupports
                    in unsigned long long startTime,
                    in unsigned long long endTime,
                    in nsITVServiceCallback callback);
-
-  /**
-   * Get the overlay ID of a given tuner.
-   *
-   * @param tunerId       The ID of the tuner.
-   * @param callback      The callback object where either |notifyError| or
-   *                      |notifySuccess|, which takes an array of
-   *                      |nsISupportsString| with only one element, is expected.
-   */
-  void getOverlayId(in DOMString tunerId,
-                    in nsITVServiceCallback callback);
 };
-
