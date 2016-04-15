@@ -279,17 +279,20 @@ def parse_commit(message, jobs):
 
     aliases = jobs['flags'].get('aliases', {})
 
-    platforms = normalize_platform_list(aliases, jobs['flags']['builds'], args.platforms)
+    platforms = set()
+    for base in normalize_platform_list(aliases, jobs['flags']['builds'], args.platforms):
+        # Silently skip unknown platforms.
+        if base not in jobs['builds']:
+            continue
+        platforms.add(base)
+        platforms.update(jobs['builds'][base].get('extra-builds', []))
+
     tests = normalize_test_list(aliases, jobs['flags']['tests'], args.tests)
 
     result = []
 
     # Expand the matrix of things!
     for platform in platforms:
-        # Silently skip unknown platforms.
-        if platform not in jobs['builds']:
-            continue
-
         platform_builds = jobs['builds'][platform]
 
         for build_type in build_types:
