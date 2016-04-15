@@ -81,6 +81,8 @@ AccessibleCaretManager::sCaretsScriptUpdates = false;
 AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
 /*static*/ bool
 AccessibleCaretManager::sHapticFeedback = false;
+/*static*/ bool
+AccessibleCaretManager::sExtendSelectionForPhoneNumber = false;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
@@ -110,6 +112,8 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
       "layout.accessiblecaret.allow_dragging_across_other_caret", true);
     Preferences::AddBoolVarCache(&sHapticFeedback,
                                  "layout.accessiblecaret.hapticfeedback");
+    Preferences::AddBoolVarCache(&sExtendSelectionForPhoneNumber,
+      "layout.accessiblecaret.extend_selection_for_phone_number");
     addedPrefs = true;
   }
 }
@@ -820,6 +824,11 @@ AccessibleCaretManager::SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) cons
   SetSelectionDragState(false);
   ClearMaintainedSelection();
 
+  // Smart-select phone numbers if possible.
+  if (sExtendSelectionForPhoneNumber) {
+    SelectMoreIfPhoneNumber();
+  }
+
   return rs;
 }
 
@@ -839,6 +848,53 @@ AccessibleCaretManager::SetSelectionDragState(bool aState) const
     nsIWidget* widget = nsContentUtils::WidgetForDocument(doc);
     static_cast<nsWindow*>(widget)->SetSelectionDragState(aState);
   #endif
+}
+
+void
+AccessibleCaretManager::SelectMoreIfPhoneNumber() const
+{
+  SetSelectionDirection(eDirNext);
+  ExtendPhoneNumberSelection(NS_LITERAL_STRING("forward"));
+
+  SetSelectionDirection(eDirPrevious);
+  ExtendPhoneNumberSelection(NS_LITERAL_STRING("backward"));
+}
+
+void
+AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) const
+{
+  nsIDocument* doc = mPresShell->GetDocument();
+
+  // Extend the phone number selection until we find a boundary.
+  Selection* selection = GetSelection();
+
+  while (selection) {
+    // Save current Focus position, and extend the selection one char.
+    nsINode* focusNode = selection->GetFocusNode();
+    uint32_t focusOffset = selection->FocusOffset();
+    selection->Modify(NS_LITERAL_STRING("extend"),
+                      aDirection,
+                      NS_LITERAL_STRING("character"));
+
+    // If the selection didn't change, (can't extend further), we're done.
+    if (selection->GetFocusNode() == focusNode &&
+        selection->FocusOffset() == focusOffset) {
+      return;
+    }
+
+    // If the changed selection isn't a valid phone number, we're done.
+    nsAutoString selectedText;
+    selection->Stringify(selectedText);
+    nsAutoString phoneRegex(NS_LITERAL_STRING("(^\\+)?[0-9\\s,\\-.()*#pw]{1,30}$"));
+
+    if (!nsContentUtils::IsPatternMatching(selectedText, phoneRegex, doc)) {
+      // Backout the undesired selection extend, (collapse to original
+      // Anchor, extend to original Focus), before exit.
+      selection->Collapse(selection->GetAnchorNode(), selection->AnchorOffset());
+      selection->Extend(focusNode, focusOffset);
+      return;
+    }
+  }
 }
 
 void

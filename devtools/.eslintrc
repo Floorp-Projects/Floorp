@@ -33,7 +33,7 @@
     // Rules from the mozilla plugin
     "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
-    "mozilla/no-cpows-in-tests": 1,
+    "mozilla/no-cpows-in-tests": 2,
     // See bug 1224289.
     "mozilla/reject-importGlobalProperties": 1,
     "mozilla/var-only-at-top-level": 1,

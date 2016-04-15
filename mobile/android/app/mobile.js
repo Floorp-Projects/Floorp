@@ -936,6 +936,10 @@ pref("layout.accessiblecaret.allow_script_change_updates", true);
 // Optionally provide haptic feedback on longPress selection events.
 pref("layout.accessiblecaret.hapticfeedback", true);
 
+// Initial text selection on long-press is enhanced to provide
+// a smarter phone-number selection for direct-dial ActionBar action.
+pref("layout.accessiblecaret.extend_selection_for_phone_number", true);
+
 // Disable sending console to logcat on release builds.
 #ifdef RELEASE_BUILD
 pref("consoleservice.logcat", false);

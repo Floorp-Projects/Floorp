@@ -234,15 +234,16 @@ CustomizeMode.prototype = {
     Task.spawn(function*() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
-        let delayedStartupDeferred = Promise.defer();
-        let delayedStartupObserver = function(aSubject) {
-          if (aSubject == this.window) {
-            Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
-            delayedStartupDeferred.resolve();
-          }
-        }.bind(this);
-        Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
-        yield delayedStartupDeferred.promise;
+        yield new Promise(resolve => {
+          let delayedStartupObserver = aSubject => {
+            if (aSubject == this.window) {
+              Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+              resolve();
+            }
+          };
+
+          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
+        });
       }
 
       let toolbarVisibilityBtn = document.getElementById(kToolbarVisibilityBtn);
@@ -562,33 +563,35 @@ CustomizeMode.prototype = {
    * excluding certain styles while in any phase of customize mode.
    */
   _doTransition: function(aEntering) {
-    let deferred = Promise.defer();
     let deck = this.document.getElementById("content-deck");
-
-    let customizeTransitionEnd = (aEvent) => {
-      if (aEvent != "timedout" &&
-          (aEvent.originalTarget != deck || aEvent.propertyName != "margin-left")) {
-        return;
-      }
-      this.window.clearTimeout(catchAllTimeout);
-      // We request an animation frame to do the final stage of the transition
-      // to improve perceived performance. (bug 962677)
-      this.window.requestAnimationFrame(() => {
-        deck.removeEventListener("transitionend", customizeTransitionEnd);
-
-        if (!aEntering) {
-          this.document.documentElement.removeAttribute("customize-exiting");
-          this.document.documentElement.removeAttribute("customizing");
-        } else {
-          this.document.documentElement.setAttribute("customize-entered", true);
-          this.document.documentElement.removeAttribute("customize-entering");
+    let customizeTransitionEndPromise = new Promise(resolve => {
+      let customizeTransitionEnd = (aEvent) => {
+        if (aEvent != "timedout" &&
+            (aEvent.originalTarget != deck || aEvent.propertyName != "margin-left")) {
+          return;
         }
-        CustomizableUI.dispatchToolboxEvent("customization-transitionend", aEntering, this.window);
+        this.window.clearTimeout(catchAllTimeout);
+        // We request an animation frame to do the final stage of the transition
+        // to improve perceived performance. (bug 962677)
+        this.window.requestAnimationFrame(() => {
+          deck.removeEventListener("transitionend", customizeTransitionEnd);
 
-        deferred.resolve();
-      });
-    };
-    deck.addEventListener("transitionend", customizeTransitionEnd);
+          if (!aEntering) {
+            this.document.documentElement.removeAttribute("customize-exiting");
+            this.document.documentElement.removeAttribute("customizing");
+          } else {
+            this.document.documentElement.setAttribute("customize-entered", true);
+            this.document.documentElement.removeAttribute("customize-entering");
+          }
+          CustomizableUI.dispatchToolboxEvent("customization-transitionend", aEntering, this.window);
+
+          resolve();
+        });
+      };
+      deck.addEventListener("transitionend", customizeTransitionEnd);
+      let catchAll = () => customizeTransitionEnd("timedout");
+      let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
+    });
 
     if (gDisableAnimation) {
       this.document.getElementById("tab-view-deck").setAttribute("fastcustomizeanimation", true);
@@ -602,9 +605,7 @@ CustomizeMode.prototype = {
       this.document.documentElement.removeAttribute("customize-entered");
     }
 
-    let catchAll = () => customizeTransitionEnd("timedout");
-    let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
-    return deferred.promise;
+    return customizeTransitionEndPromise;
   },
 
   updateLWTStyling: function(aData) {
@@ -868,14 +869,12 @@ CustomizeMode.prototype = {
   },
 
   deferredWrapToolbarItem: function(aNode, aPlace) {
-    let deferred = Promise.defer();
-
-    dispatchFunction(function() {
-      let wrapper = this.wrapToolbarItem(aNode, aPlace);
-      deferred.resolve(wrapper);
-    }.bind(this));
-
-    return deferred.promise;
+    return new Promise(resolve => {
+      dispatchFunction(() => {
+        let wrapper = this.wrapToolbarItem(aNode, aPlace);
+        resolve(wrapper);
+      });
+    });
   },
 
   wrapToolbarItem: function(aNode, aPlace) {
@@ -985,17 +984,17 @@ CustomizeMode.prototype = {
   },
 
   deferredUnwrapToolbarItem: function(aWrapper) {
-    let deferred = Promise.defer();
-    dispatchFunction(function() {
-      let item = null;
-      try {
-        item = this.unwrapToolbarItem(aWrapper);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-      deferred.resolve(item);
-    }.bind(this));
-    return deferred.promise;
+    return new Promise(resolve => {
+      dispatchFunction(() => {
+        let item = null;
+        try {
+          item = this.unwrapToolbarItem(aWrapper);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+        resolve(item);
+      });
+    });
   },
 
   unwrapToolbarItem: function(aWrapper) {

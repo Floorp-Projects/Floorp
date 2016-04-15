@@ -421,7 +421,8 @@ FxAccountsInternal.prototype = {
       return Promise.reject(new Error(
         "checkEmailStatus called without a session token"));
     }
-    return this.fxAccountsClient.recoveryEmailStatus(sessionToken, options);
+    return this.fxAccountsClient.recoveryEmailStatus(sessionToken,
+      options).catch(error => this._handleTokenError(error));
   },
 
   /**
@@ -673,10 +674,11 @@ FxAccountsInternal.prototype = {
         return null;
       }
 
-      if (!this.isUserEmailVerified(data)) {
-        log.trace("checkVerificationStatus - forcing verification status check");
-        this.pollEmailStatus(currentState, data.sessionToken, "push");
-      }
+      // Always check the verification status, even if the local state indicates
+      // we're already verified. If the user changed their password, the check
+      // will fail, and we'll enter the reauth state.
+      log.trace("checkVerificationStatus - forcing verification status check");
+      return this.pollEmailStatus(currentState, data.sessionToken, "push");
     });
   },
 
@@ -1099,7 +1101,9 @@ FxAccountsInternal.prototype = {
       }
     }
 
-    this.checkEmailStatus(sessionToken, { reason: why })
+    // We return a promise for testing only. Other callers can ignore this,
+    // since verification polling continues in the background.
+    return this.checkEmailStatus(sessionToken, { reason: why })
       .then((response) => {
         log.debug("checkEmailStatus -> " + JSON.stringify(response));
         if (response && response.verified) {

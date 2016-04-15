@@ -76,13 +76,6 @@
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
 
-  <!-- https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-settings
-       This should be kept in sync with the "app.feedbackURL" pref defined in mobile.js -->
-  <string name="feedback_link">https://input.mozilla.org/feedback/android/&formatS1;/&formatS2;/?utm_source=feedback-settings</string>
-
-  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/faq -->
-  <string name="faq_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/faq</string>
-
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/ -->
   <string name="help_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/</string>
   <string name="help_menu">&help_menu;</string>
@@ -136,14 +129,14 @@
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
   <string name="pref_category_general">&pref_category_general;</string>
-  <string name="pref_category_general_summary">&pref_category_general_summary2;</string>
+  <string name="pref_category_general_summary">&pref_category_general_summary3;</string>
 
   <string name="pref_category_search">&pref_category_search3;</string>
-  <string name="pref_category_search_summary">&pref_category_search_summary;</string>
+  <string name="pref_category_search_summary">&pref_category_search_summary2;</string>
   <string name="pref_category_accessibility">&pref_category_accessibility;</string>
   <string name="pref_category_accessibility_summary">&pref_category_accessibility_summary2;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
-  <string name="pref_category_privacy_summary">&pref_category_privacy_summary3;</string>
+  <string name="pref_category_privacy_summary">&pref_category_privacy_summary4;</string>
   <string name="pref_category_vendor">&pref_category_vendor2;</string>
   <string name="pref_category_vendor_summary">&pref_category_vendor_summary2;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
@@ -161,7 +154,7 @@
   <string name="locale_system_default">&locale_system_default;</string>
 
   <string name="pref_category_advanced">&pref_category_advanced;</string>
-  <string name="pref_category_advanced_summary">&pref_category_advanced_summary2;</string>
+  <string name="pref_category_advanced_summary">&pref_category_advanced_summary3;</string>
   <string name="pref_developer_remotedebugging_usb">&pref_developer_remotedebugging_usb;</string>
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
   <string name="pref_developer_remotedebugging_wifi_disabled_summary">&pref_developer_remotedebugging_wifi_disabled_summary;</string>
@@ -306,9 +299,18 @@
   <string name="content_notification_action_settings">&content_notification_action_settings;</string>
   <string name="content_notification_updated_on">&content_notification_updated_on;</string>
 
+  <string name="pref_default_browser">&pref_default_browser;</string>
+
   <string name="pref_about_firefox">&pref_about_firefox;</string>
+
   <string name="pref_vendor_faqs">&pref_vendor_faqs;</string>
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/faq -->
+  <string name="faq_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/faq</string>
+
   <string name="pref_vendor_feedback">&pref_vendor_feedback;</string>
+  <!-- https://input.mozilla.org/feedback/android/%VERSION%/%CHANNEL%/?utm_source=feedback-settings
+       This should be kept in sync with the "app.feedbackURL" pref defined in mobile.js -->
+  <string name="feedback_link">https://input.mozilla.org/feedback/android/&formatS1;/&formatS2;/?utm_source=feedback-settings</string>
 
   <string name="pref_dialog_set_default">&pref_dialog_set_default;</string>
   <string name="pref_default">&pref_dialog_default;</string>

@@ -1438,6 +1438,33 @@ add_test(function test_getSignedInUserProfile_no_account_data() {
 
 });
 
+add_task(function* test_checkVerificationStatusFailed() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+
+  let client = fxa.internal.fxAccountsClient;
+  client.recoveryEmailStatus = () => {
+    return Promise.reject({
+      code: 401,
+      errno: ERRNO_INVALID_AUTH_TOKEN,
+    });
+  };
+  client.accountStatus = () => Promise.resolve(true);
+
+  yield fxa.setSignedInUser(alice);
+  let user = yield fxa.internal.getUserAccountData();
+  do_check_neq(alice.sessionToken, null);
+  do_check_eq(user.email, alice.email);
+  do_check_eq(user.verified, true);
+
+  yield fxa.checkVerificationStatus();
+
+  user = yield fxa.internal.getUserAccountData();
+  do_check_eq(user.email, alice.email);
+  do_check_eq(user.sessionToken, null);
+});
+
 /*
  * End of tests.
  * Utility functions follow.
