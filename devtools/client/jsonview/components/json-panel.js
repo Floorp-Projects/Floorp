@@ -15,6 +15,8 @@ define(function(require, exports, module) {
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
 
   const { div } = dom;
+  const AUTO_EXPAND_MAX_SIZE = 100 * 1024;
+  const AUTO_EXPAND_MAX_LEVEL = 7;
 
   /**
    * This template represents the 'JSON' panel. The panel is
@@ -28,6 +30,7 @@ define(function(require, exports, module) {
         PropTypes.array,
         PropTypes.object
       ]),
+      jsonTextLength: PropTypes.number,
       searchFilter: PropTypes.string,
       actions: PropTypes.object,
     },
@@ -59,6 +62,28 @@ define(function(require, exports, module) {
       return json.indexOf(this.props.searchFilter) >= 0;
     },
 
+    getExpandedNodes: function(object, path = "", level = 0) {
+      if (typeof object != "object") {
+        return null;
+      }
+
+      if (level > AUTO_EXPAND_MAX_LEVEL) {
+        return null;
+      }
+
+      let expandedNodes = new Set();
+      for (let prop in object) {
+        let nodePath = path + "/" + prop;
+        expandedNodes.add(nodePath);
+
+        let nodes = this.getExpandedNodes(object[prop], nodePath, level + 1);
+        if (nodes) {
+          expandedNodes = new Set([...expandedNodes, ...nodes]);
+        }
+      }
+      return expandedNodes;
+    },
+
     renderValue: props => {
       let member = props.member;
 
@@ -79,13 +104,20 @@ define(function(require, exports, module) {
         width: "100%"
       }];
 
+      // Expand the document by default if its size isn't bigger than 100KB.
+      let expandedNodes = new Set();
+      if (this.props.jsonTextLength <= AUTO_EXPAND_MAX_SIZE) {
+        expandedNodes = this.getExpandedNodes(this.props.data);
+      }
+
       // Render tree component.
       return TreeView({
         object: this.props.data,
         mode: "tiny",
         onFilter: this.onFilter.bind(this),
         columns: columns,
-        renderValue: this.renderValue
+        renderValue: this.renderValue,
+        expandedNodes: expandedNodes,
       });
     },
 
