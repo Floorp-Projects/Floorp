@@ -39,6 +39,9 @@ function checkExpectedSelectState(doc, state, action) {
         is(item, items[i], "Checking item #" + i + " label");
     }
 
+    // XXX check focused element
+    // XXX check button labels?
+
     /* Actions */
 
     if (action.selectItem) {
@@ -65,76 +68,13 @@ function checkExpectedSelectState(doc, state, action) {
 function handleDialog(doc, testNum) {
     ok(true, "--- handleDialog for test " + testNum + " ---");
 
-    let state, action;
-
-    // XXX check focused element
-    // XXX check button labels?
-
-    switch(testNum) {
-      case 1:
-        // Select (0 items)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : [],
-        };
-        action = {
-            buttonClick: "ok",
-        };
-        checkExpectedSelectState(doc, state, action);
-        break;
-
-      case 2:
-        // Select (3 items, default ok)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        action = {
-            buttonClick: "ok",
-        };
-        checkExpectedSelectState(doc, state, action);
-        break;
-
-      case 3:
-        // Select (3 items, change selection, ok)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        action = {
-            buttonClick: "ok",
-            selectItem: 1,
-        };
-        checkExpectedSelectState(doc, state, action);
-        break;
-
-      case 4:
-        // Select (3 items, cancel)
-        state = {
-            msg   : "This is the select text.",
-            title : "TestTitle",
-            items : ["one", "two", "three"],
-        };
-        action = {
-            buttonClick: "cancel",
-        };
-        checkExpectedSelectState(doc, state, action);
-        break;
-
-      default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
-    }
-
-    ok(true, "handleDialog done");
+    checkExpectedSelectState(doc, state, action);
 }
 
 let testNum   = 0;
 let selectVal = {};
 let isOK;
+let state, action;
 
 isSelectDialog = true;
 isTabModal = false;
@@ -143,6 +83,14 @@ usePromptService = true;
 // ===== test 1 =====
 // Select (0 items, ok)
 testNum++;
+state = {
+    msg   : "This is the select text.",
+    title : "TestTitle",
+    items : [],
+};
+action = {
+    buttonClick: "ok",
+};
 startCallbackTimer();
 items = [];
 selectVal.value = null; // outparam, just making sure.
@@ -154,6 +102,14 @@ ok(didDialog, "handleDialog was invoked");
 // ===== test 2 =====
 // Select (3 items, ok)
 testNum++;
+state = {
+    msg   : "This is the select text.",
+    title : "TestTitle",
+    items : ["one", "two", "three"],
+};
+action = {
+    buttonClick: "ok",
+};
 startCallbackTimer();
 items = ["one", "two", "three"];
 selectVal.value = null; // outparam, just making sure.
@@ -165,6 +121,15 @@ ok(didDialog, "handleDialog was invoked");
 // ===== test 3 =====
 // Select (3 items, selection changed, ok)
 testNum++;
+state = {
+    msg   : "This is the select text.",
+    title : "TestTitle",
+    items : ["one", "two", "three"],
+};
+action = {
+    buttonClick: "ok",
+    selectItem: 1,
+};
 startCallbackTimer();
 items = ["one", "two", "three"];
 selectVal.value = null; // outparam, just making sure.
@@ -176,6 +141,14 @@ ok(didDialog, "handleDialog was invoked");
 // ===== test 4 =====
 // Select (3 items, cancel)
 testNum++;
+state = {
+    msg   : "This is the select text.",
+    title : "TestTitle",
+    items : ["one", "two", "three"],
+};
+action = {
+    buttonClick: "cancel",
+};
 startCallbackTimer();
 items = ["one", "two", "three"];
 selectVal.value = null; // outparam, just making sure.
