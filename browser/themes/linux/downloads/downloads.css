@@ -79,6 +79,15 @@
 .downloadButton.downloadIconShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
+@itemNotFinished@:hover .downloadButton.downloadIconShow {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+@itemNotFinished@:hover .downloadButton.downloadIconShow:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+@itemNotFinished@:hover .downloadButton.downloadIconShow:active {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
+}
 @notKeyfocus@ @itemFinished@:hover .downloadButton.downloadIconShow {
   -moz-image-region: rect(16px, 96px, 32px, 80px);
 }

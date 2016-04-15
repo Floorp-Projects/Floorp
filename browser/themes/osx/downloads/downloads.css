@@ -92,12 +92,15 @@
 .downloadButton.downloadIconShow {
   -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow,
 @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:hover,
 @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:hover {
   -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
+@notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:active,
 @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:active {
   -moz-image-region: rect(16px, 64px, 32px, 48px);
 }
@@ -179,12 +182,15 @@
   .downloadButton.downloadIconShow {
     -moz-image-region: rect(32px, 32px, 64px, 0px);
   }
+  @notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow,
   @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow {
     -moz-image-region: rect(32px, 64px, 64px, 32px);
   }
+  @notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:hover,
   @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:hover {
     -moz-image-region: rect(32px, 96px, 64px, 64px);
   }
+  @notKeyfocus@ @itemNotFinished@:hover .downloadButton.downloadIconShow:active,
   @keyfocus@ @itemFinished@:hover:not([selected]) .downloadButton.downloadIconShow:active {
     -moz-image-region: rect(32px, 128px, 64px, 96px);
   }
