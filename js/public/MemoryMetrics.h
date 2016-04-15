@@ -737,6 +737,8 @@ struct CompartmentStats
         MOZ_ASSERT(!other.isTotals);
     }
 
+    CompartmentStats(const CompartmentStats&) = delete; // disallow copying
+
     ~CompartmentStats() {
         // |allClasses| is usually deleted and set to nullptr before this
         // destructor runs. But there are failure cases due to OOMs that may
