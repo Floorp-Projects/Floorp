@@ -1027,9 +1027,7 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
-  VideoInfo info;
-  info.mDisplay = mTrackInfo->GetAsVideoInfo()->mDisplay;
-  info.mImage = mTrackInfo->GetAsVideoInfo()->mImage;
+  VideoInfo info(*mTrackInfo->GetAsVideoInfo());
   RefPtr<VideoData> data = VideoData::Create(info,
                                              mImageContainer,
                                              0, // Filled later by caller.
@@ -1038,7 +1036,7 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
                                              b,
                                              0, // Filled later by caller.
                                              -1,
-                                             info.mImage);
+                                             info.ImageRect());
 
   LOG("YUV420 VideoData: disp width %d, height %d, pic width %d, height %d, time %ld",
       info.mDisplay.width, info.mDisplay.height, info.mImage.width,
