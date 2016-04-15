@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_TVTypes_h
 #define mozilla_dom_TVTypes_h
 
+#include "mozilla/dom/PTVTypes.h"
 #include "mozilla/layers/GonkNativeHandle.h"
 #include "mozilla/Tuple.h"
 #include "nsITVService.h"

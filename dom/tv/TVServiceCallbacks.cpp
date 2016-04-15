@@ -68,7 +68,7 @@ TVServiceSourceSetterCallback::NotifySuccess(nsIArray* aDataList)
     do_QueryElementAt(aDataList, 0);
   if (NS_WARN_IF(!handleData)) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    return rv;
+    return NS_ERROR_INVALID_ARG;
   }
 
   rv = mTuner->SetCurrentSource(mSourceType, handleData);

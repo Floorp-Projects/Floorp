@@ -867,6 +867,12 @@ private:
 
   virtual bool RecvPPresentationConstructor(PPresentationParent* aActor) override;
 
+  virtual PTVParent* AllocPTVParent() override;
+
+  virtual bool DeallocPTVParent(PTVParent* aActor) override;
+
+  virtual bool RecvPTVConstructor(PTVParent* aActor) override;
+
   virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent() override;
 
   virtual bool
