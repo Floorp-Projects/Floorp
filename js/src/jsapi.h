@@ -837,17 +837,7 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 
 #define JSFUN_CONSTRUCTOR      0x400    /* native that can be called as a ctor */
 
-/*
- * Specify a generic native prototype methods, i.e., methods of a class
- * prototype that are exposed as static methods taking an extra leading
- * argument: the generic |this| parameter.
- *
- * If you set this flag in a JSFunctionSpec struct's flags initializer, then
- * that struct must live at least as long as the native static method object
- * created due to this flag by JS_DefineFunctions or JS_InitClass.  Typically
- * JSFunctionSpec structs are allocated in static arrays.
- */
-#define JSFUN_GENERIC_NATIVE   0x800
+//                             0x800    /* Unused */
 
 #define JSFUN_HAS_REST        0x1000    /* function has ...rest parameter. */
 
