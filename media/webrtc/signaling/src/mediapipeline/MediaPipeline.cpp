@@ -129,6 +129,17 @@ public:
 
   void QueueVideoChunk(VideoChunk& aChunk, bool aForceBlack)
   {
+    if (aChunk.IsNull()) {
+      return;
+    }
+
+    // We get passed duplicate frames every ~10ms even with no frame change.
+    int32_t serial = aChunk.mFrame.GetImage()->GetSerial();
+    if (serial == last_img_) {
+      return;
+    }
+    last_img_ = serial;
+
     // A throttling limit of 1 allows us to convert 2 frames concurrently.
     // It's short enough to not build up too significant a delay, while
     // giving us a margin to not cause some machines to drop every other frame.
@@ -158,10 +169,6 @@ public:
     }
 #endif
 
-    if (aChunk.IsNull()) {
-      return;
-    }
-
     bool forceBlack = aForceBlack || aChunk.mFrame.GetForceBlack();
 
     if (forceBlack) {
@@ -180,13 +187,6 @@ public:
       disabled_frame_sent_ = true;
     } else {
       disabled_frame_sent_ = false;
-
-      // We get passed duplicate frames every ~10ms even with no frame change.
-      int32_t serial = aChunk.mFrame.GetImage()->GetSerial();
-      if (serial == last_img_) {
-        return;
-      }
-      last_img_ = serial;
     }
 
     ++mLength; // Atomic
