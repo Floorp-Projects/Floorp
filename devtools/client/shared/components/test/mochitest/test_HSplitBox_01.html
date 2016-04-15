@@ -9,6 +9,7 @@ Basic tests for the HSplitBox component.
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript "src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://devtools/skin/splitters.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://devtools/skin/components-h-split-box.css" type="text/css"/>
   <style>
     html {
@@ -77,7 +78,7 @@ window.onload = Task.async(function* () {
     // Send a mouse down on the splitter, and then move the mouse a couple
     // times. Now we should get resizes.
 
-    const splitter = document.querySelector(".h-split-box-splitter");
+    const splitter = document.querySelector(".devtools-side-splitter");
     ok(splitter, "Should get our splitter");
 
     synthesizeMouseAtCenter(splitter, { button: 0, type: "mousedown" }, window);

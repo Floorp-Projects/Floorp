@@ -64,17 +64,19 @@
   .devtools-responsive-container > .devtools-side-splitter {
     /* This is a normally vertical splitter, but we have turned it horizontal
        due to the smaller resolution */
-    min-height: 3px;
-    height: 3px;
-    margin-top: -3px;
+    min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+    border-top-width: var(--devtools-splitter-top-width);
+    border-bottom-width: var(--devtools-splitter-bottom-width);
+    margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+    margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
 
     /* Reset the vertical splitter styles */
-    border-width: 0;
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    -moz-margin-start: 0;
-    width: auto;
     min-width: 0;
+    border-inline-end-width: 0;
+    border-inline-start-width: 0;
+    margin-inline-end: 0;
+    margin-inline-start: 0;
 
     /* In some edge case the cursor is not changed to n-resize */
     cursor: n-resize;
@@ -1123,7 +1125,7 @@
 /* Table body */
 
 .table-widget-body > .devtools-side-splitter {
-  border: none;
+  background-color: transparent;
 }
 
 .table-widget-body {
