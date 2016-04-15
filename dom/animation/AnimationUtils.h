@@ -50,14 +50,6 @@ public:
                                        const nsIContent* aContent = nullptr);
 
   /**
-   * Parses a CSS <single-transition-timing-function> value from
-   * aEasing into a ComputedTimingFunction.  If parsing fails, Nothing() will
-   * be returned.
-   */
-  static Maybe<ComputedTimingFunction>
-  ParseEasing(const nsAString& aEasing, nsIDocument* aDocument);
-
-  /**
    * Get the document from the JS context to use when parsing CSS properties.
    */
   static nsIDocument*
