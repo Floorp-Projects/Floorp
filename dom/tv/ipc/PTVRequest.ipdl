@@ -1,0 +1,60 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PTV;
+include PTVTypes;
+
+namespace mozilla {
+namespace dom {
+
+
+struct TVSuccessResponse {
+};
+
+struct TVErrorResponse {
+  uint16_t errorCode;
+};
+
+struct TVGetTunersResponse {
+  TVIPCTunerData[] tuners;
+};
+
+struct TVSetSourceResponse {
+  TVIPCGonkNativeHandleData streamHandle;
+};
+
+struct TVSetChannelResponse {
+  TVIPCChannelData channel;
+};
+
+struct TVGetChannelsResponse {
+  TVIPCChannelData[] channels;
+};
+
+struct TVGetProgramsResponse {
+  TVIPCProgramData[] programs;
+};
+
+union TVIPCResponse {
+  TVSuccessResponse;
+  TVErrorResponse;
+  TVGetTunersResponse;
+  TVSetSourceResponse;
+  TVSetChannelResponse;
+  TVGetChannelsResponse;
+  TVGetProgramsResponse;
+};
+
+protocol PTVRequest
+{
+  manager PTV;
+
+child:
+  async __delete__(TVIPCResponse aResponse);
+};
+
+} // namespace dom
+} // namespace mozilla

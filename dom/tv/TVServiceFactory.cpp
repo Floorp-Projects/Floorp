@@ -9,6 +9,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "gonk/TVGonkService.h"
 #endif
+#include "ipc/TVIPCService.h"
 #include "nsITVService.h"
 #include "nsITVSimulatorService.h"
 #include "nsServiceManagerUtils.h"
@@ -21,6 +22,11 @@ namespace dom {
 TVServiceFactory::AutoCreateTVService()
 {
   nsCOMPtr<nsITVService> service;
+
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
+    service = new TVIPCService();
+    return service.forget();
+  }
 
 #ifdef MOZ_WIDGET_GONK
   service = new TVGonkService();

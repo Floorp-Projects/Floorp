@@ -181,6 +181,7 @@
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
+#include "mozilla/dom/PTVChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -1693,6 +1694,19 @@ ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
 
   NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER)));
 
+  return true;
+}
+
+PTVChild*
+ContentChild::AllocPTVChild()
+{
+  NS_NOTREACHED("We should never be manually allocating PTVChild actors");
+  return nullptr;
+}
+
+bool
+ContentChild::DeallocPTVChild(PTVChild* aActor)
+{
   return true;
 }
 
