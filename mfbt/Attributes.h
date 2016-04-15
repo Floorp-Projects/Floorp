@@ -522,6 +522,9 @@
  *   template arguments are required to be safe to move in memory using
  *   memmove().  Passing MOZ_NON_MEMMOVABLE types to these templates is a
  *   compile time error.
+ * MOZ_NEEDS_MEMMOVABLE_MEMBERS: Applies to class declarations where each member
+ *   must be safe to move in memory using memmove().  MOZ_NON_MEMMOVABLE types
+ *   used in members of these classes are compile time errors.
  * MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS: Applies to template class
  *   declarations where an instance of the template should be considered, for
  *   static analysis purposes, to inherit any type annotations (such as
@@ -555,6 +558,7 @@
 #  define MOZ_NEEDS_NO_VTABLE_TYPE __attribute__((annotate("moz_needs_no_vtable_type")))
 #  define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE __attribute__((annotate("moz_needs_memmovable_type")))
+#  define MOZ_NEEDS_MEMMOVABLE_MEMBERS __attribute__((annotate("moz_needs_memmovable_members")))
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS \
     __attribute__((annotate("moz_inherit_type_annotations_from_template_args")))
 #  define MOZ_NON_AUTOABLE __attribute__((annotate("moz_non_autoable")))
@@ -587,6 +591,7 @@
 #  define MOZ_NEEDS_NO_VTABLE_TYPE /* nothing */
 #  define MOZ_NON_MEMMOVABLE /* nothing */
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE /* nothing */
+#  define MOZ_NEEDS_MEMMOVABLE_MEMBERS /* nothing */
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #  define MOZ_NON_AUTOABLE /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
