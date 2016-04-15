@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(function* test_switchtab_override_keynav() {
-  let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   info("Opening first tab");
   let tab = gBrowser.addTab(testURL);

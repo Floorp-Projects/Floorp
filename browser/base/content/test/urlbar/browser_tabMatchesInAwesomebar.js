@@ -7,8 +7,8 @@
 requestLongerTimeout(2);
 
 const TEST_URL_BASES = [
-  "http://example.org/browser/browser/base/content/test/general/dummy_page.html#tabmatch",
-  "http://example.org/browser/browser/base/content/test/general/moz.png#tabmatch"
+  "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html#tabmatch",
+  "http://example.org/browser/browser/base/content/test/urlbar/moz.png#tabmatch"
 ];
 
 var gController = Cc["@mozilla.org/autocomplete/controller;1"].

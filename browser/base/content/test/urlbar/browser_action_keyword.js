@@ -78,7 +78,7 @@ add_task(function*() {
   uri = NetUtil.newURI(result.getAttribute("url"));
   is(uri.spec, makeActionURI("keyword", {url: "http://example.com/?q=somethingmore", input: "keyword somethingmore"}).spec, "Expect correct url");
 
-  tabPromise = promiseWaitForEvent(gBrowser.tabContainer, "TabOpen");
+  tabPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
   EventUtils.synthesizeMouseAtCenter(result, {button: 1});
   let tabOpenEvent = yield tabPromise;
   let newTab = tabOpenEvent.target;

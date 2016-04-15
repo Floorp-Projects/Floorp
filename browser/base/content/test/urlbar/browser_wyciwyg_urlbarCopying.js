@@ -17,7 +17,7 @@ function testURLBarCopy(targetValue) {
 }
 
 add_task(function* () {
-  const url = "http://mochi.test:8888/browser/browser/base/content/test/general/test_wyciwyg_copying.html";
+  const url = "http://mochi.test:8888/browser/browser/base/content/test/urlbar/test_wyciwyg_copying.html";
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   yield BrowserTestUtils.synthesizeMouseAtCenter("#btn", {}, tab.linkedBrowser);

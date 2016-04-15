@@ -1,5 +1,5 @@
 add_task(function* test_remotetab_opens() {
-  const url = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  const url = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
   yield BrowserTestUtils.withNewTab({url: "about:robots", gBrowser}, function* () {
     // Set the urlbar to include the moz-action
     gURLBar.value = "moz-action:remotetab," + JSON.stringify({ url });

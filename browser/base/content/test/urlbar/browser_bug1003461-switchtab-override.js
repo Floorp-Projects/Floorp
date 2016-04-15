@@ -10,7 +10,7 @@ add_task(function* test_switchtab_override() {
     Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
   });
 
-  let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   info("Opening first tab");
   let tab = gBrowser.addTab(testURL);

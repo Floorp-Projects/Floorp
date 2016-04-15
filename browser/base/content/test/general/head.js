@@ -936,15 +936,6 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   return new Promise(resolve => executeSoon(resolve));
 }
 
-function makeActionURI(action, params) {
-  let encodedParams = {};
-  for (let key in params) {
-    encodedParams[key] = encodeURIComponent(params[key]);
-  }
-  let url = "moz-action:" + action + "," + JSON.stringify(encodedParams);
-  return NetUtil.newURI(url);
-}
-
 function is_hidden(element) {
   var style = element.ownerDocument.defaultView.getComputedStyle(element, "");
   if (style.display == "none")
@@ -1019,28 +1010,6 @@ function promiseNotificationShown(notification) {
   let panelPromise = promisePopupShown(win.PopupNotifications.panel);
   notification.reshow();
   return panelPromise;
-}
-
-function promiseSearchComplete(win = window) {
-  return promisePopupShown(win.gURLBar.popup).then(() => {
-    function searchIsComplete() {
-      return win.gURLBar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-    }
-
-    // Wait until there are at least two matches.
-    return new Promise(resolve => waitForCondition(searchIsComplete, resolve));
-  });
-}
-
-function promiseAutocompleteResultPopup(inputText, win = window) {
-  waitForFocus(() => {
-    win.gURLBar.focus();
-    win.gURLBar.value = inputText;
-    win.gURLBar.controller.startSearch(inputText);
-  }, win);
-
-  return promiseSearchComplete(win);
 }
 
 /**
