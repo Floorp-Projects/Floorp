@@ -581,7 +581,7 @@ class TransportAndDataEvent : public ChannelEvent
   void Run()
   {
     mChild->OnTransportAndData(mChannelStatus, mTransportStatus, mProgress,
-                               mProgressMax, mData, mOffset, mCount);
+                               mProgressMax, mOffset, mCount, mData);
   }
  private:
   HttpChannelChild* mChild;
@@ -599,9 +599,9 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
                                          const nsresult& transportStatus,
                                          const uint64_t& progress,
                                          const uint64_t& progressMax,
-                                         const nsCString& data,
                                          const uint64_t& offset,
-                                         const uint32_t& count)
+                                         const uint32_t& count,
+                                         const nsCString& data)
 {
   LOG(("HttpChannelChild::RecvOnTransportAndData [this=%p]\n", this));
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
@@ -656,9 +656,9 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
                                      const nsresult& transportStatus,
                                      const uint64_t progress,
                                      const uint64_t& progressMax,
-                                     const nsCString& data,
                                      const uint64_t& offset,
-                                     const uint32_t& count)
+                                     const uint32_t& count,
+                                     const nsCString& data)
 {
   LOG(("HttpChannelChild::OnTransportAndData [this=%p]\n", this));
 

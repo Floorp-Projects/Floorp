@@ -784,7 +784,7 @@ video > .caption-box {
     list-style-type: disclosure-open;
   }
 
-  details > summary:first-of-type > * {
+  details > summary:first-of-type > *|* {
     /* Cancel "list-style-position: inside" inherited from summary. */
     list-style-position: initial;
   }

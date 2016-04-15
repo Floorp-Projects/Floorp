@@ -1293,14 +1293,14 @@ BaseShape::adoptUnowned(UnownedBaseShape* other)
 /* static */ UnownedBaseShape*
 BaseShape::getUnowned(ExclusiveContext* cx, StackBaseShape& base)
 {
-    BaseShapeSet& table = cx->compartment()->baseShapes;
+    auto& table = cx->compartment()->baseShapes;
 
     if (!table.initialized() && !table.init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    DependentAddPtr<BaseShapeSet> p(cx, table, base);
+    auto p = MakeDependentAddPtr(cx, table, base);
     if (p)
         return *p;
 
@@ -1359,12 +1359,6 @@ BaseShape::traceShapeTable(JSTracer* trc)
         table().trace(trc);
 }
 
-void
-JSCompartment::sweepBaseShapeTable()
-{
-    baseShapes.sweep();
-}
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 
 void
@@ -1373,7 +1367,7 @@ JSCompartment::checkBaseShapeTableAfterMovingGC()
     if (!baseShapes.initialized())
         return;
 
-    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
+    for (decltype(baseShapes)::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape* base = e.front().unbarrieredGet();
         CheckGCThingAfterMovingGC(base);
 
@@ -1441,7 +1435,7 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
      * initialShapes that points into the nursery, and that the hash table
      * entries are discoverable.
      */
-    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+    for (decltype(initialShapes)::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
         TaggedProto proto = entry.proto.unbarrieredGet();
         Shape* shape = entry.shape.unbarrieredGet();
@@ -1480,16 +1474,15 @@ EmptyShape::getInitialShape(ExclusiveContext* cx, const Class* clasp, TaggedProt
 {
     MOZ_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
 
-    InitialShapeSet& table = cx->compartment()->initialShapes;
+    auto& table = cx->compartment()->initialShapes;
 
     if (!table.initialized() && !table.init()) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    typedef InitialShapeEntry::Lookup Lookup;
-    DependentAddPtr<InitialShapeSet>
-        p(cx, table, Lookup(clasp, proto, nfixed, objectFlags));
+    using Lookup = InitialShapeEntry::Lookup;
+    auto p = MakeDependentAddPtr(cx, table, Lookup(clasp, proto, nfixed, objectFlags));
     if (p)
         return p->shape;
 
@@ -1588,18 +1581,12 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
 }
 
 void
-JSCompartment::sweepInitialShapeTable()
-{
-    initialShapes.sweep();
-}
-
-void
 JSCompartment::fixupInitialShapeTable()
 {
     if (!initialShapes.initialized())
         return;
 
-    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+    for (decltype(initialShapes)::Enum e(initialShapes); !e.empty(); e.popFront()) {
         // The shape may have been moved, but we can update that in place.
         Shape* shape = e.front().shape.unbarrieredGet();
         if (IsForwarded(shape)) {

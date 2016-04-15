@@ -28770,6 +28770,10 @@
         "url": "/web-animations/animation-model/animation-types/discrete-animation.html"
       },
       {
+        "path": "web-animations/animation-model/animation-types/not-animatable.html",
+        "url": "/web-animations/animation-model/animation-types/not-animatable.html"
+      },
+      {
         "path": "web-animations/animation-timeline/document-timeline.html",
         "url": "/web-animations/animation-timeline/document-timeline.html"
       },

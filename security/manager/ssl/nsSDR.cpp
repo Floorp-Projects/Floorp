@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsITokenPasswordDialogs.h"
 
@@ -22,6 +23,7 @@
 #include "nsCRT.h"
 #include "nsSDR.h"
 #include "nsNSSComponent.h"
+#include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
 #include "ScopedNSSTypes.h"
 

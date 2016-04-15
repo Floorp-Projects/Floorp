@@ -22,6 +22,9 @@ export GRADLE_MAVEN_REPOSITORY="http://localhost:8081/nexus/content/repositories
 # From here on, just like ../android-api-15-frontend/nightly.
 
 ac_add_options --disable-compile-environment
+unset HOST_CC
+unset HOST_CXX
+
 ac_add_options --disable-tests
 
 ac_add_options --enable-profiling

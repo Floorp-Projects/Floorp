@@ -93,7 +93,6 @@ void dump(const char * name, T * frames, size_t count)
 
   if (count != fwrite(frames, sizeof(T), count, file)) {
     fprintf(stderr, "error writing to %s\n", name);
-    return;
   }
   fclose(file);
 }

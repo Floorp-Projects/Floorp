@@ -10,7 +10,6 @@
 #include "jsfriendapi.h"
 
 #include "gc/Barrier.h"
-#include "js/GCHashTable.h"
 
 namespace js {
 
