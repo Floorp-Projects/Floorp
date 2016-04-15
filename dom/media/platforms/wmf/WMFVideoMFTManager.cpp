@@ -404,12 +404,10 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
 
   UINT32 width = mVideoInfo.mImage.width;
   UINT32 height = mVideoInfo.mImage.height;
-  nsIntRect pictureRegion = mVideoInfo.mImage;
+  nsIntRect pictureRegion = mVideoInfo.ImageRect();
   // Calculate and validate the picture region and frame dimensions after
   // scaling by the pixel aspect ratio.
-  nsIntSize frameSize = nsIntSize(width, height);
-  nsIntSize displaySize = nsIntSize(mVideoInfo.mDisplay.width, mVideoInfo.mDisplay.height);
-  if (!IsValidVideoRegion(frameSize, pictureRegion, displaySize)) {
+  if (!IsValidVideoRegion(mVideoInfo.mImage, pictureRegion, mVideoInfo.mDisplay)) {
     // Video track's frame sizes will overflow. Ignore the video track.
     return E_FAIL;
   }
@@ -518,7 +516,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   VideoData::SetVideoDataToImage(image,
                                  mVideoInfo,
                                  b,
-                                 mVideoInfo.mImage,
+                                 mVideoInfo.ImageRect(),
                                  false);
 
   RefPtr<VideoData> v =
@@ -530,7 +528,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
                                image.forget(),
                                false,
                                -1,
-                               mVideoInfo.mImage);
+                               mVideoInfo.ImageRect());
 
   v.forget(aOutVideoData);
   return S_OK;
@@ -551,7 +549,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
 
   RefPtr<Image> image;
   hr = mDXVA2Manager->CopyToImage(aSample,
-                                  mVideoInfo.mImage,
+                                  mVideoInfo.ImageRect(),
                                   mImageContainer,
                                   getter_AddRefs(image));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -569,7 +567,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
                                                      image.forget(),
                                                      false,
                                                      -1,
-                                                     mVideoInfo.mImage);
+                                                     mVideoInfo.ImageRect());
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);
