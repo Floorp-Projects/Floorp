@@ -32,7 +32,7 @@ function pollDialog(okButton) {
     didDialog = true;
 }
 
-function checkExpectedState(ui, state) {
+function checkExpectedState(ui, state, action) {
 
     // XXX check title? OS X has title in content
     is(ui.infoBody.textContent,       state.msg,         "Checking expected message");
@@ -66,15 +66,61 @@ function checkExpectedState(ui, state) {
     ok(true, "focused element is a " + (e ? e.localName : "<null>"));
     if (isLinux && !e) {
         todo(false, "Focus seems missing on Linux");
-        return;
+    } else {
+        if (isOSX && state.focused && state.focused.localName == "button")
+            ok(SpecialPowers.compare(ui.infoBody, e), "buttons don't focus on OS X");
+        else if (state.focused)
+            ok(SpecialPowers.compare(state.focused, e), "Checking focused element");
+        else
+            is(e, null, "Not expecting a focused element");
     }
 
-    if (isOSX && state.focused && state.focused.localName == "button")
-        ok(SpecialPowers.compare(ui.infoBody, e), "buttons don't focus on OS X");
-    else if (state.focused)
-        ok(SpecialPowers.compare(state.focused, e), "Checking focused element");
-    else
-        is(e, null, "Not expecting a focused element");
+
+    /* Actions */
+
+
+    if (action.setCheckbox) {
+        // Annoyingly, the prompt code is driven by oncommand.
+        ui.checkbox.setChecked(true);
+        ui.checkbox.doCommand();
+    }
+
+    if (action.textField) {
+        ui.loginTextbox.setAttribute("value", action.textField);
+    }
+
+    if (action.passField) {
+        ui.password1Textbox.setAttribute("value", action.passField);
+    }
+
+    switch (action.buttonClick) {
+        case "ok":
+        case 0:
+            ui.button0.click();
+            break;
+        case "cancel":
+        case 1:
+            ui.button1.click();
+            break;
+        case 2:
+            ui.button2.click();
+            break;
+        case "pollOK":
+            // Buttons are disabled at the moment, poll until they're reenabled.
+            // Can't use setInterval here, because the window's in a modal state
+            // and thus DOM events are suppressed.
+            pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            pollTimer.initWithCallback(SpecialPowers.wrapCallback(function() {
+              pollDialog(ui.button0);
+            }),
+                                   100, Ci.nsITimer.TYPE_REPEATING_SLACK);
+            break;
+        default:
+            ok(false, "checkExpectedState action listed unknown button.")
+    }
+
+    if (action.buttonClick != "pollOK")
+        didDialog = true;
 }
 
 
@@ -90,11 +136,7 @@ function handleDialog(ui, testNum) {
     ok(true, "--- handleDialog for test " + testNum +
              " --- (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
-    let textField = ui.loginTextbox;
-    let passField = ui.password1Textbox;
-    let checkbox  = ui.checkbox;
-    let clickOK   = true;
-    let state;
+    let state, action;
 
     switch(testNum) {
       case 1:
@@ -113,7 +155,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 2:
@@ -132,7 +177,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 3:
@@ -151,11 +199,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "ok",
+            setCheckbox: true,
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 4:
@@ -174,7 +222,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 5:
@@ -193,8 +244,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-        clickOK = false;
+        action = {
+            buttonClick: "cancel",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 6:
@@ -213,7 +266,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 7:
@@ -232,8 +288,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-        clickOK = false;
+        action = {
+            buttonClick: "cancel",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 8:
@@ -252,11 +310,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "ok",
+            setCheckbox: true,
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 9:
@@ -275,12 +333,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        clickOK = false;
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "cancel",
+            setCheckbox: true,
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 10:
@@ -299,8 +356,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-        textField.setAttribute("value", "bacon");
+        action = {
+            buttonClick : "ok",
+            textField   : "bacon",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 11:
@@ -319,7 +379,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 12:
@@ -338,8 +401,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-        clickOK = false;
+        action = {
+            buttonClick: "cancel",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 13:
@@ -358,9 +423,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-        textField.setAttribute("value", "bacon");
-        clickOK = false;
+        action = {
+            buttonClick : "cancel",
+            textField   : "bacon",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 14:
@@ -379,11 +446,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "ok",
+            setCheckbox: true,
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 15:
@@ -402,12 +469,11 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        clickOK = false;
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "cancel",
+            setCheckbox: true,
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 16:
@@ -426,13 +492,13 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "newusr");
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick: "ok",
+            setCheckbox: true,
+            textField: "newusr",
+            passField: "newssh",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 17:
@@ -451,15 +517,13 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "newusr");
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
+        action = {
+            buttonClick : "cancel",
+            setCheckbox : true,
+            textField   : "newusr",
+            passField   : "newssh",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 18:
@@ -478,12 +542,12 @@ function handleDialog(ui, testNum) {
             focused     : ui.password1Textbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick : "ok",
+            setCheckbox : true,
+            passField   : "newssh",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 19:
@@ -502,14 +566,12 @@ function handleDialog(ui, testNum) {
             focused     : ui.password1Textbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
+        action = {
+            buttonClick : "cancel",
+            setCheckbox : true,
+            passField   : "newssh",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 20:
@@ -528,9 +590,12 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
+        action = {
+            buttonClick: "ok",
+        };
         is(ui.button0.label, "OK",     "Checking accept-button label");
         is(ui.button1.label, "Cancel", "Checking cancel-button label");
-        checkExpectedState(ui, state);
+        checkExpectedState(ui, state, action);
         break;
 
       case 21:
@@ -549,10 +614,12 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
+        action = {
+            buttonClick: "cancel",
+        };
         is(ui.button0.label, "Yes", "Checking accept-button label");
         is(ui.button1.label, "No",  "Checking cancel-button label");
-        checkExpectedState(ui, state);
-        clickOK = false;
+        checkExpectedState(ui, state, action);
         break;
 
       case 22:
@@ -571,14 +638,14 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
+        action = {
+            buttonClick: "ok",
+            setCheckbox: true,
+        };
         is(ui.button0.label, "butt0", "Checking accept-button label");
         is(ui.button1.label, "butt1", "Checking cancel-button label");
         is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        checkExpectedState(ui, state, action);
         break;
 
       case 23:
@@ -597,17 +664,15 @@ function handleDialog(ui, testNum) {
             focused     : ui.button1, // Default changed!
             defButton   : ui.button1,
         };
+        action = {
+            buttonClick: "cancel",
+            setCheckbox: true,
+        };
         // XXX check button1 is default
         is(ui.button0.label, "butt0", "Checking accept-button label");
         is(ui.button1.label, "butt1", "Checking cancel-button label");
         is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
+        checkExpectedState(ui, state, action);
         break;
 
       case 24:
@@ -626,18 +691,15 @@ function handleDialog(ui, testNum) {
             focused     : ui.button2, // Default changed!
             defButton   : ui.button2,
         };
+        action = {
+            buttonClick: 2,
+            setCheckbox: true,
+        };
         // XXX check button2 is default
         is(ui.button0.label, "butt0", "Checking accept-button label");
         is(ui.button1.label, "butt1", "Checking cancel-button label");
         is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        // XXX how to click button 3?
-        clickOK = false;
+        checkExpectedState(ui, state, action);
         break;
 
       case 25:
@@ -656,7 +718,10 @@ function handleDialog(ui, testNum) {
             focused     : ui.button0,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
+        action = {
+            buttonClick: "ok",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 26:
@@ -681,11 +746,15 @@ function handleDialog(ui, testNum) {
         if (isOSX)
             state.focused = ui.infoBody;
 
+        action = {
+            buttonClick: "pollOK",
+        };
+
         is(ui.button0.label, "OK",     "Checking accept-button label");
         is(ui.button1.label, "Cancel", "Checking cancel-button label");
         is(ui.button0.disabled, true,  "Checking accept-button is disabled");
         is(ui.button1.disabled, false, "Checking cancel-button isn't disabled ");
-        checkExpectedState(ui, state);
+        checkExpectedState(ui, state, action);
         break;
 
 
@@ -705,13 +774,13 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "username");
-        passField.setAttribute("value", "password");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick : "ok",
+            setCheckbox : true,
+            textField   : "username",
+            passField   : "password",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       case 101:
@@ -733,13 +802,13 @@ function handleDialog(ui, testNum) {
             focused     : ui.loginTextbox.inputField,
             defButton   : ui.button0,
         };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "username");
-        passField.setAttribute("value", "password");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
+        action = {
+            buttonClick : "ok",
+            setCheckbox : true,
+            textField   : "username",
+            passField   : "password",
+        };
+        checkExpectedState(ui, state, action);
         break;
 
       default:
@@ -747,27 +816,7 @@ function handleDialog(ui, testNum) {
         break;
     }
 
-    if (testNum == 24) {
-        ui.button2.click();
-    } else if (testNum == 26) {
-        // Buttons are disabled at the moment, poll until they're reenabled.
-        // Can't use setInterval here, because the window's in a modal state
-        // and thus DOM events are suppressed.
-        pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(SpecialPowers.wrapCallback(function() {
-          pollDialog(ui.button0);
-        }),
-                                   100, Ci.nsITimer.TYPE_REPEATING_SLACK);
-        return;
-    } else {
-        if (clickOK)
-            ui.button0.click();
-        else
-            ui.button1.click();
-    }
-
     ok(true, "handleDialog done");
-    didDialog = true;
 }
 
 
