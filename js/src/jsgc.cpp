@@ -2448,11 +2448,10 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
     sweepTypesAfterCompacting(zone);
     zone->sweepBreakpoints(fop);
     zone->sweepWeakMaps();
+    for (auto* cache : zone->weakCaches_)
+        cache->sweep();
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-        c->sweepInnerViews();
-        c->sweepBaseShapeTable();
-        c->sweepInitialShapeTable();
         c->objectGroups.sweep(fop);
         c->sweepRegExps();
         c->sweepSavedStacks();
@@ -5023,20 +5022,44 @@ class GCSweepTask : public GCParallelTask
         AutoSetThreadIsSweeping threadIsSweeping;
         GCParallelTask::runFromHelperThread();
     }
+    GCSweepTask(const GCSweepTask&) = delete;
+
   protected:
     JSRuntime* runtime;
+
   public:
     explicit GCSweepTask(JSRuntime* rt) : runtime(rt) {}
+    GCSweepTask(GCSweepTask&& other)
+      : GCParallelTask(mozilla::Forward<GCParallelTask>(other)),
+        runtime(other.runtime)
+    {}
+};
+
+// Causes the given WeakCache to be swept when run.
+class SweepWeakCacheTask : public GCSweepTask
+{
+    JS::WeakCache<void*>& cache;
+
+    SweepWeakCacheTask(const SweepWeakCacheTask&) = delete;
+
+  public:
+    SweepWeakCacheTask(JSRuntime* rt, JS::WeakCache<void*>& wc) : GCSweepTask(rt), cache(wc) {}
+    SweepWeakCacheTask(SweepWeakCacheTask&& other)
+      : GCSweepTask(mozilla::Forward<GCSweepTask>(other)), cache(other.cache)
+    {}
+
+    void run() override {
+        cache.sweep();
+    }
 };
 
 #define MAKE_GC_SWEEP_TASK(name)                                              \
     class name : public GCSweepTask {                                         \
-        virtual void run() override;                                          \
+        void run() override;                                          \
       public:                                                                 \
         explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
     }
 MAKE_GC_SWEEP_TASK(SweepAtomsTask);
-MAKE_GC_SWEEP_TASK(SweepInnerViewsTask);
 MAKE_GC_SWEEP_TASK(SweepCCWrappersTask);
 MAKE_GC_SWEEP_TASK(SweepBaseShapesTask);
 MAKE_GC_SWEEP_TASK(SweepInitialShapesTask);
@@ -5052,31 +5075,10 @@ SweepAtomsTask::run()
 }
 
 /* virtual */ void
-SweepInnerViewsTask::run()
-{
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
-        c->sweepInnerViews();
-}
-
-/* virtual */ void
 SweepCCWrappersTask::run()
 {
     for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
         c->sweepCrossCompartmentWrappers();
-}
-
-/* virtual */ void
-SweepBaseShapesTask::run()
-{
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
-        c->sweepBaseShapeTable();
-}
-
-/* virtual */ void
-SweepInitialShapesTask::run()
-{
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
-        c->sweepInitialShapeTable();
 }
 
 /* virtual */ void
@@ -5151,6 +5153,14 @@ GCRuntime::beginSweepingZoneGroup()
 
     validateIncrementalMarking();
 
+    FreeOp fop(rt);
+    SweepAtomsTask sweepAtomsTask(rt);
+    SweepCCWrappersTask sweepCCWrappersTask(rt);
+    SweepObjectGroupsTask sweepObjectGroupsTask(rt);
+    SweepRegExpsTask sweepRegExpsTask(rt);
+    SweepMiscTask sweepMiscTask(rt);
+    mozilla::Vector<SweepWeakCacheTask> sweepCacheTasks;
+
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         /* Clear all weakrefs that point to unmarked things. */
         for (auto edge : zone->gcWeakRefs) {
@@ -5160,21 +5170,16 @@ GCRuntime::beginSweepingZoneGroup()
         }
         zone->gcWeakRefs.clear();
 
-        /* No need to look up any more weakmap keys from this zone group. */
         AutoEnterOOMUnsafeRegion oomUnsafe;
+        for (JS::WeakCache<void*>* cache : zone->weakCaches_) {
+            if (!sweepCacheTasks.append(SweepWeakCacheTask(rt, *cache)))
+                oomUnsafe.crash("preparing weak cache sweeping task list");
+        }
+
+        /* No need to look up any more weakmap keys from this zone group. */
         if (!zone->gcWeakKeys.clear())
             oomUnsafe.crash("clearing weak keys in beginSweepingZoneGroup()");
     }
-
-    FreeOp fop(rt);
-    SweepAtomsTask sweepAtomsTask(rt);
-    SweepInnerViewsTask sweepInnerViewsTask(rt);
-    SweepCCWrappersTask sweepCCWrappersTask(rt);
-    SweepBaseShapesTask sweepBaseShapesTask(rt);
-    SweepInitialShapesTask sweepInitialShapesTask(rt);
-    SweepObjectGroupsTask sweepObjectGroupsTask(rt);
-    SweepRegExpsTask sweepRegExpsTask(rt);
-    SweepMiscTask sweepMiscTask(rt);
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_START);
@@ -5203,13 +5208,12 @@ GCRuntime::beginSweepingZoneGroup()
 
         {
             AutoLockHelperThreadState helperLock;
-            startTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS);
             startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER);
-            startTask(sweepBaseShapesTask, gcstats::PHASE_SWEEP_BASE_SHAPE);
-            startTask(sweepInitialShapesTask, gcstats::PHASE_SWEEP_INITIAL_SHAPE);
             startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT);
             startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP);
             startTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC);
+            for (auto& task : sweepCacheTasks)
+                startTask(task, gcstats::PHASE_SWEEP_MISC);
         }
 
         // The remainder of the of the tasks run in parallel on the main
@@ -5244,24 +5248,21 @@ GCRuntime::beginSweepingZoneGroup()
 
         {
             gcstats::AutoPhase apdc(stats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
                 zone->discardJitCode(&fop);
-            }
         }
 
         {
             gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP_TYPES);
             gcstats::AutoPhase ap2(stats, gcstats::PHASE_SWEEP_TYPES_BEGIN);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
                 zone->beginSweepTypes(&fop, releaseObservedTypes && !zone->isPreservingCode());
-            }
         }
 
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_BREAKPOINT);
-            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
                 zone->sweepBreakpoints(&fop);
-            }
         }
 
         {
@@ -5287,13 +5288,12 @@ GCRuntime::beginSweepingZoneGroup()
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
 
         AutoLockHelperThreadState helperLock;
-        joinTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS);
         joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER);
-        joinTask(sweepBaseShapesTask, gcstats::PHASE_SWEEP_BASE_SHAPE);
-        joinTask(sweepInitialShapesTask, gcstats::PHASE_SWEEP_INITIAL_SHAPE);
         joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT);
         joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP);
         joinTask(sweepMiscTask, gcstats::PHASE_SWEEP_MISC);
+        for (auto& task : sweepCacheTasks)
+            joinTask(task, gcstats::PHASE_SWEEP_MISC);
     }
 
     /*

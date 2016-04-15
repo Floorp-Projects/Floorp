@@ -9359,20 +9359,26 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
                                        nsPresContext* aPresContext,
                                        RuleNodeCacheConditions& aConditions)
 {
-  MOZ_ASSERT(aValue->GetUnit() != eCSSUnit_ListDep ||
-             aValue->GetUnit() != eCSSUnit_List,
+  MOZ_ASSERT(aValue->GetUnit() == eCSSUnit_Array,
              "expected a basic shape or reference box");
 
-  const nsCSSValueList* cur = aValue->GetListValue();
+  const nsCSSValue::Array* array = aValue->GetArrayValue();
+  MOZ_ASSERT(array->Count() == 1 || array->Count() == 2,
+             "Expect one or both of a shape function and geometry-box");
 
   uint8_t sizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
   RefPtr<nsStyleBasicShape> basicShape;
-  for (unsigned i = 0; i < 2; ++i) {
-    if (!cur) {
-      break;
-    }
-    if (cur->mValue.GetUnit() == eCSSUnit_Function) {
-      nsCSSValue::Array* shapeFunction = cur->mValue.GetArrayValue();
+  for (size_t i = 0; i < array->Count(); ++i) {
+    if (array->Item(i).GetUnit() == eCSSUnit_Enumerated) {
+      int32_t type = array->Item(i).GetIntValue();
+      if (type > NS_STYLE_CLIP_SHAPE_SIZING_VIEW ||
+          type < NS_STYLE_CLIP_SHAPE_SIZING_NOBOX) {
+        NS_NOTREACHED("unexpected reference box");
+        return;
+      }
+      sizingBox = (uint8_t)type;
+    } else if (array->Item(i).GetUnit() == eCSSUnit_Function) {
+      nsCSSValue::Array* shapeFunction = array->Item(i).GetArrayValue();
       nsCSSKeyword functionName =
         (nsCSSKeyword)shapeFunction->Item(0).GetIntValue();
       if (functionName == eCSSKeyword_polygon) {
@@ -9509,19 +9515,10 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
         NS_NOTREACHED("unexpected basic shape function");
         return;
       }
-    } else if (cur->mValue.GetUnit() == eCSSUnit_Enumerated) {
-      int32_t type = cur->mValue.GetIntValue();
-      if (type > NS_STYLE_CLIP_SHAPE_SIZING_VIEW ||
-          type < NS_STYLE_CLIP_SHAPE_SIZING_NOBOX) {
-        NS_NOTREACHED("unexpected reference box");
-        return;
-      }
-      sizingBox = (uint8_t)type;
     } else {
       NS_NOTREACHED("unexpected value");
       return;
     }
-    cur = cur->mNext;
   }
 
   if (basicShape) {
@@ -9656,8 +9653,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
       }
       break;
     }
-    case eCSSUnit_List:
-    case eCSSUnit_ListDep: {
+    case eCSSUnit_Array: {
       svgReset->mClipPath = nsStyleClipPath();
       SetStyleClipPathToCSSValue(&svgReset->mClipPath, clipPathValue, aContext,
                                  mPresContext, conditions);

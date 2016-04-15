@@ -1,0 +1,17 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Temporarily disabled. See bug 1256495.
+#test_certificates = (
+#    'content_signing_root.pem',
+#    'content_signing_int.pem',
+#    'content_signing_onecrl_ee.pem',
+#    'content_signing_onecrl_wrong_key_ee.pem',
+#    'content_signing_remote_newtab_ee.pem',
+#)
+#
+#for test_certificate in test_certificates:
+#    GeneratedTestCertificate(test_certificate)

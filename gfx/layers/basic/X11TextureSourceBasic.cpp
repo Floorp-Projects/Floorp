@@ -45,9 +45,7 @@ X11TextureSourceBasic::GetSurface(DrawTarget* aTarget)
 void
 X11TextureSourceBasic::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor->GetBackendType() == LayersBackend::LAYERS_BASIC);
-  BasicCompositor* compositor = static_cast<BasicCompositor*>(aCompositor);
-  mCompositor = compositor;
+  mCompositor = AssertBasicCompositor(aCompositor);
 }
 
 SurfaceFormat

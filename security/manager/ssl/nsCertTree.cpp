@@ -16,6 +16,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
+#include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
 #include "nsTHashtable.h"
 #include "nsUnicharUtils.h"

@@ -84,12 +84,6 @@ OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 void
 OuterDocAccessible::Shutdown()
 {
-  // XXX: sometimes outerdoc accessible is shutdown because of layout style
-  // change however the presshell of underlying document isn't destroyed and
-  // the document doesn't get pagehide events. Schedule a document rebind
-  // to its parent document. Otherwise a document accessible may be lost if its
-  // outerdoc has being recreated (see bug 862863 for details).
-
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy))
     logging::OuterDocDestroy(this);
@@ -104,7 +98,15 @@ OuterDocAccessible::Shutdown()
     }
 #endif
     RemoveChild(child);
-    mDoc->BindChildDocument(child->AsDoc());
+
+    // XXX: sometimes outerdoc accessible is shutdown because of layout style
+    // change however the presshell of underlying document isn't destroyed and
+    // the document doesn't get pagehide events. Schedule a document rebind
+    // to its parent document. Otherwise a document accessible may be lost if
+    // its outerdoc has being recreated (see bug 862863 for details).
+    if (!mDoc->IsDefunct()) {
+      mDoc->BindChildDocument(child->AsDoc());
+    }
   }
 
   AccessibleWrap::Shutdown();

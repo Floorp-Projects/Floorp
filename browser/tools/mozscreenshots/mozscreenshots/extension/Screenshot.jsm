@@ -40,7 +40,7 @@ let Screenshot = {
     let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     dir.initWithPath(this._path);
     if (!dir.exists()) {
-      dir.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
+      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
     }
 
     this._extensionPath = extensionPath;

@@ -69,6 +69,11 @@ class Pickle {
   int size() const { return static_cast<int>(header_size_ +
                                              header_->payload_size); }
 
+  // Return the full size of the memory allocated for this Pickle's data.
+  uint32_t capacity() const {
+    return capacity_;
+  }
+
   // Returns the data for this Pickle.
   const void* data() const { return header_; }
 
@@ -237,10 +242,6 @@ class Pickle {
   const char* end_of_payload() const {
     // This object may be invalid.
     return header_ ? payload() + payload_size() : nullptr;
-  }
-
-  uint32_t capacity() const {
-    return capacity_;
   }
 
   // Resizes the buffer for use when writing the specified amount of data. The

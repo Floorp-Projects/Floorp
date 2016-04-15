@@ -69,6 +69,11 @@ public:
                      mozilla::dom::Element* aScopeElement,
                      nsCSSRuleProcessor* aPreviousCSSRuleProcessor,
                      bool aIsShared = false);
+  nsCSSRuleProcessor(sheet_array_type&& aSheets,
+                     mozilla::SheetType aSheetType,
+                     mozilla::dom::Element* aScopeElement,
+                     nsCSSRuleProcessor* aPreviousCSSRuleProcessor,
+                     bool aIsShared = false);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)

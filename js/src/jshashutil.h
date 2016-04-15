@@ -30,6 +30,11 @@ struct DependentAddPtr
       , originalGcNumber(cx->zone()->gcNumber())
     {}
 
+    DependentAddPtr(DependentAddPtr&& other)
+      : addPtr(other.addPtr)
+      , originalGcNumber(other.originalGcNumber)
+    {}
+
     template <class KeyInput, class ValueInput>
     bool add(ExclusiveContext* cx, T& table, const KeyInput& key, const ValueInput& value) {
         bool gcHappened = originalGcNumber != cx->zone()->gcNumber();
@@ -41,7 +46,6 @@ struct DependentAddPtr
         }
         return true;
     }
-
 
     bool found() const                 { return addPtr.found(); }
     explicit operator bool() const     { return found(); }
@@ -56,6 +60,15 @@ struct DependentAddPtr
     DependentAddPtr(const DependentAddPtr&) = delete;
     DependentAddPtr& operator=(const DependentAddPtr&) = delete;
 };
+
+template <typename T, typename Lookup>
+inline auto
+MakeDependentAddPtr(const ExclusiveContext* cx, T& table, const Lookup& lookup)
+  -> DependentAddPtr<typename mozilla::RemoveReference<decltype(table)>::Type>
+{
+    using Ptr = DependentAddPtr<typename mozilla::RemoveReference<decltype(table)>::Type>;
+    return Ptr(cx, table, lookup);
+}
 
 } // namespace js
 

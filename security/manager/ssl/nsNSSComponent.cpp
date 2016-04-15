@@ -259,7 +259,6 @@ nsNSSComponent::nsNSSComponent()
 
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
-  mShutdownObjectList = nsNSSShutDownList::construct();
 }
 
 void
@@ -303,7 +302,7 @@ nsNSSComponent::~nsNSSComponent()
   SharedSSLState::GlobalCleanup();
   RememberCertErrorsTable::Cleanup();
   --mInstanceCount;
-  delete mShutdownObjectList;
+  nsNSSShutDownList::shutdown();
 
   // We are being freed, drop the haveLoaded flag to re-enable
   // potential nss initialization later.
@@ -1636,7 +1635,7 @@ nsNSSComponent::ShutdownNSS()
     CleanupIdentityInfo();
 #endif
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("evaporating psm resources\n"));
-    mShutdownObjectList->evaporateAllNSSResources();
+    nsNSSShutDownList::evaporateAllNSSResources();
     EnsureNSSInitialized(nssShutdown);
     if (SECSuccess != ::NSS_Shutdown()) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("NSS SHUTDOWN FAILURE\n"));
@@ -1656,12 +1655,6 @@ nsNSSComponent::Init()
   nsresult rv = NS_OK;
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Beginning NSS initialization\n"));
-
-  if (!mShutdownObjectList)
-  {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS init, out of memory in constructor\n"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   rv = InitializePIPNSSBundle();
   if (NS_FAILED(rv)) {
@@ -1809,6 +1802,10 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
 #endif // DEBUG
     } else if (prefName.Equals(kFamilySafetyModePref)) {
       MaybeEnableFamilySafetyCompatibility();
+    } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
+      MutexAutoLock lock(mutex);
+      mContentSigningRootHash =
+        Preferences::GetString("security.content.signature.root_hash");
     } else {
       clearSessionCache = false;
     }
@@ -1878,7 +1875,7 @@ nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 
   nsClientAuthRememberService::ClearAllRememberedDecisions();
 
-  return mShutdownObjectList->doPK11Logout();
+  return nsNSSShutDownList::doPK11Logout();
 }
 
 nsresult
@@ -1960,6 +1957,32 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result)
   return NS_OK;
 }
 #endif // DEBUG
+
+NS_IMETHODIMP
+nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
+{
+  MutexAutoLock lock(mutex);
+  MOZ_ASSERT(mNSSInitialized);
+
+  result = false;
+
+  if (mContentSigningRootHash.IsEmpty()) {
+    return NS_OK;
+  }
+
+  RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
+  if (!nsc) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAutoString certHash;
+  nsresult rv = nsc->GetSha256Fingerprint(certHash);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  result = mContentSigningRootHash.Equals(certHash);
+  return NS_OK;
+}
 
 SharedCertVerifier::~SharedCertVerifier() { }
 

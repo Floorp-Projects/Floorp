@@ -62,8 +62,7 @@ private:
 GLManager::CreateGLManager(LayerManagerComposite* aManager)
 {
   if (aManager && aManager->GetCompositor()->GetBackendType() == LayersBackend::LAYERS_OPENGL) {
-    return new GLManagerCompositor(static_cast<CompositorOGL*>(
-      aManager->GetCompositor()));
+    return new GLManagerCompositor(aManager->GetCompositor()->AsCompositorOGL());
   }
   return nullptr;
 }

@@ -532,6 +532,10 @@ DestroyProtoAndIfaceCache(JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
+  if (!HasProtoAndIfaceCache(obj)) {
+    return;
+  }
+
   ProtoAndIfaceCache* protoAndIfaceCache = GetProtoAndIfaceCache(obj);
 
   delete protoAndIfaceCache;

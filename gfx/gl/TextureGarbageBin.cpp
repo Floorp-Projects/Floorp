@@ -36,6 +36,7 @@ TextureGarbageBin::EmptyGarbage()
     if (!mGL)
         return;
 
+    MOZ_RELEASE_ASSERT(mGL->IsCurrent());
     while (!mGarbageTextures.empty()) {
         GLuint tex = mGarbageTextures.top();
         mGarbageTextures.pop();
