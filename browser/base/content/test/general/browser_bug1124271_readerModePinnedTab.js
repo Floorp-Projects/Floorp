@@ -38,7 +38,7 @@ add_task(function* () {
   is(gBrowser.tabs.length, initialTabsCount, "No additional tabs were opened.");
 
   readerButton.click();
-  yield promiseTabLoadEvent(tab, "", "pageshow");
+  yield promiseTabLoadEvent(tab);
 
   // Ensure no new tabs are opened when exiting reader mode in a pinned tab
   is(gBrowser.tabs.length, initialTabsCount, "No additional tabs were opened.");

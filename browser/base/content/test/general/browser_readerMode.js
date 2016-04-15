@@ -71,11 +71,9 @@ add_task(function* test_reader_button() {
 
   // Switch page back out of reader mode.
   readerButton.click();
-  yield promiseTabLoadEvent(tab, "", "pageshow");
+  yield promiseTabLoadEvent(tab);
   is(gBrowser.selectedBrowser.currentURI.spec, url,
-    "Back to the original page after clicking active reader mode button");
-  ok(gBrowser.selectedBrowser.canGoForward,
-    "Moved one step back in the session history.");
+    "Original page loaded after clicking active reader mode button");
 
   // Load a new tab that is NOT reader-able.
   let newTab = gBrowser.selectedTab = gBrowser.addTab();
