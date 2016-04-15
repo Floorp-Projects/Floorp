@@ -28,10 +28,12 @@ from mozbuild.configure.util import (
     LineIO,
 )
 from mozbuild.util import (
+    exec_,
     memoize,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
+
 import mozpack.path as mozpath
 
 
@@ -200,7 +202,7 @@ class ConfigureSandbox(dict):
 
         code = compile(source, path, 'exec')
 
-        exec(code, self)
+        exec_(code, self)
 
         self._paths.pop(-1)
 
@@ -570,10 +572,7 @@ class ConfigureSandbox(dict):
             import_line += 'import %s' % _import
             if _as:
                 import_line += ' as %s' % _as
-            # Some versions of python fail with "SyntaxError: unqualified exec
-            # is not allowed in function '_apply_imports' it contains a nested
-            # function with free variable" when using the exec function.
-            exec import_line in {}, glob
+            exec_(import_line, {}, glob)
 
     def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
