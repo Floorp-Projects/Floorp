@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["OneCRLClient"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://services-common/moz-kinto-client.js");
+Cu.import("resource://services-common/kinto-offline-client.js");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
