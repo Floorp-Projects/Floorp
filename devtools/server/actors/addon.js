@@ -83,7 +83,6 @@ BrowserAddonActor.prototype = {
       id: this.id,
       name: this._addon.name,
       url: this.url,
-      iconURL: this._addon.iconURL,
       debuggable: this._addon.isDebuggable,
       consoleActor: this._consoleActor.actorID,
 
@@ -154,13 +153,6 @@ BrowserAddonActor.prototype = {
     this._sources = null;
 
     return { type: "detached" };
-  },
-
-  onReload: function BAA_onReload() {
-    return this._addon.reload()
-      .then(() => {
-        return {}; // send an empty response
-      });
   },
 
   preNest: function() {
@@ -257,8 +249,7 @@ BrowserAddonActor.prototype = {
 
 BrowserAddonActor.prototype.requestTypes = {
   "attach": BrowserAddonActor.prototype.onAttach,
-  "detach": BrowserAddonActor.prototype.onDetach,
-  "reload": BrowserAddonActor.prototype.onReload
+  "detach": BrowserAddonActor.prototype.onDetach
 };
 
 /**

@@ -25,19 +25,6 @@ module.exports = createClass({
     BrowserToolboxProcess.init({ addonID: target.addonID });
   },
 
-  reload() {
-    let { client, target } = this.props;
-    // This function sometimes returns a partial promise that only
-    // implements then().
-    client.request({
-      to: target.addonActor,
-      type: "reload"
-    }).then(() => {}, error => {
-      throw new Error(
-        "Error reloading addon " + target.addonID + ": " + error);
-    });
-  },
-
   render() {
     let { target, debugDisabled } = this.props;
 
@@ -54,11 +41,7 @@ module.exports = createClass({
         className: "debug-button",
         onClick: this.debug,
         disabled: debugDisabled,
-      }, Strings.GetStringFromName("debug")),
-      dom.button({
-        className: "reload-button",
-        onClick: this.reload
-      }, Strings.GetStringFromName("reload"))
+      }, Strings.GetStringFromName("debug"))
     );
   }
 });
