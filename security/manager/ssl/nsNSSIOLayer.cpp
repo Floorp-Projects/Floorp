@@ -65,9 +65,6 @@ getSiteKey(const nsACString& hostName, uint16_t port,
   key.AppendInt(port);
 }
 
-// SSM_UserCertChoice: enum for cert choice info
-typedef enum {ASK, AUTO} SSM_UserCertChoice;
-
 // Historically, we have required that the server negotiate ALPN or NPN in
 // order to false start, as a compatibility hack to work around
 // implementations that just stop responding during false start. However, now
@@ -1937,43 +1934,32 @@ loser:
     return SECFailure;
 }
 
-// Sets certChoice by reading the preference
-//
-// If done properly, this function will read the identifier strings for ASK and
-// AUTO modes read the selected strings from the preference, compare the
-// strings, and determine in which mode it is in. We currently use ASK mode for
-// UI apps and AUTO mode for UI-less apps without really asking for
-// preferences.
-nsresult
-nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
+// Possible behaviors for choosing a cert for client auth.
+enum class UserCertChoice {
+  // Ask the user to choose a cert.
+  Ask = 0,
+  // Automatically choose a cert.
+  Auto = 1,
+};
+
+// Returns the most appropriate user cert choice based on the value of the
+// security.default_personal_cert preference.
+UserCertChoice
+nsGetUserCertChoice()
 {
-  char* mode = nullptr;
-  nsresult ret;
-
-  NS_ENSURE_ARG_POINTER(certChoice);
-
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  ret = pref->GetCharPref("security.default_personal_cert", &mode);
-  if (NS_FAILED(ret)) {
-    goto loser;
+  nsAutoCString value;
+  nsresult rv = Preferences::GetCString("security.default_personal_cert", &value);
+  if (NS_FAILED(rv)) {
+    return UserCertChoice::Ask;
   }
 
-  if (PL_strcmp(mode, "Select Automatically") == 0) {
-    *certChoice = AUTO;
-  } else if (PL_strcmp(mode, "Ask Every Time") == 0) {
-    *certChoice = ASK;
-  } else {
-    // Most likely we see a nickname from a migrated cert.
-    // We do not currently support that, ask the user which cert to use.
-    *certChoice = ASK;
-  }
-
-loser:
-  if (mode) {
-    free(mode);
-  }
-  return ret;
+  // There are three cases for what the preference could be set to:
+  //   1. "Select Automatically" -> Auto.
+  //   2. "Ask Every Time" -> Ask.
+  //   3. Something else -> Ask. This might be a nickname from a migrated cert,
+  //      but we no longer support this case.
+  return value.EqualsLiteral("Select Automatically") ? UserCertChoice::Auto
+                                                     : UserCertChoice::Ask;
 }
 
 static bool
@@ -2094,6 +2080,10 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 void
 ClientAuthDataRunnable::RunOnTargetThread()
 {
+  // We check the value of a pref in this runnable, so this runnable should only
+  // be run on the main thread.
+  MOZ_ASSERT(NS_IsMainThread());
+
   UniquePLArenaPool arena;
   char** caNameStrings;
   ScopedCERTCertificate cert;
@@ -2102,7 +2092,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
   CERTCertListNode* node;
   UniqueCERTCertNicknames nicknames;
   int keyError = 0; // used for private key retrieval error
-  SSM_UserCertChoice certChoice;
   int32_t NumberOfCerts = 0;
   void* wincx = mSocketInfo;
   nsresult rv;
@@ -2147,13 +2136,8 @@ ClientAuthDataRunnable::RunOnTargetThread()
     goto loser;
   }
 
-  // get the preference
-  if (NS_FAILED(nsGetUserCertChoice(&certChoice))) {
-    goto loser;
-  }
-
   // find valid user cert and key pair
-  if (certChoice == AUTO) {
+  if (nsGetUserCertChoice() == UserCertChoice::Auto) {
     // automatically find the right cert
 
     // find all user certs that are valid and for SSL
