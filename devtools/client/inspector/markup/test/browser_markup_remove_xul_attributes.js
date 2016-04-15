@@ -18,12 +18,10 @@ add_task(function* () {
 
   info("Removing panel's id attribute");
   let onMutation = inspector.once("markupmutation");
-  let onInspectorUpdated = inspector.once("inspector-updated");
   yield testActor.removeAttribute("#test", "id");
 
-  info("Waiting for markupmutation and inspector-updated");
+  info("Waiting for markupmutation");
   yield onMutation;
-  yield onInspectorUpdated;
 
   is(panelFront.hasAttribute("id"), false,
      "panelFront doesn't have id attribute anymore");

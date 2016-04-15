@@ -8,21 +8,27 @@
 
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<html><head><title>Test for the highlighter keybindings</title></head>" +
-  "<body><h1>Hello</h1><p><strong>Greetings, earthlings!</strong>" +
+  "<body><p><strong>Greetings, earthlings!</strong>" +
   " I come in peace.</p></body></html>";
 
 const TEST_DATA = [
-  { key: "VK_RIGHT", selectedNode: "h1" },
-  { key: "VK_DOWN", selectedNode: "p" },
-  { key: "VK_UP", selectedNode: "h1" },
+  { key: "VK_LEFT", selectedNode: "p" },
   { key: "VK_LEFT", selectedNode: "body" },
+  { key: "VK_LEFT", selectedNode: "html" },
+  { key: "VK_RIGHT", selectedNode: "body" },
+  { key: "VK_RIGHT", selectedNode: "p" },
+  { key: "VK_RIGHT", selectedNode: "strong" },
 ];
 
 add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
-  let bodyFront = yield getNodeFront("body", inspector);
-  is(inspector.selection.nodeFront, bodyFront,
-    "Body should be selected initially.");
+
+  info("Selecting the deepest element to start with");
+  yield selectNode("strong", inspector);
+
+  let nodeFront = yield getNodeFront("strong", inspector);
+  is(inspector.selection.nodeFront, nodeFront,
+     "<strong> should be selected initially");
 
   info("Focusing the currently active breadcrumb button");
   let bc = inspector.breadcrumbs;
