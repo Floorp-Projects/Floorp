@@ -33,6 +33,14 @@ function makeReportHandler(testpath, message, expectedJSON) {
       return;
     }
 
+    // check content-type of report is "application/csp-report"
+    var contentType = request.hasHeader("Content-Type")
+                    ? request.getHeader("Content-Type") : undefined;
+    if (contentType !== "application/csp-report") {
+      do_throw("violation report should have the 'application/csp-report' " +
+               "content-type, when in fact it is " + contentType.toString())
+    }
+
     // obtain violation report
     var reportObj = JSON.parse(
           NetUtil.readInputStreamToString(

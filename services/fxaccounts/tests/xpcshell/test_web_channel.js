@@ -38,6 +38,80 @@ add_test(function () {
   run_next_test();
 });
 
+add_task(function* test_rejection_reporting() {
+  let mockMessage = {
+    command: 'fxaccounts:login',
+    messageId: '1234',
+    data: { email: 'testuser@testuser.com' },
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      login(accountData) {
+        equal(accountData.email, 'testuser@testuser.com',
+          'Should forward incoming message data to the helper');
+        return Promise.reject(new Error('oops'));
+      },
+    },
+  });
+
+  let promiseSend = new Promise(resolve => {
+    channel._channel.send = (message, context) => {
+      resolve({ message, context });
+    };
+  });
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+
+  let { message, context } = yield promiseSend;
+
+  equal(context, mockSendingContext, 'Should forward the original context');
+  equal(message.command, 'fxaccounts:login',
+    'Should include the incoming command');
+  equal(message.messageId, '1234', 'Should include the message ID');
+  equal(message.data.error.message, 'Error: oops',
+    'Should convert the error message to a string');
+  notStrictEqual(message.data.error.stack, null,
+    'Should include the stack for JS error rejections');
+});
+
+add_test(function test_exception_reporting() {
+  let mockMessage = {
+    command: 'fxaccounts:sync_preferences',
+    messageId: '5678',
+    data: { entryPoint: 'fxa:verification_complete' }
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+    helpers: {
+      openSyncPreferences(browser, entryPoint) {
+        equal(entryPoint, 'fxa:verification_complete',
+          'Should forward incoming message data to the helper');
+        throw new TypeError('splines not reticulated');
+      },
+    },
+  });
+
+  channel._channel.send = (message, context) => {
+    equal(context, mockSendingContext, 'Should forward the original context');
+    equal(message.command, 'fxaccounts:sync_preferences',
+      'Should include the incoming command');
+    equal(message.messageId, '5678', 'Should include the message ID');
+    equal(message.data.error.message, 'TypeError: splines not reticulated',
+      'Should convert the exception to a string');
+    notStrictEqual(message.data.error.stack, null,
+      'Should include the stack for JS exceptions');
+
+    run_next_test();
+  };
+
+  channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
+});
+
 add_test(function test_profile_image_change_message() {
   var mockMessage = {
     command: "profile:change",
@@ -70,6 +144,7 @@ add_test(function test_login_message() {
       login: function (accountData) {
         do_check_eq(accountData.email, 'testuser@testuser.com');
         run_next_test();
+        return Promise.resolve();
       }
     }
   });
@@ -90,6 +165,7 @@ add_test(function test_logout_message() {
       logout: function (uid) {
         do_check_eq(uid, 'foo');
         run_next_test();
+        return Promise.resolve();
       }
     }
   });
@@ -110,6 +186,7 @@ add_test(function test_delete_message() {
       logout: function (uid) {
         do_check_eq(uid, 'foo');
         run_next_test();
+        return Promise.resolve();
       }
     }
   });
@@ -199,23 +276,25 @@ add_test(function test_helpers_should_allow_relink_different_email() {
   run_next_test();
 });
 
-add_test(function test_helpers_login_without_customize_sync() {
+add_task(function* test_helpers_login_without_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       setSignedInUser: function(accountData) {
-        // ensure fxAccounts is informed of the new user being signed in.
-        do_check_eq(accountData.email, 'testuser@testuser.com');
+        return new Promise(resolve => {
+          // ensure fxAccounts is informed of the new user being signed in.
+          do_check_eq(accountData.email, 'testuser@testuser.com');
 
-        // verifiedCanLinkAccount should be stripped in the data.
-        do_check_false('verifiedCanLinkAccount' in accountData);
+          // verifiedCanLinkAccount should be stripped in the data.
+          do_check_false('verifiedCanLinkAccount' in accountData);
 
-        // the customizeSync pref should not update
-        do_check_false(helpers.getShowCustomizeSyncPref());
+          // the customizeSync pref should not update
+          do_check_false(helpers.getShowCustomizeSyncPref());
 
-        // previously signed in user preference is updated.
-        do_check_eq(helpers.getPreviousAccountNameHashPref(), helpers.sha256('testuser@testuser.com'));
+          // previously signed in user preference is updated.
+          do_check_eq(helpers.getPreviousAccountNameHashPref(), helpers.sha256('testuser@testuser.com'));
 
-        run_next_test();
+          resolve();
+        });
       }
     }
   });
@@ -226,27 +305,29 @@ add_test(function test_helpers_login_without_customize_sync() {
   // ensure the previous account pref is overwritten.
   helpers.setPreviousAccountNameHashPref('lastuser@testuser.com');
 
-  helpers.login({
+  yield helpers.login({
     email: 'testuser@testuser.com',
     verifiedCanLinkAccount: true,
     customizeSync: false
   });
 });
 
-add_test(function test_helpers_login_with_customize_sync() {
+add_task(function* test_helpers_login_with_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       setSignedInUser: function(accountData) {
-        // ensure fxAccounts is informed of the new user being signed in.
-        do_check_eq(accountData.email, 'testuser@testuser.com');
+        return new Promise(resolve => {
+          // ensure fxAccounts is informed of the new user being signed in.
+          do_check_eq(accountData.email, 'testuser@testuser.com');
 
-        // customizeSync should be stripped in the data.
-        do_check_false('customizeSync' in accountData);
+          // customizeSync should be stripped in the data.
+          do_check_false('customizeSync' in accountData);
 
-        // the customizeSync pref should not update
-        do_check_true(helpers.getShowCustomizeSyncPref());
+          // the customizeSync pref should not update
+          do_check_true(helpers.getShowCustomizeSyncPref());
 
-        run_next_test();
+          resolve();
+        });
       }
     }
   });
@@ -254,34 +335,36 @@ add_test(function test_helpers_login_with_customize_sync() {
   // the customize sync pref should be overwritten
   helpers.setShowCustomizeSyncPref(false);
 
-  helpers.login({
+  yield helpers.login({
     email: 'testuser@testuser.com',
     verifiedCanLinkAccount: true,
     customizeSync: true
   });
 });
 
-add_test(function test_helpers_login_with_customize_sync_and_declined_engines() {
+add_task(function* test_helpers_login_with_customize_sync_and_declined_engines() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       setSignedInUser: function(accountData) {
-        // ensure fxAccounts is informed of the new user being signed in.
-        do_check_eq(accountData.email, 'testuser@testuser.com');
+        return new Promise(resolve => {
+          // ensure fxAccounts is informed of the new user being signed in.
+          do_check_eq(accountData.email, 'testuser@testuser.com');
 
-        // customizeSync should be stripped in the data.
-        do_check_false('customizeSync' in accountData);
-        do_check_false('declinedSyncEngines' in accountData);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.addons"), false);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.history"), true);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), false);
-        do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+          // customizeSync should be stripped in the data.
+          do_check_false('customizeSync' in accountData);
+          do_check_false('declinedSyncEngines' in accountData);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.addons"), false);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.history"), true);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), false);
+          do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
 
-        // the customizeSync pref should be disabled
-        do_check_false(helpers.getShowCustomizeSyncPref());
+          // the customizeSync pref should be disabled
+          do_check_false(helpers.getShowCustomizeSyncPref());
 
-        run_next_test();
+          resolve();
+        });
       }
     }
   });
@@ -295,7 +378,7 @@ add_test(function test_helpers_login_with_customize_sync_and_declined_engines() 
   do_check_eq(Services.prefs.getBoolPref("services.sync.engine.passwords"), true);
   do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), true);
   do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
-  helpers.login({
+  yield helpers.login({
     email: 'testuser@testuser.com',
     verifiedCanLinkAccount: true,
     customizeSync: true,
@@ -319,24 +402,26 @@ add_test(function test_helpers_open_sync_preferences() {
   helpers.openSyncPreferences(mockBrowser, "fxa:verification_complete");
 });
 
-add_test(function test_helpers_change_password() {
+add_task(function* test_helpers_change_password() {
   let updateCalled = false;
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       updateUserAccountData(credentials) {
-        do_check_true(credentials.hasOwnProperty("email"));
-        do_check_true(credentials.hasOwnProperty("uid"));
-        do_check_true(credentials.hasOwnProperty("kA"));
-        // "foo" isn't a field known by storage, so should be dropped.
-        do_check_false(credentials.hasOwnProperty("foo"));
-        updateCalled = true;
-        return Promise.resolve();
+        return new Promise(resolve => {
+          do_check_true(credentials.hasOwnProperty("email"));
+          do_check_true(credentials.hasOwnProperty("uid"));
+          do_check_true(credentials.hasOwnProperty("kA"));
+          // "foo" isn't a field known by storage, so should be dropped.
+          do_check_false(credentials.hasOwnProperty("foo"));
+          updateCalled = true;
+
+          resolve();
+        });
       }
     }
   });
-  helpers.changePassword({ email: "email", uid: "uid", kA: "kA", foo: "foo" });
+  yield helpers.changePassword({ email: "email", uid: "uid", kA: "kA", foo: "foo" });
   do_check_true(updateCalled);
-  run_next_test();
 });
 
 function run_test() {

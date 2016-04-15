@@ -5,69 +5,83 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
 
 <window id="360437Test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="onLoad();"
+        onload="startTest();"
         title="360437 test">
 
   <script type="application/javascript"><![CDATA[
-    const Ci = Components.interfaces;
-    const Cc = Components.classes;
-    const Cr = Components.results;
+    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;
     var gBrowser;
 
-    function ok(condition, message) {
-      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
-    }
-    function finish() {
-      window.close();
-      window.opener.wrappedJSObject.SimpleTest.finish();
+    var imports = ["SimpleTest", "ok", "is", "info"];
+    for (var name of imports) {
+      window[name] = window.opener.wrappedJSObject[name];
     }
 
-    function onLoad() {
-      var _delayedOnLoad = function() {
+    function startTest() {
+      Task.spawn(function* () {
         gFindBar = document.getElementById("FindToolbar");
-        gBrowser = document.getElementById("content");
-        gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
-      }
-      setTimeout(_delayedOnLoad, 1000);
+        for (let browserId of ["content", "content-remote"]) {
+          yield startTestWithBrowser(browserId);
+        }
+      }).then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
     }
 
-    function onPageShow() {
-      testNormalFind();
+    function* startTestWithBrowser(browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+      let promise = ContentTask.spawn(gBrowser, null, function* () {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", function listener() {
+            removeEventListener("DOMContentLoaded", listener);
+            resolve();
+          });
+        });
+      });
+      gBrowser.loadURI("data:text/html,<form><input id='input' type='text' value='text inside an input element'></form>");
+      yield promise;
+      yield onDocumentLoaded();
     }
 
-    function enterStringIntoFindField(aString) {
-      for (var i=0; i < aString.length; i++) {
-        var event = document.createEvent("KeyEvents");
-        event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, aString.charCodeAt(i));
-        gFindBar._findField.inputField.dispatchEvent(event);
-      }
-    }
-
-    function testNormalFind() {
+    function* onDocumentLoaded() {
       gFindBar.onFindCommand();
 
       // Make sure the findfield is correctly focused on open
       var searchStr = "text inside an input element";
-      enterStringIntoFindField(searchStr);
-      ok(document.commandDispatcher.focusedElement ==
+      yield* enterStringIntoFindField(searchStr);
+      is(document.commandDispatcher.focusedElement,
          gFindBar._findField.inputField, "Find field isn't focused");
 
       // Make sure "find again" correctly transfers focus to the content element
       // when the find bar is closed.
       gFindBar.close();
       gFindBar.onFindAgainCommand(false);
-      ok(document.commandDispatcher.focusedElement ==
-         gBrowser.contentDocument.getElementById("input"),
-             "Input Element isn't focused");
+      // For remote browsers, the content document DOM tree is not accessible, thus
+      // the focused element should fall back to the browser element.
+      if (gBrowser.hasAttribute("remote")) {
+        is(document.commandDispatcher.focusedElement, gBrowser,
+          "Browser element isn't focused");
+      }
+      yield ContentTask.spawn(gBrowser, null, function* () {
+        Assert.equal(content.document.activeElement,
+         content.document.getElementById("input"), "Input Element isn't focused");
+      });
 
       // Make sure "find again" doesn't focus the content element if focus
       // isn't in the content document.
@@ -77,10 +91,29 @@
       gFindBar.onFindAgainCommand(false);
       ok(textbox.hasAttribute("focused"),
          "Focus was stolen from a chrome element");
-      finish();
+    }
+
+    function* enterStringIntoFindField(aString) {
+      for (let i = 0; i < aString.length; i++) {
+        let event = document.createEvent("KeyEvents");
+        let promise = new Promise(resolve => {
+          let listener = {
+            onFindResult: function() {
+              gFindBar.browser.finder.removeResultListener(listener);
+              resolve();
+            }
+          };
+          gFindBar.browser.finder.addResultListener(listener);
+        });
+        event.initKeyEvent("keypress", true, true, null, false, false,
+                           false, false, 0, aString.charCodeAt(i));
+        gFindBar._findField.inputField.dispatchEvent(event);
+        yield promise;
+      }
     }
   ]]></script>
   <textbox id="textbox"/>
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <browser type="content-primary" flex="1" id="content-remote" remote="true" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
 </window>

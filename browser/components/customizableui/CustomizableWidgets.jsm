@@ -475,11 +475,13 @@ const CustomizableWidgets = [
     _createTabElement(doc, tabInfo) {
       let win = doc.defaultView;
       let item = doc.createElementNS(kNSXUL, "toolbarbutton");
+      let tooltipText = (tabInfo.title ? tabInfo.title + "\n" : "") + tabInfo.url;
       item.setAttribute("itemtype", "tab");
       item.setAttribute("class", "subviewbutton");
       item.setAttribute("targetURI", tabInfo.url);
       item.setAttribute("label", tabInfo.title != "" ? tabInfo.title : tabInfo.url);
       item.setAttribute("image", tabInfo.icon);
+      item.setAttribute("tooltiptext", tooltipText);
       // We need to use "click" instead of "command" here so openUILink
       // respects different buttons (eg, to open in a new tab).
       item.addEventListener("click", e => {

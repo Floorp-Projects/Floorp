@@ -127,8 +127,8 @@ BrowserToolboxProcess.prototype = {
     // invisible to the debugger (unlike the usual loader settings).
     this.loader = new DevToolsLoader();
     this.loader.invisibleToDebugger = true;
-    this.loader.main("devtools/server/main");
-    this.debuggerServer = this.loader.DebuggerServer;
+    let { DebuggerServer } = this.loader.require("devtools/server/main");
+    this.debuggerServer = DebuggerServer;
     dumpn("Created a separate loader instance for the DebuggerServer.");
 
     // Forward interesting events.

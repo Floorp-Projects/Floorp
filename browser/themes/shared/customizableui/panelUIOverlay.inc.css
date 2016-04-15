@@ -21,7 +21,6 @@
 %include ../browser.inc
 
 :root {
-  --panel-separator-color: ThreeDShadow;
   --panel-ui-exit-subview-gutter-width: 38px;
 }
 

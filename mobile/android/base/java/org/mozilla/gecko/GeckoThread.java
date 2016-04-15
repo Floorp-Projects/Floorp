@@ -377,7 +377,7 @@ public class GeckoThread extends Thread {
         } else {
             // Make sure a profile exists.
             final GeckoProfile profile = getProfile();
-            profile.forceCreate();
+            profile.getDir(); // call the lazy initializer
 
             // If args don't include the profile, make sure it's included.
             if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
