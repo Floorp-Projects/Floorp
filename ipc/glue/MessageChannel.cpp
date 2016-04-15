@@ -119,7 +119,7 @@ static MessageChannel* gParentProcessBlocker;
 namespace mozilla {
 namespace ipc {
 
-static const int kMinTelemetryMessageSize = 8192;
+static const uint32_t kMinTelemetryMessageSize = 8192;
 
 const int32_t MessageChannel::kNoTimeout = INT32_MIN;
 
@@ -757,8 +757,9 @@ MessageChannel::Echo(Message* aMsg)
 bool
 MessageChannel::Send(Message* aMsg)
 {
-    if (aMsg->size() >= kMinTelemetryMessageSize) {
-        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE, nsCString(aMsg->name()), aMsg->size());
+    if (aMsg->capacity() >= kMinTelemetryMessageSize) {
+        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
+                              nsCString(aMsg->name()), aMsg->capacity());
     }
 
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
@@ -1056,8 +1057,9 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
-    if (aMsg->size() >= kMinTelemetryMessageSize) {
-        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE, nsCString(aMsg->name()), aMsg->size());
+    if (aMsg->capacity() >= kMinTelemetryMessageSize) {
+        Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
+                              nsCString(aMsg->name()), aMsg->capacity());
     }
 
     nsAutoPtr<Message> msg(aMsg);
