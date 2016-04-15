@@ -298,9 +298,7 @@ HistoryDownloadElementShell.prototype = {
   },
 
   onStateChanged() {
-    this.element.setAttribute("image", this.image);
-    this.element.setAttribute("state",
-                              DownloadsCommon.stateOfDownload(this.download));
+    this._updateState();
 
     if (this.element.selected) {
       goUpdateDownloadCommands();
