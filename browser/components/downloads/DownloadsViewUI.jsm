@@ -112,6 +112,14 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     this.element.setAttribute("state",
                               DownloadsCommon.stateOfDownload(this.download));
 
+    if (this.download.error &&
+        this.download.error.becauseBlockedByReputationCheck) {
+      this.element.setAttribute("verdict",
+                                this.download.error.reputationCheckVerdict);
+    } else {
+      this.element.removeAttribute("verdict");
+    }
+
     // Since state changed, reset the time left estimation.
     this.lastEstimatedSecondsLeft = Infinity;
 
