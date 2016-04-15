@@ -78,7 +78,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     debugScriptMap(nullptr),
     debugScopes(nullptr),
     enumerators(nullptr),
-    compartmentStats(nullptr),
+    compartmentStats_(nullptr),
     scheduledForDestruction(false),
     maybeAlive(true),
     jitCompartment_(nullptr),
