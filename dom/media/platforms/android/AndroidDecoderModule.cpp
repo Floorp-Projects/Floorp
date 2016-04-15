@@ -305,9 +305,12 @@ AndroidDecoderModule::CreateAudioDecoder(
 
   MediaFormat::LocalRef format;
 
+  LOG("CreateAudioFormat with mimeType=%s, mRate=%d, channels=%d",
+      aConfig.mMimeType.Data(), aConfig.mRate, aConfig.mChannels);
+
   NS_ENSURE_SUCCESS(MediaFormat::CreateAudioFormat(
       aConfig.mMimeType,
-      aConfig.mBitDepth,
+      aConfig.mRate,
       aConfig.mChannels,
       &format), nullptr);
 

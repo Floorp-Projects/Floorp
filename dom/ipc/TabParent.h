@@ -281,7 +281,8 @@ public:
 
   virtual bool RecvShowTooltip(const uint32_t& aX,
                                const uint32_t& aY,
-                               const nsString& aTooltip) override;
+                               const nsString& aTooltip,
+                               const nsString& aDirection) override;
 
   virtual bool RecvHideTooltip() override;
 
@@ -580,6 +581,8 @@ protected:
   virtual bool RecvSetDimensions(const uint32_t& aFlags,
                                  const int32_t& aX, const int32_t& aY,
                                  const int32_t& aCx, const int32_t& aCy) override;
+
+  virtual bool RecvGetTabCount(uint32_t* aValue) override;
 
   virtual bool RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
                                                     const bool& aActive) override;

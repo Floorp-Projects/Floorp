@@ -35,7 +35,7 @@ public:
   void SetDuration(const UnrestrictedDoubleOrString& aDuration,
                    ErrorResult& aRv);
   void SetDirection(const PlaybackDirection& aDirection);
-  void SetEasing(const nsAString& aEasing, ErrorResult& aRv);
+  void SetEasing(JSContext* aCx, const nsAString& aEasing, ErrorResult& aRv);
 
 private:
   KeyframeEffect* MOZ_NON_OWNING_REF mEffect;

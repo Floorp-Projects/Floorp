@@ -28746,6 +28746,10 @@
         "url": "/web-animations/animation-effect-timing/duration.html"
       },
       {
+        "path": "web-animations/animation-effect-timing/easing.html",
+        "url": "/web-animations/animation-effect-timing/easing.html"
+      },
+      {
         "path": "web-animations/animation-effect-timing/endDelay.html",
         "url": "/web-animations/animation-effect-timing/endDelay.html"
       },

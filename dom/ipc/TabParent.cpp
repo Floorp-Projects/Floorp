@@ -1747,14 +1747,15 @@ TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
 }
 
 bool
-TabParent::RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip)
+TabParent::RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip,
+                           const nsString& aDirection)
 {
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
   if (!xulBrowserWindow) {
     return true;
   }
 
-  xulBrowserWindow->ShowTooltip(aX, aY, aTooltip);
+  xulBrowserWindow->ShowTooltip(aX, aY, aTooltip, aDirection);
   return true;
 }
 
@@ -3241,6 +3242,20 @@ TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
 
     window = win;
   }
+}
+
+bool
+TabParent::RecvGetTabCount(uint32_t* aValue)
+{
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+  NS_ENSURE_TRUE(xulBrowserWindow, false);
+
+  uint32_t tabCount;
+  nsresult rv = xulBrowserWindow->GetTabCount(&tabCount);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  *aValue = tabCount;
+  return true;
 }
 
 NS_IMETHODIMP

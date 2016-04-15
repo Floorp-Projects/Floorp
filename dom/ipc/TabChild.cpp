@@ -2728,6 +2728,12 @@ TabChild::SendRequestFocus(bool aCanFocus)
 }
 
 void
+TabChild::SendGetTabCount(uint32_t* tabCount)
+{
+  PBrowserChild::SendGetTabCount(tabCount);
+}
+
+void
 TabChild::EnableDisableCommands(const nsAString& aAction,
                                 nsTArray<nsCString>& aEnabledCommands,
                                 nsTArray<nsCString>& aDisabledCommands)
@@ -2894,10 +2900,12 @@ TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
 }
 
 NS_IMETHODIMP
-TabChild::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText)
+TabChild::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText,
+                        const char16_t *aTipDir)
 {
     nsString str(aTipText);
-    SendShowTooltip(aXCoords, aYCoords, str);
+    nsString dir(aTipDir);
+    SendShowTooltip(aXCoords, aYCoords, str, dir);
     return NS_OK;
 }
 

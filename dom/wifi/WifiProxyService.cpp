@@ -29,7 +29,7 @@ namespace mozilla {
 static StaticRefPtr<WifiProxyService> gWifiProxyService;
 
 // The singleton supplicant class, that can be used on any thread.
-static nsAutoPtr<WpaSupplicant> gWpaSupplicant;
+static UniquePtr<WpaSupplicant> gWpaSupplicant;
 
 // Runnable used dispatch the WaitForEvent result on the main thread.
 class WifiEventDispatcher : public nsRunnable
@@ -160,7 +160,7 @@ WifiProxyService::FactoryCreate()
     gWifiProxyService = new WifiProxyService();
     ClearOnShutdown(&gWifiProxyService);
 
-    gWpaSupplicant = new WpaSupplicant();
+    gWpaSupplicant = MakeUnique<WpaSupplicant>();
     ClearOnShutdown(&gWpaSupplicant);
   }
 

@@ -50,8 +50,8 @@ if CONFIG['GNU_CC']:
             '-Wno-incompatible-pointer-types-discards-qualifiers',
             '-Wno-logical-op-parentheses',
         ]
-    # Force visibility of cpu symbols
-    CFLAGS += ['-include', 'cpu_perms.h']
+    # Force visibility of cpu and av_log symbols.
+    CFLAGS += ['-include', 'libavutil_visibility.h']
 elif CONFIG['_MSC_VER']:
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
@@ -85,3 +85,10 @@ elif CONFIG['_MSC_VER']:
         DEFINES['vsnprintf'] = "avpriv_vsnprintf"
 
 DEFINES['HAVE_AV_CONFIG_H'] = True
+
+if CONFIG['MOZ_DEBUG']:
+    # Enable all assertions in debug builds.
+    DEFINES['ASSERT_LEVEL'] = 2
+elif not CONFIG['RELEASE_BUILD']:
+    # Enable fast assertions in opt builds of Nightly and Aurora.
+    DEFINES['ASSERT_LEVEL'] = 1
