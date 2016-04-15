@@ -52,6 +52,7 @@ if not CONFIG['JS_STANDALONE']:
 
 DIRS += [
     'config/external/fdlibm',
+    'config/external/nspr',
     'config/external/zlib',
     'memory',
     'mfbt',
@@ -61,8 +62,10 @@ DIRS += [
 if not CONFIG['JS_STANDALONE']:
     DIRS += ['xpcom/xpidl']
 
+if CONFIG['USE_ICU']:
+    DIRS += ['config/external/icu']
+
 if CONFIG['COMPILE_ENVIRONMENT']:
-    DIRS += ['config/external/nspr']
 
     if not CONFIG['JS_STANDALONE']:
         DIRS += [
@@ -72,8 +75,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
 
     if CONFIG['BUILD_CTYPES']:
         DIRS += ['config/external/ffi']
-    if CONFIG['USE_ICU']:
-        DIRS += ['config/external/icu']
+
     DIRS += ['js/src']
 else:
     TEST_DIRS += ['js/src/tests']
