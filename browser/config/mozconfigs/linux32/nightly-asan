@@ -15,6 +15,9 @@ export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=asan
 

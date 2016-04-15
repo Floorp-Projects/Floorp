@@ -33,6 +33,26 @@ add_task(function* test_is_allowed_incognito_access() {
   info("extension unloaded");
 });
 
+add_task(function* test_is_allowed_file_scheme_access() {
+  function backgroundScript() {
+    browser.extension.isAllowedFileSchemeAccess().then(isAllowedFileSchemeAccess => {
+      browser.test.assertEq(true, isAllowedFileSchemeAccess, "isAllowedFileSchemeAccess is true");
+      browser.test.notifyPass("isAllowedFileSchemeAccess");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript})()`,
+    manifest: {},
+  });
+
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("isAllowedFileSchemeAccess");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
 </script>
 
 </body>

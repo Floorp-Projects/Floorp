@@ -24,7 +24,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   // Browser's location should match original tab
   yield waitForFrameLoad(ui, TEST_URL);
   let location = yield spawnViewportTask(ui, {}, function* () {
-    return content.location.href;
+    return content.location.href; // eslint-disable-line
   });
   is(location, TEST_URL, "Viewport location matches");
 });
