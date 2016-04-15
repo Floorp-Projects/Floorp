@@ -1,4 +1,4 @@
-let testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+let testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
 add_task(function*() {
   let normalWindow = yield BrowserTestUtils.openNewBrowserWindow();
@@ -27,7 +27,7 @@ function* runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
   let testTab = yield BrowserTestUtils.openNewForegroundTab(aDestWindow.gBrowser);
 
   info("waiting for focus on the window");
-  yield promiseWaitForFocus(aDestWindow);
+  yield SimpleTest.promiseFocus(aDestWindow);
   info("got focus on the window");
 
   // Select the testTab

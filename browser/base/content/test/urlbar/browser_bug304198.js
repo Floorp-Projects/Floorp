@@ -9,7 +9,7 @@ add_task(function* () {
   deletedURLTab = gBrowser.addTab();
   fullURLTab = gBrowser.addTab();
   partialURLTab = gBrowser.addTab();
-  testURL = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+  testURL = "http://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
 
   let loaded1 = BrowserTestUtils.browserLoaded(deletedURLTab.linkedBrowser, testURL);
   let loaded2 = BrowserTestUtils.browserLoaded(fullURLTab.linkedBrowser, testURL);
