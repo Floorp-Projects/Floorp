@@ -23,6 +23,35 @@ addMessageListener("Extension:DisableWebNavigation", () => {
   removeEventListener("DOMContentLoaded", loadListener);
 });
 
+var FormSubmitListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIFormSubmitObserver,
+                                          Ci.nsISupportsWeakReference]),
+  init() {
+    this.formSubmitWindows = new WeakSet();
+    Services.obs.addObserver(FormSubmitListener, "earlyformsubmit", false);
+  },
+
+  uninit() {
+    Services.obs.removeObserver(FormSubmitListener, "earlyformsubmit", false);
+    this.formSubmitWindows = new WeakSet();
+  },
+
+  notify: function(form, window, actionURI) {
+    try {
+      this.formSubmitWindows.add(window);
+    } catch (e) {
+      Cu.reportError("Error in FormSubmitListener.notify");
+    }
+  },
+
+  hasAndForget: function(window) {
+    let has = this.formSubmitWindows.has(window);
+    this.formSubmitWindows.delete(window);
+    return has;
+  },
+};
+
 var WebProgressListener = {
   init: function() {
     // This WeakMap (DOMWindow -> nsIURI) keeps track of the pathname and hash
@@ -125,8 +154,8 @@ var WebProgressListener = {
   },
 
   sendDocumentChange({webProgress, locationURI, request}) {
-    let {loadType} = webProgress;
-    let frameTransitionData = this.getFrameTransitionData({loadType, request});
+    let {loadType, DOMWindow} = webProgress;
+    let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
 
     let data = {
       frameTransitionData,
@@ -139,7 +168,7 @@ var WebProgressListener = {
   },
 
   sendHistoryChange({webProgress, previousURI, locationURI, request}) {
-    let {loadType} = webProgress;
+    let {loadType, DOMWindow} = webProgress;
 
     let isHistoryStateUpdated = false;
     let isReferenceFragmentUpdated = false;
@@ -163,7 +192,7 @@ var WebProgressListener = {
     }
 
     if (isHistoryStateUpdated || isReferenceFragmentUpdated) {
-      let frameTransitionData = this.getFrameTransitionData({loadType, request});
+      let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
 
       let data = {
         frameTransitionData,
@@ -177,7 +206,7 @@ var WebProgressListener = {
     }
   },
 
-  getFrameTransitionData({loadType, request}) {
+  getFrameTransitionData({loadType, request, DOMWindow}) {
     let frameTransitionData = {};
 
     if (loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY) {
@@ -194,24 +223,31 @@ var WebProgressListener = {
       }
     }
 
+    if (FormSubmitListener.hasAndForget(DOMWindow)) {
+      frameTransitionData.form_submit = true;
+    }
+
+
     return frameTransitionData;
   },
-
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
 };
 
 var disabled = false;
 WebProgressListener.init();
+FormSubmitListener.init();
 addEventListener("unload", () => {
   if (!disabled) {
     disabled = true;
     WebProgressListener.uninit();
+    FormSubmitListener.uninit();
   }
 });
 addMessageListener("Extension:DisableWebNavigation", () => {
   if (!disabled) {
     disabled = true;
     WebProgressListener.uninit();
+    FormSubmitListener.uninit();
   }
 });
