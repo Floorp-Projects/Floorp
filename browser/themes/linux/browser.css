@@ -1959,7 +1959,12 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   width: 16px;
 }
 
+/**
+ * Override the --panel-arrowcontent-padding so the background extends
+ * to the sides and bottom of the panel.
+ */
 #UITourTooltipButtons {
+  margin-left: -10px;
   margin-bottom: -10px;
 }
 
