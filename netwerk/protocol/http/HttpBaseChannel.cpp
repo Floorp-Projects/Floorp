@@ -3288,6 +3288,36 @@ HttpBaseChannel::GetPerformance()
     if (!mTimingEnabled) {
         return nullptr;
     }
+
+    nsCOMPtr<nsPIDOMWindowInner> pDomWindow = GetInnerDOMWindow();
+    if (!pDomWindow) {
+        return nullptr;
+    }
+
+    nsPerformance* docPerformance = pDomWindow->GetPerformance();
+    if (!docPerformance) {
+        return nullptr;
+    }
+    // iframes should be added to the parent's entries list.
+    if (mLoadFlags & LOAD_DOCUMENT_URI) {
+        return docPerformance->GetParentPerformance();
+    }
+    return docPerformance;
+}
+
+nsIURI*
+HttpBaseChannel::GetReferringPage()
+{
+  nsCOMPtr<nsPIDOMWindowInner> pDomWindow = GetInnerDOMWindow();
+  if (!pDomWindow) {
+    return nullptr;
+  }
+  return pDomWindow->GetDocumentURI();
+}
+
+nsPIDOMWindowInner*
+HttpBaseChannel::GetInnerDOMWindow()
+{
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(this, loadContext);
     if (!loadContext) {
@@ -3307,15 +3337,7 @@ HttpBaseChannel::GetPerformance()
       return nullptr;
     }
 
-    nsPerformance* docPerformance = innerWindow->GetPerformance();
-    if (!docPerformance) {
-      return nullptr;
-    }
-    // iframes should be added to the parent's entries list.
-    if (mLoadFlags & LOAD_DOCUMENT_URI) {
-      return docPerformance->GetParentPerformance();
-    }
-    return docPerformance;
+    return innerWindow;
 }
 
 //------------------------------------------------------------------------------

@@ -58,6 +58,14 @@ interface nsICachingChannel : nsICacheInfoChannel
      */
     attribute boolean pin;
 
+    /**
+     * Overrides cache validation for a time specified in seconds.
+     *
+     * @param aSecondsToTheFuture
+     *
+     */
+    void forceCacheEntryValidFor(in unsigned long aSecondsToTheFuture);
+
     /**************************************************************************
      * Caching channel specific load flags:
      */
