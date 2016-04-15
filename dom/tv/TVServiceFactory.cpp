@@ -4,12 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/TVListeners.h"
-#include "mozilla/Preferences.h"
+#include "TVServiceFactory.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include "gonk/TVGonkService.h"
+#endif
 #include "nsITVService.h"
 #include "nsITVSimulatorService.h"
 #include "nsServiceManagerUtils.h"
-#include "TVServiceFactory.h"
+
 
 namespace mozilla {
 namespace dom {
@@ -17,20 +20,15 @@ namespace dom {
 /* static */ already_AddRefed<nsITVService>
 TVServiceFactory::AutoCreateTVService()
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsITVService> service = do_CreateInstance(TV_SERVICE_CONTRACTID);
+  nsCOMPtr<nsITVService> service;
+
+#ifdef MOZ_WIDGET_GONK
+  service = new TVGonkService();
+#endif
+
   if (!service) {
-    // Fallback to the TV Simulator Service
-    service = do_CreateInstance(TV_SIMULATOR_SERVICE_CONTRACTID, &rv);
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-  }
-
-  rv = service->SetSourceListener(new TVSourceListener());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
+    // Fallback to TV simulator service, especially for TV simulator on WebIDE.
+    service = do_CreateInstance(TV_SIMULATOR_SERVICE_CONTRACTID);
   }
 
   return service.forget();

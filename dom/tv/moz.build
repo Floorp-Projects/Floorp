@@ -40,6 +40,11 @@ EXTRA_COMPONENTS += [
     'TVSimulatorService.manifest',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    UNIFIED_SOURCES += [
+        'gonk/TVGonkService.cpp',
+    ];
+
 XPIDL_MODULE = 'dom_tv'
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']

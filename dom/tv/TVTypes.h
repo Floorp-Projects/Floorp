@@ -7,15 +7,22 @@
 #ifndef mozilla_dom_TVTypes_h
 #define mozilla_dom_TVTypes_h
 
+#include "mozilla/layers/GonkNativeHandle.h"
+#include "mozilla/Tuple.h"
 #include "nsITVService.h"
 
 namespace mozilla {
 namespace dom {
 
+typedef Tuple<nsString, nsString, nsCOMPtr<nsITVSourceListener>>
+TVSourceListenerTuple;
+
+using mozilla::layers::GonkNativeHandle;
+
 class TVTunerData final : public nsITVTunerData
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITVTUNERDATA
 
   TVTunerData();
@@ -32,7 +39,7 @@ private:
 class TVChannelData final : public nsITVChannelData
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITVCHANNELDATA
 
   TVChannelData();
@@ -53,7 +60,7 @@ private:
 class TVProgramData final : public nsITVProgramData
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITVPROGRAMDATA
 
   TVProgramData();
@@ -71,6 +78,20 @@ private:
   uint32_t mAudioLanguageCount;
   char** mSubtitleLanguages;
   uint32_t mSubtitleLanguageCount;
+};
+
+class TVGonkNativeHandleData final : public nsITVGonkNativeHandleData
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITVGONKNATIVEHANDLEDATA
+
+  TVGonkNativeHandleData();
+
+private:
+  ~TVGonkNativeHandleData();
+
+  GonkNativeHandle mHandle;
 };
 
 } // namespace dom

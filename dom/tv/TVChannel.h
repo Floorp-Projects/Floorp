@@ -12,7 +12,6 @@
 #include "mozilla/dom/TVChannelBinding.h"
 
 class nsITVChannelData;
-class nsITVService;
 
 namespace mozilla {
 namespace dom {
@@ -70,7 +69,6 @@ private:
 
   bool Init(nsITVChannelData* aData);
 
-  nsCOMPtr<nsITVService> mTVService;
   RefPtr<TVSource> mSource;
   nsString mNetworkId;
   nsString mTransportStreamId;
