@@ -46,6 +46,15 @@ function checkExpectedState(ui, state, action) {
     is(ui.loginTextbox.getAttribute("value"),     state.textValue, "Checking textbox value");
     is(ui.password1Textbox.getAttribute("value"), state.passValue, "Checking passbox value");
 
+    if (state.butt0Label) {
+        is(ui.button0.label, state.butt0Label, "Checking accept-button label");
+    }
+    if (state.butt1Label) {
+        is(ui.button1.label, state.butt1Label, "Checking cancel-button label");
+    }
+    if (state.butt2Label) {
+        is(ui.button2.label, state.butt2Label, "Checking extra1-button label");
+    }
 
     function isDefaultButton(b) {
         return (b.hasAttribute("default") &&
@@ -91,6 +100,11 @@ function checkExpectedState(ui, state, action) {
 
     if (action.passField) {
         ui.password1Textbox.setAttribute("value", action.passField);
+    }
+
+    if (action.buttonClick == "pollOk") {
+        is(ui.button0.disabled, true,  "Checking accept-button is disabled");
+        is(ui.button1.disabled, false, "Checking cancel-button isn't disabled ");
     }
 
     switch (action.buttonClick) {
@@ -589,12 +603,12 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : ui.button0,
             defButton   : ui.button0,
+            butt0Label  : "OK",
+            butt1Label  : "Cancel",
         };
         action = {
             buttonClick: "ok",
         };
-        is(ui.button0.label, "OK",     "Checking accept-button label");
-        is(ui.button1.label, "Cancel", "Checking cancel-button label");
         checkExpectedState(ui, state, action);
         break;
 
@@ -613,12 +627,12 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : ui.button0,
             defButton   : ui.button0,
+            butt0Label  : "Yes",
+            butt1Label  : "No",
         };
         action = {
             buttonClick: "cancel",
         };
-        is(ui.button0.label, "Yes", "Checking accept-button label");
-        is(ui.button1.label, "No",  "Checking cancel-button label");
         checkExpectedState(ui, state, action);
         break;
 
@@ -637,14 +651,14 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : ui.button0,
             defButton   : ui.button0,
+            butt0Label  : "butt0",
+            butt1Label  : "butt1",
+            butt2Label  : "butt2",
         };
         action = {
             buttonClick: "ok",
             setCheckbox: true,
         };
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
         checkExpectedState(ui, state, action);
         break;
 
@@ -663,15 +677,15 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : ui.button1, // Default changed!
             defButton   : ui.button1,
+            butt0Label  : "butt0",
+            butt1Label  : "butt1",
+            butt2Label  : "butt2",
         };
         action = {
             buttonClick: "cancel",
             setCheckbox: true,
         };
         // XXX check button1 is default
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
         checkExpectedState(ui, state, action);
         break;
 
@@ -690,15 +704,15 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : ui.button2, // Default changed!
             defButton   : ui.button2,
+            butt0Label  : "butt0",
+            butt1Label  : "butt1",
+            butt2Label  : "butt2",
         };
         action = {
             buttonClick: 2,
             setCheckbox: true,
         };
         // XXX check button2 is default
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
         checkExpectedState(ui, state, action);
         break;
 
@@ -739,6 +753,8 @@ function handleDialog(ui, testNum) {
             checked     : false,
             focused     : null, // nothing focused until after delay fires
             defButton   : ui.button0,
+            butt0Label  : "OK",
+            butt1Label  : "Cancel",
         };
 
         // OS X doesn't initially focus the button, but rather the infoBody.
@@ -749,11 +765,6 @@ function handleDialog(ui, testNum) {
         action = {
             buttonClick: "pollOK",
         };
-
-        is(ui.button0.label, "OK",     "Checking accept-button label");
-        is(ui.button1.label, "Cancel", "Checking cancel-button label");
-        is(ui.button0.disabled, true,  "Checking accept-button is disabled");
-        is(ui.button1.disabled, false, "Checking cancel-button isn't disabled ");
         checkExpectedState(ui, state, action);
         break;
 
