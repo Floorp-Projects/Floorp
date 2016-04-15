@@ -520,7 +520,7 @@
       {
         "name": "getFileIcon",
         "type": "function",
-        "unsupported": true,
+        "async": "callback",
         "description": "Retrieve an icon for the specified download. For new downloads, file icons are available after the <a href='#event-onCreated'>onCreated</a> event has been received. The image returned by this function while a download is in progress may be different from the image returned after the download is complete. Icon retrieval is done by querying the underlying operating system or toolkit depending on the platform. The icon that is returned will therefore depend on a number of factors including state of the download, platform, registered file types and visual theme. If a file icon cannot be determined, <a href='extension.html#property-lastError'>chrome.extension.lastError</a> will contain an error message.",
         "parameters": [
           {
@@ -535,6 +535,8 @@
               "size": {
                 "description": "The size of the icon.  The returned icon will be square with dimensions size * size pixels.  The default size for the icon is 32x32 pixels.",
                 "optional": true,
+                "minimum": 1,
+                "maximum": 127,
                 "type": "integer"
               }
             },
