@@ -300,10 +300,7 @@ def parse_commit(message, jobs):
             platform_build = platform_builds['types'][build_type]
             build_task = platform_build['task']
 
-            if 'additional-parameters' in platform_build:
-                additional_parameters = platform_build['additional-parameters']
-            else:
-                additional_parameters = {}
+            additional_parameters = platform_build.get('additional-parameters', {})
 
             # Generate list of post build tasks that run on this build
             post_build_jobs = []
