@@ -1363,50 +1363,80 @@ var BookmarkingUI = {
   },
 
   _updateRecentBookmarks: function(aHeaderItem, extraCSSClass = "") {
-    const kMaxResults = 5;
+    let repopulate = function () {
+      const kMaxResults = 5;
 
-    let options = PlacesUtils.history.getNewQueryOptions();
-    options.excludeQueries = true;
-    options.queryType = options.QUERY_TYPE_BOOKMARKS;
-    options.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
-    options.maxResults = kMaxResults;
-    let query = PlacesUtils.history.getNewQuery();
+      let options = PlacesUtils.history.getNewQueryOptions();
+      options.excludeQueries = true;
+      options.queryType = options.QUERY_TYPE_BOOKMARKS;
+      options.sortingMode = options.SORT_BY_DATEADDED_DESCENDING;
+      options.maxResults = kMaxResults;
+      let query = PlacesUtils.history.getNewQuery();
 
-    while (aHeaderItem.nextSibling &&
-           aHeaderItem.nextSibling.localName == "menuitem") {
-      aHeaderItem.nextSibling.remove();
-    }
+      while (aHeaderItem.nextSibling &&
+             aHeaderItem.nextSibling.localName == "menuitem") {
+        aHeaderItem.nextSibling.remove();
+      }
 
-    let onItemCommand = function (aEvent) {
-      let item = aEvent.target;
-      openUILink(item.getAttribute("targetURI"), aEvent);
-      CustomizableUI.hidePanelForNode(item);
+      let onItemCommand = function (aEvent) {
+        let item = aEvent.target;
+        openUILink(item.getAttribute("targetURI"), aEvent);
+        CustomizableUI.hidePanelForNode(item);
+      };
+
+      let fragment = document.createDocumentFragment();
+      let root = PlacesUtils.history.executeQuery(query, options).root;
+      root.containerOpen = true;
+      for (let i = 0; i < root.childCount; i++) {
+        let node = root.getChild(i);
+        let uri = node.uri;
+        let title = node.title;
+        let icon = node.icon;
+
+        let item =
+          document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                   "menuitem");
+        item.setAttribute("label", title || uri);
+        item.setAttribute("targetURI", uri);
+        item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
+                                   extraCSSClass);
+        item.addEventListener("command", onItemCommand);
+        if (icon) {
+          item.setAttribute("image", icon);
+        }
+        fragment.appendChild(item);
+      }
+      root.containerOpen = false;
+      aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
     };
 
-    let fragment = document.createDocumentFragment();
-    let root = PlacesUtils.history.executeQuery(query, options).root;
-    root.containerOpen = true;
-    for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = node.uri;
-      let title = node.title;
-      let icon = node.icon;
+    repopulate();
 
-      let item =
-        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                 "menuitem");
-      item.setAttribute("label", title || uri);
-      item.setAttribute("targetURI", uri);
-      item.setAttribute("class", "menuitem-iconic menuitem-with-favicon bookmark-item " +
-                                 extraCSSClass);
-      item.addEventListener("command", onItemCommand);
-      if (icon) {
-        item.setAttribute("image", icon);
+    // Update the menu when a bookmark is being removed.
+    // The native menubar on Mac doesn't support live update, so this won't
+    // work there.
+    let observer = {
+      onItemAdded() {},
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemRemoved() {
+        repopulate();
+      },
+      onItemChanged() {},
+      onItemVisited() {},
+      onItemMoved() {}
+    };
+    PlacesUtils.bookmarks.addObserver(observer, false);
+
+    let popup = aHeaderItem.parentNode;
+    let removeObserver = function (event) {
+      if (event && event.target != popup) {
+        return;
       }
-      fragment.appendChild(item);
-    }
-    root.containerOpen = false;
-    aHeaderItem.parentNode.insertBefore(fragment, aHeaderItem.nextSibling);
+      PlacesUtils.bookmarks.removeObserver(observer);
+      popup.removeEventListener("popuphidden", removeObserver);
+    };
+    popup.addEventListener("popuphidden", removeObserver);
   },
 
   /**
