@@ -159,7 +159,8 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
                                             b,
                                             aSample->mKeyframe,
                                             aSample->mTimecode,
-                                            mInfo.ImageRect());
+                                            mInfo.ScaledImageRect(img->d_w,
+                                                                  img->d_h));
 
     if (!v) {
       LOG("Image allocation error source %ldx%ld display %ldx%ld picture %ldx%ld",
