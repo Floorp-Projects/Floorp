@@ -44,7 +44,7 @@ function removeCert(nickname) {
   });
 }
 
-add_task(function*() {
+add_task(function* () {
   // No master password, so no prompt required here
   ok(!certService.loginPromptRequired);
 
