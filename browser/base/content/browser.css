@@ -696,6 +696,9 @@ html|*#fullscreen-warning[ontop] {
   /* Use -10px to hide the border and border-radius on the top */
   transform: translate(-50%, -10px);
 }
+#main-window[OSXLionFullscreen] html|*#fullscreen-warning[ontop] {
+  transform: translate(-50%, 80px);
+}
 
 html|*#fullscreen-domain-text,
 html|*#fullscreen-generic-text {

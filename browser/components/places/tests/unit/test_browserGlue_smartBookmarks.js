@@ -142,13 +142,6 @@ add_task(function* test_version_change_pos() {
   yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
   let firstItemTitle = bm.title;
 
-  bm = yield PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 1
-  });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
-  let secondItemTitle = bm.title;
-
   // Set preferences.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
 
@@ -167,13 +160,6 @@ add_task(function* test_version_change_pos() {
   });
   yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
   Assert.equal(bm.title, firstItemTitle);
-
-  bm = yield PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 1
-  });
-  yield checkItemHasAnnotation(bm.guid, SMART_BOOKMARKS_ANNO);
-  Assert.equal(bm.title, secondItemTitle);
 
   // Check version has been updated.
   Assert.equal(Services.prefs.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
@@ -195,13 +181,6 @@ add_task(function* test_version_change_pos_moved() {
   });
   yield checkItemHasAnnotation(bm1.guid, SMART_BOOKMARKS_ANNO);
   let firstItemTitle = bm1.title;
-
-  let bm2 = yield PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 1
-  });
-  yield checkItemHasAnnotation(bm2.guid, SMART_BOOKMARKS_ANNO);
-  let secondItemTitle = bm2.title;
 
   // Move the first smart bookmark to the end of the menu.
   yield PlacesUtils.bookmarks.update({
@@ -226,14 +205,6 @@ add_task(function* test_version_change_pos_moved() {
                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
   Assert.equal(countFolderChildren(PlacesUtils.bookmarksMenuFolderId),
                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-  // Check smart bookmarks are still in correct position.
-  bm2 = yield PlacesUtils.bookmarks.fetch({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    index: 0
-  });
-  yield checkItemHasAnnotation(bm2.guid, SMART_BOOKMARKS_ANNO);
-  Assert.equal(bm2.title, secondItemTitle);
 
   bm1 = yield PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.menuGuid,

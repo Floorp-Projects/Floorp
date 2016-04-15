@@ -19,8 +19,7 @@ function init(msg) {
   // in the same process.
   let devtools = new DevToolsLoader();
   devtools.invisibleToDebugger = true;
-  devtools.main("devtools/server/main");
-  let { DebuggerServer, ActorPool } = devtools;
+  let { DebuggerServer, ActorPool } = devtools.require("devtools/server/main");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

@@ -20,6 +20,9 @@ ac_add_options --with-google-oauth-api-keyfile=${_google_oauth_api_keyfile}
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
 
+# Enable Telemetry
+export MOZ_TELEMETRY_REPORTING=1
+
 # Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 

@@ -120,27 +120,27 @@ var tests = [
 
   // data: and javsacript: URIs shouldn't be encoded
   {
-    loadURL: "javascript:('%C3%A9')",
-    expectedURL: "javascript:('\xe9')",
-    copyExpected: "javascript:('\xe9')"
+    loadURL: "javascript:('%C3%A9%20%25%50')",
+    expectedURL: "javascript:('%C3%A9 %25P')",
+    copyExpected: "javascript:('%C3%A9 %25P')"
   },
   {
-    copyVal: "<javascript:(>'\xe9')",
+    copyVal: "<javascript:(>'%C3%A9 %25P')",
     copyExpected: "javascript:("
   },
 
   {
-    loadURL: "data:text/html,(%C3%A9)",
-    expectedURL: "data:text/html,(\xe9)",
-    copyExpected: "data:text/html,(\xe9)"
+    loadURL: "data:text/html,(%C3%A9%20%25%50)",
+    expectedURL: "data:text/html,(%C3%A9 %25P)",
+    copyExpected: "data:text/html,(%C3%A9 %25P)",
   },
   {
-    copyVal: "<data:text/html,(>\xe9)",
+    copyVal: "<data:text/html,(>%C3%A9 %25P)",
     copyExpected: "data:text/html,("
   },
   {
-    copyVal: "data:<text/html,(\xe9>)",
-    copyExpected: "text/html,(\xe9"
+    copyVal: "<data:text/html,(%C3%A9 %25P>)",
+    copyExpected: "data:text/html,(%C3%A9 %25P",
   }
 ];
 

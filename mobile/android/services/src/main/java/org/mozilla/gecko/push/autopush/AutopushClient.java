@@ -60,6 +60,9 @@ public class AutopushClient {
     public static final String JSON_KEY_ERROR = "error";
     public static final String JSON_KEY_MESSAGE = "message";
 
+    protected static final String[] requiredErrorStringFields = { JSON_KEY_ERROR, JSON_KEY_MESSAGE };
+    protected static final String[] requiredErrorLongFields = { JSON_KEY_CODE, JSON_KEY_ERRNO };
+
     /**
      * The server's URI.
      * <p>
@@ -136,8 +139,8 @@ public class AutopushClient {
         if (200 <= status && status <= 299) {
             return status;
         }
-        int code;
-        int errno;
+        long code;
+        long errno;
         String error;
         String message;
         String info;
@@ -146,9 +149,10 @@ public class AutopushClient {
             body = new SyncStorageResponse(response).jsonObjectBody();
             // TODO: The service doesn't do the right thing yet :(
             // body.throwIfFieldsMissingOrMisTyped(requiredErrorStringFields, String.class);
-            // body.throwIfFieldsMissingOrMisTyped(requiredErrorLongFields, Long.class);
-            code = body.getLong(JSON_KEY_CODE).intValue();
-            errno = body.getLong(JSON_KEY_ERRNO).intValue();
+            body.throwIfFieldsMissingOrMisTyped(requiredErrorLongFields, Long.class);
+            // Would throw above if missing; the -1 defaults quiet NPE warnings.
+            code = body.getLong(JSON_KEY_CODE, -1);
+            errno = body.getLong(JSON_KEY_ERRNO, -1);
             error = body.getString(JSON_KEY_ERROR);
             message = body.getString(JSON_KEY_MESSAGE);
         } catch (Exception e) {

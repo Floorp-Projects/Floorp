@@ -22,12 +22,18 @@ var cpows = [
   /^window\.content/
 ];
 
+var isInContentTask = false;
+
 module.exports = function(context) {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
   function showError(node, identifier) {
+    if (isInContentTask) {
+      return;
+    }
+
     context.report({
       node: node,
       message: identifier +
@@ -35,11 +41,32 @@ module.exports = function(context) {
     });
   }
 
+  function isContentTask(node) {
+    return node &&
+           node.type === "MemberExpression" &&
+           node.property.type === "Identifier" &&
+           node.property.name === "spawn" &&
+           node.object.type === "Identifier" &&
+           node.object.name === "ContentTask";
+  }
+
   // ---------------------------------------------------------------------------
   // Public
   // ---------------------------------------------------------------------------
 
   return {
+    CallExpression: function(node) {
+      if (isContentTask(node.callee)) {
+        isInContentTask = true;
+      }
+    },
+
+    "CallExpression:exit": function(node) {
+      if (isContentTask(node.callee)) {
+        isInContentTask = false;
+      }
+    },
+
     MemberExpression: function(node) {
       if (!helpers.getIsBrowserMochitest(this)) {
         return;
@@ -77,7 +104,6 @@ module.exports = function(context) {
             node.parent.object.name != "content") {
           return;
         }
-
         showError(node, expression);
         return;
       }
