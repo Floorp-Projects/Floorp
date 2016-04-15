@@ -70,7 +70,7 @@ nsWindowBase::InitTouchInjection()
 }
 
 bool
-nsWindowBase::InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint,
+nsWindowBase::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
                                POINTER_FLAGS aFlags, uint32_t aPressure,
                                uint32_t aOrientation)
 {
@@ -90,8 +90,8 @@ nsWindowBase::InjectTouchPoint(uint32_t aId, ScreenIntPoint& aPointerScreenPoint
   info.pointerInfo.pointerFlags = aFlags;
   info.pointerInfo.pointerType =  PT_TOUCH;
   info.pointerInfo.pointerId = aId;
-  info.pointerInfo.ptPixelLocation.x = aPointerScreenPoint.x;
-  info.pointerInfo.ptPixelLocation.y = aPointerScreenPoint.y;
+  info.pointerInfo.ptPixelLocation.x = aPoint.x;
+  info.pointerInfo.ptPixelLocation.y = aPoint.y;
 
   info.rcContact.top = info.pointerInfo.ptPixelLocation.y - 2;
   info.rcContact.bottom = info.pointerInfo.ptPixelLocation.y + 2;
@@ -119,7 +119,7 @@ void nsWindowBase::ChangedDPI()
 nsresult
 nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                          nsIWidget::TouchPointerState aPointerState,
-                                         ScreenIntPoint aPointerScreenPoint,
+                                         LayoutDeviceIntPoint aPoint,
                                          double aPointerPressure,
                                          uint32_t aPointerOrientation,
                                          nsIObserver* aObserver)
@@ -160,7 +160,7 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
       flags |= POINTER_FLAG_CANCELED;
     }
 
-    return !InjectTouchPoint(aPointerId, aPointerScreenPoint, flags,
+    return !InjectTouchPoint(aPointerId, aPoint, flags,
                              pressure, aPointerOrientation) ?
       NS_ERROR_UNEXPECTED : NS_OK;
   }
@@ -171,7 +171,7 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   }
 
   // Create a new pointer
-  info = new PointerInfo(aPointerId, aPointerScreenPoint);
+  info = new PointerInfo(aPointerId, aPoint);
 
   POINTER_FLAGS flags = POINTER_FLAG_INRANGE;
   if (contact) {
@@ -179,7 +179,7 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   }
 
   mActivePointers.Put(aPointerId, info);
-  return !InjectTouchPoint(aPointerId, aPointerScreenPoint, flags,
+  return !InjectTouchPoint(aPointerId, aPoint, flags,
                            pressure, aPointerOrientation) ?
     NS_ERROR_UNEXPECTED : NS_OK;
 }

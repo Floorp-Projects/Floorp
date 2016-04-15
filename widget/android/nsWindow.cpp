@@ -3369,7 +3369,7 @@ nsWindow::GetIMEUpdatePreference()
 nsresult
 nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,
-                                     ScreenIntPoint aPointerScreenPoint,
+                                     LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
                                      nsIObserver* aObserver)
@@ -3398,8 +3398,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     MOZ_ASSERT(mGLControllerSupport);
     GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
     client->SynthesizeNativeTouchPoint(aPointerId, eventType,
-        aPointerScreenPoint.x, aPointerScreenPoint.y, aPointerPressure,
-        aPointerOrientation);
+        aPoint.x, aPoint.y, aPointerPressure, aPointerOrientation);
 
     return NS_OK;
 }
