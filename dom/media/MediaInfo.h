@@ -184,9 +184,10 @@ public:
                 EmptyString(), EmptyString(), true, 2)
     , mDisplay(nsIntSize(aWidth, aHeight))
     , mStereoMode(StereoMode::MONO)
-    , mImage(nsIntRect(0, 0, aWidth, aHeight))
+    , mImage(nsIntSize(aWidth, aHeight))
     , mCodecSpecificConfig(new MediaByteBuffer)
     , mExtraData(new MediaByteBuffer)
+    , mImageRect(nsIntRect(0, 0, aWidth, aHeight))
   {
   }
 
@@ -197,6 +198,7 @@ public:
     , mImage(aOther.mImage)
     , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
     , mExtraData(aOther.mExtraData)
+    , mImageRect(aOther.mImageRect)
   {
   }
 
@@ -220,6 +222,19 @@ public:
     return MakeUnique<VideoInfo>(*this);
   }
 
+  nsIntRect ImageRect() const
+  {
+    if (mImageRect.width < 0 || mImageRect.height < 0) {
+      return nsIntRect(0, 0, mImage.width, mImage.height);
+    }
+    return mImageRect;
+  }
+
+  void SetImageRect(const nsIntRect& aRect)
+  {
+    mImageRect = aRect;
+  }
+
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
   nsIntSize mDisplay;
@@ -227,10 +242,16 @@ public:
   // Indicates the frame layout for single track stereo videos.
   StereoMode mStereoMode;
 
-  // Visible area of the decoded video's image.
-  nsIntRect mImage;
+  // Size of the decoded video's image.
+  nsIntSize mImage;
+
   RefPtr<MediaByteBuffer> mCodecSpecificConfig;
   RefPtr<MediaByteBuffer> mExtraData;
+
+private:
+  // mImage may be cropped; currently only used with the WebM container.
+  // A negative width or height indicate that no cropping is to occur.
+  nsIntRect mImageRect;
 };
 
 class AudioInfo : public TrackInfo {
