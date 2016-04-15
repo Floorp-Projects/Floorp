@@ -478,5 +478,55 @@ async_test(function(t) {
       .catch(unreached_rejection(t));
   }, 'Service Worker responds to fetch event with the correct cache types');
 
+async_test(function(t) {
+    var scope = 'resources/simple.html?eventsource';
+    var frame;
+
+    function test_eventsource(opts) {
+      return new Promise(function(resolve, reject) {
+        var eventSource = new frame.contentWindow.EventSource(scope, opts);
+        eventSource.addEventListener('message', function(msg) {
+          eventSource.close();
+          try {
+            var data = JSON.parse(msg.data);
+            assert_equals(data.mode, 'cors',
+                          'EventSource should make CORS requests.');
+            assert_equals(data.cache, 'no-store',
+                          'EventSource should bypass the http cache.');
+            var expectedCredentials = opts.withCredentials ? 'include'
+                                                           : 'same-origin';
+            assert_equals(data.credentials, expectedCredentials,
+                          'EventSource should pass correct credentials mode.');
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+        eventSource.addEventListener('error', function(e) {
+          eventSource.close();
+          reject('The EventSource fired an error event.');
+        });
+      });
+    }
+
+    service_worker_unregister_and_register(t, worker, scope)
+      .then(function(reg) {
+          return wait_for_state(t, reg.installing, 'activated');
+        })
+      .then(function() { return with_iframe(scope); })
+      .then(function(f) {
+          frame = f;
+          return test_eventsource({ withCredentials: false });
+        })
+      .then(function() {
+          return test_eventsource({ withCredentials: true });
+        })
+      .then(function() {
+          frame.remove();
+          return service_worker_unregister_and_done(t, scope);
+        })
+      .catch(unreached_rejection(t));
+  }, 'Service Worker should intercept EventSource');
+
 </script>
 </body>
