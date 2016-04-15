@@ -81,7 +81,7 @@ var WebProgressListener = {
     // (see Bug 1264936 and Bug 125662 for rationale)
     if ((webProgress.DOMWindow.top != webProgress.DOMWindow) &&
         (stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT)) {
-      this.sendDocumentChange({webProgress, locationURI});
+      this.sendDocumentChange({webProgress, locationURI, request});
     }
   },
 
@@ -103,7 +103,7 @@ var WebProgressListener = {
     // an "Extension:HistoryChange" to the main process, where it will be turned
     // into a webNavigation.onHistoryStateUpdated/onReferenceFragmentUpdated event.
     if (isSameDocument) {
-      this.sendHistoryChange({webProgress, previousURI, locationURI});
+      this.sendHistoryChange({webProgress, previousURI, locationURI, request});
     } else if (webProgress.DOMWindow.top == webProgress.DOMWindow) {
       // We have to catch the document changes from top level frames here,
       // where we can detect the "server redirect" transition.
@@ -124,8 +124,12 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:StateChange", data);
   },
 
-  sendDocumentChange({webProgress, locationURI}) {
+  sendDocumentChange({webProgress, locationURI, request}) {
+    let {loadType} = webProgress;
+    let frameTransitionData = this.getFrameTransitionData({loadType, request});
+
     let data = {
+      frameTransitionData,
       location: locationURI ? locationURI.spec : "",
       windowId: webProgress.DOMWindowID,
       parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
@@ -134,7 +138,7 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:DocumentChange", data);
   },
 
-  sendHistoryChange({webProgress, previousURI, locationURI}) {
+  sendHistoryChange({webProgress, previousURI, locationURI, request}) {
     let {loadType} = webProgress;
 
     let isHistoryStateUpdated = false;
@@ -159,7 +163,10 @@ var WebProgressListener = {
     }
 
     if (isHistoryStateUpdated || isReferenceFragmentUpdated) {
+      let frameTransitionData = this.getFrameTransitionData({loadType, request});
+
       let data = {
+        frameTransitionData,
         isHistoryStateUpdated, isReferenceFragmentUpdated,
         location: locationURI ? locationURI.spec : "",
         windowId: webProgress.DOMWindowID,
@@ -169,6 +176,27 @@ var WebProgressListener = {
       sendAsyncMessage("Extension:HistoryChange", data);
     }
   },
+
+  getFrameTransitionData({loadType, request}) {
+    let frameTransitionData = {};
+
+    if (loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY) {
+      frameTransitionData.forward_back = true;
+    }
+
+    if (loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+      frameTransitionData.reload = true;
+    }
+
+    if (request instanceof Ci.nsIChannel) {
+      if (request.loadInfo.redirectChain.length) {
+        frameTransitionData.server_redirect = true;
+      }
+    }
+
+    return frameTransitionData;
+  },
+
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
 };
