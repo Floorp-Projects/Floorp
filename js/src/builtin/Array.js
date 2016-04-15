@@ -1027,3 +1027,60 @@ function ArrayStaticConcat(arr, arg1) {
     var args = callFunction(std_Array_slice, arguments, 1);
     return callFunction(std_Function_apply, ArrayConcat, arr, args);
 }
+
+function ArrayStaticJoin(arr, separator) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.join');
+    return callFunction(std_Array_join, arr, separator);
+}
+
+function ArrayStaticReverse(arr) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reverse');
+    return callFunction(std_Array_reverse, arr);
+}
+
+function ArrayStaticSort(arr, comparefn) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.sort');
+    return callFunction(std_Array_sort, arr, comparefn);
+}
+
+function ArrayStaticPush(arr, arg1) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.push');
+    var args = callFunction(std_Array_slice, arguments, 1);
+    return callFunction(std_Function_apply, std_Array_push, arr, args);
+}
+
+function ArrayStaticPop(arr) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.pop');
+    return callFunction(std_Array_pop, arr);
+}
+
+function ArrayStaticShift(arr) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.shift');
+    return callFunction(std_Array_shift, arr);
+}
+
+function ArrayStaticUnshift(arr, arg1) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.unshift');
+    var args = callFunction(std_Array_slice, arguments, 1);
+    return callFunction(std_Function_apply, std_Array_unshift, arr, args);
+}
+
+function ArrayStaticSplice(arr, start, deleteCount) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.splice');
+    var args = callFunction(std_Array_slice, arguments, 1);
+    return callFunction(std_Function_apply, std_Array_splice, arr, args);
+}
+
+function ArrayStaticSlice(arr, start, end) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.slice');
+    return callFunction(std_Array_slice, arr, start, end);
+}

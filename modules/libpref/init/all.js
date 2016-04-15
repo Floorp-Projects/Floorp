@@ -2029,7 +2029,6 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 pref("security.csp.enable", true);
-pref("security.csp.debug", false);
 pref("security.csp.experimentalEnabled", false);
 
 // Default Content Security Policy to apply to privileged apps.
@@ -2421,6 +2420,9 @@ pref("layout.css.scope-pseudo.enabled", true);
 
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
+
+// Is support for background-clip:text enabled? (bug 1263516)
+pref("layout.css.background-clip-text.enabled", false);
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);

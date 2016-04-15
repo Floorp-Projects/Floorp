@@ -480,7 +480,6 @@
 
       this.invoke = function removeNotARIAOwnedEl_invoke()
       {
-        dumpTree(aContainer, "before");
         var tree = {
           SECTION: [
             { TEXT_LEAF: [ ] },
@@ -494,7 +493,6 @@
 
       this.finalCheck = function removeNotARIAOwnedEl_finalCheck()
       {
-        dumpTree(aContainer, "after");
         var tree = {
           SECTION: [
             { GROUPING: [ ] }
@@ -506,6 +504,25 @@
       this.getID = function removeNotARIAOwnedEl_getID()
       {
         return `remove not ARIA owned child`;
+      }
+    }
+
+    function setARIAOwnsOnElToRemove(aParent, aChild)
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getAccessible(aParent))
+      ];
+
+      this.invoke = function setARIAOwnsOnElToRemove_invoke()
+      {
+        getNode(aChild).setAttribute("aria-owns", "no_id");
+        getNode(aParent).removeChild(getNode(aChild));
+        getNode(aParent).parentNode.removeChild(getNode(aParent));
+      }
+
+      this.getID = function setARIAOwnsOnElToRemove_getID()
+      {
+        return `set ARIA owns on an element, and then remove it, and then remove its parent`;
       }
     }
 
@@ -554,6 +571,8 @@
         [ "RADIOBUTTON", "PUSHBUTTON", "CHECKBUTTON" ]));
 
       gQueue.push(new removeNotARIAOwnedEl("t6_container", "t6_span"));
+
+      gQueue.push(new setARIAOwnsOnElToRemove("t7_parent", "t7_child"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -607,6 +626,12 @@
     <span id="t6_span">hey</span>
   </div>
   <div id="t6_fake" role="group"></div>
+
+  <div id="t7_container">
+    <div id="t7_parent">
+      <div id="t7_child"></div>
+    </div>
+  </div>
 </body>
 
 </html>

@@ -51,7 +51,7 @@ void
 Buffer::try_realloc(size_t newlength)
 {
   char* buffer = (char*)realloc(mBuffer, newlength);
-  if (buffer) {
+  if (buffer || !newlength) {
     mBuffer = buffer;
     mReserved = newlength;
     return;
@@ -107,6 +107,8 @@ Buffer::reserve(size_t size)
 char*
 Buffer::trade_bytes(size_t count)
 {
+  MOZ_RELEASE_ASSERT(count);
+
   char* result = mBuffer;
   mSize = mReserved = mSize - count;
   mBuffer = mReserved ? (char*)malloc(mReserved) : nullptr;

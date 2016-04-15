@@ -86,6 +86,8 @@ public:
   NS_IMETHOD IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result) = 0;
 #endif
 
+  NS_IMETHOD IsCertContentSigningRoot(CERTCertificate* cert, bool& result) = 0;
+
   virtual ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() = 0;
 };
@@ -140,6 +142,8 @@ public:
   NS_IMETHOD IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result) override;
 #endif
 
+  NS_IMETHOD IsCertContentSigningRoot(CERTCertificate* cert, bool& result) override;
+
   ::already_AddRefed<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() override;
 
@@ -176,7 +180,6 @@ private:
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   bool mNSSInitialized;
   static int mInstanceCount;
-  nsNSSShutDownList* mShutdownObjectList;
 #ifndef MOZ_NO_SMART_CARDS
   SmartCardThreadList* mThreadList;
 #endif
@@ -184,6 +187,7 @@ private:
 #ifdef DEBUG
   nsAutoString mTestBuiltInRootHash;
 #endif
+  nsString mContentSigningRootHash;
 
   void deleteBackgroundThreads();
   void createBackgroundThreads();

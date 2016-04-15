@@ -9,6 +9,9 @@ function inChildProcess() {
 function makeChan(url, appId, inIsolatedMozBrowser) {
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                     .QueryInterface(Ci.nsIHttpChannel);
+  chan.loadInfo.originAttributes = { appId: appId,
+                                     inIsolatedMozBrowser: inIsolatedMozBrowser
+                                   };
   chan.notificationCallbacks = {
     appId: appId,
     isInIsolatedMozBrowserElement: inIsolatedMozBrowser,

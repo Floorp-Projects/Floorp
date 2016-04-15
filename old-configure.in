@@ -196,7 +196,6 @@ if test -n "$gonkdir" ; then
     AC_SUBST(ANDROID_VERSION)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
-    MOZ_CHROME_FILE_FORMAT=omni
     direct_nspr_config=1
     android_cxx_stl=mozstlport
 else
@@ -206,7 +205,6 @@ else
 
     case "$target" in
     *-android*|*-linuxandroid*)
-        MOZ_CHROME_FILE_FORMAT=omni
         ZLIB_DIR=yes
         AC_DEFINE(ANDROID)
         ;;
@@ -252,12 +250,6 @@ else
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
     AC_CHECK_PROGS(OTOOL, otool, :)
-    if test -z "$HOST_CC"; then
-        HOST_CC="$CC"
-    fi
-    if test -z "$HOST_CXX"; then
-        HOST_CXX="$CXX"
-    fi
     if test -z "$HOST_RANLIB"; then
         HOST_RANLIB="$RANLIB"
     fi
@@ -274,8 +266,6 @@ if test -n "$MOZ_WINCONSOLE"; then
 fi
 
 MOZ_TOOL_VARIABLES
-
-MOZ_CHECK_COMPILER_WRAPPER
 
 MOZ_RUST_SUPPORT
 
@@ -1156,9 +1146,6 @@ if test "$MOZ_DMD"; then
         CFLAGS="$CFLAGS -funwind-tables"
         CXXFLAGS="$CXXFLAGS -funwind-tables"
     fi
-
-    MOZ_MEMORY=1                        # DMD enables jemalloc
-    MOZ_REPLACE_MALLOC=1                # DMD enables replace-malloc
 fi
 
 dnl ========================================================
@@ -1247,10 +1234,6 @@ case "$target" in
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
-    # Statically disable jemalloc on 10.5 and 32-bit 10.6.  See bug 702250.
-    if test "$HAVE_64BIT_BUILD"; then
-        MOZ_MEMORY=1
-    fi
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP_FLAGS="$STRIP_FLAGS -x -S"
@@ -1344,8 +1327,6 @@ case "$target" in
         fi
     fi
 
-    MOZ_MEMORY=1
-
     case "${target_cpu}" in
     alpha*)
         CFLAGS="$CFLAGS -mieee"
@@ -1401,8 +1382,6 @@ case "$target" in
         MOZ_CXX_SUPPORTS_WARNING(-Wno-, format, ac_cxx_has_wno_format)
     else
         TARGET_COMPILER_ABI=msvc
-        HOST_CC='$(CC)'
-        HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
         if test "$AS_BIN"; then
             AS="$(basename "$AS_BIN")"
@@ -1568,7 +1547,6 @@ case "$target" in
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
         dnl allow AVX2 code from VS2012
         HAVE_X86_AVX2=1
-        MOZ_MEMORY=1
     fi
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -2813,9 +2791,6 @@ case "${target}" in
         NSS_DISABLE_DBM=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
-        if test "$COMPILE_ENVIRONMENT"; then
-            MOZ_MEMORY=1
-        fi
         MOZ_RAW=1
         ;;
 
@@ -5620,14 +5595,6 @@ if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_DUMP_PAINTING)
 fi
 
-dnl ========================================================
-dnl = Enable jemalloc
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(jemalloc,
-[  --enable-jemalloc       Replace memory allocator with jemalloc],
-    MOZ_MEMORY=1,
-    MOZ_MEMORY=)
-
 case "${OS_TARGET}" in
 Android|WINNT|Darwin)
   MOZ_GLUE_IN_PROGRAM=
@@ -5639,24 +5606,7 @@ Android|WINNT|Darwin)
   ;;
 esac
 
-dnl ========================================================
-dnl = Enable dynamic replacement of malloc implementation
-dnl ========================================================
-if test -n "$NIGHTLY_BUILD" -a -n "$MOZ_MEMORY"; then
-  # Enable on central for the debugging opportunities it adds.
-  MOZ_REPLACE_MALLOC=1
-fi
-MOZ_ARG_ENABLE_BOOL(replace-malloc,
-[  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
-    MOZ_REPLACE_MALLOC=1,
-    MOZ_REPLACE_MALLOC= )
-
-if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
-    dnl We don't want to enable jemalloc unconditionally because it may be a
-    dnl deliberate choice not to enable it (bug 702250, for instance)
-    AC_MSG_ERROR([--enable-replace-malloc requires --enable-jemalloc])
-elif test -n "$MOZ_REPLACE_MALLOC"; then
-    AC_DEFINE(MOZ_REPLACE_MALLOC)
+if test -n "$MOZ_REPLACE_MALLOC"; then
     MOZ_SYSTEM_JEMALLOC=
 
     dnl Replace-malloc Mac linkage quirks
@@ -5711,25 +5661,12 @@ elif test -n "$MOZ_REPLACE_MALLOC"; then
         MOZ_REPLACE_MALLOC_LINKAGE="$ac_cv_weak_dynamic_linking"
     fi
 fi
-AC_SUBST(MOZ_REPLACE_MALLOC)
 AC_SUBST(MOZ_REPLACE_MALLOC_LINKAGE)
 
 dnl ========================================================
 dnl = Jemalloc build setup
 dnl ========================================================
 if test -z "$MOZ_MEMORY"; then
-  if test -n "$MOZ_JEMALLOC4" -a -z "$MOZ_REPLACE_MALLOC"; then
-    MOZ_SYSTEM_JEMALLOC=1
-    AC_CHECK_FUNCS(mallctl nallocx,,
-      [MOZ_SYSTEM_JEMALLOC=
-       break])
-    if test -n "$MOZ_SYSTEM_JEMALLOC"; then
-      MOZ_MEMORY=1
-      AC_DEFINE(MOZ_MEMORY)
-      AC_DEFINE(MOZ_JEMALLOC4)
-      AC_DEFINE(MOZ_SYSTEM_JEMALLOC)
-    fi
-  fi
   case "${target}" in
     *-mingw*)
       if test -z "$WIN32_REDIST_DIR" -a -z "$MOZ_DEBUG"; then
@@ -5738,9 +5675,14 @@ if test -z "$MOZ_MEMORY"; then
       ;;
   esac
 else
-  AC_DEFINE(MOZ_MEMORY)
-  if test -n "$MOZ_JEMALLOC4"; then
-    AC_DEFINE(MOZ_JEMALLOC4)
+  if test -n "$MOZ_JEMALLOC4" -a -z "$MOZ_REPLACE_MALLOC"; then
+    MOZ_SYSTEM_JEMALLOC=1
+    AC_CHECK_FUNCS(mallctl nallocx,,
+      [MOZ_SYSTEM_JEMALLOC=
+       break])
+    if test -n "$MOZ_SYSTEM_JEMALLOC"; then
+      AC_DEFINE(MOZ_SYSTEM_JEMALLOC)
+    fi
   fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
@@ -5749,24 +5691,7 @@ else
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
   case "${target}" in
-  *-darwin*)
-    AC_DEFINE(MOZ_MEMORY_DARWIN)
-    ;;
-  *-*freebsd*)
-    AC_DEFINE(MOZ_MEMORY_BSD)
-    ;;
-  *-android*|*-linuxandroid*)
-    AC_DEFINE(MOZ_MEMORY_LINUX)
-    AC_DEFINE(MOZ_MEMORY_ANDROID)
-    ;;
-  *-*linux*)
-    AC_DEFINE(MOZ_MEMORY_LINUX)
-    ;;
-  *-netbsd*)
-    AC_DEFINE(MOZ_MEMORY_BSD)
-    ;;
   *-mingw*)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     export MOZ_NO_DEBUG_RTL=1
     if test "$MSVS_VERSION" != "2015"; then
         WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
@@ -5779,13 +5704,8 @@ else
         rm crtdll.obj
     fi
     ;;
-  *)
-    AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
-    ;;
   esac
 fi # MOZ_MEMORY
-AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_JEMALLOC4)
 AC_SUBST(MOZ_SYSTEM_JEMALLOC)
 AC_SUBST(MOZ_CRT)
 export MOZ_CRT
@@ -6233,67 +6153,6 @@ dnl = Misc. Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Misc. Options)
-
-dnl =========================================================
-dnl = Chrome format
-dnl =========================================================
-MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|omni
-                          Select FORMAT of chrome files during packaging],
-    MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
-
-if test -z "$MOZ_CHROME_FILE_FORMAT"; then
-    MOZ_CHROME_FILE_FORMAT=jar
-fi
-
-if test "$MOZ_CHROME_FILE_FORMAT" = "symlink"; then
-    AC_MSG_ERROR([--enable-chrome-format=symlink has been deprecated. It is now used by default in $DIST/bin on platforms that support it])
-fi
-
-if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
-fi
-
-dnl =========================================================
-dnl Omnijar packaging (bug 552121)
-dnl =========================================================
-dnl Omnijar packaging is compatible with flat packaging.
-dnl In unpackaged builds, omnijar looks for files as if
-dnl things were flat packaged. After packaging, all files
-dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
-dnl is set to flat since putting files into jars is only
-dnl done during packaging with omnijar.
-if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
-    MOZ_OMNIJAR=1
-    AC_DEFINE(MOZ_OMNIJAR)
-fi
-MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
-if test "$OS_ARCH" = "WINNT" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
-    MOZ_CHROME_FILE_FORMAT=flat
-else
-    MOZ_CHROME_FILE_FORMAT=symlink
-fi
-
-if test "$MOZ_WIDGET_TOOLKIT" = "android"; then
-    dnl Fennec's static resources live in the assets/ folder of the
-    dnl APK.  Adding a path to the name here works because we only
-    dnl have one omnijar file in the final package (which is not the
-    dnl case on desktop), and necessitates some contortions during
-    dnl packaging so that the resources in the omnijar are considered
-    dnl as rooted at / and not as rooted at assets/ (which again is
-    dnl not the case on desktop: there are omnijars rooted at webrtc/,
-    dnl etc). packager.mk handles changing the rooting of the single
-    dnl omnijar.
-    OMNIJAR_NAME=assets/omni.ja
-else
-    OMNIJAR_NAME=omni.ja
-fi
-
-AC_SUBST(OMNIJAR_NAME)
-AC_SUBST(MOZ_OMNIJAR)
-AC_SUBST(MOZ_PACKAGER_FORMAT)
 
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
@@ -7341,8 +7200,6 @@ AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 AC_SUBST(HAVE_X86_AVX2)
 AC_SUBST(GCC_USE_GNU_LD)
 
-AC_SUBST(MOZ_CHROME_FILE_FORMAT)
-
 AC_SUBST(WRAP_LDFLAGS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(MKCSHLIB)
@@ -7474,8 +7331,6 @@ if test -n "$A11Y_LOG"; then
 fi
 
 AC_SUBST(MOZILLA_VERSION)
-
-AC_SUBST(ac_configure_args)
 
 dnl Spit out some output
 dnl ========================================================
@@ -7655,9 +7510,6 @@ if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"
 fi
 ac_configure_args="$ac_configure_args --prefix=$dist"
-if test "$MOZ_MEMORY"; then
-   ac_configure_args="$ac_configure_args --enable-jemalloc"
-fi
 if test -n "$ZLIB_IN_MOZGLUE"; then
    MOZ_ZLIB_LIBS=
 fi
@@ -7675,7 +7527,6 @@ unset MOZ_BUILD_APP
 export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
-export MOZ_MEMORY
 export AR
 export RANLIB
 export CPP

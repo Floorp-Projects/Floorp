@@ -17,7 +17,7 @@ add_task(function test_prevent_file_stealing() {
   // Generate a path to a 'secret' file.
   let file = Services.dirsvc.get("TmpD", Ci.nsIFile);
   file.append("466937_test.file");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   let testPath = file.path;
 
   // Fill in form values.

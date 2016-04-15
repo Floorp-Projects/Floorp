@@ -86,10 +86,10 @@ BEGIN_TEST(testJitDCEinGVN_phi)
 
     //   x = 1.0
     //   y = 3.0;
-    x->addInputSlow(c1);
+    MOZ_RELEASE_ASSERT(x->addInputSlow(c1));
     MConstant* c3 = MConstant::New(func.alloc, DoubleValue(3.0));
     thenBlock1->add(c3);
-    y->addInputSlow(c3);
+    MOZ_RELEASE_ASSERT(y->addInputSlow(c3));
     thenBlock1->end(MGoto::New(func.alloc, joinBlock));
     MOZ_ALWAYS_TRUE(joinBlock->addPredecessor(func.alloc, thenBlock1));
 
@@ -102,10 +102,10 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     //   y = 4.0;
     MConstant* c2 = MConstant::New(func.alloc, DoubleValue(2.0));
     thenBlock2->add(c2);
-    x->addInputSlow(c2);
+    MOZ_RELEASE_ASSERT(x->addInputSlow(c2));
     MConstant* c4 = MConstant::New(func.alloc, DoubleValue(4.0));
     thenBlock2->add(c4);
-    y->addInputSlow(c4);
+    MOZ_RELEASE_ASSERT(y->addInputSlow(c4));
     thenBlock2->end(MGoto::New(func.alloc, joinBlock));
     MOZ_ALWAYS_TRUE(joinBlock->addPredecessor(func.alloc, thenBlock2));
 
@@ -113,10 +113,10 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     //   x = 1.0
     //   y = 5.0;
     // }
-    x->addInputSlow(c1);
+    MOZ_RELEASE_ASSERT(x->addInputSlow(c1));
     MConstant* c5 = MConstant::New(func.alloc, DoubleValue(5.0));
     elseBlock->add(c5);
-    y->addInputSlow(c5);
+    MOZ_RELEASE_ASSERT(y->addInputSlow(c5));
     elseBlock->end(MGoto::New(func.alloc, joinBlock));
     MOZ_ALWAYS_TRUE(joinBlock->addPredecessor(func.alloc, elseBlock));
 

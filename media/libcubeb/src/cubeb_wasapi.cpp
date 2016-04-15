@@ -1614,9 +1614,11 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->draining = false;
   if (input_stream_params) {
     stm->input_stream_params = *input_stream_params;
+    stm->input_device = input_device;
   }
   if (output_stream_params) {
     stm->output_stream_params = *output_stream_params;
+    stm->output_device = output_device;
   }
   stm->latency = latency;
   stm->volume = 1.0;
@@ -1723,19 +1725,25 @@ void wasapi_stream_destroy(cubeb_stream * stm)
   free(stm);
 }
 
-int stream_start_one_side(cubeb_stream * stm, IAudioClient * client)
-{
-  XASSERT(stm->output_client == client || stm->input_client == client);
+enum StreamDirection {
+  OUTPUT,
+  INPUT
+};
 
-  HRESULT hr = client->Start();
+int stream_start_one_side(cubeb_stream * stm, StreamDirection dir)
+{
+  XASSERT((dir == OUTPUT && stm->output_client) ||
+          (dir == INPUT && stm->input_client));
+
+  HRESULT hr = dir == OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
   if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
     LOG("audioclient invalidated for %s device, reconfiguring\n",
-        stm->output_client == client ? "output" : "input", hr);
+        dir == OUTPUT ? "output" : "input", hr);
 
     BOOL ok = ResetEvent(stm->reconfigure_event);
     if (!ok) {
       LOG("resetting reconfig event failed for %s stream: %x\n",
-          stm->output_client == client ? "output" : "input", GetLastError());
+          dir == OUTPUT ? "output" : "input", GetLastError());
     }
 
     close_wasapi_stream(stm);
@@ -1745,15 +1753,15 @@ int stream_start_one_side(cubeb_stream * stm, IAudioClient * client)
       return r;
     }
 
-    HRESULT hr = client->Start();
+    HRESULT hr = OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
     if (FAILED(hr)) {
       LOG("could not start the %s stream after reconfig: %x (%s)\n",
-        stm->output_client == client ? "output" : "input", hr);
+          dir == OUTPUT ? "output" : "input", hr);
       return CUBEB_ERROR;
     }
   } else if (FAILED(hr)) {
     LOG("could not start the %s stream: %x.\n",
-        stm->output_client == client ? "output" : "input", hr);
+        dir == OUTPUT ? "output" : "input", hr);
     return CUBEB_ERROR;
   }
 
@@ -1767,15 +1775,15 @@ int wasapi_stream_start(cubeb_stream * stm)
 
   XASSERT(stm && !stm->thread && !stm->shutdown_event);
 
-  if (has_output(stm)) {
-    rv = stream_start_one_side(stm, stm->output_client);
+  if (stm->output_client) {
+    rv = stream_start_one_side(stm, OUTPUT);
     if (rv != CUBEB_OK) {
       return rv;
     }
   }
 
   if (stm->input_client) {
-    rv = stream_start_one_side(stm, stm->input_client);
+    rv = stream_start_one_side(stm, INPUT);
     if (rv != CUBEB_OK) {
       return rv;
     }

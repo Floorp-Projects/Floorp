@@ -1126,23 +1126,39 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
   MOZ_RELEASE_ASSERT(!mDivertingFromChild,
     "Cannot call OnDataAvailable if diverting is set!");
 
-  nsCString data;
-  nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsresult channelStatus = NS_OK;
   mChannel->GetStatus(&channelStatus);
 
-  // OnDataAvailable is always preceded by OnStatus/OnProgress calls that set
-  // mStoredStatus/mStoredProgress(Max) to appropriate values, unless
-  // LOAD_BACKGROUND set.  In that case, they'll have garbage values, but
-  // child doesn't use them.
-  if (mIPCClosed || !SendOnTransportAndData(channelStatus, mStoredStatus,
-                                            mStoredProgress, mStoredProgressMax,
-                                            data, aOffset, aCount)) {
-    return NS_ERROR_UNEXPECTED;
+  static uint32_t const kCopyChunkSize = 128 * 1024;
+  uint32_t toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
+
+  nsCString data;
+  if (!data.SetCapacity(toRead, fallible)) {
+    LOG(("  out of memory!"));
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  while (aCount) {
+    nsresult rv = NS_ReadInputStreamToString(aInputStream, data, toRead);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // OnDataAvailable is always preceded by OnStatus/OnProgress calls that set
+    // mStoredStatus/mStoredProgress(Max) to appropriate values, unless
+    // LOAD_BACKGROUND set.  In that case, they'll have garbage values, but
+    // child doesn't use them.
+    if (mIPCClosed || !SendOnTransportAndData(channelStatus, mStoredStatus,
+                                              mStoredProgress, mStoredProgressMax,
+                                              aOffset, toRead, data)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    aOffset += toRead;
+    aCount -= toRead;
+    toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
+  }
+
   return NS_OK;
 }
 

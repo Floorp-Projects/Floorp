@@ -26,7 +26,7 @@ if $USE_64BIT; then
 elif test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
   . $topsrcdir/build/win32/mozconfig.vs2015-win64
 else
-  . $topsrcdir/build/win32/mozconfig.vs2010
+  . $topsrcdir/build/win32/mozconfig.vs2015
 fi
 
 # PATH also needs to point to mozmake.exe, which can come from either
@@ -34,7 +34,7 @@ fi
 if ! which mozmake 2>/dev/null; then
     export PATH="$PATH:$SOURCE/.."
     if ! which mozmake 2>/dev/null; then
-	TT_SERVER=${TT_SERVER:-https://api.pub.build.mozilla.org/tooltool/}
-	( cd $SOURCE/..; ./scripts/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/${platform:-win32}/releng.manifest $TT_SERVER setup.sh c:/mozilla-build/python27/python.exe C:/mozilla-build/tooltool.py )
+  TT_SERVER=${TT_SERVER:-https://api.pub.build.mozilla.org/tooltool/}
+  ( cd $SOURCE/..; ./scripts/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/${platform:-win32}/releng.manifest $TT_SERVER setup.sh c:/mozilla-build/python27/python.exe C:/mozilla-build/tooltool.py )
     fi
 fi

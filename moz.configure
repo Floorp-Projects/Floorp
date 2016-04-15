@@ -46,19 +46,26 @@ option('--disable-compile-environment',
        help='Disable compiler/library checks')
 
 @depends('--disable-compile-environment')
-def compile_environment(value):
-    if value:
+def compile_environment(compile_env):
+    if compile_env:
         return True
 
 set_config('COMPILE_ENVIRONMENT', compile_environment)
 add_old_configure_assignment('COMPILE_ENVIRONMENT', compile_environment)
 
 @depends('--disable-compile-environment', '--help')
-def toolchain_include(value, help):
-    if value:
+def toolchain_include(compile_env, help):
+    if compile_env:
         return 'build/moz.configure/toolchain.configure'
 
 include(toolchain_include)
+
+@depends('--disable-compile-environment', '--help')
+def memory_include(compile_env, help):
+    if compile_env:
+        return 'build/moz.configure/memory.configure'
+
+include(memory_include)
 
 
 @depends('--help')
@@ -166,3 +173,4 @@ check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
 
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
+# Please do not add anything after the include of old.configure.

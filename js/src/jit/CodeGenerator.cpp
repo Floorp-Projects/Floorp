@@ -1562,6 +1562,11 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     masm.createGCObject(object, temp2, templateObject, gc::DefaultHeap, &matchResultFallback);
     masm.bind(&matchResultJoin);
 
+    // Initialize slots of result object.
+    masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
+    masm.storeValue(templateObject->getSlot(0), Address(temp2, 0));
+    masm.storeValue(templateObject->getSlot(1), Address(temp2, sizeof(Value)));
+
     size_t elementsOffset = NativeObject::offsetOfFixedElements();
 
 #ifdef DEBUG
@@ -10718,6 +10723,7 @@ CodeGenerator::visitIsCallable(LIsCallable* ins)
     masm.jump(&done);
 
     masm.bind(&hasCOps);
+    masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
     masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, call)),
                    ImmPtr(nullptr), output);
 
@@ -10796,6 +10802,7 @@ CodeGenerator::visitIsConstructor(LIsConstructor* ins)
     masm.jump(&done);
 
     masm.bind(&hasCOps);
+    masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
     masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, construct)),
                    ImmPtr(nullptr), output);
 
