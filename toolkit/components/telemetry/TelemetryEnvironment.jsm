@@ -1260,7 +1260,8 @@ EnvironmentCache.prototype = {
         // Query the UBR key and only add it to the environment if it's available.
         // |readRegKey| doesn't throw, but rather returns 'undefined' on error.
         let ubr = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                             WINDOWS_UBR_KEY_PATH, "UBR");
+                                             WINDOWS_UBR_KEY_PATH, "UBR",
+                                             Ci.nsIWindowsRegKey.WOW64_64);
         data.windowsUBR = (ubr !== undefined) ? ubr : null;
       }
       data.installYear = getSysinfoProperty("installYear", null);
