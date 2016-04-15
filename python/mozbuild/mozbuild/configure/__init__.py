@@ -706,7 +706,6 @@ class ConfigureSandbox(dict):
             os=self.OS,
             log=self.log_impl,
         )
-        self._apply_imports(func, glob)
 
         # The execution model in the sandbox doesn't guarantee the execution
         # order will always be the same for a given function, and if it uses
@@ -726,12 +725,17 @@ class ConfigureSandbox(dict):
             closure = tuple(makecell(cell.cell_contents)
                             for cell in func.func_closure)
 
-        func = wraps(func)(types.FunctionType(
+        new_func = wraps(func)(types.FunctionType(
             func.func_code,
             glob,
             func.__name__,
             func.func_defaults,
             closure
         ))
-        self._prepared_functions.add(func)
-        return func, glob
+        @wraps(new_func)
+        def wrapped(*args, **kwargs):
+            self._apply_imports(func, glob)
+            return new_func(*args, **kwargs)
+
+        self._prepared_functions.add(wrapped)
+        return wrapped, glob
