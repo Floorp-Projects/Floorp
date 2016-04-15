@@ -21,22 +21,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TVSource)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TVSource,
-                                                  DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTVService)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTuner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentChannel)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TVSource,
-                                                DOMEventTargetHelper)
-  tmp->Shutdown();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTVService)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTuner)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentChannel)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TVSource, DOMEventTargetHelper, mTuner,
+                                   mCurrentChannel, mSourceListener)
 
 NS_IMPL_ADDREF_INHERITED(TVSource, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TVSource, DOMEventTargetHelper)
@@ -57,7 +43,6 @@ TVSource::TVSource(nsPIDOMWindowInner* aWindow,
 
 TVSource::~TVSource()
 {
-  Shutdown();
 }
 
 /* static */ already_AddRefed<TVSource>
@@ -72,30 +57,12 @@ TVSource::Create(nsPIDOMWindowInner* aWindow,
 bool
 TVSource::Init()
 {
-  mTVService = TVServiceFactory::AutoCreateTVService();
-  NS_ENSURE_TRUE(mTVService, false);
-
-  nsCOMPtr<nsITVSourceListener> sourceListener;
-  mTVService->GetSourceListener(getter_AddRefs(sourceListener));
-  NS_ENSURE_TRUE(sourceListener, false);
-  (static_cast<TVSourceListener*>(sourceListener.get()))->RegisterSource(this);
+  mSourceListener = TVSourceListener::Create(this);
+  if (NS_WARN_IF(!mSourceListener)) {
+    return false;
+  }
 
   return true;
-}
-
-void
-TVSource::Shutdown()
-{
-  if (!mTVService) {
-    return;
-  }
-
-  nsCOMPtr<nsITVSourceListener> sourceListener;
-  mTVService->GetSourceListener(getter_AddRefs(sourceListener));
-  if (!sourceListener) {
-    return;
-  }
-  (static_cast<TVSourceListener*>(sourceListener.get()))->UnregisterSource(this);
 }
 
 /* virtual */ JSObject*
@@ -180,13 +147,19 @@ TVSource::GetChannels(ErrorResult& aRv)
     return promise.forget();
   }
 
+  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
   nsString tunerId;
   mTuner->GetId(tunerId);
 
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceChannelGetterCallback(this, promise);
   nsresult rv =
-    mTVService->GetChannels(tunerId, ToTVSourceTypeStr(mType), callback);
+    service->GetChannels(tunerId, ToTVSourceTypeStr(mType), callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -212,13 +185,19 @@ TVSource::SetCurrentChannel(const nsAString& aChannelNumber,
     return promise.forget();
   }
 
+  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
   nsString tunerId;
   mTuner->GetId(tunerId);
 
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceChannelSetterCallback(this, promise, aChannelNumber);
-  nsresult rv =
-    mTVService->SetChannel(tunerId, ToTVSourceTypeStr(mType), aChannelNumber, callback);
+  nsresult rv = service->SetChannel(tunerId, ToTVSourceTypeStr(mType),
+                                    aChannelNumber, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -238,14 +217,17 @@ TVSource::StartScanning(const TVStartScanningOptions& aOptions,
     return nullptr;
   }
 
-  nsString tunerId;
-  mTuner->GetId(tunerId);
+  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
 
   bool isRescanned = aOptions.mIsRescanned.WasPassed() &&
                      aOptions.mIsRescanned.Value();
 
   if (isRescanned) {
-    nsresult rv = mTVService->ClearScannedChannelsCache();
+    nsresult rv = service->ClearScannedChannelsCache();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
       return promise.forget();
@@ -258,12 +240,15 @@ TVSource::StartScanning(const TVStartScanningOptions& aOptions,
     }
   }
 
+  nsString tunerId;
+  mTuner->GetId(tunerId);
+
   // |SetIsScanning(bool)| should be called once |notifySuccess()| of this
   // callback is invoked.
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceChannelScanCallback(this, promise, true);
   nsresult rv =
-    mTVService->StartScanningChannels(tunerId, ToTVSourceTypeStr(mType), callback);
+    service->StartScanningChannels(tunerId, ToTVSourceTypeStr(mType), callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -282,6 +267,12 @@ TVSource::StopScanning(ErrorResult& aRv)
     return nullptr;
   }
 
+  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
   nsString tunerId;
   mTuner->GetId(tunerId);
 
@@ -290,7 +281,7 @@ TVSource::StopScanning(ErrorResult& aRv)
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceChannelScanCallback(this, promise, false);
   nsresult rv =
-    mTVService->StopScanningChannels(tunerId, ToTVSourceTypeStr(mType), callback);
+    service->StopScanningChannels(tunerId, ToTVSourceTypeStr(mType), callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }

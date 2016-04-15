@@ -7,14 +7,21 @@
 #ifndef mozilla_dom_TVListeners_h
 #define mozilla_dom_TVListeners_h
 
-#include "mozilla/dom/TVSource.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsITVService.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
 
+class TVSource;
+
+/*
+ * Instead of making |TVSource| class implement |TVSource| (WebIDL) and
+ * |nsITVSourceListener| (XPCOM) at the same time, having an individual class
+ * for |nsITVSourceListener| (XPCOM) interface would help the JS context
+ * recognize |nsITVSourceListener| instances (when it comes to use them in
+ * |TVSimulatorService.js|.)
+ */
 class TVSourceListener final : public nsITVSourceListener
 {
 public:
@@ -22,17 +29,24 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(TVSourceListener)
   NS_DECL_NSITVSOURCELISTENER
 
-  void RegisterSource(TVSource* aSource);
-
-  void UnregisterSource(TVSource* aSource);
+  static already_AddRefed<TVSourceListener> Create(TVSource* aSource);
 
 private:
-  ~TVSourceListener() {}
+  explicit TVSourceListener(TVSource* aSource);
 
-  already_AddRefed<TVSource> GetSource(const nsAString& aTunerId,
-                                       const nsAString& aSourceType);
+  ~TVSourceListener();
 
-  nsTArray<RefPtr<TVSource>> mSources;
+  bool Init();
+
+  void Shutdown();
+
+  bool IsMatched(const nsAString& aTunerId, const nsAString& aSourceType);
+
+  RefPtr<TVSource> mSource;
+
+  // Store the tuner ID for |UnregisterSourceListener| call in |Shutdown| since
+  // |mSource->Tuner()| may not exist at that moment.
+  nsString mTunerId;
 };
 
 } // namespace dom
