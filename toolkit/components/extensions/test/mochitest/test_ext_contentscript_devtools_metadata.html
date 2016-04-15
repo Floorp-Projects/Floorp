@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Sandbox metadata on WebExtensions ContentScripts</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_contentscript_devtools_sandbox_metadata() {
+  function contentScript() {
+    browser.runtime.sendMessage("contentScript.executed");
+  }
+
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener((msg) => {
+      if (msg == "contentScript.executed") {
+        browser.test.notifyPass("contentScript.executed");
+      }
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle",
+        },
+      ],
+    },
+
+    background: "new " + backgroundScript,
+    files: {
+      "content_script.js": "new " + contentScript,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+
+  let win = window.open("file_sample.html");
+
+  let innerWindowID = SpecialPowers.wrap(win)
+                                   .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                   .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils)
+                                   .currentInnerWindowID;
+
+  yield extension.awaitFinish("contentScript.executed");
+
+  const {ExtensionContent} = SpecialPowers.Cu.import(
+    "resource://gre/modules/ExtensionContent.jsm", {}
+  );
+
+  let res = ExtensionContent.getContentScriptGlobalsForWindow(win);
+  is(res.length, 1, "Got the expected array of globals");
+  let metadata = SpecialPowers.Cu.getSandboxMetadata(res[0]) || {};
+
+  is(metadata.addonId, extension.id, "Got the expected addonId");
+  is(metadata["inner-window-id"], innerWindowID, "Got the expected inner-window-id");
+
+  yield extension.unload();
+  info("extension unloaded");
+
+  res = ExtensionContent.getContentScriptGlobalsForWindow(win);
+  is(res.length, 0, "No content scripts globals found once the extension is unloaded");
+
+  win.close();
+});
+</script>
+
+</body>
+</html>
