@@ -45,7 +45,6 @@ const TaskCache = module.exports = class TaskCache {
    * @param {Any} key
    */
   remove(key) {
-    console.log("FITZGEN: removing task from cache with keky =", key);
     assert(this._cache.has(key),
            `Should have an extant entry for key = ${key}`);
 
@@ -71,11 +70,8 @@ TaskCache.declareCacheableTask = function({ getCacheKey, task }) {
 
       const extantResult = cache.get(key);
       if (extantResult) {
-        console.log("FITZGEN: re-using task with cache key =", key);
         return extantResult;
       }
-
-      console.log("FITZGEN: creating new task with cache key =", key);
 
       // Ensure that we have our new entry in the cache *before* dispatching the
       // task!

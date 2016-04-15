@@ -270,7 +270,7 @@ function backgroundScript() {
     return browser.bookmarks.search("Menu Item");
   }).then(results => {
     browser.test.assertEq(1, results.length, "Expected number of results returned for menu item search");
-    checkBookmark({title: "Menu Item", url: "http://menu.org/", index: 4, parentId: bookmarkGuids.menuGuid}, results[0]);
+    checkBookmark({title: "Menu Item", url: "http://menu.org/", index: 3, parentId: bookmarkGuids.menuGuid}, results[0]);
 
     // finds toolbar items
     return browser.bookmarks.search("Toolbar Item");

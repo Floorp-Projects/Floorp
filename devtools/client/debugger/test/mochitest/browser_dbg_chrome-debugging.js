@@ -17,8 +17,7 @@ var gNewChromeSource = promise.defer()
 var { DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var loader = new DevToolsLoader();
 loader.invisibleToDebugger = true;
-loader.main("devtools/server/main");
-var DebuggerServer = loader.DebuggerServer;
+var { DebuggerServer } = loader.require("devtools/server/main");
 
 function test() {
   if (!DebuggerServer.initialized) {

@@ -74,19 +74,54 @@ function reload(event) {
   // We automatically reload the toolbox if we are on a browser tab
   // with a toolbox already opened
   let top = getTopLevelWindow(event.view)
-  let isBrowser = top.location.href.includes("/browser.xul") && top.gDevToolsBrowser;
+  let isBrowser = top.location.href.includes("/browser.xul");
   let reloadToolbox = false;
-  if (isBrowser && top.gDevToolsBrowser.hasToolboxOpened) {
-    reloadToolbox = top.gDevToolsBrowser.hasToolboxOpened(top);
+  if (isBrowser && top.gBrowser) {
+    // We do not use any devtools code before the call to Loader.jsm reload as
+    // any attempt to use Loader.jsm to load a module will instanciate a new
+    // Loader.
+    let nbox = top.gBrowser.getNotificationBox();
+    reloadToolbox =
+      top.document.getAnonymousElementByAttribute(nbox, "class",
+        "devtools-toolbox-bottom-iframe") ||
+      top.document.getAnonymousElementByAttribute(nbox, "class",
+        "devtools-toolbox-side-iframe") ||
+      Services.wm.getMostRecentWindow("devtools:toolbox");
   }
+  let browserConsole = Services.wm.getMostRecentWindow("devtools:webconsole");
+  let reopenBrowserConsole = false;
+  if (browserConsole) {
+    browserConsole.close();
+    reopenBrowserConsole = true;
+  }
+
   dump("Reload DevTools.  (reload-toolbox:"+reloadToolbox+")\n");
 
   // Invalidate xul cache in order to see changes made to chrome:// files
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 
-  // Ask the loader to update itself and reopen the toolbox if needed
+  // This frame script is going to be executed in all processes: parent and childs
+  Services.ppmm.loadProcessScript("data:,new " + function () {
+    /* Flush message manager cached frame scripts as well as chrome locales */
+    let obs = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    obs.notifyObservers(null, "message-manager-flush-caches", null);
+
+    /* Also purge cached modules in child processes, we do it a few lines after
+       in the parent process */
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.notifyObservers(null, "devtools-unload", "reload");
+    }
+  }, false);
+
+  // As we can't get a reference to existing Loader.jsm instances, we send them
+  // an observer service notification to unload them.
+  Services.obs.notifyObservers(null, "devtools-unload", "reload");
+
+  // Then spawn a brand new Loader.jsm instance and start the main module
+  Cu.unload("resource://devtools/shared/Loader.jsm");
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  devtools.reload();
+  devtools.require("devtools/client/framework/devtools-browser");
 
   // Go over all top level windows to reload all devtools related things
   let windowsEnum = Services.wm.getEnumerator(null);
@@ -114,15 +149,6 @@ function reload(event) {
       }
     } else if (windowtype === "devtools:webide") {
       window.location.reload();
-    } else if (windowtype === "devtools:webconsole") {
-      // Browser console document can't just be reloaded.
-      // HUDService is going to close it on unload.
-      // Instead we have to manually toggle it.
-      let HUDService = devtools.require("devtools/client/webconsole/hudservice");
-      HUDService.toggleBrowserConsole()
-        .then(() => {
-          HUDService.toggleBrowserConsole();
-        });
     }
   }
 
@@ -138,6 +164,14 @@ function reload(event) {
       let target = TargetFactory.forTab(top.gBrowser.selectedTab);
       gDevTools.showToolbox(target);
     }, 1000);
+  }
+
+  // Browser console document can't just be reloaded.
+  // HUDService is going to close it on unload.
+  // Instead we have to manually toggle it.
+  if (reopenBrowserConsole) {
+    let HUDService = devtools.require("devtools/client/webconsole/hudservice");
+    HUDService.toggleBrowserConsole();
   }
 
   actionOccurred("reloadAddonReload");
