@@ -1078,7 +1078,8 @@ nsView::DidPaintWindow()
 }
 
 void
-nsView::DidCompositeWindow(const TimeStamp& aCompositeStart,
+nsView::DidCompositeWindow(uint64_t aTransactionId,
+                           const TimeStamp& aCompositeStart,
                            const TimeStamp& aCompositeEnd)
 {
   nsIPresShell* presShell = mViewManager->GetPresShell();
@@ -1088,7 +1089,8 @@ nsView::DidCompositeWindow(const TimeStamp& aCompositeStart,
     nsPresContext* context = presShell->GetPresContext();
     nsRootPresContext* rootContext = context->GetRootPresContext();
     MOZ_ASSERT(rootContext, "rootContext must be valid.");
-    rootContext->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE);
+    rootContext->NotifyDidPaintForSubtree(nsIPresShell::PAINT_COMPOSITE, aTransactionId,
+                                          aCompositeEnd);
 
     // If the two timestamps are identical, this was likely a fake composite
     // event which wouldn't be terribly useful to display.

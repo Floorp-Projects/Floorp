@@ -125,9 +125,25 @@ AnimationEffectTiming::SetDirection(const PlaybackDirection& aDirection)
 }
 
 void
-AnimationEffectTiming::SetEasing(const nsAString& aEasing, ErrorResult& aRv)
+AnimationEffectTiming::SetEasing(JSContext* aCx,
+                                 const nsAString& aEasing,
+                                 ErrorResult& aRv)
 {
-  // TODO: Bug 1244643 - implement AnimationEffectTiming easing
+  Maybe<ComputedTimingFunction> newFunction =
+    TimingParams::ParseEasing(aEasing,
+                              AnimationUtils::GetCurrentRealmDocument(aCx),
+                              aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (mTiming.mFunction == newFunction) {
+    return;
+  }
+
+  mTiming.mFunction = newFunction;
+
+  PostSpecifiedTimingUpdated(mEffect);
 }
 
 } // namespace dom

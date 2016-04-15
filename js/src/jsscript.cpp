@@ -1938,8 +1938,6 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
 {
     struct CharsMatcher
     {
-        using ReturnType = const char16_t*;
-
         JSContext* cx;
         ScriptSource& ss;
         UncompressedSourceCache::AutoHoldEntry& holder;
@@ -1951,11 +1949,11 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
           , holder(holder)
         { }
 
-        ReturnType match(Uncompressed& u) {
+        const char16_t* match(Uncompressed& u) {
             return u.chars;
         }
 
-        ReturnType match(Compressed& c) {
+        const char16_t* match(Compressed& c) {
             if (const char16_t* decompressed = cx->runtime()->uncompressedSourceCache.lookup(&ss, holder))
                 return decompressed;
 
@@ -1984,18 +1982,16 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             return decompressed;
         }
 
-        ReturnType match(Parent& p) {
+        const char16_t* match(Parent& p) {
             return p.parent->chars(cx, holder);
         }
 
-        ReturnType match(Missing&) {
+        const char16_t* match(Missing&) {
             MOZ_CRASH("ScriptSource::chars() on ScriptSource with SourceType = Missing");
             return nullptr;
         }
     };
-
-    CharsMatcher cm(cx, *this, holder);
-    return data.match(cm);
+    return data.match(CharsMatcher(cx, *this, holder));
 }
 
 JSFlatString*
@@ -2192,30 +2188,28 @@ ScriptSource::~ScriptSource()
 {
     struct DestroyMatcher
     {
-        using ReturnType = void;
-
         ScriptSource& ss;
 
         explicit DestroyMatcher(ScriptSource& ss)
           : ss(ss)
         { }
 
-        ReturnType match(Uncompressed& u) {
+        void match(Uncompressed& u) {
             if (u.ownsChars)
                 js_free(const_cast<char16_t*>(u.chars));
         }
 
-        ReturnType match(Compressed& c) {
+        void match(Compressed& c) {
             if (ss.inCompressedSourceSet)
                 TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(&ss);
             js_free(c.raw);
         }
 
-        ReturnType match(Parent& p) {
+        void match(Parent& p) {
             p.parent->decref();
         }
 
-        ReturnType match(Missing&) {
+        void match(Missing&) {
             // Nothing to do here.
         }
     };
@@ -2223,8 +2217,7 @@ ScriptSource::~ScriptSource()
     MOZ_ASSERT(refs == 0);
     MOZ_ASSERT_IF(inCompressedSourceSet, data.is<Compressed>());
 
-    DestroyMatcher dm(*this);
-    data.match(dm);
+    data.match(DestroyMatcher(*this));
 }
 
 void
@@ -2247,21 +2240,19 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 {
     struct CompressedLengthMatcher
     {
-        using ReturnType = size_t;
-
-        ReturnType match(Uncompressed&) {
+        size_t match(Uncompressed&) {
             return 0;
         }
 
-        ReturnType match(Compressed& c) {
+        size_t match(Compressed& c) {
             return c.nbytes;
         }
 
-        ReturnType match(Parent& p) {
+        size_t match(Parent& p) {
             return p.parent->data.match(*this);
         }
 
-        ReturnType match(Missing&) {
+        size_t match(Missing&) {
             MOZ_CRASH("Missing source data in ScriptSource::performXDR");
             return 0;
         }
@@ -2269,21 +2260,19 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
 
     struct RawDataMatcher
     {
-        using ReturnType = void*;
-
-        ReturnType match(Uncompressed& u) {
+        void* match(Uncompressed& u) {
             return (void*) u.chars;
         }
 
-        ReturnType match(Compressed& c) {
+        void* match(Compressed& c) {
             return c.raw;
         }
 
-        ReturnType match(Parent& p) {
+        void* match(Parent& p) {
             return p.parent->data.match(*this);
         }
 
-        ReturnType match(Missing&) {
+        void* match(Missing&) {
             MOZ_CRASH("Missing source data in ScriptSource::performXDR");
             return nullptr;
         }
@@ -2303,10 +2292,8 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
             return false;
 
         uint32_t compressedLength;
-        if (mode == XDR_ENCODE) {
-            CompressedLengthMatcher m;
-            compressedLength = data.match(m);
-        }
+        if (mode == XDR_ENCODE)
+            compressedLength = data.match(CompressedLengthMatcher());
         if (!xdr->codeUint32(&compressedLength))
             return false;
 
@@ -2334,8 +2321,7 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
             else
                 setSource((const char16_t*) p, length_);
         } else {
-            RawDataMatcher rdm;
-            void* p = data.match(rdm);
+            void* p = data.match(RawDataMatcher());
             if (!xdr->codeBytes(p, byteLen))
                 return false;
         }

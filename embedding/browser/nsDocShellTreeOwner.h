@@ -171,7 +171,8 @@ private:
   NS_IMETHOD RemoveTooltipListener();
 
   NS_IMETHOD ShowTooltip(int32_t aInXCoords, int32_t aInYCoords,
-                         const nsAString& aInTipText);
+                         const nsAString& aInTipText,
+                         const nsAString& aDirText);
   NS_IMETHOD HideTooltip();
 
   nsWebBrowser* mWebBrowser;
