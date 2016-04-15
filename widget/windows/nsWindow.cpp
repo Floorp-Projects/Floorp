@@ -134,6 +134,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/TextEvents.h" // For WidgetKeyboardEvent
 #include "mozilla/TextEventDispatcherListener.h"
+#include "mozilla/widget/WinNativeEventData.h"
 #include "nsThemeConstants.h"
 #include "nsBidiKeyboard.h"
 
@@ -7874,8 +7875,39 @@ nsresult
 nsWindow::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
                                    nsIKeyEventInPluginCallback* aCallback)
 {
-  // TODO: Implement in the following patch.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (NS_WARN_IF(!mWnd)) {
+    return NS_OK;
+  }
+  const WinNativeKeyEventData* eventData =
+    static_cast<const WinNativeKeyEventData*>(aKeyEventData);
+  switch (eventData->mMessage) {
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN: {
+      MSG mozMsg =
+        WinUtils::InitMSG(MOZ_WM_KEYDOWN, eventData->mWParam,
+                          eventData->mLParam, mWnd);
+      ModifierKeyState modifierKeyState(eventData->mModifiers);
+      NativeKey nativeKey(this, mozMsg, modifierKeyState,
+                          eventData->GetKeyboardLayout());
+      return nativeKey.HandleKeyDownMessage() ? NS_SUCCESS_EVENT_CONSUMED :
+                                                NS_OK;
+    }
+    case WM_KEYUP:
+    case WM_SYSKEYUP: {
+      MSG mozMsg =
+        WinUtils::InitMSG(MOZ_WM_KEYUP, eventData->mWParam,
+                          eventData->mLParam, mWnd);
+      ModifierKeyState modifierKeyState(eventData->mModifiers);
+      NativeKey nativeKey(this, mozMsg, modifierKeyState,
+                          eventData->GetKeyboardLayout());
+      return nativeKey.HandleKeyUpMessage() ? NS_SUCCESS_EVENT_CONSUMED : NS_OK;
+    }
+    default:
+      // We shouldn't consume WM_*CHAR messages here even if the preceding
+      // keydown or keyup event on the plugin is consumed.  It should be
+      // managed in each plugin window rather than top level window.
+      return NS_OK;
+  }
 }
 
 /**************************************************************
