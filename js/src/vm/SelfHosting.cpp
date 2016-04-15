@@ -2248,6 +2248,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Array_unshift",                   array_unshift,                1,0),
     JS_INLINABLE_FN("std_Array_slice",           array_slice,                  2,0, ArraySlice),
     JS_FN("std_Array_sort",                      array_sort,                   1,0),
+    JS_FN("std_Array_reverse",                   array_reverse,                0,0),
+    JS_INLINABLE_FN("std_Array_splice",          array_splice,                 2,0, ArraySplice),
 
     JS_FN("std_Date_now",                        date_now,                     0,0),
     JS_FN("std_Date_valueOf",                    date_valueOf,                 0,0),
