@@ -109,6 +109,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
   using nsIConstraintValidation::CheckValidity;
+  using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::WillValidate;
   using nsIConstraintValidation::Validity;
   using nsGenericHTMLFormElementWithState::GetForm;
