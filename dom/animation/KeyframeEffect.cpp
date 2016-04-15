@@ -20,7 +20,6 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
-#include <algorithm> // For std::max
 
 namespace mozilla {
 
@@ -245,14 +244,17 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     result.mDuration = aTiming.mDuration.ref();
   }
 
-  result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
-                       1.0f :
-                       aTiming.mIterations;
-  result.mIterationStart = std::max(aTiming.mIterationStart, 0.0);
+  MOZ_ASSERT(aTiming.mIterations >= 0.0 && !IsNaN(aTiming.mIterations),
+             "mIterations should be nonnegative & finite, as ensured by "
+             "ValidateIterations or CSSParser");
+  result.mIterations = aTiming.mIterations;
+  MOZ_ASSERT(aTiming.mIterationStart >= 0.0,
+             "mIterationStart should be nonnegative, as ensured by "
+             "ValidateIterationStart");
+  result.mIterationStart = aTiming.mIterationStart;
 
-  result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
-  result.mEndTime = aTiming.mDelay + result.mActiveDuration +
-                    aTiming.mEndDelay;
+  result.mActiveDuration = aTiming.ActiveDuration();
+  result.mEndTime = aTiming.EndTime();
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;
@@ -401,23 +403,6 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   }
 
   return result;
-}
-
-StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(
-  const StickyTimeDuration& aIterationDuration,
-  double aIterationCount)
-{
-  // If either the iteration duration or iteration count is zero,
-  // Web Animations says that the active duration is zero. This is to
-  // ensure that the result is defined when the other argument is Infinity.
-  const StickyTimeDuration zeroDuration;
-  if (aIterationDuration == zeroDuration ||
-      aIterationCount == 0.0) {
-    return zeroDuration;
-  }
-
-  return aIterationDuration.MultDouble(aIterationCount);
 }
 
 // https://w3c.github.io/web-animations/#in-play

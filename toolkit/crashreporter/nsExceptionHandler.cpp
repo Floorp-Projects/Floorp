@@ -1364,6 +1364,41 @@ ChildFPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
   return result;
 }
 
+MINIDUMP_TYPE GetMinidumpType()
+{
+  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
+
+  // Try to determine what version of dbghelp.dll we're using.
+  // MinidumpWithFullMemoryInfo is only available in 6.1.x or newer.
+
+  DWORD version_size = GetFileVersionInfoSizeW(L"dbghelp.dll", nullptr);
+  if (version_size > 0) {
+    std::vector<BYTE> buffer(version_size);
+    if (GetFileVersionInfoW(L"dbghelp.dll",
+                            0,
+                            version_size,
+                            &buffer[0])) {
+      UINT len;
+      VS_FIXEDFILEINFO* file_info;
+      VerQueryValue(&buffer[0], L"\\", (void**)&file_info, &len);
+      WORD major = HIWORD(file_info->dwFileVersionMS),
+        minor = LOWORD(file_info->dwFileVersionMS),
+        revision = HIWORD(file_info->dwFileVersionLS);
+      if (major > 6 || (major == 6 && minor > 1) ||
+          (major == 6 && minor == 1 && revision >= 7600)) {
+        minidump_type = MiniDumpWithFullMemoryInfo;
+      }
+    }
+  }
+
+  const char* e = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");
+  if (e && *e) {
+    minidump_type = MiniDumpWithFullMemory;
+  }
+
+  return minidump_type;
+}
+
 #endif // XP_WIN
 
 static bool ShouldReport()
@@ -1521,36 +1556,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
 #ifdef XP_WIN32
   ReserveBreakpadVM();
-
-  MINIDUMP_TYPE minidump_type = MiniDumpNormal;
-
-  // Try to determine what version of dbghelp.dll we're using.
-  // MinidumpWithFullMemoryInfo is only available in 6.1.x or newer.
-
-  DWORD version_size = GetFileVersionInfoSizeW(L"dbghelp.dll", nullptr);
-  if (version_size > 0) {
-    std::vector<BYTE> buffer(version_size);
-    if (GetFileVersionInfoW(L"dbghelp.dll",
-                            0,
-                            version_size,
-                            &buffer[0])) {
-      UINT len;
-      VS_FIXEDFILEINFO* file_info;
-      VerQueryValue(&buffer[0], L"\\", (void**)&file_info, &len);
-      WORD major = HIWORD(file_info->dwFileVersionMS),
-           minor = LOWORD(file_info->dwFileVersionMS),
-           revision = HIWORD(file_info->dwFileVersionLS);
-      if (major > 6 || (major == 6 && minor > 1) ||
-          (major == 6 && minor == 1 && revision >= 7600)) {
-        minidump_type = MiniDumpWithFullMemoryInfo;
-      }
-    }
-  }
-
-  const char* e = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");
-  if (e && *e) {
-    minidump_type = MiniDumpWithFullMemory;
-  }
 #endif // XP_WIN32
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -1594,7 +1599,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                      nullptr,
 #ifdef XP_WIN32
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
-                     minidump_type,
+                     GetMinidumpType(),
                      (const wchar_t*) nullptr,
                      nullptr);
 #else
@@ -3482,7 +3487,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      nullptr,    // no minidump callback
                      nullptr,    // no callback context
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
-                     MiniDumpNormal,
+                     GetMinidumpType(),
                      NS_ConvertASCIItoUTF16(crashPipe).get(),
                      nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);

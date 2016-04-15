@@ -346,7 +346,6 @@ def old_configure_options(*options):
 )
 @imports(_from='__builtin__', _import='compile')
 @imports(_from='__builtin__', _import='open')
-@imports(_from='__builtin__', _import='zip')
 @imports('logging')
 @imports('os')
 @imports('subprocess')

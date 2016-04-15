@@ -25,6 +25,7 @@ interface nsITooltipListener : nsISupports
      * @param aTipText The text to display in the tooltip, typically obtained
      *        from the TITLE attribute of the node (or containing parent)
      *        over which the pointer has been positioned.
+     * @param aTipDir  The direction (ltr or rtl) in which to display the text
      *
      * @note
      * Coordinates are specified in pixels, relative to the top-left
@@ -32,7 +33,8 @@ interface nsITooltipListener : nsISupports
      *
      * @return <code>NS_OK</code> if the tooltip was displayed.
      */
-    void onShowTooltip(in long aXCoords, in long aYCoords, in wstring aTipText);
+    void onShowTooltip(in long aXCoords, in long aYCoords, in wstring aTipText,
+                       in wstring aTipDir);
   
     /**
      * Called when the tooltip should be hidden, either because the pointer

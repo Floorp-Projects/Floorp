@@ -367,12 +367,15 @@ ifdef FOUND_MOZCONFIG
 endif
 
 configure:: $(configure-preqs)
+	$(call BUILDSTATUS,TIERS configure)
+	$(call BUILDSTATUS,TIER_START configure)
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
 	@cd $(OBJDIR) && $(BUILD_PROJECT_ARG) $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
 	  || ( echo '*** Fix above errors and then restart with\
                "$(MAKE) -f client.mk build"' && exit 1 )
 	@touch $(OBJDIR)/Makefile
+	$(call BUILDSTATUS,TIER_FINISH configure)
 
 ifneq (,$(MAKEFILE))
 $(OBJDIR)/Makefile: $(OBJDIR)/config.status

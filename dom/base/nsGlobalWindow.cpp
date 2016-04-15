@@ -6434,13 +6434,23 @@ nsGlobalWindow::CanMoveResizeWindows(bool aCallerIsChrome)
     }
 
     // Ignore the request if we have more than one tab in the window.
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
-    if (treeOwner) {
-      uint32_t itemCount;
-      if (NS_SUCCEEDED(treeOwner->GetTargetableShellCount(&itemCount)) &&
-          itemCount > 1) {
-        return false;
+    uint32_t itemCount = 0;
+    if (XRE_IsContentProcess()) {
+      nsCOMPtr<nsIDocShell> docShell = GetDocShell();
+      if (docShell) {
+        nsCOMPtr<nsITabChild> child = docShell->GetTabChild();
+        if (child) {
+          child->SendGetTabCount(&itemCount);
+        }
       }
+    } else {
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
+      if (treeOwner) {
+        treeOwner->GetTargetableShellCount(&itemCount);
+      }
+    }
+    if (itemCount > 1) {
+      return false;
     }
   }
 

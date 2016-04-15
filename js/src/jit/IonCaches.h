@@ -341,6 +341,8 @@ class IonCache
         MOZ_ASSERT(pc_);
         return pc_;
     }
+
+    void trace(JSTracer* trc);
 };
 
 // Define the cache kind and pre-declare data structures used for calling inline
