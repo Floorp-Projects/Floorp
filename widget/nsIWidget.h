@@ -1721,23 +1721,6 @@ class nsIWidget : public nsISupports {
      */
     virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver);
 
-    /*
-     * Snapshot the contents of the widget by reading pixels back from the
-     * Operating System. Unlike RenderDocument(), this does not read from our
-     * own backbuffers, so that we can test if there is a difference in how
-     * our buffers are being presented.
-     *
-     * This is only supported for widgets using OMTC.
-     */
-    already_AddRefed<mozilla::gfx::SourceSurface> SnapshotWidgetOnScreen();
-
-    /*
-     * Implementation of SnapshotWidgetOnScreen. This is invoked by the
-     * compositor for SnapshotWidgetOnScreen(), and should not be called
-     * otherwise.
-     */
-    virtual bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT) = 0;
-
     virtual void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) = 0;
 
 private:

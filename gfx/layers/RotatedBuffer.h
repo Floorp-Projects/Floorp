@@ -339,7 +339,7 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || !mDTBuffer);
+    MOZ_ASSERT(!aClient || !mDTBuffer || !mDTBuffer->IsValid());
 
     mBufferProvider = aClient;
     if (!mBufferProvider) {
@@ -351,7 +351,7 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || !mDTBufferOnWhite);
+    MOZ_ASSERT(!aClient || !mDTBufferOnWhite || !mDTBufferOnWhite->IsValid());
 
     mBufferProviderOnWhite = aClient;
     if (!mBufferProviderOnWhite) {

@@ -81,9 +81,15 @@ function getChannelForURL(url, notificationCallbacks) {
     });
 
   if (notificationCallbacks) {
+    tmpChannel.loadInfo.originAttributes = { appId: 1024,
+                                             inIsolatedMozBrowser: false
+                                           };
     // Use custom notificationCallbacks if any.
     tmpChannel.notificationCallbacks = notificationCallbacks;
   } else {
+    tmpChannel.loadInfo.originAttributes = { appId: principal.appId,
+                                             inIsolatedMozBrowser: principal.isInIsolatedMozBrowserElement
+                                           };
     tmpChannel.notificationCallbacks =
       new LoadContextCallback(principal.appId,
                               principal.isInIsolatedMozBrowserElement,

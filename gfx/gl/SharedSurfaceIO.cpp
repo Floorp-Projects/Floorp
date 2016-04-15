@@ -165,11 +165,10 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioS
 
 SharedSurface_IOSurface::~SharedSurface_IOSurface()
 {
-    if (mProdTex) {
-        DebugOnly<bool> success = mGL->MakeCurrent();
-        MOZ_ASSERT(success);
-        mGL->fDeleteTextures(1, &mProdTex);
-    }
+    if (!mGL->MakeCurrent())
+        return;
+
+    mGL->fDeleteTextures(1, &mProdTex);
 }
 
 bool

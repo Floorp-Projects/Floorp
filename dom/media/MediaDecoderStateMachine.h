@@ -95,6 +95,7 @@ hardware (via AudioStream).
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"
+#include "SeekTask.h"
 
 namespace mozilla {
 
@@ -443,9 +444,6 @@ protected:
   // to the returned stream time.
   int64_t GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
-  nsresult DropAudioUpToSeekTarget(MediaData* aSample);
-  nsresult DropVideoUpToSeekTarget(MediaData* aSample);
-
   void SetStartTime(int64_t aStartTimeUsecs);
 
   // Update only the state machine's current playback position (and duration,
@@ -514,53 +512,6 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  struct SeekJob {
-    SeekJob() {}
-
-    SeekJob(SeekJob&& aOther) : mTarget(aOther.mTarget)
-    {
-      aOther.mTarget.Reset();
-      mPromise = Move(aOther.mPromise);
-    }
-
-    SeekJob& operator=(SeekJob&& aOther)
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!Exists());
-      mTarget = aOther.mTarget;
-      aOther.mTarget.Reset();
-      mPromise = Move(aOther.mPromise);
-      return *this;
-    }
-
-    bool Exists()
-    {
-      MOZ_ASSERT(mTarget.IsValid() == !mPromise.IsEmpty());
-      return mTarget.IsValid();
-    }
-
-    void Resolve(bool aAtEnd, const char* aCallSite)
-    {
-      mTarget.Reset();
-      MediaDecoder::SeekResolveValue val(aAtEnd, mTarget.mEventVisibility);
-      mPromise.Resolve(val, aCallSite);
-    }
-
-    void RejectIfExists(const char* aCallSite)
-    {
-      mTarget.Reset();
-      mPromise.RejectIfExists(true, aCallSite);
-    }
-
-    ~SeekJob()
-    {
-      MOZ_DIAGNOSTIC_ASSERT(!mTarget.IsValid());
-      MOZ_DIAGNOSTIC_ASSERT(mPromise.IsEmpty());
-    }
-
-    SeekTarget mTarget;
-    MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
-  };
-
   // Clears any previous seeking state and initiates a new see on the decoder.
   // The decoder monitor must be held.
   void InitiateSeek(SeekJob aSeekJob);
@@ -625,14 +576,6 @@ protected:
   // Return true if we are currently decoding the first frames.
   bool IsDecodingFirstFrame();
   void FinishDecodeFirstFrame();
-
-  // Seeks to mSeekTarget. Called on the decode thread. The decoder monitor
-  // must be held with exactly one lock count.
-  void DecodeSeek();
-
-  void CheckIfSeekComplete();
-  bool IsAudioSeekComplete();
-  bool IsVideoSeekComplete();
 
   // Completes the seek operation, moves onto the next appropriate state.
   void SeekCompleted();
@@ -744,8 +687,12 @@ private:
   // Queued seek - moves to mCurrentSeek when DecodeFirstFrame completes.
   SeekJob mQueuedSeek;
 
-  // The position that we're currently seeking to.
-  SeekJob mCurrentSeek;
+  // mSeekTask is responsible for executing the current seek request.
+  RefPtr<media::SeekTask> mSeekTask;
+  MozPromiseRequestHolder<media::SeekTask::SeekTaskPromise> mSeekTaskRequest;
+
+  void OnSeekTaskResolved(media::SeekTaskResolveValue aValue);
+  void OnSeekTaskRejected(media::SeekTaskRejectValue aValue);
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
@@ -865,12 +812,6 @@ private:
     }
   }
 
-  // This temporarily stores the first frame we decode after we seek.
-  // This is so that if we hit end of stream while we're decoding to reach
-  // the seek target, we will still have a frame that we can display as the
-  // last frame in the media.
-  RefPtr<MediaData> mFirstVideoFrameAfterSeek;
-
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
   // kick in and decide that we're low on decoded data because the download
@@ -975,21 +916,6 @@ private:
   // waiting to be awakened before it continues decoding. Synchronized
   // by the decoder monitor.
   bool mDecodeThreadWaiting;
-
-  // These two flags are true when we need to drop decoded samples that
-  // we receive up to the next discontinuity. We do this when we seek;
-  // the first sample in each stream after the seek is marked as being
-  // a "discontinuity".
-  bool mDropAudioUntilNextDiscontinuity;
-  bool mDropVideoUntilNextDiscontinuity;
-
-  // Track the current seek promise made by the reader.
-  MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
-
-  // We record the playback position before we seek in order to
-  // determine where the seek terminated relative to the playback position
-  // we were at before the seek.
-  int64_t mCurrentTimeBeforeSeek;
 
   // Track our request for metadata from the reader.
   MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;

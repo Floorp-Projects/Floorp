@@ -6,3 +6,5 @@ NO_CACHE=1
 . "$topsrcdir/browser/config/mozconfigs/linux64/nightly"
 
 ac_add_options --enable-artifact-builds
+unset CC
+unset CXX

@@ -32,6 +32,8 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
   'portrait-primary', 'portrait-secondary', 'landscape-primary',
   'landscape-secondary'
 ]);
+const textDirections = new Set(['ltr', 'rtl', 'auto']);
+
 Cu.import('resource://gre/modules/Console.jsm');
 Cu.import("resource://gre/modules/Services.jsm");
 // ValueExtractor is used by the various processors to get values
@@ -49,6 +51,9 @@ this.ManifestProcessor = { // jshint ignore:line
   },
   get orientationTypes() {
     return orientationTypes;
+  },
+  get textDirections() {
+    return textDirections;
   },
   // process() method processes JSON text into a clean manifest
   // that conforms with the W3C specification. Takes an object
@@ -79,6 +84,7 @@ this.ManifestProcessor = { // jshint ignore:line
     const extractor = new ValueExtractor(console, domBundle);
     const imgObjProcessor = new ImageObjectProcessor(console, extractor);
     const processedManifest = {
+      'dir': processDirMember.call(this),
       'lang': processLangMember(),
       'start_url': processStartURLMember(),
       'display': processDisplayMember.call(this),
@@ -93,6 +99,21 @@ this.ManifestProcessor = { // jshint ignore:line
     };
     processedManifest.scope = processScopeMember();
     return processedManifest;
+
+    function processDirMember() {
+      const spec = {
+        objectName: 'manifest',
+        object: rawManifest,
+        property: 'dir',
+        expectedType: 'string',
+        trim: true,
+      };
+      const value = extractor.extractValue(spec);
+      if (this.textDirections.has(value)) {
+        return value;
+      }
+      return 'auto';
+    }
 
     function processNameMember() {
       const spec = {

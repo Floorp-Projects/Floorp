@@ -223,6 +223,9 @@ function run_test()
 
 function test_channel_with_bad_signature() {
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
+  channel.loadInfo.originAttributes = { appId: 1024,
+                                        inIsolatedMozBrowser: false
+                                      };
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotFileNotFound);
@@ -237,6 +240,9 @@ function test_channel_with_bad_signature_from_trusted_origin() {
   origin.data = uri;
   Services.prefs.setComplexValue(pref, Ci.nsISupportsString, origin);
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
+  channel.loadInfo.originAttributes = { appId: 1024,
+                                        inIsolatedMozBrowser: false
+                                      };
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
@@ -247,6 +253,9 @@ function test_channel_with_bad_signature_from_trusted_origin() {
 
 function test_channel_with_good_signature() {
   var channel = make_channel(uri+"/package_with_good_signature!//index.html");
+  channel.loadInfo.originAttributes = { appId: 1024,
+                                        inIsolatedMozBrowser: false
+                                      };
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
@@ -256,6 +265,9 @@ function test_channel_with_good_signature() {
 
 function test_channel(aNullNotificationCallbacks) {
   var channel = make_channel(uri+"/package!//index.html");
+  channel.loadInfo.originAttributes = { appId: 1024,
+                                        inIsolatedMozBrowser: false
+                                      };
 
   if (!aNullNotificationCallbacks) {
     channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);

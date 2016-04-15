@@ -39,6 +39,7 @@
 #include "nssb64.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
+#include "pkix/Result.h"
 #include "plbase64.h"
 #include "prerror.h"
 #include "prmem.h"
@@ -226,8 +227,8 @@ nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  Result rv = IsCertBuiltInRoot(mCert, *aIsBuiltInRoot);
-  if (rv != Success) {
+  pkix::Result rv = IsCertBuiltInRoot(mCert, *aIsBuiltInRoot);
+  if (rv != pkix::Result::Success) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

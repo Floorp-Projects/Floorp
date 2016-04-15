@@ -145,10 +145,14 @@ public:
     case __NR_clock_gettime: {
       Arg<clockid_t> clk_id(0);
       return If(clk_id == CLOCK_MONOTONIC, Allow())
+#ifdef CLOCK_MONOTONIC_COARSE
         .ElseIf(clk_id == CLOCK_MONOTONIC_COARSE, Allow())
+#endif
         .ElseIf(clk_id == CLOCK_PROCESS_CPUTIME_ID, Allow())
         .ElseIf(clk_id == CLOCK_REALTIME, Allow())
+#ifdef CLOCK_REALTIME_COARSE
         .ElseIf(clk_id == CLOCK_REALTIME_COARSE, Allow())
+#endif
         .ElseIf(clk_id == CLOCK_THREAD_CPUTIME_ID, Allow())
         .Else(InvalidSyscall());
     }
@@ -509,6 +513,7 @@ public:
     case __NR_quotactl:
     case __NR_utimes:
     case __NR_unlink:
+    case __NR_fchown:
 #endif
       return Allow();
 

@@ -237,9 +237,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBuffering(false),
   mMinimizePreroll(false),
   mDecodeThreadWaiting(false),
-  mDropAudioUntilNextDiscontinuity(false),
-  mDropVideoUntilNextDiscontinuity(false),
-  mCurrentTimeBeforeSeek(0),
   mDecodingFirstFrame(true),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
@@ -556,36 +553,12 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
           (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 }
 
-bool
-MediaDecoderStateMachine::IsAudioSeekComplete()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("IsAudioSeekComplete() curTarVal=%d mAudDis=%d aqFin=%d aqSz=%d",
-    mCurrentSeek.Exists(), mDropAudioUntilNextDiscontinuity, AudioQueue().IsFinished(), AudioQueue().GetSize());
-  return
-    !HasAudio() ||
-    (mCurrentSeek.Exists() &&
-     !mDropAudioUntilNextDiscontinuity &&
-     (AudioQueue().IsFinished() || AudioQueue().GetSize() > 0));
-}
-
-bool
-MediaDecoderStateMachine::IsVideoSeekComplete()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("IsVideoSeekComplete() curTarVal=%d mVidDis=%d vqFin=%d vqSz=%d",
-    mCurrentSeek.Exists(), mDropVideoUntilNextDiscontinuity, VideoQueue().IsFinished(), VideoQueue().GetSize());
-  return
-    !HasVideo() ||
-    (mCurrentSeek.Exists() &&
-     !mDropVideoUntilNextDiscontinuity &&
-     (VideoQueue().IsFinished() || VideoQueue().GetSize() > 0));
-}
-
 void
 MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
+
   RefPtr<MediaData> audio(aAudioSample);
   MOZ_ASSERT(audio);
   mAudioDataRequest.Complete();
@@ -618,43 +591,6 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
       return;
     }
 
-    case DECODER_STATE_SEEKING: {
-      if (!mCurrentSeek.Exists()) {
-        // We've received a sample from a previous decode. Discard it.
-        return;
-      }
-      if (audio->mDiscontinuity) {
-        mDropAudioUntilNextDiscontinuity = false;
-      }
-      if (!mDropAudioUntilNextDiscontinuity) {
-        // We must be after the discontinuity; we're receiving samples
-        // at or after the seek target.
-        if (mCurrentSeek.mTarget.IsFast() &&
-            mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
-            audio->mTime < mCurrentTimeBeforeSeek) {
-          // We are doing a fastSeek, but we ended up *before* the previous
-          // playback position. This is surprising UX, so switch to an accurate
-          // seek and decode to the seek target. This is not conformant to the
-          // spec, fastSeek should always be fast, but until we get the time to
-          // change all Readers to seek to the keyframe after the currentTime
-          // in this case, we'll just decode forward. Bug 1026330.
-          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-        }
-        if (mCurrentSeek.mTarget.IsFast()) {
-          // Non-precise seek; we can stop the seek at the first sample.
-          Push(audio, MediaData::AUDIO_DATA);
-        } else {
-          // We're doing an accurate seek. We must discard
-          // MediaData up to the one containing exact seek target.
-          if (NS_FAILED(DropAudioUpToSeekTarget(audio))) {
-            DecodeError();
-            return;
-          }
-        }
-      }
-      CheckIfSeekComplete();
-      return;
-    }
     default: {
       // Ignore other cases.
       return;
@@ -733,6 +669,8 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
                                        MediaDecoderReader::NotDecodedReason aReason)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
+
   SAMPLE_LOG("OnNotDecoded (aType=%u, aReason=%u)", aType, aReason);
   bool isAudio = aType == MediaData::AUDIO_DATA;
   MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
@@ -800,15 +738,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   // This is an EOS. Finish off the queue, and then handle things based on our
   // state.
   MOZ_ASSERT(aReason == MediaDecoderReader::END_OF_STREAM);
-  if (!isAudio && mState == DECODER_STATE_SEEKING &&
-      mCurrentSeek.Exists() && mFirstVideoFrameAfterSeek) {
-    // Null sample. Hit end of stream. If we have decoded a frame,
-    // insert it into the queue so that we have something to display.
-    // We make sure to do this before invoking VideoQueue().Finish()
-    // below.
-    Push(mFirstVideoFrameAfterSeek, MediaData::VIDEO_DATA);
-    mFirstVideoFrameAfterSeek = nullptr;
-  }
   if (isAudio) {
     AudioQueue().Finish();
     StopPrerollingAudio();
@@ -828,21 +757,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
       if (mState == DECODER_STATE_BUFFERING) {
         ScheduleStateMachine();
       }
-      return;
-    }
-    case DECODER_STATE_SEEKING: {
-      if (!mCurrentSeek.Exists()) {
-        // We've received a sample from a previous decode. Discard it.
-        return;
-      }
-
-      if (isAudio) {
-        mDropAudioUntilNextDiscontinuity = false;
-      } else {
-        mDropVideoUntilNextDiscontinuity = false;
-      }
-
-      CheckIfSeekComplete();
       return;
     }
     default: {
@@ -876,6 +790,8 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
                                          TimeStamp aDecodeStartTime)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
+
   RefPtr<MediaData> video(aVideoSample);
   MOZ_ASSERT(video);
   mVideoDataRequest.Complete();
@@ -928,83 +844,10 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
       }
       return;
     }
-    case DECODER_STATE_SEEKING: {
-      if (!mCurrentSeek.Exists()) {
-        // We've received a sample from a previous decode. Discard it.
-        return;
-      }
-      if (mDropVideoUntilNextDiscontinuity) {
-        if (video->mDiscontinuity) {
-          mDropVideoUntilNextDiscontinuity = false;
-        }
-      }
-      if (!mDropVideoUntilNextDiscontinuity) {
-        // We must be after the discontinuity; we're receiving samples
-        // at or after the seek target.
-        if (mCurrentSeek.mTarget.IsFast() &&
-            mCurrentSeek.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
-            video->mTime < mCurrentTimeBeforeSeek) {
-          // We are doing a fastSeek, but we ended up *before* the previous
-          // playback position. This is surprising UX, so switch to an accurate
-          // seek and decode to the seek target. This is not conformant to the
-          // spec, fastSeek should always be fast, but until we get the time to
-          // change all Readers to seek to the keyframe after the currentTime
-          // in this case, we'll just decode forward. Bug 1026330.
-          mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-        }
-        if (mCurrentSeek.mTarget.IsFast()) {
-          // Non-precise seek. We can stop the seek at the first sample.
-          Push(video, MediaData::VIDEO_DATA);
-        } else {
-          // We're doing an accurate seek. We still need to discard
-          // MediaData up to the one containing exact seek target.
-          if (NS_FAILED(DropVideoUpToSeekTarget(video))) {
-            DecodeError();
-            return;
-          }
-        }
-      }
-      CheckIfSeekComplete();
-      return;
-    }
     default: {
       // Ignore other cases.
       return;
     }
-  }
-}
-
-void
-MediaDecoderStateMachine::CheckIfSeekComplete()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
-
-  const bool videoSeekComplete = IsVideoSeekComplete();
-  if (HasVideo() && !videoSeekComplete) {
-    // We haven't reached the target. Ensure we have requested another sample.
-    if (NS_FAILED(EnsureVideoDecodeTaskQueued())) {
-      DECODER_WARN("Failed to request video during seek");
-      DecodeError();
-    }
-  }
-
-  const bool audioSeekComplete = IsAudioSeekComplete();
-  if (HasAudio() && !audioSeekComplete) {
-    // We haven't reached the target. Ensure we have requested another sample.
-    if (NS_FAILED(EnsureAudioDecodeTaskQueued())) {
-      DECODER_WARN("Failed to request audio during seek");
-      DecodeError();
-    }
-  }
-
-  SAMPLE_LOG("CheckIfSeekComplete() audioSeekComplete=%d videoSeekComplete=%d",
-             audioSeekComplete, videoSeekComplete);
-
-  if (audioSeekComplete && videoSeekComplete) {
-    NS_ASSERTION(AudioQueue().GetSize() <= 1, "Should decode at most one sample");
-    NS_ASSERTION(VideoQueue().GetSize() <= 1, "Should decode at most one sample");
-    SeekCompleted();
   }
 }
 
@@ -1286,8 +1129,9 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     if (mState == DECODER_STATE_SEEKING) {
       if (mQueuedSeek.Exists()) {
         // Keep latest seek target
-      } else if (mCurrentSeek.Exists()) {
-        mQueuedSeek = Move(mCurrentSeek);
+      } else if (mSeekTask && mSeekTask->Exists()) {
+        mQueuedSeek = Move(mSeekTask->GetSeekJob());
+        mSeekTaskRequest.DisconnectIfExists();
       } else {
         mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
                                          SeekTarget::Accurate,
@@ -1304,7 +1148,13 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
       // back to MediaDecoder when we come out of dormant?
       RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
     }
-    mCurrentSeek.RejectIfExists(__func__);
+
+    // Discard the current seek task.
+    if (mSeekTask) {
+      mSeekTask->Discard();
+      mSeekTask = nullptr;
+    }
+
     SetState(DECODER_STATE_DORMANT);
     if (IsPlaying()) {
       StopPlayback();
@@ -1341,7 +1191,10 @@ MediaDecoderStateMachine::Shutdown()
   mBufferedUpdateRequest.DisconnectIfExists();
 
   mQueuedSeek.RejectIfExists(__func__);
-  mCurrentSeek.RejectIfExists(__func__);
+  if (mSeekTask) {
+    mSeekTask->Discard();
+    mSeekTask = nullptr;
+  }
 
 #ifdef MOZ_EME
   mCDMProxyPromise.DisconnectIfExists();
@@ -1530,7 +1383,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   SeekJob seekJob;
   seekJob.mTarget = aTarget;
   InitiateSeek(Move(seekJob));
-  return mCurrentSeek.mPromise.Ensure(__func__);
+  return mSeekTask->GetSeekJob().mPromise.Ensure(__func__);
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -1614,50 +1467,110 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mCurrentSeek.RejectIfExists(__func__);
-  mCurrentSeek = Move(aSeekJob);
+  // Discard the existing seek task.
+  if (mSeekTask) {
+    mSeekTask->Discard();
+  }
 
-  // Bound the seek time to be inside the media range.
-  int64_t end = Duration().ToMicroseconds();
-  NS_ASSERTION(end != -1, "Should know end time by now");
-  int64_t seekTime = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
-  seekTime = std::min(seekTime, end);
-  seekTime = std::max(int64_t(0), seekTime);
-  NS_ASSERTION(seekTime >= 0 && seekTime <= end,
-               "Can only seek in range [0,duration]");
-  mCurrentSeek.mTarget.SetTime(media::TimeUnit::FromMicroseconds(seekTime));
+  mSeekTaskRequest.DisconnectIfExists();
 
-  mDropAudioUntilNextDiscontinuity = HasAudio();
-  mDropVideoUntilNextDiscontinuity = HasVideo();
-  mCurrentTimeBeforeSeek = GetMediaTime();
+  // Create a new SeekTask instance for the incoming seek task.
+  mSeekTask = SeekTask::CreateSeekTask(mDecoderID, OwnerThread(), mReader.get(),
+                                       mReaderWrapper.get(), Move(aSeekJob),
+                                       mInfo, Duration(), GetMediaTime());
 
   // Stop playback now to ensure that while we're outside the monitor
   // dispatching SeekingStarted, playback doesn't advance and mess with
   // mCurrentPosition that we've setting to seekTime here.
   StopPlayback();
-  UpdatePlaybackPositionInternal(mCurrentSeek.mTarget.GetTime().ToMicroseconds());
+  UpdatePlaybackPositionInternal(mSeekTask->GetSeekJob().mTarget.GetTime().ToMicroseconds());
 
-  mOnSeekingStart.Notify(mCurrentSeek.mTarget.mEventVisibility);
+  mOnSeekingStart.Notify(mSeekTask->GetSeekJob().mTarget.mEventVisibility);
 
   // Reset our state machine and decoding pipeline before seeking.
-  Reset();
+  if (mSeekTask->NeedToResetMDSM()) { Reset(); }
 
   // Do the seek.
-  RefPtr<MediaDecoderStateMachine> self = this;
-  mSeekRequest.Begin(
-    mReaderWrapper->Seek(mCurrentSeek.mTarget, Duration())
-    ->Then(OwnerThread(), __func__,
-           [self] (media::TimeUnit) -> void {
-             self->mSeekRequest.Complete();
-             // We must decode the first samples of active streams, so we can determine
-             // the new stream time. So dispatch tasks to do that.
-             self->EnsureAudioDecodeTaskQueued();
-             self->EnsureVideoDecodeTaskQueued();
-           }, [self] (nsresult aResult) -> void {
-             self->mSeekRequest.Complete();
-             MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-             self->DecodeError();
-           }));
+  mSeekTaskRequest.Begin(mSeekTask->Seek(Duration())
+    ->Then(OwnerThread(), __func__, this,
+           &MediaDecoderStateMachine::OnSeekTaskResolved,
+           &MediaDecoderStateMachine::OnSeekTaskRejected));
+}
+
+void
+MediaDecoderStateMachine::OnSeekTaskResolved(SeekTaskResolveValue aValue)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
+
+  mSeekTaskRequest.Complete();
+
+  if (aValue.mSeekedAudioData) {
+    Push(aValue.mSeekedAudioData.get(), MediaData::AUDIO_DATA);
+    mDecodedAudioEndTime =
+      std::max(aValue.mSeekedAudioData->GetEndTime(), mDecodedAudioEndTime);
+  }
+
+  if (aValue.mSeekedVideoData) {
+    Push(aValue.mSeekedVideoData.get(), MediaData::VIDEO_DATA);
+    mDecodedVideoEndTime =
+      std::max(aValue.mSeekedVideoData->GetEndTime(), mDecodedVideoEndTime);
+  }
+
+  if (aValue.mIsAudioQueueFinished) {
+    AudioQueue().Finish();
+    StopPrerollingAudio();
+  }
+
+  if (aValue.mIsVideoQueueFinished) {
+    VideoQueue().Finish();
+    StopPrerollingVideo();
+  }
+
+  if (aValue.mNeedToStopPrerollingAudio) {
+    StopPrerollingAudio();
+  }
+
+  if (aValue.mNeedToStopPrerollingVideo) {
+    StopPrerollingVideo();
+  }
+
+  SeekCompleted();
+
+  mSeekTask->Discard();
+  mSeekTask = nullptr;
+}
+
+void
+MediaDecoderStateMachine::OnSeekTaskRejected(SeekTaskRejectValue aValue)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
+
+  mSeekTaskRequest.Complete();
+
+  if (aValue.mIsAudioQueueFinished) {
+    AudioQueue().Finish();
+    StopPrerollingAudio();
+  }
+
+  if (aValue.mIsVideoQueueFinished) {
+    VideoQueue().Finish();
+    StopPrerollingVideo();
+  }
+
+  if (aValue.mNeedToStopPrerollingAudio) {
+    StopPrerollingAudio();
+  }
+
+  if (aValue.mNeedToStopPrerollingVideo) {
+    StopPrerollingVideo();
+  }
+
+  DecodeError();
+
+  mSeekTask->Discard();
+  mSeekTask = nullptr;
 }
 
 nsresult
@@ -1680,18 +1593,18 @@ nsresult
 MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d status=%s",
               IsAudioDecoding(), AudioRequestStatus());
 
   if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_BUFFERING &&
-      mState != DECODER_STATE_SEEKING) {
+      mState != DECODER_STATE_BUFFERING) {
     return NS_OK;
   }
 
   if (!IsAudioDecoding() || mAudioDataRequest.Exists() ||
-      mAudioWaitRequest.Exists() || mSeekRequest.Exists()) {
+      mAudioWaitRequest.Exists()) {
     return NS_OK;
   }
 
@@ -1703,6 +1616,7 @@ void
 MediaDecoderStateMachine::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
@@ -1734,18 +1648,18 @@ nsresult
 MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
              IsVideoDecoding(), VideoRequestStatus());
 
   if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_BUFFERING &&
-      mState != DECODER_STATE_SEEKING) {
+      mState != DECODER_STATE_BUFFERING) {
     return NS_OK;
   }
 
   if (!IsVideoDecoding() || mVideoDataRequest.Exists() ||
-      mVideoWaitRequest.Exists() || mSeekRequest.Exists()) {
+      mVideoWaitRequest.Exists()) {
     return NS_OK;
   }
 
@@ -1757,6 +1671,7 @@ void
 MediaDecoderStateMachine::RequestVideoData()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   // Time the video decode, so that if it's slow, we can increase our low
   // audio threshold to reduce the chance of an audio underrun while we're
@@ -1766,8 +1681,7 @@ MediaDecoderStateMachine::RequestVideoData()
   bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
     NeedToSkipToNextKeyframe();
 
-  media::TimeUnit currentTime = media::TimeUnit::FromMicroseconds(
-    mState == DECODER_STATE_SEEKING ? 0 : GetMediaTime());
+  media::TimeUnit currentTime = media::TimeUnit::FromMicroseconds(GetMediaTime());
 
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
@@ -2056,7 +1970,7 @@ MediaDecoderStateMachine::SeekCompleted()
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
 
-  int64_t seekTime = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
+  int64_t seekTime = mSeekTask->GetSeekJob().mTarget.GetTime().ToMicroseconds();
   int64_t newCurrentTime = seekTime;
 
   // Setup timestamp state.
@@ -2101,7 +2015,7 @@ MediaDecoderStateMachine::SeekCompleted()
 
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
-  mCurrentSeek.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+  mSeekTask->GetSeekJob().Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
 
   if (mDecodingFirstFrame) {
     // We were resuming from dormant, or initiated a seek early.
@@ -2351,16 +2265,13 @@ MediaDecoderStateMachine::Reset()
   mVideoCompleted = false;
   AudioQueue().Reset();
   VideoQueue().Reset();
-  mFirstVideoFrameAfterSeek = nullptr;
-  mDropAudioUntilNextDiscontinuity = true;
-  mDropVideoUntilNextDiscontinuity = true;
 
   mMetadataRequest.DisconnectIfExists();
   mAudioDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
   mVideoDataRequest.DisconnectIfExists();
   mVideoWaitRequest.DisconnectIfExists();
-  mSeekRequest.DisconnectIfExists();
+  mSeekTaskRequest.DisconnectIfExists();
 
   mPlaybackOffset = 0;
 
@@ -2417,122 +2328,6 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 
   int64_t delay = std::max<int64_t>(1, AUDIO_DURATION_USECS / mPlaybackRate);
   ScheduleStateMachineIn(delay);
-}
-
-nsresult
-MediaDecoderStateMachine::DropVideoUpToSeekTarget(MediaData* aSample)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  RefPtr<VideoData> video(aSample->As<VideoData>());
-  MOZ_ASSERT(video);
-  DECODER_LOG("DropVideoUpToSeekTarget() frame [%lld, %lld]",
-              video->mTime, video->GetEndTime());
-  MOZ_ASSERT(mCurrentSeek.Exists());
-  const int64_t target = mCurrentSeek.mTarget.GetTime().ToMicroseconds();
-
-  // If the frame end time is less than the seek target, we won't want
-  // to display this frame after the seek, so discard it.
-  if (target >= video->GetEndTime()) {
-    DECODER_LOG("DropVideoUpToSeekTarget() pop video frame [%lld, %lld] target=%lld",
-                video->mTime, video->GetEndTime(), target);
-    mFirstVideoFrameAfterSeek = video;
-  } else {
-    if (target >= video->mTime && video->GetEndTime() >= target) {
-      // The seek target lies inside this frame's time slice. Adjust the frame's
-      // start time to match the seek target. We do this by replacing the
-      // first frame with a shallow copy which has the new timestamp.
-      RefPtr<VideoData> temp = VideoData::ShallowCopyUpdateTimestamp(video, target);
-      video = temp;
-    }
-    mFirstVideoFrameAfterSeek = nullptr;
-
-    DECODER_LOG("DropVideoUpToSeekTarget() found video frame [%lld, %lld] containing target=%lld",
-                video->mTime, video->GetEndTime(), target);
-
-    MOZ_ASSERT(VideoQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-    Push(video, MediaData::VIDEO_DATA);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-MediaDecoderStateMachine::DropAudioUpToSeekTarget(MediaData* aSample)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  RefPtr<AudioData> audio(aSample->As<AudioData>());
-  MOZ_ASSERT(audio &&
-             mCurrentSeek.Exists() &&
-             mCurrentSeek.mTarget.IsAccurate());
-
-  CheckedInt64 sampleDuration =
-    FramesToUsecs(audio->mFrames, mInfo.mAudio.mRate);
-  if (!sampleDuration.isValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (audio->mTime + sampleDuration.value() <= mCurrentSeek.mTarget.GetTime().ToMicroseconds()) {
-    // Our seek target lies after the frames in this AudioData. Don't
-    // push it onto the audio queue, and keep decoding forwards.
-    return NS_OK;
-  }
-
-  if (audio->mTime > mCurrentSeek.mTarget.GetTime().ToMicroseconds()) {
-    // The seek target doesn't lie in the audio block just after the last
-    // audio frames we've seen which were before the seek target. This
-    // could have been the first audio data we've seen after seek, i.e. the
-    // seek terminated after the seek target in the audio stream. Just
-    // abort the audio decode-to-target, the state machine will play
-    // silence to cover the gap. Typically this happens in poorly muxed
-    // files.
-    DECODER_WARN("Audio not synced after seek, maybe a poorly muxed file?");
-    Push(audio, MediaData::AUDIO_DATA);
-    return NS_OK;
-  }
-
-  // The seek target lies somewhere in this AudioData's frames, strip off
-  // any frames which lie before the seek target, so we'll begin playback
-  // exactly at the seek target.
-  NS_ASSERTION(mCurrentSeek.mTarget.GetTime().ToMicroseconds() >= audio->mTime,
-               "Target must at or be after data start.");
-  NS_ASSERTION(mCurrentSeek.mTarget.GetTime().ToMicroseconds() < audio->mTime + sampleDuration.value(),
-               "Data must end after target.");
-
-  CheckedInt64 framesToPrune =
-    UsecsToFrames(mCurrentSeek.mTarget.GetTime().ToMicroseconds() - audio->mTime, mInfo.mAudio.mRate);
-  if (!framesToPrune.isValid()) {
-    return NS_ERROR_FAILURE;
-  }
-  if (framesToPrune.value() > audio->mFrames) {
-    // We've messed up somehow. Don't try to trim frames, the |frames|
-    // variable below will overflow.
-    DECODER_WARN("Can't prune more frames that we have!");
-    return NS_ERROR_FAILURE;
-  }
-  uint32_t frames = audio->mFrames - static_cast<uint32_t>(framesToPrune.value());
-  uint32_t channels = audio->mChannels;
-  AlignedAudioBuffer audioData(frames * channels);
-  if (!audioData) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  memcpy(audioData.get(),
-         audio->mAudioData.get() + (framesToPrune.value() * channels),
-         frames * channels * sizeof(AudioDataValue));
-  CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
-  if (!duration.isValid()) {
-    return NS_ERROR_FAILURE;
-  }
-  RefPtr<AudioData> data(new AudioData(audio->mOffset,
-                                       mCurrentSeek.mTarget.GetTime().ToMicroseconds(),
-                                       duration.value(),
-                                       frames,
-                                       Move(audioData),
-                                       channels,
-                                       audio->mRate));
-  MOZ_ASSERT(AudioQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-  Push(data, MediaData::AUDIO_DATA);
-
-  return NS_OK;
 }
 
 void MediaDecoderStateMachine::UpdateNextFrameStatus()

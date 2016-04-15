@@ -1567,7 +1567,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
   CSFLogDebug(logTag, "CreateOffer()");
 
   nsresult nrv;
-  if (restartIce) {
+  if (restartIce && !mJsepSession->GetLocalDescription().empty()) {
     // If restart is requested and a restart is already in progress, we
     // need to make room for the restart request so we either rollback
     // or finalize to "clear" the previous restart.
