@@ -397,13 +397,13 @@ public:
   virtual bool
   RecvSynthesizeNativeTouchPoint(const uint32_t& aPointerId,
                                  const TouchPointerState& aPointerState,
-                                 const ScreenIntPoint& aPointerScreenPoint,
+                                 const LayoutDeviceIntPoint& aPoint,
                                  const double& aPointerPressure,
                                  const uint32_t& aPointerOrientation,
                                  const uint64_t& aObserverId) override;
 
   virtual bool
-  RecvSynthesizeNativeTouchTap(const ScreenIntPoint& aPointerScreenPoint,
+  RecvSynthesizeNativeTouchTap(const LayoutDeviceIntPoint& aPoint,
                                const bool& aLongTap,
                                const uint64_t& aObserverId) override;
 

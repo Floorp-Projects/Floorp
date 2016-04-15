@@ -255,7 +255,7 @@ private:
 nsresult
 nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,
-                                     ScreenIntPoint aPointerScreenPoint,
+                                     LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
                                      nsIObserver* aObserver)
@@ -270,6 +270,9 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         mSynthesizedTouchInput = new MultiTouchInput();
     }
 
+    ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(aPoint,
+        PixelCastJustification::LayoutDeviceIsScreenForBounds);
+
     // We can't dispatch mSynthesizedTouchInput directly because (a) dispatching
     // it might inadvertently modify it and (b) in the case of touchend or
     // touchcancel events mSynthesizedTouchInput will hold the touches that are
@@ -283,7 +286,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         if (index >= 0) {
             // found an existing touch point, update it
             SingleTouchData& point = mSynthesizedTouchInput->mTouches[index];
-            point.mScreenPoint = aPointerScreenPoint;
+            point.mScreenPoint = pointerScreenPoint;
             point.mRotationAngle = (float)aPointerOrientation;
             point.mForce = (float)aPointerPressure;
             inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
@@ -291,7 +294,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
             // new touch point, add it
             mSynthesizedTouchInput->mTouches.AppendElement(SingleTouchData(
                 (int32_t)aPointerId,
-                aPointerScreenPoint,
+                pointerScreenPoint,
                 ScreenSize(0, 0),
                 (float)aPointerOrientation,
                 (float)aPointerPressure));
@@ -309,7 +312,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
             : MultiTouchInput::MULTITOUCH_CANCEL);
         inputToDispatch.mTouches.AppendElement(SingleTouchData(
             (int32_t)aPointerId,
-            aPointerScreenPoint,
+            pointerScreenPoint,
             ScreenSize(0, 0),
             (float)aPointerOrientation,
             (float)aPointerPressure));
