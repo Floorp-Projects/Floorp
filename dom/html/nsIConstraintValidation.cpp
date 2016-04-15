@@ -10,9 +10,13 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/ValidityState.h"
 #include "nsIFormControl.h"
 #include "nsContentUtils.h"
+
+#include "nsIFormSubmitObserver.h"
+#include "nsIObserverService.h"
 
 const uint16_t nsIConstraintValidation::sContentSpecifiedMaxLengthMessage = 256;
 
@@ -124,6 +128,71 @@ nsIConstraintValidation::CheckValidity(bool* aValidity)
   *aValidity = CheckValidity();
 
   return NS_OK;
+}
+
+bool
+nsIConstraintValidation::ReportValidity()
+{
+  if (!IsCandidateForConstraintValidation() || IsValid()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(this);
+  MOZ_ASSERT(content, "This class should be inherited by HTML elements only!");
+
+  bool defaultAction = true;
+  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+                                       NS_LITERAL_STRING("invalid"),
+                                       false, true, &defaultAction);
+  if (!defaultAction) {
+    return false;
+  }
+
+  nsCOMPtr<nsIObserverService> service =
+    mozilla::services::GetObserverService();
+  if (!service) {
+    NS_WARNING("No observer service available!");
+    return true;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> theEnum;
+  nsresult rv = service->EnumerateObservers(NS_INVALIDFORMSUBMIT_SUBJECT,
+                                            getter_AddRefs(theEnum));
+
+  // Return true on error here because that's what we always did
+  NS_ENSURE_SUCCESS(rv, true);
+
+  bool hasObserver = false;
+  rv = theEnum->HasMoreElements(&hasObserver);
+
+  nsCOMPtr<nsIMutableArray> invalidElements =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  invalidElements->AppendElement(content, false);
+
+  NS_ENSURE_SUCCESS(rv, true);
+  nsCOMPtr<nsISupports> inst;
+  nsCOMPtr<nsIFormSubmitObserver> observer;
+  bool more = true;
+  while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
+    theEnum->GetNext(getter_AddRefs(inst));
+    observer = do_QueryInterface(inst);
+
+    if (observer) {
+      observer->NotifyInvalidSubmit(nullptr, invalidElements);
+    }
+  }
+
+  if (content->IsHTMLElement(nsGkAtoms::input) &&
+      nsContentUtils::IsFocusedContent(content)) {
+    HTMLInputElement* inputElement =
+    HTMLInputElement::FromContentOrNull(content);
+
+    inputElement->UpdateValidityUIBits(true);
+  }
+
+  dom::Element* element = content->AsElement();
+  element->UpdateState(true);
+  return false;
 }
 
 void
