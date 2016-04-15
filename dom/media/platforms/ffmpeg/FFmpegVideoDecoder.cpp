@@ -302,7 +302,9 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
                                             b,
                                             !!mFrame->key_frame,
                                             -1,
-                                            mInfo.ImageRect());
+                                            mInfo.ScaledImageRect(mFrame->width,
+                                                                  mFrame->height));
+
     if (!v) {
       NS_WARNING("image allocation error.");
       mCallback->Error();
