@@ -8,6 +8,7 @@ var server;
 
 const PREF_KINTO_BASE = "services.kinto.base";
 const PREF_LAST_UPDATE = "services.kinto.last_update_seconds";
+const PREF_LAST_ETAG = "services.kinto.last_etag";
 const PREF_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
 
 // Check to ensure maybeSync is called with correct values when a changes
@@ -31,7 +32,7 @@ add_task(function* test_check_maybeSync(){
         response.setHeader(headerElements[0], headerElements[1].trimLeft());
       }
 
-      // set the
+      // set the server date
       response.setHeader("Date", (new Date(2000)).toUTCString());
 
       response.write(sampled.responseBody);
@@ -47,19 +48,20 @@ add_task(function* test_check_maybeSync(){
     `http://localhost:${server.identity.primaryPort}/v1`);
 
   // set some initial values so we can check these are updated appropriately
-  Services.prefs.setIntPref("services.kinto.last_update", 0);
-  Services.prefs.setIntPref("services.kinto.clock_difference", 0);
+  Services.prefs.setIntPref(PREF_LAST_UPDATE, 0);
+  Services.prefs.setIntPref(PREF_CLOCK_SKEW_SECONDS, 0);
+  Services.prefs.clearUserPref(PREF_LAST_ETAG);
 
 
   let startTime = Date.now();
 
+  let updater = Cu.import("resource://services-common/kinto-updater.js");
+
   let syncPromise = new Promise(function(resolve, reject) {
-    let updater = Cu.import("resource://services-common/kinto-updater.js");
     // add a test kinto client that will respond to lastModified information
     // for a collection called 'test-collection'
     updater.addTestKintoClient("test-collection", {
-      "maybeSync": function(lastModified, serverTime){
-        // ensire the lastModified and serverTime values are as expected
+      maybeSync(lastModified, serverTime) {
         do_check_eq(lastModified, 1000);
         do_check_eq(serverTime, 2000);
         resolve();
@@ -80,6 +82,44 @@ add_task(function* test_check_maybeSync(){
   // we previously set the serverTime to 2 (seconds past epoch)
   do_check_eq(clockDifference <= endTime / 1000
               && clockDifference >= Math.floor(startTime / 1000) - 2, true);
+  // Last timestamp was saved. An ETag header value is a quoted string.
+  let lastEtag = Services.prefs.getCharPref(PREF_LAST_ETAG);
+  do_check_eq(lastEtag, "\"1100\"");
+
+
+  // Simulate a poll with up-to-date collection.
+  Services.prefs.setIntPref(PREF_LAST_UPDATE, 0);
+  // If server has no change, a 304 is received, maybeSync() is not called.
+  updater.addTestKintoClient("test-collection", {
+    maybeSync: () => {throw new Error("Should not be called");}
+  });
+  yield updater.checkVersions();
+  // Last update is overwritten
+  do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
+
+
+  // Simulate a server error.
+  function simulateErrorResponse (request, response) {
+    response.setHeader("Date", (new Date(3000)).toUTCString());
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.write(JSON.stringify({
+      code: 503,
+      errno: 999,
+      error: "Service Unavailable",
+    }));
+    response.setStatusLine(null, 503, "Service Unavailable");
+  }
+  server.registerPathHandler(changesPath, simulateErrorResponse);
+  // checkVersions() fails with adequate error.
+  let error;
+  try {
+    yield updater.checkVersions();
+  } catch (e) {
+    error = e;
+  }
+  do_check_eq(error.message, "Polling for changes failed.");
+  // When an error occurs, last update was not overwritten (see Date header above).
+  do_check_eq(Services.prefs.getIntPref(PREF_LAST_UPDATE), 2);
 });
 
 function run_test() {
@@ -99,12 +139,29 @@ function getSampleResponse(req, port) {
   const responses = {
     "GET:/v1/buckets/monitor/collections/changes/records?": {
       "sampleHeaders": [
-        "Content-Type: application/json; charset=UTF-8"
+        "Content-Type: application/json; charset=UTF-8",
+        "ETag: \"1100\""
       ],
       "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data":[{"host":"localhost","last_modified":1000,"bucket":"blocklists","id":"330a0c5f-fadf-ff0b-40c8-4eb0d924ff6a","collection":"test-collection"}]})
+      "responseBody": JSON.stringify({"data": [{
+        "host": "localhost",
+        "last_modified": 1100,
+        "bucket": "blocklists:aurora",
+        "id": "330a0c5f-fadf-ff0b-40c8-4eb0d924ff6a",
+        "collection": "test-collection"
+      }, {
+        "host": "localhost",
+        "last_modified": 1000,
+        "bucket": "blocklists",
+        "id": "254cbb9e-6888-4d9f-8e60-58b74faa8778",
+        "collection": "test-collection"
+      }]})
     }
   };
+
+  if (req.hasHeader("if-none-match") && req.getHeader("if-none-match", "") == "\"1100\"")
+    return {sampleHeaders: [], status: {status: 304, statusText: "Not Modified"}, responseBody: ""};
+
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
          responses[req.method];
 }
