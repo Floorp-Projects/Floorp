@@ -322,6 +322,7 @@ def parse_commit(message, jobs):
                 'build_name': platform,
                 'build_type': build_type,
                 'interactive': args.interactive,
+                'when': platform_builds.get('when', {}),
             })
 
     # Process miscellaneous tasks.
