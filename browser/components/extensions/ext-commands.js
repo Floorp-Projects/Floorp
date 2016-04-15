@@ -74,9 +74,10 @@ CommandList.prototype = {
     let os = PlatformInfo.os == "win" ? "windows" : PlatformInfo.os;
     for (let name of Object.keys(manifest.commands)) {
       let command = manifest.commands[name];
+      let shortcut = command.suggested_key[os] || command.suggested_key.default;
       commands.set(name, {
         description: command.description,
-        shortcut: command.suggested_key[os] || command.suggested_key.default,
+        shortcut: shortcut.replace(/\s+/g, ""),
       });
     }
     return commands;
