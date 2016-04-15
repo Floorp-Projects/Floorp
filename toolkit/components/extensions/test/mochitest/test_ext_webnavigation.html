@@ -70,6 +70,8 @@ const URL = BASE + "/file_WebNavigation_page1.html";
 const FRAME = BASE + "/file_WebNavigation_page2.html";
 const FRAME2 = BASE + "/file_WebNavigation_page3.html";
 const FRAME_PUSHSTATE = BASE + "/file_WebNavigation_page3_pushState.html";
+const REDIRECT = BASE + "/redirection.sjs";
+const REDIRECTED = BASE + "/dummy_page.html";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -90,6 +92,120 @@ function loadAndWait(win, event, url, script) {
   script();
   return new Promise(resolve => { completedResolve = resolve; });
 }
+
+add_task(function* webnav_transitions_props() {
+  function backgroundScriptTransitions() {
+    const EVENTS = [
+      "onCommitted",
+      "onCompleted",
+    ];
+
+    function gotEvent(event, details) {
+      browser.test.log(`Got ${event} ${details.url} ${details.transitionType}`);
+
+      browser.test.sendMessage("received", {url: details.url, details, event});
+    }
+
+    let listeners = {};
+    for (let event of EVENTS) {
+      listeners[event] = gotEvent.bind(null, event);
+      browser.webNavigation[event].addListener(listeners[event]);
+    }
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: `(${backgroundScriptTransitions})()`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event, details}) => {
+    received.push({url, event, details});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  yield loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
+
+  // transitionType: reload
+  received = [];
+  yield loadAndWait(win, "onCompleted", URL, () => { win.location.reload(); });
+
+  let found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "reload",
+       "Got the expected 'reload' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
+  // transitionType: auto_subframe
+  found = received.find((data) => (data.event == "onCommitted" && data.url == FRAME));
+
+  ok(found, "Got the sub-frame onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
+  // transitionQualifier: server_redirect
+  received = [];
+  yield loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = REDIRECT; });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "server_redirect"),
+       "Got the expected 'server_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: forward_back
+  received = [];
+  yield loadAndWait(win, "onCompleted", URL, () => { win.history.back(); });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "link",
+       "Got the expected 'link' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "forward_back"),
+       "Got the expected 'forward_back' transitionQualifiers in the OnCommitted events");
+  }
+
+  // cleanup phase
+  win.close();
+
+  yield extension.unload();
+  info("webnavigation extension unloaded");
+});
 
 add_task(function* webnav_ordering() {
   let extensionData = {
