@@ -31,6 +31,16 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
+// WebAnimations API is not enabled by default in all release channels yet, see
+// Bug 1264101.
+function enableWebAnimationsAPI() {
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.animations-api.core.enabled", true]
+    ]}, resolve);
+  });
+}
+
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
@@ -38,7 +48,7 @@ registerCleanupFunction(() => {
  */
 var _addTab = addTab;
 addTab = function(url) {
-  return _addTab(url).then(tab => {
+  return enableWebAnimationsAPI().then(() => _addTab(url)).then(tab => {
     let browser = tab.linkedBrowser;
     info("Loading the helper frame script " + FRAME_SCRIPT_URL);
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);

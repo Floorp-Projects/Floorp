@@ -38,7 +38,7 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
         return databases;
     }
 
-    // Can't mark as @Override. Added in API 11.
+    @Override
     public void shutdown() {
         synchronized (SharedBrowserDatabaseProvider.class) {
             databases.shutdown();

@@ -77,12 +77,14 @@
             android:layout_alignParentRight="true"
             android:layout_below="@id/host"
             android:layout_marginBottom="20dp"
-            android:layout_marginLeft="20dp"
+            android:layout_marginLeft="100dp"
             android:layout_marginRight="30dp"
             android:background="@drawable/button_background_action_orange_round"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:text="@string/promotion_add_to_homescreen"
+            android:maxLines="2"
+            android:ellipsize="end"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
