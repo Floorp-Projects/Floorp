@@ -5,8 +5,7 @@
 /* eslint-disable mozilla/no-cpows-in-tests */
 /* exported openAboutDebugging, closeAboutDebugging, installAddon,
    uninstallAddon, waitForMutation, assertHasTarget,
-   waitForInitialAddonList, waitForServiceWorkerRegistered,
-   unregisterServiceWorker */
+   waitForServiceWorkerRegistered, unregisterServiceWorker */
 /* global sendAsyncMessage */
 
 "use strict";
@@ -154,18 +153,6 @@ function* uninstallAddon(document, addonId, addonName) {
   ok(!names.includes(addonName),
     "After uninstall, the addon name disappears from the list of addons: "
     + names);
-}
-
-/**
- * Returns a promise that will resolve when the add-on list has been updated.
- *
- * @param {Node} document
- * @return {Promise}
- */
-function waitForInitialAddonList(document) {
-  // Wait for actor to load initial list of add-ons.
-  return waitForMutation(document.querySelector("#addons .targets"),
-                         { childList: true });
 }
 
 /**
