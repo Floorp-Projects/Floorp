@@ -14,6 +14,7 @@ Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -22,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
 
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
+const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
 
 const SUPPORTED_PROTOCOL_VERSIONS = ["1.1", "1.5"];
 
@@ -173,7 +175,7 @@ ClientEngine.prototype = {
   _processIncoming() {
     // Fetch all records from the server.
     this.lastSync = 0;
-    this._incomingClients = [];
+    this._incomingClients = {};
     try {
       SyncEngine.prototype._processIncoming.call(this);
       // Since clients are synced unconditionally, any records in the local store
@@ -181,10 +183,28 @@ ClientEngine.prototype = {
       // them, so that we don't upload records with commands for clients that will
       // never see them. We also do this to filter out stale clients from the
       // tabs collection, since showing their list of tabs is confusing.
-      let remoteClientIDs = Object.keys(this._store._remoteClients);
-      let staleIDs = Utils.arraySub(remoteClientIDs, this._incomingClients);
-      for (let staleID of staleIDs) {
-        this._removeRemoteClient(staleID);
+      for (let id in this._store._remoteClients) {
+        if (!this._incomingClients[id]) {
+          this._log.info(`Removing local state for deleted client ${id}`);
+          this._removeRemoteClient(id);
+        }
+      }
+      // Bug 1264498: Mobile clients don't remove themselves from the clients
+      // collection when the user disconnects Sync, so we filter out clients
+      // with the same name that haven't synced in over a week.
+      delete this._incomingClients[this.localID];
+      let names = new Set([this.localName]);
+      for (let id in this._incomingClients) {
+        let record = this._store._remoteClients[id];
+        if (!names.has(record.name)) {
+          names.add(record.name);
+          continue;
+        }
+        let remoteAge = AsyncResource.serverTime - this._incomingClients[id];
+        if (remoteAge > STALE_CLIENT_REMOTE_AGE) {
+          this._log.info(`Hiding stale client ${id} with age ${remoteAge}`);
+          this._removeRemoteClient(id);
+        }
       }
     } finally {
       this._incomingClients = null;
@@ -219,7 +239,7 @@ ClientEngine.prototype = {
   _reconcile: function _reconcile(item) {
     // Every incoming record is reconciled, so we use this to track the
     // contents of the collection on the server.
-    this._incomingClients.push(item.id);
+    this._incomingClients[item.id] = item.modified;
 
     if (!this._store.itemExists(item.id)) {
       return true;
