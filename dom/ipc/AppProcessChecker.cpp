@@ -36,8 +36,8 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-#if DEUBG
-  #define LOG(args...) printf_stderr(args)
+#if DEBUG
+  #define LOG(...) printf_stderr(__VA_ARGS__)
 #else
   #define LOG(...)
 #endif
