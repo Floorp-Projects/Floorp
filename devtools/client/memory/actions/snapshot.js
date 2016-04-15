@@ -482,6 +482,9 @@ const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWork
 const refreshSelectedTreeMap = exports.refreshSelectedTreeMap = function (heapWorker) {
   return function*(dispatch, getState) {
     let snapshot = getState().snapshots.find(s => s.selected);
+    if (!snapshot || snapshot.state !== states.READ) {
+      return;
+    }
 
     // Intermediate snapshot states will get handled by the task action that is
     // orchestrating them. For example, if the snapshot census's state is
@@ -489,8 +492,7 @@ const refreshSelectedTreeMap = exports.refreshSelectedTreeMap = function (heapWo
     // the inverted property matches the inverted state. If the snapshot is
     // still in the process of being saved or read, the takeSnapshotAndCensus
     // task action will follow through and ensure that a census is taken.
-    if (snapshot &&
-        (snapshot.treeMap && snapshot.treeMap.state === treeMapState.SAVED) ||
+    if ((snapshot.treeMap && snapshot.treeMap.state === treeMapState.SAVED) ||
         !snapshot.treeMap) {
       yield dispatch(takeTreeMap(heapWorker, snapshot.id));
     }
@@ -758,6 +760,27 @@ const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
     }));
 
     dispatch({ type: actions.DELETE_SNAPSHOTS_END, ids });
+  };
+};
+
+/**
+ * Delete a snapshot
+ *
+ * @param {HeapAnalysesClient} heapWorker
+ * @param {snapshotModel} snapshot
+ */
+const deleteSnapshot = exports.deleteSnapshot = function (heapWorker, snapshot) {
+  return function*(dispatch, getState) {
+    dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids: [snapshot.id] });
+
+    try {
+      yield heapWorker.deleteHeapSnapshot(snapshot.path);
+    } catch (error) {
+      reportException("deleteSnapshot", error);
+      dispatch({ type: actions.SNAPSHOT_ERROR, id: snapshot.id, error });
+    }
+
+    dispatch({ type: actions.DELETE_SNAPSHOTS_END, ids: [snapshot.id] });
   };
 };
 

@@ -53,6 +53,8 @@ var DominatorTreeComponent = React.createFactory(require("devtools/client/memory
 var DominatorTreeItem = React.createFactory(require("devtools/client/memory/components/dominator-tree-item"));
 var ShortestPaths = React.createFactory(require("devtools/client/memory/components/shortest-paths"));
 var TreeMap = React.createFactory(require("devtools/client/memory/components/tree-map"));
+var SnapshotListItem = React.createFactory(require("devtools/client/memory/components/snapshot-list-item"));
+var List = React.createFactory(require("devtools/client/memory/components/list"));
 var Toolbar = React.createFactory(require("devtools/client/memory/components/toolbar"));
 
 // All tests are asynchronous.
@@ -163,6 +165,43 @@ var TEST_SHORTEST_PATHS_PROPS = Object.freeze({
   }),
 });
 
+var TEST_SNAPSHOT = Object.freeze({
+  id: 1337,
+  selected: true,
+  path: "/fake/path/to/snapshot",
+  census: Object.freeze({
+    report: Object.freeze({
+      objects: Object.freeze({ count: 4, bytes: 400 }),
+      scripts: Object.freeze({ count: 3, bytes: 300 }),
+      strings: Object.freeze({ count: 2, bytes: 200 }),
+      other: Object.freeze({ count: 1, bytes: 100 }),
+    }),
+    display: Object.freeze({
+      displayName: "Test Display",
+      tooltip: "Test display tooltup",
+      inverted: false,
+      breakdown: Object.freeze({
+        by: "coarseType",
+        objects: Object.freeze({ by: "count", count: true, bytes: true }),
+        scripts: Object.freeze({ by: "count", count: true, bytes: true }),
+        strings: Object.freeze({ by: "count", count: true, bytes: true }),
+        other: Object.freeze({ by: "count", count: true, bytes: true }),
+      }),
+    }),
+    state: censusState.SAVED,
+    inverted: false,
+    filter: null,
+    expanded: new Set(),
+    focused: null,
+    parentMap: Object.freeze(Object.create(null))
+  }),
+  dominatorTree: TEST_DOMINATOR_TREE,
+  error: null,
+  imported: false,
+  creationTime: 0,
+  state: snapshotState.READ,
+});
+
 var TEST_HEAP_PROPS = Object.freeze({
   onSnapshotClick: noop,
   onLoadMoreSiblings: noop,
@@ -175,42 +214,7 @@ var TEST_HEAP_PROPS = Object.freeze({
   onViewSourceInDebugger: noop,
   diffing: null,
   view: { state: viewState.CENSUS, },
-  snapshot: Object.freeze({
-    id: 1337,
-    selected: true,
-    path: "/fake/path/to/snapshot",
-    census: Object.freeze({
-      report: Object.freeze({
-        objects: Object.freeze({ count: 4, bytes: 400 }),
-        scripts: Object.freeze({ count: 3, bytes: 300 }),
-        strings: Object.freeze({ count: 2, bytes: 200 }),
-        other: Object.freeze({ count: 1, bytes: 100 }),
-      }),
-      display: Object.freeze({
-        displayName: "Test Display",
-        tooltip: "Test display tooltup",
-        inverted: false,
-        breakdown: Object.freeze({
-          by: "coarseType",
-          objects: Object.freeze({ by: "count", count: true, bytes: true }),
-          scripts: Object.freeze({ by: "count", count: true, bytes: true }),
-          strings: Object.freeze({ by: "count", count: true, bytes: true }),
-          other: Object.freeze({ by: "count", count: true, bytes: true }),
-        }),
-      }),
-      state: censusState.SAVED,
-      inverted: false,
-      filter: null,
-      expanded: new Set(),
-      focused: null,
-      parentMap: Object.freeze(Object.create(null))
-    }),
-    dominatorTree: TEST_DOMINATOR_TREE,
-    error: null,
-    imported: false,
-    creationTime: 0,
-    state: snapshotState.READ,
-  }),
+  snapshot: TEST_SNAPSHOT,
   sizes: Object.freeze({ shortestPathsSize: .5 }),
   onShortestPathsResize: noop,
 });
@@ -283,6 +287,14 @@ var TEST_TREE_MAP_PROPS = Object.freeze({
       ]
     }
   })
+});
+
+var TEST_SNAPSHOT_LIST_ITEM_PROPS = Object.freeze({
+  onClick: noop,
+  onSave: noop,
+  onDelete: noop,
+  item: TEST_SNAPSHOT,
+  index: 1234,
 });
 
 function onNextAnimationFrame(fn) {

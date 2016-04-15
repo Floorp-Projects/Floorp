@@ -26,12 +26,13 @@ const SnapshotListItem = module.exports = createClass({
   propTypes: {
     onClick: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
     item: snapshotModel.isRequired,
     index: PropTypes.number.isRequired,
   },
 
   render() {
-    let { index, item: snapshot, onClick, onSave, diffing } = this.props;
+    let { index, item: snapshot, onClick, onSave, onDelete, diffing } = this.props;
     let className = `snapshot-list-item ${snapshot.selected ? " selected" : ""}`;
     let statusText = getStatusText(snapshot.state);
     let wantThrobber = !!statusText;
@@ -88,13 +89,20 @@ const SnapshotListItem = module.exports = createClass({
     let saveLink = !snapshot.path ? void 0 : dom.a({
       onClick: () => onSave(snapshot),
       className: "save",
-    }, L10N.getFormatStr("snapshot.io.save"));
+    }, L10N.getStr("snapshot.io.save"));
+
+    let deleteButton = !snapshot.path ? void 0 : dom.button({
+      onClick: () => onDelete(snapshot),
+      className: "devtools-button delete",
+      title: L10N.getStr("snapshot.io.delete")
+    });
 
     return (
       dom.li({ className, onClick },
         dom.span({ className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}` },
           checkbox,
-          title
+          title,
+          deleteButton
         ),
         dom.span({ className: "snapshot-info" },
           details,

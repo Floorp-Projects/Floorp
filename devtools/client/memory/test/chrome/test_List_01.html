@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test to verify the delete button calls the onDelete handler for an item
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+          try {
+            const container = document.getElementById("container");
+
+            let deletedSnapshots = [];
+
+            let snapshots = [ TEST_SNAPSHOT, TEST_SNAPSHOT, TEST_SNAPSHOT ]
+              .map((snapshot, index) => immutableUpdate(snapshot, {
+                index: snapshot.index + index
+              }));
+
+            yield renderComponent(
+              List({
+                itemComponent: SnapshotListItem,
+                onClick: noop,
+                onDelete: (item) => deletedSnapshots.push(item),
+                items: snapshots
+              }),
+              container
+            );
+
+            let deleteButtons = container.querySelectorAll('.delete');
+
+            is(container.querySelectorAll('.snapshot-list-item').length, 3,
+              "There are 3 list items\n");
+            is(deletedSnapshots.length, 0,
+              "Not snapshots have been deleted\n");
+
+            deleteButtons[1].click();
+
+            is(deletedSnapshots.length, 1, "One snapshot was deleted\n");
+            is(deletedSnapshots[0], snapshots[1],
+              "Deleted snapshot was added to the deleted list\n");
+
+            deleteButtons[0].click();
+
+            is(deletedSnapshots.length, 2, "Two snapshots were deleted\n");
+            is(deletedSnapshots[1], snapshots[0],
+              "Deleted snapshot was added to the deleted list\n");
+
+            deleteButtons[2].click();
+
+            is(deletedSnapshots.length, 3, "Three snapshots were deleted\n");
+            is(deletedSnapshots[2], snapshots[2],
+              "Deleted snapshot was added to the deleted list\n");
+
+
+          } catch(e) {
+            ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+          } finally {
+            SimpleTest.finish();
+          }
+         });
+        </script>
+    </pre>
+</body>
+</html>
