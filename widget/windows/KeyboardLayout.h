@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
+#include "mozilla/widget/WinMessages.h"
 #include "mozilla/widget/WinModifierKeyState.h"
 #include <windows.h>
 
@@ -170,7 +171,7 @@ public:
   UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
 };
 
-class MOZ_STACK_CLASS NativeKey
+class MOZ_STACK_CLASS NativeKey final
 {
   friend class KeyboardLayout;
 
@@ -203,7 +204,10 @@ public:
   NativeKey(nsWindowBase* aWidget,
             const MSG& aMessage,
             const ModifierKeyState& aModKeyState,
+            HKL aOverrideKeyboardLayout = 0,
             nsTArray<FakeCharMsg>* aFakeCharMsgs = nullptr);
+
+  ~NativeKey();
 
   /**
    * Handle WM_KEYDOWN message or WM_SYSKEYDOWN message.  The instance must be
@@ -292,6 +296,9 @@ private:
   // Please note that the event may not cause any text input even if this
   // is true.  E.g., it might be dead key state or Ctrl key may be pressed.
   bool    mIsPrintableKey;
+  // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
+  // keyboard layout with specified by the constructor.
+  bool    mIsOverridingKeyboardLayout;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
@@ -320,6 +327,7 @@ private:
       case WM_SYSCHAR:
       case WM_DEADCHAR:
       case WM_SYSDEADCHAR:
+      case MOZ_WM_KEYDOWN:
         return ((mMsg.lParam & (1 << 30)) != 0);
       case WM_APPCOMMAND:
         if (mVirtualKeyCode) {
@@ -355,11 +363,15 @@ private:
 
   bool IsKeyDownMessage() const
   {
-    return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
+    return (mMsg.message == WM_KEYDOWN ||
+            mMsg.message == WM_SYSKEYDOWN ||
+            mMsg.message == MOZ_WM_KEYDOWN);
   }
   bool IsKeyUpMessage() const
   {
-    return (mMsg.message == WM_KEYUP || mMsg.message == WM_SYSKEYUP);
+    return (mMsg.message == WM_KEYUP ||
+            mMsg.message == WM_SYSKEYUP ||
+            mMsg.message == MOZ_WM_KEYUP);
   }
   bool IsPrintableCharMessage(const MSG& aMSG) const
   {
@@ -395,6 +407,11 @@ private:
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
   bool IsFollowedByDeadCharMessage() const;
+  bool IsKeyMessageOnPlugin() const
+  {
+    return (mMsg.message == MOZ_WM_KEYDOWN ||
+            mMsg.message == MOZ_WM_KEYUP);
+  }
 
   /**
    * GetFollowingCharMessage() returns following char message of handling
