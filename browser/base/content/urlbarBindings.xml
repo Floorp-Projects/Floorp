@@ -1360,8 +1360,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           var popupDirection = aElement.ownerDocument.defaultView.getComputedStyle(aElement).direction;
           this.style.direction = popupDirection;
 
-          // Make the popup's starting margin negaxtive so that the start of the
-          // popup aligns with the window border.
+          // Make the popup's starting margin negative so that the leading edge
+          // of the popup aligns with the window border.
           let elementRect = aElement.getBoundingClientRect();
           if (popupDirection == "rtl") {
             let offset = elementRect.right - rect.right
@@ -1369,6 +1369,30 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           } else {
             let offset = rect.left - elementRect.left;
             this.style.marginLeft = offset + "px";
+          }
+
+          // Keep the popup items' site icons aligned with the urlbar's identity
+          // icon if it's not too far from the edge of the window.  If there are
+          // at most two toolbar buttons between the window edge and the urlbar,
+          // then consider that as "not too far."  The forward button's
+          // visibility may have changed since the last time the popup was
+          // opened, so this needs to happen now.  Do it *before* the popup
+          // opens because otherwise the items will visibly shift.
+          let nodes = [...document.getElementById("nav-bar-customization-target").childNodes];
+          let urlbarPosition = nodes.findIndex(n => n.id == "urlbar-container");
+          let alignSiteIcons = urlbarPosition <= 2 &&
+                               nodes.slice(0, urlbarPosition)
+                                    .every(n => n.localName == "toolbarbutton");
+          if (alignSiteIcons) {
+            let identityRect =
+              document.getElementById("identity-icon").getBoundingClientRect();
+            this.siteIconStart = popupDirection == "rtl" ? identityRect.right
+                                                         : identityRect.left;
+          }
+          else {
+            // Reset the alignment so that the site icons are positioned
+            // according to whatever's in the CSS.
+            this.siteIconStart = undefined;
           }
 
           // Position the popup below the navbar.  To get the y-coordinate,
@@ -2528,8 +2552,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // otherwise just rely on the panel id for common arrowpanels.
           let type = this._panel.firstChild.getAttribute("popupid") ||
                      this._panel.id;
-          if (type == "password")
-            return "passwords";
           if (type == "editBookmarkPanel")
             return "bookmarks";
           if (type == "addon-install-complete" || type == "addon-install-restart") {
@@ -2586,17 +2608,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           let viewsLeft = this._viewsLeft;
           if (viewsLeft) {
-            let notification = this._panel.firstElementChild.notification;
-            if (this._notificationType == "passwords" && notification && notification.options &&
-                notification.options.displayURI instanceof Ci.nsIStandardURL) {
-              let fxAOrigin = new URL(Services.prefs.getCharPref("identity.fxaccounts.remote.signup.uri")).origin
-              if (notification.options.displayURI.prePath == fxAOrigin) {
-                // Somewhat gross hack - we don't want to show the sync promo while
-                // the user may be logging into Sync.
-                return;
-              }
-            }
-
             if (Services.prefs.prefHasUserValue("services.sync.username") &&
                this._notificationType != "addons-sync-disabled") {
               // If the user has already setup Sync, don't show the notification.

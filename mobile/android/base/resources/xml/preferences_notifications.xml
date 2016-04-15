@@ -4,6 +4,11 @@
         android:title="@string/pref_content_notifications"
         android:summary="@string/pref_content_notifications_summary"
         android:defaultValue="true" />
+    <org.mozilla.gecko.preferences.AlignRightLinkPreference
+        android:key="android.not_a_preference.notifications.content.learn_more"
+        android:title="@string/pref_learn_more"
+        android:persistent="false"
+        url="https://support.mozilla.org/kb/notifications-firefox-android?utm_source=inproduct&amp;utm_medium=notifications&amp;utm_campaign=mobileandroid" />
     <SwitchPreference android:key="android.not_a_preference.notifications.whats_new"
         android:title="@string/pref_whats_new_notification"
         android:summary="@string/pref_whats_new_notification_summary"

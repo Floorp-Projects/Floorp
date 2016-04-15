@@ -178,7 +178,9 @@ This section contains the histograms that are valid for the current platform. ``
 
 keyedHistograms
 ---------------
-This section contains the keyed histograms available for the current platform. Unlike the ``histograms`` section, this section always reports all the keyed histograms, even though they contain no data.
+This section contains the keyed histograms available for the current platform.
+
+As of Firefox 48, this section does not contain empty keyed histograms anymore.
 
 threadHangStats
 ---------------

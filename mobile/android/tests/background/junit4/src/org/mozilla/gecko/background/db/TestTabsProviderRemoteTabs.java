@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.tests.browser.junit3;
+package org.mozilla.gecko.background.db;
 
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -9,26 +9,55 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.test.InstrumentationTestCase;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.background.db.CursorDumper;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.LocalTabsAccessor;
 import org.mozilla.gecko.db.RemoteClient;
+import org.mozilla.gecko.db.TabsProvider;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.internal.runtime.RuntimeAdapter;
+import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.List;
 
-public class TestRemoteTabs extends InstrumentationTestCase {
+@RunWith(TestRunner.class)
+public class TestTabsProviderRemoteTabs {
     private static final long ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
     private static final long ONE_WEEK_IN_MILLISECONDS = 7 * ONE_DAY_IN_MILLISECONDS;
     private static final long THREE_WEEKS_IN_MILLISECONDS = 3 * ONE_WEEK_IN_MILLISECONDS;
 
+    protected TabsProvider provider;
+
+    @Before
+    public void setUp() {
+        provider = new TabsProvider();
+        provider.onCreate();
+        ShadowContentResolver.registerProvider(BrowserContract.TABS_AUTHORITY, new DelegatingTestContentProvider(provider));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        provider.shutdown();
+        provider = null;
+    }
+
+    protected ContentProviderClient getClientsClient() {
+        final ShadowContentResolver cr = new ShadowContentResolver();
+        return cr.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
+    }
+
+    @Test
     public void testGetClientsWithoutTabsByRecencyFromCursor() throws Exception {
         final Uri uri = BrowserContractHelpers.CLIENTS_CONTENT_URI;
-        final ContentResolver cr = getInstrumentation().getTargetContext().getContentResolver();
-        final ContentProviderClient cpc = cr.acquireContentProviderClient(uri);
+        final ContentProviderClient cpc = getClientsClient();
         final LocalTabsAccessor accessor = new LocalTabsAccessor("test"); // The profile name given doesn't matter.
 
         try {
@@ -36,7 +65,7 @@ public class TestRemoteTabs extends InstrumentationTestCase {
             cpc.delete(uri, null, null);
             Cursor allClients = cpc.query(uri, null, null, null, null);
             try {
-                assertEquals(0, allClients.getCount());
+                Assert.assertEquals(0, allClients.getCount());
             } finally {
                 allClients.close();
             }
@@ -60,24 +89,24 @@ public class TestRemoteTabs extends InstrumentationTestCase {
 
             ContentValues[] values = new ContentValues[]{local, remote1, remote2};
             int inserted = cpc.bulkInsert(uri, values);
-            assertEquals(3, inserted);
+            Assert.assertEquals(3, inserted);
 
             allClients = cpc.query(BrowserContract.Clients.CONTENT_RECENCY_URI, null, null, null, null);
             try {
                 CursorDumper.dumpCursor(allClients);
                 // The local client is not ignored.
-                assertEquals(3, allClients.getCount());
+                Assert.assertEquals(3, allClients.getCount());
                 final List<RemoteClient> clients = accessor.getClientsWithoutTabsByRecencyFromCursor(allClients);
-                assertEquals(3, clients.size());
+                Assert.assertEquals(3, clients.size());
                 for (RemoteClient client : clients) {
                     // Each client should not have any tabs.
-                    assertNotNull(client.tabs);
-                    assertEquals(0, client.tabs.size());
+                    Assert.assertNotNull(client.tabs);
+                    Assert.assertEquals(0, client.tabs.size());
                 }
                 // Since there are no tabs, the order should be based on last_modified.
-                assertEquals("guid2", clients.get(0).guid);
-                assertEquals("guid1", clients.get(1).guid);
-                assertEquals(null, clients.get(2).guid);
+                Assert.assertEquals("guid2", clients.get(0).guid);
+                Assert.assertEquals("guid1", clients.get(1).guid);
+                Assert.assertEquals(null, clients.get(2).guid);
             } finally {
                 allClients.close();
             }
@@ -102,25 +131,25 @@ public class TestRemoteTabs extends InstrumentationTestCase {
 
             values = new ContentValues[]{remoteTab1, remoteTab2};
             inserted = cpc.bulkInsert(BrowserContract.Tabs.CONTENT_URI, values);
-            assertEquals(2, inserted);
+            Assert.assertEquals(2, inserted);
 
             allClients = cpc.query(BrowserContract.Clients.CONTENT_RECENCY_URI, null, BrowserContract.Clients.GUID + " IS NOT NULL", null, null);
             try {
                 CursorDumper.dumpCursor(allClients);
                 // The local client is ignored.
-                assertEquals(2, allClients.getCount());
+                Assert.assertEquals(2, allClients.getCount());
                 final List<RemoteClient> clients = accessor.getClientsWithoutTabsByRecencyFromCursor(allClients);
-                assertEquals(2, clients.size());
+                Assert.assertEquals(2, clients.size());
                 for (RemoteClient client : clients) {
                     // Each client should be remote and should not have any tabs.
-                    assertNotNull(client.guid);
-                    assertNotNull(client.tabs);
-                    assertEquals(0, client.tabs.size());
+                    Assert.assertNotNull(client.guid);
+                    Assert.assertNotNull(client.tabs);
+                    Assert.assertEquals(0, client.tabs.size());
                 }
                 // Since now there is a tab attached to the remote2 client more recent than the
                 // remote1 client modified time, it should be first.
-                assertEquals("guid1", clients.get(0).guid);
-                assertEquals("guid2", clients.get(1).guid);
+                Assert.assertEquals("guid1", clients.get(0).guid);
+                Assert.assertEquals("guid2", clients.get(1).guid);
             } finally {
                 allClients.close();
             }
@@ -129,20 +158,19 @@ public class TestRemoteTabs extends InstrumentationTestCase {
         }
     }
 
+    @Test
     public void testGetRecentRemoteClientsUpToOneWeekOld() throws Exception {
         final Uri uri = BrowserContractHelpers.CLIENTS_CONTENT_URI;
-        final Context context = getInstrumentation().getTargetContext();
-        final String profileName = GeckoProfile.get(context).getName();
-        final ContentResolver cr = context.getContentResolver();
-        final ContentProviderClient cpc = cr.acquireContentProviderClient(uri);
-        final LocalTabsAccessor accessor = new LocalTabsAccessor(profileName);
+        final ContentProviderClient cpc = getClientsClient();
+        final LocalTabsAccessor accessor = new LocalTabsAccessor("test"); // The profile name given doesn't matter.
+        final Context context = RuntimeEnvironment.application.getApplicationContext();
 
         try {
             // Start Clean
             cpc.delete(uri, null, null);
             final Cursor allClients = cpc.query(uri, null, null, null, null);
             try {
-                assertEquals(0, allClients.getCount());
+                Assert.assertEquals(0, allClients.getCount());
             } finally {
                 allClients.close();
             }
@@ -185,7 +213,7 @@ public class TestRemoteTabs extends InstrumentationTestCase {
 
             ContentValues[] values = new ContentValues[]{local, remote1, remote2, remote3, remote4, remote5};
             int inserted = cpc.bulkInsert(uri, values);
-            assertEquals(values.length, inserted);
+            Assert.assertEquals(values.length, inserted);
 
             final Cursor remoteClients =
                     accessor.getRemoteClientsByRecencyCursor(context);
@@ -194,18 +222,18 @@ public class TestRemoteTabs extends InstrumentationTestCase {
                 CursorDumper.dumpCursor(remoteClients);
                 // Local client is not included.
                 // (remote1, guid1), (remote2, guid2), (remote3, guid3) are expected.
-                assertEquals(3, remoteClients.getCount());
+                Assert.assertEquals(3, remoteClients.getCount());
 
                 // Check the inner data, according to recency.
                 List<RemoteClient> recentRemoteClientsList =
                         accessor.getClientsWithoutTabsByRecencyFromCursor(remoteClients);
-                assertEquals(3, recentRemoteClientsList.size());
-                assertEquals("remote1", recentRemoteClientsList.get(0).name);
-                assertEquals("guid1", recentRemoteClientsList.get(0).guid);
-                assertEquals("remote2", recentRemoteClientsList.get(1).name);
-                assertEquals("guid2", recentRemoteClientsList.get(1).guid);
-                assertEquals("remote3", recentRemoteClientsList.get(2).name);
-                assertEquals("guid3", recentRemoteClientsList.get(2).guid);
+                Assert.assertEquals(3, recentRemoteClientsList.size());
+                Assert.assertEquals("remote1", recentRemoteClientsList.get(0).name);
+                Assert.assertEquals("guid1", recentRemoteClientsList.get(0).guid);
+                Assert.assertEquals("remote2", recentRemoteClientsList.get(1).name);
+                Assert.assertEquals("guid2", recentRemoteClientsList.get(1).guid);
+                Assert.assertEquals("remote3", recentRemoteClientsList.get(2).name);
+                Assert.assertEquals("guid3", recentRemoteClientsList.get(2).guid);
             } finally {
                 remoteClients.close();
             }

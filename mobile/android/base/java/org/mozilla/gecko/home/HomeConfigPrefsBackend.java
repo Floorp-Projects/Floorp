@@ -35,7 +35,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     // Increment this to trigger a migration.
-    private static final int VERSION = 4;
+    private static final int VERSION = 5;
 
     // This key was originally used to store only an array of panel configs.
     public static final String PREFS_CONFIG_KEY_OLD = "home_panels";
@@ -186,6 +186,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         PanelConfig newPanel;
         int replaceIndex;
         int removeIndex;
+
         if (historyFlags.contains(PanelConfig.Flags.DISABLED_PANEL) && !syncFlags.contains(PanelConfig.Flags.DISABLED_PANEL)) {
             // Replace the Sync panel if it's visible and the History panel is disabled.
             replaceIndex = syncIndex;
@@ -211,6 +212,25 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
         }
 
         return newArray;
+    }
+
+    private static void ensureDefaultPanelForV5(Context context, JSONArray jsonPanels) throws JSONException {
+        int historyIndex = -1;
+
+        for (int i = 0; i < jsonPanels.length(); i++) {
+            final PanelConfig panelConfig = new PanelConfig(jsonPanels.getJSONObject(i));
+            if (panelConfig.isDefault()) {
+                return;
+            }
+
+            if (panelConfig.getType() == PanelType.COMBINED_HISTORY) {
+                historyIndex = i;
+            }
+        }
+
+        // Make the History panel default. We can't modify existing PanelConfigs, so make a new one.
+        final PanelConfig historyPanelConfig = createBuiltinPanelConfig(context, PanelType.COMBINED_HISTORY, EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL));
+        jsonPanels.put(historyIndex, historyPanelConfig.toJSON());
     }
 
     /**
@@ -315,6 +335,11 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                     // of panels, we try to replace the History panel if it's visible, and fall back to
                     // the Sync panel if that's visible.
                     jsonPanels = combineHistoryAndSyncPanels(context, jsonPanels);
+                    break;
+
+                case 5:
+                    // This is the fix for bug 1264136 where we lost track of the default panel during some migrations.
+                    ensureDefaultPanelForV5(context, jsonPanels);
                     break;
             }
         }

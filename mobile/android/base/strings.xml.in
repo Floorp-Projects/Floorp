@@ -92,6 +92,9 @@
   <string name="screenshot_folder_label_in_bookmarks">&screenshot_folder_label_in_bookmarks;</string>
   <string name="readinglist_smartfolder_label_in_bookmarks">&readinglist_smartfolder_label_in_bookmarks;</string>
 
+  <string name="reader_saved_offline">&reader_saved_offline;</string>
+  <string name="reader_switch_to_bookmarks">&reader_switch_to_bookmarks;</string>
+
   <string name="history_today_section">&history_today_section;</string>
   <string name="history_yesterday_section">&history_yesterday_section;</string>
   <string name="history_week_section">&history_week_section3;</string>
