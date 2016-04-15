@@ -74,6 +74,8 @@ const REDIRECT = BASE + "/redirection.sjs";
 const REDIRECTED = BASE + "/dummy_page.html";
 const CLIENT_REDIRECT = BASE + "/file_webNavigation_clientRedirect.html";
 const CLIENT_REDIRECT_HTTPHEADER = BASE + "/file_webNavigation_clientRedirect_httpHeaders.html";
+const FRAME_CLIENT_REDIRECT = BASE + "/file_webNavigation_frameClientRedirect.html";
+const FRAME_REDIRECT = BASE + "/file_webNavigation_frameRedirect.html";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -103,7 +105,7 @@ add_task(function* webnav_transitions_props() {
     ];
 
     function gotEvent(event, details) {
-      browser.test.log(`Got ${event} ${details.url} ${details.transitionType}`);
+      browser.test.log(`Got ${event} ${details.url} ${details.transitionType} ${details.transitionQualifiers && JSON.stringify(details.transitionQualifiers)}`);
 
       browser.test.sendMessage("received", {url: details.url, details, event});
     }
@@ -239,7 +241,7 @@ add_task(function* webnav_transitions_props() {
   }
 
   // transitionQualifier: client_redirect
-  // (from meta http-equiv tag)
+  // (from http headers)
   received = [];
   yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
     win.location = CLIENT_REDIRECT_HTTPHEADER;
@@ -256,6 +258,44 @@ add_task(function* webnav_transitions_props() {
     ok(Array.isArray(found.details.transitionQualifiers) &&
        found.details.transitionQualifiers.find((q) => q == "client_redirect"),
        "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: client_redirect (sub-frame)
+  // (from meta http-equiv tag)
+  received = [];
+  yield loadAndWait(win, "onCompleted", REDIRECTED, () => {
+    win.location = FRAME_CLIENT_REDIRECT;
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers) &&
+       found.details.transitionQualifiers.find((q) => q == "client_redirect"),
+       "Got the expected 'client_redirect' transitionQualifiers in the OnCommitted events");
+  }
+
+  // transitionQualifier: server_redirect (sub-frame)
+  received = [];
+  yield loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = FRAME_REDIRECT; });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECT));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "auto_subframe",
+       "Got the expected 'auto_subframe' transitionType in the OnCommitted event");
+    // BUG 1264936: currently the server_redirect is not detected in sub-frames
+    // once we fix it we can test it here:
+    //
+    // ok(Array.isArray(found.details.transitionQualifiers) &&
+    //    found.details.transitionQualifiers.find((q) => q == "server_redirect"),
+    //    "Got the expected 'server_redirect' transitionQualifiers in the OnCommitted events");
   }
 
   // cleanup phase
