@@ -1390,8 +1390,8 @@ ArrayReverseDenseKernel(JSContext* cx, HandleObject obj, uint32_t length)
 DefineBoxedOrUnboxedFunctor3(ArrayReverseDenseKernel,
                              JSContext*, HandleObject, uint32_t);
 
-bool
-js::array_reverse(JSContext* cx, unsigned argc, Value* vp)
+static bool
+array_reverse(JSContext* cx, unsigned argc, Value* vp)
 {
     AutoSPSEntry pseudoFrame(cx->runtime(), "Array.prototype.reverse");
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2381,8 +2381,8 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
 }
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.26. */
-bool
-js::array_splice(JSContext* cx, unsigned argc, Value* vp)
+static bool
+array_splice(JSContext* cx, unsigned argc, Value* vp)
 {
     return array_splice_impl(cx, argc, vp, true);
 }
@@ -3082,6 +3082,8 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#define GENERIC JSFUN_GENERIC_NATIVE
+
 static const JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
@@ -3090,18 +3092,18 @@ static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toLocaleString_str,       array_toLocaleString, 0,0),
 
     /* Perl-ish methods. */
-    JS_INLINABLE_FN("join",     array_join,         1,0, ArrayJoin),
-    JS_FN("reverse",            array_reverse,      0,0),
-    JS_FN("sort",               array_sort,         1,0),
-    JS_INLINABLE_FN("push",     array_push,         1,0, ArrayPush),
-    JS_INLINABLE_FN("pop",      array_pop,          0,0, ArrayPop),
-    JS_INLINABLE_FN("shift",    array_shift,        0,0, ArrayShift),
-    JS_FN("unshift",            array_unshift,      1,0),
-    JS_INLINABLE_FN("splice",   array_splice,       2,0, ArraySplice),
+    JS_INLINABLE_FN("join",     array_join,         1,JSFUN_GENERIC_NATIVE, ArrayJoin),
+    JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
+    JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
+    JS_INLINABLE_FN("push",     array_push,         1,JSFUN_GENERIC_NATIVE, ArrayPush),
+    JS_INLINABLE_FN("pop",      array_pop,          0,JSFUN_GENERIC_NATIVE, ArrayPop),
+    JS_INLINABLE_FN("shift",    array_shift,        0,JSFUN_GENERIC_NATIVE, ArrayShift),
+    JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
+    JS_INLINABLE_FN("splice",   array_splice,       2,JSFUN_GENERIC_NATIVE, ArraySplice),
 
     /* Pythonic sequence methods. */
     JS_SELF_HOSTED_FN("concat",      "ArrayConcat",      1,0),
-    JS_INLINABLE_FN("slice",    array_slice,        2,0, ArraySlice),
+    JS_INLINABLE_FN("slice",    array_slice,        2,JSFUN_GENERIC_NATIVE, ArraySlice),
 
     JS_SELF_HOSTED_FN("lastIndexOf", "ArrayLastIndexOf", 1,0),
     JS_SELF_HOSTED_FN("indexOf",     "ArrayIndexOf",     1,0),
@@ -3142,15 +3144,6 @@ static const JSFunctionSpec array_static_methods[] = {
     JS_SELF_HOSTED_FN("some",        "ArrayStaticSome",  2,0),
     JS_SELF_HOSTED_FN("reduce",      "ArrayStaticReduce", 2,0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayStaticReduceRight", 2,0),
-    JS_SELF_HOSTED_FN("join",        "ArrayStaticJoin", 2,0),
-    JS_SELF_HOSTED_FN("reverse",     "ArrayStaticReverse", 1,0),
-    JS_SELF_HOSTED_FN("sort",        "ArrayStaticSort", 2,0),
-    JS_SELF_HOSTED_FN("push",        "ArrayStaticPush", 2,0),
-    JS_SELF_HOSTED_FN("pop",         "ArrayStaticPop", 1,0),
-    JS_SELF_HOSTED_FN("shift",       "ArrayStaticShift", 1,0),
-    JS_SELF_HOSTED_FN("unshift",     "ArrayStaticUnshift", 2,0),
-    JS_SELF_HOSTED_FN("splice",      "ArrayStaticSplice", 3,0),
-    JS_SELF_HOSTED_FN("slice",       "ArrayStaticSlice", 3,0),
     JS_SELF_HOSTED_FN("from",        "ArrayFrom", 3,0),
     JS_FN("of",                 array_of,           0,0),
 
