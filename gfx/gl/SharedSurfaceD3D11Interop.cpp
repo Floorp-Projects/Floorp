@@ -300,11 +300,14 @@ SharedSurface_D3D11Interop::~SharedSurface_D3D11Interop()
 {
     MOZ_ASSERT(!mLockedForGL);
 
-    mGL->fDeleteRenderbuffers(1, &mProdRB);
-
     if (!mDXGL->UnregisterObject(mObjectWGL)) {
         NS_WARNING("Failed to release a DXGL object, possibly leaking it.");
     }
+
+    if (!mGL->MakeCurrent())
+        return;
+
+    mGL->fDeleteRenderbuffers(1, &mProdRB);
 
     // mDXGL is closed when it runs out of refs.
 }

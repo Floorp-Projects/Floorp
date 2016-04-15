@@ -79,6 +79,7 @@ case $cmd in
 	# put in js itself
 	cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
 	cp -pPR ${SRCDIR}/../public ${tgtpath}/js
+	cp -pPR ${SRCDIR}/../examples ${tgtpath}/js
 	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${DIST} -a -not -name ${pkg} \
 		-exec cp -pPR {} ${tgtpath}/js/src \;
 

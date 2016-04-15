@@ -1129,6 +1129,9 @@ public:
   void
   ReportError(JSContext* aCx, const char* aMessage, JSErrorReport* aReport);
 
+  static void
+  ReportErrorToConsole(const char* aMessage);
+
   int32_t
   SetTimeout(JSContext* aCx,
              Function* aHandler,

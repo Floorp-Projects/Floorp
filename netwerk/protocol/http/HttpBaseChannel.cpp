@@ -51,6 +51,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIURL.h"
 #include "nsIConsoleService.h"
+#include "mozilla/BinarySearch.h"
 
 #include <algorithm>
 
@@ -2694,6 +2695,56 @@ HttpBaseChannel::ShouldRewriteRedirectToGET(uint32_t httpStatus,
   return false;
 }
 
+static
+bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader)
+{
+  // IMPORTANT: keep this list ASCII-code sorted
+  static nsHttpAtom const* blackList[] = {
+    &nsHttp::Accept,
+    &nsHttp::Accept_Encoding,
+    &nsHttp::Accept_Language,
+    &nsHttp::Authentication,
+    &nsHttp::Authorization,
+    &nsHttp::Connection,
+    &nsHttp::Content_Length,
+    &nsHttp::Cookie,
+    &nsHttp::Host,
+    &nsHttp::If,
+    &nsHttp::If_Match,
+    &nsHttp::If_Modified_Since,
+    &nsHttp::If_None_Match,
+    &nsHttp::If_None_Match_Any,
+    &nsHttp::If_Range,
+    &nsHttp::If_Unmodified_Since,
+    &nsHttp::Proxy_Authenticate,
+    &nsHttp::Proxy_Authorization,
+    &nsHttp::Range,
+    &nsHttp::TE,
+    &nsHttp::Transfer_Encoding,
+    &nsHttp::Upgrade,
+    &nsHttp::User_Agent,
+    &nsHttp::WWW_Authenticate
+  };
+
+  class HttpAtomComparator
+  {
+    nsHttpAtom const& mTarget;
+  public:
+    explicit HttpAtomComparator(nsHttpAtom const& aTarget)
+      : mTarget(aTarget) {}
+    int operator()(nsHttpAtom const* aVal) const {
+      if (mTarget == *aVal) {
+        return 0;
+      }
+      return strcmp(mTarget._val, aVal->_val);
+    }
+  };
+
+  size_t unused;
+  return BinarySearchIf(blackList, 0, ArrayLength(blackList),
+                        HttpAtomComparator(aHeader), &unused);
+}
+
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
                                          nsIChannel   *newChannel,
@@ -2930,6 +2981,23 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       newTimedChannel->SetAllRedirectsPassTimingAllowCheck(
         mAllRedirectsPassTimingAllowCheck &&
         oldTimedChannel->TimingAllowCheck(principal));
+    }
+  }
+
+  if (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                       nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
+    // Copy non-origin related headers to the new channel.
+    nsHttpHeaderArray& requestHeaders = mRequestHead.Headers();
+    uint32_t requestHeaderCount = requestHeaders.Count();
+    for (uint32_t i = 0; i < requestHeaderCount; ++i) {
+      nsHttpAtom header;
+      const char *val = requestHeaders.PeekHeaderAt(i, header);
+      if (!val || IsHeaderBlacklistedForRedirectCopy(header)) {
+          continue;
+      }
+
+      httpChannel->SetRequestHeader(nsDependentCString(header.get()),
+                                    nsDependentCString(val), false);
     }
   }
 

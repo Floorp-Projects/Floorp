@@ -493,21 +493,22 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   return true;
 }
 
-static bool AssertD3D9Compositor(Compositor* aCompositor)
+static CompositorD3D9* AssertD3D9Compositor(Compositor* aCompositor)
 {
-  bool ok = aCompositor && aCompositor->GetBackendType() == LayersBackend::LAYERS_D3D9;
-  MOZ_ASSERT(ok);
-  return ok;
+  CompositorD3D9* compositor = aCompositor ? aCompositor->AsCompositorD3D9()
+                                           : nullptr;
+  MOZ_DIAGNOSTIC_ASSERT(!!compositor);
+  return compositor;
 }
 
 void
 DataTextureSourceD3D9::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D9Compositor(aCompositor)) {
+  CompositorD3D9* d3dCompositor = AssertD3D9Compositor(aCompositor);
+  if (!d3dCompositor) {
     Reset();
     return;
   }
-  CompositorD3D9* d3dCompositor = static_cast<CompositorD3D9*>(aCompositor);
   if (mCompositor && mCompositor != d3dCompositor) {
     Reset();
   }
@@ -920,12 +921,11 @@ TextureHostD3D9::GetDevice()
 void
 TextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D9Compositor(aCompositor)) {
-    mCompositor = nullptr;
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
     mTextureSource = nullptr;
     return;
   }
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
   if (mTextureSource) {
     mTextureSource->SetCompositor(aCompositor);
   }
@@ -1046,12 +1046,10 @@ DXGITextureHostD3D9::Unlock()
 void
 DXGITextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D9Compositor(aCompositor)) {
-    mCompositor = nullptr;
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
     mTextureSource = nullptr;
-    return;
   }
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
 }
 
 void
@@ -1085,14 +1083,12 @@ DXGIYCbCrTextureHostD3D9::GetDevice()
 void
 DXGIYCbCrTextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  if (!AssertD3D9Compositor(aCompositor)) {
-    mCompositor = nullptr;
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
     mTextureSources[0] = nullptr;
     mTextureSources[1] = nullptr;
     mTextureSources[2] = nullptr;
-    return;
   }
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
 }
 
 bool

@@ -351,7 +351,7 @@ nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
     RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  nsBlockFrameSuper::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ nsILineIterator*
@@ -372,7 +372,7 @@ nsBlockFrame::GetLineIterator()
 
 NS_QUERYFRAME_HEAD(nsBlockFrame)
   NS_QUERYFRAME_ENTRY(nsBlockFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsSplittableType
 nsBlockFrame::GetSplittableType() const
@@ -451,7 +451,7 @@ nsBlockFrame::GetDebugStateBits() const
 {
   // We don't want to include our cursor flag in the bits the
   // regression tester looks at
-  return nsBlockFrameSuper::GetDebugStateBits() & ~NS_BLOCK_HAS_LINE_CURSOR;
+  return nsContainerFrame::GetDebugStateBits() & ~NS_BLOCK_HAS_LINE_CURSOR;
 }
 #endif
 
@@ -470,7 +470,7 @@ nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
     GetParent()->InvalidateFrame();
     return;
   }
-  nsBlockFrameSuper::InvalidateFrame(aDisplayItemKey);
+  nsContainerFrame::InvalidateFrame(aDisplayItemKey);
 }
 
 void
@@ -482,7 +482,7 @@ nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItem
     GetParent()->InvalidateFrame();
     return;
   }
-  nsBlockFrameSuper::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+  nsContainerFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
 }
 
 nscoord
@@ -641,7 +641,7 @@ nsBlockFrame::MarkIntrinsicISizesDirty()
     }
   }
 
-  nsBlockFrameSuper::MarkIntrinsicISizesDirty();
+  nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 void
@@ -1396,10 +1396,16 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       if (cbHeightChanged) {
         flags |= AbsPosReflowFlags::eCBHeightChanged;
       }
+      // Setup the line cursor here to optimize line searching for
+      // calculating hypothetical position of absolutely-positioned
+      // frames. The line cursor is immediately cleared afterward to
+      // avoid affecting the display list generation.
+      SetupLineCursor();
       absoluteContainer->Reflow(this, aPresContext, *reflowState,
                                 state.mReflowStatus,
                                 containingBlock, flags,
                                 &aMetrics.mOverflowAreas);
+      ClearLineCursor();
     }
   }
 
@@ -2917,8 +2923,8 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                int32_t         aModType)
 {
-  nsresult rv = nsBlockFrameSuper::AttributeChanged(aNameSpaceID,
-                                                    aAttribute, aModType);
+  nsresult rv = nsContainerFrame::AttributeChanged(aNameSpaceID,
+                                                   aAttribute, aModType);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -5491,21 +5497,14 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
   if (!child)
     return;
 
+  line_iterator line_end = aFrame->end_lines();
   // Try to use the cursor if it exists, otherwise fall back to the first line
-  nsLineBox* cursor = aFrame->GetLineCursor();
-  if (!cursor) {
-    line_iterator iter = aFrame->begin_lines();
-    if (iter != aFrame->end_lines()) {
-      cursor = iter;
-    }
-  }
-
-  if (cursor) {
+  if (nsLineBox* const cursor = aFrame->GetLineCursor()) {
+    mLine = line_end;
     // Perform a simultaneous forward and reverse search starting from the
     // line cursor.
     nsBlockFrame::line_iterator line = aFrame->line(cursor);
     nsBlockFrame::reverse_line_iterator rline = aFrame->rline(cursor);
-    nsBlockFrame::line_iterator line_end = aFrame->end_lines();
     nsBlockFrame::reverse_line_iterator rline_end = aFrame->rend_lines();
     // rline is positioned on the line containing 'cursor', so it's not
     // rline_end. So we can safely increment it (i.e. move it to one line
@@ -5514,31 +5513,42 @@ nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
     while (line != line_end || rline != rline_end) {
       if (line != line_end) {
         if (line->Contains(child)) {
-          *aFoundValidLine = true;
           mLine = line;
-          return;
+          break;
         }
         ++line;
       }
       if (rline != rline_end) {
         if (rline->Contains(child)) {
-          *aFoundValidLine = true;
           mLine = rline;
-          return;
+          break;
         }
         ++rline;
       }
     }
-    // Didn't find the line
+    if (mLine != line_end) {
+      *aFoundValidLine = true;
+      if (mLine != cursor) {
+        aFrame->Properties().Set(nsBlockFrame::LineCursorProperty(), mLine);
+      }
+      return;
+    }
+  } else {
+    for (mLine = aFrame->begin_lines(); mLine != line_end; ++mLine) {
+      if (mLine->Contains(child)) {
+        *aFoundValidLine = true;
+        return;
+      }
+    }
   }
+  // Didn't find the line
+  MOZ_ASSERT(mLine == line_end, "mLine should be line_end at this point");
 
   // If we reach here, it means that we have not been able to find the
   // desired frame in our in-flow lines.  So we should start looking at
   // our overflow lines. In order to do that, we set mLine to the end
   // iterator so that FindValidLine starts to look at overflow lines,
   // if any.
-
-  mLine = aFrame->end_lines();
 
   if (!FindValidLine())
     return;
@@ -6778,7 +6788,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     }
   }
 
-  nsBlockFrameSuper::ChildIsDirty(aChild);
+  nsContainerFrame::ChildIsDirty(aChild);
 }
 
 void
@@ -6792,7 +6802,7 @@ nsBlockFrame::Init(nsIContent*       aContent,
              (NS_BLOCK_FLAGS_MASK & ~NS_BLOCK_FLAGS_NON_INHERITED_MASK));
   }
 
-  nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (!aPrevInFlow ||
       aPrevInFlow->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION) {

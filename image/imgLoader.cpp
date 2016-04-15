@@ -717,7 +717,8 @@ NewImageChannel(nsIChannel** aResult,
                 nsLoadFlags aLoadFlags,
                 nsContentPolicyType aPolicyType,
                 nsIPrincipal* aLoadingPrincipal,
-                nsISupports* aRequestingContext)
+                nsISupports* aRequestingContext,
+                bool aRespectPrivacy)
 {
   MOZ_ASSERT(aResult);
 
@@ -762,6 +763,10 @@ NewImageChannel(nsIChannel** aResult,
   nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
   if (inherit) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  }
+
+  if (aRespectPrivacy) {
+    securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
   }
 
   // Note we are calling NS_NewChannelWithTriggeringPrincipal() here with a
@@ -839,6 +844,21 @@ NewImageChannel(nsIChannel** aResult,
     childLoadGroup->SetParentLoadGroup(aLoadGroup);
   }
   (*aResult)->SetLoadGroup(loadGroup);
+
+  // This is a workaround and a real fix in bug 1264231.
+  if (callbacks) {
+    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+    if (loadContext) {
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      rv = (*aResult)->GetLoadInfo(getter_AddRefs(loadInfo));
+      NS_ENSURE_SUCCESS(rv, rv);
+      DocShellOriginAttributes originAttrs;
+      loadContext->GetOriginAttributes(originAttrs);
+      NeckoOriginAttributes neckoOriginAttrs;
+      neckoOriginAttrs.InheritFromDocShellToNecko(originAttrs);
+      loadInfo->SetOriginAttributes(neckoOriginAttrs);
+    }
+  }
 
   return NS_OK;
 }
@@ -1621,7 +1641,8 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
                          aLoadFlags,
                          aLoadPolicyType,
                          aLoadingPrincipal,
-                         aCX);
+                         aCX,
+                         mRespectPrivacy);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -2156,7 +2177,8 @@ imgLoader::LoadImage(nsIURI* aURI,
                          requestFlags,
                          aContentPolicyType,
                          aLoadingPrincipal,
-                         aContext);
+                         aContext,
+                         mRespectPrivacy);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }

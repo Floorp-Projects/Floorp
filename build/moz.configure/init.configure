@@ -254,61 +254,10 @@ def early_options():
 
 early_options = early_options()
 
-# At the moment, moz.configure doesn't have complete knowledge of all the
-# supported options in mozconfig because of all that is still in old.configure.
-# But we don't know all the options that moz.configure knows about until all
-# moz.configure files are executed, so we keep a manual list here, that is
-# checked in old.configure (we'll assume it's the last moz.configure file
-# processed). This is tedious but necessary for now.
-@depends('--help')
-def wanted_mozconfig_variables(help):
-     return set([
-         'AUTOCONF',
-         'AWK',
-         'CCACHE',
-         'COMPILER_WRAPPER',
-         'DISABLE_EXPORT_JS',
-         'DISABLE_SHARED_JS',
-         'DOXYGEN',
-         'DSYMUTIL',
-         'EXTERNAL_SOURCE_DIR',
-         'GENISOIMAGE',
-         'GRADLE',
-         'GRADLE_FLAGS',
-         'GRADLE_MAVEN_REPOSITORY',
-         'JS_STANDALONE',
-         'L10NBASEDIR',
-         'MOZILLABUILD',
-         'MOZ_ARTIFACT_BUILDS',
-         'MOZ_BUILD_APP',
-         'MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE',
-         'MOZ_CALLGRIND',
-         'MOZ_DMD',
-         'MOZ_FMP4',
-         'MOZ_INSTRUMENT_EVENT_LOOP',
-         'MOZ_INSTRUMENTS',
-         'MOZ_JPROF',
-         'MOZ_PROFILING',
-         'MOZ_USE_SYSTRACE',
-         'MOZ_VTUNE',
-         'MOZTTDIR',
-         'PERL',
-         'RPMBUILD',
-         'TAR',
-         'TOOLCHAIN_PREFIX',
-         'UNZIP',
-         'USE_FC_FREETYPE',
-         'WITHOUT_X',
-         'XARGS',
-         'YASM',
-         'ZIP',
-     ])
-
-
-@depends(mozconfig, wanted_mozconfig_variables, '--help')
+@depends(mozconfig, '--help')
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
-def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
+def mozconfig_options(mozconfig, help):
     if mozconfig['path']:
         helper = __sandbox__._helper
         log.info('Adding configure options from %s' % mozconfig['path'])
@@ -320,8 +269,7 @@ def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
             helper.add(arg, origin='mozconfig', args=helper._args)
 
         def add(key, value):
-            # See comment above wanted_mozconfig_variables
-            if key in wanted_mozconfig_variables:
+            if key.isupper():
                 arg = '%s=%s' % (key, value)
                 log.info('  %s' % arg)
                 helper.add(arg, origin='mozconfig', args=helper._args)
@@ -331,7 +279,9 @@ def mozconfig_options(mozconfig, wanted_mozconfig_variables, help):
         for key, (_, value) in mozconfig['env']['modified'].iteritems():
             add(key, value)
         for key, value in mozconfig['vars']['added'].iteritems():
-            add(key, value)
+            # mozconfig_loader adds _IS_SET variables that are irrelevant
+            if not key.endswith('_IS_SET'):
+                add(key, value)
         for key, (_, value) in mozconfig['vars']['modified'].iteritems():
             add(key, value)
 
@@ -725,6 +675,42 @@ set_config('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 add_old_configure_assignment('RELEASE_BUILD',
                              delayed_getattr(milestone, 'is_release'))
+
+
+# Set the MOZ_CONFIGURE_OPTIONS variable with all the options that
+# were passed somehow (environment, command line, mozconfig)
+@depends(mozconfig_options)
+@imports(_from='mozbuild.shellutil', _import='quote')
+@imports('__sandbox__')
+def all_configure_options(_):
+    result = []
+    previous = None
+    for option in __sandbox__._options.itervalues():
+        # __sandbox__._options contains items for both option.name and
+        # option.env. But it's also an OrderedDict, meaning both are
+        # consecutive.
+        # Also ignore OLD_CONFIGURE and MOZCONFIG because they're not
+        # interesting.
+        if option == previous or option.env in ('OLD_CONFIGURE', 'MOZCONFIG'):
+            continue
+        previous = option
+        value = __sandbox__._value_for(option)
+        # We only want options that were explicitly given on the command
+        # line, the environment, or mozconfig, and that differ from the
+        # defaults.
+        if (value.origin not in ('default', 'implied') and
+                value != option.default):
+            result.append(__sandbox__._raw_options[option])
+        # We however always include options that are sent to old configure
+        # because we don't know their actual defaults. (Keep the conditions
+        # separate for ease of understanding and ease of removal)
+        elif (option.help == 'Help missing for old configure options' and
+                option in __sandbox__._raw_options):
+            result.append(__sandbox__._raw_options[option])
+
+    return quote(*result)
+
+set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
 
 
 # This is temporary until js/src/configure and configure are merged.

@@ -7,6 +7,8 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 import xml.dom.minidom
 import html5lib
+import filecmp
+import fnmatch
 import shutil
 import sys
 import re
@@ -57,8 +59,7 @@ gDefaultPreferences = {
 }
 
 gLog = None
-gFailList = {}
-gSkipList = {}
+gFailList = []
 gDestPath = None
 gSrcPath = None
 support_dirs_mapped = set()
@@ -105,16 +106,12 @@ def remove_existing_dirs():
 
 def populate_test_files():
     global gSubtrees, gTestfiles
+    excludeDirs = ["support", "reftest", "reference", "reports", "tools"]
     for subtree in gSubtrees:
         for dirpath, dirnames, filenames in os.walk(subtree, topdown=True):
-            if "support" in dirnames:
-               dirnames.remove("support")
-            if "reftest" in dirnames:
-               dirnames.remove("reftest")
-            if "reference" in dirnames:
-               dirnames.remove("reference")
-            if "reports" in dirnames:
-               dirnames.remove("reports")
+            for exclDir in excludeDirs:
+                if exclDir in dirnames:
+                    dirnames.remove(exclDir)
             for f in filenames:
                 if f == "README" or \
                    f.find("-ref.") != -1:
@@ -135,6 +132,9 @@ def copy_file(test, srcfile, destname, isSupportFile=False):
     if not os.path.exists(destdir):
         os.makedirs(destdir)
     if os.path.exists(destfile):
+        if filecmp.cmp(srcfile, destfile):
+            print "Warning: duplicate file {}".format(destname)
+            return
         raise StandardError("file " + destfile + " already exists")
     copy_and_prefix(test, srcfile, destfile, gPrefixedProperties, isSupportFile)
 
@@ -173,11 +173,14 @@ def load_flags_for(fn, spec):
         if name == "flags":
             gTestFlags[destname] = meta.getAttribute("content").split()
 
+def is_html(fn):
+    return fn.endswith(".htm") or fn.endswith(".html")
+
 def get_document_for(fn):
     document = None # an xml.dom.minidom document
-    if fn.endswith(".htm") or fn.endswith(".html"):
+    if is_html(fn):
         # An HTML file
-        f = open(fn, "r")
+        f = open(fn, "rb")
         parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
         document = parser.parse(f)
         f.close()
@@ -218,6 +221,19 @@ def add_test_items(fn, spec):
     for notref in notrefs:
         add_test_items(notref, spec=spec)
 
+AHEM_DECL_CONTENT = """@font-face {
+  font-family: Ahem;
+  src: url("../../../fonts/Ahem.ttf");
+}"""
+AHEM_DECL_HTML = """<style type="text/css">
+""" + AHEM_DECL_CONTENT + """
+</style>
+"""
+AHEM_DECL_XML = """<style type="text/css"><![CDATA[
+""" + AHEM_DECL_CONTENT + """
+]]></style>
+"""
+
 def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=False):
     global gTestFlags
     newFile = open(aDestFileName, 'wb')
@@ -231,10 +247,7 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=
         if not isSupportFile and not ahemFontAdded and 'ahem' in gTestFlags[test] and re.search(searchRegex, line):
             # First put our ahem font declation before the first <style>
             # element
-            ahemFontDecl = "<style type=\"text/css\"><![CDATA[\n@font-face "\
-                           "{\n  font-family: Ahem;\n  src: url("\
-                           "\"../../../fonts/Ahem.ttf\");\n}\n]]></style>\n"
-            newFile.write(ahemFontDecl)
+            newFile.write(AHEM_DECL_HTML if is_html(aDestFileName) else AHEM_DECL_XML)
             ahemFontAdded = True
 
         for rule in aProps:
@@ -275,26 +288,26 @@ def setup_log():
     global gLog
     # Since we're going to commit the tests, we should also commit
     # information about where they came from.
-    gLog = open(os.path.join(gDestPath, "import.log"), "w")
+    gLog = open(os.path.join(gDestPath, "import.log"), "wb")
 
-def read_fail_and_skip_list():
-    global gFailList, gSkipList
+def read_fail_list():
+    global gFailList
     dirname = os.path.realpath(__file__).split(os.path.sep)
     dirname = os.path.sep.join(dirname[:len(dirname)-1])
-    failListFile = open(os.path.join(dirname, "failures.list"), "r")
-    gFailList = [x for x in [x.lstrip().rstrip() for x in failListFile] if bool(x)
-                 and not x.startswith("#")]
-    failListFile.close()
-    skipListFile = open(os.path.join(dirname, "skip.list"), "r")
-    gSkipList = [x for x in [x.lstrip().rstrip() for x in skipListFile]
-                 if bool(x) and not x.startswith("#")]
-    skipListFile.close()
+    with open(os.path.join(dirname, "failures.list"), "rb") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            items = line.split()
+            pat = re.compile(fnmatch.translate(items.pop()))
+            gFailList.append((pat, items))
 
 def main():
-    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList, gSkipList
+    global gDestPath, gLog, gTestfiles, gTestFlags, gFailList
     read_options()
     setup_paths()
-    read_fail_and_skip_list()
+    read_fail_list()
     setup_log()
     write_log_header()
     remove_existing_dirs()
@@ -303,7 +316,7 @@ def main():
     for t in gTestfiles:
         add_test_items(t, spec=None)
 
-    listfile = open(os.path.join(gDestPath, "reftest.list"), "w")
+    listfile = open(os.path.join(gDestPath, "reftest.list"), "wb")
     listfile.write("# THIS FILE IS AUTOGENERATED BY {0}\n# DO NOT EDIT!\n".format(os.path.basename(__file__)))
     lastDefaultPreferences = None
     for test in tests:
@@ -314,9 +327,10 @@ def main():
             else:
                 listfile.write("\ndefault-preferences {0}\n\n".format(defaultPreferences))
             lastDefaultPreferences = defaultPreferences
-        key = 0
+        key = 1
         while not test[key] in gTestFlags.keys() and key < len(test):
             key = key + 1
+        testType = test[key - 1]
         testFlags = gTestFlags[test[key]]
         # Replace the Windows separators if any. Our internal strings
         # all use the system separator, however the failure/skip lists
@@ -326,10 +340,11 @@ def main():
         testKey = test[key]
         if 'ahem' in testFlags:
             test = ["HTTP(../../..)"] + test
-        if testKey in gFailList:
-            test = ["fails"] + test
-        if testKey in gSkipList:
-            test = ["skip"] + test
+        fail = []
+        for pattern, failureType in gFailList:
+            if pattern.match(testKey):
+                fail = failureType
+        test = fail + test
         listfile.write(" ".join(test) + "\n")
     listfile.close()
 

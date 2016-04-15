@@ -875,7 +875,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
 
-    Node methodDefinition(YieldHandling yieldHandling, PropertyType propType, HandleAtom funName);
+    Node methodDefinition(YieldHandling yieldHandling, PropertyType propType,
+                          HandlePropertyName funName);
 
     /*
      * Additional JS parsers.
@@ -883,7 +884,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
                            Node funcpn, bool* hasRest);
 
-    Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandleAtom name,
+    Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
                      FunctionSyntaxKind kind, GeneratorKind generatorKind,
                      InvokedPrediction invoked = PredictUninvoked,
                      Node* assignmentForAnnexBOut = nullptr);
@@ -951,7 +952,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool makeDefIntoUse(Definition* dn, Node pn, HandleAtom atom);
     bool bindLexicalFunctionName(HandlePropertyName funName, ParseNode* pn);
     bool bindBodyLevelFunctionName(HandlePropertyName funName, ParseNode** pn);
-    bool checkFunctionDefinition(HandleAtom funAtom, Node* pn, FunctionSyntaxKind kind,
+    bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
                                  bool* pbodyProcessed, Node* assignmentForAnnexBOut);
     bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);
     bool addFreeVariablesFromLazyFunction(JSFunction* fun, ParseContext<ParseHandler>* pc);
@@ -1057,8 +1058,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool leaveFunction(Node fn, ParseContext<ParseHandler>* outerpc,
                        FunctionSyntaxKind kind = Expression);
-
-    JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 

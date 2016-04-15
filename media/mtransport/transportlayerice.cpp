@@ -102,9 +102,7 @@ void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
   // If SetParameters is called and we already have a stream_, this means
   // we're handling an ICE restart.  We need to hold the old stream until
   // we know the new stream is working.
-  if (stream_ && !old_stream_) {
-    MOZ_ASSERT(stream_ != stream); // make sure we're getting a different stream
-
+  if (stream_ && !old_stream_ && (stream_ != stream)) {
     // Here we leave the old stream's signals connected until we don't need
     // it anymore.  They will be disconnected if ice restart is successful.
     old_stream_ = stream_;

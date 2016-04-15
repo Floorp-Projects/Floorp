@@ -372,7 +372,7 @@ protected:
   nsCOMPtr<Element> mTarget;
   RefPtr<Animation> mAnimation;
 
-  OwningNonNull<AnimationEffectTimingReadOnly> mTiming;
+  RefPtr<AnimationEffectTimingReadOnly> mTiming;
   CSSPseudoElementType mPseudoType;
 
   // The specified keyframes.

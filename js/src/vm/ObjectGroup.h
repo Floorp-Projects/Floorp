@@ -12,6 +12,7 @@
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
+#include "js/GCHashTable.h"
 #include "vm/TaggedProto.h"
 #include "vm/TypeInference.h"
 

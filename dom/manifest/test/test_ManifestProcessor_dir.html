@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1258899
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1258899</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * dir member
+ * https://w3c.github.io/manifest/#dir-member
+ **/
+'use strict';
+//Type checks
+typeTests.forEach((type) => {
+  var expected = `Expect non - string dir to default to "auto".`;
+  data.jsonText = JSON.stringify({
+    dir: type
+  });
+  var result = processor.process(data);
+  is(result.dir, 'auto', expected);
+});
+
+/*Test valid values*/
+var validDirs = ['ltr', 'rtl', 'auto']
+validDirs.forEach((dir) => {
+  var expected = `Expect dir value to be ${dir}.`;
+  data.jsonText = JSON.stringify({dir});
+  var result = processor.process(data);
+  is(result.dir, dir, expected);
+});
+
+//trim tests
+validDirs.forEach((dir) => {
+  var expected = `Expect trimmed dir to be returned.`;
+  var expandeddir =  seperators + lineTerminators + dir + lineTerminators + seperators;
+  data.jsonText = JSON.stringify({
+    dir: expandeddir
+  });
+  var result = processor.process(data);
+  is(result.dir, dir, expected);
+});
+
+//Unknown/Invalid directions
+var invalidDirs = ['LTR', 'RtL', `fooo${whiteSpace}rtl`, '', 'bar baz, some value', 'ltr rtl auto', 'AuTo'];
+invalidDirs.forEach((dir) => {
+  var expected = `Expect default dir "auto" to be returned: '${dir}'`;
+  data.jsonText = JSON.stringify({dir});
+  var result = processor.process(data);
+  is(result.dir, 'auto', expected);
+});
+  </script>
+</head>

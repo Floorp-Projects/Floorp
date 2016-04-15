@@ -44,10 +44,15 @@ LoadContext.prototype = {
 PrivateBrowsingLoadContext = new LoadContext(true);
 
 function make_channel(url, flags, usePrivateBrowsing) {
-  var req = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+  if (usePrivateBrowsing) {
+    securityFlags |= Ci.nsILoadInfo.SEC_FORCE_PRIVATE_BROWSING;
+  }
+  var req = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true,
+                                securityFlags: securityFlags});
   req.loadFlags = flags;
   if (usePrivateBrowsing) {
-    req.notificationCallbacks = PrivateBrowsingLoadContext;    
+    req.notificationCallbacks = PrivateBrowsingLoadContext;
   }
   return req;
 }
