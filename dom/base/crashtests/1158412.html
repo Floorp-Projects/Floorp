@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    document.styleSheetSets.expando = null;
+    var otherDoc = document.implementation.createDocument("", "", null);
+    var otherSpan = otherDoc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+
+    var img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+    img.srcset = "data:,a 1w, data:,b 1w";
+    img.sizes = "1px";
+    otherSpan.appendChild(img);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
