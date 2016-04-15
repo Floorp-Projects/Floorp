@@ -155,6 +155,12 @@ protected:
 
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
   void SetSelectionDragState(bool aState) const;
+
+  // Called to extend a selection if possible that it's a phone number.
+  void SelectMoreIfPhoneNumber() const;
+  // Extend the current phone number selection in the requested direction.
+  void ExtendPhoneNumberSelection(const nsAString& aDirection) const;
+
   void SetSelectionDirection(nsDirection aDir) const;
 
   // If aDirection is eDirNext, get the frame for the range start in the first
@@ -281,6 +287,10 @@ protected:
   // Preference to show selection bars at the two ends in selection mode. The
   // selection bar is always disabled in cursor mode.
   static bool sSelectionBarEnabled;
+
+  // Preference to allow smarter selection of phone numbers,
+  // when user long presses text to start.
+  static bool sExtendSelectionForPhoneNumber;
 
   // Preference to show caret in cursor mode when long tapping on an empty
   // content. This also changes the default update behavior in cursor mode,

@@ -14,7 +14,6 @@ const snapshot = require("./snapshot");
  * @param {HeapAnalysesWorker} heapWorker
  */
 exports.refresh = function (heapWorker) {
-  console.log("FITZGEN: refresh");
   return function* (dispatch, getState) {
     switch (getState().view.state) {
       case viewState.DIFFING:

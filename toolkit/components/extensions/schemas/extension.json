@@ -117,7 +117,6 @@
       },
       {
         "name": "isAllowedFileSchemeAccess",
-        "unsupported": true,
         "type": "function",
         "description": "Retrieves the state of the extension's access to the 'file://' scheme (as determined by the user-controlled 'Allow access to File URLs' checkbox.",
         "async": "callback",

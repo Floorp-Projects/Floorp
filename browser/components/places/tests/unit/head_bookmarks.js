@@ -38,9 +38,9 @@ updateAppInfo({
 });
 
 // Smart bookmarks constants.
-const SMART_BOOKMARKS_VERSION = 7;
+const SMART_BOOKMARKS_VERSION = 8;
 const SMART_BOOKMARKS_ON_TOOLBAR = 1;
-const SMART_BOOKMARKS_ON_MENU =  3; // Takes into account the additional separator.
+const SMART_BOOKMARKS_ON_MENU =  2; // Takes into account the additional separator.
 
 // Default bookmarks constants.
 const DEFAULT_BOOKMARKS_ON_TOOLBAR = 1;

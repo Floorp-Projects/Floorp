@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.telemetry;
+package org.mozilla.gecko.telemetry.pings;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 /**
  * Container for telemetry data and the data necessary to upload it.
+ *
+ * If you want to create one of these, consider extending
+ * {@link TelemetryPingBuilder} or one of its descendants.
  */
 public class TelemetryPing {
     private final String url;

@@ -1073,7 +1073,7 @@ this.PushService = {
     Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
     if (!reply.error) {
       console.warn("onRegisterError: Called without valid error message!",
-        reply, String(reply));
+        reply);
       throw new Error("Registration error");
     }
     throw reply.error;

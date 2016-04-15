@@ -557,13 +557,21 @@ public final class GeckoProfile {
         return CUSTOM_PROFILE.equals(mName);
     }
 
+    /**
+     * Retrieves the directory backing the profile. This method acts
+     * as a lazy initializer for the GeckoProfile instance.
+     */
     @RobocopTarget
     public synchronized File getDir() {
         forceCreate();
         return mProfileDir;
     }
 
-    public synchronized GeckoProfile forceCreate() {
+    /**
+     * Forces profile creation. Consider using {@link #getDir()} to initialize the profile instead - it is the
+     * lazy initializer and, for our code reasoning abilities, we should initialize the profile in one place.
+     */
+    private synchronized GeckoProfile forceCreate() {
         if (mProfileDir != null) {
             return this;
         }
