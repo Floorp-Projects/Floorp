@@ -1068,14 +1068,14 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
 
-    nsAutoPtr<MacOSFontEntry>
-        newFontEntry(new MacOSFontEntry(uniqueName, fontRef, aWeight,
-                                        aStretch, aStyle, true, false));
+    auto newFontEntry =
+        MakeUnique<MacOSFontEntry>(uniqueName, fontRef, aWeight, aStretch,
+                                   aStyle, true, false);
     ::CFRelease(fontRef);
 
     // if succeeded and font cmap is good, return the new font
     if (newFontEntry->mIsValid && NS_SUCCEEDED(newFontEntry->ReadCMAP())) {
-        return newFontEntry.forget();
+        return newFontEntry.release();
     }
 
     // if something is funky about this font, delete immediately

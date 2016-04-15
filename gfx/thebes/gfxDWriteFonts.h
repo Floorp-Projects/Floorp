@@ -7,6 +7,7 @@
 #define GFX_WINDOWSDWRITEFONTS_H
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 #include <dwrite.h>
 
 #include "gfxFont.h"
@@ -98,7 +99,7 @@ protected:
     Metrics *mMetrics;
 
     // cache of glyph widths in 16.16 fixed-point pixels
-    nsAutoPtr<nsDataHashtable<nsUint32HashKey,int32_t> > mGlyphWidths;
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,int32_t>> mGlyphWidths;
 
     uint32_t mSpaceGlyph;
 
