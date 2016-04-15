@@ -168,6 +168,23 @@ add_task(function* webnav_transitions_props() {
        "transitionQualifiers found in the OnCommitted events");
   }
 
+  // transitionType: form_submit
+  received = [];
+  yield loadAndWait(win, "onCompleted", URL, () => {
+    win.document.querySelector("form").submit();
+  });
+
+  found = received.find((data) => (data.event == "onCommitted" && data.url == URL));
+
+  ok(found, "Got the onCommitted event");
+
+  if (found) {
+    is(found.details.transitionType, "form_submit",
+       "Got the expected 'form_submit' transitionType in the OnCommitted event");
+    ok(Array.isArray(found.details.transitionQualifiers),
+       "transitionQualifiers found in the OnCommitted events");
+  }
+
   // transitionQualifier: server_redirect
   received = [];
   yield loadAndWait(win, "onCompleted", REDIRECTED, () => { win.location = REDIRECT; });
