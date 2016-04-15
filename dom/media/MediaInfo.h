@@ -235,6 +235,27 @@ public:
     mImageRect = aRect;
   }
 
+  // Returned the crop rectangle scaled to aWidth/aHeight size relative to
+  // mImage size.
+  // If aWidth and aHeight are identical to the original mImage.width/mImage.height
+  // then the scaling ratio will be 1.
+  // This is used for when the frame size is different from what the container
+  // reports. This is legal in WebM, and we will preserve the ratio of the crop
+  // rectangle as it was reported relative to the picture size reported by the
+  // container.
+  nsIntRect ScaledImageRect(int64_t aWidth, int64_t aHeight) const
+  {
+    if (aWidth == mImage.width && aHeight == mImage.height) {
+      return ImageRect();
+    }
+    nsIntRect imageRect = ImageRect();
+    imageRect.x = (imageRect.x * aWidth) / mImage.width;
+    imageRect.y = (imageRect.y * aHeight) / mImage.height;
+    imageRect.width = (aWidth * imageRect.width) / mImage.width;
+    imageRect.height = (aHeight * imageRect.height) / mImage.height;
+    return imageRect;
+  }
+
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
   nsIntSize mDisplay;
