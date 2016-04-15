@@ -563,7 +563,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
         dragRect = ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
                             ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
 
-        nsIntRect screenRect = rootFrame->GetScreenRectExternal();
+        nsIntRect screenRect = rootFrame->GetScreenRect();
         aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,
                                  dragRect.width, dragRect.height);
       }
@@ -574,7 +574,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
       nsIFrame* frame = content->GetPrimaryFrame();
       if (frame) {
-        nsIntRect screenRect = frame->GetScreenRectExternal();
+        nsIntRect screenRect = frame->GetScreenRect();
         aScreenDragRect->SetRect(screenRect.x, screenRect.y,
                                  screenRect.width, screenRect.height);
       }
