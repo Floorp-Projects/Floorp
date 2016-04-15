@@ -4,7 +4,7 @@ function check(aBrowser, aElementName, aBarred, aType) {
     let e = content.document.createElement(aElementName);
     let contentElement = content.document.getElementById('content');
     contentElement.appendChild(e);
-    
+
     if (aType) {
       e.type = aType;
     }
