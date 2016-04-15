@@ -5371,6 +5371,16 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOVING:
       FinishLiveResizing(MOVING);
+      if (WinUtils::IsPerMonitorDPIAware()) {
+        // Sometimes, we appear to miss a WM_DPICHANGED message while moving
+        // a window around. Therefore, call ChangedDPI and ResetLayout here,
+        // which causes the prescontext and appshell window management code to
+        // check the appUnitsPerDevPixel value and current widget size, and
+        // refresh them if necessary. If nothing has changed, these calls will
+        // return without actually triggering any extra reflow or painting.
+        ChangedDPI();
+        ResetLayout();
+      }
       break;
 
     case WM_ENTERSIZEMOVE:
@@ -6927,6 +6937,7 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
     Resize(x, y, width, height, true);
   }
   ChangedDPI();
+  ResetLayout();
 }
 
 /**************************************************************
