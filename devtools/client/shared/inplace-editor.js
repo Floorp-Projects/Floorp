@@ -594,10 +594,15 @@ InplaceEditor.prototype = {
       return "";
     }
 
+    // A DOM element is used to test the validity of various units. This is to
+    // avoid having to do an async call to the server to get this information.
+    let el = this.doc.createElement("div");
     let units = ["px", "deg", "s"];
     for (let unit of units) {
       let value = beforeValue + "1" + unit + afterValue;
-      if (domUtils.cssPropertyIsValid(this.property.name, value)) {
+      el.style.setProperty(this.property.name, "");
+      el.style.setProperty(this.property.name, value);
+      if (el.style.getPropertyValue(this.property.name) !== "") {
         return unit;
       }
     }
