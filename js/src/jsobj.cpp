@@ -2899,34 +2899,6 @@ js::HasDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
     return false;
 }
 
-static bool
-GenericNativeMethodDispatcher(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    const JSFunctionSpec* fs = (JSFunctionSpec*)
-        args.callee().as<JSFunction>().getExtendedSlot(0).toPrivate();
-    MOZ_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
-
-    if (argc < 1) {
-        ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-
-    /*
-     * Copy all actual (argc) arguments down over our |this| parameter, vp[1],
-     * which is almost always the class constructor object, e.g. Array.  Then
-     * call the corresponding prototype native method with our first argument
-     * passed as |this|.
-     */
-    memmove(vp + 1, vp + 2, argc * sizeof(Value));
-
-    /* Clear the last parameter in case too few arguments were passed. */
-    vp[2 + --argc].setUndefined();
-
-    return fs->call.op(cx, argc, vp);
-}
-
 extern bool
 PropertySpecNameToId(JSContext* cx, const char* name, MutableHandleId id,
                      js::PinningBehavior pin = js::DoNotPinAtom);
@@ -2953,27 +2925,6 @@ DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs
     RootedId id(cx);
     if (!PropertySpecNameToId(cx, fs->name, &id))
         return false;
-
-    // Define a generic arity N+1 static method for the arity N prototype
-    // method if flags contains JSFUN_GENERIC_NATIVE.
-    if (flags & JSFUN_GENERIC_NATIVE) {
-        // We require that any consumers using JSFUN_GENERIC_NATIVE stash
-        // the prototype and constructor in the global slots before invoking
-        // JS_DefineFunctions on the proto.
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
-        MOZ_ASSERT(obj == &obj->global().getPrototype(key).toObject());
-        RootedObject ctor(cx, &obj->global().getConstructor(key).toObject());
-
-        flags &= ~JSFUN_GENERIC_NATIVE;
-        JSFunction* fun = DefineFunction(cx, ctor, id,
-                                         GenericNativeMethodDispatcher,
-                                         fs->nargs + 1, flags,
-                                         gc::AllocKind::FUNCTION_EXTENDED);
-        if (!fun)
-            return false;
-
-        fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
-    }
 
     JSFunction* fun = NewFunctionFromSpec(cx, fs, id);
     if (!fun)
