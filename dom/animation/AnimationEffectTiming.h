@@ -17,8 +17,10 @@ namespace dom {
 class AnimationEffectTiming : public AnimationEffectTimingReadOnly
 {
 public:
-  AnimationEffectTiming(const TimingParams& aTiming, KeyframeEffect* aEffect)
-    : AnimationEffectTimingReadOnly(aTiming)
+  AnimationEffectTiming(nsISupports* aParent,
+                        const TimingParams& aTiming,
+                        KeyframeEffect* aEffect)
+    : AnimationEffectTimingReadOnly(aParent, aTiming)
     , mEffect(aEffect) { }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

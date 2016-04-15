@@ -1,0 +1,97 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+option(env='MOZ_JEMALLOC4', help='Enable jemalloc 4')
+imply_option('--enable-jemalloc', depends_if('MOZ_JEMALLOC4')(lambda x: '4'))
+
+
+option('--enable-jemalloc', nargs='?', choices=('4',), env='MOZ_MEMORY',
+       help='Replace memory allocator with jemalloc')
+
+@depends('--enable-jemalloc', target, build_project, c_compiler)
+def jemalloc(value, target, build_project, c_compiler):
+    if value.origin != 'default':
+        return bool(value) or None
+
+    if build_project == 'js':
+        return True
+
+    if target.kernel == 'Darwin' and target.cpu == 'x86_64':
+        # Don't enable by default on 32-bits OSX. See bug 702250.
+        return True
+
+    if target.kernel == 'WINNT' and c_compiler.type in ('msvc', 'clang-cl'):
+        return True
+
+    if target.kernel == 'Linux':
+        return True
+
+@depends('--enable-jemalloc')
+def jemalloc4(jemalloc):
+    if len(jemalloc) and jemalloc[0] == '4':
+        return True
+
+
+set_config('MOZ_MEMORY', jemalloc)
+set_define('MOZ_MEMORY', jemalloc)
+add_old_configure_assignment('MOZ_MEMORY', jemalloc)
+
+set_config('MOZ_JEMALLOC4', jemalloc4)
+set_define('MOZ_JEMALLOC4', jemalloc4)
+add_old_configure_assignment('MOZ_JEMALLOC4', jemalloc4)
+
+
+# Because --enable-jemalloc doesn't use a default because of the dependency
+# on the target, we can't use a js_option for it to propagate to js/src
+# through the old-configure.
+@depends(jemalloc, jemalloc4)
+def jemalloc_for_old_configure(jemalloc, jemalloc4):
+    if jemalloc:
+        return '--enable-jemalloc=4' if jemalloc4 else '--enable-jemalloc'
+    return '--disable-jemalloc'
+
+add_old_configure_arg(jemalloc_for_old_configure)
+
+
+@depends(jemalloc, jemalloc4, target)
+def jemalloc_os_define(jemalloc, jemalloc4, target):
+    if jemalloc and not jemalloc4:
+        if target.kernel == 'WINNT':
+            return 'MOZ_MEMORY_WINDOWS'
+        if target.kernel == 'Linux':
+            return 'MOZ_MEMORY_LINUX'
+        if target.kernel == 'Darwin':
+            return 'MOZ_MEMORY_DARWIN'
+        if target.kernel in ('kFreeBSD', 'FreeBSD', 'NetBSD'):
+            return 'MOZ_MEMORY_BSD'
+        die('--enable-jemalloc is not supported on %s', target.kernel)
+
+set_define(jemalloc_os_define, '1')
+
+@depends(jemalloc, jemalloc4, target)
+def jemalloc_os_define_android(jemalloc, jemalloc4, target):
+    if jemalloc and not jemalloc4 and target.os == 'Android':
+        return 'MOZ_MEMORY_ANDROID'
+
+set_define(jemalloc_os_define_android, '1')
+
+
+option('--enable-replace-malloc',
+       help='Enable ability to dynamically replace the malloc implementation')
+
+@depends('--enable-replace-malloc', jemalloc, milestone, build_project)
+def replace_malloc(value, jemalloc, milestone, build_project):
+    # Enable on central for the debugging opportunities it adds.
+    if milestone.is_nightly and jemalloc and build_project != 'js':
+        return True
+    if value and not jemalloc:
+        die('--enable-replace-malloc requires --enable-jemalloc')
+    return bool(value) or None
+
+set_config('MOZ_REPLACE_MALLOC', replace_malloc)
+set_define('MOZ_REPLACE_MALLOC', replace_malloc)
+add_old_configure_assignment('MOZ_REPLACE_MALLOC', replace_malloc)

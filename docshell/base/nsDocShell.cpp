@@ -10688,12 +10688,24 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
+  if (mInPrivateBrowsing) {
+    securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo =
     (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) ?
       new LoadInfo(loadingWindow, triggeringPrincipal,
                    securityFlags) :
       new LoadInfo(loadingPrincipal, triggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
+
+  // We have to do this in case our OriginAttributes are different from the
+  // OriginAttributes of the parent document. Or in case there isn't a
+  // parent document.
+  NeckoOriginAttributes neckoAttrs;
+  neckoAttrs.InheritFromDocShellToNecko(GetOriginAttributes());
+  loadInfo->SetOriginAttributes(neckoAttrs);
+
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                aURI,
@@ -10717,6 +10729,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       }
       return rv;
     }
+
     if (aBaseURI) {
         nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
         if (vsc) {

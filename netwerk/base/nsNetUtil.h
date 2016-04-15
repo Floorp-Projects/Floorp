@@ -1003,6 +1003,7 @@ nsresult NS_ShouldSecureUpgrade(nsIURI* aURI,
  */
 nsresult NS_GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI);
 
+nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel);
 
 namespace mozilla {
 namespace net {

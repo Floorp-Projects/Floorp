@@ -69,7 +69,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-static const int kMinTelemetryMessageSize = 8192;
+static const size_t kMinTelemetryMessageSize = 8192;
 
 nsFrameMessageManager::nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                                              nsFrameMessageManager* aParentManager,

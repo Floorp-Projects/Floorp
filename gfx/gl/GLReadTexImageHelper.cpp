@@ -32,6 +32,9 @@ GLReadTexImageHelper::GLReadTexImageHelper(GLContext* gl)
 
 GLReadTexImageHelper::~GLReadTexImageHelper()
 {
+    if (!mGL->MakeCurrent())
+        return;
+
     mGL->fDeleteProgram(mPrograms[0]);
     mGL->fDeleteProgram(mPrograms[1]);
     mGL->fDeleteProgram(mPrograms[2]);

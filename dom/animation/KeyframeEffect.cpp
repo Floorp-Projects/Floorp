@@ -62,7 +62,8 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly,
                                    AnimationEffectReadOnly,
                                    mTarget,
-                                   mAnimation)
+                                   mAnimation,
+                                   mTiming)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadOnly,
                                                AnimationEffectReadOnly)
@@ -80,7 +81,8 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   CSSPseudoElementType aPseudoType,
   const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
-                           new AnimationEffectTimingReadOnly(aTiming))
+                           new AnimationEffectTimingReadOnly(aDocument,
+                                                             aTiming))
 {
 }
 
@@ -91,7 +93,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
-  , mTiming(*aTiming)
+  , mTiming(aTiming)
   , mPseudoType(aPseudoType)
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
@@ -1343,7 +1345,7 @@ KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
                                CSSPseudoElementType aPseudoType,
                                const TimingParams& aTiming)
   : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
-                           new AnimationEffectTiming(aTiming, this))
+                           new AnimationEffectTiming(aDocument, aTiming, this))
 {
 }
 
@@ -1402,7 +1404,11 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
 
 KeyframeEffect::~KeyframeEffect()
 {
-  mTiming->Unlink();
+  // mTiming is cycle collected, so we have to do null check first even though
+  // mTiming shouldn't be null during the lifetime of KeyframeEffect.
+  if (mTiming) {
+    mTiming->Unlink();
+  }
 }
 
 } // namespace dom

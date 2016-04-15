@@ -2287,6 +2287,11 @@ this.DOMApplicationRegistry = {
                   .createInstance(Ci.nsIXMLHttpRequest);
       xhr.open("GET", aData.manifestURL, true);
       xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+      if (xhr.channel.loadInfo) {
+        xhr.channel.loadInfo.originAttributes = { appId: app.installerAppId,
+                                                  inIsolatedMozBrowser: app.installerIsBrowser
+                                                };
+      }
       headers.forEach(function(aHeader) {
         debug("Adding header: " + aHeader.name + ": " + aHeader.value);
         xhr.setRequestHeader(aHeader.name, aHeader.value);
@@ -2596,6 +2601,10 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    if (xhr.channel.loadInfo) {
+      xhr.channel.loadInfo.originAttributes = { appId: aData.appId,
+                                                inIsolatedMozBrowser: aData.isBrowser};
+    }
     xhr.channel.notificationCallbacks = AppsUtils.createLoadContext(aData.appId,
                                                                     aData.isBrowser);
     xhr.responseType = "json";
@@ -2711,6 +2720,10 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    if (xhr.channel.loadInfo) {
+      xhr.channel.loadInfo.originAttributes = { appId: aData.appId,
+                                                inIsolatedMozBrowser: aData.isBrowser};
+    }
     xhr.channel.notificationCallbacks = AppsUtils.createLoadContext(aData.appId,
                                                                     aData.isBrowser);
     xhr.responseType = "json";
