@@ -440,8 +440,9 @@ async_test(function(t) {
       .then(function() { return with_iframe(scope); })
       .then(function(f) {
           frame = f;
+          assert_equals(frame.contentWindow.document.body.textContent, 'default');
           var tests = cacheTypes.map(function(type) {
-            return new Promise(function(resolve) {
+            return new Promise(function(resolve, reject) {
                 return frame.contentWindow.fetch(scope + '=' + type,
                                                  {cache: type})
                   .then(function(response) { return response.text(); })
@@ -450,10 +451,25 @@ async_test(function(t) {
                       assert_equals(response_text, expected,
                                     'Service Worker should respond to fetch with the correct type');
                     })
-                  .then(resolve);
+                  .then(resolve)
+                  .catch(reject);
               });
           });
-          return Promise.all(tests);
+        })
+      .then(function() {
+          return new Promise(function(resolve, reject) {
+            frame.addEventListener('load', function onLoad() {
+              frame.removeEventListener('load', onLoad);
+              try {
+                assert_equals(frame.contentWindow.document.body.textContent,
+                              'no-cache');
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
+            });
+            frame.contentWindow.location.reload();
+          });
         })
       .then(function() {
           frame.remove();
