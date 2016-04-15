@@ -2245,7 +2245,8 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
       let origin = win.document
                       .nodePrincipal
                       .originNoSuffix;
-      if (origin === host) {
+      let url = win.document.URL;
+      if (origin === host || url === host) {
         return win;
       }
     }
