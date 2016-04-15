@@ -6,7 +6,7 @@
 const certService = Cc["@mozilla.org/security/local-cert-service;1"]
                     .getService(Ci.nsILocalCertService);
 
-const gNickname = "devtools";
+const gNickname = "local-cert-test";
 
 function run_test() {
   // Need profile dir to store the key / cert
@@ -17,31 +17,31 @@ function run_test() {
 }
 
 function getOrCreateCert(nickname) {
-  let deferred = promise.defer();
-  certService.getOrCreateCert(nickname, {
-    handleCert: function(c, rv) {
-      if (rv) {
-        deferred.reject(rv);
-        return;
+  return new Promise((resolve, reject) => {
+    certService.getOrCreateCert(nickname, {
+      handleCert: function(c, rv) {
+        if (rv) {
+          reject(rv);
+          return;
+        }
+        resolve(c);
       }
-      deferred.resolve(c);
-    }
+    });
   });
-  return deferred.promise;
 }
 
 function removeCert(nickname) {
-  let deferred = promise.defer();
-  certService.removeCert(nickname, {
-    handleResult: function(rv) {
-      if (rv) {
-        deferred.reject(rv);
-        return;
+  return new Promise((resolve, reject) => {
+    certService.removeCert(nickname, {
+      handleResult: function(rv) {
+        if (rv) {
+          reject(rv);
+          return;
+        }
+        resolve();
       }
-      deferred.resolve();
-    }
+    });
   });
-  return deferred.promise;
 }
 
 add_task(function*() {
