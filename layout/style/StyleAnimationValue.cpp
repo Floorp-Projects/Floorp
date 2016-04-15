@@ -1822,6 +1822,58 @@ AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
   return result;
 }
 
+static UniquePtr<nsCSSValuePairList>
+AddCSSValuePairList(nsCSSProperty aProperty,
+                    double aCoeff1, const nsCSSValuePairList* aList1,
+                    double aCoeff2, const nsCSSValuePairList* aList2)
+{
+  MOZ_ASSERT(aList1, "Can't add a null list");
+  MOZ_ASSERT(aList2, "Can't add a null list");
+
+  auto result = MakeUnique<nsCSSValuePairList>();
+  nsCSSValuePairList* resultPtr = result.get();
+
+  do {
+    static nsCSSValue nsCSSValuePairList::* const pairListValues[] = {
+      &nsCSSValuePairList::mXValue,
+      &nsCSSValuePairList::mYValue,
+    };
+    uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
+    for (uint32_t i = 0; i < ArrayLength(pairListValues); ++i) {
+      const nsCSSValue& v1 = aList1->*(pairListValues[i]);
+      const nsCSSValue& v2 = aList2->*(pairListValues[i]);
+
+      nsCSSValue& vr = resultPtr->*(pairListValues[i]);
+      nsCSSUnit unit =
+        GetCommonUnit(aProperty, v1.GetUnit(), v2.GetUnit());
+      if (unit == eCSSUnit_Null) {
+        return nullptr;
+      }
+      if (!AddCSSValuePixelPercentCalc(restrictions, unit,
+                                       aCoeff1, v1,
+                                       aCoeff2, v2, vr)) {
+        if (v1 != v2) {
+          return nullptr;
+        }
+        vr = v1;
+      }
+    }
+    aList1 = aList1->mNext;
+    aList2 = aList2->mNext;
+    if (!aList1 || !aList2) {
+      break;
+    }
+    resultPtr->mNext = new nsCSSValuePairList;
+    resultPtr = resultPtr->mNext;
+  } while (aList1 && aList2);
+
+  if (aList1 || aList2) {
+    return nullptr; // We can't interpolate lists of different lengths
+  }
+
+  return result;
+}
+
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
                   double aCoeff2, const nsCSSValueList* aList2)
@@ -2473,44 +2525,12 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
     case eUnit_CSSValuePairList: {
       const nsCSSValuePairList *list1 = aValue1.GetCSSValuePairListValue();
       const nsCSSValuePairList *list2 = aValue2.GetCSSValuePairListValue();
-      nsAutoPtr<nsCSSValuePairList> result;
-      nsCSSValuePairList **resultTail = getter_Transfers(result);
-      do {
-        nsCSSValuePairList *item = new nsCSSValuePairList;
-        *resultTail = item;
-        resultTail = &item->mNext;
-
-        static nsCSSValue nsCSSValuePairList::* const pairListValues[] = {
-          &nsCSSValuePairList::mXValue,
-          &nsCSSValuePairList::mYValue,
-        };
-        uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
-        for (uint32_t i = 0; i < ArrayLength(pairListValues); ++i) {
-          const nsCSSValue &v1 = list1->*(pairListValues[i]);
-          const nsCSSValue &v2 = list2->*(pairListValues[i]);
-          nsCSSValue &vr = item->*(pairListValues[i]);
-          nsCSSUnit unit =
-            GetCommonUnit(aProperty, v1.GetUnit(), v2.GetUnit());
-          if (unit == eCSSUnit_Null) {
-            return false;
-          }
-          if (!AddCSSValuePixelPercentCalc(restrictions, unit, aCoeff1, v1,
-                                           aCoeff2, v2, vr) ) {
-            if (v1 != v2) {
-              return false;
-            }
-            vr = v1;
-          }
-        }
-        list1 = list1->mNext;
-        list2 = list2->mNext;
-      } while (list1 && list2);
-      if (list1 || list2) {
-        // We can't interpolate lists of different lengths.
+      UniquePtr<nsCSSValuePairList> result =
+        AddCSSValuePairList(aProperty, aCoeff1, list1, aCoeff2, list2);
+      if (!result) {
         return false;
       }
-
-      aResultValue.SetAndAdoptCSSValuePairListValue(result.forget());
+      aResultValue.SetAndAdoptCSSValuePairListValue(result.release());
       return true;
     }
   }
