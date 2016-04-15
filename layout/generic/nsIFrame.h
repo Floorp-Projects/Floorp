@@ -2178,16 +2178,15 @@ public:
    * view and the view has a widget, then this frame's widget is
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
-   * XXX virtual because gfx callers use it! (themes)
    */
-  virtual nsIWidget* GetNearestWidget() const;
+  nsIWidget* GetNearestWidget() const;
 
   /**
    * Same as GetNearestWidget() above but uses an outparam to return the offset
    * of this frame to the returned widget expressed in appunits of |this| (the
    * widget might be in a different document with a different zoom).
    */
-  virtual nsIWidget* GetNearestWidget(nsPoint& aOffset) const;
+  nsIWidget* GetNearestWidget(nsPoint& aOffset) const;
 
   /**
    * Get the "type" of the frame. May return nullptr.
