@@ -31,15 +31,11 @@ def normsep(path):
     return mozpath.normsep(path)
 
 
-# This unlocks the sandbox. Do not copy blindly.
-@imports(_import='__builtin__', _as='__builtins__')
+@imports(_from='which', _import='which')
+@imports(_from='which', _import='WhichError')
 def find_program(file):
     if is_absolute_or_relative(file):
         return os.path.abspath(file) if os.path.isfile(file) else None
-    # We can't use @imports here because it imports at declaration time,
-    # and the declaration of find_program happens before we ensure the
-    # which module is available in sys.path somehow.
-    from which import which, WhichError
     try:
         return normsep(which(file))
     except WhichError:
@@ -100,7 +96,6 @@ def namespace(**kwargs):
 @template
 def delayed_getattr(func, key):
     @depends(func)
-    @imports(_from='__builtin__', _import='getattr')
     def result(value):
         # The @depends function we're being passed may have returned
         # None, or an object that simply doesn't have the wanted key.

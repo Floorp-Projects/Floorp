@@ -107,6 +107,11 @@ interface nsIDOMWindowUtils : nsISupports {
   void updateLayerTree();
 
   /**
+   * Get the last used layer transaction id for this window's refresh driver.
+   */
+  readonly attribute unsigned long long lastTransactionId;
+
+  /**
    * Information retrieved from the <meta name="viewport"> tag.
    * See nsContentUtils::GetViewportInfo for more information.
    */
