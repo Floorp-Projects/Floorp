@@ -4882,6 +4882,7 @@ GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
 #define JS_FOR_EACH_WELL_KNOWN_SYMBOL(macro) \
+    macro(isConcatSpreadable) \
     macro(iterator) \
     macro(match) \
     macro(replace) \
