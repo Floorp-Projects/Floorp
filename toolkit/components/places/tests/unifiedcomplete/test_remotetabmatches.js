@@ -53,7 +53,7 @@ function makeRemoteTabMatch(url, deviceName, extra = {}) {
   return {
     uri: makeActionURI("remotetab", {url, deviceName}),
     title: extra.title || url,
-    style: [ "action" ],
+    style: [ "action", "remotetab" ],
     icon: extra.icon,
   }
 }
