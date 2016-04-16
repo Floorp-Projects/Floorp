@@ -1188,11 +1188,13 @@ html|span.ac-tag {
   height: 16px;
 }
 
-.ac-type-icon[type=switchtab] {
+.ac-type-icon[type=switchtab],
+.ac-type-icon[type=remotetab] {
   list-style-image: url("chrome://browser/skin/urlbar-tab.svg#tab");
 }
 
-.ac-type-icon[type=switchtab][selected] {
+.ac-type-icon[type=switchtab][selected],
+.ac-type-icon[type=remotetab][selected] {
   list-style-image: url("chrome://browser/skin/urlbar-tab.svg#tab-inverted");
 }
 
