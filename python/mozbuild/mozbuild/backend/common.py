@@ -176,8 +176,9 @@ class TestManager(object):
         self.tests_by_path = defaultdict(list)
         self.installs_by_path = defaultdict(list)
         self.deferred_installs = set()
+        self.manifest_default_support_files = {}
 
-    def add(self, t, flavor, topsrcdir):
+    def add(self, t, flavor, topsrcdir, default_supp_files):
         t = dict(t)
         t['flavor'] = flavor
 
@@ -187,6 +188,17 @@ class TestManager(object):
         key = path[len(topsrcdir)+1:]
         t['file_relpath'] = key
         t['dir_relpath'] = mozpath.dirname(key)
+
+        # Support files are propagated from the default section to individual
+        # tests by the manifest parser, but we end up storing a lot of
+        # redundant data due to the huge number of support files.
+        # So if we have support files that are the same as the manifest default
+        # we track that separately, per-manifest instead of per-test, to save
+        # space.
+        supp_files = t.get('support-files')
+        if supp_files and supp_files == default_supp_files:
+            self.manifest_default_support_files[t['manifest']] = default_supp_files
+            del t['support-files']
 
         self.tests_by_path[key].append(t)
 
@@ -225,7 +237,8 @@ class CommonBackend(BuildBackend):
 
         if isinstance(obj, TestManifest):
             for test in obj.tests:
-                self._test_manager.add(test, obj.flavor, obj.topsrcdir)
+                self._test_manager.add(test, obj.flavor, obj.topsrcdir,
+                                       obj.default_support_files)
             self._test_manager.add_installs(obj, obj.topsrcdir)
 
         elif isinstance(obj, XPIDLFile):
@@ -364,7 +377,8 @@ class CommonBackend(BuildBackend):
         # Write out a machine-readable file describing every test.
         topobjdir = self.environment.topobjdir
         with self._write_file(mozpath.join(topobjdir, 'all-tests.json')) as fh:
-            json.dump(self._test_manager.tests_by_path, fh)
+            json.dump([self._test_manager.tests_by_path,
+                       self._test_manager.manifest_default_support_files], fh)
 
         path = mozpath.join(self.environment.topobjdir, 'test-installs.json')
         with self._write_file(path) as fh:
