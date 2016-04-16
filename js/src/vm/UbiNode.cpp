@@ -55,6 +55,8 @@ using JS::ubi::TracerConcreteWithCompartment;
 
 struct CopyToBufferMatcher
 {
+    using ReturnType = size_t;
+
     RangedPtr<char16_t> destination;
     size_t              maxLength;
 
@@ -106,6 +108,8 @@ JS::ubi::AtomOrTwoByteChars::copyToBuffer(RangedPtr<char16_t> destination, size_
 
 struct LengthMatcher
 {
+    using ReturnType = size_t;
+
     size_t
     match(JSAtom* atom)
     {

@@ -169,11 +169,10 @@ struct VariantImplementation<N, T> {
       return aLhs.template as<T>() == aRhs.template as<T>();
   }
 
-  template<typename Matcher, typename ConcreteVariant>
-  static auto
-  match(Matcher&& aMatcher, ConcreteVariant& aV)
-    -> decltype(aMatcher.match(aV.template as<T>()))
-  {
+  template<typename Matcher, typename ConcreteVariant,
+           typename ReturnType = typename RemoveReference<Matcher>::Type::ReturnType>
+  static ReturnType
+  match(Matcher&& aMatcher, ConcreteVariant& aV) {
     return aMatcher.match(aV.template as<T>());
   }
 };
@@ -227,10 +226,10 @@ struct VariantImplementation<N, T, Ts...>
     }
   }
 
-  template<typename Matcher, typename ConcreteVariant>
-  static auto
+  template<typename Matcher, typename ConcreteVariant,
+           typename ReturnType = typename RemoveReference<Matcher>::Type::ReturnType>
+  static ReturnType
   match(Matcher&& aMatcher, ConcreteVariant& aV)
-    -> decltype(aMatcher.match(aV.template as<T>()))
   {
     if (aV.template is<T>()) {
       return aMatcher.match(aV.template as<T>());
@@ -244,7 +243,7 @@ struct VariantImplementation<N, T, Ts...>
       // initialize return object of type <...> with an rvalue of type
       // <...>" then that means that the Matcher::match(T&) overloads
       // are returning different types. They must all return the same
-      // type.
+      // Matcher::ReturnType type.
       return Next::match(aMatcher, aV);
     }
   }
@@ -371,11 +370,11 @@ struct AsVariantTemporary
  *     // Good!
  *     struct FooMatcher
  *     {
- *       // The return type of all matchers must be idential.
- *       char* match(A& a) { ... }
- *       char* match(B& b) { ... }
- *       char* match(C& c) { ... }
- *       char* match(D& d) { ... } // Compile-time error to forget D!
+ *       using ReturnType = char*;
+ *       ReturnType match(A& a) { ... }
+ *       ReturnType match(B& b) { ... }
+ *       ReturnType match(C& c) { ... }
+ *       ReturnType match(D& d) { ... } // Compile-time error to forget D!
  *     }
  *     char* foo(Variant<A, B, C, D>& v) {
  *       return v.match(FooMatcher());
@@ -559,15 +558,15 @@ public:
 
   /** Match on an immutable const reference. */
   template<typename Matcher>
-  auto
-  match(Matcher&& aMatcher) const -> decltype(Impl::match(aMatcher, *this)) {
+  typename RemoveReference<Matcher>::Type::ReturnType
+  match(Matcher&& aMatcher) const {
     return Impl::match(aMatcher, *this);
   }
 
   /** Match on a mutable non-const reference. */
   template<typename Matcher>
-  auto
-  match(Matcher&& aMatcher) -> decltype(Impl::match(aMatcher, *this)) {
+  typename RemoveReference<Matcher>::Type::ReturnType
+  match(Matcher&& aMatcher) {
     return Impl::match(aMatcher, *this);
   }
 };
