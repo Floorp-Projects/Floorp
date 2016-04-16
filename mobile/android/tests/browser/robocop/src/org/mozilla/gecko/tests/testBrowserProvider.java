@@ -1324,7 +1324,10 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.TITLE)), TEST_TITLE,
                          "Inserted history entry has correct specified title");
 
-            // Update the history entry, specifying additional visit count
+            // Update the history entry, specifying additional visit count.
+            // The expectation is that the value is ignored, and count is bumped by 1 only.
+            // At the same time, a visit is inserted into the visits table.
+            // See junit4 tests in BrowserProviderHistoryVisitsTest.
             values = new ContentValues();
             values.put(BrowserContract.History.VISITS, 10);
 
@@ -1341,7 +1344,7 @@ public class testBrowserProvider extends ContentProviderTest {
                          "Updated history entry has correct unchanged title");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.History.URL)), TEST_URL_2,
                          "Updated history entry has correct unchanged URL");
-            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 20L,
+            mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.VISITS)), 11L,
                          "Updated history entry has correct number of visits");
             mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.History.DATE_CREATED)), dateCreated,
                          "Updated history entry has same creation date");
