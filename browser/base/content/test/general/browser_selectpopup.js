@@ -152,11 +152,11 @@ function doSelectTests(contentType, dtd)
 }
 
 add_task(function*() {
-  yield doSelectTests("text/html", "");
+  //yield doSelectTests("text/html", "");
 });
 
 add_task(function*() {
-  yield doSelectTests("application/xhtml+xml", XHTML_DTD);
+  //yield doSelectTests("application/xhtml+xml", XHTML_DTD);
 });
 
 // This test opens a select popup and removes the content node of a popup while
