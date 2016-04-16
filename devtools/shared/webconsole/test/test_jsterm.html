@@ -225,21 +225,66 @@ function* doEvalWithBindingFrame() {
 }
 
 function* forceLexicalInit() {
-  info("test `let x = SomeError` results in x being initialized to undefined");
-  let response = yield evaluateJS("let foopie = wubbalubadubdub;");
-  checkObject(response, {
-    from: gState.actor,
-    input: "let foopie = wubbalubadubdub;",
-    result: undefined,
-  });
-  ok(response.exception, "expected exception");
-  let response2 = yield evaluateJS("foopie;");
-  checkObject(response2, {
-    from: gState.actor,
-    input: "foopie;",
-    result: undefined,
-  });
-  ok(!response2.exception, "unexpected exception");
+  info("test that failed let/const bindings are initialized to undefined");
+
+  const testData = [
+    {
+        stmt: "let foopie = wubbalubadubdub",
+        vars: ["foopie"]
+    },
+    {
+        stmt: "let {z, w={n}=null} = {}",
+        vars: ["z", "w"]
+    },
+    {
+        stmt: "let [a, b, c] = null",
+        vars: ["a", "b", "c"]
+    },
+    {
+        stmt: "const nein1 = rofl, nein2 = copter",
+        vars: ["nein1", "nein2"]
+    },
+    {
+        stmt: "const {ha} = null",
+        vars: ["ha"]
+    },
+    {
+        stmt: "const [haw=[lame]=null] = []",
+        vars: ["haw"]
+    },
+    {
+        stmt: "const [rawr, wat=[lame]=null] = []",
+        vars: ["rawr", "haw"]
+    },
+    {
+        stmt: "let {zzz: xyz=99, zwz: wb} = nexistepas()",
+        vars: ["xyz", "wb"]
+    },
+    {
+        stmt: "let {c3pdoh=101} = null",
+        vars: ["c3pdoh"]
+    }
+  ];
+
+  for (let data of testData) {
+      let response = yield evaluateJS(data.stmt);
+      checkObject(response, {
+        from: gState.actor,
+        input: data.stmt,
+        result: undefined,
+      });
+      ok(response.exception, "expected exception");
+      for (let varName of data.vars) {
+          let response2 = yield evaluateJS(varName);
+          checkObject(response2, {
+            from: gState.actor,
+            input: varName,
+            result: undefined,
+          });
+          ok(!response2.exception, "unexpected exception");
+      }
+  }
+
   nextTest();
 }
 
