@@ -3,7 +3,9 @@
   <title>Test for Bug 625187</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
 <!--
    - Any copyright is dedicated to the Public Domain.
@@ -13,7 +15,7 @@
    -   Mihai Sucan <mihai.sucan@gmail.com>
    -->
 </head>
-<body onload="runtest()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625187">Mozilla Bug 625187</a>
 
 <p><button onclick="alert('hello world')">Button</button></p>
@@ -25,72 +27,73 @@
 <pre id="test"></pre>
 
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-
-var testNum = 0;
-var dialogNum = 0;
-
-function hasTabModalPrompts() {
-  var prefName = "prompts.tab_modal.enabled";
-  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
-  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-         Services.prefs.getBoolPref(prefName);
-}
-
-function runtest()
+add_task(function* runTest()
 {
-  isTabModal = hasTabModalPrompts();
-
   // This test depends on tab modal prompts being enabled.
   if (!isTabModal) {
     todo(false, "Test disabled when tab modal prompts are not enabled.");
-    SimpleTest.finish();
     return;
   }
 
-  let url = SimpleTest.getTestFileURL("chromeScript.js");
-  let chrome = SpecialPowers.loadChromeScript(url);
+  state = {
+    msg         : "hello world",
+    iconClass   : "alert-icon",
+    titleHidden : true,
+    textHidden  : true,
+    passHidden  : true,
+    checkHidden : true,
+    textValue   : "",
+    passValue   : "",
+    checkMsg    : "",
+    checked     : false,
+    focused     : "button0",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick: "ok",
+  };
 
-  chrome.addMessageListener("promptCanceled", msg => {
-    checkSelection(msg.ui);
-  });
-
-  chrome.sendAsyncMessage("cancelPrompt");
+  promptDone = handlePrompt(action);
 
   var button = document.querySelector("button");
   dispatchMouseEvent(button, "click");
 
-  chrome.sendAsyncMessage("cancelPrompt");
+  yield promptDone;
+
+
+  // mostly reusing same state/action
+  state.titleHidden = false;
+  state.msg = "hello world 2";
+  promptDone = handlePrompt(action);
 
   var iframe = document.getElementById("iframe_diff_origin");
   button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  chrome.sendAsyncMessage("cancelPrompt");
+  yield promptDone;
+
+
+  // mostly reusing same state/action
+  state.titleHidden = true;
+  state.msg = "hello world 2";
+  promptDone = handlePrompt(action);
 
   iframe = document.getElementById("iframe_same_origin");
   button = iframe.contentWindow.document.getElementById("btn1");
   dispatchMouseEvent(button, "click");
 
-  chrome.sendAsyncMessage("cancelPrompt");
+  yield promptDone;
+
+
+  // mostly reusing same state/action
+  state.msg = "hello world 3";
+  promptDone = handlePrompt(action);
 
   button = iframe.contentWindow.document.getElementById("btn2");
   dispatchMouseEvent(button, "click");
 
-  chrome.destroy();
-  SimpleTest.finish();
-}
-
-function checkSelection(ui)
-{
-  dialogNum++;
-  if (dialogNum == 1 || dialogNum == 3 || dialogNum == 4)
-    ok(ui.infoTitle.hidden,
-       "dialog #" + dialogNum + ": the tabprompt infoTitle element is hidden");
-  else if (dialogNum == 2)
-    ok(!ui.infoTitle.hidden,
-       "dialog #" + dialogNum + ": the tabprompt infoTitle element is not hidden");
-}
+  yield promptDone;
+});
 
 function dispatchMouseEvent(target, type)
 {
