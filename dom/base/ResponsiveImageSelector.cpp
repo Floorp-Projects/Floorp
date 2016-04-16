@@ -16,10 +16,6 @@
 #include "nsRuleNode.h"
 #include "nsRuleData.h"
 
-// For IsPictureEnabled() -- the candidate parser needs to be aware of sizes
-// support being enabled
-#include "HTMLPictureElement.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -557,8 +553,7 @@ ResponsiveImageDescriptors::AddDescriptor(const nsAString& aDescriptor)
     // If the value is not a valid non-negative integer, it doesn't match this
     // descriptor, fall through.
     if (ParseInteger(valueStr, possibleWidth) && possibleWidth >= 0) {
-      if (possibleWidth != 0 && HTMLPictureElement::IsPictureEnabled() &&
-          mWidth.isNothing() && mDensity.isNothing()) {
+      if (possibleWidth != 0 && mWidth.isNothing() && mDensity.isNothing()) {
         mWidth.emplace(possibleWidth);
       } else {
         // Valid width descriptor, but width or density were already seen, sizes
