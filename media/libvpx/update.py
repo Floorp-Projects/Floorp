@@ -604,6 +604,8 @@ def apply_patches():
     os.system("patch -p3 < cast-char-to-uint-before-shift.patch")
     # Bug 1237848 - Check lookahead ctx
     os.system("patch -p3 < 1237848-check-lookahead-ctx.patch")
+    # Bug 1263384 - Check input frame resolution
+    os.system("patch -p3 < input_frame_validation.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
