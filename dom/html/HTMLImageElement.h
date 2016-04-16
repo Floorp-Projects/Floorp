@@ -331,9 +331,7 @@ protected:
   // If the node's srcset/sizes make for an invalid selector, returns
   // false. This does not guarantee the resulting selector matches an image,
   // only that it is valid.
-  bool TryCreateResponsiveSelector(nsIContent *aSourceNode,
-                                   const nsAString *aSrcset = nullptr,
-                                   const nsAString *aSizes = nullptr);
+  bool TryCreateResponsiveSelector(nsIContent *aSourceNode);
 
   CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
