@@ -399,6 +399,35 @@ var gKeyframeSequenceTests = [
                border: "3px dashed rgb(7, 8, 9)" }] },
 ];
 
+var gInvalidKeyframesTests = [
+  { desc:     "keyframes with an out-of-bounded positive offset",
+    input:    [ { opacity: 0 },
+                { opacity: 0.5, offset: 2 },
+                { opacity: 1 } ],
+    expected: { name: "TypeError" } },
+  { desc:     "keyframes with an out-of-bounded negative offset",
+    input:    [ { opacity: 0 },
+                { opacity: 0.5, offset: -1 },
+                { opacity: 1 } ],
+    expected: { name: "TypeError" } },
+  { desc:     "keyframes not loosely sorted by offset",
+    input:    [ { opacity: 0, offset: 1 },
+                { opacity: 1, offset: 0 } ],
+    expected: { name: "TypeError" } },
+  { desc:     "property-indexed keyframes with an invalid easing value",
+    input:    { opacity: [ 0, 0.5, 1 ],
+                easing: "inherit" },
+    expected: { name: "TypeError" } },
+  { desc:     "a keyframe sequence with an invalid easing value",
+    input:    [ { opacity: 0, easing: "jumpy" },
+                { opacity: 1 } ],
+    expected: { name: "TypeError" } },
+  { desc:     "keyframes with an invalid composite value",
+    input:    [ { opacity: 0, composite: "alternate" },
+                { opacity: 1 } ],
+    expected: { name: "TypeError" } }
+];
+
 // ------------------------------
 //  KeyframeEffectOptions
 // ------------------------------
