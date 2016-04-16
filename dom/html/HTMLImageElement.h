@@ -15,9 +15,6 @@
 #include "Units.h"
 #include "nsCycleCollectionParticipant.h"
 
-// Only needed for IsPictureEnabled()
-#include "mozilla/dom/HTMLPictureElement.h"
-
 namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
@@ -96,8 +93,6 @@ public:
   nsresult CopyInnerTo(Element* aDest);
 
   void MaybeLoadImage();
-
-  static bool IsSrcsetEnabled();
 
   bool IsMap()
   {
