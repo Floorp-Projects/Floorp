@@ -758,11 +758,9 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, uint16_t level, const char *ptr)
     }
 
     if (bw_modifier == SDP_BW_MODIFIER_UNSUPPORTED) {
-        sdp_parse_error(sdp_p,
-            "%s Error: BW Modifier type unsupported (%s).",
-            sdp_p->debug_str, tmp);
-        sdp_p->conf_p->num_invalid_param++;
-        return (SDP_INVALID_PARAMETER);
+        /* We don't understand this parameter, so according to RFC4566 sec 5.8
+         * ignore it. */
+        return (SDP_SUCCESS);
     }
 
     /* Find the BW type value */
