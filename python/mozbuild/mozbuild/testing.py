@@ -59,10 +59,18 @@ class TestMetadata(object):
 
         if filename:
             with open(filename, 'rt') as fh:
-                d = json.load(fh)
+                test_data, manifest_support_files = json.load(fh)
 
-                for path, tests in d.items():
+                for path, tests in test_data.items():
                     for metadata in tests:
+                        # Many tests inherit their "support-files" from a manifest
+                        # level default, so we store these separately to save
+                        # disk space, and propagate them to each test when
+                        # de-serializing here.
+                        manifest = metadata['manifest']
+                        support_files = manifest_support_files.get(manifest)
+                        if support_files and 'support-files' not in metadata:
+                            metadata['support-files'] = support_files
                         self._tests_by_path[path].append(metadata)
                         self._test_dirs.add(os.path.dirname(path))
 

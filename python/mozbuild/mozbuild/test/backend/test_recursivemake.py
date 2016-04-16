@@ -528,7 +528,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(all_tests_path))
 
         with open(all_tests_path, 'rt') as fh:
-            o = json.load(fh)
+            o, _ = json.load(fh)
 
             self.assertIn('xpcshell.js', o)
             self.assertIn('dir1/test_bar.js', o)
@@ -850,13 +850,11 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure test suites honor package_tests=False."""
         env = self._consume('test-manifests-package-tests', RecursiveMakeBackend)
 
-        tests_dir = mozpath.join(env.topobjdir, '_tests')
-
         all_tests_path = mozpath.join(env.topobjdir, 'all-tests.json')
         self.assertTrue(os.path.exists(all_tests_path))
 
         with open(all_tests_path, 'rt') as fh:
-            o = json.load(fh)
+            o, _ = json.load(fh)
 
             self.assertIn('mochitest.js', o)
             self.assertIn('not_packaged.java', o)
