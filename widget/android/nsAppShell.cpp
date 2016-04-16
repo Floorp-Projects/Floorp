@@ -260,12 +260,15 @@ public:
         obsServ->NotifyObservers(nullptr, "application-foreground", nullptr);
     }
 
-    static void CreateServices(jni::String::Param aCategory)
+    static void CreateServices(jni::String::Param aCategory, jni::String::Param aData)
     {
         nsCString category(aCategory->ToCString());
 
         NS_CreateServicesFromCategory(
-                category.get(), /* aOrigin */ nullptr, category.get());
+                category.get(),
+                nullptr, // aOrigin
+                category.get(),
+                aData ? aData->ToString().get() : nullptr);
     }
 };
 
