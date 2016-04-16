@@ -1046,12 +1046,18 @@ TEST_P(NewSdpTest, CheckGetBandwidth) {
            "s=SIP Call" CRLF
            "c=IN IP4 198.51.100.7" CRLF
            "b=CT:5000" CRLF
+           "b=FOOBAR:10" CRLF
+           "b=AS:4" CRLF
            "t=0 0" CRLF
            "m=video 56436 RTP/SAVPF 120" CRLF
            "a=rtpmap:120 VP8/90000" CRLF
            );
   ASSERT_EQ(5000U, mSdp->GetBandwidth("CT"))
-    << "Wrong bandwidth in session";
+    << "Wrong CT bandwidth in session";
+  ASSERT_EQ(0U, mSdp->GetBandwidth("FOOBAR"))
+    << "Wrong FOOBAR bandwidth in session";
+  ASSERT_EQ(4U, mSdp->GetBandwidth("AS"))
+    << "Wrong AS bandwidth in session";
 }
 
 TEST_P(NewSdpTest, CheckGetMediaSectionsCount) {
