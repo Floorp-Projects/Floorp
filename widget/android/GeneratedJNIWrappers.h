@@ -2239,10 +2239,11 @@ public:
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
                 mozilla::jni::String::Param> Args;
         static constexpr char name[] = "nativeCreateServices";
         static constexpr char signature[] =
-                "(Ljava/lang/String;)V";
+                "(Ljava/lang/String;Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

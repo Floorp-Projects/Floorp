@@ -658,14 +658,14 @@ public class GeckoThread extends Thread {
     }
 
     @WrapForJNI(stubName = "CreateServices")
-    private static native void nativeCreateServices(String category);
+    private static native void nativeCreateServices(String category, String data);
 
-    public static void createServices(final String category) {
+    public static void createServices(final String category, final String data) {
         if (isStateAtLeast(State.PROFILE_READY)) {
-            nativeCreateServices(category);
+            nativeCreateServices(category, data);
         } else {
             queueNativeCallUntil(State.PROFILE_READY, GeckoThread.class, "nativeCreateServices",
-                                 String.class, category);
+                                 String.class, category, String.class, data);
         }
     }
 }
