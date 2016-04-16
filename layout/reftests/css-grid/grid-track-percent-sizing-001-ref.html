@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: Percent track sizes</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1264607">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font-size:32px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  border: 3px solid;
+  grid-template-columns: auto;
+  grid-template-rows: auto;
+  margin-right: 20px;
+  grid-auto-rows: 10px;
+}
+.sz {
+  width: 100px;
+  height: 100px;
+}
+
+span {
+  background: grey;
+  min-width: 0;
+  min-height: 0;
+  line-height: 0;
+  align-self: start;
+  justify-self: start;
+}
+t {
+  display: inline-block;
+  width: 30px;
+  height: 10px;
+}
+x {
+  background: lime;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tA {
+  grid-template-columns: 30px;
+}
+.tB {
+  grid-template-columns: 0;
+  grid-template-rows: 0;
+}
+
+.t0 x, .t2 x, .t6 x, .t7 x, .t9 x { width: 18px }
+.t1 x { width: 28px }
+.t3 x, .t4 x, .t8 x { width: 0 }
+.t5 x { width: 10px }
+.tA x { width: 48px }
+
+.sz {
+  grid-template-rows: 40px;
+}
+.sz.t1 { grid-template-rows: 50px; }
+.sz.t3, .sz.t4 { grid-template-rows: 0; }
+.sz.t5 { grid-template-rows: 10px; }
+.sz.tA { grid-template-rows: 140px; }
+.sz.tB {
+  grid-template-columns: 60px;
+  grid-template-rows: 40px;
+}
+
+.sz x { width: 60px; }
+.sz.t1 x { width: 70px; }
+.sz.t3 x, .sz.t4 x, .sz.t8 x { width: 0 }
+.sz.t5 x { width: 10px }
+.sz.tA x { width: 160px }
+
+  </style>
+</head>
+<body>
+
+<div class="grid t0"><span><t></t></span><x></x></div>
+<div class="grid t1"><span><t></t></span><x></x></div>
+<div class="grid t2"><span><t></t></span><x></x></div>
+<div class="grid t3"><span><t></t></span><x></x></div>
+<div class="grid t4"><span><t></t></span><x></x></div>
+<div class="grid t5"><span><t></t></span><x></x></div>
+<div class="grid t6"><span><t></t></span><x></x></div>
+<div class="grid t7"><span><t></t></span><x></x></div>
+<div class="grid t8"><span><t></t></span><x></x></div>
+<div class="grid t9"><span><t></t></span><x></x></div>
+<div class="grid tA"><span><t></t></span><x></x></div>
+<div class="grid tB"><span><t></t></span><x></x></div>
+
+<br clear="all">
+
+<div class="grid sz t0"><span><t></t></span><x></x></div>
+<div class="grid sz t1"><span><t></t></span><x></x></div>
+<div class="grid sz t2"><span><t></t></span><x></x></div>
+<div class="grid sz t3"><span><t></t></span><x></x></div>
+<div class="grid sz t4"><span><t></t></span><x></x></div>
+<div class="grid sz t5"><span><t></t></span><x></x></div>
+<div class="grid sz t6"><span><t></t></span><x></x></div>
+<div class="grid sz t7"><span><t></t></span><x></x></div>
+<div class="grid sz t8"><span><t></t></span><x></x></div>
+<div class="grid sz t9"><span><t></t></span><x></x></div>
+<div class="grid sz tA"><span><t></t></span><x></x></div>
+<div class="grid sz tB"><span><t></t></span><x></x></div>
+
+
+</body>
+</html>
