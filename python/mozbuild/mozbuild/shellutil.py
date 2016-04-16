@@ -41,7 +41,7 @@ ESCAPED_NEWLINES_RE = re.compile(r'\\\n')
 
 # This regexp contains the same characters as all those listed in
 # UNQUOTED_TOKENS_RE. Please keep in sync.
-SHELL_QUOTE_RE = re.compile('[\\\t\r\n \'\"#<>&|`~(){}$;\*\?]')
+SHELL_QUOTE_RE = re.compile(r'[\\\t\r\n \'\"#<>&|`~(){}$;\*\?]')
 
 
 class MetaCharacterException(Exception):
