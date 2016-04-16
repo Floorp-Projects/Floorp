@@ -109,7 +109,7 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             self.warning("Skipping buildbot properties overrides")
         else:
             props = self.buildbot_config["properties"]
-            for prop in ['version', 'build_number']:
+            for prop in ['version', 'build_number', 'revision']:
                 if props.get(prop):
                     self.info("Overriding %s with %s" % (prop, props[prop]))
                     self.config[prop] = props.get(prop)
@@ -192,6 +192,8 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             repack_cmd.extend(["--hgroot", self.config['hgroot']])
         if self.config.get('hgrepo'):
             repack_cmd.extend(["--repo", self.config['hgrepo']])
+        if self.config.get('revision'):
+            repack_cmd.extend(["--tag", self.config["revision"]])
 
         return self.run_command(repack_cmd,
                                 cwd=self.query_abs_dirs()['abs_scripts_dir'])
