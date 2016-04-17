@@ -685,6 +685,14 @@ auto GeckoAppShell::ShowAlertNotificationWrapper(mozilla::jni::String::Param a0,
     return mozilla::jni::Method<ShowAlertNotificationWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
 }
 
+constexpr char GeckoAppShell::ShowPersistentAlertNotificationWrapper_t::name[];
+constexpr char GeckoAppShell::ShowPersistentAlertNotificationWrapper_t::signature[];
+
+auto GeckoAppShell::ShowPersistentAlertNotificationWrapper(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, mozilla::jni::String::Param a4, mozilla::jni::String::Param a5, mozilla::jni::String::Param a6) -> void
+{
+    return mozilla::jni::Method<ShowPersistentAlertNotificationWrapper_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6);
+}
+
 constexpr char GeckoAppShell::StartMonitoringGamepad_t::name[];
 constexpr char GeckoAppShell::StartMonitoringGamepad_t::signature[];
 
