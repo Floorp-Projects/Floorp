@@ -47,6 +47,8 @@ add_task(function* () {
 
   // Test that the "Copy Link Location" menu item is hidden for non-network
   // messages.
+  message.scrollIntoView();
+
   yield waitForContextMenu(menu, message, () => {
     let isHidden = menu.querySelector(CONTEXT_MENU_ID).hidden;
     ok(isHidden, CONTEXT_MENU_ID + " is hidden");
@@ -93,6 +95,8 @@ add_task(function* () {
 
   // Test that the "Copy Link Location" menu item is visible for network-related
   // messages.
+  message.scrollIntoView();
+
   yield waitForContextMenu(menu, message, () => {
     let isVisible = !menu.querySelector(CONTEXT_MENU_ID).hidden;
     ok(isVisible, CONTEXT_MENU_ID + " is visible");
