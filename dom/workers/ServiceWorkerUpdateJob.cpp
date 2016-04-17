@@ -152,11 +152,11 @@ ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
-    if (mRegistration->mInstallingWorker) {
-      mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
+    if (mRegistration->GetInstalling()) {
+      mRegistration->GetInstalling()->UpdateState(ServiceWorkerState::Redundant);
       serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                           mRegistration->mInstallingWorker->CacheName());
-      mRegistration->mInstallingWorker = nullptr;
+                                           mRegistration->GetInstalling()->CacheName());
+      mRegistration->SetInstalling(nullptr);
       if (swm) {
         swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                        WhichServiceWorker::INSTALLING_WORKER);
@@ -242,7 +242,7 @@ ServiceWorkerUpdateJob::Update()
 
   // SetRegistration() must be called before Update().
   MOZ_ASSERT(mRegistration);
-  MOZ_ASSERT(!mRegistration->mInstallingWorker);
+  MOZ_ASSERT(!mRegistration->GetInstalling());
 
   // Begin the script download and comparison steps starting at step 5
   // of the Update algorithm.
@@ -413,15 +413,16 @@ ServiceWorkerUpdateJob::Install()
   AssertIsOnMainThread();
   MOZ_ASSERT(!Canceled());
 
-  MOZ_ASSERT(!mRegistration->mInstallingWorker);
+  MOZ_ASSERT(!mRegistration->GetInstalling());
 
   // Begin step 2 of the Install algorithm.
   //
   //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#installation-algorithm
 
   MOZ_ASSERT(mServiceWorker);
-  mRegistration->mInstallingWorker = mServiceWorker.forget();
-  mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
+  mRegistration->SetInstalling(mServiceWorker);
+  mServiceWorker = nullptr;
+  mRegistration->GetInstalling()->UpdateState(ServiceWorkerState::Installing);
   mRegistration->NotifyListenersOnChange();
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -453,7 +454,7 @@ ServiceWorkerUpdateJob::Install()
 
   // Send the install event to the worker thread
   ServiceWorkerPrivate* workerPrivate =
-    mRegistration->mInstallingWorker->WorkerPrivate();
+    mRegistration->GetInstalling()->WorkerPrivate();
   nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"),
                                                   callback, failRunnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -468,7 +469,7 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
     return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
   }
 
-  MOZ_ASSERT(mRegistration->mInstallingWorker);
+  MOZ_ASSERT(mRegistration->GetInstalling());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
@@ -482,15 +483,16 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
   }
 
   // "If registration's waiting worker is not null"
-  if (mRegistration->mWaitingWorker) {
-    mRegistration->mWaitingWorker->WorkerPrivate()->TerminateWorker();
-    mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
+  if (mRegistration->GetWaiting()) {
+    mRegistration->GetWaiting()->WorkerPrivate()->TerminateWorker();
+    mRegistration->GetWaiting()->UpdateState(ServiceWorkerState::Redundant);
     serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                         mRegistration->mWaitingWorker->CacheName());
+                                         mRegistration->GetWaiting()->CacheName());
   }
 
-  mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
-  mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
+  mRegistration->SetWaiting(mRegistration->GetInstalling());
+  mRegistration->SetInstalling(nullptr);
+  mRegistration->GetWaiting()->UpdateState(ServiceWorkerState::Installed);
   mRegistration->NotifyListenersOnChange();
   swm->StoreRegistration(mPrincipal, mRegistration);
   swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
