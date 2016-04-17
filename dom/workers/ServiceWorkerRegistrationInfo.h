@@ -33,7 +33,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
-  nsCString mScope;
+  const nsCString mScope;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
