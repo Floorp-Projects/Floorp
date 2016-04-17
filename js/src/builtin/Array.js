@@ -942,23 +942,6 @@ function ArraySpeciesCreate(originalArray, length) {
     return new C(length);
 }
 
-// ES 2017 draft (April 8, 2016) 22.1.3.1.1
-function IsConcatSpreadable(O) {
-    // Step 1.
-    if (!IsObject(O))
-        return false;
-
-    // Step 2.
-    var spreadable = O[std_isConcatSpreadable];
-
-    // Step 3.
-    if (spreadable !== undefined)
-        return ToBoolean(spreadable);
-
-    // Step 4.
-    return IsArray(O);
-}
-
 // ES 2016 draft Mar 25, 2016 22.1.3.1.
 // Note: Array.prototype.concat.length is 1.
 function ArrayConcat(arg1) {
@@ -982,7 +965,8 @@ function ArrayConcat(arg1) {
     var k, len;
     while (true) {
         // Steps 5.b-c.
-        if (IsConcatSpreadable(E)) {
+        // IsArray should be replaced with IsConcatSpreadable (bug 1041586).
+        if (IsArray(E)) {
             // Step 5.c.ii.
             len = ToLength(E.length);
 
