@@ -47,6 +47,15 @@ public:
     return mChannel;
   }
 
+  // The GetEntries* methods need to be overriden in order to add the
+  // the document entry of type navigation.
+  virtual void GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
+  virtual void GetEntriesByType(const nsAString& aEntryType,
+                                nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
+  virtual void GetEntriesByName(const nsAString& aName,
+                                const Optional<nsAString>& aEntryType,
+                                nsTArray<RefPtr<PerformanceEntry>>& aRetval) override;
+
 protected:
   ~PerformanceMainThread();
 
@@ -58,7 +67,9 @@ protected:
   GetPerformanceTimingFromString(const nsAString& aTimingName) override;
 
   void DispatchBufferFullEvent() override;
+  void EnsureDocEntry();
 
+  RefPtr<PerformanceEntry> mDocEntry;
   RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<PerformanceTiming> mTiming;
