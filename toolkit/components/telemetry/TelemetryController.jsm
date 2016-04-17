@@ -135,29 +135,39 @@ this.TelemetryController = Object.freeze({
     PREF_LOG_DUMP: PREF_LOG_DUMP,
     PREF_SERVER: PREF_SERVER,
   }),
+
   /**
    * Used only for testing purposes.
    */
-  initLogging: function() {
+  testInitLogging: function() {
     configureLogging();
   },
+
   /**
    * Used only for testing purposes.
    */
-  reset: function() {
+  testReset: function() {
     return Impl.reset();
   },
+
   /**
    * Used only for testing purposes.
    */
-  setup: function() {
+  testSetup: function() {
     return Impl.setupTelemetry(true);
   },
 
   /**
    * Used only for testing purposes.
    */
-  setupContent: function() {
+  testShutdown: function() {
+    return Impl.shutdown();
+  },
+
+  /**
+   * Used only for testing purposes.
+   */
+  testSetupContent: function() {
     return Impl.setupContentTelemetry(true);
   },
 
@@ -296,13 +306,6 @@ this.TelemetryController = Object.freeze({
    */
   get clientID() {
     return Impl.clientID;
-  },
-
-  /**
-   * The AsyncShutdown.Barrier to synchronize with TelemetryController shutdown.
-   */
-  get shutdown() {
-    return Impl._shutdownBarrier.client;
   },
 
   /**
@@ -621,6 +624,9 @@ var Impl = {
    *   2) _delayedInitTask was scheduled, but didn't run yet.
    *   3) _delayedInitTask is currently running.
    *   4) _delayedInitTask finished running and is nulled out.
+   *
+   * @return {Promise} Resolved when TelemetryController and TelemetrySession are fully
+   *                   initialized. This is only used in tests.
    */
   setupTelemetry: function setupTelemetry(testing) {
     this._initStarted = true;
@@ -654,6 +660,10 @@ var Impl = {
 
     this._attachObservers();
 
+    // Perform a lightweight, early initialization for the component, just registering
+    // a few observers and initializing the session.
+    TelemetrySession.earlyInit(this._testMode);
+
     // For very short session durations, we may never load the client
     // id from disk.
     // We try to cache it in prefs to avoid this, even though this may
@@ -675,8 +685,11 @@ var Impl = {
         // Load the ClientID.
         this._clientID = yield ClientID.getClientID();
 
-        // Purge the pings archive by removing outdated pings. We don't wait for this
-        // task to complete, but TelemetryStorage blocks on it during shutdown.
+        // Perform TelemetrySession delayed init.
+        yield TelemetrySession.delayedInit();
+        // Purge the pings archive by removing outdated pings. We don't wait for
+        // this task to complete, but TelemetryStorage blocks on it during
+        // shutdown.
         TelemetryStorage.runCleanPingArchiveTask();
 
         // Now that FHR/healthreporter is gone, make sure to remove FHR's DB from
@@ -713,6 +726,7 @@ var Impl = {
       this._log.trace("setupContentTelemetry - Content process recording disabled.");
       return;
     }
+    TelemetrySession.setupContent(testing);
   },
 
   // Do proper shutdown waiting and cleanup.
@@ -732,6 +746,8 @@ var Impl = {
 
       // Stop any ping sending.
       yield TelemetrySend.shutdown();
+
+      yield TelemetrySession.shutdown();
 
       // First wait for clients processing shutdown.
       yield this._shutdownBarrier.wait();
@@ -893,12 +909,22 @@ var Impl = {
     this._clientID = null;
     this._detachObservers();
 
+    yield TelemetrySession.testReset();
+
+    this._connectionsBarrier = new AsyncShutdown.Barrier(
+      "TelemetryController: Waiting for pending ping activity"
+    );
+    this._shutdownBarrier = new AsyncShutdown.Barrier(
+      "TelemetryController: Waiting for clients."
+    );
+
     // We need to kick of the controller setup first for tests that check the
     // cached client id.
     let controllerSetup = this.setupTelemetry(true);
 
     yield TelemetrySend.reset();
     yield TelemetryStorage.reset();
+    yield TelemetryEnvironment.testReset();
 
     yield controllerSetup;
   }),
