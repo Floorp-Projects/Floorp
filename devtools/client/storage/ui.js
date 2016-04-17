@@ -5,6 +5,7 @@
 
 "use strict";
 
+const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
@@ -193,12 +194,15 @@ StorageUI.prototype = {
     return this.storageTypes[type];
   },
 
-  makeFieldsEditable: function* () {
+  makeFieldsEditable: function() {
     let actor = this.getCurrentActor();
 
     if (typeof actor.getEditableFields !== "undefined") {
-      let fields = yield actor.getEditableFields();
-      this.table.makeFieldsEditable(fields);
+      actor.getEditableFields().then(fields => {
+        this.table.makeFieldsEditable(fields);
+      }).catch(() => {
+        // Do nothing
+      });
     } else if (this.table._editableFieldsEngine) {
       this.table._editableFieldsEngine.destroy();
     }
@@ -400,7 +404,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  fetchStorageObjects: Task.async(function* (type, host, names, reason) {
+  fetchStorageObjects: function(type, host, names, reason) {
     let fetchOpts = reason === REASON.NEXT_50_ITEMS ? {offset: this.itemOffset}
                                                     : {};
     let storageType = this.storageTypes[type];
@@ -412,15 +416,21 @@ StorageUI.prototype = {
       throw new Error("Invalid reason specified");
     }
 
-    let {data} = yield storageType.getStoreObjects(host, names, fetchOpts);
-    if (data.length) {
+    storageType.getStoreObjects(host, names, fetchOpts).then(({data}) => {
+      if (!data.length) {
+        this.emit("store-objects-updated");
+        return;
+      }
       if (reason === REASON.POPULATE) {
-        yield this.resetColumns(data[0], type, host);
+        this.resetColumns(data[0], type);
+        this.table.host = host;
       }
       this.populateTable(data, reason);
-    }
-    this.emit("store-objects-updated");
-  }),
+      this.emit("store-objects-updated");
+
+      this.makeFieldsEditable();
+    }, Cu.reportError);
+  },
 
   /**
    * Populates the storage tree which displays the list of storages present for
@@ -656,10 +666,8 @@ StorageUI.prototype = {
    * @param {string} type
    *        The type of storage corresponding to the after-reset columns in the
    *        table.
-   * @param {string} host
-   *        The host name corresponding to the table after reset.
    */
-  resetColumns: function* (data, type, host) {
+  resetColumns: function(data, type) {
     let columns = {};
     let uniqueKey = null;
     for (let key in data) {
@@ -676,10 +684,7 @@ StorageUI.prototype = {
     }
     this.table.setColumns(columns, null, HIDDEN_COLUMNS);
     this.table.datatype = type;
-    this.table.host = host;
     this.hideSidebar();
-
-    yield this.makeFieldsEditable();
   },
 
   /**
