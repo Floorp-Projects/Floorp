@@ -13,7 +13,7 @@ add_task(function* () {
 
   const cacheItemId = ["Cache", "javascript:parent.frameContent"];
 
-  yield selectTreeItem(cacheItemId);
+  gUI.tree.selectedItem = cacheItemId;
   ok(gUI.tree.isSelected(cacheItemId),
     `The item ${cacheItemId.join(" > ")} is present in the tree`);
 
