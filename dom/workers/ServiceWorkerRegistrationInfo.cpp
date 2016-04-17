@@ -367,4 +367,46 @@ ServiceWorkerRegistrationInfo::CheckAndClearIfUpdateNeeded()
   return result;
 }
 
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetInstalling() const
+{
+  AssertIsOnMainThread();
+  return mInstallingWorker;
+}
+
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetWaiting() const
+{
+  AssertIsOnMainThread();
+  return mWaitingWorker;
+}
+
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetActive() const
+{
+  AssertIsOnMainThread();
+  return mActiveWorker;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetInstalling(ServiceWorkerInfo* aServiceWorker)
+{
+  AssertIsOnMainThread();
+  mInstallingWorker = aServiceWorker;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetWaiting(ServiceWorkerInfo* aServiceWorker)
+{
+  AssertIsOnMainThread();
+  mWaitingWorker = aServiceWorker;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
+{
+  AssertIsOnMainThread();
+  mActiveWorker = aServiceWorker;
+}
+
 END_WORKERS_NAMESPACE

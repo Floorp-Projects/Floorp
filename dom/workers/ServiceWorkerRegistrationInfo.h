@@ -27,6 +27,10 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t mLastUpdateCheckTime;
 
+  RefPtr<ServiceWorkerInfo> mActiveWorker;
+  RefPtr<ServiceWorkerInfo> mWaitingWorker;
+  RefPtr<ServiceWorkerInfo> mInstallingWorker;
+
   virtual ~ServiceWorkerRegistrationInfo();
 
 public:
@@ -36,10 +40,6 @@ public:
   const nsCString mScope;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  RefPtr<ServiceWorkerInfo> mActiveWorker;
-  RefPtr<ServiceWorkerInfo> mWaitingWorker;
-  RefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
@@ -123,6 +123,24 @@ public:
 
   bool
   CheckAndClearIfUpdateNeeded();
+
+  ServiceWorkerInfo*
+  GetInstalling() const;
+
+  ServiceWorkerInfo*
+  GetWaiting() const;
+
+  ServiceWorkerInfo*
+  GetActive() const;
+
+  void
+  SetInstalling(ServiceWorkerInfo* aServiceWorker);
+
+  void
+  SetWaiting(ServiceWorkerInfo* aServiceWorker);
+
+  void
+  SetActive(ServiceWorkerInfo* aServiceWorker);
 };
 
 } // namespace workers
