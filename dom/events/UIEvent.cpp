@@ -131,7 +131,7 @@ UIEvent::GetMovementPoint()
 
   // Calculate the delta between the last screen point and the current one.
   nsIntPoint current = DevPixelsToCSSPixels(mEvent->mRefPoint, mPresContext);
-  nsIntPoint last = DevPixelsToCSSPixels(mEvent->lastRefPoint, mPresContext);
+  nsIntPoint last = DevPixelsToCSSPixels(mEvent->mLastRefPoint, mPresContext);
   return current - last;
 }
 

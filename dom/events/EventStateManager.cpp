@@ -4217,7 +4217,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
         // dispatching the centering move event to content.
         LayoutDeviceIntPoint center =
           GetWindowClientRectCenter(aMouseEvent->mWidget);
-        aMouseEvent->lastRefPoint = center;
+        aMouseEvent->mLastRefPoint = center;
         if (aMouseEvent->mRefPoint != center) {
           // Mouse move doesn't finish at the center of the window. Dispatch a
           // synthetic native mouse event to move the pointer back to the center
@@ -4240,9 +4240,9 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
         // the first move we've encountered, or the mouse has just re-entered
         // the application window. We should report (0,0) movement for this
         // case, so make the current and previous mRefPoints the same.
-        aMouseEvent->lastRefPoint = aMouseEvent->mRefPoint;
+        aMouseEvent->mLastRefPoint = aMouseEvent->mRefPoint;
       } else {
-        aMouseEvent->lastRefPoint = sLastRefPoint;
+        aMouseEvent->mLastRefPoint = sLastRefPoint;
       }
 
       // Update the last known mRefPoint with the current mRefPoint.
