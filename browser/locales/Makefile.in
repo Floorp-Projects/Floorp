@@ -62,7 +62,7 @@ STUB_HOOK = $(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'; \
 endif
 
 SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt)) ddg
-ifeq (,$(filter-out en-US ru be kk tr zh-CN zh-TW,$(AB_CD)))
+ifeq (,$(filter-out en-US ru be kk tr uk zh-CN zh-TW,$(AB_CD)))
     SEARCHPLUGINS_NAMES := $(subst google,google:hidden,$(SEARCHPLUGINS_NAMES))
     SEARCHPLUGINS_NAMES += google-nocodes
 endif
