@@ -2575,7 +2575,7 @@ struct nsStyleDisplay
 
   nsStyleCoord mVerticalAlign;  // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
 
-  AutoTArray<mozilla::StyleTransition, 1> mTransitions; // [reset]
+  nsStyleAutoArray<mozilla::StyleTransition> mTransitions; // [reset]
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.
   uint32_t mTransitionTimingFunctionCount,
@@ -2583,7 +2583,7 @@ struct nsStyleDisplay
            mTransitionDelayCount,
            mTransitionPropertyCount;
 
-  AutoTArray<mozilla::StyleAnimation, 1> mAnimations; // [reset]
+  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
   uint32_t mAnimationTimingFunctionCount,
