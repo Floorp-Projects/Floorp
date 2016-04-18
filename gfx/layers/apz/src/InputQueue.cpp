@@ -118,7 +118,8 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
       // from a fast fling to a pinch state (i.e. second finger goes down while
       // the first finger is moving).
       block->SetDuringFastFling();
-      block->SetConfirmedTargetApzc(aTarget);
+      block->SetConfirmedTargetApzc(aTarget,
+          InputBlockState::TargetConfirmationState::eConfirmed);
       if (gfxPrefs::TouchActionEnabled()) {
         block->SetAllowedTouchBehaviors(currentBehaviors);
       }
@@ -586,7 +587,9 @@ InputQueue::MainThreadTimeout(const uint64_t& aInputBlockId) {
       // target apzc in the case where the main thread doesn't get back to us
       // fast enough.
       success = mInputBlockQueue[i]->TimeoutContentResponse();
-      success |= mInputBlockQueue[i]->SetConfirmedTargetApzc(mInputBlockQueue[i]->GetTargetApzc());
+      success |= mInputBlockQueue[i]->SetConfirmedTargetApzc(
+          mInputBlockQueue[i]->GetTargetApzc(),
+          InputBlockState::TargetConfirmationState::eTimedOut);
       break;
     }
   }
@@ -624,7 +627,8 @@ InputQueue::SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPan
   for (size_t i = 0; i < mInputBlockQueue.Length(); i++) {
     CancelableBlockState* block = mInputBlockQueue[i].get();
     if (block->GetBlockId() == aInputBlockId) {
-      success = block->SetConfirmedTargetApzc(aTargetApzc);
+      success = block->SetConfirmedTargetApzc(aTargetApzc,
+          InputBlockState::TargetConfirmationState::eConfirmed);
       block->RecordContentResponseTime();
       break;
     }
@@ -647,7 +651,8 @@ InputQueue::ConfirmDragBlock(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomCo
     DragBlockState* block = mInputBlockQueue[i]->AsDragBlock();
     if (block && block->GetBlockId() == aInputBlockId) {
       block->SetDragMetrics(aDragMetrics);
-      success = block->SetConfirmedTargetApzc(aTargetApzc);
+      success = block->SetConfirmedTargetApzc(aTargetApzc,
+          InputBlockState::TargetConfirmationState::eConfirmed);
       block->RecordContentResponseTime();
       break;
     }
