@@ -910,8 +910,8 @@ KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-static_assert(ArrayLength(nsCSSProps::kImageLayerOriginKTable) ==
-              ArrayLength(nsCSSProps::kBackgroundClipKTable) - 1,
+static_assert(MOZ_ARRAY_LENGTH(nsCSSProps::kImageLayerOriginKTable) ==
+              MOZ_ARRAY_LENGTH(nsCSSProps::kBackgroundClipKTable) - 1,
               "background-clip has one extra value, which is text, compared"
               "to {background,mask}-origin");
 
