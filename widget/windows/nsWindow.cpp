@@ -5799,6 +5799,7 @@ nsWindow::FinishLiveResizing(ResizeState aNewState)
     }
   }
   mResizeState = aNewState;
+  ForcePresent();
 }
 
 /**************************************************************
