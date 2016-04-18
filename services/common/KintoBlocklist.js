@@ -4,112 +4,182 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["OneCRLClient"];
+this.EXPORTED_SYMBOLS = ["AddonBlocklistClient",
+                         "GfxBlocklistClient",
+                         "OneCRLBlocklistClient",
+                         "PluginBlocklistClient",
+                         "FILENAME_ADDONS_JSON",
+                         "FILENAME_GFX_JSON",
+                         "FILENAME_PLUGINS_JSON"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://services-common/kinto-offline-client.js");
-
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Task } = Cu.import("resource://gre/modules/Task.jsm");
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
-                                   "@mozilla.org/uuid-generator;1",
-                                   "nsIUUIDGenerator");
+const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 
-const PREF_KINTO_BASE = "services.kinto.base";
-const PREF_KINTO_BUCKET = "services.kinto.bucket";
-const PREF_KINTO_ONECRL_COLLECTION = "services.kinto.onecrl.collection";
-const PREF_KINTO_ONECRL_CHECKED_SECONDS = "services.kinto.onecrl.checked";
+const PREF_KINTO_BASE                    = "services.kinto.base";
+const PREF_KINTO_BUCKET                  = "services.kinto.bucket";
+const PREF_KINTO_ONECRL_COLLECTION       = "services.kinto.onecrl.collection";
+const PREF_KINTO_ONECRL_CHECKED_SECONDS  = "services.kinto.onecrl.checked";
+const PREF_KINTO_ADDONS_COLLECTION       = "services.kinto.addons.collection";
+const PREF_KINTO_ADDONS_CHECKED_SECONDS  = "services.kinto.addons.checked";
+const PREF_KINTO_PLUGINS_COLLECTION      = "services.kinto.plugins.collection";
+const PREF_KINTO_PLUGINS_CHECKED_SECONDS = "services.kinto.plugins.checked";
+const PREF_KINTO_GFX_COLLECTION          = "services.kinto.gfx.collection";
+const PREF_KINTO_GFX_CHECKED_SECONDS     = "services.kinto.gfx.checked";
 
-const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+this.FILENAME_ADDONS_JSON  = "blocklist-addons.json";
+this.FILENAME_GFX_JSON     = "blocklist-gfx.json";
+this.FILENAME_PLUGINS_JSON = "blocklist-plugins.json";
 
-// Kinto.js assumes version 4 UUIDs but allows you to specify custom
-// validators and generators. The tooling that generates records in the
-// certificates collection currently uses a version 1 UUID so we must
-// specify a validator that's less strict. We must also supply a generator
-// since Kinto.js does not allow one without the other.
-function makeIDSchema() {
-  return {
-    validate: RE_UUID.test.bind(RE_UUID),
-    generate: function() {
-      return uuidgen.generateUUID().toString();
-    }
+
+/**
+ * Helper to instantiate a Kinto client based on preferences for remote server
+ * URL and bucket name. It uses the `FirefoxAdapter` which relies on SQLite to
+ * persist the local DB.
+ */
+function kintoClient() {
+  let base = Services.prefs.getCharPref(PREF_KINTO_BASE);
+  let bucket = Services.prefs.getCharPref(PREF_KINTO_BUCKET);
+
+  let Kinto = loadKinto();
+
+  let FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
+
+  let config = {
+    remote: base,
+    bucket: bucket,
+    adapter: FirefoxAdapter,
   };
+
+  return new Kinto(config);
 }
 
-// A Kinto based client to keep the OneCRL certificate blocklist up to date.
-function CertBlocklistClient() {
-  // maybe sync the collection of certificates with remote data.
-  // lastModified - the lastModified date (on the server, milliseconds since
-  // epoch) of data in the remote collection
-  // serverTime - the time on the server (milliseconds since epoch)
-  // returns a promise which rejects on sync failure
-  this.maybeSync = function(lastModified, serverTime) {
-    let base = Services.prefs.getCharPref(PREF_KINTO_BASE);
-    let bucket = Services.prefs.getCharPref(PREF_KINTO_BUCKET);
 
-    let Kinto = loadKinto();
+class BlocklistClient {
 
-    let FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
+  constructor(collectionName, lastCheckTimePref, processCallback) {
+    this.collectionName = collectionName;
+    this.lastCheckTimePref = lastCheckTimePref;
+    this.processCallback = processCallback;
+  }
 
+  /**
+   * Synchronize from Kinto server, if necessary.
+   *
+   * @param {int}  lastModified the lastModified date (on the server) for
+                                the remote collection.
+   * @param {Date} serverTime   the current date return by the server.
+   * @return {Promise}          which rejects on sync or process failure.
+   */
+  maybeSync(lastModified, serverTime) {
+    let db = kintoClient();
+    let collection = db.collection(this.collectionName);
 
-    let certList = Cc["@mozilla.org/security/certblocklist;1"]
-                     .getService(Ci.nsICertBlocklist);
-
-    // Future blocklist clients can extract the sync-if-stale logic. For
-    // now, since this is currently the only client, we'll do this here.
-    let config = {
-      remote: base,
-      bucket: bucket,
-      adapter: FirefoxAdapter,
-    };
-
-    let db = new Kinto(config);
-    let collectionName = Services.prefs.getCharPref(PREF_KINTO_ONECRL_COLLECTION,
-                                                    "certificates");
-    let blocklist = db.collection(collectionName,
-                                  { idSchema: makeIDSchema() });
-
-    let updateLastCheck = function() {
-      let checkedServerTimeInSeconds = Math.round(serverTime / 1000);
-      Services.prefs.setIntPref(PREF_KINTO_ONECRL_CHECKED_SECONDS,
-                                checkedServerTimeInSeconds);
-    }
-
-    return Task.spawn(function* () {
+    return Task.spawn((function* syncCollection() {
       try {
-        yield blocklist.db.open();
-        let collectionLastModified = yield blocklist.db.getLastModified();
-        // if the data is up to date, there's no need to sync. We still need
+        yield collection.db.open();
+
+        let collectionLastModified = yield collection.db.getLastModified();
+        // If the data is up to date, there's no need to sync. We still need
         // to record the fact that a check happened.
         if (lastModified <= collectionLastModified) {
-          updateLastCheck();
+          this.updateLastCheck(serverTime);
           return;
         }
-        yield blocklist.sync();
-        let list = yield blocklist.list();
-        for (let item of list.data) {
-          if (item.issuerName && item.serialNumber) {
-            certList.revokeCertByIssuerAndSerial(item.issuerName,
-                                                 item.serialNumber);
-          } else if (item.subject && item.pubKeyHash) {
-            certList.revokeCertBySubjectAndPubKey(item.subject,
-                                                  item.pubKeyHash);
-          } else {
-            throw new Error("Cert blocklist record has incomplete data");
-          }
-        }
-        // We explicitly do not want to save entries or update the
-        // last-checked time if sync fails
-        certList.saveEntries();
-        updateLastCheck();
+        // Fetch changes from server.
+        yield collection.sync();
+        // Read local collection of records.
+        let list = yield collection.list();
+
+        yield this.processCallback(list.data);
+
+        // Track last update.
+        this.updateLastCheck(serverTime);
       } finally {
-        blocklist.db.close()
+        collection.db.close();
       }
-    });
+    }).bind(this));
+  }
+
+  /**
+   * Save last time server was checked in users prefs.
+   *
+   * @param {Date} serverTime   the current date return by server.
+   */
+  updateLastCheck(serverTime) {
+    let checkedServerTimeInSeconds = Math.round(serverTime / 1000);
+    Services.prefs.setIntPref(this.lastCheckTimePref, checkedServerTimeInSeconds);
   }
 }
 
-this.OneCRLClient = new CertBlocklistClient();
+/**
+ * Revoke the appropriate certificates based on the records from the blocklist.
+ *
+ * @param {Object} records   current records in the local db.
+ */
+function* updateCertBlocklist(records) {
+  let certList = Cc["@mozilla.org/security/certblocklist;1"]
+                   .getService(Ci.nsICertBlocklist);
+  for (let item of records) {
+    if (item.issuerName && item.serialNumber) {
+      certList.revokeCertByIssuerAndSerial(item.issuerName,
+                                           item.serialNumber);
+    } else if (item.subject && item.pubKeyHash) {
+      certList.revokeCertBySubjectAndPubKey(item.subject,
+                                            item.pubKeyHash);
+    } else {
+      throw new Error("Cert blocklist record has incomplete data");
+    }
+  }
+  certList.saveEntries();
+}
+
+/**
+ * Write list of records into JSON file, and notify nsBlocklistService.
+ *
+ * @param {String} filename  path relative to profile dir.
+ * @param {Object} records   current records in the local db.
+ */
+function* updateJSONBlocklist(filename, records) {
+  // Write JSON dump for synchronous load at startup.
+  const path = OS.Path.join(OS.Constants.Path.profileDir, filename);
+  const serialized = JSON.stringify({data: records}, null, 2);
+  try {
+    yield OS.File.writeAtomic(path, serialized, {tmpPath: path + ".tmp"});
+
+    // Notify change to `nsBlocklistService`
+    const eventData = {filename: filename};
+    Services.cpmm.sendAsyncMessage("Blocklist:reload-from-disk", eventData);
+  } catch(e) {
+    Cu.reportError(e);
+  }
+}
+
+
+this.OneCRLBlocklistClient = new BlocklistClient(
+  Services.prefs.getCharPref(PREF_KINTO_ONECRL_COLLECTION),
+  PREF_KINTO_ONECRL_CHECKED_SECONDS,
+  updateCertBlocklist
+);
+
+this.AddonBlocklistClient = new BlocklistClient(
+  Services.prefs.getCharPref(PREF_KINTO_ADDONS_COLLECTION),
+  PREF_KINTO_ADDONS_CHECKED_SECONDS,
+  updateJSONBlocklist.bind(undefined, FILENAME_ADDONS_JSON)
+);
+
+this.GfxBlocklistClient = new BlocklistClient(
+  Services.prefs.getCharPref(PREF_KINTO_GFX_COLLECTION),
+  PREF_KINTO_GFX_CHECKED_SECONDS,
+  updateJSONBlocklist.bind(undefined, FILENAME_GFX_JSON)
+);
+
+this.PluginBlocklistClient = new BlocklistClient(
+  Services.prefs.getCharPref(PREF_KINTO_PLUGINS_COLLECTION),
+  PREF_KINTO_PLUGINS_CHECKED_SECONDS,
+  updateJSONBlocklist.bind(undefined, FILENAME_PLUGINS_JSON)
+);
