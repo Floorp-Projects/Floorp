@@ -17,6 +17,9 @@ mapping:
     checksum_sig:
       artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums.asc
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+    xpi:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.langpack.xpi
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/xpi/{{ locale }}.xpi
 
   {% if platform == "win32" %}
     full_installer:
