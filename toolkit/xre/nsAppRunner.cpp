@@ -2460,8 +2460,30 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
                                       getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
       if (gDoProfileReset) {
-        NS_WARNING("Profile reset is not supported in conjunction with -p .");
-        gDoProfileReset = false;
+        {
+          // Check that the source profile is not in use by temporarily acquiring its lock.
+          nsIProfileLock* tempProfileLock;
+          nsCOMPtr<nsIProfileUnlocker> unlocker;
+          rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
+          if (NS_FAILED(rv))
+            return ProfileLockedDialog(profile, unlocker, aNative, &tempProfileLock);
+        }
+
+        nsCOMPtr<nsIToolkitProfile> newProfile;
+        rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to create a profile to reset to.");
+          gDoProfileReset = false;
+        } else {
+          nsresult gotName = profile->GetName(gResetOldProfileName);
+          if (NS_SUCCEEDED(gotName)) {
+            profile = newProfile;
+          } else {
+            NS_WARNING("Failed to get the name of the profile we're resetting, so aborting reset.");
+            gResetOldProfileName.Truncate(0);
+            gDoProfileReset = false;
+          }
+        }
       }
 
       nsCOMPtr<nsIProfileUnlocker> unlocker;
