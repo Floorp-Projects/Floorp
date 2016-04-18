@@ -2738,17 +2738,15 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
       nsLayoutUtils::GetHighResolutionDisplayPort(content, &displayPort);
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
 
-    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d sle %d\n",
+    PAINT_SKIP_LOG("New scrollpos %s usingDP %d dpEqual %d scrollableByApz %d plugins %d\n",
         Stringify(CSSPoint::FromAppUnits(GetScrollPosition())).c_str(),
         usingDisplayPort, displayPort.IsEqualEdges(oldDisplayPort),
-        mScrollableByAPZ, HasPluginFrames(),
-        content->GetComposedDoc()->HasScrollLinkedEffect());
+        mScrollableByAPZ, HasPluginFrames());
     if (usingDisplayPort && displayPort.IsEqualEdges(oldDisplayPort)) {
       if (LastScrollOrigin() == nsGkAtoms::apz) {
         schedulePaint = false;
         PAINT_SKIP_LOG("Skipping due to APZ scroll\n");
-      } else if (mScrollableByAPZ && !HasPluginFrames() &&
-                 !content->GetComposedDoc()->HasScrollLinkedEffect()) {
+      } else if (mScrollableByAPZ && !HasPluginFrames()) {
         nsIWidget* widget = presContext->GetNearestWidget();
         LayerManager* manager = widget ? widget->GetLayerManager() : nullptr;
         if (manager) {
