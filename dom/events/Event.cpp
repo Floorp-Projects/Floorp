@@ -267,8 +267,10 @@ Event::GetType(nsAString& aType)
   if (name) {
     CopyASCIItoUTF16(name, aType);
     return NS_OK;
-  } else if (mEvent->mMessage == eUnidentifiedEvent && mEvent->userType) {
-    aType = Substring(nsDependentAtomString(mEvent->userType), 2); // Remove "on"
+  } else if (mEvent->mMessage == eUnidentifiedEvent &&
+             mEvent->mSpecifiedEventType) {
+    // Remove "on"
+    aType = Substring(nsDependentAtomString(mEvent->mSpecifiedEventType), 2);
     mEvent->typeString = aType;
     return NS_OK;
   }
@@ -548,11 +550,11 @@ Event::SetEventType(const nsAString& aEventTypeArg)
 {
   if (mIsMainThreadEvent) {
     mEvent->typeString.Truncate();
-    mEvent->userType =
+    mEvent->mSpecifiedEventType =
       nsContentUtils::GetEventMessageAndAtom(aEventTypeArg, mEvent->mClass,
                                              &(mEvent->mMessage));
   } else {
-    mEvent->userType = nullptr;
+    mEvent->mSpecifiedEventType = nullptr;
     mEvent->mMessage = eUnidentifiedEvent;
     mEvent->typeString = aEventTypeArg;
   }
