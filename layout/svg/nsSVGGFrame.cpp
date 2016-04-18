@@ -21,7 +21,7 @@ using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
-{  
+{
   return new (aPresShell) nsSVGGFrame(aContext);
 }
 
@@ -37,7 +37,7 @@ nsSVGGFrame::Init(nsIContent*       aContent,
                static_cast<nsSVGElement*>(aContent)->IsTransformable(),
                "The element doesn't support nsIDOMSVGTransformable");
 
-  nsSVGGFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -61,7 +61,7 @@ nsSVGGFrame::NotifySVGChanged(uint32_t aFlags)
     mCanvasTM = nullptr;
   }
 
-  nsSVGGFrameBase::NotifySVGChanged(aFlags);
+  nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
 }
 
 gfxMatrix
@@ -93,6 +93,6 @@ nsSVGGFrame::AttributeChanged(int32_t         aNameSpaceID,
     // and cause DoApplyRenderingChangeToTree to make the SchedulePaint call.
     NotifySVGChanged(TRANSFORM_CHANGED);
   }
-  
+
   return NS_OK;
 }
