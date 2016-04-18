@@ -20,11 +20,27 @@
   <preference id="xpinstall.whitelist.required"
               name="xpinstall.whitelist.required"
               type="bool"/>
+
   <preference id="browser.safebrowsing.malware.enabled"
               name="browser.safebrowsing.malware.enabled"
               type="bool"/>
   <preference id="browser.safebrowsing.enabled"
               name="browser.safebrowsing.enabled"
+              type="bool"/>
+
+  <preference id="browser.safebrowsing.downloads.enabled"
+              name="browser.safebrowsing.downloads.enabled"
+              type="bool"/>
+
+  <preference id="urlclassifier.malwareTable"
+              name="urlclassifier.malwareTable"
+              type="string"/>
+
+  <preference id="browser.safebrowsing.downloads.remote.block_potentially_unwanted"
+              name="browser.safebrowsing.downloads.remote.block_potentially_unwanted"
+              type="bool"/>
+  <preference id="browser.safebrowsing.downloads.remote.block_uncommon"
+              name="browser.safebrowsing.downloads.remote.block_uncommon"
               type="bool"/>
 
   <!-- Passwords -->
@@ -59,14 +75,17 @@
 
   <separator class="thin"/>
   <vbox align="start">
-    <checkbox id="blockAttackSites"
-              label="&blockAttackSites.label;"
-              accesskey="&blockAttackSites.accesskey;"
-              preference="browser.safebrowsing.malware.enabled" />
-    <checkbox id="blockWebForgeries"
-              label="&blockWebForgeries.label;"
-              accesskey="&blockWebForgeries.accesskey;"
-              preference="browser.safebrowsing.enabled" />
+    <checkbox id="enableSafeBrowsing"
+              label="&enableSafeBrowsing.label;"
+              accesskey="&enableSafeBrowsing.accesskey;" />
+    <vbox class="indent">
+      <checkbox id="blockDownloads"
+                label="&blockDownloads.label;"
+                accesskey="&blockDownloads.accesskey;" />
+      <checkbox id="blockUncommonUnwanted"
+                label="&blockUncommonUnwanted.label;"
+                accesskey="&blockUncommonUnwanted.accesskey;" />
+    </vbox>
   </vbox>
 </groupbox>
 
