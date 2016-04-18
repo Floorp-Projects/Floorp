@@ -7651,6 +7651,8 @@ static const PrefCallbacks kPrefCallbacks[] = {
     DisplayContentsEnabledPrefChangeCallback },
   { FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME,
     FloatLogicalValuesEnabledPrefChangeCallback },
+  { BG_CLIP_TEXT_ENABLED_PREF_NAME,
+    BackgroundClipTextEnabledPrefChangeCallback },
 };
 
 /* static */
@@ -7683,10 +7685,6 @@ nsLayoutUtils::Initialize()
   for (auto& callback : kPrefCallbacks) {
     Preferences::RegisterCallbackAndCall(callback.func, callback.name);
   }
-  Preferences::RegisterCallback(BackgroundClipTextEnabledPrefChangeCallback,
-                                BG_CLIP_TEXT_ENABLED_PREF_NAME);
-  BackgroundClipTextEnabledPrefChangeCallback(BG_CLIP_TEXT_ENABLED_PREF_NAME,
-                                              nullptr);
   nsComputedDOMStyle::RegisterPrefChangeCallbacks();
 }
 
