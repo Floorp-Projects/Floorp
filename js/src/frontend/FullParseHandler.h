@@ -46,7 +46,7 @@ class FullParseHandler
      * was previously lazily parsed, that lazy function and the current index
      * into its inner functions. We do not want to reparse the inner functions.
      */
-    LazyScript * const lazyOuterFunction_;
+    const Rooted<LazyScript*> lazyOuterFunction_;
     size_t lazyInnerFunctionIndex;
 
     const TokenPos& pos() {
@@ -103,7 +103,7 @@ class FullParseHandler
                      LazyScript* lazyOuterFunction)
       : allocator(cx, alloc),
         tokenStream(tokenStream),
-        lazyOuterFunction_(lazyOuterFunction),
+        lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
         syntaxParser(syntaxParser)
     {}
