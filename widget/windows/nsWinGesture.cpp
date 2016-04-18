@@ -314,8 +314,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam,
   coord = gi.ptsLocation;
   coord.ScreenToClient(hWnd);
 
-  evt.refPoint.x = coord.x;
-  evt.refPoint.y = coord.y;
+  evt.mRefPoint = LayoutDeviceIntPoint(coord.x, coord.y);
 
   // Multiple gesture can occur at the same time so gesture state
   // info can't be shared.
@@ -568,8 +567,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
   aWheelEvent.mDeltaX = aWheelEvent.mDeltaY = aWheelEvent.mDeltaZ = 0.0;
   aWheelEvent.mLineOrPageDeltaX = aWheelEvent.mLineOrPageDeltaY = 0;
 
-  aWheelEvent.refPoint.x = mPanRefPoint.x;
-  aWheelEvent.refPoint.y = mPanRefPoint.y;
+  aWheelEvent.mRefPoint = LayoutDeviceIntPoint(mPanRefPoint.x, mPanRefPoint.y);
   aWheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
   aWheelEvent.mScrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;

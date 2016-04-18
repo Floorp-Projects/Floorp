@@ -29,7 +29,7 @@ PointerEvent::PointerEvent(EventTarget* aOwner,
   } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
-    mEvent->refPoint.x = mEvent->refPoint.y = 0;
+    mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 }

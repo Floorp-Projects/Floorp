@@ -689,7 +689,8 @@ nsDOMWindowUtils::SendPointerEventCommon(const nsAString& aType,
     return NS_ERROR_FAILURE;
   }
 
-  event.refPoint = nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
+  event.mRefPoint =
+    nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
   event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
 
   nsEventStatus status;
@@ -810,7 +811,8 @@ nsDOMWindowUtils::SendWheelEvent(float aX,
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  wheelEvent.refPoint = nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
+  wheelEvent.mRefPoint =
+    nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
   widget->DispatchInputEvent(&wheelEvent);
 
@@ -1299,7 +1301,8 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   if (!presContext)
     return NS_ERROR_FAILURE;
 
-  event.refPoint = nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
+  event.mRefPoint =
+    nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
   nsEventStatus status;
   return widget->DispatchEvent(&event, status);
@@ -1797,7 +1800,7 @@ static void
 InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
 {
   if (aPt) {
-    aEvent.refPoint = *aPt;
+    aEvent.mRefPoint = *aPt;
   }
   aEvent.mTime = PR_IntervalNow();
 }

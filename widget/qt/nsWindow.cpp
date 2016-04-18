@@ -944,8 +944,8 @@ static void
 InitMouseEvent(WidgetMouseEvent& aMouseEvent, QMouseEvent* aEvent,
                int aClickCount)
 {
-    aMouseEvent.refPoint.x = nscoord(aEvent->pos().x());
-    aMouseEvent.refPoint.y = nscoord(aEvent->pos().y());
+    aMouseEvent.mRefPoint.x = nscoord(aEvent->pos().x());
+    aMouseEvent.mRefPoint.y = nscoord(aEvent->pos().y());
 
     aMouseEvent.InitBasicModifiers(aEvent->modifiers() & Qt::ControlModifier,
                                    aEvent->modifiers() & Qt::AltModifier,
@@ -1287,8 +1287,8 @@ nsWindow::wheelEvent(QWheelEvent* aEvent)
         break;
     }
 
-    wheelEvent.refPoint.x = nscoord(aEvent->pos().x());
-    wheelEvent.refPoint.y = nscoord(aEvent->pos().y());
+    wheelEvent.mRefPoint.x = nscoord(aEvent->pos().x());
+    wheelEvent.mRefPoint.y = nscoord(aEvent->pos().y());
 
     wheelEvent.InitBasicModifiers(aEvent->modifiers() & Qt::ControlModifier,
                                   aEvent->modifiers() & Qt::AltModifier,
@@ -1970,8 +1970,8 @@ nsWindow::ProcessMotionEvent()
     if (mMoveEvent.needDispatch) {
         WidgetMouseEvent event(true, eMouseMove, this, WidgetMouseEvent::eReal);
 
-        event.refPoint.x = nscoord(mMoveEvent.pos.x());
-        event.refPoint.y = nscoord(mMoveEvent.pos.y());
+        event.mRefPoint.x = nscoord(mMoveEvent.pos.x());
+        event.mRefPoint.y = nscoord(mMoveEvent.pos.y());
 
         event.InitBasicModifiers(mMoveEvent.modifiers & Qt::ControlModifier,
                                  mMoveEvent.modifiers & Qt::AltModifier,

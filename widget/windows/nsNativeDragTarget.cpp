@@ -167,11 +167,9 @@ nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
 
   if (mHWnd != nullptr) {
     ::ScreenToClient(mHWnd, &cpos);
-    event.refPoint.x = cpos.x;
-    event.refPoint.y = cpos.y;
+    event.mRefPoint = LayoutDeviceIntPoint(cpos.x, cpos.y);
   } else {
-    event.refPoint.x = 0;
-    event.refPoint.y = 0;
+    event.mRefPoint = LayoutDeviceIntPoint(0, 0);
   }
 
   ModifierKeyState modifierKeyState;

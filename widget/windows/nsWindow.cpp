@@ -1706,7 +1706,7 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
 
   // tell Windows to start the resize
   ::PostMessage(toplevelWnd, WM_SYSCOMMAND, syscommand,
-                POINTTOPOINTS(aEvent->refPoint));
+                POINTTOPOINTS(aEvent->mRefPoint));
 
   return NS_OK;
 }
@@ -3830,15 +3830,13 @@ void nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
       cpos.y = GET_Y_LPARAM(pos);
 
       ::ScreenToClient(mWnd, &cpos);
-      event.refPoint.x = cpos.x;
-      event.refPoint.y = cpos.y;
+      event.mRefPoint = LayoutDeviceIntPoint(cpos.x, cpos.y);
     } else {
-      event.refPoint.x = 0;
-      event.refPoint.y = 0;
+      event.mRefPoint = LayoutDeviceIntPoint(0, 0);
     }
   } else {
     // use the point override if provided
-    event.refPoint = *aPoint;
+    event.mRefPoint = *aPoint;
   }
 
   event.AssignEventTime(CurrentMessageWidgetEventTime());
@@ -4230,7 +4228,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       rect.x = 0;
       rect.y = 0;
 
-      if (rect.Contains(event.refPoint)) {
+      if (rect.Contains(event.mRefPoint)) {
         if (sCurrentWindow == nullptr || sCurrentWindow != this) {
           if ((nullptr != sCurrentWindow) && (!sCurrentWindow->mInDtor)) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
@@ -5667,7 +5665,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         touchPoint = gestureinfo->ptsLocation;
         touchPoint.ScreenToClient(mWnd);
         WidgetGestureNotifyEvent gestureNotifyEvent(true, eGestureNotify, this);
-        gestureNotifyEvent.refPoint = LayoutDeviceIntPoint::FromUnknownPoint(touchPoint);
+        gestureNotifyEvent.mRefPoint =
+          LayoutDeviceIntPoint::FromUnknownPoint(touchPoint);
         nsEventStatus status;
         DispatchEvent(&gestureNotifyEvent, status);
         mDisplayPanFeedback = gestureNotifyEvent.displayPanFeedback;
