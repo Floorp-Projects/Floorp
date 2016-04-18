@@ -346,7 +346,7 @@ public:
   nsString mSpecifiedEventTypeString;
 
   // Event targets, needed by DOM Events
-  nsCOMPtr<dom::EventTarget> target;
+  nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<dom::EventTarget> currentTarget;
   nsCOMPtr<dom::EventTarget> originalTarget;
 
@@ -360,7 +360,7 @@ public:
     // mFlags should be copied manually if it's necessary.
     mSpecifiedEventType = aEvent.mSpecifiedEventType;
     // mSpecifiedEventTypeString should be copied manually if it's necessary.
-    target = aCopyTargets ? aEvent.target : nullptr;
+    mTarget = aCopyTargets ? aEvent.mTarget : nullptr;
     currentTarget = aCopyTargets ? aEvent.currentTarget : nullptr;
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
   }

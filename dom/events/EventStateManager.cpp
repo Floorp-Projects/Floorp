@@ -2942,19 +2942,19 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // we click on a visibility: none element.
           // We can't use nsIContent::IsFocusable() because we want to blur when
           // we click on a non-focusable element like a <div>.
-          // We have to use |aEvent->target| to not make sure we do not check an
-          // anonymous node of the targeted element.
+          // We have to use |aEvent->mTarget| to not make sure we do not check
+          // an anonymous node of the targeted element.
           suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
 
           if (!suppressBlur) {
-            nsCOMPtr<Element> element = do_QueryInterface(aEvent->target);
+            nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
             suppressBlur = element &&
                            element->State().HasState(NS_EVENT_STATE_DISABLED);
           }
 
           if (!suppressBlur) {
             nsCOMPtr<nsIDOMXULControlElement> xulControl =
-              do_QueryInterface(aEvent->target);
+              do_QueryInterface(aEvent->mTarget);
             if (xulControl) {
               bool disabled;
               xulControl->GetDisabled(&disabled);

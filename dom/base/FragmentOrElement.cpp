@@ -883,7 +883,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
 #endif
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent && aVisitor.mOriginalTargetIsInAnon) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->mTarget));
     if (content && content->GetBindingParent() == parent) {
       aVisitor.mEventTargetAtParent = parent;
     }
