@@ -11,14 +11,12 @@
 #include "nsAtomicContainerFrame.h"
 #include "nsDisplayList.h"
 
-typedef nsAtomicContainerFrame nsFormControlFrameSuper;
-
-/** 
+/**
  * nsFormControlFrame is the base class for radio buttons and
  * checkboxes.  It also has two static methods (RegUnRegAccessKey and
  * GetScreenHeight) that are used by other form controls.
  */
-class nsFormControlFrame : public nsFormControlFrameSuper,
+class nsFormControlFrame : public nsAtomicContainerFrame,
                            public nsIFormControlFrame
 {
 public:
@@ -33,7 +31,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsFormControlFrameSuper::IsFrameOfType(aFlags &
+    return nsAtomicContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
@@ -68,11 +66,11 @@ public:
                   const mozilla::LogicalSize& aPadding,
                   bool aShrinkWrap) override;
 
-  /** 
+  /**
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  virtual nsresult HandleEvent(nsPresContext* aPresContext, 
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
@@ -117,7 +115,7 @@ protected:
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
 //-------------------------------------------------------------------------------------
-//   
+//
    /**
     * Get the state of the checked attribute.
     * @param aState set to true if the checked attribute is set,
