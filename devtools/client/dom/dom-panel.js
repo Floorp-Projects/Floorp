@@ -22,6 +22,7 @@ function DomPanel(iframeWindow, toolbox) {
 
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onContentMessage = this.onContentMessage.bind(this);
+  this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
 
   this.pendingRequests = new Map();
 
@@ -35,7 +36,7 @@ DomPanel.prototype = {
    * @return object
    *         A promise that is resolved when the DOM panel completes opening.
    */
-  open: Task.async(function*() {
+  open: Task.async(function* () {
     if (this._opening) {
       return this._opening;
     }
@@ -50,11 +51,9 @@ DomPanel.prototype = {
 
     this.initialize();
 
-    this.once("no-pending-requests", () => {
-      this.isReady = true;
-      this.emit("ready");
-      deferred.resolve(this);
-    });
+    this.isReady = true;
+    this.emit("ready");
+    deferred.resolve(this);
 
     return this._opening;
   }),
@@ -66,6 +65,7 @@ DomPanel.prototype = {
       this.onContentMessage, true);
 
     this.target.on("navigate", this.onTabNavigated);
+    this._toolbox.on("select", this.onPanelVisibilityChange);
 
     let provider = {
       getPrototypeAndProperties: this.getPrototypeAndProperties.bind(this)
@@ -73,10 +73,10 @@ DomPanel.prototype = {
 
     exportIntoContentScope(this.panelWin, provider, "DomProvider");
 
-    this.doRefresh();
+    this.shouldRefresh = true;
   },
 
-  destroy: Task.async(function*() {
+  destroy: Task.async(function* () {
     if (this._destroying) {
       return this._destroying;
     }
@@ -85,6 +85,7 @@ DomPanel.prototype = {
     this._destroying = deferred.promise;
 
     this.target.off("navigate", this.onTabNavigated);
+    this._toolbox.off("select", this.onPanelVisibilityChange);
 
     this.emit("destroyed");
 
@@ -94,14 +95,49 @@ DomPanel.prototype = {
 
   // Events
 
-  doRefresh: function() {
-    this.refresh().then(rootGrip => {
+  refresh: function() {
+    // Do not refresh if the panel isn't visible.
+    if (!this.isPanelVisible()) {
+      return;
+    }
+
+    // Do not refresh if it isn't necessary.
+    if (!this.shouldRefresh) {
+      return;
+    }
+
+    // Alright reset the flag we are about to refresh the panel.
+    this.shouldRefresh = false;
+
+    this.getRootGrip().then(rootGrip => {
       this.postContentMessage("initialize", rootGrip);
     });
   },
 
+  /**
+   * Make sure the panel is refreshed when the page is reloaded.
+   * The panel is refreshed immediatelly if it's currently selected
+   * or lazily  when the user actually selects it.
+   */
   onTabNavigated: function() {
-    this.doRefresh();
+    this.shouldRefresh = true;
+    this.refresh();
+  },
+
+  /**
+   * Make sure the panel is refreshed (if needed) when it's selected.
+   */
+  onPanelVisibilityChange: function() {
+    this.refresh();
+  },
+
+  // Helpers
+
+  /**
+   * Return true if the DOM panel is currently selected.
+   */
+  isPanelVisible: function() {
+    return this._toolbox.currentToolId === "dom";
   },
 
   getPrototypeAndProperties: function(grip) {
@@ -141,9 +177,7 @@ DomPanel.prototype = {
     return deferred.promise;
   },
 
-  // Refresh
-
-  refresh: function() {
+  getRootGrip: function() {
     let deferred = defer();
 
     // Attach Console. It might involve RDP communication, so wait
@@ -154,8 +188,6 @@ DomPanel.prototype = {
 
     return deferred.promise;
   },
-
-  // Helpers
 
   postContentMessage: function(type, args) {
     let data = {
