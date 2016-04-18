@@ -32,7 +32,7 @@ test(function(t) {
   var pseudoTarget = document.getAnimations()[0].effect.target;
   var effect = new KeyframeEffectReadOnly(pseudoTarget,
                                           { background: ["blue", "red"] },
-                                          3000);
+                                          3 * MS_PER_SEC);
   var newAnim = new Animation(effect, document.timeline);
   newAnim.play();
   var anims = document.getAnimations();
