@@ -42,6 +42,7 @@ public:
   enum class TargetConfirmationState {
     eUnconfirmed,
     eTimedOut,
+    eTimedOutAndMainThreadResponded,
     eConfirmed
   };
 
@@ -57,6 +58,7 @@ public:
   uint64_t GetBlockId() const;
 
   bool IsTargetConfirmed() const;
+  bool HasReceivedRealConfirmedTarget() const;
 
   void SetScrolledApzc(AsyncPanZoomController* aApzc);
   AsyncPanZoomController* GetScrolledApzc() const;
