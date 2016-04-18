@@ -674,7 +674,7 @@ EventListenerManager::ListenerCanHandle(const Listener* aListener,
   }
   if (aEvent->mMessage == eUnidentifiedEvent) {
     if (mIsMainThreadELM) {
-      return aListener->mTypeAtom == aEvent->userType;
+      return aListener->mTypeAtom == aEvent->mSpecifiedEventType;
     }
     return aListener->mTypeString.Equals(aEvent->typeString);
   }
@@ -1304,7 +1304,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
   if (mIsMainThreadELM && !hasListener) {
     mNoListenerForEvent = aEvent->mMessage;
-    mNoListenerForEventAtom = aEvent->userType;
+    mNoListenerForEventAtom = aEvent->mSpecifiedEventType;
   }
 
   if (aEvent->DefaultPrevented()) {
