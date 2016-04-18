@@ -28,9 +28,6 @@ public:
   virtual nsISupports*
   GetParentObject() const override;
 
-  virtual void
-  GetRootName(nsAString& aRetval) const override;
-
   virtual bool
   IsSafeFile(nsIFile* aFile) const override;
 
@@ -75,7 +72,8 @@ public:
   }
 
   virtual void
-  GetRootName(nsAString& aRetval) const override
+  GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                   ErrorResult& aRv) const override
   {
     MOZ_CRASH("This should not be called on the PBackground thread.");
   }

@@ -28,7 +28,6 @@ namespace dom {
 /* static */ already_AddRefed<GetDirectoryListingTaskChild>
 GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
                                      nsIFile* aTargetPath,
-                                     Directory::DirectoryType aType,
                                      const nsAString& aFilters,
                                      ErrorResult& aRv)
 {
@@ -36,7 +35,7 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
   aFileSystem->AssertIsOnOwningThread();
 
   RefPtr<GetDirectoryListingTaskChild> task =
-    new GetDirectoryListingTaskChild(aFileSystem, aTargetPath, aType, aFilters);
+    new GetDirectoryListingTaskChild(aFileSystem, aTargetPath, aFilters);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -57,12 +56,10 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
 
 GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
                                                            nsIFile* aTargetPath,
-                                                           Directory::DirectoryType aType,
                                                            const nsAString& aFilters)
   : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
   , mFilters(aFilters)
-  , mType(aType)
 {
   MOZ_ASSERT(aFileSystem);
   aFileSystem->AssertIsOnOwningThread();
@@ -93,7 +90,6 @@ GetDirectoryListingTaskChild::GetRequestParams(const nsString& aSerializedDOMPat
   }
 
   return FileSystemGetDirectoryListingParams(aSerializedDOMPath, path,
-                                             mType == Directory::eDOMRootDirectory,
                                              mFilters);
 }
 
@@ -179,8 +175,7 @@ GetDirectoryListingTaskChild::HandlerCallback()
 
     if (mTargetData[i].mType == Directory::FileOrDirectoryPath::eDirectoryPath) {
       RefPtr<Directory> directory =
-        Directory::Create(mFileSystem->GetParentObject(), path,
-                          Directory::eNotDOMRootDirectory, mFileSystem);
+        Directory::Create(mFileSystem->GetParentObject(), path, mFileSystem);
       MOZ_ASSERT(directory);
 
       // Propogate mFilter onto sub-Directory object:
@@ -230,8 +225,6 @@ GetDirectoryListingTaskParent::Create(FileSystemBase* aFileSystem,
     return nullptr;
   }
 
-  task->mType = aParam.isRoot()
-                  ? Directory::eDOMRootDirectory : Directory::eNotDOMRootDirectory;
   return task.forget();
 }
 
@@ -291,15 +284,7 @@ GetDirectoryListingTaskParent::IOWork()
   }
 
   if (!exists) {
-    if (mType == Directory::eNotDOMRootDirectory) {
-      return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
-    }
-
-    // If the root directory doesn't exit, create it.
-    rv = mTargetPath->Create(nsIFile::DIRECTORY_TYPE, 0777);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
   }
 
   // Get isDirectory.

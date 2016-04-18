@@ -27,7 +27,6 @@ namespace dom {
 /* static */ already_AddRefed<GetFileOrDirectoryTaskChild>
 GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
                                     nsIFile* aTargetPath,
-                                    Directory::DirectoryType aType,
                                     bool aDirectoryOnly,
                                     ErrorResult& aRv)
 {
@@ -35,8 +34,7 @@ GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aFileSystem);
 
   RefPtr<GetFileOrDirectoryTaskChild> task =
-    new GetFileOrDirectoryTaskChild(aFileSystem, aTargetPath, aType,
-                                    aDirectoryOnly);
+    new GetFileOrDirectoryTaskChild(aFileSystem, aTargetPath, aDirectoryOnly);
 
   // aTargetPath can be null. In this case SetError will be called.
 
@@ -57,12 +55,10 @@ GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
 
 GetFileOrDirectoryTaskChild::GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
                                                          nsIFile* aTargetPath,
-                                                         Directory::DirectoryType aType,
                                                          bool aDirectoryOnly)
   : FileSystemTaskChildBase(aFileSystem)
   , mTargetPath(aTargetPath)
   , mIsDirectory(aDirectoryOnly)
-  , mType(aType)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
@@ -92,8 +88,7 @@ GetFileOrDirectoryTaskChild::GetRequestParams(const nsString& aSerializedDOMPath
     return FileSystemGetFileOrDirectoryParams();
   }
 
-  return FileSystemGetFileOrDirectoryParams(aSerializedDOMPath, path,
-                                            mType == Directory::eDOMRootDirectory);
+  return FileSystemGetFileOrDirectoryParams(aSerializedDOMPath, path);
 }
 
 void
@@ -151,7 +146,6 @@ GetFileOrDirectoryTaskChild::HandlerCallback()
   if (mIsDirectory) {
     RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
                                               mTargetPath,
-                                              mType,
                                               mFileSystem);
     MOZ_ASSERT(dir);
 
@@ -195,8 +189,6 @@ GetFileOrDirectoryTaskParent::Create(FileSystemBase* aFileSystem,
     return nullptr;
   }
 
-  task->mType = aParam.isRoot()
-                  ? Directory::eDOMRootDirectory : Directory::eNotDOMRootDirectory;
   return task.forget();
 }
 
@@ -248,15 +240,7 @@ GetFileOrDirectoryTaskParent::IOWork()
   }
 
   if (!exists) {
-    if (mType == Directory::eNotDOMRootDirectory) {
-      return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
-    }
-
-    // If the root directory doesn't exit, create it.
-    rv = mTargetPath->Create(nsIFile::DIRECTORY_TYPE, 0777);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
   }
 
   // Get isDirectory.
@@ -267,11 +251,6 @@ GetFileOrDirectoryTaskParent::IOWork()
 
   if (mIsDirectory) {
     return NS_OK;
-  }
-
-  // Check if the root is a directory.
-  if (mType == Directory::eDOMRootDirectory) {
-    return NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
   }
 
   bool isFile;

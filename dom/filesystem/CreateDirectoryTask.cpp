@@ -119,9 +119,7 @@ CreateDirectoryTaskChild::HandlerCallback()
   }
 
   RefPtr<Directory> dir = Directory::Create(mFileSystem->GetParentObject(),
-                                            mTargetPath,
-                                            Directory::eNotDOMRootDirectory,
-                                            mFileSystem);
+                                            mTargetPath, mFileSystem);
   MOZ_ASSERT(dir);
 
   mPromise->MaybeResolve(dir);
