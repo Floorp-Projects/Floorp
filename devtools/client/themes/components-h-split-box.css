@@ -22,10 +22,3 @@
   flex-direction: row;
   flex: 1;
 }
-
-.h-split-box-splitter {
-  -moz-border-end: 1px solid var(--theme-splitter-color);
-  cursor: ew-resize;
-  width: 3px;
-  -moz-margin-start: -3px;
-}

@@ -10,6 +10,8 @@ import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
+import com.robotium.solo.Solo;
+
 /**
  * Set of tests to test UI App menu and submenus the user interact with.
  */
@@ -22,7 +24,20 @@ public class testAppMenuPathways extends UITest {
     public void testAppMenuPathways() {
         GeckoHelper.blockForReady();
 
+        _testHardwareMenuKeyOpenClose();
         _testSaveAsPDFPathway();
+    }
+
+    public void _testHardwareMenuKeyOpenClose() {
+        mAppMenu.assertMenuIsNotOpen();
+
+        mSolo.sendKey(Solo.MENU);
+        mAppMenu.waitForMenuOpen();
+        mAppMenu.assertMenuIsOpen();
+
+        mSolo.sendKey(Solo.MENU);
+        mAppMenu.waitForMenuClose();
+        mAppMenu.assertMenuIsNotOpen();
     }
 
     public void _testSaveAsPDFPathway() {

@@ -35,7 +35,14 @@ body {
 }
 
 .toolbar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   list-style: none;
+  margin: 0px;
+  padding: 0px;
+  height: 48px;
+  width: 48px;
 }
 
 .toolbar-buttons > li {
@@ -44,7 +51,6 @@ body {
   background-repeat: no-repeat;
   height: 20px;
   width: 20px;
-  margin: 0 15px;
 }
 
 #filter-input-container {
