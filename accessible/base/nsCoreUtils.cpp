@@ -113,7 +113,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
 
   nsPoint offset;
   nsIWidget *rootWidget =
-    rootFrame->GetViewExternal()->GetNearestWidget(&offset);
+    rootFrame->GetView()->GetNearestWidget(&offset);
 
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
 

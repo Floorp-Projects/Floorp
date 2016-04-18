@@ -1462,7 +1462,7 @@ TabParent::RecvSynthesizeNativeMouseScrollEvent(const LayoutDeviceIntPoint& aPoi
 bool
 TabParent::RecvSynthesizeNativeTouchPoint(const uint32_t& aPointerId,
                                           const TouchPointerState& aPointerState,
-                                          const ScreenIntPoint& aPointerScreenPoint,
+                                          const LayoutDeviceIntPoint& aPoint,
                                           const double& aPointerPressure,
                                           const uint32_t& aPointerOrientation,
                                           const uint64_t& aObserverId)
@@ -1470,22 +1470,21 @@ TabParent::RecvSynthesizeNativeTouchPoint(const uint32_t& aPointerId,
   AutoSynthesizedEventResponder responder(this, aObserverId, "touchpoint");
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    widget->SynthesizeNativeTouchPoint(aPointerId, aPointerState, aPointerScreenPoint,
+    widget->SynthesizeNativeTouchPoint(aPointerId, aPointerState, aPoint,
       aPointerPressure, aPointerOrientation, responder.GetObserver());
   }
   return true;
 }
 
 bool
-TabParent::RecvSynthesizeNativeTouchTap(const ScreenIntPoint& aPointerScreenPoint,
+TabParent::RecvSynthesizeNativeTouchTap(const LayoutDeviceIntPoint& aPoint,
                                         const bool& aLongTap,
                                         const uint64_t& aObserverId)
 {
   AutoSynthesizedEventResponder responder(this, aObserverId, "touchtap");
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    widget->SynthesizeNativeTouchTap(aPointerScreenPoint, aLongTap,
-      responder.GetObserver());
+    widget->SynthesizeNativeTouchTap(aPoint, aLongTap, responder.GetObserver());
   }
   return true;
 }

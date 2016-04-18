@@ -2158,7 +2158,7 @@ BindId(mozIStorageStatement* aState, const nsACString& aName, const nsID* aId)
 
   char idBuf[NSID_LENGTH];
   aId->ToProvidedString(idBuf);
-  rv = aState->BindUTF8StringByName(aName, nsAutoCString(idBuf));
+  rv = aState->BindUTF8StringByName(aName, nsDependentCString(idBuf));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;

@@ -1878,7 +1878,7 @@ CacheFile::WriteMetadataIfNeededLocked(bool aFireAndForget)
     return;
 
   if (!IsDirty() || mOutput || mInputs.Length() || mChunks.Count() ||
-      mWritingMetadata || mOpeningFile)
+      mWritingMetadata || mOpeningFile || mKill)
     return;
 
   if (!aFireAndForget) {

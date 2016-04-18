@@ -562,7 +562,8 @@ class Build(MachCommandBase):
         status = self._run_make(srcdir=True, filename='client.mk',
             target='configure', line_handler=on_line, log=False,
             print_directory=False, allow_parallel=False, ensure_exit_code=False,
-            append_env={b'CONFIGURE_ARGS': options.encode('utf-8')})
+            append_env={b'CONFIGURE_ARGS': options.encode('utf-8'),
+                        b'NO_BUILDSTATUS_MESSAGES': b'1',})
 
         if not status:
             print('Configure complete!')
