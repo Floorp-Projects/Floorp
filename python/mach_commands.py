@@ -68,7 +68,7 @@ class MachCommands(MachCommandBase):
             append_env={b'PYTHONDONTWRITEBYTECODE': str('1')})
 
     @Command('python-test', category='testing',
-        description='Run Python unit tests.')
+        description='Run Python unit tests with an appropriate test runner.')
     @CommandArgument('--verbose',
         default=False,
         action='store_true',
@@ -77,37 +77,74 @@ class MachCommands(MachCommandBase):
         default=False,
         action='store_true',
         help='Stop running tests after the first error or failure.')
+    @CommandArgument('--path-only',
+        default=False,
+        action='store_true',
+        help=('Collect all tests under given path instead of default '
+              'test resolution. Supports pytest-style tests.'))
     @CommandArgument('tests', nargs='*',
         metavar='TEST',
         help=('Tests to run. Each test can be a single file or a directory. '
-              'Tests must be part of PYTHON_UNIT_TESTS.'))
+              'Default test resolution relies on PYTHON_UNIT_TESTS.'))
     def python_test(self,
                     tests=[],
                     test_objects=None,
                     subsuite=None,
                     verbose=False,
+                    path_only=False,
                     stop=False):
         self._activate_virtualenv()
+
+        def find_tests_by_path():
+            import glob
+            files = []
+            for t in tests:
+                if t.endswith('.py') and os.path.isfile(t):
+                    files.append(t)
+                elif os.path.isdir(t):
+                    for root, _, _ in os.walk(t):
+                        files += glob.glob(mozpath.join(root, 'test*.py'))
+                        files += glob.glob(mozpath.join(root, 'unit*.py'))
+                else:
+                    self.log(logging.WARN, 'python-test',
+                                 {'test': t},
+                                 'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
+                    if stop:
+                        break
+            return files
 
         # Python's unittest, and in particular discover, has problems with
         # clashing namespaces when importing multiple test modules. What follows
         # is a simple way to keep environments separate, at the price of
-        # launching Python multiple times. This also runs tests via mozunit,
+        # launching Python multiple times. Most tests are run via mozunit,
         # which produces output in the format Mozilla infrastructure expects.
+        # Some tests are run via pytest, and these should be equipped with a
+        # local mozunit_report plugin to meet output expectations.
         return_code = 0
         found_tests = False
         if test_objects is None:
             # If we're not being called from `mach test`, do our own
             # test resolution.
-            from mozbuild.testing import TestResolver
-            resolver = self._spawn(TestResolver)
-            if tests:
-                # If we were given test paths, try to find tests matching them.
-                test_objects = resolver.resolve_tests(paths=tests,
-                                                      flavor='python')
+            if path_only:
+                if tests:
+                    self.virtualenv_manager.install_pip_package(
+                       'pytest==2.9.1'
+                    )
+                    test_objects = [{'path': p} for p in find_tests_by_path()]
+                else:
+                    self.log(logging.WARN, 'python-test', {},
+                             'TEST-UNEXPECTED-FAIL | No tests specified')
+                    test_objects = []
             else:
-                # Otherwise just run all Python tests.
-                test_objects = resolver.resolve_tests(flavor='python')
+                from mozbuild.testing import TestResolver
+                resolver = self._spawn(TestResolver)
+                if tests:
+                    # If we were given test paths, try to find tests matching them.
+                    test_objects = resolver.resolve_tests(paths=tests,
+                                                          flavor='python')
+                else:
+                    # Otherwise just run everything in PYTHON_UNIT_TESTS
+                    test_objects = resolver.resolve_tests(flavor='python')
 
         for test in test_objects:
             found_tests = True
@@ -145,10 +182,10 @@ class MachCommands(MachCommandBase):
                 return 1
 
         if not found_tests:
-            self.log(logging.WARN, 'python-test', {},
-                     'TEST-UNEXPECTED-FAIL | No tests collected '
-                     '(not in PYTHON_UNIT_TESTS?)')
-
+            message = 'TEST-UNEXPECTED-FAIL | No tests collected'
+            if not path_only:
+                 message += ' (Not in PYTHON_UNIT_TESTS? Try --path-only?)'
+            self.log(logging.WARN, 'python-test', {}, message)
             return 1
 
         return 0 if return_code == 0 else 1
