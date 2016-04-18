@@ -17,10 +17,8 @@ class nsSVGForeignObjectFrame;
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
 
-typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
-
-class nsSVGOuterSVGFrame final : public nsSVGOuterSVGFrameBase,
-                                 public nsISVGSVGFrame
+class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame
+                               , public nsISVGSVGFrame
 {
   friend nsContainerFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
