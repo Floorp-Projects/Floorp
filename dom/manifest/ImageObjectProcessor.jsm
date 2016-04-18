@@ -75,7 +75,6 @@ ImageObjectProcessor.prototype.process = function(
       'src': processSrcMember(aImageSpec, aBaseURL),
       'type': processTypeMember(aImageSpec),
       'sizes': processSizesMember(aImageSpec),
-      'background_color': processBackgroundColorMember(aImageSpec)
     };
   }
 
@@ -148,17 +147,6 @@ ImageObjectProcessor.prototype.process = function(
       const validDecimals = ImageObjectProcessor.decimals.test(w + h);
       return (validStarts && validDecimals);
     }
-  }
-
-  function processBackgroundColorMember(aImage) {
-    const spec = {
-      objectName: 'image',
-      object: aImage,
-      property: 'background_color',
-      expectedType: 'string',
-      trim: true
-    };
-    return extractor.extractColorValue(spec);
   }
 };
 this.ImageObjectProcessor = ImageObjectProcessor; // jshint ignore:line
