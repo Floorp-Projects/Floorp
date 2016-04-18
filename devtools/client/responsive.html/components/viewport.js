@@ -12,12 +12,14 @@ const ResizableViewport = createFactory(require("./resizable-viewport"));
 const ViewportDimension = createFactory(require("./viewport-dimension"));
 
 module.exports = createClass({
+
   displayName: "Viewport",
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     location: Types.location.isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
+    swapAfterMount: PropTypes.bool.isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
@@ -59,6 +61,7 @@ module.exports = createClass({
       devices,
       location,
       screenshot,
+      swapAfterMount,
       viewport,
       onBrowserMounted,
       onContentResize,
@@ -79,6 +82,7 @@ module.exports = createClass({
         devices,
         location,
         screenshot,
+        swapAfterMount,
         viewport,
         onBrowserMounted,
         onChangeViewportDevice,

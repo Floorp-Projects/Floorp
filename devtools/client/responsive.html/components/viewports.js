@@ -11,6 +11,7 @@ const Types = require("../types");
 const Viewport = createFactory(require("./viewport"));
 
 module.exports = createClass({
+
   displayName: "Viewports",
 
   propTypes: {
@@ -44,12 +45,13 @@ module.exports = createClass({
       {
         id: "viewports",
       },
-      viewports.map(viewport => {
+      viewports.map((viewport, i) => {
         return Viewport({
           key: viewport.id,
           devices,
           location,
           screenshot,
+          swapAfterMount: i == 0,
           viewport,
           onBrowserMounted,
           onChangeViewportDevice,

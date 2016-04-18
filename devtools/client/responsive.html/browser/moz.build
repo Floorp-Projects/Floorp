@@ -5,7 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'e10s.js',
-    'l10n.js',
-    'message.js',
+    'swap.js',
 )

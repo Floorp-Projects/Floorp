@@ -5,6 +5,7 @@
   * [Inspector](inspector-panel.md)
   * [Memory](memory-panel.md)
   * [Debugger](debugger-panel.md)
+  * [Responsive Design Mode](responsive-design-mode.md)
 * [Frontend](frontend.md)
   * [Panel SVGs](svgs.md)
   * [React](react.md)
