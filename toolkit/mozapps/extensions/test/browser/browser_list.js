@@ -88,7 +88,6 @@ add_task(function*() {
     blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED,
   }, {
     id: "addon8@tests.mozilla.org",
-    blocklistURL: "http://example.com/addon8@tests.mozilla.org",
     name: "Test add-on 8",
     blocklistState: Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE,
   }, {
@@ -395,7 +394,7 @@ add_task(function*() {
   is(get_node(addon, "error").textContent, "Test add-on 8 is known to be vulnerable and should be updated.", "Error message should be correct");
   is_element_visible(get_node(addon, "error-link"), "Error link should be visible");
   is(get_node(addon, "error-link").value, "Update Now", "Error link text should be correct");
-  is(get_node(addon, "error-link").href, "http://example.com/addon8@tests.mozilla.org", "Error link should be correct");
+  is(get_node(addon, "error-link").href, gPluginURL, "Error link should be correct");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
   info("Addon 9");
