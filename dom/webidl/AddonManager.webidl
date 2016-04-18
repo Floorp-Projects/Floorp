@@ -3,8 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* We need a JSImplementation but cannot get one without a contract ID. Since
-   This object is only ever created from JS we don't need a real contract ID. */
+/* We need a JSImplementation but cannot get one without a contract ID.
+   Since Addon and AddonInstall are only ever created from JS they don't need
+   real contract IDs. */
 [ChromeOnly, JSImplementation="dummy"]
 interface Addon {
   // The add-on's ID.
@@ -23,6 +24,27 @@ interface Addon {
   readonly attribute boolean isEnabled;
   // If the add-on is currently active in the browser.
   readonly attribute boolean isActive;
+
+  Promise<boolean> uninstall();
+};
+
+[ChromeOnly, JSImplementation="dummy"]
+interface AddonInstall : EventTarget {
+  // One of the STATE_* symbols from AddonManager.jsm
+  readonly attribute DOMString state;
+  // One of the ERROR_* symbols from AddonManager.jsm, or null
+  readonly attribute DOMString? error;
+  // How many bytes have been downloaded
+  readonly attribute long long progress;
+  // How many total bytes will need to be downloaded or -1 if unknown
+  readonly attribute long long maxProgress;
+
+  Promise<void> install();
+  Promise<void> cancel();
+};
+
+dictionary addonInstallOptions {
+  required DOMString url;
 };
 
 [HeaderFile="mozilla/AddonManagerWebAPI.h",
@@ -38,4 +60,13 @@ interface AddonManager {
    * @return A promise. It will resolve to an Addon if the add-on is installed.
    */
   Promise<Addon> getAddonByID(DOMString id);
+
+  /**
+   * Creates an AddonInstall object for a given URL.
+   *
+   * @param options
+   *        Only one supported option: 'url', the URL of the addon to install.
+   * @return A promise that resolves to an instance of AddonInstall.
+   */
+  Promise<AddonInstall> createInstall(optional addonInstallOptions options);
 };
