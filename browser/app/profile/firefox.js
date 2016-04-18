@@ -68,6 +68,12 @@ pref("services.kinto.changes.path", "/buckets/monitor/collections/changes/record
 pref("services.kinto.bucket", "blocklists");
 pref("services.kinto.onecrl.collection", "certificates");
 pref("services.kinto.onecrl.checked", 0);
+pref("services.kinto.addons.collection", "addons");
+pref("services.kinto.addons.checked", 0);
+pref("services.kinto.plugins.collection", "plugins");
+pref("services.kinto.plugins.checked", 0);
+pref("services.kinto.gfx.collection", "gfx");
+pref("services.kinto.gfx.checked", 0);
 
 // for now, let's keep kinto update out of the release channel
 #ifdef RELEASE_BUILD
