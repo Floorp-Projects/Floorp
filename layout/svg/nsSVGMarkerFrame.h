@@ -26,16 +26,14 @@ class SVGSVGElement;
 
 struct nsSVGMark;
 
-typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
-
-class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
+class nsSVGMarkerFrame : public nsSVGContainerFrame
 {
   friend class nsSVGMarkerAnonChildFrame;
   friend nsContainerFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGMarkerFrame(nsStyleContext* aContext)
-    : nsSVGMarkerFrameBase(aContext)
+    : nsSVGContainerFrame(aContext)
     , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
