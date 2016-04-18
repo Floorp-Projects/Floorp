@@ -785,7 +785,7 @@ public:
   // Provide a Monitor that should always be held when accessing this instance.
   void SetMonitor(Monitor* aMonitor) { mMonitor = aMonitor; }
 
-  bool IsEmpty()
+  bool IsEmpty() const
   {
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();

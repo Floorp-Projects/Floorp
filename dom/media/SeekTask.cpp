@@ -177,7 +177,7 @@ SeekTask::GetSeekJob()
 }
 
 bool
-SeekTask::Exists()
+SeekTask::Exists() const
 {
   return mSeekJob.Exists();
 }
@@ -422,6 +422,7 @@ SeekTask::IsAudioSeekComplete()
       mSeekJob.Exists(), mDropAudioUntilNextDiscontinuity, mIsAudioQueueFinished, !!mSeekedAudioData);
   return
     !HasAudio() ||
+    mSeekJob.mTarget.IsVideoOnly() ||
     (Exists() && !mDropAudioUntilNextDiscontinuity &&
      (mIsAudioQueueFinished || mSeekedAudioData));
 }
@@ -478,8 +479,10 @@ SeekTask::OnSeekResolved(media::TimeUnit)
   mSeekRequest.Complete();
   // We must decode the first samples of active streams, so we can determine
   // the new stream time. So dispatch tasks to do that.
-  EnsureAudioDecodeTaskQueued();
   EnsureVideoDecodeTaskQueued();
+  if (!mSeekJob.mTarget.IsVideoOnly()) {
+    EnsureAudioDecodeTaskQueued();
+  }
 }
 
 void

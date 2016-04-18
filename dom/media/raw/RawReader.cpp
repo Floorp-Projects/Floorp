@@ -27,10 +27,10 @@ RawReader::~RawReader()
   MOZ_COUNT_DTOR(RawReader);
 }
 
-nsresult RawReader::ResetDecode()
+nsresult RawReader::ResetDecode(TargetQueues aQueues)
 {
   mCurrentFrame = 0;
-  return MediaDecoderReader::ResetDecode();
+  return MediaDecoderReader::ResetDecode(aQueues);
 }
 
 nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
