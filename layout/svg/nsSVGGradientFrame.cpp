@@ -405,7 +405,7 @@ nsSVGLinearGradientFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::linearGradient),
                "Content is not an SVG linearGradient");
 
-  nsSVGLinearGradientFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGradientFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -474,8 +474,7 @@ nsSVGLinearGradientFrame::GetLinearGradientWithLength(uint32_t aIndex,
     return thisElement;
   }
 
-  return nsSVGLinearGradientFrameBase::GetLinearGradientWithLength(aIndex,
-                                                                   aDefault);
+  return nsSVGGradientFrame::GetLinearGradientWithLength(aIndex, aDefault);
 }
 
 bool
