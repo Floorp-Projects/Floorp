@@ -56,7 +56,7 @@ GetDocumentFromView(nsView* aView)
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
-  : nsSubDocumentFrameSuper(aContext)
+  : nsAtomicContainerFrame(aContext)
   , mIsInline(false)
   , mPostedReflowCallback(false)
   , mDidCreateDoc(false)
@@ -74,7 +74,7 @@ nsSubDocumentFrame::AccessibleType()
 
 NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
   NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSubDocumentFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 class AsyncFrameInit : public nsRunnable
 {
@@ -107,7 +107,7 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
   nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
   mIsInline = frameElem ? false : true;
 
-  nsSubDocumentFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We are going to create an inner view.  If we need a view for the
   // OuterFrame but we wait for the normal view creation path in
@@ -689,7 +689,7 @@ nsSubDocumentFrame::GetIntrinsicSize()
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicSize();
   }
-  return nsSubDocumentFrameSuper::GetIntrinsicSize();
+  return nsAtomicContainerFrame::GetIntrinsicSize();
 }
 
 /* virtual */ nsSize
@@ -699,7 +699,7 @@ nsSubDocumentFrame::GetIntrinsicRatio()
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicRatio();
   }
-  return nsSubDocumentFrameSuper::GetIntrinsicRatio();
+  return nsAtomicContainerFrame::GetIntrinsicRatio();
 }
 
 /* virtual */
@@ -747,10 +747,10 @@ nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                             aBorder,
                             aPadding);
   }
-  return nsSubDocumentFrameSuper::ComputeSize(aRenderingContext, aWM,
-                                              aCBSize, aAvailableISize,
-                                              aMargin, aBorder, aPadding,
-                                              aFlags);
+  return nsAtomicContainerFrame::ComputeSize(aRenderingContext, aWM,
+                                             aCBSize, aAvailableISize,
+                                             aMargin, aBorder, aPadding,
+                                             aFlags);
 }
 
 void
@@ -995,7 +995,7 @@ nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
                        (mDidCreateDoc || mCallingShow)));
   }
 
-  nsSubDocumentFrameSuper::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 CSSIntSize
