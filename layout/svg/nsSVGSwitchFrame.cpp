@@ -12,15 +12,13 @@
 
 using namespace mozilla::gfx;
 
-typedef nsSVGGFrame nsSVGSwitchFrameBase;
-
-class nsSVGSwitchFrame : public nsSVGSwitchFrameBase
+class nsSVGSwitchFrame : public nsSVGGFrame
 {
   friend nsIFrame*
   NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGSwitchFrame(nsStyleContext* aContext) :
-    nsSVGSwitchFrameBase(aContext) {}
+  explicit nsSVGSwitchFrame(nsStyleContext* aContext)
+    : nsSVGGFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -83,7 +81,7 @@ nsSVGSwitchFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svgSwitch),
                "Content is not an SVG switch");
 
-  nsSVGSwitchFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
