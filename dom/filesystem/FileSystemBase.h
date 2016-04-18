@@ -37,6 +37,9 @@ public:
   virtual already_AddRefed<FileSystemBase>
   Clone() = 0;
 
+  virtual bool
+  ShouldCreateDirectory() = 0;
+
   virtual nsISupports*
   GetParentObject() const;
 
