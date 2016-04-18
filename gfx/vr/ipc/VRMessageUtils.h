@@ -22,9 +22,9 @@ struct ParamTraits<mozilla::gfx::VRHMDType> :
                                   mozilla::gfx::VRHMDType(mozilla::gfx::VRHMDType::NumHMDTypes)> {};
 
 template<>
-struct ParamTraits<mozilla::gfx::VRStateValidFlags> :
-  public BitFlagsEnumSerializer<mozilla::gfx::VRStateValidFlags,
-                                mozilla::gfx::VRStateValidFlags::State_All> {};
+struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags> :
+  public BitFlagsEnumSerializer<mozilla::gfx::VRDisplayCapabilityFlags,
+                                mozilla::gfx::VRDisplayCapabilityFlags::Cap_All> {};
 
 template <>
 struct ParamTraits<mozilla::gfx::VRDisplayUpdate>
@@ -78,7 +78,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mType);
     WriteParam(aMsg, aParam.mDeviceID);
     WriteParam(aMsg, aParam.mDeviceName);
-    WriteParam(aMsg, aParam.mSupportedSensorBits);
+    WriteParam(aMsg, aParam.mCapabilityFlags);
     WriteParam(aMsg, aParam.mEyeResolution);
     WriteParam(aMsg, aParam.mScreenRect);
     WriteParam(aMsg, aParam.mIsFakeScreen);
@@ -96,7 +96,7 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     if (!ReadParam(aMsg, aIter, &(aResult->mType)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDeviceID)) ||
         !ReadParam(aMsg, aIter, &(aResult->mDeviceName)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mSupportedSensorBits)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mCapabilityFlags)) ||
         !ReadParam(aMsg, aIter, &(aResult->mEyeResolution)) ||
         !ReadParam(aMsg, aIter, &(aResult->mScreenRect)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsFakeScreen))) {
