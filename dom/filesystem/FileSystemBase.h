@@ -40,16 +40,12 @@ public:
   virtual nsISupports*
   GetParentObject() const;
 
-  /*
-   * Get the virtual name of the root directory. This name will be exposed to
-   * the content page.
-   */
   virtual void
-  GetRootName(nsAString& aRetval) const = 0;
+  GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                   ErrorResult& aRv) const;
 
   void
-  GetDOMPath(nsIFile* aFile, Directory::DirectoryType aType,
-             nsAString& aRetval, ErrorResult& aRv) const;
+  GetDOMPath(nsIFile* aFile, nsAString& aRetval, ErrorResult& aRv) const;
 
   /*
    * Return the local root path of the FileSystem implementation.
