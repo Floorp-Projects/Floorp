@@ -48,6 +48,7 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.javaaddons.JavaAddonManager;
+import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.ContextUtils;
@@ -816,6 +817,7 @@ public class BrowserApp extends GeckoApp
         }
 
         mAddToHomeScreenPromotion = new AddToHomeScreenPromotion(this);
+        AudioFocusAgent.getInstance().attachToContext(this);
     }
 
     /**
