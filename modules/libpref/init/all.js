@@ -5286,13 +5286,7 @@ pref("media.gmp.insecure.allow", false);
 pref("dom.audiochannel.mutedByDefault", false);
 
 // Enable <details> and <summary> tags.
-#ifdef RELEASE_BUILD
-// Bug 1226455: Need to modify dom/tests/mochitest/general/test_interfaces.html
-// when shipping.
-pref("dom.details_element.enabled", false);
-#else
 pref("dom.details_element.enabled", true);
-#endif
 
 // Secure Element API
 #ifdef MOZ_SECUREELEMENT
