@@ -10,15 +10,13 @@
 #include "nsSVGEffects.h"
 #include "nsSVGFilters.h"
 
-typedef nsFrame SVGFEUnstyledLeafFrameBase;
-
-class SVGFEUnstyledLeafFrame : public SVGFEUnstyledLeafFrameBase
+class SVGFEUnstyledLeafFrame : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
-    : SVGFEUnstyledLeafFrameBase(aContext)
+    : nsFrame(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -32,7 +30,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return SVGFEUnstyledLeafFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -85,6 +83,5 @@ SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent()->GetParent());
   }
 
-  return SVGFEUnstyledLeafFrameBase::AttributeChanged(aNameSpaceID,
-                                                        aAttribute, aModType);
+  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
