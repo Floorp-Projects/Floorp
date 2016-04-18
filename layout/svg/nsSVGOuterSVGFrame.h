@@ -207,8 +207,6 @@ protected:
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGAnonChildFrame class
 
-typedef nsSVGDisplayContainerFrame nsSVGOuterSVGAnonChildFrameBase;
-
 /**
  * nsSVGOuterSVGFrames have a single direct child that is an instance of this
  * class, and which is used to wrap their real child frames. Such anonymous
@@ -232,15 +230,14 @@ typedef nsSVGDisplayContainerFrame nsSVGOuterSVGAnonChildFrameBase;
  * example, the implementations of IsSVGTransformed and GetCanvasTM assume
  * nsSVGContainerFrame instances all the way up to the nsSVGOuterSVGFrame.
  */
-class nsSVGOuterSVGAnonChildFrame
-  : public nsSVGOuterSVGAnonChildFrameBase
+class nsSVGOuterSVGAnonChildFrame : public nsSVGDisplayContainerFrame
 {
   friend nsContainerFrame*
   NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
 
   explicit nsSVGOuterSVGAnonChildFrame(nsStyleContext* aContext)
-    : nsSVGOuterSVGAnonChildFrameBase(aContext)
+    : nsSVGDisplayContainerFrame(aContext)
   {}
 
 public:
