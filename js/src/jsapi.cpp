@@ -6277,7 +6277,7 @@ void AutoFilename::setScriptSource(js::ScriptSource* p)
 void AutoFilename::setUnowned(const char* filename)
 {
     MOZ_ASSERT(!get());
-    filename_.as<const char*>() = filename;
+    filename_.as<const char*>() = filename ? filename : "";
 }
 
 void AutoFilename::setOwned(UniqueChars&& filename)
