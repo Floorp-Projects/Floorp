@@ -637,7 +637,9 @@ class WasmAstModule : public WasmAstNode
             return true;
         }
         *sigIndex = sigs_.length();
-        return sigs_.append(new (lifo_) WasmAstSig(WasmName(), Move(sig))) &&
+        auto* lifoSig = new (lifo_) WasmAstSig(WasmName(), Move(sig));
+        return lifoSig &&
+               sigs_.append(lifoSig) &&
                sigMap_.add(p, sigs_.back(), *sigIndex);
     }
     bool append(WasmAstSig* sig) {
