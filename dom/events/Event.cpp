@@ -154,7 +154,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     tmp->mEvent->mTarget = nullptr;
-    tmp->mEvent->currentTarget = nullptr;
+    tmp->mEvent->mCurrentTarget = nullptr;
     tmp->mEvent->originalTarget = nullptr;
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
@@ -192,7 +192,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mTarget)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->currentTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mCurrentTarget)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->originalTarget)
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
@@ -301,7 +301,7 @@ Event::GetTarget(nsIDOMEventTarget** aTarget)
 EventTarget*
 Event::GetCurrentTarget() const
 {
-  return GetDOMEventTarget(mEvent->currentTarget);
+  return GetDOMEventTarget(mEvent->mCurrentTarget);
 }
 
 NS_IMETHODIMP
@@ -423,8 +423,8 @@ Event::EventPhase() const
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
-  if ((mEvent->currentTarget &&
-       mEvent->currentTarget == mEvent->mTarget) ||
+  if ((mEvent->mCurrentTarget &&
+       mEvent->mCurrentTarget == mEvent->mTarget) ||
        mEvent->mFlags.InTargetPhase()) {
     return nsIDOMEvent::AT_TARGET;
   }
@@ -532,9 +532,10 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
+  nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->mCurrentTarget);
   if (!node) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(mEvent->currentTarget);
+    nsCOMPtr<nsPIDOMWindowOuter> win =
+      do_QueryInterface(mEvent->mCurrentTarget);
     if (!win) {
       return;
     }

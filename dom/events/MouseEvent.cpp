@@ -298,7 +298,8 @@ MouseEvent::GetRelatedTarget()
 
   if (relatedTarget) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(relatedTarget);
-    nsCOMPtr<nsIContent> currentTarget = do_QueryInterface(mEvent->currentTarget);
+    nsCOMPtr<nsIContent> currentTarget =
+      do_QueryInterface(mEvent->mCurrentTarget);
 
     nsIContent* shadowRelatedTarget = GetShadowRelatedTarget(currentTarget, content);
     if (shadowRelatedTarget) {
