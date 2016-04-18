@@ -3113,8 +3113,8 @@ nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
       //let's only take the lowest half of the point structure.
       int16_t myCoord[2];
 
-      myCoord[0] = aVisitor.mEvent->refPoint.x;
-      myCoord[1] = aVisitor.mEvent->refPoint.y;
+      myCoord[0] = aVisitor.mEvent->mRefPoint.x;
+      myCoord[1] = aVisitor.mEvent->mRefPoint.y;
       gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
       gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->mTime),
                                       sizeof(uint32_t));

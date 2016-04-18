@@ -110,7 +110,7 @@ protected:
   nsCOMPtr<nsPIDOMWindowOuter> mView;
   int32_t mDetail;
   CSSIntPoint mClientPoint;
-  // Screenpoint is mEvent->refPoint.
+  // Screenpoint is mEvent->mRefPoint.
   nsIntPoint mLayerPoint;
   CSSIntPoint mPagePoint;
   nsIntPoint mMovementPoint;
