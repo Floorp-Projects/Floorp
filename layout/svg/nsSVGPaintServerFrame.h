@@ -26,15 +26,13 @@ class nsStyleContext;
 
 struct gfxRect;
 
-typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
-
-class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase
+class nsSVGPaintServerFrame : public nsSVGContainerFrame
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   explicit nsSVGPaintServerFrame(nsStyleContext* aContext)
-    : nsSVGPaintServerFrameBase(aContext)
+    : nsSVGContainerFrame(aContext)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -65,7 +63,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSVGPaintServerFrameBase::IsFrameOfType(aFlags & ~nsIFrame::eSVGPaintServer);
+    return nsSVGContainerFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVGPaintServer);
   }
 };
 
