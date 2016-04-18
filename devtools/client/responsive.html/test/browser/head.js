@@ -92,7 +92,7 @@ function addRDMTask(url, generator) {
 }
 
 function spawnViewportTask(ui, args, task) {
-  return ContentTask.spawn(ui.getViewportMessageManager(), args, task);
+  return ContentTask.spawn(ui.getViewportBrowser(), args, task);
 }
 
 function waitForFrameLoad(ui, targetURL) {

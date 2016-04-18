@@ -14,8 +14,10 @@ const { DOM: dom, createClass, addons, PropTypes } =
 
 const Types = require("../types");
 const e10s = require("../utils/e10s");
+const message = require("../utils/message");
 
 module.exports = createClass({
+
   /**
    * This component is not allowed to depend directly on frequently changing
    * data (width, height) due to the use of `dangerouslySetInnerHTML` below.
@@ -26,6 +28,7 @@ module.exports = createClass({
 
   propTypes: {
     location: Types.location.isRequired,
+    swapAfterMount: PropTypes.bool.isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
   },
@@ -37,6 +40,40 @@ module.exports = createClass({
    * various features, like floating scrollbars.
    */
   componentDidMount: Task.async(function* () {
+    // If we are not swapping browsers after mount, it's safe to start the frame
+    // script now.
+    if (!this.props.swapAfterMount) {
+      yield this.startFrameScript();
+    }
+
+    // Notify manager.js that this browser has mounted, so that it can trigger
+    // a swap if needed and continue with the rest of its startup.
+    this.props.onBrowserMounted();
+
+    // If we are swapping browsers after mount, wait for the swap to complete
+    // and start the frame script after that.
+    if (this.props.swapAfterMount) {
+      yield message.wait(window, "start-frame-script");
+      yield this.startFrameScript();
+      message.post(window, "start-frame-script:done");
+    }
+
+    // Stop the frame script when requested in the future.
+    message.wait(window, "stop-frame-script").then(() => {
+      this.stopFrameScript();
+    });
+  }),
+
+  onContentResize(msg) {
+    let { onContentResize } = this.props;
+    let { width, height } = msg.data;
+    onContentResize({
+      width,
+      height,
+    });
+  },
+
+  startFrameScript: Task.async(function* () {
     let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
@@ -61,27 +98,16 @@ module.exports = createClass({
       // Tests expect events on resize to yield on various size changes
       notifyOnResize: DevToolsUtils.testing,
     });
-
-    // manager.js waits for this signal before allowing browser tests to start
-    this.props.onBrowserMounted();
   }),
 
-  componentWillUnmount() {
+  stopFrameScript: Task.async(function* () {
     let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
     e10s.off(mm, "OnContentResize", onContentResize);
-    e10s.emit(mm, "Stop");
-  },
-
-  onContentResize(msg) {
-    let { onContentResize } = this.props;
-    let { width, height } = msg.data;
-    onContentResize({
-      width,
-      height,
-    });
-  },
+    yield e10s.request(mm, "Stop");
+    message.post(window, "stop-frame-script:done");
+  }),
 
   render() {
     let {

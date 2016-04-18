@@ -22,6 +22,7 @@ const { createFactory, createElement } =
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const message = require("./utils/message");
 const { initDevices } = require("./devices");
 const App = createFactory(require("./app"));
 const Store = require("./store");
@@ -45,7 +46,7 @@ let bootstrap = {
     yield initDevices(this.dispatch.bind(this));
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
-    window.postMessage({ type: "init" }, "*");
+    message.post(window, "init:done");
   }),
 
   destroy() {
@@ -71,10 +72,8 @@ let bootstrap = {
 
 };
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
-  bootstrap.init();
-});
+// manager.js sends a message to signal init
+message.wait(window, "init").then(() => bootstrap.init());
 
 window.addEventListener("unload", function onUnload() {
   window.removeEventListener("unload", onUnload);
@@ -122,11 +121,12 @@ window.setViewportSize = (width, height) => {
 };
 
 /**
- * Called by manager.js when tests want to use the viewport's message manager.
- * It is packed into an object because this is the format most easily usable
- * with ContentTask.spawn().
+ * Called by manager.js when tests want to use the viewport's browser to access
+ * the content inside.  We mock the format of a <xul:browser> to make this
+ * easily usable with ContentTask.spawn(), which expects an object with a
+ * `messageManager` property.
  */
-window.getViewportMessageManager = () => {
+window.getViewportBrowser = () => {
   let { messageManager } = document.querySelector("iframe.browser").frameLoader;
   return { messageManager };
 };
