@@ -51,15 +51,18 @@ public:
 
   virtual bool RecvNotifyFlushComplete() override;
 
+  virtual bool RecvDestroy() override;
+
   void SetBrowser(dom::TabChild* aBrowser);
 
 private:
-  APZChild() {};
+  APZChild();
 
   void SetObserver(nsIObserver* aObserver);
 
   RefPtr<dom::TabChild> mBrowser;
   RefPtr<nsIObserver> mObserver;
+  bool mDestroyed;
 };
 
 } // namespace layers
