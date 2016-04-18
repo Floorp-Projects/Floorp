@@ -26,9 +26,8 @@ class nsAString;
 class nsPresContext;
 class nsDisplayItem;
 
-typedef nsContainerFrame nsVideoFrameBase;
-
-class nsVideoFrame : public nsVideoFrameBase, public nsIAnonymousContentCreator
+class nsVideoFrame : public nsContainerFrame
+                   , public nsIAnonymousContentCreator
 {
 public:
   template <typename T> using Maybe = mozilla::Maybe<T>;
