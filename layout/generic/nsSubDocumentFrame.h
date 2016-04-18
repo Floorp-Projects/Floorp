@@ -12,12 +12,10 @@
 #include "nsFrameLoader.h"
 #include "Units.h"
 
-typedef nsAtomicContainerFrame nsSubDocumentFrameSuper;
-
 /******************************************************************************
  * nsSubDocumentFrame
  *****************************************************************************/
-class nsSubDocumentFrame : public nsSubDocumentFrameSuper,
+class nsSubDocumentFrame : public nsAtomicContainerFrame,
                            public nsIReflowCallback
 {
 public:
@@ -37,7 +35,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSubDocumentFrameSuper::IsFrameOfType(aFlags &
+    return nsAtomicContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced |
         nsIFrame::eReplacedSizing |
         nsIFrame::eReplacedContainsBlock));
