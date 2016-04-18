@@ -283,7 +283,7 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
 
   info("wait for the context menu to open");
   let eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(button, 2, 2, eventDetails,
+  EventUtils.synthesizeMouse(button, 5, 2, eventDetails,
                              button.ownerDocument.defaultView);
   return deferred.promise;
 }

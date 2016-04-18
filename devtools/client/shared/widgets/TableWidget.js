@@ -1680,7 +1680,7 @@ EditableFieldsEngine.prototype = {
       return;
     }
 
-    target.scrollIntoView();
+    target.scrollIntoView(false);
     target.focus();
 
     if (!target.matches(this.selectors.join(","))) {
