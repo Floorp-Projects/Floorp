@@ -31,14 +31,39 @@ enum class VRHMDType : uint16_t {
   NumHMDTypes
 };
 
-enum class VRStateValidFlags : uint16_t {
-  State_None = 0,
-  State_Position = 1 << 1,
-  State_Orientation = 1 << 2,
-  // State_All used for validity checking during IPC serialization
-  State_All = (1 << 3) - 1
+enum class VRDisplayCapabilityFlags : uint16_t {
+  Cap_None = 0,
+  /**
+   * Cap_Position is set if the VRDisplay is capable of tracking its position.
+   */
+  Cap_Position = 1 << 1,
+  /**
+    * Cap_Orientation is set if the VRDisplay is capable of tracking its orientation.
+    */
+  Cap_Orientation = 1 << 2,
+  /**
+   * Cap_Present is set if the VRDisplay is capable of presenting content to an
+   * HMD or similar device.  Can be used to indicate "magic window" devices that
+   * are capable of 6DoF tracking but for which requestPresent is not meaningful.
+   * If false then calls to requestPresent should always fail, and
+   * getEyeParameters should return null.
+   */
+  Cap_Present = 1 << 3,
+  /**
+   * Cap_External is set if the VRDisplay is separate from the device's
+   * primary display. If presenting VR content will obscure
+   * other content on the device, this should be un-set. When
+   * un-set, the application should not attempt to mirror VR content
+   * or update non-VR UI because that content will not be visible.
+   */
+  Cap_External = 1 << 4,
+  /**
+   * Cap_All used for validity checking during IPC serialization
+   */
+  Cap_All = (1 << 5) - 1
 };
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRStateValidFlags)
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
 
 struct VRFieldOfView {
   VRFieldOfView() {}
@@ -93,7 +118,7 @@ struct VRDisplayInfo
   VRHMDType GetType() const { return mType; }
   uint32_t GetDeviceID() const { return mDeviceID; }
   const nsCString& GetDeviceName() const { return mDeviceName; }
-  VRStateValidFlags GetSupportedSensorStateBits() const { return mSupportedSensorBits; }
+  VRDisplayCapabilityFlags GetCapabilities() const { return mCapabilityFlags; }
   const VRFieldOfView& GetRecommendedEyeFOV(uint32_t whichEye) const { return mRecommendedEyeFOV[whichEye]; }
   const VRFieldOfView& GetMaximumEyeFOV(uint32_t whichEye) const { return mMaximumEyeFOV[whichEye]; }
 
@@ -111,7 +136,7 @@ struct VRDisplayInfo
   uint32_t mDeviceID;
   VRHMDType mType;
   nsCString mDeviceName;
-  VRStateValidFlags mSupportedSensorBits;
+  VRDisplayCapabilityFlags mCapabilityFlags;
   VRFieldOfView mMaximumEyeFOV[VRDisplayInfo::NumEyes];
   VRFieldOfView mRecommendedEyeFOV[VRDisplayInfo::NumEyes];
   VRFieldOfView mEyeFOV[VRDisplayInfo::NumEyes];
@@ -132,7 +157,7 @@ struct VRDisplayInfo
     return mType == other.mType &&
            mDeviceID == other.mDeviceID &&
            mDeviceName == other.mDeviceName &&
-           mSupportedSensorBits == other.mSupportedSensorBits &&
+           mCapabilityFlags == other.mCapabilityFlags &&
            mEyeResolution == other.mEyeResolution &&
            mScreenRect == other.mScreenRect &&
            mIsFakeScreen == other.mIsFakeScreen &&
@@ -158,7 +183,7 @@ struct VRDisplayInfo
 struct VRHMDSensorState {
   double timestamp;
   int32_t inputFrameID;
-  VRStateValidFlags flags;
+  VRDisplayCapabilityFlags flags;
   float orientation[4];
   float position[3];
   float angularVelocity[3];

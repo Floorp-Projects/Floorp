@@ -212,9 +212,12 @@ HMDInfoOSVR::HMDInfoOSVR(OSVR_ClientContext* context,
   MOZ_COUNT_CTOR_INHERITED(HMDInfoOSVR, VRHMDInfo);
 
   mDeviceInfo.mDeviceName.AssignLiteral("OSVR HMD");
-  mDeviceInfo.mSupportedSensorBits = VRStateValidFlags::State_None;
-  mDeviceInfo.mSupportedSensorBits =
-    VRStateValidFlags::State_Orientation | VRStateValidFlags::State_Position;
+  mDeviceInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
+  mDeviceInfo.mCapabilityFlags =
+    VRDisplayCapabilityFlags::Cap_Orientation | VRDisplayCapabilityFlags::Cap_Position;
+
+  mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
 
   // XXX OSVR display topology allows for more than one viewer
   // will assume only one viewer for now (most likely stay that way)
@@ -337,7 +340,7 @@ HMDInfoOSVR::GetSensorState()
   result.timestamp = timestamp.seconds;
 
   if (ret == OSVR_RETURN_SUCCESS) {
-    result.flags |= VRStateValidFlags::State_Orientation;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
     result.orientation[0] = orientation.data[1];
     result.orientation[1] = orientation.data[2];
     result.orientation[2] = orientation.data[3];
@@ -347,7 +350,7 @@ HMDInfoOSVR::GetSensorState()
   OSVR_PositionState position;
   ret = osvr_GetPositionState(*m_iface, &timestamp, &position);
   if (ret == OSVR_RETURN_SUCCESS) {
-    result.flags |= VRStateValidFlags::State_Position;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Position;
     result.position[0] = position.data[0];
     result.position[1] = position.data[1];
     result.position[2] = position.data[2];

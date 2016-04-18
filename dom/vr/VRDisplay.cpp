@@ -47,10 +47,10 @@ VRDisplay::UpdateVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDevices, nsISupports* 
       }
 
       if (isNewDevice) {
-        gfx::VRStateValidFlags sensorBits = proxyDevice->GetDeviceInfo().GetSupportedSensorStateBits();
+        gfx::VRDisplayCapabilityFlags flags = proxyDevice->GetDeviceInfo().GetCapabilities();
         devices.AppendElement(new HMDInfoVRDisplay(aParent, proxyDevice));
-        if (sensorBits & (gfx::VRStateValidFlags::State_Position |
-            gfx::VRStateValidFlags::State_Orientation))
+        if (flags & (gfx::VRDisplayCapabilityFlags::Cap_Position |
+            gfx::VRDisplayCapabilityFlags::Cap_Orientation))
         {
           devices.AppendElement(new HMDPositionVRDisplay(aParent, proxyDevice));
         }
@@ -176,11 +176,11 @@ VRPositionState::VRPositionState(nsISupports* aParent, const gfx::VRHMDSensorSta
 {
   mTimeStamp = aState.timestamp;
 
-  if (aState.flags & gfx::VRStateValidFlags::State_Position) {
+  if (aState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) {
     mPosition = new DOMPoint(mParent, aState.position[0], aState.position[1], aState.position[2], 0.0);
   }
 
-  if (aState.flags & gfx::VRStateValidFlags::State_Orientation) {
+  if (aState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
     mOrientation = new DOMPoint(mParent, aState.orientation[0], aState.orientation[1], aState.orientation[2], aState.orientation[3]);
   }
 }
