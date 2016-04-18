@@ -707,8 +707,7 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
 }
 
 // A directory is serialized as:
-// - pair of ints: SCTAG_DOM_DIRECTORY, 0
-// - pair of ints: type (eDOMRootDirectory/eDOMNotRootDirectory) - path length
+// - pair of ints: SCTAG_DOM_DIRECTORY, path length
 // - path as string
 bool
 WriteDirectory(JSStructuredCloneWriter* aWriter,
@@ -721,36 +720,25 @@ WriteDirectory(JSStructuredCloneWriter* aWriter,
   aDirectory->GetFullRealPath(path);
 
   size_t charSize = sizeof(nsString::char_type);
-  return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DIRECTORY, 0) &&
-         JS_WriteUint32Pair(aWriter, (uint32_t)aDirectory->Type(),
-                            path.Length()) &&
+  return JS_WriteUint32Pair(aWriter, SCTAG_DOM_DIRECTORY, path.Length()) &&
          JS_WriteBytes(aWriter, path.get(), path.Length() * charSize);
 }
 
 JSObject*
 ReadDirectory(JSContext* aCx,
               JSStructuredCloneReader* aReader,
-              uint32_t aZero,
+              uint32_t aPathLength,
               StructuredCloneHolder* aHolder)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aReader);
   MOZ_ASSERT(aHolder);
-  MOZ_ASSERT(aZero == 0);
-
-  uint32_t directoryType, lengthOfString;
-  if (!JS_ReadUint32Pair(aReader, &directoryType, &lengthOfString)) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(directoryType == Directory::eDOMRootDirectory ||
-             directoryType == Directory::eNotDOMRootDirectory);
 
   nsAutoString path;
-  path.SetLength(lengthOfString);
+  path.SetLength(aPathLength);
   size_t charSize = sizeof(nsString::char_type);
   if (!JS_ReadBytes(aReader, (void*) path.BeginWriting(),
-                    lengthOfString * charSize)) {
+                    aPathLength * charSize)) {
     return nullptr;
   }
 
@@ -769,8 +757,7 @@ ReadDirectory(JSContext* aCx,
   JS::Rooted<JS::Value> val(aCx);
   {
     RefPtr<Directory> directory =
-      Directory::Create(aHolder->ParentDuringRead(), file,
-                        (Directory::DirectoryType) directoryType);
+      Directory::Create(aHolder->ParentDuringRead(), file);
 
     if (!ToJSValue(aCx, directory, &val)) {
       return nullptr;

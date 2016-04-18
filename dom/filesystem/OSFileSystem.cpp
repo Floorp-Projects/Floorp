@@ -62,13 +62,6 @@ OSFileSystem::GetParentObject() const
   return mParent;
 }
 
-void
-OSFileSystem::GetRootName(nsAString& aRetval) const
-{
-  AssertIsOnOwningThread();
-  aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-}
-
 bool
 OSFileSystem::IsSafeFile(nsIFile* aFile) const
 {
