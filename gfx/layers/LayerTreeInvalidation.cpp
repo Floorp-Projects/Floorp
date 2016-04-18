@@ -132,7 +132,6 @@ struct LayerPropertiesBase : public LayerProperties
     : mLayer(aLayer)
     , mMaskLayer(nullptr)
     , mVisibleRegion(mLayer->GetLocalVisibleRegion().ToUnknownRegion())
-    , mInvalidRegion(aLayer->GetInvalidRegion())
     , mPostXScale(aLayer->GetPostXScale())
     , mPostYScale(aLayer->GetPostYScale())
     , mOpacity(aLayer->GetLocalOpacity())
@@ -202,7 +201,7 @@ struct LayerPropertiesBase : public LayerProperties
     }
 
     AddRegion(result, ComputeChangeInternal(aCallback, aGeometryChanged));
-    AddTransformedRegion(result, mLayer->GetInvalidRegion(), mTransform);
+    AddTransformedRegion(result, mLayer->GetInvalidRegion().GetRegion(), mTransform);
 
     if (mMaskLayer && otherMask) {
       AddTransformedRegion(result, mMaskLayer->ComputeChange(aCallback, aGeometryChanged),
@@ -252,7 +251,6 @@ struct LayerPropertiesBase : public LayerProperties
   UniquePtr<LayerPropertiesBase> mMaskLayer;
   nsTArray<UniquePtr<LayerPropertiesBase>> mAncestorMaskLayers;
   nsIntRegion mVisibleRegion;
-  nsIntRegion mInvalidRegion;
   Matrix4x4 mTransform;
   float mPostXScale;
   float mPostYScale;
