@@ -83,7 +83,7 @@ ContentAreaDropListener.prototype =
 
     // Use file:/// as the default uri so that drops of file URIs are always allowed
     let principal = sourceNode ? sourceNode.nodePrincipal
-                               : secMan.getSimpleCodebasePrincipal(ioService.newURI("file:///", null, null));
+                               : secMan.createCodebasePrincipal(ioService.newURI("file:///", null, null), {});
 
     secMan.checkLoadURIStrWithPrincipal(principal, uriString, flags);
 
