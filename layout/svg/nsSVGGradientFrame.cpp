@@ -48,10 +48,10 @@ private:
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext) :
-  nsSVGGradientFrameBase(aContext),
-  mLoopFlag(false),
-  mNoHRefURI(false)
+nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext)
+  : nsSVGPaintServerFrame(aContext)
+  , mLoopFlag(false)
+  , mNoHRefURI(false)
 {
 }
 
@@ -77,8 +77,8 @@ nsSVGGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
     nsSVGEffects::InvalidateDirectRenderingObservers(this);
   }
 
-  return nsSVGGradientFrameBase::AttributeChanged(aNameSpaceID,
-                                                  aAttribute, aModType);
+  return nsSVGPaintServerFrame::AttributeChanged(aNameSpaceID,
+                                                 aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------
