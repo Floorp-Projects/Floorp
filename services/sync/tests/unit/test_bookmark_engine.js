@@ -396,7 +396,9 @@ add_test(function test_bookmark_guidMap_fail() {
   engine.lastSync = 1;   // So we don't back up.
 
   // Make building the GUID map fail.
-  store.getAllIDs = function () { throw "Nooo"; };
+
+  let pbt = PlacesUtils.promiseBookmarksTree;
+  PlacesUtils.promiseBookmarksTree = function() { return Promise.reject("Nooo"); };
 
   // Ensure that we throw when accessing _guidMap.
   engine._syncStartup();
@@ -422,6 +424,7 @@ add_test(function test_bookmark_guidMap_fail() {
   }
   do_check_eq(err, "Nooo");
 
+  PlacesUtils.promiseBookmarksTree = pbt;
   server.stop(run_next_test);
 });
 

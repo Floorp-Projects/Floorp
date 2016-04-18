@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
                                   "resource://gre/modules/ProfileAge.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -317,16 +319,17 @@ function getGfxAdapter(aSuffix = "") {
 }
 
 /**
- * Gets the service pack information on Windows platforms. This was copied from
- * nsUpdateService.js.
+ * Gets the service pack and build information on Windows platforms. The initial version
+ * was copied from nsUpdateService.js.
  *
- * @return An object containing the service pack major and minor versions.
+ * @return An object containing the service pack major and minor versions, along with the
+ *         build number.
  */
-function getServicePack() {
-  const UNKNOWN_SERVICE_PACK = {major: null, minor: null};
+function getWindowsVersionInfo() {
+  const UNKNOWN_VERSION_INFO = {servicePackMajor: null, servicePackMinor: null, buildNumber: null};
 
   if (AppConstants.platform !== "win") {
-    return UNKNOWN_SERVICE_PACK;
+    return UNKNOWN_VERSION_INFO;
   }
 
   const BYTE = ctypes.uint8_t;
@@ -367,11 +370,12 @@ function getServicePack() {
     }
 
     return {
-      major: winVer.wServicePackMajor,
-      minor: winVer.wServicePackMinor,
+      servicePackMajor: winVer.wServicePackMajor,
+      servicePackMinor: winVer.wServicePackMinor,
+      buildNumber: winVer.dwBuildNumber,
     };
   } catch (e) {
-    return UNKNOWN_SERVICE_PACK;
+    return UNKNOWN_VERSION_INFO;
   } finally {
     kernel32.close();
   }
@@ -1243,9 +1247,23 @@ EnvironmentCache.prototype = {
     if (["gonk", "android"].includes(AppConstants.platform)) {
       data.kernelVersion = getSysinfoProperty("kernel_version", null);
     } else if (AppConstants.platform === "win") {
-      let servicePack = getServicePack();
-      data.servicePackMajor = servicePack.major;
-      data.servicePackMinor = servicePack.minor;
+      // The path to the "UBR" key, queried to get additional version details on Windows.
+      const WINDOWS_UBR_KEY_PATH = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+
+      let versionInfo = getWindowsVersionInfo();
+      data.servicePackMajor = versionInfo.servicePackMajor;
+      data.servicePackMinor = versionInfo.servicePackMinor;
+      // We only need the build number and UBR if we're at or above Windows 10.
+      if (typeof(data.version) === 'string' &&
+          Services.vc.compare(data.version, "10") >= 0) {
+        data.windowsBuildNumber = versionInfo.buildNumber;
+        // Query the UBR key and only add it to the environment if it's available.
+        // |readRegKey| doesn't throw, but rather returns 'undefined' on error.
+        let ubr = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                             WINDOWS_UBR_KEY_PATH, "UBR",
+                                             Ci.nsIWindowsRegKey.WOW64_64);
+        data.windowsUBR = (ubr !== undefined) ? ubr : null;
+      }
       data.installYear = getSysinfoProperty("installYear", null);
     }
 
