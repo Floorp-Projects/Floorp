@@ -35,8 +35,6 @@ extern LazyLogModule gMediaSampleLog;
 #define DECODER_WARN(x, ...) \
   DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
 
-namespace media {
-
 /*static*/ already_AddRefed<SeekTask>
 SeekTask::CreateSeekTask(const void* aDecoderID,
                          AbstractThread* aThread,
@@ -725,5 +723,4 @@ SeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   }
 }
 
-} // namespace media
 } // namespace mozilla
