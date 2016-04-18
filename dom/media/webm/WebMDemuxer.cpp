@@ -582,11 +582,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
         if (mLastSeenFrameWidth.isSome() && mLastSeenFrameHeight.isSome() &&
             (si.w != mLastSeenFrameWidth.value() ||
              si.h != mLastSeenFrameHeight.value())) {
-          // We ignore cropping information on resizes during streams.
-          // Cropping alone is rare, and we do not consider cropping to
-          // still be valid after a resolution change
-          mInfo.mVideo.mImage = mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
-          mInfo.mVideo.SetImageRect(nsIntRect(0, 0, si.w, si.h));
+          mInfo.mVideo.mDisplay = nsIntSize(si.w, si.h);
           mSharedVideoTrackInfo = new SharedTrackInfo(mInfo.mVideo, ++sStreamSourceID);
         }
         mLastSeenFrameWidth = Some(si.w);
