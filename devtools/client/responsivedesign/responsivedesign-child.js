@@ -150,12 +150,14 @@ var global = this;
 
   function screenshot() {
     let canvas = content.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    let width = content.innerWidth;
-    let height = content.innerHeight;
+    let ratio = content.devicePixelRatio;
+    let width = content.innerWidth * ratio;
+    let height = content.innerHeight * ratio;
     canvas.mozOpaque = true;
     canvas.width = width;
     canvas.height = height;
     let ctx = canvas.getContext("2d");
+    ctx.scale(ratio, ratio);
     ctx.drawWindow(content, content.scrollX, content.scrollY, width, height, "#fff");
     sendAsyncMessage("ResponsiveMode:RequestScreenshot:Done", canvas.toDataURL());
   }
