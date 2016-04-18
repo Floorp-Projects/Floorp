@@ -822,7 +822,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // composition event.
       WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
       WidgetQueryContentEvent selectedText(true, eQuerySelectedText,
-                                           compositionEvent->widget);
+                                           compositionEvent->mWidget);
       HandleQueryContentEvent(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
       compositionEvent->mData = selectedText.mReply.mString;
@@ -1584,12 +1584,14 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
                                             WidgetMouseEvent* inDownEvent,
                                             nsIFrame* inDownFrame)
 {
-  if (!inDownEvent->widget)
+  if (!inDownEvent->mWidget) {
     return;
+  }
 
   // Note that |inDownEvent| could be either a mouse down event or a
   // synthesized mouse move event.
-  mGestureDownPoint = inDownEvent->refPoint + inDownEvent->widget->WidgetToScreenOffset();
+  mGestureDownPoint =
+    inDownEvent->refPoint + inDownEvent->mWidget->WidgetToScreenOffset();
 
   if (inDownFrame) {
     inDownFrame->GetContentForEvent(inDownEvent,
@@ -1632,13 +1634,14 @@ EventStateManager::StopTrackingDragGesture()
 void
 EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent)
 {
-  NS_ASSERTION(aEvent->widget == mCurrentTarget->GetNearestWidget(),
+  NS_ASSERTION(aEvent->mWidget == mCurrentTarget->GetNearestWidget(),
                "Incorrect widget in event");
 
   // Set the coordinates in the new event to the coordinates of
   // the old event, adjusted for the fact that the widget might be
   // different
-  aEvent->refPoint = mGestureDownPoint - aEvent->widget->WidgetToScreenOffset();
+  aEvent->refPoint =
+    mGestureDownPoint - aEvent->mWidget->WidgetToScreenOffset();
   aEvent->mModifiers = mGestureModifiers;
   aEvent->buttons = mGestureDownButtons;
 }
@@ -1694,7 +1697,8 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     }
 
     // fire drag gesture if mouse has moved enough
-    LayoutDeviceIntPoint pt = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
+    LayoutDeviceIntPoint pt =
+      aEvent->refPoint + aEvent->mWidget->WidgetToScreenOffset();
     LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
     if (Abs(distance.x) > AssertedCast<uint32_t>(pixelThresholdX) ||
         Abs(distance.y) > AssertedCast<uint32_t>(pixelThresholdY)) {
@@ -2294,11 +2298,10 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   }
 
   WidgetMouseScrollEvent event(aEvent->IsTrusted(),
-                               eLegacyMouseLineOrPageScroll, aEvent->widget);
+                               eLegacyMouseLineOrPageScroll, aEvent->mWidget);
   event.mFlags.mDefaultPrevented = aState.mDefaultPrevented;
   event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
-  event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
@@ -2334,11 +2337,10 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   }
 
   WidgetMouseScrollEvent event(aEvent->IsTrusted(),
-                               eLegacyMousePixelScroll, aEvent->widget);
+                               eLegacyMousePixelScroll, aEvent->mWidget);
   event.mFlags.mDefaultPrevented = aState.mDefaultPrevented;
   event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
-  event.widget = aEvent->widget;
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
@@ -3423,8 +3425,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
         event.refPoint = mouseEvent->refPoint;
-        if (mouseEvent->widget) {
-          event.refPoint += mouseEvent->widget->WidgetToScreenOffset();
+        if (mouseEvent->mWidget) {
+          event.refPoint += mouseEvent->mWidget->WidgetToScreenOffset();
         }
         event.refPoint -= widget->WidgetToScreenOffset();
         event.mModifiers = mouseEvent->mModifiers;
@@ -3846,7 +3848,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     nsAutoPtr<WidgetPointerEvent> newPointerEvent;
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->IsTrusted(), aMessage,
-                             aMouseEvent->widget);
+                             aMouseEvent->mWidget);
     newPointerEvent->isPrimary = sourcePointer->isPrimary;
     newPointerEvent->pointerId = sourcePointer->pointerId;
     newPointerEvent->width = sourcePointer->width;
@@ -3860,7 +3862,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
   } else {
     aNewEvent =
       new WidgetMouseEvent(aMouseEvent->IsTrusted(), aMessage,
-                           aMouseEvent->widget, WidgetMouseEvent::eReal);
+                           aMouseEvent->mWidget, WidgetMouseEvent::eReal);
     aNewEvent->relatedTarget = aRelatedContent;
   }
   aNewEvent->refPoint = aMouseEvent->refPoint;
@@ -4205,7 +4207,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       // Mouse movement is reported on the MouseEvent.movement{X,Y} fields.
       // Movement is calculated in UIEvent::GetMovementPoint() as:
       //   previous_mousemove_refPoint - current_mousemove_refPoint.
-      if (sIsPointerLocked && aMouseEvent->widget) {
+      if (sIsPointerLocked && aMouseEvent->mWidget) {
         // The pointer is locked. If the pointer is not located at the center of
         // the window, dispatch a synthetic mousemove to return the pointer there.
         // Doing this between "real" pointer moves gives the impression that the
@@ -4213,7 +4215,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
         // boundary. We cancel the synthetic event so that we don't end up
         // dispatching the centering move event to content.
         LayoutDeviceIntPoint center =
-          GetWindowClientRectCenter(aMouseEvent->widget);
+          GetWindowClientRectCenter(aMouseEvent->mWidget);
         aMouseEvent->lastRefPoint = center;
         if (aMouseEvent->refPoint != center) {
           // Mouse move doesn't finish at the center of the window. Dispatch a
@@ -4222,8 +4224,8 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
           // we've dispatched a synthetic mouse movement, so we can cancel it
           // in the other branch here.
           sSynthCenteringPoint = center;
-          aMouseEvent->widget->SynthesizeNativeMouseMove(
-            center + aMouseEvent->widget->WidgetToScreenOffset(), nullptr);
+          aMouseEvent->mWidget->SynthesizeNativeMouseMove(
+            center + aMouseEvent->mWidget->WidgetToScreenOffset(), nullptr);
         } else if (aMouseEvent->refPoint == sSynthCenteringPoint) {
           // This is the "synthetic native" event we dispatched to re-center the
           // pointer. Cancel it so we don't expose the centering move to content.
@@ -4290,7 +4292,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
 
       OverOutElementsWrapper* helper = GetWrapperByEventID(aMouseEvent);
       if (helper->mLastOverFrame &&
-          nsContentUtils::GetTopLevelWidget(aMouseEvent->widget) !=
+          nsContentUtils::GetTopLevelWidget(aMouseEvent->mWidget) !=
           nsContentUtils::GetTopLevelWidget(helper->mLastOverFrame->GetNearestWidget())) {
         // the Mouse/PointerOut event widget doesn't have same top widget with
         // mLastOverFrame, it's a spurious event for mLastOverFrame
@@ -4471,7 +4473,7 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
                                        nsWeakFrame& aTargetFrame)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetDragEvent event(aDragEvent->IsTrusted(), aMessage, aDragEvent->widget);
+  WidgetDragEvent event(aDragEvent->IsTrusted(), aMessage, aDragEvent->mWidget);
   event.refPoint = aDragEvent->refPoint;
   event.mModifiers = aDragEvent->mModifiers;
   event.buttons = aDragEvent->buttons;
@@ -4507,7 +4509,8 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
 
   if (aMessage == eDragExit && IsRemoteTarget(aTargetContent)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetDragEvent remoteEvent(aDragEvent->IsTrusted(), aMessage, aDragEvent->widget);
+    WidgetDragEvent remoteEvent(aDragEvent->IsTrusted(), aMessage,
+                                aDragEvent->mWidget);
     remoteEvent.AssignDragEventData(*aDragEvent, true);
     HandleCrossProcessEvent(&remoteEvent, &status);
   }
@@ -4625,7 +4628,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
   if (0 != aEvent->clickCount) {
     //Check that the window isn't disabled before firing a click
     //(see bug 366544).
-    if (aEvent->widget && !aEvent->widget->IsEnabled()) {
+    if (aEvent->mWidget && !aEvent->mWidget->IsEnabled()) {
       return ret;
     }
     //fire click
@@ -4634,7 +4637,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
       aEvent->button == WidgetMouseEvent::eRightButton);
 
     WidgetMouseEvent event(aEvent->IsTrusted(), eMouseClick,
-                           aEvent->widget, WidgetMouseEvent::eReal);
+                           aEvent->mWidget, WidgetMouseEvent::eReal);
     event.refPoint = aEvent->refPoint;
     event.clickCount = aEvent->clickCount;
     event.mModifiers = aEvent->mModifiers;
@@ -4668,7 +4671,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
           mouseContent && mouseContent->IsInComposedDoc()) {
         //fire double click
         WidgetMouseEvent event2(aEvent->IsTrusted(), eMouseDoubleClick,
-                                aEvent->widget, WidgetMouseEvent::eReal);
+                                aEvent->mWidget, WidgetMouseEvent::eReal);
         event2.refPoint = aEvent->refPoint;
         event2.clickCount = aEvent->clickCount;
         event2.mModifiers = aEvent->mModifiers;

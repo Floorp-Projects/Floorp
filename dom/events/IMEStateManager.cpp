@@ -1147,7 +1147,7 @@ IMEStateManager::DispatchCompositionEvent(
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
      "aPresContext=0x%p, aCompositionEvent={ mMessage=%s, "
      "mNativeIMEContext={ mRawNativeIMEContext=0x%X, "
-     "mOriginProcessID=0x%X }, widget(0x%p)={ "
+     "mOriginProcessID=0x%X }, mWidget(0x%p)={ "
      "GetNativeIMEContext()={ mRawNativeIMEContext=0x%X, "
      "mOriginProcessID=0x%X }, Destroyed()=%s }, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
@@ -1156,10 +1156,10 @@ IMEStateManager::DispatchCompositionEvent(
      ToChar(aCompositionEvent->mMessage),
      aCompositionEvent->mNativeIMEContext.mRawNativeIMEContext,
      aCompositionEvent->mNativeIMEContext.mOriginProcessID,
-     aCompositionEvent->widget.get(),
-     aCompositionEvent->widget->GetNativeIMEContext().mRawNativeIMEContext,
-     aCompositionEvent->widget->GetNativeIMEContext().mOriginProcessID,
-     GetBoolName(aCompositionEvent->widget->Destroyed()),
+     aCompositionEvent->mWidget.get(),
+     aCompositionEvent->mWidget->GetNativeIMEContext().mRawNativeIMEContext,
+     aCompositionEvent->mWidget->GetNativeIMEContext().mOriginProcessID,
+     GetBoolName(aCompositionEvent->mWidget->Destroyed()),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted),
      GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
      GetBoolName(aIsSynthesized), tabParent.get()));
@@ -1217,7 +1217,7 @@ IMEStateManager::DispatchCompositionEvent(
        composition->WasNativeCompositionEndEventDiscarded()) &&
       aCompositionEvent->CausesDOMCompositionEndEvent()) {
     TextCompositionArray::index_type i =
-      sTextCompositions->IndexOf(aCompositionEvent->widget);
+      sTextCompositions->IndexOf(aCompositionEvent->mWidget);
     if (i != TextCompositionArray::NoIndex) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
@@ -1266,7 +1266,7 @@ IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
   }
 
   RefPtr<TextComposition> composition = sTextCompositions ?
-    sTextCompositions->GetCompositionFor(aSelectionEvent->widget) : nullptr;
+    sTextCompositions->GetCompositionFor(aSelectionEvent->mWidget) : nullptr;
   if (composition) {
     // When there is a composition, TextComposition should guarantee that the
     // selection event will be handled in same target as composition events.
@@ -1290,17 +1290,17 @@ IMEStateManager::OnCompositionEventDiscarded(
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnCompositionEventDiscarded(aCompositionEvent={ "
      "mMessage=%s, mNativeIMEContext={ mRawNativeIMEContext=0x%X, "
-     "mOriginProcessID=0x%X }, widget(0x%p)={ "
+     "mOriginProcessID=0x%X }, mWidget(0x%p)={ "
      "GetNativeIMEContext()={ mRawNativeIMEContext=0x%X, "
      "mOriginProcessID=0x%X }, Destroyed()=%s }, "
      "mFlags={ mIsTrusted=%s } })",
      ToChar(aCompositionEvent->mMessage),
      aCompositionEvent->mNativeIMEContext.mRawNativeIMEContext,
      aCompositionEvent->mNativeIMEContext.mOriginProcessID,
-     aCompositionEvent->widget.get(),
-     aCompositionEvent->widget->GetNativeIMEContext().mRawNativeIMEContext,
-     aCompositionEvent->widget->GetNativeIMEContext().mOriginProcessID,
-     GetBoolName(aCompositionEvent->widget->Destroyed()),
+     aCompositionEvent->mWidget.get(),
+     aCompositionEvent->mWidget->GetNativeIMEContext().mRawNativeIMEContext,
+     aCompositionEvent->mWidget->GetNativeIMEContext().mOriginProcessID,
+     GetBoolName(aCompositionEvent->mWidget->Destroyed()),
      GetBoolName(aCompositionEvent->mFlags.mIsTrusted)));
 
   if (!aCompositionEvent->IsTrusted()) {
@@ -1314,7 +1314,7 @@ IMEStateManager::OnCompositionEventDiscarded(
   }
 
   RefPtr<TextComposition> composition =
-    sTextCompositions->GetCompositionFor(aCompositionEvent->widget);
+    sTextCompositions->GetCompositionFor(aCompositionEvent->mWidget);
   if (!composition) {
     // If the PresShell has been being destroyed during composition,
     // a TextComposition instance for the composition was already removed from

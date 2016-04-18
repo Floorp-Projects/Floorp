@@ -30,6 +30,9 @@ public:
   virtual already_AddRefed<FileSystemBase>
   Clone() override;
 
+  virtual bool
+  ShouldCreateDirectory() override { return true; }
+
   virtual void
   Shutdown() override;
 
@@ -37,7 +40,8 @@ public:
   GetParentObject() const override;
 
   virtual void
-  GetRootName(nsAString& aRetval) const override;
+  GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                   ErrorResult& aRv) const override;
 
   virtual bool
   IsSafeFile(nsIFile* aFile) const override;

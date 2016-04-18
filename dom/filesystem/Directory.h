@@ -59,20 +59,9 @@ public:
   static already_AddRefed<Promise>
   GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
 
-  enum DirectoryType {
-    // When a directory is selected using a HTMLInputElement, that will be the
-    // DOM root directory and its name will be '/'. All the sub directory will
-    // be called with they real name. We use this enum to mark what we must
-    // consider the '/' of this DOM filesystem.
-    eDOMRootDirectory,
-
-    // All the sub directories of the '/' will be marked using this other value.
-    eNotDOMRootDirectory
-  };
-
   static already_AddRefed<Directory>
   Create(nsISupports* aParent, nsIFile* aDirectory,
-         DirectoryType aType, FileSystemBase* aFileSystem = 0);
+         FileSystemBase* aFileSystem = 0);
 
   // ========= Begin WebIDL bindings. ===========
 
@@ -145,17 +134,12 @@ public:
   FileSystemBase*
   GetFileSystem(ErrorResult& aRv);
 
-  DirectoryType Type() const
-  {
-    return mType;
-  }
-
   bool
   ClonableToDifferentThreadOrProcess() const;
 
 private:
   Directory(nsISupports* aParent,
-            nsIFile* aFile, DirectoryType aType,
+            nsIFile* aFile,
             FileSystemBase* aFileSystem = nullptr);
   ~Directory();
 
@@ -172,7 +156,6 @@ private:
   nsCOMPtr<nsISupports> mParent;
   RefPtr<FileSystemBase> mFileSystem;
   nsCOMPtr<nsIFile> mFile;
-  DirectoryType mType;
 
   nsString mFilters;
   nsString mPath;

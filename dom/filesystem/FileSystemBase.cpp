@@ -111,18 +111,25 @@ FileSystemBase::IsSafeDirectory(Directory* aDir) const
 }
 
 void
+FileSystemBase::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                                 ErrorResult& aRv) const
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aFile);
+
+  aRv = aFile->GetLeafName(aRetval);
+  NS_WARN_IF(aRv.Failed());
+}
+
+void
 FileSystemBase::GetDOMPath(nsIFile* aFile,
-                           Directory::DirectoryType aType,
                            nsAString& aRetval,
                            ErrorResult& aRv) const
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFile);
 
-  if (aType == Directory::eDOMRootDirectory) {
-    aRetval.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
-    return;
-  }
+  aRetval.Truncate();
 
   nsCOMPtr<nsIFile> fileSystemPath;
   aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(LocalOrDeviceStorageRootPath()),
@@ -130,8 +137,6 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
-  MOZ_ASSERT(FileSystemUtils::IsDescendantPath(fileSystemPath, aFile));
 
   nsCOMPtr<nsIFile> path;
   aRv = aFile->Clone(getter_AddRefs(path));
@@ -142,6 +147,14 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
   nsTArray<nsString> parts;
 
   while (true) {
+    nsAutoString leafName;
+    aRv = path->GetLeafName(leafName);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
+    parts.AppendElement(leafName);
+
     bool equal = false;
     aRv = fileSystemPath->Equals(path, &equal);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -151,14 +164,6 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
     if (equal) {
       break;
     }
-
-    nsAutoString leafName;
-    aRv = path->GetLeafName(leafName);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    parts.AppendElement(leafName);
 
     nsCOMPtr<nsIFile> parentPath;
     aRv = path->GetParent(getter_AddRefs(parentPath));
@@ -175,8 +180,6 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
   }
 
   MOZ_ASSERT(!parts.IsEmpty());
-
-  aRetval.Truncate();
 
   for (int32_t i = parts.Length() - 1; i >= 0; --i) {
     aRetval.AppendLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);

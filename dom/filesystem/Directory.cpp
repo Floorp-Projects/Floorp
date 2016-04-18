@@ -137,8 +137,7 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
   }
 
   RefPtr<GetFileOrDirectoryTaskChild> task =
-    GetFileOrDirectoryTaskChild::Create(aFileSystem, path, eDOMRootDirectory,
-                                        true, aRv);
+    GetFileOrDirectoryTaskChild::Create(aFileSystem, path, true, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -149,7 +148,7 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
 
 /* static */ already_AddRefed<Directory>
 Directory::Create(nsISupports* aParent, nsIFile* aFile,
-                  DirectoryType aType, FileSystemBase* aFileSystem)
+                  FileSystemBase* aFileSystem)
 {
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aFile);
@@ -158,27 +157,17 @@ Directory::Create(nsISupports* aParent, nsIFile* aFile,
   bool isDir;
   nsresult rv = aFile->IsDirectory(&isDir);
   MOZ_ASSERT(NS_SUCCEEDED(rv) && isDir);
-
-  if (aType == eNotDOMRootDirectory) {
-    RefPtr<nsIFile> parent;
-    rv = aFile->GetParent(getter_AddRefs(parent));
-    // We must have a parent if this is not the root directory.
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && parent);
-  }
 #endif
 
-  RefPtr<Directory> directory =
-    new Directory(aParent, aFile, aType, aFileSystem);
+  RefPtr<Directory> directory = new Directory(aParent, aFile, aFileSystem);
   return directory.forget();
 }
 
 Directory::Directory(nsISupports* aParent,
                      nsIFile* aFile,
-                     DirectoryType aType,
                      FileSystemBase* aFileSystem)
   : mParent(aParent)
   , mFile(aFile)
-  , mType(aType)
 {
   MOZ_ASSERT(aFile);
 
@@ -213,18 +202,12 @@ Directory::GetName(nsAString& aRetval, ErrorResult& aRv)
 {
   aRetval.Truncate();
 
-  if (mType == eDOMRootDirectory) {
-    RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
-    fs->GetRootName(aRetval);
+  RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  aRv = mFile->GetLeafName(aRetval);
-  NS_WARN_IF(aRv.Failed());
+  fs->GetDirectoryName(mFile, aRetval, aRv);
 }
 
 already_AddRefed<Promise>
@@ -318,8 +301,7 @@ Directory::Get(const nsAString& aPath, ErrorResult& aRv)
   }
 
   RefPtr<GetFileOrDirectoryTaskChild> task =
-    GetFileOrDirectoryTaskChild::Create(fs, realPath, eNotDOMRootDirectory,
-                                        false, aRv);
+    GetFileOrDirectoryTaskChild::Create(fs, realPath, false, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -409,7 +391,7 @@ Directory::GetPath(nsAString& aRetval, ErrorResult& aRv)
       return;
     }
 
-    fs->GetDOMPath(mFile, mType, mPath, aRv);
+    fs->GetDOMPath(mFile, mPath, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -438,7 +420,7 @@ Directory::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   RefPtr<GetDirectoryListingTaskChild> task =
-    GetDirectoryListingTaskChild::Create(fs, mFile, mType, mFilters, aRv);
+    GetDirectoryListingTaskChild::Create(fs, mFile, mFilters, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -478,10 +460,6 @@ FileSystemBase*
 Directory::GetFileSystem(ErrorResult& aRv)
 {
   if (!mFileSystem) {
-    // Any subdir inherits the FileSystem of the parent Directory. If we are
-    // here it's because we are dealing with the DOM root.
-    MOZ_ASSERT(mType == eDOMRootDirectory);
-
     nsAutoString path;
     aRv = mFile->GetPath(path);
     if (NS_WARN_IF(aRv.Failed())) {

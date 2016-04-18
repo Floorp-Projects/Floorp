@@ -34,10 +34,6 @@
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
-#define PRIMETIME_EME_SUPPORTED 1
-#endif
-
 namespace mozilla {
 namespace dom {
 
@@ -280,7 +276,7 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
-#ifdef PRIMETIME_EME_SUPPORTED
+#ifdef MOZ_ADOBE_EME
   if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");

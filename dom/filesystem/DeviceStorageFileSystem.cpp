@@ -115,10 +115,32 @@ DeviceStorageFileSystem::GetParentObject() const
 }
 
 void
-DeviceStorageFileSystem::GetRootName(nsAString& aRetval) const
+DeviceStorageFileSystem::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                                          ErrorResult& aRv) const
 {
   AssertIsOnOwningThread();
-  aRetval = mStorageName;
+  MOZ_ASSERT(aFile);
+
+  nsCOMPtr<nsIFile> rootPath;
+  aRv = NS_NewLocalFile(LocalOrDeviceStorageRootPath(), false,
+                        getter_AddRefs(rootPath));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  bool equal = false;
+  aRv = aFile->Equals(rootPath, &equal);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  if (equal) {
+    aRetval = mStorageName;
+    return;
+  }
+
+  FileSystemBase::GetDirectoryName(aFile, aRetval, aRv);
+  NS_WARN_IF(aRv.Failed());
 }
 
 bool

@@ -6,6 +6,7 @@
 
 #include "WaveShaperNode.h"
 #include "mozilla/dom/WaveShaperNodeBinding.h"
+#include "AlignmentUtils.h"
 #include "AudioNode.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
@@ -231,13 +232,15 @@ public:
     aOutput->AllocateChannels(channelCount);
     for (uint32_t i = 0; i < channelCount; ++i) {
       const float* inputSamples;
-      float scaledInput[WEBAUDIO_BLOCK_SIZE];
+      float scaledInput[WEBAUDIO_BLOCK_SIZE + 4];
+      float* alignedScaledInput = ALIGNED16(scaledInput);
+      ASSERT_ALIGNED16(alignedScaledInput);
       if (aInput.mVolume != 1.0f) {
         AudioBlockCopyChannelWithScale(
             static_cast<const float*>(aInput.mChannelData[i]),
                                       aInput.mVolume,
-                                      scaledInput);
-        inputSamples = scaledInput;
+                                      alignedScaledInput);
+        inputSamples = alignedScaledInput;
       } else {
         inputSamples = static_cast<const float*>(aInput.mChannelData[i]);
       }
