@@ -11,8 +11,6 @@
 
 #include "nsRubyContentFrame.h"
 
-typedef nsRubyContentFrame nsRubyBaseFrameSuper;
-
 /**
  * Factory function.
  * @return a newly allocated nsRubyBaseFrame (infallible)
@@ -20,7 +18,7 @@ typedef nsRubyContentFrame nsRubyBaseFrameSuper;
 nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
 
-class nsRubyBaseFrame final : public nsRubyBaseFrameSuper
+class nsRubyBaseFrame final : public nsRubyContentFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -38,7 +36,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
   explicit nsRubyBaseFrame(nsStyleContext* aContext)
-    : nsRubyBaseFrameSuper(aContext) {}
+    : nsRubyContentFrame(aContext) {}
 };
 
 #endif /* nsRubyBaseFrame_h___ */
