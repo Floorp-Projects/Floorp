@@ -37,9 +37,14 @@ public:
     , _21(a21), _22(a22)
     , _31(a31), _32(a32)
   {}
-  Float _11, _12;
-  Float _21, _22;
-  Float _31, _32;
+  union {
+    struct {
+      Float _11, _12;
+      Float _21, _22;
+      Float _31, _32;
+    };
+    Float components[6];
+  };
 
   MOZ_ALWAYS_INLINE Matrix Copy() const
   {
@@ -461,10 +466,15 @@ public:
     memcpy(this, &aOther, sizeof(*this));
   }
 
-  Float _11, _12, _13, _14;
-  Float _21, _22, _23, _24;
-  Float _31, _32, _33, _34;
-  Float _41, _42, _43, _44;
+  union {
+    struct {
+      Float _11, _12, _13, _14;
+      Float _21, _22, _23, _24;
+      Float _31, _32, _33, _34;
+      Float _41, _42, _43, _44;
+    };
+    Float components[16];
+  };
 
   friend std::ostream& operator<<(std::ostream& aStream, const Matrix4x4Typed& aMatrix)
   {
@@ -1618,11 +1628,16 @@ public:
     return *this;
   }
 
-  Float _11, _12, _13, _14;
-  Float _21, _22, _23, _24;
-  Float _31, _32, _33, _34;
-  Float _41, _42, _43, _44;
-  Float _51, _52, _53, _54;
+  union {
+    struct {
+      Float _11, _12, _13, _14;
+      Float _21, _22, _23, _24;
+      Float _31, _32, _33, _34;
+      Float _41, _42, _43, _44;
+      Float _51, _52, _53, _54;
+    };
+    Float components[20];
+  };
 };
 
 } // namespace gfx
