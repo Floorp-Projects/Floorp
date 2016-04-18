@@ -65,7 +65,7 @@ class MarionetteHarness(object):
             tests = self.args.pop('tests')
             runner = self._runner_class(**self.args)
             runner.run_tests(tests)
-            return runner.failed
+            return runner.failed + runner.crashed
         except Exception:
             logger = self.args.get('logger')
             if logger:
