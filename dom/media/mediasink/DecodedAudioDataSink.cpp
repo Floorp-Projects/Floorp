@@ -63,10 +63,8 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
     mOutputRate = AudioStream::GetPreferredRate();
   }
 
-  bool monoAudioEnabled = gfxPrefs::MonoAudio();
-
-  mOutputChannels = monoAudioEnabled
-    ? 1 : (gfxPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+  mOutputChannels = mInfo.mChannels > 2 && gfxPrefs::AudioSinkForceStereo()
+                      ? 2 : mInfo.mChannels;
 
   mAudioQueueListener = aAudioQueue.PushEvent().Connect(
     mProcessingThread, this, &DecodedAudioDataSink::OnAudioPushed);
