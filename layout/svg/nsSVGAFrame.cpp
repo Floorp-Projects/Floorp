@@ -13,15 +13,13 @@
 
 using namespace mozilla;
 
-typedef nsSVGDisplayContainerFrame nsSVGAFrameBase;
-
-class nsSVGAFrame : public nsSVGAFrameBase
+class nsSVGAFrame : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGAFrame(nsStyleContext* aContext) :
-    nsSVGAFrameBase(aContext) {}
+  explicit nsSVGAFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -83,7 +81,7 @@ nsSVGAFrame::Init(nsIContent*       aContent,
                "Trying to construct an SVGAFrame for a "
                "content element that doesn't support the right interfaces");
 
-  nsSVGAFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -124,7 +122,7 @@ nsSVGAFrame::NotifySVGChanged(uint32_t aFlags)
     mCanvasTM = nullptr;
   }
 
-  nsSVGAFrameBase::NotifySVGChanged(aFlags);
+  nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
 }
 
 //----------------------------------------------------------------------
