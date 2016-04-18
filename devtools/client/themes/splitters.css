@@ -2,7 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* This file is loaded by both browser.xul and toolbox.xul. Therefore, rules
+   defined here can not rely on toolbox.xul variables. */
+
 /* Splitters */
+
+:root {
+  /* Define the widths of the draggable areas on each side of a splitter. top
+     and bottom widths are used for horizontal splitters, inline-start and
+     inline-end for side splitters.*/
+
+  --devtools-splitter-top-width: 2px;
+  --devtools-splitter-bottom-width: 2px;
+
+  /* Small draggable area on inline-start to avoid overlaps on scrollbars.*/
+  --devtools-splitter-inline-start-width: 1px;
+  --devtools-splitter-inline-end-width: 4px;
+}
+
 :root[devtoolstheme="light"] {
   /* These variables are used in browser.xul but inside the toolbox they are overridden by --theme-splitter-color */
   --devtools-splitter-color: #dde1e4;
@@ -12,28 +29,47 @@
   --devtools-splitter-color: #42484f;
 }
 
-.devtools-horizontal-splitter {
-  -moz-appearance: none;
-  background-image: none;
-  background-color: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--devtools-splitter-color);
-  min-height: 3px;
-  height: 3px;
-  margin-top: -3px;
-  position: relative;
-}
-
+.devtools-horizontal-splitter,
 .devtools-side-splitter {
   -moz-appearance: none;
   background-image: none;
-  background-color: transparent;
   border: 0;
-  -moz-border-end: 1px solid var(--devtools-splitter-color);
-  min-width: 3px;
-  width: 3px;
-  -moz-margin-start: -3px;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--devtools-splitter-color);
+  background-clip: content-box;
   position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+.devtools-horizontal-splitter {
+  min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: n-resize;
+}
+
+.devtools-side-splitter {
+  min-width: calc(var(--devtools-splitter-inline-start-width) +
+    var(--devtools-splitter-inline-end-width) + 1px);
+
+  border-inline-start-width: var(--devtools-splitter-inline-start-width);
+  border-inline-end-width: var(--devtools-splitter-inline-end-width);
+
+  margin-inline-start: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-inline-end: calc(-1 * var(--devtools-splitter-inline-end-width));
+
   cursor: e-resize;
 }
 
