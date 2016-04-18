@@ -24,7 +24,7 @@ nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const
   if (aFlags & eBidiInlineContainer) {
     return false;
   }
-  return nsRubyContentFrameSuper::IsFrameOfType(aFlags);
+  return nsInlineFrame::IsFrameOfType(aFlags);
 }
 
 bool
