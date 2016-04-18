@@ -201,6 +201,21 @@ static void InitVideoQueuePrefs() {
   }
 }
 
+static bool sSuspendBackgroundVideos = true;
+
+static void
+InitSuspendBackgroundPref()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+
+  static bool sSetupPrefCache = false;
+  if (!sSetupPrefCache) {
+    sSetupPrefCache = true;
+    Preferences::AddBoolVarCache(&sSuspendBackgroundVideos,
+                                 "media.suspend-bkgnd-video.enabled", true);
+  }
+}
+
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
@@ -289,6 +304,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   InitVideoQueuePrefs();
+  InitSuspendBackgroundPref();
 
   mBufferingWait = IsRealTime() ? 0 : 15;
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
@@ -1318,6 +1334,11 @@ void MediaDecoderStateMachine::PlayStateChanged()
 void MediaDecoderStateMachine::VisibilityChanged()
 {
   DECODER_LOG("VisibilityChanged: is visible = %c", mIsVisible ? 'T' : 'F');
+
+  if (!sSuspendBackgroundVideos) {
+    // Not suspending background videos so there's nothing to do.
+    return;
+  }
 }
 
 void MediaDecoderStateMachine::BufferedRangeUpdated()
