@@ -464,7 +464,7 @@ struct JSCompartment
     js::ObjectWeakMap* objectMetadataTable;
 
     // Map from array buffers to views sharing that storage.
-    JS::WeakCache<js::InnerViewTable> innerViews;
+    js::InnerViewTable innerViews;
 
     // Inline transparent typed objects do not initially have an array buffer,
     // but can have that buffer created lazily if it is accessed later. This
@@ -584,6 +584,7 @@ struct JSCompartment
 
     void sweepAfterMinorGC();
 
+    void sweepInnerViews();
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
     void sweepGlobalObject(js::FreeOp* fop);
