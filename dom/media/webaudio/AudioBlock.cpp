@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioBlock.h"
+#include "AlignmentUtils.h"
 
 namespace mozilla {
 
@@ -17,9 +18,7 @@ namespace mozilla {
  * buffer can reuse and modify its contents next iteration if other references
  * are all downstream temporary references held by AudioBlock.
  *
- * This only guarantees 4-byte alignment of the data. For alignment we simply
- * assume that the memory from malloc is at least 4-byte aligned and that
- * AudioBlockBuffer's size is divisible by 4.
+ * We guarantee 16 byte alignment of the channel data.
  */
 class AudioBlockBuffer final : public ThreadSharedObject {
 public:
@@ -28,7 +27,9 @@ public:
 
   float* ChannelData(uint32_t aChannel)
   {
-    return reinterpret_cast<float*>(this + 1) + aChannel * WEBAUDIO_BLOCK_SIZE;
+    float* base = reinterpret_cast<float*>(((uintptr_t)(this + 1) + 15) & ~0x0F);
+    ASSERT_ALIGNED16(base);
+    return base + aChannel * WEBAUDIO_BLOCK_SIZE;
   }
 
   static already_AddRefed<AudioBlockBuffer> Create(uint32_t aChannelCount)
@@ -37,9 +38,11 @@ public:
     size *= aChannelCount;
     size *= sizeof(float);
     size += sizeof(AudioBlockBuffer);
+    size += 15;  //padding for alignment
     if (!size.isValid()) {
       MOZ_CRASH();
     }
+
     void* m = moz_xmalloc(size.value());
     RefPtr<AudioBlockBuffer> p = new (m) AudioBlockBuffer();
     NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
@@ -150,8 +153,6 @@ AudioBlock::AllocateChannels(uint32_t aChannelCount)
     }
   }
 
-  // XXX for SIMD purposes we should do something here to make sure the
-  // channel buffers are 16-byte aligned.
   RefPtr<AudioBlockBuffer> buffer = AudioBlockBuffer::Create(aChannelCount);
   mChannelData.SetLength(aChannelCount);
   for (uint32_t i = 0; i < aChannelCount; ++i) {

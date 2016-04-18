@@ -25,11 +25,17 @@ public:
   virtual already_AddRefed<FileSystemBase>
   Clone() override;
 
+  virtual bool
+  ShouldCreateDirectory() override
+  {
+    MOZ_CRASH("This should not be called.");
+    // Because OSFileSystem should not be used when the creation of directories
+    // is needed. For that we have OSFileSystemParent.
+    return false;
+  }
+
   virtual nsISupports*
   GetParentObject() const override;
-
-  virtual void
-  GetRootName(nsAString& aRetval) const override;
 
   virtual bool
   IsSafeFile(nsIFile* aFile) const override;
@@ -67,6 +73,9 @@ public:
     return nullptr;
   }
 
+  virtual bool
+  ShouldCreateDirectory() override { return false; }
+
   virtual nsISupports*
   GetParentObject() const override
   {
@@ -75,7 +84,8 @@ public:
   }
 
   virtual void
-  GetRootName(nsAString& aRetval) const override
+  GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
+                   ErrorResult& aRv) const override
   {
     MOZ_CRASH("This should not be called on the PBackground thread.");
   }

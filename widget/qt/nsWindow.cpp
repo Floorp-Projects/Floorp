@@ -681,7 +681,7 @@ NS_IMETHODIMP
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
-    debug_DumpEvent(stdout, aEvent->widget, aEvent,
+    debug_DumpEvent(stdout, aEvent->mWidget, aEvent,
                     "something", 0);
 #endif
 

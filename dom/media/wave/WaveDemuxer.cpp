@@ -628,8 +628,6 @@ WAVTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize)
 uint32_t
 RIFFParser::Parse(ByteReader& aReader)
 {
-  MOZ_ASSERT(&aReader);
-
   while (aReader.CanRead8() && !mRiffHeader.ParseNext(aReader.ReadU8())) { }
 
   if (mRiffHeader.IsValid()) {
@@ -784,8 +782,6 @@ HeaderParser::ChunkHeader::Update(uint8_t c)
 uint32_t
 FormatParser::Parse(ByteReader& aReader)
 {
-  MOZ_ASSERT(&aReader);
-
   while (aReader.CanRead8() && !mFmtChunk.ParseNext(aReader.ReadU8())) { }
 
   if (mFmtChunk.IsValid()) {

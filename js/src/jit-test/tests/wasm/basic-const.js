@@ -1,10 +1,10 @@
 load(libdir + "wasm.js");
 
-if (!wasmIsSupported())
-    quit();
-
 function testConst(type, str, expect) {
-  assertEq(wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))')(), expect);
+    if (type === 'i64')
+        assertEqI64(wasmEvalText('(module (func (result i64) (i64.const ' + str + ')) (export "" 0))')(), expect);
+    else
+        assertEq(wasmEvalText('(module (func (result ' + type + ') (' + type + '.const ' + str + ')) (export "" 0))')(), expect);
 }
 
 function testConstError(type, str) {
@@ -26,19 +26,59 @@ testConst('i32', '0x80000000', -2147483648);
 testConst('i32', '-0x80000000', -2147483648);
 testConst('i32', '0xffffffff', -1);
 
-//testConst('i64', '0', 0); // TODO: NYI
-//testConst('i64', '-0', 0); // TODO: NYI
-//testConst('i64', '23', 23); // TODO: NYI
-//testConst('i64', '-23', -23); // TODO: NYI
-//testConst('i64', '0x23', 35); // TODO: NYI
-//testConst('i64', '-0x23', -35); // TODO: NYI
-//testConst('i64', '9223372036854775807', 9223372036854775807); // TODO: NYI
-//testConst('i64', '18446744073709551615', -1); // TODO: NYI
-//testConst('i64', '-9223372036854775808', -9223372036854775808); // TODO: NYI
-//testConst('i64', '0x7fffffffffffffff', 9223372036854775807); // TODO: NYI
-//testConst('i64', '0x8000000000000000', -9223372036854775808); // TODO: NYI
-//testConst('i64', '-0x8000000000000000', -9223372036854775808); // TODO: NYI
-//testConst('i64', '0xffffffffffffffff', -1); // TODO: NYI
+if (hasI64()) {
+
+    assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /cannot .* i64/);
+
+    setJitCompilerOption('wasm.test-mode', 1);
+
+    testConst('i64', '0', 0);
+    testConst('i64', '-0', 0);
+
+    testConst('i64', '23', 23);
+    testConst('i64', '-23', -23);
+
+    testConst('i64', '0x23', 35);
+    testConst('i64', '-0x23', -35);
+
+    testConst('i64', '-0x1', -1);
+    testConst('i64', '-1', -1);
+    testConst('i64', '0xffffffffffffffff', -1);
+
+    testConst('i64', '0xdeadc0de', {low: 0xdeadc0de, high: 0x0});
+    testConst('i64', '0x1337c0de00000000', {low: 0x0, high: 0x1337c0de});
+
+    testConst('i64', '0x0102030405060708', {low: 0x05060708, high: 0x01020304});
+    testConst('i64', '-0x0102030405060708', {low: -0x05060708, high: -0x01020305});
+
+    // INT64_MAX
+    testConst('i64', '9223372036854775807', {low: 0xffffffff, high: 0x7fffffff});
+    testConst('i64', '0x7fffffffffffffff',  {low: 0xffffffff, high: 0x7fffffff});
+
+    // INT64_MAX + 1
+    testConst('i64', '9223372036854775808', {low: 0x00000000, high: 0x80000000});
+    testConst('i64', '0x8000000000000000', {low: 0x00000000, high: 0x80000000});
+
+    // UINT64_MAX
+    testConst('i64', '18446744073709551615', {low: 0xffffffff, high: 0xffffffff});
+
+    // INT64_MIN
+    testConst('i64', '-9223372036854775808', {low: 0x00000000, high: 0x80000000});
+    testConst('i64', '-0x8000000000000000',  {low: 0x00000000, high: 0x80000000});
+
+    // INT64_MIN - 1
+    testConstError('i64', '-9223372036854775809');
+
+    testConstError('i64', '');
+    testConstError('i64', '0.0');
+    testConstError('i64', 'not an i64');
+
+    setJitCompilerOption('wasm.test-mode', 0);
+
+    assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /cannot .* i64/);
+} else {
+    assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /NYI/);
+}
 
 testConst('f32', '0.0', 0.0);
 testConst('f32', '-0', -0.0);
@@ -214,12 +254,6 @@ testConstError('i32', '0.0');
 testConstError('i32', 'not an i32');
 testConstError('i32', '4294967296');
 testConstError('i32', '-2147483649');
-
-//testConstError('i64', ''); // TODO: NYI
-//testConstError('i64', '0.0'); // TODO: NYI
-//testConstError('i64', 'not an i64'); // TODO: NYI
-//testConstError('i64', '9223372036854775808'); // TODO: NYI
-//testConstError('i64', '-9223372036854775809'); // TODO: NYI
 
 testConstError('f32', '');
 testConstError('f32', 'not an f32');

@@ -338,8 +338,8 @@ WheelTransaction::SetTimeout()
 WheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent is null");
-  NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
-  return (aEvent->refPoint + aEvent->widget->WidgetToScreenOffset())
+  NS_ASSERTION(aEvent->mWidget, "aEvent-mWidget is null");
+  return (aEvent->refPoint + aEvent->mWidget->WidgetToScreenOffset())
       .ToUnknownPoint();
 }
 

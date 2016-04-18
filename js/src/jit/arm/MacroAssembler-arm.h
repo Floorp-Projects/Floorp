@@ -1424,11 +1424,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(handleNotAnInt, Above);
     }
 
-    void memIntToValue(Address Source, Address Dest) {
-        load32(Source, lr);
-        storeValue(JSVAL_TYPE_INT32, lr, Dest);
-    }
-
     void lea(Operand addr, Register dest) {
         ma_add(addr.baseReg(), Imm32(addr.disp()), dest);
     }

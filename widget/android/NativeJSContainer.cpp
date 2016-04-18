@@ -39,16 +39,6 @@ bool CheckThread()
     return true;
 }
 
-bool
-CheckJSCall(bool result)
-{
-    if (!result) {
-        jni::ThrowException("java/lang/UnsupportedOperationException",
-                            "JSAPI call failed");
-    }
-    return result;
-}
-
 template<class C, typename T> bool
 CheckJNIArgument(const jni::Ref<C, T>& arg)
 {
@@ -127,6 +117,16 @@ class NativeJSContainerImpl final
                                 "Null JSObject");
         }
         return !!mJSObject;
+    }
+
+    bool CheckJSCall(bool result) const
+    {
+        if (!result) {
+            JS_ClearPendingException(mJSContext);
+            jni::ThrowException("java/lang/UnsupportedOperationException",
+                                "JSAPI call failed");
+        }
+        return result;
     }
 
     // Check that a JS Value contains a particular property type as indicaed by
@@ -435,6 +435,7 @@ class NativeJSContainerImpl final
         if (!JS_IsArrayObject(mJSContext, obj, &isArray) ||
             !isArray ||
             !JS_GetArrayLength(mJSContext, obj, &length)) {
+            JS_ClearPendingException(mJSContext);
             return false;
         }
         if (!length) {
@@ -444,8 +445,11 @@ class NativeJSContainerImpl final
         // We only check to see the first element is the target type. If the
         // array has mixed types, we'll throw an error during actual conversion.
         JS::RootedValue element(mJSContext);
-        return JS_GetElement(mJSContext, obj, 0, &element) &&
-               (this->*Prop::InValue)(element);
+        if (!JS_GetElement(mJSContext, obj, 0, &element)) {
+            JS_ClearPendingException(mJSContext);
+            return false;
+        }
+        return (this->*Prop::InValue)(element);
     }
 
     template<class Prop> typename Prop::NativeArray

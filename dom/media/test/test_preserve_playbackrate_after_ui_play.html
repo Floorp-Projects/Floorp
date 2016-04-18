@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title> Bug 1013933 - preserve playbackRate after clicking play button </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content">
+  <video width="320" height="240" id="video" controls mozNoDynamicControls preload="auto"></video>
+</div>
+
+<script type="text/javascript">
+/*
+ * Positions of the UI elements, relative to the upper-left corner of the
+ * <video> box.
+ */
+const videoHeight = 240;
+const playButtonWidth = 28;
+const playButtonHeight = 28;
+const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
+const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
+
+var expectedPlaybackRate = 0.5
+
+function runTest() {
+  var video = document.getElementById("video");
+  video.src = "audio.wav";
+  video.loop = true;
+  video.playbackRate = expectedPlaybackRate;
+
+  video.oncanplaythrough = function() {
+    video.oncanplaythrough = null;
+    is(video.paused, true, "video is not playing yet.");
+    is(video.playbackRate, expectedPlaybackRate,
+       "playbackRate is correct before clicking play button.");
+
+    // Click the play button
+    synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+  };
+
+  video.onplay = function() {
+    video.onplay = null;
+    is(video.paused, false, "video starts playing.");
+    is(video.playbackRate, expectedPlaybackRate,
+       "playbackRate is correct after clicking play button.");
+    video.pause();
+    SimpleTest.finish();
+  };
+}
+
+window.addEventListener("load", runTest, false);
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

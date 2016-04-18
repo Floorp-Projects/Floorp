@@ -1922,15 +1922,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         MOZ_CRASH("patchAsmJSGlobalAccess");
     }
 
-    void memIntToValue(const Address& src, const Address& dest) {
-        vixl::UseScratchRegisterScope temps(this);
-        const Register scratch = temps.AcquireX().asUnsized();
-        MOZ_ASSERT(scratch != src.base);
-        MOZ_ASSERT(scratch != dest.base);
-        load32(src, scratch);
-        storeValue(JSVAL_TYPE_INT32, scratch, dest);
-    }
-
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
         loadPtr(activation, scratch);

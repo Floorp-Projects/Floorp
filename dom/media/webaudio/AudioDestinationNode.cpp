@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioDestinationNode.h"
+#include "AlignmentUtils.h"
 #include "AudioContext.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -87,7 +88,7 @@ public:
         PodZero(outputData, duration);
       } else {
         const float* inputBuffer = static_cast<const float*>(aInput.mChannelData[i]);
-        if (duration == WEBAUDIO_BLOCK_SIZE) {
+        if (duration == WEBAUDIO_BLOCK_SIZE && IS_ALIGNED16(inputBuffer)) {
           // Use the optimized version of the copy with scale operation
           AudioBlockCopyChannelWithScale(inputBuffer, aInput.mVolume,
                                          outputData);

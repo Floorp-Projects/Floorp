@@ -175,12 +175,10 @@
                 if (isDragging) {
                     this.wasPausedBeforeDrag = this.Utils.video.paused;
                     this.isDraggingComplete = false;
-                    this.previousPlaybackRate = this.Utils.video.playbackRate;
                     this.Utils.video.pause();
                 } else if (!this.wasPausedBeforeDrag && !this.isDraggingComplete) {
                     this.isDraggingComplete = true;
                     // After the drag ends, resume playing.
-                    this.Utils.video.playbackRate = this.previousPlaybackRate;
                     this.Utils.video.play();
                 } else {
                     this.isDraggingComplete = true;
@@ -1023,7 +1021,6 @@
                     if (this.video.paused || this.video.ended) {
                         this._triggeredByControls = true;
                         this.hideClickToPlay();
-                        this.video.playbackRate = this.video.defaultPlaybackRate;
                         this.video.play();
                     } else {
                         this.video.pause();

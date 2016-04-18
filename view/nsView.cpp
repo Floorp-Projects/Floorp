@@ -1123,16 +1123,16 @@ nsEventStatus
 nsView::HandleEvent(WidgetGUIEvent* aEvent,
                     bool aUseAttachedEvents)
 {
-  NS_PRECONDITION(nullptr != aEvent->widget, "null widget ptr");
+  NS_PRECONDITION(nullptr != aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
   nsView* view;
   if (aUseAttachedEvents) {
-    nsIWidgetListener* listener = aEvent->widget->GetAttachedWidgetListener();
+    nsIWidgetListener* listener = aEvent->mWidget->GetAttachedWidgetListener();
     view = listener ? listener->GetView() : nullptr;
   }
   else {
-    view = GetViewFor(aEvent->widget);
+    view = GetViewFor(aEvent->mWidget);
   }
 
   if (view) {
