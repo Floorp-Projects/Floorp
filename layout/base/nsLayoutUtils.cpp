@@ -7635,6 +7635,24 @@ nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
   return total;
 }
 
+struct PrefCallbacks
+{
+  const char* name;
+  PrefChangedFunc func;
+};
+static const PrefCallbacks kPrefCallbacks[] = {
+  { GRID_ENABLED_PREF_NAME,
+    GridEnabledPrefChangeCallback },
+  { WEBKIT_PREFIXES_ENABLED_PREF_NAME,
+    WebkitPrefixEnabledPrefChangeCallback },
+  { TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME,
+    TextAlignUnsafeEnabledPrefChangeCallback },
+  { DISPLAY_CONTENTS_ENABLED_PREF_NAME,
+    DisplayContentsEnabledPrefChangeCallback },
+  { FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME,
+    FloatLogicalValuesEnabledPrefChangeCallback },
+};
+
 /* static */
 void
 nsLayoutUtils::Initialize()
@@ -7662,30 +7680,13 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sSVGTransformBoxEnabled,
                                "svg.transform-box.enabled");
 
-  Preferences::RegisterCallback(GridEnabledPrefChangeCallback,
-                                GRID_ENABLED_PREF_NAME);
-  GridEnabledPrefChangeCallback(GRID_ENABLED_PREF_NAME, nullptr);
-  Preferences::RegisterCallback(WebkitPrefixEnabledPrefChangeCallback,
-                                WEBKIT_PREFIXES_ENABLED_PREF_NAME);
-  WebkitPrefixEnabledPrefChangeCallback(WEBKIT_PREFIXES_ENABLED_PREF_NAME,
-                                        nullptr);
-  Preferences::RegisterCallback(TextAlignUnsafeEnabledPrefChangeCallback,
-                                TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME);
-  Preferences::RegisterCallback(DisplayContentsEnabledPrefChangeCallback,
-                                DISPLAY_CONTENTS_ENABLED_PREF_NAME);
-  DisplayContentsEnabledPrefChangeCallback(DISPLAY_CONTENTS_ENABLED_PREF_NAME,
-                                           nullptr);
-  TextAlignUnsafeEnabledPrefChangeCallback(TEXT_ALIGN_UNSAFE_ENABLED_PREF_NAME,
-                                           nullptr);
-  Preferences::RegisterCallback(FloatLogicalValuesEnabledPrefChangeCallback,
-                                FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME);
-  FloatLogicalValuesEnabledPrefChangeCallback(FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME,
-                                              nullptr);
+  for (auto& callback : kPrefCallbacks) {
+    Preferences::RegisterCallbackAndCall(callback.func, callback.name);
+  }
   Preferences::RegisterCallback(BackgroundClipTextEnabledPrefChangeCallback,
                                 BG_CLIP_TEXT_ENABLED_PREF_NAME);
   BackgroundClipTextEnabledPrefChangeCallback(BG_CLIP_TEXT_ENABLED_PREF_NAME,
                                               nullptr);
-
   nsComputedDOMStyle::RegisterPrefChangeCallbacks();
 }
 
@@ -7698,10 +7699,9 @@ nsLayoutUtils::Shutdown()
     sContentMap = nullptr;
   }
 
-  Preferences::UnregisterCallback(GridEnabledPrefChangeCallback,
-                                  GRID_ENABLED_PREF_NAME);
-  Preferences::UnregisterCallback(WebkitPrefixEnabledPrefChangeCallback,
-                                  WEBKIT_PREFIXES_ENABLED_PREF_NAME);
+  for (auto& callback : kPrefCallbacks) {
+    Preferences::UnregisterCallback(callback.func, callback.name);
+  }
   nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
 
   // so the cached initial quotes array doesn't appear to be a leak
