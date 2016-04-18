@@ -1245,7 +1245,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
 
     RefPtr<InitRunnable> runnable =
       new InitRunnable(webSocket->mImpl, aUrl, protocolArray,
-                       nsAutoCString(file.get()), lineno, column, aRv,
+                       nsDependentCString(file.get()), lineno, column, aRv,
                        &connectionFailed);
     runnable->Dispatch(aRv);
   }

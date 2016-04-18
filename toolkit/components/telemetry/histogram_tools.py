@@ -85,16 +85,20 @@ except IOError:
 class Histogram:
     """A class for representing a histogram definition."""
 
-    def __init__(self, name, definition):
+    def __init__(self, name, definition, strict_type_checks=False):
         """Initialize a histogram named name with the given definition.
 definition is a dict-like object that must contain at least the keys:
 
  - 'kind': The kind of histogram.  Must be one of 'boolean', 'flag',
    'count', 'enumerated', 'linear', or 'exponential'.
  - 'description': A textual description of the histogram.
+ - 'strict_type_checks': A boolean indicating whether to use the new, stricter type checks.
+                         The server-side still has to deal with old, oddly typed submissions,
+                         so we have to skip them there by default.
 
 The key 'cpp_guard' is optional; if present, it denotes a preprocessor
 symbol that should guard C/C++ definitions associated with the histogram."""
+        self._strict_type_checks = strict_type_checks
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
@@ -203,6 +207,11 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'linear': general_keys,
             'exponential': general_keys
             }
+        # We removed extended_statistics_ok on the client, but the server-side,
+        # where _strict_type_checks==False, has to deal with historical data.
+        if not self._strict_type_checks:
+            table['exponential'].append('extended_statistics_ok')
+
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
@@ -213,7 +222,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             raise KeyError, 'alert_emails must be an array (in histogram "%s")' % name
 
         Histogram.check_name(name)
-        Histogram.check_field_types(name, definition)
+        self.check_field_types(name, definition)
         Histogram.check_expiration(name, definition)
         Histogram.check_bug_numbers(name, definition)
 
@@ -251,8 +260,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if not all(type(num) is int for num in bug_numbers):
             raise ValueError, 'bug_numbers array for "%s" should only contain integers' % (name)
 
-    @staticmethod
-    def check_field_types(name, definition):
+    def check_field_types(self, name, definition):
+        # Define expected types for the histogram properties.
         type_checked_fields = {
                 "n_buckets": int,
                 "n_values": int,
@@ -265,6 +274,20 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 "cpp_guard": basestring,
                 "releaseChannelCollection": basestring
             }
+
+        # For the server-side, where _strict_type_checks==False, we want to
+        # skip the stricter type checks for these fields for dealing with
+        # historical data.
+        coerce_fields = ["low", "high", "n_values", "n_buckets"]
+        if not self._strict_type_checks:
+            def try_to_coerce_to_number(v):
+                try:
+                    return eval(v, {})
+                except:
+                    return v
+            for key in [k for k in coerce_fields if k in definition]:
+                definition[key] = try_to_coerce_to_number(definition[key])
+
         for key, key_type in type_checked_fields.iteritems():
             if not key in definition:
                 continue
@@ -399,4 +422,4 @@ the histograms defined in filenames.
             raise DefinitionException, "use counter histograms must be defined in a contiguous block"
 
     for (name, definition) in all_histograms.iteritems():
-        yield Histogram(name, definition)
+        yield Histogram(name, definition, strict_type_checks=True)

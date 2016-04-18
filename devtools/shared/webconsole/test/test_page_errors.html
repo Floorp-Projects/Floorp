@@ -82,7 +82,7 @@ function doPageErrors()
       warning: false,
       exception: true,
     },
-    "'a'.repeat(2**28);": {
+    "'a'.repeat(2e28);": {
       errorMessage: /repeat count.*less than infinity/,
       errorMessageName: "JSMSG_RESULTING_STRING_TOO_LARGE",
       sourceName: /test_page_errors/,

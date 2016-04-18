@@ -98,22 +98,36 @@ function importPublicKey(keyBytes) {
   return crypto.subtle.importKey("jwk", jwk, {name: "ECDSA", namedCurve: "P-256"}, true, ["verify"])
 }
 
-function assembleSignedData(appId, presenceAndCounter, clientData) {
+function deriveAppAndChallengeParam(appId, clientData) {
   var appIdBuf = string2buffer(appId);
   return Promise.all([
     crypto.subtle.digest("SHA-256", appIdBuf),
     crypto.subtle.digest("SHA-256", clientData)
   ])
   .then(function(digests) {
-    var appParam = new Uint8Array(digests[0]);
-    var clientParam = new Uint8Array(digests[1]);
-
-    var signedData = new Uint8Array(32 + 1 + 4 + 32);
-    appParam.map((x, i) => signedData[0 + i] = x);
-    presenceAndCounter.map((x, i) => signedData[32 + i] = x);
-    clientParam.map((x, i) => signedData[37 + i] = x);
-    return signedData;
+    return {
+      appParam: new Uint8Array(digests[0]),
+      challengeParam: new Uint8Array(digests[1]),
+    };
   });
+}
+
+function assembleSignedData(appParam, presenceAndCounter, challengeParam) {
+  var signedData = new Uint8Array(32 + 1 + 4 + 32);
+  appParam.map((x, i) => signedData[0 + i] = x);
+  presenceAndCounter.map((x, i) => signedData[32 + i] = x);
+  challengeParam.map((x, i) => signedData[37 + i] = x);
+  return signedData;
+}
+
+function assembleRegistrationSignedData(appParam, challengeParam, keyHandle, pubKey) {
+  var signedData = new Uint8Array(1 + 32 + 32 + keyHandle.length + 65);
+  signedData[0] = 0x00;
+  appParam.map((x, i) => signedData[1 + i] = x);
+  challengeParam.map((x, i) => signedData[33 + i] = x);
+  keyHandle.map((x, i) => signedData[65 + i] = x);
+  pubKey.map((x, i) => signedData[65 + keyHandle.length + i] = x);
+  return signedData;
 }
 
 function verifySignature(key, data, derSig) {

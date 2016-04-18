@@ -6876,7 +6876,7 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
 nsresult
 nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,
-                                     ScreenIntPoint aPointerScreenPoint,
+                                     LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
                                      nsIObserver* aObserver)
@@ -6938,13 +6938,10 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
   GdkDeviceManager* device_manager = gdk_display_get_device_manager(display);
   event.touch.device = gdk_device_manager_get_client_pointer(device_manager);
 
-  event.touch.x_root = DevicePixelsToGdkCoordRoundDown(aPointerScreenPoint.x);
-  event.touch.y_root = DevicePixelsToGdkCoordRoundDown(aPointerScreenPoint.y);
+  event.touch.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
+  event.touch.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
 
-  LayoutDeviceIntPoint pointInWindow =
-    ViewAs<LayoutDevicePixel>(aPointerScreenPoint,
-                              PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent)
-    - WidgetToScreenOffset();
+  LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
   event.touch.x = DevicePixelsToGdkCoordRoundDown(pointInWindow.x);
   event.touch.y = DevicePixelsToGdkCoordRoundDown(pointInWindow.y);
 

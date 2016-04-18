@@ -22,7 +22,7 @@ from mozbuild.testing import (
 
 
 ALL_TESTS_JSON = b'''
-{
+[{
     "accessible/tests/mochitest/actions/test_anchors.html": [
         {
             "dir_relpath": "accessible/tests/mochitest/actions",
@@ -81,7 +81,6 @@ ALL_TESTS_JSON = b'''
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
             "skip-if": "toolkit == 'gonk' || os == 'android'",
-            "support-files": "\\ndata/**\\nxpcshell_updater.ini",
             "tail": ""
         },
         {
@@ -98,7 +97,6 @@ ALL_TESTS_JSON = b'''
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
             "skip-if": "toolkit == 'gonk' || os == 'android'",
-            "support-files": "\\ndata/**\\nxpcshell_updater.ini",
             "tail": ""
         }
     ],
@@ -156,7 +154,9 @@ ALL_TESTS_JSON = b'''
             "tags": "devtools"
         }
    ]
-}'''.strip()
+}, {
+   "/Users/gps/src/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": "\\ndata/**\\nxpcshell_updater.ini"
+}]'''.strip()
 
 
 class Base(unittest.TestCase):
@@ -209,6 +209,16 @@ class TestTestMetadata(Base):
         t = self._get_test_metadata()
         result = list(t.resolve_tests(paths=['services', 'toolkit']))
         self.assertEqual(len(result), 4)
+
+    def test_resolve_support_files(self):
+        expected_support_files = "\ndata/**\nxpcshell_updater.ini"
+        t = self._get_test_metadata()
+        result = list(t.resolve_tests(paths=['toolkit']))
+        self.assertEqual(len(result), 2)
+
+        for test in result:
+            self.assertEqual(test['support-files'],
+                             expected_support_files)
 
     def test_resolve_path_prefix(self):
         t = self._get_test_metadata()

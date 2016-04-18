@@ -17,8 +17,8 @@
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
-                                   ["security.webauth.u2f.softtoken", true],
-                                   ["security.webauth.u2f.usbtoken", false]]},
+                                   ["security.webauth.u2f_enable_softtoken", true],
+                                   ["security.webauth.u2f_enable_usbtoken", false]]},
 function() {
   // Example from:
   // https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-u2f-raw-message-formats.html
@@ -35,11 +35,12 @@ function() {
   // Verify
   Promise.all([
     importPublicKey(pubKey),
-    assembleSignedData(appId, presenceAndCounter, clientData)
+    deriveAppAndChallengeParam(appId, clientData)
   ])
   .then(function(results) {
     var importedKey = results[0];
-    var signedData = new Uint8Array(results[1]);
+    var params = results[1];
+    var signedData = new Uint8Array(assembleSignedData(params.appParam, presenceAndCounter, params.challengeParam));
     return verifySignature(importedKey, signedData, signature);
   })
   .then(function(verified) {

@@ -197,12 +197,6 @@ pref("dom.url.getters_decode_hash", false);
 // significantly increase the number of compartments in the system.
 pref("dom.compartment_per_addon", true);
 
-#ifdef NIGHTLY_BUILD
-pref("dom.document.scrollingElement.enabled", true);
-#else
-pref("dom.document.scrollingElement.enabled", false);
-#endif
-
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -2567,6 +2561,16 @@ pref("layout.float-fragments-inside-column.enabled", true);
 pref("dom.animations-api.core.enabled", false);
 #else
 pref("dom.animations-api.core.enabled", true);
+#endif
+
+// Is support for the Element.animate() function (a subset of the Web Animations
+// API) enabled?
+// Note that if dom.animations-api.core.enabled is true, this preference is
+// ignored.
+#ifdef RELEASE_BUILD
+pref("dom.animations-api.element-animate.enabled", false);
+#else
+pref("dom.animations-api.element-animate.enabled", true);
 #endif
 
 // pref to permit users to make verified SOAP calls by default

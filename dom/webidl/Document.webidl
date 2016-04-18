@@ -286,7 +286,6 @@ partial interface Document {
     sequence<Element> elementsFromPoint (float x, float y);
     CaretPosition? caretPositionFromPoint (float x, float y);
 
-    [Pref="dom.document.scrollingElement.enabled"]
     readonly attribute Element? scrollingElement;
 };
 
