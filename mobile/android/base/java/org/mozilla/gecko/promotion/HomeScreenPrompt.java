@@ -46,6 +46,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
     private String url;
     private boolean isAnimating;
     private boolean hasAccepted;
+    private boolean hasDeclined;
 
     public static void show(Context context, String url, String title) {
         Intent intent = new Intent(context, HomeScreenPrompt.class);
@@ -108,10 +109,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
         findViewById(R.id.close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rememberRejection();
-                slideOut();
-
-                Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BUTTON, TELEMETRY_EXTRA);
+                onDecline();
             }
         });
     }
@@ -173,13 +171,13 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
      * Remember that the user rejected creating a home screen shortcut for this URL.
      */
     private void rememberRejection() {
-        if (hasAccepted) {
-            // User has already accepted to create a shortcut.
-            return;
-        }
-
-        final UrlAnnotations urlAnnotations = GeckoProfile.get(this).getDB().getUrlAnnotations();
-        urlAnnotations.insertHomeScreenShortcut(getContentResolver(), url, false);
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final UrlAnnotations urlAnnotations = GeckoProfile.get(HomeScreenPrompt.this).getDB().getUrlAnnotations();
+                urlAnnotations.insertHomeScreenShortcut(getContentResolver(), url, false);
+            }
+        });
     }
 
     private void slideOut() {
@@ -210,10 +208,22 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
 
     @Override
     public void onBackPressed() {
+        onDecline();
+    }
+
+    private void onDecline() {
+        if (hasDeclined || hasAccepted) {
+            return;
+        }
+
         rememberRejection();
         slideOut();
 
+        // Technically not always an action triggered by the "back" button but with the same effect: Finishing this
+        // activity and going back to the previous one.
         Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BACK, TELEMETRY_EXTRA);
+
+        hasDeclined = true;
     }
 
     /**
@@ -221,12 +231,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        rememberRejection();
-        slideOut();
-
-        // Not really an action triggered by the "back" button but with the same effect: Finishing this
-        // activity and going back to the previous one.
-        Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BACK, TELEMETRY_EXTRA);
+        onDecline();
 
         return true;
     }
