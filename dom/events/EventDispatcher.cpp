@@ -403,7 +403,7 @@ EventTargetChainItem::HandleEventTargetChain(
     aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
 
     // Setting back the original target of the event.
-    aVisitor.mEvent->mTarget = aVisitor.mEvent->originalTarget;
+    aVisitor.mEvent->mTarget = aVisitor.mEvent->mOriginalTarget;
 
     // Special handling if PresShell (or some other caller)
     // used a callback object.
@@ -515,7 +515,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         do_QueryInterface(content->FindFirstNonChromeOnlyAccessContent());
       NS_ENSURE_STATE(newTarget);
 
-      aEvent->originalTarget = target;
+      aEvent->mOriginalTarget = target;
       target = newTarget;
       retargeted = true;
     }
@@ -605,15 +605,15 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (retargeted) {
-    aEvent->originalTarget =
-      aEvent->originalTarget->GetTargetForEventTargetChain();
-    NS_ENSURE_STATE(aEvent->originalTarget);
+    aEvent->mOriginalTarget =
+      aEvent->mOriginalTarget->GetTargetForEventTargetChain();
+    NS_ENSURE_STATE(aEvent->mOriginalTarget);
   }
   else {
-    aEvent->originalTarget = aEvent->mTarget;
+    aEvent->mOriginalTarget = aEvent->mTarget;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->originalTarget);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->mOriginalTarget);
   bool isInAnon = (content && (content->IsInAnonymousSubtree() ||
                                content->IsInShadowTree()));
 
@@ -751,7 +751,7 @@ EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     bool dontResetTrusted = false;
     if (innerEvent->mFlags.mDispatchedAtLeastOnce) {
       innerEvent->mTarget = nullptr;
-      innerEvent->originalTarget = nullptr;
+      innerEvent->mOriginalTarget = nullptr;
     } else {
       aDOMEvent->GetIsTrusted(&dontResetTrusted);
     }
