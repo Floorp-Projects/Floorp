@@ -26,16 +26,6 @@ using mozilla::UniquePtr;
 #if MOZ_IS_MSVC
    template<typename T> struct Identity { typedef T type; };
 #  define DECLTYPE(EXPR) Identity<decltype(EXPR)>::type
-#elif MOZ_IS_GCC
-// Work around a bug in GCC < 4.7 that prevents expressions of
-// the form |decltype(foo)::type| from working. See here:
-// http://stackoverflow.com/questions/14330768/c11-compiler-error-when-using-decltypevar-followed-by-internal-type-of-var
-#  if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
-#    define DECLTYPE(EXPR) decltype(EXPR)
-#  else
-     template<typename T> struct Identity { typedef T type; };
-#    define DECLTYPE(EXPR) Identity<decltype(EXPR)>::type
-#  endif
 #else
 #  define DECLTYPE(EXPR) decltype(EXPR)
 #endif
