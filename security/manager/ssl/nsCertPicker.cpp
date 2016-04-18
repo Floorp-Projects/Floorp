@@ -15,6 +15,7 @@
 #include "nsICertPickDialogs.h"
 #include "nsNSSShutDown.h"
 #include "nsNSSCertHelper.h"
+#include "nsNSSHelper.h"
 #include "ScopedNSSTypes.h"
 
 #include "cert.h"

@@ -1922,7 +1922,7 @@ nsBaseWidget::GetWidgetScreen()
 }
 
 nsresult
-nsIWidget::SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint, bool aLongTap,
+nsIWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint, bool aLongTap,
                                     nsIObserver* aObserver)
 {
   AutoObserverNotifier notifier(aObserver, "touchtap");
@@ -1933,14 +1933,14 @@ nsIWidget::SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint, bool aLo
   int pointerId = sPointerIdCounter;
   sPointerIdCounter++;
   nsresult rv = SynthesizeNativeTouchPoint(pointerId, TOUCH_CONTACT,
-                                           aPointerScreenPoint, 1.0, 90, nullptr);
+                                           aPoint, 1.0, 90, nullptr);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   if (!aLongTap) {
     nsresult rv = SynthesizeNativeTouchPoint(pointerId, TOUCH_REMOVE,
-                                             aPointerScreenPoint, 0, 0, nullptr);
+                                             aPoint, 0, 0, nullptr);
     return rv;
   }
 
@@ -1951,7 +1951,7 @@ nsIWidget::SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint, bool aLo
     mLongTapTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
       SynthesizeNativeTouchPoint(pointerId, TOUCH_CANCEL,
-                                 aPointerScreenPoint, 0, 0, nullptr);
+                                 aPoint, 0, 0, nullptr);
       return NS_ERROR_UNEXPECTED;
     }
     // Windows requires recuring events, so we set this to a smaller window
@@ -1972,7 +1972,7 @@ nsIWidget::SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint, bool aLo
                                mLongTapTouchPoint->mPosition, 0, 0, nullptr);
   }
 
-  mLongTapTouchPoint = new LongTapInfo(pointerId, aPointerScreenPoint,
+  mLongTapTouchPoint = new LongTapInfo(pointerId, aPoint,
                                        TimeDuration::FromMilliseconds(elapse),
                                        aObserver);
   notifier.SkipNotification();  // we'll do it in the long-tap callback

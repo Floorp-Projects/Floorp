@@ -13,22 +13,47 @@ var challenge = new Uint8Array(16);
 
 local_is(window.location.origin, "https://test1.example.com", "Is loaded correctly");
 
-// eTLD+1 check
-u2f.register("https://example.com/appId", [{
+// same domain check
+u2f.register("https://test1.example.com/appId", [{
   version: version,
   challenge: bytesToBase64UrlSafe(challenge),
 }], [], function(res){
-  local_is(res.errorCode, 0, "AppID should work from a subdomain");
+  local_is(res.errorCode, 0, "AppID should work from a different path of this domain");
+  step2();
 });
 
-u2f.register("https://example.net/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "AppID should not work from other domains");
-});
+function step2() {
+  // same domain check, but wrong scheme
+  u2f.register("http://test1.example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work when using a different scheme");
+    step3();
+  });
+}
 
-local_finished();
+function step3() {
+  // eTLD+1 subdomain check
+  u2f.register("https://example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work from another subdomain in this registered domain");
+    step4();
+  });
+}
+
+function step4() {
+  // other domain check
+  u2f.register("https://mochi.test:8888/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work from other domains");
+    local_finished();
+  });
+}
 
 </script>
 </body>

@@ -12,6 +12,7 @@ self.addEventListener('fetch', function (event) {
   }
 
   ok(request.mode === 'cors', 'EventSource should make a CORS request');
+  ok(request.cache === 'no-store', 'EventSource should make a no-store request');
   var fetchRequest = new Request(prefix + 'eventsource.resource', { mode: 'no-cors'});
   event.respondWith(fetch(fetchRequest).then((fetchResponse) => {
     return fetchResponse;

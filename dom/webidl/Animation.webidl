@@ -18,8 +18,9 @@ enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 interface Animation : EventTarget {
   attribute DOMString id;
   // Bug 1049975: Make 'effect' writeable
-  [Pure]
+  [Func="nsDocument::IsWebAnimationsEnabled", Pure]
   readonly attribute AnimationEffectReadOnly? effect;
+  [Func="nsDocument::IsWebAnimationsEnabled"]
   readonly attribute AnimationTimeline? timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
@@ -31,7 +32,7 @@ interface Animation : EventTarget {
   readonly attribute AnimationPlayState playState;
   [Throws]
   readonly attribute Promise<Animation> ready;
-  [Throws]
+  [Func="nsDocument::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> finished;
            attribute EventHandler       onfinish;
            attribute EventHandler       oncancel;

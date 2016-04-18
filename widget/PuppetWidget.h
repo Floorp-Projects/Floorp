@@ -240,11 +240,11 @@ public:
                                                     nsIObserver* aObserver) override;
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                               TouchPointerState aPointerState,
-                                              ScreenIntPoint aPointerScreenPoint,
+                                              LayoutDeviceIntPoint aPoint,
                                               double aPointerPressure,
                                               uint32_t aPointerOrientation,
                                               nsIObserver* aObserver) override;
-  virtual nsresult SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
+  virtual nsresult SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint,
                                             bool aLongTap,
                                             nsIObserver* aObserver) override;
   virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver) override;

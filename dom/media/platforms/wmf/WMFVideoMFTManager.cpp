@@ -234,7 +234,8 @@ bool
 WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 {
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
-  bool useDxva = InitializeDXVA(aForceD3D9);
+  bool useDxva = InitializeDXVA(aForceD3D9 ||
+                                mStreamType == VP8 || mStreamType == VP9);
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 

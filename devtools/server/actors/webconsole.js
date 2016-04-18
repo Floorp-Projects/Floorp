@@ -1302,11 +1302,50 @@ WebConsoleActor.prototype =
           ast = {"body": []};
         }
         for (let line of ast.body) {
-          if (line.type == "VariableDeclaration" &&
-            (line.kind == "let" || line.kind == "const")) {
-            for (let decl of line.declarations)
-              dbgWindow.forceLexicalInitializationByName(decl.id.name);
+          // Only let and const declarations put bindings into an
+          // "initializing" state.
+          if (!(line.kind == "let" || line.kind == "const"))
+                continue;
+
+          let identifiers = [];
+          for (let decl of line.declarations) {
+            switch (decl.id.type) {
+              case "Identifier":
+                // let foo = bar;
+                identifiers.push(decl.id.name);
+                break;
+              case "ArrayPattern":
+                // let [foo, bar]    = [1, 2];
+                // let [foo=99, bar] = [1, 2];
+                for (let e of decl.id.elements) {
+                    if (e.type == "Identifier") {
+                      identifiers.push(e.name);
+                    } else if (e.type == "AssignmentExpression") {
+                      identifiers.push(e.left.name);
+                    }
+                }
+                break;
+              case "ObjectPattern":
+                // let {bilbo, my}    = {bilbo: "baggins", my: "precious"};
+                // let {blah: foo}    = {blah: yabba()}
+                // let {blah: foo=99} = {blah: yabba()}
+                for (let prop of decl.id.properties) {
+                  // key
+                  if (prop.key.type == "Identifier")
+                    identifiers.push(prop.key.name);
+                  // value
+                  if (prop.value.type == "Identifier") {
+                    identifiers.push(prop.value.name);
+                  } else if (prop.value.type == "AssignmentExpression") {
+                    identifiers.push(prop.value.left.name);
+                  }
+                }
+                break;
+            }
           }
+
+          for (let name of identifiers)
+            dbgWindow.forceLexicalInitializationByName(name);
         }
       }
     }

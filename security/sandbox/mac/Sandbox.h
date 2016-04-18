@@ -40,7 +40,7 @@ typedef struct _MacSandboxInfo {
   _MacSandboxInfo(const struct _MacSandboxInfo& other)
     : type(other.type), level(other.level), pluginInfo(other.pluginInfo),
       appPath(other.appPath), appBinaryPath(other.appBinaryPath),
-      appDir(other.appDir) {}
+      appDir(other.appDir), appTempDir(other.appTempDir) {}
   MacSandboxType type;
   int32_t level;
   MacSandboxPluginInfo pluginInfo;

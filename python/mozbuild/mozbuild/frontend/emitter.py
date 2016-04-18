@@ -1080,6 +1080,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 relpath=mozpath.join(manifest_reldir, mozpath.basename(path)),
                 dupe_manifest='dupe-manifest' in defaults)
 
+            obj.default_support_files = defaults.get('support-files')
+
             filtered = mpmanifest.tests
 
             # Jetpack add-on tests are expected to be generated during the

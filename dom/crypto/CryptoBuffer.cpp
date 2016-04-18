@@ -42,6 +42,13 @@ CryptoBuffer::Assign(const SECItem* aItem)
 }
 
 uint8_t*
+CryptoBuffer::Assign(const InfallibleTArray<uint8_t>& aData)
+{
+  return ReplaceElementsAt(0, Length(), aData.Elements(), aData.Length(),
+                           fallible);
+}
+
+uint8_t*
 CryptoBuffer::Assign(const ArrayBuffer& aData)
 {
   aData.ComputeLengthAndData();
@@ -83,6 +90,19 @@ CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData)
   MOZ_ASSERT(false);
   Clear();
   return nullptr;
+}
+
+uint8_t*
+CryptoBuffer::AppendSECItem(const SECItem* aItem)
+{
+  MOZ_ASSERT(aItem);
+  return AppendElements(aItem->data, aItem->len, fallible);
+}
+
+uint8_t*
+CryptoBuffer::AppendSECItem(const SECItem& aItem)
+{
+  return AppendElements(aItem.data, aItem.len, fallible);
 }
 
 // Helpers to encode/decode JWK's special flavor of Base64
@@ -171,6 +191,23 @@ CryptoBuffer::ToUint8Array(JSContext* aCx) const
   return Uint8Array::Create(aCx, Length(), Elements());
 }
 
+bool
+CryptoBuffer::ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const
+{
+  MOZ_ASSERT(aBuf);
+  MOZ_ASSERT(aBufLen);
+
+  uint32_t dataLen = Length();
+  uint8_t* tmp = reinterpret_cast<uint8_t*>(moz_xmalloc(dataLen));
+  if (NS_WARN_IF(!tmp)) {
+    return false;
+  }
+
+  memcpy(tmp, Elements(), dataLen);
+  *aBuf = tmp;
+  *aBufLen = dataLen;
+  return true;
+}
 
 // "BigInt" comes from the WebCrypto spec
 // ("unsigned long" isn't very "big", of course)

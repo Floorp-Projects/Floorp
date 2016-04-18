@@ -1097,10 +1097,10 @@ nsDOMWindowUtils::SendNativeTouchPoint(uint32_t aPointerId,
   }
 
   NS_DispatchToMainThread(NS_NewRunnableMethodWithArgs
-    <uint32_t, nsIWidget::TouchPointerState, ScreenIntPoint, double, uint32_t, nsIObserver*>
+    <uint32_t, nsIWidget::TouchPointerState, LayoutDeviceIntPoint, double, uint32_t, nsIObserver*>
     (widget, &nsIWidget::SynthesizeNativeTouchPoint, aPointerId,
     (nsIWidget::TouchPointerState)aTouchState,
-    ScreenIntPoint(aScreenX, aScreenY),
+    LayoutDeviceIntPoint(aScreenX, aScreenY),
     aPressure, aOrientation, aObserver));
   return NS_OK;
 }
@@ -1117,9 +1117,9 @@ nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
   }
 
   NS_DispatchToMainThread(NS_NewRunnableMethodWithArgs
-    <ScreenIntPoint, bool, nsIObserver*>
+    <LayoutDeviceIntPoint, bool, nsIObserver*>
     (widget, &nsIWidget::SynthesizeNativeTouchTap,
-    ScreenIntPoint(aScreenX, aScreenY), aLongTap, aObserver));
+    LayoutDeviceIntPoint(aScreenX, aScreenY), aLongTap, aObserver));
   return NS_OK;
 }
 
