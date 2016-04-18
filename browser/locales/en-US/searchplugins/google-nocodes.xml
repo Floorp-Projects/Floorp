@@ -12,7 +12,5 @@
   <Param name="q" value="{searchTerms}"/>
   <Param name="ie" value="utf-8"/>
   <Param name="oe" value="utf-8"/>
-  <Param name="client" value="firefox-b"/>
-  <MozParam name="client" condition="purpose" purpose="keyword" value="firefox-b-ab"/>
 </Url>
 </SearchPlugin>
