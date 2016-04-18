@@ -286,11 +286,6 @@ public:
   // Returns true when the audio stream is paused.
   bool IsPaused();
 
-  static uint32_t GetPreferredRate()
-  {
-    CubebUtils::InitPreferredSampleRate();
-    return CubebUtils::PreferredSampleRate();
-  }
   uint32_t GetRate() { return mOutRate; }
   uint32_t GetChannels() { return mChannels; }
   uint32_t GetOutChannels() { return mOutChannels; }
