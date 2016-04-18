@@ -42,6 +42,13 @@ InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aT
   MOZ_ASSERT(aState == TargetConfirmationState::eConfirmed
           || aState == TargetConfirmationState::eTimedOut);
 
+  if (mTargetConfirmed == TargetConfirmationState::eTimedOut &&
+      aState == TargetConfirmationState::eConfirmed) {
+    // The main thread finally responded. We had already timed out the
+    // confirmation, but we want to update the state internally so that we
+    // can record the time for telemetry purposes.
+    mTargetConfirmed = TargetConfirmationState::eTimedOutAndMainThreadResponded;
+  }
   if (mTargetConfirmed != TargetConfirmationState::eUnconfirmed) {
     return false;
   }
@@ -91,6 +98,13 @@ bool
 InputBlockState::IsTargetConfirmed() const
 {
   return mTargetConfirmed != TargetConfirmationState::eUnconfirmed;
+}
+
+bool
+InputBlockState::HasReceivedRealConfirmedTarget() const
+{
+  return mTargetConfirmed == TargetConfirmationState::eConfirmed ||
+         mTargetConfirmed == TargetConfirmationState::eTimedOutAndMainThreadResponded;
 }
 
 bool
@@ -197,7 +211,7 @@ CancelableBlockState::IsDefaultPrevented() const
 bool
 CancelableBlockState::HasReceivedAllContentNotifications() const
 {
-  return IsTargetConfirmed() && mContentResponded;
+  return HasReceivedRealConfirmedTarget() && mContentResponded;
 }
 
 bool
