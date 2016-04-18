@@ -34,6 +34,8 @@ DomDecorator.prototype = {
 
       return names;
     }
+
+    return null;
   },
 
   /**
