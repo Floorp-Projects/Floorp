@@ -1827,6 +1827,79 @@ add_task(function* test_blocked_applicationReputation()
 });
 
 /**
+ * Checks that if a download restarts while processing an application reputation
+ * request, the status is handled correctly.
+ */
+add_task(function* test_blocked_applicationReputation_race()
+{
+  let isFirstShouldBlockCall = true;
+
+  let blockFn = base => ({
+    shouldBlockForReputationCheck(download) {
+      if (isFirstShouldBlockCall) {
+        isFirstShouldBlockCall = false;
+
+        // 2. Cancel and restart the download before the first attempt has a
+        //    chance to finish.
+        download.cancel();
+        download.removePartialData();
+        download.start();
+
+        // 3. Allow the first attempt to finish with a blocked response.
+        return Promise.resolve({
+          shouldBlock: true,
+          verdict: Downloads.Error.BLOCK_VERDICT_UNCOMMON,
+        });
+      }
+
+      // 4/5. Don't block the download the second time. The race condition would
+      //      occur with the first attempt regardless of whether the second one
+      //      is blocked, but not blocking here makes the test simpler.
+      return Promise.resolve({
+        shouldBlock: false,
+        verdict: "",
+      });
+    },
+    shouldKeepBlockedData: () => Promise.resolve(true),
+  });
+
+  Integration.downloads.register(blockFn);
+  function cleanup() {
+    Integration.downloads.unregister(blockFn);
+  }
+  do_register_cleanup(cleanup);
+
+  let download;
+
+  try {
+    // 1. Start the download and get a reference to the promise asociated with
+    //    the first attempt, before allowing the response to continue.
+    download = yield promiseStartDownload_tryToKeepPartialData();
+    let firstAttempt = promiseDownloadStopped(download);
+    continueResponses();
+
+    // 4/5. Wait for the first attempt to be completed. The result of this
+    //      should appear as a cancellation.
+    yield firstAttempt;
+
+    do_throw("The first attempt should have been canceled.");
+  } catch (ex) {
+    // The "becauseBlocked" property should be false.
+    if (!(ex instanceof Downloads.Error) || ex.becauseBlocked) {
+      throw ex;
+    }
+  }
+
+  // 6. Wait for the second attempt to be completed.
+  yield promiseDownloadStopped(download);
+
+  // 7. At this point, "hasBlockedData" should be false.
+  do_check_false(download.hasBlockedData);
+
+  cleanup();
+});
+
+/**
  * Checks that application reputation blocks the download but maintains the
  * blocked data, which will be deleted when the block is confirmed.
  */
