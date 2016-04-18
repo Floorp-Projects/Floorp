@@ -254,6 +254,12 @@ public:
   static bool HasCriticalDisplayPort(nsIContent* aContent);
 
   /**
+   * If low-precision painting is turned on, delegates to GetCriticalDisplayPort.
+   * Otherwise, delegates to GetDisplayPort.
+   */
+  static bool GetHighResolutionDisplayPort(nsIContent* aContent, nsRect* aResult);
+
+  /**
    * Remove the displayport for the given element.
    */
   static void RemoveDisplayPort(nsIContent* aContent);
