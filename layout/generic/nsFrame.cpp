@@ -5019,12 +5019,6 @@ nsIFrame::GetView() const
   return value;
 }
 
-/* virtual */ nsView*
-nsIFrame::GetViewExternal() const
-{
-  return GetView();
-}
-
 nsresult
 nsIFrame::SetView(nsView* aView)
 {
@@ -5058,11 +5052,6 @@ nsIFrame::SetView(nsView* aView)
   return NS_OK;
 }
 
-nsIFrame* nsIFrame::GetAncestorWithViewExternal() const
-{
-  return GetAncestorWithView();
-}
-
 // Find the first geometric parent that has a view
 nsIFrame* nsIFrame::GetAncestorWithView() const
 {
@@ -5072,12 +5061,6 @@ nsIFrame* nsIFrame::GetAncestorWithView() const
     }
   }
   return nullptr;
-}
-
-// virtual
-nsPoint nsIFrame::GetOffsetToExternal(const nsIFrame* aOther) const
-{
-  return GetOffsetTo(aOther);
 }
 
 nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
@@ -5169,21 +5152,9 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const
   return offset;
 }
 
-// virtual
-nsIntRect nsIFrame::GetScreenRectExternal() const
-{
-  return GetScreenRect();
-}
-
 nsIntRect nsIFrame::GetScreenRect() const
 {
   return GetScreenRectInAppUnits().ToNearestPixels(PresContext()->AppUnitsPerCSSPixel());
-}
-
-// virtual
-nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
-{
-  return GetScreenRectInAppUnits();
 }
 
 nsRect nsIFrame::GetScreenRectInAppUnits() const

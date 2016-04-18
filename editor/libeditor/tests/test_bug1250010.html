@@ -13,17 +13,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1250010
 <div id="display">
 </div>
 
-<div id="content" contenteditable><p><b><font color="red">1234567890</font></b></p></div>
+<div id="test1" contenteditable><p><b><font color="red">1234567890</font></b></p></div>
+<div id="test2" contenteditable><p><tt>xyz</tt></p><p><tt><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAIAAABvrngfAAAAFklEQVQImWMwjWhCQwxECoW3oCHihAB0LyYv5/oAHwAAAABJRU5ErkJggg=="></tt></p></div>
 
 <pre id="test">
 </pre>
 
 <script class="testbody" type="application/javascript">
 
+function getImageDataURI()
+{
+  return document.getElementsByTagName("img")[0].getAttribute("src");
+}
+
 /** Test for Bug 1250010 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  var div = document.getElementById("content");
+
+  // First test: Empty paragraph is split correctly.
+  var div = document.getElementById("test1");
   div.focus();
   synthesizeMouseAtCenter(div, {});
 
@@ -42,6 +50,38 @@ SimpleTest.waitForFocus(function() {
                     "<p><b><font color=\"red\">a<br></font></b></p>" +
                     "<p><b><font color=\"red\">b<br></font></b></p>",
                     "unexpected HTML");
+
+  // Second test: Since we modified the code path that splits non-text nodes,
+  // test that this works, if the split node is not empty.
+  div = document.getElementById("test2");
+  div.focus();
+  synthesizeMouseAtCenter(div, {});
+
+  selRange = sel.getRangeAt(0);
+  is(selRange.endContainer.nodeName, "#text", "selection should be at the end of text node");
+  is(selRange.endOffset, 3, "offset should be 3");
+
+  // Move behind the image and press enter, insert an "A".
+  // That should insert a new empty paragraph with the "A" after what we have.
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("A", {});
+
+  // The resulting HTML is sadly less than optimal:
+  // A <br> gets inserted after the image and the "A" is followed by an empty <tt></tt>.
+  var newHTML = div.innerHTML;
+  var expectedHTML;
+  //             Existing part with additional <br> inserted.
+  expectedHTML = "<p><tt>xyz</tt></p><p><tt><img src=\"" + getImageDataURI() + "\"><br></tt></p>" +
+  //             New part caused by pressing enter after the image and typing an "A".
+                 "<p><tt>A</tt><br><tt></tt></p>";
+  is(newHTML, expectedHTML, "unexpected HTML");
+
+  // In case the empty tag gets deleted some day, let them know that something improved.
+  expectedHTML = "<p><tt>xyz</tt></p><p><tt><img src=\"" + getImageDataURI() + "\"><br></tt></p>" +
+                 "<p><tt>A</tt><br></p>";
+  todo_is(newHTML, expectedHTML, "unexpected HTML");
 
   SimpleTest.finish();
 

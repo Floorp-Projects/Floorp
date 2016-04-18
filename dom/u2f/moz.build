@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'NSSToken.h',
     'U2F.h',
     'USBToken.h',
 ]
 
 UNIFIED_SOURCES += [
-    'NSSToken.cpp',
     'U2F.cpp',
     'USBToken.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 

@@ -19,10 +19,11 @@
 <script class="testbody" type="text/javascript">
 
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
-                                   ["security.webauth.u2f.softtoken", true]]},
+                                   ["security.webauth.u2f_enable_softtoken", true]]},
 function() {
   var testList = [
     "https://example.com/tests/dom/u2f/tests/test_frame_register.html",
+    "https://example.com/tests/dom/u2f/tests/test_frame_register_sign.html",
     "http://mochi.test:8888/tests/dom/u2f/tests/test_frame_appid_facet_insecure.html",
     "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet.html",
     "https://example.com/tests/dom/u2f/tests/test_frame_appid_facet_remoteload.html",

@@ -20,758 +20,64 @@ Prompter tests: modal prompts
 
 var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
 var isLinux = ("@mozilla.org/gnome-gconf-service;1" in SpecialPowers.Cc);
+var isE10S = SpecialPowers.Services.appinfo.processType == 2;
 
-function pollDialog(okButton) {
-    if (okButton.disabled)
-        return;
-
-    ok(true, "dialog button is enabled now");
-    pollTimer.cancel();
-    pollTimer = null;
-    okButton.click();
-    didDialog = true;
-}
-
-function checkExpectedState(ui, state) {
-
+function checkPromptState(promptState, expectedState) {
     // XXX check title? OS X has title in content
-    is(ui.infoBody.textContent,       state.msg,         "Checking expected message");
-    is(ui.loginContainer.hidden,      state.textHidden,  "Checking textbox visibility");
-    is(ui.password1Container.hidden,  state.passHidden,  "Checking passbox visibility");
-    is(ui.checkboxContainer.hidden,   state.checkHidden, "Checking checkbox visibility");
-    is(ui.checkbox.label,             state.checkMsg,    "Checking checkbox label");
-    is(ui.checkbox.checked,           state.checked,     "Checking checkbox checked");
+    is(promptState.msg,         expectedState.msg,         "Checking expected message");
+    is(promptState.textHidden,  expectedState.textHidden,  "Checking textbox visibility");
+    is(promptState.passHidden,  expectedState.passHidden,  "Checking passbox visibility");
+    is(promptState.checkHidden, expectedState.checkHidden, "Checking checkbox visibility");
+    is(promptState.checkMsg,    expectedState.checkMsg,    "Checking checkbox label");
+    is(promptState.checked,     expectedState.checked,     "Checking checkbox checked");
     if (!isTabModal)
-      is(ui.infoIcon.className,       "spaced " + state.iconClass, "Checking expected icon CSS class");
-    is(ui.loginTextbox.getAttribute("value"),     state.textValue, "Checking textbox value");
-    is(ui.password1Textbox.getAttribute("value"), state.passValue, "Checking passbox value");
+      is(promptState.iconClass, "spaced " + expectedState.iconClass, "Checking expected icon CSS class");
+    is(promptState.textValue, expectedState.textValue, "Checking textbox value");
+    is(promptState.passValue, expectedState.passValue, "Checking passbox value");
 
-
-    function isDefaultButton(b) {
-        return (b.hasAttribute("default") &&
-                b.getAttribute("default") == "true");
+    if (expectedState.butt0Label) {
+        is(promptState.butt0Label, expectedState.butt0Label, "Checking accept-button label");
+    }
+    if (expectedState.butt1Label) {
+        is(promptState.butt1Label, expectedState.butt1Label, "Checking cancel-button label");
+    }
+    if (expectedState.butt2Label) {
+        is(promptState.butt2Label, expectedState.butt2Label, "Checking extra1-button label");
     }
 
-    let shouldBeDefault;
-    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button0);
-    is(isDefaultButton(ui.button0), shouldBeDefault, "checking button0 default");
-    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button1);
-    is(isDefaultButton(ui.button1), shouldBeDefault, "checking button1 default");
-    shouldBeDefault = SpecialPowers.compare(state.defButton, ui.button2);
-    is(isDefaultButton(ui.button2), shouldBeDefault, "checking button2 default");
-
-    let fm = Cc["@mozilla.org/focus-manager;1"].
-             getService(Ci.nsIFocusManager);
-    let e = fm.focusedElement;
-    ok(true, "focused element is a " + (e ? e.localName : "<null>"));
-    if (isLinux && !e) {
-        todo(false, "Focus seems missing on Linux");
-        return;
+    // For prompts with a time-delay button.
+    if (expectedState.butt0Disabled) {
+        is(promptState.butt0Disabled, true,  "Checking accept-button is disabled");
+        is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
     }
 
-    if (isOSX && state.focused && state.focused.localName == "button")
-        ok(SpecialPowers.compare(ui.infoBody, e), "buttons don't focus on OS X");
-    else if (state.focused)
-        ok(SpecialPowers.compare(state.focused, e), "Checking focused element");
-    else
-        is(e, null, "Not expecting a focused element");
-}
+    is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
+    is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
+    is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
 
-
-/*
- * handleDialog
- *
- * Invoked a short period of time after calling startCallbackTimer(), and
- * allows testing the actual prompt dialog while it's being displayed. Tests
- * should call startCallbackTimer() each time the auth dialog is expected (the
- * timer is a one-shot).
- */
-function handleDialog(ui, testNum) {
-    ok(true, "--- handleDialog for test " + testNum +
-             " --- (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
-
-    let textField = ui.loginTextbox;
-    let passField = ui.password1Textbox;
-    let checkbox  = ui.checkbox;
-    let clickOK   = true;
-    let state;
-
-    switch(testNum) {
-      case 1:
-        // Alert
-        state = {
-            msg   : "This is the alert text.",
-            title : "TestTitle",
-            iconClass   : "alert-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 2:
-        // AlertCheck (null checkbox label, so it's hidden)
-        state = {
-            msg   : "This is the alertCheck text.",
-            title : "TestTitle",
-            iconClass   : "alert-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 3:
-        // AlertCheck
-        state = {
-            msg   : "This is the alertCheck text.",
-            title : "TestTitle",
-            iconClass   : "alert-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 4:
-        // Confirm (ok)
-        state = {
-            msg   : "This is the confirm text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 5:
-        // Confirm (cancel)
-        state = {
-            msg   : "This is the confirm text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        clickOK = false;
-        break;
-
-      case 6:
-        // ConfirmCheck (no checkbox, ok)
-        state = {
-            msg   : "This is the confirmCheck text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 7:
-        // ConfirmCheck (no checkbox, cancel)
-        state = {
-            msg   : "This is the confirmCheck text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        clickOK = false;
-        break;
-
-      case 8:
-        // ConfirmCheck (ok)
-        state = {
-            msg   : "This is the confirmCheck text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 9:
-        // ConfirmCheck (cancel)
-        state = {
-            msg   : "This is the confirmCheck text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        clickOK = false;
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 10:
-        // Prompt (ok, no default text)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        textField.setAttribute("value", "bacon");
-        break;
-
-      case 11:
-        // Prompt (ok, default text)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "kittens",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 12:
-        // Prompt (cancel, default text)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "puppies",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        clickOK = false;
-        break;
-
-      case 13:
-        // Prompt (cancel, default text modified)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "puppies",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        textField.setAttribute("value", "bacon");
-        clickOK = false;
-        break;
-
-      case 14:
-        // Prompt (ok, with checkbox)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "tribbles",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 15:
-        // Prompt (cancel, with checkbox)
-        state = {
-            msg   : "This is the prompt text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : false,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "tribbles",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        clickOK = false;
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 16:
-        // PromptUsernameAndPassword (ok, with checkbox)
-        state = {
-            msg   : "This is the pUAP text.",
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : false,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "usr",
-            passValue   : "ssh",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "newusr");
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 17:
-        // PromptUsernameAndPassword (cancel, with checkbox)
-        state = {
-            msg   : "This is the pUAP text.",
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : false,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "usr",
-            passValue   : "ssh",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "newusr");
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
-        break;
-
-      case 18:
-        // PromptPassword (ok, with checkbox)
-        state = {
-            msg   : "This is the promptPassword text.",
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : true,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "ssh",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.password1Textbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 19:
-        // PromptPassword (cancel, with checkbox)
-        state = {
-            msg   : "This is the promptPassword text.",
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : true,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "ssh",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.password1Textbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        passField.setAttribute("value", "newssh");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
-        break;
-
-      case 20:
-        // ConfirmEx (ok/cancel, ok)
-        state = {
-            msg   : "This is the confirmEx text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        is(ui.button0.label, "OK",     "Checking accept-button label");
-        is(ui.button1.label, "Cancel", "Checking cancel-button label");
-        checkExpectedState(ui, state);
-        break;
-
-      case 21:
-        // ConfirmEx (yes/no, cancel)
-        state = {
-            msg   : "This is the confirmEx text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        is(ui.button0.label, "Yes", "Checking accept-button label");
-        is(ui.button1.label, "No",  "Checking cancel-button label");
-        checkExpectedState(ui, state);
-        clickOK = false;
-        break;
-
-      case 22:
-        // ConfirmEx (buttons from args, checkbox, ok)
-        state = {
-            msg   : "This is the confirmEx text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 23:
-        // ConfirmEx (buttons from args, checkbox, cancel)
-        state = {
-            msg   : "This is the confirmEx text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button1, // Default changed!
-            defButton   : ui.button1,
-        };
-        // XXX check button1 is default
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        clickOK = false;
-        break;
-
-      case 24:
-        // ConfirmEx (buttons from args, checkbox, button3)
-        state = {
-            msg   : "This is the confirmEx text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.button2, // Default changed!
-            defButton   : ui.button2,
-        };
-        // XXX check button2 is default
-        is(ui.button0.label, "butt0", "Checking accept-button label");
-        is(ui.button1.label, "butt1", "Checking cancel-button label");
-        is(ui.button2.label, "butt2", "Checking extra1-button label");
-        checkExpectedState(ui, state);
-
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-
-        // XXX how to click button 3?
-        clickOK = false;
-        break;
-
-      case 25:
-        // Alert, null window
-        state = {
-            msg   : "This is the alert text.",
-            title : "TestTitle",
-            iconClass   : "alert-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : ui.button0,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-        break;
-
-      case 26:
-        // ConfirmEx (with delay, ok)
-        state = {
-            msg   : "This is the confirmEx delay text.",
-            title : "TestTitle",
-            iconClass   : "question-icon",
-            textHidden  : true,
-            passHidden  : true,
-            checkHidden : true,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "",
-            checked     : false,
-            focused     : null, // nothing focused until after delay fires
-            defButton   : ui.button0,
-        };
-
-        // OS X doesn't initially focus the button, but rather the infoBody.
-        // The focus stays there even after the button-enable delay has fired.
-        if (isOSX)
-            state.focused = ui.infoBody;
-
-        is(ui.button0.label, "OK",     "Checking accept-button label");
-        is(ui.button1.label, "Cancel", "Checking cancel-button label");
-        is(ui.button0.disabled, true,  "Checking accept-button is disabled");
-        is(ui.button1.disabled, false, "Checking cancel-button isn't disabled ");
-        checkExpectedState(ui, state);
-        break;
-
-
-      case 100:
-        // PromptAuth (no realm, ok, with checkbox)
-        state = {
-            msg : 'Enter username and password for http://example.com',
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : false,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "username");
-        passField.setAttribute("value", "password");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      case 101:
-        // PromptAuth (long realm, ok, with checkbox)
-        state = {
-            msg : 'A username and password are being requested by http://example.com. The site '  +
-                  'says: "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
-                  'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
-                  'abcdefghi \u2026"',
-            title : "TestTitle",
-            iconClass   : "authentication-icon question-icon",
-            textHidden  : false,
-            passHidden  : false,
-            checkHidden : false,
-            textValue   : "",
-            passValue   : "",
-            checkMsg    : "Check me out!",
-            checked     : false,
-            focused     : ui.loginTextbox.inputField,
-            defButton   : ui.button0,
-        };
-        checkExpectedState(ui, state);
-
-        textField.setAttribute("value", "username");
-        passField.setAttribute("value", "password");
-        // XXX dumb. old code driven by oncommand.
-        checkbox.setChecked(true);
-        checkbox.doCommand();
-        break;
-
-      default:
-        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-        break;
-    }
-
-    if (testNum == 24) {
-        ui.button2.click();
-    } else if (testNum == 26) {
-        // Buttons are disabled at the moment, poll until they're reenabled.
-        // Can't use setInterval here, because the window's in a modal state
-        // and thus DOM events are suppressed.
-        pollTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        pollTimer.initWithCallback(SpecialPowers.wrapCallback(function() {
-          pollDialog(ui.button0);
-        }),
-                                   100, Ci.nsITimer.TYPE_REPEATING_SLACK);
-        return;
+    if (isLinux && (!promptState.focused || isE10S)) {
+        todo(false, "Focus seems missing or wrong on Linux"); // bug 1265077
+    } else if (isOSX && expectedState.focused && expectedState.focused.startsWith("button")) {
+        is(promptState.focused, "infoBody", "buttons don't focus on OS X, but infoBody does instead");
     } else {
-        if (clickOK)
-            ui.button0.click();
-        else
-            ui.button1.click();
+        is(promptState.focused, expectedState.focused, "Checking focused element");
     }
-
-    ok(true, "handleDialog done");
-    didDialog = true;
 }
 
 
 function* runTests() {
+
+    function handlePrompt() {
+      return new Promise(resolve => {
+        gChromeScript.addMessageListener("promptHandled", function handled(msg) {
+          gChromeScript.removeMessageListener("promptHandled", handled);
+          checkPromptState(msg.promptState, state);
+          resolve(true);
+        });
+        gChromeScript.sendAsyncMessage("handlePrompt", { action: action, isTabModal: isTabModal});
+      });
+    }
+
     let ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
@@ -796,103 +102,239 @@ function* runTests() {
     let flags;
     let isOK, clickedButton;
 
-    testNum = 0;
+    // =====
+    info("Starting test: Alert");
+    state = {
+        msg   : "This is the alert text.",
+        title : "TestTitle",
+        iconClass   : "alert-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
 
-    // ===== test 1 =====
-    // Alert
-    testNum++;
-    startCallbackTimer();
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the alert text."];
     if (usePromptService)
         promptArgs.unshift(window);
     prompter.alert.apply(null, promptArgs);
 
-    ok(didDialog, "handleDialog was invoked");
+    yield promptDone;
 
-    yield Promise.resolve();
+    // =====
+    info("Starting test: AlertCheck (null checkbox label, so it's hidden)");
+    state = {
+        msg   : "This is the alertCheck text.",
+        title : "TestTitle",
+        iconClass   : "alert-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
 
-    // ===== test 2 =====
-    // AlertCheck (null checkbox label)
-    testNum++;
-    startCallbackTimer();
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the alertCheck text.", null, {}];
     if (usePromptService)
         promptArgs.unshift(window);
     prompter.alertCheck.apply(null, promptArgs);
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 3 =====
-    // AlertCheck
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: AlertCheck");
+    state = {
+        msg   : "This is the alertCheck text.",
+        title : "TestTitle",
+        iconClass   : "alert-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the alertCheck text.", "Check me out!", checkVal];
     if (usePromptService)
         promptArgs.unshift(window);
     prompter.alertCheck.apply(null, promptArgs);
-    ok(didDialog, "handleDialog was invoked");
     is(checkVal.value, true, "checkbox was checked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 4 =====
-    // Confirm (ok)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Confirm (ok)");
+    state = {
+        msg   : "This is the confirm text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the confirm text."];
     if (usePromptService)
         promptArgs.unshift(window);
     isOK = prompter.confirm.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 5 =====
-    // Confirm (cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Confirm (cancel)");
+    state = {
+        msg   : "This is the confirm text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "cancel",
+    };
+
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the confirm text."];
     if (usePromptService)
         promptArgs.unshift(window);
     isOK = prompter.confirm.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 6 =====
-    // ConfirmCheck (ok, null checkbox label)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmCheck (ok, null checkbox label)");
+    state = {
+        msg   : "This is the confirmCheck text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
     if (usePromptService)
         promptArgs.unshift(window);
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 7 =====
-    // ConfirmCheck (cancel, null checkbox label)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmCheck (cancel, null checkbox label)");
+    state = {
+        msg   : "This is the confirmCheck text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "cancel",
+    };
+
+    promptDone = handlePrompt(action);
+
     promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
     if (usePromptService)
         promptArgs.unshift(window);
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 8 =====
-    // ConfirmCheck (ok)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmCheck (ok)");
+    state = {
+        msg   : "This is the confirmCheck text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
     if (usePromptService)
@@ -900,14 +342,32 @@ function* runTests() {
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 9 =====
-    // ConfirmCheck (cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmCheck (cancel)");
+    state = {
+        msg   : "This is the confirmCheck text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "cancel",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the confirmCheck text.", "Check me out!", checkVal];
     if (usePromptService)
@@ -915,14 +375,32 @@ function* runTests() {
     isOK = prompter.confirmCheck.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 10 =====
-    // Prompt (ok, no default text)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (ok, no default text)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "ok",
+        textField   : "bacon",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value = "";
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
     if (usePromptService)
@@ -930,14 +408,31 @@ function* runTests() {
     isOK = prompter.prompt.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
     is(textVal.value, "bacon", "checking expected text value");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 11 =====
-    // Prompt (ok, default text)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (ok, default text)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "kittens",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value = "kittens";
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
     if (usePromptService)
@@ -945,14 +440,31 @@ function* runTests() {
     isOK = prompter.prompt.apply(null, promptArgs);
     is(isOK, true, "checked expected retval");
     is(textVal.value, "kittens", "checking expected text value");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 12 =====
-    // Prompt (cancel, default text)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (cancel, default text)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "puppies",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "cancel",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value = "puppies";
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
     if (usePromptService)
@@ -960,14 +472,32 @@ function* runTests() {
     isOK = prompter.prompt.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
     is(textVal.value, "puppies", "checking expected text value");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 13 =====
-    // Prompt (cancel, default text modified)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (cancel, default text modified)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "puppies",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "cancel",
+        textField   : "bacon",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value = "puppies";
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
     if (usePromptService)
@@ -975,14 +505,32 @@ function* runTests() {
     isOK = prompter.prompt.apply(null, promptArgs);
     is(isOK, false, "checked expected retval");
     is(textVal.value, "puppies", "checking expected text value");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 14 =====
-    // Prompt (ok, with checkbox)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (ok, with checkbox)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "tribbles",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value  = "tribbles";
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
@@ -992,14 +540,32 @@ function* runTests() {
     is(isOK, true, "checked expected retval");
     is(textVal.value, "tribbles", "checking expected text value");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 15 =====
-    // Prompt (cancel, with checkbox)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: Prompt (cancel, with checkbox)");
+    state = {
+        msg   : "This is the prompt text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "tribbles",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "cancel",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value  = "tribbles";
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the prompt text.", textVal, "Check me out!", checkVal];
@@ -1009,15 +575,35 @@ function* runTests() {
     is(isOK, false, "checked expected retval");
     is(textVal.value, "tribbles", "checking expected text value");
     is(checkVal.value, false, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 16 =====
-    // PromptUsernameAndPassword (ok)
+    // =====
     // Just two tests for this, since password manager already tests this extensively.
-    testNum++;
-    startCallbackTimer();
+    info("Starting test: PromptUsernameAndPassword (ok)");
+    state = {
+        msg   : "This is the pUAP text.",
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : false,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "usr",
+        passValue   : "ssh",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+        setCheckbox: true,
+        textField: "newusr",
+        passField: "newssh",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value  = "usr";
     passVal.value  = "ssh";
     checkVal.value = false;
@@ -1029,14 +615,34 @@ function* runTests() {
     is(textVal.value, "newusr", "checking expected text value");
     is(passVal.value, "newssh", "checking expected pass value");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 17 =====
-    // PromptUsernameAndPassword (cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: PromptUsernameAndPassword (cancel)");
+    state = {
+        msg   : "This is the pUAP text.",
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : false,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "usr",
+        passValue   : "ssh",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "cancel",
+        setCheckbox : true,
+        textField   : "newusr",
+        passField   : "newssh",
+    };
+
+    promptDone = handlePrompt(action);
+
     textVal.value  = "usr";
     passVal.value  = "ssh";
     checkVal.value = false;
@@ -1048,14 +654,33 @@ function* runTests() {
     is(textVal.value, "usr", "checking expected text value");
     is(passVal.value, "ssh", "checking expected pass value");
     is(checkVal.value, false, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 18 =====
-    // PromptPassword (ok)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: PromptPassword (ok)");
+    state = {
+        msg   : "This is the promptPassword text.",
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : true,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "ssh",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "passField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "ok",
+        setCheckbox : true,
+        passField   : "newssh",
+    };
+
+    promptDone = handlePrompt(action);
+
     passVal.value  = "ssh";
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
@@ -1065,14 +690,33 @@ function* runTests() {
     is(isOK, true, "checked expected retval");
     is(passVal.value, "newssh", "checking expected pass value");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 19 =====
-    // PromptPassword (cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: PromptPassword (cancel)");
+    state = {
+        msg   : "This is the promptPassword text.",
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : true,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "ssh",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "passField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "cancel",
+        setCheckbox : true,
+        passField   : "newssh",
+    };
+
+    promptDone = handlePrompt(action);
+
     passVal.value  = "ssh";
     checkVal.value = false;
     promptArgs = ["TestTitle", "This is the promptPassword text.", passVal, "Check me out!", checkVal];
@@ -1082,42 +726,101 @@ function* runTests() {
     is(isOK, false, "checked expected retval");
     is(passVal.value, "ssh", "checking expected pass value");
     is(checkVal.value, false, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 20 =====
-    // ConfirmEx (ok/cancel, ok)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmEx (ok/cancel, ok)");
+    state = {
+        msg   : "This is the confirmEx text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+        butt0Label  : "OK",
+        butt1Label  : "Cancel",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
     flags = Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS;
     promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
     if (usePromptService)
         promptArgs.unshift(window);
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 0, "checked expected button num click");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 21 =====
-    // ConfirmEx (yes/no, cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmEx (yes/no, cancel)");
+    state = {
+        msg   : "This is the confirmEx text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+        butt0Label  : "Yes",
+        butt1Label  : "No",
+    };
+    action = {
+        buttonClick: "cancel",
+    };
+
+    promptDone = handlePrompt(action);
+
     flags = Ci.nsIPromptService.STD_YES_NO_BUTTONS;
     promptArgs = ["TestTitle", "This is the confirmEx text.", flags, null, null, null, null, {}];
     if (usePromptService)
         promptArgs.unshift(window);
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 1, "checked expected button num click");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 22 =====
-    // ConfirmEx (buttons from args, checkbox, ok)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmEx (buttons from args, checkbox, ok)");
+    state = {
+        msg   : "This is the confirmEx text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+        butt0Label  : "butt0",
+        butt1Label  : "butt1",
+        butt2Label  : "butt2",
+    };
+    action = {
+        buttonClick: "ok",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     let b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
     flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
             b * Ci.nsIPromptService.BUTTON_POS_1 +
@@ -1130,14 +833,35 @@ function* runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 0, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 23 =====
-    // ConfirmEx (buttons from args, checkbox, cancel)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmEx (buttons from args, checkbox, cancel)");
+    state = {
+        msg   : "This is the confirmEx text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button1", // Default changed!
+        defButton   : "button1",
+        butt0Label  : "butt0",
+        butt1Label  : "butt1",
+        butt2Label  : "butt2",
+    };
+    action = {
+        buttonClick: "cancel",
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
     flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
             b * Ci.nsIPromptService.BUTTON_POS_1 +
@@ -1151,14 +875,35 @@ function* runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 1, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 24 =====
-    // ConfirmEx (buttons from args, checkbox, button3)
-    testNum++;
-    startCallbackTimer();
+    // =====
+    info("Starting test: ConfirmEx (buttons from args, checkbox, button3)");
+    state = {
+        msg   : "This is the confirmEx text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "button2", // Default changed!
+        defButton   : "button2",
+        butt0Label  : "butt0",
+        butt1Label  : "butt1",
+        butt2Label  : "butt2",
+    };
+    action = {
+        buttonClick: 2,
+        setCheckbox: true,
+    };
+
+    promptDone = handlePrompt(action);
+
     b = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING;
     flags = b * Ci.nsIPromptService.BUTTON_POS_2 +
             b * Ci.nsIPromptService.BUTTON_POS_1 +
@@ -1172,38 +917,81 @@ function* runTests() {
     clickedButton = prompter.confirmEx.apply(null, promptArgs);
     is(clickedButton, 2, "checked expected button num click");
     is(checkVal.value, true, "expected checkbox setting");
-    ok(didDialog, "handleDialog was invoked");
 
-    yield Promise.resolve();
+    yield promptDone;
 
-    // ===== test 25  =====
-    // Alert, no window
-    // (skipped for tabmodal tests: window is required)
-    testNum++;
-    if (!isTabModal) {
-        startCallbackTimer();
-    promptArgs = ["TestTitle", "This is the alert text."];
-    if (usePromptService)
-        promptArgs.unshift(null);
+    // =====
+    // (skipped for E10S and tabmodal tests: window is required)
+    info("Starting test: Alert, no window");
+    state = {
+        msg   : "This is the alert text.",
+        title : "TestTitle",
+        iconClass   : "alert-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+    if (!isTabModal && !isE10S) {
+        promptDone = handlePrompt(action);
+
+        promptArgs = ["TestTitle", "This is the alert text."];
+        if (usePromptService)
+          promptArgs.unshift(null);
         prompter.alert.apply(null, promptArgs);
-        ok(didDialog, "handleDialog was invoked");
+
+        yield promptDone;
     }
 
-    yield Promise.resolve();
 
-    // ===== test 26 =====
-    // ConfirmEx (delay, ok)
+    // =====
     // (skipped for tabmodal tests: delay not supported)
-    testNum++;
+    info("Starting test: ConfirmEx (delay, ok)");
+    state = {
+        msg   : "This is the confirmEx delay text.",
+        title : "TestTitle",
+        iconClass   : "question-icon",
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : null, // nothing focused until after delay fires
+        defButton   : "button0",
+        butt0Label  : "OK",
+        butt1Label  : "Cancel",
+        butt0Disabled: true,
+    };
+
+    // OS X doesn't initially focus the button, but rather the infoBody.
+    // The focus stays there even after the button-enable delay has fired.
+    if (isOSX)
+        state.focused = "infoBody";
+
+    action = {
+        buttonClick: "pollOK",
+    };
     if (!isTabModal) {
-        startCallbackTimer();
+        promptDone = handlePrompt(action);
+
         flags = (Ci.nsIPromptService.STD_OK_CANCEL_BUTTONS | Ci.nsIPromptService.BUTTON_DELAY_ENABLE);
         promptArgs = ["TestTitle", "This is the confirmEx delay text.", flags, null, null, null, null, {}];
         if (usePromptService)
             promptArgs.unshift(window);
         clickedButton = prompter.confirmEx.apply(null, promptArgs);
         is(clickedButton, 0, "checked expected button num click");
-        ok(didDialog, "handleDialog was invoked");
+
+        yield promptDone;
     }
 
     // promptAuth already tested via password manager but do a few specific things here.
@@ -1227,31 +1015,73 @@ function* runTests() {
         realm : ""
     };
 
-    yield Promise.resolve();
 
-    // ===== test 100 =====
-    // promptAuth with empty realm
+    // =====
     // (promptAuth is only accessible from the prompt service)
-    testNum = 100;
+    info("Starting test: promptAuth with empty realm");
+    state = {
+        msg : 'Enter username and password for http://example.com',
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : false,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "ok",
+        setCheckbox : true,
+        textField   : "username",
+        passField   : "password",
+    };
     if (usePromptService) {
-        startCallbackTimer();
+        promptDone = handlePrompt(action);
+
         checkVal.value = false;
         isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
         is(isOK, true, "checked expected retval");
         is(authinfo.username, "username", "checking filled username");
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, true, "expected checkbox setting");
-        ok(didDialog, "handleDialog was invoked");
+
+        yield promptDone;
     }
 
-    yield Promise.resolve();
 
-    // ===== test 101 =====
-    // promptAuth with long realm
+    // =====
     // (promptAuth is only accessible from the prompt service)
-    testNum++;
+    info("Starting test: promptAuth with long realm");
+    state = {
+        msg : 'A username and password are being requested by http://example.com. The site '  +
+              'says: "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
+              'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
+              'abcdefghi \u2026"',
+        title : "TestTitle",
+        iconClass   : "authentication-icon question-icon",
+        textHidden  : false,
+        passHidden  : false,
+        checkHidden : false,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "Check me out!",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick : "ok",
+        setCheckbox : true,
+        textField   : "username",
+        passField   : "password",
+    };
     if (usePromptService) {
-        startCallbackTimer();
+        promptDone = handlePrompt(action);
+
         checkVal.value = false;
         var longString = "";
         for (var i = 0; i < 20; i++)
@@ -1264,12 +1094,13 @@ function* runTests() {
         is(authinfo.username, "username", "checking filled username");
         is(authinfo.password, "password", "checking filled password");
         is(checkVal.value, true, "expected checkbox setting");
-        ok(didDialog, "handleDialog was invoked");
+
+        yield promptDone;
     }
 }
 
-let testNum;
-let pollTimer;
+let gChromeScript;
+let state, action;
 
 /*
  * Run the body of the 3 times:
@@ -1279,17 +1110,26 @@ let pollTimer;
  */
 
 add_task(function* runPromptTests() {
+  info("Process type: " + SpecialPowers.Services.appinfo.processType);
+
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  gChromeScript = SpecialPowers.loadChromeScript(url);
 
   isTabModal = false; usePromptService = true;
+  info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
   yield* runTests();
 
   isTabModal = false; usePromptService = false;
+  info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
   yield* runTests();
 
-  if (getTabModalPromptBox(window)) {
+  if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
       isTabModal = true; usePromptService = false;
+      info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
       yield* runTests();
   }
+
+  gChromeScript.destroy();
 });
 
 </script>

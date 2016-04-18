@@ -13,10 +13,11 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsINSSU2FToken.h"
+#include "nsNSSShutDown.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
-#include "NSSToken.h"
 #include "USBToken.h"
 
 namespace mozilla {
@@ -78,8 +79,8 @@ public:
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsString mOrigin;
-  NSSToken mSoftToken;
   USBToken mUSBToken;
+  nsCOMPtr<nsINSSU2FToken> mNSSToken;
 
   static const nsString FinishEnrollment;
   static const nsString GetAssertion;
@@ -98,6 +99,20 @@ private:
   // for a description of the algorithm.
   bool
   ValidAppID(/* in/out */ nsString& aAppId) const;
+
+  nsresult
+  NSSTokenIsCompatible(const nsString& versionString, bool* isCompatible);
+
+  nsresult
+  NSSTokenIsRegistered(CryptoBuffer& keyHandle, bool* isRegistered);
+
+  nsresult
+  NSSTokenRegister(CryptoBuffer& application, CryptoBuffer& challenge,
+                   CryptoBuffer& registrationData);
+
+  nsresult
+  NSSTokenSign(CryptoBuffer& keyHandle, CryptoBuffer& application,
+               CryptoBuffer& challenge, CryptoBuffer& signatureData);
 };
 
 } // namespace dom

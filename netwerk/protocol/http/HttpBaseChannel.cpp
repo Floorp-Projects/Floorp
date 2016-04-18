@@ -2337,7 +2337,27 @@ HttpBaseChannel::SetRedirectMode(uint32_t aMode)
 NS_IMETHODIMP
 HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode)
 {
-  *aFetchCacheMode = mFetchCacheMode;
+  NS_ENSURE_ARG_POINTER(aFetchCacheMode);
+
+  // If the fetch cache mode is overriden, then use it directly.
+  if (mFetchCacheMode != nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT) {
+    *aFetchCacheMode = mFetchCacheMode;
+    return NS_OK;
+  }
+
+  // Otherwise try to guess an appropriate cache mode from the load flags.
+  if (mLoadFlags & (INHIBIT_CACHING | LOAD_BYPASS_CACHE)) {
+    *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE;
+  } else if (mLoadFlags & LOAD_BYPASS_CACHE) {
+    *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD;
+  } else if (mLoadFlags & VALIDATE_ALWAYS) {
+    *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE;
+  } else if (mLoadFlags & LOAD_FROM_CACHE) {
+    *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_FORCE_CACHE;
+  } else {
+    *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_DEFAULT;
+  }
+
   return NS_OK;
 }
 

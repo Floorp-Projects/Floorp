@@ -4,15 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "hasht.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/U2F.h"
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsIEffectiveTLDService.h"
-#include "nsURLParsers.h"
 #include "nsNetCID.h"
+#include "nsNSSComponent.h"
+#include "nsURLParsers.h"
 #include "pk11pub.h"
+
+using mozilla::dom::ContentChild;
 
 namespace mozilla {
 namespace dom {
@@ -29,14 +34,14 @@ enum class ErrorCode {
   TIMEOUT = 5
 };
 
-#define PREF_U2F_SOFTTOKEN_ENABLED "security.webauth.u2f.softtoken"
-#define PREF_U2F_USBTOKEN_ENABLED  "security.webauth.u2f.usbtoken"
+#define PREF_U2F_SOFTTOKEN_ENABLED "security.webauth.u2f_enable_softtoken"
+#define PREF_U2F_USBTOKEN_ENABLED  "security.webauth.u2f_enable_usbtoken"
 
-const nsString
-U2F::FinishEnrollment = NS_LITERAL_STRING("navigator.id.finishEnrollment");
+const nsString U2F::FinishEnrollment =
+  NS_LITERAL_STRING("navigator.id.finishEnrollment");
 
-const nsString
-U2F::GetAssertion = NS_LITERAL_STRING("navigator.id.getAssertion");
+const nsString U2F::GetAssertion =
+  NS_LITERAL_STRING("navigator.id.getAssertion");
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(U2F)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -47,6 +52,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(U2F)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(U2F)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(U2F, mParent)
+
+static mozilla::LazyLogModule gU2FLog("fido_u2f");
 
 U2F::U2F()
 {}
@@ -88,18 +95,128 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
   }
 
   if (!EnsureNSSInitializedChromeOrContent()) {
+    MOZ_LOG(gU2FLog, LogLevel::Debug, ("Failed to get NSS context for U2F"));
+    aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  aRv = mSoftToken.Init();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  if (XRE_IsParentProcess()) {
+    mNSSToken = do_GetService(NS_NSSU2FTOKEN_CONTRACTID);
+    if (NS_WARN_IF(!mNSSToken)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
   }
 
   aRv = mUSBToken.Init();
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+}
+
+nsresult
+U2F::NSSTokenIsCompatible(const nsString& aVersionString, bool* aIsCompatible)
+{
+  MOZ_ASSERT(aIsCompatible);
+
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(mNSSToken);
+    return mNSSToken->IsCompatibleVersion(aVersionString, aIsCompatible);
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  if (!cc->SendNSSU2FTokenIsCompatibleVersion(aVersionString, aIsCompatible)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+U2F::NSSTokenIsRegistered(CryptoBuffer& aKeyHandle, bool* aIsRegistered)
+{
+  MOZ_ASSERT(aIsRegistered);
+
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(mNSSToken);
+    return mNSSToken->IsRegistered(aKeyHandle.Elements(), aKeyHandle.Length(),
+                                   aIsRegistered);
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  if (!cc->SendNSSU2FTokenIsRegistered(aKeyHandle, aIsRegistered)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+U2F::NSSTokenRegister(CryptoBuffer& aApplication, CryptoBuffer& aChallenge,
+                      CryptoBuffer& aRegistrationData)
+{
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(mNSSToken);
+    uint8_t* buffer;
+    uint32_t bufferlen;
+    nsresult rv;
+    rv = mNSSToken->Register(aApplication.Elements(), aApplication.Length(),
+                             aChallenge.Elements(), aChallenge.Length(),
+                             &buffer, &bufferlen);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(buffer);
+    aRegistrationData.Assign(buffer, bufferlen);
+    free(buffer);
+    return NS_OK;
+  }
+
+  nsTArray<uint8_t> registrationBuffer;
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  if (!cc->SendNSSU2FTokenRegister(aApplication, aChallenge,
+                                   &registrationBuffer)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aRegistrationData.Assign(registrationBuffer);
+  return NS_OK;
+}
+
+nsresult
+U2F::NSSTokenSign(CryptoBuffer& aKeyHandle, CryptoBuffer& aApplication,
+                  CryptoBuffer& aChallenge, CryptoBuffer& aSignatureData)
+{
+  if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(mNSSToken);
+    uint8_t* buffer;
+    uint32_t bufferlen;
+    nsresult rv = mNSSToken->Sign(aApplication.Elements(), aApplication.Length(),
+                                  aChallenge.Elements(), aChallenge.Length(),
+                                  aKeyHandle.Elements(), aKeyHandle.Length(),
+                                  &buffer, &bufferlen);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(buffer);
+    aSignatureData.Assign(buffer, bufferlen);
+    free(buffer);
+    return NS_OK;
+  }
+
+  nsTArray<uint8_t> signatureBuffer;
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  if (!cc->SendNSSU2FTokenSign(aApplication, aChallenge, aKeyHandle,
+                               &signatureBuffer)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aSignatureData.Assign(signatureBuffer);
+  return NS_OK;
 }
 
 nsresult
@@ -189,24 +306,6 @@ U2F::ValidAppID(/* in/out */ nsString& aAppId) const
     return true;
   }
 
-  nsAutoCString appIdTld;
-  nsAutoCString facetTld;
-
-  rv = tldService->GetBaseDomainFromHost(appIdAuth, 0, appIdTld);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  rv = tldService->GetBaseDomainFromHost(facetAuth, 0, facetTld);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  // If this AppID's registered domain matches the Facet's, accept
-  if (!facetTld.IsEmpty() && !appIdTld.IsEmpty() &&
-      (facetTld == appIdTld)) {
-    return true;
-  }
-
   // TODO(Bug 1244959) Implement the remaining algorithm.
   return false;
 }
@@ -258,7 +357,7 @@ U2F::Register(const nsAString& aAppId,
   for (size_t i = 0; i < aRegisteredKeys.Length(); ++i) {
     RegisteredKey request(aRegisteredKeys[i]);
 
-    // Check for equired attributes
+    // Check for required attributes
     if (!(request.mKeyHandle.WasPassed() &&
           request.mVersion.WasPassed())) {
       continue;
@@ -282,6 +381,9 @@ U2F::Register(const nsAString& aAppId,
     // We ignore mTransports, as it is intended to be used for sorting the
     // available devices by preference, but is not an exclusion factor.
 
+    bool isCompatible = false;
+    bool isRegistered = false;
+
     // Determine if the provided keyHandle is registered at any device. If so,
     // then we'll return DEVICE_INELIGIBLE to signify we're already registered.
     if (usbTokenEnabled &&
@@ -291,13 +393,26 @@ U2F::Register(const nsAString& aAppId,
                                                   ErrorCode::DEVICE_INELIGIBLE);
       return;
     }
+    if (softTokenEnabled) {
+      rv = NSSTokenIsCompatible(request.mVersion.Value(), &isCompatible);
+      if (NS_FAILED(rv)) {
+        SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
+                                                         ErrorCode::OTHER_ERROR);
+        return;
+      }
 
-    if (softTokenEnabled &&
-        mSoftToken.IsCompatibleVersion(request.mVersion.Value()) &&
-        mSoftToken.IsRegistered(keyHandle)) {
-      SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
-                                                  ErrorCode::DEVICE_INELIGIBLE);
-      return;
+      rv = NSSTokenIsRegistered(keyHandle, &isRegistered);
+      if (NS_FAILED(rv)) {
+        SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
+                                                         ErrorCode::OTHER_ERROR);
+        return;
+      }
+
+      if (isCompatible && isRegistered) {
+        SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
+                                                         ErrorCode::DEVICE_INELIGIBLE);
+        return;
+      }
     }
   }
 
@@ -353,28 +468,31 @@ U2F::Register(const nsAString& aAppId,
     // Get the registration data from the token
     CryptoBuffer registrationData;
     bool registerSuccess = false;
-
-    if (usbTokenEnabled &&
-        mUSBToken.IsCompatibleVersion(request.mVersion.Value())) {
-      rv = mUSBToken.Register(opt_aTimeoutSeconds, challengeParam,
-                              appParam, registrationData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
-                                                      ErrorCode::OTHER_ERROR);
-        return;
-      }
-      registerSuccess = true;
+    bool isCompatible = false;
+    if (usbTokenEnabled) {
+      // TODO: Implement in Bug 1245527
+      SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
+                                                       ErrorCode::OTHER_ERROR);
+      return;
     }
 
-    if (!registerSuccess && softTokenEnabled &&
-        mSoftToken.IsCompatibleVersion(request.mVersion.Value())) {
-      rv = mSoftToken.Register(challengeParam, appParam, registrationData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (!registerSuccess && softTokenEnabled) {
+      rv = NSSTokenIsCompatible(request.mVersion.Value(), &isCompatible);
+      if (NS_FAILED(rv)) {
         SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
                                                         ErrorCode::OTHER_ERROR);
         return;
       }
-      registerSuccess = true;
+
+      if (isCompatible) {
+        rv = NSSTokenRegister(appParam, challengeParam, registrationData);
+        if (NS_FAILED(rv)) {
+          SendError<U2FRegisterCallback, RegisterResponse>(aCallback,
+                                                        ErrorCode::OTHER_ERROR);
+          return;
+        }
+        registerSuccess = true;
+      }
     }
 
     if (!registerSuccess) {
@@ -521,25 +639,39 @@ U2F::Sign(const nsAString& aAppId,
 
     if (usbTokenEnabled &&
         mUSBToken.IsCompatibleVersion(request.mVersion.Value())) {
-      rv = mUSBToken.Sign(opt_aTimeoutSeconds, appParam, challengeParam,
-                          keyHandle, signatureData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        SendError<U2FSignCallback, SignResponse>(aCallback,
-                                                 ErrorCode::OTHER_ERROR);
-        return;
-      }
-      signSuccess = true;
+      // TODO: Implement in Bug 1245527
+      SendError<U2FSignCallback, SignResponse>(aCallback,
+                                               ErrorCode::OTHER_ERROR);
+      return;
     }
 
-    if (!signSuccess && softTokenEnabled &&
-        mSoftToken.IsCompatibleVersion(request.mVersion.Value())) {
-      rv = mSoftToken.Sign(appParam, challengeParam, keyHandle, signatureData);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (!signSuccess && softTokenEnabled) {
+      bool isCompatible = false;
+      bool isRegistered = false;
+
+      rv = NSSTokenIsCompatible(request.mVersion.Value(), &isCompatible);
+      if (NS_FAILED(rv)) {
         SendError<U2FSignCallback, SignResponse>(aCallback,
                                                  ErrorCode::OTHER_ERROR);
         return;
       }
-      signSuccess = true;
+
+      rv = NSSTokenIsRegistered(keyHandle, &isRegistered);
+      if (NS_FAILED(rv)) {
+        SendError<U2FSignCallback, SignResponse>(aCallback,
+                                                 ErrorCode::OTHER_ERROR);
+        return;
+      }
+
+      if (isCompatible && isRegistered) {
+        rv = NSSTokenSign(keyHandle, appParam, challengeParam, signatureData);
+        if (NS_FAILED(rv)) {
+          SendError<U2FSignCallback, SignResponse>(aCallback,
+                                                   ErrorCode::OTHER_ERROR);
+          return;
+        }
+        signSuccess = true;
+      }
     }
 
     if (!signSuccess) {
