@@ -34,13 +34,19 @@ Services.prefs.setBoolPref(STORAGE_PREF, true);
 Services.prefs.setBoolPref(CACHES_ON_HTTP_PREF, true);
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
+  DevToolsUtils.testing = false;
   gToolbox = gPanelWindow = gWindow = gUI = null;
   Services.prefs.clearUserPref(STORAGE_PREF);
   Services.prefs.clearUserPref(SPLIT_CONSOLE_PREF);
   Services.prefs.clearUserPref(DUMPEMIT_PREF);
   Services.prefs.clearUserPref(DEBUGGERLOG_PREF);
   Services.prefs.clearUserPref(CACHES_ON_HTTP_PREF);
-  DevToolsUtils.testing = false;
+});
+
+registerCleanupFunction(function* cleanup() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
+
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -660,7 +666,7 @@ function* editCell(id, column, newValue, validate = true) {
 
   editableFieldsEngine.edit(row[column]);
 
-  return yield typeWithTerminator(newValue, "VK_RETURN", validate);
+  yield typeWithTerminator(newValue, "VK_RETURN", validate);
 }
 
 /**
