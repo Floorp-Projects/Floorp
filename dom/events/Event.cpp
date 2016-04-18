@@ -155,7 +155,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     tmp->mEvent->mTarget = nullptr;
     tmp->mEvent->mCurrentTarget = nullptr;
-    tmp->mEvent->originalTarget = nullptr;
+    tmp->mEvent->mOriginalTarget = nullptr;
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
       case eMouseScrollEventClass:
@@ -193,7 +193,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mTarget)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mCurrentTarget)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->originalTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mOriginalTarget)
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
       case eMouseScrollEventClass:
@@ -348,8 +348,8 @@ Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 EventTarget*
 Event::GetOriginalTarget() const
 {
-  if (mEvent->originalTarget) {
-    return GetDOMEventTarget(mEvent->originalTarget);
+  if (mEvent->mOriginalTarget) {
+    return GetDOMEventTarget(mEvent->mOriginalTarget);
   }
 
   return GetTarget();
@@ -588,7 +588,7 @@ Event::InitEvent(const nsAString& aEventTypeArg,
   // Clearing the old targets, so that the event is targeted correctly when
   // re-dispatching it.
   mEvent->mTarget = nullptr;
-  mEvent->originalTarget = nullptr;
+  mEvent->mOriginalTarget = nullptr;
 }
 
 NS_IMETHODIMP

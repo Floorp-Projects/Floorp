@@ -609,13 +609,13 @@ nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
     // we don't have a spinner
     return eSpinButtonNone;
   }
-  if (aEvent->originalTarget == mSpinUp) {
+  if (aEvent->mOriginalTarget == mSpinUp) {
     return eSpinButtonUp;
   }
-  if (aEvent->originalTarget == mSpinDown) {
+  if (aEvent->mOriginalTarget == mSpinDown) {
     return eSpinButtonDown;
   }
-  if (aEvent->originalTarget == mSpinBox) {
+  if (aEvent->mOriginalTarget == mSpinBox) {
     // In the case that the up/down buttons are hidden (display:none) we use
     // just the spin box element, spinning up if the pointer is over the top
     // half of the element, or down if it's over the bottom half. This is
@@ -678,7 +678,7 @@ nsNumberControlFrame::IsFocused() const
 void
 nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 {
-  if (aEvent->originalTarget != mTextField) {
+  if (aEvent->mOriginalTarget != mTextField) {
     // Move focus to our text field
     HTMLInputElement::FromContent(mTextField)->Focus();
   }
