@@ -905,7 +905,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
   // Doing a straight conversion from LayoutDeviceIntPoint to CSSIntPoint
   // seem incorrect, but it is needed to maintain legacy functionality.
   WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
-  if (!aPresContext || !(guiEvent && guiEvent->widget)) {
+  if (!aPresContext || !(guiEvent && guiEvent->mWidget)) {
     return CSSIntPoint(aPoint.x, aPoint.y);
   }
 
@@ -916,7 +916,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
     pt = pt.RemoveResolution(nsLayoutUtils::GetCurrentAPZResolutionScale(ps));
   }
 
-  pt += LayoutDevicePixel::ToAppUnits(guiEvent->widget->WidgetToScreenOffset(),
+  pt += LayoutDevicePixel::ToAppUnits(guiEvent->mWidget->WidgetToScreenOffset(),
                                       aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   return CSSPixel::FromAppUnitsRounded(pt);
@@ -964,7 +964,7 @@ Event::GetClientCoords(nsPresContext* aPresContext,
        aEvent->mClass != ePointerEventClass &&
        aEvent->mClass != eSimpleGestureEventClass) ||
       !aPresContext ||
-      !aEvent->AsGUIEvent()->widget) {
+      !aEvent->AsGUIEvent()->mWidget) {
     return aDefaultPoint;
   }
 

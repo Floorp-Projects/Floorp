@@ -1,5 +1,6 @@
         <activity
             android:name="@MOZ_ANDROID_SEARCH_INTENT_CLASS@"
+            android:process=":search"
             android:launchMode="singleTop"
             android:taskAffinity="@ANDROID_PACKAGE_NAME@.SEARCH"
             android:icon="@drawable/search_launcher"
@@ -49,6 +50,7 @@
 
         <activity
             android:name="org.mozilla.search.SearchPreferenceActivity"
+            android:process=":search"
             android:logo="@drawable/search_launcher"
             android:label="@string/search_pref_title"
             android:parentActivityName="@MOZ_ANDROID_SEARCH_INTENT_CLASS@"

@@ -81,6 +81,16 @@ Unify(ExprType one, ExprType two)
     return ExprType::Void;
 }
 
+static bool
+IsI64Implemented()
+{
+#ifdef JS_CPU_X64
+        return true;
+#else
+        return false;
+#endif
+}
+
 class FunctionDecoder
 {
     JSContext* cx_;
@@ -108,11 +118,9 @@ class FunctionDecoder
         return Fail(cx_, d_, str);
     }
     bool checkI64Support() {
-#ifdef JS_CPU_X64
+        if (!IsI64Implemented())
+            return fail("i64 NYI on this platform");
         return true;
-#else
-        return fail("i64 NYI on this platform");
-#endif
     }
 
     MOZ_WARN_UNUSED_RESULT bool pushBlock() {
@@ -1073,14 +1081,16 @@ DecodeFunctionTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 static bool
 CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
 {
+    bool allowI64 = IsI64Implemented() && JitOptions.wasmTestMode;
+
     for (ValType argType : sig.args()) {
-        if (argType == ValType::I64)
+        if (argType == ValType::I64 && !allowI64)
             return Fail(cx, d, "cannot import/export i64 argument");
         if (IsSimdType(argType))
             return Fail(cx, d, "cannot import/export SIMD argument");
     }
 
-    if (sig.ret() == ExprType::I64)
+    if (sig.ret() == ExprType::I64 && !allowI64)
         return Fail(cx, d, "cannot import/export i64 return type");
     if (IsSimdType(sig.ret()))
         return Fail(cx, d, "cannot import/export SIMD return type");

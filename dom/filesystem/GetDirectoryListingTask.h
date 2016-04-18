@@ -23,7 +23,6 @@ public:
   static already_AddRefed<GetDirectoryListingTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
-         Directory::DirectoryType aType,
          const nsAString& aFilters,
          ErrorResult& aRv);
 
@@ -40,7 +39,6 @@ private:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
                                nsIFile* aTargetPath,
-                               Directory::DirectoryType aType,
                                const nsAString& aFilters);
 
   virtual FileSystemParams
@@ -57,7 +55,6 @@ private:
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
   nsString mFilters;
-  Directory::DirectoryType mType;
 
   // We cannot store File or Directory objects bacause this object is created
   // on a different thread and File and Directory are not thread-safe.
@@ -89,7 +86,6 @@ private:
 
   nsCOMPtr<nsIFile> mTargetPath;
   nsString mFilters;
-  Directory::DirectoryType mType;
 
   // We cannot store File or Directory objects bacause this object is created
   // on a different thread and File and Directory are not thread-safe.

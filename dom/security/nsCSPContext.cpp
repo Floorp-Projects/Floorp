@@ -706,13 +706,15 @@ StripURIForReporting(nsIURI* aURI,
   // 1) If the origin of uri is a globally unique identifier (for example,
   // aURI has a scheme of data, blob, or filesystem), then return the
   // ASCII serialization of uri’s scheme.
-  bool isHttp =
-    (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttp)) && isHttp) ||
-    (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttp)) && isHttp);
-  if (!isHttp) {
+  bool isHttpOrFtp =
+    (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpOrFtp)) && isHttpOrFtp) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpOrFtp)) && isHttpOrFtp) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("ftp", &isHttpOrFtp)) && isHttpOrFtp);
+
+  if (!isHttpOrFtp) {
     // not strictly spec compliant, but what we really care about is
-    // http/https. If it's not http/https, then treat aURI as if
-    // it's a globally unique identifier and just return the scheme.
+    // http/https and also ftp. If it's not http/https or ftp, then treat aURI
+    // as if it's a globally unique identifier and just return the scheme.
     aURI->GetScheme(outStrippedURI);
     return;
   }

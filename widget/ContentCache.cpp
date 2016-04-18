@@ -846,7 +846,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
   if (!mIsComposing) {
-    if (aEvent.widget && aEvent.widget->PluginHasFocus()) {
+    if (aEvent.mWidget && aEvent.mWidget->PluginHasFocus()) {
       // If focus is on plugin, we cannot get selection range
       mCompositionStart = 0;
     } else {

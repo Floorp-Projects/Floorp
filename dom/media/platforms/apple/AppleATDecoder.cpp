@@ -287,7 +287,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   }
   if (mAudioConverter) {
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
-    mAudioConverter->Process(data);
+    data = mAudioConverter->Process(Move(data));
   }
 
   RefPtr<AudioData> audio = new AudioData(aSample->mOffset,

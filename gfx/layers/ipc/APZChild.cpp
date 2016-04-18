@@ -95,14 +95,6 @@ APZChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
-APZChild::RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
-                                      const uint32_t& aScrollGeneration)
-{
-  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
-  return true;
-}
-
-bool
 APZChild::RecvHandleDoubleTap(const CSSPoint& aPoint,
                               const Modifiers& aModifiers,
                               const ScrollableLayerGuid& aGuid)

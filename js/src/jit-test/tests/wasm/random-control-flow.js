@@ -128,3 +128,23 @@ wasmEvalText(`(module (func
   )
  )
 ))`);
+
+wasmEvalText(`
+(module
+  (func $func$0
+   (select
+    (if
+     (i32.const 0)
+     (f32.const 0)
+     (i32.const 0)
+    )
+    (if
+     (i32.const 0)
+     (f32.const 0)
+     (i32.const 0)
+    )
+    (i32.const 0)
+   )
+  )
+)
+`);
