@@ -55,10 +55,10 @@ private:
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext) :
-  nsSVGPatternFrameBase(aContext),
-  mLoopFlag(false),
-  mNoHRefURI(false)
+nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext)
+  : nsSVGPaintServerFrame(aContext)
+  , mLoopFlag(false)
+  , mNoHRefURI(false)
 {
 }
 
@@ -94,7 +94,7 @@ nsSVGPatternFrame::AttributeChanged(int32_t         aNameSpaceID,
     nsSVGEffects::InvalidateDirectRenderingObservers(this);
   }
 
-  return nsSVGPatternFrameBase::AttributeChanged(aNameSpaceID,
+  return nsSVGPaintServerFrame::AttributeChanged(aNameSpaceID,
                                                  aAttribute, aModType);
 }
 
@@ -106,7 +106,7 @@ nsSVGPatternFrame::Init(nsIContent*       aContent,
 {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::pattern), "Content is not an SVG pattern");
 
-  nsSVGPatternFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGPaintServerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
