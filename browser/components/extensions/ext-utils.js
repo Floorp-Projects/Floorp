@@ -212,12 +212,15 @@ class BasePopup {
         break;
 
       case "DOMWindowCreated":
-        let winUtils = this.browser.contentWindow
-            .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        for (let stylesheet of global.stylesheets) {
-          winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
+        if (event.target === this.browser.contentDocument) {
+          let winUtils = this.browser.contentWindow
+              .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+          for (let stylesheet of global.stylesheets) {
+            winUtils.addSheet(stylesheet, winUtils.AGENT_SHEET);
+          }
         }
         break;
+
       case "DOMWindowClose":
         if (event.target === this.browser.contentWindow) {
           event.preventDefault();

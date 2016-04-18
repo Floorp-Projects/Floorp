@@ -1536,9 +1536,13 @@ StorageActors.createActor({
   getNamesForHost: function(host) {
     let names = [];
 
-    for (let [dbName, metaData] of this.hostVsStores.get(host)) {
-      for (let objectStore of metaData.objectStores.keys()) {
-        names.push(JSON.stringify([dbName, objectStore]));
+    for (let [dbName, {objectStores}] of this.hostVsStores.get(host)) {
+      if (objectStores.size) {
+        for (let objectStore of objectStores.keys()) {
+          names.push(JSON.stringify([dbName, objectStore]));
+        }
+      } else {
+        names.push(JSON.stringify([dbName]));
       }
     }
     return names;
@@ -1634,7 +1638,7 @@ StorageActors.createActor({
       return null;
     }
 
-    if (item.indexes) {
+    if ("indexes" in item) {
       // Object store meta data
       return {
         objectStore: item.name,
@@ -1643,7 +1647,7 @@ StorageActors.createActor({
         indexes: item.indexes
       };
     }
-    if (item.objectStores) {
+    if ("objectStores" in item) {
       // DB meta data
       return {
         db: item.name,
@@ -2240,7 +2244,8 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
       let origin = win.document
                       .nodePrincipal
                       .originNoSuffix;
-      if (origin === host) {
+      let url = win.document.URL;
+      if (origin === host || url === host) {
         return win;
       }
     }

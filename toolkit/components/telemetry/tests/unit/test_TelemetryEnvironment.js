@@ -511,6 +511,16 @@ function checkSystemSection(data) {
               "ServicePackMajor must be a number.");
     Assert.ok(Number.isFinite(osData["servicePackMinor"]),
               "ServicePackMinor must be a number.");
+    if ("windowsBuildNumber" in osData) {
+      // This might not be available on all Windows platforms.
+      Assert.ok(Number.isFinite(osData["windowsBuildNumber"]),
+                "windowsBuildNumber must be a number.");
+    }
+    if ("windowsUBR" in osData) {
+      // This might not be available on all Windows platforms.
+      Assert.ok((osData["windowsUBR"] === null) || Number.isFinite(osData["windowsUBR"]),
+                "windowsUBR must be null or a number.");
+    }
   } else if (gIsAndroid || gIsGonk) {
     Assert.ok(checkNullOrString(osData.kernelVersion));
   }
