@@ -462,11 +462,11 @@ parent:
                                            uint64_t aObserverId);
     async SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,
-                                     ScreenIntPoint aPointerScreenPoint,
+                                     LayoutDeviceIntPoint aPoint,
                                      double aPointerPressure,
                                      uint32_t aPointerOrientation,
                                      uint64_t aObserverId);
-    async SynthesizeNativeTouchTap(ScreenIntPoint aPointerScreenPoint,
+    async SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint,
                                    bool aLongTap,
                                    uint64_t aObserverId);
     async ClearNativeTouchSequence(uint64_t aObserverId);

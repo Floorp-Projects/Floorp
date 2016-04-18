@@ -764,6 +764,50 @@ parent:
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
+    /**
+     * Is this token compatible with the provided version?
+     *
+     * |version| The offered version to test
+     * Returns |True| if the offered version is compatible
+     */
+    sync NSSU2FTokenIsCompatibleVersion(nsString version)
+        returns (bool result);
+
+    /**
+     * Return whether the provided KeyHandle belongs to this Token
+     *
+     * |keyHandle| Key Handle to evaluate.
+     * Returns |True| if the Key Handle is ours.
+     */
+    sync NSSU2FTokenIsRegistered(uint8_t[] keyHandle)
+        returns (bool isValidKeyHandle);
+
+    /**
+     * Generates a public/private keypair for the provided application
+     * and challenge, returning the pubkey, challenge response, and
+     * key handle in the registration data.
+     *
+     * |application| The FIDO Application data to associate with the key.
+     * |challenge| The Challenge to satisfy in the response.
+     * |registration| An array containing the pubkey, challenge response,
+     *                     and key handle.
+     */
+    sync NSSU2FTokenRegister(uint8_t[] application, uint8_t[] challenge)
+        returns (uint8_t[] registration);
+
+    /**
+     * Creates a signature over the "param" arguments using the private key
+     * provided in the key handle argument.
+     *
+     * |application| The FIDO Application data to associate with the key.
+     * |challenge| The Challenge to satisfy in the response.
+     * |keyHandle| The Key Handle opaque object to use.
+     * |signature| The resulting signature.
+     */
+    sync NSSU2FTokenSign(uint8_t[] application, uint8_t[] challenge,
+                         uint8_t[] keyHandle)
+        returns (uint8_t[] signature);
+
     async GetSystemMemory(uint64_t getterId);
 
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)

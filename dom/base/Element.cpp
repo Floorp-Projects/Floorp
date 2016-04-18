@@ -1177,14 +1177,12 @@ Element::SetAttribute(const nsAString& aName,
                       const nsAString& aValue,
                       ErrorResult& aError)
 {
+  aError = nsContentUtils::CheckQName(aName, false);
+  if (aError.Failed()) {
+    return;
+  }
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
-
   if (!name) {
-    aError = nsContentUtils::CheckQName(aName, false);
-    if (aError.Failed()) {
-      return;
-    }
-
     nsCOMPtr<nsIAtom> nameAtom;
     if (IsHTMLElement() && IsInHTMLDocument()) {
       nsAutoString lower;

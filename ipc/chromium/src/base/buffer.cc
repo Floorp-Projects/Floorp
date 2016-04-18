@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "buffer.h"
+#include "nsDebug.h"
 
 Buffer::Buffer()
  : mBuffer(nullptr),
@@ -59,7 +60,9 @@ Buffer::try_realloc(size_t newlength)
 
   // If we're growing the buffer, crash. If we're shrinking, then we continue to
   // use the old (larger) buffer.
-  MOZ_RELEASE_ASSERT(newlength <= mReserved);
+  if (newlength > mReserved) {
+    NS_ABORT_OOM(newlength);
+  }
 }
 
 void
