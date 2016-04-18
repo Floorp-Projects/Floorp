@@ -1775,6 +1775,25 @@ auto ViewTransform::Y(float a0) const -> void
     return mozilla::jni::Field<Y_t>::Set(ViewTransform::mCtx, nullptr, a0);
 }
 
+template<> const char mozilla::jni::Context<AudioFocusAgent, jobject>::name[] =
+        "org/mozilla/gecko/media/AudioFocusAgent";
+
+constexpr char AudioFocusAgent::NotifyStartedPlaying_t::name[];
+constexpr char AudioFocusAgent::NotifyStartedPlaying_t::signature[];
+
+auto AudioFocusAgent::NotifyStartedPlaying() -> void
+{
+    return mozilla::jni::Method<NotifyStartedPlaying_t>::Call(AudioFocusAgent::Context(), nullptr);
+}
+
+constexpr char AudioFocusAgent::NotifyStoppedPlaying_t::name[];
+constexpr char AudioFocusAgent::NotifyStoppedPlaying_t::signature[];
+
+auto AudioFocusAgent::NotifyStoppedPlaying() -> void
+{
+    return mozilla::jni::Method<NotifyStoppedPlaying_t>::Call(AudioFocusAgent::Context(), nullptr);
+}
+
 template<> const char mozilla::jni::Context<Restrictions, jobject>::name[] =
         "org/mozilla/gecko/restrictions/Restrictions";
 
