@@ -330,8 +330,13 @@ DecodedAudioDataSink::NotifyAudioNeeded()
   // Always ensure we have two processed frames pending to allow for processing
   // latency.
   while (AudioQueue().GetSize() && mProcessedQueue.GetSize() < 2) {
-    RefPtr<AudioData> data =
-      dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
+    RefPtr<MediaData> media = AudioQueue().PopFront();
+    if (!media || mShutdown) {
+      // AudioQueue was flushed or shutdown since checking the size of the queue.
+      return;
+    }
+    RefPtr<AudioData> data = dont_AddRef(media.forget().take()->As<AudioData>());
+
     // Ignore the element with 0 frames and try next.
     if (!data->mFrames) {
       continue;
