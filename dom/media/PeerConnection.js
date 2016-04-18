@@ -1172,7 +1172,6 @@ RTCPeerConnection.prototype = {
       return null;
     }
 
-    sdp = this._localIdp.addIdentityAttribute(sdp);
     return new this._win.RTCSessionDescription({ type: this._localType,
                                                     sdp: sdp });
   },
