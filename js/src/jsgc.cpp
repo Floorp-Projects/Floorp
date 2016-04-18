@@ -2045,6 +2045,7 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::OBJECT16,
     AllocKind::OBJECT16_BACKGROUND,
     AllocKind::SCRIPT,
+    AllocKind::LAZY_SCRIPT,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::FAT_INLINE_STRING,
@@ -2410,6 +2411,14 @@ MovingTracer::onScriptEdge(JSScript** scriptp)
     JSScript* script = *scriptp;
     if (IsForwarded(script))
         *scriptp = Forwarded(script);
+}
+
+void
+MovingTracer::onLazyScriptEdge(LazyScript** lazyp)
+{
+    LazyScript* lazy = *lazyp;
+    if (IsForwarded(lazy))
+        *lazyp = Forwarded(lazy);
 }
 
 void
