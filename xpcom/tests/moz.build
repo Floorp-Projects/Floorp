@@ -71,6 +71,14 @@ if CONFIG['MOZ_MEMORY']:
         'TestJemalloc',
     ])
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+    TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
+        '!%s%s' % (f, CONFIG['BIN_SUFFIX']) for f in sorted(SIMPLE_PROGRAMS + CPP_UNIT_TESTS)
+    ]
+    TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
+        '!/dist/bin/components/xpcomtest.xpt',
+    ]
+
 # FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
 #CPP_UNIT_TESTS += [
 #    'TestStaticAtoms',
