@@ -124,15 +124,13 @@ private:
 // Linear Gradients
 // -------------------------------------------------------------------------
 
-typedef nsSVGGradientFrame nsSVGLinearGradientFrameBase;
-
-class nsSVGLinearGradientFrame : public nsSVGLinearGradientFrameBase
+class nsSVGLinearGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);
 protected:
-  explicit nsSVGLinearGradientFrame(nsStyleContext* aContext) :
-    nsSVGLinearGradientFrameBase(aContext) {}
+  explicit nsSVGLinearGradientFrame(nsStyleContext* aContext)
+    : nsSVGGradientFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
