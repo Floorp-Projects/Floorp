@@ -167,15 +167,13 @@ protected:
 // Radial Gradients
 // -------------------------------------------------------------------------
 
-typedef nsSVGGradientFrame nsSVGRadialGradientFrameBase;
-
-class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase
+class nsSVGRadialGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);
 protected:
-  explicit nsSVGRadialGradientFrame(nsStyleContext* aContext) :
-    nsSVGRadialGradientFrameBase(aContext) {}
+  explicit nsSVGRadialGradientFrame(nsStyleContext* aContext)
+    : nsSVGGradientFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
