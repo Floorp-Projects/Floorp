@@ -688,11 +688,11 @@ private:
   SeekJob mQueuedSeek;
 
   // mSeekTask is responsible for executing the current seek request.
-  RefPtr<media::SeekTask> mSeekTask;
-  MozPromiseRequestHolder<media::SeekTask::SeekTaskPromise> mSeekTaskRequest;
+  RefPtr<SeekTask> mSeekTask;
+  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 
-  void OnSeekTaskResolved(media::SeekTaskResolveValue aValue);
-  void OnSeekTaskRejected(media::SeekTaskRejectValue aValue);
+  void OnSeekTaskResolved(SeekTaskResolveValue aValue);
+  void OnSeekTaskRejected(SeekTaskRejectValue aValue);
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
