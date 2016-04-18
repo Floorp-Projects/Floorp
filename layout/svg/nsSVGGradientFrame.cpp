@@ -513,7 +513,7 @@ nsSVGRadialGradientFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::radialGradient),
                "Content is not an SVG radialGradient");
 
-  nsSVGRadialGradientFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGGradientFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -600,8 +600,7 @@ nsSVGRadialGradientFrame::GetRadialGradientWithLength(uint32_t aIndex,
     return thisElement;
   }
 
-  return nsSVGRadialGradientFrameBase::GetRadialGradientWithLength(aIndex,
-                                                                   aDefault);
+  return nsSVGGradientFrame::GetRadialGradientWithLength(aIndex, aDefault);
 }
 
 bool
