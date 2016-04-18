@@ -260,6 +260,8 @@
 #include "IPeerConnection.h"
 #endif // MOZ_WEBRTC
 
+#include "VRDeviceProxy.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
