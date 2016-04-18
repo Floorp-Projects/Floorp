@@ -54,10 +54,10 @@ public:
   // PaintedLayer
   virtual Layer* AsLayer() override { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
-    mInvalidRegion.Or(mInvalidRegion, aRegion);
-    mInvalidRegion.SimplifyOutward(20);
-    mValidRegion.Sub(mValidRegion, mInvalidRegion);
-    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, mInvalidRegion);
+    mInvalidRegion.Add(aRegion);
+    nsIntRegion invalidRegion = mInvalidRegion.GetRegion();
+    mValidRegion.Sub(mValidRegion, invalidRegion);
+    mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, invalidRegion);
   }
 
   // Shadow methods
