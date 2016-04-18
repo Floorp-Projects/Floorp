@@ -11,6 +11,7 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 TESTING_JS_MODULES += [
     'tests/PromiseTestUtils.jsm',
+    'tests/xpcshell/TestIntegration.jsm',
 ]
 
 SPHINX_TREES['toolkit_modules'] = 'docs'
@@ -43,6 +44,7 @@ EXTRA_JS_MODULES += [
     'Http.jsm',
     'InlineSpellChecker.jsm',
     'InlineSpellCheckerContent.jsm',
+    'Integration.jsm',
     'LoadContextInfo.jsm',
     'Locale.jsm',
     'Log.jsm',
