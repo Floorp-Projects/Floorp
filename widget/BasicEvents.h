@@ -91,7 +91,7 @@ public:
   // exception.
   bool    mExceptionHasBeenRisen : 1;
   // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
-  // native anonymous subtree, the event target is set to originalTarget.
+  // native anonymous subtree, the event target is set to mOriginalTarget.
   bool    mRetargetToNonNativeAnonymous : 1;
   // If mNoCrossProcessBoundaryForwarding is true, the event is not allowed to
   // cross process boundary.
@@ -348,7 +348,7 @@ public:
   // Event targets, needed by DOM Events
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<dom::EventTarget> mCurrentTarget;
-  nsCOMPtr<dom::EventTarget> originalTarget;
+  nsCOMPtr<dom::EventTarget> mOriginalTarget;
 
   void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
   {
@@ -362,7 +362,7 @@ public:
     // mSpecifiedEventTypeString should be copied manually if it's necessary.
     mTarget = aCopyTargets ? aEvent.mTarget : nullptr;
     mCurrentTarget = aCopyTargets ? aEvent.mCurrentTarget : nullptr;
-    originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
+    mOriginalTarget = aCopyTargets ? aEvent.mOriginalTarget : nullptr;
   }
 
   /**
