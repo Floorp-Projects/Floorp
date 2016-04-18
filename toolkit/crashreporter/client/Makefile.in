@@ -18,8 +18,3 @@ libs::
 	$(NSINSTALL) -D $(DIST)/bin/crashreporter.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/crashreporter $(DIST)/bin/crashreporter.app/Contents/MacOS
 endif
-
-ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
-libs:: $(topsrcdir)/toolkit/themes/windows/global/throbber/Throbber-small.gif
-	$(INSTALL) $^ $(DIST)/bin
-endif
