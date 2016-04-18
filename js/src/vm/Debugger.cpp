@@ -6464,6 +6464,8 @@ class DebuggerSourceGetURLMatcher
         // end to prevent them from being blacklisted by devtools by having
         // the same value as a source mapped URL.
         char* buf = JS_smprintf("%s > wasm", wasmModule->module().filename());
+        if (!buf)
+            return Nothing();
         JSString* str = NewStringCopyZ<CanGC>(cx_, buf);
         JS_smprintf_free(buf);
         return Some(str);
