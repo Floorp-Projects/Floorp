@@ -20,9 +20,7 @@ class LogicalPoint;
 nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
-typedef nsContainerFrame nsFlexContainerFrameSuper;
-
-class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
+class nsFlexContainerFrame : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
   NS_DECL_QUERYFRAME_TARGET(nsFlexContainerFrame)
@@ -62,8 +60,8 @@ public:
 
 protected:
   // Protected constructor & destructor
-  explicit nsFlexContainerFrame(nsStyleContext* aContext) :
-    nsFlexContainerFrameSuper(aContext)
+  explicit nsFlexContainerFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext)
   {}
   virtual ~nsFlexContainerFrame();
 

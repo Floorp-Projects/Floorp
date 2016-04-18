@@ -2030,7 +2030,7 @@ public:
 
 NS_QUERYFRAME_HEAD(nsFlexContainerFrame)
   NS_QUERYFRAME_ENTRY(nsFlexContainerFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFlexContainerFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFlexContainerFrame)
 
