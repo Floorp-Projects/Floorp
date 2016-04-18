@@ -22,8 +22,6 @@ interface nsIPresentationSessionTransportBuilderListener : nsISupports
 [scriptable, uuid(2fdbe67d-80f9-48dc-8237-5bef8fa19801)]
 interface nsIPresentationSessionTransportBuilder : nsISupports
 {
-  const unsigned short TYPE_SENDER = 1;
-  const unsigned short TYPE_RECEIVER = 2;
 };
 
 /**

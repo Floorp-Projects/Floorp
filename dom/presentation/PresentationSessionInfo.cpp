@@ -660,7 +660,7 @@ PresentationControllingInfo::NotifyOpened()
   mBuilder = builder;
   mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
 
-  return builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_SENDER,
+  return builder->BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
                                             GetWindow(),
                                             mControlChannel,
                                             this);
@@ -874,7 +874,7 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
 
     mBuilder = builder;
     mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
-    rv = builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_RECEIVER,
+    rv = builder->BuildDataChannelTransport(nsIPresentationService::ROLE_RECEIVER,
                                             GetWindow(),
                                             mControlChannel,
                                             this);
