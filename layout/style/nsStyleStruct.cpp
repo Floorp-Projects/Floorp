@@ -2844,6 +2844,8 @@ mozilla::StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
 
 nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   : mWillChangeBitField(0)
+  , mTransitions(nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT)
+  , mAnimations(nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
   mAppearance = NS_THEME_NONE;
@@ -2884,18 +2886,12 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   // Initial value for mScrollSnapDestination is "0px 0px"
   mScrollSnapDestination.SetInitialZeroValues();
 
-  mTransitions.AppendElement();
-  MOZ_ASSERT(mTransitions.Length() == 1,
-             "appending within auto buffer should never fail");
   mTransitions[0].SetInitialValues();
   mTransitionTimingFunctionCount = 1;
   mTransitionDurationCount = 1;
   mTransitionDelayCount = 1;
   mTransitionPropertyCount = 1;
 
-  mAnimations.AppendElement();
-  MOZ_ASSERT(mAnimations.Length() == 1,
-             "appending within auto buffer should never fail");
   mAnimations[0].SetInitialValues();
   mAnimationTimingFunctionCount = 1;
   mAnimationDurationCount = 1;
