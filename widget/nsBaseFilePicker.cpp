@@ -46,8 +46,7 @@ LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
     MOZ_ASSERT(isDir);
 #endif
 
-    RefPtr<Directory> directory =
-      Directory::Create(aWindow, aFile, Directory::eDOMRootDirectory);
+    RefPtr<Directory> directory = Directory::Create(aWindow, aFile);
     MOZ_ASSERT(directory);
 
     directory.forget(aResult);

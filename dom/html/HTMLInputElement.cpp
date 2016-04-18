@@ -272,8 +272,7 @@ class HTMLInputElementState final : public nsISupports
             continue;
           }
 
-          RefPtr<Directory> directory = Directory::Create(aWindow, file,
-                                                          Directory::eDOMRootDirectory);
+          RefPtr<Directory> directory = Directory::Create(aWindow, file);
           MOZ_ASSERT(directory);
 
           OwningFileOrDirectory* element = aResult.AppendElement();
@@ -2311,8 +2310,7 @@ HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
     return;
   }
 
-  RefPtr<Directory> directory = Directory::Create(window, file,
-                                                  Directory::eDOMRootDirectory);
+  RefPtr<Directory> directory = Directory::Create(window, file);
   MOZ_ASSERT(directory);
 
   nsTArray<OwningFileOrDirectory> array;

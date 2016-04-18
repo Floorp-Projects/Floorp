@@ -1436,7 +1436,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
                                          nsEventStatus& aStatus)
 {
 #ifdef DEBUG
-  debug_DumpEvent(stdout, event->widget, event, "something", 0);
+  debug_DumpEvent(stdout, event->mWidget, event, "something", 0);
 #endif
 
   NS_ASSERTION(!(mTextInputHandler && mTextInputHandler->IsIMEComposing() &&
@@ -1461,11 +1461,12 @@ NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
   nsCOMPtr<nsIWidget> kungFuDeathGrip = do_QueryInterface(mParentWidget ? mParentWidget : this);
   if (!listener && mParentWidget) {
     if (mParentWidget->WindowType() == eWindowType_popup) {
-      // Check just in case event->widget isn't this widget
-      if (event->widget)
-        listener = event->widget->GetWidgetListener();
+      // Check just in case event->mWidget isn't this widget
+      if (event->mWidget) {
+        listener = event->mWidget->GetWidgetListener();
+      }
       if (!listener) {
-        event->widget = mParentWidget;
+        event->mWidget = mParentWidget;
         listener = mParentWidget->GetWidgetListener();
       }
     }

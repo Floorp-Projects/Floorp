@@ -29,12 +29,10 @@
 #ifndef ReverbAccumulationBuffer_h
 #define ReverbAccumulationBuffer_h
 
-#include "nsTArray.h"
+#include "AlignedTArray.h"
 #include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
-
-typedef nsTArray<float> AudioFloatArray;
 
 // ReverbAccumulationBuffer is a circular delay buffer with one client reading from it and multiple clients
 // writing/accumulating to it at different delay offsets from the read position.  The read operation will zero the memory
@@ -65,7 +63,7 @@ public:
     }
 
 private:
-    AudioFloatArray m_buffer;
+    AlignedTArray<float, 16> m_buffer;
     size_t m_readIndex;
     size_t m_readTimeFrame; // for debugging (frame on continuous timeline)
 };

@@ -6,6 +6,7 @@
 
 #include "GainNode.h"
 #include "mozilla/dom/GainNodeBinding.h"
+#include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
@@ -79,18 +80,20 @@ public:
 
       // Compute the gain values for the duration of the input AudioChunk
       StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
-      float computedGain[WEBAUDIO_BLOCK_SIZE];
-      mGain.GetValuesAtTime(tick, computedGain, WEBAUDIO_BLOCK_SIZE);
+      float computedGain[WEBAUDIO_BLOCK_SIZE + 4];
+      float* alignedComputedGain = ALIGNED16(computedGain);
+      ASSERT_ALIGNED16(alignedComputedGain);
+      mGain.GetValuesAtTime(tick, alignedComputedGain, WEBAUDIO_BLOCK_SIZE);
 
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        computedGain[counter] *= aInput.mVolume;
+        alignedComputedGain[counter] *= aInput.mVolume;
       }
 
       // Apply the gain to the output buffer
       for (size_t channel = 0; channel < aOutput->ChannelCount(); ++channel) {
         const float* inputBuffer = static_cast<const float*> (aInput.mChannelData[channel]);
         float* buffer = aOutput->ChannelFloatsForWrite(channel);
-        AudioBlockCopyChannelWithScale(inputBuffer, computedGain, buffer);
+        AudioBlockCopyChannelWithScale(inputBuffer, alignedComputedGain, buffer);
       }
     }
   }

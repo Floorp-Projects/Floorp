@@ -21,6 +21,8 @@
 
 namespace mozilla {
 
+class AudioConverter;
+
 namespace media {
 
 class DecodedAudioDataSink : public AudioSink,
@@ -97,13 +99,15 @@ private:
    */
   // The AudioData at which AudioStream::DataSource is reading.
   RefPtr<AudioData> mCurrentData;
-  // Keep track of the read positoin of mCurrentData.
+  // Keep track of the read position of mCurrentData.
   UniquePtr<AudioBufferCursor> mCursor;
   // True if there is any error in processing audio data like overflow.
   bool mErrored = false;
 
   // Set on the callback thread of cubeb once the stream has drained.
   Atomic<bool> mPlaybackComplete;
+
+  UniquePtr<AudioConverter> mConverter;
 };
 
 } // namespace media

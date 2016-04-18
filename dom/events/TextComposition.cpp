@@ -95,7 +95,7 @@ TextComposition::MaybeDispatchCompositionUpdate(
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
 
-  if (!IsValidStateForComposition(aCompositionEvent->widget)) {
+  if (!IsValidStateForComposition(aCompositionEvent->mWidget)) {
     return false;
   }
 
@@ -103,7 +103,7 @@ TextComposition::MaybeDispatchCompositionUpdate(
     return true;
   }
   CloneAndDispatchAs(aCompositionEvent, eCompositionUpdate);
-  return IsValidStateForComposition(aCompositionEvent->widget);
+  return IsValidStateForComposition(aCompositionEvent->mWidget);
 }
 
 BaseEventFlags
@@ -115,11 +115,11 @@ TextComposition::CloneAndDispatchAs(
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
 
-  MOZ_ASSERT(IsValidStateForComposition(aCompositionEvent->widget),
+  MOZ_ASSERT(IsValidStateForComposition(aCompositionEvent->mWidget),
              "Should be called only when it's safe to dispatch an event");
 
   WidgetCompositionEvent compositionEvent(aCompositionEvent->IsTrusted(),
-                                          aMessage, aCompositionEvent->widget);
+                                          aMessage, aCompositionEvent->mWidget);
   compositionEvent.mTime = aCompositionEvent->mTime;
   compositionEvent.mTimeStamp = aCompositionEvent->mTimeStamp;
   compositionEvent.mData = aCompositionEvent->mData;
@@ -279,7 +279,7 @@ TextComposition::DispatchCompositionEvent(
     aCompositionEvent->mRanges = nullptr;
   }
 
-  if (!IsValidStateForComposition(aCompositionEvent->widget)) {
+  if (!IsValidStateForComposition(aCompositionEvent->mWidget)) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return;
   }
@@ -377,7 +377,7 @@ TextComposition::DispatchCompositionEvent(
     *aStatus = nsEventStatus_eConsumeNoDefault;
   }
 
-  if (!IsValidStateForComposition(aCompositionEvent->widget)) {
+  if (!IsValidStateForComposition(aCompositionEvent->mWidget)) {
     return;
   }
 
