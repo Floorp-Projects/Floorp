@@ -774,9 +774,7 @@ public:
     }
   }
 
-  // aCx == nullptr is allowed only if aOptions.isNullOrUndefined()
-  void RequestFullscreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
-                         ErrorResult& aError);
+  void RequestFullscreen(ErrorResult& aError);
   void RequestPointerLock();
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
@@ -1879,7 +1877,7 @@ NS_IMETHOD ReleaseCapture(void) final override                                \
 NS_IMETHOD MozRequestFullScreen(void) final override                          \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
-  Element::RequestFullscreen(nullptr, JS::UndefinedHandleValue, rv);          \
+  Element::RequestFullscreen(rv);                                    \
   return rv.StealNSResult();                                                  \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) final override                         \
