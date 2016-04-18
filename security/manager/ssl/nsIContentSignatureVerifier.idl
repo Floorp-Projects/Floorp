@@ -25,17 +25,6 @@ interface nsIContentSignatureVerifier : nsISupports
 {
 
   /**
-   * Verification sources.
-   * If the verification is from ABOUT_NEWTAB, the content signature can only be
-   * verified with a certificate chain where the end entity is valid for the
-   * hostname "remote-newtab-signer.mozilla.org".
-   * If the verification is from ONECRL, the end entity must be valid for the
-   * hostname "oneCRL-signer.mozilla.org"
-   */
-  const unsigned long ABOUT_NEWTAB = 0;
-  const unsigned long ONECRL = 1;
-
-  /**
    * Verifies that the data matches the data that was used to generate the
    * signature.
    *
@@ -44,30 +33,29 @@ interface nsIContentSignatureVerifier : nsISupports
    *                                url-safe base64 encoded.
    * @param aCertificateChain       The certificate chain to use for verification.
    *                                PEM encoded string.
-   * @param aSource                 The source of this verification (one of the
-   *                                values defined above).
+   * @param aName                   The (host)name for which the end entity must
+                                    be valid.
    * @returns true if the signature matches the data and aCertificateChain is
    *          valid within aContext, false if not.
    */
   boolean verifyContentSignature(in ACString aData, in ACString aSignature,
                                  in ACString aCertificateChain,
-                                 in unsigned long aSource);
+                                 in ACString aName);
 
   /**
    * Creates a context to verify a content signature against data that is added
    * later with update calls.
    *
    * @param aData                   The first chunk of data to be tested.
-   *                                This parameter is optional.
    * @param aContentSignatureHeader The signature of the data, url-safe base64
    *                                encoded.
    * @param aCertificateChain       The certificate chain to use for
    *                                verification. PEM encoded string.
-   * @param aSource                 The source of this verification (one of the
-   *                                values defined above).
+   * @param aName                   The (host)name for which the end entity must
+                                    be valid.
    */
   void createContext(in ACString aData, in ACString aSignature,
-                     in ACString aCertificateChain, in unsigned long aSource);
+                     in ACString aCertificateChain, in ACString aName);
 
   /**
    * Adds data to the context that was used to generate the signature.
