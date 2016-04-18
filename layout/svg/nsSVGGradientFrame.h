@@ -31,13 +31,11 @@ class SVGRadialGradientElement;
 } // namespace dom
 } // namespace mozilla
 
-typedef nsSVGPaintServerFrame nsSVGGradientFrameBase;
-
 /**
  * Gradients can refer to other gradients. We create an nsSVGPaintingProperty
  * with property type nsGkAtoms::href to track the referenced gradient.
  */
-class nsSVGGradientFrame : public nsSVGGradientFrameBase
+class nsSVGGradientFrame : public nsSVGPaintServerFrame
 {
   typedef mozilla::gfx::ExtendMode ExtendMode;
 
