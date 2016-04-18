@@ -55,11 +55,16 @@ const APIBroker = {
 
 APIBroker.init();
 
-function Addon(properties) {
+function Addon(win, properties) {
   // We trust the webidl binding to broker access to our properties.
   for (let key of Object.keys(properties)) {
     this[key] = properties[key];
   }
+
+  this.uninstall = function() {
+    let err = new win.Error("not yet implemented");
+    return win.Promise.reject(err);
+  };
 }
 
 /**
@@ -97,8 +102,13 @@ WebAPI.prototype = {
 
   getAddonByID: WebAPITask(function*(id) {
     let addonInfo = yield APIBroker.sendRequest("getAddonByID", id);
-    return addonInfo ? new Addon(addonInfo) : null;
+    return addonInfo ? new Addon(this.window, addonInfo) : null;
   }),
+
+  createInstall() {
+    let err = new this.window.Error("not yet implemented");
+    return this.window.Promise.reject(err);
+  },
 
   classID: Components.ID("{8866d8e3-4ea5-48b7-a891-13ba0ac15235}"),
   contractID: "@mozilla.org/addon-web-api/manager;1",
