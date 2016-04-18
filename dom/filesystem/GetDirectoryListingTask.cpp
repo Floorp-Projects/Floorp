@@ -284,7 +284,14 @@ GetDirectoryListingTaskParent::IOWork()
   }
 
   if (!exists) {
-    return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
+    if (!mFileSystem->ShouldCreateDirectory()) {
+      return NS_ERROR_DOM_FILE_NOT_FOUND_ERR;
+    }
+
+    rv = mTargetPath->Create(nsIFile::DIRECTORY_TYPE, 0777);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // Get isDirectory.

@@ -30,6 +30,9 @@ public:
   virtual already_AddRefed<FileSystemBase>
   Clone() override;
 
+  virtual bool
+  ShouldCreateDirectory() override { return true; }
+
   virtual void
   Shutdown() override;
 
