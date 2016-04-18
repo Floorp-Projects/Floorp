@@ -621,7 +621,7 @@ nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
     // half of the element, or down if it's over the bottom half. This is
     // important to handle since this is the state things are in for the
     // default UA style sheet. See the comment in forms.css for why.
-    LayoutDeviceIntPoint absPoint = aEvent->refPoint;
+    LayoutDeviceIntPoint absPoint = aEvent->mRefPoint;
     nsPoint point =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                        absPoint, mSpinBox->GetPrimaryFrame());

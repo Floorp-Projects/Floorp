@@ -1547,9 +1547,9 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   WidgetQueryContentEvent eventOnRoot(true, eQueryCharacterAtPoint,
                                       rootWidget);
   eventOnRoot.mUseNativeLineBreak = aEvent->mUseNativeLineBreak;
-  eventOnRoot.refPoint = aEvent->refPoint;
+  eventOnRoot.mRefPoint = aEvent->mRefPoint;
   if (rootWidget != aEvent->mWidget) {
-    eventOnRoot.refPoint += aEvent->mWidget->WidgetToScreenOffset() -
+    eventOnRoot.mRefPoint += aEvent->mWidget->WidgetToScreenOffset() -
       rootWidget->WidgetToScreenOffset();
   }
   nsPoint ptInRoot =
@@ -1645,7 +1645,7 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
   NS_ENSURE_TRUE(docFrame, NS_ERROR_FAILURE);
 
   LayoutDeviceIntPoint eventLoc =
-    aEvent->refPoint + aEvent->mWidget->WidgetToScreenOffset();
+    aEvent->mRefPoint + aEvent->mWidget->WidgetToScreenOffset();
   nsIntRect docFrameRect = docFrame->GetScreenRect(); // Returns CSS pixels
   CSSIntPoint eventLocCSS(
     mPresContext->DevPixelsToIntCSSPixels(eventLoc.x) - docFrameRect.x,

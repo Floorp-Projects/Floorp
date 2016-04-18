@@ -907,12 +907,12 @@ private:
   int32_t     mLockCursor;
   bool mLastFrameConsumedSetCursor;
 
-  // Last mouse event refPoint (the offset from the widget's origin in
+  // Last mouse event mRefPoint (the offset from the widget's origin in
   // device pixels) when mouse was locked, used to restore mouse position
   // after unlocking.
   LayoutDeviceIntPoint mPreLockPoint;
 
-  // Stores the refPoint of the last synthetic mouse move we dispatched
+  // Stores the mRefPoint of the last synthetic mouse move we dispatched
   // to re-center the mouse when we were pointer locked. If this is (-1,-1) it
   // means we've not recently dispatched a centering event. We use this to
   // detect when we receive the synth event, so we can cancel and not send it
@@ -923,7 +923,7 @@ private:
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   static nsWeakFrame sLastDragOverFrame;
 
-  // Stores the refPoint (the offset from the widget's origin in device
+  // Stores the mRefPoint (the offset from the widget's origin in device
   // pixels) of the last mouse event.
   static LayoutDeviceIntPoint sLastRefPoint;
 
