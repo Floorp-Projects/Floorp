@@ -2324,10 +2324,9 @@ nsStyleImageLayers::nsStyleImageLayers()
   , mMaskModeCount(1)
   , mBlendModeCount(1)
   , mCompositeCount(1)
+  , mLayers(nsStyleAutoArray<Layer>::WITH_SINGLE_INITIAL_ELEMENT)
 {
   MOZ_COUNT_CTOR(nsStyleImageLayers);
-  mLayers.AppendElement();
-  NS_ASSERTION(mLayers.Length() == 1, "auto array must have room for 1 element");
 }
 
 nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers &aSource)

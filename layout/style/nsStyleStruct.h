@@ -752,7 +752,7 @@ struct nsStyleImageLayers {
   // layer.  In layers below the bottom layer, properties will be
   // uninitialized unless their count, above, indicates that they are
   // present.
-  AutoTArray<Layer, 1> mLayers;
+  nsStyleAutoArray<Layer> mLayers;
 
   const Layer& BottomLayer() const { return mLayers[mImageCount - 1]; }
 
