@@ -136,7 +136,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 
 
 nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
-  ImageFrameSuper(aContext),
+  nsAtomicContainerFrame(aContext),
   mComputedSize(0, 0),
   mIntrinsicRatio(0, 0),
   mDisplayingIcon(false),
@@ -158,7 +158,7 @@ nsImageFrame::~nsImageFrame()
 
 NS_QUERYFRAME_HEAD(nsImageFrame)
   NS_QUERYFRAME_ENTRY(nsImageFrame)
-NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 #ifdef ACCESSIBILITY
 a11y::AccType
@@ -222,13 +222,13 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mDisplayingIcon)
     gIconLoad->RemoveIconObserver(this);
 
-  ImageFrameSuper::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 void
 nsImageFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  ImageFrameSuper::DidSetStyleContext(aOldStyleContext);
+  nsAtomicContainerFrame::DidSetStyleContext(aOldStyleContext);
 
   if (!mImage) {
     // We'll pick this change up whenever we do get an image.
@@ -258,7 +258,7 @@ nsImageFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
                    nsIFrame*         aPrevInFlow)
 {
-  ImageFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsAtomicContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   mListener = new nsImageListener(this);
 
@@ -1998,7 +1998,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     }
   }
 
-  return ImageFrameSuper::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsAtomicContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 nsresult
@@ -2035,8 +2035,8 @@ nsImageFrame::AttributeChanged(int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
                                int32_t aModType)
 {
-  nsresult rv = ImageFrameSuper::AttributeChanged(aNameSpaceID,
-                                                  aAttribute, aModType);
+  nsresult rv = nsAtomicContainerFrame::AttributeChanged(aNameSpaceID,
+                                                         aAttribute, aModType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2057,7 +2057,7 @@ nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    ImageFrameSuper::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
@@ -2067,7 +2067,7 @@ nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
     MaybeDecodeForPredictedSize();
   }
 
-  ImageFrameSuper::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsAtomicContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 nsIAtom*
