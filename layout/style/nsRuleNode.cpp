@@ -5261,7 +5261,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                          display, parentDisplay, aRuleData,
                          conditions);
 
-  display->mTransitions.SetLength(numTransitions);
+  display->mTransitions.SetLengthNonZero(numTransitions);
 
   FOR_ALL_TRANSITION_PROPS(p) {
     const TransitionPropInfo& i = transitionPropInfo[p];
@@ -5418,7 +5418,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                          display, parentDisplay, aRuleData,
                          conditions);
 
-  display->mAnimations.SetLength(numAnimations);
+  display->mAnimations.SetLengthNonZero(numAnimations);
 
   FOR_ALL_ANIMATION_PROPS(p) {
     const TransitionPropInfo& i = animationPropInfo[p];
