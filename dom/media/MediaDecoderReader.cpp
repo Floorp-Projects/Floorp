@@ -132,16 +132,17 @@ size_t MediaDecoderReader::SizeOfAudioQueueInFrames()
   return mAudioQueue.GetSize();
 }
 
-nsresult MediaDecoderReader::ResetDecode()
+nsresult MediaDecoderReader::ResetDecode(TargetQueues aQueues /*= AUDIO_VIDEO*/)
 {
   VideoQueue().Reset();
-  AudioQueue().Reset();
-
-  mAudioDiscontinuity = true;
   mVideoDiscontinuity = true;
-
-  mBaseAudioPromise.RejectIfExists(CANCELED, __func__);
   mBaseVideoPromise.RejectIfExists(CANCELED, __func__);
+
+  if (aQueues == AUDIO_VIDEO) {
+    AudioQueue().Reset();
+    mAudioDiscontinuity = true;
+    mBaseAudioPromise.RejectIfExists(CANCELED, __func__);
+  }
 
   return NS_OK;
 }
