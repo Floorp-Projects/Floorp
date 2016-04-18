@@ -36,7 +36,7 @@ function* testClickOnSelectorEditorInput(view) {
 
   info("Click inside the editor input");
   let onClick = once(editorInput, "click");
-  EventUtils.synthesizeMouse(editor.input, 1, 1, {}, view.styleWindow);
+  EventUtils.synthesizeMouse(editor.input, 2, 1, {}, view.styleWindow);
   yield onClick;
   is(editor.input, view.styleDocument.activeElement,
     "The editor input should still be focused");
@@ -44,7 +44,7 @@ function* testClickOnSelectorEditorInput(view) {
 
   info("Doubleclick inside the editor input");
   let onDoubleClick = once(editorInput, "dblclick");
-  EventUtils.synthesizeMouse(editor.input, 1, 1, { clickCount: 2 },
+  EventUtils.synthesizeMouse(editor.input, 2, 1, { clickCount: 2 },
     view.styleWindow);
   yield onDoubleClick;
   is(editor.input, view.styleDocument.activeElement,

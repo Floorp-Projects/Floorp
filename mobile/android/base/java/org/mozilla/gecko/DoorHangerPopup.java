@@ -328,11 +328,6 @@ public class DoorHangerPopup extends AnchoredPopup
         }
 
         show();
-
-        if (Versions.preICS) {
-            // Make the popup focusable for keyboard accessibility.
-            setFocusable(true);
-        }
     }
 
     //Show all inter-DoorHanger dividers (ie. Dividers on all visible DoorHangers except the last one)
