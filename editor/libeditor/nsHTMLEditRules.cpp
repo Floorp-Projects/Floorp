@@ -6569,7 +6569,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
           nsTextEditUtils::HasMozAttr(nearNode)) {
         newBRneeded = true;
         parent = aNode;
-        offset = 0;
+        offset = aOffset;
         newSelNode = true;
       }
     }
@@ -6588,7 +6588,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
     if (newSelNode) {
       // We split the parent after the br we've just inserted.
       selNode = parent;
-      selOffset = 1;
+      selOffset = offset + 1;
     }
   }
   *aHandled = true;

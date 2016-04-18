@@ -19,6 +19,14 @@ self.addEventListener('fetch', function (event) {
     caches.open(name).then(function(cache) {
       return cache.match(event.request);
     }).then(function(response) {
+      // If this is one of our primary cached responses, then the window
+      // must have generated the request via a normal window reload.  That
+      // should be detectable in the event.request.cache attribute.
+      if (response && event.request.cache !== 'no-cache') {
+        dump('### ### FetchEvent.request.cache is "' + event.request.cache +
+             '" instead of expected "no-cache"\n');
+        return Response.error();
+      }
       return response || fetch(event.request);
     })
   );

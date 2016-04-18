@@ -75,7 +75,6 @@ ImageObjectProcessor.prototype.process = function(
       'src': processSrcMember(aImageSpec, aBaseURL),
       'type': processTypeMember(aImageSpec),
       'sizes': processSizesMember(aImageSpec),
-      'density': processDensityMember(aImageSpec),
       'background_color': processBackgroundColorMember(aImageSpec)
     };
   }
@@ -95,13 +94,6 @@ ImageObjectProcessor.prototype.process = function(
       value = netutil.parseRequestContentType(value, charset, hadCharset);
     }
     return value || undefined;
-  }
-
-  function processDensityMember(aImage) {
-    const value = parseFloat(aImage.density);
-    const validNum = Number.isNaN(value) || value === +Infinity || value <=
-      0;
-    return (validNum) ? 1.0 : value;
   }
 
   function processSrcMember(aImage, aBaseURL) {

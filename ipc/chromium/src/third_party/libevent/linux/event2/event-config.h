@@ -261,9 +261,6 @@
 /* Define to 1 if `__ss_family' is a member of `struct sockaddr_storage'. */
 /* #undef _EVENT_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY */
 
-/* Define to 1 if you have the `sysctl' function. */
-#define _EVENT_HAVE_SYSCTL 1
-
 /* Define to 1 if you have the <sys/devpoll.h> header file. */
 /* #undef _EVENT_HAVE_SYS_DEVPOLL_H */
 
@@ -299,9 +296,6 @@
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define _EVENT_HAVE_SYS_STAT_H 1
-
-/* Define to 1 if you have the <sys/sysctl.h> header file. */
-#define _EVENT_HAVE_SYS_SYSCTL_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #define _EVENT_HAVE_SYS_TIME_H 1

@@ -367,6 +367,7 @@ PK11_GetMechanism
 PK11_GetMinimumPwdLength
 PK11_GetModInfo
 PK11_GetNextSafe
+PK11_GetNextSymKey
 PK11_GetPadMechanism
 PK11_GetPrivateKeyNickname
 PK11_GetPrivateModulusLen
@@ -375,6 +376,7 @@ PK11_GetSlotInfo
 PK11_GetSlotName
 PK11_GetSlotPWValues
 PK11_GetSlotSeries
+PK11_GetSymKeyNickname
 PK11_GetTokenInfo
 PK11_GetTokenName
 PK11_HashBuf
@@ -400,6 +402,7 @@ PK11_KeyGen
 PK11_KeyGenWithTemplate
 PK11_ListCerts
 PK11_ListCertsInSlot
+PK11_ListFixedKeysInSlot
 PK11_ListPrivateKeysInSlot
 PK11_ListPrivKeysInSlot
 PK11_LoadPrivKey
@@ -429,9 +432,11 @@ PK11SDR_Decrypt
 PK11SDR_Encrypt
 PK11_SetPasswordFunc
 PK11_SetSlotPWValues
+PK11_SetSymKeyNickname
 PK11_Sign
 PK11_SignatureLen
 PK11_SignWithMechanism
+PK11_TokenKeyGenWithFlags
 PK11_UnwrapPrivKey
 PK11_UnwrapSymKey
 PK11_UpdateSlotAttribute
