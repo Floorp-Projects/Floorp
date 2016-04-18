@@ -1002,11 +1002,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         return CodeOffset(nextOffset().getOffset());
     }
 
-    void memIntToValue(Address Source, Address Dest) {
-        load32(Source, ScratchRegister);
-        storeValue(JSVAL_TYPE_INT32, ScratchRegister, Dest);
-    }
-
     void lea(Operand addr, Register dest) {
         ma_daddu(dest, addr.baseReg(), Imm32(addr.disp()));
     }

@@ -6,6 +6,7 @@
 
 #include "ConvolverNode.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
+#include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "blink/Reverb.h"
@@ -261,11 +262,13 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
       length = WEBAUDIO_BLOCK_SIZE;
       RefPtr<ThreadSharedFloatArrayBufferList> paddedBuffer =
         new ThreadSharedFloatArrayBufferList(data->GetChannels());
-      float* channelData = (float*) malloc(sizeof(float) * length * data->GetChannels());
+      void* channelData = malloc(sizeof(float) * length * data->GetChannels() + 15);
+      float* alignedChannelData = ALIGNED16(channelData);
+      ASSERT_ALIGNED16(alignedChannelData);
       for (uint32_t i = 0; i < data->GetChannels(); ++i) {
-        PodCopy(channelData + length * i, data->GetData(i), mBuffer->Length());
-        PodZero(channelData + length * i + mBuffer->Length(), WEBAUDIO_BLOCK_SIZE - mBuffer->Length());
-        paddedBuffer->SetData(i, (i == 0) ? channelData : nullptr, free, channelData);
+        PodCopy(alignedChannelData + length * i, data->GetData(i), mBuffer->Length());
+        PodZero(alignedChannelData + length * i + mBuffer->Length(), WEBAUDIO_BLOCK_SIZE - mBuffer->Length());
+        paddedBuffer->SetData(i, (i == 0) ? channelData : nullptr, free, alignedChannelData);
       }
       data = paddedBuffer;
     }

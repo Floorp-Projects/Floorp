@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BiquadFilterNode.h"
+#include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
@@ -137,7 +138,9 @@ public:
                     AudioBlock* aOutput,
                     bool* aFinished) override
   {
-    float inputBuffer[WEBAUDIO_BLOCK_SIZE];
+    float inputBuffer[WEBAUDIO_BLOCK_SIZE + 4];
+    float* alignedInputBuffer = ALIGNED16(inputBuffer);
+    ASSERT_ALIGNED16(alignedInputBuffer);
 
     if (aInput.IsNull()) {
       bool hasTail = false;
@@ -191,12 +194,12 @@ public:
     for (uint32_t i = 0; i < numberOfChannels; ++i) {
       const float* input;
       if (aInput.IsNull()) {
-        input = inputBuffer;
+        input = alignedInputBuffer;
       } else {
         input = static_cast<const float*>(aInput.mChannelData[i]);
         if (aInput.mVolume != 1.0) {
-          AudioBlockCopyChannelWithScale(input, aInput.mVolume, inputBuffer);
-          input = inputBuffer;
+          AudioBlockCopyChannelWithScale(input, aInput.mVolume, alignedInputBuffer);
+          input = alignedInputBuffer;
         }
       }
       SetParamsOnBiquad(mBiquads[i], aStream->SampleRate(), mType, freq, q, gain, detune);

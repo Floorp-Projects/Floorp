@@ -227,7 +227,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
     }
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());
     AudioSampleBuffer data(Move(buffer));
-    mAudioConverter->Process(data);
+    data = mAudioConverter->Process(Move(data));
 
     aTotalFrames += frames;
     mCallback->Output(new AudioData(aOffset,

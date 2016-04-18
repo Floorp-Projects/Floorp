@@ -143,7 +143,7 @@ nsWindow::DispatchKeyInput(WidgetKeyboardEvent& aEvent)
     gFocusedWindow->UserActivity();
 
     nsEventStatus status;
-    aEvent.widget = gFocusedWindow;
+    aEvent.mWidget = gFocusedWindow;
     gFocusedWindow->DispatchEvent(&aEvent, status);
     return status;
 }

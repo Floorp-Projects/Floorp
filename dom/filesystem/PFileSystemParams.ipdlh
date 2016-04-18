@@ -31,7 +31,7 @@ struct FileSystemGetDirectoryListingParams
 {
   nsString filesystem;
   nsString realPath;
-  bool isRoot;
+
   // 'filters' could be an array rather than a semicolon separated string
   // (we'd then use InfallibleTArray<nsString> internally), but that is
   // wasteful.  E10s requires us to pass the filters over as a string anyway,
@@ -55,7 +55,6 @@ struct FileSystemGetFileOrDirectoryParams
 {
   nsString filesystem;
   nsString realPath;
-  bool isRoot;
 };
 
 struct FileSystemRemoveParams

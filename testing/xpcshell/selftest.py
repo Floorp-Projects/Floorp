@@ -419,6 +419,10 @@ class XPCShellTestsTests(unittest.TestCase):
                                                       {"tbpl": self.log})
         self.x = XPCShellTests(logger)
         self.x.harness_timeout = 15
+        self.symbols_path = None
+        candidate_path = os.path.join(build_obj.distdir, 'crashreporter-symbols')
+        if (os.path.isdir(candidate_path)):
+          self.symbols_path = candidate_path
 
     def tearDown(self):
         shutil.rmtree(self.tempdir)
@@ -454,15 +458,14 @@ tail =
 
 """ + "\n".join(testlines))
 
-    def assertTestResult(self, expected, shuffle=False, verbose=False,
-                         symbolsPath=None):
+    def assertTestResult(self, expected, shuffle=False, verbose=False):
         """
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
         """
         self.assertEquals(expected,
                           self.x.runTests(xpcshellBin,
-                                          symbolsPath=symbolsPath,
+                                          symbolsPath=self.symbols_path,
                                           manifest=self.manifest,
                                           mozInfo=mozinfo.info,
                                           shuffle=shuffle,
@@ -532,14 +535,6 @@ tail =
         """
         When an assertion is hit, we should produce a useful stack.
         """
-        # Passing symbolsPath will cause the stack fixer to use
-        # fix_stack_using_bpsyms and exercise the fileid utility in
-        # this test.
-        symbolsPath = None
-        candidate_path = os.path.join(build_obj.distdir, 'crashreporter-symbols')
-        if os.path.isdir(candidate_path):
-          symbolsPath = candidate_path
-
         self.writeFile("test_assert.js", '''
           add_test(function test_asserts_immediately() {
             Components.classes["@mozilla.org/xpcom/debug;1"]
@@ -550,7 +545,7 @@ tail =
         ''')
 
         self.writeManifest(["test_assert.js"])
-        self.assertTestResult(False, symbolsPath=symbolsPath)
+        self.assertTestResult(False)
 
         self.assertInLog("###!!! ASSERTION")
         log_lines = self.log.getvalue().splitlines()

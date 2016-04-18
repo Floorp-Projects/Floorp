@@ -212,6 +212,91 @@ public:
   }
 };
 
+
+// HGLOBAL is just a typedef of HANDLE which nsSimpleRef has a specialization of,
+// that means having a nsAutoRefTraits specialization for HGLOBAL is useless.
+// Therefore we create a wrapper class for HGLOBAL to make nsAutoRefTraits and
+// nsAutoRef work as intention.
+class nsHGLOBAL {
+public:
+  nsHGLOBAL(HGLOBAL hGlobal) : m_hGlobal(hGlobal)
+  {
+  }
+
+  operator HGLOBAL() const
+  {
+    return m_hGlobal;
+  }
+
+private:
+  HGLOBAL m_hGlobal;
+};
+
+
+template<>
+class nsAutoRefTraits<nsHGLOBAL>
+{
+public:
+  typedef nsHGLOBAL RawRef;
+  static RawRef Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef hGlobal)
+  {
+    ::GlobalFree(hGlobal);
+  }
+};
+
+
+// Because Printer's HANDLE uses ClosePrinter and we already have nsAutoRef<HANDLE>
+// which uses CloseHandle so we need to create a wrapper class for HANDLE to have
+// another specialization for nsAutoRefTraits.
+class nsHPRINTER {
+public:
+  nsHPRINTER(HANDLE hPrinter) : m_hPrinter(hPrinter)
+  {
+  }
+
+  operator HANDLE() const
+  {
+    return m_hPrinter;
+  }
+
+  HANDLE* operator&()
+  {
+    return &m_hPrinter;
+  }
+
+private:
+  HANDLE m_hPrinter;
+};
+
+
+// winspool.h header has AddMonitor macro, it conflicts with AddMonitor member
+// function in TaskbarPreview.cpp and TaskbarTabPreview.cpp. Beside, we only
+// need ClosePrinter here for Release function, so having its prototype is enough.
+extern "C" BOOL WINAPI ClosePrinter(HANDLE hPrinter);
+
+
+template<>
+class nsAutoRefTraits<nsHPRINTER>
+{
+public:
+  typedef nsHPRINTER RawRef;
+  static RawRef Void()
+  {
+    return nullptr;
+  }
+
+  static void Release(RawRef hPrinter)
+  {
+    ::ClosePrinter(hPrinter);
+  }
+};
+
+
 typedef nsAutoRef<HKEY> nsAutoRegKey;
 typedef nsAutoRef<HDC> nsAutoHDC;
 typedef nsAutoRef<HBRUSH> nsAutoBrush;
@@ -221,6 +306,8 @@ typedef nsAutoRef<SC_HANDLE> nsAutoServiceHandle;
 typedef nsAutoRef<HANDLE> nsAutoHandle;
 typedef nsAutoRef<HMODULE> nsModuleHandle;
 typedef nsAutoRef<DEVMODEW*> nsAutoDevMode;
+typedef nsAutoRef<nsHGLOBAL> nsAutoGlobalMem;
+typedef nsAutoRef<nsHPRINTER> nsAutoPrinter;
 
 namespace {
 

@@ -958,6 +958,12 @@ class FunctionCompiler
         return numPushed;
     }
 
+    static MDefinition* peekPushedDef(MBasicBlock* block)
+    {
+        MOZ_ASSERT(hasPushed(block));
+        return block->getSlot(block->stackDepth() - 1);
+    }
+
   public:
     void pushDef(MDefinition* def)
     {
@@ -968,21 +974,39 @@ class FunctionCompiler
             curBlock_->push(def);
     }
 
+    MDefinition* popDefIfPushed()
+    {
+        if (!hasPushed(curBlock_))
+            return nullptr;
+        MDefinition* def = curBlock_->pop();
+        MOZ_ASSERT(def->type() != MIRType_Value);
+        return def;
+    }
+
     template <typename GetBlock>
     void ensurePushInvariants(const GetBlock& getBlock, size_t numBlocks)
     {
-        // Preserve the invariant that, for every iterated MBasicBlock,
-        // either: every MBasicBlock has a non-void pushed expression OR no
-        // MBasicBlock has any pushed expression. This is required by
-        // MBasicBlock::addPredecessor.
-        bool allPushed = true;
+        // Preserve the invariant that, for every iterated MBasicBlock, either:
+        // every MBasicBlock has a pushed expression with the same type (to
+        // prevent creating phis with type Value) OR no MBasicBlock has any
+        // pushed expression. This is required by MBasicBlock::addPredecessor.
+        if (numBlocks < 2)
+            return;
 
-        for (size_t i = 0; allPushed && i < numBlocks; i++)
-            allPushed = hasPushed(getBlock(i));
+        MBasicBlock* block = getBlock(0);
+
+        bool allPushed = hasPushed(block);
+        if (allPushed) {
+            MIRType type = peekPushedDef(block)->type();
+            for (size_t i = 1; allPushed && i < numBlocks; i++) {
+                block = getBlock(i);
+                allPushed = hasPushed(block) && peekPushedDef(block)->type() == type;
+            }
+        }
 
         if (!allPushed) {
             for (size_t i = 0; i < numBlocks; i++) {
-                MBasicBlock* block = getBlock(i);
+                block = getBlock(i);
                 if (hasPushed(block))
                     block->pop();
             }
@@ -1034,10 +1058,7 @@ class FunctionCompiler
         }
 
         curBlock_ = join;
-        if (hasPushed(curBlock_))
-            *def = curBlock_->pop();
-        else
-            *def = nullptr;
+        *def = popDefIfPushed();
         return true;
     }
 
@@ -1357,7 +1378,7 @@ class FunctionCompiler
     bool bindBranches(uint32_t absolute, MDefinition** def)
     {
         if (absolute >= blockPatches_.length() || blockPatches_[absolute].empty()) {
-            *def = !inDeadCode() && hasPushed(curBlock_) ? curBlock_->pop() : nullptr;
+            *def = inDeadCode() ? nullptr : popDefIfPushed();
             return true;
         }
 
@@ -1400,7 +1421,7 @@ class FunctionCompiler
             return false;
         curBlock_ = join;
 
-        *def = hasPushed(curBlock_) ? curBlock_->pop() : nullptr;
+        *def = popDefIfPushed();
 
         patches.clear();
         return true;
