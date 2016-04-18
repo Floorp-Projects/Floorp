@@ -18,15 +18,15 @@ class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
 
-typedef nsSVGDisplayContainerFrame nsSVGGenericContainerFrameBase;
-
-class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase
+class nsSVGGenericContainerFrame : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
 protected:
-  explicit nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
-  
+  explicit nsSVGGenericContainerFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext) {}
+
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
