@@ -358,6 +358,9 @@ assertEq(wasmEvalText(code.replace('BODY', '(call 1)'), imports)(), 4);
 
 assertEq(wasmEvalText(`(module (import "evalcx" "" (param i32) (result i32)) (func (result i32) (call_import 0 (i32.const 0))) (export "" 0))`, {evalcx})(), 0);
 
+if (typeof evaluate === 'function')
+    evaluate(`Wasm.instantiateModule(wasmTextToBinary('(module)')) `, { fileName: null });
+
 if (hasI64()) {
     assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
     assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
