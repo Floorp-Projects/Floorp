@@ -1066,7 +1066,7 @@ InspectorPanel.prototype = {
     yield onMutations;
 
     // Select the new node (this will auto-expand its parent).
-    this.selection.setNodeFront(nodes[0]);
+    this.selection.setNodeFront(nodes[0], "node-inserted");
   }),
 
   /**
