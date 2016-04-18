@@ -340,7 +340,10 @@ public:
   // NOTE: This is always used if the instance is a WidgetCommandEvent instance.
   nsCOMPtr<nsIAtom> mSpecifiedEventType;
 
-  nsString typeString; // always set on non-main-thread events
+  // nsIAtom isn't available on non-main thread due to unsafe.  Therefore,
+  // mSpecifiedEventTypeString is used instead of mSpecifiedEventType if
+  // the event is created in non-main thread.
+  nsString mSpecifiedEventTypeString;
 
   // Event targets, needed by DOM Events
   nsCOMPtr<dom::EventTarget> target;
@@ -356,7 +359,7 @@ public:
     AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
     mSpecifiedEventType = aEvent.mSpecifiedEventType;
-    // typeString should be copied manually if it's necessary.
+    // mSpecifiedEventTypeString should be copied manually if it's necessary.
     target = aCopyTargets ? aEvent.target : nullptr;
     currentTarget = aCopyTargets ? aEvent.currentTarget : nullptr;
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;

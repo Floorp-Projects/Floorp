@@ -258,8 +258,8 @@ Event::IsChrome(JSContext* aCx) const
 NS_METHOD
 Event::GetType(nsAString& aType)
 {
-  if (!mIsMainThreadEvent || !mEvent->typeString.IsEmpty()) {
-    aType = mEvent->typeString;
+  if (!mIsMainThreadEvent || !mEvent->mSpecifiedEventTypeString.IsEmpty()) {
+    aType = mEvent->mSpecifiedEventTypeString;
     return NS_OK;
   }
   const char* name = GetEventName(mEvent->mMessage);
@@ -271,7 +271,7 @@ Event::GetType(nsAString& aType)
              mEvent->mSpecifiedEventType) {
     // Remove "on"
     aType = Substring(nsDependentAtomString(mEvent->mSpecifiedEventType), 2);
-    mEvent->typeString = aType;
+    mEvent->mSpecifiedEventTypeString = aType;
     return NS_OK;
   }
 
@@ -549,14 +549,14 @@ void
 Event::SetEventType(const nsAString& aEventTypeArg)
 {
   if (mIsMainThreadEvent) {
-    mEvent->typeString.Truncate();
+    mEvent->mSpecifiedEventTypeString.Truncate();
     mEvent->mSpecifiedEventType =
       nsContentUtils::GetEventMessageAndAtom(aEventTypeArg, mEvent->mClass,
                                              &(mEvent->mMessage));
   } else {
     mEvent->mSpecifiedEventType = nullptr;
     mEvent->mMessage = eUnidentifiedEvent;
-    mEvent->typeString = aEventTypeArg;
+    mEvent->mSpecifiedEventTypeString = aEventTypeArg;
   }
 }
 
