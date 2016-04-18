@@ -10,8 +10,8 @@
 #include "DragTracker.h"
 #include "InputData.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "TouchCounter.h"
 
