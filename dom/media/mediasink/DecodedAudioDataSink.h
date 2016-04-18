@@ -115,9 +115,6 @@ private:
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnAudioPushed(const RefPtr<MediaData>& aSample);
   void NotifyAudioNeeded();
-  // Drain the converter and add the output to the processed audio queue.
-  // A maximum of aMaxFrames will be added.
-  uint32_t DrainConverter(uint32_t aMaxFrames = UINT32_MAX);
   already_AddRefed<AudioData> CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
                                                     AudioData* aReference);
   UniquePtr<AudioConverter> mConverter;
@@ -128,7 +125,6 @@ private:
   // the input stream. It indicates the time in frames since playback started
   // at the current input framerate.
   int64_t mFramesParsed;
-  Maybe<RefPtr<AudioData>> mLastProcessedPacket;
   int64_t mLastEndTime;
   // Never modifed after construction.
   uint32_t mOutputRate;
