@@ -11,19 +11,17 @@
 #include "nsSVGEffects.h"
 #include "nsSVGFilters.h"
 
-typedef nsContainerFrame SVGFEContainerFrameBase;
-
 /*
  * This frame is used by filter primitive elements that
  * have special child elements that provide parameters.
  */
-class SVGFEContainerFrame : public SVGFEContainerFrameBase
+class SVGFEContainerFrame : public nsContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEContainerFrame(nsStyleContext* aContext)
-    : SVGFEContainerFrameBase(aContext)
+    : nsContainerFrame(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -33,7 +31,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return SVGFEContainerFrameBase::IsFrameOfType(
+    return nsContainerFrame::IsFrameOfType(
             aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
   }
 
@@ -84,7 +82,7 @@ SVGFEContainerFrame::Init(nsIContent*       aContent,
                "Trying to construct an SVGFEContainerFrame for a "
                "content element that doesn't support the right interfaces");
 
-  SVGFEContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -106,6 +104,5 @@ SVGFEContainerFrame::AttributeChanged(int32_t  aNameSpaceID,
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }
 
-  return SVGFEContainerFrameBase::AttributeChanged(aNameSpaceID,
-                                                     aAttribute, aModType);
+  return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
