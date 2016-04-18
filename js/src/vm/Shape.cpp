@@ -47,10 +47,6 @@ ShapeTable::init(ExclusiveContext* cx, Shape* lastProp)
     if (sizeLog2 < MIN_SIZE_LOG2)
         sizeLog2 = MIN_SIZE_LOG2;
 
-    /*
-     * Use rt->calloc for memory accounting and overpressure handling
-     * without OOM reporting. See ShapeTable::change.
-     */
     size = JS_BIT(sizeLog2);
     entries_ = cx->pod_calloc<Entry>(size);
     if (!entries_)
@@ -268,7 +264,7 @@ template ShapeTable::Entry& ShapeTable::search<MaybeAdding::Adding>(jsid id);
 template ShapeTable::Entry& ShapeTable::search<MaybeAdding::NotAdding>(jsid id);
 
 bool
-ShapeTable::change(int log2Delta, ExclusiveContext* cx)
+ShapeTable::change(ExclusiveContext* cx, int log2Delta)
 {
     MOZ_ASSERT(entries_);
     MOZ_ASSERT(-1 <= log2Delta && log2Delta <= 1);
@@ -280,7 +276,7 @@ ShapeTable::change(int log2Delta, ExclusiveContext* cx)
     uint32_t newLog2 = oldLog2 + log2Delta;
     uint32_t oldSize = JS_BIT(oldLog2);
     uint32_t newSize = JS_BIT(newLog2);
-    Entry* newTable = cx->pod_calloc<Entry>(newSize);
+    Entry* newTable = cx->maybe_pod_calloc<Entry>(newSize);
     if (!newTable)
         return false;
 
@@ -318,11 +314,11 @@ ShapeTable::grow(ExclusiveContext* cx)
 
     MOZ_ASSERT(entryCount_ + removedCount_ <= size - 1);
 
-    if (!change(delta, cx)) {
-        if (entryCount_ + removedCount_ == size - 1)
+    if (!change(cx, delta)) {
+        if (entryCount_ + removedCount_ == size - 1) {
+            ReportOutOfMemory(cx);
             return false;
-
-        cx->recoverFromOutOfMemory();
+        }
     }
 
     return true;
@@ -1048,7 +1044,7 @@ NativeObject::removeProperty(ExclusiveContext* cx, jsid id_)
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table.capacity();
         if (size > ShapeTable::MIN_SIZE && table.entryCount() <= size >> 2)
-            (void) table.change(-1, cx);
+            (void) table.change(cx, -1);
     } else {
         /*
          * Non-dictionary-mode shape tables are shared immutables, so all we
