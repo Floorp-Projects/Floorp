@@ -1927,7 +1927,8 @@ class Marionette(object):
 
         :param format: if "base64" (the default), returns the screenshot
             as a base64-string. If "binary", the data is decoded and
-            returned as raw binary.
+            returned as raw binary. If "hash", the data is hashed using
+            the SHA-256 algorithm and the result is returned as a hex digest.
 
         :param full: If True (the default), the capture area will be the
             complete frame. Else only the viewport is captured. Only applies
@@ -1942,10 +1943,13 @@ class Marionette(object):
 
         body = {"id": element,
                 "highlights": lights,
-                "full": full}
+                "full": full,
+                "hash": False}
+        if format == "hash":
+            body["hash"] = True
         data = self._send_message("takeScreenshot", body, key="value")
 
-        if format == "base64":
+        if format == "base64" or format == "hash":
             return data
         elif format == "binary":
             return base64.b64decode(data.encode("ascii"))
