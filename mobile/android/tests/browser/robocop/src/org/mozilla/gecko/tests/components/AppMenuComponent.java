@@ -83,7 +83,11 @@ public class AppMenuComponent extends BaseComponent {
         super(testContext);
     }
 
-    private void assertMenuIsNotOpen() {
+    public void assertMenuIsOpen() {
+        fAssertTrue("Menu is open", isMenuOpen());
+    }
+
+    public void assertMenuIsNotOpen() {
         fAssertFalse("Menu is not open", isMenuOpen());
     }
 
@@ -271,11 +275,20 @@ public class AppMenuComponent extends BaseComponent {
         return (menuItemView != null) && (menuItemView.getVisibility() == View.VISIBLE);
     }
 
-    private void waitForMenuOpen() {
+    public void waitForMenuOpen() {
         WaitHelper.waitFor("menu to open", new Condition() {
             @Override
             public boolean isSatisfied() {
                 return isMenuOpen();
+            }
+        });
+    }
+
+    public void waitForMenuClose() {
+        WaitHelper.waitFor("menu to close", new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return !isMenuOpen();
             }
         });
     }
