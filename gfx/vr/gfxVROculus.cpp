@@ -306,13 +306,15 @@ HMDInfoOculus::HMDInfoOculus(ovrSession aSession)
 
   mDesc = ovr_GetHmdDesc(aSession);
 
-  mDeviceInfo.mSupportedSensorBits = VRStateValidFlags::State_None;
+  mDeviceInfo.mCapabilityFlags = VRDisplayCapabilityFlags::Cap_None;
   if (mDesc.AvailableTrackingCaps & ovrTrackingCap_Orientation) {
-    mDeviceInfo.mSupportedSensorBits |= VRStateValidFlags::State_Orientation;
+    mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Orientation;
   }
   if (mDesc.AvailableTrackingCaps & ovrTrackingCap_Position) {
-    mDeviceInfo.mSupportedSensorBits |= VRStateValidFlags::State_Position;
+    mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Position;
   }
+  mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
+  mDeviceInfo.mCapabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
 
   mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Left] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Left]);
   mDeviceInfo.mRecommendedEyeFOV[VRDisplayInfo::Eye_Right] = FromFovPort(mDesc.DefaultEyeFov[ovrEye_Right]);
@@ -440,7 +442,7 @@ HMDInfoOculus::GetSensorState(double timeOffset)
   result.timestamp = pose.TimeInSeconds;
 
   if (state.StatusFlags & ovrStatus_OrientationTracked) {
-    result.flags |= VRStateValidFlags::State_Orientation;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
 
     result.orientation[0] = pose.ThePose.Orientation.x;
     result.orientation[1] = pose.ThePose.Orientation.y;
@@ -457,7 +459,7 @@ HMDInfoOculus::GetSensorState(double timeOffset)
   }
 
   if (state.StatusFlags & ovrStatus_PositionTracked) {
-    result.flags |= VRStateValidFlags::State_Position;
+    result.flags |= VRDisplayCapabilityFlags::Cap_Position;
 
     result.position[0] = pose.ThePose.Position.x;
     result.position[1] = pose.ThePose.Position.y;
@@ -471,6 +473,8 @@ HMDInfoOculus::GetSensorState(double timeOffset)
     result.linearAcceleration[1] = pose.LinearAcceleration.y;
     result.linearAcceleration[2] = pose.LinearAcceleration.z;
   }
+  result.flags |= VRDisplayCapabilityFlags::Cap_External;
+  result.flags |= VRDisplayCapabilityFlags::Cap_Present;
   
   return result;
 }
