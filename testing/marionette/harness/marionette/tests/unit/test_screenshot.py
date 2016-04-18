@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import base64
+import hashlib
 import imghdr
 import struct
 import urllib
@@ -191,3 +192,10 @@ class Content(ScreenCaptureTestCase):
     def test_unknown_format(self):
         with self.assertRaises(ValueError):
             self.marionette.screenshot(format="cheese")
+
+    def test_hash_format(self):
+        self.marionette.navigate(box)
+        el = self.marionette.find_element(By.TAG_NAME, "div")
+        content = self.marionette.screenshot(element=el, format="hash")
+        hash = hashlib.sha256(ELEMENT).hexdigest()
+        self.assertEqual(content, hash)
