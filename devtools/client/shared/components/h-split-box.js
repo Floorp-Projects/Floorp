@@ -130,7 +130,7 @@ module.exports = createClass({
       ),
 
       dom.div({
-        className: "h-split-box-splitter",
+        className: "devtools-side-splitter",
         onMouseDown: this._onMouseDown,
       }),
 

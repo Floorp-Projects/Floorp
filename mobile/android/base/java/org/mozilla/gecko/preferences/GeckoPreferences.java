@@ -1465,12 +1465,7 @@ OnSharedPreferenceChangeListener
         @Override
         public void prefValue(String prefName, final boolean value) {
             final Preference pref = getField(prefName);
-            final CheckBoxPrefSetter prefSetter;
-            if (Versions.preICS) {
-                prefSetter = new CheckBoxPrefSetter();
-            } else {
-                prefSetter = new TwoStatePrefSetter();
-            }
+            final CheckBoxPrefSetter prefSetter = new TwoStatePrefSetter();
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {

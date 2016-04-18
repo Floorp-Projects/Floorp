@@ -877,9 +877,15 @@ var BrowserApp = {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_save_image");
         UITelemetry.addEvent("save.1", "contextmenu", null, "image");
 
-        ContentAreaUtils.saveImageURL(aTarget.currentURI.spec, null, "SaveImageTitle",
-                                      false, true, aTarget.ownerDocument.documentURIObject,
-                                      aTarget.ownerDocument);
+        RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then(function(permissionGranted) {
+            if (!permissionGranted) {
+                return;
+            }
+
+            ContentAreaUtils.saveImageURL(aTarget.currentURI.spec, null, "SaveImageTitle",
+                                          false, true, aTarget.ownerDocument.documentURIObject,
+                                          aTarget.ownerDocument);
+        });
       });
 
     NativeWindow.contextmenus.add(stringGetter("contextmenu.setImageAs"),

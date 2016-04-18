@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.menu;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
@@ -117,10 +116,6 @@ public class GeckoMenuItem implements MenuItem {
     }
 
     public boolean hasActionProvider() {
-        if (Versions.preICS) {
-            return false;
-        }
-
         return (mActionProvider != null);
     }
 
