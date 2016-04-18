@@ -13,8 +13,6 @@
 
 class nsRubyBaseContainerFrame;
 
-typedef nsInlineFrame nsRubyFrameSuper;
-
 /**
  * Factory function.
  * @return a newly allocated nsRubyFrame (infallible)
@@ -22,7 +20,7 @@ typedef nsInlineFrame nsRubyFrameSuper;
 nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
 
-class nsRubyFrame final : public nsRubyFrameSuper
+class nsRubyFrame final : public nsInlineFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -55,7 +53,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext)
-    : nsRubyFrameSuper(aContext) {}
+    : nsInlineFrame(aContext) {}
 
   void ReflowSegment(nsPresContext* aPresContext,
                      const nsHTMLReflowState& aReflowState,
