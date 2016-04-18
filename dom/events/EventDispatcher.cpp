@@ -259,13 +259,13 @@ public:
       mManager = mTarget->GetExistingListenerManager();
     }
     if (mManager) {
-      NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
+      NS_ASSERTION(aVisitor.mEvent->mCurrentTarget == nullptr,
                    "CurrentTarget should be null!");
       mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                             &aVisitor.mDOMEvent,
                             CurrentTarget(),
                             &aVisitor.mEventStatus);
-      NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
+      NS_ASSERTION(aVisitor.mEvent->mCurrentTarget == nullptr,
                    "CurrentTarget should be null!");
     }
   }
