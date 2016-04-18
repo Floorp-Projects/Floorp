@@ -46,6 +46,10 @@ struct Register {
         Register r = { Encoding(code) };
         return r;
     }
+    static Register Invalid() {
+        Register r = { Encoding(Codes::Invalid) };
+        return r;
+    }
     MOZ_CONSTEXPR Code code() const {
         return Code(reg_);
     }
@@ -109,6 +113,10 @@ struct Register64
       : reg(r)
     {}
 #else
+    explicit Register64(Register r)
+      : high(Register::Invalid()), low(Register::Invalid())
+    {}
+
     MOZ_CONSTEXPR Register64(Register h, Register l)
       : high(h), low(l)
     {}

@@ -3645,7 +3645,7 @@ PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
   uint32_t hoverGenerationBefore =
     restyleManager->AsGecko()->GetHoverGeneration();
   nsEventStatus status;
-  nsView* targetView = nsView::GetViewFor(aEvent->widget);
+  nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView)
     return;
   targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
@@ -6767,7 +6767,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
     if (!rootFrame) {
       nsView* rootView = mViewManager->GetRootView();
       mMouseLocation = nsLayoutUtils::TranslateWidgetToView(mPresContext,
-        aEvent->widget, aEvent->refPoint, rootView);
+        aEvent->mWidget, aEvent->refPoint, rootView);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
       mMouseLocation =
@@ -6777,7 +6777,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
 #ifdef DEBUG_MOUSE_LOCATION
     if (aEvent->mMessage == eMouseEnterIntoWidget) {
       printf("[ps=%p]got mouse enter for %p\n",
-             this, aEvent->widget);
+             this, aEvent->mWidget);
     }
     printf("[ps=%p]setting mouse location to (%d,%d)\n",
            this, mMouseLocation.x, mMouseLocation.y);
@@ -6795,7 +6795,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
     mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
 #ifdef DEBUG_MOUSE_LOCATION
     printf("[ps=%p]got mouse exit for %p\n",
-           this, aEvent->widget);
+           this, aEvent->mWidget);
     printf("[ps=%p]clearing mouse location\n",
            this);
 #endif
@@ -6904,7 +6904,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       }
 
       WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
-                               touchEvent->widget);
+                               touchEvent->mWidget);
       event.isPrimary = i == 0;
       event.pointerId = touch->Identifier();
       event.refPoint = touch->mRefPoint;
@@ -7037,7 +7037,7 @@ PresShell::DispatchBeforeKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> 
 
     aChainIndex = i;
     InternalBeforeAfterKeyboardEvent beforeEvent(aEvent.IsTrusted(),
-                                                 message, aEvent.widget);
+                                                 message, aEvent.mWidget);
     beforeEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     EventDispatcher::Dispatch(eventTarget, mPresContext, &beforeEvent);
 
@@ -7071,7 +7071,7 @@ PresShell::DispatchAfterKeyboardEventInternal(const nsTArray<nsCOMPtr<Element> >
     }
 
     InternalBeforeAfterKeyboardEvent afterEvent(aEvent.IsTrusted(),
-                                                message, aEvent.widget);
+                                                message, aEvent.mWidget);
     afterEvent.AssignBeforeAfterKeyEventData(aEvent, false);
     afterEvent.mEmbeddedCancelled.SetValue(embeddedCancelled);
     EventDispatcher::Dispatch(eventTarget, mPresContext, &afterEvent);
@@ -7104,7 +7104,7 @@ PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
   bool rv =
     mPresContext && !mHaveShutDown && nsContentUtils::IsSafeToRunScript();
   if (aEvent) {
-    rv &= (aEvent && aEvent->widget && !aEvent->widget->Destroyed());
+    rv &= (aEvent && aEvent->mWidget && !aEvent->mWidget->Destroyed());
   }
   return rv;
 }
@@ -8370,7 +8370,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
     }
     // copy the event
     WidgetTouchEvent newEvent(touchEvent->IsTrusted(),
-                              touchEvent->mMessage, touchEvent->widget);
+                              touchEvent->mMessage, touchEvent->mWidget);
     newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.target = targetPtr;
 
@@ -8478,7 +8478,7 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
         itemFrame = popupFrame;
 
       nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
-      aEvent->widget = widget;
+      aEvent->mWidget = widget;
       LayoutDeviceIntPoint widgetPoint = widget->WidgetToScreenOffset();
       aEvent->refPoint = LayoutDeviceIntPoint::FromUnknownPoint(
         itemFrame->GetScreenRect().BottomLeft()) - widgetPoint;
@@ -8504,28 +8504,28 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
   aEvent->refPoint.y = 0;
   if (rootPC) {
     rootPC->PresShell()->GetViewManager()->
-      GetRootWidget(getter_AddRefs(aEvent->widget));
+      GetRootWidget(getter_AddRefs(aEvent->mWidget));
 
-    if (aEvent->widget) {
+    if (aEvent->mWidget) {
       // default the refpoint to the topleft of our document
       nsPoint offset(0, 0);
       nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
       if (rootFrame) {
         nsView* view = rootFrame->GetClosestView(&offset);
-        offset += view->GetOffsetToWidget(aEvent->widget);
+        offset += view->GetOffsetToWidget(aEvent->mWidget);
         aEvent->refPoint =
           LayoutDeviceIntPoint::FromAppUnitsToNearest(offset, mPresContext->AppUnitsPerDevPixel());
       }
     }
   } else {
-    aEvent->widget = nullptr;
+    aEvent->mWidget = nullptr;
   }
 
   // see if we should use the caret position for the popup
   LayoutDeviceIntPoint caretPoint;
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  if (PrepareToUseCaretPosition(aEvent->widget, caretPoint)) {
+  if (PrepareToUseCaretPosition(aEvent->mWidget, caretPoint)) {
     // caret position is good
     aEvent->refPoint = caretPoint;
     return true;
@@ -8545,7 +8545,7 @@ PresShell::AdjustContextMenuKeyEvent(WidgetMouseEvent* aEvent)
     GetCurrentItemAndPositionForElement(currentFocus,
                                         getter_AddRefs(currentPointElement),
                                         aEvent->refPoint,
-                                        aEvent->widget);
+                                        aEvent->mWidget);
     if (currentPointElement) {
       mCurrentEventContent = currentPointElement;
       mCurrentEventFrame = nullptr;
@@ -9814,10 +9814,10 @@ PresShell::DelayedInputEvent::~DelayedInputEvent()
 void
 PresShell::DelayedInputEvent::Dispatch()
 {
-  if (!mEvent || !mEvent->widget) {
+  if (!mEvent || !mEvent->mWidget) {
     return;
   }
-  nsCOMPtr<nsIWidget> widget = mEvent->widget;
+  nsCOMPtr<nsIWidget> widget = mEvent->mWidget;
   nsEventStatus status;
   widget->DispatchEvent(mEvent, status);
 }
@@ -9828,7 +9828,7 @@ PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
   WidgetMouseEvent* mouseEvent =
     new WidgetMouseEvent(aEvent->IsTrusted(),
                          aEvent->mMessage,
-                         aEvent->widget,
+                         aEvent->mWidget,
                          aEvent->reason,
                          aEvent->context);
   mouseEvent->AssignMouseEventData(*aEvent, false);
@@ -9841,7 +9841,7 @@ PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent) :
   WidgetKeyboardEvent* keyEvent =
     new WidgetKeyboardEvent(aEvent->IsTrusted(),
                             aEvent->mMessage,
-                            aEvent->widget);
+                            aEvent->mWidget);
   keyEvent->AssignKeyEventData(*aEvent, false);
   keyEvent->mFlags.mIsSynthesizedForTests = aEvent->mFlags.mIsSynthesizedForTests;
   mEvent = keyEvent;

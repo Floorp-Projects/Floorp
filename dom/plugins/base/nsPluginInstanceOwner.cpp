@@ -2539,7 +2539,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 
 #ifdef MOZ_X11
   // this code supports windowless plugins
-  nsIWidget* widget = anEvent.widget;
+  nsIWidget* widget = anEvent.mWidget;
   XEvent pluginEvent = XEvent();
   pluginEvent.type = 0;
 

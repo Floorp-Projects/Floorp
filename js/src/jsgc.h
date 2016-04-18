@@ -1106,7 +1106,8 @@ struct MightBeForwarded
     static const bool value = mozilla::IsBaseOf<JSObject, T>::value ||
                               mozilla::IsBaseOf<Shape, T>::value ||
                               mozilla::IsBaseOf<JSString, T>::value ||
-                              mozilla::IsBaseOf<JSScript, T>::value;
+                              mozilla::IsBaseOf<JSScript, T>::value ||
+                              mozilla::IsBaseOf<js::LazyScript, T>::value;
 };
 
 template <typename T>

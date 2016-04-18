@@ -185,7 +185,11 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
 
 static void opensl_destroy(cubeb * ctx);
 
+
 #if defined(__ANDROID__)
+
+// B2G header file still contain the required function declarations.
+#ifndef MOZ_WIDGET_GONK
 
 #if (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
 typedef int (system_property_get)(const char*, char*);
@@ -208,6 +212,8 @@ __system_property_get(const char* name, char* value)
   return ret;
 }
 #endif
+
+#endif // MOZ_WIDGET_GONK
 
 static int
 get_android_version(void)

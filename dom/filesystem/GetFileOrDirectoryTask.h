@@ -23,7 +23,6 @@ public:
   static already_AddRefed<GetFileOrDirectoryTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
-         Directory::DirectoryType aType,
          bool aDirectoryOnly,
          ErrorResult& aRv);
 
@@ -51,7 +50,6 @@ private:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
                               nsIFile* aTargetPath,
-                              Directory::DirectoryType aType,
                               bool aDirectoryOnly);
 
   RefPtr<Promise> mPromise;
@@ -59,7 +57,6 @@ private:
 
   // Whether we get a directory.
   bool mIsDirectory;
-  Directory::DirectoryType mType;
 };
 
 class GetFileOrDirectoryTaskParent final : public FileSystemTaskParentBase
@@ -90,7 +87,6 @@ private:
 
   // Whether we get a directory.
   bool mIsDirectory;
-  Directory::DirectoryType mType;
 };
 
 } // namespace dom

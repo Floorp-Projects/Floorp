@@ -6156,6 +6156,9 @@ JS_SetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt, uint32_t v
         }
         jit::JitOptions.jumpThreshold = value;
         break;
+      case JSJITCOMPILER_WASM_TEST_MODE:
+        jit::JitOptions.wasmTestMode = !!value;
+        break;
       default:
         break;
     }
@@ -6182,6 +6185,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime* rt, JSJitCompilerOption opt)
         return rt->canUseOffthreadIonCompilation();
       case JSJITCOMPILER_SIGNALS_ENABLE:
         return rt->canUseSignalHandlers();
+      case JSJITCOMPILER_WASM_TEST_MODE:
+        return jit::JitOptions.wasmTestMode ? 1 : 0;
       default:
         break;
     }
@@ -6272,7 +6277,7 @@ void AutoFilename::setScriptSource(js::ScriptSource* p)
 void AutoFilename::setUnowned(const char* filename)
 {
     MOZ_ASSERT(!get());
-    filename_.as<const char*>() = filename;
+    filename_.as<const char*>() = filename ? filename : "";
 }
 
 void AutoFilename::setOwned(UniqueChars&& filename)

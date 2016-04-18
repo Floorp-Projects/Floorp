@@ -1250,7 +1250,7 @@ bool TabParent::RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent)
   }
 
   WidgetWheelEvent localEvent(aEvent);
-  localEvent.widget = widget;
+  localEvent.mWidget = widget;
   localEvent.refPoint -= GetChildProcessOffset();
 
   widget->DispatchInputEvent(&localEvent);
@@ -1266,7 +1266,7 @@ TabParent::RecvDispatchMouseEvent(const mozilla::WidgetMouseEvent& aEvent)
   }
 
   WidgetMouseEvent localEvent(aEvent);
-  localEvent.widget = widget;
+  localEvent.mWidget = widget;
   localEvent.refPoint -= GetChildProcessOffset();
 
   widget->DispatchInputEvent(&localEvent);
@@ -1282,7 +1282,7 @@ TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
   }
 
   WidgetKeyboardEvent localEvent(aEvent);
-  localEvent.widget = widget;
+  localEvent.mWidget = widget;
   localEvent.refPoint -= GetChildProcessOffset();
 
   widget->DispatchInputEvent(&localEvent);
@@ -2020,7 +2020,7 @@ TabParent::RecvDispatchAfterKeyboardEvent(const WidgetKeyboardEvent& aEvent)
   NS_ENSURE_TRUE(mFrameElement, true);
 
   WidgetKeyboardEvent localEvent(aEvent);
-  localEvent.widget = GetWidget();
+  localEvent.mWidget = GetWidget();
 
   nsIDocument* doc = mFrameElement->OwnerDoc();
   nsCOMPtr<nsIPresShell> presShell = doc->GetShell();

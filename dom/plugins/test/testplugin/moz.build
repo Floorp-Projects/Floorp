@@ -9,4 +9,5 @@ DIRS += ['secondplugin', 'javaplugin', 'thirdplugin', 'flashplugin', 'silverligh
 SharedLibrary('nptest')
 
 relative_path = '.'
+cocoa_name = 'Test'
 include('testplugin.mozbuild')

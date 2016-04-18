@@ -105,7 +105,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
           // ask the widget implementation to begin a resize drag if it can
           Direction direction = GetDirection();
-          nsresult rv = aEvent->widget->BeginResizeDrag(aEvent,
+          nsresult rv = aEvent->mWidget->BeginResizeDrag(aEvent,
                         direction.mHorizontal, direction.mVertical);
           // for native drags, don't set the fields below
           if (rv != NS_ERROR_NOT_IMPLEMENTED)
@@ -121,7 +121,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         LayoutDeviceIntPoint refPoint;
         if (!GetEventPoint(aEvent, refPoint))
           return NS_OK;
-        mMouseDownPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
+        mMouseDownPoint = refPoint + aEvent->mWidget->WidgetToScreenOffset();
 
         // we're tracking
         mTrackingMouseMove = true;
@@ -169,7 +169,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
       LayoutDeviceIntPoint refPoint;
       if (!GetEventPoint(aEvent, refPoint))
         return NS_OK;
-      LayoutDeviceIntPoint screenPoint = refPoint + aEvent->widget->WidgetToScreenOffset();
+      LayoutDeviceIntPoint screenPoint =
+        refPoint + aEvent->mWidget->WidgetToScreenOffset();
       LayoutDeviceIntPoint mouseMove(screenPoint - mMouseDownPoint);
 
       // Determine which direction to resize by checking the dir attribute.

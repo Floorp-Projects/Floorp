@@ -308,7 +308,7 @@ NS_IMETHODIMP
 PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
-  debug_DumpEvent(stdout, event->widget, event, "PuppetWidget", 0);
+  debug_DumpEvent(stdout, event->mWidget, event, "PuppetWidget", 0);
 #endif
 
   MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,

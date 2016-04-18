@@ -1534,9 +1534,9 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
 
   // The root frame's widget might be different, e.g., the event was fired on
   // a popup but the rootFrame is the document root.
-  if (rootWidget != aEvent->widget) {
-    NS_PRECONDITION(aEvent->widget, "The event must have the widget");
-    nsView* view = nsView::GetViewFor(aEvent->widget);
+  if (rootWidget != aEvent->mWidget) {
+    NS_PRECONDITION(aEvent->mWidget, "The event must have the widget");
+    nsView* view = nsView::GetViewFor(aEvent->mWidget);
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     rootFrame = view->GetFrame();
     NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
@@ -1548,8 +1548,8 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
                                       rootWidget);
   eventOnRoot.mUseNativeLineBreak = aEvent->mUseNativeLineBreak;
   eventOnRoot.refPoint = aEvent->refPoint;
-  if (rootWidget != aEvent->widget) {
-    eventOnRoot.refPoint += aEvent->widget->WidgetToScreenOffset() -
+  if (rootWidget != aEvent->mWidget) {
+    eventOnRoot.refPoint += aEvent->mWidget->WidgetToScreenOffset() -
       rootWidget->WidgetToScreenOffset();
   }
   nsPoint ptInRoot =
@@ -1611,7 +1611,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
-  WidgetQueryContentEvent textRect(true, eQueryTextRect, aEvent->widget);
+  WidgetQueryContentEvent textRect(true, eQueryTextRect, aEvent->mWidget);
   textRect.InitForQueryTextRect(offset, 1, aEvent->mUseNativeLineBreak);
   rv = OnQueryTextRect(&textRect);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1637,14 +1637,15 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
   aEvent->mSucceeded = false;
   aEvent->mReply.mWidgetIsHit = false;
 
-  NS_ENSURE_TRUE(aEvent->widget, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aEvent->mWidget, NS_ERROR_FAILURE);
 
   nsIDocument* doc = mPresShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   nsIFrame* docFrame = mPresShell->GetRootFrame();
   NS_ENSURE_TRUE(docFrame, NS_ERROR_FAILURE);
 
-  LayoutDeviceIntPoint eventLoc = aEvent->refPoint + aEvent->widget->WidgetToScreenOffset();
+  LayoutDeviceIntPoint eventLoc =
+    aEvent->refPoint + aEvent->mWidget->WidgetToScreenOffset();
   nsIntRect docFrameRect = docFrame->GetScreenRect(); // Returns CSS pixels
   CSSIntPoint eventLocCSS(
     mPresContext->DevPixelsToIntCSSPixels(eventLoc.x) - docFrameRect.x,
@@ -1661,7 +1662,7 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
     } else if (targetFrame) {
       targetWidget = targetFrame->GetNearestWidget();
     }
-    if (aEvent->widget == targetWidget) {
+    if (aEvent->mWidget == targetWidget) {
       aEvent->mReply.mWidgetIsHit = true;
     }
   }
