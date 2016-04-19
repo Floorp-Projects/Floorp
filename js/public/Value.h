@@ -556,7 +556,7 @@ JSVAL_IS_BOOLEAN_IMPL(jsval_layout l)
 static inline bool
 JSVAL_TO_BOOLEAN_IMPL(jsval_layout l)
 {
-    return l.s.payload.boo;
+    return bool(l.s.payload.boo);
 }
 
 static inline jsval_layout
@@ -564,7 +564,7 @@ BOOLEAN_TO_JSVAL_IMPL(bool b)
 {
     jsval_layout l;
     l.s.tag = JSVAL_TAG_BOOLEAN;
-    l.s.payload.boo = b;
+    l.s.payload.boo = uint32_t(b);
     return l;
 }
 
