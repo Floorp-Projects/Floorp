@@ -66,6 +66,7 @@ TransferHandleToProcess(HANDLE source, base::ProcessId pid)
   bool ok = DuplicateHandle(source, pid, &handleDup, access, options);
   if (!ok) {
     AnnotateSystemError();
+    AnnotateProcessInformation(pid);
   }
   MOZ_RELEASE_ASSERT(ok);
 
