@@ -321,6 +321,10 @@ public:
     return mJSRuntime;
   }
 
+protected:
+  JSRuntime* MaybeRuntime() const { return mJSRuntime; }
+
+public:
   // nsThread entrypoints
   virtual void BeforeProcessTask(bool aMightBlock) { };
   virtual void AfterProcessTask(uint32_t aRecursionDepth);

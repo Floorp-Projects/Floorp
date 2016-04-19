@@ -1591,6 +1591,10 @@ ReloadPrefsCallback(const char* pref, void* data)
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+    // Elsewhere we abort immediately if XPCJSRuntime initialization fails.
+    // Therefore the runtime must be non-null.
+    MOZ_ASSERT(MaybeRuntime());
+
     // This destructor runs before ~CycleCollectedJSRuntime, which does the
     // actual JS_DestroyRuntime() call. But destroying the runtime triggers
     // one final GC, which can call back into the runtime with various
