@@ -22,9 +22,6 @@ import java.util.List;
 public class Experiments {
     private static final String LOGTAG = "GeckoExperiments";
 
-    // Display History and Bookmarks in 3-dot menu.
-    public static final String BOOKMARKS_HISTORY_MENU = "bookmark-history-menu";
-
     // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
     public static final String SEARCH_TERM = "search-term";
 
