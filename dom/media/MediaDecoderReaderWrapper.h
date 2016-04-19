@@ -55,9 +55,9 @@ public:
   void ResetDecode();
 
   nsresult Init() { return mReader->Init(); }
-  bool IsWaitForDataSupported() { return mReader->IsWaitForDataSupported(); }
+  bool IsWaitForDataSupported() const { return mReader->IsWaitForDataSupported(); }
   bool IsAsync() const { return mReader->IsAsync(); }
-  bool UseBufferingHeuristics() { return mReader->UseBufferingHeuristics(); }
+  bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
   bool ForceZeroStartTime() const { return mReader->ForceZeroStartTime(); }
 
   bool VideoIsHardwareAccelerated() const {
