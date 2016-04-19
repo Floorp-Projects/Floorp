@@ -51,6 +51,9 @@
   <script src="/add-on/shared/js/dispatcher.js"></script>
   <script src="/add-on/shared/js/otSdkDriver.js"></script>
 
+  <!-- Load fake-components after loading utils to avoid chrome detection. -->
+  <script src="/add-on/panels/test/fake-components.js"></script>
+
   <!-- Stores need to be loaded before the views that uses them -->
   <script src="/add-on/shared/js/store.js"></script>
   <script src="/add-on/panels/js/roomStore.js"></script>
@@ -66,12 +69,14 @@
   <script src="/add-on/panels/js/roomViews.js"></script>
   <script src="/add-on/panels/js/feedbackViews.js"></script>
   <script src="/add-on/panels/js/conversation.js"></script>
+  <script src="/add-on/panels/js/copy.js"></script>
   <script src="/add-on/panels/js/panel.js"></script>
   <script src="/add-on/panels/js/slideshow.js"></script>
 
   <!-- Test scripts -->
   <script src="conversationAppStore_test.js"></script>
   <script src="conversation_test.js"></script>
+  <script src="copy_test.js"></script>
   <script src="feedbackViews_test.js"></script>
   <script src="panel_test.js"></script>
   <script src="desktopViews_test.js"></script>
@@ -83,6 +88,7 @@
     // Stop the default init functions running to avoid conflicts in tests
     document.removeEventListener('DOMContentLoaded', loop.panel.init);
     document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+    document.removeEventListener('DOMContentLoaded', loop.copy.init);
     document.removeEventListener("DOMContentLoaded", loop.slideshow.init);
 
     LoopMochaUtils.addErrorCheckingTests();

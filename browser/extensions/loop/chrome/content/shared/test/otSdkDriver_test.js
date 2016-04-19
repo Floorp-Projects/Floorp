@@ -223,23 +223,10 @@ describe("loop.OTSdkDriver", function() {
     it("should dispatch ConnectionFailure if an error occurred", function() {
       sdk.initPublisher.callArgWith(2, { message: "FAKE" });
 
-      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.ConnectionFailure({
           reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-        }));
-    });
-
-    it("should notify metrics if an error occurred", function() {
-      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
-
-      sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.ConnectionStatus({
-          event: "sdk.exception.123.FAKE",
-          state: "starting",
-          connections: 0,
-          sendStreams: 0,
-          recvStreams: 0
         }));
     });
   });
@@ -315,23 +302,10 @@ describe("loop.OTSdkDriver", function() {
     it("should dispatch ConnectionFailure if an error occurred", function() {
       sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
 
-      sinon.assert.calledTwice(dispatcher.dispatch);
+      sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.ScreenSharingState({
           state: SCREEN_SHARE_STATES.INACTIVE
-        }));
-    });
-
-    it("should notify metrics if an error occurred", function() {
-      sdk.initPublisher.callArgWith(2, { code: 123, message: "FAKE" });
-
-      sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.ConnectionStatus({
-          event: "sdk.exception.screen.123.FAKE",
-          state: "starting",
-          connections: 0,
-          sendStreams: 0,
-          recvStreams: 0
         }));
     });
   });
@@ -879,6 +853,7 @@ describe("loop.OTSdkDriver", function() {
     beforeEach(function() {
       fakeConnection = "fakeConnection";
       fakeStream = {
+        hasAudio: true,
         hasVideo: true,
         videoType: "camera",
         videoDimensions: { width: 1, height: 2 }
@@ -1037,6 +1012,7 @@ describe("loop.OTSdkDriver", function() {
 
         driver._mockPublisherEl.appendChild(fakeMockVideo);
         stream = {
+          hasAudio: true,
           hasVideo: true,
           videoType: "camera",
           videoDimensions: { width: 1, height: 2 }
@@ -1061,6 +1037,7 @@ describe("loop.OTSdkDriver", function() {
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.MediaStreamCreated({
+            hasAudio: true,
             hasVideo: true,
             isLocal: true,
             srcMediaElement: fakeMockVideo
@@ -1074,6 +1051,7 @@ describe("loop.OTSdkDriver", function() {
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.MediaStreamCreated({
+            hasAudio: true,
             hasVideo: false,
             isLocal: true,
             srcMediaElement: fakeMockVideo
@@ -1147,12 +1125,14 @@ describe("loop.OTSdkDriver", function() {
           driver.session = session;
           fakeStream.connection = fakeConnection;
           fakeStream.hasVideo = true;
+          fakeStream.hasAudio = true;
 
           session.trigger("streamCreated", { stream: fakeStream });
 
           sinon.assert.called(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.MediaStreamCreated({
+              hasAudio: true,
               hasVideo: true,
               isLocal: false,
               srcMediaElement: videoElement
@@ -1168,6 +1148,7 @@ describe("loop.OTSdkDriver", function() {
           sinon.assert.called(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.MediaStreamCreated({
+              hasAudio: true,
               hasVideo: false,
               isLocal: false,
               srcMediaElement: videoElement
@@ -1886,6 +1867,56 @@ describe("loop.OTSdkDriver", function() {
           sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.ConnectionStatus({
               event: "sdk.exception." + OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED,
+              state: "starting",
+              connections: 0,
+              sendStreams: 0,
+              recvStreams: 0
+            }));
+        });
+      });
+
+      describe("Unable to Publish", function() {
+        it("should not do anything if the message is 'GetUserMedia'", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "GetUserMedia"
+          });
+
+          sinon.assert.notCalled(dispatcher.dispatch);
+        });
+
+        it("should notify metrics", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "General Media Fail"
+          });
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionStatus({
+              event: "sdk.exception." + OT.ExceptionCodes.UNABLE_TO_PUBLISH +
+                ".General Media Fail",
+              state: "starting",
+              connections: 0,
+              sendStreams: 0,
+              recvStreams: 0
+            }));
+        });
+
+        it("should notify metrics with a special screen indication for screen shares", function() {
+          driver.screenshare = { fake: true };
+
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.UNABLE_TO_PUBLISH,
+            message: "General Media Fail 2",
+            target: driver.screenshare
+          });
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionStatus({
+              event: "sdk.exception.screen." + OT.ExceptionCodes.UNABLE_TO_PUBLISH +
+                ".General Media Fail 2",
               state: "starting",
               connections: 0,
               sendStreams: 0,

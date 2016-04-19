@@ -63,19 +63,9 @@ function promiseNewTabLocation() {
   return BrowserTestUtils.browserLoaded(browser);
 }
 
-function promiseRemoveTab(tab) {
-  return new Promise(resolve => {
-    gBrowser.tabContainer.addEventListener("TabClose", function onTabClose() {
-      gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
-      resolve();
-    });
-    gBrowser.removeTab(tab);
-  });
-}
-
 function* removeTabs() {
   for (let createdTab of createdTabs) {
-    yield promiseRemoveTab(createdTab);
+    yield BrowserTestUtils.removeTab(createdTab);
   }
 
   createdTabs = [];
@@ -139,62 +129,10 @@ add_task(function* test_multipleListener() {
   Assert.notEqual(newWindowId1, nextWindowId1, "Second listener should have updated");
 
   // Cleanup.
-  gHandlers.RemoveBrowserSharingListener({ data: [listenerIds.pop()] }, function() {});
-
-  yield removeTabs();
-});
-
-add_task(function* test_infoBar() {
-  const kBrowserSharingNotificationId = "loop-sharing-notification";
-
-  // First we add two tabs.
-  yield promiseWindowIdReceivedNewTab();
-  yield promiseWindowIdReceivedNewTab();
-  Assert.strictEqual(gBrowser.selectedTab, createdTabs[1],
-    "The second tab created should be selected now");
-
-  // Add one sharing listener, which should show the infobar.
-  yield promiseWindowIdReceivedOnAdd(handlers[0]);
-
-  let getInfoBar = function() {
-    let box = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
-    return box.getNotificationWithValue(kBrowserSharingNotificationId);
-  };
-
-  let testBarProps = function() {
-    let bar = getInfoBar();
-
-    // Start with some basic assertions for the bar.
-    Assert.ok(bar, "The notification bar should be visible");
-    Assert.strictEqual(bar.hidden, false, "Again, the notification bar should be visible");
-
-    let button = bar.querySelector(".notification-button");
-    Assert.ok(button, "There should be a button present");
-  };
-
-  testBarProps();
-
-  // When we switch tabs, the infobar should move along with it. We use `selectedIndex`
-  // here, because that's the setter that triggers the 'select' event. This event
-  // is what LoopUI listens to and moves the infobar.
-  gBrowser.selectedIndex = Array.indexOf(gBrowser.tabs, createdTabs[0]);
-
-  // We now know that the second tab is selected and should be displaying the
-  // infobar.
-  testBarProps();
-
-  // Test hiding the infoBar.
-  getInfoBar().querySelector(".notification-button-default").click();
-  Assert.equal(getInfoBar(), null, "The notification should be hidden now");
-
-  gBrowser.selectedIndex = Array.indexOf(gBrowser.tabs, createdTabs[1]);
-
-  Assert.equal(getInfoBar(), null, "The notification should still be hidden");
-
-  // Cleanup.
   for (let listenerId of listenerIds) {
     gHandlers.RemoveBrowserSharingListener({ data: [listenerId] }, function() {});
   }
+
   yield removeTabs();
 });
 

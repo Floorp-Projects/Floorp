@@ -10,7 +10,7 @@
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 2);
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("loop.gettingStarted.latestFTUVersion");
 });
 
