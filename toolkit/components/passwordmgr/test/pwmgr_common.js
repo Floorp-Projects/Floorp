@@ -304,15 +304,15 @@ function resetRecipes() {
 
 function promiseStorageChanged(expectedChangeTypes) {
   return new Promise((resolve, reject) => {
-    function onStorageChanged({ topic, data }) {
+    let onStorageChanged = SpecialPowers.wrapCallback(function osc(subject, topic, data) {
       let changeType = expectedChangeTypes.shift();
       is(data, changeType, "Check expected passwordmgr-storage-changed type");
       if (expectedChangeTypes.length === 0) {
-        chromeScript.removeMessageListener("storageChanged", onStorageChanged);
-        resolve();
+        SpecialPowers.removeObserver(onStorageChanged, "passwordmgr-storage-changed");
+        resolve(subject);
       }
-    }
-    chromeScript.addMessageListener("storageChanged", onStorageChanged);
+    });
+    SpecialPowers.addObserver(onStorageChanged, "passwordmgr-storage-changed", false);
   });
 }
 
@@ -361,14 +361,6 @@ if (this.addMessageListener) {
 
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
-
-  function onStorageChanged(subject, topic, data) {
-    sendAsyncMessage("storageChanged", {
-      topic,
-      data,
-    });
-  }
-  Services.obs.addObserver(onStorageChanged, "passwordmgr-storage-changed", false);
 
   addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
     commonInit(selfFilling);
