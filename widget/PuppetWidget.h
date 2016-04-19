@@ -19,6 +19,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsBaseScreen.h"
 #include "nsBaseWidget.h"
+#include "nsCOMArray.h"
+#include "nsIKeyEventInPluginCallback.h"
 #include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
@@ -262,6 +264,12 @@ public:
 
   virtual bool HasPendingInputEvent() override;
 
+  void HandledWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
+                                     bool aIsConsumed);
+  virtual nsresult OnWindowedPluginKeyEvent(
+                     const NativeEventData& aKeyEventData,
+                     nsIKeyEventInPluginCallback* aCallback) override;
+
 protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;
@@ -347,6 +355,8 @@ private:
 
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCursorHotspotX, mCursorHotspotY;
+
+  nsCOMArray<nsIKeyEventInPluginCallback> mKeyEventInPluginCallbacks;
 
 protected:
   bool mEnabled;

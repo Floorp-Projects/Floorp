@@ -118,9 +118,17 @@
   /* 4:  NS_ERROR_MODULE_WIDGET */
   /* ======================================================================= */
 #define MODULE  NS_ERROR_MODULE_WIDGET
-  /* Used by nsIWidget::NotifyIME(). Returned when the notification is handled
-   * and the notified event is consumed by IME. */
+  /* Used by:
+   *   - nsIWidget::NotifyIME()
+   *   - nsIWidget::OnWindowedPluginKeyEvent()
+   * Returned when the notification or the event is handled and it's consumed
+   * by somebody. */
   ERROR(NS_SUCCESS_EVENT_CONSUMED,                        SUCCESS(1)),
+  /* Used by:
+   *   - nsIWidget::OnWindowedPluginKeyEvent()
+   * Returned when the event is handled correctly but the result will be
+   * notified asynchronously. */
+  ERROR(NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY,          SUCCESS(2)),
 #undef MODULE
 
 

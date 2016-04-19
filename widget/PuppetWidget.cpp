@@ -1459,5 +1459,34 @@ PuppetWidget::HasPendingInputEvent()
   return ret;
 }
 
+void
+PuppetWidget::HandledWindowedPluginKeyEvent(
+                const NativeEventData& aKeyEventData,
+                bool aIsConsumed)
+{
+  if (NS_WARN_IF(mKeyEventInPluginCallbacks.IsEmpty())) {
+    return;
+  }
+  nsCOMPtr<nsIKeyEventInPluginCallback> callback =
+    mKeyEventInPluginCallbacks[0];
+  MOZ_ASSERT(callback);
+  mKeyEventInPluginCallbacks.RemoveElementAt(0);
+  callback->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
+}
+
+nsresult
+PuppetWidget::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
+                                       nsIKeyEventInPluginCallback* aCallback)
+{
+  if (NS_WARN_IF(!mTabChild)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(!mTabChild->SendOnWindowedPluginKeyEvent(aKeyEventData))) {
+    return NS_ERROR_FAILURE;
+  }
+  mKeyEventInPluginCallbacks.AppendElement(aCallback);
+  return NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY;
+}
+
 } // namespace widget
 } // namespace mozilla

@@ -266,6 +266,11 @@ protected:
     virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling);
 #endif
 
+    virtual nsresult HandledWindowedPluginKeyEvent(
+                       NPP aInstance,
+                       const mozilla::NativeEventData& aNativeKeyData,
+                       bool aIsConsumed) override;
+
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) override;
 #else

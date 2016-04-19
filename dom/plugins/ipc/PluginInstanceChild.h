@@ -7,6 +7,7 @@
 #ifndef dom_plugins_PluginInstanceChild_h
 #define dom_plugins_PluginInstanceChild_h 1
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
@@ -272,6 +273,11 @@ public:
     void NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
 
     void DoAsyncRedraw();
+
+    virtual bool RecvHandledWindowedPluginKeyEvent(
+                   const NativeEventData& aKeyEventData,
+                   const bool& aIsConsumed) override;
+
 private:
     friend class PluginModuleChild;
 
@@ -394,7 +400,9 @@ private:
         bool                 mWindowed;
     };
 
-#endif
+    bool ShouldPostKeyMessage(UINT message, WPARAM wParam, LPARAM lParam);
+    bool MaybePostKeyMessage(UINT message, WPARAM wParam, LPARAM lParam);
+#endif // #if defined(OS_WIN)
     const NPPluginFuncs* mPluginIface;
     nsCString                   mMimeType;
     uint16_t                    mMode;
@@ -406,6 +414,7 @@ private:
     double mContentsScaleFactor;
 #endif
     double mCSSZoomFactor;
+    uint32_t mPostingKeyEvents;
     int16_t               mDrawingModel;
 
     NPAsyncSurface* mCurrentDirectSurface;
