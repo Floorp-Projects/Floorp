@@ -103,11 +103,17 @@ module.exports = createClass({
          * set the atttibutes. In the case of @remote, the attribute must be set
          * before the element is added to the DOM to have any effect, which we
          * are able to do with this approach.
+         *
+         * @noisolation and @allowfullscreen are needed so that these frames
+         * have the same access to browser features as regular browser tabs.
+         * The `swapFrameLoaders` platform API we use compares such features
+         * before allowing the swap to proceed.
          */
         dangerouslySetInnerHTML: {
           __html: `<iframe class="browser" mozbrowser="true" remote="true"
-                           noisolation="true" src="${location}"
-                           width="100%" height="100%"></iframe>`
+                           noisolation="true" allowfullscreen="true"
+                           src="${location}" width="100%" height="100%">
+                   </iframe>`
         }
       }
     );
