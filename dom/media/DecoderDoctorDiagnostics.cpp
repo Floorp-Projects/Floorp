@@ -6,9 +6,11 @@
 
 #include "DecoderDoctorDiagnostics.h"
 
+#include "mozilla/dom/DecoderDoctorNotificationBinding.h"
 #include "mozilla/Logging.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
+#include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
 
@@ -63,7 +65,8 @@ private:
   static const uint32_t sAnalysisPeriod_ms = 1000;
   void EnsureTimerIsStarted();
 
-  void ReportAnalysis(const char* aReportStringId,
+  void ReportAnalysis(dom::DecoderDoctorNotificationType aNotificationType,
+                      const char* aReportStringId,
                       const nsAString& aFormats);
 
   void SynthesizeAnalysis();
@@ -235,9 +238,39 @@ DecoderDoctorDocumentWatcher::EnsureTimerIsStarted()
   }
 }
 
+static void
+DispatchNotification(nsISupports* aSubject,
+                     dom::DecoderDoctorNotificationType aNotificationType,
+                     const nsAString& aFormats)
+{
+  if (!aSubject) {
+    return;
+  }
+  dom::DecoderDoctorNotification data;
+  data.mType = aNotificationType;
+  if (!aFormats.IsEmpty()) {
+    data.mFormats.Construct(aFormats);
+  }
+  nsAutoString json;
+  data.ToJSON(json);
+  if (json.IsEmpty()) {
+    DD_WARN("DecoderDoctorDiagnostics/DispatchEvent() - Could not create json for dispatch");
+    // No point in dispatching this notification without data, the front-end
+    // wouldn't know what to display.
+    return;
+  }
+  DD_DEBUG("DecoderDoctorDiagnostics/DispatchEvent() %s", NS_ConvertUTF16toUTF8(json).get());
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(aSubject, "decoder-doctor-notification", json.get());
+  }
+}
+
 void
-DecoderDoctorDocumentWatcher::ReportAnalysis(const char* aReportStringId,
-                                             const nsAString& aFormats)
+DecoderDoctorDocumentWatcher::ReportAnalysis(
+  dom::DecoderDoctorNotificationType aNotificationType,
+  const char* aReportStringId,
+  const nsAString& aFormats)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -256,6 +289,8 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(const char* aReportStringId,
                                   aReportStringId,
                                   params,
                                   ArrayLength(params));
+
+  DispatchNotification(mDocument->GetInnerWindow(), aNotificationType, aFormats);
 }
 
 void
@@ -278,12 +313,15 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   if (!canPlay) {
     DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Cannot play media, formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
-    ReportAnalysis("MediaCannotPlayNoDecoders", formats);
+    ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
+                   "MediaCannotPlayNoDecoders", formats);
   } else if (!formats.IsEmpty()) {
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
     if (Preferences::GetBool("media.decoderdoctor.verbose", false)) {
-      ReportAnalysis("MediaNoDecoders", formats);
+      ReportAnalysis(
+        dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
+        "MediaNoDecoders", formats);
     }
   } else {
     DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Can play media, decoders available for all requested formats",
