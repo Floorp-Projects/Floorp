@@ -47,6 +47,7 @@ var LoginManagerParent = {
     mm.addMessageListener("RemoteLogins:findRecipes", this);
     mm.addMessageListener("RemoteLogins:onFormSubmit", this);
     mm.addMessageListener("RemoteLogins:autoCompleteLogins", this);
+    mm.addMessageListener("RemoteLogins:removeLogin", this);
     mm.addMessageListener("RemoteLogins:updateLoginFormPresence", this);
 
     XPCOMUtils.defineLazyGetter(this, "recipeParentPromise", () => {
@@ -98,6 +99,12 @@ var LoginManagerParent = {
         this.doAutocompleteSearch(data, msg.target);
         break;
       }
+
+      case "RemoteLogins:removeLogin": {
+        let login = LoginHelper.vanillaObjectToLogin(data.login);
+        AutoCompleteE10S.removeLogin(login);
+        break;
+      }
     }
 
     return undefined;
@@ -122,7 +129,7 @@ var LoginManagerParent = {
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
-    let jsLogins = JSON.parse(JSON.stringify([login]));
+    let jsLogins = [LoginHelper.loginToVanillaObject(login)];
 
     let objects = inputElement ? {inputElement} : null;
     browser.messageManager.sendAsyncMessage("RemoteLogins:fillForm", {
@@ -218,7 +225,7 @@ var LoginManagerParent = {
     var logins = Services.logins.findLogins({}, formOrigin, actionOrigin, null);
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
-    var jsLogins = JSON.parse(JSON.stringify(logins));
+    var jsLogins = LoginHelper.loginsToVanillaObjects(logins);
     target.sendAsyncMessage("RemoteLogins:loginsFound", {
       requestId: requestId,
       logins: jsLogins,
@@ -251,7 +258,7 @@ var LoginManagerParent = {
 
       // We have a list of results for a shorter search string, so just
       // filter them further based on the new search string.
-      logins = previousResult.logins;
+      logins = LoginHelper.vanillaObjectsToLogins(previousResult.logins);
     } else {
       log("Creating new autocomplete search result.");
 
@@ -279,7 +286,7 @@ var LoginManagerParent = {
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
-    var jsLogins = JSON.parse(JSON.stringify(matchingLogins));
+    var jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
     target.messageManager.sendAsyncMessage("RemoteLogins:loginsAutoCompleted", {
       requestId: requestId,
       logins: jsLogins,

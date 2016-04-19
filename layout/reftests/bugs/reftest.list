@@ -1198,9 +1198,9 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 skip-if(B2G||Mulet) == 455826-1.html 455826-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047 # Initial mulet triage: parity with B2G/B2G Desktop
 # The next three tests are fuzzy due to bug 1128229.
-fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu)),1,69) == 456219-1a.html 456219-1-ref.html # bug 853273
+fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu)),1,69) fuzzy-if(gtkWidget,1,1) == 456219-1a.html 456219-1-ref.html # bug 853273
 fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu)),1,69) == 456219-1b.html 456219-1-ref.html # bug 853273
-fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu)),1,69) == 456219-1c.html 456219-1-ref.html # bug 853273
+fuzzy-if(Android||B2G,11,41) fuzzy-if(d2d&&(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu)),1,69) fuzzy-if(gtkWidget,4,3) == 456219-1c.html 456219-1-ref.html # bug 853273
 fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html

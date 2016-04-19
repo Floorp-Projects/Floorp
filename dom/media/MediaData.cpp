@@ -247,9 +247,9 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 
   aVideoImage->SetDelayedConversion(true);
   if (aCopyData) {
-    return aVideoImage->SetData(data);
+    return aVideoImage->CopyData(data);
   } else {
-    return aVideoImage->SetDataNoCopy(data);
+    return aVideoImage->AdoptData(data);
   }
 }
 
@@ -480,7 +480,7 @@ VideoData::Create(const VideoInfo& aInfo,
                                       0));
 
   RefPtr<layers::GrallocImage> image = new layers::GrallocImage();
-  image->SetData(aBuffer, aPicture.Size());
+  image->AdoptData(aBuffer, aPicture.Size());
   v->mImage = image;
 
   return v.forget();

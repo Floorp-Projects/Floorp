@@ -1487,16 +1487,6 @@ public:
   nsPoint mLastAnimatedGeometryRootOrigin;
   nsPoint mAnimatedGeometryRootOrigin;
 
-  // If mIgnoreInvalidationsOutsideRect is set, this contains the bounds of the
-  // layer's old visible region, in layer pixels.
-  nsIntRect mOldVisibleBounds;
-
-  // If set, invalidations that fall outside of this rect should not result in
-  // calls to layer->InvalidateRegion during DLBI. Instead, the parts outside
-  // this rectangle will be invalidated in InvalidateVisibleBoundsChangesForScrolledLayer.
-  // See the comment in ComputeAndSetIgnoreInvalidationRect for more information.
-  Maybe<nsIntRect> mIgnoreInvalidationsOutsideRect;
-
   RefPtr<ColorLayer> mColorLayer;
   RefPtr<ImageLayer> mImageLayer;
 
@@ -1645,29 +1635,23 @@ AppendToString(nsACString& s, const nsIntRegion& r,
  * *after* aTranslation has been applied, so we need to
  * apply the inverse of that transform before calling InvalidateRegion.
  */
-template<typename RegionOrRect> void
-InvalidatePostTransformRegion(PaintedLayer* aLayer, const RegionOrRect& aRegion,
-                              const nsIntPoint& aTranslation,
-                              PaintedDisplayItemLayerUserData* aData)
+static void
+InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsIntRegion& aRegion,
+                              const nsIntPoint& aTranslation)
 {
   // Convert the region from the coordinates of the container layer
   // (relative to the snapped top-left of the display list reference frame)
   // to the PaintedLayer's own coordinates
-  RegionOrRect rgn = aRegion;
+  nsIntRegion rgn = aRegion;
   rgn.MoveBy(-aTranslation);
-  if (aData->mIgnoreInvalidationsOutsideRect) {
-    rgn = rgn.Intersect(*aData->mIgnoreInvalidationsOutsideRect);
-  }
-  if (!rgn.IsEmpty()) {
-    aLayer->InvalidateRegion(rgn);
+  aLayer->InvalidateRegion(rgn);
 #ifdef MOZ_DUMP_PAINTING
-    if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      nsAutoCString str;
-      AppendToString(str, rgn);
-      printf_stderr("Invalidating layer %p: %s\n", aLayer, str.get());
-    }
-#endif
+  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+    nsAutoCString str;
+    AppendToString(str, rgn);
+    printf_stderr("Invalidating layer %p: %s\n", aLayer, str.get());
   }
+#endif
 }
 
 static void
@@ -1681,7 +1665,7 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsRect& aRect,
   nsRect rect = aClip.ApplyNonRoundedIntersection(aRect);
 
   nsIntRect pixelRect = rect.ScaleToOutsidePixels(data->mXScale, data->mYScale, data->mAppUnitsPerDevPixel);
-  InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation, data);
+  InvalidatePostTransformRegion(aLayer, pixelRect, aTranslation);
 }
 
 
@@ -2240,89 +2224,6 @@ ContainerState::RecyclePaintedLayer(PaintedLayer* aLayer,
   return data;
 }
 
-static void
-ComputeAndSetIgnoreInvalidationRect(PaintedLayer* aLayer,
-                                    PaintedDisplayItemLayerUserData* aData,
-                                    AnimatedGeometryRoot* aAnimatedGeometryRoot,
-                                    nsDisplayListBuilder* aBuilder,
-                                    const nsIntPoint& aLayerTranslation)
-{
-  if (!aLayer->Manager()->IsWidgetLayerManager()) {
-    // This optimization is only useful for layers with retained content.
-    return;
-  }
-
-  const nsIFrame* parentFrame = (*aAnimatedGeometryRoot)->GetParent();
-
-  // GetDirtyRectForScrolledContents will return an empty rect if parentFrame
-  // is not a scrollable frame.
-  nsRect dirtyRect = aBuilder->GetDirtyRectForScrolledContents(parentFrame);
-
-  if (dirtyRect.IsEmpty()) {
-    // parentFrame is not a scrollable frame, or we didn't encounter it during
-    // display list building (though this shouldn't happen), or it's empty.
-    // In all those cases this optimization is not needed.
-    return;
-  }
-
-  // parentFrame is a scrollable frame, and aLayer contains the scrolled
-  // contents of that frame.
-
-  // maxNewVisibleBounds is a conservative approximation of the new visible
-  // region of aLayer.
-  nsIntRect maxNewVisibleBounds =
-    dirtyRect.ScaleToOutsidePixels(aData->mXScale, aData->mYScale,
-                                   aData->mAppUnitsPerDevPixel) - aLayerTranslation;
-  aData->mOldVisibleBounds = aLayer->GetVisibleRegion().ToUnknownRegion().GetBounds();
-
-  // When the visible region of aLayer changes (e.g. due to scrolling),
-  // three distinct types of invalidations need to be triggered:
-  //  (1) Items (or parts of items) that have left the visible region need
-  //      to be invalidated so that the pixels they painted are no longer
-  //      part of the layer's valid region.
-  //  (2) Items (or parts of items) that weren't in the old visible region
-  //      but are in the new visible region need to be invalidated. This
-  //      invalidation isn't required for painting the right layer
-  //      contents, because these items weren't part of the layer's valid
-  //      region, so they'd be painted anyway. It is, however, necessary in
-  //      order to get an accurate invalid region for the layer tree that
-  //      aLayer is in, for example for partial compositing.
-  //  (3) Any changes that happened in the intersection of the old and the
-  //      new visible region need to be invalidated. There shouldn't be any
-  //      of these when scrolling static content.
-  //
-  // We'd like to guarantee that we won't invalidate anything in the
-  // intersection area of the old and the new visible region if all
-  // invalidation are of type (1) and (2). However, if we just call
-  // aLayer->InvalidateRegion for the invalidations of type (1) and (2),
-  // at some point we'll hit the complexity limit of the layer's invalid
-  // region. And the resulting region simplification can cause the region
-  // to intersect with the intersection of the old and the new visible
-  // region.
-  // In order to get around this problem, we're using the following approach:
-  //  - aData->mIgnoreInvalidationsOutsideRect is set to a conservative
-  //    approximation of the intersection of the old and the new visible
-  //    region. At this point we don't know the layer's new visible region.
-  //  - As long as we don't know the layer's new visible region, we ignore all
-  //    invalidations outside that rectangle, so roughly some of the
-  //    invalidations of type (1) and (2).
-  //  - Once we know the layer's new visible region, which happens at some
-  //    point during PostprocessRetainedLayers, we invalidate a conservative
-  //    approximation of (1) and (2). Specifically, we invalidate the region
-  //    union of the old visible bounds and the new visible bounds, minus
-  //    aData->mIgnoreInvalidationsOutsideRect. That region is simple enough
-  //    that it will never be simplified on its own.
-  //    We unset mIgnoreInvalidationsOutsideRect at this point.
-  //  - Any other invalidations that happen on the layer after this point, e.g.
-  //    during WillEndTransaction, will just happen regularly. If they are of
-  //    type (1) or (2), they won't change the layer's invalid region because
-  //    they fall inside the region we invalidated in the previous step.
-  // Consequently, aData->mIgnoreInvalidationsOutsideRect is safe from
-  // invalidations as long as there are no invalidations of type (3).
-  aData->mIgnoreInvalidationsOutsideRect =
-    Some(maxNewVisibleBounds.Intersect(aData->mOldVisibleBounds));
-}
-
 void
 ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
                                           PaintedDisplayItemLayerUserData* aData,
@@ -2355,8 +2256,6 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
   pixOffset += mParameters.mOffset;
   Matrix matrix = Matrix::Translation(pixOffset.x, pixOffset.y);
   aLayer->SetBaseTransform(Matrix4x4::From2D(matrix));
-
-  ComputeAndSetIgnoreInvalidationRect(aLayer, aData, aAnimatedGeometryRoot, mBuilder, pixOffset);
 
   aData->mVisibilityComputedRegion.SetEmpty();
 
@@ -4382,8 +4281,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
     }
     InvalidatePostTransformRegion(paintedLayer,
         combined.ScaleToOutsidePixels(layerData->mXScale, layerData->mYScale, layerData->mAppUnitsPerDevPixel),
-        layerData->mTranslation,
-        layerData);
+        layerData->mTranslation);
   }
 
   aData->EndUpdate(geometry);
@@ -4512,8 +4410,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
         }
 
         InvalidatePostTransformRegion(layer, invalid,
-                                      GetTranslationForPaintedLayer(layer),
-                                      paintedData);
+                                      GetTranslationForPaintedLayer(layer));
       }
     }
     ClippedDisplayItem* cdi =
@@ -4775,39 +4672,6 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   aEntry->mLayer->SetAncestorMaskLayers(maskLayers);
 }
 
-static void
-InvalidateVisibleBoundsChangesForScrolledLayer(PaintedLayer* aLayer)
-{
-  PaintedDisplayItemLayerUserData* data =
-    static_cast<PaintedDisplayItemLayerUserData*>(aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
-
-  if (data->mIgnoreInvalidationsOutsideRect) {
-    // We haven't invalidated anything outside *data->mIgnoreInvalidationsOutsideRect
-    // during DLBI. Now is the right time to do that, because at this point aLayer
-    // knows its new visible region.
-    // We use the visible regions' bounds here (as opposed to the true region)
-    // in order to limit rgn's complexity. The only possible disadvantage of
-    // this is that it might cause us to unnecessarily recomposite parts of the
-    // window that are in the visible region's bounds but not in the visible
-    // region itself, but that is acceptable for scrolled layers.
-    nsIntRegion rgn;
-    rgn.Or(data->mOldVisibleBounds, aLayer->GetVisibleRegion().ToUnknownRegion().GetBounds());
-    rgn.Sub(rgn, *data->mIgnoreInvalidationsOutsideRect);
-    if (!rgn.IsEmpty()) {
-      aLayer->InvalidateRegion(rgn);
-#ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("Invalidating changes of the visible region bounds of the scrolled contents\n");
-        nsAutoCString str;
-        AppendToString(str, rgn);
-        printf_stderr("Invalidating layer %p: %s\n", aLayer, str.get());
-      }
-#endif
-    }
-    data->mIgnoreInvalidationsOutsideRect = Nothing();
-  }
-}
-
 static inline const Maybe<ParentLayerIntRect>&
 GetStationaryClipInContainer(Layer* aLayer)
 {
@@ -4855,11 +4719,6 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
                                   e->mVisibleRegion,
                                   e->mLayerContentsVisibleRect.width >= 0 ? &e->mLayerContentsVisibleRect : nullptr,
                                   e->mUntransformedVisibleRegion);
-
-    PaintedLayer* p = e->mLayer->AsPaintedLayer();
-    if (p) {
-      InvalidateVisibleBoundsChangesForScrolledLayer(p);
-    }
 
     if (!e->mOpaqueRegion.IsEmpty()) {
       AnimatedGeometryRoot* animatedGeometryRootToCover = animatedGeometryRootForOpaqueness;

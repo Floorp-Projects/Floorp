@@ -20,8 +20,8 @@
 
 using mozilla::dom::Element;
 
-nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext):
-  nsColorControlFrameSuper(aContext)
+nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext)
+  : nsHTMLButtonControlFrame(aContext)
 {
 }
 
@@ -36,14 +36,14 @@ NS_IMPL_FRAMEARENA_HELPERS(nsColorControlFrame)
 NS_QUERYFRAME_HEAD(nsColorControlFrame)
   NS_QUERYFRAME_ENTRY(nsColorControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsColorControlFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 
 
 void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mColorContent);
-  nsColorControlFrameSuper::DestroyFrom(aDestructRoot);
+  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*
@@ -126,7 +126,7 @@ nsColorControlFrame::AttributeChanged(int32_t  aNameSpaceID,
       aNameSpaceID == kNameSpaceID_None && nsGkAtoms::value == aAttribute) {
     UpdateColor();
   }
-  return nsColorControlFrameSuper::AttributeChanged(aNameSpaceID, aAttribute,
+  return nsHTMLButtonControlFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                                     aModType);
 }
 
