@@ -677,7 +677,7 @@ protected:
   nsresult RemoveInlinePropertyImpl(nsIAtom* aProperty,
                                     const nsAString* aAttribute);
 
-  bool NodeIsProperty(nsIDOMNode *aNode);
+  bool NodeIsProperty(nsINode& aNode);
   bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
