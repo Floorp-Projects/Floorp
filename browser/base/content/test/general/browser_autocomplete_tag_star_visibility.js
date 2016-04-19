@@ -30,7 +30,7 @@ add_task(function*() {
     },
     input: "tagtest1",
     expected: {
-      type: "bookmark-tag",
+      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
@@ -52,7 +52,7 @@ add_task(function*() {
     },
     input: "tagtest3",
     expected: {
-      type: "bookmark-tag",
+      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
@@ -63,7 +63,7 @@ add_task(function*() {
     },
     input: "* tagtest4",
     expected: {
-      type: "bookmark-tag",
+      type: "bookmark",
       typeImageVisible: true,
     },
   }, {
