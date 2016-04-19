@@ -523,29 +523,25 @@ nsHTMLEditor::SplitStyleAboveRange(nsRange* inRange, nsIAtom* aProperty,
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;
-  nsCOMPtr<nsIDOMNode> startNode, endNode, origStartNode;
-  int32_t startOffset, endOffset;
 
-  res = inRange->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetEndContainer(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> startNode = inRange->GetStartParent();
+  int32_t startOffset = inRange->StartOffset();
+  nsCOMPtr<nsINode> endNode = inRange->GetEndParent();
+  int32_t endOffset = inRange->EndOffset();
 
-  origStartNode = startNode;
+  nsCOMPtr<nsINode> origStartNode = startNode;
 
   // split any matching style nodes above the start of range
   {
     nsAutoTrackDOMPoint tracker(mRangeUpdater, address_of(endNode), &endOffset);
-    res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty, aAttribute);
+    res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty,
+                               aAttribute);
     NS_ENSURE_SUCCESS(res, res);
   }
 
   // second verse, same as the first...
-  res = SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty, aAttribute);
+  res = SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty,
+                             aAttribute);
   NS_ENSURE_SUCCESS(res, res);
 
   // reset the range
@@ -555,30 +551,32 @@ nsHTMLEditor::SplitStyleAboveRange(nsRange* inRange, nsIAtom* aProperty,
   return res;
 }
 
-nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
-                                           int32_t *aOffset,
-                                           nsIAtom *aProperty,          // null here means we split all properties
-                                           const nsAString *aAttribute,
-                                           nsCOMPtr<nsIDOMNode> *outLeftNode,
-                                           nsCOMPtr<nsIDOMNode> *outRightNode)
+nsresult
+nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
+                                   int32_t* aOffset,
+                                   // null here means we split all properties
+                                   nsIAtom* aProperty,
+                                   const nsAString* aAttribute,
+                                   nsIContent** aOutLeftNode,
+                                   nsIContent** aOutRightNode)
 {
-  NS_ENSURE_TRUE(aNode && *aNode && aOffset, NS_ERROR_NULL_POINTER);
-  if (outLeftNode)  *outLeftNode  = nullptr;
-  if (outRightNode) *outRightNode = nullptr;
-  // split any matching style nodes above the node/offset
-  nsCOMPtr<nsIContent> node = do_QueryInterface(*aNode);
-  NS_ENSURE_STATE(node);
-  int32_t offset;
+  MOZ_ASSERT(aNode && *aNode && aOffset);
+  NS_ENSURE_TRUE((*aNode)->IsContent(), NS_OK);
+
+  // Split any matching style nodes above the node/offset
+  OwningNonNull<nsIContent> node = *(*aNode)->AsContent();
 
   bool useCSS = IsCSSEnabled();
 
   bool isSet;
-  while (node && !IsBlockNode(node) && node->GetParentNode() &&
-         IsEditable(node->GetParentNode())) {
+  while (!IsBlockNode(node) && node->GetParent() &&
+         IsEditable(node->GetParent())) {
     isSet = false;
-    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
-      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
-      // in this implementation for the node; let's check if it carries those css styles
+    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+                                                       aAttribute)) {
+      // The HTML style defined by aProperty/aAttribute has a CSS equivalence
+      // in this implementation for the node; let's check if it carries those
+      // CSS styles
       nsAutoString firstValue;
       mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(GetAsDOMNode(node),
         aProperty, aAttribute, isSet, firstValue, nsHTMLCSSUtils::eSpecified);
@@ -591,26 +589,18 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
         (!aProperty && NodeIsProperty(GetAsDOMNode(node))) ||
         // or the style is specified in the style attribute
         isSet) {
-      // found a style node we need to split
-      nsCOMPtr<nsIContent> outLeftContent, outRightContent;
-      nsCOMPtr<nsIContent> nodeParam = do_QueryInterface(*aNode);
-      NS_ENSURE_STATE(nodeParam || !*aNode);
-      offset = SplitNodeDeep(*node, *nodeParam, *aOffset, EmptyContainers::yes,
-                             getter_AddRefs(outLeftContent),
-                             getter_AddRefs(outRightContent));
+      // Found a style node we need to split
+      int32_t offset = SplitNodeDeep(*node, *(*aNode)->AsContent(), *aOffset,
+                                     EmptyContainers::yes, aOutLeftNode,
+                                     aOutRightNode);
       NS_ENSURE_TRUE(offset != -1, NS_ERROR_FAILURE);
       // reset startNode/startOffset
-      *aNode = GetAsDOMNode(node->GetParent());
+      *aNode = node->GetParent();
       *aOffset = offset;
-      if (outLeftNode) {
-        *outLeftNode = GetAsDOMNode(outLeftContent);
-      }
-      if (outRightNode) {
-        *outRightNode = GetAsDOMNode(outRightContent);
-      }
     }
     node = node->GetParent();
   }
+
   return NS_OK;
 }
 
@@ -618,11 +608,14 @@ nsresult
 nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                          nsIAtom* aProperty, const nsAString* aAttribute)
 {
-  nsCOMPtr<nsIDOMNode> leftNode, rightNode, tmp;
-  nsresult res = SplitStyleAbovePoint(aNode, aOffset, aProperty, aAttribute,
-                                      address_of(leftNode),
-                                      address_of(rightNode));
+  nsCOMPtr<nsINode> node = do_QueryInterface(*aNode);
+  nsCOMPtr<nsIContent> leftNode, rightNode;
+  nsresult res = SplitStyleAbovePoint(address_of(node), aOffset, aProperty,
+                                      aAttribute, getter_AddRefs(leftNode),
+                                      getter_AddRefs(rightNode));
+  *aNode = GetAsDOMNode(node);
   NS_ENSURE_SUCCESS(res, res);
+
   if (leftNode) {
     bool bIsEmptyNode;
     IsEmptyNode(leftNode, &bIsEmptyNode, false, true);
@@ -633,10 +626,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
     }
   }
   if (rightNode) {
-    nsCOMPtr<nsINode> rightNode_ = do_QueryInterface(rightNode);
-    NS_ENSURE_STATE(rightNode_);
-    nsCOMPtr<nsIDOMNode> secondSplitParent =
-      GetAsDOMNode(GetLeftmostChild(rightNode_));
+    nsCOMPtr<nsINode> secondSplitParent = GetLeftmostChild(rightNode);
     // don't try to split non-containers (br's, images, hr's, etc)
     if (!secondSplitParent) {
       secondSplitParent = rightNode;
@@ -648,21 +638,18 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
         NS_ENSURE_STATE(savedBR);
       }
 
-      secondSplitParent->GetParentNode(getter_AddRefs(tmp));
-      secondSplitParent = tmp;
+      secondSplitParent = secondSplitParent->GetParentNode();
     }
     *aOffset = 0;
     res = SplitStyleAbovePoint(address_of(secondSplitParent),
                                aOffset, aProperty, aAttribute,
-                               address_of(leftNode), address_of(rightNode));
+                               getter_AddRefs(leftNode),
+                               getter_AddRefs(rightNode));
     NS_ENSURE_SUCCESS(res, res);
     // should be impossible to not get a new leftnode here
-    nsCOMPtr<nsINode> leftNode_ = do_QueryInterface(leftNode);
-    NS_ENSURE_TRUE(leftNode_, NS_ERROR_FAILURE);
-    nsCOMPtr<nsINode> newSelParent = GetLeftmostChild(leftNode_);
+    nsCOMPtr<nsINode> newSelParent = GetLeftmostChild(leftNode);
     if (!newSelParent) {
-      newSelParent = do_QueryInterface(leftNode);
-      NS_ENSURE_STATE(newSelParent);
+      newSelParent = leftNode;
     }
     // If rightNode starts with a br, suck it out of right node and into
     // leftNode.  This is so we you don't revert back to the previous style
@@ -688,7 +675,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
       // selection.
       nsAutoTrackDOMPoint tracker(mRangeUpdater,
                                   address_of(newSelParent), &newSelOffset);
-      res = RemoveStyleInside(leftNode, aProperty, aAttribute);
+      res = RemoveStyleInside(GetAsDOMNode(leftNode), aProperty, aAttribute);
       NS_ENSURE_SUCCESS(res, res);
     }
     // reset our node offset values to the resulting new sel point
