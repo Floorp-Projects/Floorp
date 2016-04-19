@@ -237,6 +237,8 @@ char **gRestartArgv;
 
 bool gIsGtest = false;
 
+nsString gAbsoluteArgv0Path;
+
 #ifdef MOZ_WIDGET_QT
 static int    gQtOnlyArgc;
 static char **gQtOnlyArgv;
@@ -4409,6 +4411,13 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
   // used throughout this file
   gAppData = mAppData;
+
+  nsCOMPtr<nsIFile> binFile;
+  rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(binFile));
+  NS_ENSURE_SUCCESS(rv, 1);
+
+  rv = binFile->GetPath(gAbsoluteArgv0Path);
+  NS_ENSURE_SUCCESS(rv, 1);
 
   mozilla::IOInterposerInit ioInterposerGuard;
 
