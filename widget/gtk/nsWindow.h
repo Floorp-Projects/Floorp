@@ -8,10 +8,9 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
-#include "nsAutoPtr.h"
-
 #include "mozcontainer.h"
-
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIDragService.h"
 #include "nsITimer.h"
 #include "nsGkAtoms.h"
@@ -563,7 +562,7 @@ private:
      */
     RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
-    nsAutoPtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
+    mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
 };
 
 class nsChildWindow : public nsWindow {

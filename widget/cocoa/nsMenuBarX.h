@@ -8,11 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/UniquePtr.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
 #include "nsINativeMenuService.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsMenuX;
