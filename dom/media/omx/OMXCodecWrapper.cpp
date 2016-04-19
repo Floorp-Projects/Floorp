@@ -489,7 +489,7 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
     NS_ENSURE_TRUE(aWidth == size.width, NS_ERROR_INVALID_ARG);
     NS_ENSURE_TRUE(aHeight == size.height, NS_ERROR_INVALID_ARG);
     if (format == ImageFormat::PLANAR_YCBCR) {
-      // Test for data, allowing SetDataNoCopy() on an image without an mBuffer
+      // Test for data, allowing AdoptData() on an image without an mBuffer
       // (as used from WebrtcOMXH264VideoCodec, and a few other places) - bug 1067442
       const PlanarYCbCrData* yuv = static_cast<PlanarYCbCrImage*>(img)->GetData();
       NS_ENSURE_TRUE(yuv->mYChannel, NS_ERROR_INVALID_ARG);

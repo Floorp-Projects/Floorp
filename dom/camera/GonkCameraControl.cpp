@@ -2382,7 +2382,7 @@ nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 
   IntSize picSize(mCurrentConfiguration.mPreviewSize.width,
                   mCurrentConfiguration.mPreviewSize.height);
-  frame->SetData(aBuffer, picSize);
+  frame->AdoptData(aBuffer, picSize);
 
   if (mCapturePoster.exchange(false)) {
     CreatePoster(frame,

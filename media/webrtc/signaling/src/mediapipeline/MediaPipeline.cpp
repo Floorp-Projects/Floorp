@@ -2234,7 +2234,7 @@ public:
       yuvData.mPicSize = IntSize(width_, height_);
       yuvData.mStereoMode = StereoMode::MONO;
 
-      if (!yuvImage->SetData(yuvData)) {
+      if (!yuvImage->CopyData(yuvData)) {
         MOZ_ASSERT(false);
         return;
       }
