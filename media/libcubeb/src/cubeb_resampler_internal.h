@@ -14,13 +14,22 @@
 #include <memory>
 #ifdef CUBEB_GECKO_BUILD
 #include "mozilla/UniquePtr.h"
-namespace std
-{
+// In libc++, symbols such as std::unique_ptr may be defined in std::__1.
+// The _LIBCPP_BEGIN_NAMESPACE_STD and _LIBCPP_END_NAMESPACE_STD macros
+// will expand to the correct namespace.
+#ifdef _LIBCPP_BEGIN_NAMESPACE_STD
+#define MOZ_BEGIN_STD_NAMESPACE _LIBCPP_BEGIN_NAMESPACE_STD
+#define MOZ_END_STD_NAMESPACE _LIBCPP_END_NAMESPACE_STD
+#else
+#define MOZ_BEGIN_STD_NAMESPACE namespace std {
+#define MOZ_END_STD_NAMESPACE }
+#endif
+MOZ_BEGIN_STD_NAMESPACE
   using mozilla::DefaultDelete;
   using mozilla::UniquePtr;
   #define default_delete DefaultDelete
   #define unique_ptr UniquePtr
-}
+MOZ_END_STD_NAMESPACE
 #endif
 #include "cubeb/cubeb.h"
 #include "cubeb_utils.h"
