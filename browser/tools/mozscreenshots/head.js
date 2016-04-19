@@ -5,11 +5,19 @@
 "use strict";
 
 const {AddonWatcher} = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
+const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const EXTENSION_DIR = "chrome://mochitests/content/extensions/mozscreenshots/browser/";
+
 let TestRunner;
 
-function setup() {
+function* setup() {
   requestLongerTimeout(20);
+
+  info("installing extension temporarily");
+  let chromeURL = Services.io.newURI(EXTENSION_DIR, null, null);
+  let dir = chromeRegistry.convertChromeURL(chromeURL).QueryInterface(Ci.nsIFileURL).file;
+  yield AddonManager.installTemporaryAddon(dir);
 
   info("Checking for mozscreenshots extension");
   return new Promise((resolve) => {
