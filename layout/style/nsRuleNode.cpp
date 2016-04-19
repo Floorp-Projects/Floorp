@@ -4772,7 +4772,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       bool isForeground;
       parentText->GetDecorationColor(decorationColor, isForeground);
       if (isForeground) {
-        text->SetDecorationColor(parentContext->StyleColor()->mColor);
+        text->SetDecorationColor(parentContext->GetTextFillColor());
       } else {
         text->SetDecorationColor(decorationColor);
       }
