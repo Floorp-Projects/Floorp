@@ -15,9 +15,7 @@
 class gfxContext;
 class nsISVGChildFrame;
 
-typedef nsSVGContainerFrame nsSVGClipPathFrameBase;
-
-class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
+class nsSVGClipPathFrame : public nsSVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -27,7 +25,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
-    : nsSVGClipPathFrameBase(aContext)
+    : nsSVGContainerFrame(aContext)
     , mReferencing(mozilla::AutoReferenceLimiter::notReferencing)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

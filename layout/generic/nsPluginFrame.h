@@ -42,13 +42,11 @@ class LayerManager;
 } // namespace layers
 } // namespace mozilla
 
-typedef nsFrame nsPluginFrameSuper;
-
 class PluginFrameDidCompositeObserver;
 
-class nsPluginFrame : public nsPluginFrameSuper,
-                      public nsIObjectFrame,
-                      public nsIReflowCallback
+class nsPluginFrame : public nsFrame
+                    , public nsIObjectFrame
+                    , public nsIReflowCallback
 {
 public:
   typedef mozilla::LayerState LayerState;
@@ -91,7 +89,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsPluginFrameSuper::IsFrameOfType(aFlags &
+    return nsFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 

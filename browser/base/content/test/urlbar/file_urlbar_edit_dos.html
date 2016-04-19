@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Try editing the URL bar</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+<script>
+var dos_timeout = null;
+function dos_hash() {
+  dos_timeout = setTimeout(function() {
+    location.hash = "#";
+  }, 50);
+}
+
+function dos_pushState() {
+  dos_timeout = setTimeout(function() {
+    history.pushState({}, "Some title", "");
+  }, 50);
+}
+</script>
+</body>
+</html>

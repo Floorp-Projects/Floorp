@@ -88,6 +88,7 @@ LoginManager.prototype = {
     this._prefBranch.addObserver("rememberSignons", this._observer, false);
 
     this._remember = this._prefBranch.getBoolPref("rememberSignons");
+    this._autoCompleteLookupPromise = null;
 
     // Form submit observer checks forms for new logins and pw changes.
     Services.obs.addObserver(this._observer, "xpcom-shutdown", false);
@@ -461,14 +462,26 @@ LoginManager.prototype = {
     }
 
     let rect = BrowserUtils.getElementBoundingScreenRect(aElement);
-    LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
-                                                 aElement, rect)
-                       .then(function(logins) {
-                         let results =
-                             new UserAutoCompleteResult(aSearchString, logins);
-                         aCallback.onSearchCompletion(results);
-                       })
-                       .then(null, Cu.reportError);
+    let autoCompleteLookupPromise = this._autoCompleteLookupPromise =
+      LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
+                                                   aElement, rect);
+    autoCompleteLookupPromise.then(({ logins, messageManager }) => {
+                               // If the search was canceled before we got our
+                               // results, don't bother reporting them.
+                               if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
+                                 return;
+                               }
+
+                               this._autoCompleteLookupPromise = null;
+                               let results =
+                                 new UserAutoCompleteResult(aSearchString, logins, messageManager);
+                               aCallback.onSearchCompletion(results);
+                             })
+                            .then(null, Cu.reportError);
+  },
+
+  stopSearch() {
+    this._autoCompleteLookupPromise = null;
   },
 }; // end of LoginManager implementation
 
