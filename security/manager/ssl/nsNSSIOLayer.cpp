@@ -747,6 +747,8 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
       return false;
     }
 
+    // This telemetry doesn't support TLS 1.3
+    // See bug 1250582
     uint32_t fallbackLimitBucket = 0;
     // added if the version has reached the min version.
     if (intolerant <= minVersion) {
@@ -1133,6 +1135,10 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   Telemetry::ID pre;
   Telemetry::ID post;
   switch (range.max) {
+    case SSL_LIBRARY_VERSION_TLS_1_3:
+      pre = Telemetry::SSL_TLS13_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_TLS13_INTOLERANCE_REASON_POST;
+      break;
     case SSL_LIBRARY_VERSION_TLS_1_2:
       pre = Telemetry::SSL_TLS12_INTOLERANCE_REASON_PRE;
       post = Telemetry::SSL_TLS12_INTOLERANCE_REASON_POST;
