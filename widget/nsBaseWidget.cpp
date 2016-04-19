@@ -18,6 +18,7 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIKeyEventInPluginCallback.h"
 #include "nsIScreenManager.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
@@ -2138,6 +2139,13 @@ NS_IMETHODIMP_(nsIWidget::NativeIMEContext)
 nsIWidget::GetNativeIMEContext()
 {
   return NativeIMEContext(this);
+}
+
+nsresult
+nsIWidget::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
+                                    nsIKeyEventInPluginCallback* aCallback)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 namespace mozilla {

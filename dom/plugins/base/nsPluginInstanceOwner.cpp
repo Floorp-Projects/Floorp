@@ -418,6 +418,7 @@ NS_IMPL_ISUPPORTS(nsPluginInstanceOwner,
                   nsIPluginInstanceOwner,
                   nsIDOMEventListener,
                   nsIPrivacyTransitionObserver,
+                  nsIKeyEventInPluginCallback,
                   nsISupportsWeakReference)
 
 nsresult
@@ -993,7 +994,57 @@ nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
   }
   return true;
 }
+
 #endif // #ifdef XP_WIN
+
+void
+nsPluginInstanceOwner::HandledWindowedPluginKeyEvent(
+                         const NativeEventData& aKeyEventData,
+                         bool aIsConsumed)
+{
+  if (NS_WARN_IF(!mInstance)) {
+    return;
+  }
+  nsresult rv =
+    mInstance->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
+  NS_WARN_IF(NS_FAILED(rv));
+}
+
+void
+nsPluginInstanceOwner::OnWindowedPluginKeyEvent(
+                         const NativeEventData& aKeyEventData)
+{
+  if (NS_WARN_IF(!mPluginFrame)) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget = mPluginFrame->PresContext()->GetRootWidget();
+  if (NS_WARN_IF(!widget)) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  nsresult rv = widget->OnWindowedPluginKeyEvent(aKeyEventData, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  // If the key event is posted to another process, we need to wait a call
+  // of HandledWindowedPluginKeyEvent().  So, nothing to do here in this case.
+  if (rv == NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY) {
+    return;
+  }
+
+  // Otherwise, the key event is handled synchronously.  Let's notify the
+  // plugin process of the key event's result.
+  bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
+  HandledWindowedPluginKeyEvent(aKeyEventData, consumed);
+}
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
