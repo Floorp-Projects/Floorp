@@ -1293,7 +1293,7 @@
                 [this.mAddon.name], 1
               );
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.vulnerableUpdatable.link");
-              this._errorLink.href = this.mAddon.blocklistURL;
+              this._errorLink.href = Services.urlFormatter.formatURLPref("plugins.update.url");
               this._errorLink.hidden = false;
             } else if (!isUpgrade && this.mAddon.blocklistState == Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE) {
               this.setAttribute("notification", "error");
