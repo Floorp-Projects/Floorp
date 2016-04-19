@@ -650,10 +650,10 @@ protected:
   CGContextRef mTitlebarCGContext;
 
   // Compositor thread only
-  nsAutoPtr<RectTextureImage> mResizerImage;
-  nsAutoPtr<RectTextureImage> mCornerMaskImage;
-  nsAutoPtr<RectTextureImage> mTitlebarImage;
-  nsAutoPtr<RectTextureImage> mBasicCompositorImage;
+  mozilla::UniquePtr<RectTextureImage> mResizerImage;
+  mozilla::UniquePtr<RectTextureImage> mCornerMaskImage;
+  mozilla::UniquePtr<RectTextureImage> mTitlebarImage;
+  mozilla::UniquePtr<RectTextureImage> mBasicCompositorImage;
 
   // The area of mTitlebarCGContext that has changed and needs to be
   // uploaded to to mTitlebarImage. Main thread only.
