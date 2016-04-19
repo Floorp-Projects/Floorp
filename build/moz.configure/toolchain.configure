@@ -460,10 +460,22 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
 
         type, version, more_flags = check_compiler(
             wrapper + [compiler] + flags, language)
+
+        # Check that the additional flags we got are enough to not require any
+        # more flags.
+        if more_flags:
+            flags += more_flags
+            type, version, more_flags = check_compiler(
+                wrapper + [compiler] + flags, language)
+
+        if more_flags:
+            raise FatalCheckError(
+                'Unknown compiler or compiler not supported.')
+
         return namespace(
             wrapper=wrapper,
             compiler=compiler,
-            flags=flags + more_flags,
+            flags=flags,
             type=type,
             version=version,
         )
