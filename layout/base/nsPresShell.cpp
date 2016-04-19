@@ -4435,7 +4435,7 @@ PresShell::ReconstructFrames(void)
 }
 
 void
-nsIPresShell::ReconstructStyleDataInternal()
+nsIPresShell::ReconstructStyleData()
 {
   AutoTArray<RefPtr<mozilla::dom::Element>,1> scopeRoots;
   mChangedScopeStyleRoots.SwapElements(scopeRoots);
@@ -4483,12 +4483,6 @@ nsIPresShell::ReconstructStyleDataInternal()
                                        NS_STYLE_HINT_NONE);
     }
   }
-}
-
-void
-nsIPresShell::ReconstructStyleDataExternal()
-{
-  ReconstructStyleDataInternal();
 }
 
 void
