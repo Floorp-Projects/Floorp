@@ -7,9 +7,9 @@
   "Android Support Repository (Support Library 23.0.1)",
   "Google Support Repository (Google Play Services 8.1.0)"
 ],
-"size": 535625068,
+"size": 510579808,
 "visibility": "internal",
-"digest": "0627515046a23c1d109e2782865b1b3b546c1d552955e4156317f76cbb195eb630aa25feea3f4edd1c685f129da0c2a5169d4d6349c1c31d8a95158a4569a478",
+"digest": "a4ea080f1aa5cb1d05250d45a288446ae07a54362a166bc7faa67281b5d50ee55001c1770cf9a942535b583e2f4c99d420902f065b03842d94a7d9273dca756d",
 "algorithm": "sha512",
 "filename": "android-sdk-linux.tar.xz",
 "unpack": true

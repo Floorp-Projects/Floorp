@@ -7,9 +7,9 @@
   "Android Support Repository (Support Library 23.0.1)",
   "Google Support Repository (Google Play Services 8.1.0)"
 ],
-"size": 535625068,
+"size": 510579808,
 "visibility": "internal",
-"digest": "0627515046a23c1d109e2782865b1b3b546c1d552955e4156317f76cbb195eb630aa25feea3f4edd1c685f129da0c2a5169d4d6349c1c31d8a95158a4569a478",
+"digest": "a4ea080f1aa5cb1d05250d45a288446ae07a54362a166bc7faa67281b5d50ee55001c1770cf9a942535b583e2f4c99d420902f065b03842d94a7d9273dca756d",
 "algorithm": "sha512",
 "filename": "android-sdk-linux.tar.xz",
 "unpack": true
@@ -35,16 +35,16 @@
 "visibility": "public",
 "filename": "jcentral.tar.xz",
 "unpack": true,
-"digest": "3fd467642a9067a1adfde7e3461b1366912b306607677b213d9f19201c23aab5f7f6361ebea7652bed1565215ed4524b51f5ced83ea68bb51ba2abca09b66148",
-"size": 41591712
+"digest": "0a970a85165bad0247c5a015cf6e0eb22bc497ec3ab3fed3948031b066041462599586f30f275738c123715e78ca65684701ab3dba99944f36f8a21c1364a857",
+"size": 41914156
 },
 {
 "algorithm": "sha512",
 "visibility": "public",
 "filename": "gradle.tar.xz",
 "unpack": true,
-"digest": "9011a0a322b55c6f55ca7aa83298886f3f57e2a91a33a079fcdae5af746f9cf1528f36942138cff5a00154757d9acba2f1a4332d0f92da18e454b3c0c1788d20",
-"size": 50805888
+"digest": "2dcedca230ac47157611991d29231ea997396a094e08eca7cff47509ea79046c3bcd33c01198f367c99e9ba78d77af41619c0d47e24956f4b403b368304f8099",
+"size": 52223524
 },
 {
 "algorithm": "sha512",
