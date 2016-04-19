@@ -19,14 +19,10 @@ export OLD_INCLUDE=$(IFS=';'; for d in $INCLUDE; do ( cd "$d" && echo -n $(pwd):
 export OLD_LIB=$(IFS=';'; for d in $LIB; do ( cd "$d" && echo -n $(pwd): ); done)
 export OLD_LIBPATH=$(IFS=';'; for d in $LIBPATH; do ( cd "$d" && echo -n $(pwd): ); done)
 
-# The various browser/config/mozconfigs/win32/* files use these checks to pick
-# the compiler.
 if $USE_64BIT; then
-  . $topsrcdir/build/win64/mozconfig.vs2015
-elif test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
-  . $topsrcdir/build/win32/mozconfig.vs2015-win64
+  . $topsrcdir/build/win64/mozconfig.vs-latest
 else
-  . $topsrcdir/build/win32/mozconfig.vs2015
+  . $topsrcdir/build/win32/mozconfig.vs-latest
 fi
 
 # PATH also needs to point to mozmake.exe, which can come from either
