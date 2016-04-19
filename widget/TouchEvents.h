@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/Touch.h"
 #include "mozilla/MouseEvents.h"
-#include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsTArray.h"
 

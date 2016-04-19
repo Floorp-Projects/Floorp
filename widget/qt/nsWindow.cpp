@@ -57,7 +57,6 @@
 #include "imgIContainer.h"
 #include "nsGfxCIID.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsAutoPtr.h"
 
 #include "gfxQtPlatform.h"
 
