@@ -8186,9 +8186,12 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             desc.setSetterObject(set.toObjectOrNull());
         }
+
+        // Avoid tripping same-compartment assertions in JS::FromPropertyDescriptor().
+        desc.object().set(&args.thisv().toObject());
     }
 
-    return FromPropertyDescriptor(cx, desc, args.rval());
+    return JS::FromPropertyDescriptor(cx, desc, args.rval());
 }
 
 
