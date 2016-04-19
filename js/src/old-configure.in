@@ -226,26 +226,19 @@ case "$target" in
         _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
 
-        # Determine compiler version
-        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | cut -c 1-2`
-        _CC_MINOR_VERSION=`echo ${CC_VERSION} | cut -c 3-4`
-        _MSC_VER=${CC_VERSION}
-
-        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | cut -c 1-2`
-
-        if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
-            AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
-        fi
+        _MSC_VER=`echo ${CC_VERSION} | cut -c 1-4`
 
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         AC_DEFINE(_USE_MATH_DEFINES) # Otherwise MSVC's math.h doesn't #define M_PI.
 
-        if test "$_CC_MAJOR_VERSION" = "18"; then
+        case "$CC_VERSION" in
+        18*)
             _CC_SUITE=12
             MSVC_C_RUNTIME_DLL=msvcr120.dll
             MSVC_CXX_RUNTIME_DLL=msvcp120.dll
-        elif test "$_CC_MAJOR_VERSION" = "19"; then
+            ;;
+        19*)
             _CC_SUITE=14
             MSVC_C_RUNTIME_DLL=vcruntime140.dll
             MSVC_CXX_RUNTIME_DLL=msvcp140.dll
@@ -262,7 +255,8 @@ case "$target" in
             # Disable C++11 thread-safe statics due to crashes on XP (bug 1204752)
             # See https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
             CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
-        fi
+            ;;
+        esac
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
 
