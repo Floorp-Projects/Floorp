@@ -832,6 +832,12 @@ nsAppShell::LegacyGeckoEvent::Run()
         hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->ConnectionType(),
                                                          curEvent->IsWifi(),
                                                          curEvent->DHCPGateway()));
+        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+        if (os) {
+            os->NotifyObservers(nullptr,
+                                NS_NETWORK_LINK_TYPE_TOPIC,
+                                nsString(curEvent->Characters()).get());
+        }
         break;
     }
 
