@@ -7,5 +7,4 @@
 SharedLibrary('npthirdtest')
 
 relative_path = 'thirdplugin'
-cocoa_name = 'ThirdTest'
 include('../testplugin.mozbuild')
