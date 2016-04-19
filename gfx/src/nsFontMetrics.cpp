@@ -34,23 +34,23 @@ public:
     AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
                 const char* aString, int32_t aLength)
     {
-        mTextRun.reset(aMetrics->GetThebesFontGroup()->MakeTextRun(
+        mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             reinterpret_cast<const uint8_t*>(aString), aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
             ComputeFlags(aMetrics),
-            nullptr));
+            nullptr);
     }
 
     AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
                 const char16_t* aString, int32_t aLength)
     {
-        mTextRun.reset(aMetrics->GetThebesFontGroup()->MakeTextRun(
+        mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             aString, aLength,
             aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
             ComputeFlags(aMetrics),
-            nullptr));
+            nullptr);
     }
 
     gfxTextRun *get() { return mTextRun.get(); }
