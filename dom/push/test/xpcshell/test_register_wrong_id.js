@@ -28,7 +28,6 @@ add_task(function* test_register_wrong_id() {
   PushServiceWebSocket._generateID = () => clientChannelID;
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {

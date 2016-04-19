@@ -16,7 +16,6 @@ add_task(function* test_registrations_error() {
 
   PushService.init({
     serverURI: "https://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
       getByIdentifiers() {
         return Promise.reject('Database error');

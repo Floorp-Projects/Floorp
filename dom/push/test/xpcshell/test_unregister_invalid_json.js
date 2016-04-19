@@ -43,7 +43,6 @@ add_task(function* test_unregister_invalid_json() {
   let unregisterPromise = new Promise(resolve => unregisterDone = after(2, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {

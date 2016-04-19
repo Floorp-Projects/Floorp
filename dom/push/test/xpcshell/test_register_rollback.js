@@ -29,7 +29,6 @@ add_task(function* test_register_rollback() {
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
       put(prev, record) {
         return Promise.reject('universe has imploded');

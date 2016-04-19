@@ -57,7 +57,6 @@ add_task(function* test_notification_error() {
   let ackPromise = new Promise(resolve => ackDone = after(records.length, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
       getByKeyID(prev, channelID) {
         if (channelID == '3c3930ba-44de-40dc-a7ca-8a133ec1a866') {
