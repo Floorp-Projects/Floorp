@@ -5,7 +5,7 @@
 CORES=$(nproc || grep -c ^processor /proc/cpuinfo || sysctl -n hw.ncpu)
 echo Building on $CORES cpus...
 
-OPTIONS="--enable-rpath --disable-elf-tls --disable-docs"
+OPTIONS="--disable-elf-tls --disable-docs"
 TARGETS="x86_64-apple-darwin,i686-apple-darwin"
 
 PREFIX=${WORKSPACE}/rustc
