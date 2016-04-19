@@ -1,0 +1,54 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1246310",
+    title: "Renegotiation: add audio track to existing video-only stream",
+  });
+
+  runNetworkTest(function (options) {
+    var test = new PeerConnectionTest(options);
+    test.chain.replace("PC_LOCAL_GUM",
+      [
+        function PC_LOCAL_GUM_ATTACH_VIDEO_ONLY(test) {
+          var localConstraints = {audio: true, video: true};
+          test.setMediaConstraints([{video: true}], []);
+          return getUserMedia(localConstraints)
+            .then(s => test.originalGumStream = s)
+            .then(() => is(test.originalGumStream.getAudioTracks().length, 1,
+                           "Should have 1 audio track"))
+            .then(() => is(test.originalGumStream.getVideoTracks().length, 1,
+                           "Should have 1 video track"))
+            .then(() => test.pcLocal.attachLocalTrack(
+                          test.originalGumStream.getVideoTracks()[0],
+                          test.originalGumStream));
+        },
+      ]
+    );
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ATTACH_SECOND_TRACK_AUDIO(test) {
+          test.setMediaConstraints([{audio: true, video: true}], []);
+          return test.pcLocal.attachLocalTrack(
+                   test.originalGumStream.getAudioTracks()[0],
+                   test.originalGumStream);
+        },
+      ],
+      [
+        function PC_CHECK_REMOTE_AUDIO_FLOW(test) {
+          return test.pcRemote.checkReceivingToneFrom(new AudioContext(), test.pcLocal);
+        }
+      ]
+    );
+
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
