@@ -306,7 +306,7 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)
   uint32_t length = mMenuArray.Length();
   // first find a menu in the menu bar
   for (unsigned int i = 0; i < length; i++) {
-    nsMenuX* menu = mMenuArray[i];
+    nsMenuX* menu = mMenuArray[i].get();
     if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
       visible++;
       if (visible == (targetIndex + 1)) {
@@ -366,7 +366,7 @@ nsMenuX* nsMenuBarX::GetMenuAt(uint32_t aIndex)
     NS_ERROR("Requesting menu at invalid index!");
     return NULL;
   }
-  return mMenuArray[aIndex];
+  return mMenuArray[aIndex].get();
 }
 
 nsMenuX* nsMenuBarX::GetXULHelpMenu()
