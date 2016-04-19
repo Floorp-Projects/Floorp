@@ -367,7 +367,7 @@ public:
    * is calling AddOverrideStyleSheet/RemoveOverrideStyleSheet, and I think
    * those should just handle reconstructing style data...
    */
-  void ReconstructStyleData();
+  void RestyleForCSSRuleChanges();
 
   /**
    * Update the style set somehow to take into account changed prefs which
