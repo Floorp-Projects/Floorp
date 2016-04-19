@@ -67,13 +67,6 @@ fi
 
 AC_SUBST(CLANG_CXX)
 AC_SUBST(CLANG_CL)
-
-if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
-    if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 8 ||
-       test "$GCC_MAJOR_VERSION" -lt 4; then
-        AC_MSG_ERROR([Only GCC 4.8 or newer supported])
-    fi
-fi
 ])
 
 AC_DEFUN([MOZ_CROSS_COMPILER],
@@ -140,20 +133,6 @@ dnl Updates to the test below should be duplicated further below for the
 dnl cross-compiling case.
 AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
-    if test -n "$CLANG_CC"; then
-        dnl We'd normally just check for the version from CC_VERSION (fed
-        dnl from __clang_major__ and __clang_minor__), but the clang that
-        dnl comes with Xcode has a completely different version scheme
-        dnl despite exposing the version with the same defines.
-        dnl So instead of a version check, do a feature check. Normally,
-        dnl we'd use __has_feature, but there are unfortunately no C++11
-        dnl differences in clang 3.4. However, it supports the 2013-08-28
-        dnl draft of the ISO WG21 SG10 feature test macro recommendations.
-        AC_TRY_COMPILE([], [#if !__cpp_static_assert
-                            #error ISO WG21 SG10 feature test macros unsupported
-                            #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
-    fi
-
     AC_CACHE_CHECK([whether 64-bits std::atomic requires -latomic],
         ac_cv_needs_atomic,
         AC_TRY_LINK(
@@ -191,28 +170,7 @@ if test -n "$CROSS_COMPILE"; then
 	HOST_GCC_MAJOR_VERSION=`echo ${HOST_GCC_VERSION} | $AWK -F\. '{ print <<$>>1 }'`
 	HOST_GCC_MINOR_VERSION=`echo ${HOST_GCC_VERSION} | $AWK -F\. '{ print <<$>>2 }'`
 	changequote([,])
-
-	if test "$HOST_GCC_MAJOR_VERSION" -eq 4 -a "$HOST_GCC_MINOR_VERSION" -lt 8 ||
-	   test "$HOST_GCC_MAJOR_VERSION" -lt 4; then
-	    AC_MSG_ERROR([Only GCC 4.8 or newer supported for host compiler])
-	fi
     fi
-
-    _SAVE_CXXFLAGS="$CXXFLAGS"
-    _SAVE_CPPFLAGS="$CPPFLAGS"
-    _SAVE_CXX="$CXX"
-    CXXFLAGS="$HOST_CXXFLAGS"
-    CPPFLAGS="$HOST_CPPFLAGS"
-    CXX="$HOST_CXX"
-    if test "$HOST_CC_TYPE" = clang; then
-	AC_TRY_COMPILE([], [#if !__cpp_static_assert
-			    #error ISO WG21 SG10 feature test macros unsupported
-			    #endif],,AC_MSG_ERROR([Only clang/llvm 3.4 or newer supported]))
-    fi
-
-    CXXFLAGS="$_SAVE_CXXFLAGS"
-    CPPFLAGS="$_SAVE_CPPFLAGS"
-    CXX="$_SAVE_CXX"
 fi
 AC_LANG_C
 ])
