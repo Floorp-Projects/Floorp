@@ -42,7 +42,8 @@ private:
 
 TEST(MediaDataDecoder, H264)
 {
-  if (!DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"))) {
+  if (!DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4")
+        , /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MediaResource> resource =

@@ -15,6 +15,7 @@ class nsACString;
 namespace mozilla {
 
 class AbstractMediaDecoder;
+class DecoderDoctorDiagnostics;
 class MediaDecoder;
 class MediaDecoderOwner;
 class MediaDecoderReader;
@@ -35,7 +36,8 @@ public:
   // specified, pass false in aHaveRequestedCodecs.
   static CanPlayStatus CanHandleMediaType(const char* aMIMEType,
                                           bool aHaveRequestedCodecs,
-                                          const nsAString& aRequestedCodecs);
+                                          const nsAString& aRequestedCodecs,
+                                          DecoderDoctorDiagnostics* aDiagnostics);
 
   // Returns the CanPlayStatus indicating if we can handle this MIME type and
   // codecs type natively, excluding any plugins-based reader (such as
@@ -43,18 +45,21 @@ public:
   // The MIME type should not include the codecs parameter.
   // That parameter is passed in aRequestedCodecs.
   static CanPlayStatus CanHandleCodecsType(const char* aMIMEType,
-                                           const nsAString& aRequestedCodecs);
+                                           const nsAString& aRequestedCodecs,
+                                           DecoderDoctorDiagnostics* aDiagnostics);
 
   // Returns true if we should handle this MIME type when it appears
   // as an <object> or as a toplevel page. If, in practice, our support
   // for the type is more limited than appears in the wild, we should return
   // false here even if CanHandleMediaType would return true.
-  static bool ShouldHandleMediaType(const char* aMIMEType);
+  static bool ShouldHandleMediaType(const char* aMIMEType,
+                                    DecoderDoctorDiagnostics* aDiagnostics);
 
   // Create a decoder for the given aType. Returns null if we
   // were unable to create the decoder.
   static already_AddRefed<MediaDecoder> CreateDecoder(const nsACString& aType,
-                                                      MediaDecoderOwner* aOwner);
+                                                      MediaDecoderOwner* aOwner,
+                                                      DecoderDoctorDiagnostics* aDiagnostics);
 
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
@@ -72,7 +77,8 @@ public:
 
   static bool IsWebMTypeAndEnabled(const nsACString& aType);
   static bool IsWebMAudioType(const nsACString& aType);
-  static bool IsMP4TypeAndEnabled(const nsACString& aType);
+  static bool IsMP4TypeAndEnabled(const nsACString& aType,
+                                  DecoderDoctorDiagnostics* aDiagnostics);
 };
 
 } // namespace mozilla

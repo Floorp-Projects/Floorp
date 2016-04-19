@@ -304,17 +304,19 @@ IsDirectShowSupportedType(const nsACString& aType)
 #ifdef MOZ_FMP4
 static bool
 IsMP4SupportedType(const nsACString& aType,
+                   DecoderDoctorDiagnostics* aDiagnostics,
                    const nsAString& aCodecs = EmptyString())
 {
-  return MP4Decoder::CanHandleMediaType(aType, aCodecs);
+  return MP4Decoder::CanHandleMediaType(aType, aCodecs, aDiagnostics);
 }
 #endif
 
 /* static */ bool
-DecoderTraits::IsMP4TypeAndEnabled(const nsACString& aType)
+DecoderTraits::IsMP4TypeAndEnabled(const nsACString& aType,
+                                   DecoderDoctorDiagnostics* aDiagnostics)
 {
 #ifdef MOZ_FMP4
-  return IsMP4SupportedType(aType);
+  return IsMP4SupportedType(aType, aDiagnostics);
 #else
   return false;
 #endif
@@ -346,7 +348,8 @@ IsWAVSupportedType(const nsACString& aType,
 }
 
 /* static */
-bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
+bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
+                                          DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     // We should not return true for Wave types, since there are some
@@ -368,13 +371,15 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType)
     }
   }
 
-  return CanHandleMediaType(aMIMEType, false, EmptyString()) != CANPLAY_NO;
+  return CanHandleMediaType(aMIMEType, false, EmptyString(), aDiagnostics)
+         != CANPLAY_NO;
 }
 
 /* static */
 CanPlayStatus
 DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
-                                   const nsAString& aRequestedCodecs)
+                                   const nsAString& aRequestedCodecs,
+                                   DecoderDoctorDiagnostics* aDiagnostics)
 {
   char const* const* codecList = nullptr;
 #ifdef MOZ_RAW
@@ -400,8 +405,8 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType))) {
-    if (IsMP4SupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
+  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
+    if (IsMP4SupportedType(nsDependentCString(aMIMEType), aDiagnostics, aRequestedCodecs)) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -467,12 +472,15 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
 CanPlayStatus
 DecoderTraits::CanHandleMediaType(const char* aMIMEType,
                                   bool aHaveRequestedCodecs,
-                                  const nsAString& aRequestedCodecs)
+                                  const nsAString& aRequestedCodecs,
+                                  DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aHaveRequestedCodecs) {
-    CanPlayStatus result = CanHandleCodecsType(aMIMEType, aRequestedCodecs);
+    CanPlayStatus result = CanHandleCodecsType(aMIMEType,
+                                               aRequestedCodecs,
+                                               aDiagnostics);
     if (result == CANPLAY_NO || result == CANPLAY_YES) {
       return result;
     }
@@ -488,7 +496,7 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
-  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType))) {
+  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType), aDiagnostics)) {
     return CANPLAY_MAYBE;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
@@ -529,13 +537,15 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 // Instantiates but does not initialize decoder.
 static
 already_AddRefed<MediaDecoder>
-InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+InstantiateDecoder(const nsACString& aType,
+                   MediaDecoderOwner* aOwner,
+                   DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<MediaDecoder> decoder;
 
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(aType)) {
+  if (IsMP4SupportedType(aType, aDiagnostics)) {
     decoder = new MP4Decoder(aOwner);
     return decoder.forget();
   }
@@ -616,10 +626,12 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
 
 /* static */
 already_AddRefed<MediaDecoder>
-DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+DecoderTraits::CreateDecoder(const nsACString& aType,
+                             MediaDecoderOwner* aOwner,
+                             DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return InstantiateDecoder(aType, aOwner);
+  return InstantiateDecoder(aType, aOwner, aDiagnostics);
 }
 
 /* static */
@@ -632,7 +644,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     return decoderReader;
   }
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(aType)) {
+  if (IsMP4SupportedType(aType, /* DecoderDoctorDiagnostics* */ nullptr)) {
     decoderReader = new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()));
   } else
 #endif
@@ -706,7 +718,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
 #endif
 #ifdef MOZ_FMP4
-    IsMP4SupportedType(aType) ||
+    IsMP4SupportedType(aType, /* DecoderDoctorDiagnostics* */ nullptr) ||
 #endif
     IsMP3SupportedType(aType) ||
     IsAACSupportedType(aType) ||

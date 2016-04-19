@@ -2898,7 +2898,8 @@ HTMLMediaElement::GetCanPlay(const nsAString& aType)
   NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
   return DecoderTraits::CanHandleMediaType(mimeTypeUTF8.get(),
                                            NS_SUCCEEDED(rv),
-                                           codecs);
+                                           codecs,
+           /* DecoderDoctorDiagnostics* */ nullptr);
 }
 
 NS_IMETHODIMP
@@ -2964,7 +2965,9 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   aChannel->GetContentType(mimeType);
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
-  RefPtr<MediaDecoder> decoder = DecoderTraits::CreateDecoder(mimeType, this);
+  RefPtr<MediaDecoder> decoder =
+    DecoderTraits::CreateDecoder(mimeType, this,
+                                 /* DecoderDoctorDiagnostics* */ nullptr);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);
