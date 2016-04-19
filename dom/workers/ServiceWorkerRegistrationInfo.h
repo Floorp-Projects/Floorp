@@ -27,19 +27,19 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t mLastUpdateCheckTime;
 
+  RefPtr<ServiceWorkerInfo> mActiveWorker;
+  RefPtr<ServiceWorkerInfo> mWaitingWorker;
+  RefPtr<ServiceWorkerInfo> mInstallingWorker;
+
   virtual ~ServiceWorkerRegistrationInfo();
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERREGISTRATIONINFO
 
-  nsCString mScope;
+  const nsCString mScope;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  RefPtr<ServiceWorkerInfo> mActiveWorker;
-  RefPtr<ServiceWorkerInfo> mWaitingWorker;
-  RefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> mListeners;
 
@@ -92,9 +92,6 @@ public:
   Clear();
 
   void
-  PurgeActiveWorker();
-
-  void
   TryToActivateAsync();
 
   void
@@ -113,7 +110,7 @@ public:
   IsLastUpdateCheckTimeOverOneDay() const;
 
   void
-  NotifyListenersOnChange();
+  NotifyListenersOnChange(WhichServiceWorker aChangedWorkers);
 
   void
   MaybeScheduleTimeCheckAndUpdate();
@@ -123,6 +120,44 @@ public:
 
   bool
   CheckAndClearIfUpdateNeeded();
+
+  ServiceWorkerInfo*
+  GetInstalling() const;
+
+  ServiceWorkerInfo*
+  GetWaiting() const;
+
+  ServiceWorkerInfo*
+  GetActive() const;
+
+  // Remove an existing installing worker, if present.  The worker will
+  // be transitioned to the Redundant state.
+  void
+  ClearInstalling();
+
+  // Set a new installing worker.  This may only be called if there is no
+  // existing installing worker.  The worker is transitioned to the Installing
+  // state.
+  void
+  SetInstalling(ServiceWorkerInfo* aServiceWorker);
+
+  // Transition the current installing worker to be the waiting worker.  The
+  // workers state is updated to Installed.
+  void
+  TransitionInstallingToWaiting();
+
+  // Override the current active worker.  This is used during browser
+  // initialization to load persisted workers.  Its also used to propagate
+  // active workers across child processes in e10s.  This second use will
+  // go away once the ServiceWorkerManager moves to the parent process.
+  // The worker is transitioned to the Activated state.
+  void
+  SetActive(ServiceWorkerInfo* aServiceWorker);
+
+  // Transition the current waiting worker to be the new active worker.  The
+  // worker is updated to the Activating state.
+  void
+  TransitionWaitingToActive();
 };
 
 } // namespace workers

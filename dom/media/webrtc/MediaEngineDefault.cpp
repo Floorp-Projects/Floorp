@@ -251,7 +251,7 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
 		     0, 0);
 #endif
 
-  bool setData = ycbcr_image->SetData(data);
+  bool setData = ycbcr_image->CopyData(data);
   MOZ_ASSERT(setData);
 
   // SetData copies data, so we can free the frame

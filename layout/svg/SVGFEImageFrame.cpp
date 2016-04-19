@@ -16,15 +16,13 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-typedef nsFrame SVGFEImageFrameBase;
-
-class SVGFEImageFrame : public SVGFEImageFrameBase
+class SVGFEImageFrame : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEImageFrame(nsStyleContext* aContext)
-    : SVGFEImageFrameBase(aContext)
+    : nsFrame(aContext)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
@@ -45,7 +43,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return SVGFEImageFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -89,12 +87,12 @@ SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   DecApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(SVGFEImageFrameBase::mContent);
+    do_QueryInterface(nsFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
   }
 
-  SVGFEImageFrameBase::DestroyFrom(aDestructRoot);
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 void
@@ -106,13 +104,13 @@ SVGFEImageFrame::Init(nsIContent*       aContent,
                "Trying to construct an SVGFEImageFrame for a "
                "content element that doesn't support the right interfaces");
 
-  SVGFEImageFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We assume that feImage's are always visible.
   IncApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(SVGFEImageFrameBase::mContent);
+    do_QueryInterface(nsFrame::mContent);
   if (imageLoader) {
     imageLoader->FrameCreated(this);
   }
@@ -144,8 +142,7 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
     }
   }
 
-  return SVGFEImageFrameBase::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 void
@@ -153,14 +150,14 @@ SVGFEImageFrame::OnVisibilityChange(Visibility aNewVisibility,
                                     Maybe<OnNonvisible> aNonvisibleAction)
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
-    do_QueryInterface(SVGFEImageFrameBase::mContent);
+    do_QueryInterface(nsFrame::mContent);
   if (!imageLoader) {
     MOZ_ASSERT_UNREACHABLE("Should have an nsIImageLoadingContent");
-    SVGFEImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
   imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  SVGFEImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }

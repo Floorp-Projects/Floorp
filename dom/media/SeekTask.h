@@ -17,8 +17,6 @@ class AbstractThread;
 class MediaData;
 class MediaDecoderReaderWrapper;
 
-namespace media {
-
 struct SeekTaskResolveValue
 {
   RefPtr<MediaData> mSeekedAudioData;
@@ -178,7 +176,6 @@ protected:
   bool mNeedToStopPrerollingVideo;
 };
 
-} // namespace media
 } // namespace mozilla
 
 #endif /* SEEK_TASK_H */

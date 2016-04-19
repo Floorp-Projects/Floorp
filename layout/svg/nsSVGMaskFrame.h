@@ -16,8 +16,6 @@
 
 class gfxContext;
 
-typedef nsSVGContainerFrame nsSVGMaskFrameBase;
-
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
  */
@@ -33,7 +31,7 @@ typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 #define GFX_ARGB32_OFFSET_B 0
 #endif
 
-class nsSVGMaskFrame final : public nsSVGMaskFrameBase
+class nsSVGMaskFrame final : public nsSVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -43,7 +41,7 @@ class nsSVGMaskFrame final : public nsSVGMaskFrameBase
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
-    : nsSVGMaskFrameBase(aContext)
+    : nsSVGContainerFrame(aContext)
     , mInUse(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

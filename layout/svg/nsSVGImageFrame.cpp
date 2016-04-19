@@ -45,17 +45,15 @@ private:
   nsSVGImageFrame *mFrame;
 };
 
-typedef nsSVGPathGeometryFrame nsSVGImageFrameBase;
-
-class nsSVGImageFrame : public nsSVGImageFrameBase,
-                        public nsIReflowCallback
+class nsSVGImageFrame : public nsSVGPathGeometryFrame
+                      , public nsIReflowCallback
 {
   friend nsIFrame*
   NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
   explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : nsSVGImageFrameBase(aContext)
+    : nsSVGPathGeometryFrame(aContext)
     , mReflowCallbackPosted(false)
   {
     EnableVisibilityTracking();
@@ -155,7 +153,7 @@ nsSVGImageFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::image),
                "Content is not an SVG image!");
 
-  nsSVGImageFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
     // Non-display frames are likely to be patterns, masks or the like.
@@ -237,8 +235,8 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
     }
   }
 
-  return nsSVGImageFrameBase::AttributeChanged(aNameSpaceID,
-                                               aAttribute, aModType);
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 void
@@ -247,13 +245,13 @@ nsSVGImageFrame::OnVisibilityChange(Visibility aNewVisibility,
 {
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
   if (!imageLoader) {
-    nsSVGImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+    nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
     return;
   }
 
   imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  nsSVGImageFrameBase::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsSVGPathGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 gfx::Matrix

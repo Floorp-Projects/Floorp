@@ -49,7 +49,7 @@ public:
     }
   }
 
-  virtual bool SetData(const Data& aData) override;
+  virtual bool CopyData(const Data& aData) override;
   virtual void SetDelayedConversion(bool aDelayed) override { mDelayedConversion = aDelayed; }
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -86,9 +86,9 @@ public:
 };
 
 bool
-BasicPlanarYCbCrImage::SetData(const Data& aData)
+BasicPlanarYCbCrImage::CopyData(const Data& aData)
 {
-  RecyclingPlanarYCbCrImage::SetData(aData);
+  RecyclingPlanarYCbCrImage::CopyData(aData);
 
   if (mDelayedConversion) {
     return false;

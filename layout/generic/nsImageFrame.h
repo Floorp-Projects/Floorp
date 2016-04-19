@@ -58,10 +58,8 @@ private:
   nsImageFrame *mFrame;
 };
 
-typedef nsAtomicContainerFrame ImageFrameSuper;
-
-class nsImageFrame : public ImageFrameSuper,
-                     public nsIReflowCallback {
+class nsImageFrame : public nsAtomicContainerFrame
+                   , public nsIReflowCallback {
 public:
   template <typename T> using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;
@@ -119,7 +117,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return ImageFrameSuper::IsFrameOfType(aFlags &
+    return nsAtomicContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
 

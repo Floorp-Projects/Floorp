@@ -31,13 +31,11 @@ class SVGRadialGradientElement;
 } // namespace dom
 } // namespace mozilla
 
-typedef nsSVGPaintServerFrame nsSVGGradientFrameBase;
-
 /**
  * Gradients can refer to other gradients. We create an nsSVGPaintingProperty
  * with property type nsGkAtoms::href to track the referenced gradient.
  */
-class nsSVGGradientFrame : public nsSVGGradientFrameBase
+class nsSVGGradientFrame : public nsSVGPaintServerFrame
 {
   typedef mozilla::gfx::ExtendMode ExtendMode;
 
@@ -126,15 +124,13 @@ private:
 // Linear Gradients
 // -------------------------------------------------------------------------
 
-typedef nsSVGGradientFrame nsSVGLinearGradientFrameBase;
-
-class nsSVGLinearGradientFrame : public nsSVGLinearGradientFrameBase
+class nsSVGLinearGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);
 protected:
-  explicit nsSVGLinearGradientFrame(nsStyleContext* aContext) :
-    nsSVGLinearGradientFrameBase(aContext) {}
+  explicit nsSVGLinearGradientFrame(nsStyleContext* aContext)
+    : nsSVGGradientFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -171,15 +167,13 @@ protected:
 // Radial Gradients
 // -------------------------------------------------------------------------
 
-typedef nsSVGGradientFrame nsSVGRadialGradientFrameBase;
-
-class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase
+class nsSVGRadialGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);
 protected:
-  explicit nsSVGRadialGradientFrame(nsStyleContext* aContext) :
-    nsSVGRadialGradientFrameBase(aContext) {}
+  explicit nsSVGRadialGradientFrame(nsStyleContext* aContext)
+    : nsSVGGradientFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS

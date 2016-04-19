@@ -37,8 +37,8 @@ NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
-  : nsSVGForeignObjectFrameBase(aContext),
-    mInReflow(false)
+  : nsContainerFrame(aContext)
+  , mInReflow(false)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED |
                NS_FRAME_SVG_LAYOUT);
@@ -49,7 +49,7 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
 
 NS_QUERYFRAME_HEAD(nsSVGForeignObjectFrame)
   NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGForeignObjectFrameBase)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void
 nsSVGForeignObjectFrame::Init(nsIContent*       aContent,
@@ -59,7 +59,7 @@ nsSVGForeignObjectFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::foreignObject),
                "Content is not an SVG foreignObject!");
 
-  nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
   AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
                NS_FRAME_FONT_INFLATION_FLOW_ROOT);
@@ -74,7 +74,7 @@ void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (!(mState & NS_FRAME_IS_NONDISPLAY)) {
       nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
   }
-  nsSVGForeignObjectFrameBase::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom *

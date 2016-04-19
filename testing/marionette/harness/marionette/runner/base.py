@@ -215,6 +215,10 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
         if self.marionette.check_for_crash():
             # this tells unittest.TestSuite not to continue running tests
             self.shouldStop = True
+            test = next((a for a in args if isinstance(a, unittest.TestCase)),
+                        None)
+            if test:
+                self.addError(test, sys.exc_info())
 
 
 class MarionetteTextTestRunner(StructuredTestRunner):
@@ -470,6 +474,11 @@ class BaseMarionetteArguments(ArgumentParser):
         if not args.tests:
             print 'must specify one or more test files, manifests, or directories'
             sys.exit(1)
+
+        for path in args.tests:
+            if not os.path.exists(path):
+                print '{0} does not exist'.format(path)
+                sys.exit(1)
 
         if not args.emulator and not args.address and not args.binary:
             print 'must specify --binary, --emulator or --address'
@@ -734,6 +743,7 @@ class BaseMarionetteTestRunner(object):
     def reset_test_stats(self):
         self.passed = 0
         self.failed = 0
+        self.crashed = 0
         self.unexpected_successes = 0
         self.todo = 0
         self.skipped = 0
@@ -852,6 +862,15 @@ setReq.onerror = function() {
         if not result:
             raise Exception("Could not launch test container app")
 
+    def record_crash(self):
+        crash = True
+        try:
+            crash = self.marionette.check_for_crash()
+            self.crashed += int(crash)
+        except Exception:
+            traceback.print_exc()
+        return crash
+
     def run_tests(self, tests):
         assert len(tests) > 0
         assert len(self.test_handlers) > 0
@@ -964,11 +983,7 @@ setReq.onerror = function() {
             for failed_test in self.failures:
                 self.logger.info('%s' % failed_test[0])
 
-        try:
-            self.marionette.check_for_crash()
-        except:
-            traceback.print_exc()
-
+        self.record_crash()
         self.end_time = time.time()
         self.elapsedtime = self.end_time - self.start_time
 
@@ -1135,7 +1150,7 @@ setReq.onerror = function() {
 
         for test in tests:
             self.run_test(test['filepath'], test['expected'], test['test_container'])
-            if self.marionette.check_for_crash():
+            if self.record_crash():
                 break
 
     def run_test_sets(self):

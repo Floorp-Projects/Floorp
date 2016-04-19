@@ -17,8 +17,8 @@ using namespace mozilla;
 
 //#define FCF_NOISY
 
-nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext) :
-  nsFormControlFrameSuper(aContext)
+nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext)
+  : nsAtomicContainerFrame(aContext)
 {
 }
 
@@ -29,7 +29,7 @@ nsFormControlFrame::~nsFormControlFrame()
 nsIAtom*
 nsFormControlFrame::GetType() const
 {
-  return nsGkAtoms::formControlFrame; 
+  return nsGkAtoms::formControlFrame;
 }
 
 void
@@ -37,12 +37,12 @@ nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Unregister the access key registered in reflow
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsFormControlFrameSuper::DestroyFrom(aDestructRoot);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_QUERYFRAME_HEAD(nsFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
 /* virtual */ nscoord
 nsFormControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)

@@ -220,7 +220,9 @@ RemoteWebProgressManager.prototype = {
     if (isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
       this._browser._documentContentType = json.documentContentType;
-      this._browser.inLoadURI = json.inLoadURI;
+      if (typeof json.inLoadURI != "undefined") {
+        this._browser.inLoadURI = json.inLoadURI;
+      }
       if (json.charset) {
         this._browser._characterSet = json.charset;
         this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;

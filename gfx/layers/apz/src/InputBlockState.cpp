@@ -25,7 +25,8 @@ static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
 InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed)
   : mTargetApzc(aTargetApzc)
-  , mTargetConfirmed(aTargetConfirmed)
+  , mTargetConfirmed(aTargetConfirmed ? TargetConfirmationState::eConfirmed
+                                      : TargetConfirmationState::eUnconfirmed)
   , mBlockId(sBlockCounter++)
   , mTransformToApzc(aTargetApzc->GetTransformToThis())
 {
@@ -35,12 +36,23 @@ InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetAp
 }
 
 bool
-InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                                        TargetConfirmationState aState)
 {
-  if (mTargetConfirmed) {
+  MOZ_ASSERT(aState == TargetConfirmationState::eConfirmed
+          || aState == TargetConfirmationState::eTimedOut);
+
+  if (mTargetConfirmed == TargetConfirmationState::eTimedOut &&
+      aState == TargetConfirmationState::eConfirmed) {
+    // The main thread finally responded. We had already timed out the
+    // confirmation, but we want to update the state internally so that we
+    // can record the time for telemetry purposes.
+    mTargetConfirmed = TargetConfirmationState::eTimedOutAndMainThreadResponded;
+  }
+  if (mTargetConfirmed != TargetConfirmationState::eUnconfirmed) {
     return false;
   }
-  mTargetConfirmed = true;
+  mTargetConfirmed = aState;
 
   TBS_LOG("%p got confirmed target APZC %p\n", this, mTargetApzc.get());
   if (mTargetApzc == aTargetApzc) {
@@ -85,7 +97,14 @@ InputBlockState::GetBlockId() const
 bool
 InputBlockState::IsTargetConfirmed() const
 {
-  return mTargetConfirmed;
+  return mTargetConfirmed != TargetConfirmationState::eUnconfirmed;
+}
+
+bool
+InputBlockState::HasReceivedRealConfirmedTarget() const
+{
+  return mTargetConfirmed == TargetConfirmationState::eConfirmed ||
+         mTargetConfirmed == TargetConfirmationState::eTimedOutAndMainThreadResponded;
 }
 
 bool
@@ -192,7 +211,7 @@ CancelableBlockState::IsDefaultPrevented() const
 bool
 CancelableBlockState::HasReceivedAllContentNotifications() const
 {
-  return IsTargetConfirmed() && mContentResponded;
+  return HasReceivedRealConfirmedTarget() && mContentResponded;
 }
 
 bool
@@ -359,7 +378,8 @@ WheelBlockState::SetContentResponse(bool aPreventDefault)
 }
 
 bool
-WheelBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+WheelBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                                        TargetConfirmationState aState)
 {
   // The APZC that we find via APZCCallbackHelpers may not be the same APZC
   // ESM or OverscrollHandoff would have computed. Make sure we get the right
@@ -370,7 +390,7 @@ WheelBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aT
     apzc = apzc->BuildOverscrollHandoffChain()->FindFirstScrollable(event);
   }
 
-  InputBlockState::SetConfirmedTargetApzc(apzc);
+  InputBlockState::SetConfirmedTargetApzc(apzc, aState);
   return true;
 }
 
@@ -603,7 +623,8 @@ PanGestureBlockState::PanGestureBlockState(const RefPtr<AsyncPanZoomController>&
 }
 
 bool
-PanGestureBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+PanGestureBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                                             TargetConfirmationState aState)
 {
   // The APZC that we find via APZCCallbackHelpers may not be the same APZC
   // ESM or OverscrollHandoff would have computed. Make sure we get the right
@@ -618,7 +639,7 @@ PanGestureBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController
     }
   }
 
-  InputBlockState::SetConfirmedTargetApzc(apzc);
+  InputBlockState::SetConfirmedTargetApzc(apzc, aState);
   return true;
 }
 

@@ -82,7 +82,7 @@ SharedPlanarYCbCrImage::GetAsSourceSurface()
 }
 
 bool
-SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
+SharedPlanarYCbCrImage::CopyData(const PlanarYCbCrData& aData)
 {
   // If mTextureClient has not already been allocated (through Allocate(aData))
   // allocate it. This code path is slower than the one used when Allocate has
@@ -140,9 +140,9 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 }
 
 bool
-SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
+SharedPlanarYCbCrImage::AdoptData(const Data &aData)
 {
-  // SetDataNoCopy is used to update YUV plane offsets without (re)allocating
+  // AdoptData is used to update YUV plane offsets without (re)allocating
   // memory previously allocated with AllocateAndGetNewBuffer().
 
   MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
