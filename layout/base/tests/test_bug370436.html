@@ -14,7 +14,6 @@
 <script class="testbody" type="application/javascript">
 <!--
 words = new Array()
-const Ci = Components.interfaces;
 
 function expandStringOffsetToWord(data, offset)
 {
@@ -27,10 +26,8 @@ function expandStringOffsetToWord(data, offset)
 
 function onContextMenu(e)
 {
-  var node = e.rangeParent;
+  var node = SpecialPowers.wrap(e).rangeParent;
   var offset = e.rangeOffset;
-  var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-  is(utils.getClassName(node), "Text", "Shouldn't have SOWs in chrome");
 
   var word = expandStringOffsetToWord(node.data, offset);
   words.push(word);
