@@ -23,13 +23,13 @@ interface nsIAboutModule : nsISupports
                           in nsILoadInfo aLoadInfo);
 
     /**
-     * A flag that indicates whether a URI is safe for untrusted
-     * content.  If it is, web pages and so forth will be allowed to
-     * link to this about: URI (unless MAKE_UNLINKABLE is also specified),
-     * and the about: protocol handler will enforce that the principal
-     * of channels created for it be based on their originalURI or URI
-     * (depending on the channel flags), by setting their "owner" to null.
-     * Otherwise, only chrome will be able to link to it.
+     * A flag that indicates whether a URI should be run with content
+     * privileges. If it is, the about: protocol handler will enforce that
+     * the principal of channels created for it be based on their
+     * originalURI or URI (depending on the channel flags), by setting
+     * their "owner" to null.
+     * If content needs to be able to link to this URI, specify
+     * URI_CONTENT_LINKABLE as well.
      */
     const unsigned long URI_SAFE_FOR_UNTRUSTED_CONTENT = (1 << 0);
 
@@ -61,10 +61,15 @@ interface nsIAboutModule : nsISupports
     const unsigned long URI_MUST_LOAD_IN_CHILD = (1 << 5);
 
     /**
-     * A flag that indicates that this URI should be unlinkable despite being
-     * safe for untrusted content.
+     * Obsolete. This flag no longer has any effect and will be removed in future.
      */
     const unsigned long MAKE_UNLINKABLE = (1 << 6);
+
+    /**
+     * A flag that indicates that this URI should be linkable from content.
+     * Ignored unless URI_SAFE_FOR_UNTRUSTED_CONTENT is also specified.
+     */
+    const unsigned long MAKE_LINKABLE = (1 << 7);
 
     /**
      * A method to get the flags that apply to a given about: URI.  The URI

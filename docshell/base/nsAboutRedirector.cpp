@@ -69,7 +69,9 @@ static RedirEntry kRedirMap[] = {
   },
   {
     "logo", "chrome://branding/content/about.png",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    // Linkable for testing reasons.
+    nsIAboutModule::MAKE_LINKABLE
   },
   {
     "memory", "chrome://global/content/aboutMemory.xhtml",
@@ -121,6 +123,8 @@ static RedirEntry kRedirMap[] = {
     "srcdoc", "about:blank",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
       nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+      // Needs to be linkable so content can touch its own srcdoc frames
+      nsIAboutModule::MAKE_LINKABLE |
       nsIAboutModule::URI_CAN_LOAD_IN_CHILD
   },
   {
