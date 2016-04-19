@@ -18,14 +18,6 @@ test(function(t) {
   assert_equals(animation.id, 'anim', 'animation.id reflects the value set');
 }, 'Animation.id for CSS Animations');
 
-test(function(t) {
-  var div = addDiv(t);
-  var animation = div.animate({}, 100 * MS_PER_SEC);
-  assert_equals(animation.id, '', 'id for CSS Animation is initially empty');
-  animation.id = 'anim'
-
-  assert_equals(animation.id, 'anim', 'animation.id reflects the value set');
-}, 'Animation.id for CSS Animations');
 done();
 </script>
 </body>
