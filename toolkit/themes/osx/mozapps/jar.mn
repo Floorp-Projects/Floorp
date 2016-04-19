@@ -53,10 +53,6 @@ toolkit.jar:
 * skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (extensions/xpinstallConfirm.css)
-#ifdef MOZ_PLACES
-  skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
-  skin/classic/mozapps/places/defaultFavicon@2x.png               (places/defaultFavicon@2x.png)
-#endif
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
 
 #if MOZ_BUILD_APP == browser

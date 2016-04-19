@@ -24,9 +24,6 @@ toolkit.jar:
   skin/classic/mozapps/passwordmgr/key.png                   (passwordmgr/key.png)
   skin/classic/mozapps/passwordmgr/key-16.png                (passwordmgr/key-16.png)
   skin/classic/mozapps/passwordmgr/key-64.png                (passwordmgr/key-64.png)
-#ifdef MOZ_PLACES
-  skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
-#endif
   skin/classic/mozapps/plugins/pluginGeneric.png             (plugins/pluginGeneric.png)
   skin/classic/mozapps/plugins/pluginBlocked.png             (plugins/pluginBlocked.png)
   skin/classic/mozapps/plugins/pluginGeneric-16.png          (plugins/pluginGeneric-16.png)
