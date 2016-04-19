@@ -3952,13 +3952,13 @@ public class BrowserApp extends GeckoApp
         // We store synchronously before sending the Intent to ensure this sequence number will not be re-used.
         sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
 
-        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
+        final Intent i = new Intent(TelemetryUploadService.ACTION_UPLOAD_CORE);
         i.setClass(context, TelemetryUploadService.class);
-        i.putExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE, (defaultEngine == null) ? null : defaultEngine.getIdentifier());
-        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().getAbsolutePath());
-        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
+        i.putExtra(TelemetryUploadService.EXTRA_DEFAULT_SEARCH_ENGINE, (defaultEngine == null) ? null : defaultEngine.getIdentifier());
+        i.putExtra(TelemetryUploadService.EXTRA_DOC_ID, UUID.randomUUID().toString());
+        i.putExtra(TelemetryUploadService.EXTRA_PROFILE_NAME, profile.getName());
+        i.putExtra(TelemetryUploadService.EXTRA_PROFILE_PATH, profile.getDir().getAbsolutePath());
+        i.putExtra(TelemetryUploadService.EXTRA_SEQ, seq);
         context.startService(i);
     }
 
