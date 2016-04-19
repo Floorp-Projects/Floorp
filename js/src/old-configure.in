@@ -262,8 +262,6 @@ case "$target" in
             # Disable C++11 thread-safe statics due to crashes on XP (bug 1204752)
             # See https://connect.microsoft.com/VisualStudio/feedback/details/1789709/visual-c-2015-runtime-broken-on-windows-server-2003-c-11-magic-statics
             CXXFLAGS="$CXXFLAGS -Zc:threadSafeInit-"
-        else
-            AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         AC_SUBST(MSVC_C_RUNTIME_DLL)
         AC_SUBST(MSVC_CXX_RUNTIME_DLL)
