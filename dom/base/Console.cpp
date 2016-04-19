@@ -546,6 +546,10 @@ protected:
       return true;
     }
 
+    if (!JS_ObjectNotWritten(aWriter, aObj)) {
+      return false;
+    }
+
     JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
     JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
     if (NS_WARN_IF(!jsString)) {
