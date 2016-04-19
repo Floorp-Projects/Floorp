@@ -490,7 +490,7 @@ function l10n(name, bundle, arg) {
     return arg ? bundle.formatStringFromName(name, [arg], 1)
     : bundle.GetStringFromName(name);
   } catch (ex) {
-    Services.console.logStringMessage("Error reading '" + name + "'");
+    console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
   }
 }

@@ -14,7 +14,6 @@ const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const Node = Ci.nsIDOMNode;
 
-loader.lazyImporter(this, "console", "resource://gre/modules/Console.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 loader.lazyImporter(this, "EventEmitter", "resource://devtools/shared/event-emitter.js");
 
