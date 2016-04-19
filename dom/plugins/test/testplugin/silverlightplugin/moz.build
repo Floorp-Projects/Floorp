@@ -7,5 +7,4 @@
 SharedLibrary('npctrltest')
 
 relative_path = 'silverlightplugin'
-cocoa_name = 'npctrltest'
 include('../testplugin.mozbuild')
