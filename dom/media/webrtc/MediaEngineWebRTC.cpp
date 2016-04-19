@@ -12,9 +12,6 @@
 #include "prenv.h"
 
 #include "mozilla/Logging.h"
-#ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
-#endif
 
 static mozilla::LogModule*
 GetUserMediaLog()
@@ -293,16 +290,6 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 #endif
 }
 
-bool
-MediaEngineWebRTC::SupportsDuplex()
-{
-#ifndef XP_WIN
-  return mFullDuplex;
-#else
-  return IsVistaOrLater() && mFullDuplex;
-#endif
-}
-
 void
 MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
                                          nsTArray<RefPtr<MediaEngineAudioSource> >* aASources)
@@ -352,7 +339,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
   }
 
   if (!mAudioInput) {
-    if (SupportsDuplex()) {
+    if (mFullDuplex) {
       // The platform_supports_full_duplex.
       mAudioInput = new mozilla::AudioInputCubeb(mVoiceEngine);
     } else {
@@ -396,7 +383,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
       aASources->AppendElement(aSource.get());
     } else {
       AudioInput* audioinput = mAudioInput;
-      if (SupportsDuplex()) {
+      if (mFullDuplex) {
         // The platform_supports_full_duplex.
 
         // For cubeb, it has state (the selected ID)
