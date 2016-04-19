@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWifiScannerDBus.h"
-#include "mozilla/ipc/DBusMessageRefPtr.h"
 #include "nsWifiAccessPoint.h"
 
 namespace mozilla {
@@ -39,9 +38,9 @@ nsWifiScannerDBus::SendMessage(const char* aInterface,
                                const char* aPath,
                                const char* aFuncCall)
 {
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
+  DBusMessage* msg =
     dbus_message_new_method_call("org.freedesktop.NetworkManager",
-                                 aPath, aInterface, aFuncCall));
+                                 aPath, aInterface, aFuncCall);
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
@@ -74,9 +73,9 @@ nsWifiScannerDBus::SendMessage(const char* aInterface,
   // http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html
   // Refer to function dbus_connection_send_with_reply_and_block.
   const uint32_t DBUS_DEFAULT_TIMEOUT = -1;
-  RefPtr<DBusMessage> reply = already_AddRefed<DBusMessage>(
-    dbus_connection_send_with_reply_and_block(mConnection, msg,
-                                              DBUS_DEFAULT_TIMEOUT, &err));
+  DBusMessage* reply = nullptr;
+  reply = dbus_connection_send_with_reply_and_block(mConnection, msg,
+                                                    DBUS_DEFAULT_TIMEOUT, &err);
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
 
@@ -100,6 +99,7 @@ nsWifiScannerDBus::SendMessage(const char* aInterface,
   } else {
     rv = NS_ERROR_FAILURE;
   }
+  dbus_message_unref(reply);
   return rv;
 }
 
