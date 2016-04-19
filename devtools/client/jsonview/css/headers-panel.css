@@ -30,19 +30,6 @@
   font-family: Lucida Grande, Tahoma, sans-serif;
   font-weight: bold;
   color: #565656;
-}
-
-.headersPanelBox .netHeader.twisty {
-  background-image: url(twisty-open.svg);
-  background-repeat: no-repeat;
-  min-height: 12px;
-  background-position: 2px 50%;
-}
-
-.headersPanelBox .netHeader {
-  cursor: pointer;
-  padding-left: 17px;
-  position: static;
   -moz-user-select: none;
 }
 
