@@ -34,6 +34,17 @@
 // Internal message used for hiding the on-screen keyboard
 #define MOZ_WM_DISMISS_ONSCREEN_KEYBOARD  (WM_APP+0x0317)
 
+// Following MOZ_WM_*KEY* messages are used by PluginInstanceChild internally.
+// (never posted to the queue)
+#define MOZ_WM_KEYDOWN                    (WM_APP+0x0318)
+#define MOZ_WM_KEYUP                      (WM_APP+0x0319)
+#define MOZ_WM_SYSKEYDOWN                 (WM_APP+0x031A)
+#define MOZ_WM_SYSKEYUP                   (WM_APP+0x031B)
+#define MOZ_WM_CHAR                       (WM_APP+0x031C)
+#define MOZ_WM_SYSCHAR                    (WM_APP+0x031D)
+#define MOZ_WM_DEADCHAR                   (WM_APP+0x031E)
+#define MOZ_WM_SYSDEADCHAR                (WM_APP+0x031F)
+
 // Internal message for ensuring the file picker is visible on multi monitor
 // systems, and when the screen resolution changes.
 #define MOZ_WM_ENSUREVISIBLE              (WM_APP+0x374F)

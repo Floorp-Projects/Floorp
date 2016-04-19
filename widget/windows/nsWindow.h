@@ -311,6 +311,9 @@ public:
                    aPosition) override;
   virtual void DefaultProcOfPluginEvent(
                  const mozilla::WidgetPluginEvent& aEvent) override;
+  virtual nsresult OnWindowedPluginKeyEvent(
+                     const mozilla::NativeEventData& aKeyEventData,
+                     nsIKeyEventInPluginCallback* aCallback) override;
 
 protected:
   virtual ~nsWindow();
