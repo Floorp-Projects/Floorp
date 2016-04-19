@@ -112,6 +112,7 @@ WEBIDL_FILES = [
     'DataStore.webidl',
     'DataStoreImpl.webidl',
     'DataTransfer.webidl',
+    'DecoderDoctorNotification.webidl',
     'DedicatedWorkerGlobalScope.webidl',
     'DelayNode.webidl',
     'DesktopNotification.webidl',
