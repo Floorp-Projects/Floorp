@@ -39,7 +39,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kContentDoc = "http://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
-const kContentScript = "chrome://mochitests/content/browser/dom/tests/browser/test_new_window_from_content_child.js";
 const kNewWindowPrefKey = "browser.link.open_newwindow";
 const kNewWindowRestrictionPrefKey = "browser.link.open_newwindow.restriction";
 const kSameTab = "same tab";
@@ -107,11 +106,12 @@ registerCleanupFunction(function() {
  *         and cleaned up after.
  */
 function prepareForResult(aBrowser, aExpectation) {
+  let expectedSpec = kContentDoc.replace(/[^\/]*$/, "dummy.html");
   switch(aExpectation) {
     case kSameTab:
       return Task.spawn(function*() {
         yield BrowserTestUtils.browserLoaded(aBrowser);
-        is(aBrowser.currentURI.spec, "about:robots", "Should be at about:robots");
+        is(aBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
         // Now put the browser back where it came from
         yield BrowserTestUtils.loadURI(aBrowser, kContentDoc);
         yield BrowserTestUtils.browserLoaded(aBrowser);
@@ -122,15 +122,15 @@ function prepareForResult(aBrowser, aExpectation) {
         let newWin = yield BrowserTestUtils.waitForNewWindow();
         let newBrowser = newWin.gBrowser.selectedBrowser;
         yield BrowserTestUtils.browserLoaded(newBrowser);
-        is(newBrowser.currentURI.spec, "about:robots", "Should be at about:robots");
+        is(newBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
         yield BrowserTestUtils.closeWindow(newWin);
       });
       break;
     case kNewTab:
       return Task.spawn(function*() {
         let newTab = yield BrowserTestUtils.waitForNewTab(gBrowser);
-        is(newTab.linkedBrowser.currentURI.spec, "about:robots",
-           "Should be at about:robots");
+        is(newTab.linkedBrowser.currentURI.spec, expectedSpec,
+           "Should be at dummy.html");
         yield BrowserTestUtils.removeTab(newTab);
       });
       break;
