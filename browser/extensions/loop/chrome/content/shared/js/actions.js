@@ -196,6 +196,7 @@ loop.shared.actions = (function() {
      * A stream from local or remote media has been created.
      */
     MediaStreamCreated: Action.define("mediaStreamCreated", {
+      hasAudio: Boolean,
       hasVideo: Boolean,
       isLocal: Boolean,
       srcMediaElement: Object

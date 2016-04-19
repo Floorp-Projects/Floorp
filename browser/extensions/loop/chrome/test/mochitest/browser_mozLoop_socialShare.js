@@ -42,13 +42,13 @@ add_task(function* test_mozLoop_addSocialShareProvider() {
 
 add_task(function* test_mozLoop_getSocialShareProviders() {
   let providers;
-  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  gHandlers.GetSocialShareProviders({}, result => { providers = result; });
   Assert.strictEqual(providers.length, 0, "Provider list should be empty initially");
 
   // Add a provider.
   yield new Promise(resolve => SocialService.addProvider(kShareProvider, resolve));
 
-  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  gHandlers.GetSocialShareProviders({}, result => { providers = result; });
   Assert.strictEqual(providers.length, 1,
     "The newly added provider should be part of the list");
   let provider = providers[0];
@@ -59,7 +59,7 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
   // Add another provider that should not be picked up by Loop.
   yield new Promise(resolve => SocialService.addProvider(kShareProviderInvalid, resolve));
 
-  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  gHandlers.GetSocialShareProviders({}, result => { providers = result; });
   Assert.strictEqual(providers.length, 1,
     "The newly added provider should not be part of the list");
 
@@ -69,7 +69,7 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
   provider2.origin = "https://example3.com";
   yield new Promise(resolve => SocialService.addProvider(provider2, resolve));
 
-  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  gHandlers.GetSocialShareProviders({}, result => { providers = result; });
   Assert.strictEqual(providers.length, 2,
     "The newly added provider should be part of the list");
   Assert.strictEqual(providers[1].name, provider2.name,
@@ -77,7 +77,7 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
 
   // Remove the second valid provider.
   yield new Promise(resolve => SocialService.disableProvider(provider2.origin, resolve));
-  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  gHandlers.GetSocialShareProviders({}, result => { providers = result; });
   Assert.strictEqual(providers.length, 1,
     "The uninstalled provider should not be part of the list");
   Assert.strictEqual(providers[0].name, kShareProvider.name, "Names should match");

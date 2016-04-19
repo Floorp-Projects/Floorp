@@ -76,7 +76,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", {});
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com/" target="_blank" rel="noreferrer">http://example.com/</a></p>');
+              '<p><a href="http://example.com/" rel="noreferrer" target="_blank">http://example.com/</a></p>');
           });
       });
 
@@ -94,7 +94,7 @@ describe("loop.shared.views.LinkifiedTextView", function() {
             var markup = renderToMarkup("http://example.com", {});
 
             expect(markup).to.equal(
-              '<p><a href="http://example.com/" target="_blank" rel="noreferrer">http://example.com/</a></p>');
+              '<p><a href="http://example.com/" rel="noreferrer" target="_blank">http://example.com/</a></p>');
           });
       });
 

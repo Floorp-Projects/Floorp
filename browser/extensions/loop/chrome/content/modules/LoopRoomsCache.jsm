@@ -154,5 +154,7 @@ LoopRoomsCache.prototype = {
       cache[sessionType][roomToken].key = roomKey;
       return yield this._setCache(cache);
     }
+
+    return Promise.resolve();
   })
 };

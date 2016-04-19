@@ -545,15 +545,20 @@ html[dir="rtl"] .context-content {
 }
 
 .context-wrapper {
-  border: 2px solid #ebebeb;
-  border-radius: 4px;
-  background: #fafafa;
-  padding: 1.1rem .8rem;
   /* Use the flex row mode to position the elements next to each other. */
   display: flex;
   flex-flow: row nowrap;
   /* No underline for the text in the context view. */
   text-decoration: none;
+}
+
+.context-content > .context-wrapper {
+  border: 2px solid #ebebeb;
+  border-radius: 4px;
+  background: #fafafa;
+  padding: 1.1rem .8rem;
+  font-size: 1.3rem;
+  line-height: 1.4rem;
 }
 
 .context-wrapper > .context-preview {

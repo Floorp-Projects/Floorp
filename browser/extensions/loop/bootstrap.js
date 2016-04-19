@@ -55,7 +55,7 @@ var WindowListener = {
    */
   setupBrowserUI: function(window) {
     let document = window.document;
-    let gBrowser = window.gBrowser;
+    let { gBrowser, gURLBar } = window;
     let xhrClass = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
     let FileReader = window.FileReader;
     let menuItem = null;
@@ -174,6 +174,15 @@ var WindowListener = {
         }).catch(err => {
           Cu.reportError(err);
         });
+      },
+
+      /**
+       * Called when a closing room has just been created, so we offer the
+       * user the chance to modify the name. For that we need to open the panel.
+       * Showing the proper layout is done on panel.jsx
+       */
+      renameRoom: function() {
+        this.openPanel();
       },
 
       /**
@@ -332,6 +341,7 @@ var WindowListener = {
 
         Services.obs.addObserver(this, "loop-status-changed", false);
 
+        this.maybeAddCopyPanel();
         this.updateToolbarState();
       },
 
@@ -361,6 +371,113 @@ var WindowListener = {
       removeMenuItem: function() {
         if (menuItem) {
           menuItem.parentNode.removeChild(menuItem);
+        }
+      },
+
+      /**
+       * Maybe add the copy panel if it's not throttled and passes other checks.
+       * @return {Promise} Resolved when decided and maybe panel-added.
+       */
+      maybeAddCopyPanel() {
+        // Don't bother adding the copy panel if we're in private browsing or
+        // we've already shown it.
+        if (PrivateBrowsingUtils.isWindowPrivate(window) ||
+            Services.prefs.getBoolPref("loop.copy.shown")) {
+          return Promise.resolve();
+        }
+
+        return Throttler.check("loop.copy").then(() => this.addCopyPanel());
+      },
+
+      /**
+       * Hook into the location bar copy command to open up the copy panel.
+       * @param {Function} onClickHandled Optional callback for finished clicks.
+       */
+      addCopyPanel(onClickHandled) {
+        // Make a copy of the loop panel as a starting point for the copy panel.
+        let copy = this.panel.cloneNode(false);
+        copy.id = "loop-copy-notification-panel";
+        this.panel.parentNode.appendChild(copy);
+
+        // Record a telemetry copy panel action.
+        let addTelemetry = bucket => {
+          this.LoopAPI.sendMessageToHandler({
+            data: ["LOOP_COPY_PANEL_ACTIONS", this.constants.COPY_PANEL[bucket]],
+            name: "TelemetryAddValue"
+          });
+        };
+
+        // Handle events from the copy panel iframe content.
+        let onIframe = iframe => {
+          // Watch for events from the copy panel when loaded.
+          iframe.addEventListener("DOMContentLoaded", function onLoad() {
+            iframe.removeEventListener("DOMContentLoaded", onLoad);
+
+            // Size the panel to fit the rendered content adjusting for borders.
+            iframe.contentWindow.requestAnimationFrame(() => {
+              let height = iframe.contentDocument.documentElement.offsetHeight;
+              height += copy.boxObject.height - iframe.boxObject.height;
+              copy.style.height = height + "px";
+            });
+
+            // Hide the copy panel then show the loop panel.
+            iframe.contentWindow.addEventListener("CopyPanelClick", event => {
+              iframe.parentNode.hidePopup();
+
+              // Show the Loop panel if the user wants it.
+              let { accept, stop } = event.detail;
+              if (accept) {
+                LoopUI.openPanel();
+              }
+
+              // Stop showing the panel if the user says so.
+              if (stop) {
+                LoopUI.removeCopyPanel();
+                Services.prefs.setBoolPref("loop.copy.shown", true);
+              }
+
+              // Generate the appropriate NO_AGAIN, NO_NEVER, YES_AGAIN,
+              // YES_NEVER probe based on the user's action.
+              let probe = (accept ? "YES" : "NO") + "_" + (stop ? "NEVER" : "AGAIN");
+              addTelemetry(probe);
+
+              // For testing, indicate that handling the click has finished.
+              try {
+                onClickHandled(event.detail);
+              } catch (ex) {
+                // Do nothing.
+              }
+            });
+          });
+        };
+
+        // Override the default behavior of the copy command.
+        let controller = gURLBar._copyCutController;
+        controller._doCommand = controller.doCommand;
+        controller.doCommand = () => {
+          // Do the normal behavior first.
+          controller._doCommand.apply(controller, arguments);
+
+          // Open up the copy panel at the loop button.
+          addTelemetry("SHOWN");
+          LoopUI.PanelFrame.showPopup(window, LoopUI.toolbarButton.anchor, "loop-copy",
+            null, "chrome://loop/content/panels/copy.html", null, onIframe);
+        };
+      },
+
+      /**
+       * Removes the copy panel copy hook and the panel.
+       */
+      removeCopyPanel() {
+        let controller = gURLBar && gURLBar._copyCutController;
+        if (controller && controller._doCommand) {
+          controller.doCommand = controller._doCommand;
+          delete controller._doCommand;
+        }
+
+        let copy = document.getElementById("loop-copy-notification-panel");
+        if (copy) {
+          copy.parentNode.removeChild(copy);
         }
       },
 
@@ -519,22 +636,28 @@ var WindowListener = {
         this.activeSound.load();
         this.activeSound.play();
 
-        this.activeSound.addEventListener("ended", () => this.activeSound = undefined, false);
+        this.activeSound.addEventListener("ended", () => { this.activeSound = undefined; }, false);
       },
 
       /**
        * Start listening to selected tab changes and notify any content page that's
-       * listening to 'BrowserSwitch' push messages.
+       * listening to 'BrowserSwitch' push messages.  Also sets up a "joined"
+       * and "left" listener for LoopRooms so that we can toggle the infobar
+       * sharing messages when people come and go.
        *
-       * Push message parameters:
-       * - {Integer} windowId  The new windowId for the browser.
+       * @param {(String)} roomToken  The current room that the link generator is connecting to.
        */
-      startBrowserSharing: function() {
+      startBrowserSharing: function(roomToken) {
         if (!this._listeningToTabSelect) {
           gBrowser.tabContainer.addEventListener("TabSelect", this);
           this._listeningToTabSelect = true;
 
           titleChangedListener = this.handleDOMTitleChanged.bind(this);
+
+          this._roomsListener = this.handleRoomJoinedOrLeft.bind(this);
+
+          this.LoopRooms.on("joined", this._roomsListener);
+          this.LoopRooms.on("left", this._roomsListener);
 
           // Watch for title changes as opposed to location changes as more
           // metadata about the page is available when this event fires.
@@ -549,7 +672,8 @@ var WindowListener = {
           gBrowser.addEventListener("click", this);
         }
 
-        this._maybeShowBrowserSharingInfoBar();
+        this._currentRoomToken = roomToken;
+        this._maybeShowBrowserSharingInfoBar(roomToken);
 
         // Get the first window Id for the listener.
         let browser = gBrowser.selectedBrowser;
@@ -577,6 +701,8 @@ var WindowListener = {
 
         this._hideBrowserSharingInfoBar();
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
+        this.LoopRooms.off("joined", this._roomsListener);
+        this.LoopRooms.off("left", this._roomsListener);
 
         if (titleChangedListener) {
           this.mm.removeMessageListener("loop@mozilla.org:DOMTitleChanged",
@@ -591,6 +717,8 @@ var WindowListener = {
 
         this._listeningToTabSelect = false;
         this._browserSharePaused = false;
+        this._currentRoomToken = null;
+
         this._sendTelemetryEventsIfNeeded();
       },
 
@@ -720,26 +848,52 @@ var WindowListener = {
       },
 
       /**
+       * Set correct strings for infobar notification based on if paused or empty.
+       */
+
+      _setInfoBarStrings: function(nonOwnerParticipants, sharePaused) {
+        let message;
+        if (nonOwnerParticipants) {
+          // More than just the owner in the room.
+          message = this._getString(
+            sharePaused ? "infobar_screenshare_stop_sharing_message2" :
+                          "infobar_screenshare_browser_message3");
+
+        } else {
+          // Just the owner in the room.
+          message = this._getString(
+            sharePaused ? "infobar_screenshare_stop_no_guest_message" :
+                          "infobar_screenshare_no_guest_message");
+        }
+        let label = this._getString(
+          sharePaused ? "infobar_button_restart_label2" : "infobar_button_stop_label2");
+        let accessKey = this._getString(
+          sharePaused ? "infobar_button_restart_accesskey" : "infobar_button_stop_accesskey");
+
+        return { message: message, label: label, accesskey: accessKey };
+      },
+
+      /**
+       * Indicates if tab sharing is paused.
+       * Set by tab pause button, startBrowserSharing and stopBrowserSharing.
+       * Defaults to false as link generator(owner) enters room we are sharing tabs.
+       */
+      _browserSharePaused: false,
+
+      /**
        * Shows an infobar notification at the top of the browser window that warns
        * the user that their browser tabs are being broadcasted through the current
        * conversation.
+       * @param  {String} currentRoomToken Room we are currently joined.
+       * @return {void}
        */
-      _maybeShowBrowserSharingInfoBar: function() {
-        // Pre-load strings
-        let pausedStrings = {
-          label: this._getString("infobar_button_restart_label2"),
-          accesskey: this._getString("infobar_button_restart_accesskey"),
-          message: this._getString("infobar_screenshare_stop_sharing_message")
-        };
-        let unpausedStrings = {
-          label: this._getString("infobar_button_stop_label2"),
-          accesskey: this._getString("infobar_button_stop_accesskey"),
-          message: this._getString("infobar_screenshare_browser_message2")
-        };
-        let initStrings =
-          this._browserSharePaused ? pausedStrings : unpausedStrings;
-
+      _maybeShowBrowserSharingInfoBar: function(currentRoomToken) {
         this._hideBrowserSharingInfoBar();
+
+        let participantsCount = this.LoopRooms.getNumParticipants(currentRoomToken);
+
+        let initStrings = this._setInfoBarStrings(participantsCount > 1, this._browserSharePaused);
+
         let box = gBrowser.getNotificationBox();
         let bar = box.appendNotification(
           initStrings.message,            // label
@@ -749,11 +903,12 @@ var WindowListener = {
           box.PRIORITY_WARNING_LOW,       // priority
           [{                              // buttons (Pause, Stop)
             label: initStrings.label,
-            accessKey: initStrings.accessKey,
+            accessKey: initStrings.accesskey,
             isDefault: false,
             callback: (event, buttonInfo, buttonNode) => {
               this._browserSharePaused = !this._browserSharePaused;
-              let stringObj = this._browserSharePaused ? pausedStrings : unpausedStrings;
+              let guestPresent = this.LoopRooms.getNumParticipants(this._currentRoomToken) > 1;
+              let stringObj = this._setInfoBarStrings(guestPresent, this._browserSharePaused);
               bar.label = stringObj.message;
               bar.classList.toggle("paused", this._browserSharePaused);
               buttonNode.label = stringObj.label;
@@ -821,6 +976,18 @@ var WindowListener = {
       },
 
       /**
+       * Handles updating of the sharing infobar when the room participants
+       * change.
+       */
+      handleRoomJoinedOrLeft: function() {
+        // Don't attempt to show it if we're not actively sharing.
+        if (!this._listeningToTabSelect) {
+          return;
+        }
+        this._maybeShowBrowserSharingInfoBar(this._currentRoomToken);
+      },
+
+      /**
        * Handles events from the frame script.
        *
        * @param {Object} message The message received from the frame script.
@@ -840,8 +1007,9 @@ var WindowListener = {
        * Handles events from gBrowser.
        */
       handleEvent: function(event) {
+
         switch (event.type) {
-          case "TabSelect":
+          case "TabSelect": {
             let wasVisible = false;
             // Hide the infobar from the previous tab.
             if (event.detail.previousTab) {
@@ -857,9 +1025,10 @@ var WindowListener = {
             if (wasVisible) {
               // If the infobar was visible before, we should show it again after the
               // switch.
-              this._maybeShowBrowserSharingInfoBar();
+              this._maybeShowBrowserSharingInfoBar(this._currentRoomToken);
             }
             break;
+          }
           case "mousemove":
             this.handleMousemove(event);
             break;
@@ -971,6 +1140,9 @@ var WindowListener = {
 
     LoopUI.init();
     window.LoopUI = LoopUI;
+
+    // Export the Throttler to allow tests to overwrite parts of it.
+    window.LoopThrottler = Throttler;
   },
 
   /**
@@ -981,6 +1153,7 @@ var WindowListener = {
    */
   tearDownBrowserUI: function(window) {
     if (window.LoopUI) {
+      window.LoopUI.removeCopyPanel();
       window.LoopUI.removeMenuItem();
 
       // This stops the frame script being loaded to new tabs, but doesn't
@@ -1012,6 +1185,77 @@ var WindowListener = {
   },
 
   onWindowTitleChange: function() {
+  }
+};
+
+/**
+ * Provide a way to throttle functionality using DNS to distribute 3 numbers for
+ * various distributions channels. DNS is used to scale distribution of the
+ * numbers as an A record pointing to a loopback address (127.*.*.*). Prefs are
+ * used to control behavior (what domain to check) and keep state (a ticket
+ * number to track if it needs to initialize, to wait for its turn, or is
+ * completed).
+ */
+let Throttler = {
+  // Each 8-bit block of the IP address allows for 0% rollout (value 0) to 100%
+  // rollout (value 255).
+  TICKET_LIMIT: 255,
+
+  // Allow the DNS service to be overwritten for testing.
+  _dns: Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService),
+
+  /**
+   * Check if a given feature should be throttled or not.
+   * @param {string} [prefPrefix] Start of the preference name for the feature.
+   * @return {Promise} Resolved on success, and rejected on throttled.
+   */
+  check(prefPrefix) {
+    return new Promise((resolve, reject) => {
+      // Initialize the ticket (0-254) if it doesn't have a valid value yet.
+      let prefTicket = prefPrefix + ".ticket";
+      let ticket = Services.prefs.getIntPref(prefTicket);
+      if (ticket < 0) {
+        ticket = Math.floor(Math.random() * this.TICKET_LIMIT);
+        Services.prefs.setIntPref(prefTicket, ticket);
+      }
+      // Short circuit if the special ticket value indicates we're good to go.
+      else if (ticket >= this.TICKET_LIMIT) {
+        resolve();
+        return;
+      }
+
+      // Handle responses from the DNS resolution service request.
+      let onDNS = (request, record) => {
+        // Use a specific part of the A-record IP address depending on the
+        // channel. I.e., 127.[release/other].[beta].[aurora/nightly].
+        let index = 1;
+        switch (Services.prefs.getCharPref("app.update.channel")) {
+          case "beta":
+            index = 2;
+            break;
+          case "aurora":
+          case "nightly":
+            index = 3;
+            break;
+        }
+
+        // Select the 1 out of 4 parts of the "."-separated IP address to check
+        // if the 8-bit threshold (0-255) exceeds the ticket (0-254).
+        let threshold = record && record.getNextAddrAsString().split(".")[index];
+        if (threshold && ticket < threshold) {
+          // Remember that we're good to go to avoid future DNS checks.
+          Services.prefs.setIntPref(prefTicket, this.TICKET_LIMIT);
+          resolve();
+        }
+        else {
+          reject();
+        }
+      };
+
+      // Look up the DNS A-record of a throttler hostname to decide to show.
+      this._dns.asyncResolve(Services.prefs.getCharPref(prefPrefix + ".throttler"),
+        this._dns.RESOLVE_DISABLE_IPV6, onDNS, Services.tm.mainThread);
+    });
   }
 };
 

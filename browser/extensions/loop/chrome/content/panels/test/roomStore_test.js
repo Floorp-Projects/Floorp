@@ -59,6 +59,7 @@ describe("loop.store.RoomStore", function() {
         if (prefName === "debug.dispatcher") {
           return false;
         }
+        return true;
       },
       NotifyUITour: function() {},
       OpenURL: sinon.stub(),
@@ -73,6 +74,7 @@ describe("loop.store.RoomStore", function() {
       "Rooms:Rename": sinon.stub(),
       "Rooms:PushSubscription": sinon.stub(),
       "SetLoopPref": sinon.stub(),
+      "SetNameNewRoom": sinon.stub(),
       TelemetryAddValue: sinon.stub()
     });
 
@@ -178,6 +180,49 @@ describe("loop.store.RoomStore", function() {
       });
 
       describe("close", function() {
+        it("should request rename if closing room is last created", function() {
+          store.setStoreState({
+            openedRoom: "fakeToken",
+            lastCreatedRoom: "fakeToken"
+          });
+
+          sinon.stub(store, "setStoreState");
+
+          LoopMochaUtils.publish("Rooms:Close");
+
+          sinon.assert.calledTwice(store.setStoreState);
+          sinon.assert.calledWithExactly(store.setStoreState.getCall(0),
+                                         { closingNewRoom: true });
+          sinon.assert.calledOnce(requestStubs.SetNameNewRoom);
+        });
+
+        it("should not request rename if last created and opened room are null", function() {
+          store.setStoreState({
+            lastCreatedRoom: null,
+            openedRoom: null
+          });
+
+          sinon.stub(store, "setStoreState");
+
+          LoopMochaUtils.publish("Rooms:Close");
+
+          sinon.assert.notCalled(requestStubs.SetNameNewRoom);
+        });
+
+        it("should end up updating closingNewRoom state to false", function() {
+          store.setStoreState({ closingNewRoom: "true" });
+          LoopMochaUtils.publish("Rooms:Close");
+
+          expect(store.getStoreState().closingNewRoom).to.eql(false);
+        });
+
+        it("should update the lastCreatedRoom state to null", function() {
+          store.setStoreState({ lastCreatedRoom: "fake1234" });
+          LoopMochaUtils.publish("Rooms:Close");
+
+          expect(store.getStoreState().lastCreatedRoom).to.eql(null);
+        });
+
         it("should update the openedRoom state to null", function() {
           store.setStoreState({ openedRoom: "fake1234" });
           LoopMochaUtils.publish("Rooms:Close");
@@ -287,6 +332,12 @@ describe("loop.store.RoomStore", function() {
         expect(store.getStoreState().pendingCreation).eql(true);
       });
 
+      it("should store the room token as the last created", function() {
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        expect(store.getStoreState().lastCreatedRoom).eql("fakeToken");
+      });
+
       it("should dispatch a CreatedRoom action once the operation is done",
         function() {
           store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
@@ -357,9 +408,9 @@ describe("loop.store.RoomStore", function() {
         sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_CREATE", 1);
       });
-   });
+    });
 
-   describe("#createdRoom", function() {
+    describe("#createdRoom", function() {
       beforeEach(function() {
         sandbox.stub(dispatcher, "dispatch");
       });
@@ -608,7 +659,6 @@ describe("loop.store.RoomStore", function() {
         sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue.getCall(0),
           "LOOP_SHARING_ROOM_URL", 4);
       });
-
     });
 
     describe("#shareRoomUrl", function() {
@@ -697,6 +747,15 @@ describe("loop.store.RoomStore", function() {
 
         expect(store.getStoreState().error).to.be.a.undefined;
         expect(store.getStoreState().rooms).to.have.length.of(3);
+      });
+
+      it("should not fetch the room list if called a second time", function() {
+        requestStubs["Rooms:GetAll"].returns(fakeRoomList);
+
+        store.getAllRooms(new sharedActions.GetAllRooms());
+        store.getAllRooms(new sharedActions.GetAllRooms());
+
+        sinon.assert.calledOnce(requestStubs["Rooms:GetAll"]);
       });
 
       it("should order the room list using ctime desc", function() {
