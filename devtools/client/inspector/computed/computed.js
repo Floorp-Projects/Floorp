@@ -228,7 +228,7 @@ CssComputedView.l10n = function(name) {
   try {
     return CssComputedView._strings.GetStringFromName(name);
   } catch (ex) {
-    Services.console.logStringMessage("Error reading '" + name + "'");
+    console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
   }
 };
