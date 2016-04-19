@@ -6,13 +6,13 @@
 #ifndef nsIWidget_h__
 #define nsIWidget_h__
 
+#include "mozilla/UniquePtr.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsRect.h"
 #include "nsStringGlue.h"
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsITheme.h"
@@ -1753,7 +1753,7 @@ private:
 
   static void OnLongTapTimerCallback(nsITimer* aTimer, void* aClosure);
 
-  nsAutoPtr<LongTapInfo> mLongTapTouchPoint;
+  mozilla::UniquePtr<LongTapInfo> mLongTapTouchPoint;
   nsCOMPtr<nsITimer> mLongTapTimer;
   static int32_t sPointerIdCounter;
 
