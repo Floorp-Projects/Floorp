@@ -421,7 +421,7 @@ AndroidMediaReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
   frameDesc.mPicY = 0;
   frameDesc.mPicSize = IntSize(aWidth, aHeight);
 
-  yuvImage->SetDataNoCopy(frameDesc);
+  yuvImage->AdoptData(frameDesc);
 
   return buffer;
 }

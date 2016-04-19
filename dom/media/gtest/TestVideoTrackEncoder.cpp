@@ -87,7 +87,7 @@ private:
     data.mCbCrSize.width = halfWidth;
     data.mCbCrSize.height = halfHeight;
 
-    image->SetData(data);
+    image->CopyData(data);
     return image;
   }
 
@@ -124,7 +124,7 @@ private:
     data.mCbCrSize.width = halfWidth;
     data.mCbCrSize.height = halfHeight;
 
-    image->SetData(data);
+    image->CopyData(data);
     return image;
   }
 
@@ -161,7 +161,7 @@ private:
     data.mCbCrSize.width = halfWidth;
     data.mCbCrSize.height = halfHeight;
 
-    image->SetData(data);
+    image->CopyData(data);
     return image;
   }
 
