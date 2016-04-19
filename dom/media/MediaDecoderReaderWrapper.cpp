@@ -246,7 +246,50 @@ MediaDecoderReaderWrapper::Seek(SeekTarget aTarget, media::TimeUnit aEndTime)
                      aEndTime.ToMicroseconds());
 }
 
+RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
+MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::WaitForData, aType);
+}
+
+RefPtr<MediaDecoderReaderWrapper::BufferedUpdatePromise>
+MediaDecoderReaderWrapper::UpdateBufferedWithPromise()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::UpdateBufferedWithPromise);
+}
+
 void
+MediaDecoderReaderWrapper::ReleaseMediaResources()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
+  mReader->OwnerThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoderReaderWrapper::SetIdle()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
+  mReader->OwnerThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoderReaderWrapper::ResetDecode()
+{
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
+  mReader->OwnerThread()->Dispatch(r.forget());
+}
+
+RefPtr<ShutdownPromise>
 MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -255,6 +298,8 @@ MediaDecoderReaderWrapper::Shutdown()
     mStartTimeRendezvous->Destroy();
     mStartTimeRendezvous = nullptr;
   }
+  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
+                     &MediaDecoderReader::Shutdown);
 }
 
 void
