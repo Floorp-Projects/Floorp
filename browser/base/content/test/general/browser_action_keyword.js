@@ -39,7 +39,6 @@ add_task(function*() {
   isnot(result, null, "Expect a keyword result");
 
   let types = new Set(result.getAttribute("type").split(/\s+/));
-  Assert.ok(types.has("action"));
   Assert.ok(types.has("keyword"));
   is(result.getAttribute("actiontype"), "keyword", "Expect correct `actiontype` attribute");
   is(result.getAttribute("title"), "example.com", "Expect correct title");

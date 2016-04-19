@@ -23,7 +23,7 @@ add_task(function* switchToTab() {
 
   ok(gURLBar.popup.richlistbox.children.length > 1, "Should get at least 2 results");
   let result = gURLBar.popup.richlistbox.children[1];
-  is(result.getAttribute("type"), "action switchtab", "Expect right type attribute");
+  is(result.getAttribute("type"), "switchtab", "Expect right type attribute");
   is(result.label, "about:about about:about Tab", "Result a11y label should be: <title> <url> Tab");
 
   gURLBar.popup.hidePopup();
