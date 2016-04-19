@@ -44,9 +44,14 @@ public:
   void SetCanPlay() { mCanPlay = true; }
   bool CanPlay() const { return mCanPlay; }
 
+  void SetFFmpegFailedToLoad() { mFFmpegFailedToLoad = true; }
+  bool DidFFmpegFailToLoad() const { return mFFmpegFailedToLoad; }
+
 private:
   // True if there is at least one decoder that can play the media.
   bool mCanPlay = false;
+
+  bool mFFmpegFailedToLoad = false;
 };
 
 } // namespace mozilla
