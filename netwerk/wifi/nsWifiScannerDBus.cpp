@@ -12,7 +12,8 @@ nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoint
 {
   MOZ_ASSERT(mAccessPoints);
 
-  mConnection = dbus_bus_get(DBUS_BUS_SYSTEM, nullptr);
+  mConnection =
+    already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
   MOZ_ASSERT(mConnection);
   dbus_connection_set_exit_on_disconnect(mConnection, false);
 
@@ -21,9 +22,6 @@ nsWifiScannerDBus::nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint> *aAccessPoint
 
 nsWifiScannerDBus::~nsWifiScannerDBus()
 {
-  if (!mConnection) {
-    dbus_connection_unref(mConnection);
-  }
   MOZ_COUNT_DTOR(nsWifiScannerDBus);
 }
 
