@@ -6,8 +6,7 @@
 
 TEST_DIRS += ['tests']
 
-for var in ('target', 'MOZ_CONFIGURE_OPTIONS', 'CC', 'CC_VERSION',
-            'CXX', 'CXX_VERSION'):
+for var in ('target', 'MOZ_CONFIGURE_OPTIONS', 'CC', 'CC_VERSION', 'CXX'):
     DEFINES[var] = CONFIG[var]
 
 DEFINES['CFLAGS'] = CONFIG['OS_CFLAGS']
