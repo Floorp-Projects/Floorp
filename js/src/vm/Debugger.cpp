@@ -8188,7 +8188,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    return FromPropertyDescriptor(cx, desc, args.rval());
+    return JS::FromPropertyDescriptor(cx, desc, args.rval());
 }
 
 
