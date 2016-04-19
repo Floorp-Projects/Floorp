@@ -35,7 +35,6 @@ Notes to self:
 #include "nsIWeakReferenceUtils.h"
 #include "nsIFile.h"
 #include "nsILoadContext.h"
-#include "nsAutoPtr.h"
 
 NS_IMPL_ISUPPORTS(nsTransferable, nsITransferable)
 

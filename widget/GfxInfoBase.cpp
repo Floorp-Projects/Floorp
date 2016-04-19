@@ -13,7 +13,6 @@
 #include "GfxDriverInfo.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsVersionComparator.h"
