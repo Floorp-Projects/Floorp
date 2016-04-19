@@ -6,9 +6,9 @@
 #ifndef nsSystemStatusBarCocoa_h_
 #define nsSystemStatusBarCocoa_h_
 
+#include "mozilla/RefPtr.h"
 #include "nsISystemStatusBar.h"
 #include "nsClassHashtable.h"
-#include "nsAutoPtr.h"
 
 class nsStandaloneNativeMenu;
 @class NSStatusItem;

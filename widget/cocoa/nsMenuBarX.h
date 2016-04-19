@@ -120,7 +120,7 @@ protected:
                                             int tag, NativeMenuItemTarget* target);
   nsresult          CreateApplicationMenu(nsMenuX* inMenu);
 
-  nsTArray< nsAutoPtr<nsMenuX> > mMenuArray;
+  nsTArray<mozilla::UniquePtr<nsMenuX>> mMenuArray;
   nsIWidget*         mParentWindow;        // [weak]
   GeckoNSMenu*       mNativeMenu;            // root menu, representing entire menu bar
 };
