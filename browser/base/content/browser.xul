@@ -140,7 +140,12 @@
     <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
 
     <!-- for url bar autocomplete -->
-    <panel type="autocomplete-richlistbox" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true" flip="none">
+    <panel type="autocomplete-richlistbox"
+           id="PopupAutoCompleteRichResult"
+           noautofocus="true"
+           hidden="true"
+           flip="none"
+           level="parent">
 #ifdef NIGHTLY_BUILD
       <hbox id="urlbar-search-footer" flex="1" align="stretch" pack="end">
         <button id="urlbar-search-settings" label="&changeSearchSettings.button;"
