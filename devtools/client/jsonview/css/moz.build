@@ -17,7 +17,5 @@ DevToolsModules(
     'search.svg',
     'tabs.css',
     'text-panel.css',
-    'toolbar.css',
-    'twisty-closed.svg',
-    'twisty-open.svg'
+    'toolbar.css'
 )
