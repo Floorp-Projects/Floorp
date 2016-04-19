@@ -2877,7 +2877,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // (This checks if already exists)
   ps->AddOverrideStyleSheet(sheet);
 
-  ps->ReconstructStyleData();
+  ps->RestyleForCSSRuleChanges();
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -2922,7 +2922,7 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   ps->RemoveOverrideStyleSheet(sheet);
-  ps->ReconstructStyleData();
+  ps->RestyleForCSSRuleChanges();
 
   // Remove it from our internal list
   return rv;
