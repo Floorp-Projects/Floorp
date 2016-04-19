@@ -65,7 +65,7 @@ uint32_t GLContext::sDebugMode = 0;
 #define END_SYMBOLS { nullptr, { nullptr } }
 
 // should match the order of GLExtensions, and be null-terminated.
-static const char *const sExtensionNames[] = {
+static const char* const sExtensionNames[] = {
     "NO_EXTENSION",
     "GL_AMD_compressed_ATC_texture",
     "GL_ANGLE_depth_texture",
@@ -399,17 +399,15 @@ ParseGLVersion(GLContext* gl, uint32_t* out_version)
 }
 
 GLContext::GLContext(const SurfaceCaps& caps,
-          GLContext* sharedContext,
-          bool isOffscreen)
-  : mInitialized(false),
-    mIsOffscreen(isOffscreen),
+                     GLContext* sharedContext,
+                     bool isOffscreen)
+  : mIsOffscreen(isOffscreen),
     mContextLost(false),
     mVersion(0),
     mProfile(ContextProfile::Unknown),
     mShadingLanguageVersion(0),
     mVendor(GLVendor::Other),
     mRenderer(GLRenderer::Other),
-    mHasRobustness(false),
     mTopError(LOCAL_GL_NO_ERROR),
     mSharedContext(sharedContext),
     mCaps(caps),
@@ -459,7 +457,7 @@ GLContext::StaticDebugCallback(GLenum source,
 }
 
 static void
-ClearSymbols(GLLibraryLoader::SymLoadStruct *symbols)
+ClearSymbols(const GLLibraryLoader::SymLoadStruct* symbols)
 {
     while (symbols->symPointer) {
         *symbols->symPointer = nullptr;
@@ -468,18 +466,84 @@ ClearSymbols(GLLibraryLoader::SymLoadStruct *symbols)
 }
 
 bool
-GLContext::InitWithPrefix(const char *prefix, bool trygl)
+GLContext::InitWithPrefix(const char* prefix, bool trygl)
 {
+    MOZ_RELEASE_ASSERT(!mSymbols.fBindFramebuffer,
+                       "InitWithPrefix should only be called once.");
+
     ScopedGfxFeatureReporter reporter("GL Context");
 
-    if (mInitialized) {
-        reporter.SetSuccessful();
-        return true;
+    if (!InitWithPrefixImpl(prefix, trygl)) {
+        // If initialization fails, zero the symbols to avoid hard-to-understand bugs.
+        mSymbols.Zero();
+        NS_WARNING("GLContext::InitWithPrefix failed!");
+        return false;
     }
 
+    reporter.SetSuccessful();
+    return true;
+}
+
+static bool
+LoadGLSymbols(GLContext* gl, const char* prefix, bool trygl,
+              const GLLibraryLoader::SymLoadStruct* list, const char* desc)
+{
+    if (gl->LoadSymbols(list, trygl, prefix))
+        return true;
+
+    ClearSymbols(list);
+
+    if (desc) {
+        const nsPrintfCString err("Failed to load symbols for %s.", desc);
+        NS_ERROR(err.BeginReading());
+    }
+    return false;
+}
+
+bool
+GLContext::LoadExtSymbols(const char* prefix, bool trygl, const SymLoadStruct* list,
+                          GLExtensions ext)
+{
+    const char* extName = sExtensionNames[size_t(ext)];
+    if (!LoadGLSymbols(this, prefix, trygl, list, extName)) {
+        MarkExtensionUnsupported(ext);
+        return false;
+    }
+    return true;
+};
+
+bool
+GLContext::LoadFeatureSymbols(const char* prefix, bool trygl, const SymLoadStruct* list,
+                              GLFeature feature)
+{
+    const char* featureName = GetFeatureName(feature);
+    if (!LoadGLSymbols(this, prefix, trygl, list, featureName)) {
+        MarkUnsupported(feature);
+        return false;
+    }
+    return true;
+};
+
+bool
+GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
+{
     mWorkAroundDriverBugs = gfxPrefs::WorkAroundDriverBugs();
 
-    SymLoadStruct symbols[] = {
+#ifdef MOZ_GL_DEBUG
+    if (gfxEnv::GlDebug())
+        sDebugMode |= DebugEnabled;
+
+    // enables extra verbose output, informing of the start and finish of every GL call.
+    // useful e.g. to record information to investigate graphics system crashes/lockups
+    if (gfxEnv::GlDebugVerbose())
+        sDebugMode |= DebugTrace;
+
+    // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
+    if (gfxEnv::GlDebugAbortOnError())
+        sDebugMode |= DebugAbortOnError;
+#endif
+
+    const SymLoadStruct coreSymbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fAttachShader, { "AttachShader", "AttachShaderARB", nullptr } },
         { (PRFuncPtr*) &mSymbols.fBindAttribLocation, { "BindAttribLocation", "BindAttribLocationARB", nullptr } },
@@ -606,1188 +670,922 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fDeleteShader, { "DeleteShader", "DeleteShaderARB", nullptr } },
 
         END_SYMBOLS
-
     };
 
-    mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
+    if (!LoadGLSymbols(this, prefix, trygl, coreSymbols, "GL"))
+        return false;
+
+    ////////////////
+
     MakeCurrent();
-    if (mInitialized) {
-        MOZ_ASSERT(mProfile != ContextProfile::Unknown);
+    MOZ_ASSERT(mProfile != ContextProfile::Unknown);
 
-        uint32_t version = 0;
-        ParseGLVersion(this, &version);
+    uint32_t version = 0;
+    ParseGLVersion(this, &version);
 
-        mShadingLanguageVersion = 100;
-        ParseGLSLVersion(this, &mShadingLanguageVersion);
+    mShadingLanguageVersion = 100;
+    ParseGLSLVersion(this, &mShadingLanguageVersion);
 
-        if (ShouldSpew()) {
-            printf_stderr("OpenGL version detected: %u\n", version);
-            printf_stderr("OpenGL shading language version detected: %u\n", mShadingLanguageVersion);
-            printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
-            printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
-        }
-
-        if (version >= mVersion) {
-            mVersion = version;
-        }
-        // Don't fail if version < mVersion, see bug 999445,
-        // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
-        // have all the GL2+ extensions that we need.
+    if (ShouldSpew()) {
+        printf_stderr("OpenGL version detected: %u\n", version);
+        printf_stderr("OpenGL shading language version detected: %u\n", mShadingLanguageVersion);
+        printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
+        printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
     }
+
+    if (version >= mVersion) {
+        mVersion = version;
+    }
+    // Don't fail if version < mVersion, see bug 999445,
+    // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
+    // have all the GL2+ extensions that we need.
+
+    ////////////////
 
     // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
-    if (mInitialized) {
-        if (IsGLES()) {
-            SymLoadStruct symbols_ES2[] = {
-                { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fClearDepthf, { "ClearDepthf", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDepthRangef, { "DepthRangef", nullptr } },
-                END_SYMBOLS
-            };
+    if (IsGLES()) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearDepthf, { "ClearDepthf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDepthRangef, { "DepthRangef", nullptr } },
+            END_SYMBOLS
+        };
 
-            if (!LoadSymbols(&symbols_ES2[0], trygl, prefix)) {
-                NS_ERROR("OpenGL ES 2.0 supported, but symbols could not be loaded.");
-                mInitialized = false;
-            }
+        if (!LoadGLSymbols(this, prefix, trygl, symbols, "OpenGL ES"))
+            return false;
+    } else {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fClearDepth, { "ClearDepth", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDepthRange, { "DepthRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fReadBuffer, { "ReadBuffer", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fMapBuffer, { "MapBuffer", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPointParameterf, { "PointParameterf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", nullptr } },
+            // The following functions are only used by Skia/GL in desktop mode.
+            // Other parts of Gecko should avoid using these
+            { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClientActiveTexture, { "ClientActiveTexture", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDisableClientState, { "DisableClientState", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEnableClientState, { "EnableClientState", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fLoadIdentity, { "LoadIdentity", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fLoadMatrixf, { "LoadMatrixf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fMatrixMode, { "MatrixMode", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexGeni, { "TexGeni", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexGenf, { "TexGenf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexGenfv, { "TexGenfv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexPointer, { "VertexPointer", nullptr } },
+            END_SYMBOLS
+        };
+
+        if (!LoadGLSymbols(this, prefix, trygl, symbols, "Desktop OpenGL"))
+            return false;
+    }
+
+    ////////////////
+
+    const char* glVendorString = (const char*)fGetString(LOCAL_GL_VENDOR);
+    const char* glRendererString = (const char*)fGetString(LOCAL_GL_RENDERER);
+    if (!glVendorString || !glRendererString)
+        return false;
+
+    // The order of these strings must match up with the order of the enum
+    // defined in GLContext.h for vendor IDs.
+    const char* vendorMatchStrings[size_t(GLVendor::Other)] = {
+        "Intel",
+        "NVIDIA",
+        "ATI",
+        "Qualcomm",
+        "Imagination",
+        "nouveau",
+        "Vivante",
+        "VMware, Inc.",
+        "ARM"
+    };
+
+    mVendor = GLVendor::Other;
+    for (size_t i = 0; i < size_t(GLVendor::Other); ++i) {
+        if (DoesStringMatch(glVendorString, vendorMatchStrings[i])) {
+            mVendor = GLVendor(i);
+            break;
+        }
+    }
+
+    // The order of these strings must match up with the order of the enum
+    // defined in GLContext.h for renderer IDs.
+    const char* rendererMatchStrings[size_t(GLRenderer::Other)] = {
+        "Adreno 200",
+        "Adreno 205",
+        "Adreno (TM) 200",
+        "Adreno (TM) 205",
+        "Adreno (TM) 320",
+        "Adreno (TM) 420",
+        "PowerVR SGX 530",
+        "PowerVR SGX 540",
+        "NVIDIA Tegra",
+        "Android Emulator",
+        "Gallium 0.4 on llvmpipe",
+        "Intel HD Graphics 3000 OpenGL Engine",
+        "Microsoft Basic Render Driver"
+    };
+
+    mRenderer = GLRenderer::Other;
+    for (size_t i = 0; i < size_t(GLRenderer::Other); ++i) {
+        if (DoesStringMatch(glRendererString, rendererMatchStrings[i])) {
+            mRenderer = GLRenderer(i);
+            break;
+        }
+    }
+
+    if (ShouldSpew()) {
+        const char* vendors[size_t(GLVendor::Other)] = {
+            "Intel",
+            "NVIDIA",
+            "ATI",
+            "Qualcomm"
+        };
+
+        MOZ_ASSERT(glVendorString);
+        if (mVendor < GLVendor::Other) {
+            printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
+                          glVendorString, vendors[size_t(mVendor)]);
         } else {
-            SymLoadStruct symbols_desktop[] = {
-                { (PRFuncPtr*) &mSymbols.fClearDepth, { "ClearDepth", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDepthRange, { "DepthRange", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fReadBuffer, { "ReadBuffer", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fMapBuffer, { "MapBuffer", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fPointParameterf, { "PointParameterf", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", nullptr } },
-                    // These functions are only used by Skia/GL in desktop mode.
-                    // Other parts of Gecko should avoid using these
-                    { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fClientActiveTexture, { "ClientActiveTexture", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fDisableClientState, { "DisableClientState", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fEnableClientState, { "EnableClientState", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fLoadIdentity, { "LoadIdentity", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fLoadMatrixf, { "LoadMatrixf", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fMatrixMode, { "MatrixMode", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fTexGeni, { "TexGeni", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fTexGenf, { "TexGenf", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fTexGenfv, { "TexGenfv", nullptr } },
-                    { (PRFuncPtr*) &mSymbols.fVertexPointer, { "VertexPointer", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&symbols_desktop[0], trygl, prefix)) {
-                NS_ERROR("Desktop symbols failed to load.");
-                mInitialized = false;
-            }
+            printf_stderr("OpenGL vendor ('%s') not recognized.\n", glVendorString);
         }
     }
 
-    const char *glVendorString = nullptr;
-    const char *glRendererString = nullptr;
+    ////////////////
 
-    if (mInitialized) {
-        // The order of these strings must match up with the order of the enum
-        // defined in GLContext.h for vendor IDs
-        glVendorString = (const char *)fGetString(LOCAL_GL_VENDOR);
-        if (!glVendorString)
-            mInitialized = false;
-
-        const char *vendorMatchStrings[size_t(GLVendor::Other)] = {
-                "Intel",
-                "NVIDIA",
-                "ATI",
-                "Qualcomm",
-                "Imagination",
-                "nouveau",
-                "Vivante",
-                "VMware, Inc.",
-                "ARM"
+    // We need this for retrieving the list of extensions on Core profiles.
+    if (IsFeatureProvidedByCoreSymbols(GLFeature::get_string_indexed)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetStringi, { "GetStringi", nullptr } },
+            END_SYMBOLS
         };
 
-        mVendor = GLVendor::Other;
-        for (size_t i = 0; i < size_t(GLVendor::Other); ++i) {
-            if (DoesStringMatch(glVendorString, vendorMatchStrings[i])) {
-                mVendor = GLVendor(i);
-                break;
-            }
-        }
-
-        // The order of these strings must match up with the order of the enum
-        // defined in GLContext.h for renderer IDs
-        glRendererString = (const char *)fGetString(LOCAL_GL_RENDERER);
-        if (!glRendererString)
-            mInitialized = false;
-
-        const char *rendererMatchStrings[size_t(GLRenderer::Other)] = {
-                "Adreno 200",
-                "Adreno 205",
-                "Adreno (TM) 200",
-                "Adreno (TM) 205",
-                "Adreno (TM) 320",
-                "Adreno (TM) 420",
-                "PowerVR SGX 530",
-                "PowerVR SGX 540",
-                "NVIDIA Tegra",
-                "Android Emulator",
-                "Gallium 0.4 on llvmpipe",
-                "Intel HD Graphics 3000 OpenGL Engine",
-                "Microsoft Basic Render Driver"
-        };
-
-        mRenderer = GLRenderer::Other;
-        for (size_t i = 0; i < size_t(GLRenderer::Other); ++i) {
-            if (DoesStringMatch(glRendererString, rendererMatchStrings[i])) {
-                mRenderer = GLRenderer(i);
-                break;
-            }
+        if (!LoadGLSymbols(this, prefix, trygl, symbols, "get_string_indexed")) {
+            MOZ_RELEASE_ASSERT(false, "get_string_indexed is required!");
+            return false;
         }
     }
 
+    InitExtensions();
+    InitFeatures();
 
-#ifdef MOZ_GL_DEBUG
-    if (gfxEnv::GlDebug())
-        sDebugMode |= DebugEnabled;
-
-    // enables extra verbose output, informing of the start and finish of every GL call.
-    // useful e.g. to record information to investigate graphics system crashes/lockups
-    if (gfxEnv::GlDebugVerbose())
-        sDebugMode |= DebugTrace;
-
-    // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
-    if (gfxEnv::GlDebugAbortOnError())
-        sDebugMode |= DebugAbortOnError;
-#endif
-
-    if (mInitialized) {
-        if (ShouldSpew()) {
-            const char* vendors[size_t(GLVendor::Other)] = {
-                "Intel",
-                "NVIDIA",
-                "ATI",
-                "Qualcomm"
-            };
-
-            MOZ_ASSERT(glVendorString);
-            if (mVendor < GLVendor::Other) {
-                printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
-                              glVendorString, vendors[size_t(mVendor)]);
-            } else {
-                printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
-            }
+    // Disable extensions with partial or incorrect support.
+    if (WorkAroundDriverBugs()) {
+        if (Renderer() == GLRenderer::AdrenoTM320) {
+            MarkUnsupported(GLFeature::standard_derivatives);
         }
 
-        if (IsFeatureProvidedByCoreSymbols(GLFeature::get_string_indexed)) {
-            SymLoadStruct moreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetStringi,    { "GetStringi", nullptr } },
-                END_SYMBOLS
-            };
-
-            MOZ_ALWAYS_TRUE(LoadSymbols(moreSymbols, trygl, prefix));
+        if (Vendor() == GLVendor::Vivante) {
+            // bug 958256
+            MarkUnsupported(GLFeature::standard_derivatives);
         }
 
-        InitExtensions();
-        InitFeatures();
-
-        // Disable extensions with partial or incorrect support.
-        if (WorkAroundDriverBugs()) {
-            if (Renderer() == GLRenderer::AdrenoTM320) {
-                MarkUnsupported(GLFeature::standard_derivatives);
-            }
-
-            if (Vendor() == GLVendor::Vivante) {
-                // bug 958256
-                MarkUnsupported(GLFeature::standard_derivatives);
-            }
-
-            if (Renderer() == GLRenderer::MicrosoftBasicRenderDriver) {
-                // Bug 978966: on Microsoft's "Basic Render Driver" (software renderer)
-                // multisampling hardcodes blending with the default blendfunc, which breaks WebGL.
-                MarkUnsupported(GLFeature::framebuffer_multisample);
-            }
+        if (Renderer() == GLRenderer::MicrosoftBasicRenderDriver) {
+            // Bug 978966: on Microsoft's "Basic Render Driver" (software renderer)
+            // multisampling hardcodes blending with the default blendfunc, which breaks WebGL.
+            MarkUnsupported(GLFeature::framebuffer_multisample);
+        }
 
 #ifdef XP_MACOSX
-            // The Mac Nvidia driver, for versions up to and including 10.8,
-            // don't seem to properly support this.  See 814839
-            // this has been fixed in Mac OS X 10.9. See 907946
-            // and it also works in 10.8.3 and higher.  See 1094338.
-            if (Vendor() == gl::GLVendor::NVIDIA &&
-                !nsCocoaFeatures::IsAtLeastVersion(10,8,3))
-            {
-                MarkUnsupported(GLFeature::depth_texture);
-            }
-#endif
-        }
-
-        NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
-                     (mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
-                     "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
-
-        if (SupportsRobustness()) {
-            mHasRobustness = false;
-
-            if (IsExtensionSupported(ARB_robustness)) {
-                SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
-
-                    mSymbols.fGetGraphicsResetStatus = nullptr;
-                } else {
-                    mHasRobustness = true;
-                }
-            }
-            if (!IsExtensionSupported(ARB_robustness) &&
-                IsExtensionSupported(EXT_robustness)) {
-                SymLoadStruct robustnessSymbols[] = {
-                    { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nullptr } },
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
-                    NS_ERROR("GL supports EXT_robustness without supplying GetGraphicsResetStatusEXT.");
-
-                    mSymbols.fGetGraphicsResetStatus = nullptr;
-                } else {
-                    mHasRobustness = true;
-                }
-            }
-
-            if (!mHasRobustness) {
-                MarkUnsupported(GLFeature::robustness);
-            }
-        }
-
-        // Check for ARB_framebuffer_objects
-        if (IsSupported(GLFeature::framebuffer_object)) {
-            // https://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
-            SymLoadStruct coreSymbols[] = {
-                CORE_SYMBOL(IsRenderbuffer),
-                CORE_SYMBOL(BindRenderbuffer),
-                CORE_SYMBOL(DeleteRenderbuffers),
-                CORE_SYMBOL(GenRenderbuffers),
-                CORE_SYMBOL(RenderbufferStorage),
-                CORE_SYMBOL(RenderbufferStorageMultisample),
-                CORE_SYMBOL(GetRenderbufferParameteriv),
-                CORE_SYMBOL(IsFramebuffer),
-                CORE_SYMBOL(BindFramebuffer),
-                CORE_SYMBOL(DeleteFramebuffers),
-                CORE_SYMBOL(GenFramebuffers),
-                CORE_SYMBOL(CheckFramebufferStatus),
-                CORE_SYMBOL(FramebufferTexture2D),
-                CORE_SYMBOL(FramebufferTextureLayer),
-                CORE_SYMBOL(FramebufferRenderbuffer),
-                CORE_SYMBOL(GetFramebufferAttachmentParameteriv),
-                CORE_SYMBOL(BlitFramebuffer),
-                CORE_SYMBOL(GenerateMipmap),
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(coreSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports framebuffer_object without supplying its functions.");
-                MarkUnsupported(GLFeature::framebuffer_object);
-            }
-        }
-
-        if (!IsSupported(GLFeature::framebuffer_object)) {
-            // Check for aux symbols based on extensions
-            if (IsSupported(GLFeature::framebuffer_object_EXT_OES))
-            {
-                SymLoadStruct extSymbols[] = {
-                    CORE_EXT_SYMBOL2(IsRenderbuffer, EXT, OES),
-                    CORE_EXT_SYMBOL2(BindRenderbuffer, EXT, OES),
-                    CORE_EXT_SYMBOL2(DeleteRenderbuffers, EXT, OES),
-                    CORE_EXT_SYMBOL2(GenRenderbuffers, EXT, OES),
-                    CORE_EXT_SYMBOL2(RenderbufferStorage, EXT, OES),
-                    CORE_EXT_SYMBOL2(GetRenderbufferParameteriv, EXT, OES),
-                    CORE_EXT_SYMBOL2(IsFramebuffer, EXT, OES),
-                    CORE_EXT_SYMBOL2(BindFramebuffer, EXT, OES),
-                    CORE_EXT_SYMBOL2(DeleteFramebuffers, EXT, OES),
-                    CORE_EXT_SYMBOL2(GenFramebuffers, EXT, OES),
-                    CORE_EXT_SYMBOL2(CheckFramebufferStatus, EXT, OES),
-                    CORE_EXT_SYMBOL2(FramebufferTexture2D, EXT, OES),
-                    CORE_EXT_SYMBOL2(FramebufferRenderbuffer, EXT, OES),
-                    CORE_EXT_SYMBOL2(GetFramebufferAttachmentParameteriv, EXT, OES),
-                    CORE_EXT_SYMBOL2(GenerateMipmap, EXT, OES),
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                    NS_ERROR("GL supports framebuffer_object without supplying its functions.");
-                }
-            }
-
-            if (IsSupported(GLFeature::framebuffer_blit)) {
-                SymLoadStruct extSymbols[] = {
-                    EXT_SYMBOL3(BlitFramebuffer, ANGLE, EXT, NV),
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                    NS_ERROR("GL supports framebuffer_blit without supplying its functions.");
-                }
-            }
-
-            if (IsSupported(GLFeature::framebuffer_multisample)) {
-                SymLoadStruct extSymbols[] = {
-                    EXT_SYMBOL3(RenderbufferStorageMultisample, ANGLE, APPLE, EXT),
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                    NS_ERROR("GL supports framebuffer_multisample without supplying its functions.");
-                }
-            }
-
-            if (IsExtensionSupported(GLContext::ARB_geometry_shader4) ||
-                IsExtensionSupported(GLContext::NV_geometry_program4))
-            {
-                SymLoadStruct extSymbols[] = {
-                    EXT_SYMBOL2(FramebufferTextureLayer, ARB, EXT),
-                    END_SYMBOLS
-                };
-
-                if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                    NS_ERROR("GL supports geometry_shader4 withot supplying its functions.");
-                }
-            }
-        }
-
-        if (!IsSupported(GLFeature::framebuffer_object) &&
-            !IsSupported(GLFeature::framebuffer_object_EXT_OES))
+        // The Mac Nvidia driver, for versions up to and including 10.8,
+        // don't seem to properly support this.  See 814839
+        // this has been fixed in Mac OS X 10.9. See 907946
+        // and it also works in 10.8.3 and higher.  See 1094338.
+        if (Vendor() == gl::GLVendor::NVIDIA &&
+            !nsCocoaFeatures::IsAtLeastVersion(10,8,3))
         {
-            NS_ERROR("GLContext requires framebuffer object support.");
-            mInitialized = false;
+            MarkUnsupported(GLFeature::depth_texture);
         }
+#endif
     }
 
-    if (mInitialized) {
-        if (IsSupported(GLFeature::sync)) {
-            SymLoadStruct syncSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsSync,         { "IsSync",         nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteSync,     { "DeleteSync",     nullptr } },
-                { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "ClientWaitSync", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fWaitSync,       { "WaitSync",       nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetInteger64v,  { "GetInteger64v",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetSynciv,      { "GetSynciv",      nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&syncSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports sync without supplying its functions.");
-
-                MarkExtensionUnsupported(ARB_sync);
-                ClearSymbols(syncSymbols);
-            }
-        }
-
-        if (IsExtensionSupported(OES_EGL_image)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fEGLImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEGLImageTargetRenderbufferStorage, { "EGLImageTargetRenderbufferStorageOES", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports OES_EGL_image without supplying its functions.");
-
-                MarkExtensionUnsupported(OES_EGL_image);
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        if (IsExtensionSupported(APPLE_texture_range)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTextureRangeAPPLE, { "TextureRangeAPPLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports APPLE_texture_range without supplying its functions.");
-
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::vertex_array_object)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArray", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArrays", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArray", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArrays", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArrayARB", "IsVertexArrayOES", "IsVertexArrayAPPLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArraysARB", "GenVertexArraysOES", "GenVertexArraysAPPLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArrayARB", "BindVertexArrayOES", "BindVertexArrayAPPLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArraysARB", "DeleteVertexArraysOES", "DeleteVertexArraysAPPLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::vertex_array_object);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
-
-                MarkUnsupported(GLFeature::vertex_array_object);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::draw_instanced)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstanced", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstanced", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstancedARB", "DrawArraysInstancedEXT", "DrawArraysInstancedNV", "DrawArraysInstancedANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstancedARB", "DrawElementsInstancedEXT", "DrawElementsInstancedNV", "DrawElementsInstancedANGLE", nullptr }
-                },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::draw_instanced);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports instanced draws without supplying its functions.");
-
-                MarkUnsupported(GLFeature::draw_instanced);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::instanced_arrays)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisor", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisorARB", "VertexAttribDivisorNV", "VertexAttribDivisorANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::instanced_arrays);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports array instanced without supplying it function.");
-
-                MarkUnsupported(GLFeature::instanced_arrays);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::texture_storage)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2D", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3D", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2DEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3DEXT", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_storage);
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports texture storage without supplying its functions.");
-
-                MarkUnsupported(GLFeature::texture_storage);
-                MarkExtensionSupported(useCore ? ARB_texture_storage : EXT_texture_storage);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::sampler_objects)) {
-            SymLoadStruct samplerObjectsSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGenSamplers, { "GenSamplers", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteSamplers, { "DeleteSamplers", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsSampler, { "IsSampler", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindSampler, { "BindSampler", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fSamplerParameteri, { "SamplerParameteri", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fSamplerParameteriv, { "SamplerParameteriv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fSamplerParameterf, { "SamplerParameterf", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fSamplerParameterfv, { "SamplerParameterfv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetSamplerParameteriv, { "GetSamplerParameteriv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetSamplerParameterfv, { "GetSamplerParameterfv", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(samplerObjectsSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports sampler objects without supplying its functions.");
-
-                MarkUnsupported(GLFeature::sampler_objects);
-                ClearSymbols(samplerObjectsSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::texture_storage)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2D", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3D", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(coreSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports texture storage without supplying its functions.");
-
-                MarkUnsupported(GLFeature::texture_storage);
-                MarkExtensionUnsupported(ARB_texture_storage);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        // ARB_transform_feedback2/NV_transform_feedback2 is a
-        // superset of EXT_transform_feedback/NV_transform_feedback
-        // and adds glPauseTransformFeedback &
-        // glResumeTransformFeedback, which are required for WebGL2.
-        if (IsSupported(GLFeature::transform_feedback2)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBase", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRange", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacks", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedback", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacks", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedback", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedback", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedback", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryings", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVarying", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedback", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedback", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBaseEXT", "BindBufferBaseNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRangeEXT", "BindBufferRangeNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacksNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedbackNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacksNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedbackNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedbackEXT", "BeginTransformFeedbackNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedbackEXT", "EndTransformFeedbackNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryingsEXT", "TransformFeedbackVaryingsNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVaryingEXT", "GetTransformFeedbackVaryingNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedbackNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedbackNV", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::transform_feedback2);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports transform feedback without supplying its functions.");
-
-                MarkUnsupported(GLFeature::transform_feedback2);
-                MarkUnsupported(GLFeature::bind_buffer_offset);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::bind_buffer_offset)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBindBufferOffset, { "BindBufferOffset", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBindBufferOffset,
-                  { "BindBufferOffsetEXT", "BindBufferOffsetNV", nullptr }
-                },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::bind_buffer_offset);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports BindBufferOffset without supplying its function.");
-
-                MarkUnsupported(GLFeature::bind_buffer_offset);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::query_counter)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounter", nullptr } },
-                END_SYMBOLS
-            };
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounterEXT", "QueryCounterANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::query_counter);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports query counters without supplying its functions.");
-
-                MarkUnsupported(GLFeature::query_counter);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::query_objects)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQueryEXT", "BeginQueryANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueriesEXT", "GenQueriesANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueriesEXT", "DeleteQueriesANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQueryEXT", "EndQueryANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryivEXT", "GetQueryivANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuivEXT", "GetQueryObjectuivANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQueryEXT", "IsQueryANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::query_objects);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports query objects without supplying its functions.");
-
-                MarkUnsupported(GLFeature::query_objects);
-                MarkUnsupported(GLFeature::get_query_object_i64v);
-                MarkUnsupported(GLFeature::get_query_object_iv);
-                MarkUnsupported(GLFeature::occlusion_query);
-                MarkUnsupported(GLFeature::occlusion_query_boolean);
-                MarkUnsupported(GLFeature::occlusion_query2);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::get_query_object_i64v)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64v", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64v", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64vEXT", "GetQueryObjecti64vANGLE", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64vEXT", "GetQueryObjectui64vANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::get_query_object_i64v);
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports 64 bit query object getters without supplying its functions.");
-
-                MarkUnsupported(GLFeature::get_query_object_i64v);
-                MarkUnsupported(GLFeature::query_counter);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::get_query_object_iv)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectivEXT", "GetQueryObjectivANGLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::get_query_object_iv);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports query objects iv getter without supplying its function.");
-
-                MarkUnsupported(GLFeature::get_query_object_iv);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::clear_buffers)) {
-            SymLoadStruct clearBuffersSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fClearBufferfi,  { "ClearBufferfi",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fClearBufferfv,  { "ClearBufferfv",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fClearBufferiv,  { "ClearBufferiv",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fClearBufferuiv, { "ClearBufferuiv", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(clearBuffersSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports clear_buffers without supplying its functions.");
-
-                MarkUnsupported(GLFeature::clear_buffers);
-                ClearSymbols(clearBuffersSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::copy_buffer)) {
-            SymLoadStruct copyBufferSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fCopyBufferSubData, { "CopyBufferSubData", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(copyBufferSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports copy_buffer without supplying its function.");
-
-                MarkUnsupported(GLFeature::copy_buffer);
-                ClearSymbols(copyBufferSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::draw_buffers)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffersARB", "DrawBuffersEXT", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::draw_buffers);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports draw_buffers without supplying its functions.");
-
-                MarkUnsupported(GLFeature::draw_buffers);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::draw_range_elements)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElements", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElementsEXT", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::draw_range_elements);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports draw_range_elements without supplying its functions.");
-
-                MarkUnsupported(GLFeature::draw_range_elements);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::get_integer_indexed)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegeri_v", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] ={
-                { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegerIndexedvEXT", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::get_integer_indexed);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports get_integer_indexed without supplying its functions.");
-
-                MarkUnsupported(GLFeature::get_integer_indexed);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::get_integer64_indexed)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetInteger64i_v, { "GetInteger64i_v", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(coreSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports get_integer64_indexed without supplying its functions.");
-
-                MarkUnsupported(GLFeature::get_integer64_indexed);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::gpu_shader4)) {
-            SymLoadStruct gpuShader4Symbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetVertexAttribIiv, { "GetVertexAttribIiv", "GetVertexAttribIivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetVertexAttribIuiv, { "GetVertexAttribIuiv", "GetVertexAttribIuivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", "VertexAttribI4iEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv","VertexAttribI4ivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", "VertexAttribI4uiEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", "VertexAttribI4uivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", "VertexAttribIPointerEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", "Uniform1uiEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", "Uniform2uiEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", "Uniform3uiEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", "Uniform4uiEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", "Uniform1uivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", "Uniform2uivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", "Uniform3uivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", "Uniform4uivEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetFragDataLocation, { "GetFragDataLocation", "GetFragDataLocationEXT", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetUniformuiv, { "GetUniformuiv", "GetUniformuivEXT", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(gpuShader4Symbols, trygl, prefix)) {
-                NS_ERROR("GL supports gpu_shader4 without supplying its functions.");
-
-                MarkUnsupported(GLFeature::gpu_shader4);
-                ClearSymbols(gpuShader4Symbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::map_buffer_range)) {
-            SymLoadStruct mapBufferRangeSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, { "FlushMappedBufferRange", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(mapBufferRangeSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports map_buffer_range without supplying its functions.");
-
-                MarkUnsupported(GLFeature::map_buffer_range);
-                ClearSymbols(mapBufferRangeSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::texture_3D)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTexImage3D, { "TexImage3D", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3D", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3DEXT", "TexSubImage3DOES", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports 3D textures without supplying functions.");
-
-                MarkUnsupported(GLFeature::texture_3D);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::texture_3D_compressed)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3D", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3D", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3DARB", "CompressedTexImage3DOES", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3DARB", "CompressedTexSubImage3DOES", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D_compressed);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports 3D textures without supplying functions.");
-
-                MarkUnsupported(GLFeature::texture_3D_compressed);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::texture_3D_copy)) {
-            SymLoadStruct coreSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3D", nullptr } },
-                END_SYMBOLS
-            };
-
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3DEXT", "CopyTexSubImage3DOES", nullptr } },
-                END_SYMBOLS
-            };
-
-            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D_copy);
-
-            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
-                NS_ERROR("GL supports 3D textures without supplying functions.");
-
-                MarkUnsupported(GLFeature::texture_3D_copy);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::uniform_buffer_object)) {
-            // Note: Don't query for glGetActiveUniformName because it is not
-            // supported by GL ES 3.
-            SymLoadStruct uboSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetUniformIndices, { "GetUniformIndices", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetActiveUniformsiv, { "GetActiveUniformsiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetUniformBlockIndex, { "GetUniformBlockIndex", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockiv, { "GetActiveUniformBlockiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockName, { "GetActiveUniformBlockName", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformBlockBinding, { "UniformBlockBinding", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&uboSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports ARB_uniform_buffer_object without supplying its functions.");
-
-                MarkExtensionUnsupported(ARB_uniform_buffer_object);
-                MarkUnsupported(GLFeature::uniform_buffer_object);
-                ClearSymbols(uboSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::uniform_matrix_nonsquare)) {
-            SymLoadStruct umnSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix2x3fv, { "UniformMatrix2x3fv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix2x4fv, { "UniformMatrix2x4fv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix3x2fv, { "UniformMatrix3x2fv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix3x4fv, { "UniformMatrix3x4fv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix4x2fv, { "UniformMatrix4x2fv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniformMatrix4x3fv, { "UniformMatrix4x3fv", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&umnSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports uniform matrix with non-square dim without supplying its functions.");
-
-                MarkUnsupported(GLFeature::uniform_matrix_nonsquare);
-                ClearSymbols(umnSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::internalformat_query)) {
-            SymLoadStruct coreSymbols[] = {
-                CORE_SYMBOL(GetInternalformativ),
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&coreSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports internalformat query without supplying its functions.");
-
-                MarkUnsupported(GLFeature::internalformat_query);
-                ClearSymbols(coreSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::invalidate_framebuffer)) {
-            SymLoadStruct invSymbols[] = {
-                { (PRFuncPtr *) &mSymbols.fInvalidateFramebuffer,    { "InvalidateFramebuffer", nullptr } },
-                { (PRFuncPtr *) &mSymbols.fInvalidateSubFramebuffer, { "InvalidateSubFramebuffer", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&invSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports framebuffer invalidation without supplying its functions.");
-
-                MarkUnsupported(GLFeature::invalidate_framebuffer);
-                ClearSymbols(invSymbols);
-            }
-        }
-
-        if (IsExtensionSupported(KHR_debug)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  { "DebugMessageControl",  "DebugMessageControlKHR",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDebugMessageInsert,   { "DebugMessageInsert",   "DebugMessageInsertKHR",   nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDebugMessageCallback, { "DebugMessageCallback", "DebugMessageCallbackKHR", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetDebugMessageLog,   { "GetDebugMessageLog",   "GetDebugMessageLogKHR",   nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetPointerv,          { "GetPointerv",          "GetPointervKHR",          nullptr } },
-                { (PRFuncPtr*) &mSymbols.fPushDebugGroup,       { "PushDebugGroup",       "PushDebugGroupKHR",       nullptr } },
-                { (PRFuncPtr*) &mSymbols.fPopDebugGroup,        { "PopDebugGroup",        "PopDebugGroupKHR",        nullptr } },
-                { (PRFuncPtr*) &mSymbols.fObjectLabel,          { "ObjectLabel",          "ObjectLabelKHR",          nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetObjectLabel,       { "GetObjectLabel",       "GetObjectLabelKHR",       nullptr } },
-                { (PRFuncPtr*) &mSymbols.fObjectPtrLabel,       { "ObjectPtrLabel",       "ObjectPtrLabelKHR",       nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetObjectPtrLabel,    { "GetObjectPtrLabel",    "GetObjectPtrLabelKHR",    nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports KHR_debug without supplying its functions.");
-
-                MarkExtensionUnsupported(KHR_debug);
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        if (IsExtensionSupported(NV_fence)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGenFences,    { "GenFencesNV",    nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteFences, { "DeleteFencesNV", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fSetFence,     { "SetFenceNV",     nullptr } },
-                { (PRFuncPtr*) &mSymbols.fTestFence,    { "TestFenceNV",    nullptr } },
-                { (PRFuncPtr*) &mSymbols.fFinishFence,  { "FinishFenceNV",  nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsFence,      { "IsFenceNV",      nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetFenceiv,   { "GetFenceivNV",   nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports NV_fence without supplying its functions.");
-
-                MarkExtensionUnsupported(NV_fence);
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::read_buffer)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fReadBuffer, { "ReadBuffer", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports read_buffer without supplying its functions.");
-
-                MarkUnsupported(GLFeature::read_buffer);
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        if (IsExtensionSupported(APPLE_framebuffer_multisample)) {
-            SymLoadStruct extSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fResolveMultisampleFramebufferAPPLE, { "ResolveMultisampleFramebufferAPPLE", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports APPLE_framebuffer_multisample without supplying its functions.");
-
-                MarkExtensionUnsupported(APPLE_framebuffer_multisample);
-                ClearSymbols(extSymbols);
-            }
-        }
-
-        // Load developer symbols, don't fail if we can't find them.
-        SymLoadStruct auxSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nullptr } },
-                END_SYMBOLS
+    if (IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) {
+        MOZ_ASSERT((mSymbols.fMapBuffer && mSymbols.fUnmapBuffer),
+                   "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer"
+                   " being available!");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    const auto fnLoadForFeature = [this, prefix, trygl](const SymLoadStruct* list,
+                                                        GLFeature feature)
+    {
+        return this->LoadFeatureSymbols(prefix, trygl, list, feature);
+    };
+
+    // Check for ARB_framebuffer_objects
+    if (IsSupported(GLFeature::framebuffer_object)) {
+        // https://www.opengl.org/registry/specs/ARB/framebuffer_object.txt
+        const SymLoadStruct symbols[] = {
+            CORE_SYMBOL(IsRenderbuffer),
+            CORE_SYMBOL(BindRenderbuffer),
+            CORE_SYMBOL(DeleteRenderbuffers),
+            CORE_SYMBOL(GenRenderbuffers),
+            CORE_SYMBOL(RenderbufferStorage),
+            CORE_SYMBOL(RenderbufferStorageMultisample),
+            CORE_SYMBOL(GetRenderbufferParameteriv),
+            CORE_SYMBOL(IsFramebuffer),
+            CORE_SYMBOL(BindFramebuffer),
+            CORE_SYMBOL(DeleteFramebuffers),
+            CORE_SYMBOL(GenFramebuffers),
+            CORE_SYMBOL(CheckFramebufferStatus),
+            CORE_SYMBOL(FramebufferTexture2D),
+            CORE_SYMBOL(FramebufferTextureLayer),
+            CORE_SYMBOL(FramebufferRenderbuffer),
+            CORE_SYMBOL(GetFramebufferAttachmentParameteriv),
+            CORE_SYMBOL(BlitFramebuffer),
+            CORE_SYMBOL(GenerateMipmap),
+            END_SYMBOLS
         };
-        bool warnOnFailures = DebugMode();
-        LoadSymbols(&auxSymbols[0], trygl, prefix, warnOnFailures);
+        fnLoadForFeature(symbols, GLFeature::framebuffer_object);
     }
 
-    if (mInitialized) {
-        raw_fGetIntegerv(LOCAL_GL_VIEWPORT, mViewportRect);
-        raw_fGetIntegerv(LOCAL_GL_SCISSOR_BOX, mScissorRect);
-        raw_fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
-        raw_fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
-        raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
-        raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
-
-#ifdef XP_MACOSX
-        if (mWorkAroundDriverBugs) {
-            if (mVendor == GLVendor::Intel) {
-                // see bug 737182 for 2D textures, bug 684882 for cube map textures.
-                mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
-                mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-                // for good measure, we align renderbuffers on what we do for 2D textures
-                mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
-                mNeedsTextureSizeChecks = true;
-            } else if (mVendor == GLVendor::NVIDIA) {
-                if (nsCocoaFeatures::OnMountainLionOrLater()) {
-                    // See bug 879656.  8192 fails, 8191 works.
-                    mMaxTextureSize = std::min(mMaxTextureSize, 8191);
-                    mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
-                } else {
-                    // See bug 877949.
-                    mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-                    mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
-                }
-
-                // Part of the bug 879656, but it also doesn't hurt the 877949
-                mNeedsTextureSizeChecks = true;
-            }
-        }
-#endif
-#ifdef MOZ_X11
-        if (mWorkAroundDriverBugs) {
-            if (mVendor == GLVendor::Nouveau) {
-                // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
-                mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
-                mNeedsTextureSizeChecks = true;
-            } else if (mVendor == GLVendor::Intel) {
-                // Bug 1199923. Driver seems to report a larger max size than
-                // actually supported.
-                mMaxTextureSize /= 2;
-                mMaxRenderbufferSize /= 2;
-                mNeedsTextureSizeChecks = true;
-            }
-        }
-#endif
-        if (mWorkAroundDriverBugs &&
-            Renderer() == GLRenderer::AdrenoTM420) {
-            // see bug 1194923. Calling glFlush before glDeleteFramebuffers
-            // prevents occasional driver crash.
-            mNeedsFlushBeforeDeleteFB = true;
+    if (!IsSupported(GLFeature::framebuffer_object)) {
+        // Check for aux symbols based on extensions
+        if (IsSupported(GLFeature::framebuffer_object_EXT_OES)) {
+            const SymLoadStruct symbols[] = {
+                CORE_EXT_SYMBOL2(IsRenderbuffer, EXT, OES),
+                CORE_EXT_SYMBOL2(BindRenderbuffer, EXT, OES),
+                CORE_EXT_SYMBOL2(DeleteRenderbuffers, EXT, OES),
+                CORE_EXT_SYMBOL2(GenRenderbuffers, EXT, OES),
+                CORE_EXT_SYMBOL2(RenderbufferStorage, EXT, OES),
+                CORE_EXT_SYMBOL2(GetRenderbufferParameteriv, EXT, OES),
+                CORE_EXT_SYMBOL2(IsFramebuffer, EXT, OES),
+                CORE_EXT_SYMBOL2(BindFramebuffer, EXT, OES),
+                CORE_EXT_SYMBOL2(DeleteFramebuffers, EXT, OES),
+                CORE_EXT_SYMBOL2(GenFramebuffers, EXT, OES),
+                CORE_EXT_SYMBOL2(CheckFramebufferStatus, EXT, OES),
+                CORE_EXT_SYMBOL2(FramebufferTexture2D, EXT, OES),
+                CORE_EXT_SYMBOL2(FramebufferRenderbuffer, EXT, OES),
+                CORE_EXT_SYMBOL2(GetFramebufferAttachmentParameteriv, EXT, OES),
+                CORE_EXT_SYMBOL2(GenerateMipmap, EXT, OES),
+                END_SYMBOLS
+            };
+            fnLoadForFeature(symbols, GLFeature::framebuffer_object_EXT_OES);
         }
 
-        mMaxTextureImageSize = mMaxTextureSize;
+        if (IsSupported(GLFeature::framebuffer_blit)) {
+            const SymLoadStruct symbols[] = {
+                EXT_SYMBOL3(BlitFramebuffer, ANGLE, EXT, NV),
+                END_SYMBOLS
+            };
+            fnLoadForFeature(symbols, GLFeature::framebuffer_blit);
+        }
 
         if (IsSupported(GLFeature::framebuffer_multisample)) {
-            fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
+            const SymLoadStruct symbols[] = {
+                EXT_SYMBOL3(RenderbufferStorageMultisample, ANGLE, APPLE, EXT),
+                END_SYMBOLS
+            };
+            fnLoadForFeature(symbols, GLFeature::framebuffer_multisample);
         }
 
-        // We're ready for final setup.
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
-
-        // TODO: Remove SurfaceCaps::any.
-        if (mCaps.any) {
-            mCaps.any = false;
-            mCaps.color = true;
-            mCaps.alpha = false;
+        if (IsExtensionSupported(GLContext::ARB_geometry_shader4) ||
+            IsExtensionSupported(GLContext::NV_geometry_program4))
+        {
+            const SymLoadStruct symbols[] = {
+                EXT_SYMBOL2(FramebufferTextureLayer, ARB, EXT),
+                END_SYMBOLS
+            };
+            if (!LoadGLSymbols(this, prefix, trygl, symbols,
+                               "ARB_geometry_shader4/NV_geometry_program4"))
+            {
+                MarkExtensionUnsupported(GLContext::ARB_geometry_shader4);
+                MarkExtensionUnsupported(GLContext::NV_geometry_program4);
+            }
         }
-
-        UpdateGLFormats(mCaps);
-
-        mTexGarbageBin = new TextureGarbageBin(this);
-
-        MOZ_ASSERT(IsCurrent());
-
-        if (DebugMode() && IsExtensionSupported(KHR_debug)) {
-            fEnable(LOCAL_GL_DEBUG_OUTPUT);
-            fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
-            fDebugMessageCallback(&StaticDebugCallback, (void*)this);
-            fDebugMessageControl(LOCAL_GL_DONT_CARE,
-                                 LOCAL_GL_DONT_CARE,
-                                 LOCAL_GL_DONT_CARE,
-                                 0, nullptr,
-                                 true);
-        }
-
-        reporter.SetSuccessful();
-    } else {
-        // if initialization fails, ensure all symbols are zero, to avoid hard-to-understand bugs
-        mSymbols.Zero();
-        NS_WARNING("InitWithPrefix failed!");
     }
 
-    mVersionString = nsPrintfCString("%u.%u.%u", mVersion / 100, (mVersion / 10) % 10, mVersion % 10);
+    if (!IsSupported(GLFeature::framebuffer_object) &&
+        !IsSupported(GLFeature::framebuffer_object_EXT_OES))
+    {
+        NS_ERROR("GLContext requires support for framebuffer objects.");
+        return false;
+    }
+    MOZ_RELEASE_ASSERT(mSymbols.fBindFramebuffer);
 
-    return mInitialized;
+    ////////////////
+
+    LoadMoreSymbols(prefix, trygl);
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    raw_fGetIntegerv(LOCAL_GL_VIEWPORT, mViewportRect);
+    raw_fGetIntegerv(LOCAL_GL_SCISSOR_BOX, mScissorRect);
+    raw_fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
+    raw_fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
+    raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
+    raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
+
+#ifdef XP_MACOSX
+    if (mWorkAroundDriverBugs) {
+        if (mVendor == GLVendor::Intel) {
+            // see bug 737182 for 2D textures, bug 684882 for cube map textures.
+            mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
+            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
+            // for good measure, we align renderbuffers on what we do for 2D textures
+            mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
+            mNeedsTextureSizeChecks = true;
+        } else if (mVendor == GLVendor::NVIDIA) {
+            if (nsCocoaFeatures::OnMountainLionOrLater()) {
+                // See bug 879656.  8192 fails, 8191 works.
+                mMaxTextureSize = std::min(mMaxTextureSize, 8191);
+                mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
+            } else {
+                // See bug 877949.
+                mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+                mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
+            }
+
+            // Part of the bug 879656, but it also doesn't hurt the 877949
+            mNeedsTextureSizeChecks = true;
+        }
+    }
+#endif
+#ifdef MOZ_X11
+    if (mWorkAroundDriverBugs) {
+        if (mVendor == GLVendor::Nouveau) {
+            // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
+            mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
+            mNeedsTextureSizeChecks = true;
+        } else if (mVendor == GLVendor::Intel) {
+            // Bug 1199923. Driver seems to report a larger max size than
+            // actually supported.
+            mMaxTextureSize /= 2;
+            mMaxRenderbufferSize /= 2;
+            mNeedsTextureSizeChecks = true;
+        }
+    }
+#endif
+    if (mWorkAroundDriverBugs &&
+        Renderer() == GLRenderer::AdrenoTM420) {
+        // see bug 1194923. Calling glFlush before glDeleteFramebuffers
+        // prevents occasional driver crash.
+        mNeedsFlushBeforeDeleteFB = true;
+    }
+
+    mMaxTextureImageSize = mMaxTextureSize;
+
+    if (IsSupported(GLFeature::framebuffer_multisample)) {
+        fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    // We're ready for final setup.
+    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+
+    // TODO: Remove SurfaceCaps::any.
+    if (mCaps.any) {
+        mCaps.any = false;
+        mCaps.color = true;
+        mCaps.alpha = false;
+    }
+
+    UpdateGLFormats(mCaps);
+
+    mTexGarbageBin = new TextureGarbageBin(this);
+
+    MOZ_ASSERT(IsCurrent());
+
+    if (DebugMode() && IsExtensionSupported(KHR_debug)) {
+        fEnable(LOCAL_GL_DEBUG_OUTPUT);
+        fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        fDebugMessageCallback(&StaticDebugCallback, (void*)this);
+        fDebugMessageControl(LOCAL_GL_DONT_CARE,
+                             LOCAL_GL_DONT_CARE,
+                             LOCAL_GL_DONT_CARE,
+                             0, nullptr,
+                             true);
+    }
+
+    mVersionString = nsPrintfCString("%u.%u.%u", mVersion / 100, (mVersion / 10) % 10,
+                                     mVersion % 10);
+    return true;
+}
+
+void
+GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
+{
+    const auto fnLoadForExt = [this, prefix, trygl](const SymLoadStruct* list,
+                                                    GLExtensions ext)
+    {
+        return this->LoadExtSymbols(prefix, trygl, list, ext);
+    };
+
+    const auto fnLoadForFeature = [this, prefix, trygl](const SymLoadStruct* list,
+                                                        GLFeature feature)
+    {
+        return this->LoadFeatureSymbols(prefix, trygl, list, feature);
+    };
+
+    const auto fnLoadFeatureByCore = [this, fnLoadForFeature](const SymLoadStruct* coreList,
+                                                              const SymLoadStruct* extList,
+                                                              GLFeature feature)
+    {
+        const bool useCore = this->IsFeatureProvidedByCoreSymbols(feature);
+        const auto list = useCore ? coreList : extList;
+        return fnLoadForFeature(list, feature);
+    };
+
+    bool hasRobustness = false;
+    if (SupportsRobustness()) {
+        if (IsExtensionSupported(ARB_robustness)) {
+            const SymLoadStruct symbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
+                END_SYMBOLS
+            };
+            if (fnLoadForExt(symbols, ARB_robustness)) {
+                hasRobustness = true;
+            }
+        }
+
+        if (!hasRobustness && IsExtensionSupported(EXT_robustness)) {
+            const SymLoadStruct symbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nullptr } },
+                END_SYMBOLS
+            };
+            if (fnLoadForExt(symbols, EXT_robustness)) {
+                hasRobustness = true;
+            }
+        }
+    }
+    if (!hasRobustness) {
+        MarkUnsupported(GLFeature::robustness);
+    }
+
+    if (IsSupported(GLFeature::sync)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fFenceSync,      { "FenceSync",      nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsSync,         { "IsSync",         nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteSync,     { "DeleteSync",     nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "ClientWaitSync", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fWaitSync,       { "WaitSync",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetInteger64v,  { "GetInteger64v",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSynciv,      { "GetSynciv",      nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::sync);
+    }
+
+    if (IsExtensionSupported(OES_EGL_image)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fEGLImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEGLImageTargetRenderbufferStorage, { "EGLImageTargetRenderbufferStorageOES", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForExt(symbols, OES_EGL_image);
+    }
+
+    if (IsExtensionSupported(APPLE_texture_range)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fTextureRangeAPPLE, { "TextureRangeAPPLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForExt(symbols, APPLE_texture_range);
+    }
+
+    if (IsSupported(GLFeature::vertex_array_object)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArray", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArrays", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArray", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArrays", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fIsVertexArray, { "IsVertexArrayARB", "IsVertexArrayOES", "IsVertexArrayAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenVertexArrays, { "GenVertexArraysARB", "GenVertexArraysOES", "GenVertexArraysAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindVertexArray, { "BindVertexArrayARB", "BindVertexArrayOES", "BindVertexArrayAPPLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteVertexArrays, { "DeleteVertexArraysARB", "DeleteVertexArraysOES", "DeleteVertexArraysAPPLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::vertex_array_object);
+    }
+
+    if (IsSupported(GLFeature::draw_instanced)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstanced", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstanced", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawArraysInstanced, { "DrawArraysInstancedARB", "DrawArraysInstancedEXT", "DrawArraysInstancedNV", "DrawArraysInstancedANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDrawElementsInstanced, { "DrawElementsInstancedARB", "DrawElementsInstancedEXT", "DrawElementsInstancedNV", "DrawElementsInstancedANGLE", nullptr }
+            },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_instanced);
+    }
+
+    if (IsSupported(GLFeature::instanced_arrays)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisor", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor, { "VertexAttribDivisorARB", "VertexAttribDivisorNV", "VertexAttribDivisorANGLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::instanced_arrays);
+    }
+
+    if (IsSupported(GLFeature::texture_storage)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3D", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fTexStorage2D, { "TexStorage2DEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexStorage3D, { "TexStorage3DEXT", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage);
+    }
+
+    if (IsSupported(GLFeature::sampler_objects)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGenSamplers, { "GenSamplers", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteSamplers, { "DeleteSamplers", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsSampler, { "IsSampler", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindSampler, { "BindSampler", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameteri, { "SamplerParameteri", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameteriv, { "SamplerParameteriv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameterf, { "SamplerParameterf", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSamplerParameterfv, { "SamplerParameterfv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSamplerParameteriv, { "GetSamplerParameteriv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetSamplerParameterfv, { "GetSamplerParameterfv", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::sampler_objects);
+    }
+
+    // ARB_transform_feedback2/NV_transform_feedback2 is a
+    // superset of EXT_transform_feedback/NV_transform_feedback
+    // and adds glPauseTransformFeedback &
+    // glResumeTransformFeedback, which are required for WebGL2.
+    if (IsSupported(GLFeature::transform_feedback2)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBase", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacks", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacks", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryings", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVarying", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedback", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedback", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBindBufferBase, { "BindBufferBaseEXT", "BindBufferBaseNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindBufferRange, { "BindBufferRangeEXT", "BindBufferRangeNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenTransformFeedbacks, { "GenTransformFeedbacksNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBindTransformFeedback, { "BindTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteTransformFeedbacks, { "DeleteTransformFeedbacksNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsTransformFeedback, { "IsTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback, { "BeginTransformFeedbackEXT", "BeginTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndTransformFeedback, { "EndTransformFeedbackEXT", "EndTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings, { "TransformFeedbackVaryingsEXT", "TransformFeedbackVaryingsNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying, { "GetTransformFeedbackVaryingEXT", "GetTransformFeedbackVaryingNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPauseTransformFeedback, { "PauseTransformFeedbackNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fResumeTransformFeedback, { "ResumeTransformFeedbackNV", nullptr } },
+            END_SYMBOLS
+        };
+        if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_storage)) {
+            // Also mark bind_buffer_offset as unsupported.
+            MarkUnsupported(GLFeature::bind_buffer_offset);
+        }
+    }
+
+    if (IsSupported(GLFeature::bind_buffer_offset)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBindBufferOffset, { "BindBufferOffset", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBindBufferOffset,
+              { "BindBufferOffsetEXT", "BindBufferOffsetNV", nullptr }
+            },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::bind_buffer_offset);
+    }
+
+    if (IsSupported(GLFeature::query_counter)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounter", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fQueryCounter, { "QueryCounterEXT", "QueryCounterANGLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::query_counter);
+    }
+
+    if (IsSupported(GLFeature::query_objects)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQueryEXT", "BeginQueryANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueriesEXT", "GenQueriesANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueriesEXT", "DeleteQueriesANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQueryEXT", "EndQueryANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryivEXT", "GetQueryivANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuivEXT", "GetQueryObjectuivANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQueryEXT", "IsQueryANGLE", nullptr } },
+            END_SYMBOLS
+        };
+        if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::query_objects)) {
+            MarkUnsupported(GLFeature::get_query_object_i64v);
+            MarkUnsupported(GLFeature::get_query_object_iv);
+            MarkUnsupported(GLFeature::occlusion_query);
+            MarkUnsupported(GLFeature::occlusion_query_boolean);
+            MarkUnsupported(GLFeature::occlusion_query2);
+        }
+    }
+
+    if (IsSupported(GLFeature::get_query_object_i64v)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64v", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64v", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjecti64v, { "GetQueryObjecti64vEXT", "GetQueryObjecti64vANGLE", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectui64v, { "GetQueryObjectui64vEXT", "GetQueryObjectui64vANGLE", nullptr } },
+            END_SYMBOLS
+        };
+        if (!fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_query_object_i64v)) {
+            MarkUnsupported(GLFeature::query_counter);
+        }
+    }
+
+    if (IsSupported(GLFeature::get_query_object_iv)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectivEXT", "GetQueryObjectivANGLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_query_object_iv);
+    }
+
+    if (IsSupported(GLFeature::clear_buffers)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fClearBufferfi,  { "ClearBufferfi",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferfv,  { "ClearBufferfv",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferiv,  { "ClearBufferiv",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fClearBufferuiv, { "ClearBufferuiv", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::clear_buffers);
+    }
+
+    if (IsSupported(GLFeature::copy_buffer)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCopyBufferSubData, { "CopyBufferSubData", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::copy_buffer);
+    }
+
+    if (IsSupported(GLFeature::draw_buffers)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffersARB", "DrawBuffersEXT", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);
+    }
+
+    if (IsSupported(GLFeature::draw_range_elements)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElements", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElementsEXT", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_range_elements);
+    }
+
+    if (IsSupported(GLFeature::get_integer_indexed)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegeri_v", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] ={
+            { (PRFuncPtr*) &mSymbols.fGetIntegeri_v, { "GetIntegerIndexedvEXT", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::get_integer_indexed);
+    }
+
+    if (IsSupported(GLFeature::get_integer64_indexed)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetInteger64i_v, { "GetInteger64i_v", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::get_integer64_indexed);
+    }
+
+    if (IsSupported(GLFeature::gpu_shader4)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIiv, { "GetVertexAttribIiv", "GetVertexAttribIivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetVertexAttribIuiv, { "GetVertexAttribIuiv", "GetVertexAttribIuivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", "VertexAttribI4iEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv","VertexAttribI4ivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", "VertexAttribI4uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", "VertexAttribI4uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", "VertexAttribIPointerEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", "Uniform1uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", "Uniform2uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", "Uniform3uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", "Uniform4uiEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", "Uniform1uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", "Uniform2uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", "Uniform3uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", "Uniform4uivEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetFragDataLocation, { "GetFragDataLocation", "GetFragDataLocationEXT", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetUniformuiv, { "GetUniformuiv", "GetUniformuivEXT", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::gpu_shader4);
+    }
+
+    if (IsSupported(GLFeature::map_buffer_range)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, { "FlushMappedBufferRange", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::map_buffer_range);
+    }
+
+    if (IsSupported(GLFeature::texture_3D)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fTexImage3D, { "TexImage3D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3D", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3DEXT", "TexSubImage3DOES", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D);
+    }
+
+    if (IsSupported(GLFeature::texture_3D_compressed)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3D", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3D", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3DARB", "CompressedTexImage3DOES", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3DARB", "CompressedTexSubImage3DOES", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D_compressed);
+    }
+
+    if (IsSupported(GLFeature::texture_3D_copy)) {
+        const SymLoadStruct coreSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3D", nullptr } },
+            END_SYMBOLS
+        };
+        const SymLoadStruct extSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3DEXT", "CopyTexSubImage3DOES", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::texture_3D_copy);
+    }
+
+    if (IsSupported(GLFeature::uniform_buffer_object)) {
+        // Note: Don't query for glGetActiveUniformName because it is not
+        // supported by GL ES 3.
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetUniformIndices, { "GetUniformIndices", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformsiv, { "GetActiveUniformsiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetUniformBlockIndex, { "GetUniformBlockIndex", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockiv, { "GetActiveUniformBlockiv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockName, { "GetActiveUniformBlockName", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformBlockBinding, { "UniformBlockBinding", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::uniform_buffer_object);
+    }
+
+    if (IsSupported(GLFeature::uniform_matrix_nonsquare)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x3fv, { "UniformMatrix2x3fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix2x4fv, { "UniformMatrix2x4fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x2fv, { "UniformMatrix3x2fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix3x4fv, { "UniformMatrix3x4fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x2fv, { "UniformMatrix4x2fv", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fUniformMatrix4x3fv, { "UniformMatrix4x3fv", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::uniform_matrix_nonsquare);
+    }
+
+    if (IsSupported(GLFeature::internalformat_query)) {
+        const SymLoadStruct symbols[] = {
+            CORE_SYMBOL(GetInternalformativ),
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::internalformat_query);
+    }
+
+    if (IsSupported(GLFeature::invalidate_framebuffer)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr *) &mSymbols.fInvalidateFramebuffer,    { "InvalidateFramebuffer", nullptr } },
+            { (PRFuncPtr *) &mSymbols.fInvalidateSubFramebuffer, { "InvalidateSubFramebuffer", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::invalidate_framebuffer);
+    }
+
+    if (IsExtensionSupported(KHR_debug)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  { "DebugMessageControl",  "DebugMessageControlKHR",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDebugMessageInsert,   { "DebugMessageInsert",   "DebugMessageInsertKHR",   nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDebugMessageCallback, { "DebugMessageCallback", "DebugMessageCallbackKHR", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetDebugMessageLog,   { "GetDebugMessageLog",   "GetDebugMessageLogKHR",   nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetPointerv,          { "GetPointerv",          "GetPointervKHR",          nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPushDebugGroup,       { "PushDebugGroup",       "PushDebugGroupKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fPopDebugGroup,        { "PopDebugGroup",        "PopDebugGroupKHR",        nullptr } },
+            { (PRFuncPtr*) &mSymbols.fObjectLabel,          { "ObjectLabel",          "ObjectLabelKHR",          nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetObjectLabel,       { "GetObjectLabel",       "GetObjectLabelKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fObjectPtrLabel,       { "ObjectPtrLabel",       "ObjectPtrLabelKHR",       nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetObjectPtrLabel,    { "GetObjectPtrLabel",    "GetObjectPtrLabelKHR",    nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForExt(symbols, KHR_debug);
+    }
+
+    if (IsExtensionSupported(NV_fence)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGenFences,    { "GenFencesNV",    nullptr } },
+            { (PRFuncPtr*) &mSymbols.fDeleteFences, { "DeleteFencesNV", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fSetFence,     { "SetFenceNV",     nullptr } },
+            { (PRFuncPtr*) &mSymbols.fTestFence,    { "TestFenceNV",    nullptr } },
+            { (PRFuncPtr*) &mSymbols.fFinishFence,  { "FinishFenceNV",  nullptr } },
+            { (PRFuncPtr*) &mSymbols.fIsFence,      { "IsFenceNV",      nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetFenceiv,   { "GetFenceivNV",   nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForExt(symbols, NV_fence);
+    }
+
+    if (IsSupported(GLFeature::read_buffer)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fReadBuffer, { "ReadBuffer", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::read_buffer);
+    }
+
+    if (IsExtensionSupported(APPLE_framebuffer_multisample)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fResolveMultisampleFramebufferAPPLE, { "ResolveMultisampleFramebufferAPPLE", nullptr } },
+            END_SYMBOLS
+        };
+        fnLoadForExt(symbols, APPLE_framebuffer_multisample);
+    }
+
+    // Load developer symbols, don't fail if we can't find them.
+    const SymLoadStruct devSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", nullptr } },
+            { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nullptr } },
+            END_SYMBOLS
+    };
+    const bool warnOnFailures = DebugMode();
+    LoadSymbols(devSymbols, trygl, prefix, warnOnFailures);
 }
 
 #undef CORE_SYMBOL
