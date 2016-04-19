@@ -3608,10 +3608,8 @@ nsTextPaintStyle::GetTextColor()
     }
   }
 
-  nsCSSProperty property =
-    mFrame->StyleText()->mWebkitTextFillColorForeground
-    ? eCSSProperty_color : eCSSProperty__webkit_text_fill_color;
-  return nsLayoutUtils::GetColor(mFrame, property);
+  return nsLayoutUtils::GetColor(mFrame,
+                                 mFrame->StyleContext()->GetTextFillColorProp());
 }
 
 bool
@@ -3804,7 +3802,7 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
     if (sc) {
       mSelectionBGColor =
         sc->GetVisitedDependentColor(eCSSProperty_background_color);
-      mSelectionTextColor = sc->GetVisitedDependentColor(eCSSProperty_color);
+      mSelectionTextColor = sc->GetVisitedDependentColor(sc->GetTextFillColorProp());
       mHasSelectionShadow =
         nsRuleNode::HasAuthorSpecifiedRules(sc,
                                             NS_AUTHOR_SPECIFIED_TEXT_SHADOW,
@@ -3840,13 +3838,15 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
   if (mResolveColors) {
     // On MacOS X, we don't exchange text color and BG color.
     if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
-      nsCSSProperty property = mFrame->IsSVGText() ? eCSSProperty_fill :
-                                                     eCSSProperty_color;
+      nsCSSProperty property = mFrame->IsSVGText()
+                               ? eCSSProperty_fill
+                               : mFrame->StyleContext()->GetTextFillColorProp();
       nscoord frameColor = mFrame->GetVisitedDependentColor(property);
       mSelectionTextColor = EnsureDifferentColors(frameColor, mSelectionBGColor);
     } else if (mSelectionTextColor == NS_CHANGE_COLOR_IF_SAME_AS_BG) {
-      nsCSSProperty property = mFrame->IsSVGText() ? eCSSProperty_fill :
-                                                     eCSSProperty_color;
+      nsCSSProperty property = mFrame->IsSVGText()
+                               ? eCSSProperty_fill
+                               : mFrame->StyleContext()->GetTextFillColorProp();
       nscolor frameColor = mFrame->GetVisitedDependentColor(property);
       if (frameColor == mSelectionBGColor) {
         mSelectionTextColor =
