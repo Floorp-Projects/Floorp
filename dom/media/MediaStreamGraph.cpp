@@ -890,7 +890,7 @@ SetImageToBlackPixel(PlanarYCbCrImage* aImage)
   data.mCrChannel = blackPixel + 2;
   data.mYStride = data.mCbCrStride = 1;
   data.mPicSize = data.mYSize = data.mCbCrSize = IntSize(1, 1);
-  aImage->SetData(data);
+  aImage->CopyData(data);
 }
 
 class VideoFrameContainerInvalidateRunnable : public nsRunnable {

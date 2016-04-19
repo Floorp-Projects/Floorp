@@ -342,7 +342,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
   data.mPicSize = IntSize(mWidth, mHeight);
   data.mStereoMode = StereoMode::MONO;
 
-  if (!image->SetData(data)) {
+  if (!image->CopyData(data)) {
     MOZ_ASSERT(false);
     return 0;
   }

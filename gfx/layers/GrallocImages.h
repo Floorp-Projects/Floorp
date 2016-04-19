@@ -63,11 +63,12 @@ public:
    */
   virtual bool SetData(const Data& aData);
 
+  using RecyclingPlanarYCbCrImage::AdoptData;
   /**
    *  Share the SurfaceDescriptor without making the copy, in order
    *  to support functioning in all different layer managers.
    */
-  void SetData(TextureClient* aGraphicBuffer, const gfx::IntSize& aSize);
+  void AdoptData(TextureClient* aGraphicBuffer, const gfx::IntSize& aSize);
 
   // From [android 4.0.4]/hardware/msm7k/libgralloc-qsd8k/gralloc_priv.h
   enum {

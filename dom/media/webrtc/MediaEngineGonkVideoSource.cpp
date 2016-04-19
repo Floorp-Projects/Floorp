@@ -789,7 +789,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
                           libyuv::FOURCC_NV21);
     destBuffer->unlock();
 
-    image->AsGrallocImage()->SetData(textureClient, gfx::IntSize(dstWidth, dstHeight));
+    image->AsGrallocImage()->AdoptData(textureClient, gfx::IntSize(dstWidth, dstHeight));
   } else {
     // Handle out of gralloc case.
     image = mImageContainer->CreatePlanarYCbCrImage();
@@ -821,7 +821,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
     data.mPicSize = IntSize(dstWidth, dstHeight);
     data.mStereoMode = StereoMode::MONO;
 
-    image->AsPlanarYCbCrImage()->SetDataNoCopy(data);
+    image->AsPlanarYCbCrImage()->AdoptData(data);
   }
   graphicBuffer->unlock();
 
