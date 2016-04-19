@@ -12,9 +12,6 @@
 #include "Types.h"
 #include "Point.h"
 #include <math.h>
-#if defined(_MSC_VER) && (_MSC_VER < 1600)
-#define hypotf _hypotf
-#endif
 
 namespace mozilla {
 namespace gfx {
