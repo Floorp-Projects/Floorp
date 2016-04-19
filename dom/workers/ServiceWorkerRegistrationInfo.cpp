@@ -20,36 +20,19 @@ ServiceWorkerRegistrationInfo::Clear()
 
   if (mWaitingWorker) {
     mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
-
-    nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
-                                                       mWaitingWorker->CacheName());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to purge the waiting cache.");
-    }
-
     mWaitingWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mWaitingWorker = nullptr;
   }
 
   if (mActiveWorker) {
     mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
-
-    nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
-                                                       mActiveWorker->CacheName());
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to purge the active cache.");
-    }
-
     mActiveWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mActiveWorker = nullptr;
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
-  swm->InvalidateServiceWorkerRegistrationWorker(this,
-                                                 WhichServiceWorker::INSTALLING_WORKER |
-                                                 WhichServiceWorker::WAITING_WORKER |
-                                                 WhichServiceWorker::ACTIVE_WORKER);
+  NotifyListenersOnChange(WhichServiceWorker::INSTALLING_WORKER |
+                          WhichServiceWorker::WAITING_WORKER |
+                          WhichServiceWorker::ACTIVE_WORKER);
 }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
@@ -205,43 +188,17 @@ ServiceWorkerRegistrationInfo::TryToActivate()
 }
 
 void
-ServiceWorkerRegistrationInfo::PurgeActiveWorker()
-{
-  RefPtr<ServiceWorkerInfo> exitingWorker = mActiveWorker.forget();
-  if (!exitingWorker)
-    return;
-
-  // FIXME(jaoo): Bug 1170543 - Wait for exitingWorker to finish and terminate it.
-  exitingWorker->UpdateState(ServiceWorkerState::Redundant);
-  nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
-                                                     exitingWorker->CacheName());
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to purge the activating cache.");
-  }
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  swm->InvalidateServiceWorkerRegistrationWorker(this, WhichServiceWorker::ACTIVE_WORKER);
-}
-
-void
 ServiceWorkerRegistrationInfo::Activate()
 {
-  RefPtr<ServiceWorkerInfo> activatingWorker = mWaitingWorker;
-  if (!activatingWorker) {
+  if (!mWaitingWorker) {
     return;
   }
 
-  PurgeActiveWorker();
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  swm->InvalidateServiceWorkerRegistrationWorker(this, WhichServiceWorker::WAITING_WORKER);
-
-  mActiveWorker = activatingWorker.forget();
-  mWaitingWorker = nullptr;
-  mActiveWorker->UpdateState(ServiceWorkerState::Activating);
-  NotifyListenersOnChange();
+  TransitionWaitingToActive();
 
   // FIXME(nsm): Unlink appcache if there is one.
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   swm->CheckPendingReadyPromises();
 
   // "Queue a task to fire a simple event named controllerchange..."
@@ -311,8 +268,16 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
 }
 
 void
-ServiceWorkerRegistrationInfo::NotifyListenersOnChange()
+ServiceWorkerRegistrationInfo::NotifyListenersOnChange(WhichServiceWorker aChangedWorkers)
 {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aChangedWorkers & (WhichServiceWorker::INSTALLING_WORKER |
+                                WhichServiceWorker::WAITING_WORKER |
+                                WhichServiceWorker::ACTIVE_WORKER));
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  swm->InvalidateServiceWorkerRegistrationWorker(this, aChangedWorkers);
+
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> listeners(mListeners);
   for (size_t index = 0; index < listeners.Length(); ++index) {
     listeners[index]->OnChange();
@@ -365,6 +330,121 @@ ServiceWorkerRegistrationInfo::CheckAndClearIfUpdateNeeded()
   mUpdateState = NoUpdate;
 
   return result;
+}
+
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetInstalling() const
+{
+  AssertIsOnMainThread();
+  return mInstallingWorker;
+}
+
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetWaiting() const
+{
+  AssertIsOnMainThread();
+  return mWaitingWorker;
+}
+
+ServiceWorkerInfo*
+ServiceWorkerRegistrationInfo::GetActive() const
+{
+  AssertIsOnMainThread();
+  return mActiveWorker;
+}
+
+void
+ServiceWorkerRegistrationInfo::ClearInstalling()
+{
+  AssertIsOnMainThread();
+
+  if (!mInstallingWorker) {
+    return;
+  }
+
+  mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
+  mInstallingWorker = nullptr;
+  NotifyListenersOnChange(WhichServiceWorker::INSTALLING_WORKER);
+}
+
+void
+ServiceWorkerRegistrationInfo::SetInstalling(ServiceWorkerInfo* aServiceWorker)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aServiceWorker);
+  MOZ_ASSERT(!mInstallingWorker);
+  MOZ_ASSERT(mWaitingWorker != aServiceWorker);
+  MOZ_ASSERT(mActiveWorker != aServiceWorker);
+
+  mInstallingWorker = aServiceWorker;
+  mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
+  NotifyListenersOnChange(WhichServiceWorker::INSTALLING_WORKER);
+}
+
+void
+ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mInstallingWorker);
+
+  if (mWaitingWorker) {
+    MOZ_ASSERT(mInstallingWorker->CacheName() != mWaitingWorker->CacheName());
+    mWaitingWorker->UpdateState(ServiceWorkerState::Redundant);
+  }
+
+  mWaitingWorker = mInstallingWorker.forget();
+  mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
+  NotifyListenersOnChange(WhichServiceWorker::INSTALLING_WORKER |
+                          WhichServiceWorker::WAITING_WORKER);
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  swm->StoreRegistration(mPrincipal, this);
+}
+
+void
+ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aServiceWorker);
+
+  // TODO: Assert installing, waiting, and active are nullptr once the SWM
+  //       moves to the parent process.  After that happens this code will
+  //       only run for browser initialization and not for cross-process
+  //       overrides.
+  MOZ_ASSERT(mInstallingWorker != aServiceWorker);
+  MOZ_ASSERT(mWaitingWorker != aServiceWorker);
+  MOZ_ASSERT(mActiveWorker != aServiceWorker);
+
+  if (mActiveWorker) {
+    MOZ_ASSERT(aServiceWorker->CacheName() != mActiveWorker->CacheName());
+    mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
+  }
+
+  // The active worker is being overriden due to initial load or
+  // another process activating a worker.  Move straight to the
+  // Activated state.
+  mActiveWorker = aServiceWorker;
+  mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
+  NotifyListenersOnChange(WhichServiceWorker::ACTIVE_WORKER);
+}
+
+void
+ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mWaitingWorker);
+
+  if (mActiveWorker) {
+    MOZ_ASSERT(mWaitingWorker->CacheName() != mActiveWorker->CacheName());
+    mActiveWorker->UpdateState(ServiceWorkerState::Redundant);
+  }
+
+  // We are transitioning from waiting to active normally, so go to
+  // the activating state.
+  mActiveWorker = mWaitingWorker.forget();
+  mActiveWorker->UpdateState(ServiceWorkerState::Activating);
+  NotifyListenersOnChange(WhichServiceWorker::WAITING_WORKER |
+                          WhichServiceWorker::ACTIVE_WORKER);
 }
 
 END_WORKERS_NAMESPACE

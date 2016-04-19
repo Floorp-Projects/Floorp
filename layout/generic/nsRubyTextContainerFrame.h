@@ -11,8 +11,6 @@
 
 #include "nsBlockFrame.h"
 
-typedef nsContainerFrame nsRubyTextContainerFrameSuper;
-
 /**
  * Factory function.
  * @return a newly allocated nsRubyTextContainerFrame (infallible)
@@ -20,7 +18,7 @@ typedef nsContainerFrame nsRubyTextContainerFrameSuper;
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
-class nsRubyTextContainerFrame final : public nsRubyTextContainerFrameSuper
+class nsRubyTextContainerFrame final : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -59,7 +57,7 @@ protected:
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsRubyTextContainerFrameSuper(aContext)
+    : nsContainerFrame(aContext)
     , mISize(0) {}
 
   void UpdateSpanFlag();

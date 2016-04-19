@@ -26,7 +26,7 @@ using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsRubyFrame)
   NS_QUERYFRAME_ENTRY(nsRubyFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsRubyFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsInlineFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyFrame)
 
@@ -54,7 +54,7 @@ nsRubyFrame::IsFrameOfType(uint32_t aFlags) const
   if (aFlags & eBidiInlineContainer) {
     return false;
   }
-  return nsRubyFrameSuper::IsFrameOfType(aFlags);
+  return nsInlineFrame::IsFrameOfType(aFlags);
 }
 
 #ifdef DEBUG_FRAME_DUMP

@@ -829,7 +829,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const DrawSurfaceOptions &aSurfOptions,
                              const DrawOptions &aOptions)
 {
-  if (mTransformSingular) {
+  if (mTransformSingular || aDest.IsEmpty()) {
     return;
   }
 

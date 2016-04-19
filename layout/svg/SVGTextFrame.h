@@ -22,8 +22,6 @@ class nsDisplaySVGText;
 class SVGTextFrame;
 class nsTextFrame;
 
-typedef nsSVGDisplayContainerFrame SVGTextFrameBase;
-
 namespace mozilla {
 
 class CharIterator;
@@ -245,7 +243,7 @@ public:
  * itself do the painting.  Otherwise, a DrawPathCallback is passed to
  * PaintText so that we can fill the text geometry with SVG paint servers.
  */
-class SVGTextFrame final : public SVGTextFrameBase
+class SVGTextFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -267,10 +265,10 @@ class SVGTextFrame final : public SVGTextFrameBase
 
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)
-    : SVGTextFrameBase(aContext),
-      mFontSizeScaleFactor(1.0f),
-      mLastContextScale(1.0f),
-      mLengthAdjustScaleFactor(1.0f)
+    : nsSVGDisplayContainerFrame(aContext)
+    , mFontSizeScaleFactor(1.0f)
+    , mLastContextScale(1.0f)
+    , mLengthAdjustScaleFactor(1.0f)
   {
     AddStateBits(NS_STATE_SVG_POSITIONING_DIRTY);
   }

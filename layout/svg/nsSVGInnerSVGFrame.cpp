@@ -33,7 +33,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)
 NS_QUERYFRAME_HEAD(nsSVGInnerSVGFrame)
   NS_QUERYFRAME_ENTRY(nsSVGInnerSVGFrame)
   NS_QUERYFRAME_ENTRY(nsISVGSVGFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsSVGInnerSVGFrameBase)
+NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 #ifdef DEBUG
 void
@@ -44,7 +44,7 @@ nsSVGInnerSVGFrame::Init(nsIContent*       aContent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::svg),
                "Content is not an SVG 'svg' element!");
 
-  nsSVGInnerSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -84,7 +84,7 @@ nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
     nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
-  return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aTransform, aDirtyRect);
+  return nsSVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aDirtyRect);
 }
 
 nsRect
@@ -124,7 +124,7 @@ nsSVGInnerSVGFrame::ReflowSVG()
     InvalidateFrame();
   }
 
-  nsSVGInnerSVGFrameBase::ReflowSVG();
+  nsSVGDisplayContainerFrame::ReflowSVG();
 }
 
 void
@@ -181,7 +181,7 @@ nsSVGInnerSVGFrame::NotifySVGChanged(uint32_t aFlags)
     mCanvasTM = nullptr;
   }
 
-  nsSVGInnerSVGFrameBase::NotifySVGChanged(aFlags);
+  nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
 }
 
 nsresult
@@ -269,7 +269,7 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const gfxPoint& aPoint)
     }
   }
 
-  return nsSVGInnerSVGFrameBase::GetFrameForPoint(aPoint);
+  return nsSVGDisplayContainerFrame::GetFrameForPoint(aPoint);
 }
 
 //----------------------------------------------------------------------

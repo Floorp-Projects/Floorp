@@ -1218,7 +1218,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   }
 
   nsRect oldDisplayPort;
-  bool hadDisplayPort = GetDisplayPort(aContent, &oldDisplayPort);
+  bool hadDisplayPort = GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
 
   aContent->SetProperty(nsGkAtoms::DisplayPortMargins,
                         new DisplayPortMarginsPropertyData(
@@ -1226,7 +1226,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
   nsRect newDisplayPort;
-  DebugOnly<bool> hasDisplayPort = GetDisplayPort(aContent, &newDisplayPort);
+  DebugOnly<bool> hasDisplayPort = GetHighResolutionDisplayPort(aContent, &newDisplayPort);
   MOZ_ASSERT(hasDisplayPort);
 
   bool changed = !hadDisplayPort ||
@@ -1322,6 +1322,15 @@ bool
 nsLayoutUtils::HasCriticalDisplayPort(nsIContent* aContent)
 {
   return GetCriticalDisplayPort(aContent, nullptr);
+}
+
+bool
+nsLayoutUtils::GetHighResolutionDisplayPort(nsIContent* aContent, nsRect* aResult)
+{
+  if (gfxPrefs::UseLowPrecisionBuffer()) {
+    return GetCriticalDisplayPort(aContent, aResult);
+  }
+  return GetDisplayPort(aContent, aResult);
 }
 
 void
