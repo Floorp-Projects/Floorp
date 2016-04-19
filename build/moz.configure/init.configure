@@ -147,7 +147,7 @@ def add_old_configure_assignment(var, value):
         else:
             if isinstance(value, (list, tuple)):
                 value = quote(*value)
-            assignments.append('%s=%s' % (var, quote(value)))
+            assignments.append('%s=%s' % (var, quote(str(value))))
 
 @template
 def add_old_configure_arg(arg):

@@ -258,17 +258,30 @@ def get_compiler_info(compiler, language):
             data[k] = v.replace(' ', '')
             log.debug('%s = %s', k, data[k])
 
-    type = data.get('COMPILER')
-    if not type:
+    try:
+        type = CompilerType(data['COMPILER'])
+    except:
         raise FatalCheckError(
             'Unknown compiler or compiler not supported.')
 
     cplusplus = int(data.get('cplusplus', '0L').rstrip('L'))
     stdc_version = int(data.get('STDC_VERSION', '0L').rstrip('L'))
 
+    version = data.get('VERSION')
+    if version and type in ('msvc', 'clang-cl'):
+        msc_ver = version
+        version = msc_ver[0:2]
+        if len(msc_ver) > 2:
+            version += '.' + msc_ver[2:4]
+        if len(msc_ver) > 4:
+            version += '.' + msc_ver[4:]
+
+    if version:
+        version = Version(version)
+
     return namespace(
-        type=CompilerType(type),
-        version=data.get('VERSION'),
+        type=type,
+        version=version,
         language='C++' if cplusplus else 'C',
         language_version=cplusplus if cplusplus else stdc_version,
     )
@@ -309,7 +322,7 @@ def check_compiler(compiler, language):
 
     # We force clang-cl to emulate Visual C++ 2013 Update 3 with fallback to
     # cl.exe.
-    if info.type == 'clang-cl' and info.version != '180030723':
+    if info.type == 'clang-cl' and info.version != '18.00.30723':
         # Those flags are direct clang-cl flags that don't need -Xclang, add
         # them directly.
         flags.append('-fms-compatibility-version=18.00.30723')
@@ -499,7 +512,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
         # Check the compiler version here instead of in `compiler_version` so
         # that the `checking` message doesn't pretend the compiler can be used
         # to then bail out one line later.
-        if type == 'gcc' and Version(version) < '4.8.0':
+        if type == 'gcc' and version < '4.8.0':
             raise FatalCheckError(
                 'Only GCC 4.8 or newer is supported (found version %s).'
                 % version)
@@ -511,8 +524,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
                 'Only clang/llvm 3.4 or newer is supported.')
 
         if type == 'msvc':
-            if version < '180030723' or (version > '19' and
-                                         version < '190023506'):
+            if version < '18.00.30723' or ('19' < version < '19.00.23506'):
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
