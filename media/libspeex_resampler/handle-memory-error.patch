@@ -1,0 +1,46 @@
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+index 83ad119..a3859e3 100644
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -811,6 +811,12 @@ EXPORT SpeexResamplerState *speex_resampler_init_frac(spx_uint32_t nb_channels,
+       return NULL;
+    }
+    st = (SpeexResamplerState *)speex_alloc(sizeof(SpeexResamplerState));
++   if (!st)
++   {
++      if (err)
++         *err = RESAMPLER_ERR_ALLOC_FAILED;
++      return NULL;
++   }
+    st->initialised = 0;
+    st->started = 0;
+    st->in_rate = 0;
+@@ -832,9 +838,12 @@ EXPORT SpeexResamplerState *speex_resampler_init_frac(spx_uint32_t nb_channels,
+    st->buffer_size = 160;
+    
+    /* Per channel data */
+-   st->last_sample = (spx_int32_t*)speex_alloc(nb_channels*sizeof(spx_int32_t));
+-   st->magic_samples = (spx_uint32_t*)speex_alloc(nb_channels*sizeof(spx_uint32_t));
+-   st->samp_frac_num = (spx_uint32_t*)speex_alloc(nb_channels*sizeof(spx_uint32_t));
++   if (!(st->last_sample = (spx_int32_t*)speex_alloc(nb_channels*sizeof(spx_int32_t))))
++      goto fail;
++   if (!(st->magic_samples = (spx_uint32_t*)speex_alloc(nb_channels*sizeof(spx_uint32_t))))
++      goto fail;
++   if (!(st->samp_frac_num = (spx_uint32_t*)speex_alloc(nb_channels*sizeof(spx_uint32_t))))
++      goto fail;
+    for (i=0;i<nb_channels;i++)
+    {
+       st->last_sample[i] = 0;
+@@ -857,6 +866,12 @@ EXPORT SpeexResamplerState *speex_resampler_init_frac(spx_uint32_t nb_channels,
+       *err = filter_err;
+ 
+    return st;
++
++fail:
++   if (err)
++      *err = RESAMPLER_ERR_ALLOC_FAILED;
++   speex_resampler_destroy(st);
++   return NULL;
+ }
+ 
+ EXPORT void speex_resampler_destroy(SpeexResamplerState *st)
