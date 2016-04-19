@@ -3436,16 +3436,11 @@ public class BrowserApp extends GeckoApp
             MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
         }
 
-        if (!SwitchBoard.isInExperiment(this, Experiments.BOOKMARKS_HISTORY_MENU)) {
-            bookmarksList.setVisible(false);
-            historyList.setVisible(false);
-        } else {
-            // Hide panel menu items if the panels themselves are hidden.
-            // If we don't know whether the panels are hidden, just show the menu items.
-            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
-            bookmarksList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, true));
-            historyList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, true));
-        }
+        // Hide panel menu items if the panels themselves are hidden.
+        // If we don't know whether the panels are hidden, just show the menu items.
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+        bookmarksList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, true));
+        historyList.setVisible(prefs.getBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, true));
 
         return true;
     }
@@ -3553,14 +3548,12 @@ public class BrowserApp extends GeckoApp
         if (itemId == R.id.bookmarks_list) {
             final String url = AboutPages.getURLForBuiltinPanelType(PanelType.BOOKMARKS);
             Tabs.getInstance().loadUrl(url);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
             return true;
         }
 
         if (itemId == R.id.history_list) {
             final String url = AboutPages.getURLForBuiltinPanelType(PanelType.COMBINED_HISTORY);
             Tabs.getInstance().loadUrl(url);
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
             return true;
         }
 
