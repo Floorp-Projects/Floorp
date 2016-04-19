@@ -25,9 +25,7 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsNameSpaceManager.h"
@@ -711,7 +709,7 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
                                 const nsAString* aAttribute,
                                 const bool aChildrenOnly /* = false */)
 {
-  if (aNode.NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (aNode.GetAsText()) {
     return NS_OK;
   }
 
@@ -844,58 +842,45 @@ nsHTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
 }
 
 nsresult
-nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* inRange)
+nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 {
-  NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> startNode, endNode, parent, tmp;
-  int32_t startOffset, endOffset, tmpOffset;
+  // We assume that <a> is not nested.
+  nsCOMPtr<nsINode> startNode = aRange.GetStartParent();
+  int32_t startOffset = aRange.StartOffset();
+  nsCOMPtr<nsINode> endNode = aRange.GetEndParent();
+  int32_t endOffset = aRange.EndOffset();
 
-  res = inRange->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetEndContainer(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(res, res);
-  res = inRange->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> parent = startNode;
 
-  tmp = startNode;
-  while ( tmp &&
-          !nsTextEditUtils::IsBody(tmp) &&
-          !nsHTMLEditUtils::IsNamedAnchor(tmp))
-  {
-    parent = GetNodeLocation(tmp, &tmpOffset);
-    tmp = parent;
+  while (parent && !parent->IsHTMLElement(nsGkAtoms::body) &&
+         !nsHTMLEditUtils::IsNamedAnchor(parent)) {
+    parent = parent->GetParentNode();
   }
-  NS_ENSURE_TRUE(tmp, NS_ERROR_NULL_POINTER);
-  if (nsHTMLEditUtils::IsNamedAnchor(tmp))
-  {
-    parent = GetNodeLocation(tmp, &tmpOffset);
-    startNode = parent;
-    startOffset = tmpOffset;
+  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
+
+  if (nsHTMLEditUtils::IsNamedAnchor(parent)) {
+    startNode = parent->GetParentNode();
+    startOffset = startNode ? startNode->IndexOf(parent) : -1;
   }
 
-  tmp = endNode;
-  while ( tmp &&
-          !nsTextEditUtils::IsBody(tmp) &&
-          !nsHTMLEditUtils::IsNamedAnchor(tmp))
-  {
-    parent = GetNodeLocation(tmp, &tmpOffset);
-    tmp = parent;
+  parent = endNode;
+  while (parent && !parent->IsHTMLElement(nsGkAtoms::body) &&
+         !nsHTMLEditUtils::IsNamedAnchor(parent)) {
+    parent = parent->GetParentNode();
   }
-  NS_ENSURE_TRUE(tmp, NS_ERROR_NULL_POINTER);
-  if (nsHTMLEditUtils::IsNamedAnchor(tmp))
-  {
-    parent = GetNodeLocation(tmp, &tmpOffset);
-    endNode = parent;
-    endOffset = tmpOffset + 1;
+  NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
+
+  if (nsHTMLEditUtils::IsNamedAnchor(parent)) {
+    endNode = parent->GetParentNode();
+    endOffset = endNode ? endNode->IndexOf(parent) + 1 : 0;
   }
 
-  res = inRange->SetStart(startNode, startOffset);
+  nsresult res = aRange.SetStart(startNode, startOffset);
   NS_ENSURE_SUCCESS(res, res);
-  res = inRange->SetEnd(endNode, endOffset);
-  return res;
+  res = aRange.SetEnd(endNode, endOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 nsresult
@@ -1241,7 +1226,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
     // Loop through the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-      RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+      OwningNonNull<nsRange> range = *selection->GetRangeAt(rangeIdx);
       if (aProperty == nsGkAtoms::name) {
         // Promote range if it starts or end in a named anchor and we want to
         // remove named anchors
@@ -1249,7 +1234,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
       } else {
         // Adjust range to include any ancestors whose children are entirely
         // selected
-        res = PromoteInlineRange(*range);
+        res = PromoteInlineRange(range);
       }
       NS_ENSURE_SUCCESS(res, res);
 
