@@ -216,6 +216,11 @@ interface nsILoginManager : nsISupports {
                                in nsIFormAutoCompleteObserver aListener);
 
   /**
+   * Stop a previously-started async search.
+   */
+  void stopSearch();
+
+  /**
    * Search for logins in the login manager. An array is always returned;
    * if there are no logins the array is empty.
    *

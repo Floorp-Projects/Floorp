@@ -14,15 +14,13 @@
 // events and propagate them to the parent.  Most of the heavy lifting is done
 // within the nsSVGGradientFrame, which is the parent for this frame
 
-typedef nsFrame  nsSVGStopFrameBase;
-
-class nsSVGStopFrame : public nsSVGStopFrameBase
+class nsSVGStopFrame : public nsFrame
 {
   friend nsIFrame*
   NS_NewSVGStopFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGStopFrame(nsStyleContext* aContext)
-    : nsSVGStopFrameBase(aContext)
+    : nsFrame(aContext)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -54,7 +52,7 @@ public:
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
-    return nsSVGStopFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+    return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -81,7 +79,7 @@ nsSVGStopFrame::Init(nsIContent*       aContent,
 {
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::stop), "Content is not a stop element");
 
-  nsSVGStopFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif /* DEBUG */
 
@@ -104,8 +102,7 @@ nsSVGStopFrame::AttributeChanged(int32_t         aNameSpaceID,
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }
 
-  return nsSVGStopFrameBase::AttributeChanged(aNameSpaceID,
-                                              aAttribute, aModType);
+  return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 // -------------------------------------------------------------------------

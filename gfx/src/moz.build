@@ -46,6 +46,10 @@ EXPORTS.mozilla += [
     'ArrayView.h',
 ]
 
+EXPORTS.mozilla.gfx += [
+    'TiledRegion.h',
+]
+
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla += ['X11Util.h']
     SOURCES += [
@@ -66,6 +70,7 @@ UNIFIED_SOURCES += [
     'nsThebesFontEnumerator.cpp',
     'nsThebesGfxFactory.cpp',
     'nsTransform2D.cpp',
+    'TiledRegion.cpp',
 ]
 
 # nsDeviceContext.cpp cannot be built in unified mode because it pulls in OS X system headers.

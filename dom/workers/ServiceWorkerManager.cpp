@@ -182,9 +182,9 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  if (aRegistration->mActiveWorker) {
-    aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
-    aData.cacheName() = aRegistration->mActiveWorker->CacheName();
+  if (aRegistration->GetActive()) {
+    aData.currentWorkerURL() = aRegistration->GetActive()->ScriptSpec();
+    aData.cacheName() = aRegistration->GetActive()->CacheName();
   }
 
   return NS_OK;
@@ -1181,7 +1181,7 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(principal, aURI);
 
-  if (registration && registration->mActiveWorker) {
+  if (registration && registration->GetActive()) {
     NS_ConvertUTF8toUTF16 scope(registration->mScope);
     RefPtr<ServiceWorkerRegistrationMainThread> swr =
       aWindow->GetServiceWorkerRegistration(scope);
@@ -1211,7 +1211,7 @@ ServiceWorkerManager::GetActiveWorkerInfoForScope(const PrincipalOriginAttribute
     return nullptr;
   }
 
-  return registration->mActiveWorker;
+  return registration->GetActive();
 }
 
 ServiceWorkerInfo*
@@ -1226,7 +1226,7 @@ ServiceWorkerManager::GetActiveWorkerInfoForDocument(nsIDocument* aDocument)
     return nullptr;
   }
 
-  return registration->mActiveWorker;
+  return registration->GetActive();
 }
 
 namespace {
@@ -1601,8 +1601,8 @@ ServiceWorkerManager::LoadRegistration(
   } else {
     // If active worker script matches our expectations for a "current worker",
     // then we are done.
-    if (registration->mActiveWorker &&
-        registration->mActiveWorker->ScriptSpec() == aRegistration.currentWorkerURL()) {
+    if (registration->GetActive() &&
+        registration->GetActive()->ScriptSpec() == aRegistration.currentWorkerURL()) {
       // No needs for updates.
       return;
     }
@@ -1610,10 +1610,10 @@ ServiceWorkerManager::LoadRegistration(
 
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
-    registration->mActiveWorker =
+    registration->SetActive(
       new ServiceWorkerInfo(registration->mPrincipal, registration->mScope,
-                            currentWorkerURL, aRegistration.cacheName());
-    registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
+                            currentWorkerURL, aRegistration.cacheName()));
+    registration->GetActive()->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }
 
@@ -2023,9 +2023,9 @@ ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aR
     } else {
       // If the registration has an active worker that is running
       // this might be a good time to stop it.
-      if (aRegistration->mActiveWorker) {
+      if (aRegistration->GetActive()) {
         ServiceWorkerPrivate* serviceWorkerPrivate =
-          aRegistration->mActiveWorker->WorkerPrivate();
+          aRegistration->GetActive()->WorkerPrivate();
         serviceWorkerPrivate->NoteStoppedControllingDocuments();
       }
       aRegistration->TryToActivateAsync();
@@ -2158,11 +2158,11 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
 
   RefPtr<ServiceWorkerInfo> info;
   if (aWhichWorker == WhichServiceWorker::INSTALLING_WORKER) {
-    info = registration->mInstallingWorker;
+    info = registration->GetInstalling();
   } else if (aWhichWorker == WhichServiceWorker::WAITING_WORKER) {
-    info = registration->mWaitingWorker;
+    info = registration->GetWaiting();
   } else if (aWhichWorker == WhichServiceWorker::ACTIVE_WORKER) {
-    info = registration->mActiveWorker;
+    info = registration->GetActive();
   } else {
     MOZ_CRASH("Invalid worker type");
   }
@@ -2301,8 +2301,8 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
     }
 
     // This should only happen if IsAvailable() returned true.
-    MOZ_ASSERT(registration->mActiveWorker);
-    serviceWorker = registration->mActiveWorker;
+    MOZ_ASSERT(registration->GetActive());
+    serviceWorker = registration->GetActive();
 
     AddNavigationInterception(serviceWorker->Scope(), aChannel);
   }
@@ -2343,7 +2343,7 @@ ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal,
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(aPrincipal, aURI);
-  return registration && registration->mActiveWorker;
+  return registration && registration->GetActive();
 }
 
 bool
@@ -2378,7 +2378,7 @@ ServiceWorkerManager::GetDocumentRegistration(nsIDocument* aDoc,
   }
 
   // If the document is controlled, the current worker MUST be non-null.
-  if (!registration->mActiveWorker) {
+  if (!registration->GetActive()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -2406,9 +2406,9 @@ ServiceWorkerManager::GetDocumentController(nsPIDOMWindowInner* aWindow,
     return rv;
   }
 
-  MOZ_ASSERT(registration->mActiveWorker);
+  MOZ_ASSERT(registration->GetActive());
   RefPtr<ServiceWorker> serviceWorker =
-    registration->mActiveWorker->GetOrCreateInstance(aWindow);
+    registration->GetActive()->GetOrCreateInstance(aWindow);
 
   serviceWorker.forget(aServiceWorker);
   return NS_OK;
@@ -2523,7 +2523,7 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
   }
 
   // "If registration's installing worker is not null, abort these steps."
-  if (registration->mInstallingWorker) {
+  if (registration->GetInstalling()) {
     return;
   }
 
@@ -2794,7 +2794,7 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
                                        ServiceWorkerRegistrationInfo* aWorkerRegistration)
 {
   MOZ_ASSERT(aWorkerRegistration);
-  MOZ_ASSERT(aWorkerRegistration->mActiveWorker);
+  MOZ_ASSERT(aWorkerRegistration->GetActive());
 
   // Same origin check
   if (!aWorkerRegistration->mPrincipal->Equals(aDocument->NodePrincipal())) {
@@ -2829,8 +2829,8 @@ ServiceWorkerManager::ClaimClients(nsIPrincipal* aPrincipal,
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(aPrincipal, aScope);
 
-  if (!registration || !registration->mActiveWorker ||
-      !(registration->mActiveWorker->ID() == aId)) {
+  if (!registration || !registration->GetActive() ||
+      !(registration->GetActive()->ID() == aId)) {
     // The worker is not active.
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -2855,13 +2855,13 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  if (registration->mInstallingWorker &&
-      (registration->mInstallingWorker->ID() == aServiceWorkerID)) {
-    registration->mInstallingWorker->SetSkipWaitingFlag();
-  } else if (registration->mWaitingWorker &&
-             (registration->mWaitingWorker->ID() == aServiceWorkerID)) {
-    registration->mWaitingWorker->SetSkipWaitingFlag();
-    if (registration->mWaitingWorker->State() == ServiceWorkerState::Installed) {
+  if (registration->GetInstalling() &&
+      (registration->GetInstalling()->ID() == aServiceWorkerID)) {
+    registration->GetInstalling()->SetSkipWaitingFlag();
+  } else if (registration->GetWaiting() &&
+             (registration->GetWaiting()->ID() == aServiceWorkerID)) {
+    registration->GetWaiting()->SetSkipWaitingFlag();
+    if (registration->GetWaiting()->State() == ServiceWorkerState::Installed) {
       registration->TryToActivateAsync();
     }
   } else {

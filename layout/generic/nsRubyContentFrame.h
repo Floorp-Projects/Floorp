@@ -11,9 +11,7 @@
 
 #include "nsInlineFrame.h"
 
-typedef nsInlineFrame nsRubyContentFrameSuper;
-
-class nsRubyContentFrame : public nsRubyContentFrameSuper
+class nsRubyContentFrame : public nsInlineFrame
 {
 public:
   NS_DECL_ABSTRACT_FRAME(nsRubyContentFrame)
@@ -30,7 +28,7 @@ public:
 
 protected:
   explicit nsRubyContentFrame(nsStyleContext* aContext)
-    : nsRubyContentFrameSuper(aContext) {}
+    : nsInlineFrame(aContext) {}
 };
 
 #endif /* nsRubyContentFrame_h___ */

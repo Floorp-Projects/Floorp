@@ -1,5 +1,6 @@
 #define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
 #define MOZ_NEEDS_MEMMOVABLE_TYPE __attribute__((annotate("moz_needs_memmovable_type")))
+#define MOZ_NEEDS_MEMMOVABLE_MEMBERS __attribute__((annotate("moz_needs_memmovable_members")))
 
 /*
   These are a bunch of structs with variable levels of memmovability.
@@ -9,12 +10,12 @@ struct MOZ_NON_MEMMOVABLE NonMovable {};
 struct Movable {};
 
 // Subclasses
-struct S_NonMovable : NonMovable {}; // expected-note 48 {{'S_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'NonMovable'}}
+struct S_NonMovable : NonMovable {}; // expected-note 51 {{'S_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'NonMovable'}}
 struct S_Movable : Movable {};
 
 // Members
 struct W_NonMovable {
-  NonMovable m; // expected-note 32 {{'W_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'NonMovable'}}
+  NonMovable m; // expected-note 34 {{'W_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'NonMovable'}}
 };
 struct W_Movable {
   Movable m;
@@ -22,17 +23,17 @@ struct W_Movable {
 
 // Wrapped Subclasses
 struct WS_NonMovable {
-  S_NonMovable m; // expected-note 32 {{'WS_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'S_NonMovable'}}
+  S_NonMovable m; // expected-note 34 {{'WS_NonMovable' is a non-memmove()able type because member 'm' is a non-memmove()able type 'S_NonMovable'}}
 };
 struct WS_Movable {
   S_Movable m;
 };
 
 // Combinations of the above
-struct SW_NonMovable : W_NonMovable {}; // expected-note 16 {{'SW_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'W_NonMovable'}}
+struct SW_NonMovable : W_NonMovable {}; // expected-note 17 {{'SW_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'W_NonMovable'}}
 struct SW_Movable : W_Movable {};
 
-struct SWS_NonMovable : WS_NonMovable {}; // expected-note 16 {{'SWS_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'WS_NonMovable'}}
+struct SWS_NonMovable : WS_NonMovable {}; // expected-note 17 {{'SWS_NonMovable' is a non-memmove()able type because it inherits from a non-memmove()able type 'WS_NonMovable'}}
 struct SWS_Movable : WS_Movable {};
 
 // Basic templated wrapper
@@ -810,3 +811,20 @@ void specialization() {
   Defaulted_Templated_NeedyTemplate7<S_SpecializedNonMovable> c7;
   W_Defaulted_Templated_NeedyTemplate8<S_SpecializedNonMovable> c8;
 }
+
+class MOZ_NEEDS_MEMMOVABLE_MEMBERS NeedsMemMovableMembers {
+  Movable m1;
+  NonMovable m2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'm2' of type 'NonMovable'}}
+  S_Movable sm1;
+  S_NonMovable sm2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'sm2' of type 'S_NonMovable'}}
+  W_Movable wm1;
+  W_NonMovable wm2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'wm2' of type 'W_NonMovable'}}
+  SW_Movable swm1;
+  SW_NonMovable swm2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'swm2' of type 'SW_NonMovable'}}
+  WS_Movable wsm1;
+  WS_NonMovable wsm2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'wsm2' of type 'WS_NonMovable'}}
+  SWS_Movable swsm1;
+  SWS_NonMovable swsm2; // expected-error {{class 'NeedsMemMovableMembers' cannot have non-memmovable member 'swsm2' of type 'SWS_NonMovable'}}
+};
+
+class NeedsMemMovableMembersDerived : public NeedsMemMovableMembers {};
