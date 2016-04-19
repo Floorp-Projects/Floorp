@@ -28801,34 +28801,6 @@
         "path": "web-animations/animation/finish.html",
         "url": "/web-animations/animation/finish.html"
       },
-       {
-        "path": "web-animations/animation/finished.html",
-        "url": "/web-animations/animation/finished.html"
-      },
-      {
-        "path": "web-animations/animation/id.html",
-        "url": "/web-animations/animation/id.html"
-      },
-      {
-        "path": "web-animations/animation/oncancel.html",
-        "url": "/web-animations/animation/oncancel.html"
-      },
-      {
-       "path": "web-animations/animation/onfinish.html",
-        "url": "/web-animations/animation/onfinish.html"
-      },
-      {
-        "path": "web-animations/animation/pause.html",
-        "url": "/web-animations/animation/pause.html"
-      },
-      {
-        "path": "web-animations/animation/ready.html",
-        "url": "/web-animations/animation/ready.html"
-      },
-      {
-        "path": "web-animations/animation/reverse.html",
-        "url": "/web-animations/animation/reverse.html"
-      },
       {
         "path": "web-animations/animation/play.html",
         "url": "/web-animations/animation/play.html"
