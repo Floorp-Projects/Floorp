@@ -134,7 +134,7 @@ protected:
                             nsAString       *outString,
                             int32_t          aMaxLength);
   nsresult WillLoadHTML(mozilla::dom::Selection* aSelection, bool* aCancel);
-  nsresult WillInsertBreak(mozilla::dom::Selection* aSelection,
+  nsresult WillInsertBreak(mozilla::dom::Selection& aSelection,
                            bool* aCancel, bool* aHandled);
   nsresult StandardBreakImpl(nsIDOMNode* aNode, int32_t aOffset,
                              mozilla::dom::Selection* aSelection);
@@ -202,7 +202,6 @@ protected:
                        nsTArray<mozilla::OwningNonNull<nsINode>>& aOutArrayOfNodes,
                        int32_t* aIndex, Lists aLists = Lists::yes,
                        Tables aTables = Tables::yes);
-  already_AddRefed<nsIDOMNode> IsInListItem(nsIDOMNode* aNode);
   mozilla::dom::Element* IsInListItem(nsINode* aNode);
   nsresult ReturnInHeader(mozilla::dom::Selection* aSelection,
                           nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
