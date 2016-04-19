@@ -220,7 +220,7 @@ def get_compiler_info(compiler, language):
         #if defined(_MSC_VER)
         #if defined(__clang__)
         %COMPILER clang-cl
-        %VERSION _MSC_VER
+        %VERSION _MSC_FULL_VER
         #else
         %COMPILER msvc
         %VERSION _MSC_FULL_VER
@@ -306,6 +306,14 @@ def check_compiler(compiler, language):
     if info.language == 'C++' and info.language_version != 201103:
         if info.type in ('clang-cl', 'clang', 'gcc'):
             append_flag('-std=gnu++11')
+
+    # We force clang-cl to emulate Visual C++ 2013 Update 3 with fallback to
+    # cl.exe.
+    if info.type == 'clang-cl' and info.version != '180030723':
+        # Those flags are direct clang-cl flags that don't need -Xclang, add
+        # them directly.
+        flags.append('-fms-compatibility-version=18.00.30723')
+        flags.append('-fallback')
 
     return info.type, info.version, flags
 
