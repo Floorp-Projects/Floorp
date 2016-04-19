@@ -9,6 +9,7 @@
 #include "AsyncEventRunner.h"
 #include "DecoderTraits.h"
 #include "Benchmark.h"
+#include "DecoderDoctorDiagnostics.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
@@ -113,6 +114,9 @@ IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
                                                aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
+        if (aDiagnostics) {
+          aDiagnostics->SetCanPlay();
+        }
         return NS_OK;
       } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
         if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
@@ -126,6 +130,9 @@ IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
                                                codecs,
                                                aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        }
+        if (aDiagnostics) {
+          aDiagnostics->SetCanPlay();
         }
         return NS_OK;
       }
@@ -223,8 +230,18 @@ already_AddRefed<SourceBuffer>
 MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mozilla::IsTypeSupported(aType,
-                                         /* DecoderDoctorDiagnostics* */ nullptr);
+  DecoderDoctorDiagnostics diagnostics;
+  nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
+  if (NS_SUCCEEDED(rv)) {
+    diagnostics.SetCanPlay();
+  }
+  if (GetOwner()) {
+    diagnostics.StoreDiagnostics(GetOwner()->GetExtantDoc(), aType,
+                                 "AddSourceBuffer with owner window's doc");
+  } else {
+    diagnostics.StoreDiagnostics(nullptr, aType,
+                                 "AddSourceBuffer with nothing");
+  }
   MSE_API("AddSourceBuffer(aType=%s)%s",
           NS_ConvertUTF16toUTF8(aType).get(),
           rv == NS_OK ? "" : " [not supported]");
@@ -340,11 +357,22 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 }
 
 /* static */ bool
-MediaSource::IsTypeSupported(const GlobalObject&, const nsAString& aType)
+MediaSource::IsTypeSupported(const GlobalObject& aOwner, const nsAString& aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mozilla::IsTypeSupported(aType,
-                                         /* DecoderDoctorDiagnostics* */ nullptr);
+  DecoderDoctorDiagnostics diagnostics;
+  nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
+  if (NS_SUCCEEDED(rv)) {
+    diagnostics.SetCanPlay();
+  }
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
+  if (window) {
+    diagnostics.StoreDiagnostics(window->GetExtantDoc(), aType,
+                                 "IsTypeSupported with aOwner window's doc");
+  } else {
+    diagnostics.StoreDiagnostics(nullptr, aType,
+                                 "IsTypeSupported with nothing");
+  }
 #define this nullptr
   MSE_API("IsTypeSupported(aType=%s)%s ",
           NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "OK" : "[not supported]");
