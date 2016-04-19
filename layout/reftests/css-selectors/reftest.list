@@ -2,3 +2,5 @@
 == attr-case-insensitive-1.html attr-case-insensitive-1-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == sibling-combinators-on-anon-content-1.xhtml sibling-combinators-on-anon-content-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == sibling-combinators-on-anon-content-2.xhtml sibling-combinators-on-anon-content-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+== nth-child-1.html nth-child-ref.html
+== nth-child-2.html nth-child-ref.html
