@@ -273,7 +273,7 @@ nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos)
   if (aPos >= (uint32_t)mMenuObjectsArray.Length())
     return NULL;
 
-  return mMenuObjectsArray[aPos];
+  return mMenuObjectsArray[aPos].get();
 }
 
 // Only includes visible items
@@ -294,13 +294,13 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos)
 
   // If there are no invisible items, can provide direct access
   if (mVisibleItemsCount == count)
-    return mMenuObjectsArray[aPos];
+    return mMenuObjectsArray[aPos].get();
 
   // Otherwise, traverse the array until we find the the item we're looking for.
   nsMenuObjectX* item;
   uint32_t visibleNodeIndex = 0;
   for (uint32_t i = 0; i < count; i++) {
-    item = mMenuObjectsArray[i];
+    item = mMenuObjectsArray[i].get();
     if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(item->Content())) {
       if (aPos == visibleNodeIndex) {
         // we found the visible node we're looking for, return it
