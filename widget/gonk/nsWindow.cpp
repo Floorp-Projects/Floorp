@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "nsWindow.h"
+
 #include "mozilla/DebugOnly.h"
 
 #include <fcntl.h>
@@ -20,6 +22,7 @@
 #include "android/log.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -28,11 +31,9 @@
 #include "GLContextProvider.h"
 #include "GLContext.h"
 #include "GLContextEGL.h"
-#include "nsAutoPtr.h"
 #include "nsAppShell.h"
 #include "nsScreenManagerGonk.h"
 #include "nsTArray.h"
-#include "nsWindow.h"
 #include "nsIWidgetListener.h"
 #include "ClientLayerManager.h"
 #include "BasicLayers.h"
@@ -267,7 +268,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     }
 
     if (!mSynthesizedTouchInput) {
-        mSynthesizedTouchInput = new MultiTouchInput();
+        mSynthesizedTouchInput = MakeUnique<MultiTouchInput>();
     }
 
     ScreenIntPoint pointerScreenPoint = ViewAs<ScreenPixel>(aPoint,

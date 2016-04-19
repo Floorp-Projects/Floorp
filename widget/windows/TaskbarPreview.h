@@ -12,9 +12,9 @@
 #include <shobjidl.h>
 #undef LogSeverity // SetupAPI.h #defines this as DWORD
 
+#include "mozilla/RefPtr.h"
 #include <nsITaskbarPreview.h>
 #include <nsITaskbarPreviewController.h>
-#include <nsAutoPtr.h>
 #include <nsString.h>
 #include <nsWeakPtr.h>
 #include <nsIDocShell.h>
