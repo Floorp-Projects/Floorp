@@ -590,26 +590,25 @@ public:
 // Helper to create a textrun and remember it in the textframe cache,
 // for either 8-bit or 16-bit text strings
 template<typename T>
-gfxTextRun *
+UniquePtr<gfxTextRun>
 MakeTextRun(const T *aText, uint32_t aLength,
             gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
             uint32_t aFlags, gfxMissingFontRecorder *aMFR)
 {
-    nsAutoPtr<gfxTextRun> textRun(aFontGroup->MakeTextRun(aText, aLength,
-                                                          aParams, aFlags,
-                                                          aMFR));
+    UniquePtr<gfxTextRun> textRun =
+        aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags, aMFR);
     if (!textRun) {
         return nullptr;
     }
-    nsresult rv = gTextRuns->AddObject(textRun);
+    nsresult rv = gTextRuns->AddObject(textRun.get());
     if (NS_FAILED(rv)) {
-        gTextRuns->RemoveFromCache(textRun);
+        gTextRuns->RemoveFromCache(textRun.get());
         return nullptr;
     }
 #ifdef NOISY_BIDI
     printf("Created textrun\n");
 #endif
-    return textRun.forget();
+    return textRun;
 }
 
 void
@@ -1857,10 +1856,7 @@ CreateReferenceDrawTarget(nsTextFrame* aTextFrame)
   return dt.forget();
 }
 
-/**
- * The returned textrun must be deleted when no longer needed.
- */
-static gfxTextRun*
+static UniquePtr<gfxTextRun>
 GetHyphenTextRun(gfxTextRun* aTextRun, DrawTarget* aDrawTarget,
                  nsTextFrame* aTextFrame)
 {
@@ -2227,7 +2223,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
                  "We didn't cover all the characters in the text run!");
   }
 
-  gfxTextRun* textRun;
+  UniquePtr<gfxTextRun> textRun;
   gfxTextRunFactory::Parameters params =
       { mDrawTarget, finalUserData, &skipChars,
         textBreakPointsAfterTransform.Elements(),
@@ -2273,18 +2269,15 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // the breaks may be stored in the textrun during this very call.
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
-  SetupBreakSinksForTextRun(textRun, textPtr);
+  SetupBreakSinksForTextRun(textRun.get(), textPtr);
 
   if (anyTextEmphasis) {
-    SetupTextEmphasisForTextRun(textRun, textPtr);
+    SetupTextEmphasisForTextRun(textRun.get(), textPtr);
   }
 
   if (mSkipIncompleteTextRuns) {
     mSkipIncompleteTextRuns = !TextContainsLineBreakerWhiteSpace(textPtr,
         transformedLength, mDoubleByteText);
-    // Arrange for this textrun to be deleted the next time the linebreaker
-    // is flushed out
-    mTextRunsToDelete.AppendElement(textRun);
     // Since we're doing to destroy the user data now, avoid a dangling
     // pointer. Strictly speaking we don't need to do this since it should
     // not be used (since this textrun will not be used and will be
@@ -2292,13 +2285,16 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     // pointers around.
     textRun->SetUserData(nullptr);
     DestroyUserData(userDataToDestroy);
+    // Arrange for this textrun to be deleted the next time the linebreaker
+    // is flushed out
+    mTextRunsToDelete.AppendElement(textRun.release());
     return nullptr;
   }
 
   // Actually wipe out the textruns associated with the mapped frames and associate
   // those frames with this text run.
-  AssignTextRun(textRun, fontInflation);
-  return textRun;
+  AssignTextRun(textRun.get(), fontInflation);
+  return textRun.release();
 }
 
 // This is a cut-down version of BuildTextRunForFrames used to set up
@@ -5170,14 +5166,14 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
 
 struct EmphasisMarkInfo
 {
-  nsAutoPtr<gfxTextRun> textRun;
+  UniquePtr<gfxTextRun> textRun;
   gfxFloat advance;
   gfxFloat baselineOffset;
 };
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
-static gfxTextRun*
+UniquePtr<gfxTextRun>
 GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
                                 WritingMode aWM, const nsStyleText* aStyleText)
 {
@@ -5845,10 +5841,11 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
                    DrawTarget* aDrawTarget)
 {
   // Fix up metrics to include hyphen
-  nsAutoPtr<gfxTextRun> hyphenTextRun(
-    GetHyphenTextRun(aBaseTextRun, aDrawTarget, aTextFrame));
-  if (!hyphenTextRun.get())
+  UniquePtr<gfxTextRun> hyphenTextRun =
+    GetHyphenTextRun(aBaseTextRun, aDrawTarget, aTextFrame);
+  if (!hyphenTextRun) {
     return;
+  }
 
   gfxTextRun::Metrics hyphenMetrics =
     hyphenTextRun->MeasureText(aBoundingBoxType, aDrawTarget);
@@ -6247,7 +6244,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
       pt.x += info->baselineOffset;
     }
   }
-  mTextRun->DrawEmphasisMarks(aContext, info->textRun, info->advance,
+  mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
                               pt, aRange, aProvider);
 }
 
@@ -6654,8 +6651,9 @@ nsTextFrame::DrawTextRun(Range aRange, const gfxPoint& aTextBaselinePt,
   if (aParams.drawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
-    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nullptr, this));
-    if (hyphenTextRun.get()) {
+    UniquePtr<gfxTextRun> hyphenTextRun =
+      GetHyphenTextRun(mTextRun, nullptr, this);
+    if (hyphenTextRun) {
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
       gfxFloat hyphenBaselineX = aTextBaselinePt.x +

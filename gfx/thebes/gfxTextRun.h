@@ -434,9 +434,10 @@ public:
 
     // Call this, don't call "new gfxTextRun" directly. This does custom
     // allocation and initialization
-    static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
-                              uint32_t aLength, gfxFontGroup *aFontGroup,
-                              uint32_t aFlags);
+    static mozilla::UniquePtr<gfxTextRun>
+    Create(const gfxTextRunFactory::Parameters *aParams,
+           uint32_t aLength, gfxFontGroup *aFontGroup,
+           uint32_t aFlags);
 
     // The text is divided into GlyphRuns as necessary
     struct GlyphRun {
@@ -797,29 +798,32 @@ public:
      * textrun will copy it.
      * This calls FetchGlyphExtents on the textrun.
      */
-    virtual gfxTextRun *MakeTextRun(const char16_t *aString, uint32_t aLength,
-                                    const Parameters *aParams, uint32_t aFlags,
-                                    gfxMissingFontRecorder *aMFR);
+    virtual mozilla::UniquePtr<gfxTextRun>
+    MakeTextRun(const char16_t *aString, uint32_t aLength,
+                const Parameters *aParams, uint32_t aFlags,
+                gfxMissingFontRecorder *aMFR);
     /**
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
      * This calls FetchGlyphExtents on the textrun.
      */
-    virtual gfxTextRun *MakeTextRun(const uint8_t *aString, uint32_t aLength,
-                                    const Parameters *aParams, uint32_t aFlags,
-                                    gfxMissingFontRecorder *aMFR);
+    virtual mozilla::UniquePtr<gfxTextRun>
+    MakeTextRun(const uint8_t *aString, uint32_t aLength,
+                const Parameters *aParams, uint32_t aFlags,
+                gfxMissingFontRecorder *aMFR);
 
     /**
      * Textrun creation helper for clients that don't want to pass
      * a full Parameters record.
      */
     template<typename T>
-    gfxTextRun* MakeTextRun(const T* aString, uint32_t aLength,
-                            DrawTarget* aRefDrawTarget,
-                            int32_t aAppUnitsPerDevUnit,
-                            uint32_t aFlags,
-                            gfxMissingFontRecorder *aMFR)
+    mozilla::UniquePtr<gfxTextRun>
+    MakeTextRun(const T* aString, uint32_t aLength,
+                DrawTarget* aRefDrawTarget,
+                int32_t aAppUnitsPerDevUnit,
+                uint32_t aFlags,
+                gfxMissingFontRecorder *aMFR)
     {
         gfxTextRunFactory::Parameters params = {
             aRefDrawTarget, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevUnit
@@ -842,8 +846,8 @@ public:
      * The caller is responsible for deleting the returned text run
      * when no longer required.
      */
-    gfxTextRun* MakeHyphenTextRun(DrawTarget* aDrawTarget,
-                                  uint32_t aAppUnitsPerDevUnit);
+    mozilla::UniquePtr<gfxTextRun>
+    MakeHyphenTextRun(DrawTarget* aDrawTarget, uint32_t aAppUnitsPerDevUnit);
 
     /**
      * Check whether a given font (specified by its gfxFontEntry)
@@ -1096,10 +1100,15 @@ protected:
      * Textrun creation short-cuts for special cases where we don't need to
      * call a font shaper to generate glyphs.
      */
-    gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags);
-    gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags);
-    gfxTextRun *MakeBlankTextRun(uint32_t aLength,
-                                 const Parameters *aParams, uint32_t aFlags);
+    mozilla::UniquePtr<gfxTextRun>
+    MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags);
+
+    mozilla::UniquePtr<gfxTextRun>
+    MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags);
+
+    mozilla::UniquePtr<gfxTextRun>
+    MakeBlankTextRun(uint32_t aLength, const Parameters *aParams,
+                     uint32_t aFlags);
 
     // Initialize the list of fonts
     void BuildFontList();
