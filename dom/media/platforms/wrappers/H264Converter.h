@@ -26,7 +26,8 @@ public:
                 layers::LayersBackend aLayersBackend,
                 layers::ImageContainer* aImageContainer,
                 FlushableTaskQueue* aVideoTaskQueue,
-                MediaDataDecoderCallback* aCallback);
+                MediaDataDecoderCallback* aCallback,
+                DecoderDoctorDiagnostics* aDiagnostics);
   virtual ~H264Converter();
 
   RefPtr<InitPromise> Init() override;
@@ -51,7 +52,7 @@ private:
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
-  nsresult CreateDecoder();
+  nsresult CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics);
   nsresult CreateDecoderAndInit(MediaRawData* aSample);
   nsresult CheckForSPSChange(MediaRawData* aSample);
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);

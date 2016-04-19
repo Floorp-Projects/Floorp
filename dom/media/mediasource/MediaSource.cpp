@@ -75,16 +75,17 @@ static const char* const gMediaSourceTypes[6] = {
 // 2. If H264 hardware acceleration is not available.
 // 3. The CPU is considered to be fast enough
 static bool
-IsWebMForced()
+IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
 {
   bool mp4supported =
-    DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"));
+    DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"),
+                                       aDiagnostics);
   bool hwsupported = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 }
 
 static nsresult
-IsTypeSupported(const nsAString& aType)
+IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (aType.IsEmpty()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -102,13 +103,14 @@ IsTypeSupported(const nsAString& aType)
 
   for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
-      if (DecoderTraits::IsMP4TypeAndEnabled(mimeTypeUTF8)) {
+      if (DecoderTraits::IsMP4TypeAndEnabled(mimeTypeUTF8, aDiagnostics)) {
         if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         if (hasCodecs &&
             DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
-                                               codecs) == CANPLAY_NO) {
+                                               codecs,
+                                               aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         return NS_OK;
@@ -116,12 +118,13 @@ IsTypeSupported(const nsAString& aType)
         if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
               (Preferences::GetBool("media.mediasource.webm.audio.enabled", true) &&
                DecoderTraits::IsWebMAudioType(mimeTypeUTF8)) ||
-              IsWebMForced())) {
+              IsWebMForced(aDiagnostics))) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         if (hasCodecs &&
             DecoderTraits::CanHandleCodecsType(mimeTypeUTF8.get(),
-                                               codecs) == CANPLAY_NO) {
+                                               codecs,
+                                               aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         return NS_OK;
@@ -220,7 +223,8 @@ already_AddRefed<SourceBuffer>
 MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mozilla::IsTypeSupported(aType);
+  nsresult rv = mozilla::IsTypeSupported(aType,
+                                         /* DecoderDoctorDiagnostics* */ nullptr);
   MSE_API("AddSourceBuffer(aType=%s)%s",
           NS_ConvertUTF16toUTF8(aType).get(),
           rv == NS_OK ? "" : " [not supported]");
@@ -339,7 +343,8 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 MediaSource::IsTypeSupported(const GlobalObject&, const nsAString& aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mozilla::IsTypeSupported(aType);
+  nsresult rv = mozilla::IsTypeSupported(aType,
+                                         /* DecoderDoctorDiagnostics* */ nullptr);
 #define this nullptr
   MSE_API("IsTypeSupported(aType=%s)%s ",
           NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "OK" : "[not supported]");
