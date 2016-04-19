@@ -248,6 +248,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Combined.FAVICON, Combined.FAVICON);
         map.put(Combined.FAVICON_ID, Combined.FAVICON_ID);
         map.put(Combined.FAVICON_URL, Combined.FAVICON_URL);
+        map.put(Combined.LOCAL_DATE_LAST_VISITED, Combined.LOCAL_DATE_LAST_VISITED);
+        map.put(Combined.REMOTE_DATE_LAST_VISITED, Combined.REMOTE_DATE_LAST_VISITED);
+        map.put(Combined.LOCAL_VISITS_COUNT, Combined.LOCAL_VISITS_COUNT);
+        map.put(Combined.REMOTE_VISITS_COUNT, Combined.REMOTE_VISITS_COUNT);
         COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
