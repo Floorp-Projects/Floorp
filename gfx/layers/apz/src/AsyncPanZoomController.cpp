@@ -3966,7 +3966,9 @@ Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
 void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination) {
   if (Maybe<CSSPoint> snapPoint =
         FindSnapPointNear(aDestination, nsIScrollableFrame::DEVICE_PIXELS)) {
-    SmoothScrollTo(*snapPoint);
+    if (*snapPoint != mFrameMetrics.GetScrollOffset()) {
+      SmoothScrollTo(*snapPoint);
+    }
   }
 }
 
