@@ -1471,7 +1471,7 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   mSeekTaskRequest.DisconnectIfExists();
 
   // Create a new SeekTask instance for the incoming seek task.
-  mSeekTask = SeekTask::CreateSeekTask(mDecoderID, OwnerThread(), mReader.get(),
+  mSeekTask = SeekTask::CreateSeekTask(mDecoderID, OwnerThread(),
                                        mReaderWrapper.get(), Move(aSeekJob),
                                        mInfo, Duration(), GetMediaTime());
 
