@@ -39,6 +39,13 @@ public class TelemetryUploadService extends BackgroundService {
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + TelemetryUploadService.class.getSimpleName(), 0, 23);
     private static final String WORKER_THREAD_NAME = LOGTAG + "Worker";
 
+    public static final String ACTION_UPLOAD_CORE = "uploadCore";
+    public static final String EXTRA_DEFAULT_SEARCH_ENGINE = "defaultSearchEngine";
+    public static final String EXTRA_DOC_ID = "docId";
+    public static final String EXTRA_PROFILE_NAME = "geckoProfileName";
+    public static final String EXTRA_PROFILE_PATH = "geckoProfilePath";
+    public static final String EXTRA_SEQ = "seq";
+
     private static final int MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 
     public TelemetryUploadService() {
@@ -80,17 +87,17 @@ public class TelemetryUploadService extends BackgroundService {
             return;
         }
 
-        if (!TelemetryConstants.ACTION_UPLOAD_CORE.equals(intent.getAction())) {
+        if (!ACTION_UPLOAD_CORE.equals(intent.getAction())) {
             Log.w(LOGTAG, "Unknown action: " + intent.getAction() + ". Returning");
             return;
         }
 
-        final String defaultSearchEngine = intent.getStringExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE);
-        final String docId = intent.getStringExtra(TelemetryConstants.EXTRA_DOC_ID);
-        final int seq = intent.getIntExtra(TelemetryConstants.EXTRA_SEQ, -1);
+        final String defaultSearchEngine = intent.getStringExtra(EXTRA_DEFAULT_SEARCH_ENGINE);
+        final String docId = intent.getStringExtra(EXTRA_DOC_ID);
+        final int seq = intent.getIntExtra(EXTRA_SEQ, -1);
 
-        final String profileName = intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_NAME);
-        final String profilePath = intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_PATH);
+        final String profileName = intent.getStringExtra(EXTRA_PROFILE_NAME);
+        final String profilePath = intent.getStringExtra(EXTRA_PROFILE_PATH);
 
         uploadCorePing(docId, seq, profileName, profilePath, defaultSearchEngine);
     }
@@ -143,24 +150,24 @@ public class TelemetryUploadService extends BackgroundService {
             return false;
         }
 
-        if (intent.getStringExtra(TelemetryConstants.EXTRA_DOC_ID) == null) {
+        if (intent.getStringExtra(EXTRA_DOC_ID) == null) {
             Log.d(LOGTAG, "Received invalid doc ID in Intent");
             return false;
         }
 
-        if (!intent.hasExtra(TelemetryConstants.EXTRA_SEQ)) {
+        if (!intent.hasExtra(EXTRA_SEQ)) {
             Log.d(LOGTAG, "Received Intent without sequence number");
             return false;
         }
 
-        if (intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_NAME) == null) {
+        if (intent.getStringExtra(EXTRA_PROFILE_NAME) == null) {
             Log.d(LOGTAG, "Received invalid profile name in Intent");
             return false;
         }
 
         // GeckoProfile can use the name to get the path so this isn't strictly necessary.
         // However, getting the path requires parsing an ini file so we optimize by including it here.
-        if (intent.getStringExtra(TelemetryConstants.EXTRA_PROFILE_PATH) == null) {
+        if (intent.getStringExtra(EXTRA_PROFILE_PATH) == null) {
             Log.d(LOGTAG, "Received invalid profile path in Intent");
             return false;
         }
