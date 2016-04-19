@@ -12,13 +12,13 @@
    */
   :-moz-any(toolbar, .widget-overflow-list) #loop-button > .toolbarbutton-icon,
   :-moz-any(toolbar, .widget-overflow-list) #loop-button > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
-    max-width: 18px;
+    max-width: 16px;
     margin: 0;
   }
 
   #loop-button {
     list-style-image: url(chrome://loop/skin/toolbar.png);
-    -moz-image-region: rect(1px, 17px, 17px, 1px);
+    -moz-image-region: rect(0, 16px, 16px, 0);
   }
 
   toolbar[brighttext] #loop-button {
@@ -27,27 +27,27 @@
 
   #loop-button[state="disabled"],
   #loop-button[disabled="true"] {
-    -moz-image-region: rect(1px, 35px, 17px, 19px);
+    -moz-image-region: rect(0, 32px, 16px, 16px);
   }
 
   #loop-button:not([disabled="true"])[state="error"] {
-    -moz-image-region: rect(1px, 53px, 17px, 37px);
+    -moz-image-region: rect(0, 48px, 16px, 32px);
   }
 
   #loop-button:not([disabled="true"])[state="action"] {
-    -moz-image-region: rect(1px, 71px, 17px, 55px);
+    -moz-image-region: rect(0, 64px, 16px, 48px);
   }
 
   #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(1px, 89px, 17px, 73px);
+    -moz-image-region: rect(0, 80px, 16px, 64px);
   }
 
   #loop-button:not([disabled="true"])[state="active"] {
-    -moz-image-region: rect(1px, 107px, 17px, 91px);
+    -moz-image-region: rect(0, 96px, 16px, 80px);
   }
 
   #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-    -moz-image-region: rect(1px, 125px, 17px, 109px);
+    -moz-image-region: rect(0, 112px, 16px, 96px);
   }
 
   /* The slideshow state disables the button for that window and makes it look
@@ -62,7 +62,7 @@
   @media (min-resolution: 1.1dppx) {
     #loop-button {
       list-style-image: url("chrome://loop/skin/toolbar@2x.png");
-      -moz-image-region: rect(2px, 34px, 34px, 2px);
+      -moz-image-region: rect(0, 32px, 32px, 0);
     }
 
     toolbar[brighttext] #loop-button {
@@ -71,27 +71,27 @@
 
     #loop-button[state="disabled"],
     #loop-button[disabled="true"] {
-      -moz-image-region: rect(2px, 70px, 34px, 38px);
+      -moz-image-region: rect(0, 64px, 32px, 32px);
     }
 
     #loop-button:not([disabled="true"])[state="error"] {
-      -moz-image-region: rect(2px, 106px, 34px, 74px);
+      -moz-image-region: rect(0, 96px, 32px, 64px);
     }
 
     #loop-button:not([disabled="true"])[state="action"] {
-      -moz-image-region: rect(2px, 142px, 34px, 110px);
+      -moz-image-region: rect(0, 128px, 32px, 96px);
     }
 
     #loop-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) {
-      -moz-image-region: rect(2px, 178px, 34px, 146px);
+      -moz-image-region: rect(0, 160px, 32px, 128px);
     }
 
     #loop-button:not([disabled="true"])[state="active"] {
-      -moz-image-region: rect(2px, 214px, 34px, 182px);
+      -moz-image-region: rect(0, 192px, 32px, 160px);
     }
 
     #loop-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) {
-      -moz-image-region: rect(2px, 250px, 34px, 216px);
+      -moz-image-region: rect(0, 224px, 32px, 192px);
     }
 
     #loop-button[cui-areatype="menu-panel"],

@@ -36,16 +36,18 @@ loop.panel = function (_, mozL10n) {
     },
 
     renderGettingStartedButton: function () {
-      if (!this.props.displayRoomListContent) {
-        return React.createElement(
-          "div",
-          { className: "fte-button-container" },
-          React.createElement(Button, { additionalClass: "fte-get-started-button",
-            caption: mozL10n.get("first_time_experience_button_label2"),
-            htmlId: "fte-button",
-            onClick: this.handleButtonClick })
-        );
+      if (this.props.displayRoomListContent) {
+        return null;
       }
+
+      return React.createElement(
+        "div",
+        { className: "fte-button-container" },
+        React.createElement(Button, { additionalClass: "fte-get-started-button",
+          caption: mozL10n.get("first_time_experience_button_label2"),
+          htmlId: "fte-button",
+          onClick: this.handleButtonClick })
+      );
     },
 
     render: function () {
@@ -445,6 +447,18 @@ loop.panel = function (_, mozL10n) {
   });
 
   /**
+   *  Aux function to retrieve the name of a room
+   */
+  function _getRoomTitle(room) {
+    if (!room) {
+      return mozL10n.get("room_name_untitled_page");
+    }
+
+    var urlData = (room.decryptedContext.urls || [])[0] || {};
+    return room.decryptedContext.roomName || urlData.description || urlData.location || mozL10n.get("room_name_untitled_page");
+  }
+
+  /**
    * Room list entry.
    *
    * Active Room means there are participants in the room.
@@ -465,13 +479,8 @@ loop.panel = function (_, mozL10n) {
       return {
         editMode: false,
         eventPosY: 0,
-        newRoomName: this._getRoomTitle()
+        newRoomName: _getRoomTitle(this.props.room)
       };
-    },
-
-    _getRoomTitle: function () {
-      var urlData = (this.props.room.decryptedContext.urls || [])[0] || {};
-      return this.props.room.decryptedContext.roomName || urlData.description || urlData.location || mozL10n.get("room_name_untitled_page");
     },
 
     _isActive: function () {
@@ -491,10 +500,6 @@ loop.panel = function (_, mozL10n) {
         return;
       }
 
-      this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
-        roomToken: this.props.room.roomToken
-      }));
-
       // Open url if needed.
       loop.requestMulti(["getSelectedTabMetadata"], ["GettingStartedURL", null, {}]).then(function (results) {
         var contextURL = this.props.room.decryptedContext.urls && this.props.room.decryptedContext.urls[0].location;
@@ -505,6 +510,12 @@ loop.panel = function (_, mozL10n) {
           loop.request("OpenURL", contextURL);
         }
         this.closeWindow();
+
+        // open the room after the (possible) tab change to be able to
+        // share when opening from non-remote tab.
+        this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
+          roomToken: this.props.room.roomToken
+        }));
       }.bind(this));
     },
 
@@ -566,7 +577,7 @@ loop.panel = function (_, mozL10n) {
         "room-active": this._isActive(),
         "room-opened": this.props.isOpenedRoom
       });
-      var roomTitle = this._getRoomTitle();
+      var roomTitle = _getRoomTitle(this.props.room);
 
       return React.createElement(
         "div",
@@ -791,6 +802,7 @@ loop.panel = function (_, mozL10n) {
     if (Object.prototype.toString.call(props[propName]) !== "[object Object]" && !_.isNull(props[propName])) {
       return new Error("Required prop `" + propName + "` was not correctly specified in `" + componentName + "`.");
     }
+    return null;
   }
 
   /**
@@ -860,6 +872,8 @@ loop.panel = function (_, mozL10n) {
       if (this.state.rooms.length > 5) {
         return React.createElement("div", { className: "room-list-blur" });
       }
+
+      return null;
     },
 
     render: function () {
@@ -957,8 +971,14 @@ loop.panel = function (_, mozL10n) {
     },
 
     handleCreateButtonClick: function () {
-      var createRoomAction = new sharedActions.CreateRoom();
+      // check that tab is remote, open about:home if not
+      loop.request("IsTabShareable").then(shareable => {
+        if (!shareable) {
+          loop.request("OpenURL", "about:home");
+        }
+      });
 
+      var createRoomAction = new sharedActions.CreateRoom();
       createRoomAction.urls = [{
         location: this.state.url,
         description: this.state.description,
@@ -1140,11 +1160,107 @@ loop.panel = function (_, mozL10n) {
     }
   });
 
+  var RenameRoomView = React.createClass({
+    displayName: "RenameRoomView",
+
+    mixins: [sharedMixins.WindowCloseMixin],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      roomName: React.PropTypes.string.isRequired,
+      roomToken: React.PropTypes.string.isRequired
+    },
+
+    getInitialState: function () {
+      return { focused: false };
+    },
+
+    componentDidMount: function () {
+      this.getDOMNode().querySelector("input").focus();
+    },
+
+    handleBlur: function () {
+      this.setState({ focused: false });
+    },
+
+    handleFocus: function () {
+      this.setState({ focused: true });
+      this.getDOMNode().querySelector("input").select();
+    },
+
+    handleKeyDown: function (event) {
+      if (event.which === 13) {
+        this.handleNameChange();
+      }
+    },
+
+    handleNameChange: function () {
+      let token = this.props.roomToken,
+          name = this.getDOMNode().querySelector("input").value || "";
+
+      if (name !== this.props.roomName) {
+        this.props.dispatcher.dispatch(new sharedActions.UpdateRoomContext({
+          roomToken: token,
+          newRoomName: name
+        }));
+      }
+
+      this.closeWindow();
+    },
+
+    render: function () {
+      let inputClass = classNames({
+        "input-group": true,
+        "focused": this.state.focused
+      });
+
+      return React.createElement(
+        "div",
+        { className: "rename-newRoom" },
+        React.createElement("img", { src: "shared/img/helloicon.svg" }),
+        React.createElement(
+          "div",
+          { className: "rename-container" },
+          React.createElement(
+            "h2",
+            { className: "rename-header" },
+            mozL10n.get("door_hanger_bye")
+          ),
+          React.createElement(
+            "p",
+            { className: "rename-subheader" },
+            mozL10n.get("door_hanger_return2")
+          ),
+          React.createElement(
+            "p",
+            { className: "rename-prompt" },
+            mozL10n.get("door_hanger_current")
+          ),
+          React.createElement(
+            "div",
+            { className: inputClass },
+            React.createElement("input", { className: "rename-input",
+              defaultValue: this.props.roomName,
+              onBlur: this.handleBlur,
+              onFocus: this.handleFocus,
+              onKeyDown: this.handleKeyDown,
+              type: "text" })
+          )
+        ),
+        React.createElement(Button, { additionalClass: "rename-button",
+          caption: mozL10n.get("door_hanger_button2"),
+          onClick: this.handleNameChange })
+      );
+    }
+  });
+
   /**
    * Panel view.
    */
   var PanelView = React.createClass({
     displayName: "PanelView",
+
+    mixins: [Backbone.Events, sharedMixins.DocumentVisibilityMixin],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -1169,6 +1285,7 @@ loop.panel = function (_, mozL10n) {
         gettingStartedSeen: loop.getStoredRequest(["GetLoopPref", "gettingStarted.latestFTUVersion"]) >= FTU_VERSION,
         multiProcessActive: loop.getStoredRequest(["IsMultiProcessActive"]),
         remoteAutoStart: loop.getStoredRequest(["GetLoopPref", "remote.autostart"]),
+        renameRoom: null,
         sharePanelOpened: false
       };
     },
@@ -1237,8 +1354,35 @@ loop.panel = function (_, mozL10n) {
       }.bind(this));
     },
 
+    _onClosingNewRoom: function () {
+      // If we close a recently created room, we offer the chance of renaming it
+      let storeState = this.props.roomStore.getStoreState();
+      if (!storeState.closingNewRoom || !storeState.openedRoom) {
+        return;
+      }
+
+      let closedRoom = storeState.rooms.filter(function (room) {
+        // closing room is the last that was opened.
+        return storeState.openedRoom === room.roomToken;
+      })[0];
+
+      this.setState({
+        renameRoom: storeState.closingNewRoom && {
+          token: storeState.openedRoom,
+          name: _getRoomTitle(closedRoom)
+        }
+      });
+    },
+
+    onDocumentHidden: function () {
+      // consider closing panel any other way than click OK button
+      // or Enter key the same as cancel renaming the room
+      this.setState({ renameRoom: null });
+    },
+
     componentWillMount: function () {
       this.updateServiceErrors();
+      this.listenTo(this.props.roomStore, "change:closingNewRoom", this._onClosingNewRoom);
     },
 
     componentDidMount: function () {
@@ -1247,6 +1391,7 @@ loop.panel = function (_, mozL10n) {
 
     componentWillUnmount: function () {
       loop.unsubscribe("LoopStatusChanged", this._onStatusChanged);
+      this.stopListening(this.props.roomStore);
     },
 
     handleContextMenu: function (e) {
@@ -1284,8 +1429,16 @@ loop.panel = function (_, mozL10n) {
           React.createElement(ToSView, null)
         );
       }
+
       if (!this.state.hasEncryptionKey) {
         return React.createElement(SignInRequestView, null);
+      }
+
+      if (this.state.renameRoom) {
+        return React.createElement(RenameRoomView, {
+          dispatcher: this.props.dispatcher,
+          roomName: this.state.renameRoom.name,
+          roomToken: this.state.renameRoom.token });
       }
 
       var cssClasses = classNames({
@@ -1392,6 +1545,7 @@ loop.panel = function (_, mozL10n) {
     init: init,
     NewRoomView: NewRoomView,
     PanelView: PanelView,
+    RenameRoomView: RenameRoomView,
     RoomEntry: RoomEntry,
     RoomEntryContextButtons: RoomEntryContextButtons,
     RoomList: RoomList,

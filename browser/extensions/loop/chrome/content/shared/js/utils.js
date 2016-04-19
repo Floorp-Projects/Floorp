@@ -427,6 +427,37 @@ if (inChrome) {
     }
   }
 
+
+  /**
+   * Formats a url for context url links.
+   *
+   * @param {String}  url                   The url to format.
+   * @return {Object}                       Sanitized url object containing the hostname,
+   *                                        full location and protocol
+   */
+  function formatSanitizedContextURL(url) {
+    if (!url) {
+      return null;
+    }
+    // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
+    // Try catch to not produce output if invalid url
+    try {
+      var sanitizedURL = loop.shared.utils.formatURL(url, true);
+    } catch (ex) {
+      return null;
+    }
+
+    // Only allow specific types of URLs.
+    if (!sanitizedURL ||
+      (sanitizedURL.protocol !== "http:" &&
+      sanitizedURL.protocol !== "https:" &&
+      sanitizedURL.protocol !== "ftp:")) {
+      return null;
+    }
+
+    return sanitizedURL;
+  }
+
   /**
    * Generates and opens a mailto: url with call URL information prefilled.
    * Note: This only works for Desktop.
@@ -795,6 +826,7 @@ if (inChrome) {
     composeCallUrlEmail: composeCallUrlEmail,
     findParentNode: findParentNode,
     formatDate: formatDate,
+    formatSanitizedContextURL: formatSanitizedContextURL,
     formatURL: formatURL,
     getBoolPreference: getBoolPreference,
     getOS: getOS,

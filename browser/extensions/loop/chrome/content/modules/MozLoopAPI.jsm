@@ -124,6 +124,16 @@ const updateSocialProvidersCache = function() {
   return gSocialProviders;
 };
 
+/**
+ *  Checks that [browser.js]'s global variable `gMultiProcessBrowser` is active,
+ *  instead of checking on first available browser element.
+ *  :see bug 1257243 comment 5:
+ */
+const isMultiProcessActive = function() {
+  let win = Services.wm.getMostRecentWindow("navigator:browser");
+  return !!win.gMultiProcessBrowser;
+};
+
 var gAppVersionInfo = null;
 var gBrowserSharingListeners = new Set();
 var gBrowserSharingWindows = new Set();
@@ -160,7 +170,7 @@ const kMessageHandlers = {
    * @param {Object}   message Message meant for the handler function, containing
    *                           the following parameters in its `data` property:
    *                           [
-   *                             {Number} windowId The window ID of the chat window
+   *                             {String} roomToken The room ID to start browser sharing and listeners.
    *                           ]
    * @param {Function} reply   Callback function, invoked with the result of this
    *                           message handler. The result will be sent back to
@@ -187,9 +197,11 @@ const kMessageHandlers = {
       return;
     }
 
+    // get room token from message
     let [windowId] = message.data;
-
-    win.LoopUI.startBrowserSharing();
+    // For rooms, the windowId === roomToken. If we change the type of place we're
+    // sharing from in the future, we may need to change this.
+    win.LoopUI.startBrowserSharing(windowId);
 
     // Point new tab to load about:home to avoid accidentally sharing top sites.
     NewTabURL.override("about:home");
@@ -422,6 +434,7 @@ const kMessageHandlers = {
    */
   GetAllConstants: function(message, reply) {
     reply({
+      COPY_PANEL: COPY_PANEL,
       LOOP_SESSION_TYPE: LOOP_SESSION_TYPE,
       LOOP_MAU_TYPE: LOOP_MAU_TYPE,
       ROOM_CREATE: ROOM_CREATE,
@@ -638,8 +651,23 @@ const kMessageHandlers = {
    */
   GetSelectedTabMetadata: function(message, reply) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-    win.messageManager.addMessageListener("PageMetadata:PageDataResult", function onPageDataResult(msg) {
-      win.messageManager.removeMessageListener("PageMetadata:PageDataResult", onPageDataResult);
+    let browser = win && win.gBrowser.selectedBrowser;
+    if (!win || !browser) {
+      MozLoopService.log.error("Error occurred whilst fetching page metadata");
+      reply();
+      return;
+    }
+
+    // non-remote pages have no metadata
+    if (!browser.getAttribute("remote") === "true") {
+      reply(null);
+    }
+
+    win.messageManager.addMessageListener("PageMetadata:PageDataResult",
+                                          function onPageDataResult(msg) {
+
+      win.messageManager.removeMessageListener("PageMetadata:PageDataResult",
+                                               onPageDataResult);
       let pageData = msg.json;
       win.LoopUI.getFavicon(function(err, favicon) {
         if (err && err !== "favicon not found for uri") {
@@ -754,9 +782,31 @@ const kMessageHandlers = {
    *                           the senders' channel.
    */
   IsMultiProcessActive: function(message, reply) {
+    reply(isMultiProcessActive());
+  },
+
+  /**
+   *  Checks that the current tab can be shared.
+   *  Non-shareable tabs are the non-remote ones when e10s is enabled.
+   *
+   *  @param {Object}   message Message meant for the handler function,
+   *                            with no data attached.
+   *  @param {Function} reply   Callback function, invoked with the result of
+   *                            the check. The result will be sent back to
+   *                            the senders' channel.
+   */
+  IsTabShareable: function(message, reply) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let browser = win && win.gBrowser.selectedBrowser;
-    reply(!!(browser && browser.getAttribute("remote") == "true"));
+    if (!win || !browser) {
+      reply(false);
+      return;
+    }
+
+    let e10sActive = isMultiProcessActive();
+    let tabRemote = browser.getAttribute("remote") === "true";
+
+    reply(!e10sActive || (e10sActive && tabRemote));
   },
 
   /**
@@ -982,6 +1032,23 @@ const kMessageHandlers = {
   SetLoopPref: function(message, reply) {
     let [prefName, value, prefType] = message.data;
     MozLoopService.setLoopPref(prefName, value, prefType);
+    reply();
+  },
+
+  /**
+   * Called when a closing room has just been created, so user can change
+   * the name of the room to be stored.
+   *
+   * @param {Object}   message Message meant for the handler function, shouldn't
+                               contain any data.
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  SetNameNewRoom: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    win && win.LoopUI.renameRoom();
+
     reply();
   },
 

@@ -96,6 +96,34 @@ describe("loop.shared.views", function() {
 
       expect(comp.getDOMNode().classList.contains("muted")).eql(true);
     });
+
+    it("should render a muted and disabled local video button", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "video",
+          action: function() {},
+          disabled: true,
+          muted: true
+        }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(true);
+      expect(comp.getDOMNode().classList.contains("disabled")).eql(true);
+    });
+
+    it("should render a muted local audio button", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.MediaControlButton, {
+          scope: "local",
+          type: "audio",
+          action: function() {},
+          disabled: true,
+          muted: true
+        }));
+
+      expect(comp.getDOMNode().classList.contains("muted")).eql(true);
+      expect(comp.getDOMNode().classList.contains("disabled")).eql(true);
+    });
   });
 
   describe("AudioMuteButton", function() {
@@ -453,6 +481,30 @@ describe("loop.shared.views", function() {
       });
     });
   });
+  describe("ContextUrlLink", function() {
+    var view;
+
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        allowClick: true,
+        description: "test",
+        url: "http://example.com"
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ContextUrlLink, props));
+    }
+
+    it("should not have any children if none are passed", function() {
+      view = mountTestComponent({
+        allowClick: true,
+        url: "http://wonderful.invalid"
+      });
+
+      var contextHasChildren = view.getDOMNode().childNodes.length;
+
+      expect(contextHasChildren).eql(0);
+    });
+  });
 
   describe("ContextUrlView", function() {
     var view;
@@ -475,7 +527,7 @@ describe("loop.shared.views", function() {
       });
 
       var wrapper = view.getDOMNode().querySelector(".context-wrapper");
-
+console.log(view.getDOMNode().querySelector(".context-wrapper").childNodes);
       expect(wrapper.classList.contains("clicks-allowed")).eql(true);
     });
 
@@ -490,29 +542,45 @@ describe("loop.shared.views", function() {
       expect(wrapper.classList.contains("clicks-allowed")).eql(false);
     });
 
+    it("should allow context to be clickable if the url is valid", function() {
+      view = mountTestComponent({
+        allowClick: true,
+        url: "http://example.com/"
+      });
+
+      expect(view.getDOMNode().querySelector(".context-wrapper").getAttribute("href"))
+        .eql("http://example.com/");
+    });
+
     it("should display nothing if the url is invalid", function() {
       view = mountTestComponent({
+        allowClick: true,
         url: "fjrTykyw"
       });
 
-      expect(view.getDOMNode()).eql(null);
+      expect(view.getDOMNode().querySelector(".context-wrapper").getAttribute("href"))
+        .eql(null);
     });
 
     it("should display nothing if it is an about url", function() {
       view = mountTestComponent({
+        allowClick: true,
         url: "about:config"
       });
 
-      expect(view.getDOMNode()).eql(null);
+      expect(view.getDOMNode().querySelector(".context-wrapper").getAttribute("href"))
+        .eql(null);
     });
 
     it("should display nothing if it is a javascript url", function() {
       /* eslint-disable no-script-url */
       view = mountTestComponent({
+        allowClick: true,
         url: "javascript:alert('hello')"
       });
 
-      expect(view.getDOMNode()).eql(null);
+      expect(view.getDOMNode().querySelector(".context-wrapper").getAttribute("href"))
+        .eql(null);
       /* eslint-enable no-script-url */
     });
 

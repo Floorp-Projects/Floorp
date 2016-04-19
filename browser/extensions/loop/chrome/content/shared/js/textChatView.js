@@ -1,5 +1,3 @@
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -60,13 +58,6 @@ loop.shared.views.chat = function (mozL10n) {
         "text-chat-notif": this.props.contentType === CHAT_CONTENT_TYPES.NOTIFICATION
       });
 
-      var optionalProps = {};
-      if (loop.shared.utils.isDesktop()) {
-        optionalProps.linkClickHandler = function (url) {
-          loop.request("OpenURL", url);
-        };
-      }
-
       if (this.props.contentType === CHAT_CONTENT_TYPES.CONTEXT_TILE) {
         return React.createElement(
           "div",
@@ -99,11 +90,19 @@ loop.shared.views.chat = function (mozL10n) {
         );
       }
 
+      var linkClickHandler;
+      if (loop.shared.utils.isDesktop()) {
+        linkClickHandler = function (url) {
+          loop.request("OpenURL", url);
+        };
+      }
+
       return React.createElement(
         "div",
         { className: classes },
-        React.createElement(sharedViews.LinkifiedTextView, _extends({}, optionalProps, {
-          rawText: this.props.message })),
+        React.createElement(sharedViews.LinkifiedTextView, {
+          linkClickHandler: linkClickHandler,
+          rawText: this.props.message }),
         React.createElement("span", { className: "text-chat-arrow" }),
         this.props.showTimestamp ? this._renderTimestamp() : null
       );
@@ -216,11 +215,6 @@ loop.shared.views.chat = function (mozL10n) {
         React.createElement(
           "div",
           { className: "text-chat-scroller" },
-          loop.shared.utils.isDesktop() ? null : React.createElement(
-            "p",
-            { className: "welcome-message" },
-            mozL10n.get("rooms_welcome_text_chat_label", { clientShortname: mozL10n.get("clientShortname2") })
-          ),
           this.props.messageList.map(function (entry, i) {
             if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
               if (!this.props.showInitialContext) {

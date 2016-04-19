@@ -69,6 +69,24 @@ const SHARING_SCREEN = {
   RESUMED: 1
 };
 
+/**
+ * Values that we segment copy panel action telemetry probes into.
+ *
+ * @enum {Number}
+ */
+const COPY_PANEL = {
+  // Copy panel was shown to the user.
+  SHOWN: 0,
+  // User selected "no" and to allow the panel to show again.
+  NO_AGAIN: 1,
+  // User selected "no" and to never show the panel.
+  NO_NEVER: 2,
+  // User selected "yes" and to allow the panel to show again.
+  YES_AGAIN: 3,
+  // User selected "yes" and to never show the panel.
+  YES_NEVER: 4
+};
+
  /**
  * Values that we segment MAUs telemetry probes into.
  *
@@ -106,13 +124,14 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE", "LOOP_MAU_TYPE",
-  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_ROOM_URL", "SHARING_SCREEN",
+  "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_ROOM_URL", "SHARING_SCREEN", "COPY_PANEL",
   "ROOM_CREATE", "ROOM_DELETE"];
 
 XPCOMUtils.defineConstant(this, "LOOP_SESSION_TYPE", LOOP_SESSION_TYPE);
 XPCOMUtils.defineConstant(this, "TWO_WAY_MEDIA_CONN_LENGTH", TWO_WAY_MEDIA_CONN_LENGTH);
 XPCOMUtils.defineConstant(this, "SHARING_ROOM_URL", SHARING_ROOM_URL);
 XPCOMUtils.defineConstant(this, "SHARING_SCREEN", SHARING_SCREEN);
+XPCOMUtils.defineConstant(this, "COPY_PANEL", COPY_PANEL);
 XPCOMUtils.defineConstant(this, "ROOM_CREATE", ROOM_CREATE);
 XPCOMUtils.defineConstant(this, "ROOM_DELETE", ROOM_DELETE);
 XPCOMUtils.defineConstant(this, "LOOP_MAU_TYPE", LOOP_MAU_TYPE);
@@ -1335,7 +1354,7 @@ this.MozLoopService = {
    *
    * @return {Promise}
    */
-  initialize: Task.async(function*(addonVersion) {
+  initialize: Task.async(function* (addonVersion) {
     // Ensure we don't setup things like listeners more than once.
     if (gServiceInitialized) {
       return Promise.resolve();
@@ -1463,7 +1482,7 @@ this.MozLoopService = {
    * Can be called more than once (e.g. if the initial setup fails at some phase).
    * @param {Deferred} deferredInitialization
    */
-  delayedInitialize: Task.async(function*(deferredInitialization) {
+  delayedInitialize: Task.async(function* (deferredInitialization) {
     log.debug("delayedInitialize");
     // Set or clear an error depending on how deferredInitialization gets resolved.
     // We do this first so that it can handle the early returns below.
@@ -1815,7 +1834,7 @@ this.MozLoopService = {
    *
    * @return {Promise} that resolves when the FxA logout flow is complete.
    */
-  logOutFromFxA: Task.async(function*() {
+  logOutFromFxA: Task.async(function* () {
     log.debug("logOutFromFxA");
     try {
       yield MozLoopServiceInternal.unregisterFromLoopServer(LOOP_SESSION_TYPE.FXA);
