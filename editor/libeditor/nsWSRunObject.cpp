@@ -193,7 +193,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEd,
 //   public instance methods
 //--------------------------------------------------------------------------------------------
 
-already_AddRefed<Element>
+Element*
 nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
                            int32_t* aInOutOffset,
                            nsIEditor::EDirection aSelect)
