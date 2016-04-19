@@ -17,6 +17,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
@@ -233,7 +235,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       } else if (this.download.error.becauseBlockedByParentalControls) {
         stateLabel = s.stateBlockedParentalControls;
       } else if (this.download.error.becauseBlockedByReputationCheck) {
-        stateLabel = s.stateDirty;
+        switch (this.download.error.reputationCheckVerdict) {
+          case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+            stateLabel = s.blockedUncommon;
+            break;
+          case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+            stateLabel = s.blockedPotentiallyUnwanted;
+            break;
+          default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+            stateLabel = s.blockedMalware;
+            break;
+        }
       } else {
         stateLabel = s.stateFailed;
       }
