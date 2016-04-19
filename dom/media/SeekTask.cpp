@@ -38,14 +38,14 @@ extern LazyLogModule gMediaSampleLog;
 /*static*/ already_AddRefed<SeekTask>
 SeekTask::CreateSeekTask(const void* aDecoderID,
                          AbstractThread* aThread,
-                         MediaDecoderReaderWrapper* aReaderWrapper,
+                         MediaDecoderReaderWrapper* aReader,
                          SeekJob&& aSeekJob,
                          const MediaInfo& aInfo,
                          const media::TimeUnit& aDuration,
                          int64_t aCurrentMediaTime)
 {
   RefPtr<SeekTask> task(new SeekTask(aDecoderID, aThread,
-                                     aReaderWrapper, Move(aSeekJob), aInfo,
+                                     aReader, Move(aSeekJob), aInfo,
                                      aDuration, aCurrentMediaTime));
 
   return task.forget();
@@ -53,14 +53,14 @@ SeekTask::CreateSeekTask(const void* aDecoderID,
 
 SeekTask::SeekTask(const void* aDecoderID,
                    AbstractThread* aThread,
-                   MediaDecoderReaderWrapper* aReaderWrapper,
+                   MediaDecoderReaderWrapper* aReader,
                    SeekJob&& aSeekJob,
                    const MediaInfo& aInfo,
                    const media::TimeUnit& aDuration,
                    int64_t aCurrentMediaTime)
   : mDecoderID(aDecoderID)
   , mOwnerThread(aThread)
-  , mReaderWrapper(aReaderWrapper)
+  , mReader(aReader)
   , mSeekJob(Move(aSeekJob))
   , mCurrentTimeBeforeSeek(aCurrentMediaTime)
   , mAudioRate(aInfo.mAudio.mRate)
@@ -186,7 +186,7 @@ SeekTask::Seek(const media::TimeUnit& aDuration)
   AssertOwnerThread();
 
   // Do the seek.
-  mSeekRequest.Begin(mReaderWrapper->Seek(mSeekJob.mTarget, aDuration)
+  mSeekRequest.Begin(mReader->Seek(mSeekJob.mTarget, aDuration)
     ->Then(OwnerThread(), __func__, this,
            &SeekTask::OnSeekResolved, &SeekTask::OnSeekRejected));
 
@@ -277,9 +277,9 @@ SeekTask::RequestAudioData()
   AssertOwnerThread();
 
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
-             !!mSeekedAudioData, mReaderWrapper->SizeOfAudioQueueInFrames());
+             !!mSeekedAudioData, mReader->SizeOfAudioQueueInFrames());
 
-  mAudioDataRequest.Begin(mReaderWrapper->RequestAudioData()
+  mAudioDataRequest.Begin(mReader->RequestAudioData()
     ->Then(OwnerThread(), __func__, this,
            &SeekTask::OnAudioDecoded, &SeekTask::OnAudioNotDecoded));
 }
@@ -293,11 +293,11 @@ SeekTask::RequestVideoData()
   const media::TimeUnit currentTime = media::TimeUnit::FromMicroseconds(0);
 
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
-               !!mSeekedVideoData, mReaderWrapper->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
+               !!mSeekedVideoData, mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
                currentTime.ToMicroseconds());
 
   mVideoDataRequest.Begin(
-    mReaderWrapper->RequestVideoData(skipToNextKeyFrame, currentTime)
+    mReader->RequestVideoData(skipToNextKeyFrame, currentTime)
     ->Then(OwnerThread(), __func__, this,
            &SeekTask::OnVideoDecoded, &SeekTask::OnVideoNotDecoded));
 }
@@ -564,10 +564,10 @@ SeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReaderWrapper->IsWaitForDataSupported(),
+    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     RefPtr<SeekTask> self = this;
-    mAudioWaitRequest.Begin(mReaderWrapper->WaitForData(MediaData::AUDIO_DATA)
+    mAudioWaitRequest.Begin(mReader->WaitForData(MediaData::AUDIO_DATA)
       ->Then(OwnerThread(), __func__,
              [self] (MediaData::Type aType) -> void {
                self->mAudioWaitRequest.Complete();
@@ -668,10 +668,10 @@ SeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReaderWrapper->IsWaitForDataSupported(),
+    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     RefPtr<SeekTask> self = this;
-    mVideoWaitRequest.Begin(mReaderWrapper->WaitForData(MediaData::VIDEO_DATA)
+    mVideoWaitRequest.Begin(mReader->WaitForData(MediaData::VIDEO_DATA)
       ->Then(OwnerThread(), __func__,
              [self] (MediaData::Type aType) -> void {
                self->mVideoWaitRequest.Complete();
