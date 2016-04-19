@@ -640,6 +640,7 @@ loop.OTSdkDriver = (function() {
       sdkSubscriberObject.on("videoDisabled", this._onVideoDisabled.bind(this));
 
       this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
+        hasAudio: sdkSubscriberObject.stream[STREAM_PROPERTIES.HAS_AUDIO],
         hasVideo: sdkSubscriberObject.stream[STREAM_PROPERTIES.HAS_VIDEO],
         isLocal: false,
         srcMediaElement: sdkSubscriberVideo
@@ -850,8 +851,10 @@ loop.OTSdkDriver = (function() {
 
       var sdkLocalVideo = this._mockPublisherEl.querySelector("video");
       var hasVideo = event.stream[STREAM_PROPERTIES.HAS_VIDEO];
+      var hasAudio = event.stream[STREAM_PROPERTIES.HAS_AUDIO];
 
       this.dispatcher.dispatch(new sharedActions.MediaStreamCreated({
+        hasAudio: hasAudio,
         hasVideo: hasVideo,
         isLocal: true,
         srcMediaElement: sdkLocalVideo
@@ -998,20 +1001,28 @@ loop.OTSdkDriver = (function() {
         // Nothing to do for the success case.
         return;
       }
-      if (!(error.message && error.message === "DENIED")) {
-        // We free up the publisher here in case the store wants to try
-        // grabbing the media again.
-        if (this.publisher) {
-          this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
-          this.publisher.destroy();
-          delete this.publisher;
-          delete this._mockPublisherEl;
-        }
-        this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-          reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-        }));
-        this._notifyMetricsEvent("sdk.exception." + error.code + "." + error.message);
+
+      if (error.message && error.message === "DENIED") {
+        // In the DENIED case, this will be handled by _onPublishDenied.
+        return;
       }
+
+      if (!this.publisher) {
+        return;
+      }
+
+      // We free up the publisher here in case the store wants to try
+      // grabbing the media again.
+      this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
+      this.publisher.destroy();
+      delete this.publisher;
+      delete this._mockPublisherEl;
+
+      this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+        reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+      }));
+
+      // Exceptions are logged via the _onOTException handler.
     },
 
     /**
@@ -1030,6 +1041,11 @@ loop.OTSdkDriver = (function() {
       delete this._mockPublisherEl;
     },
 
+    /**
+     * Handles exceptions being raised by the OT SDK.
+     *
+     * @param  {OT.Event} event
+     */
     _onOTException: function(event) {
       switch (event.code) {
         case OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED:
@@ -1046,6 +1062,17 @@ loop.OTSdkDriver = (function() {
           // We still need to log the exception so that the server knows why this
           // attempt failed.
           this._notifyMetricsEvent("sdk.exception." + event.code);
+          break;
+        case OT.ExceptionCodes.UNABLE_TO_PUBLISH:
+          // Don't report errors for GetUserMedia events as these are expected if
+          // the user denies the prompt.
+          if (event.message !== "GetUserMedia") {
+            var baseException = "sdk.exception.";
+            if (event.target && event.target === this.screenshare) {
+              baseException += "screen.";
+            }
+            this._notifyMetricsEvent(baseException + event.code + "." + event.message);
+          }
           break;
         default:
           this._notifyMetricsEvent("sdk.exception." + event.code);
@@ -1164,7 +1191,8 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.INACTIVE
       }));
-      this._notifyMetricsEvent("sdk.exception.screen." + error.code + "." + error.message);
+
+      // Exceptions are logged via the _onOTException handler.
     },
 
     /**

@@ -154,6 +154,7 @@ var LoopMochaUtils = (function(global, _) {
       }
       invokeListenerCallbacks({ data: [seq, result] });
     }
+    return undefined;
   }
 
   /**

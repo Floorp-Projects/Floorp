@@ -242,6 +242,7 @@ loop.shared.desktopViews = function (mozL10n) {
                 locationForMetrics: this.props.locationForMetrics,
                 roomData: this.props.roomData });
             }
+            return null;
           })()
         ),
         React.createElement(SocialShareDropdown, {
