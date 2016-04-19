@@ -12,6 +12,6 @@ export MOZILLA_OFFICIAL=1
 # Enable Telemetry
 export MOZ_TELEMETRY_REPORTING=1
 
-. $topsrcdir/build/win64/mozconfig.vs2015
+. $topsrcdir/build/win64/mozconfig.vs-latest
 
 . "$topsrcdir/build/mozconfig.common.override"
