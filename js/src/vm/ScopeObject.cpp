@@ -1459,8 +1459,8 @@ ScopeIter::settle()
         // function frame case above, if the script starts with a lexical
         // block, the SSI could see 2 block scopes here. So skip between 1-2
         // static block scopes here.
-        MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Block);
-        incrementStaticScopeIter();
+        if (ssi_.type() == StaticScopeIter<CanGC>::Block)
+            incrementStaticScopeIter();
         if (ssi_.type() == StaticScopeIter<CanGC>::Block)
             incrementStaticScopeIter();
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Eval);
