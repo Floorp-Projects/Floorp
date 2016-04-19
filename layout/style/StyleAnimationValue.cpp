@@ -3307,7 +3307,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           bool isForeground;
           styleTextReset->GetDecorationColor(color, isForeground);
           if (isForeground) {
-            color = aStyleContext->StyleColor()->mColor;
+            color = aStyleContext->GetTextFillColor();
           }
           aComputedValue.SetColorValue(color);
           break;
