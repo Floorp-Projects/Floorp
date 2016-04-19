@@ -290,7 +290,12 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
                                   params,
                                   ArrayLength(params));
 
-  DispatchNotification(mDocument->GetInnerWindow(), aNotificationType, aFormats);
+  // For now, disable all front-end notifications by default.
+  // TODO: Future bugs will use finer-grained filtering instead.
+  if (Preferences::GetBool("media.decoderdoctor.enable-notification-bar", false)) {
+    DispatchNotification(
+      mDocument->GetInnerWindow(), aNotificationType, aFormats);
+  }
 }
 
 void
@@ -299,11 +304,19 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   MOZ_ASSERT(NS_IsMainThread());
 
   bool canPlay = false;
+#if defined(MOZ_FFMPEG)
+  bool PlatformDecoderNeeded = false;
+#endif
   nsAutoString formats;
   for (auto& diag : mDiagnosticsSequence) {
     if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
       canPlay = true;
     } else {
+#if defined(MOZ_FFMPEG)
+      if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
+        PlatformDecoderNeeded = true;
+      }
+#endif
       if (!formats.IsEmpty()) {
         formats += NS_LITERAL_STRING(", ");
       }
@@ -311,10 +324,20 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
     }
   }
   if (!canPlay) {
-    DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Cannot play media, formats: %s",
-            this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
-    ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
-                   "MediaCannotPlayNoDecoders", formats);
+#if defined(MOZ_FFMPEG)
+    if (PlatformDecoderNeeded) {
+      DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - formats: %s -> Cannot play media because platform decoder was not found",
+               this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
+      ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
+                     "MediaPlatformDecoderNotFound", formats);
+    } else
+#endif
+    {
+      DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Cannot play media, formats: %s",
+              this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
+      ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
+                     "MediaCannotPlayNoDecoders", formats);
+    }
   } else if (!formats.IsEmpty()) {
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
@@ -340,9 +363,9 @@ DecoderDoctorDocumentWatcher::AddDiagnostics(const nsAString& aFormat,
     return;
   }
 
-  DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(format='%s', call site '%s', can play=%d)",
+  DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(format='%s', call site '%s', can play=%d, platform lib failed to load=%d)",
            this, mDocument, NS_ConvertUTF16toUTF8(aFormat).get(),
-           aCallSite, aDiagnostics.CanPlay());
+           aCallSite, aDiagnostics.CanPlay(), aDiagnostics.DidFFmpegFailToLoad());
   mDiagnosticsSequence.AppendElement(
     Diagnostics(Move(aDiagnostics), aFormat, aCallSite));
   EnsureTimerIsStarted();
