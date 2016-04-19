@@ -27,8 +27,6 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  typedef nsContainerFrame Super;
-
   explicit ViewportFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
   {}

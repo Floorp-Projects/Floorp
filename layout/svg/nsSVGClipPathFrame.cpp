@@ -418,8 +418,8 @@ nsSVGClipPathFrame::AttributeChanged(int32_t         aNameSpaceID,
     }
   }
 
-  return nsSVGClipPathFrameBase::AttributeChanged(aNameSpaceID,
-                                                  aAttribute, aModType);
+  return nsSVGContainerFrame::AttributeChanged(aNameSpaceID,
+                                               aAttribute, aModType);
 }
 
 void
@@ -431,7 +431,7 @@ nsSVGClipPathFrame::Init(nsIContent*       aContent,
                "Content is not an SVG clipPath!");
 
   AddStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
-  nsSVGClipPathFrameBase::Init(aContent, aParent, aPrevInFlow);
+  nsSVGContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsIAtom *

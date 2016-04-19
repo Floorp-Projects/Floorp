@@ -844,7 +844,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     }
     common.maskLayerParent() = nullptr;
     common.animations() = mutant->GetAnimations();
-    common.invalidRegion() = mutant->GetInvalidRegion();
+    common.invalidRegion() = mutant->GetInvalidRegion().GetRegion();
     common.scrollMetadata() = mutant->GetAllScrollMetadata();
     for (size_t i = 0; i < mutant->GetAncestorMaskLayerCount(); i++) {
       auto layer = Shadow(mutant->GetAncestorMaskLayerAt(i)->AsShadowableLayer());

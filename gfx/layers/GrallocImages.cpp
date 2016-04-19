@@ -144,7 +144,7 @@ GrallocImage::SetData(const Data& aData)
 }
 
 void
-GrallocImage::SetData(TextureClient* aGraphicBuffer, const gfx::IntSize& aSize)
+GrallocImage::AdoptData(TextureClient* aGraphicBuffer, const gfx::IntSize& aSize)
 {
   mTextureClient = aGraphicBuffer;
   mSize = aSize;

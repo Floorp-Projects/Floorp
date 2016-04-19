@@ -15,8 +15,7 @@
 
 using namespace mozilla;
 
-typedef nsImageFrame nsImageControlFrameSuper;
-class nsImageControlFrame : public nsImageControlFrameSuper,
+class nsImageControlFrame : public nsImageFrame,
                             public nsIFormControlFrame
 {
 public:
@@ -56,13 +55,13 @@ public:
                              nsIFrame::Cursor& aCursor) override;
   // nsIFormContromFrame
   virtual void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsIAtom* aName, 
+  virtual nsresult SetFormProperty(nsIAtom* aName,
                                    const nsAString& aValue) override;
 };
 
 
-nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext):
-  nsImageControlFrameSuper(aContext)
+nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext)
+  : nsImageFrame(aContext)
 {
 }
 
@@ -76,7 +75,7 @@ nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (!GetPrevInFlow()) {
     nsFormControlFrame::RegUnRegAccessKey(this, false);
   }
-  nsImageControlFrameSuper::DestroyFrom(aDestructRoot);
+  nsImageFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIFrame*
@@ -92,12 +91,12 @@ nsImageControlFrame::Init(nsIContent*       aContent,
                           nsContainerFrame* aParent,
                           nsIFrame*         aPrevInFlow)
 {
-  nsImageControlFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsImageFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     return;
   }
-  
+
   mContent->SetProperty(nsGkAtoms::imageClickedPoint,
                         new nsIntPoint(0, 0),
                         nsINode::DeleteProperty<nsIntPoint>);
@@ -105,7 +104,7 @@ nsImageControlFrame::Init(nsIContent*       aContent,
 
 NS_QUERYFRAME_HEAD(nsImageControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsImageControlFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsImageFrame)
 
 #ifdef ACCESSIBILITY
 a11y::AccType
@@ -122,7 +121,7 @@ nsImageControlFrame::AccessibleType()
 nsIAtom*
 nsImageControlFrame::GetType() const
 {
-  return nsGkAtoms::imageControlFrame; 
+  return nsGkAtoms::imageControlFrame;
 }
 
 void
@@ -136,10 +135,10 @@ nsImageControlFrame::Reflow(nsPresContext*           aPresContext,
   if (!GetPrevInFlow() && (mState & NS_FRAME_FIRST_REFLOW)) {
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
-  return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  return nsImageFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-nsresult 
+nsresult
 nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
                                  WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus)
@@ -175,11 +174,10 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
       TranslateEventCoords(pt, *lastClickPoint);
     }
   }
-  return nsImageControlFrameSuper::HandleEvent(aPresContext, aEvent,
-                                               aEventStatus);
+  return nsImageFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-void 
+void
 nsImageControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }

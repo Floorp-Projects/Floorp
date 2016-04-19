@@ -202,8 +202,9 @@ function testArrowScrollbox(id)
   var scrollBoxObject = scrollbox.scrollBoxObject;
   var orient = scrollbox.getAttribute("orient");
 
-  function helper(aStart, aDelta, aIntDelta, aDeltaMode, aExpected)
+  function helper(aStart, aDelta, aDeltaMode, aExpected)
   {
+    var lineOrPageDelta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? aDelta / 10 : aDelta;
     var orientIsHorizontal = (orient == "horizontal");
 
     scrollBoxObject.scrollTo(aStart, aStart);
@@ -211,7 +212,7 @@ function testArrowScrollbox(id)
     for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       synthesizeWheel(scrollbox, 5, 5,
                       { deltaMode: aDeltaMode, deltaY: aDelta,
-                        lineOrPageDeltaY: aIntDelta });
+                        lineOrPageDeltaY: lineOrPageDelta });
 
       var pos = orientIsHorizontal ? scrollBoxObject.positionX :
                                      scrollBoxObject.positionY;
@@ -222,7 +223,7 @@ function testArrowScrollbox(id)
       let expected = !i ? aExpected : aStart;
       is(pos, expected,
          "testArrowScrollbox(" + id +  "): vertical, starting " + aStart +
-           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
            " aDeltaMode " + aDeltaMode);
     }
 
@@ -230,7 +231,7 @@ function testArrowScrollbox(id)
     for (var i = orientIsHorizontal ? 2 : 0; i >= 0; i--) {
       synthesizeWheel(scrollbox, 5, 5,
                       { deltaMode: aDeltaMode, deltaX: aDelta,
-                        lineOrPageDeltaX: aIntDelta });
+                        lineOrPageDeltaX: lineOrPageDelta });
       // horizontal mouse scrolling is never allowed to scroll vertical
       // arrowscrollboxes
       var pos = orientIsHorizontal ? scrollBoxObject.positionX :
@@ -238,7 +239,7 @@ function testArrowScrollbox(id)
       let expected = (!i && orientIsHorizontal) ? aExpected : aStart;
       is(pos, expected,
          "testArrowScrollbox(" + id +  "): horizontal, starting " + aStart +
-           " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+           " delta " + aDelta + " lineOrPageDelta " + lineOrPageDelta +
            " aDeltaMode " + aDeltaMode);
     }
   }
@@ -250,13 +251,10 @@ function testArrowScrollbox(id)
   var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
 
   deltaModes.forEach(function(aDeltaMode) {
-    // These lineOrPageDelta values are not realistic.  However, it's enough to
-    // test if it's scrolled by the lineOrPageDelta value.
-    let delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
-    helper(50, -delta, -100, aDeltaMode, 0);
-    helper(50,  delta,  100, aDeltaMode, scrollMax);
-    helper(50, -delta,    0, aDeltaMode, 50);
-    helper(50,  delta,    0, aDeltaMode, 50);
+    helper(50, -1000, aDeltaMode, 0);
+    helper(50,  1000, aDeltaMode, scrollMax);
+    helper(50,     0, aDeltaMode, 50);
+    helper(50,     0, aDeltaMode, 50);
   });
 }
 

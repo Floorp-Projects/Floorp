@@ -10,15 +10,13 @@
 #include "gfxMatrix.h"
 #include "nsSVGContainerFrame.h"
 
-typedef nsSVGDisplayContainerFrame nsSVGGFrameBase;
-
-class nsSVGGFrame : public nsSVGGFrameBase
+class nsSVGGFrame : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGGFrame(nsStyleContext* aContext) :
-    nsSVGGFrameBase(aContext) {}
+  explicit nsSVGGFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext) {}
 
 public:
   NS_DECL_FRAMEARENA_HELPERS

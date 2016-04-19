@@ -534,12 +534,6 @@ RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
   return true;
 }
 
-bool
-RecyclingPlanarYCbCrImage::SetData(const Data &aData)
-{
-  return CopyData(aData);
-}
-
 gfxImageFormat
 PlanarYCbCrImage::GetOffscreenFormat()
 {
@@ -549,7 +543,7 @@ PlanarYCbCrImage::GetOffscreenFormat()
 }
 
 bool
-PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
+PlanarYCbCrImage::AdoptData(const Data &aData)
 {
   mData = aData;
   mSize = aData.mPicSize;

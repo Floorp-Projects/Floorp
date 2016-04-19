@@ -497,12 +497,12 @@
     </implementation>
 
     <handlers>
-      <handler event="DOMMouseScroll"><![CDATA[
+      <handler event="wheel"><![CDATA[
         if (this.orient == "vertical") {
-          // prevent horizontal scrolling from scrolling a vertical scrollbox
-          if (event.axis == event.HORIZONTAL_AXIS)
-            return;
-          this.scrollByIndex(event.detail);
+          if (event.deltaMode == event.DOM_DELTA_PIXEL)
+            this.scrollByPixels(event.deltaY);
+          else
+            this.scrollByIndex(event.deltaY);
         }
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
@@ -511,23 +511,24 @@
         // and mouse wheels that support simultaneous scrolling in both axes.
         // We do this by scrolling only when the last two scroll events were
         // on the same axis as the current scroll event.
+        // For diagonal scroll events we only respect the dominant axis.
         else {
-          let isVertical = event.axis == event.VERTICAL_AXIS;
+          let isVertical = Math.abs(event.deltaY) > Math.abs(event.deltaX);
+          let delta = isVertical ? event.deltaY : event.deltaX;
+          let scrollByDelta = isVertical && this._isRTLScrollbox ? -delta : delta;
 
-          if (this._prevMouseScrolls.every(prev => prev == isVertical))
-            this.scrollByIndex(isVertical && this._isRTLScrollbox ? -event.detail :
-                                                                    event.detail);
+          if (this._prevMouseScrolls.every(prev => prev == isVertical)) {
+            if (event.deltaMode == event.DOM_DELTA_PIXEL)
+              this.scrollByPixels(scrollByDelta);
+            else
+              this.scrollByIndex(scrollByDelta);
+          }
 
           if (this._prevMouseScrolls.length > 1)
             this._prevMouseScrolls.shift();
           this._prevMouseScrolls.push(isVertical);
         }
 
-        event.stopPropagation();
-        event.preventDefault();
-      ]]></handler>
-
-      <handler event="MozMousePixelScroll"><![CDATA[
         event.stopPropagation();
         event.preventDefault();
       ]]></handler>

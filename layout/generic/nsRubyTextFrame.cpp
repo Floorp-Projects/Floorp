@@ -22,7 +22,7 @@ using namespace mozilla;
 
 NS_QUERYFRAME_HEAD(nsRubyTextFrame)
   NS_QUERYFRAME_ENTRY(nsRubyTextFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsRubyTextFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsRubyContentFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextFrame)
 
@@ -70,7 +70,7 @@ nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  nsRubyTextFrameSuper::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  nsRubyContentFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 /* virtual */ void
@@ -85,8 +85,7 @@ nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
   // the content is no longer the same, until next reflow triggered by
   // some other change. In general, we always reflow all the frames we
   // created. There might be other problems if we don't do that.
-  nsRubyTextFrameSuper::Reflow(aPresContext, aDesiredSize,
-                               aReflowState, aStatus);
+  nsRubyContentFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   if (IsAutoHidden()) {
     // Reset the ISize. The BSize is not changed so that it won't

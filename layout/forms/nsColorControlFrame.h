@@ -14,11 +14,9 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 } // namespace mozilla
 
-typedef nsHTMLButtonControlFrame nsColorControlFrameSuper;
-
 // Class which implements the input type=color
 
-class nsColorControlFrame final : public nsColorControlFrameSuper,
+class nsColorControlFrame final : public nsHTMLButtonControlFrame,
                                   public nsIAnonymousContentCreator
 {
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;

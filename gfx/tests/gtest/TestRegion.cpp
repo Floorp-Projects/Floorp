@@ -11,8 +11,10 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "RegionBuilder.h"
+#include "mozilla/gfx/TiledRegion.h"
 
 using namespace std;
+using namespace mozilla::gfx;
 
 class TestLargestRegion {
 public:
@@ -595,6 +597,97 @@ TEST(Gfx, PingPongRegion) {
       EXPECT_TRUE(ar.Region().IsEqual(r));
     }
   }
+}
+
+// The TiledRegion tests use nsIntRect / IntRegion because nsRect doesn't have
+// InflateToMultiple which is required by TiledRegion.
+TEST(Gfx, TiledRegionNoSimplification2Rects) {
+  // Add two rectangles, both rectangles are completely inside
+  // different tiles.
+  nsIntRegion region;
+  region.OrWith(nsIntRect(50, 50, 50, 50));
+  region.OrWith(nsIntRect(300, 50, 50, 50));
+
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(nsIntRect(50, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(300, 50, 50, 50));
+
+  // No simplification should have happened.
+  EXPECT_TRUE(region.IsEqual(tiledRegion.GetRegion()));
+}
+
+TEST(Gfx, TiledRegionNoSimplification1Region) {
+  // Add two rectangles, both rectangles are completely inside
+  // different tiles.
+  nsIntRegion region;
+  region.OrWith(nsIntRect(50, 50, 50, 50));
+  region.OrWith(nsIntRect(300, 50, 50, 50));
+
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(region);
+
+  // No simplification should have happened.
+  EXPECT_TRUE(region.IsEqual(tiledRegion.GetRegion()));
+}
+
+TEST(Gfx, TiledRegionWithSimplification3Rects) {
+  // Add three rectangles. The first two rectangles are completely inside
+  // different tiles, but the third rectangle intersects both tiles.
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(nsIntRect(50, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(300, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(250, 70, 10, 10));
+
+  // Both tiles should have simplified their rectangles, and those two
+  // rectangles are adjacent to each other, so they just build up one rect.
+  EXPECT_TRUE(tiledRegion.GetRegion().IsEqual(nsIntRect(50, 50, 300, 50)));
+}
+
+TEST(Gfx, TiledRegionWithSimplification1Region) {
+  // Add three rectangles. The first two rectangles are completely inside
+  // different tiles, but the third rectangle intersects both tiles.
+  nsIntRegion region;
+  region.OrWith(nsIntRect(50, 50, 50, 50));
+  region.OrWith(nsIntRect(300, 50, 50, 50));
+  region.OrWith(nsIntRect(250, 70, 10, 10));
+
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(region);
+
+  // Both tiles should have simplified their rectangles, and those two
+  // rectangles are adjacent to each other, so they just build up one rect.
+  EXPECT_TRUE(tiledRegion.GetRegion().IsEqual(nsIntRect(50, 50, 300, 50)));
+}
+
+TEST(Gfx, TiledRegionContains) {
+  // Add three rectangles. The first two rectangles are completely inside
+  // different tiles, but the third rectangle intersects both tiles.
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(nsIntRect(50, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(300, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(250, 70, 10, 10));
+
+  // Both tiles should have simplified their rectangles, and those two
+  // rectangles are adjacent to each other, so they just build up one rect.
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(50, 50, 300, 50)));
+  EXPECT_TRUE(tiledRegion.Contains(nsIntRect(50, 50, 50, 50)));
+  EXPECT_FALSE(tiledRegion.Contains(nsIntRect(50, 50, 301, 50)));
+}
+
+TEST(Gfx, TiledRegionIntersects) {
+  // Add three rectangles. The first two rectangles are completely inside
+  // different tiles, but the third rectangle intersects both tiles.
+  TiledIntRegion tiledRegion;
+  tiledRegion.Add(nsIntRect(50, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(300, 50, 50, 50));
+  tiledRegion.Add(nsIntRect(250, 70, 10, 10));
+
+  // Both tiles should have simplified their rectangles, and those two
+  // rectangles are adjacent to each other, so they just build up one rect.
+  EXPECT_TRUE(tiledRegion.Intersects(nsIntRect(50, 50, 300, 50)));
+  EXPECT_TRUE(tiledRegion.Intersects(nsIntRect(200, 10, 10, 50)));
+  EXPECT_TRUE(tiledRegion.Intersects(nsIntRect(50, 50, 301, 50)));
+  EXPECT_FALSE(tiledRegion.Intersects(nsIntRect(0, 0, 50, 500)));
 }
 
 MOZ_GTEST_BENCH(GfxBench, RegionOr, []{

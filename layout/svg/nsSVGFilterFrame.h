@@ -27,17 +27,15 @@ class SVGFilterElement;
 } // namespace dom
 } // namespace mozilla
 
-typedef nsSVGContainerFrame nsSVGFilterFrameBase;
-
-class nsSVGFilterFrame : public nsSVGFilterFrameBase
+class nsSVGFilterFrame : public nsSVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGFilterFrameBase(aContext),
-      mLoopFlag(false),
-      mNoHRefURI(false)
+    : nsSVGContainerFrame(aContext)
+    , mLoopFlag(false)
+    , mNoHRefURI(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }

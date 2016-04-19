@@ -83,6 +83,8 @@ parent:
   async UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
                               MaybeZoomConstraints aConstraints);
 
+  async __delete__();
+
 child:
   async UpdateFrame(FrameMetrics frame);
 
@@ -95,7 +97,7 @@ child:
   async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
   async NotifyFlushComplete();
 
-  async __delete__();
+  async Destroy();
 };
 
 } // layers
