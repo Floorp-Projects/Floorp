@@ -1,10 +1,8 @@
-# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
-# vim: set filetype=python:
+#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SharedLibrary('nptestjava')
-
-relative_path = 'javaplugin'
-include('../testplugin.mozbuild')
+RELATIVE_PATH=.
+COCOA_NAME=Test
+include @srcdir@/testplugin.mk
