@@ -622,7 +622,7 @@ File::Constructor(const GlobalObject& aGlobal,
                   ErrorResult& aRv)
 {
   if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.ThrowTypeError<MSG_MISSING_ARGUMENTS>(NS_LITERAL_STRING("File"));
     return nullptr;
   }
 
