@@ -226,7 +226,7 @@ case "$target" in
         _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
 
-        _MSC_VER=`echo ${CC_VERSION} | cut -c 1-4`
+        _MSC_VER=`echo ${CC_VERSION} | cut -c 1-2,4-5`
 
         AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
