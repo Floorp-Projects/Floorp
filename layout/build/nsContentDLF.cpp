@@ -212,7 +212,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              aExtraInfo, aDocListener, aDocViewer);
   }
 
-  if (mozilla::DecoderTraits::ShouldHandleMediaType(contentType.get())) {
+  if (mozilla::DecoderTraits::ShouldHandleMediaType(contentType.get(),
+                    /* DecoderDoctorDiagnostics* */ nullptr)) {
     return CreateDocument(aCommand,
                           aChannel, aLoadGroup,
                           aContainer, kVideoDocumentCID,

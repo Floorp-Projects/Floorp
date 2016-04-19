@@ -20,7 +20,8 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              layers::LayersBackend aLayersBackend,
                              layers::ImageContainer* aImageContainer,
                              FlushableTaskQueue* aVideoTaskQueue,
-                             MediaDataDecoderCallback* aCallback)
+                             MediaDataDecoderCallback* aCallback,
+                             DecoderDoctorDiagnostics* aDiagnostics)
   : mPDM(aPDM)
   , mOriginalConfig(aConfig)
   , mCurrentConfig(aConfig)
@@ -32,7 +33,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mNeedAVCC(aPDM->DecoderNeedsConversion(aConfig) == PlatformDecoderModule::kNeedAVCC)
   , mLastError(NS_OK)
 {
-  CreateDecoder();
+  CreateDecoder(aDiagnostics);
 }
 
 H264Converter::~H264Converter()
@@ -132,7 +133,7 @@ H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
 }
 
 nsresult
-H264Converter::CreateDecoder()
+H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (mNeedAVCC && !mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
     // nothing found yet, will try again later
@@ -149,7 +150,8 @@ H264Converter::CreateDecoder()
                                       mLayersBackend,
                                       mImageContainer,
                                       mVideoTaskQueue,
-                                      mCallback);
+                                      mCallback,
+                                      aDiagnostics);
   if (!mDecoder) {
     mLastError = NS_ERROR_FAILURE;
     return NS_ERROR_FAILURE;
@@ -167,7 +169,7 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
   }
   UpdateConfigFromExtraData(extra_data);
 
-  nsresult rv = CreateDecoder();
+  nsresult rv = CreateDecoder(/* DecoderDoctorDiagnostics* */ nullptr);
 
   if (NS_SUCCEEDED(rv)) {
     // Queue the incoming sample.
