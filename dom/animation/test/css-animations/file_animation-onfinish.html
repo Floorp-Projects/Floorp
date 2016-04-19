@@ -11,7 +11,7 @@
 'use strict';
 
 const ANIM_PROP_VAL = 'abc 100s';
-const ANIM_DURATION = 100 * MS_PER_SEC;
+const ANIM_DURATION = 100000; // ms
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -78,7 +78,7 @@ async_test(function(t) {
   animation.finish();
 }, 'onfinish event is fired when animation.finish() is called');
 
-promise_test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
   var animation = div.getAnimations()[0];
@@ -90,41 +90,50 @@ promise_test(function(t) {
   animation.currentTime = ANIM_DURATION / 2;
   animation.pause();
 
-  return animation.ready.then(function() {
+  animation.ready.then(t.step_func(function() {
     animation.currentTime = ANIM_DURATION;
     return waitForAnimationFrames(2);
-  });
+  })).then(t.step_func(function() {
+    t.done();
+  }));
 }, 'onfinish event is not fired when paused');
 
-promise_test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
   var animation = div.getAnimations()[0];
+
   animation.onfinish = t.step_func(function(event) {
     assert_unreached('onfinish event should not be fired');
   });
 
-  return animation.ready.then(function() {
+  animation.ready.then(function() {
     animation.playbackRate = 0;
     animation.currentTime = ANIM_DURATION;
     return waitForAnimationFrames(2);
-  });
+  }).then(t.step_func(function() {
+    t.done();
+  }));
 
 }, 'onfinish event is not fired when the playbackRate is zero');
 
-promise_test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
   var animation = div.getAnimations()[0];
+
   animation.onfinish = t.step_func(function(event) {
     assert_unreached('onfinish event should not be fired');
   });
 
-  return animation.ready.then(function() {
+  animation.ready.then(function() {
     animation.currentTime = ANIM_DURATION;
     animation.currentTime = ANIM_DURATION / 2;
     return waitForAnimationFrames(2);
-  });
+  }).then(t.step_func(function() {
+    t.done();
+  }));
+
 }, 'onfinish event is not fired when the animation falls out ' +
    'finished state immediately');
 
