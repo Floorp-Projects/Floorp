@@ -48,7 +48,6 @@ add_task(function* test_registration_success() {
   let handshakePromise = new Promise(resolve => handshakeDone = resolve);
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
