@@ -667,7 +667,7 @@ js::ReportUncaughtException(JSContext* cx)
     cx->clearPendingException();
 
     ErrorReport err(cx);
-    if (!err.init(cx, exn)) {
+    if (!err.init(cx, exn, js::ErrorReport::WithSideEffects)) {
         cx->clearPendingException();
         return false;
     }
@@ -771,15 +771,23 @@ ErrorReport::ReportAddonExceptionToTelementry(JSContext* cx)
 }
 
 bool
-ErrorReport::init(JSContext* cx, HandleValue exn)
+ErrorReport::init(JSContext* cx, HandleValue exn,
+                  SniffingBehavior sniffingBehavior)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
+    MOZ_ASSERT(!reportp);
 
     if (exn.isObject()) {
         // Because ToString below could error and an exception object could become
         // unrooted, we must root our exception object, if any.
         exnObject = &exn.toObject();
         reportp = ErrorFromException(cx, exnObject);
+
+        if (!reportp && sniffingBehavior == NoSideEffects) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_ERR_DURING_THROW);
+            return false;
+        }
 
         // Let's see if the exception is from add-on code, if so, it should be reported
         // to telementry.

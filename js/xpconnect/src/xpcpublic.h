@@ -30,6 +30,12 @@ class nsIPrincipal;
 class nsScriptNameSpaceManager;
 class nsIMemoryReporterCallback;
 
+namespace mozilla {
+namespace dom {
+class Exception;
+}
+}
+
 typedef void (* xpcGCCallback)(JSGCStatus status);
 
 namespace xpc {
@@ -502,6 +508,8 @@ class ErrorReport {
     {}
 
     void Init(JSErrorReport* aReport, const char* aFallbackMessage,
+              bool aIsChrome, uint64_t aWindowID);
+    void Init(JSContext* aCx, mozilla::dom::Exception* aException,
               bool aIsChrome, uint64_t aWindowID);
     // Log the error report to the console.  Which console will depend on the
     // window id it was initialized with.
