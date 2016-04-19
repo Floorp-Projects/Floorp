@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 const promise = require("promise");
 const FocusManager = Services.focus;
+const {waitForTick} = require("devtools/shared/DevToolsUtils");
 
 const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
@@ -660,7 +661,7 @@ HTMLBreadcrumbs.prototype = {
       });
     }
 
-    return resolveNextTick(true);
+    return waitForTick().then(() => true);
   },
 
   /**
@@ -813,7 +814,7 @@ HTMLBreadcrumbs.prototype = {
 
       // Make sure the selected node and its neighbours are visible.
       this.scroll();
-      return resolveNextTick().then(() => {
+      return waitForTick().then(() => {
         this.inspector.emit("breadcrumbs-updated", this.selection.nodeFront);
         doneUpdating();
       });
@@ -823,18 +824,3 @@ HTMLBreadcrumbs.prototype = {
     });
   }
 };
-
-/**
- * Returns a promise that resolves at the next main thread tick.
- */
-function resolveNextTick(value) {
-  let deferred = promise.defer();
-  Services.tm.mainThread.dispatch(() => {
-    try {
-      deferred.resolve(value);
-    } catch(e) {
-      deferred.reject(e);
-    }
-  }, Ci.nsIThread.DISPATCH_NORMAL);
-  return deferred.promise;
-}
