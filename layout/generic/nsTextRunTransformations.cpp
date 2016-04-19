@@ -32,7 +32,7 @@ using namespace mozilla;
 #define GREEK_SMALL_LETTER_FINAL_SIGMA         0x03C2
 #define GREEK_SMALL_LETTER_SIGMA               0x03C3
 
-nsTransformedTextRun *
+UniquePtr<nsTransformedTextRun>
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
@@ -49,10 +49,10 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
     return nullptr;
   }
 
-  return new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
-                                            aString, aLength,
-                                            aFlags, Move(aStyles),
-                                            aOwnsFactory);
+  return UniquePtr<nsTransformedTextRun>(
+    new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
+                                       aString, aLength, aFlags,
+                                       Move(aStyles), aOwnsFactory));
 }
 
 void
@@ -98,7 +98,7 @@ nsTransformedTextRun::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-nsTransformedTextRun*
+UniquePtr<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
@@ -110,7 +110,7 @@ nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLen
                                       aOwnsFactory);
 }
 
-nsTransformedTextRun*
+UniquePtr<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
@@ -625,8 +625,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
-  nsAutoPtr<nsTransformedTextRun> transformedChild;
-  nsAutoPtr<gfxTextRun> cachedChild;
+  UniquePtr<nsTransformedTextRun> transformedChild;
+  UniquePtr<gfxTextRun> cachedChild;
   gfxTextRun* child;
 
   if (mInnerTransformingTextRunFactory) {

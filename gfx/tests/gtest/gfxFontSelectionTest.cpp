@@ -7,6 +7,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -251,7 +252,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 
     fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nullptr, nullptr, 1.0);
 
-    nsAutoPtr<gfxTextRun> textRun;
+    UniquePtr<gfxTextRun> textRun;
     gfxTextRunFactory::Parameters params = {
       ctx, nullptr, nullptr, nullptr, 0, 60
     };
@@ -263,7 +264,8 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     if (test->stringType == S_ASCII) {
         flags |= gfxTextRunFactory::TEXT_IS_ASCII | gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->string);
-        textRun = fontGroup->MakeTextRun(reinterpret_cast<const uint8_t*>(test->string), length, &params, flags);
+        textRun = fontGroup->MakeTextRun(
+            reinterpret_cast<const uint8_t*>(test->string), length, &params, flags);
     } else {
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
         length = str.Length();
