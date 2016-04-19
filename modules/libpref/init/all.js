@@ -4657,19 +4657,6 @@ pref("dom.push.pingInterval", 1800000); // 30 minutes
 
 // How long before we timeout
 pref("dom.push.requestTimeout", 10000);
-pref("dom.push.pingInterval.default", 180000);// 3 min
-pref("dom.push.pingInterval.mobile", 180000); // 3 min
-pref("dom.push.pingInterval.wifi", 180000);  // 3 min
-
-// Adaptive ping
-pref("dom.push.adaptive.enabled", false);
-pref("dom.push.adaptive.lastGoodPingInterval", 180000);// 3 min
-pref("dom.push.adaptive.lastGoodPingInterval.mobile", 180000);// 3 min
-pref("dom.push.adaptive.lastGoodPingInterval.wifi", 180000);// 3 min
-// Valid gap between the biggest good ping and the bad ping
-pref("dom.push.adaptive.gap", 60000); // 1 minute
-// We limit the ping to this maximum value
-pref("dom.push.adaptive.upperLimit", 1740000); // 29 min
 
 // enable udp wakeup support
 pref("dom.push.udp.wakeupEnabled", false);
