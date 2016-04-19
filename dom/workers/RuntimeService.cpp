@@ -880,8 +880,10 @@ public:
 
   ~WorkerJSRuntime()
   {
-    JSRuntime* rt = Runtime();
-    MOZ_ASSERT(rt);
+    JSRuntime* rt = MaybeRuntime();
+    if (!rt) {
+      return;   // Initialize() must have failed
+    }
 
     delete static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(rt));
     JS_SetRuntimePrivate(rt, nullptr);
