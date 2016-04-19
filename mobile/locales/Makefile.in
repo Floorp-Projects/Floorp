@@ -81,6 +81,7 @@ GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
 # search-jar contains a list of providers for the search plugin
 ###########################################################################
 SEARCH_PLUGINS = $(shell cat $(plugin_file))
+SEARCH_PLUGINS := $(subst :hidden,,$(SEARCH_PLUGINS))
 $(call errorIfEmpty,SEARCH_PLUGINS)
 
 search-jar-preqs = \
