@@ -4453,6 +4453,8 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   mozilla::ShutdownEventTracing();
 #endif
 
+  gAbsoluteArgv0Path.Truncate();
+
   // Check for an application initiated restart.  This is one that
   // corresponds to nsIAppStartup.quit(eRestart)
   if (rv == NS_SUCCESS_RESTART_APP
