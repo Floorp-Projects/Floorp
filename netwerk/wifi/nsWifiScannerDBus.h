@@ -10,8 +10,6 @@
 #define DBUS_API_SUBJECT_TO_CHANGE
 #include <dbus/dbus.h>
 
-#include "mozilla/ipc/DBusConnectionRefPtr.h"
-
 class nsWifiAccessPoint;
 
 namespace mozilla {
@@ -36,7 +34,7 @@ private:
   nsresult SetMac(DBusMessageIter* aVariant, nsWifiAccessPoint* aAp);
   nsresult GetDBusIterator(DBusMessage* aMsg, DBusMessageIter* aIterArray);
 
-  RefPtr<DBusConnection> mConnection;
+  DBusConnection* mConnection;
   nsCOMArray<nsWifiAccessPoint>* mAccessPoints;
 };
 
