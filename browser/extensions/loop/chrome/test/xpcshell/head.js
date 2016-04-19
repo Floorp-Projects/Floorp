@@ -218,7 +218,7 @@ MockWebSocketChannel.prototype = {
           JSON.stringify({ messageType: "hello",
                           uaid: kUAID }));
         break;
-      case "register":
+      case "register": {
         this.channelID = message.channelID;
         let statusCode = 200;
         if (this.initRegStatus) {
@@ -231,6 +231,7 @@ MockWebSocketChannel.prototype = {
                           channelID: this.channelID,
                           pushEndpoint: kEndPointUrl }));
         break;
+      }
       default:
         this.defaultMsgHandler && this.defaultMsgHandler(message);
     }

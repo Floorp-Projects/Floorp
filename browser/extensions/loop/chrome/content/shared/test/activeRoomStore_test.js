@@ -1352,6 +1352,7 @@ describe("loop.store.ActiveRoomStore", function() {
       expect(store.getStoreState()).to.not.have.property("localSrcMediaElement");
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasAudio: false,
         hasVideo: false,
         isLocal: true,
         srcMediaElement: fakeStreamElement
@@ -1363,17 +1364,20 @@ describe("loop.store.ActiveRoomStore", function() {
 
     it("should set the local video enabled", function() {
       store.setStoreState({
+        localAudioEnabled: false,
         localVideoEnabled: false,
         remoteVideoEnabled: false
       });
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasAudio: true,
         hasVideo: true,
         isLocal: true,
         srcMediaElement: fakeStreamElement
       }));
 
       expect(store.getStoreState().localVideoEnabled).eql(true);
+      expect(store.getStoreState().localAudioEnabled).eql(true);
       expect(store.getStoreState().remoteVideoEnabled).eql(false);
     });
 
@@ -1381,6 +1385,7 @@ describe("loop.store.ActiveRoomStore", function() {
       expect(store.getStoreState()).to.not.have.property("remoteSrcMediaElement");
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasAudio: false,
         hasVideo: false,
         isLocal: false,
         srcMediaElement: fakeStreamElement
@@ -1397,6 +1402,7 @@ describe("loop.store.ActiveRoomStore", function() {
       });
 
       store.mediaStreamCreated(new sharedActions.MediaStreamCreated({
+        hasAudio: true,
         hasVideo: true,
         isLocal: false,
         srcMediaElement: fakeStreamElement
@@ -1404,6 +1410,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
       expect(store.getStoreState().localVideoEnabled).eql(false);
       expect(store.getStoreState().remoteVideoEnabled).eql(true);
+      expect(store.getStoreState().remoteAudioEnabled).eql(true);
     });
   });
 

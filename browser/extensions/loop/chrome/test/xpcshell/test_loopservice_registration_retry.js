@@ -18,7 +18,7 @@ add_test(function test_retry_after_failed_push_reg() {
   MozLoopService.initialize().then((result) => {
     do_print(result);
     do_throw("should not succeed when loop server registration fails");
-  }, Task.async(function*(err) {
+  }, Task.async(function* (err) {
     // 404 is an expected failure indicated by the lack of route being set
     // up on the Loop server mock. This is added in the next test.
     Assert.equal(err.message, "404", "");

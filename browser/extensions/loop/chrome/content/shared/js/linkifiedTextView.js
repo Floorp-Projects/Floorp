@@ -1,5 +1,3 @@
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -91,10 +89,14 @@ loop.shared.views.LinkifiedTextView = function () {
         // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
         sanitizeURL = loop.shared.utils.formatURL(result[0]);
         if (sanitizeURL && sanitizeURL.location) {
+          var linkAttributes = this._generateLinkAttributes(sanitizeURL.location);
           elements.push(React.createElement(
             "a",
-            _extends({}, this._generateLinkAttributes(sanitizeURL.location), {
-              key: reactElementsCounter++ }),
+            { href: linkAttributes.href,
+              key: reactElementsCounter++,
+              onClick: linkAttributes.onClick,
+              rel: linkAttributes.rel,
+              target: linkAttributes.target },
             sanitizeURL.location
           ));
         } else {
