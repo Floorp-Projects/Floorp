@@ -688,7 +688,7 @@ private:
   // The media sink resource.  Used on the state machine thread.
   RefPtr<media::MediaSink> mMediaSink;
 
-  const RefPtr<MediaDecoderReaderWrapper> mReaderWrapper;
+  const RefPtr<MediaDecoderReaderWrapper> mReader;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
