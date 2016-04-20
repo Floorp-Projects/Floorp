@@ -35,7 +35,7 @@ public:
   static bool IsTableElementButNotTable(nsIDOMNode *aNode);
   static bool IsTableCell(nsINode* node);
   static bool IsTableCell(nsIDOMNode *aNode);
-  static bool IsTableCellOrCaption(nsINode& aNode);
+  static bool IsTableCellOrCaption(nsIDOMNode *aNode);
   static bool IsList(nsINode* aNode);
   static bool IsList(nsIDOMNode *aNode);
   static bool IsOrderedList(nsIDOMNode *aNode);
