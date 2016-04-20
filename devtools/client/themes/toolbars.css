@@ -5,6 +5,8 @@
 
 /* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
 .theme-light {
+  --toolbar-tab-hover: rgba(170, 170, 170, .2);
+  --toolbar-tab-hover-active: rgba(170, 170, 170, .4);
   --searchbox-background-color: #ffee99;
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
@@ -22,6 +24,8 @@
 }
 
 .theme-dark {
+  --toolbar-tab-hover: hsla(206, 37%, 4%, .2);
+  --toolbar-tab-hover-active: hsla(206, 37%, 4%, .4);
   --searchbox-background-color: #4d4222;
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;
@@ -271,7 +275,7 @@
 .theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
 .theme-light .devtools-toolbarbutton[data-text-only],
 .theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
-  background-color: rgba(170, 170, 170, .2); /* Splitter */
+  background-color: var(--toolbar-tab-hover);
 }
 .theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
 .theme-dark .devtools-toolbarbutton[data-text-only],
@@ -299,7 +303,7 @@
 .theme-light .devtools-button:not(:empty):not([disabled]):hover:active,
 .theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
 .theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
-  background: rgba(170, 170, 170, .4); /* Splitters */
+  background: var(--toolbar-tab-hover-active);
 }
 
 .theme-dark .devtools-toolbarbutton:not([disabled])[label][checked=true],
@@ -729,10 +733,10 @@
 }
 
 .command-button:hover {
-  background-color: hsla(206,37%,4%,.2);
+  background-color: var(--toolbar-tab-hover);
 }
 .command-button:hover:active, .command-button[checked=true]:not(:hover) {
-  background-color: hsla(206,37%,4%,.4);
+  background-color: var(--toolbar-tab-hover-active)
 }
 
 .command-button > image {
@@ -867,21 +871,19 @@
 }
 
 .theme-dark .devtools-tab:hover {
-  background-color: hsla(206,37%,4%,.2);
   color: #ced3d9;
 }
 
-.theme-light .devtools-tab:hover {
-  background-color: rgba(170,170,170,.2);
+.devtools-tab:hover {
+  background-color: var(--toolbar-tab-hover);
 }
 
 .theme-dark .devtools-tab:hover:active {
-  background-color: hsla(206,37%,4%,.4);
   color: var(--theme-selection-color);
 }
 
-.theme-light .devtools-tab:hover:active {
-  background-color: rgba(170,170,170,.4);
+.devtools-tab:hover:active {
+  background-color: var(--toolbar-tab-hover-active);
 }
 
 .devtools-tab:not([selected])[highlighted] {

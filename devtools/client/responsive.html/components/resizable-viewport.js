@@ -28,6 +28,7 @@ module.exports = createClass({
     onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
+    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
   displayName: "ResizableViewport",
@@ -123,6 +124,7 @@ module.exports = createClass({
       onContentResize,
       onResizeViewport,
       onRotateViewport,
+      onUpdateDeviceModalOpen,
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
@@ -145,6 +147,7 @@ module.exports = createClass({
         onChangeViewportDevice,
         onResizeViewport,
         onRotateViewport,
+        onUpdateDeviceModalOpen,
       }),
       dom.div(
         {
