@@ -5,6 +5,12 @@
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+                                  "resource://gre/modules/DeferredTask.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 var kSignonBundle;
 var showingPasswords = false;
@@ -44,16 +50,46 @@ function setFilter(aFilterString) {
 }
 
 var signonsTreeView = {
-  _filterSet : [],
-  _lastSelectedRanges : [],
+  // Keep track of which favicons we've fetched or started fetching.
+  // Maps a login origin to a favicon URL.
+  _faviconMap: new Map(),
+  _filterSet: [],
+  // Coalesce invalidations to avoid repeated flickering.
+  _invalidateTask: new DeferredTask(() => {
+    signonsTree.treeBoxObject.invalidateColumn(signonsTree.columns.siteCol);
+  }, 10),
+  _lastSelectedRanges: [],
   selection: null,
 
-  rowCount : 0,
-  setTree : function(tree) {},
-  getImageSrc : function(row,column) {},
-  getProgressMode : function(row,column) {},
-  getCellValue : function(row,column) {},
-  getCellText : function(row,column) {
+  rowCount: 0,
+  setTree(tree) {},
+  getImageSrc(row, column) {
+    if (column.element.getAttribute("id") !== "siteCol") {
+      return "";
+    }
+
+    const signon = this._filterSet.length ? this._filterSet[row] : signons[row];
+
+    // We already have the favicon URL or we started to fetch (value is null).
+    if (this._faviconMap.has(signon.hostname)) {
+      return this._faviconMap.get(signon.hostname);
+    }
+
+    // Record the fact that we already starting fetching a favicon for this
+    // origin in order to avoid multiple requests for the same origin.
+    this._faviconMap.set(signon.hostname, null);
+
+    PlacesUtils.promiseFaviconLinkUrl(signon.hostname)
+      .then(faviconURI => {
+        this._faviconMap.set(signon.hostname, faviconURI.spec);
+        this._invalidateTask.arm();
+      }).catch(Cu.reportError);
+
+    return "";
+  },
+  getProgressMode(row, column) {},
+  getCellValue(row, column) {},
+  getCellText(row, column) {
     var time;
     var signon = this._filterSet.length ? this._filterSet[row] : signons[row];
     switch (column.id) {
@@ -80,25 +116,25 @@ var signonsTreeView = {
         return "";
     }
   },
-  isEditable : function(row, col) {
+  isEditable(row, col) {
     if (col.id == "userCol" || col.id == "passwordCol") {
       return true;
     }
     return false;
   },
-  isSeparator : function(index) { return false; },
-  isSorted : function() { return false; },
-  isContainer : function(index) { return false; },
-  cycleHeader : function(column) {},
-  getRowProperties : function(row) { return ""; },
-  getColumnProperties : function(column) { return ""; },
-  getCellProperties : function(row,column) {
+  isSeparator(index) { return false; },
+  isSorted() { return false; },
+  isContainer(index) { return false; },
+  cycleHeader(column) {},
+  getRowProperties(row) { return ""; },
+  getColumnProperties(column) { return ""; },
+  getCellProperties(row, column) {
     if (column.element.getAttribute("id") == "siteCol")
       return "ltr";
 
     return "";
   },
-  setCellText : function(row, col, value) {
+  setCellText(row, col, value) {
     // If there is a filter, _filterSet needs to be used, otherwise signons is used.
     let table = signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons;
     function _editLogin(field) {
@@ -224,7 +260,7 @@ function AskUserShowPasswords() {
 }
 
 function FinalizeSignonDeletions(syncNeeded) {
-  for (var s=0; s<deletedSignons.length; s++) {
+  for (var s = 0; s < deletedSignons.length; s++) {
     passwordmanager.removeLogin(deletedSignons[s]);
     Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED").add(1);
   }
@@ -360,8 +396,7 @@ function SignonSaveState() {
   }
 }
 
-function _filterPasswords()
-{
+function _filterPasswords() {
   var filter = document.getElementById("filter").value;
   if (filter == "") {
     SignonClearFilter();

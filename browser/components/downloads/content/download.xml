@@ -47,22 +47,25 @@
                          xbl:inherits="value=status,tooltiptext=statusTip"/>
       </xul:vbox>
       <xul:stack>
-        <xul:button class="downloadButton downloadCancel"
+        <xul:button class="downloadButton downloadCancel downloadIconCancel"
                     tooltiptext="&cmd.cancel.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_cancel');"/>
-        <xul:button class="downloadButton downloadRetry"
+        <xul:button class="downloadButton downloadRetry downloadIconRetry"
                     tooltiptext="&cmd.retry.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_retry');"/>
-        <xul:button class="downloadButton downloadShow"
+        <xul:button class="downloadButton downloadShow downloadIconShow"
 #ifdef XP_MACOSX
                     tooltiptext="&cmd.showMac.label;"
 #else
                     tooltiptext="&cmd.show.label;"
 #endif
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_show');"/>
-        <xul:button class="downloadButton downloadConfirmBlock"
+        <xul:button class="downloadButton downloadConfirmBlock downloadIconCancel"
                     tooltiptext="&cmd.removeFile.label;"
                     oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_confirmBlock');"/>
+        <xul:button class="downloadButton downloadUnblock downloadIconShow"
+                    tooltiptext="&cmd.unblock.label;"
+                    oncommand="DownloadsView.onDownloadCommand(event, 'downloadsCmd_unblock');"/>
       </xul:stack>
     </content>
   </binding>

@@ -298,9 +298,7 @@ HistoryDownloadElementShell.prototype = {
   },
 
   onStateChanged() {
-    this.element.setAttribute("image", this.image);
-    this.element.setAttribute("state",
-                              DownloadsCommon.stateOfDownload(this.download));
+    this._updateState();
 
     if (this.element.selected) {
       goUpdateDownloadCommands();
@@ -379,12 +377,7 @@ HistoryDownloadElementShell.prototype = {
   },
 
   downloadsCmd_unblock() {
-    let verdict = this.download.error.reputationCheckVerdict;
-    DownloadsCommon.confirmUnblockDownload(verdict, window).then(confirmed => {
-      if (confirmed) {
-        return this.download.unblock();
-      }
-    }).catch(Cu.reportError);
+    this.confirmUnblock(window);
   },
 
   // Returns whether or not the download handled by this shell should
