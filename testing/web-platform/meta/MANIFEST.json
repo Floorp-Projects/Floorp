@@ -3226,6 +3226,14 @@
         "url": "/touch-events/single-touch-manual.html"
       },
       {
+        "path": "uievents/order-of-events/focus-events/focus-manual.html",
+        "url": "/uievents/order-of-events/focus-events/focus-manual.html"
+      },
+      {
+        "path": "uievents/order-of-events/focus-events/legacy-manual.html",
+        "url": "/uievents/order-of-events/focus-events/legacy-manual.html"
+      },
+      {
         "path": "uievents/order-of-events/mouse-events/click-on-body-manual.html",
         "url": "/uievents/order-of-events/mouse-events/click-on-body-manual.html"
       },
@@ -3694,6 +3702,56 @@
           ]
         ],
         "url": "/compat/webkit-text-fill-color-property-001d.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-002.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-002-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-002.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-003.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-003-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-003.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-004.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-004-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-004.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-005.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-005-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-005.html"
+      },
+      {
+        "path": "compat/webkit-text-fill-color-property-006.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-006-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-006.html"
       },
       {
         "path": "custom-elements/registering-custom-elements/unresolved-element-pseudoclass/unresolved-element-pseudoclass-css-test-custom-tag.html",
@@ -5016,6 +5074,16 @@
         "url": "/html/rendering/non-replaced-elements/the-fieldset-element-0/min-width-not-important.html"
       },
       {
+        "path": "html/rendering/non-replaced-elements/the-hr-element-0/align.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/the-hr-element-0/align-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/the-hr-element-0/align.html"
+      },
+      {
         "path": "html/rendering/non-replaced-elements/the-hr-element-0/color.html",
         "references": [
           [
@@ -5086,6 +5154,16 @@
         "url": "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/object_border_pixel.xhtml"
       },
       {
+        "path": "html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback.html",
+        "references": [
+          [
+            "/html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback.html"
+      },
+      {
         "path": "html/rendering/replaced-elements/images/space.html",
         "references": [
           [
@@ -5094,6 +5172,16 @@
           ]
         ],
         "url": "/html/rendering/replaced-elements/images/space.html"
+      },
+      {
+        "path": "html/semantics/document-metadata/the-link-element/stylesheet-with-base.html",
+        "references": [
+          [
+            "/html/semantics/document-metadata/the-link-element/stylesheet-with-base-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/document-metadata/the-link-element/stylesheet-with-base.html"
       },
       {
         "path": "html/semantics/document-metadata/the-style-element/html_style_in_comment.xhtml",
@@ -5164,6 +5252,26 @@
           ]
         ],
         "url": "/html/semantics/embedded-content/the-embed-element/embed-represent-nothing-04.html"
+      },
+      {
+        "path": "html/semantics/embedded-content/the-iframe-element/iframe-with-base.html",
+        "references": [
+          [
+            "/html/semantics/embedded-content/the-iframe-element/iframe-with-base-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/embedded-content/the-iframe-element/iframe-with-base.html"
+      },
+      {
+        "path": "html/semantics/embedded-content/the-img-element/document-base-url.html",
+        "references": [
+          [
+            "/html/semantics/embedded-content/the-img-element/document-base-url-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/embedded-content/the-img-element/document-base-url.html"
       },
       {
         "path": "html/semantics/embedded-content/the-video-element/video_content_image.htm",
@@ -5344,6 +5452,16 @@
           ]
         ],
         "url": "/html/semantics/grouping-content/the-pre-element/pre-newline-bidi.html"
+      },
+      {
+        "path": "html/semantics/links/linktypes/alternate-css.html",
+        "references": [
+          [
+            "/html/semantics/links/linktypes/alternate-css-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/links/linktypes/alternate-css.html"
       },
       {
         "path": "html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-001.html",
@@ -5606,26 +5724,6 @@
         "url": "/html/semantics/text-level-semantics/the-wbr-element/wbr-element.html"
       },
       {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002.html"
-      },
-      {
         "path": "shadow-dom/untriaged/shadow-trees/nested-shadow-trees/nested_tree_reftest.html",
         "references": [
           [
@@ -5644,16 +5742,6 @@
           ]
         ],
         "url": "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002.html"
       },
       {
         "path": "shadow-dom/untriaged/shadow-trees/shadow-root-001.html",
@@ -15134,8 +15222,8 @@
         "url": "/eventsource/dedicated-worker/eventsource-constructor-url-bogus.htm"
       },
       {
-        "path": "eventsource/dedicated-worker/eventsource-eventtarget.htm",
-        "url": "/eventsource/dedicated-worker/eventsource-eventtarget.htm"
+        "path": "eventsource/dedicated-worker/eventsource-eventtarget.worker.js",
+        "url": "/eventsource/dedicated-worker/eventsource-eventtarget.worker"
       },
       {
         "path": "eventsource/dedicated-worker/eventsource-onmesage.htm",
@@ -15748,6 +15836,10 @@
       {
         "path": "gamepad/idlharness.html",
         "url": "/gamepad/idlharness.html"
+      },
+      {
+        "path": "generic-sensor/idlharness.html",
+        "url": "/generic-sensor/idlharness.html"
       },
       {
         "path": "geolocation-API/PositionOptions.html",
@@ -18702,6 +18794,10 @@
         "url": "/html/semantics/embedded-content/the-embed-element/embed-document.html"
       },
       {
+        "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
+        "url": "/html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html"
+      },
+      {
         "path": "html/semantics/embedded-content/the-iframe-element/iframe_javascript_url_01.htm",
         "url": "/html/semantics/embedded-content/the-iframe-element/iframe_javascript_url_01.htm"
       },
@@ -19354,6 +19450,10 @@
         "url": "/html/semantics/scripting-1/the-script-element/script-noembed-noframes-iframe.xhtml"
       },
       {
+        "path": "html/semantics/scripting-1/the-script-element/script-not-found-not-executed.html",
+        "url": "/html/semantics/scripting-1/the-script-element/script-not-found-not-executed.html"
+      },
+      {
         "path": "html/semantics/scripting-1/the-script-element/script-onload-string.html",
         "url": "/html/semantics/scripting-1/the-script-element/script-onload-string.html"
       },
@@ -19530,8 +19630,20 @@
         "url": "/html/semantics/tabular-data/the-table-element/insertRow-method-02.html"
       },
       {
+        "path": "html/semantics/tabular-data/the-table-element/insertRow-method-03.html",
+        "url": "/html/semantics/tabular-data/the-table-element/insertRow-method-03.html"
+      },
+      {
         "path": "html/semantics/tabular-data/the-table-element/tBodies.html",
         "url": "/html/semantics/tabular-data/the-table-element/tBodies.html"
+      },
+      {
+        "path": "html/semantics/tabular-data/the-table-element/tFoot.html",
+        "url": "/html/semantics/tabular-data/the-table-element/tFoot.html"
+      },
+      {
+        "path": "html/semantics/tabular-data/the-table-element/tHead.html",
+        "url": "/html/semantics/tabular-data/the-table-element/tHead.html"
       },
       {
         "path": "html/semantics/tabular-data/the-table-element/table-insertRow.html",
@@ -19944,6 +20056,22 @@
       {
         "path": "html/webappapis/scripting/processing-model-2/window-onerror-runtime-error.html",
         "url": "/html/webappapis/scripting/processing-model-2/window-onerror-runtime-error.html"
+      },
+      {
+        "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html",
+        "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html"
+      },
+      {
+        "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-2.html",
+        "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-2.html"
+      },
+      {
+        "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-3.html",
+        "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-3.html"
+      },
+      {
+        "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html",
+        "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
       },
       {
         "path": "html/webappapis/system-state-and-capabilities/the-navigator-object/NavigatorID.html",
@@ -28174,10 +28302,6 @@
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/test-002.html"
       },
       {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/test-003.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-element-interface/methods/test-003.html"
-      },
-      {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-001.html",
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/extensions-to-event-interface/event-path-001.html"
       },
@@ -28208,10 +28332,6 @@
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-attributes/test-013.html",
         "url": "/shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-attributes/test-013.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-attributes/test-014.html",
-        "url": "/shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-attributes/test-014.html"
       },
       {
         "path": "shadow-dom/untriaged/elements-and-dom-objects/shadowroot-object/shadowroot-methods/test-001.html",
@@ -28248,10 +28368,6 @@
       {
         "path": "shadow-dom/untriaged/events/event-retargeting/test-001.html",
         "url": "/shadow-dom/untriaged/events/event-retargeting/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/events/event-retargeting/test-002.html",
-        "url": "/shadow-dom/untriaged/events/event-retargeting/test-002.html"
       },
       {
         "path": "shadow-dom/untriaged/events/event-retargeting/test-003.html",
@@ -28326,22 +28442,6 @@
         "url": "/shadow-dom/untriaged/events/test-001.html"
       },
       {
-        "path": "shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-001.html",
-        "url": "/shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-002.html",
-        "url": "/shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-003.html",
-        "url": "/shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-003.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-004.html",
-        "url": "/shadow-dom/untriaged/html-elements-and-their-shadow-trees/test-004.html"
-      },
-      {
         "path": "shadow-dom/untriaged/html-elements-in-shadow-trees/html-forms/test-001.html",
         "url": "/shadow-dom/untriaged/html-elements-in-shadow-trees/html-forms/test-001.html"
       },
@@ -28360,38 +28460,6 @@
       {
         "path": "shadow-dom/untriaged/html-elements-in-shadow-trees/inert-html-elements/test-002.html",
         "url": "/shadow-dom/untriaged/html-elements-in-shadow-trees/inert-html-elements/test-002.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/composition/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/composition/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-003.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-003.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-003.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-003.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-004.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-004.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-005.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/test-005.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/nested-shadow-trees/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/nested-shadow-trees/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/rendering-shadow-trees/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/rendering-shadow-trees/test-001.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/reprojection/test-001.html",
-        "url": "/shadow-dom/untriaged/shadow-trees/reprojection/test-001.html"
       },
       {
         "path": "shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/dom-tree-accessors-001.html",
@@ -28450,10 +28518,6 @@
         "url": "/shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/window-named-properties-003.html"
       },
       {
-        "path": "shadow-dom/untriaged/styles/css-variables/test-001.html",
-        "url": "/shadow-dom/untriaged/styles/css-variables/test-001.html"
-      },
-      {
         "path": "shadow-dom/untriaged/styles/test-001.html",
         "url": "/shadow-dom/untriaged/styles/test-001.html"
       },
@@ -28466,20 +28530,8 @@
         "url": "/shadow-dom/untriaged/styles/test-005.html"
       },
       {
-        "path": "shadow-dom/untriaged/styles/test-007.html",
-        "url": "/shadow-dom/untriaged/styles/test-007.html"
-      },
-      {
         "path": "shadow-dom/untriaged/styles/test-008.html",
         "url": "/shadow-dom/untriaged/styles/test-008.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/styles/test-009.html",
-        "url": "/shadow-dom/untriaged/styles/test-009.html"
-      },
-      {
-        "path": "shadow-dom/untriaged/styles/test-010.html",
-        "url": "/shadow-dom/untriaged/styles/test-010.html"
       },
       {
         "path": "shadow-dom/untriaged/user-interaction/active-element/test-001.html",
@@ -33768,9 +33820,9 @@
         "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-twice.html"
       },
       {
-        "path": "ambient-light/AmbientLight_tests.html",
+        "path": "ambient-light/AmbientLightSensor_tests.html",
         "timeout": "long",
-        "url": "/ambient-light/AmbientLight_tests.html"
+        "url": "/ambient-light/AmbientLightSensor_tests.html"
       },
       {
         "path": "content-security-policy/media-src/media-src-7_1_2.html",
@@ -40947,7 +40999,8 @@
           "url": "/compat/webkit-text-fill-color-property-006.html"
         }
       ]
-    }
+    },
+    "deleted_reftests": {}
   },
   "reftest_nodes": {
     "2dcontext/building-paths/canvas_complexshapes_arcto_001.htm": [
@@ -41440,6 +41493,66 @@
           ]
         ],
         "url": "/compat/webkit-text-fill-color-property-001d.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-002.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-002.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-002-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-002.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-003.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-003.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-003-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-003.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-004.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-004.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-004-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-004.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-005.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-005.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-005-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-005.html"
+      }
+    ],
+    "compat/webkit-text-fill-color-property-006.html": [
+      {
+        "path": "compat/webkit-text-fill-color-property-006.html",
+        "references": [
+          [
+            "/compat/webkit-text-fill-color-property-006-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/compat/webkit-text-fill-color-property-006.html"
       }
     ],
     "custom-elements/registering-custom-elements/unresolved-element-pseudoclass/unresolved-element-pseudoclass-css-test-custom-tag.html": [
@@ -43566,6 +43679,18 @@
         "url": "/html/rendering/non-replaced-elements/the-fieldset-element-0/min-width-not-important.html"
       }
     ],
+    "html/rendering/non-replaced-elements/the-hr-element-0/align.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/the-hr-element-0/align.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/the-hr-element-0/align-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/the-hr-element-0/align.html"
+      }
+    ],
     "html/rendering/non-replaced-elements/the-hr-element-0/color.html": [
       {
         "path": "html/rendering/non-replaced-elements/the-hr-element-0/color.html",
@@ -43650,6 +43775,18 @@
         "url": "/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/object_border_pixel.xhtml"
       }
     ],
+    "html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback.html": [
+      {
+        "path": "html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback.html",
+        "references": [
+          [
+            "/html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/replaced-elements/embedded-content-rendering-rules/canvas-fallback.html"
+      }
+    ],
     "html/rendering/replaced-elements/images/space.html": [
       {
         "path": "html/rendering/replaced-elements/images/space.html",
@@ -43660,6 +43797,18 @@
           ]
         ],
         "url": "/html/rendering/replaced-elements/images/space.html"
+      }
+    ],
+    "html/semantics/document-metadata/the-link-element/stylesheet-with-base.html": [
+      {
+        "path": "html/semantics/document-metadata/the-link-element/stylesheet-with-base.html",
+        "references": [
+          [
+            "/html/semantics/document-metadata/the-link-element/stylesheet-with-base-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/document-metadata/the-link-element/stylesheet-with-base.html"
       }
     ],
     "html/semantics/document-metadata/the-style-element/html_style_in_comment.xhtml": [
@@ -43744,6 +43893,30 @@
           ]
         ],
         "url": "/html/semantics/embedded-content/the-embed-element/embed-represent-nothing-04.html"
+      }
+    ],
+    "html/semantics/embedded-content/the-iframe-element/iframe-with-base.html": [
+      {
+        "path": "html/semantics/embedded-content/the-iframe-element/iframe-with-base.html",
+        "references": [
+          [
+            "/html/semantics/embedded-content/the-iframe-element/iframe-with-base-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/embedded-content/the-iframe-element/iframe-with-base.html"
+      }
+    ],
+    "html/semantics/embedded-content/the-img-element/document-base-url.html": [
+      {
+        "path": "html/semantics/embedded-content/the-img-element/document-base-url.html",
+        "references": [
+          [
+            "/html/semantics/embedded-content/the-img-element/document-base-url-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/embedded-content/the-img-element/document-base-url.html"
       }
     ],
     "html/semantics/embedded-content/the-video-element/video_content_image.htm": [
@@ -44070,6 +44243,30 @@
         "url": "/html/semantics/grouping-content/the-pre-element/pre-newline-bidi.html"
       }
     ],
+    "html/semantics/links/linktypes/alternate-css-ref.html": [
+      {
+        "path": "html/semantics/links/linktypes/alternate-css-ref.html",
+        "references": [
+          [
+            "/html/semantics/links/linktypes/alternate-css-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/links/linktypes/alternate-css-ref.html"
+      }
+    ],
+    "html/semantics/links/linktypes/alternate-css.html": [
+      {
+        "path": "html/semantics/links/linktypes/alternate-css.html",
+        "references": [
+          [
+            "/html/semantics/links/linktypes/alternate-css-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/semantics/links/linktypes/alternate-css.html"
+      }
+    ],
     "html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-001.html": [
       {
         "path": "html/semantics/scripting-1/the-template-element/additions-to-the-css-user-agent-style-sheet/css-user-agent-style-sheet-test-001.html",
@@ -44382,30 +44579,6 @@
         "url": "/html/semantics/text-level-semantics/the-wbr-element/wbr-element.html"
       }
     ],
-    "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001.html": [
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-001.html"
-      }
-    ],
-    "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002.html": [
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/lower-boundary-encapsulation/distribution-002.html"
-      }
-    ],
     "shadow-dom/untriaged/shadow-trees/nested-shadow-trees/nested_tree_reftest.html": [
       {
         "path": "shadow-dom/untriaged/shadow-trees/nested-shadow-trees/nested_tree_reftest.html",
@@ -44428,18 +44601,6 @@
           ]
         ],
         "url": "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-001.html"
-      }
-    ],
-    "shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002.html": [
-      {
-        "path": "shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002.html",
-        "references": [
-          [
-            "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002-ref.html",
-            "=="
-          ]
-        ],
-        "url": "/shadow-dom/untriaged/shadow-trees/reprojection/reprojection-002.html"
       }
     ],
     "shadow-dom/untriaged/shadow-trees/shadow-root-001.html": [
@@ -47143,7 +47304,7 @@
       }
     ]
   },
-  "rev": "8d896c2015ab1e50ad00a0013700f87813d9364c",
+  "rev": "26663baa852c0b42b91e7e72d3aa940e43371571",
   "url_base": "/",
   "version": 3
 }
