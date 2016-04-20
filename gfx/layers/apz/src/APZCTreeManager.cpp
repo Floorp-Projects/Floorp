@@ -1006,7 +1006,8 @@ APZCTreeManager::UpdateWheelTransaction(WidgetInputEvent& aEvent)
      }
 
      ScreenIntPoint point =
-       ViewAs<ScreenPixel>(aEvent.refPoint, PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+       ViewAs<ScreenPixel>(aEvent.mRefPoint,
+         PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
      txn->OnMouseMove(point);
      return;
    }
@@ -1037,11 +1038,12 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
   // Note, we call this before having transformed the reference point.
   UpdateWheelTransaction(aEvent);
 
-  // Transform the refPoint.
+  // Transform the mRefPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
   HitTestResult hitResult = HitNothing;
   PixelCastJustification LDIsScreen = PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent;
-  ScreenIntPoint refPointAsScreen = ViewAs<ScreenPixel>(aEvent.refPoint, LDIsScreen);
+  ScreenIntPoint refPointAsScreen =
+    ViewAs<ScreenPixel>(aEvent.mRefPoint, LDIsScreen);
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(refPointAsScreen, &hitResult);
   if (apzc) {
     MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
@@ -1052,7 +1054,8 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
     Maybe<ScreenIntPoint> untransformedRefPoint =
       UntransformBy(outTransform, refPointAsScreen);
     if (untransformedRefPoint) {
-      aEvent.refPoint = ViewAs<LayoutDevicePixel>(*untransformedRefPoint, LDIsScreen);
+      aEvent.mRefPoint =
+        ViewAs<LayoutDevicePixel>(*untransformedRefPoint, LDIsScreen);
     }
   }
   return result;
@@ -1069,12 +1072,12 @@ APZCTreeManager::ProcessMouseEvent(WidgetMouseEventBase& aEvent,
   UpdateWheelTransaction(aEvent);
 
   MouseInput input(aEvent);
-  input.mOrigin = ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y);
+  input.mOrigin = ScreenPoint(aEvent.mRefPoint.x, aEvent.mRefPoint.y);
 
   nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
 
-  aEvent.refPoint.x = input.mOrigin.x;
-  aEvent.refPoint.y = input.mOrigin.y;
+  aEvent.mRefPoint.x = input.mOrigin.x;
+  aEvent.mRefPoint.y = input.mOrigin.y;
   aEvent.mFlags.mHandledByAPZ = true;
   return status;
 }
@@ -1102,7 +1105,7 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
   }
 
-  ScreenPoint origin(aEvent.refPoint.x, aEvent.refPoint.y);
+  ScreenPoint origin(aEvent.mRefPoint.x, aEvent.mRefPoint.y);
   ScrollWheelInput input(aEvent.mTime, aEvent.mTimeStamp, 0,
                          scrollMode,
                          ScrollWheelInput::DeltaTypeForDeltaMode(
@@ -1122,8 +1125,8 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
     &input.mUserDeltaMultiplierY);
 
   nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
-  aEvent.refPoint.x = input.mOrigin.x;
-  aEvent.refPoint.y = input.mOrigin.y;
+  aEvent.mRefPoint.x = input.mOrigin.x;
+  aEvent.mRefPoint.y = input.mOrigin.y;
   aEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
   return status;
 }

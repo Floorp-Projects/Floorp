@@ -8,7 +8,6 @@
 #include "gfxFontUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"

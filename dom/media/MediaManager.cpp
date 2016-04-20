@@ -1416,6 +1416,8 @@ MediaManager::MediaManager()
   mPrefs.mAecOn        = false;
   mPrefs.mAgcOn        = false;
   mPrefs.mNoiseOn      = false;
+  mPrefs.mExtendedFilter = true;
+  mPrefs.mDelayAgnostic = true;
 #ifdef MOZ_WEBRTC
   mPrefs.mAec          = webrtc::kEcUnchanged;
   mPrefs.mAgc          = webrtc::kAgcUnchanged;
@@ -1437,10 +1439,12 @@ MediaManager::MediaManager()
   }
   LOG(("%s: default prefs: %dx%d @%dfps (min %d), %dHz test tones, aec: %s,"
        "agc: %s, noise: %s, aec level: %d, agc level: %d, noise level: %d,"
-       "playout delay: %d, %sfull_duplex", __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
+       "playout delay: %d, %sfull_duplex, extended aec %s, delay_agnostic %s",
+       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
        mPrefs.mFPS, mPrefs.mMinFPS, mPrefs.mFreq, mPrefs.mAecOn ? "on" : "off",
        mPrefs.mAgcOn ? "on": "off", mPrefs.mNoiseOn ? "on": "off", mPrefs.mAec,
-       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mPlayoutDelay, mPrefs.mFullDuplex ? "" : "not "));
+       mPrefs.mAgc, mPrefs.mNoise, mPrefs.mPlayoutDelay, mPrefs.mFullDuplex ? "" : "not ",
+       mPrefs.mExtendedFilter ? "on" : "off", mPrefs.mDelayAgnostic ? "on" : "off"));
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
@@ -2559,6 +2563,8 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
   GetPref(aBranch, "media.getusermedia.playout_delay", aData, &mPrefs.mPlayoutDelay);
+  GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData, &mPrefs.mExtendedFilter);
+  GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData, &mPrefs.mDelayAgnostic);
 #endif
   GetPrefBool(aBranch, "media.navigator.audio.full_duplex", aData, &mPrefs.mFullDuplex);
 }

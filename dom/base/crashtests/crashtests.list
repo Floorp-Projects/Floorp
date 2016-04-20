@@ -199,6 +199,7 @@ pref(dom.webcomponents.enabled,true) load 1027461-1.html
 pref(dom.webcomponents.enabled,true) load 1029710.html
 load 1154598.xhtml
 load 1157995.html
+load 1158412.html
 load 1181619.html
 load structured_clone_container_throws.html
 HTTP(..) load xhr_abortinprogress.html

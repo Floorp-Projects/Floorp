@@ -14,7 +14,6 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 #include "mozilla/gfx/2D.h"
 

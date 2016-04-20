@@ -940,7 +940,7 @@ IsSavedFrame(JSObject* obj)
     if (!obj)
         return false;
 
-    JSObject* unwrapped = CheckedUnwrap(obj);
+    JSObject* unwrapped = js::CheckedUnwrap(obj);
     if (!unwrapped)
         return false;
 

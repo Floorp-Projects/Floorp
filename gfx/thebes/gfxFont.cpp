@@ -700,7 +700,7 @@ gfxShapedText::AllocateDetailedGlyphs(uint32_t aIndex, uint32_t aCount)
     NS_ASSERTION(aIndex < GetLength(), "Index out of range");
 
     if (!mDetailedGlyphs) {
-        mDetailedGlyphs = new DetailedGlyphStore();
+        mDetailedGlyphs = MakeUnique<DetailedGlyphStore>();
     }
 
     return mDetailedGlyphs->Allocate(aIndex, aCount);
@@ -856,14 +856,6 @@ gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
 
 gfxFont::~gfxFont()
 {
-    uint32_t i, count = mGlyphExtentsArray.Length();
-    // We destroy the contents of mGlyphExtentsArray explicitly instead of
-    // using nsAutoPtr because VC++ can't deal with nsTArrays of nsAutoPtrs
-    // of classes that lack a proper copy constructor
-    for (i = 0; i < count; ++i) {
-        delete mGlyphExtentsArray[i];
-    }
-
     mFontEntry->NotifyFontDestroyed(this);
 
     if (mGlyphChangeObservers) {
@@ -888,7 +880,7 @@ gfxFont::GetGlyphHAdvance(DrawTarget* aDrawTarget, uint16_t aGID)
     NS_ASSERTION(mFUnitsConvFactor >= 0.0f,
                  "missing font unit conversion factor");
     if (!mHarfBuzzShaper) {
-        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+        mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
     }
     gfxHarfBuzzShaper* shaper =
         static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
@@ -1462,7 +1454,7 @@ gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
     }
 
     if (!mHarfBuzzShaper) {
-        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+        mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
     }
     gfxHarfBuzzShaper* shaper =
         static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
@@ -2050,16 +2042,16 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         aRunParams.context->SetMatrix(mat);
     }
 
-    nsAutoPtr<gfxTextContextPaint> contextPaint;
+    UniquePtr<gfxTextContextPaint> contextPaint;
     if (fontParams.haveSVGGlyphs && !fontParams.contextPaint) {
         // If no pattern is specified for fill, use the current pattern
         NS_ASSERTION((int(aRunParams.drawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
                      "no pattern supplied for stroking text");
         RefPtr<gfxPattern> fillPattern = aRunParams.context->GetPattern();
-        contextPaint =
+        contextPaint.reset(
             new SimpleTextContextPaint(fillPattern, nullptr,
-                                       aRunParams.context->CurrentMatrix());
-        fontParams.contextPaint = contextPaint;
+                                       aRunParams.context->CurrentMatrix()));
+        fontParams.contextPaint = contextPaint.get();
     }
 
     // Synthetic-bold strikes are each offset one device pixel in run direction.
@@ -2274,7 +2266,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     if (aBoundingBoxType == TIGHT_HINTED_OUTLINE_EXTENTS &&
         mAntialiasOption != kAntialiasNone) {
         if (!mNonAAFont) {
-            mNonAAFont = CopyWithAntialiasOption(kAntialiasNone);
+            mNonAAFont.reset(CopyWithAntialiasOption(kAntialiasNone));
         }
         // if font subclass doesn't implement CopyWithAntialiasOption(),
         // it will return null and we'll proceed to use the existing font
@@ -2540,7 +2532,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
         NS_WARNING("failed to create word cache entry - expect missing text");
         return nullptr;
     }
-    gfxShapedWord *sw = entry->mShapedWord;
+    gfxShapedWord* sw = entry->mShapedWord.get();
 
     bool isContent = !mStyle.systemFont;
 
@@ -2566,10 +2558,9 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
     }
 #endif
 
-    sw = entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
-                                                    aRunScript,
-                                                    aAppUnitsPerDevUnit,
-                                                    aFlags);
+    sw = gfxShapedWord::Create(aText, aLength, aRunScript, aAppUnitsPerDevUnit,
+                               aFlags);
+    entry->mShapedWord.reset(sw);
     if (!sw) {
         NS_WARNING("failed to create gfxShapedWord - expect missing text");
         return nullptr;
@@ -2586,7 +2577,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
 bool
 gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
 {
-    const gfxShapedWord *sw = mShapedWord;
+    const gfxShapedWord* sw = mShapedWord.get();
     if (!sw) {
         return false;
     }
@@ -2655,7 +2646,7 @@ gfxFont::ShapeText(DrawTarget      *aDrawTarget,
     if (FontCanSupportGraphite() && !aVertical) {
         if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
             if (!mGraphiteShaper) {
-                mGraphiteShaper = new gfxGraphiteShaper(this);
+                mGraphiteShaper = MakeUnique<gfxGraphiteShaper>(this);
             }
             ok = mGraphiteShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
                                             aScript, aVertical, aShapedText);
@@ -2664,7 +2655,7 @@ gfxFont::ShapeText(DrawTarget      *aDrawTarget,
 
     if (!ok) {
         if (!mHarfBuzzShaper) {
-            mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+            mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
         }
         ok = mHarfBuzzShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
                                         aScript, aVertical, aShapedText);
@@ -3180,26 +3171,24 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                         aDrawTarget, nullptr, nullptr, nullptr, 0,
                         aTextRun->GetAppUnitsPerDevUnit()
                     };
-                    nsAutoPtr<gfxTextRun> tempRun;
-                    tempRun =
+                    UniquePtr<gfxTextRun> tempRun(
                         gfxTextRun::Create(&params, convertedString.Length(),
-                                           aTextRun->GetFontGroup(), 0);
+                                           aTextRun->GetFontGroup(), 0));
                     tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation);
-                    if (!f->SplitAndInitTextRun(aDrawTarget, tempRun,
+                    if (!f->SplitAndInitTextRun(aDrawTarget, tempRun.get(),
                                                 convertedString.BeginReading(),
                                                 0, convertedString.Length(),
                                                 aScript, vertical)) {
                         ok = false;
                     } else {
-                        nsAutoPtr<gfxTextRun> mergedRun;
-                        mergedRun =
+                        UniquePtr<gfxTextRun> mergedRun(
                             gfxTextRun::Create(&params, runLength,
-                                               aTextRun->GetFontGroup(), 0);
-                        MergeCharactersInTextRun(mergedRun, tempRun,
+                                               aTextRun->GetFontGroup(), 0));
+                        MergeCharactersInTextRun(mergedRun.get(), tempRun.get(),
                                                  charsToMergeArray.Elements(),
                                                  deletedCharsArray.Elements());
                         gfxTextRun::Range runRange(0, runLength);
-                        aTextRun->CopyGlyphDataFrom(mergedRun, runRange,
+                        aTextRun->CopyGlyphDataFrom(mergedRun.get(), runRange,
                                                     aOffset + runStart);
                     }
                 } else {
@@ -3307,7 +3296,7 @@ gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
     uint32_t i, count = mGlyphExtentsArray.Length();
     for (i = 0; i < count; ++i) {
         if (mGlyphExtentsArray[i]->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit)
-            return mGlyphExtentsArray[i];
+            return mGlyphExtentsArray[i].get();
     }
     gfxGlyphExtents *glyphExtents = new gfxGlyphExtents(aAppUnitsPerDevUnit);
     if (glyphExtents) {
@@ -3801,7 +3790,8 @@ void
 gfxFont::AddGlyphChangeObserver(GlyphChangeObserver *aObserver)
 {
     if (!mGlyphChangeObservers) {
-        mGlyphChangeObservers = new nsTHashtable<nsPtrHashKey<GlyphChangeObserver> >;
+        mGlyphChangeObservers.reset(
+            new nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>);
     }
     mGlyphChangeObservers->PutEntry(aObserver);
 }

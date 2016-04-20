@@ -230,7 +230,8 @@ public:
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) override {
+                     MediaDataDecoderCallback* aCallback,
+                     DecoderDoctorDiagnostics* aDiagnostics) override {
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
       aConfig.mDisplay.width, aConfig.mDisplay.height, aImageContainer);
     RefPtr<MediaDataDecoder> decoder =
@@ -245,7 +246,8 @@ public:
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) override {
+                     MediaDataDecoderCallback* aCallback,
+                     DecoderDoctorDiagnostics* aDiagnostics) override {
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       aConfig.mChannels, aConfig.mRate);
 
@@ -258,7 +260,8 @@ public:
   }
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) const override
+  SupportsMimeType(const nsACString& aMimeType,
+                   DecoderDoctorDiagnostics* aDiagnostics) const override
   {
     return true;
   }

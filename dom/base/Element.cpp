@@ -2083,7 +2083,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
 
   WidgetMouseEvent event(aSourceEvent->IsTrusted(), eMouseClick,
                          aSourceEvent->mWidget, WidgetMouseEvent::eReal);
-  event.refPoint = aSourceEvent->refPoint;
+  event.mRefPoint = aSourceEvent->mRefPoint;
   uint32_t clickCount = 1;
   float pressure = 0;
   uint16_t inputSource = 0;
@@ -3025,7 +3025,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
   }
   case eLegacyDOMActivate:
     {
-      if (aVisitor.mEvent->originalTarget == this) {
+      if (aVisitor.mEvent->mOriginalTarget == this) {
         nsAutoString target;
         GetLinkTarget(target);
         const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();

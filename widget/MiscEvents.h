@@ -112,7 +112,7 @@ public:
                      eCommandEventClass)
     , command(aCommand)
   {
-    userType = aEventType;
+    mSpecifiedEventType = aEventType;
   }
 
   virtual WidgetEvent* Duplicate() const override
@@ -121,7 +121,7 @@ public:
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCommandEvent* result =
-      new WidgetCommandEvent(false, userType, command, nullptr);
+      new WidgetCommandEvent(false, mSpecifiedEventType, command, nullptr);
     result->AssignCommandEventData(*this, true);
     result->mFlags = mFlags;
     return result;

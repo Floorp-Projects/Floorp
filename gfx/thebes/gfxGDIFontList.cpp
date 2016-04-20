@@ -130,7 +130,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
       mFamilyHasItalicFace(aFamilyHasItalicFace),
       mCharset(), mUnicodeRanges()
 {
-    mUserFontData = aUserFontData;
+    mUserFontData.reset(aUserFontData);
     mStyle = aStyle;
     mWeight = aWeight;
     mStretch = aStretch;

@@ -12,9 +12,11 @@
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIProcess.h"
 #include "nsIPromptService.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIToolkitProfile.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
@@ -30,6 +32,7 @@
 #include "prprf.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"
+#include "nsAppRunner.h"
 #include "nsAppShellCID.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozilla/Services.h"
@@ -976,6 +979,49 @@ nsAppStartup::RestartInSafeMode(uint32_t aQuitMode)
 {
   PR_SetEnv("MOZ_SAFE_MODE_RESTART=1");
   this->Quit(aQuitMode | nsIAppStartup::eRestart);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::CreateInstanceWithProfile(nsIToolkitProfile* aProfile)
+{
+  if (NS_WARN_IF(!aProfile)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(gAbsoluteArgv0Path.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIFile> execPath;
+  nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(gAbsoluteArgv0Path),
+                                      true, getter_AddRefs(execPath));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = process->Init(execPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString profileName;
+  rv = aProfile->GetName(profileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  const char *args[] = { "-P", profileName.get() };
+  rv = process->Run(false, args, 2);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }

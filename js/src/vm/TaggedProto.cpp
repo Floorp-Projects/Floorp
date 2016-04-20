@@ -12,6 +12,8 @@
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 
+#include "vm/Runtime-inl.h"
+
 namespace js {
 
 /* static */ void

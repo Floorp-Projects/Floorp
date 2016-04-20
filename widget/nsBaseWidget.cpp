@@ -3037,8 +3037,8 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
           (void *) aWidget,
           aWidgetName,
           aWindowID,
-          aGuiEvent->refPoint.x,
-          aGuiEvent->refPoint.y);
+          aGuiEvent->mRefPoint.x,
+          aGuiEvent->mRefPoint.y);
 }
 //////////////////////////////////////////////////////////////
 /* static */ void

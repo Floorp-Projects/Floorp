@@ -39,8 +39,8 @@
 
 const CSS_ANIM_EVENTS =
   ['animationstart', 'animationiteration', 'animationend'];
-const ANIM_DELAY_MS = 1000000; // 1000s
-const ANIM_DUR_MS = 1000000; // 1000s
+const ANIM_DELAY_MS = 1000 * MS_PER_SEC;
+const ANIM_DUR_MS = 1000 * MS_PER_SEC;
 const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 
 /**
@@ -186,7 +186,6 @@ function checkStateAtActiveIntervalEndTime(animation)
     'animation-fill-mode is none');
 }
 
-
 test(function(t)
 {
   var div = addDiv(t, {'class': 'animated-div'});
@@ -224,8 +223,7 @@ test(function(t)
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'currentTime');
 
-
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
 
@@ -233,13 +231,13 @@ async_test(function(t) {
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     checkStateOnReadyPromiseResolved(animation);
 
     animation.currentTime =
       currentTimeForStartOfActiveInterval(animation.timeline);
     return eventWatcher.wait_for('animationstart');
-  })).then(t.step_func(function() {
+  }).then(function() {
     checkStateAtActiveIntervalStartTime(animation);
 
     animation.currentTime =
@@ -249,17 +247,13 @@ async_test(function(t) {
     animation.currentTime =
       currentTimeForEndOfActiveInterval(animation.timeline);
     return eventWatcher.wait_for('animationend');
-  })).then(t.step_func(function() {
+  }).then(function() {
     checkStateAtActiveIntervalEndTime(animation);
-  })).catch(t.step_func(function(reason) {
-    assert_unreached(reason);
-  })).then(function() {
-    t.done();
   });
 }, 'Skipping forward through animation');
 
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
 
@@ -278,8 +272,8 @@ async_test(function(t) {
   // an 'animationend' event. We need to wait for these events before we start
   // testing going backwards since EventWatcher will fail the test if it gets
   // an event that we haven't told it about.
-  eventWatcher.wait_for(['animationstart',
-                         'animationend']).then(t.step_func(function() {
+  var retPromise =  eventWatcher.wait_for(['animationstart',
+                                           'animationend']).then(function() {
     assert_true(document.timeline.currentTime - previousTimelineTime <
                   ANIM_DUR_MS,
                 'Sanity check that seeking worked rather than the events ' +
@@ -304,7 +298,7 @@ async_test(function(t) {
     var promise = eventWatcher.wait_for('animationstart');
     checkStateAtFiftyPctOfActiveInterval(animation);
     return promise;
-  })).then(t.step_func(function() {
+  }).then(function() {
     animation.currentTime =
       currentTimeForStartOfActiveInterval(animation.timeline);
     checkStateAtActiveIntervalStartTime(animation);
@@ -314,21 +308,16 @@ async_test(function(t) {
     // the animation start time, we now expect an animationend event
     // because we went from inside to outside the active interval.
     return eventWatcher.wait_for('animationend');
-  })).then(t.step_func(function() {
+  }).then(function() {
     checkStateOnReadyPromiseResolved(animation);
-  })).catch(t.step_func(function(reason) {
-    assert_unreached(reason);
-  })).then(function() {
-    t.done();
   });
 
   // This must come after we've set up the Promise chain, since requesting
   // computed style will force events to be dispatched.
-  // XXX For some reason this fails occasionally (either the animation.playState
-  // check or the marginLeft check).
-  //checkStateAtActiveIntervalEndTime(animation);
-}, 'Skipping backwards through animation');
+  checkStateAtActiveIntervalEndTime(animation);
 
+  return retPromise;
+}, 'Skipping backwards through animation');
 
 // Next we have multiple tests to check that redundant currentTime changes do
 // NOT dispatch events. It's impossible to distinguish between events not being
@@ -339,7 +328,7 @@ async_test(function(t) {
 // have happened, then assume that no events will ever be dispatched for the
 // redundant changes if no events were detected in that time.
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
@@ -348,12 +337,10 @@ async_test(function(t) {
   animation.currentTime = currentTimeForActivePhase(animation.timeline);
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
-  waitForAnimationFrames(2).then(function() {
-    t.done();
-  });
+  return waitForAnimationFrames(2);
 }, 'Redundant change, before -> active, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
@@ -362,86 +349,84 @@ async_test(function(t) {
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
-  waitForAnimationFrames(2).then(function() {
-    t.done();
-  });
+  return waitForAnimationFrames(2);
 }, 'Redundant change, before -> after, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.wait_for('animationstart').then(function() {
+  var retPromise = eventWatcher.wait_for('animationstart').then(function() {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
-    waitForAnimationFrames(2).then(function() {
-      t.done();
-    });
+    return waitForAnimationFrames(2);
   });
   // get us into the initial state:
   animation.currentTime = currentTimeForActivePhase(animation.timeline);
+
+  return retPromise;
 }, 'Redundant change, active -> before, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.wait_for('animationstart').then(function() {
+  var retPromise =  eventWatcher.wait_for('animationstart').then(function() {
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
-    waitForAnimationFrames(2).then(function() {
-      t.done();
-    });
+    return waitForAnimationFrames(2);
   });
   // get us into the initial state:
   animation.currentTime = currentTimeForActivePhase(animation.timeline);
+
+  return retPromise;
 }, 'Redundant change, active -> after, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.wait_for(['animationstart',
-                         'animationend']).then(function() {
+  var retPromise =  eventWatcher.wait_for(['animationstart',
+                                           'animationend']).then(function() {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
-    waitForAnimationFrames(2).then(function() {
-      t.done();
-    });
+    return waitForAnimationFrames(2);
   });
   // get us into the initial state:
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
+
+  return retPromise;
 }, 'Redundant change, after -> before, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.wait_for(['animationstart',
-                         'animationend']).then(function() {
+  var retPromise =  eventWatcher.wait_for(['animationstart',
+                                           'animationend']).then(function() {
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
-    waitForAnimationFrames(2).then(function() {
-      t.done();
-    });
+    return waitForAnimationFrames(2);
   });
   // get us into the initial state:
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
+
+  return retPromise;
 }, 'Redundant change, after -> active, then back');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
@@ -450,23 +435,20 @@ async_test(function(t) {
   animation.pause();
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
-  eventWatcher.wait_for(['animationstart',
-                         'animationend']).then(t.step_func(function() {
+  return eventWatcher.wait_for(['animationstart',
+                                'animationend']).then(function() {
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
     return eventWatcher.wait_for('animationstart');
-  })).then(t.step_func(function() {
-    t.done();
-  }));
-
+  });
 }, 'Seeking finished -> paused dispatches animationstart');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = ANIM_PROPERTY_VAL;
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     var exception;
     try {
       animation.currentTime = null;
@@ -476,65 +458,55 @@ async_test(function(t) {
     assert_equals(exception.name, 'TypeError',
       'Expect TypeError exception on trying to set ' +
       'Animation.currentTime to null');
-  })).catch(t.step_func(function(reason) {
-    assert_unreached(reason);
-  })).then(function() {
-    t.done();
   });
 }, 'Setting currentTime to null');
 
-
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
 
   var animation = div.getAnimations()[0];
   var pauseTime;
 
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     assert_not_equals(animation.currentTime, null,
       'Animation.currentTime not null on ready Promise resolve');
     animation.pause();
     return animation.ready;
-  })).then(t.step_func(function() {
+  }).then(function() {
     pauseTime = animation.currentTime;
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.currentTime, pauseTime,
       'Animation.currentTime is unchanged after pausing');
-  })).catch(t.step_func(function(reason) {
-    assert_unreached(reason);
-  })).then(function() {
-    t.done();
   });
 }, 'Animation.currentTime after pausing');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = ANIM_PROPERTY_VAL;
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(function() {
+  return animation.ready.then(function() {
     // just before animation ends:
     animation.currentTime = ANIM_DELAY_MS + ANIM_DUR_MS - 1;
 
     return waitForAnimationFrames(2);
-  }).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.currentTime, ANIM_DELAY_MS + ANIM_DUR_MS,
       'Animation.currentTime should not continue to increase after the ' +
       'animation has finished');
-    t.done();
-  }));
+  });
 }, 'Animation.currentTime clamping');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = ANIM_PROPERTY_VAL;
 
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(function() {
+  return animation.ready.then(function() {
     // play backwards:
     animation.playbackRate = -1;
 
@@ -542,12 +514,11 @@ async_test(function(t) {
     animation.currentTime = 1;
 
     return waitForAnimationFrames(2);
-  }).then(t.step_func(function() {
+  }).then(function() {
     assert_equals(animation.currentTime, 0,
       'Animation.currentTime should not continue to decrease after an ' +
       'animation running in reverse has finished and currentTime is zero');
-    t.done();
-  }));
+  });
 }, 'Animation.currentTime clamping for reversed animation');
 
 test(function(t) {
@@ -560,12 +531,12 @@ test(function(t) {
                 'The currentTime of a cancelled animation should be null');
 }, 'Animation.currentTime after cancelling');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
   div.style.animation = 'anim 100s';
 
   var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
+  return animation.ready.then(function() {
     animation.finish();
 
     // Initiate a pause then abort it
@@ -574,12 +545,11 @@ async_test(function(t) {
 
     // Wait to return to running state
     return animation.ready;
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_true(animation.currentTime < 100 * 1000,
                 'After aborting a pause when finished, the currentTime should'
                 + ' jump back towards the start of the animation');
-    t.done();
-  }));
+  });
 }, 'After aborting a pause when finished, the call to play() should rewind'
    + ' the current time');
 

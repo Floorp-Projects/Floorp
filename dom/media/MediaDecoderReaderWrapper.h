@@ -30,6 +30,8 @@ class MediaDecoderReaderWrapper {
   typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
   typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
   typedef MediaDecoderReader::SeekPromise SeekPromise;
+  typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
+  typedef MediaDecoderReader::BufferedUpdatePromise BufferedUpdatePromise;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
 
 public:
@@ -44,7 +46,42 @@ public:
   RefPtr<VideoDataPromise> RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold);
   RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
-  void Shutdown();
+  RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
+  RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise();
+  RefPtr<ShutdownPromise> Shutdown();
+
+  void ReleaseMediaResources();
+  void SetIdle();
+  void ResetDecode();
+
+  nsresult Init() { return mReader->Init(); }
+  bool IsWaitForDataSupported() const { return mReader->IsWaitForDataSupported(); }
+  bool IsAsync() const { return mReader->IsAsync(); }
+  bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
+  bool ForceZeroStartTime() const { return mReader->ForceZeroStartTime(); }
+
+  bool VideoIsHardwareAccelerated() const {
+    return mReader->VideoIsHardwareAccelerated();
+  }
+  TimedMetadataEventSource& TimedMetadataEvent() {
+    return mReader->TimedMetadataEvent();
+  }
+  size_t SizeOfAudioQueueInFrames() const {
+    return mReader->SizeOfAudioQueueInFrames();
+  }
+  size_t SizeOfVideoQueueInFrames() const {
+    return mReader->SizeOfVideoQueueInFrames();
+  }
+  void ReadUpdatedMetadata(MediaInfo* aInfo) {
+    mReader->ReadUpdatedMetadata(aInfo);
+  }
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
+    return mReader->CanonicalBuffered();
+  }
+
+#ifdef MOZ_EME
+  void SetCDMProxy(CDMProxy* aProxy) { mReader->SetCDMProxy(aProxy); }
+#endif
 
 private:
   ~MediaDecoderReaderWrapper();

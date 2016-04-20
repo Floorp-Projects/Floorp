@@ -539,7 +539,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   WidgetMouseEvent dummyEvent(true, eMouseMove, rootWidget,
                               WidgetMouseEvent::eSynthesized);
-  dummyEvent.refPoint = LayoutDeviceIntPoint(aX - rootRect.x, aY - rootRect.y);
+  dummyEvent.mRefPoint = LayoutDeviceIntPoint(aX - rootRect.x, aY - rootRect.y);
 
   nsIFrame* popupFrame = nsLayoutUtils::
     GetPopupFrameForEventCoordinates(accDocument->PresContext()->GetRootPresContext(),

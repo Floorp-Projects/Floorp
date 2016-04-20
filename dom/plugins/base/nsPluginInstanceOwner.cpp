@@ -2565,8 +2565,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         const WidgetMouseEvent& mouseEvent = *anEvent.AsMouseEvent();
         // Get reference point relative to screen:
         LayoutDeviceIntPoint rootPoint(-1, -1);
-        if (widget)
-          rootPoint = anEvent.refPoint + widget->WidgetToScreenOffset();
+        if (widget) {
+          rootPoint = anEvent.mRefPoint + widget->WidgetToScreenOffset();
+        }
 #ifdef MOZ_WIDGET_GTK
         Window root = GDK_ROOT_WINDOW();
 #elif defined(MOZ_WIDGET_QT)

@@ -44,17 +44,21 @@ public:
 
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
   // object.
-  void SetValueCurveAtTime(const Float32Array& aValues, double aStartTime, double aDuration, ErrorResult& aRv)
+  AudioParam* SetValueCurveAtTime(const Float32Array& aValues,
+                                  double aStartTime,
+                                  double aDuration,
+                                  ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
     aValues.ComputeLengthAndData();
 
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve,
                          aStartTime, 0.0f, 0.0f, aDuration, aValues.Data(),
                          aValues.Length());
+    return this;
   }
 
   void SetValue(float aValue)
@@ -73,53 +77,61 @@ public:
     SendEventToEngine(event);
   }
 
-  void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
+  AudioParam* SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
     EventInsertionHelper(aRv, AudioTimelineEvent::SetValueAtTime,
                          aStartTime, aValue);
+
+    return this;
   }
 
-  void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
+  AudioParam* LinearRampToValueAtTime(float aValue, double aEndTime,
+                                      ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
     EventInsertionHelper(aRv, AudioTimelineEvent::LinearRamp, aEndTime, aValue);
+    return this;
   }
 
-  void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
+  AudioParam* ExponentialRampToValueAtTime(float aValue, double aEndTime,
+                                           ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
     EventInsertionHelper(aRv, AudioTimelineEvent::ExponentialRamp,
                          aEndTime, aValue);
+    return this;
   }
 
-  void SetTargetAtTime(float aTarget, double aStartTime,
-                       double aTimeConstant, ErrorResult& aRv)
+  AudioParam* SetTargetAtTime(float aTarget, double aStartTime,
+                              double aTimeConstant, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime) ||
         !WebAudioUtils::IsTimeValid(aTimeConstant)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
     EventInsertionHelper(aRv, AudioTimelineEvent::SetTarget,
                          aStartTime, aTarget,
                          aTimeConstant);
+
+    return this;
   }
 
-  void CancelScheduledValues(double aStartTime, ErrorResult& aRv)
+  AudioParam* CancelScheduledValues(double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return this;
     }
 
     // Remove some events on the main thread copy.
@@ -128,6 +140,8 @@ public:
     AudioTimelineEvent event(AudioTimelineEvent::Cancel, aStartTime, 0.0f);
 
     SendEventToEngine(event);
+
+    return this;
   }
 
   uint32_t ParentNodeId()

@@ -143,7 +143,7 @@ private:
     WidgetMouseEvent event(true, aType, aWindow,
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
-    event.refPoint = aPoint;
+    event.mRefPoint = aPoint;
     event.clickCount = 1;
     event.button = WidgetMouseEvent::eLeftButton;
     event.mTime = PR_IntervalNow();
@@ -182,7 +182,7 @@ private:
         }
         int id = reinterpret_cast<int>(value);
         RefPtr<Touch> t = new Touch(id, loc, radius, 0.0f, 1.0f);
-        event.refPoint = loc;
+        event.mRefPoint = loc;
         event.mTouches.AppendElement(t);
     }
     aWindow->DispatchInputEvent(&event);

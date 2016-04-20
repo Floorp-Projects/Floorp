@@ -8,7 +8,6 @@
 
 #include "gfxTypes.h"
 #include "nsSize.h"
-#include "nsAutoPtr.h"
 #include "gfxPoint.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"

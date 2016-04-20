@@ -629,8 +629,9 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
                            presContext->AppUnitsPerDevPixel());
   
+  nsCSSProperty colorProp = mFrame->StyleContext()->GetTextFillColorProp();
   ColorPattern color(ToDeviceColor(
-                       mFrame->GetVisitedDependentColor(eCSSProperty_color)));
+                                 mFrame->GetVisitedDependentColor(colorProp)));
  
   // draw the slash as a parallelogram 
   Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);

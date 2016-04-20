@@ -1,23 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <meta charset=utf-8>
+<title>Animation.onfinish</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#dom-animation-onfinish">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
-<style>
-@keyframes abc {
-  to { transform: translate(10px) }
-}
-</style>
+<link rel="stylesheet" href="/resources/testharness.css">
 <body>
+<div id="log"></div>
 <script>
-'use strict';
-
-const ANIM_PROP_VAL = 'abc 100s';
-const ANIM_DURATION = 100000; // ms
+"use strict";
 
 async_test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
   var finishedTimelineTime;
   animation.finished.then(function() {
     finishedTimelineTime = animation.timeline.currentTime;
@@ -36,9 +32,8 @@ async_test(function(t) {
    'the playbackRate < 0');
 
 async_test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
 
   var finishedTimelineTime;
   animation.finished.then(function() {
@@ -46,21 +41,20 @@ async_test(function(t) {
   });
 
   animation.onfinish = t.step_func_done(function(event) {
-    assert_equals(event.currentTime, ANIM_DURATION,
+    assert_equals(event.currentTime, 100 * MS_PER_SEC,
       'event.currentTime should be the effect end');
     assert_equals(event.timelineTime, finishedTimelineTime,
       'event.timelineTime should equal to the animation timeline ' +
       'when finished promise is resolved');
   });
 
-  animation.currentTime = ANIM_DURATION;
+  animation.currentTime = 100 * MS_PER_SEC;
 }, 'onfinish event is fired when the currentTime > 0 and ' +
    'the playbackRate > 0');
 
 async_test(function(t) {
-  var div = addDiv(t, {'class': 'animated-div'});
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
 
   var finishedTimelineTime;
   animation.finished.then(function() {
@@ -68,7 +62,7 @@ async_test(function(t) {
   });
 
   animation.onfinish = t.step_func_done(function(event) {
-    assert_equals(event.currentTime, ANIM_DURATION,
+    assert_equals(event.currentTime, 100 * MS_PER_SEC,
       'event.currentTime should be the effect end');
     assert_equals(event.timelineTime, finishedTimelineTime,
       'event.timelineTime should equal to the animation timeline ' +
@@ -78,65 +72,51 @@ async_test(function(t) {
   animation.finish();
 }, 'onfinish event is fired when animation.finish() is called');
 
-async_test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
+promise_test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
 
-  animation.onfinish = t.step_func(function(event) {
+  animation.onfinish = function(event) {
     assert_unreached('onfinish event should not be fired');
-  });
+  };
 
-  animation.currentTime = ANIM_DURATION / 2;
+  animation.currentTime = 100 * MS_PER_SEC / 2;
   animation.pause();
 
-  animation.ready.then(t.step_func(function() {
-    animation.currentTime = ANIM_DURATION;
+  return animation.ready.then(function() {
+    animation.currentTime = 100 * MS_PER_SEC;
     return waitForAnimationFrames(2);
-  })).then(t.step_func(function() {
-    t.done();
-  }));
+  });
 }, 'onfinish event is not fired when paused');
 
-async_test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-
-  animation.onfinish = t.step_func(function(event) {
+promise_test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
+  animation.onfinish = function(event) {
     assert_unreached('onfinish event should not be fired');
-  });
+  };
 
-  animation.ready.then(function() {
+  return animation.ready.then(function() {
     animation.playbackRate = 0;
-    animation.currentTime = ANIM_DURATION;
+    animation.currentTime = 100 * MS_PER_SEC;
     return waitForAnimationFrames(2);
-  }).then(t.step_func(function() {
-    t.done();
-  }));
-
+  });
 }, 'onfinish event is not fired when the playbackRate is zero');
 
-async_test(function(t) {
-  var div = addDiv(t);
-  div.style.animation = ANIM_PROP_VAL;
-  var animation = div.getAnimations()[0];
-
-  animation.onfinish = t.step_func(function(event) {
+promise_test(function(t) {
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
+  animation.onfinish = function(event) {
     assert_unreached('onfinish event should not be fired');
-  });
+  };
 
-  animation.ready.then(function() {
-    animation.currentTime = ANIM_DURATION;
-    animation.currentTime = ANIM_DURATION / 2;
+  return animation.ready.then(function() {
+    animation.currentTime = 100 * MS_PER_SEC;
+    animation.currentTime = 100 * MS_PER_SEC / 2;
     return waitForAnimationFrames(2);
-  }).then(t.step_func(function() {
-    t.done();
-  }));
-
+  });
 }, 'onfinish event is not fired when the animation falls out ' +
    'finished state immediately');
 
-done();
 </script>
 </body>

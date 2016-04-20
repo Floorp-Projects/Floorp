@@ -11,6 +11,7 @@
 #include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/mozalloc.h"
+#include "nsClassHashtable.h"
 
 #include <fontconfig/fontconfig.h>
 #include "ft2build.h"
@@ -277,9 +278,8 @@ protected:
                     FcPattern*> mLocalNames;
 
     // caching generic/lang ==> font family list
-    nsBaseHashtable<nsCStringHashKey,
-                    nsAutoPtr<PrefFontList>,
-                    PrefFontList*> mGenericMappings;
+    nsClassHashtable<nsCStringHashKey,
+                     PrefFontList> mGenericMappings;
 
     // Caching family lookups as found by FindAndAddFamilies after resolving
     // substitutions. The gfxFontFamily objects cached here are owned by the

@@ -235,6 +235,7 @@ EventTree::Process()
   if (mFireReorder) {
     MOZ_ASSERT(mContainer);
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_REORDER, mContainer);
+    mContainer->Document()->MaybeNotifyOfValueChange(mContainer);
   }
 
   mDependentEvents.Clear();

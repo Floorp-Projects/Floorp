@@ -947,7 +947,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
     event.mFlags.mBubbles = false;
     event.mFlags.mCancelable = false;
      // XXX Dispatching to |window|, but using |document| as the target.
-    event.target = mDocument;
+    event.mTarget = mDocument;
 
     // If the document presentation is being restored, we don't want to fire
     // onload to the document content since that would likely confuse scripts
@@ -1305,7 +1305,7 @@ nsDocumentViewer::PageHide(bool aIsUnload)
     WidgetEvent event(true, eUnload);
     event.mFlags.mBubbles = false;
     // XXX Dispatching to |window|, but using |document| as the target.
-    event.target = mDocument;
+    event.mTarget = mDocument;
 
     // Never permit popups from the unload handler, no matter how we get
     // here.

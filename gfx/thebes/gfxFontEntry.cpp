@@ -385,7 +385,7 @@ gfxFontEntry::TryGetSVGData(gfxFont* aFont)
 
         // gfxSVGGlyphs will hb_blob_destroy() the table when it is finished
         // with it.
-        mSVGGlyphs = new gfxSVGGlyphs(svgTable, this);
+        mSVGGlyphs = MakeUnique<gfxSVGGlyphs>(svgTable, this);
     }
 
     if (!mFontsUsingSVGGlyphs.Contains(aFont)) {
@@ -430,9 +430,9 @@ gfxFontEntry::TryGetMathTable()
 
         // gfxMathTable will hb_blob_destroy() the table when it is finished
         // with it.
-        mMathTable = new gfxMathTable(mathTable);
+        mMathTable = MakeUnique<gfxMathTable>(mathTable);
         if (!mMathTable->HasValidHeaders()) {
-            mMathTable = nullptr;
+            mMathTable.reset(nullptr);
             return false;
         }
     }
@@ -643,7 +643,7 @@ gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t **aBlob)
     if (!mFontTableCache) {
         // we do this here rather than on fontEntry construction
         // because not all shapers will access the table cache at all
-        mFontTableCache = new nsTHashtable<FontTableHashEntry>(8);
+        mFontTableCache = MakeUnique<nsTHashtable<FontTableHashEntry>>(8);
     }
 
     FontTableHashEntry *entry = mFontTableCache->GetEntry(aTag);
@@ -662,7 +662,7 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
     if (MOZ_UNLIKELY(!mFontTableCache)) {
         // we do this here rather than on fontEntry construction
         // because not all shapers will access the table cache at all
-      mFontTableCache = new nsTHashtable<FontTableHashEntry>(8);
+      mFontTableCache = MakeUnique<nsTHashtable<FontTableHashEntry>>(8);
     }
 
     FontTableHashEntry *entry = mFontTableCache->PutEntry(aTag);
@@ -676,7 +676,7 @@ gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
         return nullptr;
     }
 
-    return entry->ShareTableAndGetBlob(Move(*aBuffer), mFontTableCache);
+    return entry->ShareTableAndGetBlob(Move(*aBuffer), mFontTableCache.get());
 }
 
 static int
@@ -893,7 +893,7 @@ bool
 gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
 {
     if (!mSupportedFeatures) {
-        mSupportedFeatures = new nsDataHashtable<nsUint32HashKey,bool>();
+        mSupportedFeatures = MakeUnique<nsDataHashtable<nsUint32HashKey,bool>>();
     }
 
     // note: high-order three bytes *must* be unique for each feature
@@ -971,7 +971,7 @@ const hb_set_t*
 gfxFontEntry::InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
 {
     if (!mFeatureInputs) {
-        mFeatureInputs = new nsDataHashtable<nsUint32HashKey,hb_set_t*>();
+        mFeatureInputs = MakeUnique<nsDataHashtable<nsUint32HashKey,hb_set_t*>>();
     }
 
     NS_ASSERTION(aFeatureTag == HB_TAG('s','u','p','s') ||
@@ -1032,7 +1032,7 @@ bool
 gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag)
 {
     if (!mSupportedFeatures) {
-        mSupportedFeatures = new nsDataHashtable<nsUint32HashKey,bool>();
+        mSupportedFeatures = MakeUnique<nsDataHashtable<nsUint32HashKey,bool>>();
     }
 
     // note: high-order three bytes *must* be unique for each feature

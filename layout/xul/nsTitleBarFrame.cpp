@@ -81,7 +81,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
              nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
 
              // remember current mouse coordinates.
-             mLastPoint = aEvent->refPoint;
+             mLastPoint = aEvent->mRefPoint;
            }
          }
 
@@ -110,7 +110,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
    case eMouseMove: {
        if(mTrackingMouseMove)
        {
-         LayoutDeviceIntPoint nsMoveBy = aEvent->refPoint - mLastPoint;
+         LayoutDeviceIntPoint nsMoveBy = aEvent->mRefPoint - mLastPoint;
 
          nsIFrame* parent = GetParent();
          while (parent) {

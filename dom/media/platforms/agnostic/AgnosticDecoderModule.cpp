@@ -13,7 +13,8 @@
 namespace mozilla {
 
 bool
-AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
+AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType,
+                                        DecoderDoctorDiagnostics* aDiagnostics) const
 {
   return VPXDecoder::IsVPX(aMimeType) ||
     OpusDataDecoder::IsOpus(aMimeType) ||
@@ -26,7 +27,8 @@ AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                           layers::LayersBackend aLayersBackend,
                                           layers::ImageContainer* aImageContainer,
                                           FlushableTaskQueue* aVideoTaskQueue,
-                                          MediaDataDecoderCallback* aCallback)
+                                          MediaDataDecoderCallback* aCallback,
+                                          DecoderDoctorDiagnostics* aDiagnostics)
 {
   RefPtr<MediaDataDecoder> m;
 
@@ -43,7 +45,8 @@ AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 already_AddRefed<MediaDataDecoder>
 AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                           FlushableTaskQueue* aAudioTaskQueue,
-                                          MediaDataDecoderCallback* aCallback)
+                                          MediaDataDecoderCallback* aCallback,
+                                          DecoderDoctorDiagnostics* aDiagnostics)
 {
   RefPtr<MediaDataDecoder> m;
 

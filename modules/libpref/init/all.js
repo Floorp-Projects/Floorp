@@ -442,7 +442,7 @@ pref("media.getusermedia.agc", 1);
 #if defined(XP_MACOSX)
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 10);
-pref("media.navigator.audio.full_duplex", false);
+pref("media.navigator.audio.full_duplex", true);
 #elif defined(XP_WIN)
 pref("media.peerconnection.capture_delay", 50);
 pref("media.getusermedia.playout_delay", 40);
@@ -724,6 +724,7 @@ pref("gfx.prefer-mesa-llvmpipe", false);
 
 pref("gfx.draw-color-bars", false);
 
+pref("gfx.logging.painted-pixel-count.enabled", false);
 pref("gfx.logging.texture-usage.enabled", false);
 pref("gfx.logging.peak-texture-usage.enabled", false);
 

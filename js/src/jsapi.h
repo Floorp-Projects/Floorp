@@ -2846,6 +2846,16 @@ ObjectToCompletePropertyDescriptor(JSContext* cx,
                                    JS::HandleValue descriptor,
                                    JS::MutableHandle<PropertyDescriptor> desc);
 
+/*
+ * ES6 draft rev 32 (2015 Feb 2) 6.2.4.4 FromPropertyDescriptor(Desc).
+ *
+ * If desc.object() is null, then vp is set to undefined.
+ */
+extern JS_PUBLIC_API(bool)
+FromPropertyDescriptor(JSContext* cx,
+                       JS::Handle<JS::PropertyDescriptor> desc,
+                       JS::MutableHandleValue vp);
+
 } // namespace JS
 
 
