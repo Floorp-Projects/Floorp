@@ -1902,7 +1902,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     if (!group)
         return false;
 
-    ICNewArray_Fallback::Compiler stubCompiler(cx, group);
+    ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::Baseline);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
@@ -1972,7 +1972,7 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
 {
     frame.syncStack(0);
 
-    ICNewObject_Fallback::Compiler stubCompiler(cx);
+    ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
@@ -1994,13 +1994,13 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         if (!group)
             return false;
 
-        ICNewArray_Fallback::Compiler stubCompiler(cx, group);
+        ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::Baseline);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     } else {
         MOZ_ASSERT(key == JSProto_Object);
 
-        ICNewObject_Fallback::Compiler stubCompiler(cx);
+        ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::Baseline);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     }

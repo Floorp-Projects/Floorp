@@ -891,7 +891,7 @@ class LNewArray : public LInstructionHelper<1, 0, 1>
     }
 
     const char* extraName() const {
-        return mir()->shouldUseVM() ? "VMCall" : nullptr;
+        return mir()->templateObject() ? "VMCall" : nullptr;
     }
 
     const LDefinition* temp() {
@@ -953,7 +953,7 @@ class LNewObject : public LInstructionHelper<1, 0, 1>
     }
 
     const char* extraName() const {
-        return mir()->shouldUseVM() ? "VMCall" : nullptr;
+        return mir()->templateObject() ? "VMCall" : nullptr;
     }
 
     const LDefinition* temp() {
@@ -4511,6 +4511,16 @@ class LUnarySharedStub : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0
     }
 
     static const size_t Input = 0;
+};
+
+class LNullarySharedStub : public LCallInstructionHelper<BOX_PIECES, 0, 0>
+{
+  public:
+    LIR_HEADER(NullarySharedStub)
+
+    const MNullarySharedStub* mir() const {
+        return mir_->toNullarySharedStub();
+    }
 };
 
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
