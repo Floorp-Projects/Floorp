@@ -7583,7 +7583,9 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
 
               IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
               item->flavor() = nsCString(flavorStr);
-              item->data() = nsCString(surfaceData.get(), length);
+              // Turn item->data() into an nsCString prior to accessing it.
+              item->data() = EmptyCString();
+              item->data().get_nsCString().Adopt(surfaceData.release(), length);
 
               IPCDataTransferImage& imageDetails = item->imageDetails();
               mozilla::gfx::IntSize size = dataSurface->GetSize();
