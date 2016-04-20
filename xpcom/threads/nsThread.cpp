@@ -235,7 +235,12 @@ private:
 
 struct nsThreadShutdownContext
 {
-  nsThreadShutdownContext()
+  nsThreadShutdownContext(nsThread* aTerminatingThread,
+                          nsThread* aJoiningThread,
+                          bool      aAwaitingShutdownAck)
+    : mTerminatingThread(aTerminatingThread)
+    , mJoiningThread(aJoiningThread)
+    , mAwaitingShutdownAck(aAwaitingShutdownAck)
   {
     MOZ_COUNT_CTOR(nsThreadShutdownContext);
   }
@@ -725,11 +730,7 @@ nsThread::ShutdownInternal(bool aSync)
 
   nsAutoPtr<nsThreadShutdownContext>& context =
     *currentThread->mRequestedShutdownContexts.AppendElement();
-  context = new nsThreadShutdownContext();
-
-  context->mTerminatingThread = this;
-  context->mJoiningThread = currentThread;
-  context->mAwaitingShutdownAck = aSync;
+  context = new nsThreadShutdownContext(this, currentThread, aSync);
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
