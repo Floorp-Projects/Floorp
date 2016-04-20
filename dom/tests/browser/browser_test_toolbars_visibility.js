@@ -1,7 +1,9 @@
 // Tests that toolbars have proper visibility when opening a new window
 // in either content or chrome context.
 
-const CONTENT_PAGE = "http://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
+const ROOT = "http://www.example.com/browser/dom/tests/browser/";
+const CONTENT_PAGE = ROOT + "test_new_window_from_content_child.html";
+const TARGET_PAGE = ROOT + "dummy.html";
 
 /**
  * This function retrieves the visibility state of the toolbars of a
@@ -199,7 +201,7 @@ add_task(function*() {
 add_task(function* () {
   // First open a default window from this chrome context
   let defaultWindowPromise = BrowserTestUtils.waitForNewWindow();
-  window.open("about:robots", "_blank");
+  window.open(TARGET_PAGE, "_blank");
   let defaultWindow = yield defaultWindowPromise;
 
   // Check that all toolbars are visible
@@ -209,7 +211,7 @@ add_task(function* () {
   // Now lets open a window with toolbars hidden from this chrome context
   let features = "location=no, personalbar=no, toolbar=no, scrollbars=no, menubar=no, status=no";
   let popupWindowPromise = BrowserTestUtils.waitForNewWindow();
-  window.open("about:robots", "_blank", features);
+  window.open(TARGET_PAGE, "_blank", features);
   let popupWindow = yield popupWindowPromise;
 
   // Test none of the tooolbars are visible

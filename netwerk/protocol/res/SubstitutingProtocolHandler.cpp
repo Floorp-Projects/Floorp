@@ -353,28 +353,40 @@ SubstitutingProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     return NS_OK;
   }
 
-  // Unescape the path so we can perform some checks on it.
-  nsAutoCString unescapedPath(path);
-  NS_UnescapeURL(unescapedPath);
-
-  // Don't misinterpret the filepath as an absolute URI.
-  if (unescapedPath.FindChar(':') != -1)
-    return NS_ERROR_MALFORMED_URI;
-
-  if (unescapedPath.FindChar('\\') != -1)
-    return NS_ERROR_MALFORMED_URI;
-
-  const char *p = path.get() + 1; // path always starts with a slash
-  NS_ASSERTION(*(p-1) == '/', "Path did not begin with a slash!");
-
-  if (*p == '/')
-    return NS_ERROR_MALFORMED_URI;
-
   nsCOMPtr<nsIURI> baseURI;
   rv = GetSubstitution(host, getter_AddRefs(baseURI));
   if (NS_FAILED(rv)) return rv;
 
-  rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
+  // Unescape the path so we can perform some checks on it.
+  nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+  if (!url) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  nsAutoCString unescapedPath;
+  rv = url->GetFilePath(unescapedPath);
+  if (NS_FAILED(rv)) return rv;
+
+  NS_UnescapeURL(unescapedPath);
+  if (unescapedPath.FindChar('\\') != -1) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  // Some code relies on an empty path resolving to a file rather than a
+  // directory.
+  NS_ASSERTION(path.CharAt(0) == '/', "Path must begin with '/'");
+  if (path.Length() == 1) {
+    rv = baseURI->GetSpec(result);
+  } else {
+    // Make sure we always resolve the path as file-relative to our target URI.
+    path.InsertLiteral(".", 0);
+
+    rv = baseURI->Resolve(path, result);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (MOZ_LOG_TEST(gResLog, LogLevel::Debug)) {
     nsAutoCString spec;

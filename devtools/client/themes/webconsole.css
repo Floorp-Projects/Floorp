@@ -2,6 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Webconsole specific theme variables */
+
+.theme-dark {
+  --command-line-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
+  --command-line-image-2x: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
+}
+
+.theme-light {
+  --command-line-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
+  --command-line-image-2x: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
+}
+
+.theme-firebug {
+  --command-line-image: url(chrome://devtools/skin/images/firebug/commandline-icon.svg);
+  --command-line-image-2x: url(chrome://devtools/skin/images/firebug/commandline-icon.svg);
+
+  --error-color: #FF0000;
+  --error-background-color: #FFEBEB;
+  --warning-background-color: #FFFFC8;
+}
+
 /* General output styles */
 
 a {
@@ -40,6 +61,20 @@ a {
   padding: 0 4px;
   height: 1em;
   align-self: flex-start;
+}
+
+.theme-firebug .message > .icon {
+  margin: 0;
+  margin-inline-end: 6px;
+}
+
+.theme-firebug .message[severity="error"] {
+  color: var(--error-color);
+  background-color: var(--error-background-color);
+}
+
+.theme-firebug .message[severity="warn"] {
+  background-color: var(--warning-background-color);
 }
 
 .message > .icon::before {
@@ -95,6 +130,11 @@ a {
   color: -moz-nativehyperlinktext;
   text-decoration: none;
   white-space: nowrap;
+}
+
+/* More space for the location data for location URL */
+.theme-firebug .message-location {
+  width: 13em;
 }
 
 .message-location:hover,
@@ -359,6 +399,10 @@ a {
   border-top-color: #e0e0e0;
 }
 
+.theme-firebug .jsterm-input-container {
+  border-top: 1px solid #ccc;
+}
+
 .jsterm-input-node,
 .jsterm-complete-node {
   border: none;
@@ -375,7 +419,7 @@ a {
   /* Always allow scrolling on input - it auto expands in js by setting height,
      but don't want it to get bigger than the window. 24px = toolbar height. */
   max-height: calc(90vh - 24px);
-  background-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
+  background-image: var(--command-line-image);
   background-repeat: no-repeat;
   background-size: 16px 16px;
   color: var(--theme-content-color1);
@@ -383,7 +427,7 @@ a {
 
 @media (min-resolution: 1.1dppx) {
   .jsterm-input-node {
-    background-image: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
+    background-image: var(--command-line-image-2x);
   }
 }
 
@@ -412,6 +456,11 @@ a {
 #webconsole-sidebar > tabs {
   height: 0;
   border: none;
+}
+
+/* Firebug theme has the tabs visible. */
+.theme-firebug #webconsole-sidebar > tabs {
+  height: 28px;
 }
 
 .devtools-side-splitter ~ #webconsole-sidebar[hidden] {
@@ -578,4 +627,14 @@ a.learn-more-link.webconsole-learn-more-link {
 
 :root[platform="win"] .hud-filter-box {
   width: 200px;
+}
+
+/* Firebug theme support for console.table() */
+
+.theme-firebug .consoletable .theme-body {
+  width: 100%;
+  border-top: 1px solid #D7D7D7;
+  border-bottom: 2px solid #D7D7D7;
+  border-left: 1px solid #D7D7D7;
+  border-right: 1px solid #D7D7D7;
 }

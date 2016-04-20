@@ -22,11 +22,16 @@ add_task(function* test_user_defined_commands() {
           },
           "unrecognized_property": "with-a-random-value",
         },
+        "toggle-feature-with-whitespace-in-suggested-key": {
+          "suggested_key": {
+            "default": "  Alt + Shift + 2  ",
+          },
+        },
       },
     },
 
     background: function() {
-      browser.commands.onCommand.addListener((commandName) => {
+      browser.commands.onCommand.addListener(commandName => {
         browser.test.sendMessage("oncommand", commandName);
       });
       browser.test.sendMessage("ready");
@@ -53,11 +58,11 @@ add_task(function* test_user_defined_commands() {
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, 2, "Expected keyset to have 2 children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
@@ -69,6 +74,10 @@ add_task(function* test_user_defined_commands() {
   EventUtils.synthesizeKey("VK_COMMA", {altKey: true, shiftKey: true});
   message = yield extension.awaitMessage("oncommand");
   is(message, "toggle-feature-using-alt-shift-comma", "Expected onCommand listener to fire with correct message");
+
+  EventUtils.synthesizeKey("2", {altKey: true, shiftKey: true});
+  message = yield extension.awaitMessage("oncommand");
+  is(message, "toggle-feature-with-whitespace-in-suggested-key", "Expected onCommand listener to fire with correct message");
 
   yield extension.unload();
 

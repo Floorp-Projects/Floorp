@@ -96,6 +96,15 @@
   padding-left: 17px;
 }
 
+.theme-firebug .property-view,
+.theme-firebug .property-content {
+  font-family: var(--proportional-font-family);
+}
+
+.theme-firebug .property-view {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* From skin */
 .expander {
   visibility: hidden;

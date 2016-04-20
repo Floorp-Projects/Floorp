@@ -15,14 +15,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
+import org.mozilla.gecko.db.BrowserContract.Visits;
 import org.mozilla.gecko.db.BrowserContract.Numbers;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
@@ -30,6 +32,7 @@ import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.util.FileUtils;
 
 import static org.mozilla.gecko.db.DBUtils.qualifyColumn;
@@ -39,12 +42,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 
@@ -54,13 +59,14 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 31; // Bug 1234315
+    public static final int DATABASE_VERSION = 32; // Bug 1046709
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
 
     static final String TABLE_BOOKMARKS = Bookmarks.TABLE_NAME;
     static final String TABLE_HISTORY = History.TABLE_NAME;
+    static final String TABLE_VISITS = Visits.TABLE_NAME;
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
@@ -158,6 +164,24 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 + History.DATE_MODIFIED + ')');
         db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + '('
                 + History.DATE_LAST_VISITED + ')');
+    }
+
+    private void createVisitsTable(SQLiteDatabase db) {
+        debug("Creating " + TABLE_VISITS + " talbe");
+        db.execSQL("CREATE TABLE " + TABLE_VISITS + "(" +
+                Visits._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                Visits.HISTORY_GUID + " TEXT NOT NULL," +
+                Visits.VISIT_TYPE + " TINYINT NOT NULL DEFAULT 1," +
+                Visits.DATE_VISITED + " INTEGER NOT NULL, " +
+                Visits.IS_LOCAL + " TINYINT NOT NULL DEFAULT 1, " +
+
+                "FOREIGN KEY (" + Visits.HISTORY_GUID + ") REFERENCES " +
+                TABLE_HISTORY + "(" + History.GUID + ") ON DELETE CASCADE ON UPDATE CASCADE" +
+                ");");
+
+        db.execSQL("CREATE UNIQUE INDEX visits_history_guid_and_date_visited_index ON " + TABLE_VISITS + "("
+            + Visits.HISTORY_GUID + "," + Visits.DATE_VISITED + ")");
+        db.execSQL("CREATE INDEX visits_history_guid_index ON " + TABLE_VISITS + "(" + Visits.HISTORY_GUID + ")");
     }
 
     private void createFaviconsTable(SQLiteDatabase db) {
@@ -455,6 +479,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createLoginsTableIndices(db, TABLE_LOGINS);
 
         createBookmarksWithAnnotationsView(db);
+
+        createVisitsTable(db);
     }
 
     /**
@@ -485,6 +511,143 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             if (oldTabsDB != null) {
                 oldTabsDB.close();
             }
+        }
+    }
+
+    /**
+     * We used to have a separate history extensions database which was used by Sync to store arrays
+     * of visits for individual History GUIDs. It was only used by Sync.
+     * This function migrates contents of that database over to the Visits table.
+     *
+     * @param historyExtensionDb Source History Extensions database
+     * @param db Destination database
+     */
+    private void copyHistoryExtensionDataToVisitsTable(SQLiteDatabase historyExtensionDb, SQLiteDatabase db) {
+        final String historyExtensionTable = "HistoryExtension";
+        final String columnGuid = "guid";
+        final String columnVisits = "visits";
+
+        final Cursor cursor = historyExtensionDb.query(historyExtensionTable,
+                new String[] {columnGuid, columnVisits},
+                null, null, null, null, null);
+        // Ignore null or empty cursor, we can't (or have nothing to) copy at this point.
+        if (cursor == null) {
+            return;
+        }
+        try {
+            if (!cursor.moveToFirst()) {
+                return;
+            }
+
+            final int guidCol = cursor.getColumnIndexOrThrow(columnGuid);
+            while (!cursor.isAfterLast()) {
+                final String guid = cursor.getString(guidCol);
+                final JSONArray visitsInHistoryExtensionDB = RepoUtils.getJSONArrayFromCursor(cursor, columnVisits);
+
+                if (visitsInHistoryExtensionDB == null) {
+                    continue;
+                }
+
+                debug("Inserting " + visitsInHistoryExtensionDB.size() + " visits from history extension db");
+                for (int i = 0; i < visitsInHistoryExtensionDB.size(); i++) {
+                    final ContentValues cv = new ContentValues();
+                    final JSONObject visit = (JSONObject) visitsInHistoryExtensionDB.get(i);
+
+                    cv.put(Visits.DATE_VISITED, (Long) visit.get("date"));
+                    cv.put(Visits.VISIT_TYPE, (Long) visit.get("type"));
+                    cv.put(Visits.HISTORY_GUID, guid);
+                    // Visits which we are working with here arrived from Sync, so unfortunately we
+                    // can't tell how they originated. Our only sane choice here is to mark them all as remote.
+                    cv.put(Visits.IS_LOCAL, 0);
+
+                    // Ignore any failures due to constraint violations (for example, history table
+                    // missing GUID for whatever reason).
+                    db.insertWithOnConflict(Visits.TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                }
+
+                // We might have generated local visits before Sync had a chance to send them up.
+                // Below we figure out how many visits we have locally that Sync isn't aware of, and we
+                // "synthesize" them for insertion into Visits table. Synthesizing a visit entails
+                // generating a visit with a fake date, set to be just prior to the visited date for a given history item.
+                // We have to do this since prior to v31, local visit information was only preserved in aggregate.
+                // Example: t0: sync, t1: browse, t2: migrate, t3: sync
+                // We'll ensure that at t2 all of the visits from t1 will be "preserved", and at t3 they will get synced.
+                final Long baseVisitDateForSynthesis;
+                // set date which will be a base for our "synthesized" dates with an offset just prior
+                if (visitsInHistoryExtensionDB.size() > 0) {
+                    baseVisitDateForSynthesis = (Long) ((JSONObject) visitsInHistoryExtensionDB.get(0)).get("date") - 1;
+                } else {
+                    baseVisitDateForSynthesis = System.currentTimeMillis() - 1;
+                }
+
+                insertSynthesizedVisits(db,
+                        generateSynthesizedVisits(
+                                getNumberOfVisitsToSynthesize(db, guid, visitsInHistoryExtensionDB.size()),
+                                guid, baseVisitDateForSynthesis
+                        )
+                );
+
+                cursor.moveToNext();
+            }
+        } finally {
+            // We return on a null cursor, so don't have to check it here.
+            cursor.close();
+        }
+    }
+
+    private int getNumberOfVisitsToSynthesize(@NonNull SQLiteDatabase db, @NonNull String guid, int baseNumberOfVisits) {
+        final int knownVisits;
+
+        final Cursor cursor = db.query(
+                TABLE_HISTORY,
+                new String[] {History.VISITS},
+                History.GUID + " = ?",
+                new String[] {guid},
+                null, null, null);
+        if (cursor == null) {
+            return 0;
+        }
+        try {
+            if (!cursor.moveToFirst()) {
+                Log.e(LOGTAG, "Expected to get history visit count with guid but failed: " + guid);
+                return 0;
+            }
+
+            knownVisits = cursor.getInt(
+                    cursor.getColumnIndexOrThrow(History.VISITS));
+        } finally {
+            cursor.close();
+        }
+
+        final int visitsToSynthesize = knownVisits - baseNumberOfVisits;
+
+        if (visitsToSynthesize < 0) {
+            throw new IllegalStateException(
+                    "History visits count (for guid=" + guid + ") was less than base number of visit: " + baseNumberOfVisits);
+        }
+
+        return visitsToSynthesize;
+    }
+
+    private ContentValues[] generateSynthesizedVisits(int numberOfVisits, @NonNull String guid, @NonNull Long baseDate) {
+        final ContentValues[] fakeVisits = new ContentValues[numberOfVisits];
+
+        for (int i = 0; i < numberOfVisits; i++) {
+            final ContentValues cv = new ContentValues();
+            // NB: visit type has a default value in schema
+            cv.put(Visits.DATE_VISITED, baseDate - i);
+            cv.put(Visits.HISTORY_GUID, guid);
+            cv.put(Visits.IS_LOCAL, 1);
+            fakeVisits[i] = cv;
+        }
+
+        return fakeVisits;
+    }
+
+    private void insertSynthesizedVisits(SQLiteDatabase db, ContentValues[] visits) {
+        debug("Inserting " + visits.length + " synthesized visits");
+        for (ContentValues visit : visits) {
+            db.insert(Visits.TABLE_NAME, null, visit);
         }
     }
 
@@ -1354,6 +1517,77 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    private void upgradeDatabaseFrom31to32(final SQLiteDatabase db) {
+        debug("Adding visits table");
+        createVisitsTable(db);
+
+        debug("Migrating visits from history extension db into visits table");
+        String historyExtensionDbName = "history_extension_database";
+
+        SQLiteDatabase historyExtensionDb = null;
+        boolean historyExtensionsDbPresent = true;
+        try {
+            historyExtensionDb = SQLiteDatabase.openDatabase(
+                    mContext.getDatabasePath(historyExtensionDbName).getPath(),
+                    null, SQLiteDatabase.OPEN_READONLY);
+            copyHistoryExtensionDataToVisitsTable(historyExtensionDb, db);
+
+        // We might not have a history extensions db available - if Sync wasn't set up, for example.
+        } catch (SQLiteCantOpenDatabaseException e) {
+            Log.d(LOGTAG, "No history extensions DB present");
+            historyExtensionsDbPresent = false;
+        } catch (SQLiteException e) {
+            Log.e(LOGTAG, "Error while migrating history extensions visits", e);
+        } finally {
+            if (historyExtensionDb != null) {
+                historyExtensionDb.close();
+            }
+        }
+
+        if (historyExtensionsDbPresent) {
+            // Delete history extensions db and friends.
+            if (!mContext.deleteDatabase(historyExtensionDbName)) {
+                Log.e(LOGTAG, "Couldn't remove history extension database");
+            }
+
+            // We're done!
+            return;
+        }
+
+        // History extensions DB wasn't present - we need to synthesize locally recorded visits now.
+        final Cursor cursor = db.query(History.TABLE_NAME, new String[]{History.GUID, History.VISITS, History.DATE_LAST_VISITED}, null, null, null, null, null);
+
+        if (cursor == null) {
+            Log.e(LOGTAG, "Null cursor while selecting all history records");
+            return;
+        }
+
+        try {
+            if (!cursor.moveToFirst()) {
+                Log.e(LOGTAG, "No history records to synthesize visits for.");
+                return;
+            }
+
+            int guidCol = cursor.getColumnIndexOrThrow(History.GUID);
+            int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+            int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
+            while (!cursor.isAfterLast()) {
+                insertSynthesizedVisits(db,
+                        generateSynthesizedVisits(
+                                cursor.getInt(visitsCol),
+                                cursor.getString(guidCol),
+                                cursor.getLong(dateCol)
+                        )
+                );
+                cursor.moveToNext();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Error while synthesizing visits for history record", e);
+        } finally {
+            cursor.close();
+        }
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1454,6 +1688,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 31:
                     upgradeDatabaseFrom30to31(db);
+                    break;
+
+                case 32:
+                    upgradeDatabaseFrom31to32(db);
                     break;
             }
         }

@@ -34,3 +34,7 @@ richlistitem {
 .ac-separator[actiontype=searchengine]:not([selected]) {
   display: none;
 }
+
+.ac-separator[type=keyword] {
+  display: none;
+}

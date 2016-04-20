@@ -17,12 +17,11 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
+Cu.import("resource://gre/modules/Integration.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
-                                  "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -49,6 +48,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
 XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
            "@mozilla.org/uriloader/external-helper-app-service;1",
            Ci.nsIExternalHelperAppService);
+
+Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
+            "resource://gre/modules/DownloadIntegration.jsm");
 
 const ServerSocket = Components.Constructor(
                                 "@mozilla.org/network/server-socket;1",
@@ -787,23 +789,39 @@ add_task(function test_common_initialize()
                               "Blocked by Windows Parental Controls");
     });
 
-  // Disable integration with the host application requiring profile access.
-  DownloadIntegration.dontLoadList = true;
-  DownloadIntegration.dontLoadObservers = true;
-  // Disable the parental controls checking.
-  DownloadIntegration.dontCheckParentalControls = true;
-  // Disable application reputation checks.
-  DownloadIntegration.dontCheckApplicationReputation = true;
-  // Disable the calls to the OS to launch files and open containing folders
-  DownloadIntegration.dontOpenFileAndFolder = true;
-  DownloadIntegration._deferTestOpenFile = Promise.defer();
-  DownloadIntegration._deferTestShowDir = Promise.defer();
-  // Disable checking runtime permissions.
-  DownloadIntegration.dontCheckRuntimePermissions = true;
-
-  // Avoid leaking uncaught promise errors
-  DownloadIntegration._deferTestOpenFile.promise.then(null, () => undefined);
-  DownloadIntegration._deferTestShowDir.promise.then(null, () => undefined);
+  // During unit tests, most of the functions that require profile access or
+  // operating system features will be disabled. Individual tests may override
+  // them again to check for specific behaviors.
+  Integration.downloads.register(base => ({
+    __proto__: base,
+    loadPublicDownloadListFromStore: () => Promise.resolve(),
+    shouldKeepBlockedData: () => Promise.resolve(false),
+    shouldBlockForParentalControls: () => Promise.resolve(false),
+    shouldBlockForRuntimePermissions: () => Promise.resolve(false),
+    shouldBlockForReputationCheck: () => Promise.resolve({
+      shouldBlock: false,
+      verdict: "",
+    }),
+    confirmLaunchExecutable: () => Promise.resolve(),
+    launchFile: () => Promise.resolve(),
+    showContainingDirectory: () => Promise.resolve(),
+    // This flag allows re-enabling the default observers during their tests.
+    allowObservers: false,
+    addListObservers() {
+      return this.allowObservers ? super.addListObservers(...arguments)
+                                 : Promise.resolve();
+    },
+    // This flag allows re-enabling the download directory logic for its tests.
+    _allowDirectories: false,
+    set allowDirectories(value) {
+      this._allowDirectories = value;
+      // We have to invalidate the previously computed directory path.
+      this._downloadsDirectory = null;
+    },
+    _getDirectory(name) {
+      return super._getDirectory(this._allowDirectories ? name : "TmpD");
+    },
+  }));
 
   // Get a reference to nsIComponentRegistrar, and ensure that is is freed
   // before the XPCOM shutdown.

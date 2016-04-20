@@ -5,10 +5,227 @@
 
 @import url(variables.css);
 @import url(common.css);
-@import url(toolbars.css);
 @import url(light-theme.css);
 
-.theme-body {
+:root {
   font-size: 11px;
-  font-family: Lucida Grande, Tahoma, sans-serif;
+  font-family: var(--proportional-font-family);
+}
+
+/* CodeMirror Color Syntax */
+
+.theme-firebug .cm-keyword {color: BlueViolet; font-weight: bold;}
+.theme-firebug .cm-atom {color: #219;}
+.theme-firebug .cm-number {color: #164;}
+.theme-firebug .cm-def {color: #00f;}
+.theme-firebug .cm-variable {color: black;}
+.theme-firebug .cm-variable-2 {color: black;}
+.theme-firebug .cm-variable-3 {color: black;}
+.theme-firebug .cm-property {color: black;}
+.theme-firebug .cm-operator {color: black;}
+.theme-firebug .cm-comment {color: Silver;}
+.theme-firebug .cm-string {color: Red;}
+.theme-firebug .cm-string-2 {color: Red;}
+.theme-firebug .cm-meta {color: rgb(120, 120, 120); font-style: italic;}
+.theme-firebug .cm-error {color: #f00;}
+.theme-firebug .cm-qualifier {color: #555;}
+.theme-firebug .cm-builtin {color: #30a;}
+.theme-firebug .cm-bracket {color: #997;}
+.theme-firebug .cm-tag {color: blue;}
+.theme-firebug .cm-attribute {color: rgb(0, 0, 136);}
+.theme-firebug .cm-header {color: blue;}
+.theme-firebug .cm-quote {color: #090;}
+.theme-firebug .cm-hr {color: #999;}
+.theme-firebug .cm-link {color: #00c;}
+
+.theme-firebug .theme-fg-color3,
+.theme-firebug .cm-s-mozilla .kind-Object .cm-variable{ /* dark blue */
+  color: #006400;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.theme-firebug .console-string {
+  color: #FF183C;
+}
+
+/* Variables View */
+
+.theme-firebug .variables-view-variable > .title > .name,
+.theme-firebug .variables-view-variable > .title > .value {
+  color: var(--theme-body-color);
+}
+
+/* Firebug theme support for tabbar and panel tabs
+  (both, main and side panels )*/
+
+/* Only apply bottom-border for:
+  1) The main tab list.
+  2) The side tab list if there is no scroll-box that has its own border.
+
+  Use !important to override even the rule in webconsole.css that uses
+  ID in the selector. */
+.theme-firebug .devtools-tabbar,
+.theme-firebug .devtools-sidebar-tabs tabs {
+  background-image: linear-gradient(rgba(253, 253, 253, 0.2), rgba(253, 253, 253, 0));
+  border-bottom: 1px solid rgb(170, 188, 207) !important;
+}
+
+.theme-firebug .devtools-sidebar-tabs tabs {
+  background-color: rgb(219, 234, 249) !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+}
+
+/* Add a negative bottom margin to overlap bottom border
+  of the parent element (see also the next comment for 'tabs') */
+.theme-firebug .devtools-tab,
+.theme-firebug .devtools-sidebar-tabs tab {
+  margin: 3px 0 -1px 0;
+  padding: 2px 0 0 0;
+  border: 1px solid transparent !important;
+  border-radius: 4px 4px 0 0;
+  font-weight: bold;
+  color: var(--theme-body-color);
+  -moz-box-flex: initial;
+  min-width: 0;
+}
+
+/* Also add negative bottom margin for side panel tabs*/
+.theme-firebug .devtools-sidebar-tabs tab {
+}
+
+/* In order to hide bottom-border of side panel tabs we need
+ to make the parent element overflow visible, so child element
+ can move one pixel down to hide the bottom border of the parent. */
+.theme-firebug .devtools-sidebar-tabs tabs {
+  overflow: visible;
+}
+
+.theme-firebug .devtools-tab:hover,
+.theme-firebug .devtools-sidebar-tabs tab:hover {
+  border: 1px solid #C8C8C8 !important;
+  border-bottom: 1px solid transparent;
+}
+
+.theme-firebug .devtools-tab[selected],
+.theme-firebug .devtools-sidebar-tabs tab[selected] {
+  background-color: rgb(247, 251, 254);
+  border: 1px solid rgb(170, 188, 207) !important;
+  border-bottom-width: 0 !important;
+  padding-bottom: 2px;
+  color: inherit;
+}
+
+.theme-firebug .devtools-tab spacer,
+.theme-firebug .devtools-tab image {
+  display: none;
+}
+
+.theme-firebug .toolbox-tab label {
+  margin: 0;
+}
+
+.theme-firebug .devtools-sidebar-tabs tab label {
+  margin: 2px 0 0 0;
+}
+
+/* Use different padding for labels inside tabs on Win platform.
+  Make sure this overrides the default in global.css */
+:root[platform="win"].theme-firebug .devtools-sidebar-tabs tab label {
+  margin: 0 4px !important;
+}
+
+.theme-firebug #panelSideBox .devtools-tab[selected],
+.theme-firebug .devtools-sidebar-tabs tab[selected] {
+  background-color: white;
+}
+
+.theme-firebug #panelSideBox .devtools-tab:first-child,
+.theme-firebug .devtools-sidebar-tabs tab:first-child {
+  margin-inline-start: 5px;
+}
+
+/* Firebug theme support for the Option (panel) tab */
+
+.theme-firebug #toolbox-tab-options {
+  margin-inline-end: 4px;
+  background-color: white;
+}
+
+.theme-firebug #toolbox-tab-options::before {
+  content: url(chrome://devtools/skin/images/firebug/tool-options.svg);
+  display: block;
+  margin: 4px 7px 0;
+}
+
+.theme-firebug #toolbox-tab-options:not([selected]):hover::before {
+  filter: brightness(80%);
+}
+
+/* Toolbar */
+
+.theme-firebug .theme-toolbar,
+.theme-firebug toolbar,
+.theme-firebug .devtools-toolbar {
+  border-bottom: 1px solid rgb(170, 188, 207) !important;
+  background-color: rgb(219, 234, 249) !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+  padding-inline-end: 4px;
+}
+
+/* The vbox for panel content also uses theme-toolbar class from some reason
+ but it shouldn't have the padding as defined above, so fix it here */
+.theme-firebug #toolbox-deck > .toolbox-panel.theme-toolbar {
+  padding-inline-end: 0;
+}
+
+/* Space around toolbar buttons */
+.theme-firebug .devtools-toolbar {
+  padding: 3px;
+}
+
+/* The height is the same for all toolbars and side panels tabs */
+.theme-firebug .theme-toolbar,
+.theme-firebug .devtools-sidebar-tabs tabs,
+.theme-firebug .devtools-toolbar {
+  height: 28px !important;
+}
+
+/* Do not set the fixed height for rule viewtoolbar. This toolbar
+  is changing its height to show pseudo classes. */
+.theme-firebug #ruleview-toolbar-container {
+  height: auto !important;
+}
+
+/* The Inspector panel side panels are using both
+  .devtools-toolbar and .theme-toolbar. We want the
+  proportional font for all labels in these toolbars */
+.theme-firebug .devtools-toolbar label,
+.theme-firebug .devtools-toolbar .label,
+.theme-firebug .theme-toolbar label,
+.theme-firebug .theme-toolbar .label {
+  font-family: var(--proportional-font-family);
+}
+
+/* Toolbar Buttons */
+
+.theme-firebug .theme-toolbar button,
+.theme-firebug .devtools-button,
+.theme-firebug toolbarbutton {
+  margin: 1px;
+  border-radius: 2px;
+  color: var(--theme-body-color);
+  line-height: var(--theme-toolbar-font-size);
+  font-size: var(--theme-toolbar-font-size);
+}
+
+.theme-firebug .theme-toolbar button,
+.theme-firebug .devtools-button {
+  border-width: 1px !important;
+  min-height: 21px;
+  min-width: 24px;
+}
+
+.theme-firebug .devtools-toolbarbutton {
+  min-width: 24px;
 }

@@ -545,7 +545,8 @@ class ObjectType extends Type {
     return baseType == "object";
   }
 
-  normalize(value, context) {
+  // FIXME: Bug 1265371 - Refactor normalize and parseType in Schemas.jsm to reduce complexity
+  normalize(value, context) { // eslint-disable-line complexity
     let v = this.normalizeBase("object", value, context);
     if (v.error) {
       return v;
@@ -1070,7 +1071,8 @@ this.Schemas = {
     ns.set(symbol, value);
   },
 
-  parseType(path, type, extraProperties = []) {
+  // FIXME: Bug 1265371 - Refactor normalize and parseType in Schemas.jsm to reduce complexity
+  parseType(path, type, extraProperties = []) { // eslint-disable-line complexity
     let allowedProperties = new Set(extraProperties);
 
     // Do some simple validation of our own schemas.

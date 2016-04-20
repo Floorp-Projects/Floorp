@@ -330,7 +330,9 @@ DownloadItem.prototype = {
   },
 
   get size() {
-    if (this.download.hasProgress) {
+    if (this.download.succeeded && this.download.target.exists) {
+      return DownloadUtils.convertByteUnits(this.download.target.size).join("");
+    } else if (this.download.hasProgress) {
       return DownloadUtils.convertByteUnits(this.download.totalBytes).join("");
     }
     return strings.GetStringFromName("downloadState.unknownSize");

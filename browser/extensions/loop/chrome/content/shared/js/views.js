@@ -1,5 +1,3 @@
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,6 +52,7 @@ loop.shared.views = function (_, mozL10n) {
 
     propTypes: {
       action: React.PropTypes.func.isRequired,
+      disabled: React.PropTypes.bool,
       muted: React.PropTypes.bool.isRequired,
       scope: React.PropTypes.string.isRequired,
       title: React.PropTypes.string,
@@ -62,7 +61,11 @@ loop.shared.views = function (_, mozL10n) {
     },
 
     getDefaultProps: function () {
-      return { muted: false, visible: true };
+      return {
+        disabled: false,
+        muted: false,
+        visible: true
+      };
     },
 
     handleClick: function () {
@@ -77,8 +80,9 @@ loop.shared.views = function (_, mozL10n) {
         "media-control": true,
         "transparent-button": true,
         "local-media": this.props.scope === "local",
-        "muted": this.props.muted,
-        "hide": !this.props.visible
+        "muted": this.props.muted || this.props.disabled,
+        "hide": !this.props.visible,
+        "disabled": this.props.disabled
       };
       classesObj["btn-mute-" + this.props.type] = true;
       return cx(classesObj);
@@ -89,7 +93,7 @@ loop.shared.views = function (_, mozL10n) {
         return this.props.title;
       }
 
-      var prefix = this.props.muted ? "unmute" : "mute";
+      var prefix = this.props.muted || this.props.disabled ? "unmute" : "mute";
       var suffix = this.props.type === "video" ? "button_title2" : "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
       return mozL10n.get(msgId);
@@ -235,16 +239,28 @@ loop.shared.views = function (_, mozL10n) {
     displayName: "AudioMuteButton",
 
     propTypes: {
+      disabled: React.PropTypes.bool,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
       muted: React.PropTypes.bool.isRequired
     },
 
+    getDefaultProps: function () {
+      return {
+        disabled: false
+      };
+    },
+
     toggleAudio: function () {
+      if (this.props.disabled) {
+        return;
+      }
+
       this.props.dispatcher.dispatch(new sharedActions.SetMute({ type: "audio", enabled: this.props.muted }));
     },
 
     render: function () {
       return React.createElement(MediaControlButton, { action: this.toggleAudio,
+        disabled: this.props.disabled,
         muted: this.props.muted,
         scope: "local",
         type: "audio" });
@@ -255,17 +271,29 @@ loop.shared.views = function (_, mozL10n) {
     displayName: "VideoMuteButton",
 
     propTypes: {
+      disabled: React.PropTypes.bool,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
       muted: React.PropTypes.bool.isRequired
     },
 
+    getDefaultProps: function () {
+      return {
+        disabled: false
+      };
+    },
+
     toggleVideo: function () {
+      if (this.props.disabled) {
+        return;
+      }
+
       this.props.dispatcher.dispatch(new sharedActions.SetMute({ type: "video", enabled: this.props.muted }));
     },
 
     render: function () {
       return React.createElement(MediaControlButton, { action: this.toggleVideo,
-        muted: this.props.muted,
+        disabled: this.props.disabled,
+        muted: this.props.muted || this.props.disabled,
         scope: "local",
         type: "video" });
     }
@@ -561,6 +589,63 @@ loop.shared.views = function (_, mozL10n) {
   });
 
   /**
+   * Renders the a href link for context.
+   *
+   * @property {Boolean} allowClick         Set to true to allow the url to be clicked.
+   * @property {String}  description        The description for the context url.
+   * @property {Function}  handleClick      Function for handling click operation when
+   *                                        context link is clicked
+   * @property {String}  thumbnail          The thumbnail url (expected to be a data url) to
+   *                                        display. If not specified, a fallback url will be
+   *                                        shown.
+   * @property {String}  url                The url to be displayed. If not present or invalid,
+   *                                        the context link will not be clickable
+   */
+  var ContextUrlLink = React.createClass({
+    displayName: "ContextUrlLink",
+
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+      allowClick: React.PropTypes.bool.isRequired,
+      children: React.PropTypes.node,
+      description: React.PropTypes.string,
+      handleClick: React.PropTypes.func,
+      url: React.PropTypes.string
+    },
+
+    render: function () {
+      var sanitizedURL = loop.shared.utils.formatSanitizedContextURL(this.props.url);
+
+      var opts = {};
+      opts.classNames = classNames({
+        "context-wrapper": true,
+        "clicks-allowed": this.props.allowClick
+      });
+      if (this.props.allowClick && sanitizedURL) {
+        opts.href = sanitizedURL.location;
+      }
+      if (this.props.handleClick) {
+        opts.onClick = this.props.handleClick;
+      }
+      if (this.props.description) {
+        opts.title = this.props.description;
+      }
+
+      return React.createElement(
+        "a",
+        { className: opts.classNames,
+          href: opts.href,
+          onClick: opts.onClick,
+          rel: "noreferrer",
+          target: "_blank",
+          title: opts.title },
+        this.props.children
+      );
+    }
+  });
+
+  /**
    * Renders a url that's part of context on the display.
    *
    * @property {Boolean} allowClick         Set to true to allow the url to be clicked. If this
@@ -580,7 +665,7 @@ loop.shared.views = function (_, mozL10n) {
 
     propTypes: {
       allowClick: React.PropTypes.bool.isRequired,
-      description: React.PropTypes.string.isRequired,
+      description: React.PropTypes.string,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
       thumbnail: React.PropTypes.string,
       url: React.PropTypes.string
@@ -600,49 +685,34 @@ loop.shared.views = function (_, mozL10n) {
     },
 
     render: function () {
-      // Bug 1196143 - formatURL sanitizes(decodes) the URL from IDN homographic attacks.
-      // Try catch to not produce output if invalid url
-      try {
-        var sanitizedURL = loop.shared.utils.formatURL(this.props.url, true);
-      } catch (ex) {
-        return null;
-      }
-
-      // Only allow specific types of URLs.
-      if (!sanitizedURL || sanitizedURL.protocol !== "http:" && sanitizedURL.protocol !== "https:" && sanitizedURL.protocol !== "ftp:") {
-        return null;
-      }
-
+      var description = this.props.description || null;
       var thumbnail = this.props.thumbnail;
+      var url = this.props.url || null;
+      var sanitizedURL = loop.shared.utils.formatSanitizedContextURL(url) || {};
+      var hostname = sanitizedURL.hostname || null;
 
       if (!thumbnail) {
         thumbnail = "shared/img/icons-16x16.svg#globe";
       }
 
-      var wrapperClasses = classNames({
-        "context-wrapper": true,
-        "clicks-allowed": this.props.allowClick
-      });
-
       return React.createElement(
         "div",
         { className: "context-content" },
         React.createElement(
-          "a",
-          { className: wrapperClasses,
-            href: this.props.allowClick ? this.props.url : null,
-            onClick: this.handleLinkClick,
-            rel: "noreferrer",
-            target: "_blank" },
+          ContextUrlLink,
+          { allowClick: this.props.allowClick,
+            description: description,
+            handleClick: this.handleLinkClick,
+            url: url },
           React.createElement("img", { className: "context-preview", src: thumbnail }),
           React.createElement(
             "span",
             { className: "context-info" },
-            this.props.description,
+            description,
             React.createElement(
               "span",
               { className: "context-url" },
-              sanitizedURL.hostname
+              hostname
             )
           )
         )
@@ -834,11 +904,6 @@ loop.shared.views = function (_, mozL10n) {
         return React.createElement("div", { className: "no-video" });
       }
 
-      var optionalProps = {};
-      if (this.props.posterUrl) {
-        optionalProps.poster = this.props.posterUrl;
-      }
-
       // For now, always mute media. For local media, we should be muted anyway,
       // as we don't want to hear ourselves speaking.
       //
@@ -853,9 +918,9 @@ loop.shared.views = function (_, mozL10n) {
         { className: "remote-video-box" },
         this.state.videoElementSize && this.props.shareCursor ? React.createElement(RemoteCursorView, {
           videoElementSize: this.state.videoElementSize }) : null,
-        React.createElement("video", _extends({}, optionalProps, {
-          className: this.props.mediaType + "-video",
-          muted: true }))
+        React.createElement("video", { className: this.props.mediaType + "-video",
+          muted: true,
+          poster: this.props.posterUrl })
       );
     }
   });
@@ -1232,6 +1297,7 @@ loop.shared.views = function (_, mozL10n) {
     Button: Button,
     ButtonGroup: ButtonGroup,
     Checkbox: Checkbox,
+    ContextUrlLink: ContextUrlLink,
     ContextUrlView: ContextUrlView,
     ConversationToolbar: ConversationToolbar,
     HangUpControlButton: HangUpControlButton,

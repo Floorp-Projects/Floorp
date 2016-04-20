@@ -33,6 +33,7 @@ public class BrowserContractHelpers extends BrowserContract {
   public static final Uri BOOKMARKS_PARENTS_CONTENT_URI    = withSyncAndDeletedAndProfile(Bookmarks.PARENTS_CONTENT_URI);
   public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeletedAndProfile(Bookmarks.POSITIONS_CONTENT_URI);
   public static final Uri HISTORY_CONTENT_URI              = withSyncAndDeletedAndProfile(History.CONTENT_URI);
+  public static final Uri VISITS_CONTENT_URI               = withSyncAndDeletedAndProfile(Visits.CONTENT_URI);
   public static final Uri SCHEMA_CONTENT_URI               = withSyncAndDeletedAndProfile(Schema.CONTENT_URI);
   public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeletedAndProfile(Passwords.CONTENT_URI);
   public static final Uri DELETED_PASSWORDS_CONTENT_URI    = withSyncAndDeletedAndProfile(DeletedPasswords.CONTENT_URI);
