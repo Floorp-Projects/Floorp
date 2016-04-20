@@ -197,19 +197,6 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
   mTargetBounds = aRect;
 }
 
-template<typename RectType>
-Maybe<RectType>
-IntersectMaybeRects(const Maybe<RectType>& aRect1, const Maybe<RectType>& aRect2)
-{
-  if (aRect1) {
-    if (aRect2) {
-      return Some(aRect1->Intersect(*aRect2));
-    }
-    return aRect1;
-  }
-  return aRect2;
-}
-
 /**
  * Get accumulated transform of from the context creating layer to the
  * given layer.
