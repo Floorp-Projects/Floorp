@@ -1,35 +1,30 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* $Id: nsPKCS12Blob.cpp,v 1.49 2007/09/05 07:13:46 jwalden%mit.edu Exp $ */
 
 #include "nsPKCS12Blob.h"
 
-#include "pkix/pkixtypes.h"
-
-#include "prmem.h"
-#include "prprf.h"
-
-#include "nsIFile.h"
-#include "nsNetUtil.h"
-#include "nsIInputStream.h"
+#include "ScopedNSSTypes.h"
+#include "nsCRT.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsICertificateDialogs.h"
 #include "nsIDirectoryService.h"
-#include "nsThreadUtils.h"
-
+#include "nsIFile.h"
+#include "nsIInputStream.h"
+#include "nsKeygenHandler.h" // For GetSlotWithMechanism
+#include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsXPIDLString.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsNSSHelper.h"
-#include "nsNSSCertificate.h"
-#include "nsKeygenHandler.h" //For GetSlotWithMechanism
-#include "nsPK11TokenDB.h"
-#include "nsICertificateDialogs.h"
 #include "nsNSSShutDown.h"
-#include "nsCRT.h"
-
+#include "nsNetUtil.h"
+#include "nsPK11TokenDB.h"
+#include "nsReadableUtils.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
+#include "pkix/pkixtypes.h"
+#include "prmem.h"
+#include "prprf.h"
 #include "secerr.h"
 
 using namespace mozilla;
@@ -315,7 +310,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
   for (i=0; i<numCerts; i++) {
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
-    ScopedCERTCertificate nssCert(cert->GetCert());
+    UniqueCERTCertificate nssCert(cert->GetCert());
     if (!nssCert) {
       rv = NS_ERROR_FAILURE;
       goto finish;

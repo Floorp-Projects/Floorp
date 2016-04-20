@@ -4513,5 +4513,159 @@ ICUpdatedStub::addUpdateStubForValue(JSContext* cx, HandleScript outerScript, Ha
     return true;
 }
 
+//
+// NewArray_Fallback
+//
+
+static bool
+DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t length,
+           MutableHandleValue res)
+{
+    SharedStubInfo info(cx, payload, stub->icEntry());
+
+    FallbackICSpew(cx, stub, "NewArray");
+
+    RootedObject obj(cx);
+    if (stub->templateObject()) {
+        RootedObject templateObject(cx, stub->templateObject());
+        obj = NewArrayOperationWithTemplate(cx, templateObject);
+        if (!obj)
+            return false;
+    } else {
+        HandleScript script = info.script();
+        jsbytecode* pc = info.pc();
+        obj = NewArrayOperation(cx, script, pc, length);
+        if (!obj)
+            return false;
+
+        if (obj && !obj->isSingleton() && !obj->group()->maybePreliminaryObjects()) {
+            JSObject* templateObject = NewArrayOperation(cx, script, pc, length, TenuredObject);
+            if (!templateObject)
+                return false;
+            stub->setTemplateObject(templateObject);
+        }
+    }
+
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoNewArrayFn)(JSContext*, void*, ICNewArray_Fallback*, uint32_t,
+                            MutableHandleValue);
+static const VMFunction DoNewArrayInfo = FunctionInfo<DoNewArrayFn>(DoNewArray, TailCall);
+
+bool
+ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(R0.scratchReg()); // length
+    masm.push(ICStubReg); // stub.
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoNewArrayInfo, masm);
+}
+
+//
+// NewObject_Fallback
+//
+
+// Unlike typical baseline IC stubs, the code for NewObject_WithTemplate is
+// specialized for the template object being allocated.
+static JitCode*
+GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
+{
+    JitContext jctx(cx, nullptr);
+    MacroAssembler masm;
+#ifdef JS_CODEGEN_ARM
+    masm.setSecondScratchReg(BaselineSecondScratchReg);
+#endif
+
+    Label failure;
+    Register objReg = R0.scratchReg();
+    Register tempReg = R1.scratchReg();
+    masm.movePtr(ImmGCPtr(templateObject->group()), tempReg);
+    masm.branchTest32(Assembler::NonZero, Address(tempReg, ObjectGroup::offsetOfFlags()),
+                      Imm32(OBJECT_FLAG_PRE_TENURE), &failure);
+    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataBuilder()),
+                   ImmWord(0), &failure);
+    masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &failure);
+    masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
+
+    EmitReturnFromIC(masm);
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+
+    Linker linker(masm);
+    AutoFlushICache afc("GenerateNewObjectWithTemplateCode");
+    return linker.newCode<CanGC>(cx, BASELINE_CODE);
+}
+
+static bool
+DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHandleValue res)
+{
+    SharedStubInfo info(cx, payload, stub->icEntry());
+
+    FallbackICSpew(cx, stub, "NewObject");
+
+    RootedObject obj(cx);
+
+    RootedObject templateObject(cx, stub->templateObject());
+    if (templateObject) {
+        MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjects());
+        obj = NewObjectOperationWithTemplate(cx, templateObject);
+    } else {
+        HandleScript script = info.script();
+        jsbytecode* pc = info.pc();
+        obj = NewObjectOperation(cx, script, pc);
+
+        if (obj && !obj->isSingleton() && !obj->group()->maybePreliminaryObjects()) {
+            JSObject* templateObject = NewObjectOperation(cx, script, pc, TenuredObject);
+            if (!templateObject)
+                return false;
+
+            if (!stub->invalid() &&
+                (templateObject->is<UnboxedPlainObject>() ||
+                 !templateObject->as<PlainObject>().hasDynamicSlots()))
+            {
+                JitCode* code = GenerateNewObjectWithTemplateCode(cx, templateObject);
+                if (!code)
+                    return false;
+
+                ICStubSpace* space =
+                    ICStubCompiler::StubSpaceForKind(ICStub::NewObject_WithTemplate, script,
+                                                     ICStubCompiler::Engine::Baseline);
+                ICStub* templateStub = ICStub::New<ICNewObject_WithTemplate>(cx, space, code);
+                if (!templateStub)
+                    return false;
+
+                stub->addNewStub(templateStub);
+            }
+
+            stub->setTemplateObject(templateObject);
+        }
+    }
+
+    if (!obj)
+        return false;
+
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool(*DoNewObjectFn)(JSContext*, void*, ICNewObject_Fallback*, MutableHandleValue);
+static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject, TailCall);
+
+bool
+ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.push(ICStubReg); // stub.
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoNewObjectInfo, masm);
+}
+
 } // namespace jit
 } // namespace js

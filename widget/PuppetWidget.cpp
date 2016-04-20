@@ -988,7 +988,7 @@ PuppetWidget::SetCursor(imgIContainer* aCursor,
   mozilla::UniquePtr<char[]> surfaceData =
     nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
 
-  nsCString cursorData = nsCString(surfaceData.get(), length);
+  nsDependentCString cursorData(surfaceData.get(), length);
   mozilla::gfx::IntSize size = dataSurface->GetSize();
   if (!mTabChild->SendSetCustomCursor(cursorData, size.width, size.height, stride,
                                       static_cast<uint8_t>(dataSurface->GetFormat()),

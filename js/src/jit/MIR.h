@@ -3091,10 +3091,6 @@ class MNewArray
         return convertDoubleElements_;
     }
 
-    // Returns true if the code generator should call through to the
-    // VM rather than the fast path.
-    bool shouldUseVM() const;
-
     // NewArray is marked as non-effectful because all our allocations are
     // either lazy when we are using "new Array(length)" or bounded by the
     // script or the stack size when we are using "new Array(...)" or "[...]"
@@ -3213,7 +3209,7 @@ class MNewObject
         initialHeap_(initialHeap),
         mode_(mode)
     {
-        MOZ_ASSERT_IF(mode != ObjectLiteral, !shouldUseVM());
+        MOZ_ASSERT_IF(mode != ObjectLiteral, templateObject());
         setResultType(MIRType_Object);
 
         if (JSObject* obj = templateObject())
@@ -3237,10 +3233,6 @@ class MNewObject
     {
         return new(alloc) MNewObject(constraints, templateConst, initialHeap, mode);
     }
-
-    // Returns true if the code generator should call through to the
-    // VM rather than the fast path.
-    bool shouldUseVM() const;
 
     Mode mode() const {
         return mode_;
@@ -6421,6 +6413,8 @@ class MPow
         return false;
     }
 
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
     ALLOW_CLONE(MPow)
 };
 
@@ -7606,6 +7600,24 @@ class MUnarySharedStub
     static MUnarySharedStub* New(TempAllocator& alloc, MDefinition* input)
     {
         return new(alloc) MUnarySharedStub(input);
+    }
+};
+
+class MNullarySharedStub
+  : public MNullaryInstruction
+{
+    explicit MNullarySharedStub()
+      : MNullaryInstruction()
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NullarySharedStub)
+
+    static MNullarySharedStub* New(TempAllocator& alloc)
+    {
+        return new(alloc) MNullarySharedStub();
     }
 };
 

@@ -33,6 +33,8 @@ function test() {
     NetUtil.asyncFetch({
       uri: favIconLocation,
       loadUsingSystemPrincipal: true,
+      // XXXckerschb: remove securityFlags once imageLoader uses asyncOpen2()
+      securityFlags: Ci.nsILoadInfo.SEC_NORMAL,
       contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
     }, function(inputStream, status) {
         if (!Components.isSuccessCode(status)) {

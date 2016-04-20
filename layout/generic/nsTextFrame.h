@@ -31,12 +31,6 @@ class nsTextFragment;
 class nsDisplayTextGeometry;
 class nsDisplayText;
 
-class nsTextFrameTextRunCache {
-public:
-  static void Init();
-  static void Shutdown();
-};
-
 class nsTextFrame : public nsFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::TextRangeStyle TextRangeStyle;

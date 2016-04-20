@@ -20,8 +20,6 @@
 #include "nsRect.h"                     // for IntRect
 #include "mozilla/layers/TiledContentClient.h"
 
-class gfxReusableSurfaceWrapper;
-
 namespace mozilla {
 using namespace gfx;
 namespace layers {

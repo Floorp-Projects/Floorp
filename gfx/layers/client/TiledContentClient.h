@@ -35,7 +35,6 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsExpirationTracker.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "gfxReusableSurfaceWrapper.h"
 #include "pratom.h"                     // For PR_ATOMIC_INCREMENT/DECREMENT
 
 namespace mozilla {

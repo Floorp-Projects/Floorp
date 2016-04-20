@@ -48,6 +48,7 @@ class ABIArgGenerator
 static MOZ_CONSTEXPR_VAR Register JSReturnReg = v1;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = JSReturnReg;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = JSReturnReg;
+static MOZ_CONSTEXPR_VAR Register64 ReturnReg64(ReturnReg);
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::f0, FloatRegisters::Single };
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::f0, FloatRegisters::Double };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::f23, FloatRegisters::Single };

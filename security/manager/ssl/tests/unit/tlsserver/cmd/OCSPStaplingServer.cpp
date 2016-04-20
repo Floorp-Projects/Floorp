@@ -82,7 +82,7 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   const char *certNickname = host->mServerCertName ? host->mServerCertName
                                                    : DEFAULT_CERT_NICKNAME;
 
-  ScopedCERTCertificate cert;
+  UniqueCERTCertificate cert;
   SSLKEAType certKEA;
   if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, certNickname,
                                                     &cert, &certKEA)) {

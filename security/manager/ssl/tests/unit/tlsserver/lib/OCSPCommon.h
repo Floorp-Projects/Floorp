@@ -53,7 +53,8 @@ struct OCSPHost
 };
 
 SECItemArray*
-GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
+GetOCSPResponseForType(OCSPResponseType aORT,
+                       const mozilla::UniqueCERTCertificate& aCert,
                        const mozilla::UniquePLArenaPool& aArena,
                        const char* aAdditionalCertName);
 

@@ -1,3 +1,7 @@
+function setup_tests(aNext) {
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true]]}, aNext);
+}
+
 function test_basic(aDirectory, aNext) {
   ok(aDirectory, "Directory exists.");
   ok(aDirectory instanceof Directory, "We have a directory.");

@@ -623,7 +623,8 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
 {
   return aEvent.mMessage == eMouseMove ||
          aEvent.mMessage == eMouseDown ||
-         aEvent.mMessage == eMouseUp;
+         aEvent.mMessage == eMouseUp ||
+         aEvent.mMessage == eDragEnd;
 }
 
 template<typename PanGestureOrScrollWheelInput>
@@ -1150,7 +1151,8 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
   }
 
   switch (aEvent.mClass) {
-    case eMouseEventClass: {
+    case eMouseEventClass:
+    case eDragEventClass: {
       WidgetMouseEventBase& mouseEvent = *aEvent.AsMouseEventBase();
       if (WillHandleMouseEvent(mouseEvent)) {
         return ProcessMouseEvent(mouseEvent, aOutTargetGuid, aOutInputBlockId);

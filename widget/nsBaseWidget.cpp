@@ -1197,6 +1197,18 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
   return status;
 }
 
+void
+nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mAPZC) {
+    MOZ_ASSERT(APZThreadUtils::IsControllerThread());
+    uint64_t inputBlockId = 0;
+    ScrollableLayerGuid guid;
+    mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+  }
+}
+
 nsIDocument*
 nsBaseWidget::GetDocument() const
 {

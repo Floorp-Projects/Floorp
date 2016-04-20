@@ -5799,6 +5799,7 @@ nsWindow::FinishLiveResizing(ResizeState aNewState)
     }
   }
   mResizeState = aNewState;
+  ForcePresent();
 }
 
 /**************************************************************
@@ -6895,23 +6896,6 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
   double newScale = GetDefaultScaleInternal();
 
   if (mResizeState != RESIZING && mSizeMode == nsSizeMode_Normal) {
-    // We want to try and maintain the size of the client area, rather than
-    // the overall size of the window including non-client area, so we prefer
-    // to calculate the new size instead of using Windows' suggested values.
-    if (oldScale > 0.0) {
-      double ratio = newScale / oldScale;
-      LayoutDeviceIntRect cr, sr;
-      GetClientBounds(cr);
-      GetScreenBounds(sr);
-      int32_t w = sr.width - cr.width + NSToIntRound(cr.width * ratio);
-      int32_t h = sr.height - cr.height + NSToIntRound(cr.height * ratio);
-      // Adjust x and y to preserve the center point of the suggested rect.
-      x -= (w - width) / 2;
-      y -= (h - height) / 2;
-      width = w;
-      height = h;
-    }
-
     // Limit the position (if not in the middle of a drag-move) & size,
     // if it would overflow the destination screen
     nsCOMPtr<nsIScreenManager> sm = do_GetService(sScreenManagerContractID);
