@@ -36,13 +36,59 @@ function NarrateControls(mm, win) {
   let dropdown = win.document.createElement("ul");
   dropdown.className = "dropdown";
   dropdown.id = "narrate-dropdown";
+  // We need inline svg here for the animation to work (bug 908634 & 1190881).
+  // The style animation can't be scoped (bug 830056).
   dropdown.innerHTML =
     localize`<style scoped>
       @import url("chrome://global/skin/narrateControls.css");
     </style>
     <li>
-       <button class="dropdown-toggle button"
-               id="narrate-toggle" title="${"narrate"}"></button>
+       <button class="dropdown-toggle button" id="narrate-toggle" title="${"narrate"}">
+         <svg xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              width="24" height="24" viewBox="0 0 24 24">
+          <style>
+            @keyframes grow {
+              0%   { transform: scaleY(1);   }
+              15%  { transform: scaleY(1.5); }
+              15%  { transform: scaleY(1.5); }
+              30%  { transform: scaleY(1);   }
+              100% { transform: scaleY(1);   }
+            }
+
+            #waveform > rect {
+              fill: #808080;
+            }
+
+            .speaking #waveform > rect {
+              fill: #58bf43;
+              transform-box: fill-box;
+              transform-origin: 50% 50%;
+              animation-name: grow;
+              animation-duration: 1750ms;
+              animation-iteration-count: infinite;
+              animation-timing-function: linear;
+            }
+
+            #waveform > rect:nth-child(2) { animation-delay: 250ms; }
+            #waveform > rect:nth-child(3) { animation-delay: 500ms; }
+            #waveform > rect:nth-child(4) { animation-delay: 750ms; }
+            #waveform > rect:nth-child(5) { animation-delay: 1000ms; }
+            #waveform > rect:nth-child(6) { animation-delay: 1250ms; }
+            #waveform > rect:nth-child(7) { animation-delay: 1500ms; }
+
+          </style>
+          <g id="waveform">
+            <rect x="1"  y="8" width="2" height="8"  rx=".5" ry=".5" />
+            <rect x="4"  y="5" width="2" height="14" rx=".5" ry=".5" />
+            <rect x="7"  y="8" width="2" height="8"  rx=".5" ry=".5" />
+            <rect x="10" y="4" width="2" height="16" rx=".5" ry=".5" />
+            <rect x="13" y="2" width="2" height="20" rx=".5" ry=".5" />
+            <rect x="16" y="4" width="2" height="16" rx=".5" ry=".5" />
+            <rect x="19" y="7" width="2" height="10" rx=".5" ry=".5" />
+          </g>
+         </svg>
+        </button>
     </li>
     <li class="dropdown-popup">
       <div id="narrate-control" class="narrate-row">
@@ -166,29 +212,15 @@ NarrateControls.prototype = {
           });
         }
         break;
-      case "narrate-toggle":
-        let dropdown = this._doc.getElementById("narrate-dropdown");
-        if (dropdown.classList.contains("open")) {
-          if (this.narrator.speaking) {
-            this.narrator.stop();
-          }
-
-          // We need to remove "keep-open" class here so that AboutReader
-          // closes this dropdown properly. This class is eventually removed in
-          // _updateSpeechControls which gets called after narration stops,
-          // but that happend asynchronously and is too late.
-          dropdown.classList.remove("keep-open");
-        }
-        break;
     }
   },
 
   _updateSpeechControls: function(speaking) {
     let dropdown = this._doc.getElementById("narrate-dropdown");
     dropdown.classList.toggle("keep-open", speaking);
+    dropdown.classList.toggle("speaking", speaking);
 
     let startStopButton = this._doc.getElementById("narrate-start-stop");
-    startStopButton.classList.toggle("speaking", speaking);
     startStopButton.title =
       gStrings.GetStringFromName(speaking ? "stop" : "start");
 
