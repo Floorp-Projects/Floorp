@@ -4775,6 +4775,46 @@ IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDef
     return true;
 }
 
+bool
+IonBuilder::powTrySpecialized(bool* emitted, MDefinition* base, MDefinition* power,
+                              MIRType outputType)
+{
+    // Typechecking.
+    MDefinition* output = nullptr;
+    MIRType baseType = base->type();
+    MIRType powerType = power->type();
+
+    if (outputType != MIRType_Int32 && outputType != MIRType_Double)
+        return true;
+    if (!IsNumberType(baseType))
+        return true;
+    if (!IsNumberType(powerType))
+        return true;
+
+    if (powerType == MIRType_Float32)
+        powerType = MIRType_Double;
+
+    MPow* pow = MPow::New(alloc(), base, power, powerType);
+    current->add(pow);
+    output = pow;
+
+    // Cast to the right type
+    if (outputType == MIRType_Int32 && output->type() != MIRType_Int32) {
+        MToInt32* toInt = MToInt32::New(alloc(), output);
+        current->add(toInt);
+        output = toInt;
+    }
+    if (outputType == MIRType_Double && output->type() != MIRType_Double) {
+        MToDouble* toDouble = MToDouble::New(alloc(), output);
+        current->add(toDouble);
+        output = toDouble;
+    }
+
+    current->push(output);
+    *emitted = true;
+    return true;
+}
+
 static inline bool
 SimpleArithOperand(MDefinition* op)
 {
@@ -4897,6 +4937,7 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
+      case JSOP_POW:
         stub = MBinarySharedStub::New(alloc(), left, right);
         break;
       default:
@@ -4967,17 +5008,22 @@ IonBuilder::jsop_binary_arith(JSOp op)
     return jsop_binary_arith(op, left, right);
 }
 
+
 bool
 IonBuilder::jsop_pow()
 {
     MDefinition* exponent = current->pop();
     MDefinition* base = current->pop();
 
-    if (inlineMathPowHelper(base, exponent, MIRType_Double) == InliningStatus_Inlined) {
-        base->setImplicitlyUsedUnchecked();
-        exponent->setImplicitlyUsedUnchecked();
-        return true;
+    bool emitted = false;
+
+    if (!forceInlineCaches()) {
+        if (!powTrySpecialized(&emitted, base, exponent, MIRType_Double) || emitted)
+            return emitted;
     }
+
+    if (!arithTrySharedStub(&emitted, JSOP_POW, base, exponent) || emitted)
+        return emitted;
 
     // For now, use MIRType_Double, as a safe cover-all. See bug 1188079.
     MPow* pow = MPow::New(alloc(), base, exponent, MIRType_Double);
