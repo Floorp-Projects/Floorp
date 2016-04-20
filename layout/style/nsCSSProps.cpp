@@ -3005,19 +3005,12 @@ static const nsCSSProperty gSizeLogicalGroupTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gWebkitBoxOrientLogicalGroupTable[] = {
-  eCSSProperty_flex_direction,
-  eCSSProperty_UNKNOWN
-};
-
 const nsCSSProperty* const
 nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
 #define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
 #define CSS_PROP_LOGICAL_GROUP_AXIS(name_) g##name_##LogicalGroupTable,
 #define CSS_PROP_LOGICAL_GROUP_BOX(name_) g##name_##LogicalGroupTable,
-#define CSS_PROP_LOGICAL_GROUP_SINGLE(name_) g##name_##LogicalGroupTable,
 #include "nsCSSPropLogicalGroupList.h"
-#undef CSS_PROP_LOGICAL_GROUP_SINGLE
 #undef CSS_PROP_LOGICAL_GROUP_BOX
 #undef CSS_PROP_LOGICAL_GROUP_AXIS
 #undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
@@ -3318,10 +3311,7 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
                 "the CSS_PROPERTY_LOGICAL_BLOCK_AXIS flag");                \
   static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE),                \
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_END_EDGE flag");                  \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING),\
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING flag");
+                "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
                          kwtable_, group_, stylestruct_,                    \
                          stylestructoffset_, animtype_)                     \
@@ -3334,21 +3324,7 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
                   ((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE)),              \
                 "CSS_PROPERTY_LOGICAL_END_EDGE makes no sense when used "   \
-                "with CSS_PROPERTY_LOGICAL_AXIS");                          \
-  /* Make sure CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING isn't used */  \
-  /* with other mutually-exclusive flags: */                                \
-  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
-                  ((flags_) & CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING)),\
-                "CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING makes no "   \
-                "sense when used with CSS_PROPERTY_LOGICAL_AXIS");          \
-  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_BLOCK_AXIS) &&           \
-                  ((flags_) & CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING)),\
-                "CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING makes no "   \
-                "sense when used with CSS_PROPERTY_LOGICAL_BLOCK_AXIS");    \
-  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE) &&             \
-                  ((flags_) & CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING)),\
-                "CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING makes no "   \
-                "sense when used with CSS_PROPERTY_LOGICAL_END_EDGE");
+                "with CSS_PROPERTY_LOGICAL_AXIS");
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LOGICAL
 #undef CSS_PROP
