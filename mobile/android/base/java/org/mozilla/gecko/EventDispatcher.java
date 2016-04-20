@@ -352,7 +352,8 @@ public final class EventDispatcher {
             if (ThreadUtils.isOnGeckoThread()) {
                 GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
             } else {
-                GeckoAppShell.notifyObservers(topic, wrapper.toString());
+                GeckoAppShell.notifyObservers(topic, wrapper.toString(),
+                                              GeckoThread.State.PROFILE_READY);
             }
         } catch (final JSONException e) {
             Log.e(LOGTAG, "Unable to send response", e);
@@ -397,7 +398,8 @@ public final class EventDispatcher {
                 if (ThreadUtils.isOnGeckoThread()) {
                     GeckoAppShell.syncNotifyObservers(topic, wrapper.toString());
                 } else {
-                    GeckoAppShell.notifyObservers(topic, wrapper.toString());
+                    GeckoAppShell.notifyObservers(topic, wrapper.toString(),
+                                                  GeckoThread.State.PROFILE_READY);
                 }
             } catch (final JSONException e) {
                 Log.e(LOGTAG, "Unable to send response for: " + type, e);
