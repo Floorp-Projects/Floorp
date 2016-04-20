@@ -39,8 +39,9 @@ registerCleanupFunction(() => {
  *
  * add_task(function*() {
  *   yield addTab(TEST_URI);
- *   let {toolbox, inspector, view} = yield openComputedView();
- *
+ *   let {toolbox, inspector, view} = yield openInspector();
+ *   inspector.sidebar.select(viewId);
+ *   let view = inspector[viewId].view;
  *   yield selectNode("#test", inspector);
  *   yield someAsyncTestFunction(view);
  * });
@@ -84,104 +85,6 @@ addTab = function(url) {
     return tab;
   });
 };
-
-/**
- * Open the toolbox, with the inspector tool visible.
- *
- * @return a promise that resolves when the inspector is ready
- */
-var openInspector = Task.async(function*() {
-  info("Opening the inspector");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  let inspector, toolbox;
-
-  // Checking if the toolbox and the inspector are already loaded
-  // The inspector-updated event should only be waited for if the inspector
-  // isn't loaded yet
-  toolbox = gDevTools.getToolbox(target);
-  if (toolbox) {
-    inspector = toolbox.getPanel("inspector");
-    if (inspector) {
-      info("Toolbox and inspector already open");
-      return {
-        toolbox: toolbox,
-        inspector: inspector
-      };
-    }
-  }
-
-  info("Opening the toolbox");
-  toolbox = yield gDevTools.showToolbox(target, "inspector");
-  yield waitForToolboxFrameFocus(toolbox);
-  inspector = toolbox.getPanel("inspector");
-
-  info("Waiting for the inspector to update");
-  if (inspector._updateProgress) {
-    yield inspector.once("inspector-updated");
-  }
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector
-  };
-});
-
-/**
- * Wait for the toolbox frame to receive focus after it loads
- *
- * @param {Toolbox} toolbox
- * @return a promise that resolves when focus has been received
- */
-function waitForToolboxFrameFocus(toolbox) {
-  info("Making sure that the toolbox's frame is focused");
-  let def = promise.defer();
-  let win = toolbox.frame.contentWindow;
-  waitForFocus(def.resolve, win);
-  return def.promise;
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the sidebar that
- * corresponds to the given id selected
- *
- * @return a promise that resolves when the inspector is ready and the sidebar
- * view is visible and ready
- */
-var openInspectorSideBar = Task.async(function*(id) {
-  let {toolbox, inspector} = yield openInspector();
-
-  info("Selecting the " + id + " sidebar");
-  inspector.sidebar.select(id);
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector,
-    view: inspector[id].view
-  };
-});
-
-/**
- * Open the toolbox, with the inspector tool visible, and the computed-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the computed
- * view is visible and ready
- */
-function openComputedView() {
-  return openInspectorSideBar("computedview");
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the rule-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the rule
- * view is visible and ready
- */
-function openRuleView() {
-  return openInspectorSideBar("ruleview");
-}
 
 /**
  * Wait for a content -> chrome message on the message manager (the window

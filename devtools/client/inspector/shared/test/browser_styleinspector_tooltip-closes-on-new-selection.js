@@ -17,7 +17,7 @@ add_task(function*() {
   yield testRuleView(view, inspector);
 
   info("Testing computed view tooltip closes on new selection");
-  ({view} = yield openComputedView());
+  view = selectComputedView(inspector);
   yield testComputedView(view, inspector);
 });
 

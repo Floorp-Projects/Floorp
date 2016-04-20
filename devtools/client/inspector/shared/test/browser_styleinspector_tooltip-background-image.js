@@ -43,7 +43,7 @@ add_task(function*() {
 
   info("Switching over to the computed-view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
-  ({view} = yield openComputedView());
+  view = selectComputedView(inspector);
   yield onComputedViewReady;
 
   info("Testing that the background-image computed style has a tooltip too");
