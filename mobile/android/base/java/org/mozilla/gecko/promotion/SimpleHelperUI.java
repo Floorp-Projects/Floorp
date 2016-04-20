@@ -31,6 +31,9 @@ import org.mozilla.gecko.TelemetryContract;
  * onActivityResult().
  */
 public class SimpleHelperUI extends Locales.LocaleAwareActivity {
+    public static final String PREF_FIRST_RVBP_SHOWN = "first_reader_view_bookmark_prompt_shown";
+    public static final String FIRST_RVBP_SHOWN_TELEMETRYEXTRA = "first_readerview_bookmark_prompt";
+
     private View containerView;
 
     private boolean isAnimating;
