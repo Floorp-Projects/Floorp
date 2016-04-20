@@ -18,7 +18,6 @@
   skin/classic/global/filefield.css                        (../../windows/global/filefield.css)
   skin/classic/global/globalBindings.xml                   (../../windows/global/globalBindings.xml)
   skin/classic/global/linkTree.css                         (../../windows/global/linkTree.css)
-  skin/classic/global/passwordmgr.css                      (../../windows/global/passwordmgr.css)
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
   skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
   skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)

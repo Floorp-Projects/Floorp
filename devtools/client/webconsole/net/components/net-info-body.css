@@ -109,7 +109,6 @@
 .theme-firebug .netInfoBody > .tabs .tabs-menu-item.is-active a:focus {
   border: 1px solid var(--net-border);
   border-bottom-color: transparent;
-  border-color: var(--net-border);
 }
 
 .theme-firebug .netInfoBody > .tabs .tabs-menu-item:hover a {
