@@ -89,13 +89,6 @@ CommonAnimationManager<AnimationType>::ExtractComputedValueForTransition(
   bool result = StyleAnimationValue::ExtractComputedValue(aProperty,
                                                           aStyleContext,
                                                           aComputedValue);
-  if (aProperty == eCSSProperty_visibility) {
-    MOZ_ASSERT(aComputedValue.GetUnit() ==
-                 StyleAnimationValue::eUnit_Enumerated,
-               "unexpected unit");
-    aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
-                               StyleAnimationValue::eUnit_Visibility);
-  }
   return result;
 }
 
