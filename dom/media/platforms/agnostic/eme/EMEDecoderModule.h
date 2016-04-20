@@ -33,19 +33,22 @@ protected:
                     layers::LayersBackend aLayersBackend,
                     layers::ImageContainer* aImageContainer,
                     FlushableTaskQueue* aVideoTaskQueue,
-                    MediaDataDecoderCallback* aCallback) override;
+                    MediaDataDecoderCallback* aCallback,
+                    DecoderDoctorDiagnostics* aDiagnostics) override;
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) override;
+                     MediaDataDecoderCallback* aCallback,
+                     DecoderDoctorDiagnostics* aDiagnostics) override;
 
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) const override;
+  SupportsMimeType(const nsACString& aMimeType,
+                   DecoderDoctorDiagnostics* aDiagnostics) const override;
 
 private:
   RefPtr<CDMProxy> mProxy;

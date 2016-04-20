@@ -130,8 +130,8 @@ UIEvent::GetMovementPoint()
   }
 
   // Calculate the delta between the last screen point and the current one.
-  nsIntPoint current = DevPixelsToCSSPixels(mEvent->refPoint, mPresContext);
-  nsIntPoint last = DevPixelsToCSSPixels(mEvent->lastRefPoint, mPresContext);
+  nsIntPoint current = DevPixelsToCSSPixels(mEvent->mRefPoint, mPresContext);
+  nsIntPoint last = DevPixelsToCSSPixels(mEvent->mLastRefPoint, mPresContext);
   return current - last;
 }
 
@@ -192,7 +192,7 @@ UIEvent::PageX() const
     return mPagePoint.x;
   }
 
-  return Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
                               mClientPoint).x;
 }
 
@@ -211,7 +211,7 @@ UIEvent::PageY() const
     return mPagePoint.y;
   }
 
-  return Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
                               mClientPoint).y;
 }
 
@@ -365,20 +365,20 @@ NS_IMETHODIMP
 UIEvent::DuplicatePrivateData()
 {
   mClientPoint =
-    Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+    Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                            mClientPoint);
   mMovementPoint = GetMovementPoint();
   mLayerPoint = GetLayerPoint();
   mPagePoint =
-    Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint, mClientPoint);
-  // GetScreenPoint converts mEvent->refPoint to right coordinates.
+    Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint, mClientPoint);
+  // GetScreenPoint converts mEvent->mRefPoint to right coordinates.
   CSSIntPoint screenPoint =
-    Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint);
+    Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint);
   nsresult rv = Event::DuplicatePrivateData();
   if (NS_SUCCEEDED(rv)) {
     CSSToLayoutDeviceScale scale = mPresContext ? mPresContext->CSSToDevPixelScale()
                                                 : CSSToLayoutDeviceScale(1);
-    mEvent->refPoint = RoundedToInt(screenPoint * scale);
+    mEvent->mRefPoint = RoundedToInt(screenPoint * scale);
   }
   return rv;
 }

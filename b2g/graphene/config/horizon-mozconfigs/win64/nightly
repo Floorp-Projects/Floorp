@@ -8,7 +8,7 @@ fi
 ac_add_options --target=x86_64-pc-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
-. $topsrcdir/build/win64/mozconfig.vs2013
+. $topsrcdir/build/win64/mozconfig.vs-latest
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging

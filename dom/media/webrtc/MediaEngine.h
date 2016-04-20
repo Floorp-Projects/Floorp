@@ -222,6 +222,8 @@ public:
     , mNoise(0)
     , mPlayoutDelay(0)
     , mFullDuplex(false)
+    , mExtendedFilter(false)
+    , mDelayAgnostic(false)
   {}
 
   int32_t mWidth;
@@ -237,6 +239,8 @@ public:
   int32_t mNoise;
   int32_t mPlayoutDelay;
   bool mFullDuplex;
+  bool mExtendedFilter;
+  bool mDelayAgnostic;
 
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 

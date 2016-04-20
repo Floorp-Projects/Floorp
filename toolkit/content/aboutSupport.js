@@ -374,14 +374,14 @@ var snapshotFormatters = {
 
     // Adapter tbodies.
     let adapterKeys = [
-      ["adapterDescription"],
-      ["adapterVendorID"],
-      ["adapterDeviceID"],
-      ["driverVersion"],
-      ["driverDate"],
-      ["adapterDrivers"],
-      ["adapterSubsysID"],
-      ["adapterRAM"],
+      ["adapterDescription", "gpuDescription"],
+      ["adapterVendorID", "gpuVendorID"],
+      ["adapterDeviceID", "gpuDeviceID"],
+      ["driverVersion", "gpuDriverVersion"],
+      ["driverDate", "gpuDriverDate"],
+      ["adapterDrivers", "gpuDrivers"],
+      ["adapterSubsysID", "gpuSubsysID"],
+      ["adapterRAM", "gpuRAM"],
     ];
 
     function showGpu(id, suffix) {
@@ -390,8 +390,8 @@ var snapshotFormatters = {
       }
 
       let trs = [];
-      for (let key of adapterKeys) {
-        let value = get(key);
+      for (let [prop, key] of adapterKeys) {
+        let value = get(prop);
         if (value === undefined || value === "")
           continue;
         trs.push(buildRow(key, value));
@@ -406,16 +406,16 @@ var snapshotFormatters = {
       if ("isGPU2Active" in data && ((suffix == "2") != data.isGPU2Active)) {
         active = "no";
       }
-      addRow(id, "active", strings.GetStringFromName(active));
+      addRow(id, "gpuActive", strings.GetStringFromName(active));
       addRows(id, trs);
     }
     showGpu("gpu-1", "");
     showGpu("gpu-2", "2");
 
     // Remove adapter keys.
-    for (let key of adapterKeys) {
-      delete data[key];
-      delete data[key + "2"];
+    for (let [prop, key] of adapterKeys) {
+      delete data[prop];
+      delete data[prop + "2"];
     }
     delete data.isGPU2Active;
 

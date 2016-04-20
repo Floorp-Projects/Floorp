@@ -7369,8 +7369,8 @@ Object.assign(PrivateWrapper.prototype, {
    *         The object to set as global context. Must be a window object.
    */
   setDebugGlobal(global) {
-    let activeAddon;
-    if (activeAddon = XPIProvider.activeAddons.get(this.id)) {
+    let activeAddon = XPIProvider.activeAddons.get(this.id);
+    if (activeAddon) {
       activeAddon.debugGlobal = global;
     }
   }

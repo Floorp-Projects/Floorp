@@ -1,19 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <meta charset=utf-8>
+<title>Animation.oncancel</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#dom-animation-oncancel">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
-<style>
-@keyframes abc {
-  to { transform: translate(10px) }
-}
-</style>
+<link rel="stylesheet" href="/resources/testharness.css">
 <body>
+<div id="log"></div>
 <script>
-'use strict';
+"use strict";
 
 async_test(function(t) {
-  var div = addDiv(t, {'style': 'animation: abc 100s'});
-  var animation = div.getAnimations()[0];
-
+  var div = createDiv(t);
+  var animation = div.animate({}, 100 * MS_PER_SEC);
   var finishedTimelineTime;
   animation.finished.then().catch(function() {
     finishedTimelineTime = animation.timeline.currentTime;
@@ -28,8 +28,7 @@ async_test(function(t) {
   });
 
   animation.cancel();
-}, 'oncancel event is fired when animation.cancel()');
+}, 'oncancel event is fired when animation.cancel() is called.');
 
-done();
 </script>
 </body>

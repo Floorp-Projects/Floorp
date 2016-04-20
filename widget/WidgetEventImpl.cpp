@@ -270,7 +270,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       // DOM events (EventStateManager::PreHandleEvent), but not mousemove
       // DOM events.
       // Synthesized button up events also do not cause DOM events because they
-      // do not have a reliable refPoint.
+      // do not have a reliable mRefPoint.
       return AsMouseEvent()->reason == WidgetMouseEvent::eReal;
 
     case eWheelEventClass: {

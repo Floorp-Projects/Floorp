@@ -24,6 +24,7 @@ const char* VP9Benchmark::sBenchmarkFpsPref = "media.benchmark.vp9.fps";
 const char* VP9Benchmark::sBenchmarkFpsVersionCheck = "media.benchmark.vp9.versioncheck";
 bool VP9Benchmark::sHasRunTest = false;
 
+// static
 bool
 VP9Benchmark::IsVP9DecodeFast()
 {
@@ -200,7 +201,8 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
   MOZ_ASSERT(OnThread());
 
   RefPtr<PDMFactory> platform = new PDMFactory();
-  mDecoder = platform->CreateDecoder(aInfo, mDecoderTaskQueue, this);
+  mDecoder = platform->CreateDecoder(aInfo, mDecoderTaskQueue, this,
+     /* DecoderDoctorDiagnostics* */ nullptr);
   if (!mDecoder) {
     MainThreadShutdown();
     return;

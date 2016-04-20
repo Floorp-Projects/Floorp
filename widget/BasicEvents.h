@@ -91,7 +91,7 @@ public:
   // exception.
   bool    mExceptionHasBeenRisen : 1;
   // If mRetargetToNonNativeAnonymous is true and the target is in a non-native
-  // native anonymous subtree, the event target is set to originalTarget.
+  // native anonymous subtree, the event target is set to mOriginalTarget.
   bool    mRetargetToNonNativeAnonymous : 1;
   // If mNoCrossProcessBoundaryForwarding is true, the event is not allowed to
   // cross process boundary.
@@ -271,9 +271,9 @@ protected:
     : WidgetEventTime()
     , mClass(aEventClassID)
     , mMessage(aMessage)
-    , refPoint(0, 0)
-    , lastRefPoint(0, 0)
-    , userType(nullptr)
+    , mRefPoint(0, 0)
+    , mLastRefPoint(0, 0)
+    , mSpecifiedEventType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
     mFlags.Clear();
@@ -293,9 +293,9 @@ public:
     : WidgetEventTime()
     , mClass(eBasicEventClass)
     , mMessage(aMessage)
-    , refPoint(0, 0)
-    , lastRefPoint(0, 0)
-    , userType(nullptr)
+    , mRefPoint(0, 0)
+    , mLastRefPoint(0, 0)
+    , mSpecifiedEventType(nullptr)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
     mFlags.Clear();
@@ -329,35 +329,40 @@ public:
   EventMessage mMessage;
   // Relative to the widget of the event, or if there is no widget then it is
   // in screen coordinates. Not modified by layout code.
-  LayoutDeviceIntPoint refPoint;
-  // The previous refPoint, if known, used to calculate mouse movement deltas.
-  LayoutDeviceIntPoint lastRefPoint;
+  LayoutDeviceIntPoint mRefPoint;
+  // The previous mRefPoint, if known, used to calculate mouse movement deltas.
+  LayoutDeviceIntPoint mLastRefPoint;
   // See BaseEventFlags definition for the detail.
   BaseEventFlags mFlags;
 
-  // Additional type info for user defined events
-  nsCOMPtr<nsIAtom> userType;
+  // If JS creates an event with unknown event type or known event type but
+  // for different event interface, the event type is stored to this.
+  // NOTE: This is always used if the instance is a WidgetCommandEvent instance.
+  nsCOMPtr<nsIAtom> mSpecifiedEventType;
 
-  nsString typeString; // always set on non-main-thread events
+  // nsIAtom isn't available on non-main thread due to unsafe.  Therefore,
+  // mSpecifiedEventTypeString is used instead of mSpecifiedEventType if
+  // the event is created in non-main thread.
+  nsString mSpecifiedEventTypeString;
 
   // Event targets, needed by DOM Events
-  nsCOMPtr<dom::EventTarget> target;
-  nsCOMPtr<dom::EventTarget> currentTarget;
-  nsCOMPtr<dom::EventTarget> originalTarget;
+  nsCOMPtr<dom::EventTarget> mTarget;
+  nsCOMPtr<dom::EventTarget> mCurrentTarget;
+  nsCOMPtr<dom::EventTarget> mOriginalTarget;
 
   void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
   {
     // mClass should be initialized with the constructor.
     // mMessage should be initialized with the constructor.
-    refPoint = aEvent.refPoint;
-    // lastRefPoint doesn't need to be copied.
+    mRefPoint = aEvent.mRefPoint;
+    // mLastRefPoint doesn't need to be copied.
     AssignEventTime(aEvent);
     // mFlags should be copied manually if it's necessary.
-    userType = aEvent.userType;
-    // typeString should be copied manually if it's necessary.
-    target = aCopyTargets ? aEvent.target : nullptr;
-    currentTarget = aCopyTargets ? aEvent.currentTarget : nullptr;
-    originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
+    mSpecifiedEventType = aEvent.mSpecifiedEventType;
+    // mSpecifiedEventTypeString should be copied manually if it's necessary.
+    mTarget = aCopyTargets ? aEvent.mTarget : nullptr;
+    mCurrentTarget = aCopyTargets ? aEvent.mCurrentTarget : nullptr;
+    mOriginalTarget = aCopyTargets ? aEvent.mOriginalTarget : nullptr;
   }
 
   /**

@@ -153,9 +153,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
   if (tmp->mEventIsInternal) {
-    tmp->mEvent->target = nullptr;
-    tmp->mEvent->currentTarget = nullptr;
-    tmp->mEvent->originalTarget = nullptr;
+    tmp->mEvent->mTarget = nullptr;
+    tmp->mEvent->mCurrentTarget = nullptr;
+    tmp->mEvent->mOriginalTarget = nullptr;
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
       case eMouseScrollEventClass:
@@ -191,9 +191,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
   if (tmp->mEventIsInternal) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->target)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->currentTarget)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->originalTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mCurrentTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mOriginalTarget)
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
       case eMouseScrollEventClass:
@@ -258,8 +258,8 @@ Event::IsChrome(JSContext* aCx) const
 NS_METHOD
 Event::GetType(nsAString& aType)
 {
-  if (!mIsMainThreadEvent || !mEvent->typeString.IsEmpty()) {
-    aType = mEvent->typeString;
+  if (!mIsMainThreadEvent || !mEvent->mSpecifiedEventTypeString.IsEmpty()) {
+    aType = mEvent->mSpecifiedEventTypeString;
     return NS_OK;
   }
   const char* name = GetEventName(mEvent->mMessage);
@@ -267,9 +267,11 @@ Event::GetType(nsAString& aType)
   if (name) {
     CopyASCIItoUTF16(name, aType);
     return NS_OK;
-  } else if (mEvent->mMessage == eUnidentifiedEvent && mEvent->userType) {
-    aType = Substring(nsDependentAtomString(mEvent->userType), 2); // Remove "on"
-    mEvent->typeString = aType;
+  } else if (mEvent->mMessage == eUnidentifiedEvent &&
+             mEvent->mSpecifiedEventType) {
+    // Remove "on"
+    aType = Substring(nsDependentAtomString(mEvent->mSpecifiedEventType), 2);
+    mEvent->mSpecifiedEventTypeString = aType;
     return NS_OK;
   }
 
@@ -286,7 +288,7 @@ GetDOMEventTarget(nsIDOMEventTarget* aTarget)
 EventTarget*
 Event::GetTarget() const
 {
-  return GetDOMEventTarget(mEvent->target);
+  return GetDOMEventTarget(mEvent->mTarget);
 }
 
 NS_METHOD
@@ -299,7 +301,7 @@ Event::GetTarget(nsIDOMEventTarget** aTarget)
 EventTarget*
 Event::GetCurrentTarget() const
 {
-  return GetDOMEventTarget(mEvent->currentTarget);
+  return GetDOMEventTarget(mEvent->mCurrentTarget);
 }
 
 NS_IMETHODIMP
@@ -317,7 +319,7 @@ Event::GetTargetFromFrame()
 {
   if (!mPresContext) { return nullptr; }
 
-  // Get the target frame (have to get the ESM first)
+  // Get the mTarget frame (have to get the ESM first)
   nsIFrame* targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   if (!targetFrame) { return nullptr; }
 
@@ -346,8 +348,8 @@ Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 EventTarget*
 Event::GetOriginalTarget() const
 {
-  if (mEvent->originalTarget) {
-    return GetDOMEventTarget(mEvent->originalTarget);
+  if (mEvent->mOriginalTarget) {
+    return GetDOMEventTarget(mEvent->mOriginalTarget);
   }
 
   return GetTarget();
@@ -421,8 +423,8 @@ Event::EventPhase() const
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
-  if ((mEvent->currentTarget &&
-       mEvent->currentTarget == mEvent->target) ||
+  if ((mEvent->mCurrentTarget &&
+       mEvent->mCurrentTarget == mEvent->mTarget) ||
        mEvent->mFlags.InTargetPhase()) {
     return nsIDOMEvent::AT_TARGET;
   }
@@ -530,9 +532,10 @@ Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
     return;
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
+  nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->mCurrentTarget);
   if (!node) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(mEvent->currentTarget);
+    nsCOMPtr<nsPIDOMWindowOuter> win =
+      do_QueryInterface(mEvent->mCurrentTarget);
     if (!win) {
       return;
     }
@@ -547,14 +550,14 @@ void
 Event::SetEventType(const nsAString& aEventTypeArg)
 {
   if (mIsMainThreadEvent) {
-    mEvent->typeString.Truncate();
-    mEvent->userType =
+    mEvent->mSpecifiedEventTypeString.Truncate();
+    mEvent->mSpecifiedEventType =
       nsContentUtils::GetEventMessageAndAtom(aEventTypeArg, mEvent->mClass,
                                              &(mEvent->mMessage));
   } else {
-    mEvent->userType = nullptr;
+    mEvent->mSpecifiedEventType = nullptr;
     mEvent->mMessage = eUnidentifiedEvent;
-    mEvent->typeString = aEventTypeArg;
+    mEvent->mSpecifiedEventTypeString = aEventTypeArg;
   }
 }
 
@@ -584,8 +587,8 @@ Event::InitEvent(const nsAString& aEventTypeArg,
 
   // Clearing the old targets, so that the event is targeted correctly when
   // re-dispatching it.
-  mEvent->target = nullptr;
-  mEvent->originalTarget = nullptr;
+  mEvent->mTarget = nullptr;
+  mEvent->mOriginalTarget = nullptr;
 }
 
 NS_IMETHODIMP
@@ -607,7 +610,7 @@ Event::DuplicatePrivateData()
 NS_IMETHODIMP
 Event::SetTarget(nsIDOMEventTarget* aTarget)
 {
-  mEvent->target = do_QueryInterface(aTarget);
+  mEvent->mTarget = do_QueryInterface(aTarget);
   return NS_OK;
 }
 
@@ -989,10 +992,10 @@ Event::GetOffsetCoords(nsPresContext* aPresContext,
                        LayoutDeviceIntPoint aPoint,
                        CSSIntPoint aDefaultPoint)
 {
-  if (!aEvent->target) {
+  if (!aEvent->mTarget) {
     return GetPageCoords(aPresContext, aEvent, aPoint, aDefaultPoint);
   }
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->target);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->mTarget);
   if (!content || !aPresContext) {
     return CSSIntPoint(0, 0);
   }

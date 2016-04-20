@@ -9,7 +9,7 @@ CORES=$(nproc || grep -c ^processor /proc/cpuinfo || sysctl -n hw.ncpu)
 set -v
 
 # Configure and build rust.
-OPTIONS="--enable-rpath --enable-llvm-static-stdcpp --disable-docs"
+OPTIONS="--enable-llvm-static-stdcpp --disable-docs --release-channel=stable"
 x32="i686-unknown-linux-gnu"
 x64="x86_64-unknown-linux-gnu"
 arm="arm-linux-androideabi"
@@ -19,11 +19,12 @@ pushd ${WORKSPACE}/rust-build
 ${WORKSPACE}/rust/configure --prefix=${WORKSPACE}/rustc \
   --target=${x64},${x32} ${OPTIONS}
 make -j ${CORES}
+make dist
 make install
 popd
 
 # Package the toolchain for upload.
 pushd ${WORKSPACE}
 tar cvJf rustc.tar.xz rustc/*
-/build/tooltool.py add --visibility=public rustc.tar.xz
+/build/tooltool.py add --visibility=public --unpack rustc.tar.xz
 popd

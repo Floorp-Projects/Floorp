@@ -6997,6 +6997,8 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
             jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid());
         else
             jsCacheDir = JS_strdup(rt, jsCacheDir);
+        if (!jsCacheDir)
+            return false;
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
     }
 

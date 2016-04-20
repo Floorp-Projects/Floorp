@@ -64,6 +64,11 @@ public:
       return true;
     }
 
+    bool RespectsFontStyleSmoothing() const override {
+      // gfxMacFont respects the font smoothing hint.
+      return true;
+    }
+
     bool RequiresAcceleratedGLContextForCompositorOGL() const override {
       // On OS X in a VM, unaccelerated CompositorOGL shows black flashes, so we
       // require accelerated GL for CompositorOGL but allow unaccelerated GL for

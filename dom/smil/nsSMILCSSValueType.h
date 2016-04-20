@@ -98,6 +98,16 @@ public:
    */
   static bool ValueToString(const nsSMILValue& aValue, nsAString& aString);
 
+  /**
+   * Return the CSS property animated by the specified value.
+   *
+   * @param   aValue   The nsSMILValue to examine.
+   * @return           The nsCSSProperty enum value of the property animated
+   *                   by |aValue|, or eCSSProperty_UNKNOWN if the type of
+   *                   |aValue| is not nsSMILCSSValueType.
+   */
+  static nsCSSProperty PropertyFromValue(const nsSMILValue& aValue);
+
 private:
   // Private constructor: prevent instances beyond my singleton.
   MOZ_CONSTEXPR nsSMILCSSValueType() {}
