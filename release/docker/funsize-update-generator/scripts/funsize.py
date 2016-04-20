@@ -170,6 +170,8 @@ def main():
                         type=argparse.FileType('r'))
     parser.add_argument("--filename-template",
                         default=DEFAULT_FILENAME_TEMPLATE)
+    parser.add_argument("--no-freshclam", action="store_true", default=False,
+                        help="Do not refresh ClamAV DB")
     parser.add_argument("-q", "--quiet", dest="log_level",
                         action="store_const", const=logging.WARNING,
                         default=logging.DEBUG)
@@ -180,13 +182,16 @@ def main():
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
 
-    log.info("Refreshing clamav db...")
-    try:
-        redo.retry(lambda:
-                   sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
-        log.info("Done.")
-    except sh.ErrorReturnCode:
-        log.warning("Freshclam failed, skipping DB update")
+    if args.no_freshclam:
+        log.info("Skipping freshclam")
+    else:
+        log.info("Refreshing clamav db...")
+        try:
+            redo.retry(lambda:
+                    sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+            log.info("Done.")
+        except sh.ErrorReturnCode:
+            log.warning("Freshclam failed, skipping DB update")
     manifest = []
     for e in task["extra"]["funsize"]["partials"]:
         for mar in (e["from_mar"], e["to_mar"]):
