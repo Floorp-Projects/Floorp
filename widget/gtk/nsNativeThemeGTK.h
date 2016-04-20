@@ -50,7 +50,8 @@ public:
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
                                 nsIAtom* aAttribute,
-                                bool* aShouldRepaint) override;
+                                bool* aShouldRepaint,
+                                const nsAttrValue* aOldValue) override;
 
   NS_IMETHOD ThemeChanged() override;
 

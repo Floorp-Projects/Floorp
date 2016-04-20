@@ -1191,7 +1191,7 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
         if (theme && theme->ThemeSupportsWidget(mPresContext,
                                                 primaryFrame, app)) {
           bool repaint = false;
-          theme->WidgetStateChanged(primaryFrame, app, nullptr, &repaint);
+          theme->WidgetStateChanged(primaryFrame, app, nullptr, &repaint, nullptr);
           if (repaint) {
             NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
           }
@@ -1320,7 +1320,8 @@ RestyleManager::AttributeChanged(Element* aElement,
       nsITheme *theme = mPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(mPresContext, primaryFrame, disp->mAppearance)) {
         bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
+        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
+            &repaint, aOldValue);
         if (repaint)
           NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
       }
