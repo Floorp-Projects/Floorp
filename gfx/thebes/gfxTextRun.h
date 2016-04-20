@@ -576,8 +576,6 @@ public:
     // textrun.
     void CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest);
 
-    nsExpirationState *GetExpirationState() { return &mExpirationState; }
-
     // Tell the textrun to release its reference to its creating gfxFontGroup
     // immediately, rather than on destruction. This is used for textruns
     // that are actually owned by a gfxFontGroup, so that they don't keep it
@@ -747,7 +745,6 @@ private:
     gfxFontGroup     *mFontGroup; // addrefed on creation, but our reference
                                   // may be released by ReleaseFontGroup()
     gfxSkipChars      mSkipChars;
-    nsExpirationState mExpirationState;
 
     bool              mSkipDrawing; // true if the font group we used had a user font
                                     // download that's in progress, so we should hide text
