@@ -74,7 +74,10 @@ this.checkVersions = function() {
 
     // Record new update time and the difference between local and server time
     let serverTimeMillis = Date.parse(response.headers.get("Date"));
-    let clockDifference = Math.abs(Date.now() - serverTimeMillis) / 1000;
+
+    // negative clockDifference means local time is behind server time
+    // by the absolute of that value in seconds (positive means it's ahead)
+    let clockDifference = Math.floor((Date.now() - serverTimeMillis) / 1000);
     Services.prefs.setIntPref(PREF_KINTO_CLOCK_SKEW_SECONDS, clockDifference);
     Services.prefs.setIntPref(PREF_KINTO_LAST_UPDATE, serverTimeMillis / 1000);
 
