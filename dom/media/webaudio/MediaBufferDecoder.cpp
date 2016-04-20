@@ -145,7 +145,6 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
     // MediaDecoderReader expects that BufferDecoder is alive.
     // Destruct MediaDecoderReader first.
-    mDecoderReader->BreakCycles();
     mDecoderReader = nullptr;
     mBufferDecoder = nullptr;
     JS_free(nullptr, mBuffer);

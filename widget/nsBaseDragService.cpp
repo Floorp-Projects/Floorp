@@ -437,6 +437,14 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
           event.mUserCancelled = mUserCancelled;
         }
 
+        // Send the drag event to APZ, which needs to know about them to be
+        // able to accurately detect the end of a drag gesture.
+        if (nsPresContext* presContext = presShell->GetPresContext()) {
+          if (nsCOMPtr<nsIWidget> widget = presContext->GetRootWidget()) {
+            widget->DispatchEventToAPZOnly(&event);
+          }
+        }
+
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
         return presShell->HandleDOMEventWithTarget(content, &event, &status);
       }

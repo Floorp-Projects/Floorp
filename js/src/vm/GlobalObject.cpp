@@ -445,6 +445,14 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
         return false;
     }
 
+    RootedValue std_isConcatSpreadable(cx);
+    std_isConcatSpreadable.setSymbol(cx->wellKnownSymbols().get(JS::SymbolCode::isConcatSpreadable));
+    if (!JS_DefineProperty(cx, global, "std_isConcatSpreadable", std_isConcatSpreadable,
+                           JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return false;
+    }
+
     // Define a top-level property 'std_iterator' with the name of the method
     // used by for-of loops to create an iterator.
     RootedValue std_iterator(cx);

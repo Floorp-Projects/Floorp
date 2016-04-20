@@ -712,6 +712,7 @@ function PeerConnectionWrapper(label, configuration) {
   this.constraints = [ ];
   this.offerOptions = {};
   this.streams = [ ];
+  this.streamsForLocalTracks = [ ];
   this.mediaElements = [ ];
 
   this.dataChannels = [ ];
@@ -818,6 +819,59 @@ PeerConnectionWrapper.prototype = {
 
   setIdentityProvider: function(provider, protocol, identity) {
     this._pc.setIdentityProvider(provider, protocol, identity);
+  },
+
+  /**
+   * Attaches a local track to this RTCPeerConnection using
+   * RTCPeerConnection.addTrack().
+   *
+   * Also creates a media element playing a MediaStream containing all
+   * tracks that have been added to `stream` using `attachLocalTrack()`.
+   *
+   * @param {MediaStreamTrack} track
+   *        MediaStreamTrack to handle
+   * @param {MediaStream} stream
+   *        MediaStream to use as container for `track` on remote side
+   */
+  attachLocalTrack : function(track, stream) {
+    info("Got a local " + track.kind + " track");
+
+    this.expectNegotiationNeeded();
+    var sender = this._pc.addTrack(track, stream);
+    is(sender.track, track, "addTrack returns sender");
+
+    ok(track.id, "track has id");
+    ok(track.kind, "track has kind");
+    ok(stream.id, "stream has id");
+    this.expectedLocalTrackInfoById[track.id] = {
+      type: track.kind,
+      streamId: stream.id,
+    };
+
+    var mappedStream =
+      this.streamsForLocalTracks.find(o => o.fromStreamId == stream.id);
+
+    if (mappedStream) {
+      mappedStream.stream.addTrack(track);
+      return this.observedNegotiationNeeded;
+    }
+
+    mappedStream = new MediaStream([track]);
+    this.streamsForLocalTracks.push(
+      { fromStreamId: stream.id
+      , stream: mappedStream
+      }
+    );
+
+    var element = createMediaElement(track.kind, this.label + '_tracks_' + this.streamsForLocalTracks.length);
+    this.mediaElements.push(element);
+    element.srcObject = mappedStream;
+    element.play();
+
+    // Store local media elements so that we can stop them when done.
+    // Don't store remote ones because they should stop when the PC does.
+    this.localMediaElements.push(element);
+    return this.observedNegotiationNeeded;
   },
 
   /**

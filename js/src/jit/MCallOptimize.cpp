@@ -501,23 +501,19 @@ IonBuilder::inlineArray(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
-    current->add(templateConst);
+    if (!jsop_newarray(templateObject, initLength))
+        return InliningStatus_Error;
 
-    MNewArray* ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
-                                    templateObject->group()->initialHeap(constraints()), pc);
-    current->add(ins);
-    current->push(ins);
-
+    MDefinition* array = current->peek(-1);
     if (callInfo.argc() >= 2) {
         JSValueType unboxedType = GetBoxedOrUnboxedType(templateObject);
         for (uint32_t i = 0; i < initLength; i++) {
             MDefinition* value = callInfo.getArg(i);
-            if (!initializeArrayElement(ins, i, value, unboxedType, /* addResumePoint = */ false))
+            if (!initializeArrayElement(array, i, value, unboxedType, /* addResumePoint = */ false))
                 return InliningStatus_Error;
         }
 
-        MInstruction* setLength = setInitializedLength(ins, unboxedType, initLength);
+        MInstruction* setLength = setInitializedLength(array, unboxedType, initLength);
         if (!resumeAfter(setLength))
             return InliningStatus_Error;
     }
@@ -1174,101 +1170,6 @@ IonBuilder::inlineMathHypot(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outputType)
-{
-    // Typechecking.
-    MIRType baseType = lhs->type();
-    MIRType powerType = rhs->type();
-
-    if (outputType != MIRType_Int32 && outputType != MIRType_Double)
-        return InliningStatus_NotInlined;
-    if (!IsNumberType(baseType))
-        return InliningStatus_NotInlined;
-    if (!IsNumberType(powerType))
-        return InliningStatus_NotInlined;
-
-    MDefinition* base = lhs;
-    MDefinition* power = rhs;
-    MDefinition* output = nullptr;
-
-    // Optimize some constant powers.
-    if (rhs->isConstant()) {
-        double pow = rhs->toConstant()->numberToDouble();
-
-        // Math.pow(x, 0.5) is a sqrt with edge-case detection.
-        if (pow == 0.5) {
-            MPowHalf* half = MPowHalf::New(alloc(), base);
-            current->add(half);
-            output = half;
-        }
-
-        // Math.pow(x, -0.5) == 1 / Math.pow(x, 0.5), even for edge cases.
-        if (pow == -0.5) {
-            MPowHalf* half = MPowHalf::New(alloc(), base);
-            current->add(half);
-            MConstant* one = MConstant::New(alloc(), DoubleValue(1.0));
-            current->add(one);
-            MDiv* div = MDiv::New(alloc(), one, half, MIRType_Double);
-            current->add(div);
-            output = div;
-        }
-
-        // Math.pow(x, 1) == x.
-        if (pow == 1.0)
-            output = base;
-
-        // Math.pow(x, 2) == x*x.
-        if (pow == 2.0) {
-            MMul* mul = MMul::New(alloc(), base, base, outputType);
-            current->add(mul);
-            output = mul;
-        }
-
-        // Math.pow(x, 3) == x*x*x.
-        if (pow == 3.0) {
-            MMul* mul1 = MMul::New(alloc(), base, base, outputType);
-            current->add(mul1);
-            MMul* mul2 = MMul::New(alloc(), base, mul1, outputType);
-            current->add(mul2);
-            output = mul2;
-        }
-
-        // Math.pow(x, 4) == y*y, where y = x*x.
-        if (pow == 4.0) {
-            MMul* y = MMul::New(alloc(), base, base, outputType);
-            current->add(y);
-            MMul* mul = MMul::New(alloc(), y, y, outputType);
-            current->add(mul);
-            output = mul;
-        }
-    }
-
-    // Use MPow for other powers
-    if (!output) {
-        if (powerType == MIRType_Float32)
-            powerType = MIRType_Double;
-        MPow* pow = MPow::New(alloc(), base, power, powerType);
-        current->add(pow);
-        output = pow;
-    }
-
-    // Cast to the right type
-    if (outputType == MIRType_Int32 && output->type() != MIRType_Int32) {
-        MToInt32* toInt = MToInt32::New(alloc(), output);
-        current->add(toInt);
-        output = toInt;
-    }
-    if (outputType == MIRType_Double && output->type() != MIRType_Double) {
-        MToDouble* toDouble = MToDouble::New(alloc(), output);
-        current->add(toDouble);
-        output = toDouble;
-    }
-
-    current->push(output);
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
 IonBuilder::inlineMathPow(CallInfo& callInfo)
 {
     if (callInfo.argc() != 2 || callInfo.constructing()) {
@@ -1276,13 +1177,18 @@ IonBuilder::inlineMathPow(CallInfo& callInfo)
         return InliningStatus_NotInlined;
     }
 
-    IonBuilder::InliningStatus status =
-        inlineMathPowHelper(callInfo.getArg(0), callInfo.getArg(1), getInlineReturnType());
+    bool emitted = false;
+    if (!powTrySpecialized(&emitted, callInfo.getArg(0), callInfo.getArg(1),
+                                     getInlineReturnType()))
+    {
+        return InliningStatus_Error;
+    }
 
-    if (status == IonBuilder::InliningStatus_Inlined)
-        callInfo.setImplicitlyUsedUnchecked();
+    if (!emitted)
+        return InliningStatus_NotInlined;
 
-    return status;
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
 }
 
 IonBuilder::InliningStatus
@@ -2157,16 +2063,11 @@ IonBuilder::inlineObjectCreate(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
-    current->add(templateConst);
-    MNewObject* ins = MNewObject::New(alloc(), constraints(), templateConst,
-                                      templateObject->group()->initialHeap(constraints()),
-                                      MNewObject::ObjectCreate);
-    current->add(ins);
-    current->push(ins);
-    if (!resumeAfter(ins))
+    bool emitted = false;
+    if (!newObjectTryTemplateObject(&emitted, templateObject))
         return InliningStatus_Error;
 
+    MOZ_ASSERT(emitted);
     return InliningStatus_Inlined;
 }
 

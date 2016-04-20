@@ -265,6 +265,7 @@ public:
                           const uint32_t& aFlags) override;
   // Dispatch an event that must be first be routed through APZ.
   nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) override;
+  void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) override;
 
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;

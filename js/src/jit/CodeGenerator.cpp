@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EnumeratedRange.h"
@@ -54,6 +55,7 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::AssertedCast;
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::Maybe;
@@ -2341,6 +2343,7 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
+      case JSOP_POW:
         emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
         break;
       case JSOP_LT:
@@ -2372,6 +2375,41 @@ CodeGenerator::visitUnarySharedStub(LUnarySharedStub* lir)
       case JSOP_LENGTH:
         emitSharedStub(ICStub::Kind::GetProp_Fallback, lir);
         break;
+      default:
+        MOZ_CRASH("Unsupported jsop in shared stubs.");
+    }
+}
+
+void
+CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
+{
+    jsbytecode* pc = lir->mir()->resumePoint()->pc();
+    JSOp jsop = JSOp(*pc);
+    switch (jsop) {
+      case JSOP_NEWARRAY: {
+        uint32_t length = GET_UINT32(pc);
+        MOZ_ASSERT(length <= INT32_MAX,
+                   "the bytecode emitter must fail to compile code that would "
+                   "produce JSOP_NEWARRAY with a length exceeding int32_t range");
+
+        // Pass length in R0.
+        masm.move32(Imm32(AssertedCast<int32_t>(length)), R0.scratchReg());
+        emitSharedStub(ICStub::Kind::NewArray_Fallback, lir);
+        break;
+      }
+      case JSOP_NEWOBJECT:
+        emitSharedStub(ICStub::Kind::NewObject_Fallback, lir);
+        break;
+      case JSOP_NEWINIT: {
+        JSProtoKey key = JSProtoKey(GET_UINT8(pc));
+        if (key == JSProto_Array) {
+            masm.move32(Imm32(0), R0.scratchReg());
+            emitSharedStub(ICStub::Kind::NewArray_Fallback, lir);
+        } else {
+            emitSharedStub(ICStub::Kind::NewObject_Fallback, lir);
+        }
+        break;
+      }
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
     }
@@ -5146,7 +5184,7 @@ CodeGenerator::visitNewArray(LNewArray* lir)
 
     MOZ_ASSERT(length <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
 
-    if (lir->mir()->shouldUseVM()) {
+    if (!templateObject) {
         visitNewArrayCallVM(lir);
         return;
     }
@@ -5403,7 +5441,7 @@ CodeGenerator::visitNewObject(LNewObject* lir)
     Register tempReg = ToRegister(lir->temp());
     JSObject* templateObject = lir->mir()->templateObject();
 
-    if (lir->mir()->shouldUseVM()) {
+    if (!templateObject) {
         visitNewObjectVMCall(lir);
         return;
     }
@@ -8866,6 +8904,22 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
           }
           case ICStub::Kind::GetProp_Fallback: {
             ICGetProp_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
+          case ICStub::Kind::NewArray_Fallback: {
+            JSScript* script = sharedStubs_[i].entry.script();
+            jsbytecode* pc = sharedStubs_[i].entry.pc(script);
+            ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
+            if (!group)
+                return false;
+
+            ICNewArray_Fallback::Compiler stubCompiler(cx, group, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
+          case ICStub::Kind::NewObject_Fallback: {
+            ICNewObject_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }

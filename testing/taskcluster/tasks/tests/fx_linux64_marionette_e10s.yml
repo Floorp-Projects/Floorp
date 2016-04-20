@@ -7,7 +7,7 @@ task:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}
       - --test-packages-url={{test_packages_url}}
-      - --download-symbols=ondemand
+      - --download-symbols=true # This value is to be ondemand for opt jobs
       - --e10s
     env:
         MOZHARNESS_SCRIPT: 'mozharness/scripts/marionette.py'

@@ -700,7 +700,7 @@ MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
       return NS_ERROR_FAILURE;
     }
     nsAutoCString dbKey;
-    nsresult rv = nsNSSCertificate::GetDbKey(nssCertificate.get(), dbKey);
+    nsresult rv = nsNSSCertificate::GetDbKey(nssCertificate, dbKey);
     if (NS_FAILED(rv)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("GetDbKey failed"));
       return rv;

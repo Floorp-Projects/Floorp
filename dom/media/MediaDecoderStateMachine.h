@@ -215,7 +215,6 @@ public:
   // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
-    mReader->BreakCycles();
     mResource = nullptr;
   }
 
@@ -223,9 +222,7 @@ public:
     return mMetadataManager.TimedMetadataEvent();
   }
 
-  MediaEventSource<void>& OnMediaNotSeekable() {
-    return mReader->OnMediaNotSeekable();
-  }
+  MediaEventSource<void>& OnMediaNotSeekable() const;
 
   MediaEventSourceExc<nsAutoPtr<MediaInfo>,
                       nsAutoPtr<MetadataTags>,
@@ -245,13 +242,9 @@ public:
   // Immutable after construction - may be called on any thread.
   bool IsRealTime() const { return mRealTime; }
 
-  size_t SizeOfVideoQueue() {
-    return mReader->SizeOfVideoQueueInBytes();
-  }
+  size_t SizeOfVideoQueue() const;
 
-  size_t SizeOfAudioQueue() {
-    return mReader->SizeOfAudioQueueInBytes();
-  }
+  size_t SizeOfAudioQueue() const;
 
 private:
   // Functions used by assertions to ensure we're calling things
@@ -649,11 +642,6 @@ private:
   // Accessed on state machine, audio, main, and AV thread.
   Watchable<State> mState;
 
-  // The task queue in which we run decode tasks. This is referred to as
-  // the "decode thread", though in practise tasks can run on a different
-  // thread every time they're called.
-  TaskQueue* DecodeTaskQueue() const { return mReader->OwnerThread(); }
-
   // Time that buffering started. Used for buffering timeout and only
   // accessed on the state machine thread. This is null while we're not
   // buffering.
@@ -700,11 +688,7 @@ private:
   // The media sink resource.  Used on the state machine thread.
   RefPtr<media::MediaSink> mMediaSink;
 
-  // The reader, don't call its methods with the decoder monitor held.
-  // This is created in the state machine's constructor.
-  const RefPtr<MediaDecoderReader> mReader;
-
-  const RefPtr<MediaDecoderReaderWrapper> mReaderWrapper;
+  const RefPtr<MediaDecoderReaderWrapper> mReader;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
@@ -1055,9 +1039,8 @@ private:
   Canonical<bool> mIsAudioDataAudible;
 
 public:
-  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
-    return mReader->CanonicalBuffered();
-  }
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
+
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {
     return &mDuration;
   }

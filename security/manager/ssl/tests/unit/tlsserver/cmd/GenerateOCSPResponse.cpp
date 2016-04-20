@@ -145,7 +145,7 @@ main(int argc, char* argv[])
       exit(EXIT_FAILURE);
     }
 
-    ScopedCERTCertificate cert(PK11_FindCertFromNickname(certNick, nullptr));
+    UniqueCERTCertificate cert(PK11_FindCertFromNickname(certNick, nullptr));
     if (!cert) {
       PrintPRError("PK11_FindCertFromNickname failed");
       PR_fprintf(PR_STDERR, "Failed to find certificate with nick '%s'\n",

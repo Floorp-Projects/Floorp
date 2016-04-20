@@ -3237,6 +3237,103 @@ class ICGetProp_ArgumentsCallee : public ICMonitoredStub
     };
 };
 
+// JSOP_NEWARRAY
+// JSOP_NEWINIT
+
+class ICNewArray_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrObject templateObject_;
+
+    // The group used for objects created here is always available, even if the
+    // template object itself is not.
+    HeapPtrObjectGroup templateGroup_;
+
+    ICNewArray_Fallback(JitCode* stubCode, ObjectGroup* templateGroup)
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode),
+        templateObject_(nullptr), templateGroup_(templateGroup)
+    {}
+
+  public:
+    class Compiler : public ICStubCompiler {
+        RootedObjectGroup templateGroup;
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        Compiler(JSContext* cx, ObjectGroup* templateGroup, Engine engine)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback, engine),
+            templateGroup(cx, templateGroup)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICNewArray_Fallback>(space, getStubCode(), templateGroup);
+        }
+    };
+
+    HeapPtrObject& templateObject() {
+        return templateObject_;
+    }
+
+    void setTemplateObject(JSObject* obj) {
+        MOZ_ASSERT(obj->group() == templateGroup());
+        templateObject_ = obj;
+    }
+
+    HeapPtrObjectGroup& templateGroup() {
+        return templateGroup_;
+    }
+
+    void setTemplateGroup(ObjectGroup* group) {
+        templateObject_ = nullptr;
+        templateGroup_ = group;
+    }
+};
+
+// JSOP_NEWOBJECT
+
+class ICNewObject_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrObject templateObject_;
+
+    explicit ICNewObject_Fallback(JitCode* stubCode)
+      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode), templateObject_(nullptr)
+    {}
+
+  public:
+    class Compiler : public ICStubCompiler {
+        bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback, engine)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICNewObject_Fallback>(space, getStubCode());
+        }
+    };
+
+    HeapPtrObject& templateObject() {
+        return templateObject_;
+    }
+
+    void setTemplateObject(JSObject* obj) {
+        templateObject_ = obj;
+    }
+};
+
+class ICNewObject_WithTemplate : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICNewObject_WithTemplate(JitCode* stubCode)
+      : ICStub(ICStub::NewObject_WithTemplate, stubCode)
+    {}
+};
+
 } // namespace jit
 } // namespace js
 
