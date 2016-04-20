@@ -167,17 +167,11 @@ var Reader = {
     readerModeCallback: function(browser) {
       let url = browser.currentURI.spec;
       if (url.startsWith("about:reader")) {
-        let originalURL = ReaderMode.getOriginalUrl(url);
-        if (!originalURL) {
-          Cu.reportError("Error finding original URL for about:reader URL: " + url);
-        } else {
-          browser.loadURI(originalURL);
-        }
         Reader._buttonHistogram.add(Reader._buttonHistogramValues.TAP_EXIT);
       } else {
-        browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
         Reader._buttonHistogram.add(Reader._buttonHistogramValues.TAP_ENTER);
       }
+      browser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
     },
   },
 
