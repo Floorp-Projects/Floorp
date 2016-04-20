@@ -407,32 +407,6 @@ dnl that a universal binary is being produced.
 AC_SUBST(UNIVERSAL_BINARY)
 
 dnl ========================================================
-dnl Check for MacOS deployment target version
-dnl ========================================================
-
-MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.6)
-                          Set the minimum MacOS version needed at runtime],
-                      [_MACOSX_DEPLOYMENT_TARGET=$enableval])
-
-if test "$target_cpu" != "arm"; then
-case "$target" in
-*-darwin*)
-    if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
-        dnl Use the specified value
-        export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-    else
-        dnl No value specified on the command line or in the environment,
-        dnl use architecture minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.6
-    fi
-    ;;
-esac
-fi
-
-AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
-
-dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
