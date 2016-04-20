@@ -32,6 +32,7 @@
 #include "vm/Debugger-inl.h"
 
 using namespace js;
+using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::CheckedInt;

@@ -1963,7 +1963,7 @@ ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
   MOZ_ASSERT(!mScriptLoader.mRv.Failed());
 
   js::ErrorReport report(aCx);
-  if (!report.init(aCx, exn)) {
+  if (!report.init(aCx, exn, js::ErrorReport::WithSideEffects)) {
     JS_ClearPendingException(aCx);
     return;
   }

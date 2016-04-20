@@ -3429,7 +3429,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   // nsIContent::PreHandleEvent doesn't reset any change we make to mCanHandle.
   if (mType == NS_FORM_INPUT_NUMBER &&
       aVisitor.mEvent->IsTrusted()  &&
-      aVisitor.mEvent->originalTarget != this) {
+      aVisitor.mEvent->mOriginalTarget != this) {
     // <input type=number> has an anonymous <input type=text> descendant. If
     // 'input' or 'change' events are fired at that text control then we need
     // to do some special handling here.
@@ -3439,7 +3439,7 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     if (numberControlFrame) {
       textControl = numberControlFrame->GetAnonTextControl();
     }
-    if (textControl && aVisitor.mEvent->originalTarget == textControl) {
+    if (textControl && aVisitor.mEvent->mOriginalTarget == textControl) {
       if (aVisitor.mEvent->mMessage == eEditorInput) {
         // Propogate the anon text control's new value to our HTMLInputElement:
         nsAutoString value;
@@ -3715,7 +3715,7 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
     // directory picker, else we open the file picker.
     FilePickerType type = FILE_PICKER_FILE;
     nsCOMPtr<nsIContent> target =
-      do_QueryInterface(aVisitor.mEvent->originalTarget);
+      do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
     if (target &&
         target->GetParent() == this &&
         target->IsRootOfNativeAnonymousSubtree() &&
@@ -3782,7 +3782,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       mType != NS_FORM_INPUT_NUMBER) {
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
-        !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
+        !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->mOriginalTarget)) {
       // DOMActive event should be trusted since the activation is actually
       // occurred even if the cause is an untrusted click event.
       InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);

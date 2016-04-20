@@ -115,6 +115,7 @@ var supported_properties = {
                 test_length_percent_calc_transition,
                 test_length_unclamped, test_percent_unclamped ],
     "clip": [ test_rect_transition ],
+    "clip-path": [ test_clip_path_transition ],
     "color": [ test_color_transition ],
     "fill": [ test_color_transition ],
     "fill-opacity" : [ test_float_zeroToOne_transition,
@@ -584,6 +585,127 @@ var transformTests = [
     end: 'skewX(60deg) rotate(90deg)',
     expected: computeMatrix('rotate(120deg) skewX(' + Math.atan(Math.tan(Math.PI * 60/180) / 2) + 'rad) scale(2, 0.5)'),
     round_error_ok: true },
+];
+
+var clipPathTests = [
+  { start: "none", end: "none",
+    expected: ["none"] },
+  // none to shape
+  { start: "none",
+    end: "circle(500px at 500px 500px) border-box",
+    expected: ["circle", ["500px", "at", "500px", "500px"], "border-box"]
+  },
+  { start: "none",
+    end: "ellipse(500px 500px at 500px 500px) border-box",
+    expected: ["ellipse", ["500px", "500px", "at", "500px", "500px"], "border-box"]
+  },
+  { start: "none",
+    end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
+    expected: ["polygon", ["evenodd", "500px", "500px", "500px", "500px"], "border-box"]
+  },
+  { start: "none",
+    end: "inset(500px 500px 500px 500px round 500px 500px) border-box",
+    expected: ["inset", ["500px", "round", "500px"], "border-box"]
+  },
+  // matching functions
+  { start: "circle(100px)", end: "circle(500px)",
+    expected: ["circle", ["200px", "at", "50%", "50%"]] },
+  { start: "ellipse(100px 100px)", end: "ellipse(500px 500px)",
+    expected: ["ellipse", ["200px", "200px", "at", "50%", "50%"]] },
+  { start: "circle(100px at 100px 100px) border-box",
+    end: "circle(500px at 500px 500px) border-box",
+    expected: ["circle", ["200px", "at", "200px", "200px"]]
+  },
+  { start: "ellipse(100px 100px at 100px 100px) border-box",
+    end: "ellipse(500px 500px at 500px 500px) border-box",
+    expected: ["ellipse", ["200px", "200px", "at", "200px", "200px"]]
+  },
+  { start: "polygon(evenodd, 100px 100px, 100px 100px) border-box",
+    end: "polygon(evenodd, 500px 500px, 500px 500px) border-box",
+    expected: ["polygon", ["evenodd", "200px", "200px", "200px", "200px"]]
+  },
+  { start: "inset(100px 100px 100px 100px round 100px 100px) border-box",
+    end: "inset(500px 500px 500px 500px round 500px 500px) border-box",
+    expected: ["inset", ["200px", "round", "200px"]]
+  },
+  // matching functions percentage
+  { start: "circle(100%)", end: "circle(500%)",
+    expected: ["circle", ["200%", "at", "50%", "50%"]] },
+  { start: "ellipse(100% 100%)", end: "ellipse(500% 500%)",
+    expected: ["ellipse", ["200%", "200%", "at", "50%", "50%"]] },
+  { start: "circle(100% at 100% 100%) border-box",
+    end: "circle(500% at 500% 500%) border-box",
+    expected: ["circle", ["200%", "at", "200%", "200%"]]
+  },
+  { start: "ellipse(100% 100% at 100% 100%) border-box",
+    end: "ellipse(500% 500% at 500% 500%) border-box",
+    expected: ["ellipse", ["200%", "200%", "at", "200%", "200%"]]
+  },
+  { start: "polygon(evenodd, 100% 100%, 100% 100%) border-box",
+    end: "polygon(evenodd, 500% 500%, 500% 500%) border-box",
+    expected: ["polygon", ["evenodd", "200%", "200%", "200%", "200%"]]
+  },
+  { start: "inset(100% 100% 100% 100% round 100% 100%) border-box",
+    end: "inset(500% 500% 500% 500% round 500% 500%) border-box",
+    expected: ["inset", ["200%", "round", "200%"]] },
+  // no interpolation for keywords
+  { start: "circle()", end: "circle(50px)",
+    expected: ["circle", ["50px", "at", "50%", "50%"]] },
+  { start: "circle(closest-side)", end: "circle(500px)",
+    expected: ["circle", ["500px", "at", "50%", "50%"]] },
+  { start: "circle(farthest-side)", end: "circle(500px)",
+    expected: ["circle", ["500px", "at", "50%", "50%"]] },
+  { start: "circle(500px)", end: "circle(farthest-side)",
+    expected: ["circle", ["farthest-side", "at", "50%", "50%"]]},
+  { start: "circle(500px)", end: "circle(closest-side)",
+    expected: ["circle", ["closest-side", "at", "50%", "50%"]]},
+  { start: "ellipse()", end: "ellipse(50px 50px)",
+    expected: ["ellipse", ["50px", "50px", "at", "50%", "50%"]] },
+  { start: "ellipse(closest-side closest-side)", end: "ellipse(500px 500px)",
+    expected: ["ellipse", ["500px", "500px", "at", "50%", "50%"]] },
+  { start: "ellipse(farthest-side closest-side)", end: "ellipse(500px 500px)",
+    expected: ["ellipse", ["500px", "500px", "at", "50%", "50%"]] },
+  { start: "ellipse(farthest-side farthest-side)", end: "ellipse(500px 500px)",
+    expected: ["ellipse", ["500px", "500px", "at", "50%", "50%"]] },
+  { start: "ellipse(500px 500px)", end: "ellipse(farthest-side farthest-side)",
+    expected: ["ellipse", ["farthest-side", "farthest-side", "at", "50%", "50%"]] },
+  { start: "ellipse(500px 500px)", end: "ellipse(closest-side closest-side)",
+    expected: ["ellipse", ["closest-side", "closest-side", "at", "50%", "50%"]] },
+  // mismatching boxes
+  { start: "circle(100px at 100px 100px) border-box",
+    end: "circle(500px at 500px 500px) content-box",
+    expected: ["circle", ["500px", "at", "500px", "500px"], "content-box"]
+  },
+  { start: "ellipse(100px 100px at 100px 100px) border-box",
+    end: "ellipse(500px 500px at 500px 500px) content-box",
+    expected: ["ellipse", ["500px", "500px", "at", "500px", "500px"], "content-box"]
+  },
+  { start: "polygon(evenodd, 100px 100px, 100px 100px) border-box",
+    end: "polygon(evenodd, 500px 500px, 500px 500px) content-box",
+    expected: ["polygon", ["evenodd", "500px", "500px", "500px", "500px"], "content-box"]
+  },
+  { start: "inset(100px 100px 100px 100px round 100px 100px) border-box",
+    end: "inset(500px 500px 500px 500px round 500px 500px) content-box",
+    expected: ["inset", ["500px", "round", "500px"], "content-box"]
+  },
+  // mismatching functions
+  { start: "circle(100px at 100px 100px) border-box",
+    end: "ellipse(500px 500px at 500px 500px) border-box",
+    expected: ["ellipse", ["500px", "500px", "at", "500px", "500px"], "border-box"]
+  },
+  { start: "inset(0px round 20px)", end: "ellipse(500px 500px)",
+    expected: ["ellipse", ["500px", "500px", "at", "50%", "50%"]]
+  },
+  // shape to reference box
+  { start: "circle(20px)", end: "content-box", expected: ["content-box"] },
+  { start: "content-box", end: "circle(20px)", expected: ["circle", ["20px", "at", "50%", "50%"]] },
+  // url to shape
+  { start: "circle(20px)", end: "url('#a')", expected: ["url", ["\""+document.URL+"#a\""]] },
+  { start: "url('#a')", end: "circle(20px)", expected: ["circle", ["20px", "at", "50%", "50%"]] },
+  // url to none
+  { start: "none", end: "url('#a')", expected: ["url", ["\""+document.URL+"#a\""]] },
+  { start: "url('#a')", end: "none", expected: ["none"] },
+
 ];
 
 var filterTests = [
@@ -1192,6 +1314,77 @@ function test_border_color_shorthand_transition(prop) {
   test_border_color_transition(prop, get_color_from_shorthand_value, true);
 }
 
+function test_clip_path_equals(computedValStr, expectedList)
+{
+  // Check simple case "none"
+  if (computedValStr == "none" && computedValStr == expectedList[0]) {
+    return true;
+  }
+  var start = String(computedValStr);
+
+  var regBox = /\s*(content\-box|padding\-box|border\-box|margin\-box|view\-box|stroke\-box|fill\-box)/
+  var matches = computedValStr.split(regBox);
+  var expectRefBox = typeof expectedList[expectedList.length - 1] == "string" &&
+                     expectedList[expectedList.length - 1].match(regBox) !== null;
+
+  // Found a reference box? Format: "shape()" or "shape() reference-box"
+  if (matches.length > 1) {
+    // Do we expect a reference box?
+    if (!expectRefBox) {
+      ok(false, "unexpected reference box found");
+    }
+    matches.pop();
+    is(matches.pop(), expectedList.pop(), "Reference boxes should match");
+  } else {
+    // No reference box found. Did we expect one?
+    if (expectRefBox) {
+      ok(false, "expected reference box");
+      return false;
+    }
+  }
+  computedValStr = matches[0];
+  if (expectedList.length == 0) {
+    if (computedValStr == "") {
+      return true;
+    } else {
+      ok(false, "expected clip-path shape");
+      return false;
+    }
+  }
+
+  // The regular expression does not filter out the last parenthesis.
+  // Remove last character for now.
+  is(computedValStr.substring(computedValStr.length - 1, computedValStr.length),
+                              ')', "Function should have close-paren");
+  computedValStr = computedValStr.substring(0, computedValStr.length - 1);
+
+  var regShape = /\)*\s*(circle|ellipse|polygon|inset|url)\(/
+  matches = computedValStr.split(regShape);
+  // First item must be empty. All other items are of functionName, functionValue.
+  if (!matches || matches.shift() != "") {
+    ok(false, "invalid value or unknown shape function");
+    return false;
+  }
+
+  // Split arguments at commas or whitspeaces.
+  funcParameters = matches[1].split(/\s*,\s*|\s+/);
+
+  // Check argument length.
+  if (funcParameters.length != expectedList[1].length) {
+    ok(false, "function parameters mismatch");
+    return false;
+  }
+
+  // Check argument values.
+  for (var i = 0; i < funcParameters.length; i++) {
+    if (funcParameters[i] != expectedList[1][i]) {
+      ok(false, "function parameters mismatch");
+      return false;
+    }
+  }
+  return true;
+}
+
 function filter_function_list_equals(computedValStr, expectedList)
 {
   // Check simple case "none"
@@ -1202,7 +1395,7 @@ function filter_function_list_equals(computedValStr, expectedList)
   // The regular expression does not filter out the last parenthesis.
   // Remove last character for now.
   is(computedValStr.substring(computedValStr.length - 1, computedValStr.length),
-                              ')', "Check if last character is close-paren");
+                              ')', "Last character should be close-paren");
   computedValStr = computedValStr.substring(0, computedValStr.length - 1);
 
   var reg = /\)*\s*(blur|brightness|contrast|grayscale|hue\-rotate|invert|opacity|saturate|sepia|drop\-shadow|url)\(/
@@ -1250,6 +1443,24 @@ function filter_function_list_equals(computedValStr, expectedList)
     }
   }
   return true;
+}
+
+function test_clip_path_transition(prop) {
+  if (!SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
+    return;
+  }
+  for (var i in clipPathTests) {
+    var test = clipPathTests[i];
+    div.style.setProperty("transition-property", "none", "");
+    div.style.setProperty(prop, test.start, "");
+    cs.getPropertyValue(prop);
+    div.style.setProperty("transition-property", prop, "");
+    div.style.setProperty(prop, test.end, "");
+    var actual = cs.getPropertyValue(prop);
+    ok(test_clip_path_equals(actual, test.expected),
+       "Clip-path property is " + actual + " expected values of " +
+       test.expected);
+  }
 }
 
 function test_filter_transition(prop) {

@@ -395,7 +395,8 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
                                    *decoder.mInfo->GetAsAudioInfo() :
                                    mInfo.mAudio,
                                  decoder.mTaskQueue,
-                                 decoder.mCallback);
+                                 decoder.mCallback,
+                                 /* DecoderDoctorDiagnostics* */ nullptr);
       break;
     case TrackType::kVideoTrack:
       // Decoders use the layers backend to decide if they can use hardware decoding,
@@ -406,6 +407,7 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
                                    mInfo.mVideo,
                                  decoder.mTaskQueue,
                                  decoder.mCallback,
+                                 /* DecoderDoctorDiagnostics* */ nullptr,
                                  mLayersBackendType,
                                  GetImageContainer());
       break;

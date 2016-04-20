@@ -439,7 +439,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInSystemEventGroup(
   }
 
   nsCOMPtr<mozilla::dom::Element> originalTarget =
-    do_QueryInterface(aEvent->AsEvent()->WidgetEventPtr()->originalTarget);
+    do_QueryInterface(aEvent->AsEvent()->WidgetEventPtr()->mOriginalTarget);
   if (!EventStateManager::IsRemoteTarget(originalTarget)) {
     return;
   }

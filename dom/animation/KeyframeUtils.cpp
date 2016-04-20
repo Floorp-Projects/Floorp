@@ -505,19 +505,6 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
         MOZ_ASSERT(values.Length() == 1,
                    "Longhand properties should produce a single"
                    " StyleAnimationValue");
-
-        // 'visibility' requires special handling that is unique to CSS
-        // Transitions/CSS Animations/Web Animations (i.e. not SMIL) so we
-        // apply that here.
-        //
-        // Bug 1259285 - Move this code to StyleAnimationValue
-        if (pair.mProperty == eCSSProperty_visibility) {
-          MOZ_ASSERT(values[0].mValue.GetUnit() ==
-                      StyleAnimationValue::eUnit_Enumerated,
-                    "unexpected unit");
-          values[0].mValue.SetIntValue(values[0].mValue.GetIntValue(),
-                                       StyleAnimationValue::eUnit_Visibility);
-        }
       }
 
       for (auto& value : values) {

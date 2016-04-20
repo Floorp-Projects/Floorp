@@ -32,7 +32,7 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
   else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
-    mEvent->refPoint.x = mEvent->refPoint.y = 0;
+    mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 
@@ -82,8 +82,8 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
       mouseEventBase->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
       mClientPoint.x = aClientX;
       mClientPoint.y = aClientY;
-      mouseEventBase->refPoint.x = aScreenX;
-      mouseEventBase->refPoint.y = aScreenY;
+      mouseEventBase->mRefPoint.x = aScreenX;
+      mouseEventBase->mRefPoint.y = aScreenY;
 
       WidgetMouseEvent* mouseEvent = mEvent->AsMouseEvent();
       if (mouseEvent) {
@@ -298,7 +298,8 @@ MouseEvent::GetRelatedTarget()
 
   if (relatedTarget) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(relatedTarget);
-    nsCOMPtr<nsIContent> currentTarget = do_QueryInterface(mEvent->currentTarget);
+    nsCOMPtr<nsIContent> currentTarget =
+      do_QueryInterface(mEvent->mCurrentTarget);
 
     nsIContent* shadowRelatedTarget = GetShadowRelatedTarget(currentTarget, content);
     if (shadowRelatedTarget) {
@@ -357,7 +358,7 @@ MouseEvent::GetScreenX(int32_t* aScreenX)
 int32_t
 MouseEvent::ScreenX()
 {
-  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint).x;
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).x;
 }
 
 NS_IMETHODIMP
@@ -371,7 +372,7 @@ MouseEvent::GetScreenY(int32_t* aScreenY)
 int32_t
 MouseEvent::ScreenY()
 {
-  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint).y;
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
 }
 
 
@@ -386,7 +387,7 @@ MouseEvent::GetClientX(int32_t* aClientX)
 int32_t
 MouseEvent::ClientX()
 {
-  return Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
 }
 
@@ -401,21 +402,21 @@ MouseEvent::GetClientY(int32_t* aClientY)
 int32_t
 MouseEvent::ClientY()
 {
-  return Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).y;
 }
 
 int32_t
 MouseEvent::OffsetX()
 {
-  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
 }
 
 int32_t
 MouseEvent::OffsetY()
 {
-  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->refPoint,
+  return Event::GetOffsetCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).y;
 }
 

@@ -33,7 +33,7 @@ namespace ipc {
 class DBusMessageRefPtr
 {
 public:
-  DBusMessageRefPtr(DBusMessage* aMsg);
+  explicit DBusMessageRefPtr(DBusMessage* aMsg);
   ~DBusMessageRefPtr();
 
   operator DBusMessage* ()

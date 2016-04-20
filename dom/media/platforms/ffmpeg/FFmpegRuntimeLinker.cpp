@@ -67,7 +67,7 @@ FFmpegRuntimeLinker::Init()
 
   FFMPEG_LOG("H264/AAC codecs unsupported without [");
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
-    FFMPEG_LOG("%s %s", i ? "," : "", sLibs[i]);
+    FFMPEG_LOG("%s %s", i ? "," : " ", sLibs[i]);
   }
   FFMPEG_LOG(" ]\n");
 

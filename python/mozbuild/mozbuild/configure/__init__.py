@@ -703,6 +703,7 @@ class ConfigureSandbox(dict):
         glob.update(
             __builtins__=self.BUILTINS,
             __file__=self._paths[-1] if self._paths else '',
+            __name__=self._paths[-1] if self._paths else '',
             os=self.OS,
             log=self.log_impl,
         )

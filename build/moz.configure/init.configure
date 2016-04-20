@@ -147,7 +147,7 @@ def add_old_configure_assignment(var, value):
         else:
             if isinstance(value, (list, tuple)):
                 value = quote(*value)
-            assignments.append('%s=%s' % (var, quote(value)))
+            assignments.append('%s=%s' % (var, quote(str(value))))
 
 @template
 def add_old_configure_arg(arg):
@@ -313,6 +313,10 @@ option('--target', nargs=1,
        help='Define the system type where the resulting executables will be '
             'used')
 
+@imports(_from='mozbuild.configure.constants', _import='CPU')
+@imports(_from='mozbuild.configure.constants', _import='Endianness')
+@imports(_from='mozbuild.configure.constants', _import='Kernel')
+@imports(_from='mozbuild.configure.constants', _import='OS')
 def split_triplet(triplet):
     # The standard triplet is defined as
     #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
@@ -408,10 +412,10 @@ def split_triplet(triplet):
 
     return namespace(
         alias=triplet,
-        cpu=canonical_cpu,
-        kernel=canonical_kernel,
-        os=canonical_os,
-        endianness=endianness,
+        cpu=CPU(canonical_cpu),
+        kernel=Kernel(canonical_kernel),
+        os=OS(canonical_os),
+        endianness=Endianness(endianness),
         raw_cpu=cpu,
         raw_os=os,
         # Toolchains, most notably for cross compilation may use cpu-os
@@ -493,7 +497,7 @@ def target_variables(target):
         os_target = target.os
         os_arch = target.kernel
 
-    if target.os == 'Darwin' and target.cpu == 'x86':
+    if target.kernel == 'Darwin' and target.cpu == 'x86':
         os_test = 'i386'
     else:
         os_test = target.raw_cpu

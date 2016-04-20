@@ -207,7 +207,7 @@ private:
   nsStyleContext*    mStyleContext;
   // mGlyphs/mBmData are arrays describing the glyphs used to draw the operator.
   // See the drawing methods below.
-  nsAutoPtr<gfxTextRun> mGlyphs[4];
+  mozilla::UniquePtr<gfxTextRun> mGlyphs[4];
   nsBoundingMetrics     mBmData[4];
   // mUnscaledAscent is the actual ascent of the char.
   nscoord            mUnscaledAscent;

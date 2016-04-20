@@ -358,11 +358,13 @@ this.PushService = {
   // stopObservers()
   getNetworkStateChangeEventName: function() {
     try {
-      Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
-      return "network-active-changed";
-    } catch (e) {
-      return "network:offline-status-changed";
-    }
+      let networkManager = Cc["@mozilla.org/network/manager;1"];
+      if (networkManager) {
+        networkManager.getService(Ci.nsINetworkManager);
+        return "network-active-changed";
+      }
+    } catch (e) {}
+    return "network:offline-status-changed";
   },
 
   _findService: function(serverURL) {

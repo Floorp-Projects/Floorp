@@ -9,7 +9,6 @@
 #include "gfxFont.h"
 #include "gfxFontFamilyList.h"
 #include "nsRefPtrHashtable.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIPrincipal.h"

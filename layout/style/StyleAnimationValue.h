@@ -281,6 +281,7 @@ public:
     eUnit_CSSRect, // nsCSSRect* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow, // nsCSSValueList* (may be null)
+    eUnit_Shape,  // nsCSSValue::Array* (never null)
     eUnit_Filter, // nsCSSValueList* (may be null)
     eUnit_Transform, // nsCSSValueList* (never null)
     eUnit_BackgroundPosition, // nsCSSValueList* (never null)
@@ -299,6 +300,7 @@ private:
     nsCSSValuePair* mCSSValuePair;
     nsCSSValueTriplet* mCSSValueTriplet;
     nsCSSRect* mCSSRect;
+    nsCSSValue::Array* mCSSValueArray;
     nsCSSValueList* mCSSValueList;
     nsCSSValueSharedList* mCSSValueSharedList;
     nsCSSValuePairList* mCSSValuePairList;
@@ -352,6 +354,10 @@ public:
   nsCSSRect* GetCSSRectValue() const {
     NS_ASSERTION(IsCSSRectUnit(mUnit), "unit mismatch");
     return mValue.mCSSRect;
+  }
+  nsCSSValue::Array* GetCSSValueArrayValue() const {
+    NS_ASSERTION(IsCSSValueArrayUnit(mUnit), "unit mismatch");
+    return mValue.mCSSValueArray;
   }
   nsCSSValueList* GetCSSValueListValue() const {
     NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
@@ -435,6 +441,7 @@ public:
   void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
   void SetAndAdoptCSSValueTripletValue(nsCSSValueTriplet *aValue, Unit aUnit);
   void SetAndAdoptCSSRectValue(nsCSSRect *aValue, Unit aUnit);
+  void SetAndAdoptCSSValueArrayValue(nsCSSValue::Array* aValue, Unit aUnit);
   void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
   void SetAndAdoptCSSValuePairListValue(nsCSSValuePairList *aValue);
 
@@ -470,6 +477,9 @@ private:
   }
   static bool IsCSSRectUnit(Unit aUnit) {
     return aUnit == eUnit_CSSRect;
+  }
+  static bool IsCSSValueArrayUnit(Unit aUnit) {
+    return aUnit == eUnit_Shape;
   }
   static bool IsCSSValueListUnit(Unit aUnit) {
     return aUnit == eUnit_Dasharray || aUnit == eUnit_Filter ||

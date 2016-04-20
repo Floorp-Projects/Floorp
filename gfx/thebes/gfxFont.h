@@ -653,7 +653,7 @@ protected:
     static void GetRoundOffsetsToPixels(DrawTarget* aDrawTarget,
                                         bool* aRoundX, bool* aRoundY);
 
-    // the font this shaper is working with. The font owns a nsAutoPtr reference
+    // the font this shaper is working with. The font owns a UniquePtr reference
     // to this object, and will destroy it before it dies. Thus, mFont will always
     // be valid.
     gfxFont* MOZ_NON_OWNING_REF mFont;
@@ -1145,7 +1145,7 @@ protected:
         nsTArray<DGRec>::index_type mLastUsed;
     };
 
-    nsAutoPtr<DetailedGlyphStore>   mDetailedGlyphs;
+    mozilla::UniquePtr<DetailedGlyphStore>   mDetailedGlyphs;
 
     // Number of char16_t characters and CompressedGlyph glyph records
     uint32_t                        mLength;
@@ -1534,7 +1534,7 @@ public:
             return GetHorizontalMetrics();
         }
         if (!mVerticalMetrics) {
-            mVerticalMetrics = CreateVerticalMetrics();
+            mVerticalMetrics.reset(CreateVerticalMetrics());
         }
         return *mVerticalMetrics;
     }
@@ -1751,7 +1751,7 @@ public:
     // any attempt to use GetShapedWord().
     void InitWordCache() {
         if (!mWordCache) {
-            mWordCache = new nsTHashtable<CacheHashEntry>;
+            mWordCache = mozilla::MakeUnique<nsTHashtable<CacheHashEntry>>();
         }
     }
 
@@ -2065,10 +2065,10 @@ protected:
 
         enum { ALLOW_MEMMOVE = true };
 
-        nsAutoPtr<gfxShapedWord> mShapedWord;
+        mozilla::UniquePtr<gfxShapedWord> mShapedWord;
     };
 
-    nsAutoPtr<nsTHashtable<CacheHashEntry> > mWordCache;
+    mozilla::UniquePtr<nsTHashtable<CacheHashEntry> > mWordCache;
 
     static const uint32_t  kShapedWordCacheMaxAge = 3;
 
@@ -2083,8 +2083,9 @@ protected:
 
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
-    AutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
-    nsAutoPtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver> > > mGlyphChangeObservers;
+    nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray;
+    mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>>
+                               mGlyphChangeObservers;
 
     gfxFloat                   mAdjustedSize;
 
@@ -2098,13 +2099,13 @@ protected:
 
     // a copy of the font without antialiasing, if needed for separate
     // measurement by mathml code
-    nsAutoPtr<gfxFont>         mNonAAFont;
+    mozilla::UniquePtr<gfxFont>         mNonAAFont;
 
     // we create either or both of these shapers when needed, depending
     // whether the font has graphite tables, and whether graphite shaping
     // is actually enabled
-    nsAutoPtr<gfxFontShaper>   mHarfBuzzShaper;
-    nsAutoPtr<gfxFontShaper>   mGraphiteShaper;
+    mozilla::UniquePtr<gfxFontShaper>   mHarfBuzzShaper;
+    mozilla::UniquePtr<gfxFontShaper>   mGraphiteShaper;
 
     // if a userfont with unicode-range specified, contains map of *possible*
     // ranges supported by font
@@ -2113,7 +2114,7 @@ protected:
     RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
     // For vertical metrics, created on demand.
-    nsAutoPtr<const Metrics> mVerticalMetrics;
+    mozilla::UniquePtr<const Metrics> mVerticalMetrics;
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.

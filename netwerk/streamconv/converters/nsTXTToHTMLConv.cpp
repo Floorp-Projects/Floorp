@@ -73,7 +73,8 @@ nsTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputData;
-    rv = NS_NewStringInputStream(getter_AddRefs(inputData), mBuffer);
+    NS_LossyConvertUTF16toASCII asciiData(mBuffer);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputData), asciiData);
     if (NS_FAILED(rv)) return rv;
 
     rv = mListener->OnDataAvailable(request, aContext,
@@ -102,8 +103,8 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     mBuffer.AppendLiteral("\n</body></html>");
 
     nsCOMPtr<nsIInputStream> inputData;
-
-    rv = NS_NewStringInputStream(getter_AddRefs(inputData), mBuffer);
+    NS_LossyConvertUTF16toASCII asciiData(mBuffer);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputData), asciiData);
     if (NS_FAILED(rv)) return rv;
 
     rv = mListener->OnDataAvailable(request, aContext,
@@ -179,8 +180,8 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 
         if (!pushBuffer.IsEmpty()) {
             nsCOMPtr<nsIInputStream> inputData;
-
-            rv = NS_NewStringInputStream(getter_AddRefs(inputData), pushBuffer);
+            NS_LossyConvertUTF16toASCII asciiData(pushBuffer);
+            rv = NS_NewCStringInputStream(getter_AddRefs(inputData), asciiData);
             if (NS_FAILED(rv))
                 return rv;
 
