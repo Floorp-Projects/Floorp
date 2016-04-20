@@ -118,11 +118,22 @@ richlistitem.download button {
                                            .downloadCancel,
 
 /* Blocked (dirty) downloads that have not been confirmed and
-   have temporary data. */
+   have temporary data, for the Malware case. */
 .download-state:not(          [state="8"]  /* Blocked (dirty)    */)
                                            .downloadConfirmBlock,
 .download-state[state="8"]:not(.temporary-block)
                                            .downloadConfirmBlock,
+.download-state[state="8"].temporary-block:not([verdict="Malware"])
+                                           .downloadConfirmBlock,
+
+/* Blocked (dirty) downloads that have not been confirmed and
+   have temporary data, for cases other than Malware. */
+.download-state:not(          [state="8"]  /* Blocked (dirty)    */)
+                                           .downloadUnblock,
+.download-state[state="8"]:not(.temporary-block)
+                                           .downloadUnblock,
+.download-state[state="8"].temporary-block[verdict="Malware"]
+                                           .downloadUnblock,
 
 .download-state:not(:-moz-any([state="2"], /* Failed             */
                               [state="3"]) /* Canceled           */)

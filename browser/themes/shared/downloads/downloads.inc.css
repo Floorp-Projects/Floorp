@@ -8,6 +8,7 @@
 %define notKeyfocus #downloadsPanel:not([keyfocus])
 %define item richlistitem[type="download"]
 %define itemFinished @item@[state="1"]
+%define itemNotFinished @item@:not([state="1"])
 %define itemFocused #downloadsListBox:focus > @item@[selected]
 
 /*** Panel and outer controls ***/
