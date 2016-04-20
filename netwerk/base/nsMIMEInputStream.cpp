@@ -159,6 +159,15 @@ nsMIMEInputStream::SetData(nsIInputStream *aStream)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMIMEInputStream::GetData(nsIInputStream **aStream)
+{
+  NS_ENSURE_ARG_POINTER(aStream);
+  *aStream = mData;
+  NS_IF_ADDREF(*aStream);
+  return NS_OK;
+}
+
 // set up the internal streams
 void nsMIMEInputStream::InitStreams()
 {
