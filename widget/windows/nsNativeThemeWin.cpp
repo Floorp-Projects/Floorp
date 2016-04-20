@@ -2574,7 +2574,8 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
 
 NS_IMETHODIMP
 nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                     nsIAtom* aAttribute, bool* aShouldRepaint)
+                                     nsIAtom* aAttribute, bool* aShouldRepaint,
+                                     const nsAttrValue* aOldValue)
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX ||
