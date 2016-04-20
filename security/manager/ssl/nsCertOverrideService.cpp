@@ -348,8 +348,7 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
                            SECOidTag aOidTag, 
                            nsCString &fp)
 {
-
-  ScopedCERTCertificate nsscert(aCert->GetCert());
+  UniqueCERTCertificate nsscert(aCert->GetCert());
   if (!nsscert) {
     return NS_ERROR_FAILURE;
   }
@@ -369,7 +368,7 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
   if (aPort < -1)
     return NS_ERROR_INVALID_ARG;
 
-  ScopedCERTCertificate nsscert(aCert->GetCert());
+  UniqueCERTCertificate nsscert(aCert->GetCert());
   if (!nsscert) {
     return NS_ERROR_FAILURE;
   }

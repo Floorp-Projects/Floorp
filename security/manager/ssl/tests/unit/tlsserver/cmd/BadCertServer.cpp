@@ -117,7 +117,7 @@ DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
     fprintf(stderr, "found pre-defined host '%s'\n", host->mHostName);
   }
 
-  ScopedCERTCertificate cert;
+  UniqueCERTCertificate cert;
   SSLKEAType certKEA;
   if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, host->mCertName,
                                                     &cert, &certKEA)) {

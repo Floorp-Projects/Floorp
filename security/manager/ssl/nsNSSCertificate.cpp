@@ -118,7 +118,7 @@ nsNSSCertificate::InitFromDER(char* certDER, int derLen)
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
 
-  mCert = aCert;
+  mCert.reset(aCert);
   return true;
 }
 
@@ -139,7 +139,7 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert,
     return;
 
   if (cert) {
-    mCert = CERT_DupCertificate(cert);
+    mCert.reset(CERT_DupCertificate(cert));
     if (evOidPolicy) {
       if (*evOidPolicy == SEC_OID_UNKNOWN) {
         mCachedEVStatus =  ev_status_invalid;
@@ -227,7 +227,7 @@ nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  pkix::Result rv = IsCertBuiltInRoot(mCert, *aIsBuiltInRoot);
+  pkix::Result rv = IsCertBuiltInRoot(mCert.get(), *aIsBuiltInRoot);
   if (rv != pkix::Result::Success) {
     return NS_ERROR_FAILURE;
   }
@@ -515,7 +515,7 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey)
 }
 
 nsresult
-nsNSSCertificate::GetDbKey(CERTCertificate* cert, nsACString& aDbKey)
+nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert, nsACString& aDbKey)
 {
   static_assert(sizeof(uint64_t) == 8, "type size sanity check");
   static_assert(sizeof(uint32_t) == 4, "type size sanity check");
@@ -1176,15 +1176,15 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
   // in the SignedData).
   if (chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChain ||
       chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot) {
-    ScopedCERTCertificate issuerCert(
-        CERT_FindCertIssuer(mCert.get(), PR_Now(), certUsageAnyCA));
+    UniqueCERTCertificate issuerCert(
+      CERT_FindCertIssuer(mCert.get(), PR_Now(), certUsageAnyCA));
     // the issuerCert of a self signed root is the cert itself,
     // so make sure we're not adding duplicates, again
-    if (issuerCert && issuerCert != mCert.get()) {
+    if (issuerCert && issuerCert != mCert) {
       bool includeRoot =
         (chainMode == nsIX509Cert::CMS_CHAIN_MODE_CertChainWithRoot);
       UniqueCERTCertificateList certChain(
-          CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot));
+        CERT_CertChainFromCert(issuerCert.get(), certUsageAnyCA, includeRoot));
       if (certChain) {
         if (NSS_CMSSignedData_AddCertList(sigd.get(), certChain.get())
               == SECSuccess) {
@@ -1198,9 +1198,9 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
       }
       else {
         // try to add the issuerCert, at least
-        if (NSS_CMSSignedData_AddCertificate(sigd.get(), issuerCert)
-            == SECSuccess) {
-          issuerCert.forget();
+        if (NSS_CMSSignedData_AddCertificate(sigd.get(), issuerCert.get())
+              == SECSuccess) {
+          Unused << issuerCert.release();
         }
         else {
           MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -1380,7 +1380,7 @@ nsNSSCertificate::Equals(nsIX509Cert* other, bool* result)
   NS_ENSURE_ARG(other);
   NS_ENSURE_ARG(result);
 
-  ScopedCERTCertificate cert(other->GetCert());
+  UniqueCERTCertificate cert(other->GetCert());
   *result = (mCert.get() == cert.get());
   return NS_OK;
 }
@@ -1490,17 +1490,17 @@ ConstructCERTCertListFromReversedDERArray(
   size_t numCerts = certArray.GetLength();
   for (size_t i = 0; i < numCerts; ++i) {
     SECItem certDER(UnsafeMapInputToSECItem(*certArray.GetDER(i)));
-    ScopedCERTCertificate cert(CERT_NewTempCertificate(certDB, &certDER,
+    UniqueCERTCertificate cert(CERT_NewTempCertificate(certDB, &certDER,
                                                        nullptr, false, true));
     if (!cert) {
       return SECFailure;
     }
     // certArray is ordered with the root first, but we want the resulting
     // certList to have the root last.
-    if (CERT_AddCertToListHead(certList, cert) != SECSuccess) {
+    if (CERT_AddCertToListHead(certList.get(), cert.get()) != SECSuccess) {
       return SECFailure;
     }
-    cert.forget(); // cert is now owned by certList.
+    Unused << cert.release(); // cert is now owned by certList.
   }
 
   return SECSuccess;

@@ -179,7 +179,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   // performance problem because NSS will just find the existing
   // CERTCertificate in its in-memory cache and return it.
   SECItem candidateCertDERSECItem = UnsafeMapInputToSECItem(candidateCertDER);
-  ScopedCERTCertificate candidateCert(
+  UniqueCERTCertificate candidateCert(
     CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &candidateCertDERSECItem,
                             nullptr, false, true));
   if (!candidateCert) {
