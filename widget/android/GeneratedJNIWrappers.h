@@ -4107,6 +4107,45 @@ public:
 
 };
 
+class AudioFocusAgent : public mozilla::jni::ObjectBase<AudioFocusAgent, jobject>
+{
+public:
+    explicit AudioFocusAgent(const Context& ctx) : ObjectBase<AudioFocusAgent, jobject>(ctx) {}
+
+    struct NotifyStartedPlaying_t {
+        typedef AudioFocusAgent Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "notifyStartedPlaying";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto NotifyStartedPlaying() -> void;
+
+    struct NotifyStoppedPlaying_t {
+        typedef AudioFocusAgent Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "notifyStoppedPlaying";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto NotifyStoppedPlaying() -> void;
+
+    static const bool isMultithreaded = false;
+
+};
+
 class Restrictions : public mozilla::jni::ObjectBase<Restrictions, jobject>
 {
 public:

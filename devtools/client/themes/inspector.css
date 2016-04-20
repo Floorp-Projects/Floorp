@@ -16,11 +16,11 @@
 /* Expand/collapse panel toolbar button */
 
 #inspector-pane-toggle {
-  list-style-image: url(chrome://devtools/skin/images/pane-collapse.svg);
+  list-style-image: var(--theme-pane-collapse-image);
 }
 
 #inspector-pane-toggle[pane-collapsed] {
-  list-style-image: url(chrome://devtools/skin/images/pane-expand.svg);
+  list-style-image: var(--theme-pane-expand-image);
 }
 
 @media (max-width: 700px) {

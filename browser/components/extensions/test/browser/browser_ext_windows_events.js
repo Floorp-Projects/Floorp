@@ -5,7 +5,6 @@
 add_task(function* testWindowsEvents() {
   function background() {
     browser.windows.onCreated.addListener(function listener(window) {
-      browser.windows.onCreated.removeListener(listener);
       browser.test.assertTrue(Number.isInteger(window.id),
                               "Window object's id is an integer");
       browser.test.assertEq("normal", window.type,
@@ -13,8 +12,21 @@ add_task(function* testWindowsEvents() {
       browser.test.sendMessage("window-created", window.id);
     });
 
+    let lastWindowId;
+    browser.windows.onFocusChanged.addListener(function listener(windowId) {
+      browser.test.assertTrue(lastWindowId !== windowId,
+                              "onFocusChanged fired once for the given window");
+      lastWindowId = windowId;
+      browser.test.assertTrue(Number.isInteger(windowId),
+                              "windowId is an integer");
+      browser.windows.getLastFocused().then(window => {
+        browser.test.assertEq(windowId, window.id,
+                              "Last focused window has the correct id");
+        browser.test.sendMessage(`window-focus-changed-${windowId}`);
+      });
+    });
+
     browser.windows.onRemoved.addListener(function listener(windowId) {
-      browser.windows.onRemoved.removeListener(listener);
       browser.test.assertTrue(Number.isInteger(windowId),
                               "windowId is an integer");
       browser.test.sendMessage(`window-removed-${windowId}`);
@@ -30,10 +42,29 @@ add_task(function* testWindowsEvents() {
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
+
+  let {WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let currentWindow = window;
+  let currentWindowId = WindowManager.getId(currentWindow);
+
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
-  let windowId = yield extension.awaitMessage("window-created");
+  let win1Id = yield extension.awaitMessage("window-created");
+  yield extension.awaitMessage(`window-focus-changed-${win1Id}`);
+
+  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2Id = yield extension.awaitMessage("window-created");
+  yield extension.awaitMessage(`window-focus-changed-${win2Id}`);
+
+  yield focusWindow(win1);
+  yield extension.awaitMessage(`window-focus-changed-${win1Id}`);
+
+  yield BrowserTestUtils.closeWindow(win2);
+  yield extension.awaitMessage(`window-removed-${win2Id}`);
+
   yield BrowserTestUtils.closeWindow(win1);
-  yield extension.awaitMessage(`window-removed-${windowId}`);
+  yield extension.awaitMessage(`window-removed-${win1Id}`);
+
+  yield extension.awaitMessage(`window-focus-changed-${currentWindowId}`);
   yield extension.awaitFinish("windows.events");
   yield extension.unload();
 });

@@ -142,7 +142,7 @@ add_task(function* test_noShowIcons() {
                makeRemoteTabMatch("http://example.com/", "My Phone",
                                   { title: "An Example",
                                     // expecting the default favicon due to that pref.
-                                    icon: PlacesUtils.favicons.defaultFavicon.spec,
+                                    icon: "",
                                   }),
              ],
   });

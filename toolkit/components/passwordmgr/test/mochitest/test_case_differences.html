@@ -86,10 +86,11 @@ add_task(function* test_empty_first_entry() {
   restoreForm();
   let popupState = yield getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
-  is(popupState.selectedIndex, -1, "Check no entries are selected");
   let shownPromise = promiseACShown();
   doKey("down");
   let results = yield shownPromise;
+  popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected");
   checkArrayValues(results, ["name", "Name", "USER"], "initial");
 
   // Check first entry

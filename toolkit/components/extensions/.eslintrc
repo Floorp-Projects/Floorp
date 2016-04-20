@@ -428,7 +428,7 @@
     "quote-props": 0,
 
     // Double quotes should be used.
-    "quotes": [1, "double", "avoid-escape"],
+    "quotes": [1, "double", {"avoidEscape": true, "allowTemplateLiterals": true}],
 
     // Require use of the second argument for parseInt().
     "radix": 2,

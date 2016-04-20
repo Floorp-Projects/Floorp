@@ -417,7 +417,7 @@ exports.defaultTools = defaultTools;
 
 Tools.darkTheme = {
   id: "dark",
-  label: l10n("options.darkTheme.label", toolboxStrings),
+  label: l10n("options.darkTheme.label2", toolboxStrings),
   ordinal: 1,
   stylesheets: ["chrome://devtools/skin/dark-theme.css"],
   classList: ["theme-dark"],
@@ -425,15 +425,24 @@ Tools.darkTheme = {
 
 Tools.lightTheme = {
   id: "light",
-  label: l10n("options.lightTheme.label", toolboxStrings),
+  label: l10n("options.lightTheme.label2", toolboxStrings),
   ordinal: 2,
   stylesheets: ["chrome://devtools/skin/light-theme.css"],
   classList: ["theme-light"],
 };
 
+Tools.firebugTheme = {
+  id: "firebug",
+  label: l10n("options.firebugTheme.label2", toolboxStrings),
+  ordinal: 3,
+  stylesheets: ["chrome://devtools/skin/firebug-theme.css"],
+  classList: ["theme-light", "theme-firebug"],
+};
+
 exports.defaultThemes = [
   Tools.darkTheme,
   Tools.lightTheme,
+  Tools.firebugTheme,
 ];
 
 /**

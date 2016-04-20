@@ -54,6 +54,10 @@
   --theme-graphs-grey: #cccccc;
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
+
+  /* Images */
+  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
+  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
 :root.theme-dark {
@@ -96,22 +100,26 @@
   --theme-graphs-grey: #757873;
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
+
+  /* Images */
+  --theme-pane-collapse-image: url(chrome://devtools/skin/images/pane-collapse.svg);
+  --theme-pane-expand-image: url(chrome://devtools/skin/images/pane-expand.svg);
 }
 
 :root.theme-firebug {
-  --theme-body-background: white;
-  --theme-sidebar-background: white;
+  --theme-body-background: #fcfcfc;
+  --theme-sidebar-background: #fcfcfc;
   --theme-contrast-background: #e6b064;
 
-  --theme-tab-toolbar-background: #fcfcfc;
-  --theme-toolbar-background: #fcfcfc;
-  --theme-selection-background: #4c9ed9;
-  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
-  --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #dde1e4;
-  --theme-comment: #696969;
+  --theme-tab-toolbar-background: #ebeced;
+  --theme-toolbar-background: #f0f1f2;
+  --theme-selection-background: #3399ff;
+  --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
+  --theme-selection-color: white;
+  --theme-splitter-color: #aabccf;
+  --theme-comment: green;
 
-  --theme-body-color: #393f4c;
+  --theme-body-color: #18191a;
   --theme-body-color-alt: #585959;
   --theme-content-color1: #292e33;
   --theme-content-color2: #8fa1b2;
@@ -137,4 +145,16 @@
   --theme-graphs-grey: #cccccc;
   --theme-graphs-full-red: #f00;
   --theme-graphs-full-blue: #00f;
+
+  /* Images */
+  --theme-pane-collapse-image: url(chrome://devtools/skin/images/firebug/pane-collapse.svg);
+  --theme-pane-expand-image: url(chrome://devtools/skin/images/firebug/pane-expand.svg);
+
+  /* Font size */
+  --theme-toolbar-font-size: 12px;
+
+  /* Header */
+  --theme-header-background: #F0F0F0 linear-gradient(to top,
+                                                     rgba(0, 0, 0, 0.1),
+                                                     transparent) repeat-x;
 }

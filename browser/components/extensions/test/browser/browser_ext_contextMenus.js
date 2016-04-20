@@ -2,6 +2,67 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+
+add_task(function* () {
+  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
+
+  gBrowser.selectedTab = tab1;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["contextMenus"],
+    },
+
+    background: function() {
+      browser.contextMenus.create({
+        id: "clickme",
+        title: "Click me!",
+        contexts: ["image"],
+      });
+      browser.test.notifyPass();
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish();
+
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#img1", {
+    type: "contextmenu",
+    button: 2,
+  }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
+  is(item.length, 1, "contextMenu item for image was found");
+
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(item[0], {});
+  yield popupHiddenPromise;
+
+  contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("body", {
+    type: "contextmenu",
+    button: 2,
+  }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
+  is(item.length, 0, "no contextMenu item for image was found");
+
+  // click something to close the context menu
+  popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+  EventUtils.synthesizeMouseAtCenter(document.getElementById("context-selectall"), {});
+  yield popupHiddenPromise;
+
+  yield extension.unload();
+
+  yield BrowserTestUtils.removeTab(tab1);
+});
+
 /* globals content */
 /* eslint-disable mozilla/no-cpows-in-tests */
 add_task(function* () {

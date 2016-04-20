@@ -349,6 +349,8 @@ describe("loop.shared.utils", function() {
             return "body_context";
           case "share_email_footer2":
             return "footer";
+          default:
+            return "unknown";
         }
       });
       LoopMochaUtils.stubLoopRequest(requestStubs = {

@@ -4,6 +4,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Extension",
+                                  "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
+                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",

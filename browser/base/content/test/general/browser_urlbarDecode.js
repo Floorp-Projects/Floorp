@@ -87,11 +87,8 @@ function* checkInput(inputStr) {
   Assert.equal(item.getAttribute("title"), inputStr.replace("\\","/"), "title");
   Assert.equal(item.getAttribute("text"), inputStr, "text");
 
-  let itemTypeStr = item.getAttribute("type");
-  let itemTypes = itemTypeStr.split(" ").sort();
-  Assert.equal(itemTypes.toString(),
-               ["action", "heuristic", "visiturl"].toString(),
-               "type");
+  let itemType = item.getAttribute("type");
+  Assert.equal(itemType, "visiturl");
 
   Assert.equal(item._titleText.textContent, inputStr.replace("\\","/"), "Visible title");
   Assert.equal(item._actionText.textContent, "Visit", "Visible action");

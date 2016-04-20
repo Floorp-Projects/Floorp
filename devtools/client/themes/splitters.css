@@ -25,7 +25,8 @@
   --devtools-splitter-color: #dde1e4;
 }
 
-:root[devtoolstheme="dark"] {
+:root[devtoolstheme="dark"],
+:root[devtoolstheme="firebug"] {
   --devtools-splitter-color: #42484f;
 }
 

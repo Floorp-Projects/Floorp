@@ -11,7 +11,7 @@
         "choices": [
           {
             "type": "string",
-            "pattern": "^(Alt|Ctrl|Command|MacCtr)\\+(Shift\\+)?([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right)$"
+            "pattern": "^\\s*(Alt|Ctrl|Command|MacCtr)\\s*\\+\\s*(Shift\\s*\\+\\s*)?([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right)\\s*$"
           },
           {
             "type": "string",

@@ -137,7 +137,8 @@
     </declare-styleable>
 
     <declare-styleable name="BookmarkFolderView">
-        <attr name="state_open" format="boolean"/>
+        <attr name="parent" format="boolean"/>
+        <attr name="reading_list" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="IconTabWidget">

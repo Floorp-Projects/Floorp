@@ -58,10 +58,9 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/Integration.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
-                                  "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -89,6 +88,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gExternalHelperAppService",
 XPCOMUtils.defineLazyServiceGetter(this, "gPrintSettingsService",
            "@mozilla.org/gfx/printsettings-service;1",
            Ci.nsIPrintSettingsService);
+
+Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
+            "resource://gre/modules/DownloadIntegration.jsm");
 
 const BackgroundFileSaverStreamListener = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=streamlistener",
@@ -420,10 +422,12 @@ this.Download.prototype = {
 
       let changeMade = false;
 
-      if ("contentType" in aOptions &&
-          this.contentType != aOptions.contentType) {
-        this.contentType = aOptions.contentType;
-        changeMade = true;
+      for (let property of ["contentType", "progress", "hasPartialData",
+                            "hasBlockedData"]) {
+        if (property in aOptions && this[property] != aOptions[property]) {
+          this[property] = aOptions[property];
+          changeMade = true;
+        }
       }
 
       if (changeMade) {
@@ -2133,7 +2137,7 @@ this.DownloadCopySaver.prototype = {
         // up the chain of objects for the download.
         yield deferSaveComplete.promise;
 
-        yield this._checkReputationAndMove();
+        yield this._checkReputationAndMove(aSetPropertiesFn);
       } catch (ex) {
         // Ensure we always remove the placeholder for the final target file on
         // failure, independently of which code path failed.  In some cases, the
@@ -2161,11 +2165,14 @@ this.DownloadCopySaver.prototype = {
    * will move it to the target path since reputation checking is the final
    * step in the saver.
    *
+   * @param aSetPropertiesFn
+   *        Function provided to the "execute" method.
+   *
    * @return {Promise}
    * @resolves When the reputation check and cleanup is complete.
    * @rejects DownloadError if the download should be blocked.
    */
-  _checkReputationAndMove: Task.async(function* () {
+  _checkReputationAndMove: Task.async(function* (aSetPropertiesFn) {
     let download = this.download;
     let targetPath = this.download.target.path;
     let partFilePath = this.download.target.partFilePath;
@@ -2173,8 +2180,7 @@ this.DownloadCopySaver.prototype = {
     let { shouldBlock, verdict } =
         yield DownloadIntegration.shouldBlockForReputationCheck(download);
     if (shouldBlock) {
-      download.progress = 100;
-      download.hasPartialData = false;
+      let newProperties = { progress: 100, hasPartialData: false };
 
       // We will remove the potentially dangerous file if instructed by
       // DownloadIntegration. We will always remove the file when the
@@ -2187,8 +2193,10 @@ this.DownloadCopySaver.prototype = {
           Cu.reportError(ex);
         }
       } else {
-        download.hasBlockedData = true;
+        newProperties.hasBlockedData = true;
       }
+
+      aSetPropertiesFn(newProperties);
 
       throw new DownloadError({
         becauseBlockedByReputationCheck: true,
@@ -2473,7 +2481,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute: function DLS_execute(aSetProgressBytesFn)
+  execute: function DLS_execute(aSetProgressBytesFn, aSetPropertiesFn)
   {
     // Check if this is not the first execution of the download.  The Download
     // object guarantees that this function is not re-entered during execution.
@@ -2529,7 +2537,7 @@ this.DownloadLegacySaver.prototype = {
           }
         }
 
-        yield this._checkReputationAndMove();
+        yield this._checkReputationAndMove(aSetPropertiesFn);
 
       } catch (ex) {
         // Ensure we always remove the final target file on failure,
@@ -2564,7 +2572,8 @@ this.DownloadLegacySaver.prototype = {
   },
 
   _checkReputationAndMove: function () {
-    return DownloadCopySaver.prototype._checkReputationAndMove.call(this);
+    return DownloadCopySaver.prototype._checkReputationAndMove
+                                      .apply(this, arguments);
   },
 
   /**
