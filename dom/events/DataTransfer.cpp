@@ -972,7 +972,7 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
     return nullptr;
   }
 
-  nsIDocument* doc = dragNode->GetUncomposedDoc();
+  nsIDocument* doc = dragNode->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
