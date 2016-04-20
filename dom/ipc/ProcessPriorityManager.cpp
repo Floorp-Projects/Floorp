@@ -1045,10 +1045,6 @@ ParticularProcessPriorityManager::IsExpectingSystemMessage()
     if (!bf) {
       continue;
     }
-
-    if (bf->GetIsExpectingSystemMessage()) {
-      return true;
-    }
   }
 
   return false;

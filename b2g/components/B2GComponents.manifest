@@ -121,3 +121,7 @@ contract @mozilla.org/presentation/requestuiglue;1 {ccc8a839-0b64-422b-8a60-fb2a
 # KillSwitch.js
 component {b6eae5c6-971c-4772-89e5-5df626bf3f09} KillSwitch.js
 contract @mozilla.org/moz-kill-switch;1 {b6eae5c6-971c-4772-89e5-5df626bf3f09}
+
+# SystemMessageInternal.js
+component {70589ca5-91ac-4b9e-b839-d6a88167d714} SystemMessageInternal.js
+contract @mozilla.org/system-message-internal;1 {70589ca5-91ac-4b9e-b839-d6a88167d714}
