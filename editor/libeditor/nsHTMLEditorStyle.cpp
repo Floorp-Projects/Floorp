@@ -848,6 +848,26 @@ nsHTMLEditor::IsOnlyAttribute(const nsIContent* aContent,
   return true;
 }
 
+bool nsHTMLEditor::HasAttr(nsIDOMNode* aNode,
+                           const nsAString* aAttribute)
+{
+  NS_ENSURE_TRUE(aNode, false);
+  if (!aAttribute || aAttribute->IsEmpty()) {
+    // everybody has the 'null' attribute
+    return true;
+  }
+
+  // get element
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(element, false);
+
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(*aAttribute);
+  NS_ENSURE_TRUE(atom, false);
+
+  return element->HasAttr(kNameSpaceID_None, atom);
+}
+
+
 nsresult
 nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* inRange)
 {
