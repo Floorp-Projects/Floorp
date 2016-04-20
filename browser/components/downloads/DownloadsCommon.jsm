@@ -528,29 +528,36 @@ this.DownloadsCommon = {
    * @param aOwnerWindow
    *        The window with which this action is associated.
    *
-   * @return True to unblock the file, false to keep the user safe and
-   *         cancel the operation.
+   * @return {Promise}
+   * @resolves String representing the action that should be executed:
+   *            - "unblock" to allow the download without opening the file.
+   *            - "confirmBlock" to delete the blocked data permanently.
+   *            - "cancel" to do nothing and cancel the operation.
    */
   confirmUnblockDownload: Task.async(function* (aVerdict, aOwnerWindow) {
     let s = DownloadsCommon.strings;
     let title = s.unblockHeader;
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
-                      Ci.nsIPrompt.BUTTON_POS_1_DEFAULT;
+                      (Ci.nsIPrompt.BUTTON_TITLE_CANCEL * Ci.nsIPrompt.BUTTON_POS_1);
     let type = "";
     let message = s.unblockTip;
-    let okButton = s.unblockButtonContinue;
-    let cancelButton = s.unblockButtonCancel;
+    let unblockButton = s.unblockButtonContinue;
+    let confirmBlockButton = s.unblockButtonCancel;
 
     switch (aVerdict) {
       case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
         type = s.unblockTypeUncommon;
+        buttonFlags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
+                       Ci.nsIPrompt.BUTTON_POS_0_DEFAULT;
         break;
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         type = s.unblockTypePotentiallyUnwanted;
+        buttonFlags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
+                       Ci.nsIPrompt.BUTTON_POS_2_DEFAULT;
         break;
       default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
         type = s.unblockTypeMalware;
+        buttonFlags += Ci.nsIPrompt.BUTTON_POS_1_DEFAULT;
         break;
     }
 
@@ -580,8 +587,9 @@ this.DownloadsCommon = {
     // The ordering of the ok/cancel buttons is used this way to allow "cancel"
     // to have the same result as hitting the ESC or Close button (see bug 345067).
     let rv = Services.prompt.confirmEx(aOwnerWindow, title, message, buttonFlags,
-                                       okButton, cancelButton, null, null, {});
-    return (rv == 0);
+                                       unblockButton, null, confirmBlockButton,
+                                       null, {});
+    return ["unblock", "cancel", "confirmBlock"][rv];
   }),
 };
 
