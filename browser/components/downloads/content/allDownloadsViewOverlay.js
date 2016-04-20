@@ -377,12 +377,7 @@ HistoryDownloadElementShell.prototype = {
   },
 
   downloadsCmd_unblock() {
-    let verdict = this.download.error.reputationCheckVerdict;
-    DownloadsCommon.confirmUnblockDownload(verdict, window).then(confirmed => {
-      if (confirmed) {
-        return this.download.unblock();
-      }
-    }).catch(Cu.reportError);
+    this.confirmUnblock(window);
   },
 
   // Returns whether or not the download handled by this shell should
