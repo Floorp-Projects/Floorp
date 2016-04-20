@@ -1094,6 +1094,14 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 6. Set first initialization segment received flag to true.
     mFirstInitializationSegmentReceived = true;
   } else {
+    // Check that audio configuration hasn't changed as this is something
+    // we do not support yet (bug 1185827).
+    if (mAudioTracks.mNumTracks &&
+        (info.mAudio.mChannels != mAudioTracks.mInfo->GetAsAudioInfo()->mChannels ||
+         info.mAudio.mRate != mAudioTracks.mInfo->GetAsAudioInfo()->mRate)) {
+      RejectAppend(NS_ERROR_FAILURE, __func__);
+      return;
+    }
     mAudioTracks.mLastInfo = new SharedTrackInfo(info.mAudio, streamID);
     mVideoTracks.mLastInfo = new SharedTrackInfo(info.mVideo, streamID);
   }
