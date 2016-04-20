@@ -237,25 +237,9 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
       return kMediaConduitSessionNotInited;
     }
 #endif
-  webrtc::Config config;
-  bool aec_extended_filter = true; // Always default to the extended filter length
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  bool aec_delay_agnostic = false;
-  nsresult rv;
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    prefs->GetBoolPref("media.getusermedia.aec_extended_filter", &aec_extended_filter);
-    rv = prefs->GetBoolPref("media.getusermedia.aec_delay_agnostic", &aec_delay_agnostic);
-    if (NS_SUCCEEDED(rv)) {
-      // Only override platform setting if pref is defined.
-      config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(aec_delay_agnostic));
-    }
-  }
-#endif
-  config.Set<webrtc::ExtendedFilter>(new webrtc::ExtendedFilter(aec_extended_filter));
 
   // Per WebRTC APIs below function calls return nullptr on failure
-  if(!(mVoiceEngine = webrtc::VoiceEngine::Create(config)))
+  if(!(mVoiceEngine = webrtc::VoiceEngine::Create()))
   {
     CSFLogError(logTag, "%s Unable to create voice engine", __FUNCTION__);
     return kMediaConduitSessionNotInited;
