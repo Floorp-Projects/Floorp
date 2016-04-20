@@ -113,16 +113,12 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   while (!iter.IsEnded()) {
     VideoChunk chunk = *iter;
 
-    // Send only the unique video frames to OMXCodecWrapper.
-    if (mLastFrame != chunk.mFrame) {
-      uint64_t totalDurationUs = mTotalFrameDuration * USECS_PER_S / mTrackRate;
-      layers::Image* img = (chunk.IsNull() || chunk.mFrame.GetForceBlack()) ?
-                           nullptr : chunk.mFrame.GetImage();
-      rv = mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    uint64_t totalDurationUs = mTotalFrameDuration * USECS_PER_S / mTrackRate;
+    layers::Image* img = (chunk.IsNull() || chunk.mFrame.GetForceBlack()) ?
+                         nullptr : chunk.mFrame.GetImage();
+    rv = mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    mLastFrame.TakeFrom(&chunk.mFrame);
     mTotalFrameDuration += chunk.GetDuration();
 
     iter.Next();

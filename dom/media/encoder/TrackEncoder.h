@@ -261,6 +261,7 @@ public:
     , mDisplayHeight(0)
     , mTrackRate(0)
     , mTotalFrameDuration(0)
+    , mLastFrameDuration(0)
     , mVideoBitrate(0)
   {}
 
@@ -337,10 +338,11 @@ protected:
   StreamTime mTotalFrameDuration;
 
   /**
-   * The last unique frame we've sent to track encoder, kept track of in
-   * subclasses.
+   * The last unique frame and duration we've sent to track encoder,
+   * kept track of in subclasses.
    */
   VideoFrame mLastFrame;
+  StreamTime mLastFrameDuration;
 
   /**
    * A segment queue of audio track data, protected by mReentrantMonitor.

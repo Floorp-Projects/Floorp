@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/net/NeckoCommon.h"
 #include "prsystem.h"
 #include <time.h>
 #include <math.h>
@@ -104,6 +105,10 @@ NS_IMPL_ISUPPORTS(CacheObserver,
 nsresult
 CacheObserver::Init()
 {
+  if (IsNeckoChild()) {
+    return NS_OK;
+  }
+
   if (sSelf) {
     return NS_OK;
   }

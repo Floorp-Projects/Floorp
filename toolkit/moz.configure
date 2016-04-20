@@ -390,3 +390,10 @@ def omnijar_name(toolkit):
     return 'assets/omni.ja' if toolkit == 'android' else 'omni.ja'
 
 set_config('OMNIJAR_NAME', omnijar_name)
+
+# Miscellaneous programs
+# ==============================================================
+
+check_prog('TAR', ('gnutar', 'gtar', 'tar'))
+check_prog('UNZIP', ('unzip',))
+check_prog('ZIP', ('zip',))

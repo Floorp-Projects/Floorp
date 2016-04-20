@@ -370,6 +370,7 @@ StyleEditorUI.prototype = {
       NetUtil.asyncFetch({
         uri: NetUtil.newURI(selectedFile),
         loadingNode: this._window.document,
+        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
       }, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
