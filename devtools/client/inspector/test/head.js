@@ -138,6 +138,20 @@ var selectNode = Task.async(function*(selector, inspector, reason="test") {
 });
 
 /**
+ * Set the inspector's current selection to null so that no node is selected
+ *
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise that resolves when the inspector is updated
+ */
+function clearCurrentNodeSelection(inspector) {
+  info("Clearing the current selection");
+  let updated = inspector.once("inspector-updated");
+  inspector.selection.setNodeFront(null);
+  return updated;
+}
+
+/**
  * Open the inspector in a tab with given URL.
  * @param {string} url  The URL to open.
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
@@ -671,4 +685,34 @@ function containsFocus(doc, container) {
     elm = elm.parentNode;
   }
   return false;
+}
+
+/**
+ * Listen for a new tab to open and return a promise that resolves when one
+ * does and completes the load event.
+ *
+ * @return a promise that resolves to the tab object
+ */
+var waitForTab = Task.async(function*() {
+  info("Waiting for a tab to open");
+  yield once(gBrowser.tabContainer, "TabOpen");
+  let tab = gBrowser.selectedTab;
+  let browser = tab.linkedBrowser;
+  yield once(browser, "load", true);
+  info("The tab load completed");
+  return tab;
+});
+
+/**
+ * Simulate the key input for the given input in the window.
+ *
+ * @param {String} input
+ *        The string value to input
+ * @param {Window} win
+ *        The window containing the panel
+ */
+function synthesizeKeys(input, win) {
+  for (let key of input.split("")) {
+    EventUtils.synthesizeKey(key, {}, win);
+  }
 }
