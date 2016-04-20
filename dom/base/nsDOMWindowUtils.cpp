@@ -2261,15 +2261,6 @@ ComputeAnimationValue(nsCSSProperty aProperty,
                                          aInput, false, aOutput)) {
     return false;
   }
-
-  // This matches TransExtractComputedValue in nsTransitionManager.cpp.
-  if (aProperty == eCSSProperty_visibility) {
-    MOZ_ASSERT(aOutput.GetUnit() == StyleAnimationValue::eUnit_Enumerated,
-               "unexpected unit");
-    aOutput.SetIntValue(aOutput.GetIntValue(),
-                        StyleAnimationValue::eUnit_Visibility);
-  }
-
   return true;
 }
 
