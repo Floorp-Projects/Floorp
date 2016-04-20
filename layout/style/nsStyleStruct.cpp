@@ -580,7 +580,6 @@ nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
   mOutlineColor = NS_RGB(0, 0, 0);
 
-  mHasCachedOutline = false;
   mTwipsPerPixel = aContext.DevPixelsToAppUnits(1);
 
   SetOutlineInitialColor();
@@ -592,7 +591,6 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)
   , mOutlineOffset(aSrc.mOutlineOffset)
   , mCachedOutlineWidth(aSrc.mCachedOutlineWidth)
   , mOutlineColor(aSrc.mOutlineColor)
-  , mHasCachedOutline(aSrc.mHasCachedOutline)
   , mOutlineStyle(aSrc.mOutlineStyle)
   , mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
@@ -604,17 +602,14 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
 {
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
     mCachedOutlineWidth = 0;
-    mHasCachedOutline = true;
-  } else if (IsFixedUnit(mOutlineWidth, true)) {
+  } else {
+    MOZ_ASSERT(IsFixedUnit(mOutlineWidth, true));
     // Clamp negative calc() to 0.
     mCachedOutlineWidth =
       std::max(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
     mCachedOutlineWidth =
       NS_ROUND_BORDER_TO_PIXELS(mCachedOutlineWidth, mTwipsPerPixel);
-    mHasCachedOutline = true;
   }
-  else
-    mHasCachedOutline = false;
 }
 
 nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
@@ -641,9 +636,7 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
   if (mOutlineWidth != aOther.mOutlineWidth ||
       mOutlineOffset != aOther.mOutlineOffset ||
       mTwipsPerPixel != aOther.mTwipsPerPixel ||
-      mHasCachedOutline != aOther.mHasCachedOutline ||
-      (mHasCachedOutline &&
-       (mCachedOutlineWidth != aOther.mCachedOutlineWidth))) {
+      mCachedOutlineWidth != aOther.mCachedOutlineWidth) {
     return nsChangeHint_NeutralChange;
   }
 
