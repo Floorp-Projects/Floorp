@@ -1,6 +1,5 @@
 import time
 def main(request, response):
-    print dir(response)
     response.headers.set("Content-Type", "application/javascript")
     response.headers.set("Transfer-encoding", "chunked")
     response.write_status_headers()
