@@ -60,7 +60,7 @@ static gfxTextRun *
 MakeTextRun(const char16_t *aText, uint32_t aLength, gfxFontGroup *aFontGroup,
             const gfxFontGroup::Parameters* aParams, uint32_t aFlags)
 {
-  nsAutoPtr<gfxTextRun> textRun;
+  UniquePtr<gfxTextRun> textRun;
   if (aLength == 0) {
     abort();
     //textRun = aFontGroup->MakeEmptyTextRun(aParams, aFlags);
@@ -73,12 +73,12 @@ MakeTextRun(const char16_t *aText, uint32_t aLength, gfxFontGroup *aFontGroup,
   if (!textRun) {
     return nullptr;
   }
-  nsresult rv = gTextRuns->AddObject(textRun);
+  nsresult rv = gTextRuns->AddObject(textRun.get());
   if (NS_FAILED(rv)) {
-    gTextRuns->RemoveFromCache(textRun);
+    gTextRuns->RemoveFromCache(textRun.get());
     return nullptr;
   }
-  return textRun.forget();
+  return textRun.release();
 }
 
 static already_AddRefed<DrawTarget>

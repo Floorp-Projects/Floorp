@@ -428,3 +428,19 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
     StyleAnimationValue::UncomputeValue(wrapper->mPropID,
                                         wrapper->mCSSValue, aString);
 }
+
+// static
+nsCSSProperty
+nsSMILCSSValueType::PropertyFromValue(const nsSMILValue& aValue)
+{
+  if (aValue.mType != &nsSMILCSSValueType::sSingleton) {
+    return eCSSProperty_UNKNOWN;
+  }
+
+  const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
+  if (!wrapper) {
+    return eCSSProperty_UNKNOWN;
+  }
+
+  return wrapper->mPropID;
+}

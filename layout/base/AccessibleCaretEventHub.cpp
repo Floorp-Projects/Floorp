@@ -797,7 +797,7 @@ AccessibleCaretEventHub::GetTouchEventPosition(WidgetTouchEvent* aEvent,
 nsPoint
 AccessibleCaretEventHub::GetMouseEventPosition(WidgetMouseEvent* aEvent) const
 {
-  LayoutDeviceIntPoint mouseIntPoint = aEvent->AsGUIEvent()->refPoint;
+  LayoutDeviceIntPoint mouseIntPoint = aEvent->AsGUIEvent()->mRefPoint;
 
   // Get event coordinate relative to root frame.
   nsIFrame* rootFrame = mPresShell->GetRootFrame();

@@ -29,7 +29,7 @@ FakeMediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(already_AddRefe
 }
 
 CameraPreviewMediaStream::CameraPreviewMediaStream(DOMMediaStream* aWrapper)
-  : MediaStream(aWrapper)
+  : ProcessedMediaStream(aWrapper)
   , mMutex("mozilla::camera::CameraPreviewMediaStream")
   , mInvalidatePending(0)
   , mDiscardedFrames(0)
@@ -128,6 +128,13 @@ CameraPreviewMediaStream::Invalidate()
     VideoFrameContainer* output = mVideoOutputs[i];
     output->Invalidate();
   }
+}
+
+void
+CameraPreviewMediaStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
+                                       uint32_t aFlags)
+{
+  return;
 }
 
 void

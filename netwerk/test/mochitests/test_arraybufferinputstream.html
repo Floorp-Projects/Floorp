@@ -49,6 +49,33 @@ function test()
     ok(e.result === Cr.NS_BASE_STREAM_CLOSED,
        "detaching underneath an input stream should close it");
   }
+
+  // A regression test for bug 1265076.  Previously, overflowing
+  // the internal buffer from readSegments would cause incorrect
+  // copying.  The constant mirrors the value in
+  // ArrayBufferInputStream::readSegments.
+  var size = 8192;
+  ab = new ArrayBuffer(2 * size);
+  ta = new Uint8Array(ab);
+
+  var i;
+  for (i = 0; i < size; ++i) {
+    ta[i] = 'x'.charCodeAt(0);
+  }
+  for (i = 0; i < size; ++i) {
+    ta[size + i] = 'y'.charCodeAt(0);
+  }
+
+  abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+           .createInstance(Ci.nsIArrayBufferInputStream);
+  abis.setData(ab, 0, 2 * size);
+
+  sis = Cc["@mozilla.org/scriptableinputstream;1"]
+          .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(abis);
+
+  var result = sis.read(2 * size);
+  is(result, "x".repeat(size) + "y".repeat(size), "correctly read the data");
 }
 
 test();

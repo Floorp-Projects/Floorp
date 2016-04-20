@@ -254,8 +254,9 @@ TextInputProcessor::IsValidEventTypeForComposition(
     return true;
   }
   if (aKeyboardEvent.mMessage == eUnidentifiedEvent &&
-      aKeyboardEvent.userType &&
-      nsDependentAtomString(aKeyboardEvent.userType).EqualsLiteral("on")) {
+      aKeyboardEvent.mSpecifiedEventType &&
+      nsDependentAtomString(
+        aKeyboardEvent.mSpecifiedEventType).EqualsLiteral("on")) {
     return true;
   }
   return false;

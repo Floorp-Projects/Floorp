@@ -419,7 +419,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         break;
       }
       const nsStyleTextReset* styleText = context->StyleTextReset();
-      
+
       if (decorMask & styleText->mTextDecorationLine) {  // a decoration defined here
         nscolor color;
         if (aOverrideColor) {
@@ -428,7 +428,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           bool isForeground;
           styleText->GetDecorationColor(color, isForeground);
           if (isForeground) {
-            color = nsLayoutUtils::GetColor(f, eCSSProperty_color);
+            color = nsLayoutUtils::GetColor(f, context->GetTextFillColorProp());
           }
         }
         uint8_t style = styleText->GetDecorationStyle();

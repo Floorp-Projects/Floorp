@@ -777,7 +777,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
 
   WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint,
                                    aMouseEvent->mWidget);
-  charAtPt.refPoint = aMouseEvent->refPoint;
+  charAtPt.mRefPoint = aMouseEvent->mRefPoint;
   ContentEventHandler handler(aPresContext);
   handler.OnQueryCharacterAtPoint(&charAtPt);
   if (NS_WARN_IF(!charAtPt.mSucceeded) ||
@@ -802,7 +802,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   // The refPt is relative to its widget.
   // We should notify it with offset in the widget.
   if (aMouseEvent->mWidget != mWidget) {
-    charAtPt.refPoint += aMouseEvent->mWidget->WidgetToScreenOffset() -
+    charAtPt.mRefPoint += aMouseEvent->mWidget->WidgetToScreenOffset() -
       mWidget->WidgetToScreenOffset();
   }
 
@@ -810,7 +810,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
   notification.mMouseButtonEventData.mEventMessage = aMouseEvent->mMessage;
   notification.mMouseButtonEventData.mOffset = charAtPt.mReply.mOffset;
   notification.mMouseButtonEventData.mCursorPos.Set(
-    charAtPt.refPoint.ToUnknownPoint());
+    charAtPt.mRefPoint.ToUnknownPoint());
   notification.mMouseButtonEventData.mCharRect.Set(
     charAtPt.mReply.mRect.ToUnknownRect());
   notification.mMouseButtonEventData.mButton = aMouseEvent->button;

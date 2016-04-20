@@ -345,6 +345,8 @@ struct BaseRect {
   Point Center() const { return Point(x, y) + Point(width, height)/2; }
   SizeT Size() const { return SizeT(width, height); }
 
+  T Area() const { return width * height; }
+
   // Helper methods for computing the extents
   T X() const { return x; }
   T Y() const { return y; }

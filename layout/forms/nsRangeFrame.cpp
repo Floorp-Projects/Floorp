@@ -517,7 +517,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent->mClass == eMouseEventClass ||
              aEvent->mClass == eTouchEventClass,
-             "Unexpected event type - aEvent->refPoint may be meaningless");
+             "Unexpected event type - aEvent->mRefPoint may be meaningless");
 
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
   dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
@@ -539,7 +539,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
                "Unexpected number of mTouches");
     absPoint = aEvent->AsTouchEvent()->mTouches[0]->mRefPoint;
   } else {
-    absPoint = aEvent->refPoint;
+    absPoint = aEvent->mRefPoint;
   }
   nsPoint point =
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, absPoint, this);

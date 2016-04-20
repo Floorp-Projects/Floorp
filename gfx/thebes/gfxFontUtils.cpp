@@ -66,8 +66,10 @@ gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
     uint32_t b, numBlocks = mBlocks.Length();
 
     for (b = 0; b < numBlocks; b++) {
-        Block *block = mBlocks[b];
-        if (!block) continue;
+        Block *block = mBlocks[b].get();
+        if (!block) {
+            continue;
+        }
         const int BUFSIZE = 256;
         char outStr[BUFSIZE];
         int index = 0;

@@ -10,8 +10,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1236979
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
     @keyframes anim1 {
-      0%   { margin-left: 0px }
-      100% { margin-left: 100px }
+      0%   { margin-left: 200px }
+      100% { margin-left: 300px }
     }
   </style>
 </head>
@@ -31,21 +31,6 @@ SimpleTest.waitForExplicitFinish();
 
 // Array of info-bundles about each legacy event to be tested:
 var gLegacyEventInfo = [
-  {
-    legacy_name: "webkitTransitionEnd",
-    modern_name: "transitionend",
-    trigger_event: triggerShortTransition,
-  },
-  {
-    legacy_name: "webkitAnimationStart",
-    modern_name: "animationstart",
-    trigger_event: triggerShortAnimation,
-  },
-  {
-    legacy_name: "webkitAnimationEnd",
-    modern_name: "animationend",
-    trigger_event: triggerShortAnimation,
-  },
   {
     legacy_name: "webkitAnimationIteration",
     modern_name: "animationiteration",
@@ -88,7 +73,8 @@ function triggerShortAnimation(node) {
 // away, and that we don't risk hitting the end of the second iteration at the
 // same time.
 function triggerAnimationIteration(node) {
-  node.style.animation = "anim1 300s -299.999s linear 2";
+  dump("************ Add Animation! **********");
+  node.style.animation = "anim1 1s -0.999s linear 2";
 }
 
 // GENERAL UTILITY FUNCTIONS
@@ -112,6 +98,7 @@ function createChildDiv(parentNode) {
 // the event-handler will invoke that callback as well.
 function createHandlerWithTypeCheck(expectedEventType, extraHandlerLogic) {
   var handler = function(e) {
+    dump("********** event fired [" + e.type + "] ******\n");
     is(e.type, expectedEventType,
        "When an event handler for '" + expectedEventType + "' is invoked, " +
        "the event's type field should be '" + expectedEventType + "'.");
@@ -137,16 +124,19 @@ function mpTestLegacyEventSent(eventInfo) {
     function(resolve, reject) {
       // Create a node & register an event-handler for the legacy event:
       var div = createChildDiv();
+      div.innerHTML = "<h2>Clobber</h2>";
 
       var handler = createHandlerWithTypeCheck(eventInfo.legacy_name,
                                                function() {
         // When event-handler is done, clean up & resolve:
         div.parentNode.removeChild(div);
+        dump("************ Resolved **********\n");
         resolve();
       });
       div.addEventListener(eventInfo.legacy_name, handler);
 
       // Trigger the event:
+      dump("************ trigger[" + eventInfo.legacy_name + "] **********\n");
       eventInfo.trigger_event(div);
     }
   );
@@ -174,6 +164,7 @@ function mpTestModernBeatsLegacy(eventInfo) {
            "both modern & legacy event type on the same node");
         // When event-handler is done, clean up & resolve:
         div.parentNode.removeChild(div);
+        dump("************ Resolved **********\n");
         resolve();
       });
 
@@ -221,6 +212,7 @@ function mpTestDiffListenersEventBubbling(eventInfo) {
            "Same event object should bubble, despite difference in type");
         // Clean up.
         grandparent.parentNode.removeChild(grandparent);
+        dump("************ Resolved **********\n");
         resolve();
       }));
 
@@ -270,6 +262,7 @@ function mpTestDiffListenersEventCapturing(eventInfo) {
              "Event should have fired on parent");
           // Clean up.
           grandparent.parentNode.removeChild(grandparent);
+          dump("************ Resolved **********\n");
           resolve();
       }), true);
 
@@ -281,14 +274,19 @@ function mpTestDiffListenersEventCapturing(eventInfo) {
 // MAIN FUNCTION: Kick off the tests.
 function main() {
   Promise.resolve().then(function() {
+    dump("part1 clear\n");
     return Promise.all(gLegacyEventInfo.map(mpTestLegacyEventSent))
   }).then(function() {
+    dump("part2 clear\n");
     return Promise.all(gLegacyEventInfo.map(mpTestModernBeatsLegacy));
   }).then(function() {
+    dump("part3 clear");
     return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventCapturing));
   }).then(function() {
+    dump("part4 clear");
     return Promise.all(gLegacyEventInfo.map(mpTestDiffListenersEventBubbling));
   }).then(function() {
+    dump("part5 clear");
     SimpleTest.finish();
   }).catch(function(reason) {
     ok(false, "Test failed: " + reason);

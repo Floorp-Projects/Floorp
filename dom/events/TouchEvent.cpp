@@ -146,7 +146,7 @@ TouchEvent::TargetTouches()
       // touch that is ending
       if ((mEvent->mMessage != eTouchEnd && mEvent->mMessage != eTouchCancel) ||
           !touches[i]->mChanged) {
-        if (touches[i]->mTarget == mEvent->originalTarget) {
+        if (touches[i]->mTarget == mEvent->mOriginalTarget) {
           targetTouches.AppendElement(touches[i]);
         }
       }

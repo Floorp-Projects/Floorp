@@ -1,4 +1,4 @@
-FROM          quay.io/rillian/rust-buildbot
+FROM          quay.io/rust/rust-buildbot
 MAINTAINER    Ralph Giles <giles@mozilla.com>
 
 # Reset user/workdir from parent image so we can install software.
@@ -16,6 +16,7 @@ RUN chmod +rx /build/tooltool.py
 
 # Add build scripts.
 ADD             fetch_rust.sh build_rust.sh upload_rust.sh /build/
+ADD             repack_rust.sh /build/
 RUN             chmod +x /build/*
 
 # Create user for doing the build.

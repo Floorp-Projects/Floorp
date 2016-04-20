@@ -125,11 +125,16 @@ AndroidContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
   // will redispatch to the main thread. We want to make sure that our handling
   // only happens on the main thread.
   ChromeProcessController::NotifyAPZStateChange(aGuid, aChange, aArg);
-  if (NS_IsMainThread() && aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
-    // This is used by tests to determine when the APZ is done doing whatever
-    // it's doing. XXX generify this as needed when writing additional tests.
+  if (NS_IsMainThread()) {
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    observerService->NotifyObservers(nullptr, "APZ:TransformEnd", nullptr);
+    if (aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
+      // This is used by tests to determine when the APZ is done doing whatever
+      // it's doing. XXX generify this as needed when writing additional tests.
+      observerService->NotifyObservers(nullptr, "APZ:TransformEnd", nullptr);
+      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", MOZ_UTF16("NOTHING"));
+    } else if (aChange == layers::GeckoContentController::APZStateChange::TransformBegin) {
+      observerService->NotifyObservers(nullptr, "PanZoom:StateChange", MOZ_UTF16("PANNING"));
+    }
   }
 }
 

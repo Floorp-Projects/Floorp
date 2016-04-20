@@ -514,8 +514,14 @@ ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
   builder.LeavePresShell(aFrame);
 
 #ifdef DEBUG
+  // ClipBackgroundByText is called by nsDisplayBackgroundImage::Paint or
+  // nsDisplayBackgroundColor::Paint.
+  // Assert that we do not generate and put nsDisplayBackgroundImage or
+  // nsDisplayBackgroundColor into the list again, which would lead to
+  // infinite recursion.
   for (nsDisplayItem* i = list.GetBottom(); i; i = i->GetAbove()) {
-    MOZ_ASSERT(nsDisplayItem::TYPE_TEXT == i->GetType());
+    MOZ_ASSERT(nsDisplayItem::TYPE_BACKGROUND != i->GetType() &&
+               nsDisplayItem::TYPE_BACKGROUND_COLOR != i->GetType());
   }
 #endif
 

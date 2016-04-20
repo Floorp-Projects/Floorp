@@ -25,14 +25,14 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s -10s'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().delay, -10000,
+  assert_equals(effect.getComputedTiming().delay, -10 * MS_PER_SEC,
                 'Initial value of delay');
 }, 'Negative delay of a new animation');
 
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s 10s'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().delay, 10000,
+  assert_equals(effect.getComputedTiming().delay, 10 * MS_PER_SEC,
                 'Initial value of delay');
 }, 'Positive delay of a new animation');
 
@@ -114,7 +114,7 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s -10s infinite'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().duration, 100000,
+  assert_equals(effect.getComputedTiming().duration, 100 * MS_PER_SEC,
                 'Initial value of duration');
 }, 'duration of a new animation');
 
@@ -161,14 +161,14 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().endTime, 100000,
+  assert_equals(effect.getComputedTiming().endTime, 100 * MS_PER_SEC,
                 'Initial value of endTime');
 }, 'endTime of an new animation');
 
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s -5s'});
   var effect = div.getAnimations()[0].effect;
-  var answer = 100000 - 5000; // ms
+  var answer = (100 - 5) * MS_PER_SEC;
   assert_equals(effect.getComputedTiming().endTime, answer,
                 'Initial value of endTime');
 }, 'endTime of an animation with a negative delay');
@@ -183,7 +183,7 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 0s 100s infinite'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().endTime, 100000,
+  assert_equals(effect.getComputedTiming().endTime, 100 * MS_PER_SEC,
                 'Initial value of endTime');
 }, 'endTime of an infinitely repeating zero-duration animation');
 
@@ -192,7 +192,7 @@ test(function(t) {
   // undefined value.
   var div = addDiv(t, {style: 'animation: moveAnimation 10s -100s forwards'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().endTime, -90000,
+  assert_equals(effect.getComputedTiming().endTime, -90 * MS_PER_SEC,
                 'Initial value of endTime');
 }, 'endTime of an animation that finishes before its startTime');
 
@@ -204,7 +204,7 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s 5'});
   var effect = div.getAnimations()[0].effect;
-  var answer = 100000 * 5; // ms
+  var answer = 100 * MS_PER_SEC * 5;
   assert_equals(effect.getComputedTiming().activeDuration, answer,
                 'Initial value of activeDuration');
 }, 'activeDuration of a new animation');
@@ -248,25 +248,25 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
   var anim = div.getAnimations()[0];
-  anim.currentTime = 5000;
+  anim.currentTime = 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                 'current localTime after setting currentTime');
 }, 'localTime of an animation is always equal to currentTime');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t, {style: 'animation: moveAnimation 100s'});
 
   var anim = div.getAnimations()[0];
   anim.playbackRate = 2; // 2 times faster
 
-  anim.ready.then(t.step_func(function() {
+  return anim.ready.then(function() {
     assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                   'localTime is equal to currentTime');
     return waitForFrame();
-  })).then(t.step_func_done(function() {
+  }).then(function() {
     assert_equals(anim.effect.getComputedTiming().localTime, anim.currentTime,
                   'localTime is equal to currentTime');
-  }));
+  });
 }, 'localTime reflects playbackRate immediately');
 
 test(function(t) {
@@ -306,13 +306,13 @@ test(function(t) {
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
-  anim.currentTime += 2500;
+  anim.currentTime += 2.5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
   anim.finish()
@@ -334,7 +334,7 @@ test(function(t) {
                 'Initial value of progress in after phase');
 
   // Seek backwards
-  anim.currentTime -= 1000;
+  anim.currentTime -= 1 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Value of progress before phase');
 }, 'progress of an infinitely repeating zero-duration animation');
@@ -348,7 +348,7 @@ test(function(t) {
                 'Initial value of progress in after phase');
 
   // Seek backwards
-  anim.currentTime -= 1000;
+  anim.currentTime -= 1 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Value of progress before phase');
 }, 'progress of a finitely repeating zero-duration animation');
@@ -387,13 +387,13 @@ test(function(t) {
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Initial value of progress');
-  anim.currentTime += 2500;
+  anim.currentTime += 2.5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Value of progress');
   anim.finish()
@@ -408,13 +408,13 @@ test(function(t) {
 
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Initial value of progress');
-  anim.currentTime += 2500;
+  anim.currentTime += 2.5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
-  anim.currentTime += 5000;
+  anim.currentTime += 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
   anim.finish()
@@ -429,10 +429,10 @@ test(function(t) {
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Initial value of progress');
-  anim.currentTime += 2500;
+  anim.currentTime += 2.5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.25,
                 'Value of progress');
-  anim.currentTime -= 5000;
+  anim.currentTime -= 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
                 'Value of progress');
   anim.finish()
@@ -447,10 +447,10 @@ test(function(t) {
 
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Initial value of progress');
-  anim.currentTime += 2500;
+  anim.currentTime += 2.5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 0.75,
                 'Value of progress');
-  anim.currentTime -= 5000;
+  anim.currentTime -= 5 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().progress, 1.0,
                 'Value of progress');
   anim.finish()
@@ -491,7 +491,7 @@ test(function(t) {
                 'Initial value of currentIteration in after phase');
 
   // Seek backwards
-  anim.currentTime -= 2000;
+  anim.currentTime -= 2 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Value of currentIteration count during before phase');
 }, 'currentIteration of an infinitely repeating zero-duration animation');
@@ -505,7 +505,7 @@ test(function(t) {
                 'Initial value of currentIteration');
 
   // Seek backwards
-  anim.currentTime -= 2000;
+  anim.currentTime -= 2 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().currentIteration, 0,
                 'Value of currentIteration count during before phase');
 }, 'currentIteration of a finitely repeating zero-duration animation');
@@ -518,7 +518,7 @@ test(function(t) {
                 'Initial value of currentIteration');
   // The 3rd iteration
   // Note: currentIteration = floor(scaled active time / iteration duration)
-  anim.currentTime = 250000; // ms
+  anim.currentTime = 250 * MS_PER_SEC;
   assert_equals(anim.effect.getComputedTiming().currentIteration, 2,
                 'Value of currentIteration during the 3rd iteration');
   // Finish

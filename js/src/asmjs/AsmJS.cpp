@@ -7419,6 +7419,8 @@ CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
                         "valid length is 0x%x",
                         heapLength,
                         RoundUpToNextValidAsmJSHeapLength(heapLength)));
+        if (!msg)
+            return false;
         return LinkFail(cx, msg.get());
     }
 
@@ -7431,6 +7433,8 @@ CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
                         "by const heap accesses).",
                         heapLength,
                         module.minHeapLength()));
+        if (!msg)
+            return false;
         return LinkFail(cx, msg.get());
     }
 
@@ -8131,6 +8135,8 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     int64_t usecAfter = PRMJ_Now();
     int ms = (usecAfter - usecBefore) / PRMJ_USEC_PER_MSEC;
     *compilationTimeReport = UniqueChars(JS_smprintf("loaded from cache in %dms", ms));
+    if (!*compilationTimeReport)
+        return false;
     return true;
 }
 

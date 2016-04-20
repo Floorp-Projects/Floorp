@@ -42,7 +42,8 @@ WaveDecoder::IsEnabled()
   }
   PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
-  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"));
+  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/x-wav"),
+                                    /* DecoderDoctorDiagnostics* */ nullptr);
 }
 
 /* static */

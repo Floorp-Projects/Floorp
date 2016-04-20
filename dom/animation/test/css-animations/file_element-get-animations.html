@@ -24,7 +24,7 @@ test(function(t) {
     + ' with no animations');
 }, 'getAnimations for non-animated content');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
 
   // FIXME: This test does too many things. It should be split up.
@@ -34,7 +34,7 @@ async_test(function(t) {
   var animations = div.getAnimations();
   assert_equals(animations.length, 1,
     'getAnimations returns an Animation running CSS Animations');
-  animations[0].ready.then(t.step_func(function() {
+  return animations[0].ready.then(function() {
     var startTime = animations[0].startTime;
     assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
       'CSS animation has a sensible start time');
@@ -44,7 +44,7 @@ async_test(function(t) {
     // We wait for the next frame so that we can test that the start times of
     // the animations differ.
     return waitForFrame();
-  })).then(t.step_func(function() {
+  }).then(function() {
     div.style.animation = 'anim1 100s, anim2 100s';
     animations = div.getAnimations();
     assert_equals(animations.length, 2,
@@ -54,12 +54,11 @@ async_test(function(t) {
     // (We don't make any assumptions about the order of the Animations since
     //  that is the purpose of the following test.)
     return waitForAllAnimations(animations);
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_true(animations[0].startTime < animations[1].startTime,
       'Additional Animations for CSS animations start after the original'
       + ' animation and appear later in the list');
-    t.done();
-  }));
+  });
 }, 'getAnimations for CSS Animations');
 
 test(function(t) {
@@ -78,7 +77,7 @@ test(function(t) {
     + ' that targets multiple properties');
 }, 'getAnimations for multi-property animations');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
 
   // Add an animation
@@ -88,7 +87,7 @@ async_test(function(t) {
 
   // Wait until a frame after the animation starts, then add a transition
   var animations = div.getAnimations();
-  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
+  return animations[0].ready.then(waitForFrame).then(function() {
     div.style.transition = 'all 100s';
     div.style.backgroundColor = 'green';
 
@@ -100,8 +99,7 @@ async_test(function(t) {
                         'First-returned animation is the CSS Transition');
     assert_class_string(animations[1], 'CSSAnimation',
                         'Second-returned animation is the CSS Animation');
-    t.done();
-  }));
+  });
 }, 'getAnimations for both CSS Animations and CSS Transitions at once');
 
 async_test(function(t) {
@@ -166,7 +164,7 @@ test(function(t) {
     + ' animation-name is found');
 }, 'getAnimations for CSS Animations with animation-name: missing');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s, notyet 100s';
   var animations = div.getAnimations();
@@ -174,7 +172,7 @@ async_test(function(t) {
     'getAnimations initally only returns Animations for CSS Animations whose'
     + ' animation-name is found');
 
-  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
+  return animations[0].ready.then(waitForFrame).then(function() {
     var keyframes = '@keyframes notyet { to { left: 100px; } }';
     document.styleSheets[0].insertRule(keyframes, 0);
     animations = div.getAnimations();
@@ -182,12 +180,11 @@ async_test(function(t) {
       'getAnimations includes Animation when @keyframes rule is added'
       + ' later');
     return waitForAllAnimations(animations);
-  })).then(t.step_func(function() {
+  }).then(function() {
     assert_true(animations[0].startTime < animations[1].startTime,
       'Newly added animation has a later start time');
     document.styleSheets[0].deleteRule(0);
-    t.done();
-  }));
+  });
 }, 'getAnimations for CSS Animations where the @keyframes rule is added'
    + ' later');
 
@@ -207,19 +204,18 @@ test(function(t) {
     + ' empty keyframes rule');
 }, 'getAnimations for CSS Animations with empty keyframes rule');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s 100s';
   var animations = div.getAnimations();
   assert_equals(animations.length, 1,
     'getAnimations returns animations for CSS animations whose'
     + ' delay makes them start later');
-  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
+  return animations[0].ready.then(waitForFrame).then(function() {
     assert_true(animations[0].startTime <= document.timeline.currentTime,
       'For CSS Animations in delay phase, the start time of the Animation is'
       + ' not in the future');
-    t.done();
-  }));
+  });
 }, 'getAnimations for CSS animations in delay phase');
 
 test(function(t) {
@@ -274,11 +270,11 @@ test(function(t) {
 
 }, 'getAnimations for CSS Animations that are cancelled');
 
-async_test(function(t) {
+promise_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim2 100s';
 
-  div.getAnimations()[0].ready.then(t.step_func(function() {
+  return div.getAnimations()[0].ready.then(function() {
     // Prepend to the list and test that even though anim1 was triggered
     // *after* anim2, it should come first because it appears first
     // in the animation-name property.
@@ -300,8 +296,7 @@ async_test(function(t) {
                   'animation order after cancelling and restarting');
     assert_equals(anims[1].animationName, 'anim2',
                   'animation order after cancelling and restarting');
-    t.done();
-  }));
+  });
 }, 'getAnimations for CSS Animations follows animation-name order');
 
 test(function(t) {

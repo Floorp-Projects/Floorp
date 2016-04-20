@@ -75,7 +75,6 @@ ImageObjectProcessor.prototype.process = function(
       'src': processSrcMember(aImageSpec, aBaseURL),
       'type': processTypeMember(aImageSpec),
       'sizes': processSizesMember(aImageSpec),
-      'background_color': processBackgroundColorMember(aImageSpec)
     };
   }
 
@@ -128,9 +127,9 @@ ImageObjectProcessor.prototype.process = function(
       // Split on whitespace and filter out invalid values.
       value.split(/\s+/)
         .filter(isValidSizeValue)
-        .forEach(size => sizes.add(size));
+        .reduce((collector, size) => collector.add(size), sizes);
     }
-    return sizes;
+    return (sizes.size) ? Array.from(sizes).join(" ") : undefined;
     // Implementation of HTML's link@size attribute checker.
     function isValidSizeValue(aSize) {
       const size = aSize.toLowerCase();
@@ -148,17 +147,6 @@ ImageObjectProcessor.prototype.process = function(
       const validDecimals = ImageObjectProcessor.decimals.test(w + h);
       return (validStarts && validDecimals);
     }
-  }
-
-  function processBackgroundColorMember(aImage) {
-    const spec = {
-      objectName: 'image',
-      object: aImage,
-      property: 'background_color',
-      expectedType: 'string',
-      trim: true
-    };
-    return extractor.extractColorValue(spec);
   }
 };
 this.ImageObjectProcessor = ImageObjectProcessor; // jshint ignore:line
