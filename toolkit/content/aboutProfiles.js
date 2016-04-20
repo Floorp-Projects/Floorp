@@ -183,7 +183,7 @@ function display(profileData) {
 
   if (!profileData.isCurrentProfile) {
     let runButton = document.createElement('button');
-    runButton.appendChild(document.createTextNode(bundle.GetStringFromName('start')));
+    runButton.appendChild(document.createTextNode(bundle.GetStringFromName('launchProfile')));
     runButton.onclick = function() {
       openProfile(profileData.profile);
     };
