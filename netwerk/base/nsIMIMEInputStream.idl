@@ -39,4 +39,9 @@ interface nsIMIMEInputStream : nsIInputStream
      * @param stream  stream containing the data for the stream
      */
     void setData(in nsIInputStream stream);
+
+    /**
+     * Get the wrapped data stream
+     */
+    readonly attribute nsIInputStream data;
 };
