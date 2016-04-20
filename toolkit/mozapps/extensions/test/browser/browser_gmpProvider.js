@@ -378,7 +378,8 @@ add_task(function* testEmeSupport() {
     let doc = gManagerWindow.document;
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.id == GMPScope.EME_ADOBE_ID) {
-      if (Services.appinfo.OS == "WINNT") {
+      if (Services.appinfo.OS == "WINNT" &&
+          Services.sysinfo.getPropertyAsInt32("version") >= 6) {
         Assert.ok(item, "Adobe EME supported, found add-on element.");
       } else {
         Assert.ok(!item,
