@@ -659,7 +659,7 @@ protected:
                                    const nsAString* aAttribute,
                                    const nsAString& aValue);
 
-  nsresult PromoteInlineRange(nsRange& aRange);
+  nsresult PromoteInlineRange(nsRange* aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange,
                                 nsIAtom *aProperty,
@@ -678,8 +678,8 @@ protected:
                                     const nsAString* aAttribute);
 
   bool NodeIsProperty(nsINode& aNode);
-  bool IsAtFrontOfNode(nsINode& aNode, int32_t aOffset);
-  bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
+  bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
+  bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
