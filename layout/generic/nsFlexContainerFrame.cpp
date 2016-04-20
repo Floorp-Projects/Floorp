@@ -239,7 +239,7 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
-  FlexboxAxisTracker(const nsStylePosition* aStylePosition,
+  FlexboxAxisTracker(const nsFlexContainerFrame* aFlexContainer,
                      const WritingMode& aWM);
 
   // Accessors:
@@ -1154,7 +1154,7 @@ IsOrderLEQ(nsIFrame* aFrame1,
 bool
 nsFlexContainerFrame::IsHorizontal()
 {
-  const FlexboxAxisTracker axisTracker(StylePosition(), GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
   return axisTracker.IsMainAxisHorizontal();
 }
 
@@ -3148,12 +3148,14 @@ BlockDirToAxisOrientation(WritingMode::BlockDir aBlockDir)
   return eAxis_TB; // in case of unforseen error, assume English TTB block-flow
 }
 
-FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
-                                       const WritingMode& aWM)
+FlexboxAxisTracker::FlexboxAxisTracker(
+  const nsFlexContainerFrame* aFlexContainer,
+  const WritingMode& aWM)
   : mWM(aWM),
     mAreAxesInternallyReversed(false)
 {
-  uint32_t flexDirection = aStylePosition->mFlexDirection;
+  const nsStylePosition* stylePos = aFlexContainer->StylePosition();
+  uint32_t flexDirection = stylePos->mFlexDirection;
 
   // Inline dimension ("start-to-end"):
   // (NOTE: I'm intentionally not calling these "inlineAxis"/"blockAxis", since
@@ -3201,7 +3203,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
   }
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
-  if (aStylePosition->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
+  if (stylePos->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
     mCrossAxis = GetReverseAxis(mCrossAxis);
     mIsCrossAxisReversed = true;
   } else {
@@ -3736,8 +3738,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     SortChildrenIfNeeded<IsOrderLEQWithDOMFallback>();
   }
 
-  const FlexboxAxisTracker axisTracker(aReflowState.mStylePosition,
-                                       aReflowState.GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this, aReflowState.GetWritingMode());
 
   // If we're being fragmented into a constrained BSize, then subtract off
   // borderpadding BStart from that constrained BSize, to get the available
@@ -4242,7 +4243,7 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   DISPLAY_MIN_WIDTH(this, minWidth);
 
   const nsStylePosition* stylePos = StylePosition();
-  const FlexboxAxisTracker axisTracker(stylePos, GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
   for (nsIFrame* childFrame : mFrames) {
     nscoord childMinWidth =
@@ -4273,7 +4274,7 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   // Whenever anything happens that might change it, set it to
   // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicISizesDirty
   // does)
-  const FlexboxAxisTracker axisTracker(StylePosition(), GetWritingMode());
+  const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
   for (nsIFrame* childFrame : mFrames) {
     nscoord childPrefWidth =
