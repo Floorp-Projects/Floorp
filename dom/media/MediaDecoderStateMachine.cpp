@@ -219,7 +219,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCurrentFrameID(0),
   mObservedDuration(TimeUnit(), "MediaDecoderStateMachine::mObservedDuration"),
   mFragmentEndTime(-1),
-  mReader(aReader),
   mReaderWrapper(new MediaDecoderReaderWrapper(aRealTime, mTaskQueue, aReader)),
   mDecodedAudioEndTime(0),
   mDecodedVideoEndTime(0),
@@ -2686,6 +2685,30 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
       this, &MediaDecoderStateMachine::SetAudioCaptured, false);
     OwnerThread()->Dispatch(r.forget());
   }
+}
+
+size_t
+MediaDecoderStateMachine::SizeOfVideoQueue() const
+{
+  return mReaderWrapper->SizeOfVideoQueueInBytes();
+}
+
+size_t
+MediaDecoderStateMachine::SizeOfAudioQueue() const
+{
+  return mReaderWrapper->SizeOfAudioQueueInBytes();
+}
+
+AbstractCanonical<media::TimeIntervals>*
+MediaDecoderStateMachine::CanonicalBuffered()
+{
+  return mReaderWrapper->CanonicalBuffered();
+}
+
+MediaEventSource<void>&
+MediaDecoderStateMachine::OnMediaNotSeekable()
+{
+  return mReaderWrapper->OnMediaNotSeekable();
 }
 
 } // namespace mozilla
