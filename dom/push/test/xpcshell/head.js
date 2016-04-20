@@ -140,8 +140,6 @@ function setPrefs(prefs = {}) {
     'connection.enabled': true,
     userAgentID: '',
     enabled: true,
-    // Disable UDP wake-up by default.
-    'udp.wakeupEnabled': false,
     // Defaults taken from /modules/libpref/init/all.js.
     requestTimeout: 10000,
     retryBaseInterval: 5000,
@@ -297,8 +295,7 @@ MockWebSocket.prototype = {
 
   /**
    * Closes the server end of the connection, calling onServerClose()
-   * followed by onStop(). Used to test abrupt connection termination
-   * and UDP wake-up.
+   * followed by onStop(). Used to test abrupt connection termination.
    *
    * @param {Number} [statusCode] The WebSocket connection close code.
    * @param {String} [reason] The connection close reason.
