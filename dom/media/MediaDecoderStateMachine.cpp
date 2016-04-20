@@ -2700,13 +2700,13 @@ MediaDecoderStateMachine::SizeOfAudioQueue() const
 }
 
 AbstractCanonical<media::TimeIntervals>*
-MediaDecoderStateMachine::CanonicalBuffered()
+MediaDecoderStateMachine::CanonicalBuffered() const
 {
   return mReader->CanonicalBuffered();
 }
 
 MediaEventSource<void>&
-MediaDecoderStateMachine::OnMediaNotSeekable()
+MediaDecoderStateMachine::OnMediaNotSeekable() const
 {
   return mReader->OnMediaNotSeekable();
 }

@@ -222,7 +222,7 @@ public:
     return mMetadataManager.TimedMetadataEvent();
   }
 
-  MediaEventSource<void>& OnMediaNotSeekable();
+  MediaEventSource<void>& OnMediaNotSeekable() const;
 
   MediaEventSourceExc<nsAutoPtr<MediaInfo>,
                       nsAutoPtr<MetadataTags>,
@@ -1039,7 +1039,7 @@ private:
   Canonical<bool> mIsAudioDataAudible;
 
 public:
-  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered();
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
 
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {
     return &mDuration;
