@@ -34,7 +34,7 @@ void ChannelProxy::Context::CreateChannel(const std::wstring& id,
 bool ChannelProxy::Context::TryFilters(const Message& message) {
 
   for (size_t i = 0; i < filters_.size(); ++i) {
-    if (filters_[i]->OnMessageReceived(message)) {
+      if (filters_[i]->OnMessageReceived(Message(message))) {
       return true;
     }
   }
@@ -42,7 +42,7 @@ bool ChannelProxy::Context::TryFilters(const Message& message) {
 }
 
 // Called on the IPC::Channel thread
-void ChannelProxy::Context::OnMessageReceived(const Message& message) {
+void ChannelProxy::Context::OnMessageReceived(Message&& message) {
   // First give a chance to the filters to process this message.
   if (!TryFilters(message))
     OnMessageReceivedNoFilter(message);
@@ -159,7 +159,7 @@ void ChannelProxy::Context::OnDispatchMessage(const Message& message) {
   OnDispatchConnected();
 
 
-  listener_->OnMessageReceived(message);
+  listener_->OnMessageReceived(Message(message));
 
 }
 

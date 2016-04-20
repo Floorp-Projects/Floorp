@@ -36,7 +36,7 @@ class MessageRouter : public IPC::Channel::Listener,
   virtual void OnControlMessageReceived(const IPC::Message& msg);
 
   // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(const IPC::Message& msg);
+  virtual void OnMessageReceived(IPC::Message&& msg);
 
   // Like OnMessageReceived, except it only handles routed messages.  Returns
   // true if the message was dispatched, or false if there was no listener for

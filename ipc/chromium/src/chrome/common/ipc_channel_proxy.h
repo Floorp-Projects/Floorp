@@ -75,7 +75,7 @@ class ChannelProxy : public Message::Sender {
 
     // Return true to indicate that the message was handled, or false to let
     // the message be handled in the default way.
-    virtual bool OnMessageReceived(const Message& message) {
+    virtual bool OnMessageReceived(Message&& message) {
       return false;
     }
    protected:
@@ -152,7 +152,7 @@ class ChannelProxy : public Message::Sender {
     virtual ~Context() {}
 
     // IPC::Channel::Listener methods:
-    virtual void OnMessageReceived(const Message& message);
+    virtual void OnMessageReceived(Message&& message);
     virtual void OnChannelConnected(int32_t peer_pid);
     virtual void OnChannelError();
 
