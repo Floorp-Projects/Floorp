@@ -2948,7 +2948,9 @@ TEST_F(IceConnectTest, TestPollCandPairsAfterConnect) {
   ASSERT_TRUE(ContainsSucceededPair(pairs));
 }
 
-TEST_F(IceConnectTest, TestHostCandPairingFilter) {
+// TODO Bug 1259842 - disabled until we find a better way to handle two
+// candidates from different RFC1918 ranges
+TEST_F(IceConnectTest, DISABLED_TestHostCandPairingFilter) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather(kDefaultTimeout, false));
   SetCandidateFilter(IsIpv4Candidate);
