@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["LoginRecipesContent", "LoginRecipesParent"];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const REQUIRED_KEYS = ["hosts"];
-const OPTIONAL_KEYS = ["description", "passwordSelector", "pathRegex", "usernameSelector"];
+const OPTIONAL_KEYS = ["description", "notUsernameSelector", "passwordSelector", "pathRegex", "usernameSelector"];
 const SUPPORTED_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
 
 Cu.importGlobalProperties(["URL"]);
@@ -227,7 +227,8 @@ var LoginRecipesContent = {
     let chosenRecipe = null;
     // Find the first (most-specific recipe that involves field overrides).
     for (let recipe of recipes) {
-      if (!recipe.usernameSelector && !recipe.passwordSelector) {
+      if (!recipe.usernameSelector && !recipe.passwordSelector &&
+          !recipe.notUsernameSelector) {
         continue;
       }
 
