@@ -412,6 +412,16 @@ struct ObjectGroupCompartment::NewEntry
     }
 };
 
+class ObjectGroupCompartment::NewTable : public JS::WeakCache<js::GCHashSet<NewEntry, NewEntry,
+                                                                            SystemAllocPolicy>>
+{
+    using Table = js::GCHashSet<NewEntry, NewEntry, SystemAllocPolicy>;
+    using Base = JS::WeakCache<Table>;
+
+  public:
+    explicit NewTable(Zone* zone) : Base(zone, Table()) {}
+};
+
 /* static */ ObjectGroup*
 ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
                              TaggedProto proto, JSObject* associated)
@@ -429,7 +439,7 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
     ObjectGroupCompartment::NewTable*& table = cx->compartment()->objectGroups.defaultNewTable;
 
     if (!table) {
-        table = cx->new_<ObjectGroupCompartment::NewTable>();
+        table = cx->new_<ObjectGroupCompartment::NewTable>(cx->zone());
         if (!table || !table->init()) {
             js_delete(table);
             table = nullptr;
@@ -551,7 +561,7 @@ ObjectGroup::lazySingletonGroup(ExclusiveContext* cx, const Class* clasp, Tagged
     ObjectGroupCompartment::NewTable*& table = cx->compartment()->objectGroups.lazyTable;
 
     if (!table) {
-        table = cx->new_<ObjectGroupCompartment::NewTable>();
+        table = cx->new_<ObjectGroupCompartment::NewTable>(cx->zone());
         if (!table || !table->init()) {
             ReportOutOfMemory(cx);
             js_delete(table);
@@ -593,8 +603,8 @@ ObjectGroup::setDefaultNewGroupUnknown(JSContext* cx, const Class* clasp, Handle
     ObjectGroupCompartment::NewTable* table = cx->compartment()->objectGroups.defaultNewTable;
     if (table) {
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(obj));
-        ObjectGroupCompartment::NewTable::Ptr p =
-            table->lookup(ObjectGroupCompartment::NewEntry::Lookup(clasp, taggedProto, nullptr));
+        auto lookup = ObjectGroupCompartment::NewEntry::Lookup(clasp, taggedProto, nullptr);
+        auto p = table->lookup(lookup);
         if (p)
             MarkObjectGroupUnknownProperties(cx, p->group);
     }
@@ -607,8 +617,8 @@ ObjectGroup::hasDefaultNewGroup(JSObject* proto, const Class* clasp, ObjectGroup
     ObjectGroupCompartment::NewTable* table = proto->compartment()->objectGroups.defaultNewTable;
 
     if (table) {
-        ObjectGroupCompartment::NewTable::Ptr p =
-            table->lookup(ObjectGroupCompartment::NewEntry::Lookup(clasp, TaggedProto(proto), nullptr));
+        auto lookup = ObjectGroupCompartment::NewEntry::Lookup(clasp, TaggedProto(proto), nullptr);
+        auto p = table->lookup(lookup);
         return p && p->group == group;
     }
     return false;
@@ -1614,10 +1624,10 @@ void
 ObjectGroupCompartment::removeDefaultNewGroup(const Class* clasp, TaggedProto proto,
                                               JSObject* associated)
 {
-    NewTable::Ptr p = defaultNewTable->lookup(NewEntry::Lookup(clasp, proto, associated));
+    auto p = defaultNewTable->lookup(NewEntry::Lookup(clasp, proto, associated));
     MOZ_RELEASE_ASSERT(p);
 
-    defaultNewTable->remove(p);
+    defaultNewTable->get().remove(p);
 }
 
 void
@@ -1626,9 +1636,9 @@ ObjectGroupCompartment::replaceDefaultNewGroup(const Class* clasp, TaggedProto p
 {
     NewEntry::Lookup lookup(clasp, proto, associated);
 
-    NewTable::Ptr p = defaultNewTable->lookup(lookup);
+    auto p = defaultNewTable->lookup(lookup);
     MOZ_RELEASE_ASSERT(p);
-    defaultNewTable->remove(p);
+    defaultNewTable->get().remove(p);
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!defaultNewTable->putNew(lookup, NewEntry(group, associated)))
@@ -1734,10 +1744,6 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
         plainObjectTable->sweep();
     if (allocationSiteTable)
         allocationSiteTable->sweep();
-    if (defaultNewTable)
-        defaultNewTable->sweep();
-    if (lazyTable)
-        lazyTable->sweep();
 }
 
 void
@@ -1794,7 +1800,7 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
             clasp = nullptr;
 
         NewEntry::Lookup lookup(clasp, proto, entry.associated);
-        NewTable::Ptr ptr = table->lookup(lookup);
+        auto ptr = table->lookup(lookup);
         MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
