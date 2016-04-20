@@ -39,7 +39,7 @@ registerCleanupFunction(() => {
  *
  * add_task(function*() {
  *   yield addTab(TEST_URI);
- *   let {toolbox, inspector, view} = yield openInspector();
+ *   let {toolbox, inspector} = yield openInspector();
  *   inspector.sidebar.select(viewId);
  *   let view = inspector[viewId].view;
  *   yield selectNode("#test", inspector);
