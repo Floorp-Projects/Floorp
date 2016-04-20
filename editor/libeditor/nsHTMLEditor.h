@@ -660,7 +660,7 @@ protected:
                                    const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange& aRange);
-  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
+  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange,
                                 nsIAtom *aProperty,
                                 const nsAString *aAttribute);
