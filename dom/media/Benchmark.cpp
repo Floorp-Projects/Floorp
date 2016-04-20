@@ -9,10 +9,13 @@
 #include "MediaData.h"
 #include "PDMFactory.h"
 #include "WebMDemuxer.h"
-#include "WebMSample.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
+
+#ifndef MOZ_WIDGET_ANDROID
+#include "WebMSample.h"
+#endif
 
 namespace mozilla {
 
@@ -30,6 +33,9 @@ VP9Benchmark::IsVP9DecodeFast()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#ifdef MOZ_WIDGET_ANDROID
+  return true;
+#else
   bool hasPref = Preferences::HasUserValue(sBenchmarkFpsPref);
   uint32_t hadRecentUpdate = Preferences::GetUint(sBenchmarkFpsVersionCheck, 0U);
 
@@ -77,6 +83,7 @@ VP9Benchmark::IsVP9DecodeFast()
     Preferences::GetUint("media.benchmark.vp9.threshold", 150);
 
   return decodeFps >= threshold;
+#endif
 }
 
 Benchmark::Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters)
