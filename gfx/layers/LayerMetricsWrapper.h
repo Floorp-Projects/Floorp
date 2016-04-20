@@ -366,17 +366,22 @@ public:
     return region;
   }
 
-  const Maybe<ParentLayerIntRect>& GetClipRect() const
+  Maybe<ParentLayerIntRect> GetClipRect() const
   {
     MOZ_ASSERT(IsValid());
 
-    static const Maybe<ParentLayerIntRect> sNoClipRect = Nothing();
+    Maybe<ParentLayerIntRect> result;
 
+    // The layer can have a clip rect, which is considered to apply
+    // only to the bottommost LayerMetrics.
     if (AtBottomLayer()) {
-      return mLayer->GetClipRect();
+      result = mLayer->GetClipRect();
     }
 
-    return sNoClipRect;
+    // The scroll metadata can have a clip rect as well.
+    result = IntersectMaybeRects(result, Metadata().GetClipRect());
+
+    return result;
   }
 
   float GetPresShellResolution() const
