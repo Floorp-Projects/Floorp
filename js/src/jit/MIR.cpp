@@ -4320,14 +4320,6 @@ MBeta::printOpcode(GenericPrinter& out) const
 }
 
 bool
-MNewObject::shouldUseVM() const
-{
-    if (JSObject* obj = templateObject())
-        return obj->is<PlainObject>() && obj->as<PlainObject>().hasDynamicSlots();
-    return true;
-}
-
-bool
 MCreateThisWithTemplate::canRecoverOnBailout() const
 {
     MOZ_ASSERT(templateObject()->is<PlainObject>() || templateObject()->is<UnboxedPlainObject>());
@@ -4553,25 +4545,6 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MCons
                 convertDoubleElements_ = true;
         }
     }
-}
-
-bool
-MNewArray::shouldUseVM() const
-{
-    if (!templateObject())
-        return true;
-
-    if (templateObject()->is<UnboxedArrayObject>()) {
-        MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= length());
-        return !templateObject()->as<UnboxedArrayObject>().hasInlineElements();
-    }
-
-    MOZ_ASSERT(length() <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
-
-    size_t arraySlots =
-        gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
-
-    return length() > arraySlots;
 }
 
 bool

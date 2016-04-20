@@ -52,6 +52,7 @@ namespace jit {
     _(ReturnFromCtor)                                                       \
     _(BinarySharedStub)                                                     \
     _(UnarySharedStub)                                                      \
+    _(NullarySharedStub)                                                    \
     _(CheckOverRecursed)                                                    \
     _(DefVar)                                                               \
     _(DefLexical)                                                           \

@@ -513,6 +513,16 @@ class IonBuilder
                                                   MDefinition* right);
     bool compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
 
+    // jsop_newarray helpers.
+    bool newArrayTrySharedStub(bool* emitted);
+    bool newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, uint32_t length);
+    bool newArrayTryVM(bool* emitted, uint32_t length);
+
+    // jsop_newobject helpers.
+    bool newObjectTrySharedStub(bool* emitted);
+    bool newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
+    bool newObjectTryVM(bool* emitted);
+
     // jsop_in helpers.
     bool inTryDense(bool* emitted, MDefinition* obj, MDefinition* id);
     bool inTryFold(bool* emitted, MDefinition* obj, MDefinition* id);
@@ -723,6 +733,7 @@ class IonBuilder
     bool jsop_delprop(PropertyName* name);
     bool jsop_delelem();
     bool jsop_newarray(uint32_t length);
+    bool jsop_newarray(JSObject* templateObject, uint32_t length);
     bool jsop_newarray_copyonwrite();
     bool jsop_newobject();
     bool jsop_initelem();
