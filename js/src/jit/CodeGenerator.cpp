@@ -2343,6 +2343,7 @@ CodeGenerator::visitBinarySharedStub(LBinarySharedStub* lir)
       case JSOP_MUL:
       case JSOP_DIV:
       case JSOP_MOD:
+      case JSOP_POW:
         emitSharedStub(ICStub::Kind::BinaryArith_Fallback, lir);
         break;
       case JSOP_LT:
