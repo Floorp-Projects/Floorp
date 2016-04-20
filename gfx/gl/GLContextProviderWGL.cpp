@@ -688,18 +688,31 @@ GLContextProviderWGL::CreateOffscreen(const IntSize& size,
     return gl.forget();
 }
 
-static StaticRefPtr<GLContext> gGlobalContext;
+static StaticRefPtr<GLContextWGL> gGlobalContext;
 
 /*static*/ GLContext*
 GLContextProviderWGL::GetGlobalContext()
 {
+    if (!sWGLLib.EnsureInitialized()) {
+        return nullptr;
+    }
+
     static bool triedToCreateContext = false;
-    if (!triedToCreateContext) {
+
+    if (!triedToCreateContext && !gGlobalContext) {
         triedToCreateContext = true;
 
-        MOZ_RELEASE_ASSERT(!gGlobalContext);
-        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
-        gGlobalContext = temp;
+        // conveniently, we already have what we need...
+        SurfaceCaps dummyCaps = SurfaceCaps::Any();
+        gGlobalContext = new GLContextWGL(dummyCaps,
+                                          nullptr, true,
+                                          sWGLLib.GetWindowDC(),
+                                          sWGLLib.GetWindowGLContext());
+        if (!gGlobalContext->Init()) {
+            NS_WARNING("Global context GLContext initialization failed?");
+            gGlobalContext = nullptr;
+            return nullptr;
+        }
     }
 
     return static_cast<GLContext*>(gGlobalContext);
