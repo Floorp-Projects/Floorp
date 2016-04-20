@@ -14,9 +14,8 @@ curl --location --retry 10 --retry-delay 10 -o /home/worker/task.json \
 # enable locale cache
 export MBSDIFF_HOOK="/home/worker/bin/mbsdiff_hook.sh -c /tmp/fs-cache"
 
-EXTRA_PARAMS=
 if [ ! -z $FILENAME_TEMPLATE ]; then
-    EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE"
+    EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE $EXTRA_PARAMS"
 fi
 
 /home/worker/bin/funsize.py \

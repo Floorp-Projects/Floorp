@@ -24,7 +24,8 @@ COPY runme.sh /runme.sh
 RUN chmod 755 /home/worker/bin/* /runme.sh
 RUN mkdir /home/worker/keys
 COPY *.pubkey /home/worker/keys/
-RUN freshclam --verbose
+# Freshclam may be flaky, retry if it fails
+RUN for i in 1 2 3 4 5; do freshclam --verbose && break || sleep 15; done
 
 ENV           HOME          /home/worker
 ENV           SHELL         /bin/bash
