@@ -160,6 +160,27 @@ DOMEventTargetHelper::DisconnectFromOwner()
   }
 }
 
+nsPIDOMWindowInner*
+DOMEventTargetHelper::GetWindowIfCurrent() const
+{
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return nullptr;
+  }
+
+  return GetOwner();
+}
+
+nsIDocument*
+DOMEventTargetHelper::GetDocumentIfCurrent() const
+{
+  nsPIDOMWindowInner* win = GetWindowIfCurrent();
+  if (!win) {
+    return nullptr;
+  }
+
+  return win->GetDoc();
+}
+
 NS_IMETHODIMP
 DOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                           nsIDOMEventListener* aListener,
