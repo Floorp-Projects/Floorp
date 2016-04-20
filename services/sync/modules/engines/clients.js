@@ -225,21 +225,26 @@ ClientEngine.prototype = {
   },
 
   _syncFinish() {
-    // Record telemetry for our device types.
+    // Record histograms for our device types, and also write them to a pref
+    // so non-histogram telemetry (eg, UITelemetry) has easy access to them.
     for (let [deviceType, count] of this.deviceTypes) {
       let hid;
+      let prefName = this.name + ".devices.";
       switch (deviceType) {
         case "desktop":
           hid = "WEAVE_DEVICE_COUNT_DESKTOP";
+          prefName += "desktop";
           break;
         case "mobile":
           hid = "WEAVE_DEVICE_COUNT_MOBILE";
+          prefName += "mobile";
           break;
         default:
           this._log.warn(`Unexpected deviceType "${deviceType}" recording device telemetry.`);
           continue;
       }
       Services.telemetry.getHistogramById(hid).add(count);
+      Svc.Prefs.set(prefName, count);
     }
     SyncEngine.prototype._syncFinish.call(this);
   },

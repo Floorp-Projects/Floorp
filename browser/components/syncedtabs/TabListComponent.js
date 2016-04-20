@@ -6,8 +6,13 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 let log = Cu.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
+
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
+  "resource:///modules/BrowserUITelemetry.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "TabListComponent"
@@ -105,6 +110,7 @@ TabListComponent.prototype = {
 
   onOpenTab(url, where, params) {
     this._window.openUILinkIn(url, where, params);
+    BrowserUITelemetry.countSyncedTabEvent("open", "sidebar");
   },
 
   onCopyTabLocation(url) {

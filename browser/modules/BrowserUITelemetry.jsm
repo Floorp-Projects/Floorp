@@ -180,6 +180,9 @@ this.BrowserUITelemetry = {
     UITelemetry.addSimpleMeasureFunction("UITour",
                                          () => UITour.getTelemetry());
 
+    UITelemetry.addSimpleMeasureFunction("syncstate",
+                                         this.getSyncState.bind(this));
+
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
     Services.obs.addObserver(this, "autocomplete-did-enter-text", false);
@@ -586,6 +589,18 @@ this.BrowserUITelemetry = {
     return result;
   },
 
+  getSyncState: function() {
+    let result = {};
+    for (let sub of ["desktop", "mobile"]) {
+      let count = 0;
+      try {
+        count = Services.prefs.getIntPref("services.sync.clients.devices." + sub);
+      } catch (ex) {}
+      result[sub] = count;
+    }
+    return result;
+  },
+
   countCustomizationEvent: function(aEventType) {
     this._countEvent(["customize", aEventType]);
   },
@@ -614,6 +629,18 @@ this.BrowserUITelemetry = {
 
   countTabMutingEvent: function(action, reason) {
     this._countEvent(["tab-audio-control", action, reason || "no reason given"]);
+  },
+
+  countSyncedTabEvent: function(what, where) {
+    // "what" will be, eg, "open"
+    // "where" will be "toolbarbutton-subview" or "sidebar"
+    this._countEvent(["synced-tabs", what, where]);
+  },
+
+  countSidebarEvent: function(sidebarID, action) {
+    // sidebarID is the ID of the sidebar (duh!)
+    // action will be "hide" or "show"
+    this._countEvent(["sidebar", sidebarID, action]);
   },
 
   _logAwesomeBarSearchResult: function (url) {
