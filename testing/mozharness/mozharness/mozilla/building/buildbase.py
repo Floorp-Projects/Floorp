@@ -1911,6 +1911,7 @@ or run without that action (ie: --no-{action})"
             perfherder_data["suites"].append({
                 "name": "installer size",
                 "value": installer_size,
+                "alertThreshold": 0.25,
                 "subtests": size_measurements
             })
         if (hasattr(self, "build_metrics_summary") and
