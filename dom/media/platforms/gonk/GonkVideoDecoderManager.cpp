@@ -129,7 +129,7 @@ GonkVideoDecoderManager::Init()
   property_get("ro.moz.omx.hw.max_height", propValue, "-1");
   maxHeight = -1 == atoi(propValue) ? MAX_VIDEO_HEIGHT : atoi(propValue) ;
 
-  if (mConfig.mImage.width * mConfig.mImage.height > maxWidth * maxHeight) {
+  if (uint32_t(mConfig.mImage.width * mConfig.mImage.height) > maxWidth * maxHeight) {
     GVDM_LOG("Video resolution exceeds hw codec capability");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
@@ -221,6 +221,8 @@ GonkVideoDecoderManager::CreateVideoData(MediaBuffer* aBuffer,
     keyFrame = 0;
   }
 
+  gfx::IntRect picture =
+    mConfig.ScaledImageRect(mFrameInfo.mWidth, mFrameInfo.mHeight);
   if (aBuffer->graphicBuffer().get()) {
     data = CreateVideoDataFromGraphicBuffer(aBuffer, picture);
     if (data && !mNeedsCopyBuffer) {
@@ -229,10 +231,7 @@ GonkVideoDecoderManager::CreateVideoData(MediaBuffer* aBuffer,
     }
     mNeedsCopyBuffer = false;
   } else {
-    data =
-      CreateVideoDataFromDataBuffer(aBuffer,
-                                    mConfig.ScaledImageRect(mFrameInfo.mWidth,
-                                                            mFrameInfo.mHeight));
+    data = CreateVideoDataFromDataBuffer(aBuffer, picture);
   }
 
   if (!data) {
@@ -427,7 +426,7 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
     static_cast<GrallocTextureData*>(textureClient->GetInternalData())->SetMediaBuffer(aSource);
   }
 
-  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+  RefPtr<VideoData> data = VideoData::Create(mConfig,
                                              mImageContainer,
                                              0, // Filled later by caller.
                                              0, // Filled later by caller.
@@ -496,7 +495,7 @@ GonkVideoDecoderManager::CreateVideoDataFromDataBuffer(MediaBuffer* aSource, gfx
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
-  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+  RefPtr<VideoData> data = VideoData::Create(mConfig,
                                              mImageContainer,
                                              0, // Filled later by caller.
                                              0, // Filled later by caller.
@@ -665,8 +664,8 @@ GonkVideoDecoderManager::codecReserved()
   mDecoder->Prepare();
 
   if (mConfig.mMimeType.EqualsLiteral("video/mp4v-es")) {
-    rv = mDecoder->Input(mConfig.mCodecSpecificData->Elements(),
-                         mConfig.mCodecSpecificData->Length(), 0,
+    rv = mDecoder->Input(mConfig.mCodecSpecificConfig->Elements(),
+                         mConfig.mCodecSpecificConfig->Length(), 0,
                          android::MediaCodec::BUFFER_FLAG_CODECCONFIG,
                          CODECCONFIG_TIMEOUT_US);
   }
