@@ -43,6 +43,7 @@ interface nsIScrollObserver;
 interface nsITabParent;
 interface nsITabChild;
 interface nsICommandManager;
+interface nsICommandParams;
 native TabChildRef(already_AddRefed<nsITabChild>);
 
 typedef unsigned long nsLoadFlags;
@@ -1019,6 +1020,7 @@ interface nsIDocShell : nsIDocShellTreeItem
     */
   boolean isCommandEnabled(in string command);
   void doCommand(in string command);
+  void doCommandWithParams(in string command, in nsICommandParams aParams);
 
   /**
    * Invisible DocShell are dummy construct to simulate DOM windows
