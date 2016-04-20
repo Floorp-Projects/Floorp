@@ -7,6 +7,7 @@
 @namespace svg url("http://www.w3.org/2000/svg");
 
 :root {
+  --identity-popup-expander-width: 38px;
   --panelui-subview-transition-duration: 150ms;
 }
 
