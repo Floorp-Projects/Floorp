@@ -719,7 +719,7 @@ AppendErrorTextMismatch(const nsString& host, nsIX509Cert* ix509,
   }
   notValidForHostnameString.Append('\n');
 
-  ScopedCERTCertificate nssCert(ix509->GetCert());
+  UniqueCERTCertificate nssCert(ix509->GetCert());
   if (!nssCert) {
     returnedMessage.Append(notValidForHostnameString);
     return NS_OK;

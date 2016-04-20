@@ -3,6 +3,7 @@
 <head>
   <title>Test for Directory API in workers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="filesystem_commons.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
@@ -45,6 +46,8 @@ function test_worker() {
 }
 
 var tests = [
+  function() { setup_tests(next); },
+
   create_fileList,
   test_worker,
 ];

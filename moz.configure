@@ -148,10 +148,7 @@ perl_version_check('5.006')
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
-check_prog('TAR', ('gnutar', 'gtar', 'tar'))
-check_prog('UNZIP', ('unzip',))
 check_prog('XARGS', ('xargs',))
-check_prog('ZIP', ('zip',))
 
 @depends(target)
 def extra_programs(target):

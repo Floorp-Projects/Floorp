@@ -96,24 +96,13 @@ private:
 GonkVideoDecoderManager::GonkVideoDecoderManager(
   mozilla::layers::ImageContainer* aImageContainer,
   const VideoInfo& aConfig)
-  : mImageContainer(aImageContainer)
+  : mConfig(aConfig)
+  , mImageContainer(aImageContainer)
   , mColorConverterBufferSize(0)
   , mPendingReleaseItemsLock("GonkVideoDecoderManager::mPendingReleaseItemsLock")
   , mNeedsCopyBuffer(false)
 {
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
-  mMimeType = aConfig.mMimeType;
-  mVideoWidth  = aConfig.mDisplay.width;
-  mVideoHeight = aConfig.mDisplay.height;
-  mDisplayWidth = aConfig.mDisplay.width;
-  mDisplayHeight = aConfig.mDisplay.height;
-  mInfo.mVideo = aConfig;
-
-  mCodecSpecificData = aConfig.mCodecSpecificConfig;
-  nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
-  nsIntSize frameSize(mVideoWidth, mVideoHeight);
-  mPicture = pictureRect;
-  mInitialFrame = frameSize;
 }
 
 GonkVideoDecoderManager::~GonkVideoDecoderManager()
@@ -133,9 +122,6 @@ GonkVideoDecoderManager::Init()
 {
   mNeedsCopyBuffer = false;
 
-  nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
-  nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
-
   uint32_t maxWidth, maxHeight;
   char propValue[PROPERTY_VALUE_MAX];
   property_get("ro.moz.omx.hw.max_width", propValue, "-1");
@@ -143,15 +129,14 @@ GonkVideoDecoderManager::Init()
   property_get("ro.moz.omx.hw.max_height", propValue, "-1");
   maxHeight = -1 == atoi(propValue) ? MAX_VIDEO_HEIGHT : atoi(propValue) ;
 
-  if (mVideoWidth * mVideoHeight > maxWidth * maxHeight) {
+  if (uint32_t(mConfig.mImage.width * mConfig.mImage.height) > maxWidth * maxHeight) {
     GVDM_LOG("Video resolution exceeds hw codec capability");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
   // Validate the container-reported frame and pictureRect sizes. This ensures
   // that our video frame creation code doesn't overflow.
-  nsIntSize frameSize(mVideoWidth, mVideoHeight);
-  if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
+  if (!IsValidVideoRegion(mConfig.mImage, mConfig.ImageRect(), mConfig.mDisplay)) {
     GVDM_LOG("It is not a valid region");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
@@ -169,7 +154,9 @@ GonkVideoDecoderManager::Init()
 
   RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
   android::sp<GonkVideoDecoderManager> self = this;
-  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false);
+  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper,
+                                           mConfig.mMimeType.get(),
+                                           false);
 
   uint32_t capability = MediaCodecProxy::kEmptyCapability;
   if (mDecoder->getCapability(&capability) == OK && (capability &
@@ -234,19 +221,8 @@ GonkVideoDecoderManager::CreateVideoData(MediaBuffer* aBuffer,
     keyFrame = 0;
   }
 
-  gfx::IntRect picture = mPicture;
-  if (mFrameInfo.mWidth != mInitialFrame.width ||
-      mFrameInfo.mHeight != mInitialFrame.height) {
-
-    // Frame size is different from what the container reports. This is legal,
-    // and we will preserve the ratio of the crop rectangle as it
-    // was reported relative to the picture size reported by the container.
-    picture.x = (mPicture.x * mFrameInfo.mWidth) / mInitialFrame.width;
-    picture.y = (mPicture.y * mFrameInfo.mHeight) / mInitialFrame.height;
-    picture.width = (mFrameInfo.mWidth * mPicture.width) / mInitialFrame.width;
-    picture.height = (mFrameInfo.mHeight * mPicture.height) / mInitialFrame.height;
-  }
-
+  gfx::IntRect picture =
+    mConfig.ScaledImageRect(mFrameInfo.mWidth, mFrameInfo.mHeight);
   if (aBuffer->graphicBuffer().get()) {
     data = CreateVideoDataFromGraphicBuffer(aBuffer, picture);
     if (data && !mNeedsCopyBuffer) {
@@ -450,7 +426,7 @@ GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
     static_cast<GrallocTextureData*>(textureClient->GetInternalData())->SetMediaBuffer(aSource);
   }
 
-  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+  RefPtr<VideoData> data = VideoData::Create(mConfig,
                                              mImageContainer,
                                              0, // Filled later by caller.
                                              0, // Filled later by caller.
@@ -519,7 +495,7 @@ GonkVideoDecoderManager::CreateVideoDataFromDataBuffer(MediaBuffer* aSource, gfx
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
-  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+  RefPtr<VideoData> data = VideoData::Create(mConfig,
                                              mImageContainer,
                                              0, // Filled later by caller.
                                              0, // Filled later by caller.
@@ -565,7 +541,9 @@ GonkVideoDecoderManager::SetVideoFormat()
     mFrameInfo.mColorFormat = color_format;
 
     nsIntSize displaySize(width, height);
-    if (!IsValidVideoRegion(mInitialFrame, mPicture, displaySize)) {
+    if (!IsValidVideoRegion(mConfig.mDisplay,
+                            mConfig.ScaledImageRect(width, height),
+                            displaySize)) {
       GVDM_LOG("It is not a valid region");
       return false;
     }
@@ -668,10 +646,10 @@ GonkVideoDecoderManager::codecReserved()
   sp<Surface> surface;
   status_t rv = OK;
   // Fixed values
-  GVDM_LOG("Configure video mime type: %s, width:%d, height:%d", mMimeType.get(), mVideoWidth, mVideoHeight);
-  format->setString("mime", mMimeType.get());
-  format->setInt32("width", mVideoWidth);
-  format->setInt32("height", mVideoHeight);
+  GVDM_LOG("Configure video mime type: %s, width:%d, height:%d", mConfig.mMimeType.get(), mConfig.mImage.width, mConfig.mImage.height);
+  format->setString("mime", mConfig.mMimeType.get());
+  format->setInt32("width", mConfig.mImage.width);
+  format->setInt32("height", mConfig.mImage.height);
   // Set the "moz-use-undequeued-bufs" to use the undeque buffers to accelerate
   // the video decoding.
   format->setInt32("moz-use-undequeued-bufs", 1);
@@ -685,9 +663,9 @@ GonkVideoDecoderManager::codecReserved()
   mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();
 
-  if (mMimeType.EqualsLiteral("video/mp4v-es")) {
-    rv = mDecoder->Input(mCodecSpecificData->Elements(),
-                         mCodecSpecificData->Length(), 0,
+  if (mConfig.mMimeType.EqualsLiteral("video/mp4v-es")) {
+    rv = mDecoder->Input(mConfig.mCodecSpecificConfig->Elements(),
+                         mConfig.mCodecSpecificConfig->Length(), 0,
                          android::MediaCodec::BUFFER_FLAG_CODECCONFIG,
                          CODECCONFIG_TIMEOUT_US);
   }

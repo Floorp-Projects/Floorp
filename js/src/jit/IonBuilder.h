@@ -503,12 +503,25 @@ class IonBuilder
     // jsop_bitnot helpers.
     bool bitnotTrySpecialized(bool* emitted, MDefinition* input);
 
+    // jsop_pow helpers.
+    bool powTrySpecialized(bool* emitted, MDefinition* base, MDefinition* power, MIRType outputType);
+
     // jsop_compare helpers.
     bool compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
     bool compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
     bool compareTrySpecializedOnBaselineInspector(bool* emitted, JSOp op, MDefinition* left,
                                                   MDefinition* right);
     bool compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
+
+    // jsop_newarray helpers.
+    bool newArrayTrySharedStub(bool* emitted);
+    bool newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, uint32_t length);
+    bool newArrayTryVM(bool* emitted, uint32_t length);
+
+    // jsop_newobject helpers.
+    bool newObjectTrySharedStub(bool* emitted);
+    bool newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
+    bool newObjectTryVM(bool* emitted);
 
     // jsop_in helpers.
     bool inTryDense(bool* emitted, MDefinition* obj, MDefinition* id);
@@ -720,6 +733,7 @@ class IonBuilder
     bool jsop_delprop(PropertyName* name);
     bool jsop_delelem();
     bool jsop_newarray(uint32_t length);
+    bool jsop_newarray(JSObject* templateObject, uint32_t length);
     bool jsop_newarray_copyonwrite();
     bool jsop_newobject();
     bool jsop_initelem();
@@ -804,7 +818,6 @@ class IonBuilder
     InliningStatus inlineMathHypot(CallInfo& callInfo);
     InliningStatus inlineMathMinMax(CallInfo& callInfo, bool max);
     InliningStatus inlineMathPow(CallInfo& callInfo);
-    InliningStatus inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outputType);
     InliningStatus inlineMathRandom(CallInfo& callInfo);
     InliningStatus inlineMathImul(CallInfo& callInfo);
     InliningStatus inlineMathFRound(CallInfo& callInfo);

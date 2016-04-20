@@ -1,34 +1,37 @@
-function parseQuery(request, key) {
-  var params = request.queryString.split('&');
-  for (var j = 0; j < params.length; ++j) {
-    var p = params[j];
-	if (p == key)
-	  return true;
-    if (p.indexOf(key + "=") == 0)
-	  return p.substring(key.length + 1);
-	if (p.indexOf("=") < 0 && key == "")
-	  return p;
+function parseQuery(query, key) {
+  for (let p of query.split('&')) {
+    if (p == key) {
+      return true;
+    }
+    if (p.startsWith(key + "=")) {
+      return p.substring(key.length + 1);
+    }
   }
-  return false;
 }
 
 // Return seek.ogv file content for the first request with a given key.
 // All subsequent requests return a redirect to a different-origin resource.
 function handleRequest(request, response)
 {
-  var key = parseQuery(request, "key");
-  var resource = parseQuery(request, "res");
+  var query = request.queryString;
+  var key = parseQuery(query, "key");
+  var resource = parseQuery(query, "res");
+  var nested = parseQuery(query, "nested") || false;
 
-  if (getState(key) == "redirect") {
-    var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
-    response.setStatusLine(request.httpVersion, 303, "See Other");
-    response.setHeader("Location", "http://" + origin + "/tests/dom/media/test/" + resource);
-    response.setHeader("Content-Type", "text/html");
-    return;
+  dump("Received request for key = "+ key +"\n");
+  if (!nested) {
+    if (getState(key) == "redirect") {
+      var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
+      response.setStatusLine(request.httpVersion, 303, "See Other");
+      let url = "http://" + origin +
+                "/tests/dom/media/test/dynamic_redirect.sjs?nested&" + query;
+      dump("Redirecting to "+ url + "\n");
+      response.setHeader("Location", url);
+      response.setHeader("Content-Type", "text/html");
+      return;
+    }
+    setState(key, "redirect");
   }
-
-  setState(key, "redirect");
-
   var file = Components.classes["@mozilla.org/file/directory_service;1"].
                         getService(Components.interfaces.nsIProperties).
                         get("CurWorkD", Components.interfaces.nsILocalFile);
@@ -38,17 +41,27 @@ function handleRequest(request, response)
                         createInstance(Components.interfaces.nsIBinaryInputStream);
   var paths = "tests/dom/media/test/" + resource;
   var split = paths.split("/");
-  for(var i = 0; i < split.length; ++i) {
+  for (var i = 0; i < split.length; ++i) {
     file.append(split[i]);
   }
   fis.init(file, -1, -1, false);
-  dump("file=" + file + "\n");
+
   bis.setInputStream(fis);
   var bytes = bis.readBytes(bis.available());
+  let [from, to] = request.getHeader("range").split("=")[1].split("-").map(s => parseInt(s));
+  to = to || Math.max(from, bytes.length - 1);
+  byterange = bytes.substring(from, to + 1);
+
+  let contentRange = "bytes "+ from +"-"+ to +"/"+ bytes.length;
+  let contentLength = (to - from + 1).toString();
+  dump("Response Content-Range = "+ contentRange +"\n");
+  dump("Response Content-Length = "+ contentLength +"\n");
+
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
-  response.setHeader("Content-Range", "bytes 0-" + (bytes.length - 1) + "/" + bytes.length);
-  response.setHeader("Content-Length", ""+bytes.length, false);
+  response.setHeader("Content-Range", contentRange);
+  response.setHeader("Content-Length", contentLength, false);
   response.setHeader("Content-Type", "video/ogg", false);
-  response.write(bytes, bytes.length);
+  response.setHeader("Accept-Ranges", "bytes", false);
+  response.write(byterange, byterange.length);
   bis.close();
 }

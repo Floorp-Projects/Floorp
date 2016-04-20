@@ -27,13 +27,13 @@ using namespace mozilla::pkix::test;
 using namespace mozilla::test;
 
 static TestKeyPair*
-CreateTestKeyPairFromCert(CERTCertificate& cert)
+CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
 {
-  UniqueSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(&cert, nullptr));
+  UniqueSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(cert.get(), nullptr));
   if (!privateKey) {
     return nullptr;
   }
-  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(&cert));
+  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
   if (!publicKey) {
     return nullptr;
   }
@@ -41,11 +41,11 @@ CreateTestKeyPairFromCert(CERTCertificate& cert)
 }
 
 SECItemArray*
-GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
+GetOCSPResponseForType(OCSPResponseType aORT, const UniqueCERTCertificate& aCert,
                        const UniquePLArenaPool& aArena,
                        const char* aAdditionalCertName)
 {
-  MOZ_ASSERT(aArena.get());
+  MOZ_ASSERT(aArena);
   MOZ_ASSERT(aCert);
   // Note: |aAdditionalCertName| may or may not need to be non-null depending
   //       on the |aORT| value given.
@@ -68,18 +68,18 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
   time_t now = time(nullptr);
   time_t oldNow = now - (8 * Time::ONE_DAY_IN_SECONDS);
 
-  mozilla::ScopedCERTCertificate cert(CERT_DupCertificate(aCert));
+  mozilla::UniqueCERTCertificate cert(CERT_DupCertificate(aCert.get()));
 
   if (aORT == ORTGoodOtherCert) {
-    cert = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
+    cert.reset(PK11_FindCertFromNickname(aAdditionalCertName, nullptr));
     if (!cert) {
       PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
     }
   }
   // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
-  mozilla::ScopedCERTCertificate
-    issuerCert(CERT_FindCertIssuer(aCert, PR_Now(), certUsageSSLCA));
+  mozilla::UniqueCERTCertificate
+    issuerCert(CERT_FindCertIssuer(aCert.get(), PR_Now(), certUsageSSLCA));
   if (!issuerCert) {
     PrintPRError("CERT_FindCertIssuer failed");
     return nullptr;
@@ -101,11 +101,11 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
   CertID certID(issuer, issuerPublicKey, serialNumber);
   OCSPResponseContext context(certID, now);
 
-  mozilla::ScopedCERTCertificate signerCert;
+  mozilla::UniqueCERTCertificate signerCert;
   if (aORT == ORTGoodOtherCA || aORT == ORTDelegatedIncluded ||
       aORT == ORTDelegatedIncludedLast || aORT == ORTDelegatedMissing ||
       aORT == ORTDelegatedMissingMultiple) {
-    signerCert = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
+    signerCert.reset(PK11_FindCertFromNickname(aAdditionalCertName, nullptr));
     if (!signerCert) {
       PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
@@ -192,9 +192,9 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate* aCert,
   }
 
   if (!signerCert) {
-    signerCert = CERT_DupCertificate(issuerCert.get());
+    signerCert.reset(CERT_DupCertificate(issuerCert.get()));
   }
-  context.signerKeyPair.reset(CreateTestKeyPairFromCert(*signerCert));
+  context.signerKeyPair.reset(CreateTestKeyPairFromCert(signerCert));
   if (!context.signerKeyPair) {
     PrintPRError("PK11_FindKeyByAnyCert failed");
     return nullptr;
