@@ -7190,6 +7190,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "-moz-box-ordinal-group",
     subproperties: [ "-moz-box-ordinal-group" ],
   };
+  gCSSProperties["-webkit-box-orient"] = {
+    domProp: "webkitBoxOrient",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-orient",
+    subproperties: [ "-moz-box-orient" ],
+  };
+  gCSSProperties["-webkit-box-direction"] = {
+    domProp: "webkitBoxDirection",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-box-direction",
+    subproperties: [ "-moz-box-direction" ],
+  };
   gCSSProperties["-webkit-box-align"] = {
     domProp: "webkitBoxAlign",
     inherited: false,
