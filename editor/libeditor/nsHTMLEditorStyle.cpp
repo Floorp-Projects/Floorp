@@ -605,13 +605,15 @@ nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode,
 }
 
 nsresult
-nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
+nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                          nsIAtom* aProperty, const nsAString* aAttribute)
 {
+  nsCOMPtr<nsINode> node = do_QueryInterface(*aNode);
   nsCOMPtr<nsIContent> leftNode, rightNode;
-  nsresult res = SplitStyleAbovePoint(aNode, aOffset, aProperty,
+  nsresult res = SplitStyleAbovePoint(address_of(node), aOffset, aProperty,
                                       aAttribute, getter_AddRefs(leftNode),
                                       getter_AddRefs(rightNode));
+  *aNode = GetAsDOMNode(node);
   NS_ENSURE_SUCCESS(res, res);
 
   if (leftNode) {
@@ -677,7 +679,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
       NS_ENSURE_SUCCESS(res, res);
     }
     // reset our node offset values to the resulting new sel point
-    *aNode = newSelParent;
+    *aNode = GetAsDOMNode(newSelParent);
     *aOffset = newSelOffset;
   }
 
