@@ -106,6 +106,7 @@ public:
   NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult) override;
   NS_IMETHOD WillDeleteSelection(nsISelection *aSelection) override;
   NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) override;
+  void DeleteNodeIfCollapsedText(nsINode& aNode);
 
 protected:
   virtual ~nsHTMLEditRules();

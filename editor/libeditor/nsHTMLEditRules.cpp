@@ -2030,6 +2030,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
                                     DeprecatedAbs(eo - so));
       *aHandled = true;
       NS_ENSURE_SUCCESS(res, res);
+
+      DeleteNodeIfCollapsedText(nodeAsText);
+
       res = InsertBRIfNeeded(aSelection);
       NS_ENSURE_SUCCESS(res, res);
 
@@ -2471,6 +2474,18 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
     }
   }
+
+  // We might have left only collapsed whitespace in the start/end nodes
+  {
+    nsAutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
+                                     address_of(startNode), &startOffset);
+    nsAutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
+                                   address_of(endNode), &endOffset);
+
+    DeleteNodeIfCollapsedText(*startNode);
+    DeleteNodeIfCollapsedText(*endNode);
+  }
+
   // If we're joining blocks: if deleting forward the selection should be
   // collapsed to the end of the selection, if deleting backward the selection
   // should be collapsed to the beginning of the selection. But if we're not
@@ -2486,6 +2501,28 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   }
   NS_ENSURE_SUCCESS(res, res);
   return NS_OK;
+}
+
+/**
+ * If aNode is a text node that contains only collapsed whitespace, delete it.
+ * It doesn't serve any useful purpose, and we don't want it to confuse code
+ * that doesn't correctly skip over it.
+ *
+ * If deleting the node fails (like if it's not editable), the caller should
+ * proceed as usual, so don't return any errors.
+ */
+void
+nsHTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode)
+{
+  if (!aNode.GetAsText()) {
+    return;
+  }
+  bool empty;
+  nsresult res = mHTMLEditor->IsVisTextNode(aNode.AsContent(), &empty, false);
+  NS_ENSURE_SUCCESS_VOID(res);
+  if (empty) {
+    mHTMLEditor->DeleteNode(&aNode);
+  }
 }
 
 
