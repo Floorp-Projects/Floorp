@@ -533,11 +533,6 @@
 @RESPATH@/components/TVSimulatorService.js
 @RESPATH@/components/TVSimulatorService.manifest
 
-@RESPATH@/components/SystemMessageCache.js
-@RESPATH@/components/SystemMessageInternal.js
-@RESPATH@/components/SystemMessageManager.js
-@RESPATH@/components/SystemMessageManager.manifest
-
 @RESPATH@/components/Payment.js
 @RESPATH@/components/PaymentFlowInfo.js
 @RESPATH@/components/Payment.manifest

@@ -108,7 +108,6 @@
 #include "nsAnonymousTemporaryFile.h"
 #include "nsISpellChecker.h"
 #include "nsClipboardProxy.h"
-#include "nsISystemMessageCache.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -487,39 +486,6 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
   return NS_OK;
 }
 
-class SystemMessageHandledObserver final : public nsIObserver
-{
-  ~SystemMessageHandledObserver() {}
-
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  void Init();
-};
-
-void SystemMessageHandledObserver::Init()
-{
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-
-  if (os) {
-    os->AddObserver(this, "handle-system-messages-done", /* ownsWeak */ false);
-  }
-}
-
-NS_IMETHODIMP
-SystemMessageHandledObserver::Observe(nsISupports* aSubject,
-                                      const char* aTopic,
-                                      const char16_t* aData)
-{
-  if (ContentChild::GetSingleton()) {
-    ContentChild::GetSingleton()->SendSystemMessageHandled();
-  }
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(SystemMessageHandledObserver, nsIObserver)
-
 class BackgroundChildPrimer final :
   public nsIIPCBackgroundChildCreateCallback
 {
@@ -568,10 +534,6 @@ InitOnContentProcessCreated()
     MOZ_ASSERT(false, "Failed updating permission in child process");
   }
 #endif
-
-  nsCOMPtr<nsISystemMessageCache> smc =
-    do_GetService("@mozilla.org/system-message-cache;1");
-  NS_WARN_IF(!smc);
 
   // This will register cross-process observer.
   mozilla::dom::time::InitializeDateCacheCleaner();
@@ -1080,11 +1042,6 @@ ContentChild::InitXPCOM()
     ProcessGlobal* global = ProcessGlobal::Get();
     global->SetInitialProcessData(data);
   }
-
-  // This object is held alive by the observer service.
-  RefPtr<SystemMessageHandledObserver> sysMsgObserver =
-    new SystemMessageHandledObserver();
-  sysMsgObserver->Init();
 
   InitOnContentProcessCreated();
 }
