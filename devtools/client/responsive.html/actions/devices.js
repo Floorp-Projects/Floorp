@@ -7,6 +7,8 @@
 const {
   ADD_DEVICE,
   ADD_DEVICE_TYPE,
+  UPDATE_DEVICE_DISPLAYED,
+  UPDATE_DEVICE_MODAL_OPEN,
 } = require("./index");
 
 module.exports = {
@@ -23,6 +25,22 @@ module.exports = {
     return {
       type: ADD_DEVICE_TYPE,
       deviceType,
+    };
+  },
+
+  updateDeviceDisplayed(device, deviceType, displayed) {
+    return {
+      type: UPDATE_DEVICE_DISPLAYED,
+      device,
+      deviceType,
+      displayed,
+    };
+  },
+
+  updateDeviceModalOpen(isOpen) {
+    return {
+      type: UPDATE_DEVICE_MODAL_OPEN,
+      isOpen,
     };
   },
 

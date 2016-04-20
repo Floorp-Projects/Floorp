@@ -30,7 +30,7 @@ module.exports = createClass({
     return dom.header(
       {
         id: "global-toolbar",
-        className: "toolbar",
+        className: "container",
       },
       dom.span(
         {

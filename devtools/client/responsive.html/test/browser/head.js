@@ -26,6 +26,7 @@ SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
 DevToolsUtils.testing = true;
+Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref("devtools.devices.url",
   TEST_URI_ROOT + "devices.json");
 Services.prefs.setBoolPref("devtools.responsive.html.enabled", true);
@@ -34,8 +35,12 @@ registerCleanupFunction(() => {
   DevToolsUtils.testing = false;
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.enabled");
+  Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 });
 const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+const { loadDeviceList } = require("devtools/client/responsive.html/devices");
+
+const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 /**
  * Open responsive design mode for the given tab.
@@ -125,3 +130,25 @@ var setViewportSize = Task.async(function* (ui, manager, width, height) {
     yield resized;
   }
 });
+
+function openDeviceModal(ui) {
+  let { document } = ui.toolWindow;
+  let select = document.querySelector(".viewport-device-selector");
+  let modal = document.querySelector(".device-modal");
+  let editDeviceOption = [...select.options].filter(o => {
+    return o.value === OPEN_DEVICE_MODAL_VALUE;
+  })[0];
+
+  info("Checking initial device modal state");
+  ok(modal.classList.contains("hidden"),
+    "The device modal is hidden by default.");
+
+  info("Opening device modal through device selector.");
+  EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"},
+    ui.toolWindow);
+  EventUtils.synthesizeMouseAtCenter(editDeviceOption, {type: "mouseup"},
+    ui.toolWindow);
+
+  ok(!modal.classList.contains("hidden"),
+    "The device modal is displayed.");
+}
