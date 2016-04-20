@@ -370,10 +370,12 @@ private:
   FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
   FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
 
-  // Helper for constructor which determines the orientation of our axes, based
-  // on modern flexbox properties (flex-direction, flex-wrap).
-  // XXXdholbert An anternate version of this function (using legacy box
-  // properties) is coming in a later patch.
+  // Helpers for constructor which determine the orientation of our axes, based
+  // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
+  // modern flexbox properties (flex-direction, flex-wrap) depending on whether
+  // the flex container is a "legacy box" (as determined by IsLegacyBox).
+  void InitAxesFromLegacyProps(const nsFlexContainerFrame* aFlexContainer,
+                               const WritingMode& aWM);
   void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer,
                                const WritingMode& aWM);
 
@@ -3161,7 +3163,12 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   : mWM(aWM),
     mAreAxesInternallyReversed(false)
 {
-  InitAxesFromModernProps(aFlexContainer, aWM);
+  if (IsLegacyBox(aFlexContainer->StyleDisplay(),
+                  aFlexContainer->StyleContext())) {
+    InitAxesFromLegacyProps(aFlexContainer, aWM);
+  } else {
+    InitAxesFromModernProps(aFlexContainer, aWM);
+  }
 
   // Master switch to enable/disable bug 983427's code for reversing our axes
   // and reversing some logic, to avoid reflowing children in bottom-to-top
@@ -3180,6 +3187,53 @@ FlexboxAxisTracker::FlexboxAxisTracker(
       mIsCrossAxisReversed = !mIsCrossAxisReversed;
     }
   }
+}
+
+void
+FlexboxAxisTracker::InitAxesFromLegacyProps(
+  const nsFlexContainerFrame* aFlexContainer,
+  const WritingMode& aWM)
+{
+  const nsStyleXUL* styleXUL = aFlexContainer->StyleXUL();
+
+  const bool boxOrientIsVertical = (styleXUL->mBoxOrient ==
+                                    NS_STYLE_BOX_ORIENT_VERTICAL);
+  const bool wmIsVertical = aWM.IsVertical();
+
+  // If box-orient agrees with our writing-mode, then we're "row-oriented"
+  // (i.e. the flexbox main axis is the same as our writing mode's inline
+  // direction).  Otherwise, we're column-oriented (i.e. the flexbox's main
+  // axis is perpendicular to the writing-mode's inline direction).
+  mIsRowOriented = (boxOrientIsVertical == wmIsVertical);
+
+  // XXXdholbert BEGIN CODE TO SET DEPRECATED MEMBER-VARS
+  if (boxOrientIsVertical) {
+    mMainAxis = eAxis_TB;
+    mCrossAxis = eAxis_LR;
+  } else {
+    mMainAxis = eAxis_LR;
+    mCrossAxis = eAxis_TB;
+  }
+  // "direction: rtl" (in a horizontal -webkit-box) reverses the main axis.
+  // (Note this we don't toggle "mIsMainAxisReversed" for this condition,
+  // because the main axis will still match aWM's inline direction.)
+  if (aWM.IsBidiLTR()) {
+    mMainAxis = GetReverseAxis(mMainAxis);
+  }
+  // XXXdholbert END CODE TO SET DEPRECATED MEMBER-VARS
+
+  // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
+  // main axis (so it runs in the reverse direction of the inline axis):
+  if (styleXUL->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE) {
+    mMainAxis = GetReverseAxis(mMainAxis);
+    mIsMainAxisReversed = true;
+  } else {
+    mIsMainAxisReversed = false;
+  }
+
+  // Legacy flexbox does not support reversing the cross axis -- it has no
+  // equivalent of modern flexbox's "flex-wrap: wrap-reverse".
+  mIsCrossAxisReversed = false;
 }
 
 void
