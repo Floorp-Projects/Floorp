@@ -38,7 +38,7 @@ add_task(function*() {
   yield onHighlighterShown;
 
   let onComputedViewReady = inspector.once("computed-view-refreshed");
-  let {view: cView} = yield openComputedView();
+  let cView = selectComputedView(inspector);
   yield onComputedViewReady;
   hs = cView.highlighters;
 

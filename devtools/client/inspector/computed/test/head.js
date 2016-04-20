@@ -13,22 +13,6 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Open the toolbox, with the inspector tool visible, and the computed-view
- * sidebar tab selected.
- * @return a promise that resolves when the inspector is ready and the computed
- * view is visible and ready
- */
-function openComputedView() {
-  return openInspectorSidebarTab("computedview").then(({toolbox, inspector}) => {
-    return {
-      toolbox,
-      inspector,
-      view: inspector.computedview.view
-    };
-  });
-}
-
-/**
  * Dispatch the copy event on the given element
  */
 function fireCopyEvent(element) {
