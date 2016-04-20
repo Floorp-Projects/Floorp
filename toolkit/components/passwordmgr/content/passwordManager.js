@@ -5,6 +5,13 @@
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+                                  "resource://gre/modules/DeferredTask.jsm");
 
 var kSignonBundle;
 var showingPasswords = false;
@@ -44,13 +51,43 @@ function setFilter(aFilterString) {
 }
 
 var signonsTreeView = {
+  // Keep track of which favicons we've fetched or started fetching.
+  // Maps a login origin to a favicon URL.
+  _faviconMap: new Map(),
   _filterSet : [],
+  // Coalesce invalidations to avoid repeated flickering.
+  _invalidateTask: new DeferredTask(() => {
+    signonsTree.treeBoxObject.invalidateColumn(signonsTree.columns.siteCol);
+  }, 10),
   _lastSelectedRanges : [],
   selection: null,
 
   rowCount : 0,
   setTree : function(tree) {},
-  getImageSrc : function(row,column) {},
+  getImageSrc : function(row, column) {
+    if (column.element.getAttribute("id") !== "siteCol") {
+      return "";
+    }
+
+    const signon = this._filterSet.length ? this._filterSet[row] : signons[row];
+
+    // We already have the favicon URL or we started to fetch (value is null).
+    if (this._faviconMap.has(signon.hostname)) {
+      return this._faviconMap.get(signon.hostname);
+    }
+
+    // Record the fact that we already starting fetching a favicon for this
+    // origin in order to avoid multiple requests for the same origin.
+    this._faviconMap.set(signon.hostname, null);
+
+    PlacesUtils.promiseFaviconLinkUrl(signon.hostname)
+      .then(faviconURI => {
+        this._faviconMap.set(signon.hostname, faviconURI.spec);
+        this._invalidateTask.arm();
+      }).catch(Cu.reportError);
+
+    return "";
+  },
   getProgressMode : function(row,column) {},
   getCellValue : function(row,column) {},
   getCellText : function(row,column) {
