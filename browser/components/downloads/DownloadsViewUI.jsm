@@ -265,6 +265,25 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   /**
+   * Shows the appropriate unblock dialog based on the verdict, and executes the
+   * action selected by the user in the dialog, which may involve unblocking,
+   * opening or removing the file.
+   *
+   * @param window
+   *        The window to which the dialog should be anchored.
+   */
+  confirmUnblock(window) {
+    let verdict = this.download.error.reputationCheckVerdict;
+    DownloadsCommon.confirmUnblockDownload(verdict, window).then(action => {
+      if (action == "unblock") {
+        return this.download.unblock();
+      } else if (action == "confirmBlock") {
+        return this.download.confirmBlock();
+      }
+    }).catch(Cu.reportError);
+  },
+
+  /**
    * Returns the name of the default command to use for the current state of the
    * download, when there is a double click or another default interaction. If
    * there is no default command for the current state, returns an empty string.
