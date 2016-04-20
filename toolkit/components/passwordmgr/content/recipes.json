@@ -21,6 +21,11 @@
       "usernameSelector": "#accountname, input[name='loginname']",
       "passwordSelector": "#password1, input[name='loginpassword']",
       "pathRegex": "^\/account\/"
+    },
+    {
+      "description": "Username field will be incorrectly captured in the change password form (bug 1243722)",
+      "hosts": ["www.facebook.com"],
+      "notUsernameSelector": "#password_strength"
     }
   ]
 }
