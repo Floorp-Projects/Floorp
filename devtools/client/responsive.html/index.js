@@ -34,7 +34,7 @@ let bootstrap = {
 
   store: null,
 
-  init: Task.async(function*() {
+  init: Task.async(function* () {
     // Load a special UA stylesheet to reset certain styles such as dropdown
     // lists.
     loadSheet(window,
