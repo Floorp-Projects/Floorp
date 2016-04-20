@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1265841
+-->
+<head>
+  <title>Bug 1265841 - Test ServiceWorkerGlobalScope.notificationclose event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/MockServices.js"></script>
+  <script type="text/javascript" src="/tests/dom/tests/mochitest/notification/NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265841">Bug 1265841</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+<script type="text/javascript">
+  SimpleTest.requestFlakyTimeout("Mock alert service dispatches show, click, and close events.");
+
+  function testFrame(src) {
+    var iframe = document.createElement("iframe");
+    iframe.src = src;
+    window.callback = function(result) {
+      window.callback = null;
+      document.body.removeChild(iframe);
+      iframe = null;
+      ok(result, "Got notificationclose event with correct data.");
+      MockServices.unregister();
+      registration.unregister().then(function() {
+        SimpleTest.finish();
+      });
+    };
+    document.body.appendChild(iframe);
+  }
+
+  var registration;
+
+  function runTest() {
+    MockServices.register();
+    testFrame('notificationclose.html');
+    navigator.serviceWorker.register("notificationclose.js", { scope: "notificationclose.html" }).then(function(reg) {
+      registration = reg;
+    }, function(e) {
+      ok(false, "registration should have passed!");
+    });
+  };
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.webnotifications.workers.enabled", true],
+    ["dom.webnotifications.serviceworker.enabled", true],
+    ["notification.prompt.testing", true],
+  ]}, runTest);
+</script>
+</body>
+</html>
