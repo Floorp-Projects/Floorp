@@ -673,7 +673,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
       // selection.
       nsAutoTrackDOMPoint tracker(mRangeUpdater,
                                   address_of(newSelParent), &newSelOffset);
-      res = RemoveStyleInside(*leftNode, aProperty, aAttribute);
+      res = RemoveStyleInside(GetAsDOMNode(leftNode), aProperty, aAttribute);
       NS_ENSURE_SUCCESS(res, res);
     }
     // reset our node offset values to the resulting new sel point
@@ -708,6 +708,19 @@ nsresult nsHTMLEditor::ApplyDefaultProperties()
     NS_ENSURE_SUCCESS(res, res);
   }
   return res;
+}
+
+nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
+                                         // null here means remove all properties
+                                         nsIAtom *aProperty,
+                                         const nsAString *aAttribute,
+                                         const bool aChildrenOnly)
+{
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(content);
+
+  return RemoveStyleInside(*content, aProperty, aAttribute, aChildrenOnly);
 }
 
 nsresult
@@ -819,6 +832,17 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
     return RemoveContainer(&aNode);
   }
   return NS_OK;
+}
+
+bool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
+                                     const nsAString *aAttribute)
+{
+  NS_ENSURE_TRUE(aNode && aAttribute, false);  // ooops
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(content, false);  // ooops
+
+  return IsOnlyAttribute(content, *aAttribute);
 }
 
 bool
@@ -1329,21 +1353,21 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
         // Not the easy case.  Range not contained in single text node.
         nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
-        nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
+        nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
 
         // Iterate range and build up array
         for (iter->Init(range); !iter->IsDone(); iter->Next()) {
           nsCOMPtr<nsINode> node = iter->GetCurrentNode();
           NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-          if (IsEditable(node) && node->IsContent()) {
-            arrayOfNodes.AppendElement(*node->AsContent());
+          if (IsEditable(node)) {
+            arrayOfNodes.AppendElement(node);
           }
         }
 
         // Loop through the list, remove the property on each node
         for (auto& node : arrayOfNodes) {
-          res = RemoveStyleInside(node, aProperty, aAttribute);
+          res = RemoveStyleInside(GetAsDOMNode(node), aProperty, aAttribute);
           NS_ENSURE_SUCCESS(res, res);
           if (IsCSSEnabled() &&
               mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
@@ -1358,7 +1382,8 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
               // "inverting" the style
               mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
             NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
-            SetInlinePropertyOnNode(node, *aProperty, aAttribute, value);
+            SetInlinePropertyOnNode(*node->AsContent(), *aProperty,
+                                    aAttribute, value);
           }
         }
       }
