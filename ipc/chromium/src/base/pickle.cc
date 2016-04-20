@@ -577,23 +577,6 @@ char* Pickle::BeginWriteData(int length) {
   return data_ptr;
 }
 
-void Pickle::TrimWriteData(int new_length) {
-  DCHECK(variable_buffer_offset_ != 0);
-
-  // Fetch the the variable buffer size
-  int* cur_length = reinterpret_cast<int*>(
-      reinterpret_cast<char*>(header_) + variable_buffer_offset_);
-
-  if (new_length < 0 || new_length > *cur_length) {
-    NOTREACHED() << "Invalid length in TrimWriteData.";
-    return;
-  }
-
-  // Update the payload size and variable buffer size
-  header_->payload_size -= (*cur_length - new_length);
-  *cur_length = new_length;
-}
-
 void Pickle::Resize(uint32_t new_capacity) {
   new_capacity = ConstantAligner<kPayloadUnit>::align(new_capacity);
 
