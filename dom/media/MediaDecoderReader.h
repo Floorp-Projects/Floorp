@@ -153,7 +153,7 @@ public:
   // By default, the state machine polls the reader once per second when it's
   // in buffering mode. Some readers support a promise-based mechanism by which
   // they notify the state machine when the data arrives.
-  virtual bool IsWaitForDataSupported() { return false; }
+  virtual bool IsWaitForDataSupported() const { return false; }
 
   virtual RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType)
   {
@@ -213,7 +213,7 @@ public:
   // raw media data is arriving sequentially from a network channel. This
   // makes sense in the <video src="foo"> case, but not for more advanced use
   // cases like MSE.
-  virtual bool UseBufferingHeuristics() { return true; }
+  virtual bool UseBufferingHeuristics() const { return true; }
 
   // Returns the number of bytes of memory allocated by structures/frames in
   // the video queue.

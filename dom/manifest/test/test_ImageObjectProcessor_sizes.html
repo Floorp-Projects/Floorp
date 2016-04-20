@@ -57,19 +57,13 @@ var testIcon = {
   }]
 };
 
-validSizes.forEach(({
-  test, expect
-}) => {
+validSizes.forEach(({test, expect}) => {
   testIcon.icons[0].sizes = test;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
-  for (var expectedSize of expect) {
-    var expected = `Expect sizes to contain ${expectedSize}`;
-    is(sizes.has(expectedSize), true, expected);
-  }
-  expected = `Expect the size of the set to be ${expect.length}.`;
-  is(sizes.size, expect.length, expected);
+  var expected = `Expect sizes to equal ${expect.join(" ")}`;
+  is(sizes, expect.join(" "), expected);
 });
 
 var testIcon = {
@@ -81,21 +75,21 @@ var testIcon = {
 
 var invalidSizes = ['invalid', '', ' ', '16 x 16', '32', '21', '16xx16', '16 x x 6'];
 invalidSizes.forEach((invalidSize) => {
-  var expected = 'Expect invalid sizes to return an empty set.';
+  var expected = 'Expect invalid sizes to return undefined.';
   testIcon.icons[0].sizes = invalidSize;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
-  is(sizes.size, 0, expected);
+  is(sizes, undefined, expected);
 });
 
 typeTests.forEach((type) => {
-  var expected = `Expect non-string sizes to be empty set: ${typeof type}.`;
+  var expected = `Expect non-string sizes ${typeof type} to be undefined.`;
   testIcon.icons[0].sizes = type;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
-  is(sizes.size, 0, expected);
+  is(sizes, undefined, expected);
 });
   </script>
 </head>

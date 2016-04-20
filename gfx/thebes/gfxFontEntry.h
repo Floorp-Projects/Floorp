@@ -433,14 +433,14 @@ public:
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;
     mozilla::UniquePtr<uint8_t[]> mUVSData;
-    nsAutoPtr<gfxUserFontData> mUserFontData;
-    nsAutoPtr<gfxSVGGlyphs> mSVGGlyphs;
+    mozilla::UniquePtr<gfxUserFontData> mUserFontData;
+    mozilla::UniquePtr<gfxSVGGlyphs> mSVGGlyphs;
     // list of gfxFonts that are using SVG glyphs
     nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
-    nsAutoPtr<gfxMathTable> mMathTable;
+    mozilla::UniquePtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
-    nsAutoPtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
-    nsAutoPtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,hb_set_t*>> mFeatureInputs;
     uint32_t         mLanguageOverride;
 
     // Color Layer font support
@@ -625,7 +625,7 @@ private:
         hb_blob_t *mBlob;
     };
 
-    nsAutoPtr<nsTHashtable<FontTableHashEntry> > mFontTableCache;
+    mozilla::UniquePtr<nsTHashtable<FontTableHashEntry> > mFontTableCache;
 
     gfxFontEntry(const gfxFontEntry&);
     gfxFontEntry& operator=(const gfxFontEntry&);

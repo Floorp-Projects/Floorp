@@ -628,7 +628,7 @@ public:
   {
     NS_ASSERTION(mMessage == eQueryDOMWidgetHittest,
                  "wrong initializer is called");
-    refPoint = aPoint;
+    mRefPoint = aPoint;
   }
 
   void RequestFontRanges()
@@ -682,7 +682,7 @@ public:
     void* mContentsRoot;
     uint32_t mOffset;
     // mTentativeCaretOffset is used by only eQueryCharacterAtPoint.
-    // This is the offset where caret would be if user clicked at the refPoint.
+    // This is the offset where caret would be if user clicked at the mRefPoint.
     uint32_t mTentativeCaretOffset;
     nsString mString;
     // mRect is used by eQueryTextRect, eQueryCaretRect, eQueryCharacterAtPoint

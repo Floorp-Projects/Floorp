@@ -39,6 +39,7 @@ class nsIFile;
 class nsIProfileLock;
 class nsIProfileUnlocker;
 class nsIFactory;
+class nsString;
 
 extern nsXREDirProvider* gDirServiceProvider;
 
@@ -53,6 +54,7 @@ extern char **gArgv;
 extern int    gRestartArgc;
 extern char **gRestartArgv;
 extern bool gLogConsoleErrors;
+extern nsString gAbsoluteArgv0Path;
 
 extern bool gIsGtest;
 

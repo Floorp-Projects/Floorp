@@ -10,7 +10,6 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "cairo-features.h"
 #include "gfxFontConstants.h"
 #include "nsTArray.h"

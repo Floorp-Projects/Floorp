@@ -57,7 +57,7 @@
 #define CONSOLE_TAG_BLOB   JS_SCTAG_USER_MIN
 
 // This value is taken from ConsoleAPIStorage.js
-#define STORAGE_MAX_EVENTS 200
+#define STORAGE_MAX_EVENTS 1000
 
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;

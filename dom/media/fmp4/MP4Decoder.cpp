@@ -90,7 +90,8 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
 /* static */
 bool
 MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
-                               const nsAString& aCodecs)
+                               const nsAString& aCodecs,
+                               DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (!IsEnabled()) {
     return false;
@@ -153,7 +154,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   PDMFactory::Init();
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const nsCString& codecMime : codecMimes) {
-    if (!platform->SupportsMimeType(codecMime)) {
+    if (!platform->SupportsMimeType(codecMime, aDiagnostics)) {
       return false;
     }
   }
@@ -162,7 +163,8 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
 }
 
 /* static */ bool
-MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
+MP4Decoder::CanHandleMediaType(const nsAString& aContentType,
+                               DecoderDoctorDiagnostics* aDiagnostics)
 {
   nsContentTypeParser parser(aContentType);
   nsAutoString mimeType;
@@ -173,7 +175,9 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
   nsString codecs;
   parser.GetParameter("codecs", codecs);
 
-  return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType), codecs);
+  return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType),
+                            codecs,
+                            aDiagnostics);
 }
 
 /* static */
@@ -231,7 +235,9 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   RefPtr<MediaDataDecoder> decoder(
-    platform->CreateDecoder(aConfig, aTaskQueue, nullptr, aBackend, nullptr));
+    platform->CreateDecoder(aConfig, aTaskQueue, nullptr,
+                            /* DecoderDoctorDiagnostics* */ nullptr,
+                            aBackend, nullptr));
 
   return decoder.forget();
 }

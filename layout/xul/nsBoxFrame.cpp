@@ -2103,7 +2103,7 @@ nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, LayoutDeviceIntPoint& aPoint) 
     }
     aPoint = touch->mRefPoint;
   } else {
-    aPoint = aEvent->refPoint;
+    aPoint = aEvent->mRefPoint;
   }
   return true;
 }

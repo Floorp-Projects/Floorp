@@ -240,8 +240,8 @@ public:
    * aEvent is used as the target (unless there is event
    * retargeting) and the originalTarget of the DOM Event.
    * aTarget is always used as the starting point for constructing the event
-   * target chain, no matter what the value of aEvent->target is.
-   * In other words, aEvent->target is only a property of the event and it has
+   * target chain, no matter what the value of aEvent->mTarget is.
+   * In other words, aEvent->mTarget is only a property of the event and it has
    * nothing to do with the construction of the event target chain.
    * Neither aTarget nor aEvent is allowed to be nullptr.
    *

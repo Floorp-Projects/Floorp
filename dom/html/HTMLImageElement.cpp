@@ -1157,8 +1157,16 @@ HTMLImageElement::UpdateResponsiveSource()
 /*static */ bool
 HTMLImageElement::SupportedPictureSourceType(const nsAString& aType)
 {
+  nsAutoString type;
+  nsAutoString params;
+
+  nsContentUtils::SplitMimeType(aType, type, params);
+  if (type.IsEmpty()) {
+    return true;
+  }
+
   return
-    imgLoader::SupportImageWithMimeType(NS_ConvertUTF16toUTF8(aType).get(),
+    imgLoader::SupportImageWithMimeType(NS_ConvertUTF16toUTF8(type).get(),
                                         AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
 }
 

@@ -921,7 +921,10 @@ HRESULT register_notification_client(cubeb_stream * stm)
   hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client);
   if (FAILED(hr)) {
     LOG("Could not register endpoint notification callback: %x\n", hr);
-    return hr;
+    SafeRelease(stm->notification_client);
+    stm->notification_client = nullptr;
+    SafeRelease(stm->device_enumerator);
+    stm->device_enumerator = nullptr;
   }
 
   return hr;
@@ -930,12 +933,19 @@ HRESULT register_notification_client(cubeb_stream * stm)
 HRESULT unregister_notification_client(cubeb_stream * stm)
 {
   XASSERT(stm);
+  HRESULT hr;
 
   if (!stm->device_enumerator) {
     return S_OK;
   }
 
-  stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client);
+  hr = stm->device_enumerator->UnregisterEndpointNotificationCallback(stm->notification_client);
+  if (FAILED(hr)) {
+    // We can't really do anything here, we'll probably leak the
+    // notification client, but we can at least release the enumerator.
+    SafeRelease(stm->device_enumerator);
+    return S_OK;
+  }
 
   SafeRelease(stm->notification_client);
   SafeRelease(stm->device_enumerator);
@@ -1707,9 +1717,9 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  unregister_notification_client(stm);
-
   stop_and_join_render_thread(stm);
+
+  unregister_notification_client(stm);
 
   SafeRelease(stm->reconfigure_event);
   SafeRelease(stm->refill_event);
@@ -1753,7 +1763,7 @@ int stream_start_one_side(cubeb_stream * stm, StreamDirection dir)
       return r;
     }
 
-    HRESULT hr = OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
+    HRESULT hr = dir == OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
     if (FAILED(hr)) {
       LOG("could not start the %s stream after reconfig: %x (%s)\n",
           dir == OUTPUT ? "output" : "input", hr);

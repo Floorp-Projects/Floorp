@@ -429,7 +429,6 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
   nsPresContext *pctx = presShell ? presShell->GetPresContext() : nullptr;
 
   if (!pctx) {
-    MOZ_ASSERT(false, "Unable to find presContext for this content");
     return false;
   }
 

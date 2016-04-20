@@ -13,7 +13,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
 #include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
 typedef struct _cairo_pattern cairo_pattern_t;
