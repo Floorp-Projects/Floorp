@@ -959,7 +959,7 @@ private:
   AutoTArray<MappedFlow,10>   mMappedFlows;
   AutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
   AutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
-  AutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
+  AutoTArray<UniquePtr<gfxTextRun>,5> mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   DrawTarget*                   mDrawTarget;
@@ -1473,11 +1473,6 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
     mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
-
-  for (uint32_t i = 0; i < mTextRunsToDelete.Length(); ++i) {
-    gfxTextRun* deleteTextRun = mTextRunsToDelete[i];
-    delete deleteTextRun;
-  }
   mTextRunsToDelete.Clear();
 }
 
@@ -2217,7 +2212,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     DestroyUserData(userDataToDestroy);
     // Arrange for this textrun to be deleted the next time the linebreaker
     // is flushed out
-    mTextRunsToDelete.AppendElement(textRun.release());
+    mTextRunsToDelete.AppendElement(Move(textRun));
     return nullptr;
   }
 
