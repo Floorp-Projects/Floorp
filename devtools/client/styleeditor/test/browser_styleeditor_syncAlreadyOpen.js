@@ -6,9 +6,6 @@
 // Test that changes in the style inspector are synchronized into the
 // style editor.
 
-/* import-globals-from ../../inspector/shared/test/head.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
-
 const TESTCASE_URI = TEST_BASE_HTTP + "sync.html";
 
 const expectedText = `
@@ -25,7 +22,7 @@ const expectedText = `
 add_task(function* () {
   yield addTab(TESTCASE_URI);
 
-  let { inspector, view } = yield openRuleView();
+  let { inspector, view, toolbox } = yield openRuleView();
 
   // In this test, make sure the style editor is open before making
   // changes in the inspector.
@@ -35,7 +32,7 @@ add_task(function* () {
   let onEditorChange = promise.defer();
   editor.sourceEditor.on("change", onEditorChange.resolve);
 
-  yield openRuleView();
+  yield toolbox.getPanel("inspector");
   yield selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
