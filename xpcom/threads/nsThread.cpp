@@ -245,9 +245,9 @@ struct nsThreadShutdownContext
   }
 
   // NB: This will be the last reference.
-  RefPtr<nsThread> terminatingThread;
-  nsThread* joiningThread;
-  bool      awaitingShutdownAck;
+  RefPtr<nsThread> mTerminatingThread;
+  nsThread* mJoiningThread;
+  bool      mAwaitingShutdownAck;
 };
 
 // This event is responsible for notifying nsThread::Shutdown that it is time
@@ -263,7 +263,7 @@ public:
   }
   NS_IMETHOD Run() override
   {
-    mShutdownContext->terminatingThread->ShutdownComplete(mShutdownContext);
+    mShutdownContext->mTerminatingThread->ShutdownComplete(mShutdownContext);
     return NS_OK;
   }
   nsresult Cancel() override
@@ -426,9 +426,9 @@ nsThread::ThreadFunc(void* aArg)
   nsThreadManager::get()->UnregisterCurrentThread(self);
 
   // Dispatch shutdown ACK
-  MOZ_ASSERT(self->mShutdownContext->terminatingThread == self);
+  MOZ_ASSERT(self->mShutdownContext->mTerminatingThread == self);
   event = do_QueryObject(new nsThreadShutdownAckEvent(self->mShutdownContext));
-  self->mShutdownContext->joiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  self->mShutdownContext->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
@@ -727,9 +727,9 @@ nsThread::ShutdownInternal(bool aSync)
     *currentThread->mRequestedShutdownContexts.AppendElement();
   context = new nsThreadShutdownContext();
 
-  context->terminatingThread = this;
-  context->joiningThread = currentThread;
-  context->awaitingShutdownAck = aSync;
+  context->mTerminatingThread = this;
+  context->mJoiningThread = currentThread;
+  context->mAwaitingShutdownAck = aSync;
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
@@ -747,12 +747,12 @@ void
 nsThread::ShutdownComplete(nsThreadShutdownContext* aContext)
 {
   MOZ_ASSERT(mThread);
-  MOZ_ASSERT(aContext->terminatingThread == this);
+  MOZ_ASSERT(aContext->mTerminatingThread == this);
 
-  if (aContext->awaitingShutdownAck) {
+  if (aContext->mAwaitingShutdownAck) {
     // We're in a synchronous shutdown, so tell whatever is up the stack that
     // we're done and unwind the stack so it can call us again.
-    aContext->awaitingShutdownAck = false;
+    aContext->mAwaitingShutdownAck = false;
     return;
   }
 
@@ -775,7 +775,7 @@ nsThread::ShutdownComplete(nsThreadShutdownContext* aContext)
 
   // Delete aContext.
   MOZ_ALWAYS_TRUE(
-    aContext->joiningThread->mRequestedShutdownContexts.RemoveElement(aContext));
+    aContext->mJoiningThread->mRequestedShutdownContexts.RemoveElement(aContext));
 }
 
 void
@@ -803,8 +803,8 @@ nsThread::Shutdown()
 
   // Process events on the current thread until we receive a shutdown ACK.
   // Allows waiting; ensure no locks are held that would deadlock us!
-  while (context->awaitingShutdownAck) {
-    NS_ProcessNextEvent(context->joiningThread, true);
+  while (context->mAwaitingShutdownAck) {
+    NS_ProcessNextEvent(context->mJoiningThread, true);
   }
 
   ShutdownComplete(context);
