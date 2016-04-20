@@ -87,18 +87,16 @@ add_task(function* () {
   yield BrowserTestUtils.closeWindow(win1);
 });
 
-function* do_test_update(background) {
+function* do_test_update(background, withPermissions = true) {
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
 
   yield focusWindow(win1);
 
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "permissions": ["tabs"],
-    },
-
-    background: background,
-  });
+  let manifest = {};
+  if (withPermissions) {
+    manifest.permissions = ["tabs"];
+  }
+  let extension = ExtensionTestUtils.loadExtension({manifest, background});
 
   yield Promise.all([
     yield extension.startup(),
@@ -175,6 +173,25 @@ add_task(function* test_url() {
       browser.tabs.update(tab.id, {url: "about:blank"});
     });
   });
+});
+
+add_task(function* test_without_tabs_permission() {
+  yield do_test_update(function background() {
+    browser.tabs.create({url: "about:blank"}, function(tab) {
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+        if (tabId == tab.id) {
+          browser.test.assertFalse("url" in changeInfo, "url should not be included without tabs permission");
+          browser.test.assertFalse("favIconUrl" in changeInfo, "favIconUrl should not be included without tabs permission");
+
+          if (changeInfo.status == "complete") {
+            browser.tabs.onUpdated.removeListener(onUpdated);
+            browser.tabs.remove(tabId);
+            browser.test.notifyPass("finish");
+          }
+        }
+      });
+    });
+  }, false /* withPermissions */);
 });
 
 add_task(forceGC);
