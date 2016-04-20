@@ -695,7 +695,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   rv = aSSLStatus->GetServerCert(getter_AddRefs(cert));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cert, NS_ERROR_FAILURE);
-  ScopedCERTCertificate nssCert(cert->GetCert());
+  UniqueCERTCertificate nssCert(cert->GetCert());
   NS_ENSURE_TRUE(nssCert, NS_ERROR_FAILURE);
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
