@@ -4583,7 +4583,8 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
   if (emptyDiv) {
     NS_ENSURE_STATE(aSelection.GetRangeAt(0) &&
                     aSelection.GetRangeAt(0)->GetStartParent());
-    nsCOMPtr<nsINode> parent = aSelection.GetRangeAt(0)->GetStartParent();
+    OwningNonNull<nsINode> parent =
+      *aSelection.GetRangeAt(0)->GetStartParent();
     int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
 
     rv = SplitAsNeeded(*nsGkAtoms::div, parent, offset);
