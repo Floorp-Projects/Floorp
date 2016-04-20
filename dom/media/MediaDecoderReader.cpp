@@ -348,14 +348,6 @@ MediaDecoderReader::RequestAudioData()
   return p;
 }
 
-void
-MediaDecoderReader::BreakCycles()
-{
-  // Nothing left to do here these days. We keep this method around so that, if
-  // we need it, we don't have to make all of the subclass implementations call
-  // the superclass method again.
-}
-
 RefPtr<ShutdownPromise>
 MediaDecoderReader::Shutdown()
 {
