@@ -6,6 +6,7 @@
 package org.mozilla.gecko.push;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -15,6 +16,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -25,6 +27,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,7 +125,7 @@ public class PushService implements BundleEventListener {
         }
     }
 
-    public void onMessageReceived(final @NonNull Bundle bundle) {
+    public void onMessageReceived(final @NonNull Context context, final @NonNull Bundle bundle) {
         Log.i(LOG_TAG, "Google Play Services GCM message received; delivering.");
         ThreadUtils.assertOnBackgroundThread();
 
@@ -154,6 +157,8 @@ public class PushService implements BundleEventListener {
                 return;
             }
 
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
+
             final String profileName = subscription.serviceData.optString("profileName", null);
             final String profilePath = subscription.serviceData.optString("profilePath", null);
             if (profileName == null || profilePath == null) {
@@ -161,25 +166,16 @@ public class PushService implements BundleEventListener {
                 return;
             }
 
-            // Let's look to the future, when we'll deliver messages without regard to whether
-            // Gecko is running or not.
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, "dom-push-api");
-
-            if (!GeckoThread.isRunning()) {
-                Log.w(LOG_TAG, "dom/push message received but no Gecko thread is running; ignoring message.");
+            final File profileDir = new File(profilePath);
+            if (!GeckoThread.canUseProfile(profileName, profileDir)) {
+                Log.e(LOG_TAG, "Mismatched profile for chid: " + chid + "; ignoring dom/push message.");
                 return;
             }
 
-            final GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
-            if (geckoInterface == null) {
-                Log.w(LOG_TAG, "dom/push message received but no Gecko interface is registered; ignoring message.");
-                return;
-            }
-
-            final GeckoProfile profile = geckoInterface.getProfile();
-            if (profile == null || !profileName.equals(profile.getName()) || !profilePath.equals(profile.getDir().getAbsolutePath())) {
-                Log.w(LOG_TAG, "dom/push message received but Gecko is running with the wrong profile name or path; ignoring message.");
-                return;
+            if (!canSendPushMessagesToGecko) {
+                final Intent intent = GeckoService.getIntentToCreateServices(context, "android-push-service");
+                GeckoService.setIntentProfile(intent, profileName, profilePath);
+                context.startService(intent);
             }
 
             // DELIVERANCE!
@@ -214,7 +210,8 @@ public class PushService implements BundleEventListener {
 
     protected void sendMessageToGeckoService(final @NonNull String message) {
         Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
-        GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage", message);
+        GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage", message,
+                                      GeckoThread.State.PROFILE_READY);
     }
 
     protected void registerGeckoEventListener() {
