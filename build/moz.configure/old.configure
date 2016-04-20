@@ -202,7 +202,6 @@ def old_configure_options(*options):
     '--enable-libproxy',
     '--enable-llvm-hacks',
     '--enable-logrefcnt',
-    '--enable-macos-target',
     '--enable-maintenance-service',
     '--enable-media-navigator',
     '--enable-memory-sanitizer',
