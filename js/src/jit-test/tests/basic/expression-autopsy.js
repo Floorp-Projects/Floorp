@@ -42,23 +42,10 @@ function check(expr, expected=expr) {
             // Let in a switch
             Function("var x = 4; switch (x) { case 4: let o, undef;" + statement + "\ncase 6: break;}"),
             // Try-catch blocks
-            Function("o", "undef", "try { let q = 4; try { let p = 4; } catch (e) {} } catch (e) {} { let o, undef; " + statement + " }")
+            Function("o", "undef", "try { let q = 4; try { let p = 4; } catch (e) {} } catch (e) {} { let o, undef; " + statement + " }"),
+            // Let in for-in (uses with to prevent jit compilation: bug 942804, bug 831120 and bug 1041586)
+            Function("with ({}) {} var undef, o; for (let z in [1, 2]) { " + statement + " }"),
         ];
-
-        try {
-            // Let in for-in
-            check_one(expected,
-                      Function("var undef, o; for (let z in [1, 2]) { " + statement + " }"),
-                      err);
-        } catch (ex) {
-            // Bug 831120.  See bug 942804 comment 5.
-            if (expected == 'undef' && err == ' is undefined')
-                check_one(expected + end,
-                          Function("var undef, o; for (let z in [1, 2]) { " + statement + " }"),
-                          err);
-            else
-                throw ex;
-        }
 
         for (var f of cases) {
             check_one(expected, f, err);
