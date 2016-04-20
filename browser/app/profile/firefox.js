@@ -795,7 +795,7 @@ pref("browser.safebrowsing.downloads.remote.url", "https://sb-ssl.google.com/saf
 pref("browser.safebrowsing.downloads.remote.block_dangerous",            true);
 pref("browser.safebrowsing.downloads.remote.block_dangerous_host",       true);
 pref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", true);
-pref("browser.safebrowsing.downloads.remote.block_uncommon",             false);
+pref("browser.safebrowsing.downloads.remote.block_uncommon",             true);
 pref("browser.safebrowsing.debug", false);
 
 pref("browser.safebrowsing.provider.google.lists", "goog-badbinurl-shavar,goog-downloadwhite-digest256,goog-phish-shavar,goog-malware-shavar,goog-unwanted-shavar");
