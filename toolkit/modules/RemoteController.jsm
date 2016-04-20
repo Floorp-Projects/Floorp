@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["RemoteController"];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
+const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -21,7 +22,8 @@ function RemoteController(browser)
 }
 
 RemoteController.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIController]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIController,
+                                         Ci.nsICommandController]),
 
   isCommandEnabled: function(aCommand) {
     return this._supportedCommands[aCommand] || false;
@@ -33,6 +35,38 @@ RemoteController.prototype = {
 
   doCommand: function(aCommand) {
     this._browser.messageManager.sendAsyncMessage("ControllerCommands:Do", aCommand);
+  },
+
+  getCommandStateWithParams: function(aCommand, aCommandParams) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  doCommandWithParams: function(aCommand, aCommandParams) {
+    let cmd = {
+      cmd: aCommand,
+      params: null
+    };
+    if (aCommand == "cmd_lookUpDictionary") {
+      let rect = this._browser.getBoundingClientRect();
+      cmd.params = {
+        x:  {
+          type: "long",
+          value: aCommandParams.getLongValue("x") - rect.left
+        },
+        y: {
+          type: "long",
+          value: aCommandParams.getLongValue("y") - rect.top
+        }
+      };
+    } else {
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    }
+    this._browser.messageManager.sendAsyncMessage(
+      "ControllerCommands:DoWithParams", cmd);
+  },
+
+  getSupportedCommands: function(aCount, aCommands) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   onEvent: function () {},
