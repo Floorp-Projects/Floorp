@@ -4518,9 +4518,11 @@ ICUpdatedStub::addUpdateStubForValue(JSContext* cx, HandleScript outerScript, Ha
 //
 
 static bool
-DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub, uint32_t length,
+DoNewArray(JSContext* cx, void* payload, ICNewArray_Fallback* stub, uint32_t length,
            MutableHandleValue res)
 {
+    SharedStubInfo info(cx, payload, stub->icEntry());
+
     FallbackICSpew(cx, stub, "NewArray");
 
     RootedObject obj(cx);
@@ -4530,8 +4532,8 @@ DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub, uint3
         if (!obj)
             return false;
     } else {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
+        HandleScript script = info.script();
+        jsbytecode* pc = info.pc();
         obj = NewArrayOperation(cx, script, pc, length);
         if (!obj)
             return false;
@@ -4548,15 +4550,13 @@ DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub, uint3
     return true;
 }
 
-typedef bool(*DoNewArrayFn)(JSContext*, BaselineFrame*, ICNewArray_Fallback*, uint32_t,
+typedef bool(*DoNewArrayFn)(JSContext*, void*, ICNewArray_Fallback*, uint32_t,
                             MutableHandleValue);
 static const VMFunction DoNewArrayInfo = FunctionInfo<DoNewArrayFn>(DoNewArray, TailCall);
 
 bool
 ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.push(R0.scratchReg()); // length
@@ -4602,8 +4602,10 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
 }
 
 static bool
-DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, MutableHandleValue res)
+DoNewObject(JSContext* cx, void* payload, ICNewObject_Fallback* stub, MutableHandleValue res)
 {
+    SharedStubInfo info(cx, payload, stub->icEntry());
+
     FallbackICSpew(cx, stub, "NewObject");
 
     RootedObject obj(cx);
@@ -4613,8 +4615,8 @@ DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, Mut
         MOZ_ASSERT(!templateObject->group()->maybePreliminaryObjects());
         obj = NewObjectOperationWithTemplate(cx, templateObject);
     } else {
-        RootedScript script(cx, frame->script());
-        jsbytecode* pc = stub->icEntry()->pc(script);
+        HandleScript script = info.script();
+        jsbytecode* pc = info.pc();
         obj = NewObjectOperation(cx, script, pc);
 
         if (obj && !obj->isSingleton() && !obj->group()->maybePreliminaryObjects()) {
@@ -4622,8 +4624,9 @@ DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, Mut
             if (!templateObject)
                 return false;
 
-            if (templateObject->is<UnboxedPlainObject>() ||
-                !templateObject->as<PlainObject>().hasDynamicSlots())
+            if (!stub->invalid() &&
+                (templateObject->is<UnboxedPlainObject>() ||
+                 !templateObject->as<PlainObject>().hasDynamicSlots()))
             {
                 JitCode* code = GenerateNewObjectWithTemplateCode(cx, templateObject);
                 if (!code)
@@ -4650,14 +4653,12 @@ DoNewObject(JSContext* cx, BaselineFrame* frame, ICNewObject_Fallback* stub, Mut
     return true;
 }
 
-typedef bool(*DoNewObjectFn)(JSContext*, BaselineFrame*, ICNewObject_Fallback*, MutableHandleValue);
+typedef bool(*DoNewObjectFn)(JSContext*, void*, ICNewObject_Fallback*, MutableHandleValue);
 static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject, TailCall);
 
 bool
 ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     EmitRestoreTailCallReg(masm);
 
     masm.push(ICStubReg); // stub.

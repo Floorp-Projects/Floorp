@@ -3238,6 +3238,7 @@ class ICGetProp_ArgumentsCallee : public ICMonitoredStub
 };
 
 // JSOP_NEWARRAY
+// JSOP_NEWINIT
 
 class ICNewArray_Fallback : public ICFallbackStub
 {
@@ -3260,8 +3261,8 @@ class ICNewArray_Fallback : public ICFallbackStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, ObjectGroup* templateGroup)
-          : ICStubCompiler(cx, ICStub::NewArray_Fallback, Engine::Baseline),
+        Compiler(JSContext* cx, ObjectGroup* templateGroup, Engine engine)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback, engine),
             templateGroup(cx, templateGroup)
         {}
 
@@ -3306,8 +3307,8 @@ class ICNewObject_Fallback : public ICFallbackStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::NewObject_Fallback, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
