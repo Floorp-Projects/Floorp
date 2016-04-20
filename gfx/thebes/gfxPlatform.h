@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 #include "gfxTypes.h"
 #include "gfxFontFamilyList.h"
@@ -396,6 +395,12 @@ public:
      * NB: this bit is only honored by the FT2 backend, currently.
      */
     virtual bool RequiresLinearZoom() { return false; }
+
+    /**
+     * Whether the frame->StyleFont().mFont.smoothing field is respected by
+     * text rendering on this platform.
+     */
+    virtual bool RespectsFontStyleSmoothing() const { return false; }
 
     /**
      * Whether to check all font cmaps during system font fallback

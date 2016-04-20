@@ -303,7 +303,7 @@ public:
     MOZ_ASSERT(aOverridingMessage != eUnidentifiedEvent,
                "Only use this class with a valid overriding EventMessage");
     MOZ_ASSERT(mOrigMessage != eUnidentifiedEvent &&
-               mEvent->mEvent->typeString.IsEmpty(),
+               mEvent->mEvent->mSpecifiedEventTypeString.IsEmpty(),
                "Only use this class on events whose overridden type is "
                "known (so we can restore it properly)");
 

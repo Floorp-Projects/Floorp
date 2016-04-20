@@ -143,7 +143,7 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
   nsresult CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
-                                         nsIDOMNode **aOutBrNode);
+                                       mozilla::dom::Element** aOutBrNode);
 
   nsresult LoadHTML(const nsAString &aInputString);
 
@@ -426,8 +426,8 @@ protected:
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
-  already_AddRefed<mozilla::dom::Element> CreateBR(nsINode* aNode,
-      int32_t aOffset, EDirection aSelect = eNone);
+  mozilla::dom::Element* CreateBR(nsINode* aNode, int32_t aOffset,
+                                  EDirection aSelect = eNone);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset,
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone) override;
 
@@ -640,10 +640,10 @@ protected:
   nsresult RelativeFontChange(FontSize aDir);
 
   /* helper routines for font size changing */
-  nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange,
-                                         nsIDOMCharacterData *aTextNode,
-                                         int32_t aStartOffset,
-                                         int32_t aEndOffset);
+  nsresult RelativeFontChangeOnTextNode(FontSize aDir,
+                                        mozilla::dom::Text& aTextNode,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset);
   nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
@@ -659,22 +659,17 @@ protected:
                                    const nsAString* aAttribute,
                                    const nsAString& aValue);
 
-  nsresult PromoteInlineRange(nsRange* aRange);
-  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
+  nsresult PromoteInlineRange(nsRange& aRange);
+  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange,
                                 nsIAtom *aProperty,
                                 const nsAString *aAttribute);
-  nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
-                                int32_t *aOffset,
-                                nsIAtom *aProperty,
-                                const nsAString *aAttribute,
-                                nsCOMPtr<nsIDOMNode> *outLeftNode = nullptr,
-                                nsCOMPtr<nsIDOMNode> *outRightNode = nullptr);
+  nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
+                                nsIAtom* aProperty,
+                                const nsAString* aAttribute,
+                                nsIContent** aOutLeftNode = nullptr,
+                                nsIContent** aOutRightNode = nullptr);
   nsresult ApplyDefaultProperties();
-  nsresult RemoveStyleInside(nsIDOMNode *aNode,
-                             nsIAtom *aProperty,
-                             const nsAString *aAttribute,
-                             const bool aChildrenOnly = false);
   nsresult RemoveStyleInside(nsIContent& aNode,
                              nsIAtom* aProperty,
                              const nsAString* aAttribute,
@@ -682,11 +677,9 @@ protected:
   nsresult RemoveInlinePropertyImpl(nsIAtom* aProperty,
                                     const nsAString* aAttribute);
 
-  bool NodeIsProperty(nsIDOMNode *aNode);
-  bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
-  bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
-  bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
-  bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
+  bool NodeIsProperty(nsINode& aNode);
+  bool IsAtFrontOfNode(nsINode& aNode, int32_t aOffset);
+  bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
@@ -756,7 +749,7 @@ protected:
                                    bool aTrustedInput,
                                    bool aClearStyle = true);
 
-  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
+  nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
 
   void SetElementPosition(mozilla::dom::Element& aElement,

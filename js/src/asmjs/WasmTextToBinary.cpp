@@ -1172,6 +1172,7 @@ class WasmTokenStream
     WasmToken nan(const char16_t* begin);
     WasmToken literal(const char16_t* begin);
     WasmToken next();
+    void skipSpaces();
 
   public:
     WasmTokenStream(const char16_t* text, UniqueChars* error)
@@ -1350,15 +1351,48 @@ WasmTokenStream::literal(const char16_t* begin)
     return WasmToken(u.value(), begin, cur_);
 }
 
+void
+WasmTokenStream::skipSpaces()
+{
+    while (cur_ != end_) {
+        char16_t ch = *cur_;
+        if (ch == ';' && consume(MOZ_UTF16(";;"))) {
+            // Skipping single line comment.
+            while (cur_ != end_ && !IsWasmNewLine(*cur_))
+                cur_++;
+        } else if (ch == '(' && consume(MOZ_UTF16("(;"))) {
+            // Skipping multi-line and possibly nested comments.
+            size_t level = 1;
+            while (cur_ != end_) {
+                char16_t ch = *cur_;
+                if (ch == '(' && consume(MOZ_UTF16("(;"))) {
+                    level++;
+                } else if (ch == ';' && consume(MOZ_UTF16(";)"))) {
+                    if (--level == 0)
+                        break;
+                } else {
+                    cur_++;
+                    if (IsWasmNewLine(ch)) {
+                        lineStart_ = cur_;
+                        line_++;
+                    }
+                }
+            }
+        } else if (IsWasmSpace(ch)) {
+            cur_++;
+            if (IsWasmNewLine(ch)) {
+                lineStart_ = cur_;
+                line_++;
+            }
+        } else
+            break; // non-whitespace found
+    }
+}
+
 WasmToken
 WasmTokenStream::next()
 {
-    while (cur_ != end_ && IsWasmSpace(*cur_)) {
-        if (IsWasmNewLine(*cur_++)) {
-            lineStart_ = cur_;
-            line_++;
-        }
-    }
+    skipSpaces();
 
     if (cur_ == end_)
         return WasmToken(WasmToken::EndOfFile, cur_, cur_);

@@ -91,6 +91,17 @@ public:
    */
   role Role() const { return mRole; }
 
+  /**
+   * Return true if this is an embedded object.
+   */
+  bool IsEmbeddedObject() const
+  {
+    role role = Role();
+    return role != roles::TEXT_LEAF &&
+           role != roles::WHITESPACE &&
+           role != roles::STATICTEXT;
+  }
+
   /*
    * Return the states for the proxied accessible.
    */

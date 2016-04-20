@@ -53,18 +53,6 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
                       nsAssignmentType aAssignment = NS_ASSIGNMENT_DEPEND);
 
 /**
- * Factory method to get an nsInputStream from an nsAString.  Result will
- * implement nsIStringInputStream and nsISeekableStream.
- *
- * The given string data will be converted to a single-byte data buffer via
- * truncation (i.e., the high-order byte of each character will be discarded).
- * This could result in data-loss, so be careful when using this function.
- */
-extern nsresult
-NS_NewStringInputStream(nsIInputStream** aStreamResult,
-                        const nsAString& aStringToRead);
-
-/**
  * Factory method to get an nsInputStream from an nsACString.  Result will
  * implement nsIStringInputStream and nsISeekableStream.
  */

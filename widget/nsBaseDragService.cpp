@@ -433,7 +433,7 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage)
         WidgetDragEvent event(true, aEventMessage, nullptr);
         event.inputSource = mInputSource;
         if (aEventMessage == eDragEnd) {
-          event.refPoint = mEndDragPoint;
+          event.mRefPoint = mEndDragPoint;
           event.mUserCancelled = mUserCancelled;
         }
 

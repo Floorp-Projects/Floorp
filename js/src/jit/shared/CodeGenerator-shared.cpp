@@ -624,7 +624,8 @@ CodeGeneratorShared::assignBailoutId(LSnapshot* snapshot)
     unsigned bailoutId = bailouts_.length();
     snapshot->setBailoutId(bailoutId);
     JitSpew(JitSpew_IonSnapshots, "Assigned snapshot bailout id %u", bailoutId);
-    return bailouts_.append(snapshot->snapshotOffset());
+    masm.propagateOOM(bailouts_.append(snapshot->snapshotOffset()));
+    return true;
 }
 
 bool

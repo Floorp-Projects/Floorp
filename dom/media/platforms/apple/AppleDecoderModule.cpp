@@ -83,7 +83,8 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                        layers::LayersBackend aLayersBackend,
                                        layers::ImageContainer* aImageContainer,
                                        FlushableTaskQueue* aVideoTaskQueue,
-                                       MediaDataDecoderCallback* aCallback)
+                                       MediaDataDecoderCallback* aCallback,
+                                       DecoderDoctorDiagnostics* aDiagnostics)
 {
   RefPtr<MediaDataDecoder> decoder;
 
@@ -109,7 +110,8 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
 already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                        FlushableTaskQueue* aAudioTaskQueue,
-                                       MediaDataDecoderCallback* aCallback)
+                                       MediaDataDecoderCallback* aCallback,
+                                       DecoderDoctorDiagnostics* aDiagnostics)
 {
   RefPtr<MediaDataDecoder> decoder =
     new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
@@ -117,7 +119,8 @@ AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 }
 
 bool
-AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
+AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType,
+                                     DecoderDoctorDiagnostics* aDiagnostics) const
 {
   return (sIsCoreMediaAvailable &&
           (aMimeType.EqualsLiteral("audio/mpeg") ||

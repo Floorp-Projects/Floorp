@@ -648,7 +648,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
         aRootFrame->PresContext(), view, point, aEvent->mWidget);
   if (widgetPoint.x != NS_UNCONSTRAINEDSIZE) {
     // If that succeeded, we update the point in the event
-    aEvent->refPoint = widgetPoint;
+    aEvent->mRefPoint = widgetPoint;
   }
   return target;
 }

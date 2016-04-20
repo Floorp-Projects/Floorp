@@ -44,16 +44,19 @@ public:
   virtual ~nsTransformingTextRunFactory() {}
 
   // Default 8-bit path just transforms to Unicode and takes that path
-  nsTransformedTextRun* MakeTextRun(const uint8_t* aString, uint32_t aLength,
-                                    const gfxFontGroup::Parameters* aParams,
-                                    gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                    nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-                                    bool aOwnsFactory);
-  nsTransformedTextRun* MakeTextRun(const char16_t* aString, uint32_t aLength,
-                                    const gfxFontGroup::Parameters* aParams,
-                                    gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                    nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-                                    bool aOwnsFactory);
+  mozilla::UniquePtr<nsTransformedTextRun>
+  MakeTextRun(const uint8_t* aString, uint32_t aLength,
+              const gfxFontGroup::Parameters* aParams,
+              gfxFontGroup* aFontGroup, uint32_t aFlags,
+              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+              bool aOwnsFactory);
+
+  mozilla::UniquePtr<nsTransformedTextRun>
+  MakeTextRun(const char16_t* aString, uint32_t aLength,
+              const gfxFontGroup::Parameters* aParams,
+              gfxFontGroup* aFontGroup, uint32_t aFlags,
+              nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+              bool aOwnsFactory);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               mozilla::gfx::DrawTarget* aRefDrawTarget,
@@ -114,13 +117,14 @@ protected:
 class nsTransformedTextRun final : public gfxTextRun {
 public:
 
-  static nsTransformedTextRun *Create(const gfxTextRunFactory::Parameters* aParams,
-                                      nsTransformingTextRunFactory* aFactory,
-                                      gfxFontGroup* aFontGroup,
-                                      const char16_t* aString, uint32_t aLength,
-                                      const uint32_t aFlags,
-                                      nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
-                                      bool aOwnsFactory);
+  static mozilla::UniquePtr<nsTransformedTextRun>
+  Create(const gfxTextRunFactory::Parameters* aParams,
+         nsTransformingTextRunFactory* aFactory,
+         gfxFontGroup* aFontGroup,
+         const char16_t* aString, uint32_t aLength,
+         const uint32_t aFlags,
+         nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+         bool aOwnsFactory);
 
   ~nsTransformedTextRun() {
     if (mOwnsFactory) {

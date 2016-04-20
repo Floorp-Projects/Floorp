@@ -15,6 +15,8 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -2523,9 +2525,17 @@ Promise::MaybeReportRejected()
   }
 
   js::ErrorReport report(cx);
-  if (!report.init(cx, val)) {
-    JS_ClearPendingException(cx);
-    return;
+  RefPtr<Exception> exp;
+  bool isObject = val.isObject();
+  if (!isObject || NS_FAILED(UNWRAP_OBJECT(Exception, &val.toObject(), exp))) {
+    if (!isObject ||
+        NS_FAILED(UNWRAP_OBJECT(DOMException, &val.toObject(), exp))) {
+      if (!report.init(cx, val, js::ErrorReport::NoSideEffects)) {
+        NS_WARNING("Couldn't convert the unhandled rejected value to an exception.");
+        JS_ClearPendingException(cx);
+        return;
+      }
+    }
   }
 
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
@@ -2533,7 +2543,12 @@ Promise::MaybeReportRejected()
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj))
                                : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
   nsGlobalWindow* win = isMainThread ? xpc::WindowGlobalOrNull(obj) : nullptr;
-  xpcReport->Init(report.report(), report.message(), isChrome, win ? win->AsInner()->WindowID() : 0);
+  uint64_t windowID = win ? win->AsInner()->WindowID() : 0;
+  if (exp) {
+    xpcReport->Init(cx, exp, isChrome, windowID);
+  } else {
+    xpcReport->Init(report.report(), report.message(), isChrome, windowID);
+  }
 
   // Now post an event to do the real reporting async
   // Since Promises preserve their wrapper, it is essential to RefPtr<> the

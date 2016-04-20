@@ -39,6 +39,7 @@ typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
+class DecoderDoctorDiagnostics;
 class DOMMediaStream;
 class ErrorResult;
 class MediaResource;
@@ -321,7 +322,8 @@ public:
 
   // Returns the CanPlayStatus indicating if we can handle the
   // full MIME type including the optional codecs parameter.
-  static CanPlayStatus GetCanPlay(const nsAString& aType);
+  static CanPlayStatus GetCanPlay(const nsAString& aType,
+                                  DecoderDoctorDiagnostics* aDiagnostics);
 
   /**
    * Called when a child source element is added to this media element. This

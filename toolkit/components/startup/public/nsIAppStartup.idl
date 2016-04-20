@@ -6,6 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsICmdLineService;
+interface nsIToolkitProfile;
 
 [scriptable, uuid(6621f6d5-6c04-4a0e-9e74-447db221484e)]
 
@@ -72,6 +73,14 @@ interface nsIAppStartup : nsISupports
      * @see nsIAppStartup::quit
      */
     void restartInSafeMode(in uint32_t aQuitMode);
+
+    /**
+     * Run a new instance of this app with a specified profile
+     * @param aProfile
+     *        The profile we want to use.
+     * @see nsIAppStartup::quit
+     */
+    void createInstanceWithProfile(in nsIToolkitProfile aProfile);
 
     /**
      * If the last startup crashed then increment a counter.

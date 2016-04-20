@@ -138,7 +138,7 @@ gfxMacFont::ShapeText(DrawTarget     *aDrawTarget,
     if (static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout() &&
         !aVertical) {
         if (!mCoreTextShaper) {
-            mCoreTextShaper = new gfxCoreTextShaper(this);
+            mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
         }
         if (mCoreTextShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
                                        aScript, aVertical, aShapedText)) {

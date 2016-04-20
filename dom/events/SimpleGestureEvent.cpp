@@ -27,7 +27,7 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
   } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
-    mEvent->refPoint.x = mEvent->refPoint.y = 0;
+    mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
     static_cast<WidgetMouseEventBase*>(mEvent)->inputSource =
       nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
   }

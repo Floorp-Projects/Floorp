@@ -106,7 +106,9 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     mVoiceEngine(nullptr),
     mAudioInput(nullptr),
     mAudioEngineInit(false),
-    mFullDuplex(aPrefs.mFullDuplex)
+    mFullDuplex(aPrefs.mFullDuplex),
+    mExtendedFilter(aPrefs.mExtendedFilter),
+    mDelayAgnostic(aPrefs.mDelayAgnostic)
 {
 #ifndef MOZ_B2G_CAMERA
   nsCOMPtr<nsIComponentRegistrar> compMgr;
@@ -320,7 +322,10 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
 #endif
 
   if (!mVoiceEngine) {
-    mVoiceEngine = webrtc::VoiceEngine::Create();
+    mConfig.Set<webrtc::ExtendedFilter>(new webrtc::ExtendedFilter(mExtendedFilter));
+    mConfig.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
+
+    mVoiceEngine = webrtc::VoiceEngine::Create(mConfig);
     if (!mVoiceEngine) {
       return;
     }
