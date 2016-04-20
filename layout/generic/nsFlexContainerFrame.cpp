@@ -370,6 +370,13 @@ private:
   FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
   FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
 
+  // Helper for constructor which determines the orientation of our axes, based
+  // on modern flexbox properties (flex-direction, flex-wrap).
+  // XXXdholbert An anternate version of this function (using legacy box
+  // properties) is coming in a later patch.
+  void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer,
+                               const WritingMode& aWM);
+
   // XXXdholbert [BEGIN DEPRECATED]
   AxisOrientationType mMainAxis;
   AxisOrientationType mCrossAxis;
@@ -3154,6 +3161,32 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   : mWM(aWM),
     mAreAxesInternallyReversed(false)
 {
+  InitAxesFromModernProps(aFlexContainer, aWM);
+
+  // Master switch to enable/disable bug 983427's code for reversing our axes
+  // and reversing some logic, to avoid reflowing children in bottom-to-top
+  // order. (This switch can be removed eventually, but for now, it allows
+  // this special-case code path to be compared against the normal code path.)
+  static bool sPreventBottomToTopChildOrdering = true;
+
+  if (sPreventBottomToTopChildOrdering) {
+    // If either axis is bottom-to-top, we flip both axes (and set a flag
+    // so that we can flip some logic to make the reversal transparent).
+    if (eAxis_BT == mMainAxis || eAxis_BT == mCrossAxis) {
+      mMainAxis = GetReverseAxis(mMainAxis);
+      mCrossAxis = GetReverseAxis(mCrossAxis);
+      mAreAxesInternallyReversed = true;
+      mIsMainAxisReversed = !mIsMainAxisReversed;
+      mIsCrossAxisReversed = !mIsCrossAxisReversed;
+    }
+  }
+}
+
+void
+FlexboxAxisTracker::InitAxesFromModernProps(
+  const nsFlexContainerFrame* aFlexContainer,
+  const WritingMode& aWM)
+{
   const nsStylePosition* stylePos = aFlexContainer->StylePosition();
   uint32_t flexDirection = stylePos->mFlexDirection;
 
@@ -3208,24 +3241,6 @@ FlexboxAxisTracker::FlexboxAxisTracker(
     mIsCrossAxisReversed = true;
   } else {
     mIsCrossAxisReversed = false;
-  }
-
-  // Master switch to enable/disable bug 983427's code for reversing our axes
-  // and reversing some logic, to avoid reflowing children in bottom-to-top
-  // order. (This switch can be removed eventually, but for now, it allows
-  // this special-case code path to be compared against the normal code path.)
-  static bool sPreventBottomToTopChildOrdering = true;
-
-  if (sPreventBottomToTopChildOrdering) {
-    // If either axis is bottom-to-top, we flip both axes (and set a flag
-    // so that we can flip some logic to make the reversal transparent).
-    if (eAxis_BT == mMainAxis || eAxis_BT == mCrossAxis) {
-      mMainAxis = GetReverseAxis(mMainAxis);
-      mCrossAxis = GetReverseAxis(mCrossAxis);
-      mAreAxesInternallyReversed = true;
-      mIsMainAxisReversed = !mIsMainAxisReversed;
-      mIsCrossAxisReversed = !mIsCrossAxisReversed;
-    }
   }
 }
 
