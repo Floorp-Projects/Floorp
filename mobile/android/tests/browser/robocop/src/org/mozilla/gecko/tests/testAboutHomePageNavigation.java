@@ -41,11 +41,11 @@ public class testAboutHomePageNavigation extends UITest {
 
     private void helperTestTablet() {
         mAboutHome.swipeToPanelOnRight();
-        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
+        mAboutHome.assertCurrentPanel(PanelType.COMBINED_HISTORY);
 
         // Edge case.
         mAboutHome.swipeToPanelOnRight();
-        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
+        mAboutHome.assertCurrentPanel(PanelType.COMBINED_HISTORY);
 
         mAboutHome.swipeToPanelOnLeft();
         mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
@@ -73,11 +73,11 @@ public class testAboutHomePageNavigation extends UITest {
         mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
 
         mAboutHome.swipeToPanelOnLeft();
-        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
+        mAboutHome.assertCurrentPanel(PanelType.COMBINED_HISTORY);
 
         // Edge case.
         mAboutHome.swipeToPanelOnLeft();
-        mAboutHome.assertCurrentPanel(PanelType.HISTORY);
+        mAboutHome.assertCurrentPanel(PanelType.COMBINED_HISTORY);
 
         mAboutHome.swipeToPanelOnRight();
         mAboutHome.assertCurrentPanel(PanelType.TOP_SITES);
