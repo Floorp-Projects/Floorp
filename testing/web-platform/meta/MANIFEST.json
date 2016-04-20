@@ -35225,6 +35225,12 @@
         ]
       },
       "testharness": {
+        "XMLHttpRequest/open-url-multi-window-6.htm": [
+          {
+            "path": "XMLHttpRequest/open-url-multi-window-6.htm",
+            "url": "/XMLHttpRequest/open-url-multi-window-6.htm"
+          }
+        ],
         "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html": [
           {
             "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
