@@ -123,7 +123,7 @@ HitTestingTreeNode::GetScrollSize() const
 bool
 HitTestingTreeNode::IsScrollbarNode() const
 {
-  return mIsScrollbarContainer;
+  return mIsScrollbarContainer || (mScrollDir != Layer::NONE);
 }
 
 void
