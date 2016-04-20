@@ -9,7 +9,7 @@
 
 var [, gHandlers] = LoopAPI.inspect();
 var gConstants;
-gHandlers.GetAllConstants({}, constants => gConstants = constants);
+gHandlers.GetAllConstants({}, constants => { gConstants = constants; });
 
 function resetMauPrefs() {
   Services.prefs.clearUserPref("loop.mau.openPanel");

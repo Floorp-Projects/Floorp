@@ -325,7 +325,7 @@ update(AddonConsoleActor.prototype, {
         case "ConsoleAPI":
           if (!this.consoleAPIListener) {
             this.consoleAPIListener =
-              new ConsoleAPIListener(null, this, "addon/" + this.addon.id);
+              new ConsoleAPIListener(null, this, { addonId: this.addon.id });
             this.consoleAPIListener.init();
           }
           startedListeners.push(listener);

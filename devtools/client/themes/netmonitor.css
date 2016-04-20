@@ -6,10 +6,46 @@
 :root.theme-dark {
   --table-splitter-color: rgba(255,255,255,0.15);
   --table-zebra-background: rgba(255,255,255,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
+  --timig-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-arrows.svg#ascending);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-arrows.svg#descending);
 }
+
 :root.theme-light {
   --table-splitter-color: rgba(0,0,0,0.15);
   --table-zebra-background: rgba(0,0,0,0.05);
+
+  --timing-blocked-color: rgba(235, 83, 104, 0.8);
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(0, 136, 204, 0.8); /* blue */
+  --timing-wait-color: rgba(95, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(44, 187, 15, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/sort-arrows.svg#ascending);
+  --sort-descending-image: url(chrome://devtools/skin/images/sort-arrows.svg#descending);
+}
+
+:root.theme-firebug {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+
+  --timing-blocked-color:  rgba(235, 83, 104, 0.8); /* red */
+  --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
+  --timing-connect-color: rgba(217, 102, 41, 0.8); /* orange */
+  --timing-send-color: rgba(70, 175, 227, 0.8); /* light blue */
+  --timing-wait-color: rgba(94, 136, 176, 0.8); /* blue grey */
+  --timing-receive-color: rgba(112, 191, 83, 0.8); /* green */
+
+  --sort-ascending-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+  --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
 }
 
 #requests-menu-empty-notice {
@@ -45,6 +81,10 @@
   padding: 0;
 }
 
+.theme-firebug #requests-menu-toolbar {
+  height: 16px !important;
+}
+
 .requests-menu-subitem {
   padding: 3px;
 }
@@ -52,7 +92,10 @@
 .requests-menu-header-button {
   -moz-appearance: none;
   background-color: transparent;
-  border-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
+  border-image: linear-gradient(transparent 15%,
+                                var(--theme-splitter-color) 15%,
+                                var(--theme-splitter-color) 85%,
+                                transparent 85%) 1 1;
   border-style: solid;
   border-width: 0;
   border-inline-start-width: 1px;
@@ -86,12 +129,12 @@
 
 .requests-menu-header-button[sorted=ascending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=ascending] #requests-menu-waterfall-image {
-  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#ascending");
+  list-style-image: var(--sort-ascending-image);
 }
 
 .requests-menu-header-button[sorted=descending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=descending] #requests-menu-waterfall-image {
-  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
+  list-style-image: var(--sort-descending-image);
 }
 
 .requests-menu-header-button > .button-box > .button-text,
@@ -109,6 +152,30 @@
 .requests-menu-header[active] + .requests-menu-header .requests-menu-header-button {
   border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
 }
+
+/* Firebug theme support for Network panel header */
+
+.theme-firebug .requests-menu-header {
+  padding: 0 !important;
+  font-weight: bold;
+  background: linear-gradient(rgba(255, 255, 255, 0.05),
+                              rgba(0, 0, 0, 0.05)),
+                              #C8D2DC;
+}
+
+.theme-firebug .requests-menu-header-button {
+  min-height: 17px;
+}
+
+.theme-firebug .requests-header-menu-button[sorted] {
+  background-color: #AAC3DC;
+}
+
+.theme-firebug .requests-header-menu:hover:active {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1),
+                                    transparent);
+}
+
 
 /* Network requests table: specific column dimensions */
 
@@ -335,41 +402,33 @@
   height: 9px;
 }
 
+.theme-firebug .requests-menu-timings-box {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.2));
+  height: 16px;
+}
+
 .requests-menu-timings-box.blocked {
-  background-color: rgba(235, 83, 104, 0.8); /* red */
+  background-color: var(--timing-blocked-color);
 }
 
 .requests-menu-timings-box.dns {
-  background-color: rgba(223, 128, 255, 0.8); /* pink */
+  background-color: var(--timing-dns-color);
 }
 
 .requests-menu-timings-box.connect {
-  background-color: rgba(217, 102, 41, 0.8); /* orange */
+  background-color: var(--timing-connect-color);
 }
 
-/* Use custom colors for dark and light theme on remaining timing types. */
-.theme-dark .requests-menu-timings-box.send {
-  background-color: rgba(70, 175, 227, 0.8); /* light blue */
+.requests-menu-timings-box.send {
+  background-color: var(--timing-send-color);
 }
 
-.theme-light .requests-menu-timings-box.send {
-  background-color: rgba(0, 136, 204, 0.8); /* blue */
+.requests-menu-timings-box.wait {
+  background-color: var(--timing-wait-color);
 }
 
-.theme-dark .requests-menu-timings-box.wait {
-  background-color: rgba(94, 136, 176, 0.8); /* blue grey */
-}
-
-.theme-light .requests-menu-timings-box.wait {
-  background-color: rgba(95, 136, 176, 0.8); /* blue grey */
-}
-
-.theme-dark .requests-menu-timings-box.receive {
-  background-color: rgba(112, 191, 83, 0.8); /* green */
-}
-
-.theme-light .requests-menu-timings-box.receive {
-  background-color: rgba(44, 187, 15, 0.8); /* green */
+.requests-menu-timings-box.receive {
+  background-color: var(--timing-receive-color);
 }
 
 /* SideMenuWidget */
@@ -395,14 +454,38 @@
   background-color: var(--theme-selection-background-semitransparent);
 }
 
+.theme-firebug .side-menu-widget-item:not(.selected):hover {
+  background: #EFEFEF;
+}
+
+.theme-firebug .requests-menu-subitem {
+  padding: 1px;
+}
+
+/* HTTP Status Column */
+.theme-firebug .requests-menu-subitem.requests-menu-status {
+  font-weight: bold;
+}
+
+/* Method Column */
+.theme-firebug .requests-menu-subitem.requests-menu-method-box {
+  color: rgb(128, 128, 128);
+}
+
+/* Size Column */
+.theme-firebug .requests-menu-subitem.requests-menu-size {
+  text-align: end;
+  padding-inline-end: 4px;
+}
+
 /* Network request details */
 
 #details-pane-toggle {
-  list-style-image: url("chrome://devtools/skin/images/pane-collapse.svg");
+  list-style-image: var(--theme-pane-collapse-image);
 }
 
 #details-pane-toggle[pane-collapsed] {
-  list-style-image: url("chrome://devtools/skin/images/pane-expand.svg");
+  list-style-image: var(--theme-pane-expand-image);
 }
 
 /* Network request details tabpanels */
@@ -417,6 +500,12 @@
 
 #headers-tabpanel {
   background-color: var(--theme-toolbar-background);
+}
+
+/* Headers separators are toolbars, but they have different height
+  in Firebug theme */
+.theme-firebug .tabpanel-content .variables-view-container .title.devtools-toolbar {
+  height: 20px !important;
 }
 
 /* Summary tabpanel */
@@ -510,6 +599,10 @@
 
 #timings-tabpanel .requests-menu-timings-total {
   transition: transform 0.2s ease-out;
+}
+
+.theme-firebug #timings-tabpanel .requests-menu-timings-total {
+  color: var(--theme-body-color);
 }
 
 /* Security tabpanel */
@@ -698,6 +791,48 @@
 
 .table-chart-row-label[name=time] {
   width: 7em;
+}
+
+/* Firebug theme support for network charts */
+
+.theme-firebug .chart-colored-blob[name=html] {
+  fill: rgba(94, 136, 176, 0.8); /* Blue-Grey highlight */
+  background: rgba(94, 136, 176, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=css] {
+  fill: rgba(70, 175, 227, 0.8); /* light blue */
+  background: rgba(70, 175, 227, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=js] {
+  fill: rgba(235, 83, 104, 0.8); /* red */
+  background: rgba(235, 83, 104, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=xhr] {
+  fill: rgba(217, 102, 41, 0.8); /* orange  */
+  background: rgba(217, 102, 41, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=fonts] {
+  fill: rgba(223, 128, 255, 0.8); /* pink */
+  background: rgba(223, 128, 255, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=images] {
+  fill: rgba(112, 191, 83, 0.8); /* pink */
+  background: rgba(112, 191, 83, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=media] {
+  fill: rgba(235, 235, 84, 0.8); /* yellow */
+  background: rgba(235, 235, 84, 0.8);
+}
+
+.theme-firebug .chart-colored-blob[name=flash] {
+  fill: rgba(84, 235, 159, 0.8); /* cyan */
+  background: rgba(84, 235, 159, 0.8);
 }
 
 /* Responsive sidebar */

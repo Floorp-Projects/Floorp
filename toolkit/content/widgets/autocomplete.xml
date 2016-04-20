@@ -1368,10 +1368,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
              onunderflow="this._onUnderflow();">
       <xul:image anonid="type-icon"
                  class="ac-type-icon"
-                 xbl:inherits="selected,current"/>
+                 xbl:inherits="selected,current,type"/>
       <xul:image anonid="site-icon"
                  class="ac-site-icon"
-                 xbl:inherits="src=image,selected"/>
+                 xbl:inherits="src=image,selected,type"/>
       <xul:hbox class="ac-title"
                 align="center"
                 xbl:inherits="selected">
@@ -1394,7 +1394,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <xul:hbox anonid="separator"
                 class="ac-separator"
                 align="center"
-                xbl:inherits="selected,actiontype">
+                xbl:inherits="selected,actiontype,type">
         <xul:description class="ac-separator-text">—</xul:description>
       </xul:hbox>
       <xul:hbox class="ac-url"
@@ -2001,8 +2001,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             }
           }
 
-          this._typeIcon.setAttribute("type", type);
-          this._siteIcon.setAttribute("type", type);
+          this.setAttribute("type", type);
 
           if (Array.isArray(title)) {
             this._setUpEmphasisedSections(this._titleText, title);

@@ -16,8 +16,13 @@
   --monospace-font-family: Consolas, monospace;
 }
 
-:root[platform="linux"] {
+:root[platform="linux"],
+:root.theme-firebug {
   --monospace-font-family: monospace;
+}
+
+:root.theme-firebug {
+  --proportional-font-family: Lucida Grande, Tahoma, sans-serif;
 }
 
 .devtools-monospace {
@@ -30,7 +35,6 @@
 
 
 /* Autocomplete Popup */
-/* Dark and light theme */
 
 .devtools-autocomplete-popup {
   -moz-appearance: none !important;
@@ -106,16 +110,31 @@
   box-shadow: 0 1px 0 hsla(209,29%,90%,.25) inset;
 }
 
+.theme-firebug .devtools-autocomplete-popup {
+  border-color: var(--theme-splitter-color);
+  border-radius: 5px;
+  font-size: var(--theme-autompletion-font-size);
+}
+
+.devtools-autocomplete-popup.firebug-theme {
+  background: var(--theme-body-background);
+}
+
+.devtools-autocomplete-listbox.firebug-theme > richlistitem[selected],
+.devtools-autocomplete-listbox.firebug-theme > richlistitem:hover,
 .devtools-autocomplete-listbox.light-theme > richlistitem[selected],
 .devtools-autocomplete-listbox.light-theme > richlistitem:hover {
   background-color: rgba(128,128,128,0.3);
 }
 
+.devtools-autocomplete-listbox.firebug-theme > richlistitem[selected] > .autocomplete-value,
+.devtools-autocomplete-listbox:focus.firebug-theme > richlistitem[selected] > .initial-value,
 .devtools-autocomplete-listbox.light-theme > richlistitem[selected] > .autocomplete-value,
 .devtools-autocomplete-listbox:focus.light-theme > richlistitem[selected] > .initial-value {
   color: #222;
 }
 
+.devtools-autocomplete-listbox.firebug-theme > richlistitem > label,
 .devtools-autocomplete-listbox.light-theme > richlistitem > label {
   color: #666;
 }

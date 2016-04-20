@@ -408,6 +408,8 @@ var MozLoopPushHandler = {
       this._mockWebSocket = options.mockWebSocket;
     }
 
+    this.pushServerUri = Services.prefs.getCharPref("dom.push.serverURL");
+
     this._openSocket();
   },
 
@@ -764,62 +766,12 @@ var MozLoopPushHandler = {
     // For tests, use the mock instance.
     this._pushSocket = new PushSocket(this._mockWebSocket);
 
-    let performOpen = () => {
-      consoleLog.info("PushHandler: attempt to open websocket to PushServer: ", this.pushServerUri);
-      this._pushSocket.connect(this.pushServerUri,
-                               (aMsg) => this._onMsg(aMsg),
-                               () => this._onStart(),
-                               (aCode, aReason) => this._onClose(aCode, aReason));
-    };
+    consoleLog.info("PushHandler: attempt to open websocket to PushServer: ", this.pushServerUri);
+    this._pushSocket.connect(this.pushServerUri,
+                             (aMsg) => this._onMsg(aMsg),
+                             () => this._onStart(),
+                             (aCode, aReason) => this._onClose(aCode, aReason));
 
-    let pushServerURLFetchError = () => {
-      consoleLog.warn("PushHandler: Could not retrieve push server URL from Loop server, will retry");
-      this._pushSocket = undefined;
-      this._retryManager.retry(() => this._openSocket());
-      return;
-    };
-
-    try {
-      this.pushServerUri = Services.prefs.getCharPref("loop.debug.pushserver");
-    }
-    catch (e) {
-      // Do nothing
-    }
-
-    if (!this.pushServerUri) {
-      // Get push server to use from the Loop server
-      let pushUrlEndpoint = Services.prefs.getCharPref("loop.server") + "/push-server-config";
-      let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(
-                Ci.nsIXMLHttpRequest);
-      req.open("GET", pushUrlEndpoint);
-      req.onload = () => {
-        if (req.status >= 200 && req.status < 300) {
-          let pushServerConfig;
-          try {
-            pushServerConfig = JSON.parse(req.responseText);
-          } catch (e) {
-            consoleLog.warn("PushHandler: Error parsing JSON response for push server URL");
-            pushServerURLFetchError();
-          }
-          if (pushServerConfig.pushServerURI) {
-            this._retryManager.reset();
-            this.pushServerUri = pushServerConfig.pushServerURI;
-            performOpen();
-          } else {
-            consoleLog.warn("PushHandler: push server URL config lacks pushServerURI parameter");
-            pushServerURLFetchError();
-          }
-        } else {
-          consoleLog.warn("PushHandler: push server URL retrieve error: " + req.status);
-          pushServerURLFetchError();
-        }
-      };
-      req.onerror = pushServerURLFetchError;
-      req.send();
-    } else {
-      // this.pushServerUri already set -- just open the channel
-      performOpen();
-    }
   },
 
   /**

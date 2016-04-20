@@ -91,6 +91,11 @@ public class LocalBrowserDB implements BrowserDB {
 
     private volatile SuggestedSites mSuggestedSites;
 
+    // Constants used when importing history data from legacy browser.
+    public static String HISTORY_VISITS_DATE = "date";
+    public static String HISTORY_VISITS_COUNT = "visits";
+    public static String HISTORY_VISITS_URL = "url";
+
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
     private final Uri mHistoryUriWithProfile;
@@ -1483,6 +1488,72 @@ public class LocalBrowserDB implements BrowserDB {
             operations.add(builder.build());
         } finally {
             cursor.close();
+        }
+    }
+
+    /**
+     * Utility method used by AndroidImport to insert visit data for history records that were just imported.
+     * Uses batch operations.
+     *
+     * @param cr <code>ContentResolver</code> used to query history table and bulkInsert visit records
+     * @param operations Collection of operations for queueing inserts
+     * @param visitsToSynthesize List of ContentValues describing visit information for each history record:
+     *                                  (History URL, LAST DATE VISITED, VISIT COUNT)
+     */
+    public void insertVisitsFromImportHistoryInBatch(ContentResolver cr,
+                                                     Collection<ContentProviderOperation> operations,
+                                                     ArrayList<ContentValues> visitsToSynthesize) {
+        // If for any reason we fail to obtain history GUID for a tuple we're processing,
+        // let's just ignore it. It's possible that the "best-effort" history import
+        // did not fully succeed, so we could be missing some of the records.
+        int historyGUIDCol = -1;
+        for (ContentValues visitsInformation : visitsToSynthesize) {
+            final Cursor cursor = cr.query(mHistoryUriWithProfile,
+                    new String[] {History.GUID},
+                    History.URL + " = ?",
+                    new String[] {visitsInformation.getAsString(HISTORY_VISITS_URL)},
+                    null);
+            if (cursor == null) {
+                continue;
+            }
+
+            final String historyGUID;
+
+            try {
+                if (!cursor.moveToFirst()) {
+                    continue;
+                }
+                if (historyGUIDCol == -1) {
+                    historyGUIDCol = cursor.getColumnIndexOrThrow(History.GUID);
+                }
+
+                historyGUID = cursor.getString(historyGUIDCol);
+            } finally {
+                // We "continue" on a null cursor above, so it's safe to act upon it without checking.
+                cursor.close();
+            }
+            if (historyGUID == null) {
+                continue;
+            }
+
+            // This fakes the individual visit records, using last visited date as the starting point.
+            for (int i = 0; i < visitsInformation.getAsInteger(HISTORY_VISITS_COUNT); i++) {
+                // We rely on database defaults for IS_LOCAL and VISIT_TYPE.
+                final ContentValues visitToInsert = new ContentValues();
+                visitToInsert.put(BrowserContract.Visits.HISTORY_GUID, historyGUID);
+
+                // Visit timestamps are stored in microseconds, while Android Browser visit timestmaps
+                // are in milliseconds. This is the conversion point for imports.
+                visitToInsert.put(BrowserContract.Visits.DATE_VISITED,
+                        (visitsInformation.getAsLong(HISTORY_VISITS_DATE) - i) * 1000);
+
+                final ContentProviderOperation.Builder builder =
+                        ContentProviderOperation.newInsert(BrowserContract.Visits.CONTENT_URI);
+                builder.withValues(visitToInsert);
+
+                // Queue the insert operation
+                operations.add(builder.build());
+            }
         }
     }
 

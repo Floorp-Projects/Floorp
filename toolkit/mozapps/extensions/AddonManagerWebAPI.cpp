@@ -40,16 +40,16 @@ AddonManagerWebAPI::IsValidSite(nsIURI* uri)
   }
 
   if (host.Equals("addons.mozilla.org") ||
-      host.Equals("services.addons.mozilla.org")) {
+      host.Equals("discovery.addons.mozilla.org")) {
     return true;
   }
 
   // When testing allow access to the developer sites.
   if (Preferences::GetBool("extensions.webapi.testing", false)) {
     if (host.Equals("addons.allizom.org") ||
-        host.Equals("services.addons.allizom.org") ||
+        host.Equals("discovery.addons.allizom.org") ||
         host.Equals("addons-dev.allizom.org") ||
-        host.Equals("services.addons-dev.allizom.org") ||
+        host.Equals("discovery.addons-dev.allizom.org") ||
         host.Equals("example.com")) {
       return true;
     }

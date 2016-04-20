@@ -103,6 +103,7 @@ loop.store = loop.store || {};
 
       this._notifications = options.notifications;
       this._constants = options.constants;
+      this._gotAllRooms = false;
 
       if (options.activeRoomStore) {
         this.activeRoomStore = options.activeRoomStore;
@@ -114,7 +115,9 @@ loop.store = loop.store || {};
     getInitialStoreState: function() {
       return {
         activeRoom: this.activeRoomStore ? this.activeRoomStore.getStoreState() : {},
+        closingNewRoom: false,
         error: null,
+        lastCreatedRoom: null,
         openedRoom: null,
         pendingCreation: false,
         pendingInitialRetrieval: true,
@@ -153,6 +156,7 @@ loop.store = loop.store || {};
     _onRoomAdded: function(addedRoomData) {
       addedRoomData.participants = addedRoomData.participants || [];
       addedRoomData.ctime = addedRoomData.ctime || new Date().getTime();
+
       this.dispatchAction(new sharedActions.UpdateRoomList({
         // Ensure the room isn't part of the list already, then add it.
         roomList: this._storeState.rooms.filter(function(room) {
@@ -165,7 +169,20 @@ loop.store = loop.store || {};
      * Clears the current active room.
      */
     _onRoomClose: function() {
+      let state = this.getStoreState();
+
+      // If the room getting closed has been just created, then open the panel.
+      if (state.lastCreatedRoom && state.openedRoom === state.lastCreatedRoom) {
+        this.setStoreState({
+          closingNewRoom: true
+        });
+        loop.request("SetNameNewRoom");
+      }
+
+      // reset state for closed room
       this.setStoreState({
+        closingNewRoom: false,
+        lastCreatedRoom: null,
         openedRoom: null
       });
     },
@@ -267,6 +284,11 @@ loop.store = loop.store || {};
           }));
           return;
         }
+
+        // Keep the token for the last created room.
+        this.setStoreState({
+          lastCreatedRoom: result.roomToken
+        });
 
         this.dispatchAction(new sharedActions.CreatedRoom({
           decryptedContext: result.decryptedContext,
@@ -467,6 +489,12 @@ loop.store = loop.store || {};
      * Gather the list of all available rooms from the Loop API.
      */
     getAllRooms: function() {
+      // XXX Ideally, we'd have a specific command to "start up" the room store
+      // to get the rooms. We should address this alongside bug 1074665.
+      if (this._gotAllRooms) {
+        return;
+      }
+
       loop.request("Rooms:GetAll", null).then(function(result) {
         var action;
 
@@ -479,6 +507,8 @@ loop.store = loop.store || {};
         }
 
         this.dispatchAction(action);
+
+        this._gotAllRooms = true;
 
         // We can only start listening to room events after getAll() has been
         // called executed first.

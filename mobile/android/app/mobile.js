@@ -139,6 +139,7 @@ pref("browser.sessionstore.max_tabs_undo", 5);
 pref("browser.sessionstore.max_resumed_crashes", 1);
 pref("browser.sessionstore.recent_crashes", 0);
 pref("browser.sessionstore.privacy_level", 0); // saving data: 0 = all, 1 = unencrypted sites, 2 = never
+pref("browser.sessionstore.debug_logging", false);
 
 /* these should help performance */
 pref("mozilla.widget.force-24bpp", true);
@@ -985,3 +986,7 @@ pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sy
 // Enable Presentation API
 pref("dom.presentation.enabled", true);
 pref("dom.presentation.discovery.enabled", true);
+
+// TODO : remove it after landing bug1242874 because now it's the only way to
+// suspend the MediaElement.
+pref("media.useAudioChannelAPI", true);

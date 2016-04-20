@@ -40,7 +40,7 @@ add_task(function*() {
   let result = gURLBar.popup.richlistbox.children[1];
 
   isnot(result, null, "Expect a search result");
-  is(result.getAttribute("type"), "action searchengine favicon", "Expect correct `type` attribute");
+  is(result.getAttribute("type"), "searchengine", "Expect correct `type` attribute");
 
   let titleHbox = result._titleText.parentNode.parentNode;
   ok(titleHbox.classList.contains("ac-title"), "Title hbox sanity check");

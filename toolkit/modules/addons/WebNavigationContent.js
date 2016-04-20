@@ -23,6 +23,35 @@ addMessageListener("Extension:DisableWebNavigation", () => {
   removeEventListener("DOMContentLoaded", loadListener);
 });
 
+var FormSubmitListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIFormSubmitObserver,
+                                          Ci.nsISupportsWeakReference]),
+  init() {
+    this.formSubmitWindows = new WeakSet();
+    Services.obs.addObserver(FormSubmitListener, "earlyformsubmit", false);
+  },
+
+  uninit() {
+    Services.obs.removeObserver(FormSubmitListener, "earlyformsubmit", false);
+    this.formSubmitWindows = new WeakSet();
+  },
+
+  notify: function(form, window, actionURI) {
+    try {
+      this.formSubmitWindows.add(window);
+    } catch (e) {
+      Cu.reportError("Error in FormSubmitListener.notify");
+    }
+  },
+
+  hasAndForget: function(window) {
+    let has = this.formSubmitWindows.has(window);
+    this.formSubmitWindows.delete(window);
+    return has;
+  },
+};
+
 var WebProgressListener = {
   init: function() {
     // This WeakMap (DOMWindow -> nsIURI) keeps track of the pathname and hash
@@ -38,9 +67,13 @@ var WebProgressListener = {
       this.previousURIMap.set(win, currentURI);
     }
 
+    // This WeakSet of DOMWindows keeps track of the attempted refresh.
+    this.refreshAttemptedDOMWindows = new WeakSet();
+
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+                                          Ci.nsIWebProgress.NOTIFY_REFRESH |
                                           Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
@@ -53,8 +86,26 @@ var WebProgressListener = {
     webProgress.removeProgressListener(this);
   },
 
+  onRefreshAttempted: function onRefreshAttempted(webProgress, URI, delay, sameURI) {
+    this.refreshAttemptedDOMWindows.add(webProgress.DOMWindow);
+
+    // If this function doesn't return true, the attempted refresh will be blocked.
+    return true;
+  },
+
   onStateChange: function onStateChange(webProgress, request, stateFlags, status) {
-    let locationURI = request.QueryInterface(Ci.nsIChannel).URI;
+    let {originalURI, URI: locationURI} = request.QueryInterface(Ci.nsIChannel);
+
+    // Prevents "about", "chrome", "resource" and "moz-extension" URI schemes to be
+    // reported with the resolved "file" or "jar" URIs. (see Bug 1246125 for rationale)
+    if (locationURI.schemeIs("file") || locationURI.schemeIs("jar")) {
+      let shouldUseOriginalURI = originalURI.schemeIs("about") ||
+                                 originalURI.schemeIs("chrome") ||
+                                 originalURI.schemeIs("resource") ||
+                                 originalURI.schemeIs("moz-extension");
+
+      locationURI = shouldUseOriginalURI ? originalURI : locationURI;
+    }
 
     this.sendStateChange({webProgress, locationURI, stateFlags, status});
 
@@ -70,7 +121,7 @@ var WebProgressListener = {
     // (see Bug 1264936 and Bug 125662 for rationale)
     if ((webProgress.DOMWindow.top != webProgress.DOMWindow) &&
         (stateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT)) {
-      this.sendDocumentChange({webProgress, locationURI});
+      this.sendDocumentChange({webProgress, locationURI, request});
     }
   },
 
@@ -92,7 +143,7 @@ var WebProgressListener = {
     // an "Extension:HistoryChange" to the main process, where it will be turned
     // into a webNavigation.onHistoryStateUpdated/onReferenceFragmentUpdated event.
     if (isSameDocument) {
-      this.sendHistoryChange({webProgress, previousURI, locationURI});
+      this.sendHistoryChange({webProgress, previousURI, locationURI, request});
     } else if (webProgress.DOMWindow.top == webProgress.DOMWindow) {
       // We have to catch the document changes from top level frames here,
       // where we can detect the "server redirect" transition.
@@ -113,8 +164,12 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:StateChange", data);
   },
 
-  sendDocumentChange({webProgress, locationURI}) {
+  sendDocumentChange({webProgress, locationURI, request}) {
+    let {loadType, DOMWindow} = webProgress;
+    let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
+
     let data = {
+      frameTransitionData,
       location: locationURI ? locationURI.spec : "",
       windowId: webProgress.DOMWindowID,
       parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
@@ -123,8 +178,8 @@ var WebProgressListener = {
     sendAsyncMessage("Extension:DocumentChange", data);
   },
 
-  sendHistoryChange({webProgress, previousURI, locationURI}) {
-    let {loadType} = webProgress;
+  sendHistoryChange({webProgress, previousURI, locationURI, request}) {
+    let {loadType, DOMWindow} = webProgress;
 
     let isHistoryStateUpdated = false;
     let isReferenceFragmentUpdated = false;
@@ -148,7 +203,10 @@ var WebProgressListener = {
     }
 
     if (isHistoryStateUpdated || isReferenceFragmentUpdated) {
+      let frameTransitionData = this.getFrameTransitionData({loadType, request, DOMWindow});
+
       let data = {
+        frameTransitionData,
         isHistoryStateUpdated, isReferenceFragmentUpdated,
         location: locationURI ? locationURI.spec : "",
         windowId: webProgress.DOMWindowID,
@@ -159,20 +217,56 @@ var WebProgressListener = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
+  getFrameTransitionData({loadType, request, DOMWindow}) {
+    let frameTransitionData = {};
+
+    if (loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY) {
+      frameTransitionData.forward_back = true;
+    }
+
+    if (loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+      frameTransitionData.reload = true;
+    }
+
+    if (request instanceof Ci.nsIChannel) {
+      if (request.loadInfo.redirectChain.length) {
+        frameTransitionData.server_redirect = true;
+      }
+    }
+
+    if (FormSubmitListener.hasAndForget(DOMWindow)) {
+      frameTransitionData.form_submit = true;
+    }
+
+    if (this.refreshAttemptedDOMWindows.has(DOMWindow)) {
+      this.refreshAttemptedDOMWindows.delete(DOMWindow);
+      frameTransitionData.client_redirect = true;
+    }
+
+    return frameTransitionData;
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsIWebProgressListener2,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
 var disabled = false;
 WebProgressListener.init();
+FormSubmitListener.init();
 addEventListener("unload", () => {
   if (!disabled) {
     disabled = true;
     WebProgressListener.uninit();
+    FormSubmitListener.uninit();
   }
 });
 addMessageListener("Extension:DisableWebNavigation", () => {
   if (!disabled) {
     disabled = true;
     WebProgressListener.uninit();
+    FormSubmitListener.uninit();
   }
 });

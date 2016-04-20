@@ -122,7 +122,6 @@ public class GeckoApplication extends Application
                 }
             });
         }
-        GeckoConnectivityReceiver.getInstance().stop();
         GeckoNetworkManager.getInstance().stop();
     }
 
@@ -134,7 +133,6 @@ public class GeckoApplication extends Application
 
         final Context applicationContext = getApplicationContext();
         GeckoBatteryManager.getInstance().start(applicationContext);
-        GeckoConnectivityReceiver.getInstance().start(applicationContext);
         GeckoNetworkManager.getInstance().start(applicationContext);
 
         mInBackground = false;

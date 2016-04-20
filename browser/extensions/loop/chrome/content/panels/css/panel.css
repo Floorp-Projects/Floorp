@@ -96,6 +96,70 @@ body {
   border-radius: 3px;
 }
 
+/* Rename closing room panel */
+.rename-newRoom > img {
+  margin-left: 16px;
+  position: absolute;
+  width: 32px;
+}
+html[dir="rtl"] .rename-newRoom > img {
+  margin-left: 0;
+  margin-right: 16px;
+}
+
+.rename-container {
+  margin: 16px;
+  /* margin is img-width + 16px separation */
+  padding-left: 48px;
+}
+html[dir="rtl"] .rename-container {
+  padding-left: 0;
+  padding-right: 48px;
+}
+
+.rename-container > .rename-header {
+  color: #000;
+  font-size: 1.2em;
+  padding-top: 5px;
+}
+
+.rename-container > .rename-prompt {
+  margin-bottom: 8px;
+}
+
+.rename-container > .input-group {
+  background: #fff;
+  border: 1px solid #d1d1d1;
+  border-radius: 2px;
+  margin-left: -2px;
+  width: 100%;
+  padding: 2px 4px;
+}
+html[dir="rtl"] .rename-container > .input-group {
+  margin-left: 0;
+  margin-right: -2px;
+}
+.rename-container > .input-group.focused {
+  border: 1px solid #0078f9;
+  box-shadow: 0 0 0 3px #9eccfe;
+}
+
+.input-group > .rename-input {
+  border: 0px none;
+  font-size: 1.4rem;
+  width: 100%;
+}
+
+.rename-button {
+  background: #efefef;
+  border-top: 1px solid #d1d1d1;
+  display: block;
+  padding: 12px;
+  width: 100%;
+}
+
+
+
 /* Content area and input fields */
 
 .content-area {
@@ -724,7 +788,6 @@ img.fte-hello-web-share {
 }
 
 .fte-get-started-container {
-  width: 330px; /* XXXremove me after this comment exists on 1.1 */
   display: flex;
   flex-flow: column nowrap;
   background: #fbfbfb;

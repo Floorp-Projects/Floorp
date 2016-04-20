@@ -34,6 +34,7 @@ REDIRECTIONS = {
     "/shared/vendor": "/chrome/content/shared/vendor",
     "/add-on/panels/vendor": "/chrome/content/panels/vendor",
     "/add-on/panels/js": "/chrome/content/panels/js",
+    "/add-on/panels/test": "/chrome/content/panels/test",
     "/add-on/shared/js": "/chrome/content/shared/js",
     "/add-on/shared/vendor": "/chrome/content/shared/vendor",
 }

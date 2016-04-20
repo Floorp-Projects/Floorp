@@ -6,10 +6,35 @@
 
 .theme-dark {
   --even-animation-timeline-background-color: rgba(255,255,255,0.03);
+  --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --pause-image: url(chrome://devtools/skin/images/debugger-pause.png);
+  --pause-image-2x: url(chrome://devtools/skin/images/debugger-pause@2x.png);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.png);
+  --rewind-image-2x: url(chrome://devtools/skin/images/rewind@2x.png);
+  --play-image: url(chrome://devtools/skin/images/debugger-play.png);
+  --play-image-2x: url(chrome://devtools/skin/images/debugger-play@2x.png);
 }
 
 .theme-light {
   --even-animation-timeline-background-color: rgba(128,128,128,0.03);
+  --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --pause-image: url(chrome://devtools/skin/images/debugger-pause.png);
+  --pause-image-2x: url(chrome://devtools/skin/images/debugger-pause@2x.png);
+  --rewind-image: url(chrome://devtools/skin/images/rewind.png);
+  --rewind-image-2x: url(chrome://devtools/skin/images/rewind@2x.png);
+  --play-image: url(chrome://devtools/skin/images/debugger-play.png);
+  --play-image-2x: url(chrome://devtools/skin/images/debugger-play@2x.png);
+}
+
+.theme-firebug {
+  --even-animation-timeline-background-color: rgba(128,128,128,0.03);
+  --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
+  --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
+  --pause-image-2x: url(chrome://devtools/skin/images/firebug/pause.svg);
+  --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
+  --rewind-image-2x: url(chrome://devtools/skin/images/firebug/rewind.svg);
+  --play-image: url(chrome://devtools/skin/images/firebug/play.svg);
+  --play-image-2x: url(chrome://devtools/skin/images/firebug/play.svg);
 }
 
 :root {
@@ -145,32 +170,32 @@ body {
 }
 
 #element-picker::before {
-  background-image: url("chrome://devtools/skin/images/command-pick.svg");
+  background-image: var(--command-pick-image);
 }
 
 .pause-button::before {
-  background-image: url("images/debugger-pause.png");
+  background-image: var(--pause-image);
 }
 
 #rewind-timeline::before {
-  background-image: url("images/rewind.png");
+  background-image: var(--rewind-image);
 }
 
 .pause-button.paused::before {
-  background-image: url("images/debugger-play.png");
+  background-image: var(--play-image);
 }
 
 @media (min-resolution: 1.1dppx) {
   .pause-button::before {
-    background-image: url("images/debugger-pause@2x.png");
+    background-image: var(--pause-image-2x);
   }
 
   .pause-button.paused::before {
-    background-image: url("images/debugger-play@2x.png");
+    background-image: var(--play-image-2x);
   }
 
   #rewind-timeline::before {
-    background-image: url("images/rewind@2x.png");
+    background-image: var(--rewind-image-2x);
   }
 }
 

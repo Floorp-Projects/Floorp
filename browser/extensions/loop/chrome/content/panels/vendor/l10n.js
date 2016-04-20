@@ -120,7 +120,7 @@
     if ((ret == undefined) || (ret == "")) {
       // Display a message in the error console
       console.error("Index #" + index + " of '" + str + "' for value " + num +
-          " is invalid -- plural rule #" + aRuleNum);
+          " is invalid -- plural rule #" + ret);
 
       // Default to the first entry (which might be empty, but not undefined).
       ret = words[0];
@@ -210,7 +210,15 @@
       // Fallback to a working - synchronous - implementation of retrieving the
       // plural form of a string.
       if (!gL10nDetails.getPluralForm && ("pluralRule" in gL10nDetails)) {
-        gPluralFunc = kPluralFunctions[gL10nDetails.pluralRule][1];
+        var ruleNum = gL10nDetails.pluralRule;
+
+        // Default to "all plural" if the value is out of bounds or invalid
+        if (ruleNum < 0 || ruleNum >= kPluralFunctions.length || isNaN(ruleNum)) {
+          console.error(["Invalid rule number: ", ruleNum, " -- defaulting to 0"]);
+          ruleNum = 0;
+        }
+
+        gPluralFunc = kPluralFunctions[ruleNum][1];
         gL10nDetails.getPluralForm = fallbackGetPluralForm;
       }
 

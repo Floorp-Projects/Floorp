@@ -27,7 +27,6 @@ const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
 const XRE_UPDATE_ROOT_DIR     = "UpdRootD";
 const ENVVAR_UPDATE_DIR       = "UPDATES_DIRECTORY";
 const WEBAPPS_DIR             = "webappsDir";
-const DOWNLOAD_DIR            = "DfltDwnld";
 
 const SYSTEM_DIST_PATH = `/system/${AppConstants.ANDROID_PACKAGE_NAME}/distribution`;
 
@@ -68,12 +67,6 @@ DirectoryProvider.prototype = {
           return new FileUtils.File(path);
         }
       }
-      return new FileUtils.File(env.get("DOWNLOADS_DIRECTORY"));
-    } else if (prop == DOWNLOAD_DIR) {
-      // Downloads.getSystemDownloadsDirectory is asynchronous, but getFile is
-      // synchronous, so just return what the getSystemDownloadsDirectory
-      // implementation would have returned.
-      let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
       return new FileUtils.File(env.get("DOWNLOADS_DIRECTORY"));
     }
 

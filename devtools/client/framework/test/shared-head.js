@@ -9,7 +9,8 @@
 // devtools.
 // It contains various common helper functions.
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC}
+  = Components;
 
 function scopedCuImport(path) {
   const scope = {};
@@ -40,9 +41,12 @@ waitForExplicitFinish();
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
 registerCleanupFunction(function() {
-  if (DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
-    ok(false, "Should have had the expected number of DevToolsUtils.assert() failures. Expected " +
-      EXPECTED_DTU_ASSERT_FAILURE_COUNT + ", got " + DevToolsUtils.assertionFailureCount);
+  if (DevToolsUtils.assertionFailureCount !==
+      EXPECTED_DTU_ASSERT_FAILURE_COUNT) {
+    ok(false,
+      "Should have had the expected number of DevToolsUtils.assert() failures."
+      + " Expected " + EXPECTED_DTU_ASSERT_FAILURE_COUNT
+      + ", got " + DevToolsUtils.assertionFailureCount);
   }
 });
 
@@ -56,7 +60,7 @@ const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   observe: function(subject, topic, data) {
-    var message = subject.wrappedJSObject.arguments[0];
+    let message = subject.wrappedJSObject.arguments[0];
 
     if (/Failed propType/.test(message)) {
       ok(false, message);
@@ -103,7 +107,7 @@ registerCleanupFunction(function* cleanup() {
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-var addTab = Task.async(function*(url) {
+var addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: " + url);
 
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
@@ -119,7 +123,7 @@ var addTab = Task.async(function*(url) {
  * @param {Object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
-var removeTab = Task.async(function*(tab) {
+var removeTab = Task.async(function* (tab) {
   info("Removing tab.");
 
   let onClose = once(gBrowser.tabContainer, "TabClose");
@@ -165,7 +169,8 @@ function synthesizeKeyFromKeyTag(key) {
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
  * @param {String} eventName
- * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @param {Boolean} useCapture Optional, for
+ *        addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
 function once(target, eventName, useCapture = false) {
@@ -194,8 +199,8 @@ function once(target, eventName, useCapture = false) {
 /**
  * Some tests may need to import one or more of the test helper scripts.
  * A test helper script is simply a js file that contains common test code that
- * is either not common-enough to be in head.js, or that is located in a separate
- * directory.
+ * is either not common-enough to be in head.js, or that is located in a
+ * separate directory.
  * The script will be loaded synchronously and in the test's scope.
  * @param {String} filePath The file path, relative to the current directory.
  *                 Examples:
@@ -224,7 +229,7 @@ function waitForTick() {
  * @param {String} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves with the toolbox, when it has been opened.
  */
-var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
+var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
   info("Opening the toolbox");
 
   let toolbox;
@@ -244,7 +249,8 @@ var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
   toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
 
   // Make sure that the toolbox frame is focused.
-  yield new Promise(resolve => waitForFocus(resolve, toolbox.frame.contentWindow));
+  yield new Promise(resolve => waitForFocus(resolve,
+    toolbox.frame.contentWindow));
 
   info("Toolbox opened and focused");
 
@@ -259,9 +265,9 @@ var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
-var openNewTabAndToolbox = Task.async(function*(url, toolId, hostType) {
+var openNewTabAndToolbox = Task.async(function* (url, toolId, hostType) {
   let tab = yield addTab(url);
-  return openToolboxForTab(tab, toolId, hostType)
+  return openToolboxForTab(tab, toolId, hostType);
 });
 
 /**
@@ -314,13 +320,13 @@ function waitUntil(predicate, interval = 10) {
  * in potentially a different process.
  */
 let MM_INC_ID = 0;
-function evalInDebuggee (mm, script) {
-  return new Promise(function (resolve, reject) {
+function evalInDebuggee(mm, script) {
+  return new Promise(function(resolve, reject) {
     let id = MM_INC_ID++;
     mm.sendAsyncMessage("devtools:test:eval", { script, id });
     mm.addMessageListener("devtools:test:eval:response", handler);
 
-    function handler ({ data }) {
+    function handler({ data }) {
       if (id !== data.id) {
         return;
       }
@@ -330,4 +336,52 @@ function evalInDebuggee (mm, script) {
       resolve(data.value);
     }
   });
+}
+
+/**
+ * Wait for a context menu popup to open.
+ *
+ * @param nsIDOMElement popup
+ *        The XUL popup you expect to open.
+ * @param nsIDOMElement button
+ *        The button/element that receives the contextmenu event. This is
+ *        expected to open the popup.
+ * @param function onShown
+ *        Function to invoke on popupshown event.
+ * @param function onHidden
+ *        Function to invoke on popuphidden event.
+ * @return object
+ *         A Promise object that is resolved after the popuphidden event
+ *         callback is invoked.
+ */
+function waitForContextMenu(popup, button, onShown, onHidden) {
+  let deferred = promise.defer();
+
+  function onPopupShown() {
+    info("onPopupShown");
+    popup.removeEventListener("popupshown", onPopupShown);
+
+    onShown && onShown();
+
+    // Use executeSoon() to get out of the popupshown event.
+    popup.addEventListener("popuphidden", onPopupHidden);
+    executeSoon(() => popup.hidePopup());
+  }
+  function onPopupHidden() {
+    info("onPopupHidden");
+    popup.removeEventListener("popuphidden", onPopupHidden);
+
+    onHidden && onHidden();
+
+    deferred.resolve(popup);
+  }
+
+  popup.addEventListener("popupshown", onPopupShown);
+
+  info("wait for the context menu to open");
+  button.scrollIntoView();
+  let eventDetails = {type: "contextmenu", button: 2};
+  EventUtils.synthesizeMouse(button, 5, 2, eventDetails,
+                             button.ownerDocument.defaultView);
+  return deferred.promise;
 }

@@ -253,10 +253,10 @@ function setScrollHandlers(container, dragZoom, emitChanged, update) {
 
     // The ratio of where the center of the mouse is in regards to the total
     // zoomed width/height
-    let ratioZoomX = (dragZoom.zoomedWidth / 2 + mouseOffsetX - dragZoom.translateX)
-      / dragZoom.zoomedWidth;
-    let ratioZoomY = (dragZoom.zoomedHeight / 2 + mouseOffsetY - dragZoom.translateY)
-      / dragZoom.zoomedHeight;
+    let ratioZoomX = (prevZoomedWidth / 2 + mouseOffsetX - dragZoom.translateX)
+      / prevZoomedWidth;
+    let ratioZoomY = (prevZoomedHeight / 2 + mouseOffsetY - dragZoom.translateY)
+      / prevZoomedHeight;
 
     // Distribute the change in width and height based on the above ratio
     dragZoom.translateX -= lerp(-deltaWidth / 2, deltaWidth / 2, ratioZoomX);
@@ -268,10 +268,10 @@ function setScrollHandlers(container, dragZoom, emitChanged, update) {
     update();
   }
 
-  window.addEventListener("wheel", handleWheel, false);
+  container.addEventListener("wheel", handleWheel, false);
 
   return function removeListener() {
-    window.removeEventListener("wheel", handleWheel, false);
+    container.removeEventListener("wheel", handleWheel, false);
   };
 }
 

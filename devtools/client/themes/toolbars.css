@@ -9,6 +9,16 @@
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
   --searcbox-no-match-border-color: #e52e2e;
+  --magnifying-glass-image: url(images/magnifying-glass-light.png);
+  --magnifying-glass-image-2x: url(images/magnifying-glass-light@2x.png);
+  --command-pick-image: url(images/command-pick.svg);
+  --tool-options-image: url(images/tool-options.svg);
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
+  --icon-filter: invert(1);
+  --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
+  --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
+  --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
+  --toolbar-button-border-color: rgba(170, 170, 170, .5);
 }
 
 .theme-dark {
@@ -16,7 +26,31 @@
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;
   --searcbox-no-match-border-color: #cc3d3d;
+  --magnifying-glass-image: url(images/magnifying-glass.png);
+  --magnifying-glass-image-2x: url(images/magnifying-glass@2x.png);
+  --command-pick-image: url(images/command-pick.svg);
+  --tool-options-image: url(images/tool-options.svg);
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
+  --icon-filter: none;
+  --dock-bottom-image: url(chrome://devtools/skin/images/dock-bottom.svg);
+  --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
+  --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
+  --toolbar-button-border-color: rgba(0, 0, 0, .4);
 }
+
+.theme-firebug {
+  --magnifying-glass-image: url(images/firebug/filter.svg);
+  --magnifying-glass-image-2x: url(images/firebug/filter.svg);
+  --command-pick-image: url(images/firebug/command-pick.svg);
+  --tool-options-image: url(images/firebug/tool-options.svg);
+  --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
+  --icon-filter: none;
+  --dock-bottom-image: url(chrome://devtools/skin/images/firebug/dock-bottom.svg);
+  --dock-side-image: url(chrome://devtools/skin/images/firebug/dock-side.svg);
+  --dock-undock-image: url(chrome://devtools/skin/images/firebug/dock-undock.svg);
+  --toolbar-button-border-color: rgba(170, 170, 170, .5);
+}
+
 
 /* Toolbars */
 .devtools-toolbar,
@@ -130,16 +164,10 @@
   min-height: 2em;
 }
 
-.theme-dark .devtools-menulist,
-.theme-dark .devtools-toolbarbutton,
-.theme-dark .devtools-button {
-  border-color: rgba(0, 0, 0, .4); /* Splitters */
-}
-
-.theme-light .devtools-menulist,
-.theme-light .devtools-toolbarbutton,
-.theme-light .devtools-button {
-  border-color: rgba(170, 170, 170, .5); /* Splitters */
+.devtools-menulist,
+.devtools-toolbarbutton,
+.devtools-button {
+  border-color: var(--toolbar-button-border-color);
 }
 
 /* Icon button styles */
@@ -156,6 +184,11 @@
 
 #toolbox-buttons .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
   padding: 0 2px;
+}
+
+/* Invert toolbox button icons in Firebug theme. */
+.theme-firebug #toolbox-buttons toolbarbutton image {
+  filter: invert(1);
 }
 
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
@@ -296,7 +329,7 @@
 }
 
 .devtools-option-toolbarbutton {
-  list-style-image: url("chrome://devtools/skin/images/tool-options.svg");
+  list-style-image: var(--tool-options-image);
 }
 
 .devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
@@ -332,18 +365,11 @@
   padding: 0;
   -moz-padding-start: 22px;
   -moz-padding-end: 4px;
+  background-image: var(--magnifying-glass-image);
   background-position: 8px center;
   background-size: 11px 11px;
   background-repeat: no-repeat;
   font-size: inherit;
-}
-
-.theme-dark .devtools-searchinput {
-  background-image: url(images/magnifying-glass.png);
-}
-
-.theme-light .devtools-searchinput {
-  background-image: url(images/magnifying-glass-light.png);
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl),
@@ -461,12 +487,8 @@
 }
 
 @media (min-resolution: 1.1dppx) {
-  .theme-dark .devtools-searchinput {
-    background-image: url(images/magnifying-glass@2x.png);
-  }
-
-  .theme-light .devtools-searchinput {
-    background-image: url(images/magnifying-glass-light@2x.png);
+  .devtools-searchinput {
+    background-image: var(--magnifying-glass-image-2x);
   }
 }
 
@@ -486,7 +508,7 @@
   height: 16px;
   -moz-appearance: none;
   background-size: cover;
-  background-image: url("chrome://devtools/skin/images/close.svg");
+  background-image: var(--close-button-image);
   background-position: center center;
   background-repeat: no-repeat;
 }
@@ -618,6 +640,17 @@
   display: none;
 }
 
+/* Save space in Firebug theme */
+.theme-firebug #toolbox-controls toolbarbutton {
+  margin-inline-start: 0 !important;
+  width: 12px;
+  min-width: 12px;
+}
+
+.theme-firebug #toolbox-controls toolbarbutton:hover {
+  background: none;
+}
+
 #toolbox-dock-buttons > toolbarbutton > image {
   -moz-appearance: none;
   width: 16px;
@@ -628,15 +661,15 @@
 }
 
 #toolbox-dock-bottom > image {
-  background-image: url("chrome://devtools/skin/images/dock-bottom.svg");
+  background-image: var(--dock-bottom-image);
 }
 
 #toolbox-dock-side  > image {
-  background-image: url("chrome://devtools/skin/images/dock-side.svg");
+  background-image: var(--dock-side-image);
 }
 
 #toolbox-dock-window > image {
-  background-image: url("chrome://devtools/skin/images/dock-undock.svg");
+  background-image: var(--dock-undock-image);
 }
 
 #toolbox-dock-bottom-minimize {
@@ -744,7 +777,7 @@
 }
 
 #command-button-pick > image {
-  background-image: url("chrome://devtools/skin/images/command-pick.svg");
+  background-image: var(--command-pick-image);
 }
 
 #command-button-frames > image {
@@ -815,6 +848,12 @@
   -moz-border-start-width: 1px;
   -moz-box-align: center;
   -moz-user-focus: normal;
+  -moz-box-flex: 1;
+}
+
+/* Save space on the tab-strip in Firebug theme */
+.theme-firebug .devtools-tab {
+  -moz-box-flex: initial;
 }
 
 .theme-dark .devtools-tab {
@@ -855,6 +894,16 @@
 
 .theme-light .devtools-tab:not([selected])[highlighted] {
   background-color: rgba(44, 187, 15, .2);
+}
+
+/* Display execution pointer in the Debugger tab to indicate
+   that the debugger is paused. */
+.theme-firebug #toolbox-tab-jsdebugger.devtools-tab:not([selected])[highlighted] {
+  background-color: rgba(89, 178, 234, .2);
+  background-image: url(chrome://devtools/skin/images/firebug/tool-debugger-paused.svg);
+  background-repeat: no-repeat;
+  padding-left: 13px !important;
+  background-position: 3px 6px;
 }
 
 .devtools-tab > image {
@@ -954,7 +1003,7 @@
 .theme-light #requests-menu-network-summary-button .button-icon,
 .theme-light #toggle-breakpoints[checked] > image,
 .theme-light .event-tooltip-debugger-icon {
-  filter: invert(1);
+  filter: var(--icon-filter);
 }
 
 /* Since selected backgrounds are blue, we want to use the normal

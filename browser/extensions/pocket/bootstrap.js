@@ -104,8 +104,7 @@ PocketAboutPage.prototype = {
   getURIFlags: function(aURI) {
     return Ci.nsIAboutModule.ALLOW_SCRIPT |
            Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
-           Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT |
-           Ci.nsIAboutModule.MAKE_UNLINKABLE;
+           Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
   },
 
   newChannel: function(aURI, aLoadInfo) {

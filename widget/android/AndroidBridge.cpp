@@ -51,6 +51,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ContentChild.h"
+#include "nsIObserverService.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1578,10 +1579,12 @@ NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidBridge)
 
 nsAndroidBridge::nsAndroidBridge()
 {
+  AddObservers();
 }
 
 nsAndroidBridge::~nsAndroidBridge()
 {
+  RemoveObservers();
 }
 
 NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
@@ -1633,6 +1636,45 @@ NS_IMETHODIMP nsAndroidBridge::IsContentDocumentDisplayed(bool *aRet)
 {
     *aRet = AndroidBridge::Bridge()->IsContentDocumentDisplayed();
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAndroidBridge::Observe(nsISupports* aSubject, const char* aTopic,
+                         const char16_t* aData)
+{
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    RemoveObservers();
+  } else if (!strcmp(aTopic, "audio-playback")) {
+    ALOG_BRIDGE("nsAndroidBridge::Observe, get audio-playback event.");
+    nsAutoString activeStr(aData);
+    if (activeStr.EqualsLiteral("active")) {
+      AudioFocusAgent::NotifyStartedPlaying();
+    } else {
+      AudioFocusAgent::NotifyStoppedPlaying();
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+nsAndroidBridge::AddObservers()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "xpcom-shutdown", false);
+    obs->AddObserver(this, "audio-playback", false);
+  }
+}
+
+void
+nsAndroidBridge::RemoveObservers()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "xpcom-shutdown");
+    obs->RemoveObserver(this, "audio-playback");
+  }
 }
 
 uint32_t

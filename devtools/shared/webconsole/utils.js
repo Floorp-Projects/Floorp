@@ -794,13 +794,14 @@ ConsoleServiceListener.prototype =
  *        - onConsoleAPICall(). This method is invoked with one argument, the
  *        Console API message that comes from the observer service, whenever
  *        a relevant console API call is received.
- * @param string consoleID
- *        Options - The consoleID that this listener should listen to
+ * @param object filteringOptions
+ *        Optional - The filteringOptions that this listener should listen to:
+ *        - addonId: filter console messages based on the addonId.
  */
-function ConsoleAPIListener(window, owner, consoleID) {
+function ConsoleAPIListener(window, owner, {addonId} = {}) {
   this.window = window;
   this.owner = owner;
-  this.consoleID = consoleID;
+  this.addonId = addonId;
 }
 exports.ConsoleAPIListener = ConsoleAPIListener;
 
@@ -825,10 +826,10 @@ ConsoleAPIListener.prototype =
   owner: null,
 
   /**
-   * The consoleID that we listen for. If not null then only messages from this
+   * The addonId that we listen for. If not null then only messages from this
    * console will be returned.
    */
-  consoleID: null,
+  addonId: null,
 
   /**
    * Initialize the window.console API observer.
@@ -896,7 +897,25 @@ ConsoleAPIListener.prototype =
       }
     }
 
-    if (this.consoleID && message.consoleID !== this.consoleID) {
+    if (this.addonId) {
+      // ConsoleAPI.jsm messages contains a consoleID, (and it is currently
+      // used in Addon SDK add-ons), the standard 'console' object
+      // (which is used in regular webpages and in WebExtensions pages)
+      // contains the originAttributes of the source document principal.
+
+      // Filtering based on the originAttributes used by
+      // the Console API object.
+      if (message.originAttributes &&
+          message.originAttributes.addonId == this.addonId) {
+        return true;
+      }
+
+      // Filtering based on the old-style consoleID property used by
+      // the legacy Console JSM module.
+      if (message.consoleID && message.consoleID == `addon/${this.addonId}`) {
+        return true;
+      }
+
       return false;
     }
 

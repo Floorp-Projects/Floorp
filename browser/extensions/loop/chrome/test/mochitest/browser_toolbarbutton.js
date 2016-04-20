@@ -21,7 +21,7 @@ const fxASampleProfile = {
   uid: "abcd1234"
 };
 
-registerCleanupFunction(function*() {
+registerCleanupFunction(function* () {
   MozLoopService.doNotDisturb = false;
   MozLoopServiceInternal.fxAOAuthProfile = null;
   yield MozLoopServiceInternal.clearError("testing");

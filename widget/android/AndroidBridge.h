@@ -32,6 +32,7 @@
 #include "mozilla/Types.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/jni/Utils.h"
+#include "nsIObserver.h"
 
 // Some debug #defines
 // #define DEBUG_ANDROID_EVENTS
@@ -582,16 +583,21 @@ private:
 { 0x0FE2321D, 0xEBD9, 0x467D, \
     { 0xA7, 0x43, 0x03, 0xA6, 0x8D, 0x40, 0x59, 0x9E } }
 
-class nsAndroidBridge final : public nsIAndroidBridge
+class nsAndroidBridge final : public nsIAndroidBridge,
+                              public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANDROIDBRIDGE
+  NS_DECL_NSIOBSERVER
 
   nsAndroidBridge();
 
 private:
   ~nsAndroidBridge();
+
+  void AddObservers();
+  void RemoveObservers();
 
 protected:
 };

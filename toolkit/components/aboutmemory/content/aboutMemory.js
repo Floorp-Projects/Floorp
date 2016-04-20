@@ -35,6 +35,10 @@ const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+ "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+ "resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "nsBinaryStream",
                             () => CC("@mozilla.org/binaryinputstream;1",
@@ -2026,9 +2030,12 @@ function saveReportsToFile()
   } catch(ex) {
     // This will fail on Android, since there is no Save as file picker there.
     // Just save to the default downloads dir if it does.
-    let file = Services.dirsvc.get("DfltDwnld", Ci.nsIFile);
-    file.append(fp.defaultString);
-    fpFinish(file);
+    Downloads.getSystemDownloadsDirectory().then(function(dirPath) {
+      let file = FileUtils.File(dirPath);
+      file.append(fp.defaultString);
+      fpFinish(file);
+    });
+
     return;
   }
   fp.open(fpCallback);

@@ -209,23 +209,27 @@ this.ReaderMode = {
           if (content) {
             let urlIndex = content.toUpperCase().indexOf("URL=");
             if (urlIndex > -1) {
-              let url = content.substring(urlIndex + 4);
+              let baseURI = Services.io.newURI(url, null, null);
+              let newURI = Services.io.newURI(content.substring(urlIndex + 4), null, baseURI);
+              let newURL = newURI.spec;
               let ssm = Services.scriptSecurityManager;
               let flags = ssm.LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
                           ssm.DISALLOW_INHERIT_PRINCIPAL;
               try {
-                ssm.checkLoadURIStrWithPrincipal(doc.nodePrincipal, url, flags);
+                ssm.checkLoadURIStrWithPrincipal(doc.nodePrincipal, newURL, flags);
               } catch (ex) {
                 let errorMsg = "Reader mode disallowed meta refresh (reason: " + ex + ").";
 
                 if (Services.prefs.getBoolPref("reader.errors.includeURLs"))
-                  errorMsg += " Refresh target URI: '" + url + "'.";
+                  errorMsg += " Refresh target URI: '" + newURL + "'.";
                 reject(errorMsg);
                 return;
               }
               // Otherwise, pass an object indicating our new URL:
-              reject({newURL: url});
-              return;
+              if (!baseURI.equalsExceptRef(newURI)) {
+                reject({newURL});
+                return;
+              }
             }
           }
         }
@@ -234,10 +238,10 @@ this.ReaderMode = {
         // Convert these to real URIs to make sure the escaping (or lack
         // thereof) is identical:
         try {
-          responseURL = Services.io.newURI(responseURL, null, null).spec;
+          responseURL = Services.io.newURI(responseURL, null, null).specIgnoringRef;
         } catch (ex) { /* Ignore errors - we'll use what we had before */ }
         try {
-          givenURL = Services.io.newURI(givenURL, null, null).spec;
+          givenURL = Services.io.newURI(givenURL, null, null).specIgnoringRef;
         } catch (ex) { /* Ignore errors - we'll use what we had before */ }
 
         if (responseURL != givenURL) {

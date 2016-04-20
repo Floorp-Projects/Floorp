@@ -274,7 +274,7 @@ class MachCommands(MachCommandBase):
         # Note that that's the version currently compatible with the mozilla
         # eslint plugin.
         success = self.callProcess("eslint",
-                                   [npmPath, "install", "eslint@2.7.0", "-g"])
+                                   [npmPath, "install", "eslint@2.8.0", "-g"])
         if not success:
             return 1
 

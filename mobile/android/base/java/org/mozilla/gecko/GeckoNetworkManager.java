@@ -37,6 +37,22 @@ import android.util.Log;
  */
 
 public class GeckoNetworkManager extends BroadcastReceiver implements NativeEventListener {
+    /*
+     * Keep the below constants in sync with
+     * http://mxr.mozilla.org/mozilla-central/source/netwerk/base/nsINetworkLinkService.idl
+     */
+    private static final String LINK_DATA_UP = "up";
+    private static final String LINK_DATA_DOWN = "down";
+    private static final String LINK_DATA_CHANGED = "changed";
+    private static final String LINK_DATA_UNKNOWN = "unknown";
+
+    private static final String LINK_TYPE_UNKONWN = "unknown";
+    private static final String LINK_TYPE_ETHERNET = "ethernet";
+    private static final String LINK_TYPE_WIFI = "wifi";
+    private static final String LINK_TYPE_WIMAX = "wimax";
+    private static final String LINK_TYPE_2G = "2g";
+    private static final String LINK_TYPE_3G = "3g";
+    private static final String LINK_TYPE_4G = "4g";
     private static final String LOGTAG = "GeckoNetworkManager";
 
     private static GeckoNetworkManager sInstance;
@@ -107,6 +123,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     @Override
     public void onReceive(Context aContext, Intent aIntent) {
         updateConnectionType();
+        updateLinkStatus(aContext);
     }
 
     public void start(final Context context) {
@@ -255,7 +272,27 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkEvent(
                                        newConnectionType.value,
                                        newConnectionType == ConnectionType.WIFI,
-                                       wifiDhcpGatewayAddress()));
+                                       wifiDhcpGatewayAddress(),
+                                       getConnectionSubType()));
+    }
+
+    public void updateLinkStatus(Context context) {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo info = cm.getActiveNetworkInfo();
+
+        final String status;
+        if (info == null) {
+            status = LINK_DATA_UNKNOWN;
+        } else if (!info.isConnected()) {
+            status = LINK_DATA_DOWN;
+        } else {
+            status = LINK_DATA_UP;
+        }
+
+        if (GeckoThread.isRunning()) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(status));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(LINK_DATA_CHANGED));
+        }
     }
 
     public double[] getCurrentInformation() {
@@ -285,40 +322,92 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
         }
     }
 
-    private ConnectionType getConnectionType() {
+    private NetworkInfo getConnectivityManager() {
         final Context appContext = mApplicationContext;
 
         if (null == appContext) {
-            return ConnectionType.NONE;
+          return null;
         }
 
         ConnectivityManager cm = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
-            Log.e(LOGTAG, "Connectivity service does not exist");
-            return ConnectionType.NONE;
+          Log.e(LOGTAG, "Connectivity service does not exist");
+          return null;
         }
 
-        NetworkInfo ni = null;
         try {
-            ni = cm.getActiveNetworkInfo();
-        } catch (SecurityException se) { /* if we don't have the permission, fall through to null check */ }
+            return cm.getActiveNetworkInfo();
+        } catch (SecurityException se) {
+            return null;
+        }
+    }
+
+    private ConnectionType getConnectionType() {
+        NetworkInfo ni = getConnectivityManager();
+
         if (ni == null) {
             return ConnectionType.NONE;
         }
 
         switch (ni.getType()) {
-        case ConnectivityManager.TYPE_BLUETOOTH:
-            return ConnectionType.BLUETOOTH;
-        case ConnectivityManager.TYPE_ETHERNET:
-            return ConnectionType.ETHERNET;
-        case ConnectivityManager.TYPE_MOBILE:
-        case ConnectivityManager.TYPE_WIMAX:
-            return ConnectionType.CELLULAR;
-        case ConnectivityManager.TYPE_WIFI:
-            return ConnectionType.WIFI;
-        default:
-            Log.w(LOGTAG, "Ignoring the current network type.");
-            return ConnectionType.OTHER;
+            case ConnectivityManager.TYPE_BLUETOOTH:
+                return ConnectionType.BLUETOOTH;
+            case ConnectivityManager.TYPE_ETHERNET:
+                return ConnectionType.ETHERNET;
+            case ConnectivityManager.TYPE_MOBILE:
+            case ConnectivityManager.TYPE_WIMAX:
+                return ConnectionType.CELLULAR;
+            case ConnectivityManager.TYPE_WIFI:
+                return ConnectionType.WIFI;
+            default:
+                Log.w(LOGTAG, "Ignoring the current network type.");
+                return ConnectionType.OTHER;
+        }
+    }
+
+    private String getConnectionSubType() {
+        NetworkInfo ni = getConnectivityManager();
+
+        if (ni == null) {
+            return LINK_TYPE_UNKONWN;
+        }
+
+        switch (ni.getType()) {
+            case ConnectivityManager.TYPE_ETHERNET:
+                return LINK_TYPE_ETHERNET;
+            case ConnectivityManager.TYPE_MOBILE:
+                switch (ni.getSubtype()) {
+                    case TelephonyManager.NETWORK_TYPE_GPRS:
+                    case TelephonyManager.NETWORK_TYPE_EDGE:
+                    case TelephonyManager.NETWORK_TYPE_CDMA:
+                    case TelephonyManager.NETWORK_TYPE_1xRTT:
+                    case TelephonyManager.NETWORK_TYPE_IDEN:
+                        return LINK_TYPE_2G;
+                    case TelephonyManager.NETWORK_TYPE_UMTS:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
+                    case TelephonyManager.NETWORK_TYPE_HSDPA:
+                    case TelephonyManager.NETWORK_TYPE_HSUPA:
+                    case TelephonyManager.NETWORK_TYPE_HSPA:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                    case TelephonyManager.NETWORK_TYPE_EHRPD:
+                    case TelephonyManager.NETWORK_TYPE_HSPAP:
+                        return LINK_TYPE_3G;
+                    case TelephonyManager.NETWORK_TYPE_LTE:
+                        return LINK_TYPE_4G;
+                    default:
+                        return LINK_TYPE_2G;
+                    /* We are not returning LINK_TYPE_UNKONOWN because we treat unknown
+                     * as "no connection" in code elsewhere, which is not the case.
+                     * TODO: Network change notification issue causes a caching problem (Bug 1236130).
+                     */
+                }
+            case ConnectivityManager.TYPE_WIMAX:
+                return LINK_TYPE_WIMAX;
+            case ConnectivityManager.TYPE_WIFI:
+                return LINK_TYPE_WIFI;
+            default:
+                return LINK_TYPE_UNKONWN;
         }
     }
 

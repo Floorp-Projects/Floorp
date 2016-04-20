@@ -109,6 +109,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
       "localVideoDimensions",
       "mediaConnected",
       "receivingScreenShare",
+      "remoteAudioEnabled",
       "remotePeerDisconnected",
       "remoteSrcMediaElement",
       "remoteVideoDimensions",
@@ -130,6 +131,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
         roomState: ROOM_STATES.INIT,
         audioMuted: false,
         videoMuted: false,
+        remoteAudioEnabled: false,
         remoteVideoEnabled: false,
         failureReason: undefined,
         // Whether or not Firefox can handle this room in the conversation
@@ -808,6 +810,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
     mediaStreamCreated: function(actionData) {
       if (actionData.isLocal) {
         this.setStoreState({
+          localAudioEnabled: actionData.hasAudio,
           localVideoEnabled: actionData.hasVideo,
           localSrcMediaElement: actionData.srcMediaElement
         });
@@ -815,6 +818,7 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
       }
 
       this.setStoreState({
+        remoteAudioEnabled: actionData.hasAudio,
         remoteVideoEnabled: actionData.hasVideo,
         remoteSrcMediaElement: actionData.srcMediaElement
       });
@@ -1099,7 +1103,9 @@ loop.store.ActiveRoomStore = (function(mozL10n) {
      * @param {sharedActions.LeaveRoom} actionData
      */
     leaveRoom: function(actionData) {
-      this._leaveRoom(ROOM_STATES.ENDED, false, actionData && actionData.windowStayingOpen);
+      this._leaveRoom(ROOM_STATES.ENDED,
+                      false,
+                      actionData && actionData.windowStayingOpen);
     },
 
     /**

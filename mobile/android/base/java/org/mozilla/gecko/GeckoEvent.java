@@ -485,11 +485,12 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createNetworkEvent(int connectionType, boolean isWifi, int DHCPGateway) {
+    public static GeckoEvent createNetworkEvent(int connectionType, boolean isWifi, int DHCPGateway, String status) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.NETWORK_CHANGED);
         event.mConnectionType = connectionType;
         event.mIsWifi = isWifi;
         event.mDHCPGateway = DHCPGateway;
+        event.mCharacters = status;
         return event;
     }
 

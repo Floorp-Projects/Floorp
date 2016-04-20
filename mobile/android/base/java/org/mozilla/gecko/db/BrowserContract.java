@@ -106,6 +106,16 @@ public class BrowserContract {
         public static final String VISITS = "visits";
     }
 
+    @RobocopTarget
+    public interface VisitsColumns {
+        public static final String HISTORY_GUID = "history_guid";
+        public static final String VISIT_TYPE = "visit_type";
+        public static final String DATE_VISITED = "date";
+        // Used to distinguish between visits that were generated locally vs those that came in from Sync.
+        // Since we don't track "origin clientID" for visits, this is the best we can do for now.
+        public static final String IS_LOCAL = "is_local";
+    }
+
     public interface DeletedColumns {
         public static final String ID = "id";
         public static final String GUID = "guid";
@@ -208,6 +218,15 @@ public class BrowserContract {
         public static final Uri CONTENT_OLD_URI = Uri.withAppendedPath(AUTHORITY_URI, "history/old");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/browser-history";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/browser-history";
+    }
+
+    @RobocopTarget
+    public static final class Visits implements CommonColumns, VisitsColumns {
+        private Visits() {}
+
+        public static final String TABLE_NAME = "visits";
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "visits");
     }
 
     // Combined bookmarks and history

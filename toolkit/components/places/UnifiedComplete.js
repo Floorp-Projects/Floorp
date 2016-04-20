@@ -1427,7 +1427,7 @@ Search.prototype = {
       match.style += " heuristic";
     }
 
-    match.icon = match.icon || PlacesUtils.favicons.defaultFavicon.spec;
+    match.icon = match.icon || "";
     match.finalCompleteValue = match.finalCompleteValue || "";
 
     this._result.insertMatchAt(this._getInsertIndexForMatch(match),
