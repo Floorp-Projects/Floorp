@@ -155,6 +155,12 @@ GLContextCGL::IsDoubleBuffered() const
 }
 
 bool
+GLContextCGL::SupportsRobustness() const
+{
+    return false;
+}
+
+bool
 GLContextCGL::SwapBuffers()
 {
   PROFILER_LABEL("GLContextCGL", "SwapBuffers",
@@ -356,16 +362,20 @@ static RefPtr<GLContext> gGlobalContext;
 GLContext*
 GLContextProviderCGL::GetGlobalContext()
 {
-    static bool triedToCreateContext = false;
-    if (!triedToCreateContext) {
-        triedToCreateContext = true;
+    if (!sCGLLibrary.EnsureInitialized()) {
+        return nullptr;
+    }
 
-        MOZ_RELEASE_ASSERT(!gGlobalContext);
-        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
-        gGlobalContext = temp;
-
-        if (!gGlobalContext) {
+    if (!gGlobalContext) {
+        // There are bugs in some older drivers with pbuffers less
+        // than 16x16 in size; also 16x16 is POT so that we can do
+        // a FBO with it on older video cards.  A FBO context for
+        // sharing is preferred since it has no associated target.
+        gGlobalContext = CreateOffscreenFBOContext(CreateContextFlags::NONE);
+        if (!gGlobalContext || !static_cast<GLContextCGL*>(gGlobalContext.get())->Init()) {
             NS_WARNING("Couldn't init gGlobalContext.");
+            gGlobalContext = nullptr;
+            return nullptr;
         }
     }
 
