@@ -462,7 +462,7 @@ this.DownloadsCommon = {
       if (!shouldLaunch) {
         return;
       }
-  
+
       // Actually open the file.
       try {
         if (aMimeInfo && aMimeInfo.preferredAction == aMimeInfo.useHelperApp) {
@@ -470,7 +470,7 @@ this.DownloadsCommon = {
           return;
         }
       } catch (ex) { }
-  
+
       // If either we don't have the mime info, or the preferred action failed,
       // attempt to launch the file directly.
       try {
@@ -521,49 +521,83 @@ this.DownloadsCommon = {
    * Displays an alert message box which asks the user if they want to
    * unblock the downloaded file or not.
    *
-   * @param aVerdict
-   *        The detailed reason why the download was blocked, according to the
-   *        "Downloads.Error.BLOCK_VERDICT_" constants. If an unknown reason is
-   *        specified, "Downloads.Error.BLOCK_VERDICT_MALWARE" is assumed.
-   * @param aOwnerWindow
-   *        The window with which this action is associated.
+   * @param options
+   *        An object with the following properties:
+   *        {
+   *          verdict:
+   *            The detailed reason why the download was blocked, according to
+   *            the "Downloads.Error.BLOCK_VERDICT_" constants. If an unknown
+   *            reason is specified, "Downloads.Error.BLOCK_VERDICT_MALWARE" is
+   *            assumed.
+   *          window:
+   *            The window with which this action is associated.
+   *          dialogType:
+   *            String that determines which actions are available:
+   *             - "unblock" to offer just "unblock".
+   *             - "chooseUnblock" to offer "unblock" and "confirmBlock".
+   *             - "chooseOpen" to offer "open" and "confirmBlock".
+   *        }
    *
    * @return {Promise}
    * @resolves String representing the action that should be executed:
+   *            - "open" to allow the download and open the file.
    *            - "unblock" to allow the download without opening the file.
    *            - "confirmBlock" to delete the blocked data permanently.
    *            - "cancel" to do nothing and cancel the operation.
    */
-  confirmUnblockDownload: Task.async(function* (aVerdict, aOwnerWindow) {
+  confirmUnblockDownload: Task.async(function* ({ verdict, window,
+                                                  dialogType }) {
     let s = DownloadsCommon.strings;
-    let title = s.unblockHeader;
-    let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                      (Ci.nsIPrompt.BUTTON_TITLE_CANCEL * Ci.nsIPrompt.BUTTON_POS_1);
-    let type = "";
-    let message = s.unblockTip;
-    let unblockButton = s.unblockButtonContinue;
-    let confirmBlockButton = s.unblockButtonCancel;
 
-    switch (aVerdict) {
-      case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
-        type = s.unblockTypeUncommon;
-        buttonFlags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
-                       Ci.nsIPrompt.BUTTON_POS_0_DEFAULT;
-        break;
-      case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
-        type = s.unblockTypePotentiallyUnwanted;
-        buttonFlags += (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
-                       Ci.nsIPrompt.BUTTON_POS_2_DEFAULT;
-        break;
-      default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
-        type = s.unblockTypeMalware;
+    // All the dialogs have an action button and a cancel button, while only
+    // some of them have an additonal button to remove the file. The cancel
+    // button must always be the one at BUTTON_POS_1 because this is the value
+    // returned by confirmEx when using ESC or closing the dialog (bug 345067).
+    let title = s.unblockHeaderUnblock;
+    let firstButtonText = s.unblockButtonUnblock;
+    let firstButtonAction = "unblock";
+    let buttonFlags =
+        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+        (Ci.nsIPrompt.BUTTON_TITLE_CANCEL * Ci.nsIPrompt.BUTTON_POS_1);
+
+    switch (dialogType) {
+      case "unblock":
+        // Use only the unblock action. The default is to cancel.
         buttonFlags += Ci.nsIPrompt.BUTTON_POS_1_DEFAULT;
         break;
+      case "chooseUnblock":
+        // Use the unblock and remove file actions. The default is remove file.
+        buttonFlags +=
+          (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
+          Ci.nsIPrompt.BUTTON_POS_2_DEFAULT;
+        break;
+      case "chooseOpen":
+        // Use the unblock and open file actions. The default is open file.
+        title = s.unblockHeaderOpen;
+        firstButtonText = s.unblockButtonOpen;
+        firstButtonAction = "open";
+        buttonFlags +=
+          (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2) +
+          Ci.nsIPrompt.BUTTON_POS_0_DEFAULT;
+        break;
+      default:
+        Cu.reportError("Unexpected dialog type: " + dialogType);
+        return "cancel";
     }
 
-    if (type) {
-      message = type + "\n\n" + message;
+    let message;
+    switch (verdict) {
+      case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+        message = s.unblockTypeUncommon;
+        break;
+      case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+        message = s.unblockTypePotentiallyUnwanted;
+        break;
+      default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+        message = s.unblockTypeMalware;
+        break;
     }
+    message += "\n\n" + s.unblockTip;
 
     Services.ww.registerNotification(function onOpen(subj, topic) {
       if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
@@ -584,12 +618,10 @@ this.DownloadsCommon = {
       }
     });
 
-    // The ordering of the ok/cancel buttons is used this way to allow "cancel"
-    // to have the same result as hitting the ESC or Close button (see bug 345067).
-    let rv = Services.prompt.confirmEx(aOwnerWindow, title, message, buttonFlags,
-                                       unblockButton, null, confirmBlockButton,
-                                       null, {});
-    return ["unblock", "cancel", "confirmBlock"][rv];
+    let rv = Services.prompt.confirmEx(window, title, message, buttonFlags,
+                                       firstButtonText, null,
+                                       s.unblockButtonConfirmBlock, null, {});
+    return [firstButtonAction, "cancel", "confirmBlock"][rv];
   }),
 };
 
