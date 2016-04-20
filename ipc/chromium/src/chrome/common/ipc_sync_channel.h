@@ -97,7 +97,7 @@ class SyncChannel : public ChannelProxy,
    virtual void Clear();
 
     // Called on the IPC thread.
-    virtual void OnMessageReceived(const Message& msg);
+    virtual void OnMessageReceived(Message&& msg);
     virtual void OnChannelError();
     virtual void OnChannelOpened();
     virtual void OnChannelClosed();

@@ -32,6 +32,11 @@
 //
 class Pickle {
  public:
+  enum Ownership {
+    BORROWS,
+    OWNS,
+  };
+
   ~Pickle();
 
   // Initialize a Pickle object using the default header size.
@@ -42,11 +47,13 @@ class Pickle {
   // will be rounded up to ensure that the header size is 32bit-aligned.
   explicit Pickle(int header_size);
 
-  // Initializes a Pickle from a const block of data.  The data is not copied;
-  // instead the data is merely referenced by this Pickle.  Only const methods
-  // should be used on the Pickle when initialized this way.  The header
-  // padding size is deduced from the data length.
-  Pickle(const char* data, int data_len);
+  // Initializes a Pickle from a const block of data. If ownership == BORROWS,
+  // the data is not copied; instead the data is merely referenced by this
+  // Pickle. Only const methods should be used on the Pickle when initialized
+  // this way. The header padding size is deduced from the data length.  If
+  // ownership == OWNS, then again no copying takes place. However, the buffer
+  // is writable and will be freed when this Pickle is destroyed.
+  Pickle(const char* data, int data_len, Ownership ownership = BORROWS);
 
   // Initializes a Pickle as a deep copy of another Pickle.
   Pickle(const Pickle& other);
@@ -282,6 +289,12 @@ class Pickle {
   static const char* FindNext(uint32_t header_size,
                               const char* range_start,
                               const char* range_end);
+
+  // If the given range contains at least header_size bytes, return the length
+  // of the pickled data including the header.
+  static uint32_t GetLength(uint32_t header_size,
+                            const char* range_start,
+                            const char* range_end);
 
   // The allocation granularity of the payload.
   static const int kPayloadUnit;

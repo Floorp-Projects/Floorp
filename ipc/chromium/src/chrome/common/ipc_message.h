@@ -70,10 +70,12 @@ class Message : public Pickle {
           MessageCompression compression = COMPRESSION_NONE,
           const char* const name="???");
 
-  // Initializes a message from a const block of data.  The data is not copied;
-  // instead the data is merely referenced by this message.  Only const methods
-  // should be used on the message when initialized this way.
-  Message(const char* data, int data_len);
+  // Initializes a message from a const block of data. If ownership == BORROWS,
+  // the data is not copied; instead the data is merely referenced by this
+  // message. Only const methods should be used on the message when initialized
+  // this way. If ownership == OWNS, then again no copying takes place. However,
+  // the buffer is writable and will be freed when the message is destroyed.
+  Message(const char* data, int data_len, Ownership ownership = BORROWS);
 
   Message(const Message& other);
   Message(Message&& other);
@@ -240,6 +242,12 @@ class Message : public Pickle {
   // if the entire message is not found in the given data range.
   static const char* FindNext(const char* range_start, const char* range_end) {
     return Pickle::FindNext(sizeof(Header), range_start, range_end);
+  }
+
+  // If the given range contains at least header_size bytes, return the length
+  // of the message including the header.
+  static uint32_t GetLength(const char* range_start, const char* range_end) {
+    return Pickle::GetLength(sizeof(Header), range_start, range_end);
   }
 
 #if defined(OS_POSIX)
