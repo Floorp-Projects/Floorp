@@ -15,60 +15,11 @@ from mozbuild.configure import (
     ConfigureError,
     ConfigureSandbox,
 )
-from mozbuild.util import (
-    exec_,
-    ReadOnlyNamespace,
-)
+from mozbuild.util import exec_
 from mozpack import path as mozpath
 
 from buildconfig import topsrcdir
-from which import WhichError
-
-
-class ConfigureTestVFS(object):
-    def __init__(self, paths):
-        self._paths = set(mozpath.abspath(p) for p in paths)
-
-    def exists(self, path):
-        return mozpath.abspath(path) in self._paths
-
-    def isfile(self, path):
-        return mozpath.abspath(path) in self._paths
-
-
-class ConfigureTestSandbox(ConfigureSandbox):
-    def __init__(self, paths, config, environ, *args, **kwargs):
-        self._search_path = environ.get('PATH', '').split(os.pathsep)
-
-        vfs = ConfigureTestVFS(paths)
-
-        self.OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
-            k: v if k not in ('exists', 'isfile')
-            else getattr(vfs, k)
-            for k, v in ConfigureSandbox.OS.path.__dict__.iteritems()
-        }))
-
-        super(ConfigureTestSandbox, self).__init__(config, environ, *args,
-                                                   **kwargs)
-
-    def _get_one_import(self, what):
-        if what == 'which.which':
-            return self.which
-
-        if what == 'which':
-            return ReadOnlyNamespace(
-                which=self.which,
-                WhichError=WhichError,
-            )
-
-        return super(ConfigureTestSandbox, self)._get_one_import(what)
-
-    def which(self, command):
-        for parent in self._search_path:
-            path = mozpath.join(parent, command)
-            if self.OS.path.exists(path):
-                return path
-        raise WhichError()
+from common import ConfigureTestSandbox
 
 
 class TestChecksConfigure(unittest.TestCase):
