@@ -27,15 +27,32 @@ var AboutReaderListener = {
     addEventListener("DOMContentLoaded", this, false);
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
-    addMessageListener("Reader:ParseDocument", this);
+    addMessageListener("Reader:ToggleReaderMode", this);
     addMessageListener("Reader:PushState", this);
   },
 
   receiveMessage: function(message) {
     switch (message.name) {
-      case "Reader:ParseDocument":
-        this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
-        content.document.location = "about:reader?url=" + encodeURIComponent(message.data.url);
+      case "Reader:ToggleReaderMode":
+        let url = content.document.location.href;
+        if (!this.isAboutReader) {
+          this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
+          content.document.location = "about:reader?url=" + encodeURIComponent(url);
+        } else {
+          let originalURL = ReaderMode.getOriginalUrl(url);
+          let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+          let sh = webNav.sessionHistory;
+          if (webNav.canGoBack) {
+            let prevEntry = sh.getEntryAtIndex(sh.index - 1, false);
+            let prevURL = prevEntry.URI.spec;
+            if (prevURL && (prevURL == originalURL || !originalURL)) {
+              webNav.goBack();
+              break;
+            }
+          }
+
+          content.document.location = originalURL;
+        }
         break;
 
       case "Reader:PushState":
@@ -110,4 +127,3 @@ ExtensionContent.init(this);
 addEventListener("unload", () => {
   ExtensionContent.uninit(this);
 });
-
