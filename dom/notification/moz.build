@@ -36,4 +36,5 @@ LOCAL_INCLUDES += [
     '/dom/workers',
 ]
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
