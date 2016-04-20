@@ -12,7 +12,6 @@
 
 #include "mozilla/Logging.h"
 
-#include "nsExpirationTracker.h"
 #include "nsITimer.h"
 
 #include "gfxGlyphExtents.h"

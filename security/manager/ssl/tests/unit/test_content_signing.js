@@ -11,6 +11,9 @@ const PREF_SIGNATURE_ROOT = "security.content.signature.root_hash";
 
 const TEST_DATA_DIR = "test_content_signing/";
 
+const ONECRL_NAME = "oneCRL-signer.mozilla.org";
+const ABOUT_NEWTAB_NAME = "remote-newtab-signer.mozilla.org";
+
 function getSignatureVerifier() {
   return Cc["@mozilla.org/security/contentsignatureverifier;1"]
            .createInstance(Ci.nsIContentSignatureVerifier);
@@ -55,23 +58,24 @@ function run_test() {
   let oneCRLRSAKeyChain = loadChain(TEST_DATA_DIR + "content_signing",
                                     ["onecrl_RSA_ee", "int", "root"]);
 
+  let noSANChain = loadChain(TEST_DATA_DIR + "content_signing",
+                             ["onecrl_no_SAN_ee", "int", "root"]);
+
   // Check good signatures from good certificates with the correct SAN
   let chain1 = oneCRLChain.join("\n");
   let verifier = getSignatureVerifier();
-  ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                     verifier.ONECRL),
+  ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME),
      "A OneCRL signature should verify with the OneCRL chain");
   let chain2 = remoteNewTabChain.join("\n");
   verifier = getSignatureVerifier();
   ok(verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
-                                     verifier.ABOUT_NEWTAB),
+                                     ABOUT_NEWTAB_NAME),
      "A newtab signature should verify with the newtab chain");
 
   // Check a bad signature when a good chain is provided
   chain1 = oneCRLChain.join("\n");
   verifier = getSignatureVerifier();
-  ok(!verifier.verifyContentSignature(DATA, BAD_SIGNATURE, chain1,
-                                      verifier.ONECRL),
+  ok(!verifier.verifyContentSignature(DATA, BAD_SIGNATURE, chain1, ONECRL_NAME),
      "A bad signature should not verify");
 
   // Check a good signature from cert with good SAN but a different key than the
@@ -79,7 +83,7 @@ function run_test() {
   let badKeyChain = oneCRLBadKeyChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, badKeyChain,
-                                      verifier.ONECRL),
+                                      ONECRL_NAME),
      "A signature should not verify if the signing key is wrong");
 
   // Check a good signature from cert with good SAN but a different key than the
@@ -87,35 +91,59 @@ function run_test() {
   let rsaKeyChain = oneCRLBadKeyChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, rsaKeyChain,
-                                      verifier.ONECRL),
+                                      ONECRL_NAME),
      "A signature should not verify if the signing key is wrong (RSA)");
 
   // Check a good signature from cert with good SAN but with chain missing root
   let missingRoot = [oneCRLChain[0], oneCRLChain[1]].join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingRoot,
-                                      verifier.ONECRL),
+                                      ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing root)");
 
   // Check a good signature from cert with good SAN but with no path to root
   let missingInt = [oneCRLChain[0], oneCRLChain[2]].join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, missingInt,
-                                      verifier.ONECRL),
+                                      ONECRL_NAME),
      "A signature should not verify if the chain is incomplete (missing int)");
 
-  // Check good signatures from good certificates with incorrect SANs
+  // Check good signatures from good certificates with the wrong SANs
   chain1 = oneCRLChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                      verifier.ABOUT_NEWTAB),
-     "A OneCRL signature should not verify if the signer has the newtab SAN");
+                                      ABOUT_NEWTAB_NAME),
+     "A OneCRL signature should not verify if we require the newtab SAN");
 
   chain2 = remoteNewTabChain.join("\n");
   verifier = getSignatureVerifier();
   ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain2,
-                                      verifier.ONECRL),
-     "A newtab signature should not verify if the signer has the OneCRL SAN");
+                                      ONECRL_NAME),
+     "A newtab signature should not verify if we require the OneCRL SAN");
+
+  // Check good signatures with good chains with some other invalid names
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ""),
+     "A signature should not verify if the SANs do not match an empty name");
+
+  let relatedName = "subdomain." + ONECRL_NAME;
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
+                                      relatedName),
+     "A signature should not verify if the SANs do not match a related name");
+
+  let randomName = "\xb1\x9bU\x1c\xae\xaa3\x19H\xdb\xed\xa1\xa1\xe0\x81\xfb" +
+                   "\xb2\x8f\x1cP\xe5\x8b\x9c\xc2s\xd3\x1f\x8e\xbbN";
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, randomName),
+     "A signature should not verify if the SANs do not match a random name");
+
+  // check good signatures with chains that have strange or missing SANs
+  chain1 = noSANChain.join("\n");
+  verifier = getSignatureVerifier();
+  ok(!verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
+                                      ONECRL_NAME),
+     "A signature should not verify if the SANs do not match a supplied name");
 
   // Check malformed signature data
   chain1 = oneCRLChain.join("\n");
@@ -139,8 +167,7 @@ function run_test() {
   for (let badSig of bad_signatures) {
     throws(() => {
       verifier = getSignatureVerifier();
-      verifier.verifyContentSignature(DATA, badSig, chain1,
-                                      verifier.ONECRL);
+      verifier.verifyContentSignature(DATA, badSig, chain1, ONECRL_NAME);
     }, /NS_ERROR/, `Bad or malformed signature "${badSig}" should be rejected`);
   }
 
@@ -175,7 +202,7 @@ function run_test() {
     throws(() => {
       verifier = getSignatureVerifier();
       verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, badChain,
-                                      verifier.ONECRL);
+                                      ONECRL_NAME);
     }, /NS_ERROR/, `Bad chain data starting "${badChain.substring(0, 80)}" ` +
                    "should be rejected");
   }
@@ -184,14 +211,14 @@ function run_test() {
   // combination is provided
   chain1 = oneCRLChain.join("\n");
   verifier = getSignatureVerifier();
-  verifier.createContext("", GOOD_SIGNATURE, chain1, verifier.ONECRL);
+  verifier.createContext("", GOOD_SIGNATURE, chain1, ONECRL_NAME);
   verifier.update(DATA);
   ok(verifier.end(),
      "A good signature should verify using the stream interface");
 
   // Check that the streaming interface works with multiple update calls
   verifier = getSignatureVerifier();
-  verifier.createContext("", GOOD_SIGNATURE, chain1, verifier.ONECRL);
+  verifier.createContext("", GOOD_SIGNATURE, chain1, ONECRL_NAME);
   for (let c of DATA) {
     verifier.update(c);
   }
@@ -203,7 +230,7 @@ function run_test() {
   verifier = getSignatureVerifier();
   let start = DATA.substring(0, 5);
   let rest = DATA.substring(start.length);
-  verifier.createContext(start, GOOD_SIGNATURE, chain1, verifier.ONECRL);
+  verifier.createContext(start, GOOD_SIGNATURE, chain1, ONECRL_NAME);
   for (let c of rest) {
     verifier.update(c);
   }
@@ -212,23 +239,22 @@ function run_test() {
 
   // Check that a bad chain / data combination fails
   verifier = getSignatureVerifier();
-  verifier.createContext("", GOOD_SIGNATURE, chain1, verifier.ONECRL);
+  verifier.createContext("", GOOD_SIGNATURE, chain1, ONECRL_NAME);
   ok(!verifier.end(),
      "A bad signature should fail using the stream interface");
 
   // Check that re-creating a context throws ...
   verifier = getSignatureVerifier();
-  verifier.createContext("", GOOD_SIGNATURE, chain1, verifier.ONECRL);
+  verifier.createContext("", GOOD_SIGNATURE, chain1, ONECRL_NAME);
 
   // ... firstly, creating a context explicitly
   throws(() => {
-    verifier.createContext(DATA, GOOD_SIGNATURE, chain1, verifier.ONECRL);
+    verifier.createContext(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME);
   }, /NS_ERROR/, "Ensure a verifier cannot be re-used with createContext");
 
   // ... secondly, by calling verifyContentSignature
   throws(() => {
-    verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1,
-                                    verifier.ONECRL);
+    verifier.verifyContentSignature(DATA, GOOD_SIGNATURE, chain1, ONECRL_NAME);
   }, /NS_ERROR/, "Ensure a verifier cannot be re-used with verifyContentSignature");
 
   run_next_test();

@@ -49,13 +49,6 @@
 #include "mozilla/layers/GrallocTextureClient.h"
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "gfxReusableImageSurfaceWrapper.h"
-#else
-#  include "gfxReusableSharedImageSurfaceWrapper.h"
-#  include "gfxSharedImageSurface.h"
-#endif
-
 #if 0
 #define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
 #else

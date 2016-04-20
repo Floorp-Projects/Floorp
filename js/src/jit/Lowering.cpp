@@ -2362,6 +2362,17 @@ LIRGenerator::visitUnarySharedStub(MUnarySharedStub* ins)
 }
 
 void
+LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
+{
+    MOZ_ASSERT(ins->type() == MIRType_Value);
+
+    LNullarySharedStub* lir = new(alloc()) LNullarySharedStub();
+
+    defineSharedStubReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitLambda(MLambda* ins)
 {
     if (ins->info().singletonType || ins->info().useSingletonForClone) {

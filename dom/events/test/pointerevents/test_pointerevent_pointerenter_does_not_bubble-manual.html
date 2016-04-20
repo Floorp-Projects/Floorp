@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1000870</title>
+    <meta name="author" content="Maksim Lebedev" />
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="mochitest_support_external.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      function startTest() {
+        var iframe = document.getElementById("testFrame");
+        iframe.src = "pointerevent_pointerenter_does_not_bubble-manual.html";
+      }
+      function executeTest(int_win) {
+        sendMouseEvent(int_win, "target0", "mousemove");
+        sendMouseEvent(int_win, "log",     "mousemove");
+      }
+    </script>
+  </head>
+  <body>
+    <iframe id="testFrame" height="800" width="1000"></iframe>
+  </body>
+</html>

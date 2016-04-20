@@ -9,8 +9,10 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 ok(MediaRecorder.isTypeSupported('video/webm'), 'Should support video/webm');
-ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8, vorbis"'), 'Should support video/webm + vp8/vorbis');
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp8, vorbis"'), 'Should not support video/webm + vp8/vorbis');
 ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp9, vorbis"'), 'Should not support video/webm + vp9/vorbis');
+ok(MediaRecorder.isTypeSupported('video/webm; codecs="vp8, opus"'), 'Should support video/webm + vp8/opus');
+ok(!MediaRecorder.isTypeSupported('video/webm; codecs="vp9, opus"'), 'Should not support video/webm + vp9/opus');
 </script>
 </head>
 </html>

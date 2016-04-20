@@ -201,8 +201,6 @@ nsLayoutStatics::Initialize()
   StaticPresData::Init();
   nsCSSRendering::Init();
 
-  nsTextFrameTextRunCache::Init();
-
   rv = nsHTMLDNSPrefetch::Initialize();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize HTML DNS prefetch");
@@ -346,7 +344,6 @@ nsLayoutStatics::Shutdown()
   IMEStateManager::Shutdown();
   nsCSSParser::Shutdown();
   nsCSSRuleProcessor::Shutdown();
-  nsTextFrameTextRunCache::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
   StaticPresData::Shutdown();

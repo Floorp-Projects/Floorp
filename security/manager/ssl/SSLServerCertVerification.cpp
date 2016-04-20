@@ -348,7 +348,8 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
 }
 
 SECStatus
-DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
+DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
+                            const char* hostName,
                             PRTime now, PRErrorCode defaultErrorCodeToReport,
                             /*out*/ uint32_t& collectedErrors,
                             /*out*/ PRErrorCode& errorCodeTrust,
@@ -378,7 +379,8 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
       errorCodeTrust = defaultErrorCodeToReport;
 
-      SECCertTimeValidity validity = CERT_CheckCertValidTimes(cert, now, false);
+      SECCertTimeValidity validity = CERT_CheckCertValidTimes(cert.get(), now,
+                                                              false);
       if (validity == secCertTimeUndetermined) {
         // This only happens if cert is null. CERT_CheckCertValidTimes will
         // have set the error code to SEC_ERROR_INVALID_ARGS. We should really
@@ -638,7 +640,7 @@ CertErrorRunnable*
 CreateCertErrorRunnable(CertVerifier& certVerifier,
                         PRErrorCode defaultErrorCodeToReport,
                         nsNSSSocketInfo* infoObject,
-                        CERTCertificate* cert,
+                        const UniqueCERTCertificate& cert,
                         const void* fdForLogging,
                         uint32_t providerFlags,
                         PRTime now)
@@ -667,7 +669,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
     return nullptr;
   }
 
-  RefPtr<nsNSSCertificate> nssCert(nsNSSCertificate::Create(cert));
+  RefPtr<nsNSSCertificate> nssCert(nsNSSCertificate::Create(cert.get()));
   if (!nssCert) {
     NS_ERROR("nsNSSCertificate::Create failed");
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
@@ -731,7 +733,7 @@ public:
   static SECStatus Dispatch(const RefPtr<SharedCertVerifier>& certVerifier,
                             const void* fdForLogging,
                             nsNSSSocketInfo* infoObject,
-                            CERTCertificate* serverCert,
+                            const UniqueCERTCertificate& serverCert,
                             ScopedCERTCertList& peerCertChain,
                             SECItem* stapledOCSPResponse,
                             uint32_t providerFlags,
@@ -744,7 +746,7 @@ private:
   SSLServerCertVerificationJob(const RefPtr<SharedCertVerifier>& certVerifier,
                                const void* fdForLogging,
                                nsNSSSocketInfo* infoObject,
-                               CERTCertificate* cert,
+                               const UniqueCERTCertificate& cert,
                                CERTCertList* peerCertChain,
                                SECItem* stapledOCSPResponse,
                                uint32_t providerFlags,
@@ -753,7 +755,7 @@ private:
   const RefPtr<SharedCertVerifier> mCertVerifier;
   const void* const mFdForLogging;
   const RefPtr<nsNSSSocketInfo> mInfoObject;
-  const ScopedCERTCertificate mCert;
+  const UniqueCERTCertificate mCert;
   ScopedCERTCertList mPeerCertChain;
   const uint32_t mProviderFlags;
   const Time mTime;
@@ -764,13 +766,13 @@ private:
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
-    nsNSSSocketInfo* infoObject, CERTCertificate* cert,
+    nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& cert,
     CERTCertList* peerCertChain, SECItem* stapledOCSPResponse,
     uint32_t providerFlags, Time time, PRTime prtime)
   : mCertVerifier(certVerifier)
   , mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
-  , mCert(CERT_DupCertificate(cert))
+  , mCert(CERT_DupCertificate(cert.get()))
   , mPeerCertChain(peerCertChain)
   , mProviderFlags(providerFlags)
   , mTime(time)
@@ -793,7 +795,7 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
 // in order to support SPDY's cross-origin connection pooling.
 static SECStatus
 BlockServerCertChangeForSpdy(nsNSSSocketInfo* infoObject,
-                             CERTCertificate* serverCert)
+                             const UniqueCERTCertificate& serverCert)
 {
   // Get the existing cert. If there isn't one, then there is
   // no cert change to worry about.
@@ -833,9 +835,9 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo* infoObject,
   }
 
   // Check to see if the cert has actually changed
-  ScopedCERTCertificate c(cert->GetCert());
+  UniqueCERTCertificate c(cert->GetCert());
   NS_ASSERTION(c, "very bad and hopefully impossible state");
-  bool sameCert = CERT_CompareCerts(c, serverCert);
+  bool sameCert = CERT_CompareCerts(c.get(), serverCert.get());
   if (sameCert) {
     return SECSuccess;
   }
@@ -1215,7 +1217,7 @@ GatherSuccessfulValidationTelemetry(const ScopedCERTCertList& certList)
 SECStatus
 AuthCertificate(CertVerifier& certVerifier,
                 nsNSSSocketInfo* infoObject,
-                CERTCertificate* cert,
+                const UniqueCERTCertificate& cert,
                 ScopedCERTCertList& peerCertChain,
                 SECItem* stapledOCSPResponse,
                 uint32_t providerFlags,
@@ -1293,10 +1295,10 @@ AuthCertificate(CertVerifier& certVerifier,
 
   if (!status || !status->HasServerCert()) {
     if( rv == SECSuccess ){
-      nsc = nsNSSCertificate::Create(cert, &evOidPolicy);
+      nsc = nsNSSCertificate::Create(cert.get(), &evOidPolicy);
     }
     else {
-      nsc = nsNSSCertificate::Create(cert);
+      nsc = nsNSSCertificate::Create(cert.get());
     }
   }
 
@@ -1353,7 +1355,7 @@ SSLServerCertVerificationJob::Dispatch(
   const RefPtr<SharedCertVerifier>& certVerifier,
   const void* fdForLogging,
   nsNSSSocketInfo* infoObject,
-  CERTCertificate* serverCert,
+  const UniqueCERTCertificate& serverCert,
   ScopedCERTCertList& peerCertChain,
   SECItem* stapledOCSPResponse,
   uint32_t providerFlags,
@@ -1427,7 +1429,7 @@ SSLServerCertVerificationJob::Run()
     // Reset the error code here so we can detect if AuthCertificate fails to
     // set the error code if/when it fails.
     PR_SetError(0, 0);
-    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert.get(),
+    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
                                    mPeerCertChain, mStapledOCSPResponse,
                                    mProviderFlags, mTime);
     if (rv == SECSuccess) {
@@ -1450,9 +1452,8 @@ SSLServerCertVerificationJob::Run()
     }
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(
-          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject,
-                                  mCert.get(), mFdForLogging, mProviderFlags,
-                                  mPRTime));
+          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject, mCert,
+                                  mFdForLogging, mProviderFlags, mPRTime));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError();
@@ -1523,7 +1524,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 
   nsNSSSocketInfo* socketInfo = static_cast<nsNSSSocketInfo*>(arg);
 
-  ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
+  UniqueCERTCertificate serverCert(SSL_PeerCertificate(fd));
 
   if (!checkSig || isServer || !socketInfo || !serverCert) {
       PR_SetError(PR_INVALID_STATE_ERROR, 0);

@@ -1051,6 +1051,26 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     return;
   }
 
+  nsTArray<RefPtr<MediaStreamTrack>> tracks;
+  if (mDOMStream) {
+    mDOMStream->GetTracks(tracks);
+  }
+  if (!tracks.IsEmpty()) {
+    // If there are tracks already available that we're not allowed
+    // to record, we should throw a security error.
+    bool subsumes = false;
+    nsPIDOMWindowInner* window;
+    nsIDocument* doc;
+    if (!(window = GetOwner()) ||
+        !(doc = window->GetExtantDoc()) ||
+        NS_FAILED(doc->NodePrincipal()->Subsumes(
+                    mDOMStream->GetPrincipal(), &subsumes)) ||
+        !subsumes) {
+      aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return;
+    }
+  }
+
   int32_t timeSlice = 0;
   if (aTimeSlice.WasPassed()) {
     if (aTimeSlice.Value() < 0) {
@@ -1224,14 +1244,12 @@ MediaRecorder::SetOptions(const MediaRecorderOptions& aInitDict)
   }
 }
 
-static char const *const gWebMAudioEncoderCodecs[3] = {
-  "vorbis",
+static char const *const gWebMAudioEncoderCodecs[2] = {
   "opus",
   // no VP9 yet
   nullptr,
 };
-static char const *const gWebMVideoEncoderCodecs[5] = {
-  "vorbis",
+static char const *const gWebMVideoEncoderCodecs[4] = {
   "opus",
   "vp8",
   "vp8.0",

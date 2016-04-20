@@ -9,9 +9,7 @@
 #include "mozilla/Logging.h"
 
 #include "nsServiceManagerUtils.h"
-#include "nsExpirationTracker.h"
 #include "nsILanguageAtomService.h"
-#include "nsITimer.h"
 
 #include "gfxFontEntry.h"
 #include "gfxTextRun.h"
