@@ -51,14 +51,6 @@
 <!ENTITY fxaccount_getting_started_get_started 'Get started'>
 <!ENTITY fxaccount_getting_started_old_firefox 'Using an older version of &syncBrand.shortName.label;?'>
 
-<!ENTITY fxaccount_confirm_account_header 'Confirm your account'>
-<!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
-
-<!ENTITY fxaccount_sign_in_button_label 'Sign in'>
-
-<!ENTITY fxaccount_finish_migrating_header 'Sign in to finish upgrading'>
-<!ENTITY fxaccount_finish_migrating_button_label 'Finish upgrading'>
-
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
 <!ENTITY fxaccount_status_manage_account 'Manage account'>
 <!ENTITY fxaccount_status_auth_server 'Account server'>
