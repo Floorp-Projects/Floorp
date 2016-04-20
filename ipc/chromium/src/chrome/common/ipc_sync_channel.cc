@@ -271,7 +271,7 @@ void SyncChannel::SyncContext::Clear() {
   Context::Clear();
 }
 
-void SyncChannel::SyncContext::OnMessageReceived(const Message& msg) {
+void SyncChannel::SyncContext::OnMessageReceived(Message&& msg) {
   // Give the filters a chance at processing this message.
   if (TryFilters(msg))
     return;

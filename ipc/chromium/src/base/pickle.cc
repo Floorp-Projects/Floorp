@@ -122,10 +122,10 @@ Pickle::Pickle(int header_size)
   header_->payload_size = 0;
 }
 
-Pickle::Pickle(const char* data, int data_len)
+Pickle::Pickle(const char* data, int data_len, Ownership ownership)
     : header_(reinterpret_cast<Header*>(const_cast<char*>(data))),
       header_size_(0),
-      capacity_(kCapacityReadOnly),
+      capacity_(ownership == BORROWS ? kCapacityReadOnly : data_len),
       variable_buffer_offset_(0) {
   if (data_len >= static_cast<int>(sizeof(Header)))
     header_size_ = data_len - header_->payload_size;
@@ -661,4 +661,24 @@ const char* Pickle::FindNext(uint32_t header_size,
     return nullptr;
 
   return start + header_size + hdr->payload_size;
+}
+
+// static
+uint32_t Pickle::GetLength(uint32_t header_size,
+			   const char* start,
+			   const char* end) {
+  DCHECK(header_size == AlignInt(header_size));
+  DCHECK(header_size <= static_cast<memberAlignmentType>(kPayloadUnit));
+
+  if (end < start)
+    return 0;
+  size_t length = static_cast<size_t>(end - start);
+  if (length < sizeof(Header))
+    return 0;
+
+  const Header* hdr = reinterpret_cast<const Header*>(start);
+  if (length < header_size)
+    return 0;
+
+  return header_size + hdr->payload_size;
 }
