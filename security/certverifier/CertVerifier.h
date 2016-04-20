@@ -84,7 +84,7 @@ public:
       /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr);
 
   SECStatus VerifySSLServerCert(
-                    CERTCertificate* peerCert,
+                    const UniqueCERTCertificate& peerCert,
        /*optional*/ const SECItem* stapledOCSPResponse,
                     mozilla::pkix::Time time,
        /*optional*/ void* pinarg,

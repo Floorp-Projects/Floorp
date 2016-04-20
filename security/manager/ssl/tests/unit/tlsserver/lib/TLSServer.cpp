@@ -10,6 +10,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "base64.h"
+#include "mozilla/Move.h"
 #include "mozilla/Snprintf.h"
 #include "nspr.h"
 #include "nss.h"
@@ -189,7 +190,7 @@ AddCertificateFromFile(const char* basePath, const char* filename)
     PrintPRError("CERT_DecodeCertPackage failed");
     return rv;
   }
-  ScopedCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+  UniqueCERTCertificate cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                                      &certDER, nullptr, false,
                                                      true));
   PORT_Free(certDER.data);
@@ -204,7 +205,8 @@ AddCertificateFromFile(const char* basePath, const char* filename)
   }
   // The nickname is the filename without '.pem'.
   std::string nickname(filename, strlen(filename) - 4);
-  rv = PK11_ImportCert(slot, cert, CK_INVALID_HANDLE, nickname.c_str(), false);
+  rv = PK11_ImportCert(slot.get(), cert.get(), CK_INVALID_HANDLE,
+                       nickname.c_str(), false);
   if (rv != SECSuccess) {
     PrintPRError("PK11_ImportCert failed");
     return rv;
@@ -410,11 +412,11 @@ DoCallback()
 }
 
 SECStatus
-ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
-                                /*optional*/ ScopedCERTCertificate *certOut,
-                                /*optional*/ SSLKEAType *keaOut)
+ConfigSecureServerWithNamedCert(PRFileDesc* fd, const char* certName,
+                                /*optional*/ UniqueCERTCertificate* certOut,
+                                /*optional*/ SSLKEAType* keaOut)
 {
-  ScopedCERTCertificate cert(PK11_FindCertFromNickname(certName, nullptr));
+  UniqueCERTCertificate cert(PK11_FindCertFromNickname(certName, nullptr));
   if (!cert) {
     PrintPRError("PK11_FindCertFromNickname failed");
     return SECFailure;
@@ -424,7 +426,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
   // we don't encounter unknown issuer errors when that's not what we're
   // testing.
   UniqueCERTCertificateList certList;
-  ScopedCERTCertificate issuerCert(
+  UniqueCERTCertificate issuerCert(
     CERT_FindCertByName(CERT_GetDefaultCertDB(), &cert->derIssuer));
   // If we can't find the issuer cert, continue without it.
   if (issuerCert) {
@@ -469,7 +471,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
     return SECFailure;
   }
 
-  SSLKEAType certKEA = NSS_FindCertKEAType(cert);
+  SSLKEAType certKEA = NSS_FindCertKEAType(cert.get());
 
   if (SSL_ConfigSecureServerWithCertChain(fd, cert.get(), certList.get(),
                                           key.get(), certKEA) != SECSuccess) {
@@ -478,7 +480,7 @@ ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
   }
 
   if (certOut) {
-    *certOut = cert.forget();
+    *certOut = Move(cert);
   }
 
   if (keaOut) {

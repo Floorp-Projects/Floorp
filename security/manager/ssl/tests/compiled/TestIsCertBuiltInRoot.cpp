@@ -128,7 +128,7 @@ AddCertificate(char* pem, char* nickname)
     return false;
   }
 
-  mozilla::ScopedCERTCertificate cert(
+  mozilla::UniqueCERTCertificate cert(
     CERT_NewTempCertificate(CERT_GetDefaultCertDB(), sCertDER, nickname, false,
                             true));
   if (!cert) {
@@ -140,7 +140,7 @@ AddCertificate(char* pem, char* nickname)
   trust.sslFlags = 0;
   trust.emailFlags = 0;
   trust.objectSigningFlags = 0;
-  if (CERT_AddTempCertToPerm(cert, nickname, &trust) != SECSuccess) {
+  if (CERT_AddTempCertToPerm(cert.get(), nickname, &trust) != SECSuccess) {
     fail("CERT_AddTempCertToPerm failed");
     return false;
   }

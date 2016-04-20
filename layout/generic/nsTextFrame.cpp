@@ -49,7 +49,6 @@
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
 #include "MathMLTextRunFactory.h"
-#include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
 #include "nsStyleUtil.h"
 #include "nsRubyFrame.h"
@@ -185,7 +184,6 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(TabWidthProperty, TabWidthStore)
 
 NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(OffsetToFrameProperty, nsTextFrame)
 
-// text runs are destroyed by the text run cache
 NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(UninflatedTextRunProperty, gfxTextRun)
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
@@ -553,73 +551,6 @@ GlyphObserver::NotifyGlyphsChanged()
     // not easy to do well.
     shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
   }
-}
-
-class FrameTextRunCache;
-
-static FrameTextRunCache *gTextRuns = nullptr;
-
-/*
- * Cache textruns and expire them after 3*10 seconds of no use.
- */
-class FrameTextRunCache final : public nsExpirationTracker<gfxTextRun,3> {
-public:
-  enum { TIMEOUT_SECONDS = 10 };
-  FrameTextRunCache()
-    : nsExpirationTracker<gfxTextRun,3>(TIMEOUT_SECONDS * 1000,
-                                        "FrameTextRunCache")
-  {}
-  ~FrameTextRunCache() {
-    AgeAllGenerations();
-  }
-
-  void RemoveFromCache(gfxTextRun* aTextRun) {
-    if (aTextRun->GetExpirationState()->IsTracked()) {
-      RemoveObject(aTextRun);
-    }
-  }
-
-  // This gets called when the timeout has expired on a gfxTextRun
-  virtual void NotifyExpired(gfxTextRun* aTextRun) {
-    UnhookTextRunFromFrames(aTextRun, nullptr);
-    RemoveFromCache(aTextRun);
-    delete aTextRun;
-  }
-};
-
-// Helper to create a textrun and remember it in the textframe cache,
-// for either 8-bit or 16-bit text strings
-template<typename T>
-UniquePtr<gfxTextRun>
-MakeTextRun(const T *aText, uint32_t aLength,
-            gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
-            uint32_t aFlags, gfxMissingFontRecorder *aMFR)
-{
-    UniquePtr<gfxTextRun> textRun =
-        aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags, aMFR);
-    if (!textRun) {
-        return nullptr;
-    }
-    nsresult rv = gTextRuns->AddObject(textRun.get());
-    if (NS_FAILED(rv)) {
-        gTextRuns->RemoveFromCache(textRun.get());
-        return nullptr;
-    }
-#ifdef NOISY_BIDI
-    printf("Created textrun\n");
-#endif
-    return textRun;
-}
-
-void
-nsTextFrameTextRunCache::Init() {
-    gTextRuns = new FrameTextRunCache();
-}
-
-void
-nsTextFrameTextRunCache::Shutdown() {
-    delete gTextRuns;
-    gTextRuns = nullptr;
 }
 
 int32_t nsTextFrame::GetContentEnd() const {
@@ -1028,7 +959,7 @@ private:
   AutoTArray<MappedFlow,10>   mMappedFlows;
   AutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
   AutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
-  AutoTArray<gfxTextRun*,5>   mTextRunsToDelete;
+  AutoTArray<UniquePtr<gfxTextRun>,5> mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   DrawTarget*                   mDrawTarget;
@@ -1542,12 +1473,6 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
     mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
-
-  for (uint32_t i = 0; i < mTextRunsToDelete.Length(); ++i) {
-    gfxTextRun* deleteTextRun = mTextRunsToDelete[i];
-    gTextRuns->RemoveFromCache(deleteTextRun);
-    delete deleteTextRun;
-  }
   mTextRunsToDelete.Clear();
 }
 
@@ -2241,8 +2166,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         transformingFactory.forget();
       }
     } else {
-      textRun = MakeTextRun(text, transformedLength, fontGroup, &params,
-                            textFlags, mMissingFonts);
+      textRun = fontGroup->MakeTextRun(text, transformedLength, &params,
+                                       textFlags, mMissingFonts);
     }
   } else {
     const uint8_t* text = static_cast<const uint8_t*>(textPtr);
@@ -2256,8 +2181,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         transformingFactory.forget();
       }
     } else {
-      textRun = MakeTextRun(text, transformedLength, fontGroup, &params,
-                            textFlags, mMissingFonts);
+      textRun = fontGroup->MakeTextRun(text, transformedLength, &params,
+                                       textFlags, mMissingFonts);
     }
   }
   if (!textRun) {
@@ -2287,7 +2212,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     DestroyUserData(userDataToDestroy);
     // Arrange for this textrun to be deleted the next time the linebreaker
     // is flushed out
-    mTextRunsToDelete.AppendElement(textRun.release());
+    mTextRunsToDelete.AppendElement(Move(textRun));
     return nullptr;
   }
 
@@ -2708,11 +2633,7 @@ nsTextFrame::EnsureTextRun(TextRunType aWhichTextRun,
                            uint32_t* aFlowEndInTextRun)
 {
   gfxTextRun *textRun = GetTextRun(aWhichTextRun);
-  if (textRun && (!aLine || !(*aLine)->GetInvalidateTextRuns())) {
-    if (textRun->GetExpirationState()->IsTracked()) {
-      gTextRuns->MarkUsed(textRun);
-    }
-  } else {
+  if (!textRun || (aLine && (*aLine)->GetInvalidateTextRuns())) {
     RefPtr<DrawTarget> refDT = aRefDrawTarget;
     if (!refDT) {
       refDT = CreateReferenceDrawTarget(this);
@@ -4548,21 +4469,8 @@ nsTextFrame::ClearTextRun(nsTextFrame* aStartContinuation,
   MOZ_ASSERT(checkmTextrun ? !mTextRun
                            : !Properties().Get(UninflatedTextRunProperty()));
 
-  // see comments in BuildTextRunForFrames...
-//  if (textRun->GetFlags() & gfxFontGroup::TEXT_IS_PERSISTENT) {
-//    NS_ERROR("Shouldn't reach here for now...");
-//    // the textrun's text may be referencing a DOM node that has changed,
-//    // so we'd better kill this textrun now.
-//    if (textRun->GetExpirationState()->IsTracked()) {
-//      gTextRuns->RemoveFromCache(textRun);
-//    }
-//    delete textRun;
-//    return;
-//  }
-
   if (!textRun->GetUserData()) {
-    // Remove it now because it's not doing anything useful
-    gTextRuns->RemoveFromCache(textRun);
+    // Delete it now because it's not doing anything useful
     delete textRun;
   }
 }

@@ -36,7 +36,6 @@ template <typename Base, typename Sub>
 class gfxBaseSharedMemorySurface : public Base {
     typedef mozilla::ipc::SharedMemory SharedMemory;
     typedef mozilla::ipc::Shmem Shmem;
-    friend class gfxReusableSharedImageSurfaceWrapper;
 
 protected:
     virtual ~gfxBaseSharedMemorySurface()
