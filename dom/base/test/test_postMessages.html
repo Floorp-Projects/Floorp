@@ -10,6 +10,10 @@
 <input id="fileList" type="file"></input>
 <script type="application/javascript;version=1.7">
 
+function setup_tests() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true]]}, next);
+}
+
 function getType(a) {
   if (a === null || a === undefined)
     return 'null';
@@ -527,6 +531,8 @@ function test_messagePort_inWorkers() {
 }
 
 var tests = [
+  setup_tests,
+
   create_fileList,
   create_directory,
 
