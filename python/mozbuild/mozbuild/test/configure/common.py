@@ -166,9 +166,15 @@ class BaseConfigureTest(unittest.TestCase):
         return 0, args[0], ''
 
     def get_sandbox(self, paths, config, args=[], environ={}, mozconfig='',
-                    out=None):
-        if not out:
-            out = StringIO()
+                    out=None, logger=None):
+        kwargs = {}
+        if logger:
+            kwargs['logger'] = logger
+        else:
+            if not out:
+                out = StringIO()
+            kwargs['stdout'] = out
+            kwargs['stderr'] = out
 
         if mozconfig:
             fh, mozconfig_path = tempfile.mkstemp()
@@ -191,7 +197,7 @@ class BaseConfigureTest(unittest.TestCase):
             paths[mozpath.join(autoconf_dir, 'config.sub')] = self.config_sub
 
             sandbox = ConfigureTestSandbox(paths, config, environ,
-                                           ['configure'] + args, out, out)
+                                           ['configure'] + args, **kwargs)
             sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
 
             return sandbox
