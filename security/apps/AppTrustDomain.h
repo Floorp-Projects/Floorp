@@ -69,7 +69,7 @@ public:
 private:
   /*out*/ ScopedCERTCertList& mCertChain;
   void* mPinArg; // non-owning!
-  ScopedCERTCertificate mTrustedRoot;
+  UniqueCERTCertificate mTrustedRoot;
   unsigned int mMinRSABits;
 
   static StaticMutex sMutex;
