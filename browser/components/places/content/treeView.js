@@ -882,24 +882,25 @@ PlacesTreeView.prototype = {
       if (queryOptions.excludeItems) {
         return;
       }
-
-      PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
-        .then(aLivemark => {
-          let shouldInvalidate =
-            !this._controller.hasCachedLivemarkInfo(aNode);
-          this._controller.cacheLivemarkInfo(aNode, aLivemark);
-          if (aNewState == Components.interfaces.nsINavHistoryContainerResultNode.STATE_OPENED) {
-            aLivemark.registerForUpdates(aNode, this);
-            // Prioritize the current livemark.
-            aLivemark.reload();
-            PlacesUtils.livemarks.reloadLivemarks();
-            if (shouldInvalidate)
-              this.invalidateContainer(aNode);
-          }
-          else {
-            aLivemark.unregisterForUpdates(aNode);
-          }
-        }, () => undefined);
+      if (aNode.itemId != -1) { // run when there's a valid node id
+        PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
+          .then(aLivemark => {
+            let shouldInvalidate =
+              !this._controller.hasCachedLivemarkInfo(aNode);
+            this._controller.cacheLivemarkInfo(aNode, aLivemark);
+            if (aNewState == Components.interfaces.nsINavHistoryContainerResultNode.STATE_OPENED) {
+              aLivemark.registerForUpdates(aNode, this);
+              // Prioritize the current livemark.
+              aLivemark.reload();
+              PlacesUtils.livemarks.reloadLivemarks();
+              if (shouldInvalidate)
+                this.invalidateContainer(aNode);
+            }
+            else {
+              aLivemark.unregisterForUpdates(aNode);
+            }
+          }, () => undefined);
+      }
     }
   },
 
