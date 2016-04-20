@@ -5172,7 +5172,7 @@ dnl = EME support
 dnl ========================================================
 
 MOZ_ARG_ENABLE_STRING(eme,
-[  --enable-eme[=adobe]  Enable support for Encrypted Media Extensions  ],
+[  --enable-eme[=adobe,widevine]  Enable support for Encrypted Media Extensions  ],
     MOZ_EME_ARGS=$enableval)
 
 if test "$MOZ_EME_ARGS"; then
