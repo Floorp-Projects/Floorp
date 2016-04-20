@@ -32,13 +32,13 @@ test(function(t) {
   animation.cancel();
   assert_equals(getComputedStyle(div).marginLeft, '0px',
                 'margin-left style is not animated after cancelling');
- 
+
   animation.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(div).marginLeft, '50px',
                 'margin-left style is updated when cancelled animation is'
                 + ' seeked');
 }, 'After cancelling an animation, it can still be seeked');
- 
+
 promise_test(function(t) {
   var div = createDiv(t);
   var animation = div.animate({marginLeft:['100px', '200px']},
