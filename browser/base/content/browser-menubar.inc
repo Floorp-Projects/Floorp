@@ -468,13 +468,20 @@
                    onpopupshowing="if (!this.parentNode._placesView)
                                      new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
       </menu>
+      <menu id="menu_unsortedBookmarks"
+            class="menu-iconic bookmark-item"
+            label="&otherBookmarksCmd.label;"
+            container="true">
+        <menupopup id="otherBookmarksFolderPopup"
+#ifndef XP_MACOSX
+                   placespopup="true"
+#endif
+                   context="placesContext"
+                   onpopupshowing="if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
+      </menu>
       <menuseparator id="bookmarksMenuItemsSeparator"/>
       <!-- Bookmarks menu items -->
-      <menuseparator builder="end"
-                     class="hide-if-empty-places-result"/>
-      <menuitem id="menu_unsortedBookmarks"
-                label="&otherBookmarksCmd.label;"
-                oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
     </menupopup>
   </menu>
 
