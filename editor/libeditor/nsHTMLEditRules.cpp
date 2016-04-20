@@ -660,8 +660,7 @@ nsHTMLEditRules::WillDoAction(Selection* aSelection,
       return WillMakeDefListItem(aSelection, info->blockType, info->entireList,
                                  aCancel, aHandled);
     case EditAction::insertElement:
-      WillInsert(*aSelection, aCancel);
-      return NS_OK;
+      return WillInsert(aSelection, aCancel);
     case EditAction::decreaseZIndex:
       return WillRelativeChangeZIndex(aSelection, -1, aCancel, aHandled);
     case EditAction::increaseZIndex:
@@ -1207,46 +1206,54 @@ nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
  *  Protected rules methods
  ********************************************************/
 
-void
-nsHTMLEditRules::WillInsert(Selection& aSelection, bool* aCancel)
+nsresult
+nsHTMLEditRules::WillInsert(Selection* aSelection, bool* aCancel)
 {
-  MOZ_ASSERT(aCancel);
+  nsresult res = nsTextEditRules::WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
-  nsTextEditRules::WillInsert(aSelection, aCancel);
-
-  NS_ENSURE_TRUE_VOID(mHTMLEditor);
-  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
-
-  // Adjust selection to prevent insertion after a moz-BR.  This next only
-  // works for collapsed selections right now, because selection is a pain to
-  // work with when not collapsed.  (no good way to extend start or end of
-  // selection), so we ignore those types of selections.
-  if (!aSelection.Collapsed()) {
-    return;
+  // Adjust selection to prevent insertion after a moz-BR.
+  // this next only works for collapsed selections right now,
+  // because selection is a pain to work with when not collapsed.
+  // (no good way to extend start or end of selection), so we ignore
+  // those types of selections.
+  if (!aSelection->Collapsed()) {
+    return NS_OK;
   }
 
-  // If we are after a mozBR in the same block, then move selection to be
-  // before it
-  NS_ENSURE_TRUE_VOID(aSelection.GetRangeAt(0) &&
-                      aSelection.GetRangeAt(0)->GetStartParent());
-  OwningNonNull<nsINode> selNode = *aSelection.GetRangeAt(0)->GetStartParent();
-  int32_t selOffset = aSelection.GetRangeAt(0)->StartOffset();
-
-  // Get prior node
-  nsCOMPtr<nsIContent> priorNode = mHTMLEditor->GetPriorHTMLNode(selNode,
-                                                                 selOffset);
-  if (priorNode && nsTextEditUtils::IsMozBR(priorNode)) {
-    nsCOMPtr<Element> block1 = mHTMLEditor->GetBlock(selNode);
-    nsCOMPtr<Element> block2 = mHTMLEditor->GetBlockNodeParent(priorNode);
+  // if we are after a mozBR in the same block, then move selection
+  // to be before it
+  nsCOMPtr<nsIDOMNode> selNode, priorNode;
+  int32_t selOffset;
+  // get the (collapsed) selection location
+  NS_ENSURE_STATE(mHTMLEditor);
+  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode),
+                                           &selOffset);
+  NS_ENSURE_SUCCESS(res, res);
+  // get prior node
+  NS_ENSURE_STATE(mHTMLEditor);
+  res = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset,
+                                      address_of(priorNode));
+  if (NS_SUCCEEDED(res) && priorNode && nsTextEditUtils::IsMozBR(priorNode))
+  {
+    nsCOMPtr<nsIDOMNode> block1, block2;
+    if (IsBlockNode(selNode)) {
+      block1 = selNode;
+    }
+    else {
+      NS_ENSURE_STATE(mHTMLEditor);
+      block1 = mHTMLEditor->GetBlockNodeParent(selNode);
+    }
+    NS_ENSURE_STATE(mHTMLEditor);
+    block2 = mHTMLEditor->GetBlockNodeParent(priorNode);
 
     if (block1 && block1 == block2) {
-      // If we are here then the selection is right after a mozBR that is in
-      // the same block as the selection.  We need to move the selection start
-      // to be before the mozBR.
-      selNode = priorNode->GetParentNode();
-      selOffset = selNode->IndexOf(priorNode);
-      nsresult res = aSelection.Collapse(selNode, selOffset);
-      NS_ENSURE_SUCCESS_VOID(res);
+      // if we are here then the selection is right after a mozBR
+      // that is in the same block as the selection.  We need to move
+      // the selection start to be before the mozBR.
+      selNode = nsEditor::GetNodeLocation(priorNode, &selOffset);
+      res = aSelection->Collapse(selNode,selOffset);
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
 
@@ -1254,14 +1261,16 @@ nsHTMLEditRules::WillInsert(Selection& aSelection, bool* aCancel)
       (mTheAction == EditAction::insertText ||
        mTheAction == EditAction::insertIMEText ||
        mTheAction == EditAction::deleteSelection)) {
-    nsresult res = ReapplyCachedStyles();
-    NS_ENSURE_SUCCESS_VOID(res);
+    res = ReapplyCachedStyles();
+    NS_ENSURE_SUCCESS(res, res);
   }
   // For most actions we want to clear the cached styles, but there are
   // exceptions
   if (!IsStyleCachePreservingAction(mTheAction)) {
     ClearCachedStyles();
   }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1298,7 +1307,8 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  WillInsert(*aSelection, aCancel);
+  res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
@@ -1533,7 +1543,8 @@ nsHTMLEditRules::WillInsertBreak(Selection* aSelection,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  WillInsert(*aSelection, aCancel);
+  res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
@@ -3015,7 +3026,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   }
   OwningNonNull<nsIAtom> listType = NS_Atomize(*aListType);
 
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
@@ -3040,7 +3052,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
 
   *aHandled = true;
 
-  nsresult res = NormalizeSelection(aSelection);
+  res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
@@ -3394,11 +3406,12 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
   *aCancel = false;
   *aHandled = false;
 
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
-  nsresult res = NormalizeSelection(aSelection);
+  res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
@@ -3572,14 +3585,15 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult res = NormalizeSelection(aSelection);
+  res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
@@ -3775,14 +3789,15 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
                                 bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult res = NormalizeSelection(aSelection);
+  res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
@@ -4611,14 +4626,15 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = false;
 
-  nsresult res = NormalizeSelection(aSelection);
+  res = NormalizeSelection(aSelection);
   NS_ENSURE_SUCCESS(res, res);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
 
@@ -8766,7 +8782,8 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
                                       bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore result of WillInsert()
@@ -8775,8 +8792,7 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
 
   nsCOMPtr<nsIDOMElement> focusElement;
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult res =
-    mHTMLEditor->GetSelectionContainer(getter_AddRefs(focusElement));
+  res = mHTMLEditor->GetSelectionContainer(getter_AddRefs(focusElement));
   if (focusElement) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(focusElement);
     if (nsHTMLEditUtils::IsImage(node)) {
@@ -8995,7 +9011,8 @@ nsresult
 nsHTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
                                             bool* aCancel, bool* aHandled) {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore aCancel from WillInsert()
@@ -9004,8 +9021,7 @@ nsHTMLEditRules::WillRemoveAbsolutePosition(Selection* aSelection,
 
   nsCOMPtr<nsIDOMElement>  elt;
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult res =
-    mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
+  res = mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
   NS_ENSURE_SUCCESS(res, res);
 
   NS_ENSURE_STATE(mHTMLEditor);
@@ -9023,7 +9039,8 @@ nsHTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
                                           bool * aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  WillInsert(*aSelection, aCancel);
+  nsresult res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
 
   // initialize out param
   // we want to ignore aCancel from WillInsert()
@@ -9032,8 +9049,7 @@ nsHTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
 
   nsCOMPtr<nsIDOMElement>  elt;
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult res =
-    mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
+  res = mHTMLEditor->GetAbsolutelyPositionedSelectionContainer(getter_AddRefs(elt));
   NS_ENSURE_SUCCESS(res, res);
 
   NS_ENSURE_STATE(mHTMLEditor);

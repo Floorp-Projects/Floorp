@@ -123,7 +123,7 @@ protected:
   nsresult DidInsertBreak(mozilla::dom::Selection* aSelection,
                           nsresult aResult);
 
-  void WillInsert(mozilla::dom::Selection& aSelection, bool* aCancel);
+  nsresult WillInsert(mozilla::dom::Selection* aSelection, bool* aCancel);
   nsresult DidInsert(mozilla::dom::Selection* aSelection, nsresult aResult);
 
   nsresult WillDeleteSelection(mozilla::dom::Selection* aSelection,
