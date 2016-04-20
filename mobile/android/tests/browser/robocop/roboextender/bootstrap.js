@@ -18,7 +18,7 @@ function _sendMessageToJava (aMsg) {
 var windowListener = {
   onOpenWindow: function(aWindow) {
     // Wait for the window to finish loading
-    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
+    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     domWindow.addEventListener("load", function() {
       domWindow.removeEventListener("load", arguments.callee, false);
       if (domWindow) {
