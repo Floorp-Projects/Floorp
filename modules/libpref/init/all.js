@@ -4658,9 +4658,6 @@ pref("dom.push.pingInterval", 1800000); // 30 minutes
 // How long before we timeout
 pref("dom.push.requestTimeout", 10000);
 
-// enable udp wakeup support
-pref("dom.push.udp.wakeupEnabled", false);
-
 // WebPush prefs:
 pref("dom.push.http2.reset_retry_count_after_ms", 60000);
 pref("dom.push.http2.maxRetries", 2);

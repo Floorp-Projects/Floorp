@@ -34,9 +34,9 @@ const kPUSHWSDB_DB_NAME = "pushapi";
 const kPUSHWSDB_DB_VERSION = 5; // Change this if the IndexedDB format changes
 const kPUSHWSDB_STORE_NAME = "pushapi";
 
-const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
-                                          // by server to signal that it can
-                                          // wake client up using UDP.
+// WebSocket close code sent by the server to indicate that the client should
+// not automatically reconnect.
+const kBACKOFF_WS_STATUS_CODE = 4774;
 
 // Maps ack statuses, unsubscribe reasons, and delivery error reasons to codes
 // included in request payloads.
@@ -286,12 +286,12 @@ this.PushServiceWebSocket = {
    * TCP connection after they close a WebSocket. This causes wsOnStop to be
    * called with error NS_BASE_STREAM_CLOSED. Since the client has to keep the
    * WebSocket up, it should try to reconnect. But if the server closes the
-   * WebSocket because it will wake up the client via UDP, then the client
-   * shouldn't re-establish the connection. If the server says that it will
-   * wake up the client over UDP, this is set to true in wsOnServerClose. It is
+   * WebSocket because it wants the client to back off, then the client
+   * shouldn't re-establish the connection. If the server sends the backoff
+   * close code, this field will be set to true in wsOnServerClose. It is
    * checked in wsOnStop.
    */
-  _willBeWokenUpByUDP: false,
+  _skipReconnect: false,
 
   /** Indicates whether the server supports Web Push-style message delivery. */
   _dataEnabled: false,
@@ -340,13 +340,6 @@ this.PushServiceWebSocket = {
       this._makeWebSocket = options.makeWebSocket;
     }
 
-    // Override the default UDP socket factory function. The returned object
-    // must be null or satisfy the nsIUDPSocket interface. Used by the
-    // UDP tests.
-    if (options.makeUDPSocket) {
-      this._makeUDPSocket = options.makeUDPSocket;
-    }
-
     this._requestTimeout = prefs.get("requestTimeout");
 
     return Promise.resolve();
@@ -361,7 +354,7 @@ this.PushServiceWebSocket = {
   _shutdownWS: function(shouldCancelPending = true) {
     console.debug("shutdownWS()");
     this._currentState = STATE_SHUT_DOWN;
-    this._willBeWokenUpByUDP = false;
+    this._skipReconnect = false;
 
     prefs.ignore("userAgentID", this);
 
@@ -390,11 +383,6 @@ this.PushServiceWebSocket = {
   },
 
   uninit: function() {
-    if (this._udpServer) {
-      this._udpServer.close();
-      this._udpServer = null;
-    }
-
     // All pending requests (ideally none) are dropped at this point. We
     // shouldn't have any applications performing registration/unregistration
     // or receiving notifications.
@@ -413,9 +401,7 @@ this.PushServiceWebSocket = {
   },
 
   /**
-   * How retries work:  The goal is to ensure websocket is always up on
-   * networks not supporting UDP. So the websocket should only be shutdown if
-   * onServerClose indicates UDP wakeup.  If WS is closed due to socket error,
+   * How retries work: If the WS is closed due to a socket error,
    * _startBackoffTimer() is called. The retry timer is started and when
    * it times out, beginWSSetup() is called again.
    *
@@ -1008,9 +994,8 @@ this.PushServiceWebSocket = {
     console.debug("wsOnStop()");
     this._releaseWakeLock();
 
-    if (statusCode != Cr.NS_OK &&
-        !(statusCode == Cr.NS_BASE_STREAM_CLOSED && this._willBeWokenUpByUDP)) {
-      console.debug("wsOnStop: Socket error", statusCode);
+    if (statusCode != Cr.NS_OK && !this._skipReconnect) {
+      console.debug("wsOnStop: Reconnecting after socket error", statusCode);
       this._reconnect();
       return;
     }
@@ -1086,17 +1071,16 @@ this.PushServiceWebSocket = {
    * function), which calls reconnect and re-establishes the WebSocket
    * connection.
    *
-   * If the server said it'll use UDP for wakeup, we set _willBeWokenUpByUDP
-   * and stop reconnecting in _wsOnStop().
+   * If the server requested that we back off, we won't reconnect until the
+   * next network state change event, or until we need to send a new register
+   * request.
    */
   _wsOnServerClose: function(context, aStatusCode, aReason) {
     console.debug("wsOnServerClose()", aStatusCode, aReason);
 
-    // Switch over to UDP.
-    if (aStatusCode == kUDP_WAKEUP_WS_STATUS_CODE) {
-      console.debug("wsOnServerClose: Server closed with promise to wake up");
-      this._willBeWokenUpByUDP = true;
-      // TODO: there should be no pending requests
+    if (aStatusCode == kBACKOFF_WS_STATUS_CODE) {
+      console.debug("wsOnServerClose: Skipping automatic reconnect");
+      this._skipReconnect = true;
     }
   },
 
@@ -1108,62 +1092,6 @@ this.PushServiceWebSocket = {
       request.reject(new Error("Register request aborted"));
     }
     this._registerRequests.clear();
-  },
-
-  _makeUDPSocket: function() {
-    return Cc["@mozilla.org/network/udp-socket;1"]
-             .createInstance(Ci.nsIUDPSocket);
-  },
-
-  /**
-   * This method should be called only if the device is on a mobile network!
-   */
-  _listenForUDPWakeup: function() {
-    console.debug("listenForUDPWakeup()");
-
-    if (this._udpServer) {
-      console.warn("listenForUDPWakeup: UDP Server already running");
-      return;
-    }
-
-    if (!prefs.get("udp.wakeupEnabled")) {
-      console.debug("listenForUDPWakeup: UDP support disabled");
-      return;
-    }
-
-    let socket = this._makeUDPSocket();
-    if (!socket) {
-      return;
-    }
-    this._udpServer = socket.QueryInterface(Ci.nsIUDPSocket);
-    this._udpServer.init(-1, false, Services.scriptSecurityManager.getSystemPrincipal());
-    this._udpServer.asyncListen(this);
-    console.debug("listenForUDPWakeup: Listening on", this._udpServer.port);
-
-    return this._udpServer.port;
-  },
-
-  /**
-   * Called by UDP Server Socket. As soon as a ping is received via UDP,
-   * reconnect the WebSocket and get the actual data.
-   */
-  onPacketReceived: function(aServ, aMessage) {
-    console.debug("onPacketReceived: Recv UDP datagram on port",
-      this._udpServer.port);
-    this._beginWSSetup();
-  },
-
-  /**
-   * Called by UDP Server Socket if the socket was closed for some reason.
-   *
-   * If this happens, we reconnect the WebSocket to not miss out on
-   * notifications.
-   */
-  onStopListening: function(aServ, aStatus) {
-    console.debug("onStopListening: UDP Server socket was shutdown. Status",
-      aStatus);
-    this._udpServer = undefined;
-    this._beginWSSetup();
   },
 };
 
