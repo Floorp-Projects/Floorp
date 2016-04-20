@@ -1092,7 +1092,17 @@ DownloadsViewItem.prototype = {
 
   downloadsCmd_unblock() {
     DownloadsPanel.hidePanel();
-    this.confirmUnblock(window);
+    this.confirmUnblock(window, "unblock");
+  },
+
+  downloadsCmd_chooseUnblock() {
+    DownloadsPanel.hidePanel();
+    this.confirmUnblock(window, "chooseUnblock");
+  },
+
+  downloadsCmd_chooseOpen() {
+    DownloadsPanel.hidePanel();
+    this.confirmUnblock(window, "chooseOpen");
   },
 
   downloadsCmd_open() {
