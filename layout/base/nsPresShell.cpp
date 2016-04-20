@@ -1170,17 +1170,9 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "Destroy is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-  mInImageVisibility = true;
-
   mUpdateImageVisibilityEvent.Revoke();
 
   ClearVisibleImagesList(nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
-
-  mInImageVisibility = false;
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5548,54 +5540,11 @@ PresShell::MarkImagesInListVisible(const nsDisplayList& aList)
   }
 }
 
-void
-PresShell::ReportAnyBadState()
-{
-  if (!NS_IsMainThread()) {
-    gfxCriticalNote << "Got null image in image visibility: off-main-thread";
-  }
-  if (mIsZombie) {
-    gfxCriticalNote << "Got null image in image visibility: mIsZombie";
-  }
-  if (mIsDestroying) {
-    gfxCriticalNote << "Got null image in image visibility: mIsDestroying";
-  }
-  if (mIsReflowing) {
-    gfxCriticalNote << "Got null image in image visibility: mIsReflowing";
-  }
-  if (mPaintingIsFrozen) {
-    gfxCriticalNote << "Got null image in image visibility: mPaintingIsFrozen";
-  }
-  if (mForwardingContainer) {
-    gfxCriticalNote << "Got null image in image visibility: mForwardingContainer";
-  }
-  if (mIsNeverPainting) {
-    gfxCriticalNote << "Got null image in image visibility: mIsNeverPainting";
-  }
-  if (mIsDocumentGone) {
-    gfxCriticalNote << "Got null image in image visibility: mIsDocumentGone";
-  }
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    gfxCriticalNote << "Got null image in image visibility: not safe to run script";
-  }
-}
-
-void
-PresShell::SetInImageVisibility(bool aState)
-{
-  mInImageVisibility = aState;
-}
-
 static void
 DecrementVisibleCount(nsTHashtable<nsRefPtrHashKey<nsIImageLoadingContent>>& aImages,
-                      uint32_t aNonvisibleAction, PresShell* aPresShell)
+                      uint32_t aNonvisibleAction)
 {
   for (auto iter = aImages.Iter(); !iter.Done(); iter.Next()) {
-    if (MOZ_UNLIKELY(!iter.Get()->GetKey())) {
-      // We are about to crash, annotate crash report with some info that might
-      // help debug the crash (bug 1251150)
-      aPresShell->ReportAnyBadState();
-    }
     iter.Get()->GetKey()->DecrementVisibleCount(aNonvisibleAction);
   }
 }
@@ -5611,7 +5560,7 @@ PresShell::RebuildImageVisibilityDisplayList(const nsDisplayList& aList)
   mVisibleImages.SwapElements(oldVisibleImages);
   MarkImagesInListVisible(aList);
   DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
+                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
 }
 
 /* static */ void
@@ -5634,7 +5583,7 @@ PresShell::ClearImageVisibilityVisited(nsView* aView, bool aClear)
 void
 PresShell::ClearVisibleImagesList(uint32_t aNonvisibleAction)
 {
-  DecrementVisibleCount(mVisibleImages, aNonvisibleAction, this);
+  DecrementVisibleCount(mVisibleImages, aNonvisibleAction);
   mVisibleImages.Clear();
 }
 
@@ -5751,7 +5700,7 @@ PresShell::RebuildImageVisibility(nsRect* aRect,
   MarkImagesInSubtreeVisible(rootFrame, vis, aRemoveOnly);
 
   DecrementVisibleCount(oldVisibleImages,
-                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION, this);
+                        nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
 }
 
 void
@@ -5768,14 +5717,7 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
 
   mUpdateImageVisibilityEvent.Revoke();
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "DoUpdateImageVisibility is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-  mInImageVisibility = true;
-
   if (mHaveShutDown || mIsDestroying) {
-    mInImageVisibility = false;
     return;
   }
 
@@ -5784,14 +5726,11 @@ PresShell::DoUpdateImageVisibility(bool aRemoveOnly)
   if (!rootFrame) {
     ClearVisibleImagesList(
       nsIImageLoadingContent::ON_NONVISIBLE_REQUEST_DISCARD);
-    mInImageVisibility = false;
     return;
   }
 
   RebuildImageVisibility(/* aRect = */ nullptr, aRemoveOnly);
   ClearImageVisibilityVisited(rootFrame->GetView(), true);
-
-  mInImageVisibility = false;
 
 #ifdef DEBUG_IMAGE_VISIBILITY_DISPLAY_LIST
   // This can be used to debug the frame walker by comparing beforeImageList and
@@ -5902,18 +5841,10 @@ PresShell::EnsureImageInVisibleList(nsIImageLoadingContent* aImage)
   }
 #endif
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "EnsureImageInVisibleList is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-  mInImageVisibility = true;
-
   if (!mVisibleImages.Contains(aImage)) {
     mVisibleImages.PutEntry(aImage);
     aImage->IncrementVisibleCount();
   }
-
-  mInImageVisibility = false;
 }
 
 void
@@ -5933,12 +5864,6 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
     return;
   }
 
-  if (mInImageVisibility) {
-    gfxCriticalNoteOnce << "RemoveImageFromVisibleList is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-  mInImageVisibility = true;
-
   uint32_t count = mVisibleImages.Count();
   mVisibleImages.RemoveEntry(aImage);
   if (mVisibleImages.Count() < count) {
@@ -5946,8 +5871,6 @@ PresShell::RemoveImageFromVisibleList(nsIImageLoadingContent* aImage)
     aImage->DecrementVisibleCount(
       nsIImageLoadingContent::ON_NONVISIBLE_NO_ACTION);
   }
-
-  mInImageVisibility = false;
 }
 
 class nsAutoNotifyDidPaint
@@ -10702,12 +10625,6 @@ PresShell::UpdateImageLockingState()
   nsresult rv = mDocument->SetImageLockingState(locked);
 
   if (locked) {
-    if (mInImageVisibility) {
-      gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
-                          << (NS_IsMainThread() ? "" : "non-") << "main thread";
-    }
-    mInImageVisibility = true;
-
     // Request decodes for visible images; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
     for (auto iter = mVisibleImages.Iter(); !iter.Done(); iter.Next()) {
@@ -10717,7 +10634,6 @@ PresShell::UpdateImageLockingState()
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }
-    mInImageVisibility = false;
   }
 
   return rv;
