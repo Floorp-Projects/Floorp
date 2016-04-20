@@ -7,11 +7,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import os
 import subprocess
+import tempfile
+import unittest
 
 from mozbuild.configure import ConfigureSandbox
 from mozbuild.util import ReadOnlyNamespace
 from mozpack import path as mozpath
 
+from StringIO import StringIO
 from which import WhichError
 
 from buildconfig import (
@@ -144,3 +147,49 @@ class ConfigureTestSandbox(ConfigureSandbox):
         if script in self._subprocess_paths:
             return self._subprocess_paths[script](stdin, args[1:])
         return 127, '', 'File not found'
+
+
+class BaseConfigureTest(unittest.TestCase):
+    HOST = 'x86_64-pc-linux-gnu'
+
+    def setUp(self):
+        self._cwd = os.getcwd()
+        os.chdir(topobjdir)
+
+    def tearDown(self):
+        os.chdir(self._cwd)
+
+    def config_guess(self, stdin, args):
+        return 0, self.HOST, ''
+
+    def config_sub(self, stdin, args):
+        return 0, args[0], ''
+
+    def get_sandbox(self, paths, config, args=[], environ={}, mozconfig='',
+                    out=None):
+        if not out:
+            out = StringIO()
+
+        fh, mozconfig_path = tempfile.mkstemp()
+        os.write(fh, mozconfig)
+        os.close(fh)
+
+        try:
+            environ = dict(
+                environ,
+                OLD_CONFIGURE=os.path.join(topsrcdir, 'old-configure'),
+                MOZCONFIG=mozconfig_path)
+
+            paths = dict(paths)
+            autoconf_dir = mozpath.join(topsrcdir, 'build', 'autoconf')
+            paths[mozpath.join(autoconf_dir,
+                               'config.guess')] = self.config_guess
+            paths[mozpath.join(autoconf_dir, 'config.sub')] = self.config_sub
+
+            sandbox = ConfigureTestSandbox(paths, config, environ,
+                                           ['configure'] + args, out, out)
+            sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
+
+            return sandbox
+        finally:
+            os.remove(mozconfig_path)
