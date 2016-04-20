@@ -328,6 +328,9 @@ GetDisplayMode(nsPresContext* aPresContext, const nsMediaFeature*,
   baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
   int32_t displayMode;
   nsSizeMode mode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+  // Background tabs are always in 'browser' mode for now.
+  // If new modes are supported, please ensure not cause the regression in
+  // Bug 1259641.
   switch (mode) {
     case nsSizeMode_Fullscreen:
       displayMode = NS_STYLE_DISPLAY_MODE_FULLSCREEN;
