@@ -11490,6 +11490,10 @@
         "url": "/IndexedDB/idbcursor_update_index7.htm"
       },
       {
+        "path": "IndexedDB/idbcursor_update_index8.htm",
+        "url": "/IndexedDB/idbcursor_update_index8.htm"
+      },
+      {
         "path": "IndexedDB/idbcursor_update_objectstore.htm",
         "url": "/IndexedDB/idbcursor_update_objectstore.htm"
       },
@@ -11520,6 +11524,10 @@
       {
         "path": "IndexedDB/idbcursor_update_objectstore8.htm",
         "url": "/IndexedDB/idbcursor_update_objectstore8.htm"
+      },
+      {
+        "path": "IndexedDB/idbcursor_update_objectstore9.htm",
+        "url": "/IndexedDB/idbcursor_update_objectstore9.htm"
       },
       {
         "path": "IndexedDB/idbdatabase_close.htm",
