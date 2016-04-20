@@ -254,9 +254,8 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, toShow).apply();
         }
 
-        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.HISTORY).equals(panelId)) {
+        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.COMBINED_HISTORY).equals(panelId)) {
             GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, toShow).apply();
         }
-
     }
 }

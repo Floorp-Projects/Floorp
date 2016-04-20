@@ -166,7 +166,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             JSONObject panelObj = jsonPanels.getJSONObject(i);
             final PanelConfig panelConfig = new PanelConfig(panelObj);
             final PanelType type = panelConfig.getType();
-            if (type == PanelType.HISTORY) {
+            if (type == PanelType.DEPRECATED_HISTORY) {
                 historyIndex = i;
                 historyFlags = panelConfig.getFlags();
             } else if (type == PanelType.REMOTE_TABS) {
@@ -490,7 +490,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 || !prefs.contains(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED)) {
 
             final String bookmarkType = PanelType.BOOKMARKS.toString();
-            final String historyType = PanelType.HISTORY.toString();
+            final String historyType = PanelType.COMBINED_HISTORY.toString();
             try {
                 for (int i = 0; i < panelsArray.length(); i++) {
                     final JSONObject panelObj = panelsArray.getJSONObject(i);
