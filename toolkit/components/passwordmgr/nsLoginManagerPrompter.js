@@ -1351,7 +1351,13 @@ LoginManagerPrompter.prototype = {
       // Now that we know which login to use, modify its password.
       var selectedLogin = logins[selectedIndex.value];
       this.log("Updating password for user " + selectedLogin.username);
-      this._updateLogin(selectedLogin, aNewLogin);
+      var newLoginWithUsername = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                     createInstance(Ci.nsILoginInfo);
+      newLoginWithUsername.init(aNewLogin.hostname,
+                                aNewLogin.formSubmitURL, aNewLogin.httpRealm,
+                                selectedLogin.username, aNewLogin.password,
+                                selectedLogin.userNameField, aNewLogin.passwordField);
+      this._updateLogin(selectedLogin, newLoginWithUsername);
     }
   },
 
