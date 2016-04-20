@@ -215,7 +215,6 @@ public:
   // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
-    mReader->BreakCycles();
     mResource = nullptr;
   }
 

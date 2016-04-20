@@ -103,10 +103,6 @@ public:
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
   virtual void ReleaseMediaResources() {}
-  // Breaks reference-counted cycles. Called during shutdown.
-  // WARNING: If you override this, you must call the base implementation
-  // in your override.
-  virtual void BreakCycles();
 
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as it is irreversable,
