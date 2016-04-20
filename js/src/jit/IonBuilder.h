@@ -503,6 +503,9 @@ class IonBuilder
     // jsop_bitnot helpers.
     bool bitnotTrySpecialized(bool* emitted, MDefinition* input);
 
+    // jsop_pow helpers.
+    bool powTrySpecialized(bool* emitted, MDefinition* base, MDefinition* power, MIRType outputType);
+
     // jsop_compare helpers.
     bool compareTrySpecialized(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
     bool compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefinition* right);
@@ -804,7 +807,6 @@ class IonBuilder
     InliningStatus inlineMathHypot(CallInfo& callInfo);
     InliningStatus inlineMathMinMax(CallInfo& callInfo, bool max);
     InliningStatus inlineMathPow(CallInfo& callInfo);
-    InliningStatus inlineMathPowHelper(MDefinition* lhs, MDefinition* rhs, MIRType outputType);
     InliningStatus inlineMathRandom(CallInfo& callInfo);
     InliningStatus inlineMathImul(CallInfo& callInfo);
     InliningStatus inlineMathFRound(CallInfo& callInfo);

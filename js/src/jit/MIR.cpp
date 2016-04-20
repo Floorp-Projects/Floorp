@@ -2906,6 +2906,53 @@ MMinMax::foldsTo(TempAllocator& alloc)
     return this;
 }
 
+MDefinition*
+MPow::foldsTo(TempAllocator& alloc)
+{
+    if (!power()->isConstant() || !power()->toConstant()->isTypeRepresentableAsDouble())
+        return this;
+
+    double pow = power()->toConstant()->numberToDouble();
+    MIRType outputType = type();
+
+    // Math.pow(x, 0.5) is a sqrt with edge-case detection.
+    if (pow == 0.5)
+        return MPowHalf::New(alloc, input());
+
+    // Math.pow(x, -0.5) == 1 / Math.pow(x, 0.5), even for edge cases.
+    if (pow == -0.5) {
+        MPowHalf* half = MPowHalf::New(alloc, input());
+        block()->insertBefore(this, half);
+        MConstant* one = MConstant::New(alloc, DoubleValue(1.0));
+        block()->insertBefore(this, one);
+        return MDiv::New(alloc, one, half, MIRType_Double);
+    }
+
+    // Math.pow(x, 1) == x.
+    if (pow == 1.0)
+        return input();
+
+    // Math.pow(x, 2) == x*x.
+    if (pow == 2.0)
+        return MMul::New(alloc, input(), input(), outputType);
+
+    // Math.pow(x, 3) == x*x*x.
+    if (pow == 3.0) {
+        MMul* mul1 = MMul::New(alloc, input(), input(), outputType);
+        block()->insertBefore(this, mul1);
+        return MMul::New(alloc, input(), mul1, outputType);
+    }
+
+    // Math.pow(x, 4) == y*y, where y = x*x.
+    if (pow == 4.0) {
+        MMul* y = MMul::New(alloc, input(), input(), outputType);
+        block()->insertBefore(this, y);
+        return MMul::New(alloc, y, y, outputType);
+    }
+
+    return this;
+}
+
 bool
 MAbs::fallible() const
 {
