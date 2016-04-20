@@ -545,7 +545,6 @@ size. -->
 <!ENTITY home_last_tabs_empty "Your recent tabs show up here.">
 <!ENTITY home_open_all "Open all">
 <!ENTITY home_most_recent_empty "Websites you visited most recently show up here.">
-<!ENTITY home_selected_empty "Websites you visited in the selected timeframe show up here.">
 <!-- Localization note (home_most_recent_emptyhint2): "Psst" is a sound that might be used to attract someone's attention unobtrusively, and intended to hint at Private Browsing to the user.
      The placeholders &formatS1; and &formatS2; are used to mark the location of text underlining. -->
 <!ENTITY home_most_recent_emptyhint2 "Psst: using a &formatS1;New Private Tab&formatS2; won\'t save your history.">
@@ -558,16 +557,6 @@ size. -->
      previous location in the navigation, such as the previous folder -->
 <!ENTITY home_move_back_to_filter "Back to &formatS;">
 
-<!ENTITY home_remote_tabs_title "Synced Tabs">
-<!ENTITY home_remote_tabs_empty "Your tabs from other devices show up here.">
-<!ENTITY home_remote_tabs_unable_to_connect "Unable to connect">
-<!ENTITY home_remote_tabs_need_to_sign_in "Please sign in to reconnect your Firefox Account and continue syncing.">
-<!ENTITY home_remote_tabs_need_to_finish_migrating "Your new Firefox Account is ready!">
-
-<!ENTITY home_remote_tabs_trouble_verifying "Trouble verifying your account?">
-<!ENTITY home_remote_tabs_need_to_verify "Please verify your Firefox Account to start syncing.">
-
-<!ENTITY home_remote_tabs_one_hidden_device "1 device hidden">
 <!-- Localization note (home_remote_tabs_many_hidden_devices) : The
      formatD is replaced with the number of hidden devices.  The
      number of hidden devices is always more than one.  We can't use
