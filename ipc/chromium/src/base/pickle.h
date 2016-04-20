@@ -176,18 +176,6 @@ class Pickle {
   // The returned pointer will only be valid until the next write operation
   // on this Pickle.
   char* BeginWriteData(int length);
-
-  // For Pickles which contain variable length buffers (e.g. those created
-  // with BeginWriteData), the Pickle can
-  // be 'trimmed' if the amount of data required is less than originally
-  // requested.  For example, you may have created a buffer with 10K of data,
-  // but decided to only fill 10 bytes of that data.  Use this function
-  // to trim the buffer so that we don't send 9990 bytes of unused data.
-  // You cannot increase the size of the variable buffer; only shrink it.
-  // This function assumes that the length of the variable buffer has
-  // not been changed.
-  void TrimWriteData(int length);
-
   void EndRead(void* iter) const {
     DCHECK(iter == end_of_payload());
   }
