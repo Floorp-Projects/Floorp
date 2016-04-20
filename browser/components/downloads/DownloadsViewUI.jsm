@@ -17,6 +17,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
@@ -112,6 +114,14 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     this.element.setAttribute("state",
                               DownloadsCommon.stateOfDownload(this.download));
 
+    if (this.download.error &&
+        this.download.error.becauseBlockedByReputationCheck) {
+      this.element.setAttribute("verdict",
+                                this.download.error.reputationCheckVerdict);
+    } else {
+      this.element.removeAttribute("verdict");
+    }
+
     // Since state changed, reset the time left estimation.
     this.lastEstimatedSecondsLeft = Infinity;
 
@@ -131,6 +141,11 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         this.element.removeAttribute("exists");
       }
     }
+
+    // When a block is confirmed, the removal of blocked data will not trigger a
+    // state change for the download, so this class must be updated here.
+    this.element.classList.toggle("temporary-block",
+                                  !!this.download.hasBlockedData);
 
     // The progress bar is only displayed for in-progress downloads.
     if (this.download.hasProgress) {
@@ -220,7 +235,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       } else if (this.download.error.becauseBlockedByParentalControls) {
         stateLabel = s.stateBlockedParentalControls;
       } else if (this.download.error.becauseBlockedByReputationCheck) {
-        stateLabel = s.stateDirty;
+        switch (this.download.error.reputationCheckVerdict) {
+          case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
+            stateLabel = s.blockedUncommon;
+            break;
+          case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+            stateLabel = s.blockedPotentiallyUnwanted;
+            break;
+          default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
+            stateLabel = s.blockedMalware;
+            break;
+        }
       } else {
         stateLabel = s.stateFailed;
       }
@@ -237,6 +262,25 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
 
     return { text, tip: tip || text };
+  },
+
+  /**
+   * Shows the appropriate unblock dialog based on the verdict, and executes the
+   * action selected by the user in the dialog, which may involve unblocking,
+   * opening or removing the file.
+   *
+   * @param window
+   *        The window to which the dialog should be anchored.
+   */
+  confirmUnblock(window) {
+    let verdict = this.download.error.reputationCheckVerdict;
+    DownloadsCommon.confirmUnblockDownload(verdict, window).then(action => {
+      if (action == "unblock") {
+        return this.download.unblock();
+      } else if (action == "confirmBlock") {
+        return this.download.confirmBlock();
+      }
+    }).catch(Cu.reportError);
   },
 
   /**

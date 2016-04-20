@@ -29,8 +29,7 @@ namespace media {
 // The amount of audio frames that is used to fuzz rounding errors.
 static const int64_t AUDIO_FUZZ_FRAMES = 1;
 
-DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
-                                           MediaQueue<MediaData>& aAudioQueue,
+DecodedAudioDataSink::DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
                                            int64_t aStartTime,
                                            const AudioInfo& aInfo,
                                            dom::AudioChannel aChannel)
@@ -41,32 +40,16 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mPlaying(true)
-  , mErrored(false)
   , mPlaybackComplete(false)
-  , mOwnerThread(aThread)
-  , mFramesParsed(0)
-  , mLastEndTime(0)
 {
   bool resampling = gfxPrefs::AudioSinkResampling();
-
-  if (resampling) {
-    mOutputRate = gfxPrefs::AudioSinkResampleRate();
-  } else if (mInfo.mRate == 44100 || mInfo.mRate == 48000) {
-    // The original rate is of good quality and we want to minimize unecessary
-    // resampling. The common scenario being that the sampling rate is one or
-    // the other, this allows to minimize audio quality regression and hoping
-    // content provider want change from those rates mid-stream.
-    mOutputRate = mInfo.mRate;
-  } else {
-    // We will resample all data to match cubeb's preferred sampling rate.
-    mOutputRate = AudioStream::GetPreferredRate();
-  }
-  MOZ_DIAGNOSTIC_ASSERT(mOutputRate, "output rate can't be 0.");
-
-  bool monoAudioEnabled = gfxPrefs::MonoAudio();
-
-  mOutputChannels = monoAudioEnabled
-    ? 1 : (gfxPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+  uint32_t resamplingRate = gfxPrefs::AudioSinkResampleRate();
+  mConverter =
+    MakeUnique<AudioConverter>(
+      AudioConfig(mInfo.mChannels, mInfo.mRate),
+      AudioConfig(mInfo.mChannels > 2 && gfxPrefs::AudioSinkForceStereo()
+                    ? 2 : mInfo.mChannels,
+                  resampling ? resamplingRate : mInfo.mRate));
 }
 
 DecodedAudioDataSink::~DecodedAudioDataSink()
@@ -76,16 +59,6 @@ DecodedAudioDataSink::~DecodedAudioDataSink()
 RefPtr<GenericPromise>
 DecodedAudioDataSink::Init(const PlaybackParams& aParams)
 {
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-
-  mAudioQueueListener = mAudioQueue.PushEvent().Connect(
-    mOwnerThread, this, &DecodedAudioDataSink::OnAudioPushed);
-  mProcessedQueueListener = mProcessedQueue.PopEvent().Connect(
-    mOwnerThread, this, &DecodedAudioDataSink::OnAudioPopped);
-
-  // To ensure at least one audio packet will be popped from AudioQueue and
-  // ready to be played.
-  NotifyAudioNeeded();
   RefPtr<GenericPromise> p = mEndPromise.Ensure(__func__);
   nsresult rv = InitializeAudioStream(aParams);
   if (NS_FAILED(rv)) {
@@ -122,16 +95,10 @@ DecodedAudioDataSink::HasUnplayedFrames()
 void
 DecodedAudioDataSink::Shutdown()
 {
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-
-  mAudioQueueListener.Disconnect();
-  mProcessedQueueListener.Disconnect();
-
   if (mAudioStream) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
   }
-  mProcessedQueue.Reset();
   mEndPromise.ResolveIfExists(true, __func__);
 }
 
@@ -179,7 +146,9 @@ nsresult
 DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 {
   mAudioStream = new AudioStream(*this);
-  nsresult rv = mAudioStream->Init(mOutputChannels, mOutputRate, mChannel);
+  nsresult rv = mAudioStream->Init(mConverter->OutputConfig().Channels(),
+                                   mConverter->OutputConfig().Rate(),
+                                   mChannel);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
@@ -199,14 +168,13 @@ DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 int64_t
 DecodedAudioDataSink::GetEndTime() const
 {
-  CheckedInt64 playedUsecs = FramesToUsecs(mWritten, mOutputRate) + mStartTime;
+  CheckedInt64 playedUsecs =
+    FramesToUsecs(mWritten, mConverter->OutputConfig().Rate()) + mStartTime;
   if (!playedUsecs.isValid()) {
     NS_WARNING("Int overflow calculating audio end time");
     return -1;
   }
-  // As we may be resampling, rounding errors may occur. Ensure we never get
-  // past the original end time.
-  return std::min<int64_t>(mLastEndTime, playedUsecs.value());
+  return playedUsecs.value();
 }
 
 UniquePtr<AudioStream::Chunk>
@@ -249,13 +217,78 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     UniquePtr<AudioDataValue[]> mData;
   };
 
-  if (!mCurrentData) {
+  while (!mCurrentData) {
     // No data in the queue. Return an empty chunk.
-    if (!mProcessedQueue.GetSize()) {
+    if (AudioQueue().GetSize() == 0) {
       return MakeUnique<Chunk>();
     }
 
-    mCurrentData = dont_AddRef(mProcessedQueue.PopFront().take());
+    AudioData* a = AudioQueue().PeekFront()->As<AudioData>();
+
+    // Ignore the element with 0 frames and try next.
+    if (a->mFrames == 0) {
+      RefPtr<MediaData> releaseMe = AudioQueue().PopFront();
+      continue;
+    }
+
+    // Ignore invalid samples.
+    if (a->mRate != mInfo.mRate || a->mChannels != mInfo.mChannels) {
+      NS_WARNING(nsPrintfCString(
+        "mismatched sample format, data=%p rate=%u channels=%u frames=%u",
+        a->mAudioData.get(), a->mRate, a->mChannels, a->mFrames).get());
+      RefPtr<MediaData> releaseMe = AudioQueue().PopFront();
+      continue;
+    }
+
+    // See if there's a gap in the audio. If there is, push silence into the
+    // audio hardware, so we can play across the gap.
+    // Calculate the timestamp of the next chunk of audio in numbers of
+    // samples.
+    CheckedInt64 sampleTime = UsecsToFrames(AudioQueue().PeekFront()->mTime,
+                                            mConverter->OutputConfig().Rate());
+    // Calculate the number of frames that have been pushed onto the audio hardware.
+    CheckedInt64 playedFrames = UsecsToFrames(mStartTime,
+                                              mConverter->OutputConfig().Rate()) +
+                                static_cast<int64_t>(mWritten);
+    CheckedInt64 missingFrames = sampleTime - playedFrames;
+
+    if (!missingFrames.isValid() || !sampleTime.isValid()) {
+      NS_WARNING("Int overflow in DecodedAudioDataSink");
+      mErrored = true;
+      return MakeUnique<Chunk>();
+    }
+
+    const uint32_t rate = mConverter->OutputConfig().Rate();
+    const uint32_t channels = mConverter->OutputConfig().Channels();
+
+    if (missingFrames.value() > AUDIO_FUZZ_FRAMES) {
+      // The next audio chunk begins some time after the end of the last chunk
+      // we pushed to the audio hardware. We must push silence into the audio
+      // hardware so that the next audio chunk begins playback at the correct
+      // time.
+      missingFrames = std::min<int64_t>(UINT32_MAX, missingFrames.value());
+      auto framesToPop = std::min<uint32_t>(missingFrames.value(), aFrames);
+      mWritten += framesToPop;
+      return MakeUnique<SilentChunk>(framesToPop, channels, rate);
+    }
+
+    RefPtr<AudioData> data =
+      dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
+    if (mConverter->InputConfig() != mConverter->OutputConfig()) {
+      AlignedAudioBuffer convertedData =
+        mConverter->Process(AudioSampleBuffer(Move(data->mAudioData))).Forget();
+      mCurrentData =
+        new AudioData(data->mOffset,
+                      data->mTime,
+                      data->mDuration,
+                      convertedData.Length() / channels,
+                      Move(convertedData),
+                      channels,
+                      rate);
+    } else {
+      mCurrentData = Move(data);
+    }
+
     mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
                                             mCurrentData->mChannels,
                                             mCurrentData->mFrames);
@@ -275,7 +308,7 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
 
   // All frames are popped. Reset mCurrentData so we can pop new elements from
   // the audio queue in next calls to PopFrames().
-  if (!mCursor->Available()) {
+  if (mCursor->Available() == 0) {
     mCurrentData = nullptr;
   }
 
@@ -295,190 +328,6 @@ DecodedAudioDataSink::Drained()
   SINK_LOG("Drained");
   mPlaybackComplete = true;
   mEndPromise.ResolveIfExists(true, __func__);
-}
-
-void
-DecodedAudioDataSink::OnAudioPopped(const RefPtr<MediaData>& aSample)
-{
-  SINK_LOG_V("AudioStream has used an audio packet.");
-  NotifyAudioNeeded();
-}
-
-void
-DecodedAudioDataSink::OnAudioPushed(const RefPtr<MediaData>& aSample)
-{
-  SINK_LOG_V("One new audio packet available.");
-  NotifyAudioNeeded();
-}
-
-void
-DecodedAudioDataSink::NotifyAudioNeeded()
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn(),
-             "Not called from the owner's thread");
-
-  if (AudioQueue().IsFinished() && !AudioQueue().GetSize()) {
-    // We have reached the end of the data, drain the resampler.
-    DrainConverter();
-    return;
-  }
-
-  // Always ensure we have two processed frames pending to allow for processing
-  // latency.
-  while (AudioQueue().GetSize() && mProcessedQueue.GetSize() < 2) {
-    RefPtr<AudioData> data =
-      dont_AddRef(AudioQueue().PopFront().take()->As<AudioData>());
-
-    // Ignore the element with 0 frames and try next.
-    if (!data->mFrames) {
-      continue;
-    }
-
-    if (!mConverter ||
-        (data->mRate != mConverter->InputConfig().Rate() ||
-         data->mChannels != mConverter->InputConfig().Channels())) {
-      SINK_LOG_V("Audio format changed from %u@%uHz to %u@%uHz",
-                 mConverter? mConverter->InputConfig().Channels() : 0,
-                 mConverter ? mConverter->InputConfig().Rate() : 0,
-                 data->mChannels, data->mRate);
-
-      DrainConverter();
-
-      // mFramesParsed indicates the current playtime in frames at the current
-      // input sampling rate. Recalculate it per the new sampling rate.
-      if (mFramesParsed) {
-        // We minimize overflow.
-        uint32_t oldRate = mConverter->InputConfig().Rate();
-        uint32_t newRate = data->mRate;
-        int64_t major = mFramesParsed / oldRate;
-        int64_t remainder = mFramesParsed % oldRate;
-        CheckedInt64 result =
-          CheckedInt64(remainder) * newRate / oldRate + major * oldRate;
-        if (!result.isValid()) {
-          NS_WARNING("Int overflow in DecodedAudioDataSink");
-          mErrored = true;
-          return;
-        }
-        mFramesParsed = result.value();
-      }
-
-      mConverter =
-        MakeUnique<AudioConverter>(
-          AudioConfig(data->mChannels, data->mRate),
-          AudioConfig(mOutputChannels, mOutputRate));
-    }
-
-    // See if there's a gap in the audio. If there is, push silence into the
-    // audio hardware, so we can play across the gap.
-    // Calculate the timestamp of the next chunk of audio in numbers of
-    // samples.
-    CheckedInt64 sampleTime = UsecsToFrames(data->mTime - mStartTime,
-                                            data->mRate);
-    // Calculate the number of frames that have been pushed onto the audio hardware.
-    CheckedInt64 missingFrames = sampleTime - mFramesParsed;
-
-    if (!missingFrames.isValid()) {
-      NS_WARNING("Int overflow in DecodedAudioDataSink");
-      mErrored = true;
-      return;
-    }
-
-    if (missingFrames.value() > AUDIO_FUZZ_FRAMES) {
-      // The next audio packet begins some time after the end of the last packet
-      // we pushed to the audio hardware. We must push silence into the audio
-      // hardware so that the next audio packet begins playback at the correct
-      // time.
-      missingFrames = std::min<int64_t>(INT32_MAX, missingFrames.value());
-      mFramesParsed += missingFrames.value();
-      // We need to insert silence, first use drained frames if any.
-      missingFrames -= DrainConverter(missingFrames.value());
-      // Insert silence is still needed.
-      if (missingFrames.value()) {
-        AlignedAudioBuffer silenceData(missingFrames.value() * mOutputChannels);
-        if (!silenceData) {
-          NS_WARNING("OOM in DecodedAudioDataSink");
-          mErrored = true;
-          return;
-        }
-        RefPtr<AudioData> silence = CreateAudioFromBuffer(Move(silenceData), data);
-        if (silence) {
-          mProcessedQueue.Push(silence);
-        }
-      }
-    }
-
-    mLastEndTime = data->GetEndTime();
-    mFramesParsed += data->mFrames;
-
-    if (mConverter->InputConfig() != mConverter->OutputConfig()) {
-      AlignedAudioBuffer convertedData =
-        mConverter->Process(AudioSampleBuffer(Move(data->mAudioData))).Forget();
-      data = CreateAudioFromBuffer(Move(convertedData), data);
-      if (!data) {
-        continue;
-      }
-    }
-    mProcessedQueue.Push(data);
-    mLastProcessedPacket = Some(data);
-  }
-}
-
-already_AddRefed<AudioData>
-DecodedAudioDataSink::CreateAudioFromBuffer(AlignedAudioBuffer&& aBuffer,
-                                            AudioData* aReference)
-{
-  uint32_t frames = aBuffer.Length() / mOutputChannels;
-  if (!frames) {
-    return nullptr;
-  }
-  CheckedInt64 duration = FramesToUsecs(frames, mOutputRate);
-  if (!duration.isValid()) {
-    NS_WARNING("Int overflow in DecodedAudioDataSink");
-    mErrored = true;
-    return nullptr;
-  }
-  RefPtr<AudioData> data =
-    new AudioData(aReference->mOffset,
-                  aReference->mTime,
-                  duration.value(),
-                  frames,
-                  Move(aBuffer),
-                  mOutputChannels,
-                  mOutputRate);
-  return data.forget();
-}
-
-uint32_t
-DecodedAudioDataSink::DrainConverter(uint32_t aMaxFrames)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-
-  if (!mConverter || !mLastProcessedPacket) {
-    // nothing to drain.
-    return 0;
-  }
-
-  RefPtr<AudioData> lastPacket = mLastProcessedPacket.ref();
-  mLastProcessedPacket.reset();
-
-  // To drain we simply provide an empty packet to the audio converter.
-  AlignedAudioBuffer convertedData =
-    mConverter->Process(AudioSampleBuffer(AlignedAudioBuffer())).Forget();
-
-  uint32_t frames = convertedData.Length() / mOutputChannels;
-  if (!convertedData.SetLength(std::min(frames, aMaxFrames) * mOutputChannels)) {
-    // This can never happen as we were reducing the length of convertData.
-    mErrored = true;
-    return 0;
-  }
-
-  RefPtr<AudioData> data =
-    CreateAudioFromBuffer(Move(convertedData), lastPacket);
-  if (!data) {
-    return 0;
-  }
-  mProcessedQueue.Push(data);
-  return data->mFrames;
 }
 
 } // namespace media
