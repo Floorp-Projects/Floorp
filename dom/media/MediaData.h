@@ -240,8 +240,12 @@ private:
       (reinterpret_cast<uintptr_t>(newBuffer.get()) + alignmask) & ~alignmask);
     MOZ_ASSERT(uintptr_t(newData) % (AlignmentOffset()+1) == 0);
 
+    MOZ_ASSERT(!mLength || mData);
+
     PodZero(newData + mLength, aLength - mLength);
-    PodCopy(newData, mData, mLength);
+    if (mLength) {
+      PodCopy(newData, mData, mLength);
+    }
 
     mBuffer = Move(newBuffer);
     mCapacity = sizeNeeded.value();
