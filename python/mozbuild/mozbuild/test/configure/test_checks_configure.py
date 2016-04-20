@@ -131,11 +131,11 @@ class TestChecksConfigure(unittest.TestCase):
                    prog='/bin/configure'):
         config = {}
         out = StringIO()
-        paths = (
-            self.KNOWN_A,
-            self.KNOWN_B,
-            self.KNOWN_C,
-        )
+        paths = {
+            self.KNOWN_A: None,
+            self.KNOWN_B: None,
+            self.KNOWN_C: None,
+        }
         environ = dict(environ)
         environ['PATH'] = os.pathsep.join(os.path.dirname(p) for p in paths)
         sandbox = ConfigureTestSandbox(paths, config, environ, [prog] + args,
