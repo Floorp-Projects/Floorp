@@ -540,7 +540,7 @@ class ObjectGroupCompartment
     friend class ObjectGroup;
 
     struct NewEntry;
-    using NewTable = js::GCHashSet<NewEntry, NewEntry, SystemAllocPolicy>;
+    class NewTable;
 
     // Set of default 'new' or lazy groups in the compartment.
     NewTable* defaultNewTable;
