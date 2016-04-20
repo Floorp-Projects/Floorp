@@ -2561,18 +2561,22 @@ IonBuilder::inlineIsCallable(CallInfo& callInfo)
 
     if (getInlineReturnType() != MIRType_Boolean)
         return InliningStatus_NotInlined;
-    if (callInfo.getArg(0)->type() != MIRType_Object)
+
+    MDefinition* arg = callInfo.getArg(0);
+    // Do not inline if the type of arg is neither primitive nor object.
+    if (arg->type() > MIRType_Object)
         return InliningStatus_NotInlined;
 
     // Try inlining with constant true/false: only objects may be callable at
     // all, and if we know the class check if it is callable.
     bool isCallableKnown = false;
     bool isCallableConstant;
-    if (callInfo.getArg(0)->type() != MIRType_Object) {
+    if (arg->type() != MIRType_Object) {
+        // Primitive (including undefined and null).
         isCallableKnown = true;
         isCallableConstant = false;
     } else {
-        TemporaryTypeSet* types = callInfo.getArg(0)->resultTypeSet();
+        TemporaryTypeSet* types = arg->resultTypeSet();
         const Class* clasp = types ? types->getKnownClass(constraints()) : nullptr;
         if (clasp && !clasp->isProxy()) {
             isCallableKnown = true;
@@ -2589,7 +2593,7 @@ IonBuilder::inlineIsCallable(CallInfo& callInfo)
         return InliningStatus_Inlined;
     }
 
-    MIsCallable* isCallable = MIsCallable::New(alloc(), callInfo.getArg(0));
+    MIsCallable* isCallable = MIsCallable::New(alloc(), arg);
     current->add(isCallable);
     current->push(isCallable);
 

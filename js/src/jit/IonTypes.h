@@ -397,14 +397,17 @@ enum MIRType
     MIRType_Int64,
     MIRType_Double,
     MIRType_Float32,
+    // Types above have trivial conversion to a number.
     MIRType_String,
     MIRType_Symbol,
+    // Types above are primitive (including undefined and null).
     MIRType_Object,
     MIRType_MagicOptimizedArguments,   // JS_OPTIMIZED_ARGUMENTS magic value.
     MIRType_MagicOptimizedOut,         // JS_OPTIMIZED_OUT magic value.
     MIRType_MagicHole,                 // JS_ELEMENTS_HOLE magic value.
     MIRType_MagicIsConstructing,       // JS_IS_CONSTRUCTING magic value.
     MIRType_MagicUninitializedLexical, // JS_UNINITIALIZED_LEXICAL magic value.
+    // Types above are specialized.
     MIRType_Value,
     MIRType_SinCosDouble,              // Optimizing a sin/cos to sincos.
     MIRType_ObjectOrNull,
