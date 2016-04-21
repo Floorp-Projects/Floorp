@@ -73,6 +73,10 @@ public final class GeckoProfile {
     public static final String CUSTOM_PROFILE = "";
     public static final String GUEST_PROFILE = "guest";
 
+    // Session store
+    private static final String SESSION_FILE = "sessionstore.js";
+    private static final String SESSION_FILE_BACKUP = "sessionstore.bak";
+
     private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName;
 
@@ -767,9 +771,9 @@ public final class GeckoProfile {
      * holds the previous session.
      */
     public void moveSessionFile() {
-        File sessionFile = getFile("sessionstore.js");
+        File sessionFile = getFile(SESSION_FILE);
         if (sessionFile != null && sessionFile.exists()) {
-            File sessionFileBackup = getFile("sessionstore.bak");
+            File sessionFileBackup = getFile(SESSION_FILE_BACKUP);
             sessionFile.renameTo(sessionFileBackup);
         }
     }
@@ -787,7 +791,7 @@ public final class GeckoProfile {
      * @return the session string
      */
     public String readSessionFile(boolean readBackup) {
-        File sessionFile = getFile(readBackup ? "sessionstore.bak" : "sessionstore.js");
+        File sessionFile = getFile(readBackup ? SESSION_FILE_BACKUP : SESSION_FILE);
 
         try {
             if (sessionFile != null && sessionFile.exists()) {
