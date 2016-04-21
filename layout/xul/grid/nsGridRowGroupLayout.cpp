@@ -157,7 +157,7 @@ nsGridRowGroupLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)
     // calling MarkIntrinsicISizesDirty for every row group.
     aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange,
                                          NS_FRAME_IS_DIRTY);
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     while(child) {
 
@@ -181,7 +181,7 @@ nsGridRowGroupLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32
   if (aBox) {
     int32_t startCount = aRowCount;
 
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     while(child) {
       
@@ -216,7 +216,7 @@ nsGridRowGroupLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows)
   int32_t rowCount = 0;
 
   if (aBox) {
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     while(child) {
       

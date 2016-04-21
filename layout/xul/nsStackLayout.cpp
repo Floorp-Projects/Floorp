@@ -63,7 +63,7 @@ nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize prefSize (0, 0);
 
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize pref = child->GetXULPrefSize(aState);
@@ -89,7 +89,7 @@ nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize minSize (0, 0);
 
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetXULMinSize(aState);
@@ -115,7 +115,7 @@ nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetXULMinSize(aState);
@@ -145,7 +145,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nscoord vAscent = 0;
 
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {  
     nscoord ascent = child->GetXULBoxAscent(aState);
     nsMargin margin;
@@ -260,7 +260,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
   bool grow;
 
   do {
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
     grow = false;
 
     while (child) 
