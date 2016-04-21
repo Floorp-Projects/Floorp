@@ -565,7 +565,7 @@ nsImageBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState)
   size.height += borderPadding.TopBottom();
 
   bool widthSet, heightSet;
-  nsIFrame::AddCSSPrefSize(this, size, widthSet, heightSet);
+  nsIFrame::AddXULPrefSize(this, size, widthSet, heightSet);
   NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
                "non-intrinsic size expected");
 
@@ -630,7 +630,7 @@ nsImageBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
   DISPLAY_MIN_SIZE(this, size);
   AddBorderAndPadding(size);
   bool widthSet, heightSet;
-  nsIFrame::AddCSSMinSize(aState, this, size, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(aState, this, size, widthSet, heightSet);
   return size;
 }
 

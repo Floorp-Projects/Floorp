@@ -404,7 +404,7 @@ nsBox::GetXULPrefSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(pref);
   bool widthSet, heightSet;
-  nsIFrame::AddCSSPrefSize(this, pref, widthSet, heightSet);
+  nsIFrame::AddXULPrefSize(this, pref, widthSet, heightSet);
 
   nsSize minSize = GetXULMinSize(aState);
   nsSize maxSize = GetXULMaxSize(aState);
@@ -424,7 +424,7 @@ nsBox::GetXULMinSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(min);
   bool widthSet, heightSet;
-  nsIFrame::AddCSSMinSize(aState, this, min, widthSet, heightSet);
+  nsIFrame::AddXULMinSize(aState, this, min, widthSet, heightSet);
   return min;
 }
 
@@ -447,7 +447,7 @@ nsBox::GetXULMaxSize(nsBoxLayoutState& aState)
 
   AddBorderAndPadding(maxSize);
   bool widthSet, heightSet;
-  nsIFrame::AddCSSMaxSize(this, maxSize, widthSet, heightSet);
+  nsIFrame::AddXULMaxSize(this, maxSize, widthSet, heightSet);
   return maxSize;
 }
 
@@ -456,7 +456,7 @@ nsBox::GetXULFlex()
 {
   nscoord flex = 0;
 
-  nsIFrame::AddCSSFlex(this, flex);
+  nsIFrame::AddXULFlex(this, flex);
 
   return flex;
 }
@@ -595,7 +595,7 @@ nsIFrame::XULRedraw(nsBoxLayoutState& aState)
 }
 
 bool
-nsIFrame::AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
+nsIFrame::AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
     aHeightSet = false;
@@ -668,7 +668,7 @@ nsIFrame::AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &a
 
 
 bool
-nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
+nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
                       bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
@@ -775,7 +775,7 @@ nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
 }
 
 bool
-nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
+nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aHeightSet)
 {
     aWidthSet = false;
     aHeightSet = false;
@@ -834,7 +834,7 @@ nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
 }
 
 bool
-nsIFrame::AddCSSFlex(nsIFrame* aBox, nscoord& aFlex)
+nsIFrame::AddXULFlex(nsIFrame* aBox, nscoord& aFlex)
 {
     bool flexSet = false;
 
