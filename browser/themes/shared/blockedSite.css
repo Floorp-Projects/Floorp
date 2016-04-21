@@ -1,0 +1,65 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/error-pages.css");
+
+body {
+  background-image: linear-gradient(-45deg, #9b2e2e,     #9b2e2e 33%,
+                                            #a83232 33%, #a83232 66%,
+                                            #9b2e2e 66%, #9b2e2e);
+  background-color: #b14646;
+  color: white;
+}
+
+.title {
+  background-image: url("chrome://global/skin/icons/blocked.svg");
+}
+
+.title-text {
+  color: white;
+}
+
+.button-container button:not(.primary) {
+  background-color: transparent;
+  color: white;
+  border: 1px solid #9b2e2e;
+  margin-inline-end: 0;
+}
+
+.button-container button:not(.primary):hover {
+  background-color: #a83232;
+}
+
+.button-container button:not(.primary):active {
+  background-color: #9b2e2e;
+}
+
+.button-container button {
+  margin-top: 1.2em;
+}
+
+/* Style warning button to look like a small text link in the
+   bottom right. This is preferable to just using a text link
+   since there is already a mechanism in browser.js for trapping
+   oncommand events from unprivileged chrome pages (BrowserOnCommand).*/
+#ignoreWarningButton {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  margin: 4px 0 0 0;
+  padding: 0;
+  font-size: smaller;
+  min-width: 0;
+}
+
+#ignoreWarningButton:hover {
+  cursor: pointer;
+}
+
+#ignoreWarning {
+  margin-top: 1.2em;
+  text-align: end;
+}
