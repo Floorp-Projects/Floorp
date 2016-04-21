@@ -299,6 +299,10 @@ public:
   mozilla::a11y::Accessible* GetRootAccessible();
 #endif
 
+  // Return true if this is a simple widget (that is typically not worth
+  // accelerating)
+  bool IsSmallPopup() const;
+
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 
   virtual LayoutDeviceIntSize
