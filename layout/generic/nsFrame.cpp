@@ -9060,7 +9060,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       }
     }
 
-    // Box layout calls SetRect before Layout, whereas non-box layout
+    // Box layout calls SetRect before XULLayout, whereas non-box layout
     // calls SetRect after Reflow.
     // XXX Perhaps we should be doing this by twiddling the rect back to
     // mLastSize before calling Reflow and then switching it back, but
@@ -10274,7 +10274,7 @@ void* nsFrame::DisplayLayoutEnter(nsIFrame* aFrame)
   DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("Layout\n");
+    printf("XULLayout\n");
   }
   return treeNode;
 }
@@ -10386,7 +10386,7 @@ void nsFrame::DisplayLayoutExit(nsIFrame*            aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     nsRect rect = aFrame->GetRect();
-    printf("Layout=%d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height);
+    printf("XULLayout=%d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height);
   }
   DR_state->DeleteTreeNode(*treeNode);
 }

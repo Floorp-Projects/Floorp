@@ -168,7 +168,7 @@ HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState, nscoord& aX, nsco
 }
 
 NS_IMETHODIMP
-nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   // See if we are collapsed. If we are, then simply iterate over all our
   // children and give them a rect of 0 width and height.
@@ -430,7 +430,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
         childRect.height = 0;
 
       // Now we're trying to figure out if we have to lay out this child, i.e., to call
-      // the child's Layout method.
+      // the child's XULLayout method.
       if (passes > 0) {
         layout = false;
       } else {
@@ -481,7 +481,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       // we make sure to call layout on the child, since its children may need to be shifted
       // around as a result of the size change.
       if (layout || sizeChanged)
-        child->Layout(aState);
+        child->XULLayout(aState);
       
       // If the child was a block or inline (e.g., HTML) it may have changed its rect *during* layout. 
       // We have to check for this.
@@ -1136,7 +1136,7 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
           rect.Deflate(margin);
 
         aChild->SetXULBounds(aState, rect);
-        aChild->Layout(aState);
+        aChild->XULLayout(aState);
       }
 
 }

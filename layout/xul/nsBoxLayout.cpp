@@ -66,7 +66,7 @@ nsBoxLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 NS_IMETHODIMP
-nsBoxLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   return NS_OK;
 }

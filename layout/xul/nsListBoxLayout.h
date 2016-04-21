@@ -19,7 +19,7 @@ public:
   nsListBoxLayout();
 
   // nsBoxLayout
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState) override;
+  NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState) override;
   virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;

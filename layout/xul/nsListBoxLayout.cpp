@@ -93,7 +93,7 @@ nsListBoxLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState
 }
 
 NS_IMETHODIMP
-nsListBoxLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsListBoxLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   return LayoutInternal(aBox, aState);
 }
@@ -162,7 +162,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       childRect.Deflate(margin);
       box->SetXULBounds(aState, childRect);
-      box->Layout(aState);
+      box->XULLayout(aState);
     } else {
       // if the child did not need to be relayed out. Then its easy.
       // Place the child by just grabbing its rect and adjusting the y.

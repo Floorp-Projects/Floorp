@@ -301,7 +301,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   SetXULBounds(state, r);
  
   // layout our children
-  Layout(state);
+  XULLayout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
   aDesiredSize.Width() = mRect.width;
