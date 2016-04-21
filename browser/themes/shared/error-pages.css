@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/info-pages.css");
+
+body {
+  background-size: 64px 32px;
+  background-repeat: repeat-x;
+  /* Top padding for when the window height is small.
+     Bottom padding to keep everything centered. */
+  padding: 75px 0;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.button-spacer {
+  flex: 1;
+}
+
+@media only screen and (max-width: 959px) {
+  body {
+    padding: 75px 48px;
+  }
+
+  .title {
+    background-image: none !important;
+    -moz-padding-start: 0;
+    -moz-margin-start: 0;
+  }
+
+  .title-text {
+    padding-top: 0;
+  }
+}
+
+@media only screen and (max-width: 640px) {
+  body {
+    justify-content: unset;
+    /* Now that everything is top-aligned, we don't need the
+     * bottom padding for centering - though it's added back
+     * when the viewport height is < 480px (see below). */
+    padding: 75px 20px 0;
+  }
+
+  .title-text {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .button-container button {
+    /* Force buttons to display: block here to try and enforce collapsing margins */
+    display: block;
+    width: 100%;
+    margin: 0.66em 0 0;
+  }
+}
+
+/* For small window height, shift the stripes up by 10px.
+ * We could just change the background size, but that changes
+ * the angle of the stripes so just shifting up is easier. */
+@media only screen and (max-height: 480px) {
+  body {
+    background-position: 10px -10px;
+    padding-top: 38px;
+    /* We get rid of bottom padding for width < 640px, but
+     * for height < 480px a bit of space between the content
+     * and the viewport edge is nice. */
+    padding-bottom: 38px;
+  }
+}
