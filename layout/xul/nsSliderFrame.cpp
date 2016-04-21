@@ -468,7 +468,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   // Redraw only if thumb changed size.
   if (!oldThumbRect.IsEqualInterior(thumbRect))
-    Redraw(aState);
+    XULRedraw(aState);
 
   return NS_OK;
 }

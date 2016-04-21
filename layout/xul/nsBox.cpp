@@ -535,7 +535,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
   
 
   if (GetStateBits() & NS_FRAME_IS_DIRTY)
-     Redraw(aState);
+     XULRedraw(aState);
 
   RemoveStateBits(NS_FRAME_HAS_DIRTY_CHILDREN | NS_FRAME_IS_DIRTY
                   | NS_FRAME_FIRST_REFLOW | NS_FRAME_IN_REFLOW);
@@ -582,7 +582,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 }
 
 nsresult
-nsIFrame::Redraw(nsBoxLayoutState& aState)
+nsIFrame::XULRedraw(nsBoxLayoutState& aState)
 {
   if (aState.PaintingDisabled())
     return NS_OK;
