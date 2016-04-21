@@ -35264,16 +35264,22 @@
             "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
           }
         ],
+        "web-animations/timing-model/active-time.html": [
+          {
+            "path": "web-animations/timing-model/active-time.html",
+            "url": "/web-animations/timing-model/active-time.html"
+          }
+        ],
         "web-animations/timing-model/current-iteration.html": [
           {
             "path": "web-animations/timing-model/current-iteration.html",
             "url": "/web-animations/timing-model/current-iteration.html"
           }
         ],
-        "web-animations/timing-model/iteration-progress.html": [
+        "web-animations/timing-model/simple-iteration-progress.html": [
           {
-            "path": "web-animations/timing-model/iteration-progress.html",
-            "url": "/web-animations/timing-model/iteration-progress.html"
+            "path": "web-animations/timing-model/simple-iteration-progress.html",
+            "url": "/web-animations/timing-model/simple-iteration-progress.html"
           }
         ]
       }
