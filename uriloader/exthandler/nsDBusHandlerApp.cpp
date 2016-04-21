@@ -6,6 +6,7 @@
 
 #include <dbus/dbus.h>
 #include "mozilla/ipc/DBusConnectionRefPtr.h"
+#include "mozilla/ipc/DBusMessageRefPtr.h"
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
 #include "nsIClassInfoImpl.h"
@@ -99,11 +100,11 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   }
   dbus_connection_set_exit_on_disconnect(connection,false);
 
-  DBusMessage* msg;
-  msg = dbus_message_new_method_call(mService.get(),
-                                     mObjpath.get(),
-                                     mInterface.get(),
-                                     mMethod.get());
+  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
+    dbus_message_new_method_call(mService.get(),
+                                 mObjpath.get(),
+                                 mInterface.get(),
+                                 mMethod.get()));
 
   if (!msg) {
     return NS_ERROR_FAILURE;
@@ -116,9 +117,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
 
   if (dbus_connection_send(connection, msg, nullptr)) {
     dbus_connection_flush(connection);
-    dbus_message_unref(msg);
   } else {
-    dbus_message_unref(msg);
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
