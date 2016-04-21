@@ -43,7 +43,7 @@ public:
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
-  virtual nsresult GetDebug(bool& aDebug) override;
+  virtual nsresult GetXULDebug(bool& aDebug) override;
   virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
 
   virtual nsresult DumpBox(FILE* out) override;

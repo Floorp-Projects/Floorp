@@ -981,7 +981,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
 
 
 nsresult
-nsBox::GetDebug(bool& aDebug)
+nsBox::GetXULDebug(bool& aDebug)
 {
   aDebug = false;
   return NS_OK;

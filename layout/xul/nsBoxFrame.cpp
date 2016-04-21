@@ -1539,7 +1539,7 @@ nsBoxFrame::GetType() const
 
 #ifdef DEBUG_LAYOUT
 nsresult
-nsBoxFrame::GetDebug(bool& aDebug)
+nsBoxFrame::GetXULDebug(bool& aDebug)
 {
   aDebug = (mState & NS_STATE_CURRENTLY_IN_DEBUG);
   return NS_OK;
