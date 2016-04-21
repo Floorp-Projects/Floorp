@@ -482,7 +482,7 @@ nsIFrame::GetXULOrdinal()
 }
 
 nscoord
-nsBox::GetBoxAscent(nsBoxLayoutState& aState)
+nsBox::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
   if (IsCollapsed())
     return 0;
