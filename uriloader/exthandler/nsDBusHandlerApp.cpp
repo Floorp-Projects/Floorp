@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include  <dbus/dbus.h>
+#include <dbus/dbus.h>
+#include "mozilla/ipc/DBusConnectionRefPtr.h"
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
 #include "nsIClassInfoImpl.h"
@@ -86,8 +87,9 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   DBusError err;
   dbus_error_init(&err);
 
-  DBusConnection  *connection;
-  connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
+  RefPtr<DBusConnection> connection = already_AddRefed<DBusConnection>(
+    dbus_bus_get(DBUS_BUS_SESSION, &err));
+
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
     return NS_ERROR_FAILURE;
