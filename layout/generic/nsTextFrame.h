@@ -192,7 +192,7 @@ public:
   
   virtual bool IsEmpty() override;
   virtual bool IsSelfEmpty() override { return IsEmpty(); }
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const final;
   
   virtual bool HasSignificantTerminalNewline() const override;
 
