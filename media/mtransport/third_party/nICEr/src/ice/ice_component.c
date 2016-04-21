@@ -931,6 +931,11 @@ static int nr_ice_component_stun_server_cb(void *cb_arg,nr_stun_server_ctx *stun
     nr_transport_addr local_addr;
     int r,_status;
 
+    if(comp->state==NR_ICE_COMPONENT_FAILED) {
+      *error=400;
+      ABORT(R_REJECTED);
+    }
+
     /* Find the candidate pair that this maps to */
     if(r=nr_socket_getaddr(sock,&local_addr)) {
       *error=500;
