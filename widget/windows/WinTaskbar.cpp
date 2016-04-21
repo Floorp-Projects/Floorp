@@ -9,13 +9,13 @@
 #include "TaskbarPreview.h"
 #include <nsITaskbarPreviewController.h>
 
+#include "mozilla/RefPtr.h"
 #include <nsError.h>
 #include <nsCOMPtr.h>
 #include <nsIWidget.h>
 #include <nsIBaseWindow.h>
 #include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
-#include <nsAutoPtr.h>
 #include "nsIXULAppInfo.h"
 #include "nsIJumpListBuilder.h"
 #include "nsUXThemeData.h"

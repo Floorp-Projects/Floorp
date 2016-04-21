@@ -8,11 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/UniquePtr.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
 #include "nsINativeMenuService.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsMenuX;
@@ -120,7 +120,7 @@ protected:
                                             int tag, NativeMenuItemTarget* target);
   nsresult          CreateApplicationMenu(nsMenuX* inMenu);
 
-  nsTArray< nsAutoPtr<nsMenuX> > mMenuArray;
+  nsTArray<mozilla::UniquePtr<nsMenuX>> mMenuArray;
   nsIWidget*         mParentWindow;        // [weak]
   GeckoNSMenu*       mNativeMenu;            // root menu, representing entire menu bar
 };

@@ -12,9 +12,7 @@
 #include "nsIMutationObserver.h"
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
-
 
 class nsMenuItemX;
 class nsChangeObserver;

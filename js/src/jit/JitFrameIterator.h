@@ -709,7 +709,7 @@ class InlineFrameIterator
 
         // Read return value.
         if (rval)
-            *rval = s.read();
+            *rval = s.maybeRead(fallback);
         else
             s.skip();
 

@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "nsAutoPtr.h"
 #include "nsColor.h"
 #include "nsITextInputProcessor.h"
 #include "nsStyleConsts.h"

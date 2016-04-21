@@ -568,7 +568,9 @@ struct NamedConstructor
  * global is used as the parent of the interface object and the interface
  *        prototype object
  * protoProto is the prototype to use for the interface prototype object.
- * interfaceProto is the prototype to use for the interface object.
+ * interfaceProto is the prototype to use for the interface object.  This can be
+ *                null if both constructorClass and constructor are null (as in,
+ *                if we're not creating an interface object at all).
  * protoClass is the JSClass to use for the interface prototype object.
  *            This is null if we should not create an interface prototype
  *            object.

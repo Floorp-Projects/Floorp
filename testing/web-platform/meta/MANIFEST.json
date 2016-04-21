@@ -11490,6 +11490,10 @@
         "url": "/IndexedDB/idbcursor_update_index7.htm"
       },
       {
+        "path": "IndexedDB/idbcursor_update_index8.htm",
+        "url": "/IndexedDB/idbcursor_update_index8.htm"
+      },
+      {
         "path": "IndexedDB/idbcursor_update_objectstore.htm",
         "url": "/IndexedDB/idbcursor_update_objectstore.htm"
       },
@@ -11520,6 +11524,10 @@
       {
         "path": "IndexedDB/idbcursor_update_objectstore8.htm",
         "url": "/IndexedDB/idbcursor_update_objectstore8.htm"
+      },
+      {
+        "path": "IndexedDB/idbcursor_update_objectstore9.htm",
+        "url": "/IndexedDB/idbcursor_update_objectstore9.htm"
       },
       {
         "path": "IndexedDB/idbdatabase_close.htm",
@@ -28801,7 +28809,7 @@
         "path": "web-animations/animation/finish.html",
         "url": "/web-animations/animation/finish.html"
       },
-       {
+      {
         "path": "web-animations/animation/finished.html",
         "url": "/web-animations/animation/finished.html"
       },
@@ -28814,20 +28822,12 @@
         "url": "/web-animations/animation/oncancel.html"
       },
       {
-       "path": "web-animations/animation/onfinish.html",
+        "path": "web-animations/animation/onfinish.html",
         "url": "/web-animations/animation/onfinish.html"
       },
       {
         "path": "web-animations/animation/pause.html",
         "url": "/web-animations/animation/pause.html"
-      },
-      {
-        "path": "web-animations/animation/ready.html",
-        "url": "/web-animations/animation/ready.html"
-      },
-      {
-        "path": "web-animations/animation/reverse.html",
-        "url": "/web-animations/animation/reverse.html"
       },
       {
         "path": "web-animations/animation/play.html",
@@ -28840,6 +28840,14 @@
       {
         "path": "web-animations/animation/playbackRate.html",
         "url": "/web-animations/animation/playbackRate.html"
+      },
+      {
+        "path": "web-animations/animation/ready.html",
+        "url": "/web-animations/animation/ready.html"
+      },
+      {
+        "path": "web-animations/animation/reverse.html",
+        "url": "/web-animations/animation/reverse.html"
       },
       {
         "path": "web-animations/keyframe-effect/constructor.html",
@@ -35160,7 +35168,10 @@
     "wdspec": []
   },
   "local_changes": {
-    "deleted": [],
+    "deleted": [
+      "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
+      "web-animations/keyframe-effect/getComputedTiming-progress.html"
+    ],
     "items": {
       "reftest": {
         "compat/webkit-text-fill-color-property-002.html": [
@@ -35225,6 +35236,12 @@
         ]
       },
       "testharness": {
+        "XMLHttpRequest/open-url-multi-window-6.htm": [
+          {
+            "path": "XMLHttpRequest/open-url-multi-window-6.htm",
+            "url": "/XMLHttpRequest/open-url-multi-window-6.htm"
+          }
+        ],
         "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html": [
           {
             "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
@@ -35253,6 +35270,24 @@
           {
             "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html",
             "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
+          }
+        ],
+        "web-animations/timing-model/active-time.html": [
+          {
+            "path": "web-animations/timing-model/active-time.html",
+            "url": "/web-animations/timing-model/active-time.html"
+          }
+        ],
+        "web-animations/timing-model/current-iteration.html": [
+          {
+            "path": "web-animations/timing-model/current-iteration.html",
+            "url": "/web-animations/timing-model/current-iteration.html"
+          }
+        ],
+        "web-animations/timing-model/simple-iteration-progress.html": [
+          {
+            "path": "web-animations/timing-model/simple-iteration-progress.html",
+            "url": "/web-animations/timing-model/simple-iteration-progress.html"
           }
         ]
       }

@@ -893,19 +893,17 @@ WebSocketImpl::GetInterface(const nsIID& aIID, void** aResult)
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
       aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv;
-    nsIScriptContext* sc = mWebSocket->GetContextForEventHandlers(&rv);
-    nsCOMPtr<nsIDocument> doc =
-      nsContentUtils::GetDocumentFromScriptContext(sc);
-    if (!doc) {
+    nsCOMPtr<nsPIDOMWindowInner> win = mWebSocket->GetWindowIfCurrent();
+    if (!win) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
+    nsresult rv;
     nsCOMPtr<nsIPromptFactory> wwatch =
       do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsPIDOMWindowOuter> outerWindow = doc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> outerWindow = win->GetOuterWindow();
     return wwatch->GetPrompt(outerWindow, aIID, aResult);
   }
 
@@ -1494,16 +1492,6 @@ WebSocketImpl::Init(JSContext* aCx,
     return;
   }
 
-  nsIScriptContext* sc = nullptr;
-  {
-    nsresult rv;
-    sc = mWebSocket->GetContextForEventHandlers(&rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
-  }
-
   nsCOMPtr<nsIURI> uri;
   {
     nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
@@ -1517,7 +1505,15 @@ WebSocketImpl::Init(JSContext* aCx,
 
   // Check content policy.
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsCOMPtr<nsIDocument> originDoc = nsContentUtils::GetDocumentFromScriptContext(sc);
+  nsCOMPtr<nsIDocument> originDoc = mWebSocket->GetDocumentIfCurrent();
+  if (!originDoc) {
+    nsresult rv = mWebSocket->CheckInnerWindowCorrectness();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+  }
+
   mOriginDocument = do_GetWeakReference(originDoc);
   aRv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
                                   uri,
@@ -2656,11 +2652,7 @@ WebSocketImpl::GetLoadGroup(nsILoadGroup** aLoadGroup)
   *aLoadGroup = nullptr;
 
   if (mIsMainThread) {
-    nsresult rv;
-    nsIScriptContext* sc = mWebSocket->GetContextForEventHandlers(&rv);
-    nsCOMPtr<nsIDocument> doc =
-      nsContentUtils::GetDocumentFromScriptContext(sc);
-
+    nsCOMPtr<nsIDocument> doc = mWebSocket->GetDocumentIfCurrent();
     if (doc) {
       *aLoadGroup = doc->GetDocumentLoadGroup().take();
     }

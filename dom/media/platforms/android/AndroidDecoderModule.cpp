@@ -73,7 +73,8 @@ GetFeatureStatus(int32_t aFeature)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(aFeature, &status))) {
+  nsCString discardFailureId;
+  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(aFeature, discardFailureId, &status))) {
     return false;
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;

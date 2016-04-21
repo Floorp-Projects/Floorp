@@ -15,7 +15,6 @@
 
 #include "mozilla/gfx/2D.h"
 #include "nsIWidget.h"
-#include "nsAutoPtr.h"
 #include "Units.h"
 
 #include <X11/Xlib.h>

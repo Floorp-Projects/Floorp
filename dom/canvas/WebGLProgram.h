@@ -156,7 +156,7 @@ public:
                            dom::Nullable< nsTArray<GLuint> >& retval) const;
     void UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) const;
 
-    bool LinkProgram();
+    void LinkProgram();
     bool UseProgram() const;
     void ValidateProgram() const;
 
@@ -195,7 +195,7 @@ public:
 private:
     ~WebGLProgram();
 
-    bool LinkAndUpdate();
+    void LinkAndUpdate();
 
 public:
     const GLuint mGLName;

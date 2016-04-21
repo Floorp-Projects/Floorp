@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <windows.h>
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShellCID.h"
 #include "nsComponentManagerUtils.h"
@@ -20,7 +21,6 @@
 #include "nsISupportsImpl.h"
 #include "nsIWidget.h"
 #include "nsIXULWindow.h"
-#include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsWindowDefs.h"

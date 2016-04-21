@@ -298,7 +298,8 @@ DriverCrashGuard::FeatureEnabled(int aFeature, bool aDefault)
     return aDefault;
   }
   int32_t status;
-  if (!NS_SUCCEEDED(mGfxInfo->GetFeatureStatus(aFeature, &status))) {
+  nsCString discardFailureId;
+  if (!NS_SUCCEEDED(mGfxInfo->GetFeatureStatus(aFeature, discardFailureId, &status))) {
     return false;
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;

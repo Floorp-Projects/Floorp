@@ -937,6 +937,9 @@ auto GeckoThread::CheckAndSetState(mozilla::jni::Object::Param a0, mozilla::jni:
     return mozilla::jni::Method<CheckAndSetState_t>::Call(GeckoThread::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoThread::CreateServices_t::name[];
+constexpr char GeckoThread::CreateServices_t::signature[];
+
 constexpr char GeckoThread::OnPause_t::name[];
 constexpr char GeckoThread::OnPause_t::signature[];
 

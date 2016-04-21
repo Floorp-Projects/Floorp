@@ -138,7 +138,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
       /* Last not least, some simple edge case tests. */
 /*70*/[ "<div>test</div><pre>foobar\n</pre>baz", "<div>testfoobar\n</div>baz" ],
 /*71*/[ "<div>test</div><pre>\nfoo\nbar</pre>", "<div>testfoo\n</div><pre>bar</pre>" ],
-/*72*/[ "<div>test</div><pre>\n\nfoo\nbar</pre>", "<div>test\n</div><pre>foo\nbar</pre>" ],
+/*72*/[ "<div>test</div><pre>\n\nfoo\nbar</pre>", "<div>test</div><pre>foo\nbar</pre>", "<div>test\n</div><pre>foo\nbar</pre>" ],
     ];
 
     /** Test for Bug 772796 **/

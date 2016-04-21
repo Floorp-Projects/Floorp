@@ -8,9 +8,9 @@
 
 #include <oleidl.h>
 
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsDataObj.h"
 #include "mozilla/Attributes.h"
 

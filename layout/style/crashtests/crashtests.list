@@ -139,6 +139,9 @@ load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html
 load 1264396-1.html
+# The following test relies on -webkit-text-fill-color being behind the
+# layout.css.prefixes.webkit pref
+pref(layout.css.prefixes.webkit,false) load 1265611-1.html
 load border-image-visited-link.html
 load font-face-truncated-src.html 
 load large_border_image_width.html

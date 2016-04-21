@@ -35,7 +35,7 @@ public:
    bool IsMaxSet()  { return (mMax  != -1); } 
    bool IsFlexSet() { return (mFlex != -1); }
    bool IsOffsetSet() { return (mTop != -1 && mBottom != -1); }
-   bool IsCollapsed();
+   bool IsXULCollapsed();
 
 public:
 

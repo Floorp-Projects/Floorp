@@ -168,6 +168,7 @@ https://sub.sectest1.example.org:443
 # Used while testing the url-classifier
 #
 http://malware.example.com:80
+http://unwanted.example.com:80
 http://tracking.example.com:80
 http://not-tracking.example.com:80
 http://tracking.example.org:80
@@ -175,6 +176,7 @@ http://itisatracker.org:80
 http://trackertest.org:80
 
 https://malware.example.com:443
+https://unwanted.example.com:443
 https://tracking.example.com:443
 https://not-tracking.example.com:443
 https://tracking.example.org:443

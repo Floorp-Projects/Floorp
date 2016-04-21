@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -719,8 +720,8 @@ public:
   nsCSSValuePairList* SetPairListValue();
 
   // These take ownership of the passed-in resource.
-  void AdoptListValue(nsCSSValueList*&& aValue);
-  void AdoptPairListValue(nsCSSValuePairList*&& aValue);
+  void AdoptListValue(mozilla::UniquePtr<nsCSSValueList> aValue);
+  void AdoptPairListValue(mozilla::UniquePtr<nsCSSValuePairList> aValue);
 
   void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
