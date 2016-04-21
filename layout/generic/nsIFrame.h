@@ -2928,7 +2928,7 @@ public:
   bool IsXULNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
   nsresult XULRedraw(nsBoxLayoutState& aState);
-  virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild)=0;
+  virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild)=0;
 
 #ifdef DEBUG_LAYOUT
   virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug)=0;
