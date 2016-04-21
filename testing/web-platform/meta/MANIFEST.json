@@ -35276,6 +35276,12 @@
             "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
           }
         ],
+        "service-workers/service-worker/navigate-window.https.html": [
+          {
+            "path": "service-workers/service-worker/navigate-window.https.html",
+            "url": "/service-workers/service-worker/navigate-window.https.html"
+          }
+        ],
         "web-animations/timing-model/active-time.html": [
           {
             "path": "web-animations/timing-model/active-time.html",
