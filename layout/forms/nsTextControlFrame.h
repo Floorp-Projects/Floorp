@@ -63,7 +63,7 @@ public:
                       nsReflowStatus&          aStatus) override;
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual bool IsCollapsed() override;
+  virtual bool IsXULCollapsed() override;
 
   virtual bool IsLeaf() const override;
   

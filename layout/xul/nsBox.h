@@ -27,7 +27,7 @@ public:
 
   virtual nsSize GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual bool IsCollapsed() override;
+  virtual bool IsXULCollapsed() override;
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowAreas = false) override;
