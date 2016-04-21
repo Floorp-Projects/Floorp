@@ -189,9 +189,25 @@ var TEST_DATA = [
     key: "p", suggestions: []
   },
   {
-    key: "]",
+    key: "]", suggestions: []
+  },
+  {
+    key: ".",
     suggestions: [
-      {label: "p[id*=p]"}
+      {label: "p[id*=p].c1"},
+      {label: "p[id*=p].c2"}
+    ]
+  },
+  {
+    key: "VK_BACK_SPACE",
+    suggestions: []
+  },
+  {
+    key: "#",
+    suggestions: [
+      {label: "p[id*=p]#p1"},
+      {label: "p[id*=p]#p2"},
+      {label: "p[id*=p]#p3"}
     ]
   }
 ];
