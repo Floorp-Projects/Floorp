@@ -1536,11 +1536,8 @@ public abstract class GeckoApp
             processTabQueue();
         }
 
-        // If we're not restoring, move the session file so it can be read for
-        // the last tabs section.
-        if (!mShouldRestore) {
-            getProfile().moveSessionFile();
-        }
+        // Make sure sessionstore.bak is either updated or deleted as necessary.
+        getProfile().updateSessionFile(mShouldRestore);
 
         recordStartupActionTelemetry(passedUri, action);
 

@@ -76,6 +76,7 @@ public final class GeckoProfile {
     // Session store
     private static final String SESSION_FILE = "sessionstore.js";
     private static final String SESSION_FILE_BACKUP = "sessionstore.bak";
+    private static final long MAX_BACKUP_FILE_AGE = 1000 * 3600 * 24; // 24 hours
 
     private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName;
@@ -761,20 +762,29 @@ public final class GeckoProfile {
     }
 
     /**
-     * Moves the session file to the backup session file.
+     * Updates the state of the old session data file.
      *
-     * sessionstore.js should hold the current session, and sessionstore.bak
-     * should hold the previous session (where it is used to read the "tabs
-     * from last time"). Normally, sessionstore.js is moved to sessionstore.bak
-     * on a clean quit, but this doesn't happen if Fennec crashed. Thus, this
-     * method should be called after a crash so sessionstore.bak correctly
-     * holds the previous session.
+     * sessionstore.js should hold the current session, and sessionstore.bak should
+     * hold the previous session (where it is used to read the "tabs from last time").
+     * If we're not restoring tabs automatically, sessionstore.js needs to be moved to
+     * sessionstore.bak, so we can display the correct "tabs from last time".
+     * If we *are* restoring tabs, we need to delete outdated copies of sessionstore.bak,
+     * so we don't continue showing stale "tabs from last time" indefinitely.
+     *
+     * @param shouldRestore Pass true if we are automatically restoring last session's tabs.
      */
-    public void moveSessionFile() {
-        File sessionFile = getFile(SESSION_FILE);
-        if (sessionFile != null && sessionFile.exists()) {
-            File sessionFileBackup = getFile(SESSION_FILE_BACKUP);
-            sessionFile.renameTo(sessionFileBackup);
+    public void updateSessionFile(boolean shouldRestore) {
+        File sessionFileBackup = getFile(SESSION_FILE_BACKUP);
+        if (!shouldRestore) {
+            File sessionFile = getFile(SESSION_FILE);
+            if (sessionFile != null && sessionFile.exists()) {
+                sessionFile.renameTo(sessionFileBackup);
+            }
+        } else {
+            if (sessionFileBackup != null && sessionFileBackup.exists() &&
+                    System.currentTimeMillis() - sessionFileBackup.lastModified() > MAX_BACKUP_FILE_AGE) {
+                sessionFileBackup.delete();
+            }
         }
     }
 
