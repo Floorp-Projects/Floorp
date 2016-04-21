@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=998893
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 998893 - Ensure that input.value changes affect autocomplete</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /** Test for Bug 998893 **/
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(setup);
+
+  function setup() {
+    SpecialPowers.formHistory.update([
+      { op : "bump", fieldname: "field1", value: "Default text option" },
+      { op : "bump", fieldname: "field1", value: "New value option" },
+    ], {
+      handleCompletion: function() {
+        runTest();
+      },
+    });
+  }
+
+  function handleEnter(evt) {
+    if (evt.keyCode != KeyEvent.DOM_VK_RETURN) {
+      return;
+    }
+    info("RETURN received for phase: " + evt.eventPhase);
+    is(evt.target.value, "New value option", "Check that the correct autocomplete entry was used");
+    SimpleTest.finish();
+  }
+
+  function popupShownListener(evt) {
+    info("popupshown");
+    sendKey("DOWN");
+    sendKey("RETURN"); // select the first entry in the popup
+    sendKey("RETURN"); // try to submit the form with the filled value
+  }
+
+  SpecialPowers.addAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+
+  function runTest() {
+    var field = document.getElementById("field1");
+    field.addEventListener("focus", function onFocus() {
+      info("field focused");
+      field.value = "New value";
+      sendKey("DOWN");
+    });
+
+    field.addEventListener("keypress", handleEnter, true);
+
+    field.focus();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998893">Mozilla Bug 998893</a>
+<p id="display"><input id="field1" value="Default text"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
