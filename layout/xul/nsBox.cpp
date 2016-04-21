@@ -214,7 +214,7 @@ nsIFrame::GetClientRect(nsRect& aClientRect)
   aClientRect.MoveTo(0,0);
 
   nsMargin borderPadding;
-  GetBorderAndPadding(borderPadding);
+  GetXULBorderAndPadding(borderPadding);
 
   aClientRect.Deflate(borderPadding);
 
@@ -284,7 +284,7 @@ nsBox::GetLayoutFlags(uint32_t& aFlags)
 
 
 nsresult
-nsIFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
+nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   aBorderAndPadding.SizeTo(0, 0, 0, 0);
   nsresult rv = GetBorder(aBorderAndPadding);
@@ -873,7 +873,7 @@ void
 nsBox::AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize)
 {
   nsMargin borderPadding(0,0,0,0);
-  aBox->GetBorderAndPadding(borderPadding);
+  aBox->GetXULBorderAndPadding(borderPadding);
   AddMargin(aSize, borderPadding);
 }
 

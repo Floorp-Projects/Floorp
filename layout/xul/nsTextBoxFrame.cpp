@@ -1062,7 +1062,7 @@ nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
 
     LogicalRect textRect(wm, LogicalPoint(wm, 0, 0), GetLogicalSize(wm));
     nsMargin borderPadding;
-    GetBorderAndPadding(borderPadding);
+    GetXULBorderAndPadding(borderPadding);
     textRect.Deflate(wm, LogicalMargin(wm, borderPadding));
 
     // determine (cropped) title and underline position
@@ -1157,7 +1157,7 @@ nsTextBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState)
     nscoord ascent = mAscent;
 
     nsMargin m(0,0,0,0);
-    GetBorderAndPadding(m);
+    GetXULBorderAndPadding(m);
 
     WritingMode wm = GetWritingMode();
     ascent += LogicalMargin(wm, m).BStart(wm);
