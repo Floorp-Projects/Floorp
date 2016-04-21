@@ -172,6 +172,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -303,6 +304,10 @@ public class BrowserApp extends GeckoApp
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
     private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
+
+    private final List<BrowserAppDelegate> delegates = Arrays.asList(
+
+    );
 
     @NonNull
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
@@ -847,6 +852,10 @@ public class BrowserApp extends GeckoApp
 
         mAddToHomeScreenPromotion = new AddToHomeScreenPromotion(this);
         AudioFocusAgent.getInstance().attachToContext(this);
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onCreate(this, savedInstanceState);
+        }
     }
 
     /**
@@ -1103,6 +1112,10 @@ public class BrowserApp extends GeckoApp
         mScreenshotObserver.start();
 
         mAddToHomeScreenPromotion.resume();
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onResume(this);
+        }
     }
 
     @Override
@@ -1119,6 +1132,19 @@ public class BrowserApp extends GeckoApp
         mScreenshotObserver.stop();
 
         mAddToHomeScreenPromotion.pause();
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onPause(this);
+        }
+    }
+
+    @Override
+    public void onRestart() {
+        super.onRestart();
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onRestart(this);
+        }
     }
 
     @Override
@@ -1155,6 +1181,10 @@ public class BrowserApp extends GeckoApp
         //
         // So we're left with onStart/onStop.
         searchEngineManager.getEngine(new UploadTelemetryCallback(BrowserApp.this));
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onStart(this);
+        }
     }
 
     @Override
@@ -1163,6 +1193,10 @@ public class BrowserApp extends GeckoApp
 
         // We only show the guest mode notification when our activity is in the foreground.
         GuestSession.hideNotification(this);
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onStop(this);
+        }
     }
 
     @Override
@@ -1529,6 +1563,10 @@ public class BrowserApp extends GeckoApp
                 // automatically on API 14+
                 nfc.setNdefPushMessageCallback(null, this);
             }
+        }
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onDestroy(this);
         }
 
         super.onDestroy();
