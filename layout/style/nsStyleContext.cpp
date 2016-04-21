@@ -575,7 +575,7 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   // which represents text frames, as well as ruby pseudos are excluded
   // because we still want to set the flag for them.
   if (aContext->GetPseudoType() == CSSPseudoElementType::AnonBox &&
-      aContext->GetPseudo() != nsCSSAnonBoxes::mozNonElement &&
+      !nsCSSAnonBoxes::IsNonElement(aContext->GetPseudo()) &&
       !RubyUtils::IsRubyPseudo(aContext->GetPseudo())) {
     return false;
   }
@@ -744,7 +744,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       containerDisp = containerContext->StyleDisplay();
     }
     if (ShouldBlockifyChildren(containerDisp) &&
-        GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
+        !nsCSSAnonBoxes::IsNonElement(GetPseudo())) {
       // NOTE: Technically, we shouldn't modify the 'display' value of
       // positioned elements, since they aren't flex/grid items. However,
       // we don't need to worry about checking for that, because if we're
@@ -815,7 +815,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
    *   ...etc.
    */
   if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-      mPseudoTag != nsCSSAnonBoxes::mozNonElement &&
+      !nsCSSAnonBoxes::IsNonElement(mPseudoTag) &&
       mParent) {
     auto cbContext = mParent;
     while (cbContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {

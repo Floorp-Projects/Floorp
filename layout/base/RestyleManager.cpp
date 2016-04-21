@@ -3118,7 +3118,7 @@ ElementRestyler::MoveStyleContextsForContentChildren(
         return false;
       }
       nsIAtom* pseudoTag = sc->GetPseudo();
-      if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement) {
+      if (pseudoTag && !nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
         return false;
       }
       aContextsToMove.AppendElement(sc);
@@ -3551,7 +3551,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
   // where we have this kind of inheritance, we keep restyling past
   // pseudos.
   nsIAtom* pseudoTag = oldContext->GetPseudo();
-  if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement) {
+  if (pseudoTag && !nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
     LOG_RESTYLE_CONTINUE("the old style context is for a pseudo");
     aRestyleResult = eRestyleResult_Continue;
     aCanStopWithStyleChange = false;
@@ -3565,7 +3565,10 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
     // be inheriting from a grandparent frame's style context (or a further
     // ancestor).
     nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
-    if (parentPseudoTag && parentPseudoTag != nsCSSAnonBoxes::mozNonElement) {
+    if (parentPseudoTag &&
+        parentPseudoTag != nsCSSAnonBoxes::mozOtherNonElement) {
+      MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::mozText,
+                 "Style of text node should not be parent of anything");
       LOG_RESTYLE_CONTINUE("the old style context's parent is for a pseudo");
       aRestyleResult = eRestyleResult_Continue;
       // Parent style context pseudo-ness doesn't affect whether we can
@@ -3922,11 +3925,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     // continuation.
     LOG_RESTYLE("using previous continuation's context");
     newContext = prevContinuationContext;
-  }
-  else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
+  } else if (nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
     NS_ASSERTION(aSelf->GetContent(),
                  "non pseudo-element frame without content node");
-    newContext = styleSet->ResolveStyleForNonElement(parentContext);
+    newContext = styleSet->ResolveStyleForNonElement(parentContext, pseudoTag);
   }
   else {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
@@ -4271,7 +4273,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     const CSSPseudoElementType extraPseudoType =
       oldExtraContext->GetPseudoType();
     NS_ASSERTION(extraPseudoTag &&
-                 extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
+                 !nsCSSAnonBoxes::IsNonElement(extraPseudoTag),
                  "extra style context is not pseudo element");
     Element* element = extraPseudoType != CSSPseudoElementType::AnonBox
                          ? mContent->AsElement() : nullptr;
