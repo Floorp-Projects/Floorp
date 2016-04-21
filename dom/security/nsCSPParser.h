@@ -54,7 +54,8 @@ class nsCSPTokenizer {
 
     inline void skipWhiteSpace()
     {
-      while (mCurChar < mEndChar && *mCurChar == ' ') {
+      while (mCurChar < mEndChar &&
+             nsContentUtils::IsHTMLWhitespace(*mCurChar)) {
         mCurToken.Append(*mCurChar++);
       }
       mCurToken.Truncate();
@@ -62,7 +63,8 @@ class nsCSPTokenizer {
 
     inline void skipWhiteSpaceAndSemicolon()
     {
-      while (mCurChar < mEndChar && (*mCurChar == ' ' || *mCurChar == ';')) {
+      while (mCurChar < mEndChar && (*mCurChar == ';' ||
+             nsContentUtils::IsHTMLWhitespace(*mCurChar))){
         mCurToken.Append(*mCurChar++);
       }
       mCurToken.Truncate();
