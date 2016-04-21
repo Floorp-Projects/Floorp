@@ -16,6 +16,7 @@
 #include "mozilla/unused.h"
 
 #include "mozilla/dom/BodyUtil.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 
 namespace mozilla {
@@ -67,18 +68,22 @@ NS_IMETHODIMP
 PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
                                        nsIPrincipal* aPrincipal)
 {
-  nsresult rv;
-  if (ShouldNotifyObservers(aPrincipal)) {
-    rv = NotifySubscriptionChangeObservers(aScope);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  nsresult rv = NotifySubscriptionChangeObservers(aScope);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  if (XRE_IsContentProcess()) {
+    // Forward XPCOM observer notifications to the parent.
+    ContentChild* parentActor = ContentChild::GetSingleton();
+    if (!NS_WARN_IF(!parentActor)) {
+      Unused << NS_WARN_IF(
+        !parentActor->SendNotifyPushSubscriptionChangeObservers(
+          PromiseFlatCString(aScope)));
     }
   }
-  if (ShouldNotifyWorkers(aPrincipal)) {
-    rv = NotifySubscriptionChangeWorkers(aScope, aPrincipal);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+
+  rv = NotifySubscriptionChangeWorkers(aScope, aPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
@@ -109,18 +114,32 @@ PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                          const nsAString& aMessageId,
                          const Maybe<nsTArray<uint8_t>>& aData)
 {
-  nsresult rv;
-  if (ShouldNotifyObservers(aPrincipal)) {
-    rv = NotifyPushObservers(aScope, aData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+  // Notify XPCOM observers in the current process.
+  nsresult rv = NotifyPushObservers(aScope, aData);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  if (XRE_IsContentProcess()) {
+    // If we're in the content process, forward the notification to the parent.
+    // We don't need to do anything if we're already in the parent;
+    // `ContentChild::RecvPush` will notify content process observers.
+    ContentChild* parentActor = ContentChild::GetSingleton();
+    if (!NS_WARN_IF(!parentActor)) {
+      if (aData) {
+        Unused << NS_WARN_IF(
+          !parentActor->SendNotifyPushObserversWithData(
+            PromiseFlatCString(aScope), PromiseFlatString(aMessageId),
+            aData.ref()));
+      } else {
+        Unused << NS_WARN_IF(
+          !parentActor->SendNotifyPushObservers(
+            PromiseFlatCString(aScope), PromiseFlatString(aMessageId)));
+      }
     }
   }
-  if (ShouldNotifyWorkers(aPrincipal)) {
-    rv = NotifyPushWorkers(aScope, aPrincipal, aMessageId, aData);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+
+  rv = NotifyPushWorkers(aScope, aPrincipal, aMessageId, aData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
@@ -140,6 +159,9 @@ PushNotifier::NotifyPushWorkers(const nsACString& aScope,
     // Notify the worker from the current process. Either we're running in
     // the content process and received a message from the parent, or e10s
     // is disabled.
+    if (!ShouldNotifyWorkers(aPrincipal)) {
+      return NS_OK;
+    }
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (!swm) {
       return NS_ERROR_FAILURE;
@@ -180,6 +202,9 @@ PushNotifier::NotifySubscriptionChangeWorkers(const nsACString& aScope,
 
   if (XRE_IsContentProcess() || !BrowserTabsRemoteAutostart()) {
     // Content process or e10s disabled.
+    if (!ShouldNotifyWorkers(aPrincipal)) {
+      return NS_OK;
+    }
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (!swm) {
       return NS_ERROR_FAILURE;
@@ -297,15 +322,6 @@ PushNotifier::DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
   }
   return obsService->NotifyObservers(aSubject, aTopic,
                                      NS_ConvertUTF8toUTF16(aScope).get());
-}
-
-bool
-PushNotifier::ShouldNotifyObservers(nsIPrincipal* aPrincipal)
-{
-  // Notify XPCOM observers for system subscriptions, or all subscriptions
-  // if the `testing.notifyAllObservers` pref is set.
-  return nsContentUtils::IsSystemPrincipal(aPrincipal) ||
-         Preferences::GetBool("dom.push.testing.notifyAllObservers");
 }
 
 bool

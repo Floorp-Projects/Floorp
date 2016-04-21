@@ -24,6 +24,9 @@
 namespace mozilla {
 namespace dom {
 
+class ContentParent;
+class ContentChild;
+
 /**
  * `PushNotifier` implements the `nsIPushNotifier` interface. This service
  * forwards incoming push messages to service workers running in the content
@@ -34,12 +37,18 @@ namespace dom {
  */
 class PushNotifier final : public nsIPushNotifier
 {
+  friend class ContentParent;
+  friend class ContentChild;
+
 public:
   PushNotifier();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushNotifier, nsIPushNotifier)
   NS_DECL_NSIPUSHNOTIFIER
+
+private:
+  virtual ~PushNotifier();
 
   nsresult NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                       const nsAString& aMessageId,
@@ -52,17 +61,11 @@ public:
                                            nsIPrincipal* aPrincipal);
   void NotifyErrorWorkers(const nsACString& aScope, const nsAString& aMessage,
                           uint32_t aFlags);
-
-protected:
-  virtual ~PushNotifier();
-
-private:
   nsresult NotifyPushObservers(const nsACString& aScope,
                                const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
   nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
                              const nsACString& aScope);
-  bool ShouldNotifyObservers(nsIPrincipal* aPrincipal);
   bool ShouldNotifyWorkers(nsIPrincipal* aPrincipal);
 };
 

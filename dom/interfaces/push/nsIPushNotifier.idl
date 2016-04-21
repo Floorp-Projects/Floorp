@@ -9,8 +9,7 @@ interface nsIPrincipal;
 
 /**
  * Fires service worker events for push messages sent to content subscriptions,
- * and XPCOM observer notifications for system subscriptions. This service
- * can only be used from the parent process.
+ * and XPCOM observer notifications for system subscriptions.
  */
 [scriptable, builtinclass, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
 interface nsIPushNotifier : nsISupports
