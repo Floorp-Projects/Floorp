@@ -858,6 +858,8 @@ AccessibleCaretManager::SelectMoreIfPhoneNumber() const
 
   SetSelectionDirection(eDirPrevious);
   ExtendPhoneNumberSelection(NS_LITERAL_STRING("backward"));
+
+  SetSelectionDirection(eDirNext);
 }
 
 void
@@ -869,6 +871,11 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
   Selection* selection = GetSelection();
 
   while (selection) {
+    // Backup the anchor focus range since both anchor node and focus node might
+    // be changed after calling Selection::Modify().
+    RefPtr<nsRange> oldAnchorFocusRange =
+      selection->GetAnchorFocusRange()->CloneRange();
+
     // Save current Focus position, and extend the selection one char.
     nsINode* focusNode = selection->GetFocusNode();
     uint32_t focusOffset = selection->FocusOffset();
@@ -888,10 +895,9 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     nsAutoString phoneRegex(NS_LITERAL_STRING("(^\\+)?[0-9\\s,\\-.()*#pw]{1,30}$"));
 
     if (!nsContentUtils::IsPatternMatching(selectedText, phoneRegex, doc)) {
-      // Backout the undesired selection extend, (collapse to original
-      // Anchor, extend to original Focus), before exit.
-      selection->Collapse(selection->GetAnchorNode(), selection->AnchorOffset());
-      selection->Extend(focusNode, focusOffset);
+      // Backout the undesired selection extend, restore the old anchor focus
+      // range before exit.
+      selection->SetAnchorFocusToRange(oldAnchorFocusRange);
       return;
     }
   }
