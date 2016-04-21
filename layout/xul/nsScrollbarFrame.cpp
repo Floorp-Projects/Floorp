@@ -167,7 +167,7 @@ nsScrollbarFrame::GetScrollbarMediator()
 }
 
 nsresult
-nsScrollbarFrame::GetMargin(nsMargin& aMargin)
+nsScrollbarFrame::GetXULMargin(nsMargin& aMargin)
 {
   nsresult rv = NS_ERROR_FAILURE;
   aMargin.SizeTo(0,0,0,0);
@@ -191,7 +191,7 @@ nsScrollbarFrame::GetMargin(nsMargin& aMargin)
   }
 
   if (NS_FAILED(rv)) {
-    rv = nsBox::GetMargin(aMargin);
+    rv = nsBox::GetXULMargin(aMargin);
   }
 
   if (NS_SUCCEEDED(rv) && !IsHorizontal()) {

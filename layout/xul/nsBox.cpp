@@ -358,7 +358,7 @@ nsBox::GetXULPadding(nsMargin& aMargin)
 }
 
 nsresult
-nsBox::GetMargin(nsMargin& aMargin)
+nsBox::GetXULMargin(nsMargin& aMargin)
 {
   aMargin.SizeTo(0,0,0,0);
   StyleMargin()->GetMargin(aMargin);
@@ -881,7 +881,7 @@ void
 nsBox::AddMargin(nsIFrame* aChild, nsSize& aSize)
 {
   nsMargin margin(0,0,0,0);
-  aChild->GetMargin(margin);
+  aChild->GetXULMargin(margin);
   AddMargin(aSize, margin);
 }
 
