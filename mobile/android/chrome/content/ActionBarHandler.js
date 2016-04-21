@@ -65,7 +65,8 @@ var ActionBarHandler = {
     if (this._selectionID) {
       let [element, win] = this._getSelectionTargets();
       if (this._targetElement === element && this._contentWindow === win) {
-        if (e.reason == 'visibilitychange' || e.reason == 'presscaret') {
+        if (e.reason == 'visibilitychange' || e.reason == 'presscaret' ||
+            e.reason == 'scroll' ) {
           this._updateVisibility();
         } else {
           let forceUpdate = e.reason == 'updateposition' || e.reason == 'releasecaret';

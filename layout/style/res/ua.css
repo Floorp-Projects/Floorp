@@ -342,6 +342,12 @@ parsererror|sourcetext {
   font-size: 12pt;
 }
 
+div:-moz-native-anonymous.moz-accessiblecaret {
+  /* Add transition effect to make caret size changing smoother. */
+  transition-duration: 250ms;
+  transition-property: width, height, margin-left;
+}
+
 div:-moz-native-anonymous.moz-accessiblecaret,
 div:-moz-native-anonymous.moz-accessiblecaret > div.image,
 div:-moz-native-anonymous.moz-accessiblecaret > div.bar {

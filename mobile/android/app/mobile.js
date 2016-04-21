@@ -889,11 +889,6 @@ pref("layout.accessiblecaret.timeout_ms", 0);
 // Android generates long tap (mouse) events.
 pref("layout.accessiblecaret.use_long_tap_injector", false);
 
-// AccessibleCarets behaviour is extended to support Android specific
-// requirements to hide carets while maintaining ActionBar visiblity during page
-// scroll.
-pref("layout.accessiblecaret.extendedvisibility", true);
-
 // Androids carets are always tilt to match the text selection guideline.
 pref("layout.accessiblecaret.always_tilt", true);
 
