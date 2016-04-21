@@ -6,20 +6,22 @@
 
 "use strict";
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-
 const {
   TAKE_SCREENSHOT_START,
   TAKE_SCREENSHOT_END,
 } = require("./index");
 
-const { getRect } = require("devtools/shared/layout/utils");
 const { getFormatStr } = require("../utils/l10n");
 const { getToplevelWindow } = require("sdk/window/utils");
-const { Task: { spawn, async } } = require("resource://gre/modules/Task.jsm");
+const { Task: { spawn } } = require("resource://gre/modules/Task.jsm");
+const e10s = require("../utils/e10s");
 
 const BASE_URL = "resource://devtools/client/responsive.html";
 const audioCamera = new window.Audio(`${BASE_URL}/audio/camera-click.mp3`);
+
+const animationFrame = () => new Promise(resolve => {
+  window.requestAnimationFrame(resolve);
+});
 
 function getFileName() {
   let date = new Date();
@@ -33,17 +35,9 @@ function getFileName() {
 }
 
 function createScreenshotFor(node) {
-  let { top, left, width, height } = getRect(window, node, window);
+  let mm = node.frameLoader.messageManager;
 
-  const canvas = document.createElementNS(HTML_NS, "canvas");
-  const ctx = canvas.getContext("2d");
-  const ratio = window.devicePixelRatio;
-  canvas.width = width * ratio;
-  canvas.height = height * ratio;
-  ctx.scale(ratio, ratio);
-  ctx.drawWindow(window, left, top, width, height, "#fff");
-
-  return canvas.toDataURL("image/png", "");
+  return e10s.request(mm, "RequestScreenshot");
 }
 
 function saveToFile(data, filename) {
@@ -73,17 +67,16 @@ module.exports = {
 
       // Waiting the next repaint, to ensure the react components
       // can be properly render after the action dispatched above
-      window.requestAnimationFrame(async(function* () {
-        let iframe = document.querySelector("iframe");
-        let data = createScreenshotFor(iframe);
+      yield animationFrame();
 
-        simulateCameraEffects(iframe);
+      let iframe = document.querySelector("iframe");
+      let data = yield createScreenshotFor(iframe);
 
-        yield saveToFile(data, getFileName());
+      simulateCameraEffects(iframe);
 
-        dispatch({ type: TAKE_SCREENSHOT_END });
-      }));
+      yield saveToFile(data, getFileName());
+
+      dispatch({ type: TAKE_SCREENSHOT_END });
     };
   }
-
 };

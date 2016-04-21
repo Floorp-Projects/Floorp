@@ -6,9 +6,6 @@
 // Test that changes in the style editor are synchronized into the
 // style inspector.
 
-/* import-globals-from ../../inspector/shared/test/head.js */
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
-
 const TEST_URI = `
   <style type='text/css'>
     div { background-color: seagreen; }

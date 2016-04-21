@@ -22,6 +22,7 @@ module.exports = createClass({
     onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
+    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
   displayName: "Viewport",
@@ -59,8 +60,9 @@ module.exports = createClass({
       location,
       screenshot,
       viewport,
-      onContentResize,
       onBrowserMounted,
+      onContentResize,
+      onUpdateDeviceModalOpen,
     } = this.props;
 
     let {
@@ -83,6 +85,7 @@ module.exports = createClass({
         onContentResize,
         onResizeViewport,
         onRotateViewport,
+        onUpdateDeviceModalOpen,
       }),
       ViewportDimension({
         viewport,

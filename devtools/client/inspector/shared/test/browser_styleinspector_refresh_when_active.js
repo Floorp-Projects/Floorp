@@ -14,6 +14,7 @@ const TEST_URI = `
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
+
   yield selectNode("#one", inspector);
 
   is(getRuleViewPropertyValue(view, "element", "color"), "red",
@@ -25,7 +26,7 @@ add_task(function*() {
 
   info("Switching to the computed-view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
-  yield openComputedView();
+  selectComputedView(inspector);
   yield onComputedViewReady;
 
   ok(getComputedViewPropertyValue(cView, "color"), "#F00",

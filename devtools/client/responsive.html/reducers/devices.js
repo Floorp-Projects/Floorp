@@ -7,10 +7,13 @@
 const {
   ADD_DEVICE,
   ADD_DEVICE_TYPE,
+  UPDATE_DEVICE_DISPLAYED,
+  UPDATE_DEVICE_MODAL_OPEN,
 } = require("../actions/index");
 
 const INITIAL_DEVICES = {
   types: [],
+  isModalOpen: false,
 };
 
 let reducers = {
@@ -25,6 +28,26 @@ let reducers = {
     return Object.assign({}, devices, {
       types: [...devices.types, deviceType],
       [deviceType]: [],
+    });
+  },
+
+  [UPDATE_DEVICE_DISPLAYED](devices, { device, deviceType, displayed }) {
+    let newDevices = devices[deviceType].map(d => {
+      if (d == device) {
+        d.displayed = displayed;
+      }
+
+      return d;
+    });
+
+    return Object.assign({}, devices, {
+      [deviceType]: newDevices,
+    });
+  },
+
+  [UPDATE_DEVICE_MODAL_OPEN](devices, { isOpen }) {
+    return Object.assign({}, devices, {
+      isModalOpen: isOpen,
     });
   },
 

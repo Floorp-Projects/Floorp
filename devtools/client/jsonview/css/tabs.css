@@ -142,7 +142,7 @@
 
 .theme-dark .tabs .tabs-menu-item:hover,
 .theme-light .tabs .tabs-menu-item:hover {
-  background-color: rgba(170,170,170,.2);
+  background-color: var(--toolbar-tab-hover);
 }
 
 .theme-dark .tabs .tabs-menu-item.is-active,
@@ -161,7 +161,7 @@
 
 .theme-dark .tabs .tabs-menu-item:active:hover,
 .theme-light .tabs .tabs-menu-item:active:hover {
-  background-color: rgba(170,170,170,.4);
+  background-color: var(--toolbar-tab-hover-active);
 }
 
 .theme-dark .tabs .tabs-menu-item.is-active,
@@ -190,7 +190,7 @@
 }
 
 .theme-dark .tabs .tabs-menu-item:active:hover {
-  background-color: hsla(206,37%,4%,.4);
+  background-color: hsla(206, 37%, 4%, .4); /* --toolbar-tab-hover-active */
 }
 
 .theme-dark .tabs .tabs-menu-item.is-active {

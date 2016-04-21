@@ -103,6 +103,7 @@
 #identity-popup-permissions-content,
 #tracking-protection-content {
   padding: 0.5em 0 1em;
+  /* .identity-popup-headline.host depends on this width */
   -moz-padding-start: calc(2em + 24px);
   -moz-padding-end: 1em;
 }
@@ -120,7 +121,7 @@
   margin: 0;
   padding: 4px 0;
   min-width: auto;
-  width: 38px;
+  width: var(--identity-popup-expander-width);
   border: 0 none;
   -moz-appearance: none;
   background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg"),
@@ -179,6 +180,13 @@
 .identity-popup-headline {
   margin: 3px 0 4px;
   font-size: 150%;
+}
+
+.identity-popup-headline.host {
+  word-wrap: break-word;
+  /* 1em + 2em + 24px is #identity-popup-security-content padding
+   * 30em is .panel-mainview:not([panelid="PanelUI-popup"]) width */
+  max-width: calc(30rem - 3rem - 24px - var(--identity-popup-expander-width))
 }
 
 .identity-popup-warning-gray {

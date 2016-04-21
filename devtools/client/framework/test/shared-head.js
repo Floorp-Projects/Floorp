@@ -165,18 +165,23 @@ function synthesizeKeyFromKeyTag(key) {
 }
 
 /**
- * Wait for eventName on target.
- * @param {Object} target An observable object that either supports on/off or
- * addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture Optional, for
+ * Wait for eventName on target to be delivered a number of times.
+ *
+ * @param {Object} target
+ *        An observable object that either supports on/off or
  *        addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Number} numTimes
+ *        Number of deliveries to wait for.
+ * @param {Boolean} useCapture
+ *        Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
-function once(target, eventName, useCapture = false) {
+function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   let deferred = promise.defer();
+  let count = 0;
 
   for (let [add, remove] of [
     ["addEventListener", "removeEventListener"],
@@ -186,14 +191,31 @@ function once(target, eventName, useCapture = false) {
     if ((add in target) && (remove in target)) {
       target[add](eventName, function onEvent(...aArgs) {
         info("Got event: '" + eventName + "' on " + target + ".");
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
+        if (++count == numTimes) {
+          target[remove](eventName, onEvent, useCapture);
+          deferred.resolve.apply(deferred, aArgs);
+        }
       }, useCapture);
       break;
     }
   }
 
   return deferred.promise;
+}
+
+/**
+ * Wait for eventName on target.
+ *
+ * @param {Object} target
+ *        An observable object that either supports on/off or
+ *        addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture
+ *        Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture = false) {
+  return waitForNEvents(target, eventName, 1, useCapture);
 }
 
 /**
@@ -220,6 +242,20 @@ function waitForTick() {
   let deferred = promise.defer();
   executeSoon(deferred.resolve);
   return deferred.promise;
+}
+
+/**
+ * This shouldn't be used in the tests, but is useful when writing new tests or
+ * debugging existing tests in order to introduce delays in the test steps
+ *
+ * @param {Number} ms
+ *        The time to wait
+ * @return A promise that resolves when the time is passed
+ */
+function wait(ms) {
+  let def = promise.defer();
+  content.setTimeout(def.resolve, ms);
+  return def.promise;
 }
 
 /**

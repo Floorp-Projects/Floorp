@@ -854,7 +854,7 @@
             <menuitem label="&recentBookmarks.label;"
                       id="BMB_recentBookmarks"
                       disabled="true"
-                      class="subviewbutton"/>
+                      class="menuitem-iconic subviewbutton"/>
             <menuseparator/>
             <menu id="BMB_bookmarksToolbar"
                   class="menu-iconic bookmark-item subviewbutton"
