@@ -268,7 +268,7 @@ nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
       childFrame = childFrame->GetNextSibling();
     }
 
-    nsSize prefSize = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
+    nsSize prefSize = mLayoutManager->GetXULPrefSize(this, aBoxLayoutState);
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = overflow.Overflow(otype);
       o.height = std::max(o.height, prefSize.height);
@@ -293,7 +293,7 @@ nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
   nsSize result(0, 0);
   if (nsContentUtils::HasNonEmptyAttr(GetContent(), kNameSpaceID_None,
                                       nsGkAtoms::sizemode)) {
-    result = GetPrefSize(aBoxLayoutState);
+    result = GetXULPrefSize(aBoxLayoutState);
     result.height = 0;
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
     if (scrollFrame &&
@@ -307,9 +307,9 @@ nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
+nsListBoxBodyFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {  
-  nsSize pref = nsBoxFrame::GetPrefSize(aBoxLayoutState);
+  nsSize pref = nsBoxFrame::GetXULPrefSize(aBoxLayoutState);
 
   int32_t size = GetFixedRowSize();
   if (size > -1)
