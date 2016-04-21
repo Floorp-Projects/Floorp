@@ -7645,13 +7645,11 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     nsIntPoint pos(pt.x, pt.y);
 
     consumeRollupEvent =
-      rollupListener->Rollup(popupsToRollup, true, &pos, &mLastRollup) ||
-      consumeRollupEvent;
+      rollupListener->Rollup(popupsToRollup, true, &pos, &mLastRollup);
     NS_IF_ADDREF(mLastRollup);
   } else {
     consumeRollupEvent =
-      rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr) ||
-      consumeRollupEvent;
+      rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
   }
 
   // Tell hook to stop processing messages
