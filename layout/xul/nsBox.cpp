@@ -138,7 +138,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
     // If the parent is dirty, all the children are dirty (nsHTMLReflowState
     // does this too).
     nsIFrame* box;
-    for (box = GetChildXULBox(this); box; box = GetNextBox(box))
+    for (box = GetChildXULBox(this); box; box = GetNextXULBox(box))
       box->AddStateBits(NS_FRAME_IS_DIRTY);
   }
 
@@ -930,7 +930,7 @@ nsBox::GetChildXULBox(const nsIFrame* aFrame)
 }
 
 /*static*/ nsIFrame*
-nsBox::GetNextBox(const nsIFrame* aFrame)
+nsBox::GetNextXULBox(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
     aFrame->GetParent()->IsXULBoxFrame() ? aFrame->GetNextSibling() : nullptr;
@@ -968,7 +968,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
     if (NS_SUCCEEDED(rv) && hit) {
       *aBox = hit;
     }
-    child = GetNextBox(child);
+    child = GetNextXULBox(child);
   }
 
   // found a child

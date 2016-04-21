@@ -169,7 +169,7 @@ nsGridRowGroupLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)
       if (monument) 
         monument->DirtyRows(deepChild, aState);
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
     }
   }
 }
@@ -191,12 +191,12 @@ nsGridRowGroupLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32
       nsIGridPart* monument = nsGrid::GetPartFromBox(deepChild);
       if (monument) {
         monument->CountRowsColumns(deepChild, aRowCount, aComputedColumnCount);
-        child = nsBox::GetNextBox(child);
+        child = nsBox::GetNextXULBox(child);
         deepChild = child;
         continue;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
 
       // if not a monument. Then count it. It will be a bogus row
       aRowCount++;
@@ -226,14 +226,14 @@ nsGridRowGroupLayout::BuildRows(nsIFrame* aBox, nsGridRow* aRows)
       nsIGridPart* monument = nsGrid::GetPartFromBox(deepChild);
       if (monument) {
         rowCount += monument->BuildRows(deepChild, &aRows[rowCount]);
-        child = nsBox::GetNextBox(child);
+        child = nsBox::GetNextXULBox(child);
         deepChild = child;
         continue;
       }
 
       aRows[rowCount].Init(child, true);
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
 
       // if not a monument. Then count it. It will be a bogus row
       rowCount++;

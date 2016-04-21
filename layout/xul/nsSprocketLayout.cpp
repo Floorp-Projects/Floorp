@@ -177,7 +177,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
     while(child) 
     {
       nsBoxFrame::LayoutChildAt(aState, child, nsRect(0,0,0,0));  
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
     }
     return NS_OK;
   }
@@ -565,7 +565,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
       childComputedBoxSize = childComputedBoxSize->next;
       childBoxSize = childBoxSize->next;
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
       count++;
     }
 
@@ -629,7 +629,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
       childRect.x += (x - origX);
       childRect.y += (y - origY);
       child->SetXULBounds(aState, childRect);
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
     }
   }
 
@@ -714,7 +714,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     if (flex > 0) 
        aFlexes++;
    
-    child = GetNextBox(child);
+    child = GetNextXULBox(child);
   }
 #endif
 
@@ -838,7 +838,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     currentBox->collapsed = collapsed;
     aFlexes += currentBox->flex;
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
 
     last = currentBox;
     currentBox = currentBox->next;
@@ -1006,7 +1006,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
       child->SetXULBounds(aState, childRect);
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 }
 
@@ -1343,7 +1343,7 @@ nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    if (isEqual) {
@@ -1411,7 +1411,7 @@ nsSprocketLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    
@@ -1471,7 +1471,7 @@ nsSprocketLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    if (isEqual) {
@@ -1529,7 +1529,7 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
         }
       //}
 
-      child = nsBox::GetNextBox(child);      
+      child = nsBox::GetNextXULBox(child);      
    }
 
    nsMargin borderPadding;

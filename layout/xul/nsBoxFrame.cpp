@@ -1510,7 +1510,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
       DrawSpacer(GetPresContext(), aDrawTarget, isHorizontal, flex, x, y, borderSize, spacerSize);
     }
 
-    kid = GetNextBox(kid);
+    kid = GetNextXULBox(kid);
   }
 }
 #endif
@@ -1823,7 +1823,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     return NS_OK;   
             }
 
-          child = GetNextBox(child);
+          child = GetNextXULBox(child);
           count++;
         }
     } else {
@@ -1841,7 +1841,7 @@ nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool
      while (child)
      {
         child->SetDebug(aState, aDebug);
-        child = GetNextBox(child);
+        child = GetNextXULBox(child);
      }
 }
 
@@ -1955,7 +1955,7 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsIFrame* aChild)
       newPrevSib = child;
     }
 
-    child = GetNextBox(child);
+    child = GetNextXULBox(child);
   }
 
   if (aChild->GetPrevSibling() == newPrevSib) {

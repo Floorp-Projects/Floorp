@@ -277,7 +277,7 @@ nsGrid::FindRowsAndColumns(nsIFrame** aRows, nsIFrame** aColumns)
       child = oldBox;
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 }
 
@@ -416,7 +416,7 @@ nsGrid::PopulateCellMap(nsGridRow* aRows, nsGridRow* aColumns, int32_t aRowCount
          else
            GetCellAt(i,j)->SetBoxInColumn(child);
 
-         child = nsBox::GetNextBox(child);
+         child = nsBox::GetNextXULBox(child);
 
          j++;
        }

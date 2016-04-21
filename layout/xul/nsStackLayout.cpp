@@ -76,7 +76,7 @@ nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddLargestSize(prefSize, pref);
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 
   AddBorderAndPadding(aBox, prefSize);
@@ -102,7 +102,7 @@ nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddLargestSize(minSize, min);
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 
   AddBorderAndPadding(aBox, minSize);
@@ -131,7 +131,7 @@ nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       AddSmallestSize(maxSize, max);
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 
   AddBorderAndPadding(aBox, maxSize);
@@ -154,7 +154,7 @@ nsStackLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
     if (ascent > vAscent)
       vAscent = ascent;
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 
   return vAscent;
@@ -359,7 +359,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
           }
        }
 
-       child = nsBox::GetNextBox(child);
+       child = nsBox::GetNextXULBox(child);
      }
    } while (grow);
    

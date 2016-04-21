@@ -52,7 +52,7 @@ nsGridRowGroupFrame::GetXULFlex()
   while (child)
   {
     totalFlex += child->GetXULFlex();
-    child = GetNextBox(child);
+    child = GetNextXULBox(child);
   }
 
   mFlex = totalFlex;

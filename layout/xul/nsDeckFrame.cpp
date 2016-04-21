@@ -220,7 +220,7 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
     if (count != mIndex) 
       HideBox(box);
 
-    box = GetNextBox(box);
+    box = GetNextXULBox(box);
     count++;
   }
 
