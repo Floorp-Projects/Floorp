@@ -716,7 +716,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     count++;
   }
 
-  if (!mParentBox->IsNormalDirection()) {
+  if (!mParentBox->IsXULNormalDirection()) {
     // The before array is really the after array, and the order needs to be reversed.
     // First reverse both arrays.
     Reverse(mChildInfosBefore, mChildInfosBeforeCount);
