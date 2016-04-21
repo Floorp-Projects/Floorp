@@ -769,7 +769,7 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug)
           return NS_OK;
 
       while (aList) {
-        if (aList->IsBoxFrame())
+        if (aList->IsXULBoxFrame())
           aList->SetDebug(aState, aDebug);
 
         aList = aList->GetNextSibling();
