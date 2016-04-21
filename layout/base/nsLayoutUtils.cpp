@@ -167,6 +167,7 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 /* static */ bool nsLayoutUtils::sCSSVariablesEnabled;
 /* static */ bool nsLayoutUtils::sInterruptibleReflowEnabled;
 /* static */ bool nsLayoutUtils::sSVGTransformBoxEnabled;
+/* static */ bool nsLayoutUtils::sTextCombineUprightDigitsEnabled;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
@@ -7716,6 +7717,8 @@ nsLayoutUtils::Initialize()
                                "layout.interruptible-reflow.enabled");
   Preferences::AddBoolVarCache(&sSVGTransformBoxEnabled,
                                "svg.transform-box.enabled");
+  Preferences::AddBoolVarCache(&sTextCombineUprightDigitsEnabled,
+                               "layout.css.text-combine-upright-digits.enabled");
 
   for (auto& callback : kPrefCallbacks) {
     Preferences::RegisterCallbackAndCall(callback.func, callback.name);

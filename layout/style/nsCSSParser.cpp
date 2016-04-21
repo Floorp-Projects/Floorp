@@ -15165,6 +15165,9 @@ CSSParserImpl::ParseTextCombineUpright(nsCSSValue& aValue)
   // if 'digits', need to check for an explicit number [2, 3, 4]
   if (eCSSUnit_Enumerated == aValue.GetUnit() &&
       aValue.GetIntValue() == NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2) {
+    if (!nsLayoutUtils::TextCombineUprightDigitsEnabled()) {
+      return false;
+    }
     if (!GetToken(true)) {
       return true;
     }
