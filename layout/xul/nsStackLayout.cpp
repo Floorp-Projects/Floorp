@@ -255,7 +255,7 @@ NS_IMETHODIMP
 nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsRect clientRect;
-  aBox->GetClientRect(clientRect);
+  aBox->GetXULClientRect(clientRect);
 
   bool grow;
 

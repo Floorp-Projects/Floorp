@@ -1008,7 +1008,7 @@ nsListBoxBodyFrame::CreateRows()
 {
   // Get our client rect.
   nsRect clientRect;
-  GetClientRect(clientRect);
+  GetXULClientRect(clientRect);
 
   // Get the starting y position and the remaining available
   // height.

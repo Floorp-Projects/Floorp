@@ -208,7 +208,7 @@ nsBox::RelayoutChildAtOrdinal(nsIFrame* aChild)
 }
 
 nsresult
-nsIFrame::GetClientRect(nsRect& aClientRect)
+nsIFrame::GetXULClientRect(nsRect& aClientRect)
 {
   aClientRect = mRect;
   aClientRect.MoveTo(0,0);

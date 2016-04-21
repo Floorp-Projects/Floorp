@@ -329,7 +329,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
                             uint32_t aFlags)
 {
   nsRect constraintRect;
-  GetClientRect(constraintRect);
+  GetXULClientRect(constraintRect);
 
   constraintRect += aPt;
 
@@ -476,7 +476,7 @@ nsDisplayXULImage::GetDestRect()
   nsImageBoxFrame* imageFrame = static_cast<nsImageBoxFrame*>(mFrame);
 
   nsRect clientRect;
-  imageFrame->GetClientRect(clientRect);
+  imageFrame->GetXULClientRect(clientRect);
 
   return clientRect + ToReferenceFrame();
 }

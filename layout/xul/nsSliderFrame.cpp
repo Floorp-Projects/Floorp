@@ -341,7 +341,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     thumbRect.Inflate(m);
 
     nsRect crect;
-    GetClientRect(crect);
+    GetXULClientRect(crect);
 
     if (crect.width < thumbRect.width || crect.height < thumbRect.height)
       return;
@@ -410,7 +410,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   // get the content area inside our borders
   nsRect clientRect;
-  GetClientRect(clientRect);
+  GetXULClientRect(clientRect);
 
   // get the scrollbar
   nsIFrame* scrollbarBox = GetScrollbar();
@@ -750,7 +750,7 @@ nsSliderFrame::CurrentPositionChanged()
   nsRect thumbRect = thumbFrame->GetRect();
 
   nsRect clientRect;
-  GetClientRect(clientRect);
+  GetXULClientRect(clientRect);
 
   // figure out the new rect
   nsRect newThumbRect(thumbRect);
@@ -820,7 +820,7 @@ nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumb
                                        bool aIsSmooth, bool aMaySnap)
 {
   nsRect crect;
-  GetClientRect(crect);
+  GetXULClientRect(crect);
   nscoord offset = IsHorizontal() ? crect.x : crect.y;
   int32_t newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
   
@@ -1284,7 +1284,7 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   // position.
 #ifdef MOZ_WIDGET_GTK
   nsRect clientRect;
-  GetClientRect(clientRect);
+  GetXULClientRect(clientRect);
 
   // Set the destination point to the very end of the scrollbar so that
   // scrolling doesn't stop halfway through.
