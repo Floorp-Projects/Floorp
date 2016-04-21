@@ -1324,22 +1324,16 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
 GLContextProviderGLX::GetGlobalContext()
 {
     // TODO: get GLX context sharing to work well with multiple threads
-    if (gfxEnv::DisableContextSharingGlx()) {
+    if (gfxEnv::DisableContextSharingGlx())
         return nullptr;
-    }
 
     static bool triedToCreateContext = false;
-    if (!triedToCreateContext && !gGlobalContext) {
+    if (!triedToCreateContext) {
         triedToCreateContext = true;
 
-        IntSize dummySize = IntSize(16, 16);
-        SurfaceCaps dummyCaps = SurfaceCaps::Any();
-        // StaticPtr doesn't support assignments from already_AddRefed,
-        // so use a temporary nsRefPtr to make the reference counting
-        // fall out correctly.
-        RefPtr<GLContext> holder;
-        holder = CreateOffscreenPixmapContext(dummySize, dummyCaps);
-        gGlobalContext = holder;
+        MOZ_RELEASE_ASSERT(!gGlobalContext);
+        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
+        gGlobalContext = temp;
     }
 
     return gGlobalContext;
