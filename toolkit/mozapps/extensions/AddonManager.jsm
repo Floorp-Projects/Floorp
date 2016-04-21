@@ -314,10 +314,12 @@ function webAPIForAddon(addon) {
 
   let result = {};
 
-  // By default just pass through any plain property, the webidl will control
-  // access.
+  // By default just pass through any plain property, the webidl will
+  // control access.  Also filter out private properties, regular Addon
+  // objects are okay but MockAddon used in tests has non-serializable
+  // private properties.
   for (let prop in addon) {
-    if (typeof(addon[prop]) != "function") {
+    if (prop[0] != "_" && typeof(addon[prop]) != "function") {
       result[prop] = addon[prop];
     }
   }
@@ -2856,6 +2858,24 @@ var AddonManagerInternal = {
           resolve(result);
         };
         AddonManager.getInstallForURL(options.url, newInstall, "application/x-xpinstall");
+      });
+    },
+
+    addonUninstall(target, id) {
+      return new Promise(resolve => {
+        AddonManager.getAddonByID(id, addon => {
+          if (!addon) {
+            resolve(false);
+          }
+
+          try {
+            addon.uninstall();
+            resolve(true);
+          } catch (err) {
+            Cu.reportError(err);
+            resolve(false);
+          }
+        });
       });
     },
 
