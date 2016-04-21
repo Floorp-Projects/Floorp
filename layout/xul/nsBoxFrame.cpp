@@ -1400,7 +1400,7 @@ void
 nsBoxFrame::PaintXULDebugBackground(DrawTarget* aDrawTarget, nsPoint aPt)
 {
   nsMargin border;
-  GetBorder(border);
+  GetXULBorder(border);
 
   nsMargin debugBorder;
   nsMargin debugMargin;
@@ -1462,7 +1462,7 @@ void
 nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
 {
   nsMargin border;
-  GetBorder(border);
+  GetXULBorder(border);
 
   nsMargin debugMargin;
   GetDebugMargin(debugMargin);

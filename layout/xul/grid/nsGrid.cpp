@@ -657,7 +657,7 @@ nsGrid::GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsH
        // get real border and padding. GetXULBorderAndPadding
        // is redefined on nsGridRowLeafFrame. If we called it here
        // we would be in finite recurson.
-       box->GetBorder(border);
+       box->GetXULBorder(border);
        box->GetPadding(padding);
 
        totalBorderPadding += border;
@@ -726,7 +726,7 @@ nsGrid::GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsH
            // get real border and padding. GetXULBorderAndPadding
            // is redefined on nsGridRowLeafFrame. If we called it here
            // we would be in finite recurson.
-           box->GetBorder(border);
+           box->GetXULBorder(border);
            box->GetPadding(padding);
            totalChildBorderPadding += border;
            totalChildBorderPadding += padding;
