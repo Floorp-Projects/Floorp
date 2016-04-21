@@ -59,14 +59,14 @@ nsStackLayout::nsStackLayout()
  */
 
 nsSize
-nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsStackLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize prefSize (0, 0);
 
   nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
-      nsSize pref = child->GetPrefSize(aState);
+      nsSize pref = child->GetXULPrefSize(aState);
 
       AddMargin(child, pref);
       nsMargin offset;
@@ -307,12 +307,12 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
                 childRect.width = clamped(width, min.width, max.width);
               }
               else {
-                nscoord width = child->GetPrefSize(aState).width;
+                nscoord width = child->GetXULPrefSize(aState).width;
                 childRect.width = clamped(width, min.width, max.width);
               }
             }
             else if (offsetSpecified & SPECIFIED_RIGHT) {
-              nscoord width = child->GetPrefSize(aState).width;
+              nscoord width = child->GetXULPrefSize(aState).width;
               childRect.width = clamped(width, min.width, max.width);
               childRect.x = clientRect.XMost() - offset.right - margin.right - childRect.width;
             }
@@ -324,12 +324,12 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
                 childRect.height = clamped(height, min.height, max.height);
               }
               else {
-                nscoord height = child->GetPrefSize(aState).height;
+                nscoord height = child->GetXULPrefSize(aState).height;
                 childRect.height = clamped(height, min.height, max.height);
               }
             }
             else if (offsetSpecified & SPECIFIED_BOTTOM) {
-              nscoord height = child->GetPrefSize(aState).height;
+              nscoord height = child->GetXULPrefSize(aState).height;
               childRect.height = clamped(height, min.height, max.height);
               childRect.y = clientRect.YMost() - offset.bottom - margin.bottom - childRect.height;
             }

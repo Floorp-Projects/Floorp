@@ -88,7 +88,7 @@ public:
   virtual void MarkIntrinsicISizesDirty() override;
 
   virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   // size calculation 
   int32_t GetRowCount();

@@ -320,7 +320,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
         // ALIGN is not stretch, however, then we also need to know the child's size along the
         // opposite axis.
         if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-           nsSize prefSize = child->GetPrefSize(aState);
+           nsSize prefSize = child->GetXULPrefSize(aState);
            nsSize minSize = child->GetXULMinSize(aState);
            nsSize maxSize = child->GetMaxSize(aState);
            prefSize = nsBox::BoundsCheck(minSize, prefSize, maxSize);
@@ -744,7 +744,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     // 0 then and not even have to ask for it.
     //if (flexes != 1)  {
 
-      pref = child->GetPrefSize(aState);
+      pref = child->GetXULPrefSize(aState);
       minSize = child->GetXULMinSize(aState);
       maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetMaxSize(aState));
       ascent = child->GetBoxAscent(aState);
@@ -1304,7 +1304,7 @@ nsSprocketLayout::ComputeChildSizes(nsIFrame* aBox,
 
 
 nsSize
-nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nsSize vpref (0, 0); 
    bool isHorizontal = IsHorizontal(aBox);
@@ -1325,7 +1325,7 @@ nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
       // ignore collapsed children
       if (!child->IsCollapsed())
       {
-        nsSize pref = child->GetPrefSize(aState);
+        nsSize pref = child->GetXULPrefSize(aState);
         AddMargin(child, pref);
 
         if (isEqual) {
@@ -1388,7 +1388,7 @@ nsSprocketLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         // if the child is not flexible then
         // its min size is its pref size.
         if (child->GetFlex() == 0) {
-            pref = child->GetPrefSize(aState);
+            pref = child->GetXULPrefSize(aState);
             if (isHorizontal)
                min.width = pref.width;
             else

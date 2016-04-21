@@ -34,7 +34,7 @@ nsBoxLayout::AddMargin(nsSize& aSize, const nsMargin& aMargin)
 }
 
 nsSize
-nsBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize pref (0, 0);
   AddBorderAndPadding(aBox, pref);

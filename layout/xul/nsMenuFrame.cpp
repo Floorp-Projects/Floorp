@@ -1350,7 +1350,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
       nsMenuPopupFrame* popupFrame = GetPopup();
       if (!popupFrame)
         return false;
-      tmpSize = popupFrame->GetPrefSize(aState);
+      tmpSize = popupFrame->GetXULPrefSize(aState);
 
       // Produce a size such that:
       //  (1) the menu and its popup can be the same width
@@ -1380,9 +1380,9 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 }
 
 nsSize
-nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState)
+nsMenuFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 {
-  nsSize size = nsBoxFrame::GetPrefSize(aState);
+  nsSize size = nsBoxFrame::GetXULPrefSize(aState);
   DISPLAY_PREF_SIZE(this, size);
 
   // If we are using sizetopopup="always" then

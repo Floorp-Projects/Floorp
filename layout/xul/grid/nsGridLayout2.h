@@ -41,7 +41,7 @@ public:
   }
   virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override { aRowCount++; }
   virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override { }
   virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;

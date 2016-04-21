@@ -392,7 +392,7 @@ nsBox::DoesNeedRecalc(nscoord aCoord)
 }
 
 nsSize
-nsBox::GetPrefSize(nsBoxLayoutState& aState)
+nsBox::GetXULPrefSize(nsBoxLayoutState& aState)
 {
   NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
 
@@ -487,7 +487,7 @@ nsBox::GetBoxAscent(nsBoxLayoutState& aState)
   if (IsCollapsed())
     return 0;
 
-  return GetPrefSize(aState).height;
+  return GetXULPrefSize(aState).height;
 }
 
 bool
@@ -606,7 +606,7 @@ nsIFrame::AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &a
     // see if the width or height was specifically set
     // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
-    // GetPrefSize/GetXULMinSize methods that don't consider
+    // GetXULPrefSize/GetXULMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.)
     const nsStyleCoord &width = position->mWidth;
     if (width.GetUnit() == eStyleUnit_Coord) {
@@ -718,7 +718,7 @@ nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
     }
     // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
-    // GetPrefSize/GetXULMinSize methods that don't consider
+    // GetXULPrefSize/GetXULMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.
     // calc() with percentage is treated like '0' (unset)
 
@@ -787,7 +787,7 @@ nsIFrame::AddCSSMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
     // see if the width or height was specifically set
     // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
-    // GetPrefSize/GetXULMinSize methods that don't consider
+    // GetXULPrefSize/GetXULMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.)
     const nsStyleCoord maxWidth = position->mMaxWidth;
     if (maxWidth.ConvertsToLength()) {

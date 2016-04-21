@@ -1108,7 +1108,7 @@ nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
  * Ok return our dimensions
  */
 nsSize
-nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
+nsTextBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {
     CalcTextSize(aBoxLayoutState);
 

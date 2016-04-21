@@ -46,7 +46,7 @@ nsPlaceholderFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 /* virtual */ nsSize
-nsPlaceholderFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
+nsPlaceholderFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize size(0, 0);
   DISPLAY_PREF_SIZE(this, size);

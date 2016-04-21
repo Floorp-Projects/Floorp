@@ -545,7 +545,7 @@ nsImageBoxFrame::GetImageSize()
  * Ok return our dimensions
  */
 nsSize
-nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
+nsImageBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 {
   nsSize size(0,0);
   DISPLAY_PREF_SIZE(this, size);
@@ -637,7 +637,7 @@ nsImageBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
 nscoord
 nsImageBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
-  return GetPrefSize(aState).height;
+  return GetXULPrefSize(aState).height;
 }
 
 nsIAtom*
