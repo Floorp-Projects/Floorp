@@ -67,10 +67,8 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
   }
   MOZ_DIAGNOSTIC_ASSERT(mOutputRate, "output rate can't be 0.");
 
-  bool monoAudioEnabled = gfxPrefs::MonoAudio();
-
-  mOutputChannels = monoAudioEnabled
-    ? 1 : (gfxPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+  mOutputChannels = mInfo.mChannels > 2 && gfxPrefs::AudioSinkForceStereo()
+                      ? 2 : mInfo.mChannels;
 }
 
 DecodedAudioDataSink::~DecodedAudioDataSink()
