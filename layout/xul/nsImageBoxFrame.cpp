@@ -717,7 +717,7 @@ nsresult
 nsImageBoxFrame::OnDecodeComplete(imgIRequest* aRequest)
 {
   nsBoxLayoutState state(PresContext());
-  this->Redraw(state);
+  this->XULRedraw(state);
   return NS_OK;
 }
 
