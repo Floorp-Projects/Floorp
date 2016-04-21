@@ -713,6 +713,11 @@ this.PushServiceHttp2 = {
     return this._unsubscribeResource(aRecord.subscriptionUri);
   },
 
+  reportDeliveryError: function(messageID, reason) {
+    console.warn("reportDeliveryError: Ignoring message delivery error",
+      messageID, reason);
+  },
+
   /** Push server has deleted subscription.
    *  Re-subscribe - if it succeeds send update db record and send
    *                 pushsubscriptionchange,

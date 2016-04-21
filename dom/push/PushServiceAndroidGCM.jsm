@@ -125,7 +125,7 @@ this.PushServiceAndroidGCM = {
 
       console.debug("Delivering message to main PushService:", message, cryptoParams);
       this._mainPushService.receivedPushMessage(
-        data.channelID, message, cryptoParams, (record) => {
+        data.channelID, "", message, cryptoParams, (record) => {
           // Always update the stored record.
           return record;
         });
@@ -238,6 +238,11 @@ this.PushServiceAndroidGCM = {
       type: "PushServiceAndroidGCM:UnsubscribeChannel",
       channelID: record.keyID,
     });
+  },
+
+  reportDeliveryError: function(messageID, reason) {
+    console.warn("reportDeliveryError: Ignoring message delivery error",
+      messageID, reason);
   },
 };
 
