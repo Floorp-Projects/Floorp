@@ -1255,7 +1255,8 @@ public:
    * @param aSizeInflation number to multiply font size by
    */
   static already_AddRefed<nsFontMetrics> GetFontMetricsForStyleContext(
-      nsStyleContext* aStyleContext, float aSizeInflation = 1.0f);
+      nsStyleContext* aStyleContext, float aSizeInflation = 1.0f,
+      uint8_t aVariantWidth = NS_FONT_VARIANT_WIDTH_NORMAL);
 
   /**
    * Get the font metrics of emphasis marks corresponding to the given
