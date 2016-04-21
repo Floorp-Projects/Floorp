@@ -182,7 +182,7 @@ InitBoxMetrics(nsIFrame* aFrame, bool aClear)
 }
 
 static bool
-IsBoxWrapped(const nsIFrame* aFrame)
+IsXULBoxWrapped(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
          aFrame->GetParent()->IsXULBoxFrame() &&
@@ -608,7 +608,7 @@ nsFrame::Init(nsIContent*       aContent,
 
   DidSetStyleContext(nullptr);
 
-  if (::IsBoxWrapped(this))
+  if (::IsXULBoxWrapped(this))
     ::InitBoxMetrics(this, false);
 }
 
@@ -4242,7 +4242,7 @@ nsFrame::MarkIntrinsicISizesDirty()
 {
   // This version is meant only for what used to be box-to-block adaptors.
   // It should not be called by other derived classes.
-  if (::IsBoxWrapped(this)) {
+  if (::IsXULBoxWrapped(this)) {
     nsBoxLayoutMetrics *metrics = BoxMetrics();
 
     SizeNeedsRecalc(metrics->mPrefSize);
@@ -5881,7 +5881,7 @@ nsFrame::UpdateOverflow()
   nsOverflowAreas overflowAreas(rect, rect);
 
   if (!DoesClipChildren() &&
-      !(IsCollapsed() && (IsXULBoxFrame() || ::IsBoxWrapped(this)))) {
+      !(IsCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
   }
 
@@ -7971,7 +7971,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   // Note that NS_STYLE_OVERFLOW_CLIP doesn't clip the frame background,
   // so we add theme background overflow here so it's not clipped.
-  if (!::IsBoxWrapped(this) && IsThemed(disp)) {
+  if (!::IsXULBoxWrapped(this) && IsThemed(disp)) {
     nsRect r(bounds);
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
@@ -9208,12 +9208,12 @@ nsIFrame::SetParent(nsContainerFrame* aParent)
 {
   // Note that the current mParent may already be destroyed at this point.
   mParent = aParent;
-  if (::IsBoxWrapped(this)) {
+  if (::IsXULBoxWrapped(this)) {
     ::InitBoxMetrics(this, true);
   } else {
     // We could call Properties().Delete(BoxMetricsProperty()); here but
     // that's kind of slow and re-parenting in such a way that we were
-    // IsBoxWrapped() before but not now should be very rare, so we'll just
+    // IsXULBoxWrapped() before but not now should be very rare, so we'll just
     // keep this unused frame property until this frame dies instead.
   }
 

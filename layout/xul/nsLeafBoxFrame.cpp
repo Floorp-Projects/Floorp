@@ -380,7 +380,7 @@ nsLeafBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 nsLeafBoxFrame::MarkIntrinsicISizesDirty()
 {
   // Don't call base class method, since everything it does is within an
-  // IsBoxWrapped check.
+  // IsXULBoxWrapped check.
 }
 
 NS_IMETHODIMP
