@@ -922,16 +922,10 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   }
 }
 
-bool nsBaseWidget::IsSmallPopup() const
-{
-  return mWindowType == eWindowType_popup || mPopupType == ePopupTypePanel;
-}
-
 bool
 nsBaseWidget::ComputeShouldAccelerate()
 {
-  return !IsSmallPopup() &&
-         gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration();
+  return gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration();
 }
 
 CompositorBridgeParent* nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
