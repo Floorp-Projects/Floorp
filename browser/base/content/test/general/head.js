@@ -611,9 +611,19 @@ function promiseTabLoadEvent(tab, url)
   let deferred = Promise.defer();
   info("Wait tab event: load");
 
+  function handle(loadedUrl) {
+    if (loadedUrl === "about:blank" || (url && loadedUrl !== url)) {
+      info(`Skipping spurious load event for ${loadedUrl}`);
+      return false;
+    }
+
+    info("Tab event received: load");
+    return true;
+  }
+
   // Create two promises: one resolved from the content process when the page
   // loads and one that is rejected if we take too long to load the url.
-  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url);
+  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, handle);
 
   let timeout = setTimeout(() => {
     deferred.reject(new Error("Timed out while waiting for a 'load' event"));

@@ -2784,13 +2784,110 @@ var AddonManagerInternal = {
   },
 
   webAPI: {
-    getAddonByID(id) {
+    // installs maps integer ids to AddonInstall instances.
+    installs: new Map(),
+    nextInstall: 0,
+
+    sendEvent: null,
+    setEventHandler(fn) {
+      this.sendEvent = fn;
+    },
+
+    getAddonByID(target, id) {
       return new Promise(resolve => {
         AddonManager.getAddonByID(id, (addon) => {
           resolve(webAPIForAddon(addon));
         });
       });
-    }
+    },
+
+    // helper to copy (and convert) the properties we care about
+    copyProps(install, obj) {
+      obj.state = AddonManager.stateToString(install.state);
+      obj.error = AddonManager.errorToString(install.error);
+      obj.progress = install.progress;
+      obj.maxProgress = install.maxProgress;
+    },
+
+    makeListener(id, target) {
+      const events = [
+        "onDownloadStarted",
+        "onDownloadProgress",
+        "onDownloadEnded",
+        "onDownloadCancelled",
+        "onDownloadFailed",
+        "onInstallStarted",
+        "onInstallEnded",
+        "onInstallCancelled",
+        "onInstallFailed",
+      ];
+
+      let listener = {};
+      events.forEach(event => {
+        listener[event] = (install) => {
+          let data = {event, id};
+          AddonManager.webAPI.copyProps(install, data);
+          this.sendEvent(target, data);
+        }
+      });
+      return listener;
+    },
+
+    forgetInstall(id) {
+      let info = this.installs.get(id);
+      if (!info) {
+        throw new Error(`forgetInstall cannot find ${id}`);
+      }
+      info.install.removeListener(info.listener);
+      this.installs.delete(id);
+    },
+
+    createInstall(target, options) {
+      return new Promise((resolve) => {
+        let newInstall = install => {
+          let id = this.nextInstall++;
+          let listener = this.makeListener(id, target);
+          install.addListener(listener);
+
+          this.installs.set(id, {install, target, listener});
+
+          let result = {id};
+          this.copyProps(install, result);
+          resolve(result);
+        };
+        AddonManager.getInstallForURL(options.url, newInstall, "application/x-xpinstall");
+      });
+    },
+
+    addonInstallDoInstall(target, id) {
+      let state = this.installs.get(id);
+      if (!state) {
+        return Promise.reject(`invalid id ${id}`);
+      }
+      return Promise.resolve(state.install.install());
+    },
+
+    addonInstallCancel(target, id) {
+      let state = this.installs.get(id);
+      if (!state) {
+        return Promise.reject(`invalid id ${id}`);
+      }
+      return Promise.resolve(state.install.cancel());
+    },
+
+    clearInstalls(ids) {
+      for (let id of ids) {
+        this.forgetInstall(id);
+      }
+    },
+
+    clearInstallsFrom(mm) {
+      for (let [id, info] of this.installs) {
+        if (info.target == mm) {
+          this.forgetInstall(id);
+        }
+      }
+    },
   },
 };
 
@@ -2951,39 +3048,45 @@ this.AddonManagerPrivate = {
  */
 this.AddonManager = {
   // Constants for the AddonInstall.state property
-  // The install is available for download.
-  STATE_AVAILABLE: 0,
-  // The install is being downloaded.
-  STATE_DOWNLOADING: 1,
-  // The install is checking for compatibility information.
-  STATE_CHECKING: 2,
-  // The install is downloaded and ready to install.
-  STATE_DOWNLOADED: 3,
-  // The download failed.
-  STATE_DOWNLOAD_FAILED: 4,
-  // The add-on is being installed.
-  STATE_INSTALLING: 5,
-  // The add-on has been installed.
-  STATE_INSTALLED: 6,
-  // The install failed.
-  STATE_INSTALL_FAILED: 7,
-  // The install has been cancelled.
-  STATE_CANCELLED: 8,
+  // These will show up as AddonManager.STATE_* (eg, STATE_AVAILABLE)
+  _states: new Map([
+    // The install is available for download.
+    ["STATE_AVAILABLE",  0],
+    // The install is being downloaded.
+    ["STATE_DOWNLOADING",  1],
+    // The install is checking for compatibility information.
+    ["STATE_CHECKING", 2],
+    // The install is downloaded and ready to install.
+    ["STATE_DOWNLOADED", 3],
+    // The download failed.
+    ["STATE_DOWNLOAD_FAILED", 4],
+    // The add-on is being installed.
+    ["STATE_INSTALLING", 5],
+    // The add-on has been installed.
+    ["STATE_INSTALLED", 6],
+    // The install failed.
+    ["STATE_INSTALL_FAILED", 7],
+    // The install has been cancelled.
+    ["STATE_CANCELLED", 8],
+  ]),
 
   // Constants representing different types of errors while downloading an
   // add-on.
-  // The download failed due to network problems.
-  ERROR_NETWORK_FAILURE: -1,
-  // The downloaded file did not match the provided hash.
-  ERROR_INCORRECT_HASH: -2,
-  // The downloaded file seems to be corrupted in some way.
-  ERROR_CORRUPT_FILE: -3,
-  // An error occured trying to write to the filesystem.
-  ERROR_FILE_ACCESS: -4,
-  // The add-on must be signed and isn't.
-  ERROR_SIGNEDSTATE_REQUIRED: -5,
-  // The downloaded add-on had a different type than expected.
-  ERROR_UNEXPECTED_ADDON_TYPE: -6,
+  // These will show up as AddonManager.ERROR_* (eg, ERROR_NETWORK_FAILURE)
+  _errors: new Map([
+    // The download failed due to network problems.
+    ["ERROR_NETWORK_FAILURE", -1],
+    // The downloaded file did not match the provided hash.
+    ["ERROR_INCORRECT_HASH", -2],
+    // The downloaded file seems to be corrupted in some way.
+    ["ERROR_CORRUPT_FILE", -3],
+    // An error occured trying to write to the filesystem.
+    ["ERROR_FILE_ACCESS", -4],
+    // The add-on must be signed and isn't.
+    ["ERROR_SIGNEDSTATE_REQUIRED", -5],
+    // The downloaded add-on had a different type than expected.
+    ["ERROR_UNEXPECTED_ADDON_TYPE", -6],
+  ]),
 
   // These must be kept in sync with AddonUpdateChecker.
   // No error was encountered.
@@ -3163,6 +3266,27 @@ this.AddonManager = {
 
   get isReady() {
     return gStartupComplete && !gShutdownInProgress;
+  },
+
+  init() {
+    this._stateToString = new Map();
+    for (let [name, value] of this._states) {
+      this[name] = value;
+      this._stateToString.set(value, name);
+    }
+    this._errorToString = new Map();
+    for (let [name, value] of this._errors) {
+      this[name] = value;
+      this._errorToString.set(value, name);
+    }
+  },
+
+  stateToString(state) {
+    return this._stateToString.get(state);
+  },
+
+  errorToString(err) {
+    return err ? this._errorToString.get(err) : null;
   },
 
   getInstallForURL: function(aUrl, aCallback, aMimetype,
@@ -3381,6 +3505,8 @@ this.AddonManager = {
     return gShutdownBarrier.client;
   },
 };
+
+this.AddonManager.init();
 
 // load the timestamps module into AddonManagerInternal
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);

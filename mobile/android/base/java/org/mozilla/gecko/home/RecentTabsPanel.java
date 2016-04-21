@@ -22,6 +22,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -286,6 +287,15 @@ public class RecentTabsPanel extends HomeFragment
 
         @Override
         public Cursor loadCursor() {
+            // TwoLinePageRow requires the SavedReaderViewHelper to be initialised. Usually this is
+            // done as part of BrowserDatabaseHelper.onOpen(), however we don't actually access
+            // the DB when showing the Recent Tabs panel, hence it's possible that the SavedReaderViewHelper
+            // isn't loaded. Therefore we need to explicitly force loading here.
+            // Note: loadCursor is run on a background thread, hence it's safe to do this here.
+            // (loading time is a few ms, and hence shouldn't impact overall loading time for this
+            // panel in any significant way).
+            SavedReaderViewHelper.getSavedReaderViewHelper(getContext()).loadItems();
+
             final Context context = getContext();
 
             final MatrixCursor c = new MatrixCursor(new String[] { RecentTabs._ID,

@@ -23,6 +23,10 @@
              oncommand="goDoCommand('downloadsCmd_cancel')"/>
     <command id="downloadsCmd_unblock"
              oncommand="goDoCommand('downloadsCmd_unblock')"/>
+    <command id="downloadsCmd_chooseUnblock"
+             oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
+    <command id="downloadsCmd_chooseOpen"
+             oncommand="goDoCommand('downloadsCmd_chooseOpen')"/>
     <command id="downloadsCmd_confirmBlock"
              oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
     <command id="downloadsCmd_open"
@@ -71,8 +75,8 @@
                   accesskey="&cmd.cancel.accesskey;"/>
         <menuitem command="downloadsCmd_unblock"
                   class="downloadUnblockMenuItem"
-                  label="&cmd.unblock.label;"
-                  accesskey="&cmd.unblock.accesskey;"/>
+                  label="&cmd.unblock2.label;"
+                  accesskey="&cmd.unblock2.accesskey;"/>
         <menuitem command="cmd_delete"
                   class="downloadRemoveFromHistoryMenuItem"
                   label="&cmd.removeFromHistory.label;"

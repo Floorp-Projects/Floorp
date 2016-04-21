@@ -38,6 +38,12 @@ createEnum([
   // Indicates when the screenshot action ends.
   "TAKE_SCREENSHOT_END",
 
+  // Update the device display state in the device selector.
+  "UPDATE_DEVICE_DISPLAYED",
+
+  // Update the device modal open state.
+  "UPDATE_DEVICE_MODAL_OPEN",
+
 ], module.exports);
 
 /**

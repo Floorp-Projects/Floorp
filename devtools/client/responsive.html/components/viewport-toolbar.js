@@ -17,6 +17,7 @@ module.exports = createClass({
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
+    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
   displayName: "ViewportToolbar",
@@ -30,17 +31,19 @@ module.exports = createClass({
       onChangeViewportDevice,
       onResizeViewport,
       onRotateViewport,
+      onUpdateDeviceModalOpen,
     } = this.props;
 
     return dom.div(
       {
-        className: "toolbar viewport-toolbar",
+        className: "viewport-toolbar container",
       },
       DeviceSelector({
         devices,
         selectedDevice,
         onChangeViewportDevice,
         onResizeViewport,
+        onUpdateDeviceModalOpen,
       }),
       dom.button({
         className: "viewport-rotate-button toolbar-button devtools-button",

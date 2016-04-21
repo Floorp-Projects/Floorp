@@ -377,7 +377,15 @@ HistoryDownloadElementShell.prototype = {
   },
 
   downloadsCmd_unblock() {
-    this.confirmUnblock(window);
+    this.confirmUnblock(window, "unblock");
+  },
+
+  downloadsCmd_chooseUnblock() {
+    this.confirmUnblock(window, "chooseUnblock");
+  },
+
+  downloadsCmd_chooseOpen() {
+    this.confirmUnblock(window, "chooseOpen");
   },
 
   // Returns whether or not the download handled by this shell should

@@ -15,9 +15,6 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 const {FileUtils} = Components.utils.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Components.utils.import("resource://gre/modules/NetUtil.jsm", {});
 

@@ -6,7 +6,9 @@
  */
 
 .theme-light {
-  --box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+  --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+  --submit-button-active-background-color: rgba(0,0,0,0.12);
+  --submit-button-active-color: var(--theme-body-color);
   --viewport-active-color: var(--theme-body-color);
   --viewport-selection-arrow: url("./images/select-arrow.svg#light");
   --viewport-selection-arrow-selected:
@@ -14,7 +16,9 @@
 }
 
 .theme-dark {
-  --box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+  --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+  --submit-button-active-background-color: var(--toolbar-tab-hover-active);
+  --submit-button-active-color: var(--theme-selection-color);
   --viewport-active-color: var(--theme-selection-color);
   --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
   --viewport-selection-arrow-selected:
@@ -51,10 +55,10 @@ html, body {
 }
 
 /**
- * Common style for toolbars and toolbar buttons
+ * Common style for containers and toolbar buttons
  */
 
-.toolbar {
+.container {
   background-color: var(--theme-toolbar-background);
   border: 1px solid var(--theme-splitter-color);
 }
@@ -80,7 +84,7 @@ html, body {
 #global-toolbar {
   color: var(--theme-body-color-alt);
   border-radius: 2px;
-  box-shadow: var(--box-shadow);
+  box-shadow: var(--rdm-box-shadow);
   margin: 30px 0;
   padding: 4px 5px;
   display: inline-flex;
@@ -142,7 +146,7 @@ html, body {
 
 .resizable-viewport {
   border: 1px solid var(--theme-splitter-color);
-  box-shadow: var(--box-shadow);
+  box-shadow: var(--rdm-box-shadow);
   position: relative;
 }
 
@@ -307,4 +311,89 @@ html, body {
 
 .viewport-dimension-separator {
   -moz-user-select: none;
+}
+
+/**
+ * Device Modal
+ */
+
+.device-modal {
+  border-radius: 2px;
+  box-shadow: var(--rdm-box-shadow);
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 642px;
+  height: 612px;
+}
+
+.device-modal.hidden {
+  display: none;
+}
+
+.device-modal-content {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  overflow: auto;
+  height: 550px;
+  width: 600px;
+  margin: 20px;
+}
+
+#device-close-button,
+#device-close-button::before {
+  position: absolute;
+  top: 5px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+}
+
+#device-close-button::before {
+  background-image: url("./images/close.svg");
+  margin: -6px 0 0 -6px;
+}
+
+.device-type {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.device-header {
+  font-weight: bold;
+  text-transform: capitalize;
+  padding: 0 0 3px 23px;
+}
+
+.device-label {
+  padding-bottom: 3px;
+}
+
+.device-input-checkbox {
+  margin-right: 5px;
+}
+
+#device-submit-button {
+  background-color: var(--theme-tab-toolbar-background);
+  border-width: 1px 0 0 0;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--theme-splitter-color);
+  color: var(--theme-body-color);
+  width: 100%;
+  height: 20px;
+}
+
+#device-submit-button:hover {
+  background-color: var(--toolbar-tab-hover);
+}
+
+#device-submit-button:hover:active {
+  background-color: var(--submit-button-active-background-color);
+  color: var(--submit-button-active-color);
 }
