@@ -1380,12 +1380,12 @@ nsXULScrollFrame::GetType() const
 }
 
 nscoord
-nsXULScrollFrame::GetBoxAscent(nsBoxLayoutState& aState)
+nsXULScrollFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
   if (!mHelper.mScrolledFrame)
     return 0;
 
-  nscoord ascent = mHelper.mScrolledFrame->GetBoxAscent(aState);
+  nscoord ascent = mHelper.mScrolledFrame->GetXULBoxAscent(aState);
   nsMargin m(0,0,0,0);
   GetBorderAndPadding(m);
   ascent += m.top;

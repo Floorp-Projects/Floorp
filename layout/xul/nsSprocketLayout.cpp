@@ -747,7 +747,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
       pref = child->GetXULPrefSize(aState);
       minSize = child->GetXULMinSize(aState);
       maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetXULMaxSize(aState));
-      ascent = child->GetBoxAscent(aState);
+      ascent = child->GetXULBoxAscent(aState);
       nsMargin margin;
       child->GetMargin(margin);
       ascent += margin.top;
@@ -938,7 +938,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   if (isHorizontal) {
     valign = aBox->GetVAlign();
     if (valign == nsBoxFrame::vAlign_BaseLine) {
-      maxAscent = aBox->GetBoxAscent(aState);
+      maxAscent = aBox->GetXULBoxAscent(aState);
     }
   } else {
     isLTR = GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR;
@@ -973,7 +973,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
         case nsBoxFrame::vAlign_BaseLine:
           // Alignments don't force the box to grow (only sizes do),
           // so keep the children within the box.
-          y = maxAscent - child->GetBoxAscent(aState);
+          y = maxAscent - child->GetXULBoxAscent(aState);
           y = std::max(startAlign, y);
           y = std::min(y, endAlign);
           break;
@@ -1513,7 +1513,7 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
       //if (!child->IsCollapsed())
       //{
         // if completely redefined don't even ask our child for its size.
-        nscoord ascent = child->GetBoxAscent(aState);
+        nscoord ascent = child->GetXULBoxAscent(aState);
 
         nsMargin margin;
         child->GetMargin(margin);

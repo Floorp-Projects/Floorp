@@ -306,7 +306,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // ok our child could have gotten bigger. So lets get its bounds
   aDesiredSize.Width() = mRect.width;
   aDesiredSize.Height() = mRect.height;
-  aDesiredSize.SetBlockStartAscent(GetBoxAscent(state));
+  aDesiredSize.SetBlockStartAscent(GetXULBoxAscent(state));
 
   // the overflow rect is set in SetBounds() above
   aDesiredSize.mOverflowAreas = GetOverflowAreas();
@@ -371,9 +371,9 @@ nsLeafBoxFrame::GetXULFlex()
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
+nsLeafBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
-    return nsBox::GetBoxAscent(aState);
+    return nsBox::GetXULBoxAscent(aState);
 }
 
 /* virtual */ void
