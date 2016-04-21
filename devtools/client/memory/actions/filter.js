@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { clearTimeout, setTimeout } = require("sdk/timers");
 const { actions } = require("../constants");
 const { refresh } = require("./refresh");
 
