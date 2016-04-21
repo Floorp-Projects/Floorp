@@ -1126,7 +1126,7 @@ public:
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;

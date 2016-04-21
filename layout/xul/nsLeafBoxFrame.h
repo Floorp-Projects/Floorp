@@ -18,7 +18,7 @@ public:
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aState) override;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetXULMaxSize(nsBoxLayoutState& aState) override;
   virtual nscoord GetFlex() override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) override;
 

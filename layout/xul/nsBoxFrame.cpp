@@ -677,7 +677,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   if (computedSize.BSize(wm) == NS_INTRINSICSIZE) {
     nsSize physicalPrefSize = GetXULPrefSize(state);
     nsSize minSize = GetXULMinSize(state);
-    nsSize maxSize = GetMaxSize(state);
+    nsSize maxSize = GetXULMaxSize(state);
     // XXXbz isn't GetXULPrefSize supposed to bounds-check for us?
     physicalPrefSize = BoundsCheck(minSize, physicalPrefSize, maxSize);
     prefSize = LogicalSize(wm, physicalPrefSize);
@@ -779,7 +779,7 @@ nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
   }
 
   nsSize minSize = GetXULMinSize(aBoxLayoutState);
-  nsSize maxSize = GetMaxSize(aBoxLayoutState);
+  nsSize maxSize = GetXULMaxSize(aBoxLayoutState);
   mPrefSize = BoundsCheck(minSize, size, maxSize);
  
   return mPrefSize;
@@ -847,7 +847,7 @@ nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
+nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
 {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
@@ -870,14 +870,14 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   if (!nsIFrame::AddCSSMaxSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
-      nsSize layoutSize = mLayoutManager->GetMaxSize(this, aBoxLayoutState);
+      nsSize layoutSize = mLayoutManager->GetXULMaxSize(this, aBoxLayoutState);
       if (!widthSet)
         size.width = layoutSize.width;
       if (!heightSet)
         size.height = layoutSize.height;
     }
     else {
-      size = nsBox::GetMaxSize(aBoxLayoutState);
+      size = nsBox::GetXULMaxSize(aBoxLayoutState);
     }
   }
 
@@ -1788,7 +1788,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
 
                     nsSize prefSize = child->GetXULPrefSize(state);
                     nsSize minSize = child->GetXULMinSize(state);
-                    nsSize maxSize = child->GetMaxSize(state);
+                    nsSize maxSize = child->GetXULMaxSize(state);
                     nscoord flexSize = child->GetFlex();
                     nscoord ascentSize = child->GetBoxAscent(state);
 

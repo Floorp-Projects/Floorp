@@ -570,7 +570,7 @@ nsImageBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState)
                "non-intrinsic size expected");
 
   nsSize minSize = GetXULMinSize(aState);
-  nsSize maxSize = GetMaxSize(aState);
+  nsSize maxSize = GetXULMaxSize(aState);
 
   if (!widthSet && !heightSet) {
     if (minSize.width != NS_INTRINSICSIZE)

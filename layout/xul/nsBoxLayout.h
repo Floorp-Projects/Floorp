@@ -38,7 +38,7 @@ public:
 
   virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nscoord GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,

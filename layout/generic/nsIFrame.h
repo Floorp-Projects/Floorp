@@ -2887,7 +2887,7 @@ public:
    * @param[in] aBoxLayoutState The desired state to calculate for
    * @return The maximum size
    */    
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
+  virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
 
   /**
    * This returns the minimum size for the scroll area if this frame is

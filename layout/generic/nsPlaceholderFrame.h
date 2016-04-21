@@ -96,7 +96,7 @@ public:
                                   InlinePrefISizeData* aData) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
