@@ -54,3 +54,8 @@ void
 a11y::ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool)
 {
 }
+
+void
+a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
+{
+}
