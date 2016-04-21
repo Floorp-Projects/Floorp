@@ -288,7 +288,7 @@ nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsListBoxBodyFrame::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
+nsListBoxBodyFrame::GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize result(0, 0);
   if (nsContentUtils::HasNonEmptyAttr(GetContent(), kNameSpaceID_None,
