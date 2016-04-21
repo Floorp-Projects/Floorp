@@ -226,6 +226,10 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 //   wrapped in "#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL".
 // Note that, these flags have no effect on the use of aliases of this
 // property.
+// Furthermore, for the purposes of animation (including triggering
+// transitions) these flags are ignored. That is, if the property is disabled
+// by a pref, we will *not* run animations or transitions on it even in
+// UA sheets or chrome.
 #define CSS_PROPERTY_ENABLED_MASK                 (3<<22)
 #define CSS_PROPERTY_ENABLED_IN_UA_SHEETS         (1<<22)
 #define CSS_PROPERTY_ENABLED_IN_CHROME            (1<<23)
