@@ -35,7 +35,7 @@ public:
 
     nsSize      GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState);
     nsSize      GetXULMinSize(nsBoxLayoutState& aBoxLayoutState);
-    nsSize      GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
+    nsSize      GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
     bool        IsCollapsed();
 
 // accessors

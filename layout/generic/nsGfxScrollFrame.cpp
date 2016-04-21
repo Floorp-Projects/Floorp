@@ -1464,7 +1464,7 @@ nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState)
+nsXULScrollFrame::GetXULMaxSize(nsBoxLayoutState& aState)
 {
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aState);

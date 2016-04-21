@@ -698,7 +698,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
 
   nsBoxLayoutState aState(aPresContext, aRC);
   nsSize minSize = rootFrame->GetXULMinSize(aState);
-  nsSize maxSize = rootFrame->GetMaxSize(aState);
+  nsSize maxSize = rootFrame->GetXULMaxSize(aState);
 
   SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
 #endif

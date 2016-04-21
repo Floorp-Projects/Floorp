@@ -54,7 +54,7 @@ nsPlaceholderFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 /* virtual */ nsSize
-nsPlaceholderFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
+nsPlaceholderFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);

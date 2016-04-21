@@ -69,14 +69,14 @@ nsGridRowLeafLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridRowLeafLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
   bool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
-    return nsGridRowLayout::GetMaxSize(aBox, aState); 
+    return nsGridRowLayout::GetXULMaxSize(aBox, aState); 
   else {
     nsSize maxSize;
     maxSize = grid->GetMaxRowSize(aState, index, isHorizontal);

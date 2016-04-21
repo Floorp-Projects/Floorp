@@ -407,7 +407,7 @@ nsBox::GetXULPrefSize(nsBoxLayoutState& aState)
   nsIFrame::AddCSSPrefSize(this, pref, widthSet, heightSet);
 
   nsSize minSize = GetXULMinSize(aState);
-  nsSize maxSize = GetMaxSize(aState);
+  nsSize maxSize = GetXULMaxSize(aState);
   return BoundsCheck(minSize, pref, maxSize);
 }
 
@@ -435,7 +435,7 @@ nsBox::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBox::GetMaxSize(nsBoxLayoutState& aState)
+nsBox::GetXULMaxSize(nsBoxLayoutState& aState)
 {
   NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
 

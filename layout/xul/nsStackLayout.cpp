@@ -111,7 +111,7 @@ nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsStackLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
@@ -119,7 +119,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
       nsSize min = child->GetXULMinSize(aState);
-      nsSize max = child->GetMaxSize(aState);
+      nsSize max = child->GetXULMaxSize(aState);
 
       max = nsBox::BoundsCheckMinMax(min, max);
 
@@ -299,7 +299,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           // Margins on the child are also included in the edge offsets
           if (offsetSpecified) {
             nsSize min = child->GetXULMinSize(aState);
-            nsSize max = child->GetMaxSize(aState);
+            nsSize max = child->GetXULMaxSize(aState);
             if (offsetSpecified & SPECIFIED_LEFT) {
               childRect.x = clientRect.x + offset.left + margin.left;
               if (offsetSpecified & SPECIFIED_RIGHT) {

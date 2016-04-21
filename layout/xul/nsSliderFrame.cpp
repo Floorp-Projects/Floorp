@@ -1352,10 +1352,10 @@ nsSliderFrame::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsSliderFrame::GetMaxSize(nsBoxLayoutState& aState)
+nsSliderFrame::GetXULMaxSize(nsBoxLayoutState& aState)
 {
   EnsureOrient();
-  return nsBoxFrame::GetMaxSize(aState);
+  return nsBoxFrame::GetXULMaxSize(aState);
 }
 
 void
