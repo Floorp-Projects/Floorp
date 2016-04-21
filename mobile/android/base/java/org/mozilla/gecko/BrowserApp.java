@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -2160,6 +2161,10 @@ public class BrowserApp extends GeckoApp
 
             // Hide potentially visible "find in page" bar (Bug 1177338)
             mFindInPageBar.hide();
+
+            for (final BrowserAppDelegate delegate : delegates) {
+                delegate.onTabsTrayShown(this, mTabsPanel);
+            }
         }
     }
 
@@ -2168,6 +2173,10 @@ public class BrowserApp extends GeckoApp
         mTabsPanel.hide();
         if (mDoorHangerPopup != null) {
             mDoorHangerPopup.enable();
+        }
+
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onTabsTrayHidden(this, mTabsPanel);
         }
     }
 
