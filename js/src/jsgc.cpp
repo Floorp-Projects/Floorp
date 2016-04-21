@@ -2815,11 +2815,6 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
     // Type inference may put more blocks here to free.
     freeLifoAlloc.freeAll();
 
-    // Clear runtime caches that can contain cell pointers.
-    // TODO: Should possibly just call purgeRuntime() here.
-    rt->newObjectCache.purge();
-    rt->nativeIterCache.purge();
-
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerZoneGroupCallbacks();
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
@@ -5753,6 +5748,10 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget)
         if (sliceBudget.isOverBudget())
             break;
     }
+
+    // Clear runtime caches that can contain cell pointers.
+    rt->newObjectCache.purge();
+    rt->nativeIterCache.purge();
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
