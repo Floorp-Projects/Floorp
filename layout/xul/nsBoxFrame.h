@@ -71,7 +71,7 @@ public:
   virtual nsresult GetDebug(bool& aDebug) override;
 #endif
   virtual Valignment GetXULVAlign() const override { return mValign; }
-  virtual Halignment GetHAlign() const override { return mHalign; }
+  virtual Halignment GetXULHAlign() const override { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual bool ComputesOwnOverflowArea() override { return false; }
