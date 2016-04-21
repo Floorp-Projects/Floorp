@@ -569,7 +569,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
     NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH ||
-                 !(int(aParams.drawMode) & int(DrawMode::GLYPH_PATH)),
+                 !(aParams.drawMode & DrawMode::GLYPH_PATH),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
     NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                  "callback must not be specified unless using GLYPH_PATH");
