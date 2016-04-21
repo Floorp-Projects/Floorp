@@ -30,7 +30,6 @@ const protocol = require("devtools/server/protocol");
 const {method, Arg} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
-const {setTimeout, clearTimeout} = require("sdk/timers");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
