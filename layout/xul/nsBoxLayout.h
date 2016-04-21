@@ -34,7 +34,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_BOX_LAYOUT_IID)
 
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState);
 
   virtual nsSize GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState);

@@ -122,7 +122,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
 #ifdef DEBUG_LAYOUT 
 
   nsBoxAddIndents();
-  printf("Layout: ");
+  printf("XULLayout: ");
   DumpBox(stdout);
   printf("\n");
   gIndent++;
@@ -497,7 +497,7 @@ nsBox::IsXULCollapsed()
 }
 
 nsresult
-nsIFrame::Layout(nsBoxLayoutState& aState)
+nsIFrame::XULLayout(nsBoxLayoutState& aState)
 {
   NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
 
