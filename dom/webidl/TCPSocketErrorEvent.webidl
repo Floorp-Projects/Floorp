@@ -9,8 +9,8 @@
 * - if there's an error connecting to the host
 */
 
-[Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
- Constructor(DOMString type, optional TCPSocketErrorEventInit eventInitDict),
+[Constructor(DOMString type, optional TCPSocketErrorEventInit eventInitDict),
+ Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
  Exposed=(Window,System)]
 interface TCPSocketErrorEvent : Event {
   readonly attribute DOMString name;

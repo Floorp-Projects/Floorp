@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821630
 <head>
   <title>Test for Bug 821630 Settings API</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -23,11 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821630
 
 var url = SimpleTest.getTestFileURL("file_loadserver.js");
 var script = SpecialPowers.loadChromeScript(url);
-SpecialPowers.addPermission("settings-read", true, document);
-SpecialPowers.addPermission("settings-write", true, document);
-SpecialPowers.addPermission("settings-api-read", true, document);
-SpecialPowers.addPermission("settings-api-write", true, document);
-SpecialPowers.addPermission("settings-clear", true, document);
 
 function onUnwantedSuccess() {
   ok(false, "onUnwantedSuccess: shouldn't get here");

@@ -6,7 +6,7 @@
 
 [JSImplementation="@mozilla.org/mozChromeNotifications;1",
  NavigatorProperty="mozChromeNotifications",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface ChromeNotifications {
   void mozResendAllNotifications(ResendCallback resendCallback);
 };

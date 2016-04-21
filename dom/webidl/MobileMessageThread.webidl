@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.sms.enabled",
- CheckAnyPermissions="sms",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MobileMessageThread {
   /**
    * Unique identity of the thread.

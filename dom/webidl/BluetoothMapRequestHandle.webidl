@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[CheckAnyPermissions="bluetooth"]
+[ChromeOnly]
 interface BluetoothMapRequestHandle
 {
   /**
    * Reply to Folder-Listing object for MAP request. The Promise will be
    * rejected if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToFolderListing(long masId, DOMString folders);
 
   /**
    * Reply the Messages-Listing object to the MAP request. The Promise will
    * be rejected if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToMessagesListing(
     long masId,
     Blob messageslisting,
@@ -29,27 +29,27 @@ interface BluetoothMapRequestHandle
    * Reply GetMessage object to the MAP request. The Promise will be rejected
    * if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToGetMessage(long masId, Blob bmessage);
 
   /**
    * Reply SetMessage object to the MAP request. The Promise will be rejected
    * if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToSetMessageStatus(long masId, boolean status);
 
   /**
    * Reply SendMessage request to the MAP request. The Promise will be rejected
    * if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToSendMessage(long masId, DOMString handleId, boolean status);
 
   /**
    * Reply Message-Update object to the MAP request. The Promise will be
    * rejected if the MAP request operation fails.
    */
-  [NewObject, Throws, AvailableIn=CertifiedApps]
+  [NewObject, Throws]
   Promise<void> replyToMessageUpdate(long masId, boolean status);
 };

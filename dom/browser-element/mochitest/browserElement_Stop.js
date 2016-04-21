@@ -12,7 +12,6 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 var iframe;
 var stopped = false;
@@ -21,7 +20,8 @@ var imgSrc = 'http://test/tests/dom/browser-element/mochitest/file_bug709759.sjs
 function runTest() {
   iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
-
+  // FIXME: Bug 1270790
+  iframe.setAttribute('remote', 'true');
   iframe.addEventListener('mozbrowserloadend', loadend);
   iframe.src = 'data:text/html,<html>' +
     '<body><img src="' + imgSrc + '" /></body></html>';

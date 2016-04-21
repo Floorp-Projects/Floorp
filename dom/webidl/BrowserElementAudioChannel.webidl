@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.mozBrowserFramesEnabled",
- CheckAnyPermissions="browser"]
+ ChromeOnly]
 interface BrowserElementAudioChannel : EventTarget {
   readonly attribute AudioChannel name;
 
@@ -32,7 +32,7 @@ interface BrowserElementAudioChannel : EventTarget {
 partial interface BrowserElementPrivileged {
   [Pure, Cached, Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   readonly attribute sequence<BrowserElementAudioChannel> allowedAudioChannels;
 
   /**
@@ -40,7 +40,7 @@ partial interface BrowserElementPrivileged {
    */
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   void mute();
 
   /**
@@ -48,7 +48,7 @@ partial interface BrowserElementPrivileged {
    */
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   void unmute();
 
   /**
@@ -56,7 +56,7 @@ partial interface BrowserElementPrivileged {
    */
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   DOMRequest getMuted();
 
   /**
@@ -64,7 +64,7 @@ partial interface BrowserElementPrivileged {
    */
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   void setVolume(float volume);
 
   /**
@@ -72,6 +72,6 @@ partial interface BrowserElementPrivileged {
    */
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
-   CheckAnyPermissions="browser"]
+   ChromeOnly]
   DOMRequest getVolume();
 };

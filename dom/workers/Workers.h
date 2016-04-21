@@ -268,8 +268,6 @@ struct WorkerLoadInfo
   bool mReportCSPViolations;
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
-  bool mIsInPrivilegedApp;
-  bool mIsInCertifiedApp;
   bool mStorageAllowed;
   bool mPrivateBrowsing;
   bool mServiceWorkersTestingInWindow;

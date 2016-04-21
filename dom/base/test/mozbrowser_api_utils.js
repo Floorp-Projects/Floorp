@@ -20,12 +20,12 @@ const METHODS = {
   getCanGoBack: {},
   getCanGoForward: {},
   getContentDimensions: {},
-  setInputMethodActive: { alwaysFails: true }, // needs input-manage
-  setNFCFocus: { alwaysFails: true }, // needs nfc-manager
+  setInputMethodActive: {},
+  setNFCFocus: {},
   findAll: {},
   findNext: {},
   clearMatch: {},
-  executeScript: { alwaysFails: true }, // needs browser:universalxss
+  executeScript: {},
   getWebManifest: {},
   mute: {},
   unmute: {},
@@ -39,7 +39,7 @@ const ATTRIBUTES = [
 ];
 
 function once(target, eventName, useCapture = false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
+  info("Waiting for event: '" + JSON.stringify(eventName) + "' on " + target + ".");
 
   return new Promise(resolve => {
     for (let [add, remove] of [
@@ -47,11 +47,13 @@ function once(target, eventName, useCapture = false) {
       ["addMessageListener", "removeMessageListener"],
     ]) {
       if ((add in target) && (remove in target)) {
-        target[add](eventName, function onEvent(...aArgs) {
-          info("Got event: '" + eventName + "' on " + target + ".");
-          target[remove](eventName, onEvent, useCapture);
-          resolve(aArgs);
-        }, useCapture);
+        eventName.forEach(evName => {
+          target[add](evName, function onEvent(...aArgs) {
+            info("Got event: '" + evName + "' on " + target + ".");
+            target[remove](evName, onEvent, useCapture);
+            resolve(aArgs);
+          }, useCapture);
+	});
         break;
       }
     }
@@ -64,7 +66,7 @@ function* loadFrame(attributes = {}) {
   for (let key in attributes) {
     iframe.setAttribute(key, attributes[key]);
   }
-  let loaded = once(iframe, "load");
+  let loaded = once(iframe, [ "load", "mozbrowserloadend" ]);
   document.body.appendChild(iframe);
   yield loaded;
   return iframe;

@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.sms.enabled",
- CheckAnyPermissions="sms",
- AvailableIn="CertifiedApps",
+ ChromeOnly,
  Constructor(DOMString type, optional MozMmsEventInit eventInitDict)]
 interface MozMmsEvent : Event
 {

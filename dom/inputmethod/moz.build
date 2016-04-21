@@ -38,4 +38,4 @@ EXTRA_PP_JS_MODULES += [
 
 JAR_MANIFESTS += ['jar.mn']
 
-MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']

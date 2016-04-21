@@ -7,7 +7,6 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 var iframeScript = function() {
   content.document.addEventListener("visibilitychange", function() {

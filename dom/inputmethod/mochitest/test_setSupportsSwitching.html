@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197682
 -->
 <head>
   <title>Test inputcontext#inputType and MozInputMethodManager#supportsSwitching()</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1197682">Mozilla Bug 1197682</a>
@@ -113,11 +113,7 @@ function runTest() {
   im.mgmt.setSupportsSwitchingTypes(['text', 'password']);
 
   let iframe = document.createElement('iframe');
-  iframe.src = 'data:text/html,<html><body>' +
-    '<input type="text">' +
-    '<input type="number">' +
-    '<input type="password">' +
-    '</body></html>';
+  iframe.src = 'file_test_setSupportsSwitching.html';
   iframe.setAttribute('mozbrowser', true);
   document.body.appendChild(iframe);
 

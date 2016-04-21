@@ -227,10 +227,6 @@ function runNextStep() {
 }
 
 function test() {
-  SpecialPowers.pushPermissions([
-    {type: "power", allow: true, context: kUrlSource}
-  ], function () {
-    SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]},
-                              runNextStep);
-  });
+  SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]},
+                            runNextStep);
 }

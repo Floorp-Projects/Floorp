@@ -8,7 +8,6 @@ const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.js
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 /**
  * Content script passed to the child iframe
@@ -65,7 +64,7 @@ function runTest() {
   });
 
   // Load a simple page to get the process started.
-  iframe.src = browserElementTestHelpers.emptyPage1;
+  iframe.src = browserElementTestHelpers.fileEmptyPage1;
 }
 
 addEventListener('testready', function() {

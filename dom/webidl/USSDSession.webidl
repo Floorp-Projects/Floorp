@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckAnyPermissions="telephony",
- AvailableIn="CertifiedApps",
+ ChromeOnly,
  Constructor(unsigned long serviceId)]
 interface USSDSession {
   [NewObject]

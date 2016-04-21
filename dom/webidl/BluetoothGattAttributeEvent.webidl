@@ -6,7 +6,7 @@
 
 [Constructor(DOMString type,
              optional BluetoothGattAttributeEventInit eventInitDict),
- CheckAnyPermissions="bluetooth"]
+ ChromeOnly]
 interface BluetoothGattAttributeEvent : Event
 {
   readonly attribute DOMString                    address;

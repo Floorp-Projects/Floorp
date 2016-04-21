@@ -603,18 +603,6 @@ public:
     return mLoadInfo.mPrincipalIsSystem;
   }
 
-  bool
-  IsInPrivilegedApp() const
-  {
-    return mLoadInfo.mIsInPrivilegedApp;
-  }
-
-  bool
-  IsInCertifiedApp() const
-  {
-    return mLoadInfo.mIsInCertifiedApp;
-  }
-
   const PrincipalInfo&
   GetPrincipalInfo() const
   {

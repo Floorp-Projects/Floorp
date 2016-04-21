@@ -5,8 +5,8 @@
 <head>
   <meta charset="utf-8">
   <title>Test for B2G Presentation API at sender side</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for B2G Presentation API at sender side</a>
@@ -190,14 +190,9 @@ function runTests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPermissions([
-  {type: 'presentation-device-manage', allow: false, context: document},
-  {type: 'presentation', allow: true, context: document},
-], function() {
-  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
-                                      ["dom.presentation.session_transport.data_channel.enable", false]]},
-                            runTests);
-});
+SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                    ["dom.presentation.session_transport.data_channel.enable", false]]},
+                          runTests);
 
 </script>
 </body>

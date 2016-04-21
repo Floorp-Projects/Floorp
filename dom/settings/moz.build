@@ -18,13 +18,11 @@ if CONFIG['MOZ_B2G']:
         'SettingsService.manifest',
     ]
 
-    MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
-
 EXTRA_JS_MODULES += [
     'SettingsDB.jsm',
     'SettingsRequestManager.jsm'
 ]
 
-MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

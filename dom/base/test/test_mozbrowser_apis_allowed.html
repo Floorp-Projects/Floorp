@@ -2,10 +2,10 @@
 <html>
 <head>
   <title>Verify mozbrowser APIs are allowed with browser permission</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="mozbrowser_api_utils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 
 <body>
@@ -19,17 +19,11 @@
   });
 
   add_task(function*() {
-    yield new Promise(resolve => {
-      SpecialPowers.pushPermissions([
-        { "type": "browser", "allow": 1, "context": document }
-      ], resolve);
-    });
-  });
-
-  add_task(function*() {
     // Create <iframe mozbrowser>
     let frame = yield loadFrame({
-      mozbrowser: "true"
+      mozbrowser: "true",
+      // FIXME: Bug 1270790
+      remote: true
     });
 
     // Verify that mozbrowser APIs are accessible

@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1201407
 -->
 <head>
   <title>Test addinputrequest and removeinputrequest event</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1201407">Mozilla Bug 1201407</a>
@@ -62,36 +62,27 @@ function setupInputAppFrame() {
 
     let inputAppFrame = document.createElement('iframe');
     inputAppFrame.setAttribute('mozbrowser', true);
+    // FIXME: Bug 1270790
+    inputAppFrame.setAttribute('remote', true);
     inputAppFrame.src = imeUrl;
     document.body.appendChild(inputAppFrame);
 
-    SpecialPowers.pushPermissions([{
-      type: 'input',
-      allow: true,
-      context: {
-        url: imeUrl,
-        originAttributes: {
-          inIsolatedMozBrowser: true
-        }
-      }
-    }], function() {
-      let mm = appFrameMM =
-        SpecialPowers.getBrowserFrameMessageManager(inputAppFrame);
+    let mm = appFrameMM =
+      SpecialPowers.getBrowserFrameMessageManager(inputAppFrame);
 
-      inputAppFrame.addEventListener('mozbrowserloadend', function() {
-        mm.addMessageListener('test:appEvent', function(msg) {
-          ok(false, 'Input app should not receive ' + msg.data.type + ' event.');
-        });
-        mm.addMessageListener('test:resolved', function(msg) {
-          nextStep && nextStep(msg.data);
-        });
-        mm.addMessageListener('test:rejected', function(msg) {
-          nextStep && nextStep(msg.data);
-        });
-        mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
-
-        resolve();
+    inputAppFrame.addEventListener('mozbrowserloadend', function() {
+      mm.addMessageListener('test:appEvent', function(msg) {
+        ok(false, 'Input app should not receive ' + msg.data.type + ' event.');
       });
+      mm.addMessageListener('test:resolved', function(msg) {
+        nextStep && nextStep(msg.data);
+      });
+      mm.addMessageListener('test:rejected', function(msg) {
+        nextStep && nextStep(msg.data);
+      });
+      mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+
+      resolve();
     });
   });
 }

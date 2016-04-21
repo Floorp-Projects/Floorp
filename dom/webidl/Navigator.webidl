@@ -94,10 +94,10 @@ interface NavigatorStorageUtils {
 
 [NoInterfaceObject]
 interface NavigatorFeatures {
-  [CheckAnyPermissions="feature-detection", Throws]
+  [ChromeOnly, Throws]
   Promise<any> getFeature(DOMString name);
 
-  [CheckAnyPermissions="feature-detection", Throws]
+  [ChromeOnly, Throws]
   Promise<any> hasFeature(DOMString name);
 };
 
@@ -206,7 +206,7 @@ partial interface Navigator {
   readonly attribute boolean cookieEnabled;
   [Throws, Constant, Cached]
   readonly attribute DOMString buildID;
-  [Throws, CheckAnyPermissions="power", UnsafeInPrerendering]
+  [Throws, ChromeOnly, UnsafeInPrerendering]
   readonly attribute MozPowerManager mozPower;
 
   // WebKit/Blink/Trident/Presto support this.
@@ -216,13 +216,13 @@ partial interface Navigator {
   /**
    * Navigator requests to add an idle observer to the existing window.
    */
-  [Throws, CheckAnyPermissions="idle"]
+  [Throws, ChromeOnly]
   void addIdleObserver(MozIdleObserver aIdleObserver);
 
   /**
    * Navigator requests to remove an idle observer from the existing window.
    */
-  [Throws, CheckAnyPermissions="idle"]
+  [Throws, ChromeOnly]
   void removeIdleObserver(MozIdleObserver aIdleObserver);
 
   /**
@@ -280,7 +280,7 @@ partial interface Navigator {
 
 #ifdef MOZ_WEBSMS_BACKEND
 partial interface Navigator {
-  [CheckAnyPermissions="sms", Pref="dom.sms.enabled", AvailableIn="CertifiedApps"]
+  [ChromeOnly, Pref="dom.sms.enabled"]
   readonly attribute MozMobileMessageManager? mozMobileMessage;
 };
 #endif
@@ -299,30 +299,30 @@ partial interface Navigator {
 
 #ifdef MOZ_B2G_RIL
 partial interface Navigator {
-  [Throws, Pref="dom.mobileconnection.enabled", CheckAnyPermissions="mobileconnection mobilenetwork", UnsafeInPrerendering]
+  [Throws, Pref="dom.mobileconnection.enabled", ChromeOnly, UnsafeInPrerendering]
   readonly attribute MozMobileConnectionArray mozMobileConnections;
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.cellbroadcast.enabled", CheckAnyPermissions="cellbroadcast",
-   AvailableIn="CertifiedApps", UnsafeInPrerendering]
+  [Throws, Pref="dom.cellbroadcast.enabled", ChromeOnly,
+   UnsafeInPrerendering]
   readonly attribute MozCellBroadcast mozCellBroadcast;
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.voicemail.enabled", CheckAnyPermissions="voicemail",
-   AvailableIn="CertifiedApps", UnsafeInPrerendering]
+  [Throws, Pref="dom.voicemail.enabled", ChromeOnly,
+   UnsafeInPrerendering]
   readonly attribute MozVoicemail mozVoicemail;
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.icc.enabled", CheckAnyPermissions="mobileconnection",
-   AvailableIn="CertifiedApps", UnsafeInPrerendering]
+  [Throws, Pref="dom.icc.enabled", ChromeOnly,
+   UnsafeInPrerendering]
   readonly attribute MozIccManager? mozIccManager;
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.telephony.enabled", CheckAnyPermissions="telephony", UnsafeInPrerendering]
+  [Throws, Pref="dom.telephony.enabled", ChromeOnly, UnsafeInPrerendering]
   readonly attribute Telephony? mozTelephony;
 };
 #endif // MOZ_B2G_RIL
@@ -346,14 +346,14 @@ partial interface Navigator {
 
 #ifdef MOZ_B2G_BT
 partial interface Navigator {
-  [Throws, CheckAnyPermissions="bluetooth", UnsafeInPrerendering]
+  [Throws, ChromeOnly, UnsafeInPrerendering]
   readonly attribute BluetoothManager mozBluetooth;
 };
 #endif // MOZ_B2G_BT
 
 #ifdef MOZ_B2G_FM
 partial interface Navigator {
-  [Throws, CheckAnyPermissions="fmradio", UnsafeInPrerendering]
+  [Throws, ChromeOnly, UnsafeInPrerendering]
   readonly attribute FMRadio mozFMRadio;
 };
 #endif // MOZ_B2G_FM
@@ -361,7 +361,7 @@ partial interface Navigator {
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime
 partial interface Navigator {
-  [Throws, CheckAnyPermissions="time", UnsafeInPrerendering]
+  [Throws, ChromeOnly, UnsafeInPrerendering]
   readonly attribute MozTimeManager mozTime;
 };
 #endif // MOZ_TIME_MANAGER
@@ -421,12 +421,12 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Pref="dom.tv.enabled", CheckAnyPermissions="tv", AvailableIn=CertifiedApps]
+  [Pref="dom.tv.enabled", ChromeOnly]
   readonly attribute TVManager? tv;
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.inputport.enabled", CheckAnyPermissions="inputport", AvailableIn=CertifiedApps]
+  [Throws, Pref="dom.inputport.enabled", ChromeOnly]
   readonly attribute InputPortManager inputPortManager;
 };
 
@@ -436,7 +436,7 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [NewObject, Pref="dom.mozTCPSocket.enabled", CheckAnyPermissions="tcp-socket"]
+  [NewObject, Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist"]
   readonly attribute LegacyMozTCPSocket mozTCPSocket;
 };
 

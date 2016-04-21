@@ -1877,8 +1877,6 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mReportCSPViolations(false)
   , mXHRParamsAllowed(false)
   , mPrincipalIsSystem(false)
-  , mIsInPrivilegedApp(false)
-  , mIsInCertifiedApp(false)
   , mStorageAllowed(false)
   , mPrivateBrowsing(true)
   , mServiceWorkersTestingInWindow(false)
@@ -1937,8 +1935,6 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mReportCSPViolations = aOther.mReportCSPViolations;
   mXHRParamsAllowed = aOther.mXHRParamsAllowed;
   mPrincipalIsSystem = aOther.mPrincipalIsSystem;
-  mIsInPrivilegedApp = aOther.mIsInPrivilegedApp;
-  mIsInCertifiedApp = aOther.mIsInCertifiedApp;
   mStorageAllowed = aOther.mStorageAllowed;
   mPrivateBrowsing = aOther.mPrivateBrowsing;
   mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
@@ -3556,11 +3552,6 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
 
   mLoadInfo.mPrincipal = aPrincipal;
   mLoadInfo.mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
-  uint16_t appStatus = aPrincipal->GetAppStatus();
-  mLoadInfo.mIsInPrivilegedApp =
-    (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
-     appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
-  mLoadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
 
   aPrincipal->GetCsp(getter_AddRefs(mLoadInfo.mCSP));
 
@@ -4393,11 +4384,6 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
       loadInfo.mXHRParamsAllowed = perm == nsIPermissionManager::ALLOW_ACTION;
 
-      uint16_t appStatus = loadInfo.mPrincipal->GetAppStatus();
-      loadInfo.mIsInPrivilegedApp =
-        (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
-         appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
-      loadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
       nsContentUtils::StorageAccess access =

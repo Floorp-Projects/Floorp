@@ -4,7 +4,6 @@
 
 [JSImplementation="@mozilla.org/networkstatsalarm;1",
  ChromeOnly,
- CheckAnyPermissions="networkstats-manage",
  Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStatsAlarm {
   readonly attribute unsigned long alarmId;

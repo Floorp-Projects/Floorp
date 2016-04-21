@@ -61,6 +61,6 @@ interface PresentationRequest : EventTarget {
    * - "NetworkError":   Failed to establish the control channel or data channel.
    * - "TimeoutError":   Presenting page takes too long to load.
    */
-  [CheckAnyPermissions="presentation-device-manage", Throws]
+  [ChromeOnly, Throws]
   Promise<PresentationConnection> startWithDevice(DOMString deviceId);
 };
