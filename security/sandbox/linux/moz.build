@@ -4,6 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# WARNING: On desktop Linux, SandboxHooks.cpp must be statically compiled
+# into the main executable in order to function properly.
+# This is currently the case, but if mozsandbox is moved to its own
+# shared library, something needs to change regarding SandboxHooks.cpp.
+# See Bug 1176099 for further details.
+
 if CONFIG['OS_TARGET'] == 'Android':
     SharedLibrary('mozsandbox')
     USE_LIBS += [
@@ -62,6 +68,7 @@ SOURCES += [
     'SandboxChroot.cpp',
     'SandboxFilter.cpp',
     'SandboxFilterUtil.cpp',
+    'SandboxHooks.cpp',
     'SandboxLogging.cpp',
     'SandboxUtil.cpp',
 ]
