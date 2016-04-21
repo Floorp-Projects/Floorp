@@ -420,7 +420,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   // get the thumb's pref size
   nsSize thumbSize = thumbBox->GetXULPrefSize(aState);
 
-  if (IsHorizontal())
+  if (IsXULHorizontal())
     thumbSize.height = clientRect.height;
   else
     thumbSize.width = clientRect.width;
@@ -433,8 +433,8 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   maxPos = std::max(minPos, maxPos);
   curPos = clamped(curPos, minPos, maxPos);
 
-  nscoord& availableLength = IsHorizontal() ? clientRect.width : clientRect.height;
-  nscoord& thumbLength = IsHorizontal() ? thumbSize.width : thumbSize.height;
+  nscoord& availableLength = IsXULHorizontal() ? clientRect.width : clientRect.height;
+  nscoord& thumbLength = IsXULHorizontal() ? thumbSize.width : thumbSize.height;
 
   if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetXULFlex() > 0) {
     float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
@@ -458,7 +458,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   // set the thumb's coord to be the current pos * the ratio.
   nsRect thumbRect(clientRect.x, clientRect.y, thumbSize.width, thumbSize.height);
-  int32_t& thumbPos = (IsHorizontal() ? thumbRect.x : thumbRect.y);
+  int32_t& thumbPos = (IsXULHorizontal() ? thumbRect.x : thumbRect.y);
   thumbPos += NSToCoordRound(pos * mRatio);
 
   nsRect oldThumbRect(thumbBox->GetRect());
@@ -496,7 +496,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   nsIFrame* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar;
   scrollbar = GetContentOfBox(scrollbarBox);
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
 
   if (isDraggingThumb())
   {
@@ -759,7 +759,7 @@ nsSliderFrame::CurrentPositionChanged()
                                          nsGkAtoms::reverse, eCaseMatters);
   nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
 
-  if (IsHorizontal())
+  if (IsXULHorizontal())
      newThumbRect.x = clientRect.x + NSToCoordRound(pos * mRatio);
   else
      newThumbRect.y = clientRect.y + NSToCoordRound(pos * mRatio);
@@ -769,7 +769,7 @@ nsSliderFrame::CurrentPositionChanged()
   nsPoint snappedThumbLocation = ToAppUnits(
       newThumbRect.TopLeft().ToNearestPixels(appUnitsPerPixel),
       appUnitsPerPixel);
-  if (IsHorizontal()) {
+  if (IsXULHorizontal()) {
     newThumbRect.x = snappedThumbLocation.x;
   } else {
     newThumbRect.y = snappedThumbLocation.y;
@@ -821,7 +821,7 @@ nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumb
 {
   nsRect crect;
   GetXULClientRect(crect);
-  nscoord offset = IsHorizontal() ? crect.x : crect.y;
+  nscoord offset = IsXULHorizontal() ? crect.x : crect.y;
   int32_t newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
   
   if (aMaySnap && mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::snap,
@@ -968,8 +968,8 @@ nsSliderFrame::StartAPZDrag()
                                NSAppUnitsToIntPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
                                sliderTrackCSS,
-                               IsHorizontal() ? AsyncDragMetrics::HORIZONTAL :
-                                                AsyncDragMetrics::VERTICAL);
+                               IsXULHorizontal() ? AsyncDragMetrics::HORIZONTAL :
+                                                   AsyncDragMetrics::VERTICAL);
 
   if (!nsLayoutUtils::HasDisplayPort(scrollableContent)) {
     return false;
@@ -1001,7 +1001,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
   if (!GetEventPoint(event, pt)) {
     return NS_OK;
   }
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
   nscoord pos = isHorizontal ? pt.x : pt.y;
 
   // If we should scroll-to-click, first place the middle of the slider thumb
@@ -1235,7 +1235,7 @@ nsSliderFrame::IsEventOverThumb(WidgetGUIEvent* aEvent)
   return eventPoint.x >= thumbRect.x && eventPoint.x < thumbRect.XMost() &&
          eventPoint.y >= thumbRect.y && eventPoint.y < thumbRect.YMost();
 #else
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
   nscoord eventPos = isHorizontal ? eventPoint.x : eventPoint.y;
   nscoord thumbStart = isHorizontal ? thumbRect.x : thumbRect.y;
   nscoord thumbEnd = isHorizontal ? thumbRect.XMost() : thumbRect.YMost();
@@ -1272,8 +1272,8 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   if (!GetEventPoint(aEvent, eventPoint)) {
     return NS_OK;
   }
-  if (IsHorizontal() ? eventPoint.x < thumbRect.x 
-                     : eventPoint.y < thumbRect.y)
+  if (IsXULHorizontal() ? eventPoint.x < thumbRect.x 
+                        : eventPoint.y < thumbRect.y)
     change = -1;
 
   mChange = change;
@@ -1383,7 +1383,7 @@ nsSliderFrame::Notify(void)
     }
     nsRect thumbRect = thumbFrame->GetRect();
 
-    bool isHorizontal = IsHorizontal();
+    bool isHorizontal = IsXULHorizontal();
 
     // See if the thumb has moved past our destination point.
     // if it has we want to stop.

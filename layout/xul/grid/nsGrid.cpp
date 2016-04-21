@@ -262,7 +262,7 @@ nsGrid::FindRowsAndColumns(nsIFrame** aRows, nsIFrame** aColumns)
     {
       nsGridRowGroupLayout* rowGroup = monument->CastToRowGroupLayout();
       if (rowGroup) {
-         bool isHorizontal = !nsSprocketLayout::IsHorizontal(child);
+         bool isHorizontal = !nsSprocketLayout::IsXULHorizontal(child);
          if (isHorizontal)
            *aRows = child;
          else

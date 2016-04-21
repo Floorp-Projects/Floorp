@@ -54,7 +54,7 @@ nsSprocketLayout::nsSprocketLayout()
 }
 
 bool 
-nsSprocketLayout::IsHorizontal(nsIFrame* aBox)
+nsSprocketLayout::IsXULHorizontal(nsIFrame* aBox)
 {
    return (aBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
 }
@@ -219,7 +219,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
   // the box.  Continuing with the example begun in the comment above, size would
   // be 150 pixels.
   nscoord size = clientRect.width;
-  if (!IsHorizontal(aBox))
+  if (!IsXULHorizontal(aBox))
     size = clientRect.height;
   ComputeChildSizes(aBox, aState, size, boxSizes, computedBoxSizes);
 
@@ -232,7 +232,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
   // in the OPPOSITE orientation, e.g., for a horizontal box, |min| is the minimum
   // height we require to enclose our children, and |max| is the maximum height
   // required to enclose our children.
-  if (IsHorizontal(aBox)) {
+  if (IsXULHorizontal(aBox)) {
     clientRect.width = size;
     if (clientRect.height < min)
       clientRect.height = min;
@@ -662,7 +662,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
 
   bool isHorizontal;
 
-  if (IsHorizontal(aBox))
+  if (IsXULHorizontal(aBox))
      isHorizontal = true;
   else
      isHorizontal = false;
@@ -900,7 +900,7 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIFrame* aBox,
   nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
 
-  if (IsHorizontal(aBox)) {
+  if (IsXULHorizontal(aBox)) {
     // horizontal box's children.
     if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
       aNextX = aCurX + aCurrentChildSize.width;
@@ -1027,7 +1027,7 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
 {
       nsRect childCurrentRect(aChildLayoutRect);
 
-      bool isHorizontal = IsHorizontal(aBox);
+      bool isHorizontal = IsXULHorizontal(aBox);
       nscoord childLayoutWidth  = GET_WIDTH(aChildLayoutRect,isHorizontal);
       nscoord& childActualWidth  = GET_WIDTH(aChildActualRect,isHorizontal);
       nscoord& containingWidth   = GET_WIDTH(aContainingRect,isHorizontal);   
@@ -1307,7 +1307,7 @@ nsSize
 nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nsSize vpref (0, 0); 
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord biggestPref = 0;
 
@@ -1363,7 +1363,7 @@ nsSize
 nsSprocketLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nsSize minSize (0, 0);
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord biggestMin = 0;
 
@@ -1432,7 +1432,7 @@ nsSize
 nsSprocketLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
 
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord smallestMax = NS_INTRINSICSIZE;
    nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
@@ -1500,7 +1500,7 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nscoord vAscent = 0;
 
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box

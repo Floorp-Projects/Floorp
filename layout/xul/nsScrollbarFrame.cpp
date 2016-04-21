@@ -180,7 +180,7 @@ nsScrollbarFrame::GetXULMargin(nsMargin& aMargin)
       bool isOverridable;
       theme->GetMinimumWidgetSize(presContext, this, NS_THEME_SCROLLBAR, &size,
                                   &isOverridable);
-      if (IsHorizontal()) {
+      if (IsXULHorizontal()) {
         aMargin.top = -presContext->DevPixelsToAppUnits(size.height);
       }
       else {
@@ -194,7 +194,7 @@ nsScrollbarFrame::GetXULMargin(nsMargin& aMargin)
     rv = nsBox::GetXULMargin(aMargin);
   }
 
-  if (NS_SUCCEEDED(rv) && !IsHorizontal()) {
+  if (NS_SUCCEEDED(rv) && !IsXULHorizontal()) {
     nsIScrollbarMediator* scrollFrame = GetScrollbarMediator();
     if (scrollFrame && !scrollFrame->IsScrollbarOnRight()) {
       Swap(aMargin.left, aMargin.right);

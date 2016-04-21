@@ -229,7 +229,7 @@ nsSplitterFrame::GetCursor(const nsPoint&    aPoint,
   return nsBoxFrame::GetCursor(aPoint, aCursor);
 
   /*
-    if (IsHorizontal())
+    if (IsXULHorizontal())
       aCursor = NS_STYLE_CURSOR_N_RESIZE;
     else
       aCursor = NS_STYLE_CURSOR_W_RESIZE;
@@ -280,7 +280,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
   // XXXbz this is pretty messed up, since this can change whether we should
   // have a frame at all.  This really needs a better solution.
   if (aParent && aParent->IsXULBoxFrame()) {
-    if (!aParent->IsHorizontal()) {
+    if (!aParent->IsXULHorizontal()) {
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
@@ -318,7 +318,7 @@ nsSplitterFrame::GetInitialOrientation(bool& aIsHorizontal)
 {
   nsIFrame* box = nsBox::GetParentXULBox(this);
   if (box) {
-    aIsHorizontal = !box->IsHorizontal();
+    aIsHorizontal = !box->IsXULHorizontal();
   }
   else
     nsBoxFrame::GetInitialOrientation(aIsHorizontal);
@@ -444,7 +444,7 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
 
     //printf("Dragging\n");
 
-    bool isHorizontal = !mOuter->IsHorizontal();
+    bool isHorizontal = !mOuter->IsXULHorizontal();
     // convert coord to pixels
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                               mParentBox);
@@ -644,7 +644,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mDidDrag = false;
 
   EnsureOrient();
-  bool isHorizontal = !mOuter->IsHorizontal();
+  bool isHorizontal = !mOuter->IsXULHorizontal();
   
   ResizeType resizeBefore = GetResizeBefore();
   ResizeType resizeAfter  = GetResizeAfter();
@@ -887,7 +887,7 @@ void
 nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 {
   EnsureOrient();
-  bool isHorizontal = !mOuter->IsHorizontal();
+  bool isHorizontal = !mOuter->IsXULHorizontal();
 
   AdjustChildren(aPresContext, mChildInfosBefore.get(),
                  mChildInfosBeforeCount, isHorizontal);
