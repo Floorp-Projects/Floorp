@@ -303,10 +303,10 @@ public class BrowserApp extends GeckoApp
     private boolean mHideWebContentOnAnimationEnd;
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
-    private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
 
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
-            (BrowserAppDelegate) new AddToHomeScreenPromotion()
+            (BrowserAppDelegate) new AddToHomeScreenPromotion(),
+            (BrowserAppDelegate) new ScreenshotDelegate()
     ));
 
     @NonNull
@@ -807,30 +807,6 @@ public class BrowserApp extends GeckoApp
             }
         });
 
-        // Watch for screenshots while browser is in foreground.
-        mScreenshotObserver.setListener(getContext(), new ScreenshotObserver.OnScreenshotListener() {
-            @Override
-            public void onScreenshotTaken(final String screenshotPath, final String title) {
-                // Treat screenshots as a sharing method.
-                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "screenshot");
-
-                if (!AppConstants.SCREENSHOTS_IN_BOOKMARKS_ENABLED) {
-                    return;
-                }
-
-                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab == null) {
-                    Log.w(LOGTAG, "Selected tab is null: could not page info to store screenshot.");
-                    return;
-                }
-
-                getProfile().getDB().getUrlAnnotations().insertScreenshot(
-                        getContentResolver(), selectedTab.getURL(), screenshotPath);
-                SnackbarHelper.showSnackbar(BrowserApp.this,
-                        getResources().getString(R.string.screenshot_added_to_bookmarks), Snackbar.LENGTH_SHORT);
-            }
-        });
-
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
 
@@ -1108,8 +1084,6 @@ public class BrowserApp extends GeckoApp
 
         processTabQueue();
 
-        mScreenshotObserver.start();
-
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onResume(this);
         }
@@ -1125,8 +1099,6 @@ public class BrowserApp extends GeckoApp
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
-
-        mScreenshotObserver.stop();
 
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onPause(this);
