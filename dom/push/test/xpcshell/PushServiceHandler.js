@@ -1,5 +1,5 @@
-// An XPCOM service that's registered with the category manager for handling
-// push notifications with scope "chrome://test-scope"
+// An XPCOM service that's registered with the category manager in the parent
+// process for handling push notifications with scope "chrome://test-scope"
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;

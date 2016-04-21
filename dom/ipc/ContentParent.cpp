@@ -264,6 +264,10 @@ using namespace mozilla::system;
 #include "mozilla/dom/GamepadMonitoring.h"
 #endif
 
+#ifndef MOZ_SIMPLEPUSH
+#include "mozilla/dom/PushNotifier.h"
+#endif
+
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"
 #endif
@@ -5831,6 +5835,63 @@ ContentParent::StartProfiler(nsIProfilerStartParams* aParams)
   profiler->GetProfileGatherer(getter_AddRefs(gatherer));
   mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
 #endif
+}
+
+bool
+ContentParent::RecvNotifyPushObservers(const nsCString& aScope,
+                                       const nsString& aMessageId)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+
+  nsresult rv = pushNotifier->NotifyPushObservers(aScope, Nothing());
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
+bool
+ContentParent::RecvNotifyPushObserversWithData(const nsCString& aScope,
+                                               const nsString& aMessageId,
+                                               InfallibleTArray<uint8_t>&& aData)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+
+  nsresult rv = pushNotifier->NotifyPushObservers(aScope, Some(aData));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
+bool
+ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+
+  nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
 }
 
 } // namespace dom
