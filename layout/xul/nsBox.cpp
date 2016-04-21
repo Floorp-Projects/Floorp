@@ -117,7 +117,7 @@ nsBox::GetBoxName(nsAutoString& aName)
 #endif
 
 nsresult
-nsBox::BeginLayout(nsBoxLayoutState& aState)
+nsBox::BeginXULLayout(nsBoxLayoutState& aState)
 {
 #ifdef DEBUG_LAYOUT 
 
@@ -504,7 +504,7 @@ nsIFrame::XULLayout(nsBoxLayoutState& aState)
   nsBox *box = static_cast<nsBox*>(this);
   DISPLAY_LAYOUT(box);
 
-  box->BeginLayout(aState);
+  box->BeginXULLayout(aState);
 
   box->DoLayout(aState);
 

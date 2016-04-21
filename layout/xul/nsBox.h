@@ -91,7 +91,7 @@ protected:
   
   virtual void GetLayoutFlags(uint32_t& aFlags);
 
-  nsresult BeginLayout(nsBoxLayoutState& aState);
+  nsresult BeginXULLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   nsresult EndLayout(nsBoxLayoutState& aState);
 
