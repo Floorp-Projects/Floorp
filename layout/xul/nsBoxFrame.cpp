@@ -965,7 +965,7 @@ nsBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
 #ifdef DEBUG_LAYOUT
 nsresult
-nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
+nsBoxFrame::SetXULDebug(nsBoxLayoutState& aState, bool aDebug)
 {
   // see if our state matches the given debug state
   bool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
@@ -1840,7 +1840,7 @@ nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool
     nsIFrame* child = nsBox::GetChildXULBox(this);
      while (child)
      {
-        child->SetDebug(aState, aDebug);
+        child->SetXULDebug(aState, aDebug);
         child = GetNextXULBox(child);
      }
 }

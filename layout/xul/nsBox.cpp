@@ -99,11 +99,11 @@ nsBox::PropagateDebug(nsBoxLayoutState& aState)
   // propagate debug information
   if (mState & NS_STATE_DEBUG_WAS_SET) {
     if (mState & NS_STATE_SET_TO_DEBUG)
-      SetDebug(aState, true);
+      SetXULDebug(aState, true);
     else
-      SetDebug(aState, false);
+      SetXULDebug(aState, false);
   } else if (mState & NS_STATE_IS_ROOT) {
-    SetDebug(aState, gDebug);
+    SetXULDebug(aState, gDebug);
   }
 }
 #endif
@@ -945,7 +945,7 @@ nsBox::GetParentXULBox(const nsIFrame* aFrame)
 
 #ifdef DEBUG_LAYOUT
 nsresult
-nsBox::SetDebug(nsBoxLayoutState& aState, bool aDebug)
+nsBox::SetXULDebug(nsBoxLayoutState& aState, bool aDebug)
 {
     return NS_OK;
 }

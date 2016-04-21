@@ -89,7 +89,7 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 
 #ifdef DEBUG_LAYOUT
-  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) override;
+  virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
 #endif
 
   // The following methods are all overridden so that the menupopup
@@ -263,7 +263,7 @@ protected:
 
 protected:
 #ifdef DEBUG_LAYOUT
-  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
+  nsresult SetXULDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
 #endif
   nsresult Notify(nsITimer* aTimer);
 
