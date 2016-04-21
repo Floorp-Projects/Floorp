@@ -1105,7 +1105,7 @@ nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
       // not flexible.
       if (parentsParent) {
         if (!IsGrid(parentsParent)) {
-          nscoord flex = parent->GetFlex();
+          nscoord flex = parent->GetXULFlex();
           nsIFrame::AddCSSFlex(parent, flex);
           if (flex == 0) {
             row->mFlex = 0;
@@ -1119,7 +1119,7 @@ nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
     }
     
     // get the row flex.
-    row->mFlex = box->GetFlex();
+    row->mFlex = box->GetXULFlex();
     nsIFrame::AddCSSFlex(box, row->mFlex);
   }
 

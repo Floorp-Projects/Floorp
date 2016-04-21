@@ -677,7 +677,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         mOuter->AddMargin(childBox, prefSize);
         mOuter->AddMargin(childBox, maxSize);
 
-        nscoord flex = childBox->GetFlex();
+        nscoord flex = childBox->GetXULFlex();
 
         nsMargin margin(0,0,0,0);
         childBox->GetMargin(margin);

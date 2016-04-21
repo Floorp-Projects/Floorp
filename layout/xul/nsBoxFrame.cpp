@@ -887,12 +887,12 @@ nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nscoord
-nsBoxFrame::GetFlex()
+nsBoxFrame::GetXULFlex()
 {
   if (!DoesNeedRecalc(mFlex))
      return mFlex;
 
-  mFlex = nsBox::GetFlex();
+  mFlex = nsBox::GetXULFlex();
 
   return mFlex;
 }
@@ -1499,7 +1499,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
         spacerSize = debugBorder.left - onePixel*4;
     }
 
-    nscoord flex = kid->GetFlex();
+    nscoord flex = kid->GetXULFlex();
 
     if (!kid->IsCollapsed()) {
       if (isHorizontal) 
@@ -1789,7 +1789,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     nsSize prefSize = child->GetXULPrefSize(state);
                     nsSize minSize = child->GetXULMinSize(state);
                     nsSize maxSize = child->GetXULMaxSize(state);
-                    nscoord flexSize = child->GetFlex();
+                    nscoord flexSize = child->GetXULFlex();
                     nscoord ascentSize = child->GetBoxAscent(state);
 
                     char min[100];
