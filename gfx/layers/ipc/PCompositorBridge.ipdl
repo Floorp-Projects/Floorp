@@ -25,6 +25,7 @@ using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasi
 using mozilla::CSSIntRegion from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDeviceIntRegion from "Units.h";
+using mozilla::VisibilityCounter from "VisibilityIPC.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 
@@ -173,15 +174,18 @@ parent:
    */
   async RequestNotifyAfterRemotePaint();
 
-  // The child clears the 'approximately visible' regions associated with the
-  // provided layers ID and pres shell ID (i.e., the regions for all view IDs
-  // associated with those IDs).
-  async ClearApproximatelyVisibleRegions(uint64_t layersId, uint32_t presShellId);
+  // The child sends a request to clear the visible regions (approximate,
+  // in-displayport, etc.) associated with the provided layers ID and pres shell
+  // ID (i.e., the regions for all view IDs associated with those IDs).
+  async ClearVisibleRegions(uint64_t layersId, uint32_t presShellId);
 
   // The child sends a region containing rects associated with the provided
-  // scrollable layer GUID that the child considers 'approximately visible'.
+  // scrollable layer GUID that the child considers visible in the sense
+  // specified by |counter|.
   // We visualize this information in the APZ minimap.
-  async NotifyApproximatelyVisibleRegion(ScrollableLayerGuid guid, CSSIntRegion region);
+  async UpdateVisibleRegion(VisibilityCounter counter,
+                            ScrollableLayerGuid guid,
+                            CSSIntRegion region);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

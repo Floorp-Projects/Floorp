@@ -33,6 +33,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsAString, etc
 #include "LayerTreeInvalidation.h"
+#include "Visibility.h"
 
 class gfxContext;
 
@@ -219,10 +220,17 @@ public:
     mInvalidRegion.Or(mInvalidRegion, aRegion);
   }
 
-  void ClearApproximatelyVisibleRegions(uint64_t aLayersId,
-                                        const Maybe<uint32_t>& aPresShellId)
+  void ClearVisibleRegions(uint64_t aLayersId,
+                           const Maybe<uint32_t>& aPresShellId)
   {
-    for (auto iter = mVisibleRegions.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mApproximatelyVisibleRegions.Iter(); !iter.Done(); iter.Next()) {
+      if (iter.Key().mLayersId == aLayersId &&
+          (!aPresShellId || iter.Key().mPresShellId == *aPresShellId)) {
+        iter.Remove();
+      }
+    }
+
+    for (auto iter = mInDisplayPortVisibleRegions.Iter(); !iter.Done(); iter.Next()) {
       if (iter.Key().mLayersId == aLayersId &&
           (!aPresShellId || iter.Key().mPresShellId == *aPresShellId)) {
         iter.Remove();
@@ -230,18 +238,35 @@ public:
     }
   }
 
-  void UpdateApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                        const CSSIntRegion& aRegion)
+  void UpdateVisibleRegion(VisibilityCounter aCounter,
+                           const ScrollableLayerGuid& aGuid,
+                           const CSSIntRegion& aRegion)
   {
-    CSSIntRegion* regionForScrollFrame = mVisibleRegions.LookupOrAdd(aGuid);
+    VisibleRegions& regions = aCounter == VisibilityCounter::MAY_BECOME_VISIBLE
+                            ? mApproximatelyVisibleRegions
+                            : mInDisplayPortVisibleRegions;
+
+    CSSIntRegion* regionForScrollFrame = regions.LookupOrAdd(aGuid);
     MOZ_ASSERT(regionForScrollFrame);
 
     *regionForScrollFrame = aRegion;
   }
 
-  CSSIntRegion* GetApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid)
+  CSSIntRegion* GetVisibleRegion(VisibilityCounter aCounter,
+                                 const ScrollableLayerGuid& aGuid)
   {
-    return mVisibleRegions.Get(aGuid);
+    static CSSIntRegion emptyRegion;
+
+    VisibleRegions& regions = aCounter == VisibilityCounter::MAY_BECOME_VISIBLE
+                            ? mApproximatelyVisibleRegions
+                            : mInDisplayPortVisibleRegions;
+
+    CSSIntRegion* region = regions.Get(aGuid);
+    if (!region) {
+      region = &emptyRegion;
+    }
+
+    return region;
   }
 
   Compositor* GetCompositor() const
@@ -382,7 +407,8 @@ private:
 
   typedef nsClassHashtable<nsGenericHashKey<ScrollableLayerGuid>,
                            CSSIntRegion> VisibleRegions;
-  VisibleRegions mVisibleRegions;
+  VisibleRegions mApproximatelyVisibleRegions;
+  VisibleRegions mInDisplayPortVisibleRegions;
 
   UniquePtr<FPSState> mFPS;
 

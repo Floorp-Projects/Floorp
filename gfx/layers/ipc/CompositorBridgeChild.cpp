@@ -729,28 +729,27 @@ CompositorBridgeChild::SendRequestNotifyAfterRemotePaint()
 }
 
 bool
-CompositorBridgeChild::SendClearApproximatelyVisibleRegions(uint64_t aLayersId,
-                                                            uint32_t aPresShellId)
+CompositorBridgeChild::SendClearVisibleRegions(uint64_t aLayersId,
+                                               uint32_t aPresShellId)
 {
   MOZ_ASSERT(mCanSend);
   if (!mCanSend) {
     return true;
   }
-  return PCompositorBridgeChild::SendClearApproximatelyVisibleRegions(aLayersId,
-                                                                aPresShellId);
+  return PCompositorBridgeChild::SendClearVisibleRegions(aLayersId, aPresShellId);
 }
 
 bool
-CompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                            const CSSIntRegion& aRegion)
+CompositorBridgeChild::SendUpdateVisibleRegion(VisibilityCounter aCounter,
+                                               const ScrollableLayerGuid& aGuid,
+                                               const CSSIntRegion& aRegion)
 {
   MOZ_ASSERT(mCanSend);
   if (!mCanSend) {
     return true;
   }
-  return PCompositorBridgeChild::SendNotifyApproximatelyVisibleRegion(aGuid, aRegion);
+  return PCompositorBridgeChild::SendUpdateVisibleRegion(aCounter, aGuid, aRegion);
 }
-
 
 } // namespace layers
 } // namespace mozilla
