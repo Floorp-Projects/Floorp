@@ -3764,6 +3764,28 @@ nsPIDOMWindowOuter::RefreshMediaElements()
   }
 }
 
+void
+nsPIDOMWindowOuter::SetServiceWorkersTestingEnabled(bool aEnabled)
+{
+  // Devtools should only be setting this on the top level window.  Its
+  // ok if devtools clears the flag on clean up of nested windows, though.
+  // It will have no affect.
+#ifdef DEBUG
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetScriptableTop();
+  MOZ_ASSERT_IF(aEnabled, this == topWindow);
+#endif
+  mServiceWorkersTestingEnabled = aEnabled;
+}
+
+bool
+nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled()
+{
+  // Automatically get this setting from the top level window so that nested
+  // iframes get the correct devtools setting.
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetScriptableTop();
+  return topWindow->mServiceWorkersTestingEnabled;
+}
+
 bool
 nsPIDOMWindowInner::GetAudioCaptured() const
 {
