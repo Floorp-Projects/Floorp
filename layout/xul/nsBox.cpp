@@ -163,7 +163,7 @@ nsBox::DoLayout(nsBoxLayoutState& aState)
 }
 
 nsresult
-nsBox::EndLayout(nsBoxLayoutState& aState)
+nsBox::EndXULLayout(nsBoxLayoutState& aState)
 {
 
   #ifdef DEBUG_LAYOUT
@@ -508,7 +508,7 @@ nsIFrame::XULLayout(nsBoxLayoutState& aState)
 
   box->DoLayout(aState);
 
-  box->EndLayout(aState);
+  box->EndXULLayout(aState);
 
   return NS_OK;
 }
