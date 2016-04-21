@@ -185,7 +185,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
     yOffset += size;
     availableHeight -= size;
     
-    box = nsBox::GetNextBox(box);
+    box = nsBox::GetNextXULBox(box);
   }
   
   // We have enough available height left to add some more rows

@@ -205,7 +205,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
       }
 
       if (child && !column->mIsBogus)
-        child = nsBox::GetNextBox(child);
+        child = nsBox::GetNextXULBox(child);
 
     }
     aBoxSizes = start;
@@ -303,7 +303,7 @@ nsGridRowLeafLayout::CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_
     // count the children
     int32_t columnCount = 0;
     while(child) {
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
       columnCount++;
     }
 
