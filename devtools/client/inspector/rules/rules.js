@@ -120,8 +120,12 @@ function createDummyDocument() {
   });
   let docShell = getDocShell(frame);
   let eventTarget = docShell.chromeEventHandler;
-  docShell.createAboutBlankContentViewer(Cc["@mozilla.org/nullprincipal;1"]
-                                         .createInstance(Ci.nsIPrincipal));
+  let ssm = Services.scriptSecurityManager;
+
+  // We probably need to call InheritFromDocShellToDoc to get the correct origin
+  // attributes, but right now we can't call it from JS.
+  let nullPrincipal = ssm.createNullPrincipal(docShell.getOriginAttributes());
+  docShell.createAboutBlankContentViewer(nullPrincipal);
   let window = docShell.contentViewer.DOMDocument.defaultView;
   window.location = "data:text/html,<html></html>";
   let deferred = promise.defer();
