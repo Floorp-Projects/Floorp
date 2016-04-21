@@ -13,6 +13,11 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"/>
 
+    <ViewStub android:id="@+id/home_sync_empty_view_stub"
+              android:layout="@layout/remote_tabs_setup"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"/>
+
     <org.mozilla.gecko.home.CombinedHistoryRecyclerView
             android:id="@+id/combined_recycler_view"
             android:layout_width="match_parent"
