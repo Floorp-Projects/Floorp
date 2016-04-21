@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>altgraph.GraphUtil — Utility functions &mdash; altgraph 0.11 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="altgraph 0.11 documentation" href="index.html" />
+    <link rel="next" title="altgraph.Dot — Interface to the dot language" href="dot.html" />
+    <link rel="prev" title="altgraph.GraphStat — Functions providing various graph statistics" href="graphstat.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dot.html" title="altgraph.Dot — Interface to the dot language"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="graphstat.html" title="altgraph.GraphStat — Functions providing various graph statistics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-altgraph.GraphUtil">
+<span id="altgraph-graphutil-utility-functions"></span><h1><a class="reference internal" href="#module-altgraph.GraphUtil" title="altgraph.GraphUtil: Utility functions"><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.GraphUtil</span></tt></a> &#8212; Utility functions<a class="headerlink" href="#module-altgraph.GraphUtil" title="Permalink to this headline">¶</a></h1>
+<p>The module <a class="reference internal" href="#module-altgraph.GraphUtil" title="altgraph.GraphUtil: Utility functions"><tt class="xref py py-mod docutils literal"><span class="pre">altgraph.GraphUtil</span></tt></a> performs a number of more
+or less useful utility functions.</p>
+<dl class="function">
+<dt id="altgraph.GraphUtil.generate_random_graph">
+<tt class="descclassname">altgraph.GraphUtil.</tt><tt class="descname">generate_random_graph</tt><big>(</big><em>node_num, edge_num[, self_loops[, multi_edges]</em><big>)</big><a class="headerlink" href="#altgraph.GraphUtil.generate_random_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and returns a <a class="reference internal" href="graph.html#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a> instance
+with <em>node_num</em> nodes randomly connected by <em>edge_num</em> edges.</p>
+<p>When <em>self_loops</em> is present and True there can be edges that point from
+a node to itself.</p>
+<p>When <em>multi_edge</em> is present and True there can be duplicate edges.</p>
+<p>This method raises <tt class="xref py py-class docutils literal"><span class="pre">GraphError</span> <span class="pre">&lt;altgraph.GraphError</span></tt> when
+a graph with the requested configuration cannot be created.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="altgraph.GraphUtil.generate_scale_free_graph">
+<tt class="descclassname">altgraph.GraphUtil.</tt><tt class="descname">generate_scale_free_graph</tt><big>(</big><em>steps</em>, <em>growth_num</em><span class="optional">[</span>, <em>self_loops</em><span class="optional">[</span>, <em>multi_edges</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#altgraph.GraphUtil.generate_scale_free_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and returns a <a class="reference internal" href="graph.html#altgraph.Graph.Graph" title="altgraph.Graph.Graph"><tt class="xref py py-class docutils literal"><span class="pre">Graph</span></tt></a> instance that
+will have <em>steps*growth_n um</em> nodes and a scale free (powerlaw)
+connectivity.</p>
+<p>Starting with a fully connected graph with <em>growth_num</em> nodes
+at every step <em>growth_num</em> nodes are added to the graph and are connected
+to existing nodes with a probability proportional to the degree of these
+existing nodes.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The current implementation is basically untested, although
+code inspection seems to indicate an implementation that is consistent
+with the description at
+<a class="reference external" href="http://mathworld.wolfram.com/Scale-FreeNetwork.html">Wolfram MathWorld</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="altgraph.GraphUtil.filter_stack">
+<tt class="descclassname">altgraph.GraphUtil.</tt><tt class="descname">filter_stack</tt><big>(</big><em>graph</em>, <em>head</em>, <em>filters</em><big>)</big><a class="headerlink" href="#altgraph.GraphUtil.filter_stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a depth-first oder walk of the graph starting at <em>head</em> and
+apply all filter functions in <em>filters</em> on the node data of the nodes
+found.</p>
+<p>Returns (<em>visited</em>, <em>removes</em>, <em>orphans</em>), where</p>
+<ul class="simple">
+<li><em>visited</em>: the set of visited nodes</li>
+<li><em>removes</em>: the list of nodes where the node data doesn&#8217;t match
+all <em>filters</em>.</li>
+<li><em>orphans</em>: list of tuples (<em>last_good</em>, <em>node</em>), where
+node is not in <em>removes</em> and one of the nodes that is connected
+by an incoming edge is in <em>removes</em>. <em>Last_good</em> is the
+closest upstream node that is not in <em>removes</em>.</li>
+</ul>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="graphstat.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">altgraph.GraphStat</span></tt> &#8212; Functions providing various graph statistics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dot.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">altgraph.Dot</span></tt> &#8212; Interface to the dot language</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dot.html" title="altgraph.Dot — Interface to the dot language"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="graphstat.html" title="altgraph.GraphStat — Functions providing various graph statistics"
+             >previous</a> |</li>
+        <li><a href="index.html">altgraph 0.11 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010-2011, Ronald Oussoren, Bob Ippolito, 2004 Istvan Albert.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>
