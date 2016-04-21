@@ -1602,7 +1602,7 @@ public:
     uint32_t mCount;
   };
 private:
-  // Total time an MSE video has spent playing
+  // Total time a video has spent playing.
   TimeDurationAccumulator mPlayTime;
 
   // Indicates if user has interacted with the element.
