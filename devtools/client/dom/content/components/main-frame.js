@@ -37,8 +37,7 @@ var MainFrame = React.createClass({
     return (
       div({className: "mainFrame"},
         MainToolbar({
-          dispatch: this.props.dispatch,
-          object: this.props.object
+          dispatch: this.props.dispatch
         }),
         DomTree({
           object: this.props.object,
