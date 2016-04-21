@@ -1343,12 +1343,12 @@ nsSliderFrame::GetPrefSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsSliderFrame::GetMinSize(nsBoxLayoutState& aState)
+nsSliderFrame::GetXULMinSize(nsBoxLayoutState& aState)
 {
   EnsureOrient();
 
   // our min size is just our borders and padding
-  return nsBox::GetMinSize(aState);
+  return nsBox::GetXULMinSize(aState);
 }
 
 nsSize

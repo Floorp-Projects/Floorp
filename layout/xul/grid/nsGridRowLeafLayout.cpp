@@ -53,14 +53,14 @@ nsGridRowLeafLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridRowLeafLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsGridRowLeafLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
   bool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
-    return nsGridRowLayout::GetMinSize(aBox, aState); 
+    return nsGridRowLayout::GetXULMinSize(aBox, aState); 
   else {
     nsSize minSize = grid->GetMinRowSize(aState, index, isHorizontal);
     AddBorderAndPadding(aBox, minSize);

@@ -458,7 +458,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   // get the preferred, minimum and maximum size. If the menu is sized to the
   // popup, then the popup's width is the menu's width.
   nsSize prefSize = GetPrefSize(aState);
-  nsSize minSize = GetMinSize(aState); 
+  nsSize minSize = GetXULMinSize(aState); 
   nsSize maxSize = GetMaxSize(aState);
 
   if (aSizedToPopup) {

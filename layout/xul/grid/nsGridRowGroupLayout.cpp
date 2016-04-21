@@ -121,9 +121,9 @@ nsGridRowGroupLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridRowGroupLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsGridRowGroupLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
-  nsSize minSize = nsGridRowLayout::GetMinSize(aBox, aState); 
+  nsSize minSize = nsGridRowLayout::GetXULMinSize(aBox, aState); 
 
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);

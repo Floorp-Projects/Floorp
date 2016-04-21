@@ -93,9 +93,9 @@ nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal)
 }
 
 nsSize
-nsGridLayout2::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsGridLayout2::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
-  nsSize minSize = nsStackLayout::GetMinSize(aBox, aState); 
+  nsSize minSize = nsStackLayout::GetXULMinSize(aBox, aState); 
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.

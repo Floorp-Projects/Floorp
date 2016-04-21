@@ -590,11 +590,11 @@ nsBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   DISPLAY_MIN_WIDTH(this, result);
 
   nsBoxLayoutState state(PresContext(), aRenderingContext);
-  nsSize minSize = GetMinSize(state);
+  nsSize minSize = GetXULMinSize(state);
 
-  // GetMinSize returns border-box width, and we want to return content
+  // GetXULMinSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
-  // actually just want to subtract what GetMinSize added, which is the
+  // actually just want to subtract what GetXULMinSize added, which is the
   // result of GetBorderAndPadding.
   nsMargin bp;
   GetBorderAndPadding(bp);
@@ -676,7 +676,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                "computed inline size should always be computed");
   if (computedSize.BSize(wm) == NS_INTRINSICSIZE) {
     nsSize physicalPrefSize = GetPrefSize(state);
-    nsSize minSize = GetMinSize(state);
+    nsSize minSize = GetXULMinSize(state);
     nsSize maxSize = GetMaxSize(state);
     // XXXbz isn't GetPrefSize supposed to bounds-check for us?
     physicalPrefSize = BoundsCheck(minSize, physicalPrefSize, maxSize);
@@ -778,7 +778,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
     }
   }
 
-  nsSize minSize = GetMinSize(aBoxLayoutState);
+  nsSize minSize = GetXULMinSize(aBoxLayoutState);
   nsSize maxSize = GetMaxSize(aBoxLayoutState);
   mPrefSize = BoundsCheck(minSize, size, maxSize);
  
@@ -807,7 +807,7 @@ nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
+nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
   NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
                "must have rendering context");
@@ -830,14 +830,14 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   if (!nsIFrame::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
-      nsSize layoutSize = mLayoutManager->GetMinSize(this, aBoxLayoutState);
+      nsSize layoutSize = mLayoutManager->GetXULMinSize(this, aBoxLayoutState);
       if (!widthSet)
         size.width = layoutSize.width;
       if (!heightSet)
         size.height = layoutSize.height;
     }
     else {
-      size = nsBox::GetMinSize(aBoxLayoutState);
+      size = nsBox::GetXULMinSize(aBoxLayoutState);
     }
   }
   
@@ -1787,7 +1787,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     nsIFrame::AddCSSFlex    (child, flexCSS);
 
                     nsSize prefSize = child->GetPrefSize(state);
-                    nsSize minSize = child->GetMinSize(state);
+                    nsSize minSize = child->GetXULMinSize(state);
                     nsSize maxSize = child->GetMaxSize(state);
                     nscoord flexSize = child->GetFlex();
                     nscoord ascentSize = child->GetBoxAscent(state);

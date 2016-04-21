@@ -85,14 +85,14 @@ nsStackLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsStackLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsStackLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   nsSize minSize (0, 0);
 
   nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
-      nsSize min = child->GetMinSize(aState);
+      nsSize min = child->GetXULMinSize(aState);
 
       AddMargin(child, min);
       nsMargin offset;
@@ -118,7 +118,7 @@ nsStackLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
   nsIFrame* child = nsBox::GetChildBox(aBox);
   while (child) {
     if (child->StyleXUL()->mStretchStack) {
-      nsSize min = child->GetMinSize(aState);
+      nsSize min = child->GetXULMinSize(aState);
       nsSize max = child->GetMaxSize(aState);
 
       max = nsBox::BoundsCheckMinMax(min, max);
@@ -298,7 +298,7 @@ nsStackLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           //
           // Margins on the child are also included in the edge offsets
           if (offsetSpecified) {
-            nsSize min = child->GetMinSize(aState);
+            nsSize min = child->GetXULMinSize(aState);
             nsSize max = child->GetMaxSize(aState);
             if (offsetSpecified & SPECIFIED_LEFT) {
               childRect.x = clientRect.x + offset.left + margin.left;
