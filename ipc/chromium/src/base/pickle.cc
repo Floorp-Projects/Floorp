@@ -24,6 +24,8 @@ static_assert(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
 // static
 const int Pickle::kPayloadUnit = 64;
 
+const uint32_t kFastGrowthCap = 128 * 1024;
+
 // We mark a read only pickle with a special capacity_.
 static const uint32_t kCapacityReadOnly = (uint32_t) -1;
 
@@ -500,7 +502,8 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   uint32_t needed_size = header_size_ + new_size;
 
   if (needed_size > capacity_) {
-    Resize(std::max(capacity_ * 2, needed_size));
+    double growth_rate = capacity_ < kFastGrowthCap ? 2.0 : 1.4;
+    Resize(std::max(static_cast<uint32_t>(capacity_ * growth_rate), needed_size));
   }
 
   DCHECK(intptr_t(header_) % alignment == 0);
