@@ -14,7 +14,6 @@
 #include "gfxPattern.h"
 #include "mozilla/gfx/UserData.h"
 #include "nsRefreshDriver.h"
-#include "DrawMode.h"
 
 class nsIDocument;
 class nsIContentViewer;
@@ -115,11 +114,10 @@ public:
 
     /**
      * Render the SVG glyph for |aGlyphId|
-     * @param aDrawMode Whether to fill or stroke or both; see DrawMode
      * @param aContextPaint Information on text context paints.
      *   See |gfxTextContextPaint|.
      */
-    bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId, DrawMode aDrawMode,
+    bool RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
                      gfxTextContextPaint *aContextPaint);
 
     /**

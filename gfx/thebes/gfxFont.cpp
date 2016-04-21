@@ -1748,14 +1748,6 @@ gfxFont::CalcXScale(DrawTarget* aDrawTarget)
     return 1.0 / m;
 }
 
-static DrawMode
-ForcePaintingDrawMode(DrawMode aDrawMode)
-{
-    return aDrawMode == DrawMode::GLYPH_PATH ?
-        DrawMode(int(DrawMode::GLYPH_FILL) | int(DrawMode::GLYPH_STROKE)) :
-        aDrawMode;
-}
-
 // Draw an individual glyph at a specific location.
 // *aPt is the glyph position in appUnits; it is converted to device
 // coordinates (devPt) here.
@@ -1793,8 +1785,9 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
         if (!runParams.paintSVGGlyphs) {
             return;
         }
-        DrawMode mode = ForcePaintingDrawMode(runParams.drawMode);
-        if (RenderSVGGlyph(runParams.context, devPt, mode,
+        NS_WARN_IF_FALSE(runParams.drawMode != DrawMode::GLYPH_PATH,
+                         "Rendering SVG glyph despite request for glyph path");
+        if (RenderSVGGlyph(runParams.context, devPt,
                            aGlyphID, fontParams.contextPaint,
                            runParams.callbacks, *aEmittedGlyphs)) {
             return;
@@ -2146,7 +2139,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 }
 
 bool
-gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
+gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint) const
 {
     if (!GetFontEntry()->HasSVGGlyph(aGlyphId)) {
@@ -2165,14 +2158,14 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
     bool rv = GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId,
-                                             int(aDrawMode), aContextPaint);
+                                             aContextPaint);
     aContext->Restore();
     aContext->NewPath();
     return rv;
 }
 
 bool
-gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
+gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint,
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
                         bool& aEmittedGlyphs) const
@@ -2181,7 +2174,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
         aCallbacks->NotifyGlyphPathEmitted();
         aEmittedGlyphs = false;
     }
-    return RenderSVGGlyph(aContext, aPoint, aDrawMode, aGlyphId, aContextPaint);
+    return RenderSVGGlyph(aContext, aPoint, aGlyphId, aContextPaint);
 }
 
 bool
