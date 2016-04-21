@@ -337,7 +337,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   if (thumb) {
     nsRect thumbRect(thumb->GetRect());
     nsMargin m;
-    thumb->GetMargin(m);
+    thumb->GetXULMargin(m);
     thumbRect.Inflate(m);
 
     nsRect crect;

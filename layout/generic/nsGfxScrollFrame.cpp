@@ -1389,7 +1389,7 @@ nsXULScrollFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
   nsMargin m(0,0,0,0);
   GetXULBorderAndPadding(m);
   ascent += m.top;
-  GetMargin(m);
+  GetXULMargin(m);
   ascent += m.top;
 
   return ascent;
@@ -5360,7 +5360,7 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     vRect.x = scrollbarOnLeft ? aContentArea.x : mScrollPort.x + NSToCoordRound(res * scrollPortClampingSize.width);
     if (mHasVerticalScrollbar) {
       nsMargin margin;
-      mVScrollbarBox->GetMargin(margin);
+      mVScrollbarBox->GetXULMargin(margin);
       vRect.Deflate(margin);
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, true);
@@ -5377,7 +5377,7 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     hRect.y = mScrollPort.y + NSToCoordRound(res * scrollPortClampingSize.height);
     if (mHasHorizontalScrollbar) {
       nsMargin margin;
-      mHScrollbarBox->GetMargin(margin);
+      mHScrollbarBox->GetXULMargin(margin);
       hRect.Deflate(margin);
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, hRect, hasResizer, false);
