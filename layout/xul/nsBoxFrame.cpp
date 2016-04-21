@@ -706,7 +706,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   SetXULBounds(state, r);
  
   // layout our children
-  Layout(state);
+  XULLayout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
   
@@ -910,7 +910,7 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
   nsresult rv = NS_OK;
   if (mLayoutManager) {
     CoordNeedsRecalc(mAscent);
-    rv = mLayoutManager->Layout(this, aState);
+    rv = mLayoutManager->XULLayout(this, aState);
   }
 
   aState.SetLayoutFlags(oldFlags);
@@ -1929,7 +1929,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect
   bool layout = NS_SUBTREE_DIRTY(aBox);
   
   if (layout || (oldRect.width != aRect.width || oldRect.height != aRect.height))  {
-    return aBox->Layout(aState);
+    return aBox->XULLayout(aState);
   }
 
   return NS_OK;

@@ -47,13 +47,13 @@ nsGridLayout2::AddOffset(nsIFrame* aChild, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsGridLayout2::Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsGridLayout2::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   // XXX This should be set a better way!
   mGrid.SetBox(aBox);
   NS_ASSERTION(aBox->GetLayoutManager() == this, "setting incorrect box");
 
-  nsresult rv = nsStackLayout::Layout(aBox, aBoxLayoutState);
+  nsresult rv = nsStackLayout::XULLayout(aBox, aBoxLayoutState);
 #ifdef DEBUG_grid
   mGrid.PrintCellMap();
 #endif

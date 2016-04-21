@@ -277,9 +277,9 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIFrame* aBox,
 }
 
 NS_IMETHODIMP
-nsGridRowLeafLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsGridRowLeafLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  return nsGridRowLayout::Layout(aBox, aBoxLayoutState);
+  return nsGridRowLayout::XULLayout(aBox, aBoxLayoutState);
 }
 
 void

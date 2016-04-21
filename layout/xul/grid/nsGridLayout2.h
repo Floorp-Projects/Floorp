@@ -30,7 +30,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
   virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() override { return nullptr; }

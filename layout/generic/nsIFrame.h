@@ -2903,12 +2903,12 @@ public:
   virtual bool IsXULCollapsed() = 0;
   // This does not alter the overflow area. If the caller is changing
   // the box size, the caller is responsible for updating the overflow
-  // area. It's enough to just call Layout or SyncLayout on the
+  // area. It's enough to just call XULLayout or SyncLayout on the
   // box. You can pass true to aRemoveOverflowArea as a
   // convenience.
   virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                             bool aRemoveOverflowAreas = false) = 0;
-  nsresult Layout(nsBoxLayoutState& aBoxLayoutState);
+  nsresult XULLayout(nsBoxLayoutState& aBoxLayoutState);
   // Box methods.  Note that these do NOT just get the CSS border, padding,
   // etc.  They also talk to nsITheme.
   virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding);
