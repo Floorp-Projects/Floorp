@@ -118,10 +118,10 @@ nsGridCell::GetXULMaxSize(nsBoxLayoutState& aState)
 
 
 bool
-nsGridCell::IsCollapsed()
+nsGridCell::IsXULCollapsed()
 {
-  return ((mBoxInColumn && mBoxInColumn->IsCollapsed()) ||
-          (mBoxInRow && mBoxInRow->IsCollapsed()));
+  return ((mBoxInColumn && mBoxInColumn->IsXULCollapsed()) ||
+          (mBoxInRow && mBoxInRow->IsXULCollapsed()));
 }
 
 

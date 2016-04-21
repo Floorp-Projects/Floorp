@@ -137,7 +137,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
       nscoord bottomMargin = column->mBottomMargin;
 
       if (box) 
-        collapsed = box->IsCollapsed();
+        collapsed = box->IsXULCollapsed();
 
       pref = pref - (left + right);
       if (pref < 0)

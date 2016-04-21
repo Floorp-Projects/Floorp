@@ -759,7 +759,7 @@ nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -795,7 +795,7 @@ nsBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return 0;
 
   if (mLayoutManager)
@@ -822,7 +822,7 @@ nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -862,7 +862,7 @@ nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
   PropagateDebug(aBoxLayoutState);
 #endif
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return size;
 
   // if the size was not completely redefined in CSS then ask our children
@@ -1501,7 +1501,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
 
     nscoord flex = kid->GetXULFlex();
 
-    if (!kid->IsCollapsed()) {
+    if (!kid->IsXULCollapsed()) {
       if (isHorizontal) 
           borderSize = cr.width;
       else 

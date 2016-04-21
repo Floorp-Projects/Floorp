@@ -36,7 +36,7 @@ public:
     nsSize      GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState);
     nsSize      GetXULMinSize(nsBoxLayoutState& aBoxLayoutState);
     nsSize      GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
-    bool        IsCollapsed();
+    bool        IsXULCollapsed();
 
 // accessors
     nsIFrame*   GetBoxInColumn()               { return mBoxInColumn; }
