@@ -59,6 +59,40 @@
     });
   }
 
+  function testDismiss() {
+    // Dismissed persistent notifications should be removed from the
+    // notification list.
+    var alertsService = SpecialPowers.Cc["@mozilla.org/alerts-service;1"]
+                                     .getService(SpecialPowers.Ci.nsIAlertsService);
+    return navigator.serviceWorker.getRegistration("./notification/")
+      .then(function(reg) {
+        return reg.showNotification(
+          "This is a notification that will be closed", { tag: "dismiss" })
+          .then(function() {
+            return reg;
+          });
+      }).then(function(reg) {
+        return reg.getNotifications()
+          .then(function(notifications) {
+            is(notifications.length, 1, "There should be one visible notification");
+            is(notifications[0].tag, "dismiss", "Tag should match");
+
+            // Simulate dismissing the notification by using the alerts service
+            // directly, instead of `Notification#close`.
+            var principal = SpecialPowers.wrap(document).nodePrincipal;
+            var id = principal.origin + "#tag:dismiss";
+            alertsService.closeAlert(id, principal);
+
+            return reg;
+          });
+      }).then(function(reg) {
+        return reg.getNotifications();
+      }).then(function(notifications) {
+        // Make sure dismissed notifications are no longer retrieved.
+        is(notifications.length, 0, "There should be no more stored notifications");
+      });
+  }
+
   function testGet() {
     // Non persistent notifications will not show up in getNotification().
     var n = new Notification("Scope does not match");
@@ -167,6 +201,7 @@
       .then(testGetWorker)
       .then(testGetServiceWorker)
       .then(testAcrossThreads)
+      .then(testDismiss)
       .then(unregisterSW)
       .then(function() {
         MockServices.unregister();
