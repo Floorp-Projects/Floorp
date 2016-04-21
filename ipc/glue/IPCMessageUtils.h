@@ -114,7 +114,7 @@ struct EnumSerializer {
     WriteParam(aMsg, uintParamType(aValue));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     uintParamType value;
     if (!ReadParam(aMsg, aIter, &value)) {
 #ifdef MOZ_CRASHREPORTER
@@ -230,7 +230,7 @@ struct ParamTraits<int8_t>
     aMsg->WriteBytes(&aParam, sizeof(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     const char* outp;
     if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
@@ -251,7 +251,7 @@ struct ParamTraits<uint8_t>
     aMsg->WriteBytes(&aParam, sizeof(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     const char* outp;
     if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
@@ -271,7 +271,7 @@ struct ParamTraits<base::FileDescriptor>
   static void Write(Message* aMsg, const paramType& aParam) {
     NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     NS_RUNTIMEABORT("FileDescriptor isn't meaningful on this platform");
     return false;
   }
@@ -297,7 +297,7 @@ struct ParamTraits<nsACString>
     aMsg->WriteBytes(aParam.BeginReading(), length);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     bool isVoid;
     if (!aMsg->ReadBool(aIter, &isVoid))
@@ -347,7 +347,7 @@ struct ParamTraits<nsAString>
     aMsg->WriteBytes(aParam.BeginReading(), length * sizeof(char16_t));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     bool isVoid;
     if (!aMsg->ReadBool(aIter, &isVoid))
@@ -461,7 +461,7 @@ struct ParamTraits<nsTArray<E>>
 
   // This method uses infallible allocation so that an OOM failure will
   // show up as an OOM crash rather than an IPC FatalError.
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint32_t length;
     if (!ReadParam(aMsg, aIter, &length)) {
@@ -518,7 +518,7 @@ struct ParamTraits<FallibleTArray<E>>
   }
 
   // Deserialize the array infallibly, but return a FallibleTArray.
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsTArray<E> temp;
     if (!ReadParam(aMsg, aIter, &temp))
@@ -550,7 +550,7 @@ struct ParamTraits<float>
     aMsg->WriteBytes(&aParam, sizeof(paramType));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     const char* outFloat;
     if (!aMsg->ReadBytes(aIter, &outFloat, sizeof(float)))
@@ -578,7 +578,7 @@ struct ParamTraits<mozilla::void_t>
   typedef mozilla::void_t paramType;
   static void Write(Message* aMsg, const paramType& aParam) { }
   static bool
-  Read(const Message* aMsg, void** aIter, paramType* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     *aResult = paramType();
     return true;
@@ -591,7 +591,7 @@ struct ParamTraits<mozilla::null_t>
   typedef mozilla::null_t paramType;
   static void Write(Message* aMsg, const paramType& aParam) { }
   static bool
-  Read(const Message* aMsg, void** aIter, paramType* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     *aResult = paramType();
     return true;
@@ -613,7 +613,7 @@ struct ParamTraits<nsID>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if(!ReadParam(aMsg, aIter, &(aResult->m0)) ||
        !ReadParam(aMsg, aIter, &(aResult->m1)) ||
@@ -648,7 +648,7 @@ struct ParamTraits<mozilla::TimeDuration>
   {
     WriteParam(aMsg, aParam.mValue);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mValue);
   };
@@ -662,7 +662,7 @@ struct ParamTraits<mozilla::TimeStamp>
   {
     WriteParam(aMsg, aParam.mValue);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mValue);
   };
@@ -681,7 +681,7 @@ struct ParamTraits<mozilla::TimeStampValue>
     WriteParam(aMsg, aParam.mHasQPC);
     WriteParam(aMsg, aParam.mIsNull);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mGTC) &&
             ReadParam(aMsg, aIter, &aResult->mQPC) &&
@@ -702,7 +702,7 @@ struct ParamTraits<mozilla::dom::ipc::StructuredCloneData>
     aParam.WriteIPCParams(aMsg);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return aResult->ReadIPCParams(aMsg, aIter);
   }
@@ -723,7 +723,7 @@ struct ParamTraits<mozilla::net::WebSocketFrameData>
     aParam.WriteIPCParams(aMsg);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return aResult->ReadIPCParams(aMsg, aIter);
   }
@@ -743,7 +743,7 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->dataLength)) {
       return false;
@@ -792,7 +792,7 @@ struct ParamTraits<mozilla::Maybe<T>>
     }
   }
 
-  static bool Read(const Message* msg, void** iter, paramType* result)
+  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
   {
     bool isSome;
     if (!ReadParam(msg, iter, &isSome)) {

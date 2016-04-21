@@ -15,6 +15,7 @@
 namespace IPC {
 class Message;
 }
+class PickleIterator;
 
 namespace mozilla {
 namespace dom {
@@ -137,7 +138,7 @@ public:
 
   // For IPC serialization
   void WriteIPCParams(IPC::Message* aMessage) const;
-  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
+  bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
 private:
   uint64_t* MOZ_NON_OWNING_REF mExternalData;

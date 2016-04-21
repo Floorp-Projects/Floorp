@@ -62,7 +62,7 @@ struct ParamTraits<mozilla::layers::FrameUniformityData>
     WriteParam(aMsg, aParam.mUniformities);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ParamTraitsStd<std::map<uintptr_t,float>>::Read(aMsg, aIter, &aResult->mUniformities);
   }

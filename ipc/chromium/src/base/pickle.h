@@ -15,6 +15,21 @@
 
 #include "mozilla/Attributes.h"
 
+class Pickle;
+
+class PickleIterator {
+public:
+  explicit PickleIterator(const Pickle& pickle);
+
+private:
+  friend class Pickle;
+
+  template<typename T>
+  void CopyFrom(T* dest);
+
+  void* iter_;
+};
+
 // This class provides facilities for basic binary value packing and unpacking.
 //
 // The Pickle class supports appending primitive values (ints, strings, etc.)
@@ -82,30 +97,34 @@ class Pickle {
   // the Pickle, initialize *iter to NULL.  If successful, these methods return
   // true.  Otherwise, false is returned to indicate that the result could not
   // be extracted.
-  MOZ_MUST_USE bool ReadBool(void** iter, bool* result) const;
-  MOZ_MUST_USE bool ReadInt16(void** iter, int16_t* result) const;
-  MOZ_MUST_USE bool ReadUInt16(void** iter, uint16_t* result) const;
-  MOZ_MUST_USE bool ReadShort(void** iter, short* result) const;
-  MOZ_MUST_USE bool ReadInt(void** iter, int* result) const;
-  MOZ_MUST_USE bool ReadLong(void** iter, long* result) const;
-  MOZ_MUST_USE bool ReadULong(void** iter, unsigned long* result) const;
-  MOZ_MUST_USE bool ReadSize(void** iter, size_t* result) const;
-  MOZ_MUST_USE bool ReadInt32(void** iter, int32_t* result) const;
-  MOZ_MUST_USE bool ReadUInt32(void** iter, uint32_t* result) const;
-  MOZ_MUST_USE bool ReadInt64(void** iter, int64_t* result) const;
-  MOZ_MUST_USE bool ReadUInt64(void** iter, uint64_t* result) const;
-  MOZ_MUST_USE bool ReadDouble(void** iter, double* result) const;
-  MOZ_MUST_USE bool ReadIntPtr(void** iter, intptr_t* result) const;
-  MOZ_MUST_USE bool ReadUnsignedChar(void** iter, unsigned char* result) const;
-  MOZ_MUST_USE bool ReadString(void** iter, std::string* result) const;
-  MOZ_MUST_USE bool ReadWString(void** iter, std::wstring* result) const;
-  MOZ_MUST_USE bool ReadData(void** iter, const char** data, int* length) const;
-  MOZ_MUST_USE bool ReadBytes(void** iter, const char** data, int length,
+  MOZ_MUST_USE bool ReadBool(PickleIterator* iter, bool* result) const;
+  MOZ_MUST_USE bool ReadInt16(PickleIterator* iter, int16_t* result) const;
+  MOZ_MUST_USE bool ReadUInt16(PickleIterator* iter, uint16_t* result) const;
+  MOZ_MUST_USE bool ReadShort(PickleIterator* iter, short* result) const;
+  MOZ_MUST_USE bool ReadInt(PickleIterator* iter, int* result) const;
+  MOZ_MUST_USE bool ReadLong(PickleIterator* iter, long* result) const;
+  MOZ_MUST_USE bool ReadULong(PickleIterator* iter, unsigned long* result) const;
+  MOZ_MUST_USE bool ReadSize(PickleIterator* iter, size_t* result) const;
+  MOZ_MUST_USE bool ReadInt32(PickleIterator* iter, int32_t* result) const;
+  MOZ_MUST_USE bool ReadUInt32(PickleIterator* iter, uint32_t* result) const;
+  MOZ_MUST_USE bool ReadInt64(PickleIterator* iter, int64_t* result) const;
+  MOZ_MUST_USE bool ReadUInt64(PickleIterator* iter, uint64_t* result) const;
+  MOZ_MUST_USE bool ReadDouble(PickleIterator* iter, double* result) const;
+  MOZ_MUST_USE bool ReadIntPtr(PickleIterator* iter, intptr_t* result) const;
+  MOZ_MUST_USE bool ReadUnsignedChar(PickleIterator* iter, unsigned char* result) const;
+  MOZ_MUST_USE bool ReadString(PickleIterator* iter, std::string* result) const;
+  MOZ_MUST_USE bool ReadWString(PickleIterator* iter, std::wstring* result) const;
+  MOZ_MUST_USE bool ReadData(PickleIterator* iter, const char** data, int* length) const;
+  MOZ_MUST_USE bool ReadBytes(PickleIterator* iter, const char** data, int length,
                               uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
-  MOZ_MUST_USE bool ReadLength(void** iter, int* result) const;
+  MOZ_MUST_USE bool ReadLength(PickleIterator* iter, int* result) const;
+
+  void EndRead(PickleIterator& iter) const {
+    DCHECK(iter.iter_ == end_of_payload());
+  }
 
   // Methods for adding to the payload of the Pickle.  These values are
   // appended to the end of the Pickle's payload.  When reading values from a
@@ -176,9 +195,6 @@ class Pickle {
   // The returned pointer will only be valid until the next write operation
   // on this Pickle.
   char* BeginWriteData(int length);
-  void EndRead(void* iter) const {
-    DCHECK(iter == end_of_payload());
-  }
 
   // Payload follows after allocation of Header (header size is customizable).
   struct Header {
@@ -202,12 +218,12 @@ class Pickle {
   // Returns true if the given iterator could point to data with the given
   // length. If there is no room for the given data before the end of the
   // payload, returns false.
-  bool IteratorHasRoomFor(const void* iter, int len) const {
-    if ((len < 0) || (iter < header_) || iter > end_of_payload())
+  bool IteratorHasRoomFor(const PickleIterator& iter, int len) const {
+    if ((len < 0) || (iter.iter_ < header_) || iter.iter_ > end_of_payload())
       return false;
-    const char* end_of_region = reinterpret_cast<const char*>(iter) + len;
+    const char* end_of_region = reinterpret_cast<const char*>(iter.iter_) + len;
     // Watch out for overflow in pointer calculation, which wraps.
-    return (iter <= end_of_region) && (end_of_region <= end_of_payload());
+    return (iter.iter_ <= end_of_region) && (end_of_region <= end_of_payload());
   }
 
   typedef uint32_t memberAlignmentType;
@@ -267,8 +283,8 @@ class Pickle {
   // Moves the iterator by the given number of bytes, making sure it is aligned.
   // Pointer (iterator) is NOT aligned, but the change in the pointer
   // is guaranteed to be a multiple of sizeof(memberAlignmentType).
-  static void UpdateIter(void** iter, int bytes) {
-    *iter = static_cast<char*>(*iter) + AlignInt(bytes);
+  static void UpdateIter(PickleIterator* iter, int bytes) {
+    iter->iter_ = static_cast<char*>(iter->iter_) + AlignInt(bytes);
   }
 
   // Find the end of the pickled data that starts at range_start.  Returns NULL
@@ -287,6 +303,8 @@ class Pickle {
   static const int kPayloadUnit;
 
  private:
+  friend class PickleIterator;
+
   Header* header_;
   uint32_t header_size_;
   uint32_t capacity_;

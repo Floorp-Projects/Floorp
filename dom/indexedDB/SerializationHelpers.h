@@ -26,7 +26,7 @@ struct ParamTraits<mozilla::dom::indexedDB::Key>
     WriteParam(aMsg, aParam.mBuffer);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mBuffer);
   }
@@ -55,7 +55,7 @@ struct ParamTraits<mozilla::dom::indexedDB::KeyPath>
     WriteParam(aMsg, aParam.mStrings);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mType) &&
            ReadParam(aMsg, aIter, &aResult->mStrings);

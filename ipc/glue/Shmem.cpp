@@ -34,7 +34,7 @@ public:
   }
 
   static bool
-  ReadInfo(const Message* msg, void** iter,
+  ReadInfo(const Message* msg, PickleIterator* iter,
            id_t* aIPDLId,
            size_t* aSize,
            SharedMemory::SharedMemoryType* aType)
@@ -100,7 +100,7 @@ ReadSegment(const IPC::Message& aDescriptor, Shmem::id_t* aId, size_t* aNBytes, 
     return nullptr;
   }
   SharedMemory::SharedMemoryType type;
-  void* iter = nullptr;
+  PickleIterator iter(aDescriptor);
   if (!ShmemCreated::ReadInfo(&aDescriptor, &iter, aId, aNBytes, &type)) {
     return nullptr;
   }

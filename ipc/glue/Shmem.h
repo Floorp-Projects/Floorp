@@ -284,7 +284,7 @@ struct ParamTraits<mozilla::ipc::Shmem>
     WriteParam(aMsg, aParam.mId);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     paramType::id_t id;
     if (!ReadParam(aMsg, aIter, &id))

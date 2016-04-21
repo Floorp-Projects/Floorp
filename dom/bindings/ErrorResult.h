@@ -36,6 +36,7 @@ namespace IPC {
 class Message;
 template <typename> struct ParamTraits;
 } // namespace IPC
+class PickleIterator;
 
 namespace mozilla {
 
@@ -307,10 +308,10 @@ private:
 
   friend struct IPC::ParamTraits<ErrorResult>;
   void SerializeMessage(IPC::Message* aMsg) const;
-  bool DeserializeMessage(const IPC::Message* aMsg, void** aIter);
+  bool DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter);
 
   void SerializeDOMExceptionInfo(IPC::Message* aMsg) const;
-  bool DeserializeDOMExceptionInfo(const IPC::Message* aMsg, void** aIter);
+  bool DeserializeDOMExceptionInfo(const IPC::Message* aMsg, PickleIterator* aIter);
 
   // Helper method that creates a new Message for this ErrorResult,
   // and returns the arguments array from that Message.

@@ -126,7 +126,7 @@ bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {
   }
 }
 
-bool Message::ReadFileDescriptor(void** iter,
+bool Message::ReadFileDescriptor(PickleIterator* iter,
                                 base::FileDescriptor* descriptor) const {
   int descriptor_index;
   if (!ReadInt(iter, &descriptor_index))

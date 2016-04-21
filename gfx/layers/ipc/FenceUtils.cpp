@@ -33,7 +33,7 @@ ParamTraits<FenceHandle>::Write(Message* aMsg,
 
 bool
 ParamTraits<FenceHandle>::Read(const Message* aMsg,
-                               void** aIter, paramType* aResult)
+                               PickleIterator* aIter, paramType* aResult)
 {
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   base::FileDescriptor fd;

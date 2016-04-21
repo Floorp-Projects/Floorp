@@ -186,7 +186,7 @@ public:
     virtual void CloneManagees(ListenerT* aSource,
                                ProtocolCloneContext* aCtx) = 0;
 
-    Maybe<ListenerT*> ReadActor(const IPC::Message* aMessage, void** aIter, bool aNullable,
+    Maybe<ListenerT*> ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                 const char* aActorDescription, int32_t aProtocolTypeId);
 };
 
@@ -364,7 +364,7 @@ UnpackChannelOpened(const PrivateIPDLInterface&,
 
 template<typename ListenerT>
 Maybe<ListenerT*>
-IProtocolManager<ListenerT>::ReadActor(const IPC::Message* aMessage, void** aIter, bool aNullable,
+IProtocolManager<ListenerT>::ReadActor(const IPC::Message* aMessage, PickleIterator* aIter, bool aNullable,
                                        const char* aActorDescription, int32_t aProtocolTypeId)
 {
     int32_t id;
@@ -614,7 +614,7 @@ struct ParamTraits<mozilla::ipc::ActorHandle>
         IPC::WriteParam(aMsg, aParam.mId);
     }
 
-    static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+    static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
         int id;
         if (IPC::ReadParam(aMsg, aIter, &id)) {
@@ -653,7 +653,7 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>>
         IPC::WriteParam(aMsg, static_cast<uint32_t>(aParam.mProtocolId));
     }
 
-    static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+    static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
         MOZ_RELEASE_ASSERT(!aResult->mValid);
         aResult->mValid = true;

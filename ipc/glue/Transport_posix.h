@@ -33,7 +33,7 @@ struct ParamTraits<mozilla::ipc::TransportDescriptor>
   {
     WriteParam(aMsg, aParam.mFd);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mFd);
   }
