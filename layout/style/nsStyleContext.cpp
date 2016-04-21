@@ -642,6 +642,24 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 #define GET_UNIQUE_STYLE_DATA(name_) \
   static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
 
+  // Change writing mode of text frame for text-combine-upright. We use
+  // style structs of the parent to avoid triggering computation before
+  // we change the writing mode.
+  // It is safe to look at the parent's style because we are looking at
+  // inherited properties, and ::-moz-text never matches any rules.
+  if (mPseudoTag == nsCSSAnonBoxes::mozText && mParent &&
+      mParent->StyleVisibility()->mWritingMode !=
+        NS_STYLE_WRITING_MODE_HORIZONTAL_TB &&
+      mParent->StyleText()->mTextCombineUpright ==
+        NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL) {
+    MOZ_ASSERT(!PeekStyleVisibility(), "If StyleVisibility was already "
+               "computed, some properties may have been computed "
+               "incorrectly based on the old writing mode value");
+    nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
+    mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+    AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
+  }
+
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
   if (mParent && mParent->HasTextDecorationLines()) {

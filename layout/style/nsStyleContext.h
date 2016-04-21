@@ -209,6 +209,11 @@ public:
   bool IsInDisplayNoneSubtree() const
     { return !!(mBits & NS_STYLE_IN_DISPLAY_NONE_SUBTREE); }
 
+  // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
+  // only set on style contexts whose pseudo is nsCSSAnonBoxes::mozText.
+  bool IsTextCombined() const
+    { return !!(mBits & NS_STYLE_IS_TEXT_COMBINED); }
+
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
