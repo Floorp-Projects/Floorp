@@ -805,7 +805,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHoriz
   {
     bool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIFrame::AddCSSPrefSize(box, cssSize, widthSet, heightSet);
+    nsIFrame::AddXULPrefSize(box, cssSize, widthSet, heightSet);
 
     row->mPref = GET_HEIGHT(cssSize, aIsHorizontal);
 
@@ -881,7 +881,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   if (box) {
     bool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIFrame::AddCSSMinSize(aState, box, cssSize, widthSet, heightSet);
+    nsIFrame::AddXULMinSize(aState, box, cssSize, widthSet, heightSet);
 
     row->mMin = GET_HEIGHT(cssSize, aIsHorizontal);
 
@@ -956,7 +956,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   if (box) {
     bool widthSet, heightSet;
     nsSize cssSize(-1, -1);
-    nsIFrame::AddCSSMaxSize(box, cssSize, widthSet, heightSet);
+    nsIFrame::AddXULMaxSize(box, cssSize, widthSet, heightSet);
 
     row->mMax = GET_HEIGHT(cssSize, aIsHorizontal);
 
@@ -1106,7 +1106,7 @@ nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
       if (parentsParent) {
         if (!IsGrid(parentsParent)) {
           nscoord flex = parent->GetXULFlex();
-          nsIFrame::AddCSSFlex(parent, flex);
+          nsIFrame::AddXULFlex(parent, flex);
           if (flex == 0) {
             row->mFlex = 0;
             return row->mFlex;
@@ -1120,7 +1120,7 @@ nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
     
     // get the row flex.
     row->mFlex = box->GetXULFlex();
-    nsIFrame::AddCSSFlex(box, row->mFlex);
+    nsIFrame::AddXULFlex(box, row->mFlex);
   }
 
   return row->mFlex;

@@ -1345,7 +1345,7 @@ nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
   if (!IsXULCollapsed()) {
     bool widthSet, heightSet;
     nsSize tmpSize(-1, 0);
-    nsIFrame::AddCSSPrefSize(this, tmpSize, widthSet, heightSet);
+    nsIFrame::AddXULPrefSize(this, tmpSize, widthSet, heightSet);
     if (!widthSet && GetXULFlex() == 0) {
       nsMenuPopupFrame* popupFrame = GetPopup();
       if (!popupFrame)
