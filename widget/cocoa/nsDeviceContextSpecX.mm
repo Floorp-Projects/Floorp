@@ -5,10 +5,10 @@
 
 #include "nsDeviceContextSpecX.h"
 
+#include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include <unistd.h>
 
-#include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"

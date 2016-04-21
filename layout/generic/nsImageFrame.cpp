@@ -714,7 +714,7 @@ nsImageFrame::MaybeDecodeForPredictedSize()
     return;  // We won't draw anything, so no point in decoding.
   }
 
-  if (GetVisibility() != Visibility::APPROXIMATELY_VISIBLE) {
+  if (!IsVisibleOrMayBecomeVisibleSoon()) {
     return;  // We're not visible, so don't decode.
   }
 
@@ -2063,7 +2063,8 @@ nsImageFrame::OnVisibilityChange(Visibility aNewVisibility,
 
   imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 
-  if (aNewVisibility == Visibility::APPROXIMATELY_VISIBLE) {
+  if (aNewVisibility == Visibility::MAY_BECOME_VISIBLE ||
+      aNewVisibility == Visibility::IN_DISPLAYPORT) {
     MaybeDecodeForPredictedSize();
   }
 

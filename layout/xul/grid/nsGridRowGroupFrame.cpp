@@ -34,7 +34,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsGridRowGroupFrame)
  * then their flex must be equal to the sum of their children's flexes.
  */
 nscoord
-nsGridRowGroupFrame::GetFlex()
+nsGridRowGroupFrame::GetXULFlex()
 {
   // if we are flexible out flexibility is determined by our columns.
   // so first get the our flex. If not 0 then our flex is the sum of
@@ -43,16 +43,16 @@ nsGridRowGroupFrame::GetFlex()
   if (!DoesNeedRecalc(mFlex))
      return mFlex;
 
-  if (nsBoxFrame::GetFlex() == 0)
+  if (nsBoxFrame::GetXULFlex() == 0)
     return 0;
 
   // ok we are flexible add up our children
   nscoord totalFlex = 0;
-  nsIFrame* child = nsBox::GetChildBox(this);
+  nsIFrame* child = nsBox::GetChildXULBox(this);
   while (child)
   {
-    totalFlex += child->GetFlex();
-    child = GetNextBox(child);
+    totalFlex += child->GetXULFlex();
+    child = GetNextXULBox(child);
   }
 
   mFlex = totalFlex;

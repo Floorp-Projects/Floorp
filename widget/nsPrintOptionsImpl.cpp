@@ -7,6 +7,7 @@
 
 #include "mozilla/embedding/PPrinting.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
+#include "mozilla/RefPtr.h"
 #include "nsPrintingProxy.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
@@ -24,7 +25,6 @@
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "stdlib.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "nsIWebBrowserPrint.h"

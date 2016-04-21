@@ -11,6 +11,7 @@
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
 
+#include "mozilla/RefPtr.h"
 #include "nsDragService.h"
 #include "nsITransferable.h"
 #include "nsDataObj.h"
@@ -22,8 +23,6 @@
 #include "nsISupportsArray.h"
 #include "nsIDocument.h"
 #include "nsDataObjCollection.h"
-
-#include "nsAutoPtr.h"
 
 #include "nsString.h"
 #include "nsEscape.h"

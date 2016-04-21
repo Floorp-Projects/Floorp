@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<title>Test for Bug 1186799</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<div contenteditable></div>
+<script>
+var div = document.querySelector("div");
+
+function reset() {
+  div.innerHTML = "x<br> y";
+  div.focus();
+  synthesizeKey("VK_DOWN", {});
+}
+
+function checks(msg) {
+  is(div.innerHTML, "x<br><br>",
+     msg + ": Should add a second <br> to prevent collapse of first");
+  is(div.childNodes.length, 3, msg + ": No empty text nodes allowed");
+  ok(getSelection().isCollapsed, msg + ": Selection must be collapsed");
+  is(getSelection().focusNode, div, msg + ": Focus must be in div");
+  is(getSelection().focusOffset, 2,
+     msg + ": Focus must be between the two <br>s");
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  // Put selection after the "y" and backspace
+  reset();
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  checks("Collapsed backspace");
+
+  // Now do the same with delete
+  reset();
+  synthesizeKey("VK_DELETE", {});
+  checks("Collapsed delete");
+
+  // Forward selection
+  reset();
+  synthesizeKey("VK_RIGHT", {shiftKey: true});
+  synthesizeKey("VK_BACK_SPACE", {});
+  checks("Forward-selected backspace");
+
+  // Backward selection
+  reset();
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_LEFT", {shiftKey: true});
+  synthesizeKey("VK_BACK_SPACE", {});
+  checks("Backward-selected backspace");
+
+  // Make sure we're not deleting if the whitespace isn't actually collapsed
+  div.style.whiteSpace = "pre-wrap";
+  reset();
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_RIGHT", {});
+  synthesizeKey("VK_BACK_SPACE", {});
+  if (div.innerHTML, "x<br> ", "pre-wrap: Don't delete uncollapsed space");
+  ok(getSelection().isCollapsed, "pre-wrap: Selection must be collapsed");
+  is(getSelection().focusNode, div.lastChild,
+     "pre-wrap: Focus must be in final text node");
+  is(getSelection().focusOffset, 1, "pre-wrap: Focus must be at end of node");
+
+  SimpleTest.finish();
+});
+</script>

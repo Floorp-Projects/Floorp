@@ -167,6 +167,7 @@ public:
     if (!mDeviceIndexes) {
       mDeviceIndexes = new nsTArray<int>;
       mDeviceNames = new nsTArray<nsCString>;
+      mDefaultDevice = -1;
     }
   }
 
@@ -192,10 +193,15 @@ public:
 
   static int32_t DeviceIndex(int aIndex)
   {
+    // -1 = system default if any
     if (aIndex == -1) {
-      aIndex = 0; // -1 = system default
+      if (mDefaultDevice == -1) {
+        aIndex = 0;
+      } else {
+        aIndex = mDefaultDevice;
+      }
     }
-    if (aIndex >= (int) mDeviceIndexes->Length()) {
+    if (aIndex < 0 || aIndex >= (int) mDeviceIndexes->Length()) {
       return -1;
     }
     // Note: if the device is gone, this will be -1
@@ -291,6 +297,7 @@ private:
 
   // pointers to avoid static constructors
   static nsTArray<int>* mDeviceIndexes;
+  static int mDefaultDevice; // -1 == not set
   static nsTArray<nsCString>* mDeviceNames;
   static cubeb_device_collection *mDevices;
   static bool mAnyInUse;

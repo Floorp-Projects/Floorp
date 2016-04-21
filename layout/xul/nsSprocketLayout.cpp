@@ -54,7 +54,7 @@ nsSprocketLayout::nsSprocketLayout()
 }
 
 bool 
-nsSprocketLayout::IsHorizontal(nsIFrame* aBox)
+nsSprocketLayout::IsXULHorizontal(nsIFrame* aBox)
 {
    return (aBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
 }
@@ -114,8 +114,8 @@ HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState, nscoord& aX, nsco
   }
 
   // Get our pack/alignment information.
-  nsIFrame::Halignment halign = aBox->GetHAlign();
-  nsIFrame::Valignment valign = aBox->GetVAlign();
+  nsIFrame::Halignment halign = aBox->GetXULHAlign();
+  nsIFrame::Valignment valign = aBox->GetXULVAlign();
 
   // The following code handles box PACKING.  Packing comes into play in the case where the computed size for 
   // all of our children (now stored in our client rect) is smaller than the size available for
@@ -168,16 +168,16 @@ HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState, nscoord& aX, nsco
 }
 
 NS_IMETHODIMP
-nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   // See if we are collapsed. If we are, then simply iterate over all our
   // children and give them a rect of 0 width and height.
-  if (aBox->IsCollapsed()) {
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+  if (aBox->IsXULCollapsed()) {
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
     while(child) 
     {
       nsBoxFrame::LayoutChildAt(aState, child, nsRect(0,0,0,0));  
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
     }
     return NS_OK;
   }
@@ -190,7 +190,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   // -- make sure we remove our border and padding  ----
   nsRect clientRect;
-  aBox->GetClientRect(clientRect);
+  aBox->GetXULClientRect(clientRect);
 
   // |originalClientRect| represents the rect of the entire box (excluding borders
   // and padding).  We store it here because we're going to use |clientRect| to hold
@@ -219,7 +219,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
   // the box.  Continuing with the example begun in the comment above, size would
   // be 150 pixels.
   nscoord size = clientRect.width;
-  if (!IsHorizontal(aBox))
+  if (!IsXULHorizontal(aBox))
     size = clientRect.height;
   ComputeChildSizes(aBox, aState, size, boxSizes, computedBoxSizes);
 
@@ -232,7 +232,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
   // in the OPPOSITE orientation, e.g., for a horizontal box, |min| is the minimum
   // height we require to enclose our children, and |max| is the maximum height
   // required to enclose our children.
-  if (IsHorizontal(aBox)) {
+  if (IsXULHorizontal(aBox)) {
     clientRect.width = size;
     if (clientRect.height < min)
       clientRect.height = min;
@@ -299,7 +299,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
     nsComputedBoxSize* childComputedBoxSize = computedBoxSizes;
     nsBoxSize* childBoxSize                 = boxSizes;
 
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     int32_t count = 0;
     while (child || (childBoxSize && childBoxSize->bogus))
@@ -320,9 +320,9 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
         // ALIGN is not stretch, however, then we also need to know the child's size along the
         // opposite axis.
         if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-           nsSize prefSize = child->GetPrefSize(aState);
-           nsSize minSize = child->GetMinSize(aState);
-           nsSize maxSize = child->GetMaxSize(aState);
+           nsSize prefSize = child->GetXULPrefSize(aState);
+           nsSize minSize = child->GetXULMinSize(aState);
+           nsSize maxSize = child->GetXULMaxSize(aState);
            prefSize = nsBox::BoundsCheck(minSize, prefSize, maxSize);
        
            AddMargin(child, prefSize);
@@ -422,7 +422,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       bool layout = true;
 
       // Deflate the rect of our child by its margin.
-      child->GetMargin(margin);
+      child->GetXULMargin(margin);
       childRect.Deflate(margin);
       if (childRect.width < 0)
         childRect.width = 0;
@@ -430,7 +430,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
         childRect.height = 0;
 
       // Now we're trying to figure out if we have to lay out this child, i.e., to call
-      // the child's Layout method.
+      // the child's XULLayout method.
       if (passes > 0) {
         layout = false;
       } else {
@@ -455,15 +455,15 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       // If our old rect is different, then we know our size changed and we cache that fact
       // in the |sizeChanged| variable.
 
-      child->SetBounds(aState, childRect);
+      child->SetXULBounds(aState, childRect);
       bool sizeChanged = (childRect.width != oldRect.width ||
                             childRect.height != oldRect.height);
 
       if (sizeChanged) {
         // Our size is different.  Sanity check against our maximum allowed size to ensure
         // we didn't exceed it.
-        nsSize minSize = child->GetMinSize(aState);
-        nsSize maxSize = child->GetMaxSize(aState);
+        nsSize minSize = child->GetXULMinSize(aState);
+        nsSize maxSize = child->GetXULMaxSize(aState);
         maxSize = nsBox::BoundsCheckMinMax(minSize, maxSize);
 
         // make sure the size is in our max size.
@@ -474,14 +474,14 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           childRect.height = maxSize.height;
            
         // set it again
-        child->SetBounds(aState, childRect);
+        child->SetXULBounds(aState, childRect);
       }
 
       // If we already determined that layout was required or if our size has changed, then
       // we make sure to call layout on the child, since its children may need to be shifted
       // around as a result of the size change.
       if (layout || sizeChanged)
-        child->Layout(aState);
+        child->XULLayout(aState);
       
       // If the child was a block or inline (e.g., HTML) it may have changed its rect *during* layout. 
       // We have to check for this.
@@ -489,7 +489,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       if (!newChildRect.IsEqualInterior(childRect)) {
 #ifdef DEBUG_GROW
-        child->DumpBox(stdout);
+        child->XULDumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
 #endif
         newChildRect.Inflate(margin);
@@ -550,7 +550,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
         if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
           childRect.Deflate(margin);
             
-        child->SetBounds(aState, newChildRect);
+        child->SetXULBounds(aState, newChildRect);
 
         // If we are the first box that changed size, then we don't need to do a second pass
         if (count == 0)
@@ -565,7 +565,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       childComputedBoxSize = childComputedBoxSize->next;
       childBoxSize = childBoxSize->next;
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
       count++;
     }
 
@@ -595,7 +595,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
     // See if one of our children forced us to get bigger
     nsRect tmpClientRect(originalClientRect);
     nsMargin bp(0,0,0,0);
-    aBox->GetBorderAndPadding(bp);
+    aBox->GetXULBorderAndPadding(bp);
     tmpClientRect.Inflate(bp);
 
     if (tmpClientRect.width > originalSize.width || tmpClientRect.height > originalSize.height)
@@ -608,7 +608,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       if (tmpClientRect.height > originalSize.height)
         bounds.height = tmpClientRect.height;
 
-      aBox->SetBounds(aState, bounds);
+      aBox->SetXULBounds(aState, bounds);
     }
   }
 
@@ -620,7 +620,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
   // we really did have to change the positions because of packing (typically for 'center'
   // or 'end' pack values).
   if (x != origX || y != origY) {
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     // reposition all our children
     while (child) 
@@ -628,8 +628,8 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
       nsRect childRect(child->GetRect());
       childRect.x += (x - origX);
       childRect.y += (y - origY);
-      child->SetBounds(aState, childRect);
-      child = nsBox::GetNextBox(child);
+      child->SetXULBounds(aState, childRect);
+      child = nsBox::GetNextXULBox(child);
     }
   }
 
@@ -662,7 +662,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
 
   bool isHorizontal;
 
-  if (IsHorizontal(aBox))
+  if (IsXULHorizontal(aBox))
      isHorizontal = true;
   else
      isHorizontal = false;
@@ -677,7 +677,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
   // so we can just optimize it out this way.
 
   // set flexes
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
   aFlexes = 0;
   nsBoxSize* currentBox = nullptr;
@@ -702,10 +702,10 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
       }
     
 
-      flex = child->GetFlex();
+      flex = child->GetXULFlex();
 
       currentBox->flex = flex;
-      currentBox->collapsed = child->IsCollapsed();
+      currentBox->collapsed = child->IsXULCollapsed();
     } else {
       flex = start->flex;
       start = start->next;
@@ -714,12 +714,12 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     if (flex > 0) 
        aFlexes++;
    
-    child = GetNextBox(child);
+    child = GetNextXULBox(child);
   }
 #endif
 
   // get pref, min, max
-  child = nsBox::GetChildBox(aBox);
+  child = nsBox::GetChildXULBox(aBox);
   currentBox = aBoxSizes;
   nsBoxSize* last = nullptr;
 
@@ -737,19 +737,19 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     nsSize minSize(0,0);
     nsSize maxSize(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
     nscoord ascent = 0;
-    bool collapsed = child->IsCollapsed();
+    bool collapsed = child->IsXULCollapsed();
 
     if (!collapsed) {
     // only one flexible child? Cool we will just make its preferred size
     // 0 then and not even have to ask for it.
     //if (flexes != 1)  {
 
-      pref = child->GetPrefSize(aState);
-      minSize = child->GetMinSize(aState);
-      maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetMaxSize(aState));
-      ascent = child->GetBoxAscent(aState);
+      pref = child->GetXULPrefSize(aState);
+      minSize = child->GetXULMinSize(aState);
+      maxSize = nsBox::BoundsCheckMinMax(minSize, child->GetXULMaxSize(aState));
+      ascent = child->GetXULBoxAscent(aState);
       nsMargin margin;
-      child->GetMargin(margin);
+      child->GetXULMargin(margin);
       ascent += margin.top;
     //}
 
@@ -786,7 +786,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
           prefWidth = pref.height;
       }
 
-      nscoord flex = child->GetFlex();
+      nscoord flex = child->GetXULFlex();
 
       // set them if you collapsed you are not flexible.
       if (collapsed) {
@@ -838,7 +838,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, nsB
     currentBox->collapsed = collapsed;
     aFlexes += currentBox->flex;
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
 
     last = currentBox;
     currentBox = currentBox->next;
@@ -900,7 +900,7 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIFrame* aBox,
   nsFrameState frameState = nsFrameState(0);
   GetFrameState(aBox, frameState);
 
-  if (IsHorizontal(aBox)) {
+  if (IsXULHorizontal(aBox)) {
     // horizontal box's children.
     if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
       aNextX = aCurX + aCurrentChildSize.width;
@@ -924,7 +924,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   GetFrameState(aBox, frameState);
   bool isHorizontal = (frameState & NS_STATE_IS_HORIZONTAL) != 0;
   nsRect clientRect;
-  aBox->GetClientRect(clientRect);
+  aBox->GetXULClientRect(clientRect);
 
   NS_PRECONDITION(!(frameState & NS_STATE_AUTO_STRETCH),
                   "Only AlignChildren() with non-stretch alignment");
@@ -936,20 +936,20 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   bool isLTR;
 
   if (isHorizontal) {
-    valign = aBox->GetVAlign();
+    valign = aBox->GetXULVAlign();
     if (valign == nsBoxFrame::vAlign_BaseLine) {
-      maxAscent = aBox->GetBoxAscent(aState);
+      maxAscent = aBox->GetXULBoxAscent(aState);
     }
   } else {
     isLTR = GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR;
-    halign = aBox->GetHAlign();
+    halign = aBox->GetXULHAlign();
   }
 
-  nsIFrame* child = nsBox::GetChildBox(aBox);
+  nsIFrame* child = nsBox::GetChildXULBox(aBox);
   while (child) {
 
     nsMargin margin;
-    child->GetMargin(margin);
+    child->GetXULMargin(margin);
     nsRect childRect = child->GetRect();
 
     if (isHorizontal) {
@@ -973,7 +973,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
         case nsBoxFrame::vAlign_BaseLine:
           // Alignments don't force the box to grow (only sizes do),
           // so keep the children within the box.
-          y = maxAscent - child->GetBoxAscent(aState);
+          y = maxAscent - child->GetXULBoxAscent(aState);
           y = std::max(startAlign, y);
           y = std::min(y, endAlign);
           break;
@@ -1003,10 +1003,10 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
     }
 
     if (childRect.TopLeft() != child->GetPosition()) {
-      child->SetBounds(aState, childRect);
+      child->SetXULBounds(aState, childRect);
     }
 
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 }
 
@@ -1027,7 +1027,7 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
 {
       nsRect childCurrentRect(aChildLayoutRect);
 
-      bool isHorizontal = IsHorizontal(aBox);
+      bool isHorizontal = IsXULHorizontal(aBox);
       nscoord childLayoutWidth  = GET_WIDTH(aChildLayoutRect,isHorizontal);
       nscoord& childActualWidth  = GET_WIDTH(aChildActualRect,isHorizontal);
       nscoord& containingWidth   = GET_WIDTH(aContainingRect,isHorizontal);   
@@ -1045,8 +1045,8 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
             // ok if the height changed then we need to reflow everyone but us at the new height
             // so we will set the changed index to be us. And signal that we need a new pass.
 
-            nsSize min = aChild->GetMinSize(aState);            
-            nsSize max = nsBox::BoundsCheckMinMax(min, aChild->GetMaxSize(aState));
+            nsSize min = aChild->GetXULMinSize(aState);            
+            nsSize max = nsBox::BoundsCheckMinMax(min, aChild->GetXULMaxSize(aState));
             AddMargin(aChild, max);
 
             if (isHorizontal)
@@ -1080,8 +1080,8 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
       } 
       
       if (childActualWidth > childLayoutWidth) {
-            nsSize min = aChild->GetMinSize(aState);
-            nsSize max = nsBox::BoundsCheckMinMax(min, aChild->GetMaxSize(aState));
+            nsSize min = aChild->GetXULMinSize(aState);
+            nsSize max = nsBox::BoundsCheckMinMax(min, aChild->GetXULMaxSize(aState));
             
             AddMargin(aChild, max);
 
@@ -1130,13 +1130,13 @@ nsSprocketLayout::ChildResized(nsIFrame* aBox,
         // make sure we remove it before setting 
         // the bounds.
         nsMargin margin(0,0,0,0);
-        aChild->GetMargin(margin);
+        aChild->GetXULMargin(margin);
         nsRect rect(aChildActualRect);
         if (rect.width >= margin.left + margin.right && rect.height >= margin.top + margin.bottom) 
           rect.Deflate(margin);
 
-        aChild->SetBounds(aState, rect);
-        aChild->Layout(aState);
+        aChild->SetXULBounds(aState, rect);
+        aChild->XULLayout(aState);
       }
 
 }
@@ -1304,17 +1304,17 @@ nsSprocketLayout::ComputeChildSizes(nsIFrame* aBox,
 
 
 nsSize
-nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nsSize vpref (0, 0); 
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord biggestPref = 0;
 
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box
 
-   nsIFrame* child = nsBox::GetChildBox(aBox);
+   nsIFrame* child = nsBox::GetChildXULBox(aBox);
    nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
@@ -1323,9 +1323,9 @@ nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    while (child) 
    {  
       // ignore collapsed children
-      if (!child->IsCollapsed())
+      if (!child->IsXULCollapsed())
       {
-        nsSize pref = child->GetPrefSize(aState);
+        nsSize pref = child->GetXULPrefSize(aState);
         AddMargin(child, pref);
 
         if (isEqual) {
@@ -1343,7 +1343,7 @@ nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    if (isEqual) {
@@ -1360,10 +1360,10 @@ nsSprocketLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nsSize minSize (0, 0);
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord biggestMin = 0;
 
@@ -1371,7 +1371,7 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box
 
-   nsIFrame* child = nsBox::GetChildBox(aBox);
+   nsIFrame* child = nsBox::GetChildXULBox(aBox);
    nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
@@ -1380,15 +1380,15 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    while (child) 
    {  
        // ignore collapsed children
-      if (!child->IsCollapsed())
+      if (!child->IsXULCollapsed())
       {
-        nsSize min = child->GetMinSize(aState);
+        nsSize min = child->GetXULMinSize(aState);
         nsSize pref(0,0);
         
         // if the child is not flexible then
         // its min size is its pref size.
-        if (child->GetFlex() == 0) {
-            pref = child->GetPrefSize(aState);
+        if (child->GetXULFlex() == 0) {
+            pref = child->GetXULPrefSize(aState);
             if (isHorizontal)
                min.width = pref.width;
             else
@@ -1411,7 +1411,7 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    
@@ -1429,10 +1429,10 @@ nsSprocketLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 }
 
 nsSize
-nsSprocketLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsSprocketLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
 
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
    nscoord smallestMax = NS_INTRINSICSIZE;
    nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
@@ -1440,7 +1440,7 @@ nsSprocketLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box
 
-   nsIFrame* child = nsBox::GetChildBox(aBox);
+   nsIFrame* child = nsBox::GetChildXULBox(aBox);
    nsFrameState frameState = nsFrameState(0);
    GetFrameState(aBox, frameState);
    bool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
@@ -1449,11 +1449,11 @@ nsSprocketLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
    while (child) 
    {  
       // ignore collapsed children
-      if (!child->IsCollapsed())
+      if (!child->IsXULCollapsed())
       {
         // if completely redefined don't even ask our child for its size.
-        nsSize min = child->GetMinSize(aState);
-        nsSize max = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));
+        nsSize min = child->GetXULMinSize(aState);
+        nsSize max = nsBox::BoundsCheckMinMax(min, child->GetXULMaxSize(aState));
 
         AddMargin(child, max);
         AddSmallestSize(maxSize, max, isHorizontal);
@@ -1471,7 +1471,7 @@ nsSprocketLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
         count++;
       }
 
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
    }
 
    if (isEqual) {
@@ -1500,23 +1500,23 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
    nscoord vAscent = 0;
 
-   bool isHorizontal = IsHorizontal(aBox);
+   bool isHorizontal = IsXULHorizontal(aBox);
 
    // run through all the children and get their min, max, and preferred sizes
    // return us the size of the box
    
-   nsIFrame* child = nsBox::GetChildBox(aBox);
+   nsIFrame* child = nsBox::GetChildXULBox(aBox);
    
    while (child) 
    {  
       // ignore collapsed children
-      //if (!child->IsCollapsed())
+      //if (!child->IsXULCollapsed())
       //{
         // if completely redefined don't even ask our child for its size.
-        nscoord ascent = child->GetBoxAscent(aState);
+        nscoord ascent = child->GetXULBoxAscent(aState);
 
         nsMargin margin;
-        child->GetMargin(margin);
+        child->GetXULMargin(margin);
         ascent += margin.top;
 
         if (isHorizontal)
@@ -1529,11 +1529,11 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
         }
       //}
 
-      child = nsBox::GetNextBox(child);      
+      child = nsBox::GetNextXULBox(child);      
    }
 
    nsMargin borderPadding;
-   aBox->GetBorderAndPadding(borderPadding);
+   aBox->GetXULBorderAndPadding(borderPadding);
 
    return vAscent + borderPadding.top;
 }

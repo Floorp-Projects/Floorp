@@ -8,7 +8,6 @@
 #include "nsError.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"

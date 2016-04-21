@@ -33,10 +33,10 @@ NS_IMPL_FRAMEARENA_HELPERS(nsGridRowLeafFrame)
  * Let's go check it out.
  */
 nsresult
-nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
+nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   // if our columns have made our padding larger add it in.
-  nsresult rv = nsBoxFrame::GetBorderAndPadding(aBorderAndPadding);
+  nsresult rv = nsBoxFrame::GetXULBorderAndPadding(aBorderAndPadding);
 
   nsIGridPart* part = nsGrid::GetPartFromBox(this);
   if (!part)
@@ -48,7 +48,7 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
   if (!grid) 
     return rv;
 
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
 
   int32_t firstIndex = 0;
   int32_t lastIndex = 0;

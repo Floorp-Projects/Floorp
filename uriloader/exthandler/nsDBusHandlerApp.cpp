@@ -4,14 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include  <dbus/dbus.h>
+#include <dbus/dbus.h>
+#include "mozilla/ipc/DBusConnectionRefPtr.h"
+#include "mozilla/ipc/DBusMessageRefPtr.h"
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
 #include "nsIClassInfoImpl.h"
 #include "nsCOMPtr.h"
 #include "nsCExternalHandlerService.h"
 
-// XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
+// XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one
 // here too?
 NS_IMPL_CLASSINFO(nsDBusHandlerApp, nullptr, 0, NS_DBUSHANDLERAPP_CID)
 NS_IMPL_ISUPPORTS_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
@@ -41,7 +43,7 @@ NS_IMETHODIMP nsDBusHandlerApp::SetDetailedDescription(const nsAString & aDescri
 NS_IMETHODIMP nsDBusHandlerApp::GetDetailedDescription(nsAString& aDescription)
 {
   aDescription.Assign(mDetailedDescription);
-  
+
   return NS_OK;
 }
 
@@ -49,7 +51,7 @@ NS_IMETHODIMP
 nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aHandlerApp);
-  
+
   // If the handler app isn't a dbus handler app, then it's not the same app.
   nsCOMPtr<nsIDBusHandlerApp> dbusHandlerApp = do_QueryInterface(aHandlerApp);
   if (!dbusHandlerApp) {
@@ -58,7 +60,7 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
   }
   nsAutoCString service;
   nsAutoCString method;
-  
+
   nsresult rv = dbusHandlerApp->GetService(service);
   if (NS_FAILED(rv)) {
     *_retval = false;
@@ -69,7 +71,7 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval)
     *_retval = false;
     return NS_OK;
   }
-  
+
   *_retval = service.Equals(mService) && method.Equals(mMethod);
   return NS_OK;
 }
@@ -81,46 +83,45 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   nsAutoCString spec;
   nsresult rv = aURI->GetAsciiSpec(spec);
   NS_ENSURE_SUCCESS(rv,rv);
-  const char* uri = spec.get(); 
-  
+  const char* uri = spec.get();
+
   DBusError err;
   dbus_error_init(&err);
-  
-  DBusConnection  *connection;
-  connection = dbus_bus_get(DBUS_BUS_SESSION, &err);
-  if (dbus_error_is_set(&err)) { 
-    dbus_error_free(&err); 
+
+  RefPtr<DBusConnection> connection = already_AddRefed<DBusConnection>(
+    dbus_bus_get_private(DBUS_BUS_SESSION, &err));
+
+  if (dbus_error_is_set(&err)) {
+    dbus_error_free(&err);
     return NS_ERROR_FAILURE;
   }
-  if (nullptr == connection) { 
-    return NS_ERROR_FAILURE; 
+  if (nullptr == connection) {
+    return NS_ERROR_FAILURE;
   }
   dbus_connection_set_exit_on_disconnect(connection,false);
-  
-  DBusMessage* msg;
-  msg = dbus_message_new_method_call(mService.get(), 
-                                     mObjpath.get(), 
-                                     mInterface.get(), 
-                                     mMethod.get());
-  
+
+  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
+    dbus_message_new_method_call(mService.get(),
+                                 mObjpath.get(),
+                                 mInterface.get(),
+                                 mMethod.get()));
+
   if (!msg) {
     return NS_ERROR_FAILURE;
   }
   dbus_message_set_no_reply(msg, true);
-  
+
   DBusMessageIter iter;
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &uri);
-  
+
   if (dbus_connection_send(connection, msg, nullptr)) {
     dbus_connection_flush(connection);
-    dbus_message_unref(msg);
   } else {
-    dbus_message_unref(msg);
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
-  
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -25,8 +25,6 @@ fi
 
 case "$target" in
 *-android*|*-linuxandroid*)
-    NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-version=$android_version"
-
     AC_MSG_CHECKING([for android platform directory])
 
     case "$target_cpu" in

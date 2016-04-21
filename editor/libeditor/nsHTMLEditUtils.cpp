@@ -259,13 +259,16 @@ nsHTMLEditUtils::IsTableCell(nsINode* aNode)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsTableCellOrCaption: true if node an html td or th or caption
+// IsTableCell: true if node an html td or th
 //
 bool
-nsHTMLEditUtils::IsTableCellOrCaption(nsINode& aNode)
+nsHTMLEditUtils::IsTableCellOrCaption(nsIDOMNode* aNode)
 {
-  return aNode.IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th,
-                                   nsGkAtoms::caption);
+  NS_PRECONDITION(aNode, "null parent passed to nsHTMLEditUtils::IsTableCell");
+  nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aNode);
+  return (nodeAtom == nsGkAtoms::td)
+      || (nodeAtom == nsGkAtoms::th)
+      || (nodeAtom == nsGkAtoms::caption);
 }
 
 

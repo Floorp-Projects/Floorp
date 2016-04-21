@@ -2,7 +2,7 @@
 
 <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <gfxItems>
-    <gfxBlacklistEntry>
+    <gfxBlacklistEntry blockID="g35">
       <os>WINNT 6.1</os>
       <vendor>0xabcd</vendor>
       <devices>
@@ -28,7 +28,7 @@
       <driverVersion> 8.52.322.2202 </driverVersion>
       <driverVersionComparator> LESS_THAN </driverVersionComparator>
     </gfxBlacklistEntry>
-    <gfxBlacklistEntry>
+    <gfxBlacklistEntry blockID="g36">
       <os>WINNT 6.1</os>
       <vendor>0xabab</vendor>
       <devices>

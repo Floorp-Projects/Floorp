@@ -17,6 +17,7 @@
 #define nsWindow_h
 
 #include "InputData.h"
+#include "mozilla/UniquePtr.h"
 #include "nsBaseWidget.h"
 #include "nsRegion.h"
 #include "nsIIdleServiceInternal.h"
@@ -150,7 +151,7 @@ protected:
 private:
     // This is used by SynthesizeNativeTouchPoint to maintain state between
     // multiple synthesized points
-    nsAutoPtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
+    mozilla::UniquePtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
 
     RefPtr<nsScreenGonk> mScreen;
 

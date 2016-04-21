@@ -3,7 +3,7 @@
 <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <gfxItems>
 
-    <gfxBlacklistEntry>
+    <gfxBlacklistEntry blockID="g1">
       <os>All</os>
       <vendor>0xabcd</vendor>
       <versionRange minVersion="15.0" maxVersion="15.0"/>
@@ -16,7 +16,7 @@
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
-    <gfxBlacklistEntry>
+    <gfxBlacklistEntry blockID="g2">
       <os>All</os>
       <vendor>0xabcd</vendor>
       <versionRange minVersion="15.0" maxVersion="22.0a1"/>
@@ -68,7 +68,7 @@
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
-    <gfxBlacklistEntry>
+    <gfxBlacklistEntry blockID="g11">
       <os>All</os>
       <vendor>0xabcd</vendor>
       <versionRange minVersion="14.0b2" maxVersion="15.0"/>

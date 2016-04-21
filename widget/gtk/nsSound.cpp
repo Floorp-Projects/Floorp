@@ -18,7 +18,6 @@
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"

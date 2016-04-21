@@ -354,13 +354,15 @@ DuplicateHandle(HANDLE aSourceHandle,
 #endif
 
 /**
- * Annotate the crash reporter with the error error code from the most recent
- * system call.
+ * Annotate the crash reporter with the error code from the most recent system
+ * call. Returns the system error.
  */
 #ifdef MOZ_CRASHREPORTER
 void AnnotateSystemError();
+void AnnotateProcessInformation(base::ProcessId aPid);
 #else
 #define AnnotateSystemError() do { } while (0)
+#define AnnotateProcessInformation(...) do { } while (0)
 #endif
 
 /**

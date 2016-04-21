@@ -24,7 +24,6 @@
 #include "nsITimer.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
-#include "nsAutoPtr.h"
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
