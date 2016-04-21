@@ -68,7 +68,7 @@ public:
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 #ifdef DEBUG_LAYOUT
   virtual nsresult SetXULDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;
-  virtual nsresult GetDebug(bool& aDebug) override;
+  virtual nsresult GetXULDebug(bool& aDebug) override;
 #endif
   virtual Valignment GetXULVAlign() const override { return mValign; }
   virtual Halignment GetXULHAlign() const override { return mHalign; }
