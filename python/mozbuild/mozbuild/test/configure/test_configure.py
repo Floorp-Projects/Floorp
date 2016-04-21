@@ -24,6 +24,7 @@ from mozbuild.configure import (
     ConfigureError,
     ConfigureSandbox,
 )
+from mozbuild.util import exec_
 
 import mozpack.path as mozpath
 
@@ -244,7 +245,7 @@ class TestConfigure(unittest.TestCase):
         sandbox = ConfigureSandbox(config, {}, [], out, out)
 
         with self.assertRaises(ImportError):
-            exec(textwrap.dedent('''
+            exec_(textwrap.dedent('''
                 @template
                 def foo():
                     import sys
@@ -252,7 +253,7 @@ class TestConfigure(unittest.TestCase):
                 sandbox
             )
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports('sys')
             def foo():
@@ -262,7 +263,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox['foo'](), sys)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports(_from='os', _import='path')
             def foo():
@@ -272,7 +273,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox['foo'](), os.path)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports(_from='os', _import='path', _as='os_path')
             def foo():
@@ -282,7 +283,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox['foo'](), os.path)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports('__builtin__')
             def foo():
@@ -293,7 +294,7 @@ class TestConfigure(unittest.TestCase):
         import __builtin__
         self.assertIs(sandbox['foo'](), __builtin__)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports(_from='__builtin__', _import='open')
             def foo():
@@ -306,7 +307,7 @@ class TestConfigure(unittest.TestCase):
         f.close()
 
         # This unlocks the sandbox
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports(_import='__builtin__', _as='__builtins__')
             def foo():
@@ -317,7 +318,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox['foo'](), sys)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports('__sandbox__')
             def foo():
@@ -327,7 +328,7 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox['foo'](), sandbox)
 
-        exec(textwrap.dedent('''
+        exec_(textwrap.dedent('''
             @template
             @imports(_import='__sandbox__', _as='s')
             def foo():
