@@ -8948,13 +8948,6 @@
     "kind": "boolean",
     "description": "EME video playback success or failure"
   },
-  "VIDEO_MSE_JOIN_LATENCY_MS" : {
-    "expires_in_version": "45",
-    "description": "Time in MS between MSE video load and playback",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50
-  },
   "VIDEO_MSE_PLAY_TIME_MS" : {
     "expires_in_version": "45",
     "description": "Total time spent playing MSE video",
