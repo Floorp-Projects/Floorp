@@ -1387,7 +1387,7 @@ nsXULScrollFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 
   nscoord ascent = mHelper.mScrolledFrame->GetXULBoxAscent(aState);
   nsMargin m(0,0,0,0);
-  GetBorderAndPadding(m);
+  GetXULBorderAndPadding(m);
   ascent += m.top;
   GetMargin(m);
   ascent += m.top;

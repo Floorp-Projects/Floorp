@@ -367,7 +367,7 @@ nsStackLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
    // get bigger
    nsRect bounds(aBox->GetRect());
    nsMargin bp;
-   aBox->GetBorderAndPadding(bp);
+   aBox->GetXULBorderAndPadding(bp);
    clientRect.Inflate(bp);
 
    if (clientRect.width > bounds.width || clientRect.height > bounds.height)

@@ -8618,7 +8618,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     nsRect rect = GetRect();
 
     nsMargin bp(0,0,0,0);
-    GetBorderAndPadding(bp);
+    GetXULBorderAndPadding(bp);
 
     {
       // If we're a container for font size inflation, then shrink

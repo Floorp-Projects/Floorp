@@ -654,7 +654,7 @@ nsGrid::GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsH
   {
     if (!box->IsXULCollapsed())
     {
-       // get real border and padding. GetBorderAndPadding
+       // get real border and padding. GetXULBorderAndPadding
        // is redefined on nsGridRowLeafFrame. If we called it here
        // we would be in finite recurson.
        box->GetBorder(border);
@@ -723,7 +723,7 @@ nsGrid::GetRowOffsets(int32_t aIndex, nscoord& aTop, nscoord& aBottom, bool aIsH
            // at this point border/padding and margins all added
            // up to more needed space.
            margin = GetBoxTotalMargin(box, !aIsHorizontal);
-           // get real border and padding. GetBorderAndPadding
+           // get real border and padding. GetXULBorderAndPadding
            // is redefined on nsGridRowLeafFrame. If we called it here
            // we would be in finite recurson.
            box->GetBorder(border);
