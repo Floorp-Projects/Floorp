@@ -243,4 +243,16 @@ CDMCaps::AutoLock::GetSessionIdsForKeyId(const CencKeyId& aKeyId,
   }
 }
 
+bool
+CDMCaps::AutoLock::RemoveKeysForSession(const nsString& aSessionId)
+{
+  bool changed = false;
+  nsTArray<KeyStatus> statuses;
+  GetKeyStatusesForSession(aSessionId, statuses);
+  for (const KeyStatus& status : statuses) {
+    changed |= SetKeyStatus(status.mId, aSessionId, kGMPUnknown);
+  }
+  return changed;
+}
+
 } // namespace mozilla
