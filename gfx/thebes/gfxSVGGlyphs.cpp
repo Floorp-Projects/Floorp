@@ -344,7 +344,6 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     rv = NS_NewDOMDocument(getter_AddRefs(domDoc),

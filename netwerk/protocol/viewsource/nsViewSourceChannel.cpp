@@ -68,7 +68,6 @@ nsViewSourceChannel::Init(nsIURI* uri)
     // nullPrincipal as the loadingPrincipal and the least permissive
     // securityflag.
     nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
 
     rv = pService->NewChannel2(path,
                                nullptr, // aOriginCharset

@@ -646,7 +646,6 @@ nsresult nsPluginHost::FindProxyForURL(const char* url, char* *result)
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
   // The following channel is never openend, so it does not matter what
   // securityFlags we pass; let's follow the principle of least privilege.
   nsCOMPtr<nsIChannel> tempChannel;

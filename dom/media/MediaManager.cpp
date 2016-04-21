@@ -910,7 +910,7 @@ public:
 
       nsCOMPtr<nsIPrincipal> principal;
       if (mPeerIdentity) {
-        principal = nsNullPrincipal::Create();
+        principal = nsNullPrincipal::CreateWithInheritedAttributes(window->GetExtantDoc()->NodePrincipal());
       } else {
         principal = window->GetExtantDoc()->NodePrincipal();
       }
