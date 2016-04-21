@@ -399,7 +399,7 @@ nsBox::GetXULPrefSize(nsBoxLayoutState& aState)
   nsSize pref(0,0);
   DISPLAY_PREF_SIZE(this, pref);
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return pref;
 
   AddBorderAndPadding(pref);
@@ -419,7 +419,7 @@ nsBox::GetXULMinSize(nsBoxLayoutState& aState)
   nsSize min(0,0);
   DISPLAY_MIN_SIZE(this, min);
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return min;
 
   AddBorderAndPadding(min);
@@ -442,7 +442,7 @@ nsBox::GetXULMaxSize(nsBoxLayoutState& aState)
   nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, maxSize);
 
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return maxSize;
 
   AddBorderAndPadding(maxSize);
@@ -484,14 +484,14 @@ nsIFrame::GetXULOrdinal()
 nscoord
 nsBox::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
-  if (IsCollapsed())
+  if (IsXULCollapsed())
     return 0;
 
   return GetXULPrefSize(aState).height;
 }
 
 bool
-nsBox::IsCollapsed()
+nsBox::IsXULCollapsed()
 {
   return StyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
 }
@@ -527,7 +527,7 @@ nsresult
 nsBox::SyncLayout(nsBoxLayoutState& aState)
 {
   /*
-  if (IsCollapsed()) {
+  if (IsXULCollapsed()) {
     CollapseChild(aState, this, true);
     return NS_OK;
   }
@@ -557,7 +557,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
   else {
     nsRect rect(nsPoint(0, 0), GetSize());
     nsOverflowAreas overflowAreas(rect, rect);
-    if (!DoesClipChildren() && !IsCollapsed()) {
+    if (!DoesClipChildren() && !IsXULCollapsed()) {
       // See if our child frames caused us to overflow after being laid
       // out. If so, store the overflow area.  This normally can't happen
       // in XUL, but it can happen with the CSS 'outline' property and

@@ -50,8 +50,8 @@ nsGridRow::~nsGridRow()
 }
 
 bool 
-nsGridRow::IsCollapsed()
+nsGridRow::IsXULCollapsed()
 {
-  return mBox && mBox->IsCollapsed();
+  return mBox && mBox->IsXULCollapsed();
 }
 
