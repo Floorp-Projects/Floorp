@@ -402,9 +402,9 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_DEBUG_WAS_SET) {
       if (mState & NS_STATE_SET_TO_DEBUG)
-          SetDebug(aState, true);
+          SetXULDebug(aState, true);
       else
-          SetDebug(aState, false);
+          SetXULDebug(aState, false);
   }
 #endif
 

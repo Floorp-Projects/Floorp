@@ -2931,7 +2931,7 @@ public:
   virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild)=0;
 
 #ifdef DEBUG_LAYOUT
-  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug)=0;
+  virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug)=0;
   virtual nsresult GetDebug(bool& aDebug)=0;
 
   virtual nsresult DumpBox(FILE* out)=0;
