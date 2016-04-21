@@ -114,7 +114,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
     // now get the scrolled boxes first child.
     nsIFrame* child = nsBox::GetChildXULBox(scrolledBox);
 
-    bool horiz = scrolledBox->IsHorizontal();
+    bool horiz = scrolledBox->IsXULHorizontal();
     nsPoint cp = sf->GetScrollPosition();
     nscoord diff = 0;
     int32_t curIndex = 0;

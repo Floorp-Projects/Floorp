@@ -43,7 +43,7 @@ nsGridRowGroupLayout::ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aSta
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   if (grid)
     grid->RowAddedOrRemoved(aState, index, isHorizontal);
@@ -79,7 +79,7 @@ nsGridRowGroupLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    bool isHorizontal = IsHorizontal(aBox);
+    bool isHorizontal = IsXULHorizontal(aBox);
     int32_t extraColumns = grid->GetExtraColumnCount(isHorizontal);
     int32_t start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (int32_t i=0; i < extraColumns; i++)
@@ -105,7 +105,7 @@ nsGridRowGroupLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    bool isHorizontal = IsHorizontal(aBox);
+    bool isHorizontal = IsXULHorizontal(aBox);
     int32_t extraColumns = grid->GetExtraColumnCount(isHorizontal);
     int32_t start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (int32_t i=0; i < extraColumns; i++)
@@ -131,7 +131,7 @@ nsGridRowGroupLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
   if (grid) 
   {
     // make sure we add in extra columns sizes as well
-    bool isHorizontal = IsHorizontal(aBox);
+    bool isHorizontal = IsXULHorizontal(aBox);
     int32_t extraColumns = grid->GetExtraColumnCount(isHorizontal);
     int32_t start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (int32_t i=0; i < extraColumns; i++)

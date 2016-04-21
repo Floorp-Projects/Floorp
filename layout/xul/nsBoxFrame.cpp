@@ -315,7 +315,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the PACK attribute.  For vertical boxes
   // we are checking the ALIGN attribute.
-  nsIAtom* attrName = IsHorizontal() ? nsGkAtoms::pack : nsGkAtoms::align;
+  nsIAtom* attrName = IsXULHorizontal() ? nsGkAtoms::pack : nsGkAtoms::align;
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::_empty, &nsGkAtoms::start, &nsGkAtoms::center, &nsGkAtoms::end, nullptr};
   static const Halignment values[] =
@@ -336,7 +336,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // horizontal boxes we're checking PACK.  For vertical boxes we are checking
   // ALIGN.
   const nsStyleXUL* boxInfo = StyleXUL();
-  if (IsHorizontal()) {
+  if (IsXULHorizontal()) {
     switch (boxInfo->mBoxPack) {
       case NS_STYLE_BOX_PACK_START:
         aHalign = nsBoxFrame::hAlign_Left;
@@ -390,7 +390,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the ALIGN attribute.  For vertical boxes
   // we are checking the PACK attribute.
-  nsIAtom* attrName = IsHorizontal() ? nsGkAtoms::align : nsGkAtoms::pack;
+  nsIAtom* attrName = IsXULHorizontal() ? nsGkAtoms::align : nsGkAtoms::pack;
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::_empty, &nsGkAtoms::start, &nsGkAtoms::center,
      &nsGkAtoms::baseline, &nsGkAtoms::end, nullptr};
@@ -411,7 +411,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // horizontal boxes we're checking ALIGN.  For vertical boxes we are checking
   // PACK.
   const nsStyleXUL* boxInfo = StyleXUL();
-  if (IsHorizontal()) {
+  if (IsXULHorizontal()) {
     switch (boxInfo->mBoxAlign) {
       case NS_STYLE_BOX_ALIGN_START:
         aValign = nsBoxFrame::vAlign_Top;
@@ -479,7 +479,7 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
   if (!GetContent())
     return;
 
-  if (IsHorizontal()) {
+  if (IsXULHorizontal()) {
     // For horizontal boxes only, we initialize our value based off the CSS 'direction' property.
     // This means that BiDI users will end up with horizontally inverted chrome.
     aIsNormal = (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
@@ -494,7 +494,7 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
   
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
-  if (IsHorizontal()) {
+  if (IsXULHorizontal()) {
     static nsIContent::AttrValuesArray strings[] =
       {&nsGkAtoms::reverse, &nsGkAtoms::ltr, &nsGkAtoms::rtl, nullptr};
     int32_t index = GetContent()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::dir,
@@ -1406,7 +1406,7 @@ nsBoxFrame::PaintXULDebugBackground(DrawTarget* aDrawTarget, nsPoint aPt)
   nsMargin debugMargin;
   nsMargin debugPadding;
 
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
 
   GetDebugBorder(debugBorder);
   PixelMarginToTwips(debugBorder);
@@ -1477,7 +1477,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
 
   kid = nsBox::GetChildXULBox(this);
   while (nullptr != kid) {
-    bool isHorizontal = IsHorizontal();
+    bool isHorizontal = IsXULHorizontal();
 
     nscoord x, y, borderSize, spacerSize;
     
@@ -1649,7 +1649,7 @@ nsBoxFrame::GetDebugBorder(nsMargin& aInset)
 {
     aInset.SizeTo(2,2,2,2);
 
-    if (IsHorizontal()) 
+    if (IsXULHorizontal()) 
        aInset.top = 10;
     else 
        aInset.left = 10;
@@ -1726,7 +1726,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
     aBox->GetXULBorderAndPadding(border);
     insideBorder.Deflate(border);
 
-    bool isHorizontal = IsHorizontal();
+    bool isHorizontal = IsXULHorizontal();
 
     if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_ERROR_FAILURE;

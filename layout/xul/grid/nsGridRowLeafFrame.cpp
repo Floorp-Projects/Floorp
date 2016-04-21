@@ -48,7 +48,7 @@ nsGridRowLeafFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
   if (!grid) 
     return rv;
 
-  bool isHorizontal = IsHorizontal();
+  bool isHorizontal = IsXULHorizontal();
 
   int32_t firstIndex = 0;
   int32_t lastIndex = 0;

@@ -77,7 +77,7 @@ public:
 
   nsSprocketLayout();
 
-  static bool IsHorizontal(nsIFrame* aBox);
+  static bool IsXULHorizontal(nsIFrame* aBox);
 
   static void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
   static void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, bool aIsHorizontal);
