@@ -76,6 +76,7 @@ interface nsIPushService : nsISupports
   /** Observer topic names, exported for convenience. */
   readonly attribute DOMString pushTopic;
   readonly attribute DOMString subscriptionChangeTopic;
+  readonly attribute DOMString subscriptionLostTopic;
 
   /**
    * Creates a push subscription for the given |scope| URL and |principal|.

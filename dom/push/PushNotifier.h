@@ -20,6 +20,7 @@
 // These constants are duplicated in `PushComponents.js`.
 #define OBSERVER_TOPIC_PUSH "push-message"
 #define OBSERVER_TOPIC_SUBSCRIPTION_CHANGE "push-subscription-change"
+#define OBSERVER_TOPIC_SUBSCRIPTION_LOST "push-subscription-lost"
 
 namespace mozilla {
 namespace dom {
@@ -64,6 +65,8 @@ private:
   nsresult NotifyPushObservers(const nsACString& aScope,
                                const Maybe<nsTArray<uint8_t>>& aData);
   nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
+  nsresult NotifySubscriptionLostObservers(const nsACString& aScope,
+                                           uint16_t aReason);
   nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
                              const nsACString& aScope);
   bool ShouldNotifyWorkers(nsIPrincipal* aPrincipal);
