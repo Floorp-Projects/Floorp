@@ -926,21 +926,21 @@ nsBox::GetChildBox(const nsIFrame* aFrame)
 {
   // box layout ends at box-wrapped frames, so don't allow these frames
   // to report child boxes.
-  return aFrame->IsBoxFrame() ? aFrame->PrincipalChildList().FirstChild() : nullptr;
+  return aFrame->IsXULBoxFrame() ? aFrame->PrincipalChildList().FirstChild() : nullptr;
 }
 
 /*static*/ nsIFrame*
 nsBox::GetNextBox(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
-    aFrame->GetParent()->IsBoxFrame() ? aFrame->GetNextSibling() : nullptr;
+    aFrame->GetParent()->IsXULBoxFrame() ? aFrame->GetNextSibling() : nullptr;
 }
 
 /*static*/ nsIFrame*
 nsBox::GetParentBox(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
-    aFrame->GetParent()->IsBoxFrame() ? aFrame->GetParent() : nullptr;
+    aFrame->GetParent()->IsXULBoxFrame() ? aFrame->GetParent() : nullptr;
 }
 
 #ifdef DEBUG_LAYOUT

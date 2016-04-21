@@ -1930,7 +1930,7 @@ void nsDisplayList::DeleteAll() {
 static bool
 GetMouseThrough(const nsIFrame* aFrame)
 {
-  if (!aFrame->IsBoxFrame())
+  if (!aFrame->IsXULBoxFrame())
     return false;
 
   const nsIFrame* frame = aFrame;

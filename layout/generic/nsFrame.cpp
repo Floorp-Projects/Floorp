@@ -185,8 +185,8 @@ static bool
 IsBoxWrapped(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
-         aFrame->GetParent()->IsBoxFrame() &&
-         !aFrame->IsBoxFrame();
+         aFrame->GetParent()->IsXULBoxFrame() &&
+         !aFrame->IsXULBoxFrame();
 }
 
 // Formerly the nsIFrameDebug interface
@@ -494,7 +494,7 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
                                                              nsGkAtoms::optgroup,
                                                              nsGkAtoms::select) ||
                                 content->IsInNativeAnonymousSubtree()))) &&
-                  !(aFrame->IsBoxFrame() && aFrame->GetParent()->IsBoxFrame());
+                  !(aFrame->IsXULBoxFrame() && aFrame->GetParent()->IsXULBoxFrame());
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
                isInline ||
                // br frames and mathml frames report being line
@@ -5881,7 +5881,7 @@ nsFrame::UpdateOverflow()
   nsOverflowAreas overflowAreas(rect, rect);
 
   if (!DoesClipChildren() &&
-      !(IsCollapsed() && (IsBoxFrame() || ::IsBoxWrapped(this)))) {
+      !(IsCollapsed() && (IsXULBoxFrame() || ::IsBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
   }
 

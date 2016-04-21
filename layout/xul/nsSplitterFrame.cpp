@@ -279,7 +279,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
   // on splitter content, then re-resolve style
   // XXXbz this is pretty messed up, since this can change whether we should
   // have a frame at all.  This really needs a better solution.
-  if (aParent && aParent->IsBoxFrame()) {
+  if (aParent && aParent->IsXULBoxFrame()) {
     if (!aParent->IsHorizontal()) {
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
@@ -839,7 +839,7 @@ nsSplitterFrameInner::UpdateState()
   }
 
   if ((SupportsCollapseDirection(Before) || SupportsCollapseDirection(After)) &&
-      mOuter->GetParent()->IsBoxFrame()) {
+      mOuter->GetParent()->IsXULBoxFrame()) {
     // Find the splitter's immediate sibling.
     nsIFrame* splitterSibling;
     if (newState == CollapsedBefore || mState == CollapsedBefore) {
