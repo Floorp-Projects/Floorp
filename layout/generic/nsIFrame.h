@@ -2937,12 +2937,6 @@ public:
   virtual nsresult XULDumpBox(FILE* out)=0;
 #endif
 
-  /**
-   * @return true if this text frame ends with a newline character.  It
-   * should return false if this is not a text frame.
-   */
-  virtual bool HasSignificantTerminalNewline() const;
-
   static bool AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
   static bool AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
                             nsSize& aSize, bool& aWidth, bool& aHeightSet);
@@ -2952,6 +2946,12 @@ public:
   // END OF BOX LAYOUT METHODS
   // The above methods have been migrated from nsIBox and are in the process of
   // being refactored. DO NOT USE OUTSIDE OF XUL.
+
+  /**
+   * @return true if this text frame ends with a newline character.  It
+   * should return false if this is not a text frame.
+   */
+  virtual bool HasSignificantTerminalNewline() const;
 
   struct CaretPosition {
     CaretPosition();
