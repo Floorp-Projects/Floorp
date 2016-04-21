@@ -933,7 +933,7 @@ impl MarionetteConnection {
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
         loop {
-            match TcpStream::connect(&("127.0.0.1", self.port)) {
+            match TcpStream::connect(&("localhost", self.port)) {
                 Ok(stream) => {
                     self.stream = Some(stream);
                     break
