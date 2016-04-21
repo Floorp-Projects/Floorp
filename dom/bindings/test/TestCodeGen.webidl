@@ -11,7 +11,7 @@ typedef CustomEventInit TestDictionaryTypedef;
 
 interface TestExternalInterface;
 
-[AvailableIn=PrivilegedApps, Pref="xyz"]
+[Pref="xyz"]
 interface TestRenamedInterface {
 };
 
@@ -135,7 +135,6 @@ interface OnlyForUseInConstructor {
  Constructor(ArrayBuffer arrayBuf),
  Constructor(Uint8Array typedArr),
  // Constructor(long arg1, long arg2, (TestInterface or OnlyForUseInConstructor) arg3),
- AvailableIn=CertifiedApps,
  NamedConstructor=Test,
  NamedConstructor=Test(DOMString str),
  NamedConstructor=Test2(DictForConstructor dict, any any1, object obj1,
@@ -887,14 +886,6 @@ interface TestInterface {
   void prefable19();
   [Pref="abc.def", Func="TestFuncControlledMember", ChromeOnly]
   void prefable20();
-  [Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable21();
-  [Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable22();
-  [Pref="abc.def", Func="TestFuncControlledMember", AvailableIn=CertifiedApps]
-  void prefable23();
-  [Pref="abc.def", Func="TestFuncControlledMember", AvailableIn=PrivilegedApps]
-  void prefable24();
 
   // Conditionally exposed methods/attributes involving [SecureContext]
   [SecureContext]

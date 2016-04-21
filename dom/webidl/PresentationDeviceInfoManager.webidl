@@ -13,7 +13,7 @@ dictionary PresentationDeviceInfo {
 [NavigatorProperty="mozPresentationDeviceInfo",
  JSImplementation="@mozilla.org/presentation-device/deviceInfo;1",
  Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation-device-manage"]
+ ChromeOnly]
 interface PresentationDeviceInfoManager : EventTarget {
   // notify if any device updated.
   attribute EventHandler ondevicechange;

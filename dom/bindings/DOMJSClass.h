@@ -74,18 +74,6 @@ typedef bool
                            JS::Handle<JSObject*> obj,
                            JS::AutoIdVector& props);
 
-// Returns true if aObj's global has any of the permissions named in
-// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
-// null-terminated.
-bool
-CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
-
-// Returns true if aObj's global has all of the permissions named in
-// aPermissions set to nsIPermissionManager::ALLOW_ACTION. aPermissions must be
-// null-terminated.
-bool
-CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
-
 // Returns true if the given global is of a type whose bit is set in
 // aNonExposedGlobals.
 bool
@@ -138,20 +126,6 @@ struct PrefableDisablers {
         !enabledFunc(cx, js::GetGlobalForObjectCrossCompartment(obj))) {
       return false;
     }
-    if (availableFunc &&
-        !availableFunc(cx, js::GetGlobalForObjectCrossCompartment(obj))) {
-      return false;
-    }
-    if (checkAnyPermissions &&
-        !CheckAnyPermissions(cx, js::GetGlobalForObjectCrossCompartment(obj),
-                             checkAnyPermissions)) {
-      return false;
-    }
-    if (checkAllPermissions &&
-        !CheckAllPermissions(cx, js::GetGlobalForObjectCrossCompartment(obj),
-                             checkAllPermissions)) {
-      return false;
-    }
     return true;
   }
 
@@ -167,16 +141,8 @@ struct PrefableDisablers {
 
   // A function pointer to a function that can say the property is disabled
   // even if "enabled" is set to true.  If the pointer is null the value of
-  // "enabled" is used as-is unless availableFunc overrides.
+  // "enabled" is used as-is.
   const PropertyEnabled enabledFunc;
-
-  // A function pointer to a function that can be used to disable a
-  // property even if "enabled" is true and enabledFunc allowed.  This
-  // is basically a hack to avoid having to codegen PropertyEnabled
-  // implementations in case when we need to do two separate checks.
-  const PropertyEnabled availableFunc;
-  const char* const* const checkAnyPermissions;
-  const char* const* const checkAllPermissions;
 };
 
 template<typename T>

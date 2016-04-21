@@ -1,8 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <iframe></iframe>
@@ -15,13 +15,7 @@ function run_tests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-onload = function() {
-  SpecialPowers.pushPermissions([
-    {type: "contacts-read", allow: true, context: document},
-    {type: "contacts-write", allow: true, context: document},
-    {type: "contacts-create", allow: true, context: document},
-  ], run_tests);
-};
+onload = run_tests;
 
 </script>
 </pre>

@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=979109
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 979109</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=983502">Mozilla Bug 983502</a>
@@ -114,23 +114,19 @@ function runNextTest() {
 
 info("About to run " + tests.length + " tests");
 
-SpecialPowers.pushPermissions([
-  {type: "feature-detection", allow: 1, context: document}
-], function() {
-  ok('getFeature' in navigator, "navigator.getFeature should exist");
-  ok('hasFeature' in navigator, "navigator.hasFeature should exist");
-  // B2G specific manifest features.
-  // Touching navigator before pushPermissions makes it fail.
-  if (!navigator.userAgent.includes("Android") &&
-        /Mobile|Tablet/.test(navigator.userAgent)) {
-    info("Adding B2G specific tests");
-    tests.push(createManifestTest("manifest.chrome.navigation"));
-    tests.push(createManifestTest("manifest.precompile"));
-    tests.push(createManifestTest("manifest.role.homescreen"));
-  }
-  runNextTest();
-  ok(true, "Test DONE");
-});
+ok('getFeature' in navigator, "navigator.getFeature should exist");
+ok('hasFeature' in navigator, "navigator.hasFeature should exist");
+// B2G specific manifest features.
+// Touching navigator before pushPermissions makes it fail.
+if (!navigator.userAgent.includes("Android") &&
+      /Mobile|Tablet/.test(navigator.userAgent)) {
+  info("Adding B2G specific tests");
+  tests.push(createManifestTest("manifest.chrome.navigation"));
+  tests.push(createManifestTest("manifest.precompile"));
+  tests.push(createManifestTest("manifest.role.homescreen"));
+}
+runNextTest();
+ok(true, "Test DONE");
 
 SimpleTest.waitForExplicitFinish();
 

@@ -9,8 +9,7 @@
  * a particular region.
  */
 [Pref="dom.cellbroadcast.enabled",
- CheckAnyPermissions="cellbroadcast",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozCellBroadcast : EventTarget
 {
   /**

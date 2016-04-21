@@ -1235,11 +1235,5 @@ bool
 TCPSocket::ShouldTCPSocketExist(JSContext* aCx, JSObject* aGlobal)
 {
   JS::Rooted<JSObject*> global(aCx, aGlobal);
-  if (nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(global))) {
-    return true;
-  }
-
-  const char* const perms[] = { "tcp-socket", nullptr };
-  return Preferences::GetBool("dom.mozTCPSocket.enabled") &&
-      CheckAnyPermissions(aCx, global, perms);
+  return nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(global));
 }

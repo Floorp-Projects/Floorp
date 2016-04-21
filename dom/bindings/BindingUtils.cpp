@@ -2502,32 +2502,6 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
   return true;
 }
 
-bool
-IsInPrivilegedApp(JSContext* aCx, JSObject* aObj)
-{
-  if (!NS_IsMainThread()) {
-    return GetWorkerPrivateFromContext(aCx)->IsInPrivilegedApp();
-  }
-
-  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aObj);
-  uint16_t appStatus = principal->GetAppStatus();
-  return (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
-          appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED) ||
-          Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
-}
-
-bool
-IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
-{
-  if (!NS_IsMainThread()) {
-    return GetWorkerPrivateFromContext(aCx)->IsInCertifiedApp();
-  }
-
-  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aObj);
-  return principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED ||
-         Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
-}
-
 void
 FinalizeGlobal(JSFreeOp* aFreeOp, JSObject* aObj)
 {
@@ -2560,50 +2534,6 @@ EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
              "classes!");
 
   return JS_EnumerateStandardClasses(aCx, aObj);
-}
-
-bool
-CheckAnyPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
-{
-  JS::Rooted<JSObject*> rootedObj(aCx, aObj);
-  nsPIDOMWindowInner* window = xpc::WindowGlobalOrNull(rootedObj)->AsInner();
-  if (!window) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  do {
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromWindow(window, *aPermissions, &permission);
-    if (permission == nsIPermissionManager::ALLOW_ACTION) {
-      return true;
-    }
-  } while (*(++aPermissions));
-  return false;
-}
-
-bool
-CheckAllPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[])
-{
-  JS::Rooted<JSObject*> rootedObj(aCx, aObj);
-  nsPIDOMWindowInner* window = xpc::WindowGlobalOrNull(rootedObj)->AsInner();
-  if (!window) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  do {
-    uint32_t permission = nsIPermissionManager::DENY_ACTION;
-    permMgr->TestPermissionFromWindow(window, *aPermissions, &permission);
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
-      return false;
-    }
-  } while (*(++aPermissions));
-  return true;
 }
 
 bool

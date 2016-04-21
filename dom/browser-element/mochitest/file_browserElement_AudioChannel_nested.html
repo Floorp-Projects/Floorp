@@ -31,7 +31,7 @@
 
       ok("allowedAudioChannels" in iframe, "allowedAudioChannels exist");
       var channels = iframe.allowedAudioChannels;
-      is(channels.length, 1, "1 audio channel by default");
+      is(channels.length, 9, "9 audio channel by default");
 
       var ac = channels[0];
 
@@ -43,7 +43,7 @@
       ok("isActive" in ac, "ac.isActive exists");
 
       ac.onactivestatechanged = function() {
-        ok("activestatechanged event received.");
+        ok(true, "activestatechanged event received.");
 
         ac.getVolume().onsuccess = function(e) {
           ok(e.target.result, 1, "Default volume is 1");
@@ -54,7 +54,7 @@
     });
 
     document.body.appendChild(iframe);
-    iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/file_audio.html';
+    iframe.src = 'chrome://mochitests/content/chrome/dom/browser-element/mochitest/file_audio.html';
   });
 </script>
 </head>

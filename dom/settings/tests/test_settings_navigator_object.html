@@ -6,8 +6,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=898512
 <head>
   <title>Test for Bug 898512 Settings API</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 
@@ -30,16 +30,7 @@ function testPref() {
   });
 }
 
-SpecialPowers.pushPermissions([
-  {type: "settings-read", allow: 0, context: document},
-  {type: "settings-write", allow: 0, context: document},
-  {type: "settings-api-read", allow: 0, context: document},
-  {type: "settings-api-write", allow: 0, context: document},
-  {type: "settings-clear", allow: 0, context: document}
-], function() {
-  is(frames[0].navigator.mozSettings, undefined, "navigator.mozSettings is undefined when the page doesn't have permissions");
-  testPref();
-});
+testPref();
 </script>
 </pre>
 </body>

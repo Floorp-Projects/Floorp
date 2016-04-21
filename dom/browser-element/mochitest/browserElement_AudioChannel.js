@@ -7,13 +7,12 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 function noaudio() {
   info("Test : no-audio");
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
-  iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/file_empty.html';
+  iframe.src = 'chrome://mochitests/content/chrome/dom/browser-element/mochitest/file_empty.html';
 
   function noaudio_loadend() {
     ok("mute" in iframe, "iframe.mute exists");
@@ -24,7 +23,7 @@ function noaudio() {
 
     ok("allowedAudioChannels" in iframe, "allowedAudioChannels exist");
     var channels = iframe.allowedAudioChannels;
-    is(channels.length, 1, "1 audio channel by default");
+    is(channels.length, 9, "9 audio channel by default");
 
     var ac = channels[0];
 
@@ -146,7 +145,7 @@ function audio() {
   info("Test : audio");
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
-  iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/iframe_file_audio.html';
+  iframe.src = 'chrome://mochitests/content/chrome/dom/browser-element/mochitest/iframe_file_audio.html';
 
   function audio_loadend() {
     ok("mute" in iframe, "iframe.mute exists");
@@ -157,7 +156,7 @@ function audio() {
 
     ok("allowedAudioChannels" in iframe, "allowedAudioChannels exist");
     var channels = iframe.allowedAudioChannels;
-    is(channels.length, 1, "1 audio channel by default");
+    is(channels.length, 9, "9 audio channel by default");
 
     var ac = channels[0];
 

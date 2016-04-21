@@ -7,24 +7,13 @@ function inputmethod_setup(callback) {
     SpecialPowers.Cu.import("resource://gre/modules/Keyboard.jsm", this);
   }
 
-  let permissions = [];
-  ['input', 'input-manage', 'browser'].forEach(function(name) {
-    permissions.push({
-      type: name,
-      allow: true,
-      context: document
-    });
-  });
-
-  SpecialPowers.pushPermissions(permissions, function() {
-    let prefs = [
-      ['dom.mozBrowserFramesEnabled', true],
-      // Enable navigator.mozInputMethod.
-      ['dom.mozInputMethod.enabled', true]
-    ];
-    SpecialPowers.pushPrefEnv({set: prefs}, function() {
-      SimpleTest.waitForFocus(callback);
-    });
+  let prefs = [
+    ['dom.mozBrowserFramesEnabled', true],
+    // Enable navigator.mozInputMethod.
+    ['dom.mozInputMethod.enabled', true]
+  ];
+  SpecialPowers.pushPrefEnv({set: prefs}, function() {
+    SimpleTest.waitForFocus(callback);
   });
 }
 

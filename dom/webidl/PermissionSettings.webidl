@@ -3,7 +3,7 @@
  * You can obtain at http://mozilla.org/MPL/2.0/. */
 
 [JSImplementation="@mozilla.org/permissionSettings;1",
- CheckAnyPermissions="permissions",
+ ChromeOnly,
  Pref="dom.mozPermissionSettings.enabled",
  NavigatorProperty="mozPermissionSettings"]
 interface PermissionSettings

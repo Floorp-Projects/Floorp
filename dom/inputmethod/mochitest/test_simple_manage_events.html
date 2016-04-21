@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1201407
 -->
 <head>
   <title>Test simple manage notification events on MozInputMethodManager</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1201407">Mozilla Bug 1201407</a>
@@ -98,32 +98,21 @@ function setupInputAppFrame() {
     inputAppFrame.src = imeUrl;
     document.body.appendChild(inputAppFrame);
 
-    SpecialPowers.pushPermissions([{
-      type: 'input',
-      allow: true,
-      context: {
-        url: imeUrl,
-        originAttributes: {
-          inIsolatedMozBrowser: true
-        }
-      }
-    }], function() {
-      let mm = appFrameMM =
-        SpecialPowers.getBrowserFrameMessageManager(inputAppFrame);
+    let mm = appFrameMM =
+      SpecialPowers.getBrowserFrameMessageManager(inputAppFrame);
 
-      inputAppFrame.addEventListener('mozbrowserloadend', function() {
-        mm.addMessageListener('test:appEvent', function(msg) {
-          ok(false, 'Input app should not receive ' + msg.data.type + ' event.');
-        });
-        mm.addMessageListener('test:inputcontextchange', function(msg) {
-          nextStep && nextStep({ type: 'inputcontextchange' });
-        });
-        mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
-
-        // Set the input app frame to be active
-        let req = inputAppFrame.setInputMethodActive(true);
-        resolve(req);
+    inputAppFrame.addEventListener('mozbrowserloadend', function() {
+      mm.addMessageListener('test:appEvent', function(msg) {
+        ok(false, 'Input app should not receive ' + msg.data.type + ' event.');
       });
+      mm.addMessageListener('test:inputcontextchange', function(msg) {
+        nextStep && nextStep({ type: 'inputcontextchange' });
+      });
+      mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+
+      // Set the input app frame to be active
+      let req = inputAppFrame.setInputMethodActive(true);
+      resolve(req);
     });
   });
 }
@@ -136,7 +125,7 @@ function setupContentFrame() {
   };
 
   let iframe = document.createElement('iframe');
-  iframe.src = 'data:text/html,<html><body><input type="text"></body></html>';
+  iframe.src = 'file_test_simple_manage_events.html';
   iframe.setAttribute('mozbrowser', true);
   document.body.appendChild(iframe);
 

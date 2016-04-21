@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.sms.enabled",
- CheckAnyPermissions="sms",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface DOMMobileMessageError : DOMError {
   readonly attribute (SmsMessage or MmsMessage) data;
 };

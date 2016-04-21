@@ -70,9 +70,8 @@ dictionary ResourceStatsAlarmOptions
   any                           data;
 };
 
-[CheckAnyPermissions="resourcestats-manage",
+[ChromeOnly,
  Pref="dom.resource_stats.enabled",
- AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/resourceStatsAlarm;1"]
 interface ResourceStatsAlarm
 {
@@ -112,10 +111,9 @@ interface ResourceStatsAlarm
   readonly attribute any                    data;
 };
 
-[CheckAnyPermissions="resourcestats-manage",
+[ChromeOnly,
  Pref="dom.resource_stats.enabled",
  Constructor(ResourceType type),
- AvailableIn="CertifiedApps",
  JSImplementation="@mozilla.org/resourceStatsManager;1"]
 interface ResourceStatsManager
 {

@@ -33,7 +33,6 @@ dictionary NetworkStatsAlarmOptions
 
 [JSImplementation="@mozilla.org/networkstats;1",
  ChromeOnly,
- CheckAnyPermissions="networkstats-manage",
  Pref="dom.mozNetworkStats.enabled"]
 interface MozNetworkStats {
   /**
