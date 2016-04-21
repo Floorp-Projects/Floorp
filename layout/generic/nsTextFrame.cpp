@@ -5130,14 +5130,15 @@ struct EmphasisMarkInfo
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
 UniquePtr<gfxTextRun>
-GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
-                                WritingMode aWM, const nsStyleText* aStyleText)
+GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame,
+                                nsFontMetrics* aFontMetrics,
+                                nsStyleContext* aStyleContext,
+                                const nsStyleText* aStyleText)
 {
   const nsString& emphasisString = aStyleText->mTextEmphasisStyleString;
   RefPtr<DrawTarget> dt = CreateReferenceDrawTarget(aFrame);
   auto appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
-  uint32_t flags = nsLayoutUtils::
-    GetTextRunOrientFlagsForStyle(aFrame->StyleContext());
+  uint32_t flags = nsLayoutUtils::GetTextRunOrientFlagsForStyle(aStyleContext);
   if (flags == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
     // The emphasis marks should always be rendered upright per spec.
     flags = gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
@@ -5169,24 +5170,31 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
     return nsRect();
   }
 
+  nsStyleContext* styleContext = StyleContext();
+  bool isTextCombined = styleContext->IsTextCombined();
+  if (isTextCombined) {
+    styleContext = styleContext->GetParent();
+  }
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-    GetFontMetricsOfEmphasisMarks(StyleContext(), GetFontSizeInflation());
+    GetFontMetricsOfEmphasisMarks(styleContext, GetFontSizeInflation());
   EmphasisMarkInfo* info = new EmphasisMarkInfo;
   info->textRun =
-    GenerateTextRunForEmphasisMarks(this, fm, aWM, styleText);
+    GenerateTextRunForEmphasisMarks(this, fm, styleContext, styleText);
   info->advance = info->textRun->GetAdvanceWidth();
 
   // Calculate the baseline offset
   LogicalSide side = styleText->TextEmphasisSide(aWM);
-  nsFontMetrics* baseFontMetrics = aProvider.GetFontMetrics();
-  LogicalSize frameSize = GetLogicalSize();
+  LogicalSize frameSize = GetLogicalSize(aWM);
   // The overflow rect is inflated in the inline direction by half
   // advance of the emphasis mark on each side, so that even if a mark
   // is drawn for a zero-width character, it won't be clipped.
   LogicalRect overflowRect(aWM, -info->advance / 2,
-                           /* BStart to be computed below */0,
+                           /* BStart to be computed below */ 0,
                            frameSize.ISize(aWM) + info->advance,
                            fm->MaxAscent() + fm->MaxDescent());
+  RefPtr<nsFontMetrics> baseFontMetrics = isTextCombined
+    ? nsLayoutUtils::GetInflatedFontMetricsForFrame(GetParent())
+    : do_AddRef(aProvider.GetFontMetrics());
   // When the writing mode is vertical-lr the line is inverted, and thus
   // the ascent and descent are swapped.
   nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
@@ -5204,6 +5212,11 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
     MOZ_ASSERT(side == eLogicalSideBEnd);
     info->baselineOffset = absOffset + endLeading;
     overflowRect.BStart(aWM) = frameSize.BSize(aWM) + endLeading;
+  }
+  // If text combined, fix the gap between the text frame and its parent.
+  if (isTextCombined) {
+    nscoord gap = (baseFontMetrics->MaxHeight() - frameSize.BSize(aWM)) / 2;
+    overflowRect.BStart(aWM) += gap * (side == eLogicalSideBStart ? -1 : 1);
   }
 
   Properties().Set(EmphasisMarkProperty(), info);
@@ -6184,7 +6197,7 @@ nsTextFrame::PaintTextWithSelection(
 void
 nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
-                               Range aRange,
+                               const gfxPoint& aFramePt, Range aRange,
                                const nscolor* aDecorationOverrideColor,
                                PropertyProvider* aProvider)
 {
@@ -6193,10 +6206,22 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     return;
   }
 
+  bool isTextCombined = StyleContext()->IsTextCombined();
   nscolor color = aDecorationOverrideColor ? *aDecorationOverrideColor :
     nsLayoutUtils::GetColor(this, eCSSProperty_text_emphasis_color);
   aContext->SetColor(Color::FromABGR(color));
-  gfxPoint pt(aTextBaselinePt);
+  gfxPoint pt;
+  if (!isTextCombined) {
+    pt = aTextBaselinePt;
+  } else {
+    MOZ_ASSERT(aWM.IsVertical());
+    pt = aFramePt;
+    if (aWM.IsVerticalRL()) {
+      pt.x += GetSize().width - GetLogicalBaseline(aWM);
+    } else {
+      pt.x += GetLogicalBaseline(aWM);
+    }
+  }
   if (!aWM.IsVertical()) {
     pt.y += info->baselineOffset;
   } else {
@@ -6206,8 +6231,14 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
       pt.x += info->baselineOffset;
     }
   }
-  mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
-                              pt, aRange, aProvider);
+  if (!isTextCombined) {
+    mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
+                                pt, aRange, aProvider);
+  } else {
+    pt.y += (GetSize().height - info->advance) / 2;
+    info->textRun->Draw(Range(info->textRun.get()), pt,
+                        gfxTextRun::DrawParams(aContext));
+  }
 }
 
 nscolor
@@ -6763,7 +6794,8 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     }
 
     // Emphasis marks
-    DrawEmphasisMarks(aParams.context, wm, aTextBaselinePt, aRange,
+    DrawEmphasisMarks(aParams.context, wm,
+                      aTextBaselinePt, aParams.framePt, aRange,
                       aParams.decorationOverrideColor, aParams.provider);
 
     // Line-throughs
