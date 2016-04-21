@@ -1,0 +1,38 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" height="16" width="16">
+  <defs>
+    <linearGradient id="d">
+      <stop offset="0" stop-color="#8c8c8c"/>
+      <stop offset="1" stop-color="#b4b4b4"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#544024"/>
+      <stop offset="1" stop-color="#8b6b3d"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#a0a0a0"/>
+      <stop offset="1" stop-color="#a0a0a0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="e">
+      <stop offset="0" stop-color="#a0a0a0"/>
+      <stop offset="1" stop-color="#c8c8c8"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#382b18"/>
+      <stop offset="1" stop-color="#6f5631"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="3.409" x2="6.735" y1="3.859" x1="9.123" id="f" xlink:href="#a"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="8.347" x2="2.4" y1="9.586" x1="13.352" id="j" xlink:href="#a"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="11.675" x2="7.974" y1="14.423" x1="7.974" id="l" xlink:href="#b" gradientTransform="translate(0 -.2)"/>
+    <linearGradient xlink:href="#c" id="g" x1="9.32" y1="7.243" x2="6.728" y2="6.716" gradientUnits="userSpaceOnUse"/>
+    <linearGradient xlink:href="#c" id="k" x1="12.451" y1="11.469" x2="1.56" y2="10.342" gradientUnits="userSpaceOnUse"/>
+    <linearGradient xlink:href="#d" id="i" x1="13.218" y1="13.627" x2="2.686" y2="13.627" gradientUnits="userSpaceOnUse"/>
+    <linearGradient xlink:href="#e" id="h" x1="12.607" y1="12.021" x2="3.321" y2="12.021" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path d="M8 1c-.828 0-1.5 1.343-1.5 3v3.5c0 .554.446 1 1 1h1c.554 0 1-.446 1-1V4c0-1.657-.672-3-1.5-3z" fill="url(#f)" stroke="url(#g)" stroke-width=".4" stroke-linejoin="round"/>
+  <rect width="11" height="5" x="2.5" y="10" rx=".5" ry=".5" fill="url(#h)" stroke="url(#i)" stroke-width=".4" stroke-linejoin="round"/>
+  <rect width="12" height="2" x="2" y="8" rx=".5" ry=".5" fill="url(#j)" stroke="url(#k)" stroke-width=".4" stroke-linejoin="round"/>
+  <path d="M11.5 10.8h1v4h-1zm-2 0h1v4h-1zm-2 0h1v4h-1zm-2 0h1v4h-1zm-2 0h1v4h-1z" fill="url(#l)"/>
+</svg>

@@ -1,0 +1,26 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" height="16" width="16">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#505424"/>
+      <stop offset="1" stop-color="#6c6f31"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#e8eace"/>
+      <stop offset="1" stop-color="#f5f6ea"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#484a2e"/>
+      <stop offset="1" stop-color="#61633d"/>
+    </linearGradient>
+    <linearGradient xlink:href="#a" id="d" x1="-.831" y1="11.595" x2="2.378" y2="1.336" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.2174 0 0 1 -11.66 -4.6)"/>
+    <linearGradient xlink:href="#b" id="e" x1="1.536" y1="14.334" x2="5.493" y2="1.678" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.2174 0 0 1 -11.66 -4.6)"/>
+    <linearGradient xlink:href="#c" id="f" x1="1.695" y1="14.28" x2="6.421" y2="1.672" gradientUnits="userSpaceOnUse" gradientTransform="rotate(-90 3.4 8)"/>
+  </defs>
+  <g transform="translate(4.6 .6)">
+    <rect transform="rotate(-90)" ry=".5" rx=".5" y="-3.4" x="-10.2" height="13.6" width="5.6" fill="url(#d)" stroke="url(#e)" stroke-width=".4" stroke-linejoin="round"/>
+    <path d="M-2.1 10.4v-3m11 3v-3m-2.75 3V8.9M3.4 10.4v-3m-2.75 3V8.9" fill="none" stroke="url(#f)"/>
+  </g>
+</svg>
