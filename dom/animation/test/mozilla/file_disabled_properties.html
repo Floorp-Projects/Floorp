@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+function waitForSetPref(pref, value) {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({ 'set': [[pref, value]] }, resolve);
+  });
+}
+
+/*
+ * These tests rely on the fact that the -webkit-text-fill-color property
+ * is disabled by the layout.css.prefixes.webkit pref. If we ever remove that
+ * pref we will need to substitute some other pref:property combination.
+ */
+
+promise_test(function(t) {
+  return waitForSetPref('layout.css.prefixes.webkit', true).then(() => {
+    var anim = addDiv(t).animate({ webkitTextFillColor: [ 'green', 'blue' ]});
+    assert_equals(anim.effect.getFrames().length, 2,
+                  'A property-indexed keyframe specifying only enabled'
+                  + ' properties produces keyframes');
+    return waitForSetPref('layout.css.prefixes.webkit', false);
+  }).then(() => {
+    var anim = addDiv(t).animate({ webkitTextFillColor: [ 'green', 'blue' ]});
+    assert_equals(anim.effect.getFrames().length, 0,
+                  'A property-indexed keyframe specifying only disabled'
+                  + ' properties produces no keyframes');
+  });
+}, 'Specifying a disabled property using a property-indexed keyframe');
+
+promise_test(function(t) {
+  var createAnim = () => {
+    var anim = addDiv(t).animate([ { webkitTextFillColor: 'green' },
+                                   { webkitTextFillColor: 'blue' } ]);
+    assert_equals(anim.effect.getFrames().length, 2,
+                  'Animation specified using a keyframe sequence should'
+                  + ' return the same number of keyframes regardless of'
+                  + ' whether or not the specified properties are disabled');
+    return anim;
+  };
+
+  var assert_has_property = (anim, index, descr, property) => {
+    assert_true(
+      anim.effect.getFrames()[index].hasOwnProperty(property),
+      `${descr} should have the '${property}' property`);
+  };
+  var assert_does_not_have_property = (anim, index, descr, property) => {
+    assert_false(
+      anim.effect.getFrames()[index].hasOwnProperty(property),
+      `${descr} should NOT have the '${property}' property`);
+  };
+
+  return waitForSetPref('layout.css.prefixes.webkit', true).then(() => {
+    var anim = createAnim();
+    assert_has_property(anim, 0, 'Initial keyframe', 'webkitTextFillColor');
+    assert_has_property(anim, 1, 'Final keyframe', 'webkitTextFillColor');
+    return waitForSetPref('layout.css.prefixes.webkit', false);
+  }).then(() => {
+    var anim = createAnim();
+    assert_does_not_have_property(anim, 0, 'Initial keyframe',
+                                  'webkitTextFillColor');
+    assert_does_not_have_property(anim, 1, 'Final keyframe',
+                                  'webkitTextFillColor');
+  });
+}, 'Specifying a disabled property using a keyframe sequence');
+
+done();
+</script>
+</body>
