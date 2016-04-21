@@ -173,6 +173,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -240,7 +241,6 @@ public class BrowserApp extends GeckoApp
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
-    private AddToHomeScreenPromotion mAddToHomeScreenPromotion;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -305,9 +305,9 @@ public class BrowserApp extends GeckoApp
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
     private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
 
-    private final List<BrowserAppDelegate> delegates = Arrays.asList(
-
-    );
+    private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
+            (BrowserAppDelegate) new AddToHomeScreenPromotion()
+    ));
 
     @NonNull
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
@@ -850,7 +850,6 @@ public class BrowserApp extends GeckoApp
                       .run();
         }
 
-        mAddToHomeScreenPromotion = new AddToHomeScreenPromotion(this);
         AudioFocusAgent.getInstance().attachToContext(this);
 
         for (final BrowserAppDelegate delegate : delegates) {
@@ -1111,9 +1110,7 @@ public class BrowserApp extends GeckoApp
 
         mScreenshotObserver.start();
 
-        mAddToHomeScreenPromotion.resume();
-
-        for (final BrowserAppDelegate delegate : delegates) {
+        for (BrowserAppDelegate delegate : delegates) {
             delegate.onResume(this);
         }
     }
@@ -1131,9 +1128,7 @@ public class BrowserApp extends GeckoApp
 
         mScreenshotObserver.stop();
 
-        mAddToHomeScreenPromotion.pause();
-
-        for (final BrowserAppDelegate delegate : delegates) {
+        for (BrowserAppDelegate delegate : delegates) {
             delegate.onPause(this);
         }
     }
