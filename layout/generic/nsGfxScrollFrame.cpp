@@ -1008,7 +1008,7 @@ nsXULScrollFrame::nsXULScrollFrame(nsStyleContext* aContext,
   : nsBoxFrame(aContext, aIsRoot),
     mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
-  SetLayoutManager(nullptr);
+  SetXULLayoutManager(nullptr);
   mHelper.mClipAllDescendants = aClipAllDescendants;
 }
 
