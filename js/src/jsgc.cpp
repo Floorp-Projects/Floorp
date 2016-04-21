@@ -5060,7 +5060,7 @@ class SweepWeakCacheTask : public GCSweepTask
 
 #define MAKE_GC_SWEEP_TASK(name)                                              \
     class name : public GCSweepTask {                                         \
-        void run() override;                                          \
+        void run() override;                                                  \
       public:                                                                 \
         explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
     }
