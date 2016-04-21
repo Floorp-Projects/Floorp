@@ -81,7 +81,7 @@ public:
    */
   virtual bool DoesClipChildren() override { return true; }
 
-  virtual nsresult GetMargin(nsMargin& aMargin) override;
+  virtual nsresult GetXULMargin(nsMargin& aMargin) override;
 
   /**
    * The following three methods set the value of mIncrement when a

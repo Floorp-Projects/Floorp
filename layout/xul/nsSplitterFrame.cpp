@@ -680,7 +680,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         nscoord flex = childBox->GetXULFlex();
 
         nsMargin margin(0,0,0,0);
-        childBox->GetMargin(margin);
+        childBox->GetXULMargin(margin);
         nsRect r(childBox->GetRect());
         r.Inflate(margin);
 
@@ -954,7 +954,7 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChil
   }
 
   nsMargin margin(0,0,0,0);
-  aChildBox->GetMargin(margin);
+  aChildBox->GetXULMargin(margin);
 
   nsCOMPtr<nsIAtom> attribute;
 

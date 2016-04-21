@@ -8964,7 +8964,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // Construct a bogus parent reflow state so that there's a usable
     // containing block reflow state.
     nsMargin margin(0,0,0,0);
-    GetMargin(margin);
+    GetXULMargin(margin);
 
     nsSize parentSize(aWidth, aHeight);
     if (parentSize.height != NS_INTRINSICSIZE)

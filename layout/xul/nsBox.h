@@ -34,7 +34,7 @@ public:
 
   virtual nsresult GetXULBorder(nsMargin& aBorderAndPadding) override;
   virtual nsresult GetXULPadding(nsMargin& aBorderAndPadding) override;
-  virtual nsresult GetMargin(nsMargin& aMargin) override;
+  virtual nsresult GetXULMargin(nsMargin& aMargin) override;
 
   virtual Valignment GetVAlign() const override { return vAlign_Top; }
   virtual Halignment GetHAlign() const override { return hAlign_Left; }

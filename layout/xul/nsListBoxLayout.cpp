@@ -145,7 +145,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
     // If this box is dirty or if it has dirty children, we
     // call layout on it.
     nsRect childRect(box->GetRect());
-    box->GetMargin(margin);
+    box->GetXULMargin(margin);
     
     // relayout if we must or we are dirty or some of our children are dirty
     //   or the client area is wider than us

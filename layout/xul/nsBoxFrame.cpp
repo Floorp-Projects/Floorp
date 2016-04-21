@@ -1483,7 +1483,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
     
     nsRect cr(kid->mRect);
     nsMargin margin;
-    kid->GetMargin(margin);
+    kid->GetXULMargin(margin);
     cr.Inflate(margin);
     
     if (isHorizontal) 
@@ -1850,7 +1850,7 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIFrame* aBox, nsSize& aSize)
 {
   nsRect rect(aBox->GetRect());
   nsMargin margin(0,0,0,0);
-  aBox->GetMargin(margin);
+  aBox->GetXULMargin(margin);
   rect.Inflate(margin);
   aSize.width = rect.width;
   aSize.height = rect.height;
