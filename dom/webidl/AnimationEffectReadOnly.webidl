@@ -40,7 +40,7 @@ dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
   unrestricted double   endTime = 0.0;
   unrestricted double   activeDuration = 0.0;
   double?               localTime = null;
-  unrestricted double?  progress = null;
+  double?               progress = null;
   unrestricted double?  currentIteration = null;
 };
 
