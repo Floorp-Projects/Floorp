@@ -41,12 +41,10 @@ function addTestTab(url) {
 
       // Select the DOM panel and wait till it's initialized.
       initDOMPanel(tab).then(panel => {
-        waitForDispatch(panel, "FETCH_PROPERTIES").then(() => {
-          resolve({
-            tab: tab,
-            browser: tab.linkedBrowser,
-            panel: panel
-          });
+        resolve({
+          tab: tab,
+          browser: tab.linkedBrowser,
+          panel: panel
         });
       });
     });
@@ -142,7 +140,6 @@ function _afterDispatchDone(store, type) {
             (action.status === "end" || action.status === "error") :
             true;
         }
-        return false;
       },
       run: (dispatch, getState, action) => {
         resolve(action);
@@ -156,7 +153,7 @@ function waitForDispatch(panel, type, eventRepeat = 1) {
   const actionType = constants[type];
   let count = 0;
 
-  return Task.spawn(function* () {
+  return Task.spawn(function*() {
     info("Waiting for " + type + " to dispatch " + eventRepeat + " time(s)");
     while (count < eventRepeat) {
       yield _afterDispatchDone(store, actionType);
