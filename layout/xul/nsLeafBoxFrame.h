@@ -75,7 +75,7 @@ public:
 
 protected:
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;
 
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName) override;

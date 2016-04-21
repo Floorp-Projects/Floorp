@@ -902,7 +902,7 @@ nsBoxFrame::GetXULFlex()
  * layout will call this method.
  */
 NS_IMETHODIMP
-nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
+nsBoxFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   uint32_t oldFlags = aState.LayoutFlags();
   aState.SetLayoutFlags(0);

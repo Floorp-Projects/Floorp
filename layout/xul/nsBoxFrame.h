@@ -72,7 +72,7 @@ public:
 #endif
   virtual Valignment GetXULVAlign() const override { return mValign; }
   virtual Halignment GetXULHAlign() const override { return mHalign; }
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual bool ComputesOwnOverflowArea() override { return false; }
 
