@@ -75,8 +75,7 @@ struct MinimalFunc : MinimalAlloc
     {
         if (!SplitCriticalEdges(graph))
             return false;
-        if (!RenumberBlocks(graph))
-            return false;
+        RenumberBlocks(graph);
         if (!BuildDominatorTree(graph))
             return false;
         if (!BuildPhiReverseMapping(graph))
@@ -93,8 +92,7 @@ struct MinimalFunc : MinimalAlloc
     {
         if (!SplitCriticalEdges(graph))
             return false;
-        if (!RenumberBlocks(graph))
-            return false;
+        RenumberBlocks(graph);
         if (!BuildDominatorTree(graph))
             return false;
         if (!BuildPhiReverseMapping(graph))

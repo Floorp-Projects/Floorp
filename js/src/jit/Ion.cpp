@@ -1512,8 +1512,7 @@ OptimizeMIR(MIRGenerator* mir)
 
     {
         AutoTraceLog log(logger, TraceLogger_RenumberBlocks);
-        if (!RenumberBlocks(graph))
-            return false;
+        RenumberBlocks(graph);
         gs.spewPass("Renumber Blocks");
         AssertGraphCoherency(graph);
 
