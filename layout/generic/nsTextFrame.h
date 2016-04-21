@@ -458,7 +458,7 @@ public:
   void DrawEmphasisMarks(gfxContext* aContext,
                          mozilla::WritingMode aWM,
                          const gfxPoint& aTextBaselinePt,
-                         Range aRange,
+                         const gfxPoint& aFramePt, Range aRange,
                          const nscolor* aDecorationOverrideColor,
                          PropertyProvider* aProvider);
 
