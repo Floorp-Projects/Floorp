@@ -66,8 +66,6 @@ GripProvider.prototype = {
 
       return (value.type == "object" && hasChildren);
     }
-
-    return null;
   },
 
   getValue: function(object) {
@@ -81,11 +79,15 @@ GripProvider.prototype = {
   },
 
   getLabel: function(object) {
-    return (object instanceof Property) ? object.name : null;
+    if (object instanceof Property) {
+      return object.name;
+    }
   },
 
   getKey: function(object) {
-    return (object instanceof Property) ? object.key : null;
+    if (object instanceof Property) {
+      return object.key;
+    }
   },
 
   getType: function(object) {
