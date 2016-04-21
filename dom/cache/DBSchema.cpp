@@ -193,7 +193,7 @@ static_assert(int(HeadersGuardEnum::None) == 0 &&
 static_assert(int(ReferrerPolicy::_empty) == 0 &&
               int(ReferrerPolicy::No_referrer) == 1 &&
               int(ReferrerPolicy::No_referrer_when_downgrade) == 2 &&
-              int(ReferrerPolicy::Origin_only) == 3 &&
+              int(ReferrerPolicy::Origin) == 3 &&
               int(ReferrerPolicy::Origin_when_cross_origin) == 4 &&
               int(ReferrerPolicy::Unsafe_url) == 5 &&
               int(ReferrerPolicy::EndGuard_) == 6,

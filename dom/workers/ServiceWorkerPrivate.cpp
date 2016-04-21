@@ -1090,7 +1090,7 @@ public:
       mReferrerPolicy = ReferrerPolicy::No_referrer;
       break;
     case nsIHttpChannel::REFERRER_POLICY_ORIGIN:
-      mReferrerPolicy = ReferrerPolicy::Origin_only;
+      mReferrerPolicy = ReferrerPolicy::Origin;
       break;
     case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE:
       mReferrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
