@@ -2934,7 +2934,7 @@ public:
   virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug)=0;
   virtual nsresult GetXULDebug(bool& aDebug)=0;
 
-  virtual nsresult DumpBox(FILE* out)=0;
+  virtual nsresult XULDumpBox(FILE* out)=0;
 #endif
 
   /**

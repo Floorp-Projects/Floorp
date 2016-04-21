@@ -8843,7 +8843,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
           desiredSize.BSize(outerWM) > ourSize.BSize(outerWM)) {
 
 #ifdef DEBUG_GROW
-        DumpBox(stdout);
+        XULDumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n",
                ourSize.ISize(outerWM), ourSize.BSize(outerWM),
                desiredSize.ISize(outerWM), desiredSize.BSize(outerWM));

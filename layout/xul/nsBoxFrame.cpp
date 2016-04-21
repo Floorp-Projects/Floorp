@@ -221,7 +221,7 @@ nsBoxFrame::CacheAttributes()
 {
   /*
   printf("Caching: ");
-  DumpBox(stdout);
+  XULDumpBox(stdout);
   printf("\n");
    */
 
@@ -1763,13 +1763,13 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
 
                     if (aBox->GetContent()) {
                       printf("---------------\n");
-                      DumpBox(stdout);
+                      XULDumpBox(stdout);
                       printf("\n");
                     }
 
                     if (child->GetContent()) {
                         printf("child #%d: ", count);
-                        child->DumpBox(stdout);
+                        child->XULDumpBox(stdout);
                         printf("\n");
                     }
 

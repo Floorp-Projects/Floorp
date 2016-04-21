@@ -489,7 +489,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
       if (!newChildRect.IsEqualInterior(childRect)) {
 #ifdef DEBUG_GROW
-        child->DumpBox(stdout);
+        child->XULDumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
 #endif
         newChildRect.Inflate(margin);

@@ -46,7 +46,7 @@ public:
   virtual nsresult GetXULDebug(bool& aDebug) override;
   virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
 
-  virtual nsresult DumpBox(FILE* out) override;
+  virtual nsresult XULDumpBox(FILE* out) override;
   void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
@@ -118,7 +118,7 @@ private:
 #ifdef DEBUG_LAYOUT
 #define NS_BOX_ASSERTION(box,expr,str) \
   if (!(expr)) { \
-       box->DumpBox(stdout); \
+       box->XULDumpBox(stdout); \
        NS_DebugBreak(NSDebugAssertion, str, #expr, __FILE__, __LINE__); \
   }
 #else
