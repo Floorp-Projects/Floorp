@@ -14,6 +14,8 @@
 
 "use strict";
 
+const LONG_WORD = "a".repeat(1000);
+
 const testCases = [
   ["cs2", [
     {name: "cs2", value: "sessionCookie"},
@@ -92,6 +94,23 @@ const testCases = [
     {name: "ss3.this", value: "is"},
     {name: "ss3.an", value: "object"},
     {name: "ss3.foo", value: "bar"},
+  ], true],
+  ["ss4", [
+    {name: "ss4", value: "Array"},
+    {name: "ss4.0", value: ""},
+    {name: "ss4.1", value: "array"},
+    {name: "ss4.2", value: ""},
+    {name: "ss4.3", value: "with"},
+    {name: "ss4.4", value: "empty"},
+    {name: "ss4.5", value: "items"},
+  ], true],
+  ["ss5", [
+    {name: "ss5", value: "Array"},
+    {name: "ss5.0", value: LONG_WORD},
+    {name: "ss5.1", value: LONG_WORD},
+    {name: "ss5.2", value: LONG_WORD},
+    {name: "ss5.3", value: `${LONG_WORD}&${LONG_WORD}`},
+    {name: "ss5.4", value: `${LONG_WORD}&${LONG_WORD}`},
   ], true],
   [["indexedDB", "http://test1.example.org", "idb1", "obj1"]],
   [1, [

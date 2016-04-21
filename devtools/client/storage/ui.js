@@ -607,8 +607,10 @@ StorageUI.prototype = {
           continue;
         }
         let p = separators[j];
-        let regex = new RegExp("^([^" + kv + p + "]*" + kv + "+[^" + kv + p +
-                               "]*" + p + "*)+$", "g");
+        let word = `[^${kv}${p}]*`;
+        let keyValue = `${word}${kv}${word}`;
+        let keyValueList = `${keyValue}(${p}${keyValue})*`;
+        let regex = new RegExp(`^${keyValueList}$`);
         if (value.match && value.match(regex) && value.includes(kv) &&
             (value.includes(p) || value.split(kv).length == 2)) {
           return makeObject(kv, p);
@@ -617,7 +619,9 @@ StorageUI.prototype = {
     }
     // Testing for array
     for (let p of separators) {
-      let regex = new RegExp("^[^" + p + "]+(" + p + "+[^" + p + "]*)+$", "g");
+      let word = `[^${p}]*`;
+      let wordList = `(${word}${p})+${word}`;
+      let regex = new RegExp(`^${wordList}$`);
       if (value.match && value.match(regex)) {
         return value.split(p.replace(/\\*/g, ""));
       }

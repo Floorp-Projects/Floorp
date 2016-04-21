@@ -32,6 +32,11 @@ localStorage.setItem("ls3", "http://foobar.com/baz.php");
 sessionStorage.setItem("ss1", "This#is#an#array");
 sessionStorage.setItem("ss2", "This~is~another~array");
 sessionStorage.setItem("ss3", "this#is~an#object~foo#bar");
+sessionStorage.setItem("ss4", "#array##with#empty#items");
+// long string that is almost an object and might trigger exponential
+// regexp backtracking
+let s = "a".repeat(1000);
+sessionStorage.setItem("ss5", `${s}=${s}=${s}=${s}&${s}=${s}&${s}`);
 console.log("added cookies and stuff from main page");
 
 let idbGenerator = function*() {
