@@ -35,9 +35,9 @@ inline nsIUGenCategory::nsUGenCategory GetGenCategory(uint32_t aCh) {
 
 nsCharType GetBidiCat(uint32_t aCh);
 
-uint8_t GetScriptCode(uint32_t aCh);
+Script GetScriptCode(uint32_t aCh);
 
-uint32_t GetScriptTagForCode(int32_t aScriptCode);
+uint32_t GetScriptTagForCode(Script aScriptCode);
 
 /* This MUST match the values assigned by genUnicodePropertyData.pl! */
 enum VerticalOrientation {

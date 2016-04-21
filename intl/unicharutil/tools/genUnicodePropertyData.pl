@@ -800,13 +800,17 @@ __END
 
 close DATA_TABLES;
 
-print HEADER "enum {\n";
+print HEADER "namespace mozilla {\n";
+print HEADER "namespace unicode {\n";
+print HEADER "enum class Script {\n";
 for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
-  print HEADER "  MOZ_SCRIPT_", $scriptCodeToName[$i], " = ", $i, ",\n";
+  print HEADER "  ", $scriptCodeToName[$i], " = ", $i, ",\n";
 }
-print HEADER "\n  MOZ_NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
-print HEADER "\n  MOZ_SCRIPT_INVALID = -1\n";
-print HEADER "};\n\n";
+print HEADER "\n  NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
+print HEADER "\n  INVALID = -1\n";
+print HEADER "};\n";
+print HEADER "} // namespace unicode\n";
+print HEADER "} // namespace mozilla\n\n";
 
 print HEADER <<__END;
 #endif

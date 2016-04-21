@@ -161,7 +161,7 @@ public:
     void VerifyD2DDevice(bool aAttemptForce);
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                                        int32_t aRunScript,
+                                        Script aRunScript,
                                         nsTArray<const char*>& aFontList) override;
 
     gfxFontGroup*

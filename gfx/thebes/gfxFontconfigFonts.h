@@ -37,7 +37,7 @@ public:
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
-                        int32_t aRunScript, gfxFont *aPrevMatchedFont,
+                        Script aRunScript, gfxFont *aPrevMatchedFont,
                         uint8_t *aMatchType);
 
     static void Shutdown();
