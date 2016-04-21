@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=998893
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 998893 - Ensure that input.value changes affect autocomplete</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript">
+  /** Test for Bug 998893 **/
+  add_task(function* waitForFocus() {
+    yield new Promise(resolve => SimpleTest.waitForFocus(resolve));
+  });
+
+  add_task(function* setup() {
+    yield new Promise(resolve => {
+      let chromeScript = SpecialPowers.loadChromeScript(function() {
+        const {FormHistory} = Components.utils.import("resource://gre/modules/FormHistory.jsm", null);
+        FormHistory.update([
+          { op : "bump", fieldname: "field1", value: "Default text option" },
+          { op : "bump", fieldname: "field1", value: "New value option" },
+        ], {
+          handleCompletion: function() {
+            sendAsyncMessage("Test:Resume");
+          },
+        });
+      });
+
+      chromeScript.addMessageListener("Test:Resume", function resumeListener() {
+        chromeScript.removeMessageListener("Test:Resume", resumeListener);
+        chromeScript.destroy();
+        resolve();
+      });
+    });
+  });
+
+  add_task(function* runTest() {
+    let promisePopupShown = new Promise(resolve => {
+      let chromeScript = SpecialPowers.loadChromeScript(function() {
+        Components.utils.import("resource://gre/modules/Services.jsm");
+        let window = Services.wm.getMostRecentWindow("navigator:browser");
+        let popup = window.document.getElementById("PopupAutoComplete");
+        popup.addEventListener("popupshown", function popupShown() {
+          popup.removeEventListener("popupshown", popupShown);
+          sendAsyncMessage("Test:Resume");
+        });
+      });
+
+      chromeScript.addMessageListener("Test:Resume", function resumeListener() {
+        chromeScript.removeMessageListener("Test:Resume", resumeListener);
+        chromeScript.destroy();
+        resolve();
+      });
+    });
+
+    let field = document.getElementById("field1");
+
+    let promiseFieldFocus = new Promise(resolve => {
+      field.addEventListener("focus", function onFocus() {
+        info("field focused");
+        field.value = "New value";
+        sendKey("DOWN");
+        resolve();
+      });
+    });
+
+    let handleEnterPromise = new Promise(resolve => {
+      function handleEnter(evt) {
+        if (evt.keyCode != KeyEvent.DOM_VK_RETURN) {
+          return;
+        }
+        info("RETURN received for phase: " + evt.eventPhase);
+        is(evt.target.value, "New value option", "Check that the correct autocomplete entry was used");
+        resolve();
+      }
+
+      field.addEventListener("keypress", handleEnter, true);
+    });
+
+    field.focus();
+
+    yield promiseFieldFocus;
+
+    yield promisePopupShown;
+
+    sendKey("DOWN");
+    sendKey("RETURN");
+    sendKey("RETURN");
+
+    yield handleEnterPromise;
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998893">Mozilla Bug 998893</a>
+<p id="display"><input id="field1" value="Default text"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
