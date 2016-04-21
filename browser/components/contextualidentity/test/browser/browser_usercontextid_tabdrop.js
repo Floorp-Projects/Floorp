@@ -83,3 +83,34 @@ add_task(function* () {
   yield BrowserTestUtils.removeTab(tab);
   yield BrowserTestUtils.removeTab(tab2);
 });
+
+/**
+ * When dragging a URL from one tab or link on a tab to an existing tab, the
+ * existing tab should not change its userContextId.
+ * Ex: if you drag a link from tab 1 with userContext 1 to tab 2 with
+ * userContext 2, the link will open in tab 2 with userContext 2.
+ */
+add_task(function* () {
+  let tab = gBrowser.addTab("http://example.com/", {userContextId: 1});
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  let tab2 = gBrowser.addTab("http://example.org/", {userContextId: 2});
+  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+
+  let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
+
+  ChromeUtils.synthesizeDrop(tab, tab2, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window);
+
+  yield awaitDrop;
+  Assert.equal(tab2.getAttribute("usercontextid"), 2);
+
+  yield BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+
+  yield ContentTask.spawn(tab2.linkedBrowser, {}, function* () {
+    Assert.equal(content.document.documentURI, "http://test1.example.com/");
+    Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 2);
+  });
+
+  yield BrowserTestUtils.removeTab(tab);
+  yield BrowserTestUtils.removeTab(tab2);
+});
