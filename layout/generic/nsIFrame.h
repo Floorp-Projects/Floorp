@@ -2906,8 +2906,8 @@ public:
   // area. It's enough to just call Layout or SyncLayout on the
   // box. You can pass true to aRemoveOverflowArea as a
   // convenience.
-  virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         bool aRemoveOverflowAreas = false) = 0;
+  virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                            bool aRemoveOverflowAreas = false) = 0;
   nsresult Layout(nsBoxLayoutState& aBoxLayoutState);
   // Box methods.  Note that these do NOT just get the CSS border, padding,
   // etc.  They also talk to nsITheme.

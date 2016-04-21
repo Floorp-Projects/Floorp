@@ -230,9 +230,9 @@ nsIFrame::GetClientRect(nsRect& aClientRect)
 }
 
 void
-nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOverflowAreas)
+nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveOverflowAreas)
 {
-    NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
+    NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetXULBounds Size < 0");
 
     nsRect rect(mRect);
 
