@@ -28822,14 +28822,6 @@
         "url": "/web-animations/animation/pause.html"
       },
       {
-        "path": "web-animations/animation/ready.html",
-        "url": "/web-animations/animation/ready.html"
-      },
-      {
-        "path": "web-animations/animation/reverse.html",
-        "url": "/web-animations/animation/reverse.html"
-      },
-      {
         "path": "web-animations/animation/play.html",
         "url": "/web-animations/animation/play.html"
       },
@@ -28840,6 +28832,14 @@
       {
         "path": "web-animations/animation/playbackRate.html",
         "url": "/web-animations/animation/playbackRate.html"
+      },
+      {
+        "path": "web-animations/animation/ready.html",
+        "url": "/web-animations/animation/ready.html"
+      },
+      {
+        "path": "web-animations/animation/reverse.html",
+        "url": "/web-animations/animation/reverse.html"
       },
       {
         "path": "web-animations/keyframe-effect/constructor.html",
