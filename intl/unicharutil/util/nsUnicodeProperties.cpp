@@ -493,6 +493,18 @@ ClusterIterator::Next()
                  "ClusterIterator::Next has overshot the string!");
 }
 
+uint32_t
+CountGraphemeClusters(const char16_t* aText, uint32_t aLength)
+{
+  ClusterIterator iter(aText, aLength);
+  uint32_t result = 0;
+  while (!iter.AtEnd()) {
+    ++result;
+    iter.Next();
+  }
+  return result;
+}
+
 } // end namespace unicode
 
 } // end namespace mozilla
