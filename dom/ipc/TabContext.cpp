@@ -250,6 +250,11 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       TabContext *context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
         context = TabParent::GetFrom(ipcContext.opener().get_PBrowserParent());
+        if (!context) {
+          mInvalidReason = "Child is-browser process tried to "
+                           "open a null tab.";
+          return;
+        }
         if (context->IsMozBrowserElement() &&
             !ipcContext.isMozBrowserElement()) {
           // If the TabParent corresponds to a browser element, then it can only
