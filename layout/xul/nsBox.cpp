@@ -287,7 +287,7 @@ nsresult
 nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   aBorderAndPadding.SizeTo(0, 0, 0, 0);
-  nsresult rv = GetBorder(aBorderAndPadding);
+  nsresult rv = GetXULBorder(aBorderAndPadding);
   if (NS_FAILED(rv))
     return rv;
 
@@ -302,7 +302,7 @@ nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 }
 
 nsresult
-nsBox::GetBorder(nsMargin& aMargin)
+nsBox::GetXULBorder(nsMargin& aMargin)
 {
   aMargin.SizeTo(0,0,0,0);
     

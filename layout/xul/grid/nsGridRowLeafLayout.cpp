@@ -159,7 +159,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
 
         nsMargin border(0,0,0,0);
         // can't call GetBorderPadding we will get into recursion
-        aBox->GetBorder(border);
+        aBox->GetXULBorder(border);
         offset += border;
         aBox->GetPadding(border);
         offset += border;
