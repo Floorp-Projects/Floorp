@@ -7,6 +7,8 @@
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsICategoryManager.h"
+#include "nsIPushErrorReporter.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
@@ -85,6 +87,30 @@ PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PushNotifier::NotifySubscriptionLost(const nsACString& aScope,
+                                     nsIPrincipal* aPrincipal,
+                                     uint16_t aReason)
+{
+  if (NS_WARN_IF(aReason < nsIPushErrorReporter::UNSUBSCRIBE_MANUAL ||
+                 aReason > nsIPushErrorReporter::UNSUBSCRIBE_PERMISSION_REVOKED)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult rv = NotifySubscriptionLostObservers(aScope, aReason);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  if (XRE_IsContentProcess()) {
+    ContentChild* parentActor = ContentChild::GetSingleton();
+    if (!NS_WARN_IF(!parentActor)) {
+      Unused << NS_WARN_IF(
+        !parentActor->SendNotifyPushSubscriptionLostObservers(
+          PromiseFlatCString(aScope), aReason));
+    }
+  }
+
   return NS_OK;
 }
 
@@ -295,6 +321,18 @@ nsresult
 PushNotifier::NotifySubscriptionChangeObservers(const nsACString& aScope)
 {
   return DoNotifyObservers(nullptr, OBSERVER_TOPIC_SUBSCRIPTION_CHANGE, aScope);
+}
+
+nsresult
+PushNotifier::NotifySubscriptionLostObservers(const nsACString& aScope,
+                                              uint16_t aReason)
+{
+  nsCOMPtr<nsISupportsPRUint16> wrapper =
+    do_CreateInstance(NS_SUPPORTS_PRUINT16_CONTRACTID);
+  if (NS_WARN_IF(!wrapper || NS_FAILED(wrapper->SetData(aReason)))) {
+    return NS_ERROR_FAILURE;
+  }
+  return DoNotifyObservers(wrapper, OBSERVER_TOPIC_SUBSCRIPTION_LOST, aScope);
 }
 
 nsresult
