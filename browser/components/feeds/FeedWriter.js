@@ -887,12 +887,16 @@ FeedWriter.prototype = {
    *        The window of the document invoking the BrowserFeedWriter
    */
   _getOriginalURI(aWindow) {
-    let chan = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-               getInterface(Ci.nsIWebNavigation).
-               QueryInterface(Ci.nsIDocShell).currentDocumentChannel;
+    let docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation)
+                          .QueryInterface(Ci.nsIDocShell);
+    let chan = docShell.currentDocumentChannel;
 
-    let nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].
-                        createInstance(Ci.nsIPrincipal);
+    // We probably need to call InheritFromDocShellToDoc for this, but right now
+    // we can't call it from JS.
+    let attrs = docShell.getOriginAttributes();
+    let ssm = Services.scriptSecurityManager;
+    let nullPrincipal = ssm.createNullPrincipal(attrs);
 
     let resolvedURI = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService).
@@ -1185,13 +1189,19 @@ FeedWriter.prototype = {
     }
     let faviconURI = makeURI(readerURI.prePath + "/favicon.ico");
     let self = this;
-    let usePrivateBrowsing = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                         .getInterface(Ci.nsIWebNavigation)
-                                         .QueryInterface(Ci.nsIDocShell)
-                                         .QueryInterface(Ci.nsILoadContext)
-                                         .usePrivateBrowsing;
-    let nullPrincipal = Cc["@mozilla.org/nullprincipal;1"]
-                          .createInstance(Ci.nsIPrincipal);
+
+    let docShell = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell);
+    let usePrivateBrowsing = docShell.QueryInterface(Ci.nsILoadContext)
+                                     .usePrivateBrowsing;
+
+    // We probably need to call InheritFromDocShellToDoc for this, but right now
+    // we can't call it from JS.
+    let attrs = docShell.getOriginAttributes();
+    let ssm = Services.scriptSecurityManager;
+    let nullPrincipal = ssm.createNullPrincipal(attrs);
+
     this._faviconService.setAndFetchFaviconForPage(readerURI, faviconURI, false,
       usePrivateBrowsing ? this._faviconService.FAVICON_LOAD_PRIVATE
                          : this._faviconService.FAVICON_LOAD_NON_PRIVATE,
