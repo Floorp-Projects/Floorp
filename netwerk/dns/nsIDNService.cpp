@@ -798,7 +798,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
   label.BeginReading(current);
   label.EndReading(end);
 
-  int32_t lastScript = MOZ_SCRIPT_INVALID;
+  Script lastScript = Script::INVALID;
   uint32_t previousChar = 0;
   uint32_t savedNumberingSystem = 0;
 // Simplified/Traditional Chinese check temporarily disabled -- bug 857481
@@ -825,9 +825,9 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
     }
 
     // Check for mixed script
-    int32_t script = GetScriptCode(ch);
-    if (script != MOZ_SCRIPT_COMMON &&
-        script != MOZ_SCRIPT_INHERITED &&
+    Script script = GetScriptCode(ch);
+    if (script != Script::COMMON &&
+        script != Script::INHERITED &&
         script != lastScript) {
       if (illegalScriptCombo(script, savedScript)) {
         return false;
@@ -875,10 +875,10 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
 }
 
 // Scripts that we care about in illegalScriptCombo
-static const int32_t scriptTable[] = {
-  MOZ_SCRIPT_BOPOMOFO, MOZ_SCRIPT_CYRILLIC, MOZ_SCRIPT_GREEK,
-  MOZ_SCRIPT_HANGUL,   MOZ_SCRIPT_HAN,      MOZ_SCRIPT_HIRAGANA,
-  MOZ_SCRIPT_KATAKANA, MOZ_SCRIPT_LATIN };
+static const Script scriptTable[] = {
+  Script::BOPOMOFO, Script::CYRILLIC, Script::GREEK,
+  Script::HANGUL,   Script::HAN,      Script::HIRAGANA,
+  Script::KATAKANA, Script::LATIN };
 
 #define BOPO 0
 #define CYRL 1
@@ -895,7 +895,7 @@ static const int32_t scriptTable[] = {
 #define HNLT 12   // Latin + Han (could be any of the above combinations)
 #define FAIL 13
 
-static inline int32_t findScriptIndex(int32_t aScript)
+static inline int32_t findScriptIndex(Script aScript)
 {
   int32_t tableLength = sizeof(scriptTable) / sizeof(int32_t);
   for (int32_t index = 0; index < tableLength; ++index) {
@@ -924,7 +924,7 @@ static const int32_t scriptComboTable[13][9] = {
  /* HNLT */  { CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL }
 };
 
-bool nsIDNService::illegalScriptCombo(int32_t script, int32_t& savedScript)
+bool nsIDNService::illegalScriptCombo(Script script, int32_t& savedScript)
 {
   if (savedScript == -1) {
     savedScript = findScriptIndex(script);

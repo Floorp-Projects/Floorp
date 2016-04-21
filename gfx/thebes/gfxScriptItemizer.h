@@ -58,30 +58,32 @@
 class gfxScriptItemizer
 {
 public:
+    typedef mozilla::unicode::Script Script;
+
     gfxScriptItemizer(const char16_t *src, uint32_t length);
 
     void SetText(const char16_t *src, uint32_t length);
 
     bool Next(uint32_t& aRunStart, uint32_t& aRunLimit,
-              int32_t& aRunScript);
+              Script& aRunScript);
 
 protected:
     void reset() {
         scriptStart = 0;
         scriptLimit = 0;
-        scriptCode  = MOZ_SCRIPT_INVALID;
+        scriptCode  = Script::INVALID;
         parenSP     = -1;
         pushCount   =  0;
         fixupCount  =  0;
     }
 
-    void push(uint32_t endPairChar, int32_t newScriptCode);
+    void push(uint32_t endPairChar, Script newScriptCode);
     void pop();
-    void fixup(int32_t newScriptCode);
+    void fixup(Script newScriptCode);
 
     struct ParenStackEntry {
         uint32_t endPairChar;
-        int32_t  scriptCode;
+        Script  scriptCode;
     };
 
     const char16_t *textPtr;
@@ -89,7 +91,7 @@ protected:
 
     uint32_t scriptStart;
     uint32_t scriptLimit;
-    int32_t  scriptCode;
+    Script  scriptCode;
 
     struct ParenStackEntry parenStack[PAREN_STACK_DEPTH];
     uint32_t parenSP;

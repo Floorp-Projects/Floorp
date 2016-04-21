@@ -97,6 +97,7 @@ private:
 class gfxFontEntry {
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
+    typedef mozilla::unicode::Script Script;
 
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
@@ -133,12 +134,12 @@ public:
 
     // whether a feature is supported by the font (limited to a small set
     // of features for which some form of fallback needs to be implemented)
-    bool SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag);
+    bool SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag);
     bool SupportsGraphiteFeature(uint32_t aFeatureTag);
 
     // returns a set containing all input glyph ids for a given feature
     const hb_set_t*
-    InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag);
+    InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag);
 
     virtual bool IsSymbolFont();
 
@@ -423,8 +424,8 @@ public:
 
     // bitvector of substitution space features per script, one each
     // for default and non-default features
-    uint32_t         mDefaultSubSpaceFeatures[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
-    uint32_t         mNonDefaultSubSpaceFeatures[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
+    uint32_t         mDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
+    uint32_t         mNonDefaultSubSpaceFeatures[(int(Script::NUM_SCRIPT_CODES) + 31) / 32];
 
     uint16_t         mWeight;
     int16_t          mStretch;
@@ -634,7 +635,7 @@ private:
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {
     GlobalFontMatch(const uint32_t aCharacter,
-                    int32_t aRunScript,
+                    mozilla::unicode::Script aRunScript,
                     const gfxFontStyle *aStyle) :
         mCh(aCharacter), mRunScript(aRunScript), mStyle(aStyle),
         mMatchRank(0), mCount(0), mCmapsTested(0)
@@ -643,7 +644,7 @@ struct GlobalFontMatch {
         }
 
     const uint32_t         mCh;          // codepoint to be matched
-    int32_t                mRunScript;   // Unicode script for the codepoint
+    mozilla::unicode::Script mRunScript;   // Unicode script for the codepoint
     const gfxFontStyle*    mStyle;       // style to match
     int32_t                mMatchRank;   // metric indicating closest match
     RefPtr<gfxFontEntry> mBestMatch;   // current best match

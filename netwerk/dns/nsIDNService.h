@@ -9,6 +9,7 @@
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
+#include "nsUnicodeScriptCodes.h"
 #include "nsWeakReference.h"
 
 #ifdef IDNA2008
@@ -147,7 +148,8 @@ private:
    * For the "Moderately restrictive" profile, Latin is also allowed
    *  with other scripts except Cyrillic and Greek
    */
-  bool illegalScriptCombo(int32_t script, int32_t& savedScript);
+  bool illegalScriptCombo(mozilla::unicode::Script script,
+                          int32_t& savedScript);
 
 #ifdef IDNA2008
   /**

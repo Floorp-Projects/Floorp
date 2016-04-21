@@ -7592,6 +7592,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   // want to allow this to split a ligature.
   bool allowSplitLigature;
 
+  typedef unicode::Script Script;
   switch (unicode::GetScriptCode(aFrag->CharAt(aOffset + i))) {
     default:
       allowSplitLigature = true;
@@ -7604,39 +7605,39 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
     // rule.
 
     // Indic
-    case MOZ_SCRIPT_BENGALI:
-    case MOZ_SCRIPT_DEVANAGARI:
-    case MOZ_SCRIPT_GUJARATI:
-    case MOZ_SCRIPT_GURMUKHI:
-    case MOZ_SCRIPT_KANNADA:
-    case MOZ_SCRIPT_MALAYALAM:
-    case MOZ_SCRIPT_ORIYA:
-    case MOZ_SCRIPT_TAMIL:
-    case MOZ_SCRIPT_TELUGU:
-    case MOZ_SCRIPT_SINHALA:
-    case MOZ_SCRIPT_BALINESE:
-    case MOZ_SCRIPT_LEPCHA:
-    case MOZ_SCRIPT_REJANG:
-    case MOZ_SCRIPT_SUNDANESE:
-    case MOZ_SCRIPT_JAVANESE:
-    case MOZ_SCRIPT_KAITHI:
-    case MOZ_SCRIPT_MEETEI_MAYEK:
-    case MOZ_SCRIPT_CHAKMA:
-    case MOZ_SCRIPT_SHARADA:
-    case MOZ_SCRIPT_TAKRI:
-    case MOZ_SCRIPT_KHMER:
+    case Script::BENGALI:
+    case Script::DEVANAGARI:
+    case Script::GUJARATI:
+    case Script::GURMUKHI:
+    case Script::KANNADA:
+    case Script::MALAYALAM:
+    case Script::ORIYA:
+    case Script::TAMIL:
+    case Script::TELUGU:
+    case Script::SINHALA:
+    case Script::BALINESE:
+    case Script::LEPCHA:
+    case Script::REJANG:
+    case Script::SUNDANESE:
+    case Script::JAVANESE:
+    case Script::KAITHI:
+    case Script::MEETEI_MAYEK:
+    case Script::CHAKMA:
+    case Script::SHARADA:
+    case Script::TAKRI:
+    case Script::KHMER:
 
     // Tibetan
-    case MOZ_SCRIPT_TIBETAN:
+    case Script::TIBETAN:
 
     // Myanmar
-    case MOZ_SCRIPT_MYANMAR:
+    case Script::MYANMAR:
 
     // Other SEAsian
-    case MOZ_SCRIPT_BUGINESE:
-    case MOZ_SCRIPT_NEW_TAI_LUE:
-    case MOZ_SCRIPT_CHAM:
-    case MOZ_SCRIPT_TAI_THAM:
+    case Script::BUGINESE:
+    case Script::NEW_TAI_LUE:
+    case Script::CHAM:
+    case Script::TAI_THAM:
 
     // What about Thai/Lao - any special handling needed?
     // Should we special-case Arabic lam-alef?
