@@ -3264,8 +3264,8 @@
             originalTab: this.selectedTab,  // Tab that we started on.
 
             tabbrowser: this,  // Reference to gBrowser.
-            loadTimer: null,   // TAB_SWITCH_TIMEOUT timer.
-            unloadTimer: null, // UNLOAD_DELAY timer.
+            loadTimer: null,   // TAB_SWITCH_TIMEOUT nsITimer instance.
+            unloadTimer: null, // UNLOAD_DELAY nsITimer instance.
 
             // Map from tabs to STATE_* (below).
             tabState: new Map(),
@@ -3292,6 +3292,24 @@
 
             // re-entrancy guard:
             _processing: false,
+
+            // Wraps nsITimer. Must not use the vanilla setTimeout and
+            // clearTimeout, because they will be blocked by nsIPromptService
+            // dialogs.
+            setTimer: function(callback, timeout) {
+              let event = {
+                notify: callback
+              };
+
+              var timer = Cc["@mozilla.org/timer;1"]
+                .createInstance(Components.interfaces.nsITimer);
+              timer.initWithCallback(event, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+              return timer;
+            },
+
+            clearTimer: function(timer) {
+              timer.cancel();
+            },
 
             getTabState: function(tab) {
               let state = this.tabState.get(tab);
@@ -3332,8 +3350,14 @@
             },
 
             destroy: function() {
-              clearTimeout(this.unloadTimer);
-              clearTimeout(this.loadTimer);
+              if (this.unloadTimer) {
+                this.clearTimer(this.unloadTimer);
+                this.unloadTimer = null;
+              }
+              if (this.loadTimer) {
+                this.clearTimer(this.loadTimer);
+                this.loadTimer = null;
+              }
 
               window.removeEventListener("MozAfterPaint", this);
               window.removeEventListener("MozLayerTreeReady", this);
@@ -3459,7 +3483,7 @@
               this.log("Loading tab " + this.tinfo(this.loadingTab));
 
               this.setTabState(this.requestedTab, this.STATE_LOADING);
-              this.loadTimer = setTimeout(() => this.onLoadTimeout(), this.TAB_SWITCH_TIMEOUT);
+              this.loadTimer = this.setTimer(() => this.onLoadTimeout(), this.TAB_SWITCH_TIMEOUT);
             },
 
             // This function runs before every event. It fixes up the state
@@ -3483,7 +3507,7 @@
               }
               if (this.loadingTab && !this.loadingTab.linkedBrowser) {
                 this.loadingTab = null;
-                clearTimeout(this.loadTimer);
+                this.clearTimer(this.loadTimer);
                 this.loadTimer = null;
               }
             },
@@ -3538,6 +3562,7 @@
             // Fires when we're ready to unload unused tabs.
             onUnloadTimeout: function() {
               this.logState("onUnloadTimeout");
+              this.unloadTimer = null;
               this.preActions();
 
               let numPending = 0;
@@ -3560,7 +3585,7 @@
 
               if (numPending) {
                 // Keep the timer going since there may be more tabs to unload.
-                this.unloadTimer = setTimeout(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
+                this.unloadTimer = this.setTimer(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
               }
 
               this.postActions();
@@ -3585,7 +3610,7 @@
               this.maybeFinishTabSwitch();
 
               if (this.loadingTab === tab) {
-                clearTimeout(this.loadTimer);
+                this.clearTimer(this.loadTimer);
                 this.loadTimer = null;
                 this.loadingTab = null;
               }
@@ -3653,15 +3678,17 @@
 
               this.preActions();
 
-              clearTimeout(this.unloadTimer);
-              this.unloadTimer = setTimeout(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
+              if (this.unloadTimer) {
+                this.clearTimer(this.unloadTimer);
+              }
+              this.unloadTimer = this.setTimer(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
 
               this.postActions();
             },
 
             handleEvent: function(event, delayed = false) {
               if (this._processing) {
-                setTimeout(() => this.handleEvent(event, true), 0);
+                this.setTimer(() => this.handleEvent(event, true), 0);
                 return;
               }
               if (delayed && this.tabbrowser._switcher != this) {
