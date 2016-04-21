@@ -405,20 +405,25 @@ def default_cxx_compilers(c_compiler):
 
 
 @template
-def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
+def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
+             other_c_compiler=None):
     '''Template handling the generic base checks for the compiler for the
     given `language` on the given platform (`host_or_target`).
     `host_or_target` is either `host` or `target` (the @depends functions
     from init.configure.
-    When the language in 'C++', `c_compiler` is the result of the `compiler`
+    When the language is 'C++', `c_compiler` is the result of the `compiler`
     template for the language 'C' for the same `host_or_target`.
     When `host_or_target` is `host`, `other_compiler` is the result of the
     `compiler` template for the same `language` for `target`.
+    When `host_or_target` is `host` and the language is 'C++',
+    `other_c_compiler` is the result of the `compiler` template for the
+    language 'C' for `target`.
     '''
     assert host_or_target in (host, target)
     assert language in ('C', 'C++')
     assert language == 'C' or c_compiler
     assert host_or_target == target or other_compiler
+    assert language == 'C' or host_or_target == target or other_c_compiler
 
     host_or_target_str = {
         host: 'host',
@@ -462,14 +467,19 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
             flags=cmd[len(without_flags):],
         )
 
-    # Derive the host C compiler from the target C compiler when no explicit
-    # compiler was given and we're not cross compiling.
-    if language == 'C' and host_or_target == host:
-        @depends(provided_compiler, other_compiler, cross_compiling)
-        def provided_compiler(value, other_compiler, cross_compiling):
+    # Derive the host compiler from the corresponding target compiler when no
+    # explicit compiler was given and we're not cross compiling. For the C++
+    # compiler, though, prefer to derive from the host C compiler when it
+    # doesn't match the target C compiler.
+    if host_or_target == host:
+        args = (c_compiler, other_c_compiler) if other_c_compiler else ()
+
+        @depends(provided_compiler, other_compiler, cross_compiling, *args)
+        def provided_compiler(value, other_compiler, cross_compiling, *args):
             if value:
                 return value
-            if not cross_compiling:
+            c_compiler, other_c_compiler = args if args else (None, None)
+            if not cross_compiling and c_compiler == other_c_compiler:
                 return other_compiler
 
     # Normally, we'd use `var` instead of `_var`, but the interaction with
@@ -607,4 +617,5 @@ c_compiler = compiler('C', target)
 cxx_compiler = compiler('C++', target, c_compiler=c_compiler)
 host_c_compiler = compiler('C', host, other_compiler=c_compiler)
 host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
-                             other_compiler=cxx_compiler)
+                             other_compiler=cxx_compiler,
+                             other_c_compiler=c_compiler)
