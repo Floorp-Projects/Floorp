@@ -1,0 +1,25 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" height="16" width="16">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#f0f0f0"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#e1e8ff"/>
+      <stop offset="1" stop-color="#b9c9ff"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#505050"/>
+      <stop offset="1" stop-color="#787878"/>
+    </linearGradient>
+    <linearGradient gradientTransform="translate(.078 -1.018) scale(1.07692)" gradientUnits="userSpaceOnUse" y2="2.767" x2="1.624" y1="14.154" x1="13.01" id="d" xlink:href="#a"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="12.503" x2="12.396" y1="3.285" x1="3.179" id="e" xlink:href="#b"/>
+    <linearGradient y2="12.503" x2="12.396" y1="3.285" x1="3.179" gradientUnits="userSpaceOnUse" id="f" xlink:href="#c"/>
+  </defs>
+  <rect ry="1" rx="1" y="1" x="1" height="14" width="14" fill="url(#d)"/>
+  <path d="M7 2h7v3H7zM2 2h4v12H2z" fill="url(#e)"/>
+  <path d="M7 6h7v8H7z" fill="url(#f)"/>
+</svg>

@@ -13,7 +13,6 @@
   --searcbox-no-match-border-color: #e52e2e;
   --magnifying-glass-image: url(images/magnifying-glass-light.png);
   --magnifying-glass-image-2x: url(images/magnifying-glass-light@2x.png);
-  --command-pick-image: url(images/command-pick.svg);
   --tool-options-image: url(images/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
   --icon-filter: invert(1);
@@ -21,6 +20,19 @@
   --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
   --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
+
+  /* Toolbox buttons */
+  --command-paintflashing-image: url(images/command-paintflashing.svg);
+  --command-screenshot-image: url(images/command-screenshot.svg);
+  --command-responsive-image: url(images/command-responsivemode.svg);
+  --command-scratchpad-image: url(images/command-scratchpad.svg);
+  --command-pick-image: url(images/command-pick.svg);
+  --command-frames-image: url(images/command-frames.svg);
+  --command-splitconsole-image: url(images/command-console.svg);
+  --command-noautohide-image: url(images/command-noautohide.svg);
+  --command-eyedropper-image: url(images/command-eyedropper.svg);
+  --command-rulers-image: url(images/command-rulers.svg);
+  --command-measure-image: url(images/command-measure.svg);
 }
 
 .theme-dark {
@@ -32,7 +44,6 @@
   --searcbox-no-match-border-color: #cc3d3d;
   --magnifying-glass-image: url(images/magnifying-glass.png);
   --magnifying-glass-image-2x: url(images/magnifying-glass@2x.png);
-  --command-pick-image: url(images/command-pick.svg);
   --tool-options-image: url(images/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/close.svg);
   --icon-filter: none;
@@ -40,19 +51,44 @@
   --dock-side-image: url(chrome://devtools/skin/images/dock-side.svg);
   --dock-undock-image: url(chrome://devtools/skin/images/dock-undock.svg);
   --toolbar-button-border-color: rgba(0, 0, 0, .4);
+
+  /* Toolbox buttons */
+  --command-paintflashing-image: url(images/command-paintflashing.svg);
+  --command-screenshot-image: url(images/command-screenshot.svg);
+  --command-responsive-image: url(images/command-responsivemode.svg);
+  --command-scratchpad-image: url(images/command-scratchpad.svg);
+  --command-pick-image: url(images/command-pick.svg);
+  --command-frames-image: url(images/command-frames.svg);
+  --command-splitconsole-image: url(images/command-console.svg);
+  --command-noautohide-image: url(images/command-noautohide.svg);
+  --command-eyedropper-image: url(images/command-eyedropper.svg);
+  --command-rulers-image: url(images/command-rulers.svg);
+  --command-measure-image: url(images/command-measure.svg);
 }
 
 .theme-firebug {
   --magnifying-glass-image: url(images/firebug/filter.svg);
   --magnifying-glass-image-2x: url(images/firebug/filter.svg);
-  --command-pick-image: url(images/firebug/command-pick.svg);
   --tool-options-image: url(images/firebug/tool-options.svg);
   --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
-  --icon-filter: none;
+  --icon-filter: invert(1);
   --dock-bottom-image: url(chrome://devtools/skin/images/firebug/dock-bottom.svg);
   --dock-side-image: url(chrome://devtools/skin/images/firebug/dock-side.svg);
   --dock-undock-image: url(chrome://devtools/skin/images/firebug/dock-undock.svg);
   --toolbar-button-border-color: rgba(170, 170, 170, .5);
+
+  /* Toolbox buttons */
+  --command-paintflashing-image: url(images/firebug/command-paintflashing.svg);
+  --command-screenshot-image: url(images/firebug/command-screenshot.svg);
+  --command-responsive-image: url(images/firebug/command-responsivemode.svg);
+  --command-scratchpad-image: url(images/firebug/command-scratchpad.svg);
+  --command-pick-image: url(images/firebug/command-pick.svg);
+  --command-frames-image: url(images/firebug/command-frames.svg);
+  --command-splitconsole-image: url(images/firebug/command-console.svg);
+  --command-noautohide-image: url(images/firebug/command-noautohide.svg);
+  --command-eyedropper-image: url(images/firebug/command-eyedropper.svg);
+  --command-rulers-image: url(images/firebug/command-rulers.svg);
+  --command-measure-image: url(images/firebug/command-measure.svg);
 }
 
 
@@ -760,24 +796,22 @@
   filter: url(images/filters.svg#checked-icon-state) !important;
 }
 
+/* Toolbox buttons images */
+
 #command-button-paintflashing > image {
-  background-image: url("chrome://devtools/skin/images/command-paintflashing.svg");
+  background-image: var(--command-paintflashing-image);
 }
 
 #command-button-screenshot > image {
-  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
+  background-image: var(--command-screenshot-image);
 }
 
 #command-button-responsive > image {
-  background-image: url("chrome://devtools/skin/images/command-responsivemode.svg");
-}
-
-#command-button-tilt > image {
-  background-image: url("chrome://devtools/skin/images/command-tilt.svg");
+  background-image: var(--command-responsive-image);
 }
 
 #command-button-scratchpad > image {
-  background-image: url("chrome://devtools/skin/images/command-scratchpad.svg");
+  background-image: var(--command-scratchpad-image);
 }
 
 #command-button-pick > image {
@@ -785,27 +819,27 @@
 }
 
 #command-button-frames > image {
-  background-image: url("chrome://devtools/skin/images/command-frames.svg");
+  background-image: var(--command-frames-image);
 }
 
 #command-button-splitconsole > image {
-  background-image: url("chrome://devtools/skin/images/command-console.svg");
+  background-image: var(--command-splitconsole-image);
 }
 
 #command-button-noautohide > image {
-  background-image: url("chrome://devtools/skin/images/command-noautohide.svg");
+  background-image: var(--command-noautohide-image);
 }
 
 #command-button-eyedropper > image {
-  background-image: url("chrome://devtools/skin/images/command-eyedropper.svg");
+  background-image: var(--command-eyedropper-image);
 }
 
 #command-button-rulers > image {
-  background-image: url("chrome://devtools/skin/images/command-rulers.svg");
+  background-image: var(--command-rulers-image);
 }
 
 #command-button-measure > image {
-  background-image: url("chrome://devtools/skin/images/command-measure.svg");
+  background-image: var(--command-measure-image);
 }
 
 /* Tabs */
