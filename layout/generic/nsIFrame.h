@@ -2922,7 +2922,7 @@ public:
 
   // For nsSprocketLayout
   virtual Valignment GetXULVAlign() const = 0;
-  virtual Halignment GetHAlign() const = 0;
+  virtual Halignment GetXULHAlign() const = 0;
 
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }

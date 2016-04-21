@@ -114,7 +114,7 @@ HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState, nscoord& aX, nsco
   }
 
   // Get our pack/alignment information.
-  nsIFrame::Halignment halign = aBox->GetHAlign();
+  nsIFrame::Halignment halign = aBox->GetXULHAlign();
   nsIFrame::Valignment valign = aBox->GetXULVAlign();
 
   // The following code handles box PACKING.  Packing comes into play in the case where the computed size for 
@@ -942,7 +942,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
     }
   } else {
     isLTR = GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR;
-    halign = aBox->GetHAlign();
+    halign = aBox->GetXULHAlign();
   }
 
   nsIFrame* child = nsBox::GetChildXULBox(aBox);
