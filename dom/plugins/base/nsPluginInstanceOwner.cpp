@@ -3280,14 +3280,10 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
 
 void* nsPluginInstanceOwner::GetPluginPort()
 {
-//!!! Port must be released for windowless plugins on Windows, because it is HDC !!!
-
   void* result = nullptr;
   if (mWidget) {
 #ifdef XP_WIN
-    if (mPluginWindow && (mPluginWindow->type == NPWindowTypeDrawable))
-      result = mWidget->GetNativeData(NS_NATIVE_GRAPHIC); // HDC
-    else
+    if (!mPluginWindow || mPluginWindow->type == NPWindowTypeWindow)
 #endif
       result = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT); // HWND/gdk window
   }
@@ -3297,12 +3293,6 @@ void* nsPluginInstanceOwner::GetPluginPort()
 
 void nsPluginInstanceOwner::ReleasePluginPort(void * pluginPort)
 {
-#ifdef XP_WIN
-  if (mWidget && mPluginWindow &&
-      mPluginWindow->type == NPWindowTypeDrawable) {
-    mWidget->FreeNativeData((HDC)pluginPort, NS_NATIVE_GRAPHIC);
-  }
-#endif
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
