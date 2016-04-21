@@ -424,6 +424,7 @@ public:
   template<typename T=void>
   using PropertyDescriptor = const mozilla::FramePropertyDescriptor<T>*;
   using Visibility = mozilla::Visibility;
+  using VisibilityCounter = mozilla::VisibilityCounter;
 
   typedef mozilla::FrameProperties FrameProperties;
   typedef mozilla::layers::Layer Layer;
@@ -1102,6 +1103,15 @@ public:
   /// for the possible return values and their meanings.
   Visibility GetVisibility() const;
 
+  /// @return true if this frame is either in the displayport now or may
+  /// become visible soon.
+  bool IsVisibleOrMayBecomeVisibleSoon() const
+  {
+    Visibility visibility = GetVisibility();
+    return visibility == Visibility::MAY_BECOME_VISIBLE ||
+           visibility == Visibility::IN_DISPLAYPORT;
+  }
+
   /// Update the visibility state of this frame synchronously.
   /// XXX(seth): Avoid using this method; we should be relying on the refresh
   /// driver for visibility updates. This method, which replaces
@@ -1110,11 +1120,17 @@ public:
   /// the old image visibility code.
   void UpdateVisibilitySynchronously();
 
-  // A frame property which stores the visibility state of this frame. Right
-  // now that consists of an approximate visibility counter represented as a
-  // uint32_t. When the visibility of this frame is not being tracked, this
-  // property is absent.
-  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(VisibilityStateProperty, uint32_t);
+  struct VisibilityState
+  {
+    unsigned int mApproximateCounter : 16;
+    unsigned int mInDisplayPortCounter : 16;
+  };
+
+  // A frame property which stores the visibility state of this frame, which
+  // consists of a VisibilityState value that stores counters for each type of
+  // visibility we track. When the visibility of this frame is not being
+  // tracked, this property is absent.
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(VisibilityStateProperty, VisibilityState);
 
 protected:
 
@@ -1159,12 +1175,19 @@ public:
   ///////////////////////////////////////////////////////////////////////////////
 
   /**
-   * We track the approximate visibility of frames using a counter; if it's
-   * non-zero, then the frame is considered visible. Using a counter allows us
-   * to account for situations where the frame may be visible in more than one
-   * place (for example, via -moz-element), and it simplifies the
+   * We track the visibility of frames using counters; if any of the counters
+   * are non-zero, then the frame is considered visible. Using counters allows
+   * us to account for situations where the frame may be visible in more than
+   * one place (for example, via -moz-element), and it simplifies the
    * implementation of our approximate visibility tracking algorithms.
    *
+   * There are two visibility counters for each frame: the approximate counter
+   * (which is based on our heuristics for which frames may become visible
+   * "soon"), and the in-displayport counter (which records if the frame was
+   * within the displayport at the last paint).
+   *
+   *
+   * @param aCounter          Which counter to increment or decrement.
    * @param aNonvisibleAction A requested action if the frame has become
    *                          nonvisible. If Nothing(), no action is
    *                          requested. If DISCARD_IMAGES is specified, the
@@ -1172,8 +1195,9 @@ public:
    *                          associated with to discard their surfaces if
    *                          possible.
    */
-  void DecApproximateVisibleCount(Maybe<OnNonvisible> aNonvisibleAction = Nothing());
-  void IncApproximateVisibleCount();
+  void DecVisibilityCount(VisibilityCounter aCounter,
+                          Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  void IncVisibilityCount(VisibilityCounter aCounter);
 
 
   /**
