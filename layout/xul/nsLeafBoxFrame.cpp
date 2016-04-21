@@ -259,7 +259,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
      prefSize = GetXULPrefSize(state);
      nsSize minSize = GetXULMinSize(state);
-     nsSize maxSize = GetMaxSize(state);
+     nsSize maxSize = GetXULMaxSize(state);
      prefSize = BoundsCheck(minSize, prefSize, maxSize);
   }
 
@@ -359,9 +359,9 @@ nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 /* virtual */ nsSize
-nsLeafBoxFrame::GetMaxSize(nsBoxLayoutState& aState)
+nsLeafBoxFrame::GetXULMaxSize(nsBoxLayoutState& aState)
 {
-    return nsBox::GetMaxSize(aState);
+    return nsBox::GetXULMaxSize(aState);
 }
 
 /* virtual */ nscoord

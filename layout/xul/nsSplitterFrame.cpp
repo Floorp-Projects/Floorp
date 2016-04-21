@@ -670,7 +670,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     if (atom != nsGkAtoms::splitter) { 
         nsSize prefSize = childBox->GetXULPrefSize(state);
         nsSize minSize = childBox->GetXULMinSize(state);
-        nsSize maxSize = nsBox::BoundsCheckMinMax(minSize, childBox->GetMaxSize(state));
+        nsSize maxSize = nsBox::BoundsCheckMinMax(minSize, childBox->GetXULMaxSize(state));
         prefSize = nsBox::BoundsCheck(minSize, prefSize, maxSize);
 
         mOuter->AddMargin(childBox, minSize);

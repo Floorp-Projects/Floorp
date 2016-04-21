@@ -73,9 +73,9 @@ nsListBoxLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState
 }
 
 nsSize
-nsListBoxLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsListBoxLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  nsSize maxSize = nsGridRowGroupLayout::GetMaxSize(aBox, aBoxLayoutState);
+  nsSize maxSize = nsGridRowGroupLayout::GetXULMaxSize(aBox, aBoxLayoutState);
 
   nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {

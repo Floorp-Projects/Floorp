@@ -8764,7 +8764,7 @@ nsFrame::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsFrame::GetMaxSize(nsBoxLayoutState& aState)
+nsFrame::GetXULMaxSize(nsBoxLayoutState& aState)
 {
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);
@@ -8778,7 +8778,7 @@ nsFrame::GetMaxSize(nsBoxLayoutState& aState)
   if (IsCollapsed())
     return size;
 
-  size = nsBox::GetMaxSize(aState);
+  size = nsBox::GetXULMaxSize(aState);
   metrics->mMaxSize = size;
 
   return size;
