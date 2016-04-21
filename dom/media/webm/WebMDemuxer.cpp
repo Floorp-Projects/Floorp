@@ -510,8 +510,9 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     return false;
   }
   int64_t tstamp = holder->Timestamp();
+  int64_t duration = holder->Duration();
 
-  // The end time of this frame is the start time of the next frame.  Fetch
+  // The end time of this frame is the start time of the next frame. Fetch
   // the timestamp of the next packet for this track.  If we've reached the
   // end of the resource, use the file's duration as the end time of this
   // video frame.
@@ -521,6 +522,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     if (next_holder) {
       next_tstamp = next_holder->Timestamp();
       PushAudioPacket(next_holder);
+    } else if (duration >= 0) {
+      next_tstamp = tstamp + duration;
     } else if (!mIsMediaSource ||
                (mIsMediaSource && mLastAudioFrameTime.isSome())) {
       next_tstamp = tstamp;
@@ -534,6 +537,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     if (next_holder) {
       next_tstamp = next_holder->Timestamp();
       PushVideoPacket(next_holder);
+    } else if (duration >= 0) {
+      next_tstamp = tstamp + duration;
     } else if (!mIsMediaSource ||
                (mIsMediaSource && mLastVideoFrameTime.isSome())) {
       next_tstamp = tstamp;
