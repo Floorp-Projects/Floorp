@@ -712,7 +712,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         } 
     }
     
-    childBox = nsBox::GetNextBox(childBox);
+    childBox = nsBox::GetNextXULBox(childBox);
     count++;
   }
 
@@ -903,7 +903,7 @@ static nsIFrame* GetChildBoxForContent(nsIFrame* aParentBox, nsIContent* aConten
     if (childBox->GetContent() == aContent) {
       return childBox;
     }
-    childBox = nsBox::GetNextBox(childBox);
+    childBox = nsBox::GetNextXULBox(childBox);
   }
   return nullptr;
 }
@@ -922,7 +922,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   while(child)
   {
     SetPreferredSize(state, child, onePixel, aIsHorizontal, nullptr);
-    child = nsBox::GetNextBox(child);
+    child = nsBox::GetNextXULBox(child);
   }
 
   // now set our changed widths.

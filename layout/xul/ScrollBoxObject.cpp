@@ -152,7 +152,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
           break;
         }
       }
-      child = nsBox::GetNextBox(child);
+      child = nsBox::GetNextXULBox(child);
       curIndex++;
     }
 
@@ -163,7 +163,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
 
     if (dindexes > 0) {
       while(child) {
-        child = nsBox::GetNextBox(child);
+        child = nsBox::GetNextXULBox(child);
         if (child) {
           rect = child->GetRect();
         }
@@ -182,7 +182,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
         }
 
         count++;
-        child = nsBox::GetNextBox(child);
+        child = nsBox::GetNextXULBox(child);
 
       }
    }

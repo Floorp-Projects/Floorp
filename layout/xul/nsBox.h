@@ -78,7 +78,7 @@ rollbox.
   static nscoord BoundsCheck(nscoord aMinSize, nscoord aPrefSize, nscoord aMaxSize);
 
   static nsIFrame* GetChildXULBox(const nsIFrame* aFrame);
-  static nsIFrame* GetNextBox(const nsIFrame* aFrame);
+  static nsIFrame* GetNextXULBox(const nsIFrame* aFrame);
   static nsIFrame* GetParentBox(const nsIFrame* aFrame);
 
 protected:
