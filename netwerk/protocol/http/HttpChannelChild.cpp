@@ -1779,9 +1779,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // Set user agent override from docshell
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
-  // Set user agent override from loadgroup
-  HttpBaseChannel::SetLoadGroupUserAgentOverride();
-
   MOZ_ASSERT_IF(mPostRedirectChannelShouldUpgrade,
                 mPostRedirectChannelShouldIntercept);
   bool shouldUpgrade = mPostRedirectChannelShouldUpgrade;
@@ -1947,10 +1944,10 @@ HttpChannelChild::ContinueAsyncOpen()
   nsresult rv = mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  EnsureSchedulingContextID();
-  char scid[NSID_LENGTH];
-  mSchedulingContextID.ToProvidedString(scid);
-  openArgs.schedulingContextID().AssignASCII(scid);
+  EnsureRequestContextID();
+  char rcid[NSID_LENGTH];
+  mRequestContextID.ToProvidedString(rcid);
+  openArgs.requestContextID().AssignASCII(rcid);
 
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.

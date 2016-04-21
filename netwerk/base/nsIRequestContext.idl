@@ -17,18 +17,18 @@ class SpdyPushCache;
 [ptr] native SpdyPushCachePtr(mozilla::net::SpdyPushCache);
 
 /**
- * The nsISchedulingContext is used to maintain state about connections
+ * The nsIRequestContext is used to maintain state about connections
  * that are in some way associated with each other (often by being part
  * of the same load group) and how they interact with blocking items like
  * HEAD css/js loads.
  *
- * This used to be known as nsILoadGroupConnectionInfo.
+ * This used to be known as nsILoadGroupConnectionInfo and nsISchedulingContext.
  */
 [scriptable, uuid(658e3e6e-8633-4b1a-8d66-fa9f72293e63)]
-interface nsISchedulingContext : nsISupports
+interface nsIRequestContext : nsISupports
 {
   /**
-   * A unique identifier for this scheduling context
+   * A unique identifier for this request context
    */
   [noscript] readonly attribute nsID ID;
 
@@ -52,39 +52,44 @@ interface nsISchedulingContext : nsISupports
 
   /**
    * This gives out a weak pointer to the push cache.
-   * The nsISchedulingContext implementation owns the cache
+   * The nsIRequestContext implementation owns the cache
    * and will destroy it when overwritten or when the context
    * ends.
    */
   [noscript] attribute SpdyPushCachePtr spdyPushCache;
+
+  /**
+   * This holds a cached value of the user agent override.
+   */
+  [noscript] attribute ACString userAgentOverride;
 };
 
 /**
- * The nsISchedulingContextService is how anyone gets access to a scheduling
+ * The nsIRequestContextService is how anyone gets access to a request
  * context when they haven't been explicitly given a strong reference to an
  * existing one. It is responsible for creating and handing out strong
- * references to nsISchedulingContexts, but only keeps weak references itself.
- * The shared scheduling context will go away once no one else is keeping a
- * reference to it. If you ask for a scheduling context that has no one else
- * holding a reference to it, you'll get a brand new scheduling context. Anyone
- * who asks for the same scheduling context while you're holding a reference
- * will get a reference to the same scheduling context you have.
+ * references to nsIRequestContexts, but only keeps weak references itself.
+ * The shared request context will go away once no one else is keeping a
+ * reference to it. If you ask for a request context that has no one else
+ * holding a reference to it, you'll get a brand new request context. Anyone
+ * who asks for the same request context while you're holding a reference
+ * will get a reference to the same request context you have.
  */
 [uuid(7fcbf4da-d828-4acc-b144-e5435198f727)]
-interface nsISchedulingContextService : nsISupports
+interface nsIRequestContextService : nsISupports
 {
   /**
-   * Get an existing scheduling context from its ID
+   * Get an existing request context from its ID
    */
-  nsISchedulingContext getSchedulingContext(in nsIDRef id);
+  nsIRequestContext getRequestContext(in nsIDRef id);
 
   /**
-   * Create a new scheduling context identifier
+   * Create a new request context identifier
    */
-  nsID newSchedulingContextID();
+  nsID newRequestContextID();
 
   /**
-   * Remove an existing scheduling context from its ID
+   * Remove an existing request context from its ID
    */
-  void removeSchedulingContext(in nsIDRef id);
+  void removeRequestContext(in nsIDRef id);
 };
