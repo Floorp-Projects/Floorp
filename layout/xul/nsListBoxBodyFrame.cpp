@@ -1130,7 +1130,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame) {
-    return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
+    return mTopFrame->IsXULBoxFrame() ? mTopFrame : nullptr;
   }
 
   // top frame was cleared out
@@ -1138,7 +1138,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
   mBottomFrame = mTopFrame;
 
   if (mTopFrame && mRowsToPrepend <= 0) {
-    return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
+    return mTopFrame->IsXULBoxFrame() ? mTopFrame : nullptr;
   }
 
   // At this point, we either have no frames at all, 
@@ -1168,7 +1168,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
       return GetFirstItemBox(++aOffset, aCreated);
     }
     if (existingFrame) {
-      return existingFrame->IsBoxFrame() ? existingFrame : nullptr;
+      return existingFrame->IsXULBoxFrame() ? existingFrame : nullptr;
     }
 
     // Either append the new frame, or prepend it (at index 0)
@@ -1187,7 +1187,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
 
       mBottomFrame = mTopFrame;
 
-      return mTopFrame->IsBoxFrame() ? mTopFrame : nullptr;
+      return mTopFrame->IsXULBoxFrame() ? mTopFrame : nullptr;
     } else
       return GetFirstItemBox(++aOffset, 0);
   }
@@ -1252,10 +1252,10 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
 
   mBottomFrame = result;
 
-  NS_ASSERTION(!result->IsBoxFrame() || result->GetParent() == this,
+  NS_ASSERTION(!result->IsXULBoxFrame() || result->GetParent() == this,
                "returning frame that is not in childlist");
 
-  return result->IsBoxFrame() ? result : nullptr;
+  return result->IsXULBoxFrame() ? result : nullptr;
 }
 
 bool

@@ -169,7 +169,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
 
   // As an optimization, we cache the fact that we are not positioned to avoid
   // wasting time fetching attributes.
-  if (aChild->IsBoxFrame() &&
+  if (aChild->IsXULBoxFrame() &&
       (aChild->GetStateBits() & NS_STATE_STACK_NOT_POSITIONED))
     return 0;
 
@@ -241,7 +241,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
     }
   }
 
-  if (!offsetSpecified && aChild->IsBoxFrame()) {
+  if (!offsetSpecified && aChild->IsXULBoxFrame()) {
     // If no offset was specified at all, then we cache this fact to avoid requerying
     // CSS or the content model.
     aChild->AddStateBits(NS_STATE_STACK_NOT_POSITIONED);
