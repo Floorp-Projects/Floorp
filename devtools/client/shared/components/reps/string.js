@@ -96,9 +96,6 @@ define(function(require, exports, module) {
   exports.StringRep = {
     rep: StringRep,
     supportsObject: supportsObject,
+    isCropped: isCropped
   };
-
-  exports.isCropped = isCropped;
-  exports.cropString = cropString;
-  exports.cropMultipleLines = cropMultipleLines;
 });
