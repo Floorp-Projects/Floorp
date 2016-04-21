@@ -24,6 +24,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
+import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -53,6 +54,7 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
 
     private WeakReference<Activity> activityReference;
     private boolean isEnabled;
+    private boolean isInForeground;
     private int minimumVisits;
     private int lastVisitMinimumAgeMs;
     private int lastVisitMaximumAgeMs;
@@ -60,6 +62,7 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
         activityReference = new WeakReference<Activity>(browserApp);
+        isInForeground = true;
 
         initializeExperiment(browserApp);
     }
@@ -72,6 +75,16 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
     @Override
     public void onPause(BrowserApp browserApp) {
         Tabs.unregisterOnTabsChangedListener(this);
+    }
+
+    @Override
+    public void onTabsTrayShown(BrowserApp browserApp, TabsPanel tabsPanel) {
+        isInForeground = false;
+    }
+
+    @Override
+    public void onTabsTrayHidden(BrowserApp browserApp, TabsPanel tabsPanel) {
+        isInForeground = true;
     }
 
     private void initializeExperiment(Context context) {
@@ -117,14 +130,22 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
             return;
         }
 
-        if (Tabs.TabEvents.LOADED == msg) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    maybeShowPromotionForUrl(tab.getURL(), tab.getTitle());
-                }
-            });
+        if (Tabs.TabEvents.LOADED != msg) {
+            return;
         }
+
+        if (!isInForeground) {
+            // We only want to show this prompt if this tab is in the foreground and not on top
+            // of the tabs tray.
+            return;
+        }
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                maybeShowPromotionForUrl(tab.getURL(), tab.getTitle());
+            }
+        });
     }
 
     private void maybeShowPromotionForUrl(String url, String title) {
