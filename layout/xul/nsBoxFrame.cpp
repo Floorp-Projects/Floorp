@@ -764,7 +764,7 @@ nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIFrame::AddCSSPrefSize(this, size, widthSet, heightSet))
+  if (!nsIFrame::AddXULPrefSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetXULPrefSize(this, aBoxLayoutState);
@@ -827,7 +827,7 @@ nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIFrame::AddCSSMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
+  if (!nsIFrame::AddXULMinSize(aBoxLayoutState, this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetXULMinSize(this, aBoxLayoutState);
@@ -867,7 +867,7 @@ nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
 
   // if the size was not completely redefined in CSS then ask our children
   bool widthSet, heightSet;
-  if (!nsIFrame::AddCSSMaxSize(this, size, widthSet, heightSet))
+  if (!nsIFrame::AddXULMaxSize(this, size, widthSet, heightSet))
   {
     if (mLayoutManager) {
       nsSize layoutSize = mLayoutManager->GetXULMaxSize(this, aBoxLayoutState);
@@ -1781,10 +1781,10 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     nscoord flexCSS = NS_INTRINSICSIZE;
 
                     bool widthSet, heightSet;
-                    nsIFrame::AddCSSPrefSize(child, prefSizeCSS, widthSet, heightSet);
-                    nsIFrame::AddCSSMinSize (state, child, minSizeCSS, widthSet, heightSet);
-                    nsIFrame::AddCSSMaxSize (child, maxSizeCSS, widthSet, heightSet);
-                    nsIFrame::AddCSSFlex    (child, flexCSS);
+                    nsIFrame::AddXULPrefSize(child, prefSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddXULMinSize (state, child, minSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddXULMaxSize (child, maxSizeCSS, widthSet, heightSet);
+                    nsIFrame::AddXULFlex    (child, flexCSS);
 
                     nsSize prefSize = child->GetXULPrefSize(state);
                     nsSize minSize = child->GetXULMinSize(state);
