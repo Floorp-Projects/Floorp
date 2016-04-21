@@ -560,7 +560,7 @@ nsImageBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState)
   nsSize intrinsicSize = size;
 
   nsMargin borderPadding(0,0,0,0);
-  GetBorderAndPadding(borderPadding);
+  GetXULBorderAndPadding(borderPadding);
   size.width += borderPadding.LeftRight();
   size.height += borderPadding.TopBottom();
 

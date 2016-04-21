@@ -25,7 +25,7 @@ public:
   explicit nsGroupBoxFrame(nsStyleContext* aContext):
     nsBoxFrame(aContext) {}
 
-  virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding) override;
+  virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -284,7 +284,7 @@ nsGroupBoxFrame::GetCaptionBox(nsRect& aCaptionRect)
 }
 
 nsresult
-nsGroupBoxFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
+nsGroupBoxFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   aBorderAndPadding.SizeTo(0,0,0,0);
   return NS_OK;

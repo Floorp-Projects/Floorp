@@ -595,7 +595,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
     // See if one of our children forced us to get bigger
     nsRect tmpClientRect(originalClientRect);
     nsMargin bp(0,0,0,0);
-    aBox->GetBorderAndPadding(bp);
+    aBox->GetXULBorderAndPadding(bp);
     tmpClientRect.Inflate(bp);
 
     if (tmpClientRect.width > originalSize.width || tmpClientRect.height > originalSize.height)
@@ -1533,7 +1533,7 @@ nsSprocketLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aState)
    }
 
    nsMargin borderPadding;
-   aBox->GetBorderAndPadding(borderPadding);
+   aBox->GetXULBorderAndPadding(borderPadding);
 
    return vAscent + borderPadding.top;
 }

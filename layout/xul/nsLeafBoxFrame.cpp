@@ -136,9 +136,9 @@ nsLeafBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   // GetXULMinSize returns border-box size, and we want to return content
   // inline-size.  Since Reflow uses the reflow state's border and padding, we
   // actually just want to subtract what GetXULMinSize added, which is the
-  // result of GetBorderAndPadding.
+  // result of GetXULBorderAndPadding.
   nsMargin bp;
-  GetBorderAndPadding(bp);
+  GetXULBorderAndPadding(bp);
 
   result = minSize.ISize(wm) - LogicalMargin(wm, bp).IStartEnd(wm);
 
@@ -158,9 +158,9 @@ nsLeafBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   // GetXULPrefSize returns border-box size, and we want to return content
   // inline-size.  Since Reflow uses the reflow state's border and padding, we
   // actually just want to subtract what GetXULPrefSize added, which is the
-  // result of GetBorderAndPadding.
+  // result of GetXULBorderAndPadding.
   nsMargin bp;
-  GetBorderAndPadding(bp);
+  GetXULBorderAndPadding(bp);
 
   result = prefSize.ISize(wm) - LogicalMargin(wm, bp).IStartEnd(wm);
 
@@ -245,7 +245,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   nsMargin m;
   m = aReflowState.ComputedPhysicalBorderPadding();
 
-  //GetBorderAndPadding(m);
+  //GetXULBorderAndPadding(m);
 
   // this happens sometimes. So lets handle it gracefully.
   if (aReflowState.ComputedHeight() == 0) {

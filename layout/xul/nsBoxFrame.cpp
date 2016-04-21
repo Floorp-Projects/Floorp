@@ -595,9 +595,9 @@ nsBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   // GetXULMinSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
   // actually just want to subtract what GetXULMinSize added, which is the
-  // result of GetBorderAndPadding.
+  // result of GetXULBorderAndPadding.
   nsMargin bp;
-  GetBorderAndPadding(bp);
+  GetXULBorderAndPadding(bp);
 
   result = minSize.width - bp.LeftRight();
   result = std::max(result, 0);
@@ -617,9 +617,9 @@ nsBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   // GetXULPrefSize returns border-box width, and we want to return content
   // width.  Since Reflow uses the reflow state's border and padding, we
   // actually just want to subtract what GetXULPrefSize added, which is the
-  // result of GetBorderAndPadding.
+  // result of GetXULBorderAndPadding.
   nsMargin bp;
-  GetBorderAndPadding(bp);
+  GetXULBorderAndPadding(bp);
 
   result = prefSize.width - bp.LeftRight();
   result = std::max(result, 0);
@@ -667,7 +667,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                            aReflowState.ComputedBSize());
 
   LogicalMargin m = aReflowState.ComputedLogicalBorderPadding();
-  // GetBorderAndPadding(m);
+  // GetXULBorderAndPadding(m);
 
   LogicalSize prefSize(wm);
 
@@ -1723,7 +1723,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
     nsRect insideBorder(aBox->mRect);
     insideBorder.MoveTo(0,0):
     nsMargin border(0,0,0,0);
-    aBox->GetBorderAndPadding(border);
+    aBox->GetXULBorderAndPadding(border);
     insideBorder.Deflate(border);
 
     bool isHorizontal = IsHorizontal();
