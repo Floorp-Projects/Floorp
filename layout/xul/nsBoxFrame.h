@@ -59,7 +59,7 @@ public:
   virtual void SetXULLayoutManager(nsBoxLayout* aLayout) override { mLayoutManager = aLayout; }
   virtual nsBoxLayout* GetXULLayoutManager() override { return mLayoutManager; }
 
-  virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
+  virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;

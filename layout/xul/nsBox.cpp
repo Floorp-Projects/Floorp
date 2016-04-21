@@ -202,7 +202,7 @@ nsBox::Shutdown()
 }
 
 nsresult
-nsBox::RelayoutChildAtOrdinal(nsIFrame* aChild)
+nsBox::XULRelayoutChildAtOrdinal(nsIFrame* aChild)
 {
   return NS_OK;
 }

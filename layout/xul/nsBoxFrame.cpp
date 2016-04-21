@@ -1232,11 +1232,11 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
     // Also don't bother with popup frames since they are kept on the 
-    // kPopupList and RelayoutChildAtOrdinal() only handles
+    // kPopupList and XULRelayoutChildAtOrdinal() only handles
     // principal children.
     if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
         StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
-      parent->RelayoutChildAtOrdinal(this);
+      parent->XULRelayoutChildAtOrdinal(this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
         FrameNeedsReflow(parent, nsIPresShell::eStyleChange,
@@ -1936,7 +1936,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect
 }
 
 nsresult
-nsBoxFrame::RelayoutChildAtOrdinal(nsIFrame* aChild)
+nsBoxFrame::XULRelayoutChildAtOrdinal(nsIFrame* aChild)
 {
   if (!SupportsOrdinalsInChildren())
     return NS_OK;
