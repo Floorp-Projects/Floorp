@@ -190,7 +190,7 @@ nsSprocketLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aState)
 
   // -- make sure we remove our border and padding  ----
   nsRect clientRect;
-  aBox->GetClientRect(clientRect);
+  aBox->GetXULClientRect(clientRect);
 
   // |originalClientRect| represents the rect of the entire box (excluding borders
   // and padding).  We store it here because we're going to use |clientRect| to hold
@@ -924,7 +924,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   GetFrameState(aBox, frameState);
   bool isHorizontal = (frameState & NS_STATE_IS_HORIZONTAL) != 0;
   nsRect clientRect;
-  aBox->GetClientRect(clientRect);
+  aBox->GetXULClientRect(clientRect);
 
   NS_PRECONDITION(!(frameState & NS_STATE_AUTO_STRETCH),
                   "Only AlignChildren() with non-stretch alignment");
