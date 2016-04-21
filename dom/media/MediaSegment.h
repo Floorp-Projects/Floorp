@@ -416,7 +416,7 @@ protected:
                            StreamTime aStart, StreamTime aEnd)
   {
     MOZ_ASSERT(aStart <= aEnd, "Endpoints inverted");
-    NS_WARN_IF_FALSE(aStart >= 0 && aEnd <= aSource.mDuration, "Slice out of range");
+    NS_ASSERTION(aStart >= 0 && aEnd <= aSource.mDuration, "Slice out of range");
     mDuration += aEnd - aStart;
     StreamTime offset = 0;
     for (uint32_t i = 0; i < aSource.mChunks.Length() && offset < aEnd; ++i) {
