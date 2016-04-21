@@ -35,7 +35,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-public class PromptInput {
+public abstract class PromptInput {
     protected final String mLabel;
     protected final String mType;
     protected final String mId;
@@ -47,7 +47,7 @@ public class PromptInput {
     public static final String LOGTAG = "GeckoPromptInput";
 
     public interface OnChangeListener {
-        public void onChange(PromptInput input);
+        void onChange(PromptInput input);
     }
 
     public void setListener(OnChangeListener listener) {
@@ -372,9 +372,7 @@ public class PromptInput {
         return null;
     }
 
-    public View getView(Context context) throws UnsupportedOperationException {
-        return null;
-    }
+    public abstract View getView(Context context) throws UnsupportedOperationException;
 
     public String getId() {
         return mId;
