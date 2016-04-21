@@ -744,7 +744,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
 #ifdef DEBUG_LAYOUT
 nsresult
-nsMenuFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
+nsMenuFrame::SetXULDebug(nsBoxLayoutState& aState, bool aDebug)
 {
   // see if our state matches the given debug state
   bool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
@@ -753,24 +753,24 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
   // if it doesn't then tell each child below us the new debug state
   if (debugChanged)
   {
-      nsBoxFrame::SetDebug(aState, aDebug);
+      nsBoxFrame::SetXULDebug(aState, aDebug);
       nsMenuPopupFrame* popupFrame = GetPopup();
       if (popupFrame)
-        SetDebug(aState, popupFrame, aDebug);
+        SetXULDebug(aState, popupFrame, aDebug);
   }
 
   return NS_OK;
 }
 
 nsresult
-nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug)
+nsMenuFrame::SetXULDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug)
 {
       if (!aList)
           return NS_OK;
 
       while (aList) {
         if (aList->IsXULBoxFrame())
-          aList->SetDebug(aState, aDebug);
+          aList->SetXULDebug(aState, aDebug);
 
         aList = aList->GetNextSibling();
       }
@@ -1296,7 +1296,7 @@ nsMenuFrame::InsertFrames(ChildListID     aListID,
     if (HasPopup()) {
 #ifdef DEBUG_LAYOUT
       nsBoxLayoutState state(PresContext());
-      SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+      SetXULDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
 #endif
 
       PresContext()->PresShell()->
@@ -1325,7 +1325,7 @@ nsMenuFrame::AppendFrames(ChildListID     aListID,
 
 #ifdef DEBUG_LAYOUT
       nsBoxLayoutState state(PresContext());
-      SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+      SetXULDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
 #endif
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,

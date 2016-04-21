@@ -67,7 +67,7 @@ public:
   virtual nscoord GetXULFlex() override;
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 #ifdef DEBUG_LAYOUT
-  virtual nsresult SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;
+  virtual nsresult SetXULDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;
   virtual nsresult GetDebug(bool& aDebug) override;
 #endif
   virtual Valignment GetXULVAlign() const override { return mValign; }
@@ -220,7 +220,7 @@ protected:
 private: 
 
 #ifdef DEBUG_LAYOUT
-    nsresult SetDebug(nsPresContext* aPresContext, bool aDebug);
+    nsresult SetXULDebug(nsPresContext* aPresContext, bool aDebug);
     bool GetInitialDebug(bool& aDebug);
     void GetDebugPref();
 
