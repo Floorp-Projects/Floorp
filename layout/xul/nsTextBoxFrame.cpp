@@ -86,7 +86,7 @@ nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
                              NS_FRAME_IS_DIRTY);
     } else if (aRedraw) {
         nsBoxLayoutState state(PresContext());
-        Redraw(state);
+        XULRedraw(state);
     }
 
     // If the accesskey changed, register for the new value

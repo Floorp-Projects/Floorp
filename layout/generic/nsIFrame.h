@@ -2927,7 +2927,7 @@ public:
   bool IsXULHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsXULNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
-  nsresult Redraw(nsBoxLayoutState& aState);
+  nsresult XULRedraw(nsBoxLayoutState& aState);
   virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild)=0;
 
 #ifdef DEBUG_LAYOUT
