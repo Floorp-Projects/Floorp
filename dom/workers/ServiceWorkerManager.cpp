@@ -2787,6 +2787,10 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
       }
 
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
+
+      // All controlled documents must have an outer window.
+      MOZ_ASSERT(doc->GetWindow());
+
       ProcessDocument(aPrincipal, doc);
     }
   }
