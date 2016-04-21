@@ -1614,6 +1614,13 @@ MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
     g_signal_emit_by_name(aParent, signal_name, indexInParent, this, nullptr);
 }
 
+void
+a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible* aWidget, uint32_t)
+{
+  MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aWidget));
+    g_signal_emit_by_name(obj, "selection_changed");
+}
+
 // static
 void
 AccessibleWrap::GetKeyBinding(Accessible* aAccessible, nsAString& aResult)

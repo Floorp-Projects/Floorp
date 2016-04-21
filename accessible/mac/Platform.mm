@@ -106,6 +106,11 @@ void
 ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool)
 {
 }
+
+void
+ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
+{
+}
 } // namespace a11y
 } // namespace mozilla
 
