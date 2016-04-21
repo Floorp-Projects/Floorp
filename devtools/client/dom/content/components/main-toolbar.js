@@ -29,7 +29,7 @@ const PropTypes = React.PropTypes;
  */
 var MainToolbar = React.createClass({
   propTypes: {
-    object: PropTypes.any.isRequired,
+    object: PropTypes.any,
     dispatch: PropTypes.func.isRequired,
   },
 
@@ -47,7 +47,7 @@ var MainToolbar = React.createClass({
     return (
       Toolbar({},
         ToolbarButton({
-          className: "btn refresh",
+          className: "btn copy",
           onClick: this.onRefresh},
           l10n.getStr("dom.refresh")
         ),
