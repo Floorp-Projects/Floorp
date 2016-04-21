@@ -12,7 +12,6 @@ const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 const promise = require("promise");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
-const {setTimeout, clearTimeout} = require("sdk/timers");
 const specs = require("devtools/shared/specs/storage");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
