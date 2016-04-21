@@ -61,6 +61,7 @@ from ..frontend.data import (
     ObjdirPreprocessedFiles,
     PerSourceFlag,
     Program,
+    RustRlibLibrary,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -572,6 +573,10 @@ class RecursiveMakeBackend(CommonBackend):
                 self._process_android_eclipse_project_data(obj.wrapped, backend_file)
             else:
                 return False
+
+        elif isinstance(obj, RustRlibLibrary):
+            # Nothing to do because |Sources| has done the work for us.
+            pass
 
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
@@ -1147,6 +1152,17 @@ class RecursiveMakeBackend(CommonBackend):
         if libdef.symbols_file:
             backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
 
+        rust_rlibs = [o for o in libdef.linked_libraries if isinstance(o, RustRlibLibrary)]
+        if rust_rlibs:
+            # write out Rust file with extern crate declarations.
+            extern_crate_file = mozpath.join(libdef.objdir, 'rul.rs')
+            with self._write_file(extern_crate_file) as f:
+                f.write('// AUTOMATICALLY GENERATED.  DO NOT EDIT.\n\n')
+                for rlib in rust_rlibs:
+                    f.write('extern crate %s;\n' % rlib.crate_name)
+
+            backend_file.write('RS_STATICLIB_CRATE_SRC := %s\n' % extern_crate_file)
+
     def _process_static_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
         backend_file.write('FORCE_STATIC_LIB := 1\n')
@@ -1193,6 +1209,9 @@ class RecursiveMakeBackend(CommonBackend):
                                         % (relpath, lib.import_name))
                     if isinstance(obj, SharedLibrary):
                         write_shared_and_system_libs(lib)
+                elif isinstance(lib, RustRlibLibrary):
+                    backend_file.write_once('RLIB_EXTERN_CRATE_OPTIONS += --extern %s=%s/%s\n'
+                                            % (lib.crate_name, relpath, lib.rlib_filename))
                 elif isinstance(obj, SharedLibrary):
                     assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
@@ -1210,6 +1229,14 @@ class RecursiveMakeBackend(CommonBackend):
                 assert isinstance(lib, HostLibrary)
                 backend_file.write_once('HOST_LIBS += %s/%s\n'
                                    % (relpath, lib.import_name))
+
+        # We have to link the Rust super-crate after all intermediate static
+        # libraries have been listed to ensure that the Rust objects are
+        # searched after the C/C++ objects that might reference Rust symbols.
+        # Building the Rust super-crate will take care of Rust->Rust linkage.
+        if isinstance(obj, SharedLibrary) and any(isinstance(o, RustRlibLibrary)
+                                                  for o in obj.linked_libraries):
+            backend_file.write('STATIC_LIBS += librul.$(LIB_SUFFIX)\n')
 
         for lib in obj.linked_system_libs:
             if obj.KIND == 'target':
@@ -1397,6 +1424,12 @@ class RecursiveMakeBackend(CommonBackend):
             self.backend_input_files.add(obj.input_path)
 
         self._makefile_out_count += 1
+
+    def _handle_linked_rust_crates(self, obj, extern_crate_file):
+        backend_file = self._get_backend_file_for(obj)
+
+        backend_file.write('RS_STATICLIB_CRATE_SRC := %s\n' % extern_crate_file)
+        backend_file.write('STATIC_LIBS += librul.$(LIB_SUFFIX)\n')
 
     def _handle_ipdl_sources(self, ipdl_dir, sorted_ipdl_sources,
                              unified_ipdl_cppsrcs_mapping):
