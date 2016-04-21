@@ -27,7 +27,7 @@ add_task(function*() {
   yield addTab(TEST_URI_HTML);
   let target = getNode("#target");
 
-  let {inspector} = yield openRuleView();
+  let {inspector} = yield openInspector();
   yield selectNode("#target", inspector);
 
   info("Checking stylesheets");
@@ -36,7 +36,7 @@ add_task(function*() {
   info("Checking authored stylesheets");
   yield addTab(TEST_URI_AUTHOR);
 
-  ({inspector} = yield openRuleView());
+  ({inspector} = yield openInspector());
   target = getNode("#target");
   yield selectNode("#target", inspector);
   yield checkSheets(target);
@@ -46,7 +46,7 @@ add_task(function*() {
   allowXUL();
   yield addTab(TEST_URI_XUL);
 
-  ({inspector} = yield openRuleView());
+  ({inspector} = yield openInspector());
   target = getNode("#target");
   yield selectNode("#target", inspector);
 

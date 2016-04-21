@@ -622,8 +622,8 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         final int visitsToSynthesize = knownVisits - baseNumberOfVisits;
 
         if (visitsToSynthesize < 0) {
-            throw new IllegalStateException(
-                    "History visits count (for guid=" + guid + ") was less than base number of visit: " + baseNumberOfVisits);
+            Log.w(LOGTAG, guid + " # of visits(" + knownVisits + ") less than # of hist.ext.db visits(" + baseNumberOfVisits + ")");
+            return 0;
         }
 
         return visitsToSynthesize;

@@ -59,7 +59,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
         mActionButtonBar = (ViewGroup) findViewById(R.id.actionbar_buttons);
 
         mPopupMenu = new GeckoPopupMenu(getContext(), mMenuButton);
-        ((GeckoMenu) mPopupMenu.getMenu()).setActionItemBarPresenter(this);
+        mPopupMenu.getMenu().setActionItemBarPresenter(this);
 
         mMenuButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,7 +87,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
         mTitleView.setText(resId);
     }
 
-    public Menu getMenu() {
+    public GeckoMenu getMenu() {
         return mPopupMenu.getMenu();
     }
 
@@ -172,6 +172,10 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
 
         mTitleView.startAnimation(t);
         mActionButtonBar.startAnimation(s);
-        mMenuButton.startAnimation(s);
+
+        if ((mMenuButton.getVisibility() == View.VISIBLE) &&
+            (mPopupMenu.getMenu().size() > 0)) {
+            mMenuButton.startAnimation(s);
+        }
     }
 }

@@ -28,7 +28,7 @@ xul|scrollbar[orient="horizontal"] {
 }
 
 xul|scrollbar xul|thumb {
-  background-color: rgba(170,170,170,0.2) !important;
+  background-color: rgba(170, 170, 170, .2) !important; /* --toolbar-tab-hover */
   -moz-appearance: none !important;
   border-width: 0px !important;
   border-radius: 3px !important;

@@ -593,6 +593,67 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
         });
       },
 
+      getFileIcon(downloadId, options) {
+        return DownloadMap.lazyInit().then(() => {
+          let size = options && options.size ? options.size : 32;
+          let download = DownloadMap.fromId(downloadId).download;
+          let pathPrefix = "";
+          let path;
+
+          if (download.succeeded) {
+            let file = FileUtils.File(download.target.path);
+            path = Services.io.newFileURI(file).spec;
+          } else {
+            path = OS.Path.basename(download.target.path);
+            pathPrefix = "//";
+          }
+
+          return new Promise((resolve, reject) => {
+            let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
+            chromeWebNav
+              .QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDocShell)
+              .createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
+
+            let img = chromeWebNav.document.createElement("img");
+            img.width = size;
+            img.height = size;
+
+            let handleLoad;
+            let handleError;
+            const cleanup = () => {
+              img.removeEventListener("load", handleLoad);
+              img.removeEventListener("error", handleError);
+              chromeWebNav.close();
+              chromeWebNav = null;
+            };
+
+            handleLoad = () => {
+              let canvas = chromeWebNav.document.createElement("canvas");
+              canvas.width = size;
+              canvas.height = size;
+              let context = canvas.getContext("2d");
+              context.drawImage(img, 0, 0, size, size);
+              let dataURL = canvas.toDataURL("image/png");
+              cleanup();
+              resolve(dataURL);
+            };
+
+            handleError = (error) => {
+              Cu.reportError(error);
+              cleanup();
+              reject(new Error("An unexpected error occurred"));
+            };
+
+            img.addEventListener("load", handleLoad);
+            img.addEventListener("error", handleError);
+            img.src = `moz-icon:${pathPrefix}${path}?size=${size}`;
+          });
+        }).catch((error) => {
+          return Promise.reject({message: error.message});
+        });
+      },
+
       // When we do setShelfEnabled(), check for additional "downloads.shelf" permission.
       // i.e.:
       // setShelfEnabled(enabled) {

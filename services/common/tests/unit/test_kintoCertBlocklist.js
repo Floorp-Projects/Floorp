@@ -1,16 +1,14 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 const { Constructor: CC } = Components;
 
-Cu.import("resource://services-common/KintoCertificateBlocklist.js");
-Cu.import("resource://services-common/kinto-offline-client.js");
 Cu.import("resource://testing-common/httpd.js");
+
+const { OneCRLBlocklistClient } = Cu.import("resource://services-common/KintoBlocklist.js");
+const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
 
-var server;
+let server;
 
 // set up what we need to make storage adapters
 const Kinto = loadKinto();
@@ -48,30 +46,30 @@ add_task(function* test_something(){
   // register a handler
   function handleResponse (request, response) {
     try {
-      const sampled = getSampleResponse(request, server.identity.primaryPort);
-      if (!sampled) {
+      const sample = getSampleResponse(request, server.identity.primaryPort);
+      if (!sample) {
         do_throw(`unexpected ${request.method} request for ${request.path}?${request.queryString}`);
       }
 
-      response.setStatusLine(null, sampled.status.status,
-                             sampled.status.statusText);
+      response.setStatusLine(null, sample.status.status,
+                             sample.status.statusText);
       // send the headers
-      for (let headerLine of sampled.sampleHeaders) {
+      for (let headerLine of sample.sampleHeaders) {
         let headerElements = headerLine.split(':');
         response.setHeader(headerElements[0], headerElements[1].trimLeft());
       }
       response.setHeader("Date", (new Date()).toUTCString());
 
-      response.write(sampled.responseBody);
+      response.write(sample.responseBody);
     } catch (e) {
-      dump(`${e}\n`);
+      do_print(e);
     }
   }
   server.registerPathHandler(configPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
   // Test an empty db populates
-  let result = yield OneCRLClient.maybeSync(2000, Date.now());
+  let result = yield OneCRLBlocklistClient.maybeSync(2000, Date.now());
 
   // Open the collection, verify it's been populated:
   // Our test data has a single record; it should be in the local collection
@@ -82,7 +80,7 @@ add_task(function* test_something(){
   yield collection.db.close();
 
   // Test the db is updated when we call again with a later lastModified value
-  result = yield OneCRLClient.maybeSync(4000, Date.now());
+  result = yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our test data now has two records; both should be in the local collection
@@ -96,15 +94,15 @@ add_task(function* test_something(){
   // should be attempted.
   // Clear the kinto base pref so any connections will cause a test failure
   Services.prefs.clearUserPref("services.kinto.base");
-  yield OneCRLClient.maybeSync(4000, Date.now());
+  yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Try again with a lastModified value at some point in the past
-  yield OneCRLClient.maybeSync(3000, Date.now());
+  yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
 
   // Check the OneCRL check time pref is modified, even if the collection
   // hasn't changed
   Services.prefs.setIntPref("services.kinto.onecrl.checked", 0);
-  yield OneCRLClient.maybeSync(3000, Date.now());
+  yield OneCRLBlocklistClient.maybeSync(3000, Date.now());
   let newValue = Services.prefs.getIntPref("services.kinto.onecrl.checked");
   do_check_neq(newValue, 0);
 });
@@ -117,7 +115,7 @@ function run_test() {
   run_next_test();
 
   do_register_cleanup(function() {
-    server.stop(function() { });
+    server.stop(() => { });
   });
 }
 

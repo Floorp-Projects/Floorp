@@ -11,14 +11,20 @@ const { createClass, createFactory, PropTypes, DOM: dom } =
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const {
+  updateDeviceDisplayed,
+  updateDeviceModalOpen,
+} = require("./actions/devices");
+const {
   changeDevice,
   resizeViewport,
   rotateViewport
 } = require("./actions/viewports");
 const { takeScreenshot } = require("./actions/screenshot");
-const Types = require("./types");
-const Viewports = createFactory(require("./components/viewports"));
+const DeviceModal = createFactory(require("./components/device-modal"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
+const Viewports = createFactory(require("./components/viewports"));
+const { updateDeviceList } = require("./devices");
+const Types = require("./types");
 
 let App = createClass({
   propTypes: {
@@ -46,6 +52,10 @@ let App = createClass({
     }, "*");
   },
 
+  onDeviceListUpdate(devices) {
+    updateDeviceList(devices);
+  },
+
   onExit() {
     window.postMessage({ type: "exit" }, "*");
   },
@@ -62,6 +72,14 @@ let App = createClass({
     this.props.dispatch(takeScreenshot());
   },
 
+  onUpdateDeviceDisplayed(device, deviceType, displayed) {
+    this.props.dispatch(updateDeviceDisplayed(device, deviceType, displayed));
+  },
+
+  onUpdateDeviceModalOpen(isOpen) {
+    this.props.dispatch(updateDeviceModalOpen(isOpen));
+  },
+
   render() {
     let {
       devices,
@@ -74,10 +92,13 @@ let App = createClass({
       onBrowserMounted,
       onChangeViewportDevice,
       onContentResize,
+      onDeviceListUpdate,
       onExit,
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
+      onUpdateDeviceDisplayed,
+      onUpdateDeviceModalOpen,
     } = this;
 
     return dom.div(
@@ -99,6 +120,13 @@ let App = createClass({
         onContentResize,
         onRotateViewport,
         onResizeViewport,
+        onUpdateDeviceModalOpen,
+      }),
+      DeviceModal({
+        devices,
+        onDeviceListUpdate,
+        onUpdateDeviceDisplayed,
+        onUpdateDeviceModalOpen,
       })
     );
   },

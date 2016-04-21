@@ -1047,7 +1047,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 if (hasFaviconsInProjection(projection)) {
                     qb.setTables(VIEW_BOOKMARKS_WITH_FAVICONS);
-                } else if (selection.contains(Bookmarks.ANNOTATION_KEY)) {
+                } else if (selection != null && selection.contains(Bookmarks.ANNOTATION_KEY)) {
                     qb.setTables(VIEW_BOOKMARKS_WITH_ANNOTATIONS);
 
                     groupBy = uri.getQueryParameter(BrowserContract.PARAM_GROUP_BY);

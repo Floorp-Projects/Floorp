@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "test content script sources",
+  "description": "test content script sources",
+  "version": "0.1.0",
+  "applications": {
+    "gecko": {
+      "id": "test-contentscript-sources@mozilla.com"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["webext-content-script.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

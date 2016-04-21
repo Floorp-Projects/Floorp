@@ -531,7 +531,7 @@ StorageActors.createActor({
       return host == null;
     }
     if (cookie.host.startsWith(".")) {
-      return host.endsWith(cookie.host);
+      return ("." + host).endsWith(cookie.host);
     }
     if (cookie.host === "") {
       return host.startsWith("file://" + cookie.path);
@@ -902,7 +902,7 @@ var cookieHelpers = {
         return matchHost == null;
       }
       if (cookieHost.startsWith(".")) {
-        return matchHost.endsWith(cookieHost);
+        return ("." + matchHost).endsWith(cookieHost);
       }
       return cookieHost == host;
     }

@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 Cu.import("resource://services-common/kinto-updater.js")
 Cu.import("resource://testing-common/httpd.js");
 
