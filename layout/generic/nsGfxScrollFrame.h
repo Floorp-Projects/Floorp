@@ -1124,7 +1124,7 @@ public:
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) override;
 
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;

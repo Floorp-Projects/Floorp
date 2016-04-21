@@ -43,7 +43,7 @@ nsBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBoxLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize minSize (0,0);
   AddBorderAndPadding(aBox, minSize);

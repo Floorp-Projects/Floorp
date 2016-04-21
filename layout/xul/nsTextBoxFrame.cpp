@@ -1126,7 +1126,7 @@ nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
  * Ok return our dimensions
  */
 nsSize
-nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
+nsTextBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
     CalcTextSize(aBoxLayoutState);
 

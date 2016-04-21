@@ -716,9 +716,9 @@ nsMenuFrame::IsSizedToPopup(nsIContent* aContent, bool aRequireAlways)
 }
 
 nsSize
-nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
+nsMenuFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
-  nsSize size = nsBoxFrame::GetMinSize(aBoxLayoutState);
+  nsSize size = nsBoxFrame::GetXULMinSize(aBoxLayoutState);
   DISPLAY_MIN_SIZE(this, size);
 
   if (IsSizedToPopup(mContent, true))
@@ -1391,7 +1391,7 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState)
       IsSizedToPopup(mContent, false) &&
       SizeToPopup(aState, size)) {
     // We now need to ensure that size is within the min - max range.
-    nsSize minSize = nsBoxFrame::GetMinSize(aState);
+    nsSize minSize = nsBoxFrame::GetXULMinSize(aState);
     nsSize maxSize = GetMaxSize(aState);
     size = BoundsCheck(minSize, size, maxSize);
   }

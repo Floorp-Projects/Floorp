@@ -131,11 +131,11 @@ nsLeafBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   nsBoxLayoutState state(PresContext(), aRenderingContext);
 
   WritingMode wm = GetWritingMode();
-  LogicalSize minSize(wm, GetMinSize(state));
+  LogicalSize minSize(wm, GetXULMinSize(state));
 
-  // GetMinSize returns border-box size, and we want to return content
+  // GetXULMinSize returns border-box size, and we want to return content
   // inline-size.  Since Reflow uses the reflow state's border and padding, we
-  // actually just want to subtract what GetMinSize added, which is the
+  // actually just want to subtract what GetXULMinSize added, which is the
   // result of GetBorderAndPadding.
   nsMargin bp;
   GetBorderAndPadding(bp);
@@ -249,7 +249,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
   // this happens sometimes. So lets handle it gracefully.
   if (aReflowState.ComputedHeight() == 0) {
-    nsSize minSize = GetMinSize(state);
+    nsSize minSize = GetXULMinSize(state);
     computedSize.height = minSize.height - m.top - m.bottom;
   }
 
@@ -258,7 +258,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // if we are told to layout intrinic then get our preferred size.
   if (computedSize.width == NS_INTRINSICSIZE || computedSize.height == NS_INTRINSICSIZE) {
      prefSize = GetPrefSize(state);
-     nsSize minSize = GetMinSize(state);
+     nsSize minSize = GetXULMinSize(state);
      nsSize maxSize = GetMaxSize(state);
      prefSize = BoundsCheck(minSize, prefSize, maxSize);
   }
@@ -353,9 +353,9 @@ nsLeafBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
 }
 
 /* virtual */ nsSize
-nsLeafBoxFrame::GetMinSize(nsBoxLayoutState& aState)
+nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
 {
-    return nsBox::GetMinSize(aState);
+    return nsBox::GetXULMinSize(aState);
 }
 
 /* virtual */ nsSize

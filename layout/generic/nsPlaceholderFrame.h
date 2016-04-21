@@ -88,13 +88,13 @@ public:
              }
 
   // nsIFrame overrides
-  // We need to override GetMinSize and GetPrefSize because XUL uses
+  // We need to override GetXULMinSize and GetPrefSize because XUL uses
   // placeholders not within lines.
   virtual void AddInlineMinISize(nsRenderingContext* aRenderingContext,
                                  InlineMinISizeData* aData) override;
   virtual void AddInlinePrefISize(nsRenderingContext* aRenderingContext,
                                   InlinePrefISizeData* aData) override;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
 

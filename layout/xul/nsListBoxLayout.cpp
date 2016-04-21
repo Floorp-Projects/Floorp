@@ -47,9 +47,9 @@ nsListBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsListBoxLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsListBoxLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  nsSize minSize = nsGridRowGroupLayout::GetMinSize(aBox, aBoxLayoutState);
+  nsSize minSize = nsGridRowGroupLayout::GetXULMinSize(aBox, aBoxLayoutState);
 
   nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {
