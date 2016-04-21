@@ -32,7 +32,7 @@ public:
   virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                             bool aRemoveOverflowAreas = false) override;
 
-  virtual nsresult GetBorder(nsMargin& aBorderAndPadding) override;
+  virtual nsresult GetXULBorder(nsMargin& aBorderAndPadding) override;
   virtual nsresult GetPadding(nsMargin& aBorderAndPadding) override;
   virtual nsresult GetMargin(nsMargin& aMargin) override;
 
