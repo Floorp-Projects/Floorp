@@ -1897,16 +1897,14 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
       // data (audio/video samples) accessible to the receiving page. We're
       // only certain that privacy hasn't been requested if we're connected.
       nsCOMPtr<nsIPrincipal> principal;
+      nsIDocument* doc = GetWindow()->GetExtantDoc();
+      MOZ_ASSERT(doc);
       if (mDtlsConnected && !PrivacyRequested()) {
-        nsIDocument* doc = GetWindow()->GetExtantDoc();
-        MOZ_ASSERT(doc);
-        if (doc) {
-          principal = doc->NodePrincipal();
-        }
+        principal = doc->NodePrincipal();
       } else {
         // we're either certain that we need isolation for the streams, OR
         // we're not sure and we can fix the stream in SetDtlsConnected
-        principal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
+        principal =  nsNullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
       }
 #endif
 
