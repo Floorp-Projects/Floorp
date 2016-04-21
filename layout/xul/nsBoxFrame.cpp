@@ -717,7 +717,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // getting the ascent could be a lot of work. Don't get it if
   // we are the root. The viewport doesn't care about it.
   if (!(mState & NS_STATE_IS_ROOT)) {
-    ascent = GetBoxAscent(state);
+    ascent = GetXULBoxAscent(state);
   }
 
   aDesiredSize.SetSize(wm, boxSize);
@@ -786,7 +786,7 @@ nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 nscoord
-nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
+nsBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 {
   if (!DoesNeedRecalc(mAscent))
      return mAscent;
@@ -801,7 +801,7 @@ nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
   if (mLayoutManager)
     mAscent = mLayoutManager->GetAscent(this, aBoxLayoutState);
   else
-    mAscent = nsBox::GetBoxAscent(aBoxLayoutState);
+    mAscent = nsBox::GetXULBoxAscent(aBoxLayoutState);
 
   return mAscent;
 }
@@ -934,7 +934,7 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
     // getting the ascent could be a lot of work. Don't get it if
     // we are the root. The viewport doesn't care about it.
     if (!(mState & NS_STATE_IS_ROOT)) {
-      ascent = GetBoxAscent(aState);
+      ascent = GetXULBoxAscent(aState);
     }
     desiredSize.SetBlockStartAscent(ascent);
     desiredSize.mOverflowAreas = GetOverflowAreas();
@@ -1790,7 +1790,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
                     nsSize minSize = child->GetXULMinSize(state);
                     nsSize maxSize = child->GetXULMaxSize(state);
                     nscoord flexSize = child->GetXULFlex();
-                    nscoord ascentSize = child->GetBoxAscent(state);
+                    nscoord ascentSize = child->GetXULBoxAscent(state);
 
                     char min[100];
                     char pref[100];

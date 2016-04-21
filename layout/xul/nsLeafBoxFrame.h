@@ -20,7 +20,7 @@ public:
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aState) override;
   virtual nscoord GetXULFlex() override;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) override;
+  virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aState) override;
 
   virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override

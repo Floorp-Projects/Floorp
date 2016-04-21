@@ -65,7 +65,7 @@ public:
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nscoord GetXULFlex() override;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 #ifdef DEBUG_LAYOUT
   virtual nsresult SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;
   virtual nsresult GetDebug(bool& aDebug) override;

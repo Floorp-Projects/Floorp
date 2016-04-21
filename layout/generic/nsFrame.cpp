@@ -8797,7 +8797,7 @@ nsFrame::GetXULFlex()
 }
 
 nscoord
-nsFrame::GetBoxAscent(nsBoxLayoutState& aState)
+nsFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
   nsBoxLayoutMetrics *metrics = BoxMetrics();
   if (!DoesNeedRecalc(metrics->mAscent))

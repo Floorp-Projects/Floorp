@@ -635,7 +635,7 @@ nsImageBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 nscoord
-nsImageBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
+nsImageBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 {
   return GetXULPrefSize(aState).height;
 }
