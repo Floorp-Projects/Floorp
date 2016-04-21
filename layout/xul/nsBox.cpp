@@ -429,7 +429,7 @@ nsBox::GetXULMinSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsBox::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
+nsBox::GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 {
   return nsSize(0, 0);
 }
