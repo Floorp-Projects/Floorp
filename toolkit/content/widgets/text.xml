@@ -314,9 +314,7 @@
 
             uri = ioService.newURI(href, null, null);
 
-            var nullPrincipal =
-              Components.classes["@mozilla.org/nullprincipal;1"]
-                        .createInstance(Components.interfaces.nsIPrincipal);
+            var nullPrincipal = secMan.createNullPrincipal({});
             try {
               secMan.checkLoadURIWithPrincipal(nullPrincipal, uri,
                                                nsISSM.DISALLOW_INHERIT_PRINCIPAL)
