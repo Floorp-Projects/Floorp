@@ -8957,11 +8957,13 @@
     "n_buckets": 100,
     "bug_numbers": [1261955, 1127646]
   },
-  "VIDEO_MSE_UNLOAD_STATE": {
-    "expires_in_version": "45",
+  "VIDEO_UNLOAD_STATE": {
+    "alert_emails": ["ajones@mozilla.com"],
+    "expires_in_version": "55",
     "kind": "enumerated",
     "n_values": 5,
-    "description": "MSE video state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4"
+    "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
+    "bug_numbers": [1261955, 1261955]
   },
   "VIDEO_ADOBE_GMP_DISAPPEARED": {
     "alert_emails": ["cpearce@mozilla.com"],
