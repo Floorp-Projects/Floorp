@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import android.os.Bundle;
 
+import org.mozilla.gecko.tabs.TabsPanel;
+
 /**
  * Abstract class for extending the behavior of BrowserApp without adding additional code to the
  * already huge class.
@@ -46,4 +48,14 @@ public abstract class BrowserAppDelegate {
      * The final call before the BrowserApp activity is destroyed.
      */
     public void onDestroy(BrowserApp browserApp) {}
+
+    /**
+     * Called when the tabs tray is opened.
+     */
+    public void onTabsTrayShown(BrowserApp browserApp, TabsPanel tabsPanel) {}
+
+    /**
+     * Called when the tabs tray is closed.
+     */
+    public void onTabsTrayHidden(BrowserApp browserApp, TabsPanel tabsPanel) {}
 }
