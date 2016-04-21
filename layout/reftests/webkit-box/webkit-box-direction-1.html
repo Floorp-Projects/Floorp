@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>
+    CSS Test: "-webkit-box-direction" property
+    in a -webkit-box with default writing-mode
+  </title>
+  <style>
+    .box {
+      display: -webkit-box;
+      border: 1px solid black;
+      margin: 5px 20px;
+      float: left; /* For testing in "rows" */
+      font: 10px serif;
+    }
+    .box > *:nth-child(1) {
+      background: turquoise;
+    }
+    .box > *:nth-child(2) {
+      background: salmon;
+    }
+
+    .rtl { direction: rtl; }
+
+    .horizNormal {
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: normal;
+    }
+    .horizReverse {
+      -webkit-box-orient: horizontal;
+      -webkit-box-direction: reverse;
+    }
+    .vertNormal {
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+    }
+    .vertReverse {
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: reverse;
+    }
+    br { clear: both; }
+  </style>
+</head>
+<body>
+  <!-- FIRST ROW: '-webkit-box-orient: horizontal', default 'direction' -->
+  <div class="box horizNormal">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box horizReverse">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- SECOND ROW: '-webkit-box-orient: horizontal', 'direction: rtl' -->
+  <div class="box horizNormal rtl">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box horizReverse rtl">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- THIRD ROW: '-webkit-box-orient: vertical', default 'direction' -->
+  <div class="box vertNormal">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box vertReverse">
+    <div>a</div><div>b</div>
+  </div>
+
+  <br>
+
+  <!-- FOURTH ROW: '-webkit-box-orient: vertical', 'direction: rtl' -->
+  <div class="box vertNormal rtl">
+    <div>a</div><div>b</div>
+  </div>
+  <div class="box vertReverse rtl">
+    <div>a</div><div>b</div>
+  </div>
+</body>
+</html>

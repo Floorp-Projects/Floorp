@@ -10,7 +10,7 @@
  * nsWindow - Native window management and event handling.
  */
 
-#include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsBaseWidget.h"
 #include "nsWindowBase.h"
 #include "nsdefs.h"

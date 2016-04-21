@@ -265,6 +265,14 @@ public:
             mozilla::services::GetObserverService();
         obsServ->NotifyObservers(nullptr, "application-foreground", nullptr);
     }
+
+    static void CreateServices(jni::String::Param aCategory)
+    {
+        nsCString category(aCategory->ToCString());
+
+        NS_CreateServicesFromCategory(
+                category.get(), /* aOrigin */ nullptr, category.get());
+    }
 };
 
 uint32_t GeckoThreadSupport::sPauseCount;

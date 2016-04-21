@@ -762,7 +762,8 @@ nsCategoryManager::SuppressNotifications(bool aSuppress)
 void
 NS_CreateServicesFromCategory(const char* aCategory,
                               nsISupports* aOrigin,
-                              const char* aObserverTopic)
+                              const char* aObserverTopic,
+                              const char16_t* aObserverData)
 {
   nsresult rv;
 
@@ -812,7 +813,8 @@ NS_CreateServicesFromCategory(const char* aCategory,
       // try an observer, if it implements it.
       nsCOMPtr<nsIObserver> observer = do_QueryInterface(instance);
       if (observer) {
-        observer->Observe(aOrigin, aObserverTopic, EmptyString().get());
+        observer->Observe(aOrigin, aObserverTopic,
+                          aObserverData ? aObserverData : EmptyString().get());
       } else {
         LogMessage("While creating services from category '%s', service for entry '%s', contract ID '%s' does not implement nsIObserver.",
                    aCategory, entryString.get(), contractID.get());

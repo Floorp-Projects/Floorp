@@ -8,12 +8,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuBarX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsCOMPtr.h"
 #include "nsChangeObserver.h"
-#include "nsAutoPtr.h"
 
 class nsMenuX;
 class nsMenuItemIconX;
@@ -77,12 +78,12 @@ protected:
   bool           OnOpen();
   bool           OnClose();
   nsresult       AddMenuItem(nsMenuItemX* aMenuItem);
-  nsresult       AddMenu(nsMenuX* aMenu);
+  nsMenuX*       AddMenu(mozilla::UniquePtr<nsMenuX> aMenu);
   void           LoadMenuItem(nsIContent* inMenuItemContent);  
   void           LoadSubMenu(nsIContent* inMenuContent);
   GeckoNSMenu*   CreateMenuWithGeckoString(nsString& menuTitle);
 
-  nsTArray< nsAutoPtr<nsMenuObjectX> > mMenuObjectsArray;
+  nsTArray<mozilla::UniquePtr<nsMenuObjectX>> mMenuObjectsArray;
   nsString                  mLabel;
   uint32_t                  mVisibleItemsCount; // cache
   nsMenuObjectX*            mParent; // [weak]

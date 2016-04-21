@@ -360,8 +360,10 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
         return false;
     }
 
-    // Any checks below this depend on a program being available.
-    if (!mCurrentProgram) {
+    // Any checks below this depend on mActiveProgramLinkInfo being available.
+    if (!mActiveProgramLinkInfo) {
+        // Technically, this will only be null iff CURRENT_PROGRAM is null.
+        // But it's better to branch on what we actually care about.
         ErrorInvalidOperation("%s: null CURRENT_PROGRAM", info);
         return false;
     }

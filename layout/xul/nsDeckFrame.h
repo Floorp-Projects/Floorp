@@ -31,7 +31,7 @@ public:
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,

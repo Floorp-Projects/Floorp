@@ -120,7 +120,7 @@ nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext):
 
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);
-  SetLayoutManager(layout);
+  SetXULLayoutManager(layout);
 }
 
 void

@@ -6,8 +6,8 @@
 #ifndef KeyboardLayout_h__
 #define KeyboardLayout_h__
 
+#include "mozilla/RefPtr.h"
 #include "nscore.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsWindowBase.h"
 #include "nsWindowDefs.h"

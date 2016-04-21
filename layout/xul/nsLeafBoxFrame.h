@@ -16,11 +16,11 @@ public:
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) override;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aState) override;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aState) override;
-  virtual nscoord GetFlex() override;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetXULMaxSize(nsBoxLayoutState& aState) override;
+  virtual nscoord GetXULFlex() override;
+  virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aState) override;
 
   virtual nsIAtom* GetType() const override;
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -75,7 +75,7 @@ public:
 
 protected:
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aState) override;
 
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName) override;

@@ -175,6 +175,7 @@ IDBDatabase::IDBDatabase(IDBOpenDBRequest* aRequest,
   , mFileHandleDisabled(aRequest->IsFileHandleDisabled())
   , mClosed(false)
   , mInvalidated(false)
+  , mQuotaExceeded(false)
 {
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aFactory);
@@ -665,13 +666,19 @@ IDBDatabase::Transaction(JSContext* aCx,
       mode = IDBTransaction::READ_ONLY;
       break;
     case IDBTransactionMode::Readwrite:
-      mode = IDBTransaction::READ_WRITE;
+      if (mQuotaExceeded) {
+        mode = IDBTransaction::CLEANUP;
+        mQuotaExceeded = false;
+      } else {
+        mode = IDBTransaction::READ_WRITE;
+      }
       break;
     case IDBTransactionMode::Readwriteflush:
       mode = IDBTransaction::READ_WRITE_FLUSH;
       break;
     case IDBTransactionMode::Cleanup:
       mode = IDBTransaction::CLEANUP;
+      mQuotaExceeded = false;
       break;
     case IDBTransactionMode::Versionchange:
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -705,7 +712,7 @@ IDBDatabase::Transaction(JSContext* aCx,
 
   transaction->SetBackgroundActor(actor);
 
-  if (aMode == IDBTransactionMode::Cleanup) {
+  if (mode == IDBTransaction::CLEANUP) {
     ExpireFileActors(/* aExpireAll */ true);
   }
 

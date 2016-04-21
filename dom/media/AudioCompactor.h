@@ -49,7 +49,7 @@ public:
 
     while (aFrames > 0) {
       uint32_t samples = GetChunkSamples(aFrames, aChannels, maxSlop);
-      if (aFrames * aChannels > mSamplesPadding) {
+      if (samples / aChannels > mSamplesPadding / aChannels + 1) {
         samples -= mSamplesPadding;
       }
       AlignedAudioBuffer buffer(samples);

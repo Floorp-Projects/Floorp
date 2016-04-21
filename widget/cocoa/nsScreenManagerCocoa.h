@@ -8,8 +8,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsIScreenManager.h"
 #include "nsScreenCocoa.h"
 

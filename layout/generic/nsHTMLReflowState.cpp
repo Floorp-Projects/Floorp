@@ -660,7 +660,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     mStylePosition->MaxBSizeDependsOnContainer(wm) ||
     mStylePosition->OffsetHasPercent(wm.PhysicalSide(eLogicalSideBStart)) ||
     mStylePosition->mOffset.GetBEndUnit(wm) != eStyleUnit_Auto ||
-    frame->IsBoxFrame();
+    frame->IsXULBoxFrame();
 
   if (mStyleText->mLineHeight.GetUnit() == eStyleUnit_Enumerated) {
     NS_ASSERTION(mStyleText->mLineHeight.GetIntValue() ==

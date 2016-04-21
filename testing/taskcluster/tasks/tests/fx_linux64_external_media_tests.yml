@@ -1,0 +1,29 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_desktop_generic.yml'
+task:
+  payload:
+    command:
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+    env:
+        MOZHARNESS_SCRIPT: 'mozharness/scripts/firefox_media_tests_buildbot.py'
+        MOZHARNESS_CONFIG: >
+          mozharness/configs/mediatests/buildbot_posix_config.py
+          mozharness/configs/remove_executables.py
+    maxRunTime: 5400
+  metadata:
+    name: '[TC] Linux64 external-media-tests'
+    description: Marionette unittest run
+  extra:
+    suite:
+      name: external-media-tests
+      flavor: external-media-tests
+    treeherder:
+      groupName: VideoPuppeteer
+      groupSymbol: VP
+      symbol: m
+      tier: 2
+

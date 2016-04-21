@@ -327,6 +327,15 @@ struct Zone : public JS::shadow::Zone,
     // can't be determined by examining this zone by itself.
     ZoneSet gcZoneGroupEdges;
 
+    // Keep track of all TypeDescr and related objects in this compartment.
+    // This is used by the GC to trace them all first when compacting, since the
+    // TypedObject trace hook may access these objects.
+    using TypeDescrObjectSet = js::GCHashSet<js::RelocatablePtrObject,
+                                             js::MovableCellHasher<js::RelocatablePtrObject>,
+                                             js::SystemAllocPolicy>;
+    JS::WeakCache<TypeDescrObjectSet> typeDescrObjects;
+
+
     // Malloc counter to measure memory pressure for GC scheduling. It runs from
     // gcMaxMallocBytes down to zero. This counter should be used only when it's
     // not possible to know the size of a free.

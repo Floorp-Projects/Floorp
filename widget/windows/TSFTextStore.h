@@ -6,7 +6,7 @@
 #ifndef TSFTextStore_h_
 #define TSFTextStore_h_
 
-#include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
