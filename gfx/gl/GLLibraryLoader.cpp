@@ -24,7 +24,7 @@ GLLibraryLoader::OpenLibrary(const char *library)
 }
 
 bool
-GLLibraryLoader::LoadSymbols(SymLoadStruct *firstStruct,
+GLLibraryLoader::LoadSymbols(const SymLoadStruct *firstStruct,
                              bool tryplatform,
                              const char *prefix,
                              bool warnOnFailure)
@@ -64,7 +64,7 @@ GLLibraryLoader::LookupSymbol(PRLibrary *lib,
 
 bool
 GLLibraryLoader::LoadSymbols(PRLibrary *lib,
-                             SymLoadStruct *firstStruct,
+                             const SymLoadStruct *firstStruct,
                              PlatformLookupFunction lookupFunction,
                              const char *prefix,
                              bool warnOnFailure)
@@ -72,7 +72,7 @@ GLLibraryLoader::LoadSymbols(PRLibrary *lib,
     char sbuf[MAX_SYMBOL_LENGTH * 2];
     int failCount = 0;
 
-    SymLoadStruct *ss = firstStruct;
+    const SymLoadStruct *ss = firstStruct;
     while (ss->symPointer) {
         *ss->symPointer = 0;
 
