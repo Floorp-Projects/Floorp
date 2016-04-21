@@ -10,6 +10,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "nsContentUtils.h"
 #include "nsMathUtils.h"
+#include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
@@ -410,7 +411,15 @@ public:
 
     uint32_t numFrames = std::min(aBufferMax - mBufferPosition,
                                   availableInOutput);
-    if (numFrames == WEBAUDIO_BLOCK_SIZE) {
+
+    bool inputBufferAligned = true;
+    for (uint32_t i = 0; i < aChannels; ++i) {
+      if (!IS_ALIGNED16(mBuffer->GetData(i) + mBufferPosition)) {
+        inputBufferAligned = false;
+      }
+    }
+
+    if (numFrames == WEBAUDIO_BLOCK_SIZE && inputBufferAligned) {
       MOZ_ASSERT(mBufferPosition < aBufferMax);
       BorrowFromInputBuffer(aOutput, aChannels);
     } else {
