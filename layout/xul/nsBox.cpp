@@ -452,7 +452,7 @@ nsBox::GetXULMaxSize(nsBoxLayoutState& aState)
 }
 
 nscoord
-nsBox::GetFlex()
+nsBox::GetXULFlex()
 {
   nscoord flex = 0;
 

@@ -2898,7 +2898,7 @@ public:
   // Implemented in nsBox, used in nsBoxFrame
   uint32_t GetXULOrdinal();
 
-  virtual nscoord GetFlex() = 0;
+  virtual nscoord GetXULFlex() = 0;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) = 0;
   virtual bool IsCollapsed() = 0;
   // This does not alter the overflow area. If the caller is changing
