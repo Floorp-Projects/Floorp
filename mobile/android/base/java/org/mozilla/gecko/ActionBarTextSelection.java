@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
+import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.FloatUtils;
@@ -249,6 +250,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             mCallback = new TextSelectionActionModeCallback(items);
             presenter.startActionModeCompat(mCallback);
+            mCallback.animateIn();
         }
     }
 
@@ -321,8 +323,14 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
             }
         }
 
+        public void animateIn() {
+            if (mActionMode != null) {
+                mActionMode.animateIn();
+            }
+        }
+
         @Override
-        public boolean onPrepareActionMode(final ActionModeCompat mode, final Menu menu) {
+        public boolean onPrepareActionMode(final ActionModeCompat mode, final GeckoMenu menu) {
             // Android would normally expect us to only update the state of menu items here
             // To make the js-java interaction a bit simpler, we just wipe out the menu here and recreate all
             // the javascript menu items in onPrepare instead. This will be called any time invalidate() is called on the
@@ -354,7 +362,7 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
         }
 
         @Override
-        public boolean onCreateActionMode(ActionModeCompat mode, Menu menu) {
+        public boolean onCreateActionMode(ActionModeCompat mode, GeckoMenu unused) {
             mActionMode = mode;
             return true;
         }
