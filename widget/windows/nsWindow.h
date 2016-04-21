@@ -473,6 +473,9 @@ private:
 protected:
 #endif // MOZ_XUL
 
+  HDC GetWindowSurface();
+  void FreeWindowSurface(HDC dc);
+
   static bool             IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void                    IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 
