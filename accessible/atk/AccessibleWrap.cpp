@@ -1495,6 +1495,10 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
   case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     g_object_notify((GObject*)wrapper, "accessible-value");
     break;
+  case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+  case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
+    g_signal_emit_by_name(wrapper, "selection_changed");
+    break;
   }
 }
 
