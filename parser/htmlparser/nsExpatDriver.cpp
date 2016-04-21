@@ -794,7 +794,6 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
     }
     if (!loadingPrincipal) {
       loadingPrincipal = nsNullPrincipal::Create();
-      NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
     }
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,

@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "nsDocShell.h"
 #include "nsNullPrincipal.h"
 #include "nsNullPrincipalURI.h"
 #include "nsMemory.h"
@@ -40,6 +41,18 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  return nullPrin.forget();
+}
+
+/* static */ already_AddRefed<nsNullPrincipal>
+nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
+{
+  PrincipalOriginAttributes attrs;
+  attrs.InheritFromDocShellToDoc(nsDocShell::Cast(aDocShell)->GetOriginAttributes(), nullptr);
+
+  RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
+  nsresult rv = nullPrin->Init(attrs);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }

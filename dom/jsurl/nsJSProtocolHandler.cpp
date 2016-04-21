@@ -418,7 +418,6 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     nsCOMPtr<nsIChannel> channel;
 
     nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
 
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
