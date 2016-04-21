@@ -1,0 +1,34 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for encoding of service workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  function runTest() {
+    navigator.serviceWorker.register("bug1240436_worker.js")
+      .then(reg => reg.unregister())
+      .then(() => ok(true, "service worker register script succeed"))
+      .catch(err => ok(false, "service worker register script faled " + err))
+      .then(() => SimpleTest.finish());
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
