@@ -89,7 +89,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   dbus_error_init(&err);
 
   RefPtr<DBusConnection> connection = already_AddRefed<DBusConnection>(
-    dbus_bus_get(DBUS_BUS_SESSION, &err));
+    dbus_bus_get_private(DBUS_BUS_SESSION, &err));
 
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
