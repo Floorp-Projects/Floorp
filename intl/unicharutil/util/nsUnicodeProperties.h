@@ -151,6 +151,9 @@ private:
 #endif
 };
 
+// Count the number of grapheme clusters in the given string
+uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
+
 } // end namespace unicode
 
 } // end namespace mozilla
