@@ -445,6 +445,16 @@ class Library(BaseLibrary):
         self.is_sdk = is_sdk
 
 
+class RustRlibLibrary(Library):
+    """Context derived container object for a Rust rlib"""
+
+    def __init__(self, context, basename, crate_name, rlib_filename, link_into):
+        Library.__init__(self, context, basename)
+        self.crate_name = crate_name
+        self.rlib_filename = rlib_filename
+        self.link_into = link_into
+
+
 class StaticLibrary(Library):
     """Context derived container object for a static library"""
     __slots__ = (

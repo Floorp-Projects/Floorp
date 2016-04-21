@@ -6,6 +6,8 @@
 #define nsBaseWidget_h__
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "nsRect.h"
@@ -14,7 +16,6 @@
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
 #include "nsIObserver.h"
 #include "nsIWidgetListener.h"

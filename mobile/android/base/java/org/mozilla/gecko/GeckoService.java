@@ -27,19 +27,12 @@ public class GeckoService extends Service {
     private static final String INTENT_PROFILE_NAME = "org.mozilla.gecko.intent.PROFILE_NAME";
     private static final String INTENT_PROFILE_DIR = "org.mozilla.gecko.intent.PROFILE_DIR";
 
+    private static final String INTENT_ACTION_UPDATE_ADDONS = "update-addons";
+    private static final String INTENT_ACTION_CREATE_SERVICES = "create-services";
+
+    private static final String INTENT_SERVICE_CATEGORY = "category";
+
     private static class EventListener implements NativeEventListener {
-
-        private PendingIntent getIntentForAction(final Context context, final String action) {
-            final Intent intent = new Intent(action, /* uri */ null, context, GeckoService.class);
-            final GeckoProfile profile = GeckoThread.getActiveProfile();
-            if (profile != null) {
-                intent.putExtra(INTENT_PROFILE_NAME, profile.getName());
-                intent.putExtra(INTENT_PROFILE_DIR, profile.getDir().getAbsolutePath());
-            }
-            return PendingIntent.getService(context, /* requestCode */ 0, intent,
-                                            PendingIntent.FLAG_CANCEL_CURRENT);
-        }
-
         @Override // NativeEventListener
         public void handleMessage(final String event,
                                   final NativeJSObject message,
@@ -51,13 +44,18 @@ public class GeckoService extends Service {
                     Log.d(LOGTAG, "Scheduling " + message.getString("action") +
                                   " @ " + message.getInt("interval") + "ms");
                 }
+
+                final Intent intent = getIntentForAction(context, message.getString("action"));
+                final PendingIntent pendingIntent = PendingIntent.getService(
+                        context, /* requestCode */ 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
                 final AlarmManager am = (AlarmManager)
                     context.getSystemService(Context.ALARM_SERVICE);
                 // Cancel any previous alarm and schedule a new one.
                 am.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
                                        message.getInt("trigger"),
                                        message.getInt("interval"),
-                                       getIntentForAction(context, message.getString("action")));
+                                       pendingIntent);
                 break;
 
             default:
@@ -113,6 +111,27 @@ public class GeckoService extends Service {
         super.onDestroy();
     }
 
+    private static Intent getIntentForAction(final Context context, final String action) {
+        final Intent intent = new Intent(action, /* uri */ null, context, GeckoService.class);
+        final GeckoProfile profile = GeckoThread.getActiveProfile();
+        if (profile != null) {
+            setIntentProfile(intent, profile.getName(), profile.getDir().getAbsolutePath());
+        }
+        return intent;
+    }
+
+    public static Intent getIntentToCreateServices(final Context context, final String category) {
+        final Intent intent = getIntentForAction(context, INTENT_ACTION_CREATE_SERVICES);
+        intent.putExtra(INTENT_SERVICE_CATEGORY, category);
+        return intent;
+    }
+
+    public static void setIntentProfile(final Intent intent, final String profileName,
+                                        final String profileDir) {
+        intent.putExtra(INTENT_PROFILE_NAME, profileName);
+        intent.putExtra(INTENT_PROFILE_DIR, profileDir);
+    }
+
     private int handleIntent(final Intent intent, final int startId) {
         if (DEBUG) {
             Log.d(LOGTAG, "Handling " + intent.getAction());
@@ -142,9 +161,18 @@ public class GeckoService extends Service {
         GeckoThread.launch();
 
         switch (intent.getAction()) {
-        case "update-addons":
+        case INTENT_ACTION_UPDATE_ADDONS:
             // Run the add-on update service. Because the service is automatically invoked
             // when loading Gecko, we don't have to do anything else here.
+            break;
+
+        case INTENT_ACTION_CREATE_SERVICES:
+            final String category = intent.getStringExtra(INTENT_SERVICE_CATEGORY);
+
+            if (category == null) {
+                break;
+            }
+            GeckoThread.createServices(category);
             break;
 
         default:

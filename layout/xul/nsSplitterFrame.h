@@ -44,7 +44,7 @@ public:
   virtual nsresult GetCursor(const nsPoint&    aPoint,
                              nsIFrame::Cursor& aCursor) override;
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,

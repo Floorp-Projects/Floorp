@@ -933,7 +933,8 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
          nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
          if (gfxInfo) {
            int32_t status;
-           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE, &status))) {
+           nsCString discardFailureId;
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE, discardFailureId, &status))) {
              if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
                NS_WARNING("VP8 encoder hardware is not whitelisted: disabling.\n");
              } else {
@@ -958,7 +959,8 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
          nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
          if (gfxInfo) {
            int32_t status;
-           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE, &status))) {
+           nsCString discardFailureId;
+           if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE, discardFailureId, &status))) {
              if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
                NS_WARNING("VP8 decoder hardware is not whitelisted: disabling.\n");
              } else {

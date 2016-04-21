@@ -83,6 +83,11 @@ PushServiceBase.prototype = {
       this._handleReady();
       return;
     }
+    if (topic === "android-push-service") {
+      // Load PushService immediately.
+      this._handleReady();
+      return;
+    }
   },
 
   _deliverSubscription(request, props) {

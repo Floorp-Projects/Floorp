@@ -27,7 +27,7 @@ public:
 
   friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,

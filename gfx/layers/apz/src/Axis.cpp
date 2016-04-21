@@ -459,7 +459,7 @@ bool Axis::CanScroll(ParentLayerCoord aDelta) const
     return false;
   }
 
-  return DisplacementWillOverscrollAmount(aDelta) != aDelta;
+  return fabs(DisplacementWillOverscrollAmount(aDelta) - aDelta) > COORDINATE_EPSILON;
 }
 
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const

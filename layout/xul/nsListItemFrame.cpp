@@ -26,9 +26,9 @@ nsListItemFrame::~nsListItemFrame()
 }
 
 nsSize
-nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState)
+nsListItemFrame::GetXULPrefSize(nsBoxLayoutState& aState)
 {
-  nsSize size = nsBoxFrame::GetPrefSize(aState);  
+  nsSize size = nsBoxFrame::GetXULPrefSize(aState);  
   DISPLAY_PREF_SIZE(this, size);
 
   // guarantee that our preferred height doesn't exceed the standard

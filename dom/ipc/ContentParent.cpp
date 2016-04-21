@@ -4971,6 +4971,7 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
 bool
 ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
                                             int32_t* aStatus,
+                                            nsCString* aFailureId,
                                             bool* aSuccess)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
@@ -4979,7 +4980,7 @@ ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
     return true;
   }
 
-  *aSuccess = NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, aStatus));
+  *aSuccess = NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, *aFailureId, aStatus));
   return true;
 }
 

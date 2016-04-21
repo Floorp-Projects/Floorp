@@ -235,30 +235,31 @@ nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsMenuX::AddMenu(nsMenuX* aMenu)
+nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  // Add a submenu
-  if (!aMenu)
-    return NS_ERROR_NULL_POINTER;
+  // aMenu transfers ownership to mMenuObjectsArray and becomes nullptr, so
+  // we need to keep a raw pointer to access it conveniently.
+  nsMenuX* menu = aMenu.get();
+  mMenuObjectsArray.AppendElement(Move(aMenu));
 
-  mMenuObjectsArray.AppendElement(aMenu);
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenu->Content()))
-    return NS_OK;
+  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
+    return menu;
+  }
+
   ++mVisibleItemsCount;
 
   // We have to add a menu item and then associate the menu with it
-  NSMenuItem* newNativeMenuItem = aMenu->NativeMenuItem();
-  if (!newNativeMenuItem)
-    return NS_ERROR_FAILURE;
-  [mNativeMenu addItem:newNativeMenuItem];
+  NSMenuItem* newNativeMenuItem = menu->NativeMenuItem();
+  if (newNativeMenuItem) {
+    [mNativeMenu addItem:newNativeMenuItem];
+    [newNativeMenuItem setSubmenu:(NSMenu*)menu->NativeData()];
+  }
 
-  [newNativeMenuItem setSubmenu:(NSMenu*)aMenu->NativeData()];
+  return menu;
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
 }
 
 // Includes all items, including hidden/collapsed ones
@@ -273,7 +274,7 @@ nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos)
   if (aPos >= (uint32_t)mMenuObjectsArray.Length())
     return NULL;
 
-  return mMenuObjectsArray[aPos];
+  return mMenuObjectsArray[aPos].get();
 }
 
 // Only includes visible items
@@ -294,13 +295,13 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos)
 
   // If there are no invisible items, can provide direct access
   if (mVisibleItemsCount == count)
-    return mMenuObjectsArray[aPos];
+    return mMenuObjectsArray[aPos].get();
 
   // Otherwise, traverse the array until we find the the item we're looking for.
   nsMenuObjectX* item;
   uint32_t visibleNodeIndex = 0;
   for (uint32_t i = 0; i < count; i++) {
-    item = mMenuObjectsArray[i];
+    item = mMenuObjectsArray[i].get();
     if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(item->Content())) {
       if (aPos == visibleNodeIndex) {
         // we found the visible node we're looking for, return it
@@ -538,7 +539,7 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
 
 void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 {
-  nsAutoPtr<nsMenuX> menu(new nsMenuX());
+  auto menu = MakeUnique<nsMenuX>();
   if (!menu)
     return;
 
@@ -546,13 +547,15 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
   if (NS_FAILED(rv))
     return;
 
-  AddMenu(menu);
+  // |menu|'s ownership is transfer to AddMenu but, if it is successfully
+  // added, we can access it via the returned raw pointer.
+  nsMenuX* menu_ptr = AddMenu(Move(menu));
 
   // This needs to happen after the nsIMenu object is inserted into
   // our item array in AddMenu()
-  menu->SetupIcon();
-
-  menu.forget();
+  if (menu_ptr) {
+    menu_ptr->SetupIcon();
+  }
 }
 
 // This menu is about to open. Returns TRUE if we should keep processing the event,

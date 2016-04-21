@@ -23,7 +23,7 @@ public:
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) override;
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
 
 protected:
   explicit nsListItemFrame(nsStyleContext *aContext,

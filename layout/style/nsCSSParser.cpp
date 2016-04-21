@@ -964,7 +964,7 @@ protected:
   // Assuming a [ <line-names>? ] has already been parsed,
   // parse the rest of a <track-list>.
   //
-  // This exists because [ <line-names>? ] is ambiguous in the 'grid'
+  // This exists because [ <line-names>? ] is ambiguous in the 'grid-template'
   // shorthand: it can be either the start of a <track-list> (in
   // a <'grid-template-rows'>) or of the intertwined syntax that sets both
   // grid-template-rows and grid-template-areas.
@@ -8522,7 +8522,7 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   nsCSSValueList* item;
   if (aValue.GetUnit() == eCSSUnit_List) {
     // Find the end of an existing list.
-    // The 'grid' shorthand uses this, at most once for a given list.
+    // The grid-template shorthand uses this, at most once for a given list.
 
     // NOTE: we could avoid this traversal by somehow keeping around
     // a pointer to the last item from the previous call.
@@ -9360,7 +9360,7 @@ CSSParserImpl::ParseGridTemplate()
   return ParseGridTemplateColumnsRows(eCSSProperty_grid_template_columns);
 }
 
-// Helper for parsing <'grid-template'> part of the 'grid' shorthand:
+// Helper for parsing the 'grid-template' shorthand:
 // Parse [ <line-names>? <string> <track-size>? <line-names>? ]+
 // with a <line-names>? already consumed, stored in |aFirstLineNames|,
 // and the current token a <string>
@@ -11478,6 +11478,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_grid_template_columns:
   case eCSSProperty_grid_template_rows:
     return ParseGridTemplateColumnsRows(aPropID);
+  case eCSSProperty_grid_template:
+    return ParseGridTemplate();
   case eCSSProperty_grid:
     return ParseGrid();
   case eCSSProperty_grid_column_start:

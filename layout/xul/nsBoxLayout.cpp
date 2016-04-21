@@ -34,7 +34,7 @@ nsBoxLayout::AddMargin(nsSize& aSize, const nsMargin& aMargin)
 }
 
 nsSize
-nsBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize pref (0, 0);
   AddBorderAndPadding(aBox, pref);
@@ -43,7 +43,7 @@ nsBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBoxLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize minSize (0,0);
   AddBorderAndPadding(aBox, minSize);
@@ -51,7 +51,7 @@ nsBoxLayout::GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 nsSize
-nsBoxLayout::GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   //AddBorderAndPadding () never changes maxSize (NS_INTRINSICSIZE)
   //AddBorderAndPadding(aBox, maxSize);
@@ -66,7 +66,7 @@ nsBoxLayout::GetAscent(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 }
 
 NS_IMETHODIMP
-nsBoxLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsBoxLayout::XULLayout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
   return NS_OK;
 }

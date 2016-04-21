@@ -35,6 +35,7 @@
 #include "mozilla/MouseEvents.h"        // for WidgetWheelEvent
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/Telemetry.h"          // for Telemetry
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
@@ -58,7 +59,6 @@
 #include "mozilla/unused.h"             // for unused
 #include "mozilla/FloatingPoint.h"      // for FuzzyEquals*
 #include "nsAlgorithm.h"                // for clamped
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsIDOMWindowUtils.h"          // for nsIDOMWindowUtils
@@ -3966,7 +3966,9 @@ Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
 void AsyncPanZoomController::ScrollSnapNear(const CSSPoint& aDestination) {
   if (Maybe<CSSPoint> snapPoint =
         FindSnapPointNear(aDestination, nsIScrollableFrame::DEVICE_PIXELS)) {
-    SmoothScrollTo(*snapPoint);
+    if (*snapPoint != mFrameMetrics.GetScrollOffset()) {
+      SmoothScrollTo(*snapPoint);
+    }
   }
 }
 

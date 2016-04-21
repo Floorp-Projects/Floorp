@@ -5,10 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsWindow.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
@@ -100,7 +103,6 @@ using namespace mozilla::widget;
 #include "nsGfxCIID.h"
 #include "nsImageToPixbuf.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsAutoPtr.h"
 #include "ClientLayerManager.h"
 
 #include "gfxPlatformGtk.h"
@@ -121,7 +123,6 @@ using namespace mozilla::widget;
 #include "nsIDOMWheelEvent.h"
 
 #include "NativeKeyBindings.h"
-#include "nsWindow.h"
 
 #include <dlfcn.h>
 
@@ -3020,9 +3021,9 @@ mozilla::CurrentX11TimeGetter*
 nsWindow::GetCurrentTimeGetter() {
     MOZ_ASSERT(mGdkWindow, "Expected mGdkWindow to be set");
     if (MOZ_UNLIKELY(!mCurrentTimeGetter)) {
-        mCurrentTimeGetter = new CurrentX11TimeGetter(mGdkWindow);
+        mCurrentTimeGetter = MakeUnique<CurrentX11TimeGetter>(mGdkWindow);
     }
-    return mCurrentTimeGetter;
+    return mCurrentTimeGetter.get();
 }
 
 gboolean
