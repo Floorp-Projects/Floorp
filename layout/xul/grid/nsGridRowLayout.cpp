@@ -64,7 +64,7 @@ nsGridRowLayout::GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox)
 
   // get the parent
   if (aBox)
-    aBox = nsBox::GetParentBox(aBox);
+    aBox = nsBox::GetParentXULBox(aBox);
 
   if (aBox)
   {

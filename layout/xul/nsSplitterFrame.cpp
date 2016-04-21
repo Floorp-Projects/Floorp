@@ -305,7 +305,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) 
   {
-    mInner->mParentBox = nsBox::GetParentBox(this);
+    mInner->mParentBox = nsBox::GetParentXULBox(this);
     mInner->UpdateState();
   }
 
@@ -316,7 +316,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
 void
 nsSplitterFrame::GetInitialOrientation(bool& aIsHorizontal)
 {
-  nsIFrame* box = nsBox::GetParentBox(this);
+  nsIFrame* box = nsBox::GetParentXULBox(this);
   if (box) {
     aIsHorizontal = !box->IsHorizontal();
   }
@@ -617,7 +617,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                     nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
-  mParentBox = nsBox::GetParentBox(mOuter);
+  mParentBox = nsBox::GetParentXULBox(mOuter);
   if (!mParentBox)
     return NS_OK;
 
