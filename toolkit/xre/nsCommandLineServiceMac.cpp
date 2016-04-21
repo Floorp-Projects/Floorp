@@ -54,8 +54,10 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart)
   // Copy args, stripping anything we don't want.
   for (int arg = 0; arg < argc; arg++) {
     char* flag = argv[arg];
-    // Don't pass on the psn (Process Serial Number) flag from the OS.
-    if (strncmp(flag, "-psn_", 5) != 0)
+    // Don't pass on the psn (Process Serial Number) flag from the OS, or
+    // the "-foreground" flag since it will be set below if necessary.
+    if (strncmp(flag, "-psn_", 5) != 0 &&
+        strncmp(flag, "-foreground", 11) != 0)
       AddToCommandLine(flag);
   }
 
