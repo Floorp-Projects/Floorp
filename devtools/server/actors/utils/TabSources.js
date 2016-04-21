@@ -259,6 +259,11 @@ TabSources.prototype = {
    * @returns Boolean
    */
   _isMinifiedURL: function (aURL) {
+    // Filter out null URLs to avoid debug warnings.
+    if (!aUrl) {
+      return false;
+    }
+
     try {
       let url = new URL(aURL);
       let pathname = url.pathname;
