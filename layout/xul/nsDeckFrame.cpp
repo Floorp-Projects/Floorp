@@ -200,7 +200,7 @@ nsDeckFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 }
 
 NS_IMETHODIMP
-nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
+nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   // Make sure we tweak the state so it does not resize our children.
   // We will do that.
@@ -208,7 +208,7 @@ nsDeckFrame::DoLayout(nsBoxLayoutState& aState)
   aState.SetLayoutFlags(NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
 
   // do a normal layout
-  nsresult rv = nsBoxFrame::DoLayout(aState);
+  nsresult rv = nsBoxFrame::DoXULLayout(aState);
 
   // run though each child. Hide all but the selected one
   nsIFrame* box = nsBox::GetChildXULBox(this);

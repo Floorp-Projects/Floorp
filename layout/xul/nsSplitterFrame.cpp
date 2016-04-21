@@ -301,7 +301,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
+nsSplitterFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) 
   {
@@ -309,7 +309,7 @@ nsSplitterFrame::DoLayout(nsBoxLayoutState& aState)
     mInner->UpdateState();
   }
 
-  return nsBoxFrame::DoLayout(aState);
+  return nsBoxFrame::DoXULLayout(aState);
 }
 
 

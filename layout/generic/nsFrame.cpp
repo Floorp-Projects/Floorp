@@ -8815,7 +8815,7 @@ nsFrame::GetXULBoxAscent(nsBoxLayoutState& aState)
 }
 
 nsresult
-nsFrame::DoLayout(nsBoxLayoutState& aState)
+nsFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   nsRect ourRect(mRect);
 

@@ -1487,13 +1487,13 @@ nsXULScrollFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 NS_IMETHODIMP
-nsXULScrollFrame::DoLayout(nsBoxLayoutState& aState)
+nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   uint32_t flags = aState.LayoutFlags();
   nsresult rv = XULLayout(aState);
   aState.SetLayoutFlags(flags);
 
-  nsBox::DoLayout(aState);
+  nsBox::DoXULLayout(aState);
   return rv;
 }
 

@@ -949,7 +949,7 @@ nsTextBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 }
 
 NS_IMETHODIMP
-nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
+nsTextBoxFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState)
 {
     if (mNeedsReflowCallback) {
         nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
@@ -959,7 +959,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
         mNeedsReflowCallback = false;
     }
 
-    nsresult rv = nsLeafBoxFrame::DoLayout(aBoxLayoutState);
+    nsresult rv = nsLeafBoxFrame::DoXULLayout(aBoxLayoutState);
 
     CalcDrawRect(*aBoxLayoutState.GetRenderingContext());
 
