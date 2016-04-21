@@ -16,6 +16,7 @@ function PushServiceHandler() {
   this.observed = [];
   Services.obs.addObserver(this, pushService.pushTopic, false);
   Services.obs.addObserver(this, pushService.subscriptionChangeTopic, false);
+  Services.obs.addObserver(this, pushService.subscriptionLostTopic, false);
 }
 
 PushServiceHandler.prototype = {

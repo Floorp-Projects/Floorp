@@ -5894,6 +5894,25 @@ ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope
   return true;
 }
 
+bool
+ContentParent::RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
+                                                       const uint16_t& aReason)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+
+  nsresult rv = pushNotifier->NotifySubscriptionLostObservers(aScope, aReason);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
 
