@@ -298,7 +298,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
-  SetBounds(state, r);
+  SetXULBounds(state, r);
  
   // layout our children
   Layout(state);
@@ -308,7 +308,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   aDesiredSize.Height() = mRect.height;
   aDesiredSize.SetBlockStartAscent(GetXULBoxAscent(state));
 
-  // the overflow rect is set in SetBounds() above
+  // the overflow rect is set in SetXULBounds() above
   aDesiredSize.mOverflowAreas = GetOverflowAreas();
 
 #ifdef DO_NOISY_REFLOW

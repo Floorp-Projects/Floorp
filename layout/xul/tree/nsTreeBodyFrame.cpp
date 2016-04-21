@@ -404,14 +404,14 @@ nsTreeBodyFrame::ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth)
 }
 
 void
-nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                           bool aRemoveOverflowArea)
+nsTreeBodyFrame::SetXULBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                              bool aRemoveOverflowArea)
 {
   nscoord horzWidth = CalcHorzWidth(GetScrollParts());
   ManageReflowCallback(aRect, horzWidth);
   mHorzWidth = horzWidth;
 
-  nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
+  nsLeafBoxFrame::SetXULBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
 }
 
 
