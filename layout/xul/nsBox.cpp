@@ -937,7 +937,7 @@ nsBox::GetNextXULBox(const nsIFrame* aFrame)
 }
 
 /*static*/ nsIFrame*
-nsBox::GetParentBox(const nsIFrame* aFrame)
+nsBox::GetParentXULBox(const nsIFrame* aFrame)
 {
   return aFrame->GetParent() &&
     aFrame->GetParent()->IsXULBoxFrame() ? aFrame->GetParent() : nullptr;

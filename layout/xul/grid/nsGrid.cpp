@@ -1092,13 +1092,13 @@ nsGrid::GetRowFlex(int32_t aIndex, bool aIsHorizontal)
     // the grid. 3) Then we are not flexible
 
     box = GetScrollBox(box);
-    nsIFrame* parent = nsBox::GetParentBox(box);
+    nsIFrame* parent = nsBox::GetParentXULBox(box);
     nsIFrame* parentsParent=nullptr;
 
     while(parent)
     {
       parent = GetScrollBox(parent);
-      parentsParent = nsBox::GetParentBox(parent);
+      parentsParent = nsBox::GetParentXULBox(parent);
 
       // if our parents parent is not a grid
       // the get its flex. If its 0 then we are
@@ -1225,7 +1225,7 @@ nsGrid::GetScrollBox(nsIFrame* aChild)
     return nullptr;
 
   // get parent
-  nsIFrame* parent = nsBox::GetParentBox(aChild);
+  nsIFrame* parent = nsBox::GetParentXULBox(aChild);
 
   // walk up until we find a scrollframe or a part
   // if it's a scrollframe return it.
@@ -1242,7 +1242,7 @@ nsGrid::GetScrollBox(nsIFrame* aChild)
     if (parentGridRow) 
       break;
 
-    parent = nsBox::GetParentBox(parent);
+    parent = nsBox::GetParentXULBox(parent);
   }
 
   return aChild;
