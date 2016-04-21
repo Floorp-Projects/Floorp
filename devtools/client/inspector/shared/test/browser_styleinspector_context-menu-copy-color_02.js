@@ -19,6 +19,7 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   let {inspector, view} = yield openRuleView();
+
   yield testCopyToClipboard(inspector, view);
   yield testManualEdit(inspector, view);
   yield testColorPickerEdit(inspector, view);

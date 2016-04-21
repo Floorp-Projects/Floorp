@@ -742,6 +742,70 @@ add_task(function* test_erase() {
   is(msg.result.length, 0, "search found 0 downloads");
 });
 
+function loadImage(img, data) {
+  return new Promise((resolve) => {
+    let handle = () => {
+      img.removeEventListener("load", handle);
+      resolve();
+    };
+    img.addEventListener("load", handle);
+    img.src = data;
+  });
+}
+
+add_task(function* test_getFileIcon() {
+  let img = document.createElement("img");
+  let msg = yield runInExtension("download", {url: TXT_URL});
+  is(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  msg = yield runInExtension("getFileIcon", id);
+  is(msg.status, "success", "getFileIcon() succeeded");
+  yield loadImage(img, msg.result);
+  is(img.height, 32, "returns an icon with the right height");
+  is(img.width, 32, "returns an icon with the right width");
+
+  msg = yield runInExtension("waitForEvents", [
+    {type: "onCreated", data: {id, url: TXT_URL}},
+    {type: "onChanged"},
+  ]);
+  is(msg.status, "success", "got events");
+
+  msg = yield runInExtension("getFileIcon", id);
+  is(msg.status, "success", "getFileIcon() succeeded");
+  yield loadImage(img, msg.result);
+  is(img.height, 32, "returns an icon with the right height after download");
+  is(img.width, 32, "returns an icon with the right width after download");
+
+  msg = yield runInExtension("getFileIcon", id + 100);
+  is(msg.status, "error", "getFileIcon() failed");
+  ok(msg.errmsg.includes("Invalid download id"), "download id is invalid");
+
+  msg = yield runInExtension("getFileIcon", id, {size: 127});
+  is(msg.status, "success", "getFileIcon() succeeded");
+  yield loadImage(img, msg.result);
+  is(img.height, 127, "returns an icon with the right custom height");
+  is(img.width, 127, "returns an icon with the right custom width");
+
+  msg = yield runInExtension("getFileIcon", id, {size: 1});
+  is(msg.status, "success", "getFileIcon() succeeded");
+  yield loadImage(img, msg.result);
+  is(img.height, 1, "returns an icon with the right custom height");
+  is(img.width, 1, "returns an icon with the right custom width");
+
+  msg = yield runInExtension("getFileIcon", id, {size: "foo"});
+  is(msg.status, "error", "getFileIcon() fails");
+  ok(msg.errmsg.includes("Error processing size"), "size is not a number");
+
+  msg = yield runInExtension("getFileIcon", id, {size: 0});
+  is(msg.status, "error", "getFileIcon() fails");
+  ok(msg.errmsg.includes("Error processing size"), "size is too small");
+
+  msg = yield runInExtension("getFileIcon", id, {size: 128});
+  is(msg.status, "error", "getFileIcon() fails");
+  ok(msg.errmsg.includes("Error processing size"), "size is too big");
+});
+
 add_task(function* cleanup() {
   yield extension.unload();
 });

@@ -1,23 +1,19 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from ../../test/head.js */
 
 "use strict";
 
-var Cu = Components.utils;
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {gDevTools} = require("devtools/client/framework/devtools");
-var {TargetFactory} = require("devtools/client/framework/target");
-var {CssRuleView, _ElementStyle} = require("devtools/client/inspector/rules/rules");
-var {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var promise = require("promise");
-var {editableField, getInplaceEditorForSpan: inplaceEditor} =
-  require("devtools/client/shared/inplace-editor");
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+// Import the inspector's head.js first (which itself imports shared-head.js).
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
+  this);
 
-// All tests are asynchronous
-waitForExplicitFinish();
+var {CssRuleView} = require("devtools/client/inspector/rules/rules");
+var {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");
+var {getInplaceEditorForSpan: inplaceEditor} =
+  require("devtools/client/shared/inplace-editor");
 
 const TEST_URL_ROOT =
   "http://example.com/browser/devtools/client/inspector/shared/test/";
@@ -26,28 +22,9 @@ const TEST_URL_ROOT_SSL =
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 
-// Auto clean-up when a test ends
-registerCleanupFunction(function*() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-});
-
-// Uncomment this pref to dump all devtools emitted events to the console.
-// Services.prefs.setBoolPref("devtools.dump.emit", true);
-
-// Set the testing flag on gDevTools and reset it when the test ends
-DevToolsUtils.testing = true;
-registerCleanupFunction(() => DevToolsUtils.testing = false);
-
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
-  Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
 });
 
@@ -62,8 +39,9 @@ registerCleanupFunction(() => {
  *
  * add_task(function*() {
  *   yield addTab(TEST_URI);
- *   let {toolbox, inspector, view} = yield openComputedView();
- *
+ *   let {toolbox, inspector} = yield openInspector();
+ *   inspector.sidebar.select(viewId);
+ *   let view = inspector[viewId].view;
  *   yield selectNode("#test", inspector);
  *   yield someAsyncTestFunction(view);
  * });
@@ -92,263 +70,21 @@ registerCleanupFunction(() => {
  */
 
 /**
- * Add a new test tab in the browser and load the given url.
- *
- * @param {String} url
- *        The url to be loaded in the new tab
- * @return a promise that resolves to the tab object when the url is loaded
+ * The rule-view tests rely on a frame-script to be injected in the content test
+ * page. So override the shared-head's addTab to load the frame script after the
+ * tab was added.
+ * FIXME: Refactor the rule-view tests to use the testActor instead of a frame
+ * script, so they can run on remote targets too.
  */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
-
-  window.focus();
-
-  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
-  let browser = tab.linkedBrowser;
-
-  info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-  browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
-
-  browser.addEventListener("load", function onload() {
-    browser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-
-    def.resolve(tab);
-  }, true);
-
-  return def.promise;
-}
-
-/**
- * Simple DOM node accesor function that takes either a node or a string css
- * selector as argument and returns the corresponding node
- *
- * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
- * doesn't implement *all* of the DOMNode's properties
- */
-function getNode(nodeOrSelector) {
-  info("Getting the node for '" + nodeOrSelector + "'");
-  return typeof nodeOrSelector === "string" ?
-    content.document.querySelector(nodeOrSelector) :
-    nodeOrSelector;
-}
-
-/**
- * Get the NodeFront for a given css selector, via the protocol
- *
- * @param {String} selector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return {Promise} Resolves to the NodeFront instance
- */
-function getNodeFront(selector, {walker}) {
-  return walker.querySelector(walker.rootNode, selector);
-}
-
-/*
- * Set the inspector's current selection to a node or to the first match of the
- * given css selector.
- *
- * @param {String|NodeFront} data
- *        The node to select
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @param {String} reason
- *        Defaults to "test" which instructs the inspector not
- *        to highlight the node upon selection
- * @return {Promise} Resolves when the inspector is updated with the new node
- */
-var selectNode = Task.async(function*(data, inspector, reason="test") {
-  info("Selecting the node for '" + data + "'");
-  let nodeFront = data;
-  if (!data._form) {
-    nodeFront = yield getNodeFront(data, inspector);
-  }
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(nodeFront, reason);
-  yield updated;
-});
-
-/**
- * Set the inspector's current selection to null so that no node is selected
- *
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves when the inspector is updated
- */
-function clearCurrentNodeSelection(inspector) {
-  info("Clearing the current selection");
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(null);
-  return updated;
-}
-
-/**
- * Open the toolbox, with the inspector tool visible.
- *
- * @return a promise that resolves when the inspector is ready
- */
-var openInspector = Task.async(function*() {
-  info("Opening the inspector");
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  let inspector, toolbox;
-
-  // Checking if the toolbox and the inspector are already loaded
-  // The inspector-updated event should only be waited for if the inspector
-  // isn't loaded yet
-  toolbox = gDevTools.getToolbox(target);
-  if (toolbox) {
-    inspector = toolbox.getPanel("inspector");
-    if (inspector) {
-      info("Toolbox and inspector already open");
-      return {
-        toolbox: toolbox,
-        inspector: inspector
-      };
-    }
-  }
-
-  info("Opening the toolbox");
-  toolbox = yield gDevTools.showToolbox(target, "inspector");
-  yield waitForToolboxFrameFocus(toolbox);
-  inspector = toolbox.getPanel("inspector");
-
-  info("Waiting for the inspector to update");
-  if (inspector._updateProgress) {
-    yield inspector.once("inspector-updated");
-  }
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector
-  };
-});
-
-/**
- * Wait for the toolbox frame to receive focus after it loads
- *
- * @param {Toolbox} toolbox
- * @return a promise that resolves when focus has been received
- */
-function waitForToolboxFrameFocus(toolbox) {
-  info("Making sure that the toolbox's frame is focused");
-  let def = promise.defer();
-  let win = toolbox.frame.contentWindow;
-  waitForFocus(def.resolve, win);
-  return def.promise;
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the sidebar that
- * corresponds to the given id selected
- *
- * @return a promise that resolves when the inspector is ready and the sidebar
- * view is visible and ready
- */
-var openInspectorSideBar = Task.async(function*(id) {
-  let {toolbox, inspector} = yield openInspector();
-
-  info("Selecting the " + id + " sidebar");
-  inspector.sidebar.select(id);
-
-  return {
-    toolbox: toolbox,
-    inspector: inspector,
-    view: inspector[id].view
-  };
-});
-
-/**
- * Open the toolbox, with the inspector tool visible, and the computed-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the computed
- * view is visible and ready
- */
-function openComputedView() {
-  return openInspectorSideBar("computedview");
-}
-
-/**
- * Open the toolbox, with the inspector tool visible, and the rule-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the rule
- * view is visible and ready
- */
-function openRuleView() {
-  return openInspectorSideBar("ruleview");
-}
-
-/**
- * Wait for eventName on target to be delivered a number of times.
- *
- * @param {Object} target
- *        An observable object that either supports on/off or
- *        addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Number} numTimes
- *        Number of deliveries to wait for.
- * @param {Boolean} useCapture
- *        Optional, for addEventListener/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function waitForNEvents(target, eventName, numTimes, useCapture = false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-  let count = 0;
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        if (++count == numTimes) {
-          target[remove](eventName, onEvent, useCapture);
-          deferred.resolve.apply(deferred, aArgs);
-        }
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
-}
-
-/**
- * Wait for eventName on target.
- *
- * @param {Object} target
- *        An observable object that either supports on/off or
- *        addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture
- *        Optional, for addEventListener/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function once(target, eventName, useCapture=false) {
-  return waitForNEvents(target, eventName, 1, useCapture);
-}
-
-/**
- * This shouldn't be used in the tests, but is useful when writing new tests or
- * debugging existing tests in order to introduce delays in the test steps
- *
- * @param {Number} ms
- *        The time to wait
- * @return A promise that resolves when the time is passed
- */
-function wait(ms) {
-  let def = promise.defer();
-  content.setTimeout(def.resolve, ms);
-  return def.promise;
-}
+var _addTab = addTab;
+addTab = function(url) {
+  return _addTab(url).then(tab => {
+    info("Loading the helper frame script " + FRAME_SCRIPT_URL);
+    let browser = tab.linkedBrowser;
+    browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
+    return tab;
+  });
+};
 
 /**
  * Wait for a content -> chrome message on the message manager (the window
@@ -493,39 +229,6 @@ function assertHoverTooltipOn(tooltip, element) {
 }
 
 /**
- * Listen for a new tab to open and return a promise that resolves when one
- * does and completes the load event.
- *
- * @return a promise that resolves to the tab object
- */
-var waitForTab = Task.async(function*() {
-  info("Waiting for a tab to open");
-  yield once(gBrowser.tabContainer, "TabOpen");
-  let tab = gBrowser.selectedTab;
-  let browser = tab.linkedBrowser;
-  yield once(browser, "load", true);
-  info("The tab load completed");
-  return tab;
-});
-
-/**
- * @see SimpleTest.waitForClipboard
- *
- * @param {Function} setup
- *        Function to execute before checking for the
- *        clipboard content
- * @param {String|Boolean} expected
- *        An expected string or validator function
- * @return a promise that resolves when the expected string has been found or
- * the validator function has returned true, rejects otherwise.
- */
-function waitForClipboard(setup, expected) {
-  let def = promise.defer();
-  SimpleTest.waitForClipboard(expected, setup, def.resolve, def.reject);
-  return def.promise;
-}
-
-/**
  * Polls a given function waiting for it to return true.
  *
  * @param {Function} validatorFn
@@ -555,36 +258,6 @@ function waitForSuccess(validatorFn, name="untitled") {
 }
 
 /**
- * Create a new style tag containing the given style text and append it to the
- * document's head node
- *
- * @param {Document} doc
- * @param {String} style
- * @return {DOMNode} The newly created style node
- */
-function addStyle(doc, style) {
-  info("Adding a new style tag to the document with style content: " +
-    style.substring(0, 50));
-  let node = doc.createElement("style");
-  node.setAttribute("type", "text/css");
-  node.textContent = style;
-  doc.getElementsByTagName("head")[0].appendChild(node);
-  return node;
-}
-
-/**
- * Checks whether the inspector's sidebar corresponding to the given id already
- * exists
- *
- * @param {InspectorPanel}
- * @param {String}
- * @return {Boolean}
- */
-function hasSideBarTab(inspector, id) {
-  return !!inspector.sidebar.getWindowForTab(id);
-}
-
-/**
  * Get the dataURL for the font family tooltip.
  *
  * @param {String} font
@@ -601,20 +274,6 @@ var getFontFamilyDataURL = Task.async(function*(font, nodeFront) {
   let dataURL = yield data.string();
   return dataURL;
 });
-
-/**
- * Simulate the key input for the given input in the window.
- *
- * @param {String} input
- *        The string value to input
- * @param {Window} win
- *        The window containing the panel
- */
-function synthesizeKeys(input, win) {
-  for (let key of input.split("")) {
-    EventUtils.synthesizeKey(key, {}, win);
-  }
-}
 
 /* *********************************************
  * RULE-VIEW
@@ -920,78 +579,4 @@ function getComputedViewProperty(view, name) {
 function getComputedViewPropertyValue(view, name, propertyName) {
   return getComputedViewProperty(view, name, propertyName)
     .valueSpan.textContent;
-}
-
-/* *********************************************
- * STYLE-EDITOR
- * *********************************************
- * Style-editor related utility functions.
- */
-
-/**
- * Wait for the toolbox to emit the styleeditor-selected event and when done
- * wait for the stylesheet identified by href to be loaded in the stylesheet
- * editor
- *
- * @param {Toolbox} toolbox
- * @param {String} href
- *        Optional, if not provided, wait for the first editor to be ready
- * @return a promise that resolves to the editor when the stylesheet editor is
- * ready
- */
-function waitForStyleEditor(toolbox, href) {
-  let def = promise.defer();
-
-  info("Waiting for the toolbox to switch to the styleeditor");
-  toolbox.once("styleeditor-selected").then(() => {
-    let panel = toolbox.getCurrentPanel();
-    ok(panel && panel.UI, "Styleeditor panel switched to front");
-
-    // A helper that resolves the promise once it receives an editor that
-    // matches the expected href. Returns false if the editor was not correct.
-    let gotEditor = (event, editor) => {
-      let currentHref = editor.styleSheet.href;
-      if (!href || (href && currentHref.endsWith(href))) {
-        info("Stylesheet editor selected");
-        panel.UI.off("editor-selected", gotEditor);
-
-        editor.getSourceEditor().then(sourceEditor => {
-          info("Stylesheet editor fully loaded");
-          def.resolve(sourceEditor);
-        });
-
-        return true;
-      }
-
-      info("The editor was incorrect. Waiting for editor-selected event.");
-      return false;
-    };
-
-    // The expected editor may already be selected. Check the if the currently
-    // selected editor is the expected one and if not wait for an
-    // editor-selected event.
-    if (!gotEditor("styleeditor-selected", panel.UI.selectedEditor)) {
-      // The expected editor is not selected (yet). Wait for it.
-      panel.UI.on("editor-selected", gotEditor);
-    }
-  });
-
-  return def.promise;
-}
-
-/**
- * Reload the current page and wait for the inspector to be initialized after
- * the navigation
- *
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves after page reload and inspector
- * initialization
- */
-function reloadPage(inspector) {
-  let onNewRoot = inspector.once("new-root");
-  content.location.reload();
-  return onNewRoot.then(() => {
-    inspector.markup._waitForChildren();
-  });
 }

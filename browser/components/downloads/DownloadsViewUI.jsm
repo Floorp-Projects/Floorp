@@ -237,7 +237,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       } else if (this.download.error.becauseBlockedByReputationCheck) {
         switch (this.download.error.reputationCheckVerdict) {
           case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
-            stateLabel = s.blockedUncommon;
+            stateLabel = s.blockedUncommon2;
             break;
           case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
             stateLabel = s.blockedPotentiallyUnwanted;
@@ -271,11 +271,18 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
    *
    * @param window
    *        The window to which the dialog should be anchored.
+   * @param dialogType
+   *        Can be "unblock", "chooseUnblock", or "chooseOpen".
    */
-  confirmUnblock(window) {
-    let verdict = this.download.error.reputationCheckVerdict;
-    DownloadsCommon.confirmUnblockDownload(verdict, window).then(action => {
-      if (action == "unblock") {
+  confirmUnblock(window, dialogType) {
+    DownloadsCommon.confirmUnblockDownload({
+      verdict: this.download.error.reputationCheckVerdict,
+      window,
+      dialogType,
+    }).then(action => {
+      if (action == "open") {
+        return this.download.unblock().then(() => this.downloadsCmd_open());
+      } else if (action == "unblock") {
         return this.download.unblock();
       } else if (action == "confirmBlock") {
         return this.download.confirmBlock();
@@ -323,6 +330,8 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_openReferrer":
         return !!this.download.source.referrer;
       case "downloadsCmd_confirmBlock":
+      case "downloadsCmd_chooseUnblock":
+      case "downloadsCmd_chooseOpen":
       case "downloadsCmd_unblock":
         return this.download.hasBlockedData;
     }

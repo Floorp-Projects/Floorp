@@ -26,7 +26,7 @@
               onclick="checkForMiddleClick(this, event);"/>
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
               label="&safeb.palm.notdeceptive.label;"
-              accesskey="&reportDeceptiveSiteMenu.accesskey;"
+              accesskey="&safeb.palm.notdeceptive.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingErrorBroadcaster"
               oncommand="openUILinkIn(gSafeBrowsing.getReportURL('PhishMistake'), 'tab');"

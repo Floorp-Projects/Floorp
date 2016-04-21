@@ -1486,7 +1486,7 @@ testCM("lineWidgetChanged", function(cm) {
     // Good:
     // | ------------- display width ------------- |
     // | ------- widget-width when measured ------ |
-    // | | -- under-half -- | | -- under-half -- | |
+    // | | -- under-half -- | | -- under-half -- | | 
     // | | --- over-half --- |                     |
     // | | --- over-half --- |                     |
     // Height: measured as 3 lines, same as it will be when actually displayed
@@ -1503,7 +1503,7 @@ testCM("lineWidgetChanged", function(cm) {
     // Bad (too wide):
     // | ------------- display width ------------- |
     // | -------- widget-width when measured ------- | < -- uh oh
-    // | | -- under-half -- | | -- under-half -- |   |
+    // | | -- under-half -- | | -- under-half -- |   | 
     // | | --- over-half --- | | --- over-half --- | | < -- when measured, combined on one line
     // Height: measured as 2 lines, less than expected. Will be displayed as 3 lines!
 

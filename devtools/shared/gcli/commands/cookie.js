@@ -59,7 +59,10 @@ function isCookieAtHost(cookie, host) {
     return host == null;
   }
   if (cookie.host.startsWith(".")) {
-    return host.endsWith(cookie.host);
+    return ("." + host).endsWith(cookie.host);
+  }
+  if (cookie.host === "") {
+    return host.startsWith("file://" + cookie.path);
   }
   return cookie.host == host;
 }

@@ -12,6 +12,12 @@
 <script type="text/javascript">
 "use strict";
 
+// A 1x1 PNG image.
+// Source: https://commons.wikimedia.org/wiki/File:1x1.png (Public Domain)
+let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+                 "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+
 add_task(function* test_notification() {
   function backgroundScript() {
     let opts = {
@@ -141,6 +147,7 @@ add_task(function* test_notifications_populated_getAll() {
   function backgroundScript() {
     let opts = {
       type: "basic",
+      iconUrl: "a.png",
       title: "Testing Notification",
       message: "Carry on",
     };
@@ -170,6 +177,9 @@ add_task(function* test_notifications_populated_getAll() {
       permissions: ["notifications"],
     },
     background: `(${backgroundScript})()`,
+    files: {
+      "a.png": IMAGE_ARRAYBUFFER,
+    },
   });
   yield extension.startup();
   yield extension.awaitFinish("getAll populated");

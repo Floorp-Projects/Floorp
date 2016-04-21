@@ -25,25 +25,27 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8,background image tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
 
-  yield testRuleViewUrls();
-  yield testComputedViewUrls();
+  let {inspector} = yield openInspector();
+  yield testRuleViewUrls(inspector);
+  yield testComputedViewUrls(inspector);
 });
 
-function* testRuleViewUrls() {
+function* testRuleViewUrls(inspector) {
   info("Testing tooltips in the rule view");
-
-  let {view, inspector} = yield openRuleView();
+  let view = selectRuleView(inspector);
   yield selectNode("h1", inspector);
 
   let {valueSpan} = getRuleViewProperty(view, "h1", "background");
   yield performChecks(view, valueSpan);
 }
 
-function* testComputedViewUrls() {
+function* testComputedViewUrls(inspector) {
   info("Testing tooltips in the computed view");
 
-  let {view, inspector} = yield openComputedView();
-  yield inspector.once("computed-view-refreshed");
+  let onComputedViewReady = inspector.once("computed-view-refreshed");
+  let view = selectComputedView(inspector);
+  yield onComputedViewReady;
+
   let {valueSpan} = getComputedViewProperty(view, "background-image");
 
   yield performChecks(view, valueSpan);

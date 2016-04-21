@@ -1,3 +1,4 @@
+/*eslint-env es6:false*/
 /*
  * DO NOT MODIFY THIS FILE DIRECTLY!
  *
@@ -64,22 +65,23 @@ var Readability = function(uri, doc, options) {
   // Make an AJAX request for each page and append it to the document.
   this._curPageNum = 1;
 
+  var logEl;
+
   // Control whether log messages are sent to the console
   if (this._debug) {
-    function logEl(e) {
+    logEl = function(e) {
       var rv = e.nodeName + " ";
       if (e.nodeType == e.TEXT_NODE) {
         return rv + '("' + e.textContent + '")';
       }
       var classDesc = e.className && ("." + e.className.replace(/ /g, "."));
       var elDesc = "";
-      if (e.id) {
+      if (e.id)
         elDesc = "(#" + e.id + classDesc + ")";
-      } else if (classDesc) {
+      else if (classDesc)
         elDesc = "(" + classDesc + ")";
-      }
       return rv + elDesc;
-    }
+    };
     this.log = function () {
       if ("dump" in root) {
         var msg = Array.prototype.map.call(arguments, function(x) {
@@ -118,10 +120,10 @@ Readability.prototype = {
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
-    unlikelyCandidates: /banner|combx|comment|community|disqus|extra|foot|header|menu|related|remark|rss|share|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup/i,
+    unlikelyCandidates: /banner|combx|comment|community|disqus|extra|foot|header|menu|modal|related|remark|rss|share|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup/i,
     okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
     positive: /article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
-    negative: /hidden|^hid$| hid$| hid |^hid |banner|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
+    negative: /hidden|^hid$| hid$| hid |^hid |banner|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|modal|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
     extraneous: /print|archive|comment|discuss|e[\-]?mail|share|reply|all|login|sign|single|utility/i,
     byline: /byline|author|dateline|writtenby/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
@@ -198,12 +200,14 @@ Readability.prototype = {
       return node.querySelectorAll(tagNames.join(','));
     }
     return [].concat.apply([], tagNames.map(function(tag) {
-      return node.getElementsByTagName(tag);
+      var collection = node.getElementsByTagName(tag);
+      return Array.isArray(collection) ? collection : Array.from(collection);
     }));
   },
 
   /**
-   * Converts each <a> and <img> uri in the given element to an absolute URI.
+   * Converts each <a> and <img> uri in the given element to an absolute URI,
+   * ignoring #ref URIs.
    *
    * @param Element
    * @return void
@@ -229,6 +233,10 @@ Readability.prototype = {
       // Dotslash relative URI.
       if (uri.indexOf("./") === 0)
         return pathBase + uri.slice(2);
+
+      // Ignore hash URIs:
+      if (uri[0] == "#")
+        return uri;
 
       // Standard relative URI; add entire path. pathBase already includes a
       // trailing "/".
@@ -374,9 +382,9 @@ Readability.prototype = {
       // (which will be replaced with a <p> later).
       while ((next = this._nextElement(next)) && (next.tagName == "BR")) {
         replaced = true;
-        let sibling = next.nextSibling;
+        var brSibling = next.nextSibling;
         next.parentNode.removeChild(next);
-        next = sibling;
+        next = brSibling;
       }
 
       // If we removed a <br> chain, replace the remaining <br> with a <p>. Add
@@ -396,7 +404,7 @@ Readability.prototype = {
           }
 
           // Otherwise, make this node a child of the new <p>.
-          let sibling = next.nextSibling;
+          var sibling = next.nextSibling;
           p.appendChild(next);
           next = sibling;
         }
@@ -747,7 +755,12 @@ Readability.prototype = {
           // - parent:             1 (no division)
           // - grandparent:        2
           // - great grandparent+: ancestor level * 3
-          var scoreDivider = level < 2 ? level + 1 : level * 3;
+          if (level === 0)
+            var scoreDivider = 1;
+          else if (level === 1)
+            scoreDivider = 2;
+          else
+            scoreDivider = level * 3;
           ancestor.readability.contentScore += contentScore / scoreDivider;
         });
       });
@@ -860,7 +873,8 @@ Readability.prototype = {
 
             if (nodeLength > 80 && linkDensity < 0.25) {
               append = true;
-            } else if (nodeLength < 80 && linkDensity === 0 && nodeContent.search(/\.( |$)/) !== -1) {
+            } else if (nodeLength < 80 && nodeLength > 0 && linkDensity === 0 &&
+                       nodeContent.search(/\.( |$)/) !== -1) {
               append = true;
             }
           }
@@ -1145,7 +1159,7 @@ Readability.prototype = {
   _getLinkDensity: function(element) {
     var textLength = this._getInnerText(element).length;
     if (textLength === 0)
-      return undefined;
+      return 0;
 
     var linkLength = 0;
 
