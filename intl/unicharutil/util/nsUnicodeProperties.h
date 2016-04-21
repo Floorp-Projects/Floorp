@@ -101,6 +101,11 @@ HanVariantType GetHanVariant(uint32_t aCh);
 #endif
 
 uint32_t GetFullWidth(uint32_t aCh);
+// This is the reverse function of GetFullWidth which guarantees that
+// for every codepoint c, GetFullWidthInverse(GetFullWidth(c)) == c.
+// Note that, this function does not guarantee to convert all wide
+// form characters to their possible narrow form.
+uint32_t GetFullWidthInverse(uint32_t aCh);
 
 bool IsClusterExtender(uint32_t aCh, uint8_t aCategory);
 
