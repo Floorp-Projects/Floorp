@@ -93,7 +93,7 @@ protected:
 
   nsresult BeginXULLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-  nsresult EndLayout(nsBoxLayoutState& aState);
+  nsresult EndXULLayout(nsBoxLayoutState& aState);
 
 #ifdef DEBUG_LAYOUT
   virtual void GetBoxName(nsAutoString& aName);
