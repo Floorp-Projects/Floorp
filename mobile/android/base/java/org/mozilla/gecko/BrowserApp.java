@@ -650,6 +650,12 @@ public class BrowserApp extends GeckoApp
             mBrowserToolbar.setTitle(intent.getDataString());
 
             showTabQueuePromptIfApplicable(intent);
+        } else if (ACTION_VIEW_MULTIPLE.equals(action) && savedInstanceState == null) {
+            // We only want to handle this intent if savedInstanceState is null. In the case where
+            // savedInstanceState is not null this activity is being re-created and we already
+            // opened tabs for the URLs the last time. Our session store will take care of restoring
+            // them.
+            openMultipleTabsFromIntent(intent);
         } else if (GuestSession.NOTIFICATION_INTENT.equals(action)) {
             GuestSession.handleIntent(this, intent);
         } else if (TabQueueHelper.LOAD_URLS_ACTION.equals(action)) {
@@ -1028,6 +1034,23 @@ public class BrowserApp extends GeckoApp
                     showNormalTabs();
                 }
             });
+        }
+    }
+
+    private void openMultipleTabsFromIntent(final Intent intent) {
+        final List<String> urls = intent.getStringArrayListExtra("urls");
+        if (urls != null) {
+            openUrls(urls);
+        }
+
+        // Launched from a "content notification"
+        if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
+
+            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
         }
     }
 
@@ -3775,20 +3798,7 @@ public class BrowserApp extends GeckoApp
 
         // Custom intent action for opening multiple URLs at once
         if (isViewMultipleAction) {
-            List<String> urls = intent.getStringArrayListExtra("urls");
-            if (urls != null) {
-                openUrls(urls);
-            }
-
-            // Launched from a "content notification"
-            if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
-                Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
-
-                Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-            }
+            openMultipleTabsFromIntent(intent);
         }
 
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
@@ -3992,12 +4002,9 @@ public class BrowserApp extends GeckoApp
             // If the toolbar is dynamic and not currently showing, just slide it in
             if (mDynamicToolbar.isEnabled() && toolbar.getToolbarTranslation() != 0) {
                 mDynamicToolbar.setTemporarilyVisible(true, VisibilityTransition.ANIMATE);
-            } else {
-                // Otherwise, we animate the actionbar itself
-                mActionBar.animateIn();
             }
-
             mDynamicToolbar.setPinned(true, PinReason.ACTION_MODE);
+
         } else {
             // Otherwise, we're already showing an action mode. Just finish it and show the new one
             mActionMode.finish();

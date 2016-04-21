@@ -6,20 +6,14 @@
 
 "use strict";
 
+/* import-globals-from ../../inspector/shared/test/head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
+
 const TEST_BASE = "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
 const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/styleeditor/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/styleeditor/test/";
 const TEST_HOST = "mochi.test:8888";
-
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {TargetFactory} = require("devtools/client/framework/target");
-var promise = require("promise");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-DevToolsUtils.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
-});
 
 /**
  * Add a new test tab in the browser and load the given url.
@@ -27,7 +21,7 @@ SimpleTest.registerCleanupFunction(() => {
  * @param {Window} win The window to add the tab to (default: current window).
  * @return a promise that resolves to the tab object when the url is loaded
  */
-function addTab(url, win) {
+var addTab = function(url, win) {
   info("Adding a new tab with URL: '" + url + "'");
   let def = promise.defer();
 
@@ -42,7 +36,7 @@ function addTab(url, win) {
   }, true);
 
   return def.promise;
-}
+};
 
 /**
  * Navigate the currently selected tab to a new URL and wait for it to load.
@@ -77,15 +71,6 @@ var reloadPageAndWaitForStyleSheets = Task.async(function* (ui) {
   let browser = gBrowser.selectedBrowser;
   yield ContentTask.spawn(browser, null, "() => content.location.reload()");
   yield onReset;
-});
-
-registerCleanupFunction(function* () {
-  while (gBrowser.tabs.length > 1) {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    yield gDevTools.closeToolbox(target);
-
-    gBrowser.removeCurrentTab();
-  }
 });
 
 /**
@@ -125,7 +110,7 @@ var openStyleEditorForURL = Task.async(function* (url, win) {
  * @param {String} name
  *        name of the property.
  */
-function* getComputedStyleProperty(args) {
+var getComputedStyleProperty = function* (args) {
   return yield ContentTask.spawn(gBrowser.selectedBrowser, args,
     function({selector, pseudo, name}) {
       let element = content.document.querySelector(selector);
@@ -133,4 +118,4 @@ function* getComputedStyleProperty(args) {
       return style.getPropertyValue(name);
     }
   );
-}
+};

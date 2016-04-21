@@ -42,76 +42,6 @@ addTab = function(url) {
 };
 
 /**
- * Open the toolbox, with the inspector tool visible, and the rule-view
- * sidebar tab selected.
- *
- * @return a promise that resolves when the inspector is ready and the rule
- * view is visible and ready
- */
-function openRuleView() {
-  return openInspectorSidebarTab("ruleview").then(data => {
-    return {
-      toolbox: data.toolbox,
-      inspector: data.inspector,
-      testActor: data.testActor,
-      view: data.inspector.ruleview.view
-    };
-  });
-}
-
-/**
- * Set the inspector's current selection to null so that no node is selected
- *
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves when the inspector is updated
- */
-function clearCurrentNodeSelection(inspector) {
-  info("Clearing the current selection");
-  let updated = inspector.once("inspector-updated");
-  inspector.selection.setNodeFront(null);
-  return updated;
-}
-
-/**
- * Wait for eventName on target to be delivered a number of times.
- *
- * @param {Object} target
- *        An observable object that either supports on/off or
- *        addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Number} numTimes
- *        Number of deliveries to wait for.
- * @param {Boolean} useCapture
- *        Optional, for addEventListener/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function waitForNEvents(target, eventName, numTimes, useCapture = false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-  let count = 0;
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        if (++count == numTimes) {
-          target[remove](eventName, onEvent, useCapture);
-          deferred.resolve.apply(deferred, aArgs);
-        }
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
-}
-
-/**
  * Wait for a content -> chrome message on the message manager (the window
  * messagemanager is used).
  *
@@ -285,22 +215,6 @@ function* hideTooltipAndWaitForRuleViewChanged(tooltip, view) {
 }
 
 /**
- * Listen for a new tab to open and return a promise that resolves when one
- * does and completes the load event.
- *
- * @return a promise that resolves to the tab object
- */
-var waitForTab = Task.async(function* () {
-  info("Waiting for a tab to open");
-  yield once(gBrowser.tabContainer, "TabOpen");
-  let tab = gBrowser.selectedTab;
-  let browser = tab.linkedBrowser;
-  yield once(browser, "load", true);
-  info("The tab load completed");
-  return tab;
-});
-
-/**
  * Polls a given generator function waiting for it to return true.
  *
  * @param {Function} validatorFn
@@ -347,20 +261,6 @@ var getFontFamilyDataURL = Task.async(function* (font, nodeFront) {
   let dataURL = yield data.string();
   return dataURL;
 });
-
-/**
- * Simulate the key input for the given input in the window.
- *
- * @param {String} input
- *        The string value to input
- * @param {Window} win
- *        The window containing the panel
- */
-function synthesizeKeys(input, win) {
-  for (let key of input.split("")) {
-    EventUtils.synthesizeKey(key, {}, win);
-  }
-}
 
 /**
  * Get the DOMNode for a css rule in the rule-view that corresponds to the given

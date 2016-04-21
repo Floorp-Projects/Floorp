@@ -13,7 +13,7 @@ const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive.html/",
   window: this
 });
-const { GetDevices } = require("devtools/client/shared/devices");
+const { Task } = require("resource://gre/modules/Task.jsm");
 const Telemetry = require("devtools/client/shared/telemetry");
 const { loadSheet } = require("sdk/stylesheet/utils");
 
@@ -22,9 +22,9 @@ const { createFactory, createElement } =
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const { initDevices } = require("./devices");
 const App = createFactory(require("./app"));
 const Store = require("./store");
-const { addDevice, addDeviceType } = require("./actions/devices");
 const { changeLocation } = require("./actions/location");
 const { addViewport, resizeViewport } = require("./actions/viewports");
 
@@ -34,7 +34,7 @@ let bootstrap = {
 
   store: null,
 
-  init() {
+  init: Task.async(function* () {
     // Load a special UA stylesheet to reset certain styles such as dropdown
     // lists.
     loadSheet(window,
@@ -42,11 +42,11 @@ let bootstrap = {
               "agent");
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
+    yield initDevices(this.dispatch.bind(this));
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
-    this.initDevices();
     window.postMessage({ type: "init" }, "*");
-  },
+  }),
 
   destroy() {
     this.store = null;
@@ -67,19 +67,6 @@ let bootstrap = {
       return;
     }
     this.store.dispatch(action);
-  },
-
-  initDevices() {
-    GetDevices().then(devices => {
-      for (let type of devices.TYPES) {
-        this.dispatch(addDeviceType(type));
-        for (let device of devices[type]) {
-          if (device.os != "fxos") {
-            this.dispatch(addDevice(device, type));
-          }
-        }
-      }
-    });
   },
 
 };

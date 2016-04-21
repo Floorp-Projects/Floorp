@@ -10,7 +10,8 @@ const IGNORE = ["getPreferredIconURL", "escapeAddonURI",
                 "addAddonListener", "removeAddonListener",
                 "addInstallListener", "removeInstallListener",
                 "addManagerListener", "removeManagerListener",
-                "mapURIToAddonID", "shutdown"];
+                "mapURIToAddonID", "shutdown", "init",
+                "stateToString", "errorToString"];
 
 const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
                         "AddonScreenshot", "AddonType", "startup", "shutdown",
