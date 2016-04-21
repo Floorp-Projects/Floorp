@@ -2921,7 +2921,7 @@ public:
   nsresult GetXULClientRect(nsRect& aContentRect);
 
   // For nsSprocketLayout
-  virtual Valignment GetVAlign() const = 0;
+  virtual Valignment GetXULVAlign() const = 0;
   virtual Halignment GetHAlign() const = 0;
 
   bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }

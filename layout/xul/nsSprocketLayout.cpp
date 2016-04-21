@@ -115,7 +115,7 @@ HandleBoxPack(nsIFrame* aBox, const nsFrameState& aFrameState, nscoord& aX, nsco
 
   // Get our pack/alignment information.
   nsIFrame::Halignment halign = aBox->GetHAlign();
-  nsIFrame::Valignment valign = aBox->GetVAlign();
+  nsIFrame::Valignment valign = aBox->GetXULVAlign();
 
   // The following code handles box PACKING.  Packing comes into play in the case where the computed size for 
   // all of our children (now stored in our client rect) is smaller than the size available for
@@ -936,7 +936,7 @@ nsSprocketLayout::AlignChildren(nsIFrame* aBox,
   bool isLTR;
 
   if (isHorizontal) {
-    valign = aBox->GetVAlign();
+    valign = aBox->GetXULVAlign();
     if (valign == nsBoxFrame::vAlign_BaseLine) {
       maxAscent = aBox->GetXULBoxAscent(aState);
     }
