@@ -161,7 +161,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
       childRect.height = rowHeight;
 
       childRect.Deflate(margin);
-      box->SetBounds(aState, childRect);
+      box->SetXULBounds(aState, childRect);
       box->Layout(aState);
     } else {
       // if the child did not need to be relayed out. Then its easy.
@@ -175,7 +175,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
         redrawStart = newPos;
 
       childRect.y = newPos;
-      box->SetBounds(aState, childRect);
+      box->SetXULBounds(aState, childRect);
     }
 
     // Ok now the available size gets smaller and we move the
