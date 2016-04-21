@@ -732,7 +732,6 @@ class LinuxToolchainTest(BaseToolchainTest):
             'CC': '/opt/clang/bin/clang',
         })
 
-    @unittest.expectedFailure  # Bug 1264609
     def test_atypical_name(self):
         paths = dict(self.PATHS)
         paths.update({
@@ -749,6 +748,28 @@ class LinuxToolchainTest(BaseToolchainTest):
         }, environ={
             'CC': 'afl-clang-fast',
             'CXX': 'afl-clang-fast++',
+        })
+
+    def test_mixed_compilers(self):
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.CLANG_3_6_RESULT,
+            'cxx_compiler': self.CLANGXX_3_6_RESULT,
+            'host_c_compiler': self.GCC_4_9_RESULT,
+            'host_cxx_compiler': self.GXX_4_9_RESULT,
+        }, environ={
+            'CC': 'clang',
+            'HOST_CC': 'gcc',
+        })
+
+        self.do_toolchain_test(self.PATHS, {
+            'c_compiler': self.CLANG_3_6_RESULT,
+            'cxx_compiler': self.CLANGXX_3_6_RESULT,
+            'host_c_compiler': self.GCC_4_9_RESULT,
+            'host_cxx_compiler': self.GXX_4_9_RESULT,
+        }, environ={
+            'CC': 'clang',
+            'CXX': 'clang++',
+            'HOST_CC': 'gcc',
         })
 
 
