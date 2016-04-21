@@ -164,6 +164,7 @@ add_task(function* testAccessibleCarets() {
 
   let ip_LTR_elem = doc.getElementById("LTRphone");
   let ip_RTL_elem = doc.getElementById("RTLphone");
+  let bug1265750_elem = doc.getElementById("bug1265750");
 
   // Locate longpress midpoints for test elements, ensure expactations.
   let ce_LTR_midPoint = getCharPressPoint(doc, ce_LTR_elem, 0, "F");
@@ -178,6 +179,7 @@ add_task(function* testAccessibleCarets() {
 
   let ip_LTR_midPoint = getCharPressPoint(doc, ip_LTR_elem, 8, "2");
   let ip_RTL_midPoint = getCharPressPoint(doc, ip_RTL_elem, 9, "2");
+  let bug1265750_midPoint = getCharPressPoint(doc, bug1265750_elem, 2, "7");
 
   // Longpress various LTR content elements. Test focused element against
   // expected, and selected text against expected.
@@ -203,6 +205,11 @@ add_task(function* testAccessibleCarets() {
     "Selected phone number should match expected text.");
   is(result.text.length, 30,
     "Selected phone number length should match expected maximum.");
+
+  result = getLongPressResult(browser, bug1265750_midPoint);
+  is(result.focusedElement, null, "Focused element should match expected.");
+  is(result.text, "3 45 678 90",
+    "Selected phone number should match expected text.");
 
   // Longpress various RTL content elements. Test focused element against
   // expected, and selected text against expected.
