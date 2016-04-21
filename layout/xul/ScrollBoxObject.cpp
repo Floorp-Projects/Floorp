@@ -118,7 +118,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
     nsPoint cp = sf->GetScrollPosition();
     nscoord diff = 0;
     int32_t curIndex = 0;
-    bool isLTR = scrolledBox->IsNormalDirection();
+    bool isLTR = scrolledBox->IsXULNormalDirection();
 
     int32_t frameWidth = 0;
     if (!isLTR && horiz) {
