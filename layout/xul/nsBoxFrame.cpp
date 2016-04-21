@@ -1907,7 +1907,7 @@ IsBoxOrdinalLEQ(nsIFrame* aFrame1,
   // If we've got a placeholder frame, use its out-of-flow frame's ordinal val.
   nsIFrame* aRealFrame1 = nsPlaceholderFrame::GetRealFrameFor(aFrame1);
   nsIFrame* aRealFrame2 = nsPlaceholderFrame::GetRealFrameFor(aFrame2);
-  return aRealFrame1->GetOrdinal() <= aRealFrame2->GetOrdinal();
+  return aRealFrame1->GetXULOrdinal() <= aRealFrame2->GetXULOrdinal();
 }
 
 void 
@@ -1941,13 +1941,13 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsIFrame* aChild)
   if (!SupportsOrdinalsInChildren())
     return NS_OK;
 
-  uint32_t ord = aChild->GetOrdinal();
+  uint32_t ord = aChild->GetXULOrdinal();
   
   nsIFrame* child = mFrames.FirstChild();
   nsIFrame* newPrevSib = nullptr;
 
   while (child) {
-    if (ord < child->GetOrdinal()) {
+    if (ord < child->GetXULOrdinal()) {
       break;
     }
 
