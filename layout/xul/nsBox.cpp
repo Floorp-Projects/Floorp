@@ -157,7 +157,7 @@ nsBox::BeginXULLayout(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsBox::DoLayout(nsBoxLayoutState& aState)
+nsBox::DoXULLayout(nsBoxLayoutState& aState)
 {
   return NS_OK;
 }
@@ -506,7 +506,7 @@ nsIFrame::XULLayout(nsBoxLayoutState& aState)
 
   box->BeginXULLayout(aState);
 
-  box->DoLayout(aState);
+  box->DoXULLayout(aState);
 
   box->EndXULLayout(aState);
 

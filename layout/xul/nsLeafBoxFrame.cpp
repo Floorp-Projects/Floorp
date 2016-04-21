@@ -384,7 +384,7 @@ nsLeafBoxFrame::MarkIntrinsicISizesDirty()
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::DoLayout(nsBoxLayoutState& aState)
+nsLeafBoxFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
-    return nsBox::DoLayout(aState);
+    return nsBox::DoXULLayout(aState);
 }

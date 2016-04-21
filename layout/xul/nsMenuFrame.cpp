@@ -728,10 +728,10 @@ nsMenuFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
+nsMenuFrame::DoXULLayout(nsBoxLayoutState& aState)
 {
   // lay us out
-  nsresult rv = nsBoxFrame::DoLayout(aState);
+  nsresult rv = nsBoxFrame::DoXULLayout(aState);
 
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (popupFrame) {

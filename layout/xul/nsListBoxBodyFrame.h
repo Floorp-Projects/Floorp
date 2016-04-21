@@ -84,7 +84,7 @@ public:
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
   virtual void MarkIntrinsicISizesDirty() override;
 
   virtual nsSize GetXULMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;

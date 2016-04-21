@@ -250,12 +250,12 @@ nsListBoxBodyFrame::MarkIntrinsicISizesDirty()
 /////////// nsBox ///////////////
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
+nsListBoxBodyFrame::DoXULLayout(nsBoxLayoutState& aBoxLayoutState)
 {
   if (mScrolling)
     aBoxLayoutState.SetPaintingDisabled(true);
 
-  nsresult rv = nsBoxFrame::DoLayout(aBoxLayoutState);
+  nsresult rv = nsBoxFrame::DoXULLayout(aBoxLayoutState);
 
   // determine the real height for the scrollable area from the total number
   // of rows, since non-visible rows don't yet have frames
