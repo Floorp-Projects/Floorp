@@ -569,7 +569,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
   NS_ASSERTION(size.width != NS_INTRINSICSIZE && size.height != NS_INTRINSICSIZE,
                "non-intrinsic size expected");
 
-  nsSize minSize = GetMinSize(aState);
+  nsSize minSize = GetXULMinSize(aState);
   nsSize maxSize = GetMaxSize(aState);
 
   if (!widthSet && !heightSet) {
@@ -623,7 +623,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsImageBoxFrame::GetMinSize(nsBoxLayoutState& aState)
+nsImageBoxFrame::GetXULMinSize(nsBoxLayoutState& aState)
 {
   // An image can always scale down to (0,0).
   nsSize size(0,0);

@@ -57,7 +57,7 @@ nsGridCell::GetPrefSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsGridCell::GetMinSize(nsBoxLayoutState& aState)
+nsGridCell::GetXULMinSize(nsBoxLayoutState& aState)
 {
   nsSize sum(0, 0);
 
@@ -66,7 +66,7 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
   // we are tall as the tallest child plus its top offset
 
   if (mBoxInColumn) {
-    nsSize min = mBoxInColumn->GetMinSize(aState);
+    nsSize min = mBoxInColumn->GetXULMinSize(aState);
 
     nsBox::AddMargin(mBoxInColumn, min);
     nsGridLayout2::AddOffset(mBoxInColumn, min);
@@ -75,7 +75,7 @@ nsGridCell::GetMinSize(nsBoxLayoutState& aState)
   }
 
   if (mBoxInRow) {
-    nsSize min = mBoxInRow->GetMinSize(aState);
+    nsSize min = mBoxInRow->GetXULMinSize(aState);
 
     nsBox::AddMargin(mBoxInRow, min);
     nsGridLayout2::AddOffset(mBoxInRow, min);

@@ -34,7 +34,7 @@ public:
     ~nsGridCell();
 
     nsSize      GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
-    nsSize      GetMinSize(nsBoxLayoutState& aBoxLayoutState);
+    nsSize      GetXULMinSize(nsBoxLayoutState& aBoxLayoutState);
     nsSize      GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
     bool        IsCollapsed();
 

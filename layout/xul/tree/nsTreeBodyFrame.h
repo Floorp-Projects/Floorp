@@ -124,7 +124,7 @@ public:
 
   void ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth);
 
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowArea = false) override;
 

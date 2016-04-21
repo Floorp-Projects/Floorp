@@ -38,7 +38,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 #endif
 
 /* virtual */ nsSize
-nsPlaceholderFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
+nsPlaceholderFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
   nsSize size(0, 0);
   DISPLAY_MIN_SIZE(this, size);

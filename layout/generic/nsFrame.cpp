@@ -8729,7 +8729,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState)
 }
 
 nsSize
-nsFrame::GetMinSize(nsBoxLayoutState& aState)
+nsFrame::GetXULMinSize(nsBoxLayoutState& aState)
 {
   nsSize size(0,0);
   DISPLAY_MIN_SIZE(this, size);

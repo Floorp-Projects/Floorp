@@ -81,7 +81,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual void Init(nsIContent*       aContent,
