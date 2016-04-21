@@ -119,6 +119,9 @@ var handleContentContextMenu = function (event) {
                                           .outerWindowID;
   let loginFillInfo = LoginManagerContent.getFieldContext(event.target);
 
+  // The same-origin check will be done in nsContextMenu.openLinkInTab.
+  let parentAllowsMixedContent = !!docShell.mixedContentChannel;
+
   // get referrer attribute from clicked link and parse it
   // if per element referrer is enabled, the element referrer overrules
   // the document wide referrer
@@ -180,7 +183,7 @@ var handleContentContextMenu = function (event) {
                      principal, docLocation, charSet, baseURI, referrer,
                      referrerPolicy, contentType, contentDisposition,
                      frameOuterWindowID, selectionInfo, disableSetDesktopBg,
-                     loginFillInfo, },
+                     loginFillInfo, parentAllowsMixedContent },
                    { event, popupNode: event.target });
   }
   else {
@@ -203,6 +206,7 @@ var handleContentContextMenu = function (event) {
       selectionInfo: selectionInfo,
       disableSetDesktopBackground: disableSetDesktopBg,
       loginFillInfo,
+      parentAllowsMixedContent,
     };
   }
 }
