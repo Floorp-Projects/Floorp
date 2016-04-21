@@ -1086,12 +1086,13 @@ HasLookupRuleWithGlyph(hb_face_t *aFace, hb_tag_t aTableTag, bool& aHasGlyph,
     hb_set_destroy(otherLookups);
 }
 
-nsDataHashtable<nsUint32HashKey, int32_t> *gfxFont::sScriptTagToCode = nullptr;
-nsTHashtable<nsUint32HashKey>             *gfxFont::sDefaultFeatures = nullptr;
+nsDataHashtable<nsUint32HashKey,Script> *gfxFont::sScriptTagToCode = nullptr;
+nsTHashtable<nsUint32HashKey>           *gfxFont::sDefaultFeatures = nullptr;
 
 static inline bool
-HasSubstitution(uint32_t *aBitVector, uint32_t aBit) {
-    return (aBitVector[aBit >> 5] & (1 << (aBit & 0x1f))) != 0;
+HasSubstitution(uint32_t *aBitVector, Script aScript) {
+    return (aBitVector[static_cast<uint32_t>(aScript) >> 5]
+           & (1 << (static_cast<uint32_t>(aScript) & 0x1f))) != 0;
 }
 
 // union of all default substitution features across scripts
@@ -1165,9 +1166,10 @@ gfxFont::CheckForFeaturesInvolvingSpace()
         if (!sScriptTagToCode) {
             sScriptTagToCode =
                 new nsDataHashtable<nsUint32HashKey,
-                                    int32_t>(MOZ_NUM_SCRIPT_CODES);
-            sScriptTagToCode->Put(HB_TAG('D','F','L','T'), MOZ_SCRIPT_COMMON);
-            for (int32_t s = MOZ_SCRIPT_ARABIC; s < MOZ_NUM_SCRIPT_CODES; s++) {
+                                    Script>(size_t(Script::NUM_SCRIPT_CODES));
+            sScriptTagToCode->Put(HB_TAG('D','F','L','T'), Script::COMMON);
+            for (Script s = Script::ARABIC; s < Script::NUM_SCRIPT_CODES;
+                 s = Script(static_cast<int>(s) + 1)) {
                 hb_script_t scriptTag = hb_script_t(GetScriptTagForCode(s));
                 hb_tag_t s1, s2;
                 hb_ot_tags_from_script(scriptTag, &s1, &s2);
@@ -1195,7 +1197,7 @@ gfxFont::CheckForFeaturesInvolvingSpace()
                                                &len, scriptTags);
             for (uint32_t i = 0; i < len; i++) {
                 bool isDefaultFeature = false;
-                int32_t s;
+                Script s;
                 if (!HasLookupRuleWithGlyphByScript(face, HB_OT_TAG_GSUB,
                                                     scriptTags[i], offset + i,
                                                     spaceGlyph,
@@ -1206,8 +1208,8 @@ gfxFont::CheckForFeaturesInvolvingSpace()
                     continue;
                 }
                 result = true;
-                uint32_t index = s >> 5;
-                uint32_t bit = s & 0x1f;
+                uint32_t index = static_cast<uint32_t>(s) >> 5;
+                uint32_t bit = static_cast<uint32_t>(s) & 0x1f;
                 if (isDefaultFeature) {
                     mFontEntry->mDefaultSubSpaceFeatures[index] |= (1 << bit);
                 } else {
@@ -1222,7 +1224,7 @@ gfxFont::CheckForFeaturesInvolvingSpace()
     // ==> can't use word cache, skip GPOS analysis
     bool canUseWordCache = true;
     if (HasSubstitution(mFontEntry->mDefaultSubSpaceFeatures,
-                        MOZ_SCRIPT_COMMON)) {
+                        Script::COMMON)) {
         canUseWordCache = false;
     }
 
@@ -1268,19 +1270,19 @@ gfxFont::CheckForFeaturesInvolvingSpace()
 }
 
 bool
-gfxFont::HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript)
+gfxFont::HasSubstitutionRulesWithSpaceLookups(Script aRunScript)
 {
     NS_ASSERTION(GetFontEntry()->mHasSpaceFeaturesInitialized,
                  "need to initialize space lookup flags");
-    NS_ASSERTION(aRunScript < MOZ_NUM_SCRIPT_CODES, "weird script code");
-    if (aRunScript == MOZ_SCRIPT_INVALID ||
-        aRunScript >= MOZ_NUM_SCRIPT_CODES) {
+    NS_ASSERTION(aRunScript < Script::NUM_SCRIPT_CODES, "weird script code");
+    if (aRunScript == Script::INVALID ||
+        aRunScript >= Script::NUM_SCRIPT_CODES) {
         return false;
     }
 
     // default features have space lookups ==> true
     if (HasSubstitution(mFontEntry->mDefaultSubSpaceFeatures,
-                        MOZ_SCRIPT_COMMON) ||
+                        Script::COMMON) ||
         HasSubstitution(mFontEntry->mDefaultSubSpaceFeatures,
                         aRunScript))
     {
@@ -1290,7 +1292,7 @@ gfxFont::HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript)
     // non-default features have space lookups and some type of
     // font feature, in font or style is specified ==> true
     if ((HasSubstitution(mFontEntry->mNonDefaultSubSpaceFeatures,
-                         MOZ_SCRIPT_COMMON) ||
+                         Script::COMMON) ||
          HasSubstitution(mFontEntry->mNonDefaultSubSpaceFeatures,
                          aRunScript)) &&
         (!mStyle.featureSettings.IsEmpty() ||
@@ -1303,7 +1305,7 @@ gfxFont::HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript)
 }
 
 bool
-gfxFont::SpaceMayParticipateInShaping(int32_t aRunScript)
+gfxFont::SpaceMayParticipateInShaping(Script aRunScript)
 {
     // avoid checking fonts known not to include default space-dependent features
     if (MOZ_UNLIKELY(mFontEntry->mSkipDefaultFeatureSpaceCheck)) {
@@ -1349,7 +1351,7 @@ gfxFont::SpaceMayParticipateInShaping(int32_t aRunScript)
 }
 
 bool
-gfxFont::SupportsFeature(int32_t aScript, uint32_t aFeatureTag)
+gfxFont::SupportsFeature(Script aScript, uint32_t aFeatureTag)
 {
     if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
         return GetFontEntry()->SupportsGraphiteFeature(aFeatureTag);
@@ -1358,7 +1360,7 @@ gfxFont::SupportsFeature(int32_t aScript, uint32_t aFeatureTag)
 }
 
 bool
-gfxFont::SupportsVariantCaps(int32_t aScript,
+gfxFont::SupportsVariantCaps(Script aScript,
                              uint32_t aVariantCaps,
                              bool& aFallbackToSmallCaps,
                              bool& aSyntheticLowerToSmallCaps,
@@ -1423,7 +1425,7 @@ gfxFont::SupportsVariantCaps(int32_t aScript,
 bool
 gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
                                 const uint8_t *aString,
-                                uint32_t aLength, int32_t aRunScript)
+                                uint32_t aLength, Script aRunScript)
 {
     NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aString),
                                          aLength);
@@ -1434,7 +1436,7 @@ gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
 bool
 gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
                                 const char16_t *aString,
-                                uint32_t aLength, int32_t aRunScript)
+                                uint32_t aLength, Script aRunScript)
 {
     NS_ASSERTION(aSubSuperscript == NS_FONT_VARIANT_POSITION_SUPER ||
                  aSubSuperscript == NS_FONT_VARIANT_POSITION_SUB,
@@ -2499,7 +2501,7 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
                        const T    *aText,
                        uint32_t    aLength,
                        uint32_t    aHash,
-                       int32_t     aRunScript,
+                       Script      aRunScript,
                        bool        aVertical,
                        int32_t     aAppUnitsPerDevUnit,
                        uint32_t    aFlags,
@@ -2576,7 +2578,7 @@ gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
     if (sw->GetLength() != aKey->mLength ||
         sw->GetFlags() != aKey->mFlags ||
         sw->GetAppUnitsPerDevUnit() != aKey->mAppUnitsPerDevUnit ||
-        sw->Script() != aKey->mScript) {
+        sw->GetScript() != aKey->mScript) {
         return false;
     }
     if (sw->TextIs8Bit()) {
@@ -2608,7 +2610,7 @@ gfxFont::ShapeText(DrawTarget    *aDrawTarget,
                    const uint8_t *aText,
                    uint32_t       aOffset,
                    uint32_t       aLength,
-                   int32_t        aScript,
+                   Script         aScript,
                    bool           aVertical,
                    gfxShapedText *aShapedText)
 {
@@ -2627,7 +2629,7 @@ gfxFont::ShapeText(DrawTarget      *aDrawTarget,
                    const char16_t *aText,
                    uint32_t         aOffset,
                    uint32_t         aLength,
-                   int32_t          aScript,
+                   Script           aScript,
                    bool             aVertical,
                    gfxShapedText   *aShapedText)
 {
@@ -2692,7 +2694,7 @@ gfxFont::ShapeFragmentWithoutWordCache(DrawTarget *aDrawTarget,
                                        const T    *aText,
                                        uint32_t    aOffset,
                                        uint32_t    aLength,
-                                       int32_t     aScript,
+                                       Script      aScript,
                                        bool        aVertical,
                                        gfxTextRun *aTextRun)
 {
@@ -2757,7 +2759,7 @@ gfxFont::ShapeTextWithoutWordCache(DrawTarget *aDrawTarget,
                                    const T    *aText,
                                    uint32_t    aOffset,
                                    uint32_t    aLength,
-                                   int32_t     aScript,
+                                   Script      aScript,
                                    bool        aVertical,
                                    gfxTextRun *aTextRun)
 {
@@ -2839,7 +2841,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                              const T *aString, // text for this font run
                              uint32_t aRunStart, // position in the textrun
                              uint32_t aRunLength,
-                             int32_t aRunScript,
+                             Script aRunScript,
                              bool aVertical)
 {
     if (aRunLength == 0) {
@@ -3031,7 +3033,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                              const uint8_t *aString,
                              uint32_t aRunStart,
                              uint32_t aRunLength,
-                             int32_t aRunScript,
+                             Script aRunScript,
                              bool aVertical);
 template bool
 gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
@@ -3039,7 +3041,7 @@ gfxFont::SplitAndInitTextRun(DrawTarget *aDrawTarget,
                              const char16_t *aString,
                              uint32_t aRunStart,
                              uint32_t aRunLength,
-                             int32_t aRunScript,
+                             Script aRunScript,
                              bool aVertical);
 
 template<>
@@ -3051,7 +3053,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
                               uint16_t        aOrientation,
-                              int32_t         aScript,
+                              Script          aScript,
                               bool            aSyntheticLower,
                               bool            aSyntheticUpper)
 {
@@ -3217,7 +3219,7 @@ gfxFont::InitFakeSmallCapsRun(DrawTarget     *aDrawTarget,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
                               uint16_t        aOrientation,
-                              int32_t         aScript,
+                              Script          aScript,
                               bool            aSyntheticLower,
                               bool            aSyntheticUpper)
 {

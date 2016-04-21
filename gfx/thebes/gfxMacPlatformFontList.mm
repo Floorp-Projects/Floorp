@@ -889,7 +889,7 @@ gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(CFNotificatio
 
 gfxFontEntry*
 gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
-                                           int32_t aRunScript,
+                                           Script aRunScript,
                                            const gfxFontStyle* aMatchStyle,
                                            uint32_t& aCmapCount,
                                            gfxFontFamily** aMatchedFamily)
