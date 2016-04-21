@@ -8330,7 +8330,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
 
   // Anon boxes are parented to their actual parent already, except
   // for non-elements.  Those should not be treated as an anon box.
-  if (aChildPseudo && aChildPseudo != nsCSSAnonBoxes::mozNonElement &&
+  if (aChildPseudo && !nsCSSAnonBoxes::IsNonElement(aChildPseudo) &&
       nsCSSAnonBoxes::IsAnonBox(aChildPseudo)) {
     NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozAnonymousBlock &&
                  aChildPseudo != nsCSSAnonBoxes::mozAnonymousPositionedBlock,
