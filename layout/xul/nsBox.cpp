@@ -292,7 +292,7 @@ nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
     return rv;
 
   nsMargin padding;
-  rv = GetPadding(padding);
+  rv = GetXULPadding(padding);
   if (NS_FAILED(rv))
     return rv;
 
@@ -328,7 +328,7 @@ nsBox::GetXULBorder(nsMargin& aMargin)
 }
 
 nsresult
-nsBox::GetPadding(nsMargin& aMargin)
+nsBox::GetXULPadding(nsMargin& aMargin)
 {
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->mAppearance && gTheme) {

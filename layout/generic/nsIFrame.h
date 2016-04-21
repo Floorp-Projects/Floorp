@@ -2914,7 +2914,7 @@ public:
   // etc.  They also talk to nsITheme.
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding);
   virtual nsresult GetXULBorder(nsMargin& aBorder)=0;
-  virtual nsresult GetPadding(nsMargin& aBorderAndPadding)=0;
+  virtual nsresult GetXULPadding(nsMargin& aBorderAndPadding)=0;
   virtual nsresult GetMargin(nsMargin& aMargin)=0;
   virtual void SetLayoutManager(nsBoxLayout* aLayout) { }
   virtual nsBoxLayout* GetLayoutManager() { return nullptr; }

@@ -794,12 +794,12 @@ nsHTMLScrollFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 nsresult
-nsHTMLScrollFrame::GetPadding(nsMargin& aMargin)
+nsHTMLScrollFrame::GetXULPadding(nsMargin& aMargin)
 {
   // Our padding hangs out on the inside of the scrollframe, but XUL doesn't
   // reaize that.  If we're stuck inside a XUL box, we need to claim no
   // padding.
-  // @see also nsXULScrollFrame::GetPadding.
+  // @see also nsXULScrollFrame::GetXULPadding.
   aMargin.SizeTo(0,0,0,0);
   return NS_OK;
 }
@@ -1367,7 +1367,7 @@ nsXULScrollFrame::GetSplittableType() const
 }
 
 nsresult
-nsXULScrollFrame::GetPadding(nsMargin& aMargin)
+nsXULScrollFrame::GetXULPadding(nsMargin& aMargin)
 {
   aMargin.SizeTo(0,0,0,0);
   return NS_OK;
