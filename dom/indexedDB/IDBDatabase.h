@@ -83,6 +83,7 @@ class IDBDatabase final
   const bool mFileHandleDisabled;
   bool mClosed;
   bool mInvalidated;
+  bool mQuotaExceeded;
 
 public:
   static already_AddRefed<IDBDatabase>
@@ -147,6 +148,12 @@ public:
     AssertIsOnOwningThread();
 
     return mInvalidated;
+  }
+
+  void
+  SetQuotaExceeded()
+  {
+    mQuotaExceeded = true;
   }
 
   void
