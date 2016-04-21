@@ -3077,6 +3077,16 @@ static void FindClusterEnd(gfxTextRun* aTextRun, int32_t aOriginalEnd,
 void
 PropertyProvider::ComputeJustification(Range aRange)
 {
+  // Horizontal-in-vertical frame is orthogonal to the line, so it
+  // doesn't actually include any justification opportunity inside.
+  // Note: although the spec says such frame should be treated as a
+  // U+FFFC, which indicates it is justifiable on its sides, we don't
+  // do that because it is difficult to implement, and doesn't make
+  // any difference in common use cases.
+  if (mFrame->StyleContext()->IsTextCombined()) {
+    return;
+  }
+
   bool isCJ = IsChineseOrJapanese(mFrame);
   nsSkipCharsRunIterator run(
     mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aRange.Length());
@@ -3168,6 +3178,10 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
   for (index = 0; index < aRange.Length(); ++index) {
     aSpacing[index].mBefore = 0.0;
     aSpacing[index].mAfter = 0.0;
+  }
+
+  if (mFrame->StyleContext()->IsTextCombined()) {
+    return;
   }
 
   // Find our offset into the original+transformed string
