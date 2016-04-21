@@ -55,7 +55,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>     // synonym for XEvent
         aMsg->WriteBytes(&aParam, sizeof(paramType));
     }
 
-    static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+    static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
         const char* bytes = 0;
 

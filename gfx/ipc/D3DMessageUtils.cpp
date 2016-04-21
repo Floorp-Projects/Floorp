@@ -53,7 +53,7 @@ ParamTraits<DxgiAdapterDesc>::Write(Message* aMsg, const paramType& aParam)
 }
 
 bool
-ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, void** aIter, paramType* aResult)
+ParamTraits<DxgiAdapterDesc>::Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
 {
 #if defined(XP_WIN)
   const char* description = nullptr;

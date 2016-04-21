@@ -62,7 +62,7 @@ public:
   virtual SharedMemoryType Type() const = 0;
 
   virtual bool ShareHandle(base::ProcessId aProcessId, IPC::Message* aMessage) = 0;
-  virtual bool ReadHandle(const IPC::Message* aMessage, void** aIter) = 0;
+  virtual bool ReadHandle(const IPC::Message* aMessage, PickleIterator* aIter) = 0;
 
   void
   Protect(char* aAddr, size_t aSize, int aRights)
@@ -137,7 +137,7 @@ public:
     return true;
   }
 
-  virtual bool ReadHandle(const IPC::Message* aMessage, void** aIter) override
+  virtual bool ReadHandle(const IPC::Message* aMessage, PickleIterator* aIter) override
   {
     Handle handle;
     return IPC::ReadParam(aMessage, aIter, &handle) &&

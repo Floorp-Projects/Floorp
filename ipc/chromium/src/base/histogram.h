@@ -55,6 +55,7 @@
 #include "base/lock.h"
 
 class Pickle;
+class PickleIterator;
 
 namespace base {
 
@@ -361,7 +362,7 @@ class Histogram {
     void Add(const SampleSet& other);
 
     bool Serialize(Pickle* pickle) const;
-    bool Deserialize(void** iter, const Pickle& pickle);
+    bool Deserialize(PickleIterator* iter, const Pickle& pickle);
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 

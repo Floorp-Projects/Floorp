@@ -190,7 +190,7 @@ public:
                    ProcessId* aOtherProcess,
                    ProtocolId* aProtocol)
   {
-    void* iter = nullptr;
+    PickleIterator iter(aMsg);
     if (!IPC::ReadParam(&aMsg, &iter, aDescriptor) ||
         !IPC::ReadParam(&aMsg, &iter, aOtherProcess) ||
         !IPC::ReadParam(&aMsg, &iter, reinterpret_cast<uint32_t*>(aProtocol))) {

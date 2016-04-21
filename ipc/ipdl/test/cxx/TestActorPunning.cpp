@@ -120,7 +120,7 @@ ParamTraits<Bad>::Write(Message* aMsg, const paramType& aParam)
 }
 
 /*static*/ bool
-ParamTraits<Bad>::Read(const Message* aMsg, void** aIter, paramType* aResult)
+ParamTraits<Bad>::Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
 {
     const char* ptr;
     int len;
