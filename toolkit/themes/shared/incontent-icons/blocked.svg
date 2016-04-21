@@ -1,0 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 45 45">
+  <defs>
+    <circle id="stop-sign" cx="22.5" cy="22.5" r="20.5"/>
+    <mask id="stop-symbol">
+      <rect width="45" height="45" fill="#fff"/>
+      <line x1="10" y1="23" x2="35" y2="23" stroke="#000" stroke-width="6"/>
+    </mask>
+  </defs>
+  <use xlink:href="#stop-sign" mask="url(#stop-symbol)" fill="#fff"/>
+</svg>
