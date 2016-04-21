@@ -37,7 +37,7 @@ public:
   virtual nsresult GetXULMargin(nsMargin& aMargin) override;
 
   virtual Valignment GetXULVAlign() const override { return vAlign_Top; }
-  virtual Halignment GetHAlign() const override { return hAlign_Left; }
+  virtual Halignment GetXULHAlign() const override { return hAlign_Left; }
 
   virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
