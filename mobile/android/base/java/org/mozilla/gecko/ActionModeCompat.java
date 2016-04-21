@@ -60,7 +60,10 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
 
     public void finish() {
         // Clearing the menu will also clear the ActionItemBar
-        mView.getMenu().clear();
+        final GeckoMenu menu = mView.getMenu();
+        menu.clear();
+        menu.close();
+
         if (mCallback != null) {
             mCallback.onDestroyActionMode(this);
         }
