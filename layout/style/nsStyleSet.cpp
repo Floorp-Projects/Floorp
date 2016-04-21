@@ -2210,7 +2210,10 @@ nsStyleSet::GCRuleTrees()
     node->Destroy();
   }
 
-  MOZ_ASSERT(!mOldRootNode, "Should have GCed old root node");
+#ifdef DEBUG
+  NS_ASSERTION(!mOldRootNode, "Should have GCed old root node");
+  mOldRootNode = nullptr;
+#endif
   mUnusedRuleNodeCount = 0;
   mInGC = false;
 }
