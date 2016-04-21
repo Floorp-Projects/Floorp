@@ -696,6 +696,8 @@ PeerConnectionMedia::RollbackIceRestart()
                     RefPtr<PeerConnectionMedia>(this),
                     &PeerConnectionMedia::RollbackIceRestart_s),
                 NS_DISPATCH_NORMAL);
+
+  mIceRestartState = ICE_RESTART_NONE;
 }
 
 void
