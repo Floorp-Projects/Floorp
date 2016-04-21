@@ -130,6 +130,8 @@ MapSinglePropertyInto(nsCSSProperty aTargetProp,
                       nsCSSValue* aTargetValue,
                       nsRuleData* aRuleData)
 {
+  MOZ_ASSERT(!nsCSSProps::PropHasFlags(aTargetProp, CSS_PROPERTY_LOGICAL),
+             "Can't map into a logical property");
   MOZ_ASSERT(aSrcValue->GetUnit() != eCSSUnit_Null, "oops");
 
   // Although aTargetValue is the nsCSSValue we are going to write into,
