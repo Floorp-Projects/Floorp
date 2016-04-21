@@ -260,6 +260,31 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
 }
 
 bool
+DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
+                                        const uint64_t& aWidgetID,
+                                        const uint32_t& aType)
+{
+  ProxyAccessible* target = GetAccessible(aID);
+  ProxyAccessible* widget = GetAccessible(aWidgetID);
+  if (!target || !widget) {
+    NS_ERROR("invalid id in selection event");
+    return true;
+  }
+
+  ProxySelectionEvent(target, widget, aType);
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return true;
+  }
+  xpcAccessibleGeneric* xpcTarget = GetXPCAccessible(target);
+  xpcAccessibleDocument* xpcDoc = GetAccService()->GetXPCDocument(this);
+  RefPtr<xpcAccEvent> event = new xpcAccEvent(aType, xpcTarget, xpcDoc,
+                                              nullptr, false);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
+  return true;
+}
+
+bool
 DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID)
 {
   // One document should never directly be the child of another.
