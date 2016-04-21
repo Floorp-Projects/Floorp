@@ -85,7 +85,7 @@ nsBox::ListBox(nsAutoString& aResult)
 }
 
 nsresult
-nsBox::DumpBox(FILE* aFile)
+nsBox::XULDumpBox(FILE* aFile)
 {
   nsAutoString s;
   ListBox(s);
@@ -123,7 +123,7 @@ nsBox::BeginLayout(nsBoxLayoutState& aState)
 
   nsBoxAddIndents();
   printf("XULLayout: ");
-  DumpBox(stdout);
+  XULDumpBox(stdout);
   printf("\n");
   gIndent++;
 #endif
