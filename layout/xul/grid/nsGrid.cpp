@@ -543,7 +543,7 @@ nsGrid::GetPartFromBox(nsIFrame* aBox)
   if (!aBox)
     return nullptr;
 
-  nsBoxLayout* layout = aBox->GetLayoutManager();
+  nsBoxLayout* layout = aBox->GetXULLayoutManager();
   return layout ? layout->AsGridPart() : nullptr;
 }
 

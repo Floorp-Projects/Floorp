@@ -57,7 +57,7 @@ public:
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
   virtual void SetXULLayoutManager(nsBoxLayout* aLayout) override { mLayoutManager = aLayout; }
-  virtual nsBoxLayout* GetLayoutManager() override { return mLayoutManager; }
+  virtual nsBoxLayout* GetXULLayoutManager() override { return mLayoutManager; }
 
   virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
