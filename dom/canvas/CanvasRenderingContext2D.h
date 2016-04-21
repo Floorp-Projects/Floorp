@@ -443,7 +443,8 @@ public:
     return nullptr;
   }
   NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override;
-  NS_IMETHOD InitializeWithSurface(nsIDocShell* aShell, gfxASurface* aSurface, int32_t aWidth, int32_t aHeight) override;
+  NS_IMETHOD InitializeWithDrawTarget(nsIDocShell* aShell,
+                                      gfx::DrawTarget* aTarget) override;
 
   NS_IMETHOD GetInputStream(const char* aMimeType,
                             const char16_t* aEncoderOptions,

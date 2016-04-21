@@ -78,12 +78,6 @@ public:
     static already_AddRefed<gfxContext>
         ForDrawTargetWithTransform(mozilla::gfx::DrawTarget* aTarget);
 
-    /**
-     * Return the current transparency group target, if any. If no group is
-     * active, returns the surface the gfxContext was created with.
-     */
-    already_AddRefed<gfxASurface> CurrentSurface();
-
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 
     /**
