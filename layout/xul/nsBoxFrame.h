@@ -70,7 +70,7 @@ public:
   virtual nsresult SetDebug(nsBoxLayoutState& aBoxLayoutState, bool aDebug) override;
   virtual nsresult GetDebug(bool& aDebug) override;
 #endif
-  virtual Valignment GetVAlign() const override { return mValign; }
+  virtual Valignment GetXULVAlign() const override { return mValign; }
   virtual Halignment GetHAlign() const override { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
