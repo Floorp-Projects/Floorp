@@ -1038,13 +1038,6 @@ StructTypeDescr::fieldCount() const
     return fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).getDenseInitializedLength();
 }
 
-size_t
-StructTypeDescr::maybeForwardedFieldCount() const
-{
-    ArrayObject& fieldInfo = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES);
-    return fieldInfo.getDenseInitializedLength();
-}
-
 bool
 StructTypeDescr::fieldIndex(jsid id, size_t* out) const
 {
@@ -1074,28 +1067,12 @@ StructTypeDescr::fieldOffset(size_t index) const
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
-size_t
-StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
-{
-    ArrayObject& fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
-    MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
-}
-
 TypeDescr&
 StructTypeDescr::fieldDescr(size_t index) const
 {
     ArrayObject& fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
-}
-
-TypeDescr&
-StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
-{
-    ArrayObject& fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
-    MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
-    return MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject())->as<TypeDescr>();
 }
 
 /******************************************************************************
@@ -1413,19 +1390,6 @@ TypedObject::isAttached() const
     return true;
 }
 
-bool
-TypedObject::maybeForwardedIsAttached() const
-{
-    if (is<InlineTypedObject>())
-        return true;
-    if (!as<OutlineTypedObject>().outOfLineTypedMem())
-        return false;
-    JSObject& owner = *MaybeForwarded(&as<OutlineTypedObject>().owner());
-    if (owner.is<ArrayBufferObject>() && owner.as<ArrayBufferObject>().isDetached())
-        return false;
-    return true;
-}
-
 /* static */ bool
 TypedObject::GetBuffer(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1685,7 +1649,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
         trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
     }
 
-    if (!descr.opaque() || !typedObj.maybeForwardedIsAttached())
+    if (!descr.opaque() || !typedObj.isAttached())
         return;
 
     descr.traceInstances(trc, newData, 1);
@@ -2838,7 +2802,7 @@ visitReferences(TypeDescr& descr,
       case type::Array:
       {
         ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
-        TypeDescr& elementDescr = arrayDescr.maybeForwardedElementType();
+        TypeDescr& elementDescr = arrayDescr.elementType();
         for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();
@@ -2849,9 +2813,9 @@ visitReferences(TypeDescr& descr,
       case type::Struct:
       {
         StructTypeDescr& structDescr = descr.as<StructTypeDescr>();
-        for (size_t i = 0; i < structDescr.maybeForwardedFieldCount(); i++) {
-            TypeDescr& descr = structDescr.maybeForwardedFieldDescr(i);
-            size_t offset = structDescr.maybeForwardedFieldOffset(i);
+        for (size_t i = 0; i < structDescr.fieldCount(); i++) {
+            TypeDescr& descr = structDescr.fieldDescr(i);
+            size_t offset = structDescr.fieldOffset(i);
             visitReferences(descr, mem + offset, visitor);
         }
         return;
