@@ -33,7 +33,19 @@ AudioConverter::AudioConverter(const AudioConfig& aIn, const AudioConfig& aOut)
   MOZ_DIAGNOSTIC_ASSERT(aOut.Interleaved(), "planar audio format not supported");
   mIn.Layout().MappingTable(mOut.Layout(), mChannelOrderMap);
   if (aIn.Rate() != aOut.Rate()) {
-    RecreateResampler();
+    int error;
+    mResampler = speex_resampler_init(aOut.Channels(),
+                                      aIn.Rate(),
+                                      aOut.Rate(),
+                                      SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                      &error);
+
+    if (error == RESAMPLER_ERR_SUCCESS) {
+      speex_resampler_skip_zeros(mResampler);
+    } else {
+      NS_WARNING("Failed to initialize resampler.");
+      mResampler = nullptr;
+    }
   }
 }
 
@@ -270,46 +282,6 @@ AudioConverter::ResampleAudio(void* aOut, const void* aIn, size_t aFrames)
   return outframes;
 }
 
-void
-AudioConverter::RecreateResampler()
-{
-  if (mResampler) {
-    speex_resampler_destroy(mResampler);
-  }
-  int error;
-  mResampler = speex_resampler_init(mOut.Channels(),
-                                    mIn.Rate(),
-                                    mOut.Rate(),
-                                    SPEEX_RESAMPLER_QUALITY_DEFAULT,
-                                    &error);
-
-  if (error == RESAMPLER_ERR_SUCCESS) {
-    speex_resampler_skip_zeros(mResampler);
-  } else {
-    NS_WARNING("Failed to initialize resampler.");
-    mResampler = nullptr;
-  }
-}
-
-size_t
-AudioConverter::DrainResampler(void* aOut)
-{
-  if (!mResampler) {
-    return 0;
-  }
-  int frames = speex_resampler_get_input_latency(mResampler);
-  AlignedByteBuffer buffer(FramesOutToSamples(frames) *
-                           AudioConfig::SampleSize(mOut.Format()));
-  if (!buffer) {
-    // OOM
-    return 0;
-  }
-  frames = ResampleAudio(aOut, buffer.Data(), frames);
-  // Tore down the resampler as it's easier than handling follow-up.
-  RecreateResampler();
-  return frames;
-}
-
 size_t
 AudioConverter::UpmixAudio(void* aOut, const void* aIn, size_t aFrames) const
 {
@@ -355,13 +327,7 @@ AudioConverter::UpmixAudio(void* aOut, const void* aIn, size_t aFrames) const
 size_t
 AudioConverter::ResampleRecipientFrames(size_t aFrames) const
 {
-  if (!aFrames && mIn.Rate() != mOut.Rate()) {
-    // The resampler will be drained, account for frames currently buffered
-    // in the resampler.
-    return speex_resampler_get_output_latency(mResampler);
-  } else {
-    return (uint64_t)aFrames * mOut.Rate() / mIn.Rate() + 1;
-  }
+  return (uint64_t)aFrames * mOut.Rate() / mIn.Rate() + 1;
 }
 
 size_t
