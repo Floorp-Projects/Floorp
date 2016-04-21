@@ -80,7 +80,9 @@ var ContentClick = {
     let params = { charset: browser.characterSet,
                    referrerURI: browser.documentURI,
                    referrerPolicy: json.referrerPolicy,
-                   noReferrer: json.noReferrer };
+                   noReferrer: json.noReferrer,
+                   allowMixedContent: json.allowMixedContent };
+
     window.openLinkIn(json.href, where, params);
   }
 };

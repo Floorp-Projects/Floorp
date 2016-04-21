@@ -185,7 +185,12 @@ function RegExpReplace(string, replaceValue) {
     if (!functionalReplace) {
         // Step 6.a.
         replaceValue = ToString(replaceValue);
-        firstDollarIndex = callFunction(std_String_indexOf, replaceValue, "$");
+
+        // Skip if replaceValue is an empty string or a single character.
+        // A single character string may contain "$", but that cannot be a
+        // substitution.
+        if (replaceValue.length > 1)
+            firstDollarIndex = callFunction(std_String_indexOf, replaceValue, "$");
     }
 
     // Step 7.

@@ -54,7 +54,6 @@ public:
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     nsDeque::PushFront(aItem);
-    mPushEvent.Notify(RefPtr<T>(aItem));
   }
 
   inline already_AddRefed<T> PopFront() {

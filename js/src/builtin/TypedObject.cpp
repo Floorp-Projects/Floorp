@@ -644,6 +644,9 @@ ArrayMetaTypeDescr::create(JSContext* cx,
     if (!CreateTraceList(cx, obj))
         return nullptr;
 
+    if (!cx->zone()->typeDescrObjects.put(obj))
+        return nullptr;
+
     return obj;
 }
 
@@ -940,21 +943,17 @@ StructMetaTypeDescr::create(JSContext* cx,
                                             TenuredObject);
         if (!fieldNamesVec)
             return nullptr;
-        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES,
-                                     ObjectValue(*fieldNamesVec));
+        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES, ObjectValue(*fieldNamesVec));
     }
 
     // Construct for internal use an array with the type object for each field.
-    {
-        RootedObject fieldTypeVec(cx);
-        fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
-                                           fieldTypeObjs.begin(), nullptr,
-                                           TenuredObject);
-        if (!fieldTypeVec)
-            return nullptr;
-        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES,
-                                     ObjectValue(*fieldTypeVec));
-    }
+    RootedObject fieldTypeVec(cx);
+    fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
+                                       fieldTypeObjs.begin(), nullptr,
+                                       TenuredObject);
+    if (!fieldTypeVec)
+        return nullptr;
+    descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES, ObjectValue(*fieldTypeVec));
 
     // Construct for internal use an array with the offset for each field.
     {
@@ -964,8 +963,7 @@ StructMetaTypeDescr::create(JSContext* cx,
                                               TenuredObject);
         if (!fieldOffsetsVec)
             return nullptr;
-        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS,
-                                     ObjectValue(*fieldOffsetsVec));
+        descr->initReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS, ObjectValue(*fieldOffsetsVec));
     }
 
     // Create data properties fieldOffsets and fieldTypes
@@ -1002,6 +1000,12 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!CreateTraceList(cx, descr))
         return nullptr;
 
+    if (!cx->zone()->typeDescrObjects.put(descr) ||
+        !cx->zone()->typeDescrObjects.put(fieldTypeVec))
+    {
+        return nullptr;
+    }
+
     return descr;
 }
 
@@ -1034,13 +1038,6 @@ StructTypeDescr::fieldCount() const
     return fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).getDenseInitializedLength();
 }
 
-size_t
-StructTypeDescr::maybeForwardedFieldCount() const
-{
-    ArrayObject& fieldInfo = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_NAMES);
-    return fieldInfo.getDenseInitializedLength();
-}
-
 bool
 StructTypeDescr::fieldIndex(jsid id, size_t* out) const
 {
@@ -1070,28 +1067,12 @@ StructTypeDescr::fieldOffset(size_t index) const
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
-size_t
-StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
-{
-    ArrayObject& fieldOffsets = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS);
-    MOZ_ASSERT(index < fieldOffsets.getDenseInitializedLength());
-    return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
-}
-
 TypeDescr&
 StructTypeDescr::fieldDescr(size_t index) const
 {
     ArrayObject& fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
-}
-
-TypeDescr&
-StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
-{
-    ArrayObject& fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
-    MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
-    return MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject())->as<TypeDescr>();
 }
 
 /******************************************************************************
@@ -1189,6 +1170,9 @@ DefineSimpleTypeDescr(JSContext* cx,
         return false;
 
     if (!CreateTraceList(cx, descr))
+        return false;
+
+    if (!cx->zone()->typeDescrObjects.put(descr))
         return false;
 
     return true;
@@ -1401,19 +1385,6 @@ TypedObject::isAttached() const
     if (!as<OutlineTypedObject>().outOfLineTypedMem())
         return false;
     JSObject& owner = as<OutlineTypedObject>().owner();
-    if (owner.is<ArrayBufferObject>() && owner.as<ArrayBufferObject>().isDetached())
-        return false;
-    return true;
-}
-
-bool
-TypedObject::maybeForwardedIsAttached() const
-{
-    if (is<InlineTypedObject>())
-        return true;
-    if (!as<OutlineTypedObject>().outOfLineTypedMem())
-        return false;
-    JSObject& owner = *MaybeForwarded(&as<OutlineTypedObject>().owner());
     if (owner.is<ArrayBufferObject>() && owner.as<ArrayBufferObject>().isDetached())
         return false;
     return true;
@@ -1678,7 +1649,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
         trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
     }
 
-    if (!descr.opaque() || !typedObj.maybeForwardedIsAttached())
+    if (!descr.opaque() || !typedObj.isAttached())
         return;
 
     descr.traceInstances(trc, newData, 1);
@@ -2831,7 +2802,7 @@ visitReferences(TypeDescr& descr,
       case type::Array:
       {
         ArrayTypeDescr& arrayDescr = descr.as<ArrayTypeDescr>();
-        TypeDescr& elementDescr = arrayDescr.maybeForwardedElementType();
+        TypeDescr& elementDescr = arrayDescr.elementType();
         for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();
@@ -2842,9 +2813,9 @@ visitReferences(TypeDescr& descr,
       case type::Struct:
       {
         StructTypeDescr& structDescr = descr.as<StructTypeDescr>();
-        for (size_t i = 0; i < structDescr.maybeForwardedFieldCount(); i++) {
-            TypeDescr& descr = structDescr.maybeForwardedFieldDescr(i);
-            size_t offset = structDescr.maybeForwardedFieldOffset(i);
+        for (size_t i = 0; i < structDescr.fieldCount(); i++) {
+            TypeDescr& descr = structDescr.fieldDescr(i);
+            size_t offset = structDescr.fieldOffset(i);
             visitReferences(descr, mem + offset, visitor);
         }
         return;
@@ -3057,6 +3028,7 @@ CreateTraceList(JSContext* cx, HandleTypeDescr descr)
 /* static */ void
 TypeDescr::finalize(FreeOp* fop, JSObject* obj)
 {
-    if (obj->as<TypeDescr>().hasTraceList())
-        js_free(const_cast<int32_t*>(obj->as<TypeDescr>().traceList()));
+    TypeDescr& descr = obj->as<TypeDescr>();
+    if (descr.hasTraceList())
+        js_free(const_cast<int32_t*>(descr.traceList()));
 }

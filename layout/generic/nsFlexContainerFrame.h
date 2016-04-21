@@ -5,7 +5,7 @@
  * version 2.0 (the "License"). You can obtain a copy of the License at
  * http://mozilla.org/MPL/2.0/. */
 
-/* rendering object for CSS "display: flex" */
+/* rendering object for CSS "display: flex" and "display: -webkit-box" */
 
 #ifndef nsFlexContainerFrame_h___
 #define nsFlexContainerFrame_h___
@@ -20,6 +20,26 @@ class LogicalPoint;
 nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
+
+/**
+ * This is the rendering object used for laying out elements with
+ * "display: flex" or "display: inline-flex".
+ *
+ * We also use this class for elements with "display: -webkit-box" or
+ * "display: -webkit-inline-box" (but not "-moz-box" / "-moz-inline-box" --
+ * those are rendered with old-school XUL frame classes).
+ *
+ * Note: we represent the -webkit-box family of properties (-webkit-box-orient,
+ * -webkit-box-flex, etc.) as aliases for their -moz equivalents.  And for
+ * -webkit-{inline-}box containers, nsFlexContainerFrame will honor those
+ * "legacy" properties for alignment/flexibility/etc. *instead of* honoring the
+ * modern flexbox & alignment properties.  For brevity, many comments in
+ * nsFlexContainerFrame.cpp simply refer to these properties using their
+ * "-webkit" versions, since we're mostly expecting to encounter them in that
+ * form. (Technically, the "-moz" versions of these properties *can* influence
+ * layout here as well (since that's what the -webkit versions are aliased to)
+ * -- but only inside of a "display:-webkit-{inline-}box" container.)
+ */
 class nsFlexContainerFrame : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS

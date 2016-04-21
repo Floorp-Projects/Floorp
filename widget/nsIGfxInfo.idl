@@ -134,9 +134,11 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_BLOCKED_MISMATCHED_VERSION = 7;
 
   /**
-   * Ask about a feature, and return the status of that feature
+   * Ask about a feature, and return the status of that feature.
+   * If the feature is not ok then aFailureId will give a unique failure Id
+   * otherwise it will be empty.
    */
-  long getFeatureStatus(in long aFeature);
+  long getFeatureStatus(in long aFeature, [optional] out ACString aFailureId);
 
   /*
    * Ask about a feature, return the minimum driver version required for it if its status is

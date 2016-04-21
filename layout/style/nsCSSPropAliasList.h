@@ -336,6 +336,14 @@ CSS_PROP_ALIAS(-webkit-box-ordinal-group,
                box_ordinal_group,
                WebkitBoxOrdinalGroup,
                WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-orient,
+               box_orient,
+               WebkitBoxOrient,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-direction,
+               box_direction,
+               WebkitBoxDirection,
+               WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-box-align,
                box_align,
                WebkitBoxAlign,

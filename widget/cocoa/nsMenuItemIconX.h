@@ -10,8 +10,8 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "imgINotificationObserver.h"
 
 class nsIURI;

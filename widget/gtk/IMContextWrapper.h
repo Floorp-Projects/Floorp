@@ -12,7 +12,6 @@
 #include <gtk/gtk.h>
 
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsIWidget.h"

@@ -38,6 +38,7 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/UniquePtr.h"
 #include "MobileViewportManager.h"
+#include "Visibility.h"
 #include "ZoomConstraintsClient.h"
 
 class nsRange;
@@ -79,6 +80,8 @@ class PresShell final : public nsIPresShell,
   template <typename T> using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;
   using OnNonvisible = mozilla::OnNonvisible;
+  template <typename T> using UniquePtr = mozilla::UniquePtr<T>;
+  using VisibilityCounter = mozilla::VisibilityCounter;
   using VisibleFrames = mozilla::VisibleFrames;
   using VisibleRegions = mozilla::VisibleRegions;
 
@@ -402,8 +405,8 @@ public:
   void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
                                          bool aRemoveOnly = false) override;
 
-  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) override;
-  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) override;
+  void MarkFrameVisibleInDisplayPort(nsIFrame* aFrame) override;
+  void MarkFrameNonvisible(nsIFrame* aFrame) override;
 
   bool AssumeAllFramesVisible() override;
 
@@ -765,26 +768,47 @@ protected:
   void UpdateApproximateFrameVisibility();
   void DoUpdateApproximateFrameVisibility(bool aRemoveOnly);
 
-  void ClearApproximatelyVisibleFramesList(Maybe<mozilla::OnNonvisible> aNonvisibleAction
-                                             = Nothing());
-  static void ClearApproximateFrameVisibilityVisited(nsView* aView, bool aClear);
-  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList,
-                                                   Maybe<VisibleRegions>& aVisibleRegions);
+  void ClearVisibleFramesSets(Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  static void ClearVisibleFramesForUnvisitedPresShells(nsView* aView, bool aClear);
+  static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList);
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
-                                               Maybe<VisibleRegions>& aVisibleRegions,
                                                bool aRemoveOnly = false);
 
-  void DecApproximateVisibleCount(VisibleFrames& aFrames,
-                                  Maybe<OnNonvisible> aNonvisibleAction = Nothing());
+  void DecVisibleCount(const VisibleFrames& aFrames,
+                       VisibilityCounter aCounter,
+                       Maybe<OnNonvisible> aNonvisibleAction = Nothing());
   void ReportBadStateDuringVisibilityUpdate();
   void SetInFrameVisibilityUpdate(bool aState);
 
+  void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
+  void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
+  void NotifyCompositorOfVisibleRegionsChange();
+
   nsRevocableEventPtr<nsRunnableMethod<PresShell>> mUpdateApproximateFrameVisibilityEvent;
+  nsRevocableEventPtr<nsRunnableMethod<PresShell>> mNotifyCompositorOfVisibleRegionsChangeEvent;
 
   // A set of frames that were visible or could be visible soon at the time
   // that we last did an approximate frame visibility update.
   VisibleFrames mApproximatelyVisibleFrames;
+
+  // A set of frames that were visible in the displayport the last time we painted.
+  VisibleFrames mInDisplayPortFrames;
+
+  struct VisibleRegionsContainer
+  {
+    // The approximately visible regions calculated during the last update to
+    // approximate frame visibility.
+    VisibleRegions mApproximate;
+
+    // The in-displayport visible regions calculated during the last paint.
+    VisibleRegions mInDisplayPort;
+  };
+
+  // The most recent visible regions we've computed. Only non-null if the APZ
+  // minimap visibility visualization was enabled during the last visibility
+  // update.
+  UniquePtr<VisibleRegionsContainer> mVisibleRegions;
 
 
   //////////////////////////////////////////////////////////////////////////////

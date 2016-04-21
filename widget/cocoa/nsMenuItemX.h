@@ -6,10 +6,10 @@
 #ifndef nsMenuItemX_h_
 #define nsMenuItemX_h_
 
+#include "mozilla/RefPtr.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
-#include "nsAutoPtr.h"
 
 #import <Cocoa/Cocoa.h>
 

@@ -19,7 +19,6 @@
 #undef GetBinaryType
 #undef RemoveDirectory
 
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsRegion.h"
 #include "nsRect.h"

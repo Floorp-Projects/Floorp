@@ -681,7 +681,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
     static bool
     CloneArrayBufferNoCopy(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
-                           bool isWrapped, uint32_t srcByteOffset,
+                           bool isWrapped, uint32_t srcByteOffset, uint32_t srcLength,
                            MutableHandle<ArrayBufferObject*> buffer);
 
     static JSObject*
@@ -819,12 +819,13 @@ GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped, MutableHa
     return JS_WrapValue(cx, ctor);
 }
 
-// ES 2016 draft Mar 25, 2016 24.1.1.4.
+// ES 2017 draft rev 8633ffd9394b203b8876bb23cb79aff13eb07310 24.1.1.4.
 template<typename T>
 /* static */ bool
 TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
                                                     Handle<ArrayBufferObjectMaybeShared*> srcBuffer,
                                                     bool isWrapped, uint32_t srcByteOffset,
+                                                    uint32_t srcLength,
                                                     MutableHandle<ArrayBufferObject*> buffer)
 {
     // Step 1 (skipped).
@@ -840,30 +841,21 @@ TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
         return false;
     }
 
-    // Step 3 (skipped).
+    // Steps 3-4 (skipped).
 
-    // Steps 4-5.
-    uint32_t srcLength = srcBuffer->byteLength();
-    MOZ_ASSERT(srcByteOffset <= srcLength);
-
-    // Step 6.
-    uint32_t cloneLength = srcLength - srcByteOffset;
-
-    // Step 7 (skipped).
-
-    // Steps 8.
-    if (!AllocateArrayBuffer(cx, cloneCtor, cloneLength, buffer))
+    // Steps 5.
+    if (!AllocateArrayBuffer(cx, cloneCtor, srcLength, buffer))
         return false;
 
-    // Step 9.
+    // Step 6.
     if (srcBuffer->isDetached()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
         return false;
     }
 
-    // Steps 10-11 (done in caller).
+    // Steps 7-8 (done in caller).
 
-    // Step 12.
+    // Step 9.
     return true;
 }
 
@@ -883,7 +875,7 @@ TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
     return fromObject(cx, other, newTarget);
 }
 
-// ES 2016 draft Mar 25, 2016 22.2.4.3.
+// ES 2017 draft rev 8633ffd9394b203b8876bb23cb79aff13eb07310 22.2.4.3.
 template<typename T>
 /* static */ JSObject*
 TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, bool isWrapped,
@@ -949,7 +941,10 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     Rooted<ArrayBufferObject*> buffer(cx);
     if (ArrayTypeID() == srcType) {
         // Step 17.a.
-        if (!CloneArrayBufferNoCopy(cx, srcData, isWrapped, srcByteOffset, &buffer))
+        uint32_t srcLength = srcArray->byteLength();
+
+        // Step 17.b.
+        if (!CloneArrayBufferNoCopy(cx, srcData, isWrapped, srcByteOffset, srcLength, &buffer))
             return nullptr;
     } else {
         // Step 18.a.
