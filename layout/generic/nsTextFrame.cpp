@@ -67,6 +67,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 
 #include <algorithm>
+#include <limits>
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -4709,6 +4710,15 @@ nsDisplayText::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   }
 }
 
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(TextCombineScaleFactorProperty, float)
+
+static float
+GetTextCombineScaleFactor(nsTextFrame* aFrame)
+{
+  float factor = aFrame->Properties().Get(TextCombineScaleFactorProperty());
+  return factor ? factor : 1.0f;
+}
+
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) {
@@ -4718,8 +4728,9 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
   // antialiased pixels beyond the measured text extents.
   // This is temporary until we do this in the actual calculation of text extents.
-  LayoutDeviceRect extraVisible = LayoutDeviceRect::FromAppUnits(
-    mVisibleRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
+  LayoutDeviceRect extraVisible =
+    LayoutDeviceRect::FromAppUnits(mVisibleRect, A2D);
   extraVisible.Inflate(1);
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
@@ -4743,6 +4754,18 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(mVisIEndEdge >= 0, "illegal end edge");
 
   nsPoint framePt = ToReferenceFrame();
+  if (f->StyleContext()->IsTextCombined()) {
+    float scaleFactor = GetTextCombineScaleFactor(f);
+    if (scaleFactor != 1.0f) {
+      // Setup matrix to compress text for text-combine-upright if
+      // necessary. This is done here because we want selection be
+      // compressed at the same time as text.
+      gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
+      gfxMatrix mat = ctx->CurrentMatrix()
+        .Translate(pt).Scale(scaleFactor, 1.0).Translate(-pt);
+      ctx->SetMatrix(mat);
+    }
+  }
   nsTextFrame::PaintTextParams params(aCtx->ThebesContext());
   params.framePt = gfxPoint(framePt.x, framePt.y);
 
@@ -6806,6 +6829,9 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
   gfxFloat width = mTextRun->IsVertical()
     ? (mTextRun->IsInlineReversed() ? mRect.height - aPoint.y : aPoint.y)
     : (mTextRun->IsInlineReversed() ? mRect.width - aPoint.x : aPoint.x);
+  if (StyleContext()->IsTextCombined()) {
+    width /= GetTextCombineScaleFactor(this);
+  }
   gfxFloat fitWidth;
   Range skippedRange = ComputeTransformedRange(provider);
 
@@ -7066,6 +7092,9 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
       outPoint->x = mRect.width - iSize;
     } else {
       outPoint->x = iSize;
+    }
+    if (StyleContext()->IsTextCombined()) {
+      outPoint->x *= GetTextCombineScaleFactor(this);
     }
   }
 
@@ -7749,6 +7778,16 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
   uint32_t start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
 
+  // text-combine-upright frame is constantly 1em on inline-axis.
+  if (StyleContext()->IsTextCombined()) {
+    if (textRun->CanBreakLineBefore(start)) {
+      aData->OptionallyBreak();
+    }
+    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    aData->mTrailingWhitespace = 0;
+    return;
+  }
+
   AutoTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
   bool *hyphBreakBefore = nullptr;
   if (hyphenating) {
@@ -7902,6 +7941,13 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
   const nsTextFragment* frag = mContent->GetText();
   PropertyProvider provider(textRun, textStyle, frag, this,
                             iter, INT32_MAX, nullptr, 0, aTextRunType);
+
+  // text-combine-upright frame is constantly 1em on inline-axis.
+  if (StyleContext()->IsTextCombined()) {
+    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    aData->mTrailingWhitespace = 0;
+    return;
+  }
 
   bool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
   bool preformatNewlines = textStyle->NewlineIsSignificant(this);
@@ -8636,6 +8682,11 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   bool usedHyphenation;
   gfxFloat trimmedWidth = 0;
   gfxFloat availWidth = aAvailableWidth;
+  if (StyleContext()->IsTextCombined()) {
+    // If text-combine-upright is 'all', we would compress whatever long
+    // text into ~1em width, so there is no limited on the avail width.
+    availWidth = std::numeric_limits<gfxFloat>::infinity();
+  }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
@@ -8743,7 +8794,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   if (!brokeText && lastBreak >= 0) {
     // Since everything fit and no break was forced,
     // record the last break opportunity
-    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= aAvailableWidth,
+    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= availWidth,
                  "If the text doesn't fit, and we have a break opportunity, why didn't MeasureText use it?");
     MOZ_ASSERT(lastBreak >= offset, "Strange break position");
     aLineLayout.NotifyOptionalBreakPosition(this, lastBreak - offset,
@@ -8791,11 +8842,31 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
     finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
   }
+  if (StyleContext()->IsTextCombined()) {
+    nsFontMetrics* fm = provider.GetFontMetrics();
+    gfxFloat width = finalSize.ISize(wm);
+    gfxFloat em = fm->EmHeight();
+    // Compress the characters in horizontal axis if necessary.
+    if (width <= em) {
+      Properties().Remove(TextCombineScaleFactorProperty());
+    } else {
+      Properties().Set(TextCombineScaleFactorProperty(), em / width);
+      finalSize.ISize(wm) = em;
+    }
+    // Make the characters be in an 1em square.
+    if (finalSize.BSize(wm) != em) {
+      aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
+                                   (em - finalSize.BSize(wm)) / 2);
+      finalSize.BSize(wm) = em;
+    }
+  }
   aMetrics.SetSize(wm, finalSize);
 
   NS_ASSERTION(aMetrics.BlockStartAscent() >= 0,
                "Negative ascent???");
-  NS_ASSERTION(aMetrics.BSize(aMetrics.GetWritingMode()) -
+  NS_ASSERTION((StyleContext()->IsTextCombined()
+                ? aMetrics.ISize(aMetrics.GetWritingMode())
+                : aMetrics.BSize(aMetrics.GetWritingMode())) -
                aMetrics.BlockStartAscent() >= 0,
                "Negative descent???");
 
