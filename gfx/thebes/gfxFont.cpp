@@ -1610,12 +1610,12 @@ private:
         buf.mNumGlyphs = mNumGlyphs;
 
         gfxContext::AzureState state = mRunParams.context->CurrentState();
-        if ((int(mRunParams.drawMode) &
-            (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
-            (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) {
+        if ((mRunParams.drawMode &
+             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
+            (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) {
             FlushStroke(buf, state);
         }
-        if (int(mRunParams.drawMode) & int(DrawMode::GLYPH_FILL)) {
+        if (mRunParams.drawMode & DrawMode::GLYPH_FILL) {
             if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
 
@@ -1682,16 +1682,16 @@ private:
                                           mFontParams.renderingOptions);
             }
         }
-        if (int(mRunParams.drawMode) & int(DrawMode::GLYPH_PATH)) {
+        if (mRunParams.drawMode & DrawMode::GLYPH_PATH) {
             mRunParams.context->EnsurePathBuilder();
             Matrix mat = mRunParams.dt->GetTransform();
             mFontParams.scaledFont->CopyGlyphsToBuilder(
                 buf, mRunParams.context->mPathBuilder,
                 mRunParams.dt->GetBackendType(), &mat);
         }
-        if ((int(mRunParams.drawMode) &
-            (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
-             int(DrawMode::GLYPH_STROKE)) {
+        if ((mRunParams.drawMode &
+             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
+            DrawMode::GLYPH_STROKE) {
             FlushStroke(buf, state);
         }
 
