@@ -28801,7 +28801,7 @@
         "path": "web-animations/animation/finish.html",
         "url": "/web-animations/animation/finish.html"
       },
-       {
+      {
         "path": "web-animations/animation/finished.html",
         "url": "/web-animations/animation/finished.html"
       },
@@ -28814,7 +28814,7 @@
         "url": "/web-animations/animation/oncancel.html"
       },
       {
-       "path": "web-animations/animation/onfinish.html",
+        "path": "web-animations/animation/onfinish.html",
         "url": "/web-animations/animation/onfinish.html"
       },
       {
@@ -35160,7 +35160,10 @@
     "wdspec": []
   },
   "local_changes": {
-    "deleted": [],
+    "deleted": [
+      "web-animations/keyframe-effect/getComputedTiming-currentIteration.html",
+      "web-animations/keyframe-effect/getComputedTiming-progress.html"
+    ],
     "items": {
       "reftest": {
         "compat/webkit-text-fill-color-property-002.html": [
@@ -35259,6 +35262,18 @@
           {
             "path": "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html",
             "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
+          }
+        ],
+        "web-animations/timing-model/current-iteration.html": [
+          {
+            "path": "web-animations/timing-model/current-iteration.html",
+            "url": "/web-animations/timing-model/current-iteration.html"
+          }
+        ],
+        "web-animations/timing-model/iteration-progress.html": [
+          {
+            "path": "web-animations/timing-model/iteration-progress.html",
+            "url": "/web-animations/timing-model/iteration-progress.html"
           }
         ]
       }
