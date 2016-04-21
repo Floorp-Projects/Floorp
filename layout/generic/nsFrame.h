@@ -411,7 +411,7 @@ public:
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nscoord GetFlex() override;
+  virtual nscoord GetXULFlex() override;
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 
   // We compute and store the HTML content's overflow area. So don't

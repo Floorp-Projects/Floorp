@@ -436,7 +436,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   nscoord& availableLength = IsHorizontal() ? clientRect.width : clientRect.height;
   nscoord& thumbLength = IsHorizontal() ? thumbSize.width : thumbSize.height;
 
-  if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetFlex() > 0) {
+  if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetXULFlex() > 0) {
     float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
     thumbLength = std::max(thumbLength, NSToCoordRound(availableLength * ratio));
   }
