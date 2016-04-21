@@ -1903,7 +1903,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     lastStyleContext = f->StyleContext();
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->StyleText();
-    if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
+    if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform ||
+        // text-combine-upright requires converting from full-width
+        // characters to non-full-width correspendent in some cases.
+        lastStyleContext->IsTextCombined()) {
       anyTextTransformStyle = true;
     }
     if (textStyle->HasTextEmphasis()) {
@@ -2134,9 +2137,14 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         uint32_t offset = iter.GetSkippedOffset();
         iter.AdvanceOriginal(f->GetContentLength());
         uint32_t end = iter.GetSkippedOffset();
-        if (sc != f->StyleContext()) {
+        // Text-combined frames have content-dependent transform, so we
+        // want to create new nsTransformedCharStyle for them anyway.
+        if (sc != f->StyleContext() || sc->IsTextCombined()) {
           sc = f->StyleContext();
           charStyle = new nsTransformedCharStyle(sc);
+          if (sc->IsTextCombined() && f->CountGraphemeClusters() > 1) {
+            charStyle->mForceNonFullWidth = true;
+          }
         }
         uint32_t j;
         for (j = offset; j < end; ++j) {
@@ -9540,4 +9548,14 @@ nsTextFrame::GetJustificationAssignment() const
   result.mGapsAtStart = encoded >> 8;
   result.mGapsAtEnd = encoded & 0xFF;
   return result;
+}
+
+uint32_t
+nsTextFrame::CountGraphemeClusters() const
+{
+  const nsTextFragment* frag = GetContent()->GetText();
+  MOZ_ASSERT(frag, "Text frame must have text fragment");
+  nsAutoString content;
+  frag->AppendTo(content, GetContentOffset(), GetContentLength());
+  return unicode::CountGraphemeClusters(content.Data(), content.Length());
 }

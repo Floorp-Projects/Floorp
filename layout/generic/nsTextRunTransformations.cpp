@@ -299,6 +299,7 @@ nsCaseTransformTextRunFactory::TransformString(
   nsIUGenCategory::nsUGenCategory cat;
 
   uint8_t style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE : 0;
+  bool forceNonFullWidth = false;
   const nsIAtom* lang = aLanguage;
 
   LanguageSpecificCasingBehavior languageSpecificCasing = GetCasingFor(lang);
@@ -314,6 +315,7 @@ nsCaseTransformTextRunFactory::TransformString(
       charStyle = aTextRun->mStyles[i];
       style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE :
         charStyle->mTextTransform;
+      forceNonFullWidth = charStyle->mForceNonFullWidth;
 
       nsIAtom* newLang = charStyle->mExplicitLanguage
                          ? charStyle->mLanguage : nullptr;
@@ -558,6 +560,10 @@ nsCaseTransformTextRunFactory::TransformString(
 
     default:
       break;
+    }
+
+    if (forceNonFullWidth) {
+      ch = mozilla::unicode::GetFullWidthInverse(ch);
     }
 
     if (ch == uint32_t(-1)) {
