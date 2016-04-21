@@ -13,7 +13,7 @@ mkdir -p $HOME/artifacts-public
 DEVICE=${TARGET%%-*}
 
 mv $WORKSPACE/B2G/upload/sources.xml $HOME/artifacts/sources.xml
-mv $WORKSPACE/B2G/upload/b2g-*.android-arm.tar.gz $HOME/artifacts/b2g-android-arm.tar.gz
+mv $WORKSPACE/B2G/upload/b2g-*.linux-androideabi-arm.tar.gz $HOME/artifacts/b2g-android-arm.tar.gz
 mv $WORKSPACE/B2G/upload/${TARGET}.zip $HOME/artifacts/${TARGET}.zip
 mv $WORKSPACE/B2G/upload/gaia.zip $HOME/artifacts/gaia.zip
 
