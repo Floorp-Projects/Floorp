@@ -764,6 +764,10 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
                                eNotCancelable);
     MOZ_ASSERT(event);
   } else {
+    if (aResult == NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR) {
+      mDatabase->SetQuotaExceeded();
+    }
+
     if (!mError && !mAbortedByScript) {
       mError = new DOMError(GetOwner(), aResult);
     }

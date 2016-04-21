@@ -14,16 +14,12 @@ function testSteps()
     this.window ? window.location.pathname : "test_quotaExceeded_recovery";
   const objectStoreName = "foo";
 
-  // We want 8 MB database on Android and 32 MB database on other platforms.
-  const groupLimitMB = mozinfo.os == "android" ? 8 : 32;
-
-  // The group limit is calculated as 20% of the global temporary storage limit.
-  const tempStorageLimitKB = groupLimitMB * 5 * 1024;
+  // We want 32 MB database, but there's the group limit so we need to
+  // multiply by 5.
+  const tempStorageLimitKB = 32 * 1024 * 5;
 
   // Store in 1 MB chunks.
   const dataSize = 1024 * 1024;
-
-  const maxIter = 10;
 
   for (let blobs of [false, true]) {
     setTemporaryStorageLimit(tempStorageLimitKB);
@@ -46,7 +42,7 @@ function testSteps()
 
     info("Creating objectStore");
 
-    request.result.createObjectStore(objectStoreName, { autoIncrement: true });
+    request.result.createObjectStore(objectStoreName);
 
     yield undefined;
 
@@ -54,7 +50,7 @@ function testSteps()
     let db = request.result;
     db.onerror = errorHandler;
 
-    ok(true, "Filling database");
+    ok(true, "Adding data until quota is reached");
 
     let obj = {
       name: "foo"
@@ -64,7 +60,6 @@ function testSteps()
       obj.data = getRandomView(dataSize);
     }
 
-    let iter = 1;
     let i = 1;
     let j = 1;
     while (true) {
@@ -73,16 +68,14 @@ function testSteps()
       }
 
       let trans = db.transaction(objectStoreName, "readwrite");
-      request = trans.objectStore(objectStoreName).add(obj);
+      request = trans.objectStore(objectStoreName).add(obj, i);
       request.onerror = function(event)
       {
         event.stopPropagation();
       }
 
       trans.oncomplete = function(event) {
-        if (iter == 1) {
-          i++;
-        }
+        i++;
         j++;
         testGenerator.send(true);
       }
@@ -94,43 +87,67 @@ function testSteps()
       let completeFired = yield undefined;
       if (completeFired) {
         ok(true, "Got complete event");
-        continue;
-      }
-
-      ok(true, "Got abort event");
-
-      if (iter++ == maxIter) {
-        break;
-      }
-
-      if (iter > 1) {
-        ok(i == j, "Recycled entire database");
-        j = 1;
-      }
-
-      trans = db.transaction(objectStoreName, "readwrite");
-
-      // Don't use a cursor for deleting stored blobs (Cursors prolong live
-      // of stored files since each record must be fetched from the database
-      // first which creates a memory reference to the stored blob.)
-      if (blobs) {
-        request = trans.objectStore(objectStoreName).clear();
       } else {
-        request = trans.objectStore(objectStoreName).openCursor();
-        request.onsuccess = function(event) {
-          let cursor = event.target.result;
-          if (cursor) {
-            cursor.delete();
-            cursor.continue();
-          }
+        ok(true, "Got abort event");
+
+        if (j == 1) {
+          // Plain cleanup transaction (just vacuuming and checkpointing)
+          // couldn't shrink database any further.
+          break;
         }
+
+        j = 1;
+
+        trans = db.transaction(objectStoreName, "cleanup");
+        trans.onabort = unexpectedSuccessHandler;;
+        trans.oncomplete = grabEventAndContinueHandler;
+
+        yield undefined;
       }
-
-      trans.onabort = unexpectedSuccessHandler;;
-      trans.oncomplete = grabEventAndContinueHandler;
-
-      yield undefined;
     }
+
+    info("Reopening database");
+
+    db.close();
+
+    request = indexedDB.openForPrincipal(getPrincipal(spec), name);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+
+    yield undefined;
+
+    db = request.result;
+    db.onerror = errorHandler;
+
+    info("Deleting some data")
+
+    let trans = db.transaction(objectStoreName, "cleanup");
+    trans.objectStore(objectStoreName).delete(1);
+
+    trans.onabort = unexpectedSuccessHandler;;
+    trans.oncomplete = grabEventAndContinueHandler;
+
+    yield undefined;
+
+    info("Adding data again")
+
+    trans = db.transaction(objectStoreName, "readwrite");
+    trans.objectStore(objectStoreName).add(obj, 1);
+
+    trans.onabort = unexpectedSuccessHandler;
+    trans.oncomplete = grabEventAndContinueHandler;
+
+    yield undefined;
+
+    info("Deleting database");
+
+    db.close();
+
+    request = indexedDB.deleteForPrincipal(getPrincipal(spec), name);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+
+    yield undefined;
   }
 
   finishTest();
