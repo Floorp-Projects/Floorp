@@ -2,33 +2,33 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="12" height="12">
-    <defs>
-        <linearGradient id="c">
-            <stop offset="0" stop-color="#787878"/>
-            <stop offset="1" stop-color="#b4b4b4"/>
-        </linearGradient>
-        <linearGradient id="d">
-            <stop offset="0" stop-color="#505050"/>
-            <stop offset="1" stop-color="#787878"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#c8c8c8"/>
-            <stop offset="1" stop-color="#dcdcdc"/>
-        </linearGradient>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#a0a0a0"/>
-            <stop offset="1" stop-color="#c8c8c8"/>
-        </linearGradient>
-        <linearGradient x1="8.637" y1="4.311" x2="6.34" y2=".583" id="e" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.64 0 0 .6988 .88 .987)"/>
-        <linearGradient x1="7.188" y1="5.078" x2="4.956" y2="1.392" id="f" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.64 0 0 .6988 .88 .987)"/>
-        <linearGradient x1="11.377" y1="1052.085" x2="4.559" y2="1040.666" id="g" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)"/>
-        <linearGradient x1="8.842" y1="1053.385" x2="1.917" y2="1041.923" id="h" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)"/>
-        <linearGradient x1="8.54" y1="12.498" x2="6.608" y2="7.825" id="i" xlink:href="#d" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.71429 0 0 .71492 .286 .276)"/>
-        <linearGradient x1="9.392" y1="12.116" x2="7.402" y2="7.414" id="j" xlink:href="#c" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.71429 0 0 .71492 .286 .276)"/>
-    </defs>
-    <g transform="matrix(1.19102 0 0 1.19106 -1.146 -1.146)" stroke-linejoin="round">
-        <path d="M6 1.215a2.982 2.982 0 0 0-2.991 2.904c.114-.019.238-.045.357-.045h.938C4.386 3.194 5.1 2.421 6 2.421c.899 0 1.614.773 1.696 1.653h.938c.119 0 .243.026.357.045A2.982 2.982 0 0 0 6 1.215z" fill="url(#e)" stroke="url(#f)" stroke-width=".504"/>
-        <rect width="9.571" height="6.72" rx="1.679" ry="1.679" x="1.214" y="4.065" fill="url(#g)" stroke="url(#h)" stroke-width=".504"/>
-        <path d="M6 5.504A1.2 1.2 0 0 0 4.795 6.71c0 .562.375 1.023.893 1.162v1.475h.625V7.872c.517-.139.892-.6.892-1.162A1.2 1.2 0 0 0 6 5.504z" fill="url(#i)" stroke="url(#j)" stroke-width=".336"/>
-    </g>
+  <defs>
+    <linearGradient id="d">
+      <stop offset="0" stop-color="#787878"/>
+      <stop offset="1" stop-color="#b4b4b4"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#505050"/>
+      <stop offset="1" stop-color="#787878"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#c8c8c8"/>
+      <stop offset="1" stop-color="#dcdcdc"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#a0a0a0"/>
+      <stop offset="1" stop-color="#c8c8c8"/>
+    </linearGradient>
+    <linearGradient x1="8.637" y1="4.311" x2="6.34" y2=".583" id="e" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.64 0 0 .6988 .88 .987)"/>
+    <linearGradient x1="7.188" y1="5.078" x2="4.956" y2="1.392" id="f" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.64 0 0 .6988 .88 .987)"/>
+    <linearGradient x1="11.377" y1="1052.085" x2="4.559" y2="1040.666" id="g" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)"/>
+    <linearGradient x1="8.842" y1="1053.385" x2="1.917" y2="1041.923" id="h" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)"/>
+    <linearGradient x1="8.54" y1="12.498" x2="6.608" y2="7.825" id="i" xlink:href="#c" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.71429 0 0 .71492 .286 .276)"/>
+    <linearGradient x1="9.392" y1="12.116" x2="7.402" y2="7.414" id="j" xlink:href="#d" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.71429 0 0 .71492 .286 .276)"/>
+  </defs>
+  <g transform="matrix(1.19102 0 0 1.19106 -1.146 -1.146)" stroke-linejoin="round">
+    <path d="M6 1.215a2.982 2.982 0 0 0-2.991 2.904c.114-.019.238-.045.357-.045h.938C4.386 3.194 5.1 2.421 6 2.421c.899 0 1.614.773 1.696 1.653h.938c.119 0 .243.026.357.045A2.982 2.982 0 0 0 6 1.215z" fill="url(#e)" stroke="url(#f)" stroke-width=".504"/>
+    <rect width="9.571" height="6.72" rx="1.679" ry="1.679" x="1.214" y="4.065" fill="url(#g)" stroke="url(#h)" stroke-width=".504"/>
+    <path d="M6 5.504A1.2 1.2 0 0 0 4.795 6.71c0 .562.375 1.023.893 1.162v1.475h.625V7.872c.517-.139.892-.6.892-1.162A1.2 1.2 0 0 0 6 5.504z" fill="url(#i)" stroke="url(#j)" stroke-width=".336"/>
+  </g>
 </svg>

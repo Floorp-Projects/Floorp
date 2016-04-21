@@ -1,0 +1,47 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" height="16" width="16">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#747254"/>
+      <stop offset="1" stop-color="#8b8965"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#e1e1d7"/>
+      <stop offset="1" stop-color="#f2f2ee"/>
+    </linearGradient>
+    <linearGradient gradientTransform="translate(-2.38 -2.38) scale(1.17241)" gradientUnits="userSpaceOnUse" y2="4.847" x2="2.94" y1="12.978" x1="13.037" id="g" xlink:href="#a"/>
+    <linearGradient gradientTransform="translate(-2.38 -2.38) scale(1.17241)" gradientUnits="userSpaceOnUse" y2="2.729" x2="4.832" y1="11.063" x1="14.997" id="h" xlink:href="#b"/>
+    <linearGradient gradientTransform="matrix(.64 0 0 .6988 .88 .987)" gradientUnits="userSpaceOnUse" xlink:href="#c" id="i" y2=".583" x2="6.34" y1="4.311" x1="8.637"/>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#c8c8c8"/>
+      <stop offset="1" stop-color="#dcdcdc"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(.64 0 0 .6988 .88 .987)" gradientUnits="userSpaceOnUse" xlink:href="#d" id="j" y2="1.392" x2="4.956" y1="5.078" x1="7.188"/>
+    <linearGradient id="d">
+      <stop offset="0" stop-color="#a0a0a0"/>
+      <stop offset="1" stop-color="#c8c8c8"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)" gradientUnits="userSpaceOnUse" xlink:href="#c" id="k" y2="1040.666" x2="4.559" y1="1052.085" x1="11.377"/>
+    <linearGradient gradientTransform="matrix(.62152 0 0 .5895 1.028 -609.403)" gradientUnits="userSpaceOnUse" xlink:href="#d" id="l" y2="1041.923" x2="1.917" y1="1053.385" x1="8.842"/>
+    <linearGradient gradientTransform="matrix(.71429 0 0 .71492 .286 .276)" gradientUnits="userSpaceOnUse" xlink:href="#e" id="m" y2="7.825" x2="6.608" y1="12.498" x1="8.54"/>
+    <linearGradient id="e">
+      <stop offset="0" stop-color="#505050"/>
+      <stop offset="1" stop-color="#787878"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(.71429 0 0 .71492 .286 .276)" gradientUnits="userSpaceOnUse" xlink:href="#f" id="n" y2="7.414" x2="7.402" y1="12.116" x1="9.392"/>
+    <linearGradient id="f">
+      <stop offset="0" stop-color="#787878"/>
+      <stop offset="1" stop-color="#b4b4b4"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linejoin="round">
+    <path d="M9.351.2l1.603 1.575.833.819h.84c.65 0 1.173.52 1.173 1.167v8.872c0 .646-.523 1.167-1.172 1.167H1.372C.722 13.8.2 13.28.2 12.633V3.76c0-.647.523-1.167 1.172-1.167h5.543l.834-.819L9.35.2z" fill="url(#g)" stroke="url(#h)" stroke-width=".4"/>
+    <g transform="matrix(.9821 0 0 .98213 5.107 5.107)">
+      <path d="M6 1.215a2.982 2.982 0 0 0-2.991 2.904c.114-.019.238-.045.357-.045h.938C4.386 3.194 5.1 2.421 6 2.421c.899 0 1.614.773 1.696 1.653h.938c.119 0 .243.026.357.045A2.982 2.982 0 0 0 6 1.215z" fill="url(#i)" stroke="url(#j)" stroke-width=".611"/>
+      <rect y="4.065" x="1.214" ry=".787" rx=".787" height="6.72" width="9.571" fill="url(#k)" stroke="url(#l)" stroke-width=".611"/>
+      <path d="M6 5.504A1.2 1.2 0 0 0 4.795 6.71c0 .562.375 1.023.893 1.162v1.475h.625V7.872c.517-.139.892-.6.892-1.162A1.2 1.2 0 0 0 6 5.504z" fill="url(#m)" stroke="url(#n)" stroke-width=".407"/>
+    </g>
+  </g>
+</svg>

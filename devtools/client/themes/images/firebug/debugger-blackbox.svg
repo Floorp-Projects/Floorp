@@ -2,29 +2,29 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
-    <defs>
-        <linearGradient id="d">
-            <stop offset="0" stop-color="#323232"/>
-            <stop offset="1" stop-color="#646464"/>
-        </linearGradient>
-        <linearGradient id="c">
-            <stop offset="0" stop-color="#b4b4b4"/>
-            <stop offset="1" stop-color="#dcdcdc"/>
-        </linearGradient>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#3c3c3c"/>
-            <stop offset="1" stop-color="#646464"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#505050"/>
-            <stop offset="1" stop-color="#8c8c8c"/>
-        </linearGradient>
-        <linearGradient gradientTransform="matrix(.97143 0 0 1.08571 .229 -1125.879)" xlink:href="#a" id="e" x1="10.803" y1="1047.39" x2="4.726" y2="1041.559" gradientUnits="userSpaceOnUse"/>
-        <linearGradient gradientTransform="matrix(.97143 0 0 1.08571 .229 -1125.879)" xlink:href="#b" id="f" x1="12.563" y1="1046.633" x2="5.974" y2="1040.229" gradientUnits="userSpaceOnUse"/>
-        <linearGradient gradientTransform="matrix(1.16667 0 0 1.16667 -1.333 -1210.423)" xlink:href="#c" id="g" x1="9.698" y1="1046.429" x2="5.893" y2="1042.623" gradientUnits="userSpaceOnUse"/>
-        <linearGradient gradientTransform="translate(0 -1036.362)" xlink:href="#d" id="h" x1="9.023" y1="1045.897" x2="6.49" y2="1043.363" gradientUnits="userSpaceOnUse"/>
-    </defs>
-    <path d="M14.8 8c0 1.085-3.044 3.8-6.8 3.8S1.2 9.085 1.2 8 4.244 4.2 8 4.2s6.8 2.715 6.8 3.8z" style="marker:none" color="#000" overflow="visible" fill="url(#e)" stroke="url(#f)" stroke-width=".4" stroke-linejoin="round"/>
-    <circle r="3.5" cy="8" cx="8" style="marker:none" color="#000" overflow="visible" fill="url(#g)"/>
-    <circle r="2" cy="8" cx="8" style="marker:none" color="#000" overflow="visible" fill="url(#h)"/>
+  <defs>
+    <linearGradient id="d">
+      <stop offset="0" stop-color="#323232"/>
+      <stop offset="1" stop-color="#646464"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#b4b4b4"/>
+      <stop offset="1" stop-color="#dcdcdc"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#3c3c3c"/>
+      <stop offset="1" stop-color="#646464"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#505050"/>
+      <stop offset="1" stop-color="#8c8c8c"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(.97143 0 0 1.08571 .229 -1125.879)" xlink:href="#a" id="e" x1="10.803" y1="1047.39" x2="4.726" y2="1041.559" gradientUnits="userSpaceOnUse"/>
+    <linearGradient gradientTransform="matrix(.97143 0 0 1.08571 .229 -1125.879)" xlink:href="#b" id="f" x1="12.563" y1="1046.633" x2="5.974" y2="1040.229" gradientUnits="userSpaceOnUse"/>
+    <linearGradient gradientTransform="translate(-1.333 -1210.423) scale(1.16667)" xlink:href="#c" id="g" x1="9.698" y1="1046.429" x2="5.893" y2="1042.623" gradientUnits="userSpaceOnUse"/>
+    <linearGradient gradientTransform="translate(0 -1036.362)" xlink:href="#d" id="h" x1="9.023" y1="1045.897" x2="6.49" y2="1043.363" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path d="M14.8 8c0 1.085-3.044 3.8-6.8 3.8S1.2 9.085 1.2 8 4.244 4.2 8 4.2s6.8 2.715 6.8 3.8z" style="marker:none" color="#000" overflow="visible" fill="url(#e)" stroke="url(#f)" stroke-width=".4" stroke-linejoin="round"/>
+  <circle r="3.5" cy="8" cx="8" style="marker:none" color="#000" overflow="visible" fill="url(#g)"/>
+  <circle r="2" cy="8" cx="8" style="marker:none" color="#000" overflow="visible" fill="url(#h)"/>
 </svg>

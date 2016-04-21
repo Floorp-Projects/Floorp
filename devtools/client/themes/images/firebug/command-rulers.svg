@@ -1,0 +1,20 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" height="16" width="16">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#e2e6ea"/>
+      <stop offset="1" stop-color="#f9fafb"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#323b46"/>
+      <stop offset="1" stop-color="#546374"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" y2=".822" x2="4.016" y1="13.198" x1="8.663" id="d" xlink:href="#a"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="1.975" x2="2.064" y1="13.044" x1="6.113" id="c" xlink:href="#b"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="1.511" x2="3.948" y1="13.163" x1="7.795" id="e" xlink:href="#a"/>
+  </defs>
+  <path d="M1.7 1.2c-.278 0-.5.222-.5.5v12.6c0 .278.222.5.5.5h3.6c.278 0 .5-.222.5-.5V5.8h8.5c.278 0 .5-.222.5-.5V1.7c0-.278-.222-.5-.5-.5H1.7z" fill="url(#c)" stroke="url(#d)" stroke-width=".4" stroke-linejoin="round"/>
+  <path d="M1 4.5h1.5M1 7.5h3m-3 3h1.5m-1.5 3h3M4.5 1v1.5m3-1.5v3m3-3v1.5m3-1.5v3" fill="none" stroke="url(#e)"/>
+</svg>
