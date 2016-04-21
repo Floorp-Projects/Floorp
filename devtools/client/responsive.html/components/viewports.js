@@ -21,6 +21,7 @@ module.exports = createClass({
     onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
+    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
   displayName: "Viewports",
@@ -36,6 +37,7 @@ module.exports = createClass({
       onContentResize,
       onResizeViewport,
       onRotateViewport,
+      onUpdateDeviceModalOpen,
     } = this.props;
 
     return dom.div(
@@ -54,6 +56,7 @@ module.exports = createClass({
           onContentResize,
           onResizeViewport,
           onRotateViewport,
+          onUpdateDeviceModalOpen,
         });
       })
     );

@@ -9,23 +9,31 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.importGlobalProperties(['fetch']);
+const BlocklistClients = Cu.import("resource://services-common/KintoBlocklist.js", {});
 
-const PREF_KINTO_CHANGES_PATH = "services.kinto.changes.path";
-const PREF_KINTO_BASE = "services.kinto.base";
-const PREF_KINTO_BUCKET = "services.kinto.bucket";
-const PREF_KINTO_LAST_UPDATE = "services.kinto.last_update_seconds";
-const PREF_KINTO_LAST_ETAG = "services.kinto.last_etag";
+const PREF_KINTO_CHANGES_PATH       = "services.kinto.changes.path";
+const PREF_KINTO_BASE               = "services.kinto.base";
+const PREF_KINTO_BUCKET             = "services.kinto.bucket";
+const PREF_KINTO_LAST_UPDATE        = "services.kinto.last_update_seconds";
+const PREF_KINTO_LAST_ETAG          = "services.kinto.last_etag";
 const PREF_KINTO_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
-const PREF_KINTO_ONECRL_COLLECTION = "services.kinto.onecrl.collection";
+const PREF_KINTO_ONECRL_COLLECTION  = "services.kinto.onecrl.collection";
 
-const kintoClients = {
+
+const gBlocklistClients = {
+  [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
+  [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,
+  [BlocklistClients.GfxBlocklistClient.collectionName]: BlocklistClients.GfxBlocklistClient,
+  [BlocklistClients.PluginBlocklistClient.collectionName]: BlocklistClients.PluginBlocklistClient
 };
+
+// Add a blocklist client for testing purposes. Do not use for any other purpose
+this.addTestKintoClient = (name, client) => { gBlocklistClients[name] = client; }
 
 // This is called by the ping mechanism.
 // returns a promise that rejects if something goes wrong
 this.checkVersions = function() {
-
-  return Task.spawn(function *() {
+  return Task.spawn(function* syncClients() {
     // Fetch a versionInfo object that looks like:
     // {"data":[
     //   {
@@ -78,14 +86,14 @@ this.checkVersions = function() {
       }
 
       let collection = collectionInfo.collection;
-      let kintoClient = kintoClients[collection];
-      if (kintoClient && kintoClient.maybeSync) {
+      let client = gBlocklistClients[collection];
+      if (client && client.maybeSync) {
         let lastModified = 0;
         if (collectionInfo.last_modified) {
           lastModified = collectionInfo.last_modified;
         }
         try {
-          yield kintoClient.maybeSync(lastModified, serverTimeMillis);
+          yield client.maybeSync(lastModified, serverTimeMillis);
         } catch (e) {
           if (!firstError) {
             firstError = e;
@@ -105,12 +113,3 @@ this.checkVersions = function() {
     }
   });
 };
-
-// Add a kintoClient for testing purposes. Do not use for any other purpose
-this.addTestKintoClient = function(name, kintoClient) {
-  kintoClients[name] = kintoClient;
-};
-
-// Add the various things that we know want updates
-const KintoBlocklist = Cu.import("resource://services-common/KintoCertificateBlocklist.js", {});
-kintoClients[Services.prefs.getCharPref(PREF_KINTO_ONECRL_COLLECTION)]  = KintoBlocklist.OneCRLClient;

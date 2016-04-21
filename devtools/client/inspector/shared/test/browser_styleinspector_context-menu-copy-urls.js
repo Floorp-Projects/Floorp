@@ -39,24 +39,24 @@ add_task(function*() {
 
 function* startTest() {
   info("Opening rule view");
-  let ruleViewData = yield openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   info("Test valid background image URL in rule view");
-  yield testCopyUrlToClipboard(ruleViewData, "data-uri", ".valid-background", TEST_DATA_URI);
-  yield testCopyUrlToClipboard(ruleViewData, "url", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in rue view");
-  yield testCopyUrlToClipboard(ruleViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
-  yield testCopyUrlToClipboard(ruleViewData, "url", ".invalid-background", INVALID_IMAGE_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri", ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard({view, inspector}, "url", ".invalid-background", INVALID_IMAGE_URI);
 
   info("Opening computed view");
-  let computedViewData = yield openComputedView();
+  view = selectComputedView(inspector);
 
   info("Test valid background image URL in computed view");
-  yield testCopyUrlToClipboard(computedViewData, "data-uri", ".valid-background", TEST_DATA_URI);
-  yield testCopyUrlToClipboard(computedViewData, "url", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri", ".valid-background", TEST_DATA_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in computed view");
-  yield testCopyUrlToClipboard(computedViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
-  yield testCopyUrlToClipboard(computedViewData, "url", ".invalid-background", INVALID_IMAGE_URI);
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri", ".invalid-background", ERROR_MESSAGE);
+  yield testCopyUrlToClipboard({view, inspector}, "url", ".invalid-background", INVALID_IMAGE_URI);
 }
 
 function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {

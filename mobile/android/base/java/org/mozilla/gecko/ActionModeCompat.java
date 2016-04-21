@@ -4,8 +4,9 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import android.view.Gravity;
 import android.view.Menu;
@@ -26,11 +27,11 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
      * creation, interaction with, and destruction of menuitems for the view */
     public static interface Callback {
         /* Called when action mode is first created. Implementors should use this to inflate menu resources. */
-        public boolean onCreateActionMode(ActionModeCompat mode, Menu menu);
+        public boolean onCreateActionMode(ActionModeCompat mode, GeckoMenu menu);
 
         /* Called to refresh an action mode's action menu. Called whenever the mode is invalidated. Implementors
          * should use this to enable/disable/show/hide menu items. */
-        public boolean onPrepareActionMode(ActionModeCompat mode, Menu menu);
+        public boolean onPrepareActionMode(ActionModeCompat mode, GeckoMenu menu);
 
         /* Called to report a user click on an action button. */
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item);
@@ -59,7 +60,10 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
 
     public void finish() {
         // Clearing the menu will also clear the ActionItemBar
-        mView.getMenu().clear();
+        final GeckoMenu menu = mView.getMenu();
+        menu.clear();
+        menu.close();
+
         if (mCallback != null) {
             mCallback.onDestroyActionMode(this);
         }
@@ -77,7 +81,7 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
         mView.setTitle(resId);
     }
 
-    public Menu getMenu() {
+    public GeckoMenu getMenu() {
         return mView.getMenu();
     }
 
@@ -86,6 +90,10 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
             mCallback.onPrepareActionMode(this, mView.getMenu());
         }
         mView.invalidate();
+    }
+
+    public void animateIn() {
+        mView.animateIn();
     }
 
     /* GeckoPopupMenu.OnMenuItemClickListener */

@@ -25,7 +25,7 @@ add_task(function*() {
 
   info("Opening the computed view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
-  ({inspector, view} = yield openComputedView());
+  view = selectComputedView(inspector);
   yield onComputedViewReady;
 
   yield testComputedView(view, inspector.selection.nodeFront);

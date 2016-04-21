@@ -631,6 +631,7 @@ var gViewController = {
 
   initialize: function() {
     this.viewPort = document.getElementById("view-port");
+    this.headerEl = document.getElementById("header");
 
     this.viewObjects["search"] = gSearchView;
     this.viewObjects["discover"] = gDiscoverView;
@@ -762,6 +763,8 @@ var gViewController = {
       throw Components.Exception("Root node doesn't exist for '" + view.type + "' view");
 
     if (this.currentViewObj && aViewId != aPreviousView) {
+      this.headerEl.hidden = Boolean(viewObj.hideHeader);
+
       try {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
@@ -2054,6 +2057,7 @@ var gDiscoverView = {
   _error: null,
   homepageURL: null,
   _loadListeners: [],
+  hideHeader: true,
 
   initialize: function() {
     this.enabled = isDiscoverEnabled();

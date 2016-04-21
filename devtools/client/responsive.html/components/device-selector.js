@@ -9,6 +9,7 @@ const { DOM: dom, createClass, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
+const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 module.exports = createClass({
   propTypes: {
@@ -16,6 +17,7 @@ module.exports = createClass({
     selectedDevice: PropTypes.string.isRequired,
     onChangeViewportDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
+    onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
   displayName: "DeviceSelector",
@@ -27,7 +29,13 @@ module.exports = createClass({
       devices,
       onChangeViewportDevice,
       onResizeViewport,
+      onUpdateDeviceModalOpen,
     } = this.props;
+
+    if (target.value === OPEN_DEVICE_MODAL_VALUE) {
+      onUpdateDeviceModalOpen(true);
+      return;
+    }
 
     for (let type of devices.types) {
       for (let device of devices[type]) {
@@ -50,7 +58,9 @@ module.exports = createClass({
     let options = [];
     for (let type of devices.types) {
       for (let device of devices[type]) {
-        options.push(device);
+        if (device.displayed) {
+          options.push(device);
+        }
       }
     }
 
@@ -75,7 +85,10 @@ module.exports = createClass({
           key: device.name,
           value: device.name,
         }, device.name);
-      })
+      }),
+      dom.option({
+        value: OPEN_DEVICE_MODAL_VALUE,
+      }, getStr("responsive.editDeviceList"))
     );
   },
 

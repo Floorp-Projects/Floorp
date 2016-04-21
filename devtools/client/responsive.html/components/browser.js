@@ -13,7 +13,7 @@ const { DOM: dom, createClass, addons, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 const Types = require("../types");
-const { waitForMessage } = require("../utils/e10s");
+const e10s = require("../utils/e10s");
 
 module.exports = createClass({
   /**
@@ -45,9 +45,9 @@ module.exports = createClass({
     // quite the same timing as when we _set_ a new size around the browser,
     // since it still needs to do async work before the content is actually
     // resized to match.
-    mm.addMessageListener("ResponsiveMode:OnContentResize", onContentResize);
+    e10s.on(mm, "OnContentResize", onContentResize);
 
-    let ready = waitForMessage(mm, "ResponsiveMode:ChildScriptReady");
+    let ready = e10s.once(mm, "ChildScriptReady");
     mm.loadFrameScript("resource://devtools/client/responsivedesign/" +
                        "responsivedesign-child.js", true);
     yield ready;
@@ -55,13 +55,12 @@ module.exports = createClass({
     let browserWindow = getToplevelWindow(window);
     let requiresFloatingScrollbars =
       !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
-    let started = waitForMessage(mm, "ResponsiveMode:Start:Done");
-    mm.sendAsyncMessage("ResponsiveMode:Start", {
+
+    yield e10s.request(mm, "Start", {
       requiresFloatingScrollbars,
       // Tests expect events on resize to yield on various size changes
       notifyOnResize: DevToolsUtils.testing,
     });
-    yield started;
 
     // manager.js waits for this signal before allowing browser tests to start
     this.props.onBrowserMounted();
@@ -71,8 +70,8 @@ module.exports = createClass({
     let { onContentResize } = this;
     let browser = this.refs.browserContainer.querySelector("iframe.browser");
     let mm = browser.frameLoader.messageManager;
-    mm.removeMessageListener("ResponsiveMode:OnContentResize", onContentResize);
-    mm.sendAsyncMessage("ResponsiveMode:Stop");
+    e10s.off(mm, "OnContentResize", onContentResize);
+    e10s.emit(mm, "Stop");
   },
 
   onContentResize(msg) {

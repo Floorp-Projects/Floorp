@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the cookie command works for host with a port specified
 
-const TEST_URI = "http://mochi.test:8888/browser/devtools/client/commandline/"+
+const TEST_URI = "http://mochi.test:8888/browser/devtools/client/commandline/" +
                  "test/browser_cmd_cookie.html";
 
 function test() {
@@ -12,7 +14,7 @@ function test() {
         {
           setup: 'cookie list',
           exec: {
-            output: [ /zap=zep/, /zip=zop/ ],
+            output: [ /zap=zep/, /zip=zop/, /zig=zag/ ],
           }
         },
         {
@@ -30,7 +32,7 @@ function test() {
         {
           setup: "cookie list",
           exec: {
-            output: [ /zap=zep/, /zip=zop/, /zup=banana/, /Edit/ ]
+            output: [ /zap=zep/, /zip=zop/, /zig=zag/, /zup=banana/, /Edit/ ]
           }
         }
     ]);
