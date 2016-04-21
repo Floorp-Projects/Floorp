@@ -232,7 +232,7 @@ add_task(makeInstallTest(function* (browser) {
     }
   ];
 
-  yield testInstall(browser, XPI_URL + "bogus", steps, "a basic install works");
+  yield testInstall(browser, XPI_URL + "bogus", steps, "install of a bad url fails");
 
   let addons = yield promiseAddonsByIDs([ID]);
   is(addons[0], null, "The addon was not installed");
