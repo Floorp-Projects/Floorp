@@ -5,8 +5,7 @@
  */
 
 [Constructor(DOMString type, optional MozNFCTagEventInit eventInitDict),
- Func="Navigator::HasNFCSupport", CheckAnyPermissions="nfc",
- AvailableIn="PrivilegedApps"]
+ Func="Navigator::HasNFCSupport", ChromeOnly]
 interface MozNFCTagEvent : Event
 {
   /**

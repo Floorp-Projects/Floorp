@@ -6,7 +6,6 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 function runTest() {
   var dppxPref = 'layout.css.devPixelsPerPx';

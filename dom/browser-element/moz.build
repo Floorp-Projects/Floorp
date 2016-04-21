@@ -54,4 +54,8 @@ MOCHITEST_MANIFESTS += [
     'mochitest/mochitest.ini',
     'mochitest/priority/mochitest.ini',
 ]
-MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'mochitest/chrome.ini',
+    'mochitest/priority/chrome.ini',
+]

@@ -6,7 +6,6 @@
 'use strict';
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 // request to load a manifest from a page that doesn't have a manifest.
 // The expected result to be null.

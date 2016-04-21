@@ -7,7 +7,6 @@
 "use strict";
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addPermission();
 
 var iframe;
 function addOneShotIframeEventListener(event, fn) {

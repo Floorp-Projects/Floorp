@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckAnyPermissions="telephony",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MMICall {
   [Throws]
   readonly attribute Promise<MozMMIResult> result;

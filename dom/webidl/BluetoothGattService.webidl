@@ -9,7 +9,7 @@
  * local GATT server, or in the client role as a service provided by a remote
  * GATT server.
  */
-[CheckAnyPermissions="bluetooth", Constructor(BluetoothGattServiceInit init)]
+[ChromeOnly, Constructor(BluetoothGattServiceInit init)]
 interface BluetoothGattService
 {
   [Cached, Pure]

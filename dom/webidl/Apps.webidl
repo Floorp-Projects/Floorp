@@ -22,9 +22,9 @@ enum LocaleResourceType {
 };
 
 [NoInterfaceObject, NavigatorProperty="mozApps",
- JSImplementation="@mozilla.org/webapps;1"]
+ JSImplementation="@mozilla.org/webapps;1",
+ ChromeOnly]
 interface DOMApplicationsRegistry {
-  [CheckAnyPermissions="webapps-manage homescreen-webapps-manage"]
   readonly attribute DOMApplicationsManager mgmt;
   DOMRequest install(DOMString url, optional InstallParameters params);
   DOMRequest installPackage(DOMString url, optional InstallParameters params);
@@ -105,21 +105,16 @@ interface DOMApplication : EventTarget {
 };
 
 [JSImplementation="@mozilla.org/webapps/manager;1",
- ChromeOnly,
- CheckAnyPermissions="webapps-manage homescreen-webapps-manage"]
+ ChromeOnly]
 interface DOMApplicationsManager : EventTarget {
   DOMRequest getAll();
 
-  [CheckAnyPermissions="webapps-manage"]
   void applyDownload(DOMApplication app);
   DOMRequest uninstall(DOMApplication app);
 
-  [CheckAnyPermissions="webapps-manage"]
   Promise<DOMApplication> import(Blob blob);
-  [CheckAnyPermissions="webapps-manage"]
   Promise<any> extractManifest(Blob blob);
 
-  [CheckAnyPermissions="webapps-manage"]
   void setEnabled(DOMApplication app, boolean state);
   Promise<Blob> getIcon(DOMApplication app, DOMString iconID,
                         optional DOMString entryPoint);

@@ -6,8 +6,8 @@
 
 [Constructor(DOMString typeArg,
  optional BeforeAfterKeyboardEventInit eventInitDict),
- CheckAnyPermissions="embed-apps before-after-keyboard-event",
- Pref="dom.beforeAfterKeyboardEvent.enabled"]
+ Pref="dom.beforeAfterKeyboardEvent.enabled",
+ ChromeOnly]
 interface BeforeAfterKeyboardEvent : KeyboardEvent
 {
   // The valid value of embeddedCancelled is:

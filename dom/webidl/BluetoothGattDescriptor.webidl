@@ -9,7 +9,7 @@
  * by a local GATT server, or in the client role as a descriptor provided by a
  * remote GATT server.
  */
-[CheckAnyPermissions="bluetooth"]
+[ChromeOnly]
 interface BluetoothGattDescriptor
 {
   readonly attribute BluetoothGattCharacteristic            characteristic;

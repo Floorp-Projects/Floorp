@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Test Enabling/Disabling CPU Sleep with Power Management API</title>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
 <p id="display"></p>
@@ -41,19 +41,13 @@
 
   SimpleTest.expectAssertions(0, 9);
   SimpleTest.waitForExplicitFinish();
-  if (SpecialPowers.hasPermission("power", document)) {
-    // Currently only applicable on FxOS
-    if (navigator.userAgent.indexOf("Mobile") != -1 &&
-        navigator.appVersion.indexOf("Android") == -1) {
-      startTests();
-    } else {
-      ok(true, "mozPower on Firefox OS only.");
-      SimpleTest.finish();
-    }
+  // Currently only applicable on FxOS
+  if (navigator.userAgent.indexOf("Mobile") != -1 &&
+      navigator.appVersion.indexOf("Android") == -1) {
+     startTests();
   } else {
-    // Add the permission and reload so it's propogated
-    SpecialPowers.addPermission("power", true, document);
-    window.location.reload();
+    ok(true, "mozPower on Firefox OS only.");
+    SimpleTest.finish();
   }
   </script>
 </pre>

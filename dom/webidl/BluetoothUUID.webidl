@@ -13,7 +13,7 @@ typedef (DOMString or unsigned long) BluetoothServiceUUID;
 typedef (DOMString or unsigned long) BluetoothCharacteristicUUID;
 typedef (DOMString or unsigned long) BluetoothDescriptorUUID;
 
-[Pref="dom.bluetooth.webbluetooth.enable", CheckAnyPermissions="bluetooth"]
+[Pref="dom.bluetooth.webbluetooth.enable", ChromeOnly]
 interface BluetoothUUID
 {
   [Throws]

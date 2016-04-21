@@ -15,8 +15,7 @@ dictionary MmsDeliveryInfo {
 };
 
 [Pref="dom.sms.enabled",
- CheckAnyPermissions="sms",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MmsMessage {
   /**
    * |type| is always "mms".

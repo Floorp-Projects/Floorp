@@ -9,7 +9,7 @@
  * BluetoothGattCharacteristicEvent interface is exposed only if
  * "dom.bluetooth.webbluetooth.enabled" preference is false.
  */
-[CheckAnyPermissions="bluetooth",
+[ChromeOnly,
  Func="mozilla::dom::bluetooth::BluetoothManager::B2GGattClientEnabled",
  Constructor(DOMString type,
              optional BluetoothGattCharacteristicEventInit eventInitDict)]

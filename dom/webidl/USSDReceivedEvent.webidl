@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.telephony.enabled",
- CheckAnyPermissions="telephony",
- AvailableIn="CertifiedApps",
+ ChromeOnly,
  Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict)]
 interface USSDReceivedEvent : Event
 {

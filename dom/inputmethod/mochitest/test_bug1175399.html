@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1175399
 -->
 <head>
   <title>Test focus when page unloads</title>
-  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1175399">Mozilla Bug 1175399</a>
@@ -35,7 +35,7 @@ function runTest() {
   SpecialPowers.wrap(im).setActive(true);
 
   let iframe = document.createElement('iframe');
-  iframe.src = 'data:text/html,<html><body><input value="First" readonly></body></html>';
+  iframe.src = 'file_test_bug1175399.html';
   iframe.setAttribute('mozbrowser', true);
   document.body.appendChild(iframe);
 

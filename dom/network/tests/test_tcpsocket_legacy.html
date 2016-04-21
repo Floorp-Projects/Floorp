@@ -6,8 +6,8 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 885982</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1084245">Mozilla Bug 1084245</a>
@@ -21,13 +21,7 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv(
     { set: [ ['dom.mozTCPSocket.enabled', true] ] },
-    setPerms);
-
-  function setPerms() {
-    SpecialPowers.pushPermissions(
-      [ { type: 'tcp-socket', allow: true, context: document } ],
-      runTest);
-  }
+    runTest);
 
   function runTest() {
     // See bug 903830; in e10s mode we never get to find out the localPort if we

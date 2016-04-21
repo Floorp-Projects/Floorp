@@ -140,8 +140,7 @@ dictionary IccCardLockRetryCount
 };
 
 [Pref="dom.icc.enabled",
- CheckAnyPermissions="mobileconnection",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozIcc : EventTarget
 {
   // Integrated Circuit Card Information.

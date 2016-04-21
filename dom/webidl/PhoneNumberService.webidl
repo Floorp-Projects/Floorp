@@ -6,7 +6,7 @@
 
 [JSImplementation="@mozilla.org/phoneNumberService;1",
  NavigatorProperty="mozPhoneNumberService",
- CheckAnyPermissions="phonenumberservice"]
+ ChromeOnly]
 interface PhoneNumberService {
   DOMRequest fuzzyMatch([TreatNullAs=EmptyString] optional DOMString number1 = "",
                         [TreatNullAs=EmptyString] optional DOMString number2= "");

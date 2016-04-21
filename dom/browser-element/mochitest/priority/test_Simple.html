@@ -31,12 +31,23 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.enableProcessPriorityManager();
 
+var allCompleted = 0;
+var allExpected  = 2;
+function finish() {
+  allCompleted++;
+  if (allCompleted === allExpected) {
+    SimpleTest.finish();
+  }
+}
+
 function runTest() {
+  var iframeLoaded = false;
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', true);
   iframe.src = browserElementTestHelpers.emptyPage1;
 
-  expectProcessCreated('FOREGROUND').then(SimpleTest.finish);
+  iframe.addEventListener('mozbrowserloadend', finish);
+  expectProcessCreated('FOREGROUND').then(finish);
 
   document.body.appendChild(iframe);
 }

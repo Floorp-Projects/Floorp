@@ -5,7 +5,7 @@
  */
 
 [Constructor(DOMString type, optional MozSettingsEventInit eventInitDict),
- CheckAnyPermissions="settings-api-read settings-api-write"]
+ ChromeOnly]
 interface MozSettingsEvent : Event
 {
   readonly attribute DOMString? settingName;

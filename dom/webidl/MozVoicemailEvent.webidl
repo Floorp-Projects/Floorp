@@ -6,8 +6,7 @@
 
 [Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict),
  Pref="dom.voicemail.enabled",
- CheckAnyPermissions="voicemail",
- AvailableIn="CertifiedApps"]
+ ChromeOnly]
 interface MozVoicemailEvent : Event
 {
   readonly attribute MozVoicemailStatus? status;
