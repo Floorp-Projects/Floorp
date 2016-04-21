@@ -6,9 +6,7 @@
 
 "use strict";
 
-const {Ci, Cu} = require("chrome");
-const {setTimeout, clearTimeout} =
-      Cu.import("resource://gre/modules/Timer.jsm", {});
+const {Ci} = require("chrome");
 const {parseDeclarations} =
       require("devtools/client/shared/css-parsing-utils");
 const promise = require("promise");

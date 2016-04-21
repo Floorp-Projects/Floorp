@@ -7,7 +7,6 @@ const {Ci,Cu,Cc} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Services = require("Services");
-var {setTimeout,clearTimeout} = require("sdk/timers");
 
 function MonitorActor(aConnection) {
   this.conn = aConnection;
