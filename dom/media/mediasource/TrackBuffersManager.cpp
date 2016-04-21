@@ -1642,9 +1642,11 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   // We allow a fuzz factor in our interval of half a frame length,
   // as fuzz is +/- value, giving an effective leeway of a full frame
   // length.
-  TimeIntervals range(aIntervals);
-  range.SetFuzz(trackBuffer.mLongestFrameDuration / 2);
-  trackBuffer.mSanitizedBufferedRanges += range;
+  if (aIntervals.Length()) {
+    TimeIntervals range(aIntervals);
+    range.SetFuzz(trackBuffer.mLongestFrameDuration / 2);
+    trackBuffer.mSanitizedBufferedRanges += range;
+  }
 }
 
 void
