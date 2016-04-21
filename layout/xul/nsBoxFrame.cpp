@@ -1004,7 +1004,7 @@ nsBoxFrame::MarkIntrinsicISizesDirty()
   }
 
   // Don't call base class method, since everything it does is within an
-  // IsBoxWrapped check.
+  // IsXULBoxWrapped check.
 }
 
 void
