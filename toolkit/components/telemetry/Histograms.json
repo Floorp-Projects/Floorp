@@ -8955,11 +8955,6 @@
     "high": 7200000,
     "n_buckets": 100
   },
-  "VIDEO_MSE_BUFFERING_COUNT" : {
-    "expires_in_version": "45",
-    "description": "Count of times that MSE video was buffering",
-    "kind": "count"
-  },
   "VIDEO_MSE_UNLOAD_STATE": {
     "expires_in_version": "45",
     "kind": "enumerated",
