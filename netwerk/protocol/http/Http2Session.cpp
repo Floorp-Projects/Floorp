@@ -25,7 +25,7 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnection.h"
-#include "nsISchedulingContext.h"
+#include "nsIRequestContext.h"
 #include "nsISSLSocketControl.h"
 #include "nsISSLStatus.h"
 #include "nsISSLStatusProvider.h"
@@ -1038,10 +1038,10 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
       Http2PushedStream *pushStream = static_cast<Http2PushedStream *>(aStream);
       nsAutoCString hashKey;
       pushStream->GetHashKey(hashKey);
-      nsISchedulingContext *schedulingContext = aStream->SchedulingContext();
-      if (schedulingContext) {
+      nsIRequestContext *requestContext = aStream->RequestContext();
+      if (requestContext) {
         SpdyPushCache *cache = nullptr;
-        schedulingContext->GetSpdyPushCache(&cache);
+        requestContext->GetSpdyPushCache(&cache);
         if (cache) {
           Http2PushedStream *trash = cache->RemovePushedStreamHttp2(hashKey);
           LOG3(("Http2Session::CleanupStream %p aStream=%p pushStream=%p trash=%p",
@@ -1608,12 +1608,12 @@ Http2Session::RecvPushPromise(Http2Session *self)
     LOG3(("Http2Session::RecvPushPromise %p lookup associated ID failed.\n", self));
     self->GenerateRstStream(PROTOCOL_ERROR, promisedID);
   } else {
-    nsISchedulingContext *schedulingContext = associatedStream->SchedulingContext();
-    if (schedulingContext) {
-      schedulingContext->GetSpdyPushCache(&cache);
+    nsIRequestContext *requestContext = associatedStream->RequestContext();
+    if (requestContext) {
+      requestContext->GetSpdyPushCache(&cache);
       if (!cache) {
         cache = new SpdyPushCache();
-        if (!cache || NS_FAILED(schedulingContext->SetSpdyPushCache(cache))) {
+        if (!cache || NS_FAILED(requestContext->SetSpdyPushCache(cache))) {
           delete cache;
           cache = nullptr;
         }

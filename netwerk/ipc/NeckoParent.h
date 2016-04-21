@@ -228,7 +228,7 @@ protected:
                              const IPC::SerializedLoadContext& aLoadContext) override;
   virtual bool RecvPredReset() override;
 
-  virtual bool RecvRemoveSchedulingContext(const nsCString& scid) override;
+  virtual bool RecvRemoveRequestContext(const nsCString& rcid) override;
 
 private:
   nsCString mCoreAppsBasePath;

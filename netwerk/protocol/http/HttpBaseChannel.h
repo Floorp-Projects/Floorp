@@ -168,11 +168,11 @@ public:
   NS_IMETHOD GetResponseStatusText(nsACString& aValue) override;
   NS_IMETHOD GetRequestSucceeded(bool *aValue) override;
   NS_IMETHOD RedirectTo(nsIURI *newURI) override;
-  NS_IMETHOD GetSchedulingContextID(nsID *aSCID) override;
+  NS_IMETHOD GetRequestContextID(nsID *aRCID) override;
   NS_IMETHOD GetTransferSize(uint64_t *aTransferSize) override;
   NS_IMETHOD GetDecodedBodySize(uint64_t *aDecodedBodySize) override;
   NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
-  NS_IMETHOD SetSchedulingContextID(const nsID aSCID) override;
+  NS_IMETHOD SetRequestContextID(const nsID aRCID) override;
   NS_IMETHOD GetIsMainDocumentChannel(bool* aValue) override;
   NS_IMETHOD SetIsMainDocumentChannel(bool aValue) override;
   NS_IMETHOD GetProtocolVersion(nsACString & aProtocolVersion) override;
@@ -353,8 +353,6 @@ protected:
   // for a possible synthesized response instead.
   bool ShouldIntercept(nsIURI* aURI = nullptr);
 
-  void SetLoadGroupUserAgentOverride();
-
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
@@ -505,8 +503,8 @@ protected:
   // The network interface id that's associated with this channel.
   nsCString mNetworkInterfaceId;
 
-  nsID mSchedulingContextID;
-  bool EnsureSchedulingContextID();
+  nsID mRequestContextID;
+  bool EnsureRequestContextID();
 
   bool                              mRequireCORSPreflight;
   nsTArray<nsCString>               mUnsafeHeaders;

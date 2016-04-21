@@ -234,13 +234,13 @@ NullHttpChannel::RedirectTo(nsIURI *aNewURI)
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetSchedulingContextID(nsID *_retval)
+NullHttpChannel::GetRequestContextID(nsID *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetSchedulingContextID(const nsID scID)
+NullHttpChannel::SetRequestContextID(const nsID rcID)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

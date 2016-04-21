@@ -17,8 +17,8 @@
 #include "PLDHashTable.h"
 #include "mozilla/TimeStamp.h"
 
-class nsISchedulingContext;
-class nsISchedulingContextService;
+class nsIRequestContext;
+class nsIRequestContextService;
 class nsITimedChannel;
 
 class nsLoadGroup : public nsILoadGroup,
@@ -71,8 +71,8 @@ protected:
 
     nsCOMPtr<nsILoadGroup>          mLoadGroup; // load groups can contain load groups
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-    nsCOMPtr<nsISchedulingContext>  mSchedulingContext;
-    nsCOMPtr<nsISchedulingContextService> mSchedulingContextService;
+    nsCOMPtr<nsIRequestContext>  mRequestContext;
+    nsCOMPtr<nsIRequestContextService> mRequestContextService;
 
     nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
     PLDHashTable                    mRequests;
