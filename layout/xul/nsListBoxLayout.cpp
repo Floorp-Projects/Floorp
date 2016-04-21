@@ -21,9 +21,9 @@ nsListBoxLayout::nsListBoxLayout() : nsGridRowGroupLayout()
 ////////// nsBoxLayout //////////////
 
 nsSize
-nsListBoxLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
+nsListBoxLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  nsSize pref = nsGridRowGroupLayout::GetPrefSize(aBox, aBoxLayoutState);
+  nsSize pref = nsGridRowGroupLayout::GetXULPrefSize(aBox, aBoxLayoutState);
 
   nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
   if (frame) {
@@ -155,7 +155,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
       childRect.y = yOffset;
       childRect.width = clientRect.width;
       
-      nsSize size = box->GetPrefSize(aState);
+      nsSize size = box->GetXULPrefSize(aState);
       body->SetRowHeight(size.height);
       
       childRect.height = rowHeight;

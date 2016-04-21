@@ -477,7 +477,7 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                           aCBSize, aAvailableISize,
                                           aMargin, aBorder,
                                           aPadding, aShrinkWrap);
-      // Disabled when there's inflation; see comment in GetPrefSize.
+      // Disabled when there's inflation; see comment in GetXULPrefSize.
       MOZ_ASSERT(inflation != 1.0f ||
                  ancestorAutoSize.ISize(aWM) == autoSize.ISize(aWM),
                  "Incorrect size computed by ComputeAutoSize?");

@@ -61,9 +61,9 @@ nsGridRowGroupLayout::AddWidth(nsSize& aSize, nscoord aSize2, bool aIsHorizontal
 }
 
 nsSize
-nsGridRowGroupLayout::GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
+nsGridRowGroupLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 { 
-  nsSize vpref = nsGridRowLayout::GetPrefSize(aBox, aState); 
+  nsSize vpref = nsGridRowLayout::GetXULPrefSize(aBox, aState); 
 
 
  /* It is possible that we could have some extra columns. This is when less columns in XUL were 

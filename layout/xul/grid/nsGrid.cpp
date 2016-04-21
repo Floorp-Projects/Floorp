@@ -826,7 +826,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHoriz
      nsSize size(0,0);
      if (box) 
      {
-       size = box->GetPrefSize(aState);
+       size = box->GetXULPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsGridLayout2::AddOffset(box, size);
      }
@@ -851,7 +851,7 @@ nsGrid::GetPrefRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHoriz
     // ignore collapsed children
     if (!child->IsCollapsed())
     {
-      nsSize childSize = child->GetPrefSize(aState);
+      nsSize childSize = child->GetXULPrefSize(aState);
 
       nsSprocketLayout::AddLargestSize(size, childSize, aIsHorizontal);
     }
@@ -901,7 +901,7 @@ nsGrid::GetMinRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   {
      nsSize size(0,0);
      if (box) {
-       size = box->GetPrefSize(aState);
+       size = box->GetXULPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsGridLayout2::AddOffset(box, size);
      }
@@ -976,7 +976,7 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex, bool aIsHorizo
   {
      nsSize size(NS_INTRINSICSIZE,NS_INTRINSICSIZE);
      if (box) {
-       size = box->GetPrefSize(aState);
+       size = box->GetXULPrefSize(aState);
        nsBox::AddMargin(box, size);
        nsGridLayout2::AddOffset(box, size);
      }

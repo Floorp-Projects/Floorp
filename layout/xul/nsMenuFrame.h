@@ -82,7 +82,7 @@ public:
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
