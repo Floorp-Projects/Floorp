@@ -4745,6 +4745,9 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   nsLayoutUtils::PaintFrame(&rc, rootFrame, nsRegion(aRect),
                             aBackgroundColor, flags);
 
+  // We don't call NotifyCompositorOfVisibleRegionsChange here because we're
+  // not painting to the window, and hence there should be no change.
+
   return NS_OK;
 }
 
@@ -6432,8 +6435,30 @@ PresShell::Paint(nsView*        aViewToPaint,
   }
 
   if (frame) {
+    // Remove the entries of the mInDisplayPortFrames hashtable and put them
+    // in oldInDisplayPortFrames.
+    VisibleFrames oldInDisplayPortFrames;
+    mInDisplayPortFrames.SwapElements(oldInDisplayPortFrames);
+
+    InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter::IN_DISPLAYPORT);
+
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor, flags);
+
+    DecVisibleCount(oldInDisplayPortFrames, VisibilityCounter::IN_DISPLAYPORT);
+
+    if (mVisibleRegions &&
+        !mNotifyCompositorOfVisibleRegionsChangeEvent.IsPending()) {
+      // Asynchronously notify the compositor of the new visible regions,
+      // since this is happening during a paint and updating the visible
+      // regions triggers a recomposite.
+      RefPtr<nsRunnableMethod<PresShell>> event =
+        NS_NewRunnableMethod(this, &PresShell::NotifyCompositorOfVisibleRegionsChange);
+      if (NS_SUCCEEDED(NS_DispatchToMainThread(event))) {
+        mNotifyCompositorOfVisibleRegionsChangeEvent = event;
+      }
+    }
+
     return;
   }
 
