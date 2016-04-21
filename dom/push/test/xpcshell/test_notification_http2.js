@@ -43,7 +43,6 @@ function run_test() {
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
   servicePrefs.set('testing.notifyWorkers', false);
-  servicePrefs.set('testing.notifyAllObservers', true);
 
   run_next_test();
 }
