@@ -1,0 +1,242 @@
+Release history
+===============
+
+macholib 1.7
+------------
+
+* Added support for ARM64, LC_ENCRYPTION_INFO_64 and LC_LINKER_OPTION
+
+  Patch by Matthias Ringwald.
+
+* Load commands now have a "describe" method that returns more information
+  about the command.
+
+  Patch by David Dorsey.
+
+* The MAGIC value in the header was always represented in the native
+  byte order, instead of as the value read from the binary.
+
+  Patch by David Dorsey.
+
+* Added various new constants to "macholib.mach_o".
+
+  Patch by David Dorsey.
+
+macholib 1.6.1
+--------------
+
+* ?
+
+macholib 1.6
+------------
+
+* Add support for '@loader_path' link command in
+  macholib.dyld:
+
+  - Added function ``macholib.dyld.dyld_loader_search``
+
+  - This function is used by ``macholib.dyld.dyld_find``,
+    and that function now has an new (optional) argument
+    with the path to the loader.
+
+* Also add support for '@loader_path' to macholib.MachoGraph,
+  using the newly added '@loader_path' support in the
+  dyld module.
+
+  Due to this suppport the *macho_standalone* tool can
+  now rewrite binaries that contain an '@loader_path' load
+  command.
+
+
+macholib 1.5.2
+--------------
+
+* Issue #93: Show the name of the affected file in the exception message
+  for Mach-O headers that are too large to relocate.
+
+
+macholib 1.5.1
+--------------
+
+* There were no 'classifiers' in the package metadata due to
+  a bug in setup.py.
+
+macholib 1.5
+--------------
+
+macholib 1.5 is a minor feature release
+
+* No longer use 2to3 to provide Python 3 support
+
+  As a side-effect of this macholib no longer supports
+  Python 2.5 and earlier.
+
+* Adds suppport for some new macho load commands
+
+* Fix for py3k problem in macho_standalone.py
+
+  Patch by Guanqun Lu.
+
+* Fix for some issues in macho_dump.py
+
+  Patch by Nam Nguyen
+
+* Issue #10: Fix for LC_DATA_IN_CODE linker commands, without
+  this fix py2app cannot build application bundles when
+  the source binaries have been compiled with Xcode 4.5.
+
+* Issue #6: Fix for LC_ENCRYPTION_INFO linker commands
+
+* Use the mach header information to print the cpu type of a
+  binary, instead of trying to deduce that from pointer width
+  and endianness.
+
+  Changed the code because of issue #6, in which a user tries to
+  dump a iOS binary which results in bogus output in the previous
+  releases.
+
+* The mapping ``macholib.macho_dump.ARCH_MAP`` is undocumented
+  and no longer used by macholib itself. It will be removed
+  in the next release.
+
+
+* The command-line tools ``macho_find``, ``macho_dump`` and
+  ``macho_standalone`` are deprecated. Use "python -mmacholib"
+  instead. That is::
+
+   $ python -mmacholib dump /usr/bin/grep
+
+   $ python -mmacholib find ~
+
+   $ python -mmacholib standalone myapp.app
+
+  This makes it clearer which version of the tools are used.
+
+macholib 1.4.3
+--------------
+
+macholib 1.4.3 is a minor feature release
+
+* Added strings for 'x86_64' and 'ppc64' to
+  macholib.mach_o.CPU_TYPE_NAMES.
+
+* macho_find and macho_dump were broken in the 1.4.2 release
+
+* added 'macholib.util.NOT_SYSTEM_FILES', a list of
+  files that aren't system path's even though they are
+  located in system locations.
+
+  Needed to work around a bug in PySide (see issue #32 in the
+  py2app tracker)
+
+
+
+macholib 1.4.2
+--------------
+
+macholib 1.4.2 is a minor bugfix release
+
+* The support for new load commands that was added in 1.4.1
+  contained a typo that caused problems on OSX 10.7 (Lion).
+
+macholib 1.4.1
+--------------
+
+macholib 1.4.1 is a minor feature release
+
+Features:
+
+- Add support for a number of new MachO load commands that were added
+  during the lifetime of OSX 10.6: ``LC_LOAD_UPWARD_DYLIB``,
+  ``LC_VERSION_MIN_MACOSX``, ``LC_VERSION_MIN_IPHONEOS`` and
+  ``LC_FUNCTION_STARTS``.
+
+macholib 1.4
+-------------
+
+macholib 1.4 is a feature release
+
+Features:
+
+- Documentation is now generated using `sphinx <http://pypi.python.org/pypi/sphinx>`_
+  and can be viewed at <http://packages.python.org/macholib>.
+
+- The repository has moved to bitbucket
+
+- There now is a testsuite
+
+- Private functionality inside modules was renamed to
+  a name starting with an underscore.
+
+  .. note:: if this change affects your code you are relying on undefined
+     implementation features, please stop using private functions.
+
+- The basic packable types in ``macholib.ptypes`` were renamed to better
+  represent the corresponding C type. The table below lists the old
+  an new names (the old names are still available, but are deprecated and
+  will be removed in a future release).
+
+  +--------------+--------------+
+  | **Old name** | **New name** |
+  +==============+==============+
+  | p_byte       | p_int8       |
+  +--------------+--------------+
+  | p_ubyte      | p_uint8      |
+  +--------------+--------------+
+  | p_short      | p_int16      |
+  +--------------+--------------+
+  | p_ushort     | p_uint16     |
+  +--------------+--------------+
+  | p_int        | p_int32      |
+  +--------------+--------------+
+  | p_uint       | p_uint32     |
+  +--------------+--------------+
+  | p_long       | p_int32      |
+  +--------------+--------------+
+  | p_ulong      | p_uint32     |
+  +--------------+--------------+
+  | p_longlong   | p_int64      |
+  +--------------+--------------+
+  | p_ulonglong  | p_uint64     |
+  +--------------+--------------+
+
+  ``Macholib.ptypes.p_ptr`` is no longer present as it had an unclear
+  definition and isn't actually used in the codebase.
+
+
+Bug fixes:
+
+- The semantics of ``dyld.dyld_default_search`` were changed a bit,
+  it now first searches the framework path (if appropriate) and then
+  the linker path, irrespective of the value of the ``DYLD_FALLBACK*``
+  environment variables.
+
+  Previous versions would change the search order when those variables
+  was set, which is odd and doesn't correspond with the documented
+  behaviour of the system dyld.
+
+- It is once again possible to install using python2.5
+
+- The source distribution includes all files, this was broken
+  due to the switch to mercurial (which confused setuptools)
+
+macholib 1.3
+------------
+
+macholib 1.3 is a feature release.
+
+Features:
+
+- Experimental Python 3.x support
+
+  This version contains lightly tested support for Python 3.
+
+macholib 1.2.2
+--------------
+
+macholib 1.2.2 is a bugfix release.
+
+Bug fixes:
+
+- Macholib should work better with 64-bit code
+  (patch by Marc-Antoine Parent)
