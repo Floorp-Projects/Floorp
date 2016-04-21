@@ -56,7 +56,7 @@ public:
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
-  virtual void SetLayoutManager(nsBoxLayout* aLayout) override { mLayoutManager = aLayout; }
+  virtual void SetXULLayoutManager(nsBoxLayout* aLayout) override { mLayoutManager = aLayout; }
   virtual nsBoxLayout* GetLayoutManager() override { return mLayoutManager; }
 
   virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
