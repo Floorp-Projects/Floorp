@@ -39,7 +39,7 @@ public:
   virtual Valignment GetXULVAlign() const override { return vAlign_Top; }
   virtual Halignment GetXULHAlign() const override { return hAlign_Left; }
 
-  virtual nsresult RelayoutChildAtOrdinal(nsIFrame* aChild) override;
+  virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
