@@ -8989,7 +8989,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
     parentReflowState.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
     // XXX use box methods
-    parentFrame->GetPadding(parentReflowState.ComputedPhysicalPadding());
+    parentFrame->GetXULPadding(parentReflowState.ComputedPhysicalPadding());
     parentFrame->GetXULBorder(parentReflowState.ComputedPhysicalBorderPadding());
     parentReflowState.ComputedPhysicalBorderPadding() +=
       parentReflowState.ComputedPhysicalPadding();

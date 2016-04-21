@@ -33,7 +33,7 @@ public:
                             bool aRemoveOverflowAreas = false) override;
 
   virtual nsresult GetXULBorder(nsMargin& aBorderAndPadding) override;
-  virtual nsresult GetPadding(nsMargin& aBorderAndPadding) override;
+  virtual nsresult GetXULPadding(nsMargin& aBorderAndPadding) override;
   virtual nsresult GetMargin(nsMargin& aMargin) override;
 
   virtual Valignment GetVAlign() const override { return vAlign_Top; }
