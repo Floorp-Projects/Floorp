@@ -93,7 +93,7 @@ nsGridRowLayout::GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequ
    }
 
    int32_t index = -1;
-   nsIFrame* child = nsBox::GetChildBox(aBox);
+   nsIFrame* child = nsBox::GetChildXULBox(aBox);
    int32_t count = 0;
    while(child)
    {
@@ -150,7 +150,7 @@ nsGridRowLayout::GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal)
     nsIFrame* next = nsBox::GetNextBox(aBox);
 
     // get the parent first child to see if we are first
-    nsIFrame* child = nsBox::GetChildBox(parent);
+    nsIFrame* child = nsBox::GetChildXULBox(parent);
 
     margin = part->GetTotalMargin(parent, aIsHorizontal);
 

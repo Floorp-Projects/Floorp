@@ -136,7 +136,7 @@ nsListBoxLayout::LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState)
   }
 
   // run through all our currently created children
-  nsIFrame* box = nsBox::GetChildBox(body);
+  nsIFrame* box = nsBox::GetChildXULBox(body);
 
   // if the reason is resize or initial we must relayout.
   nscoord rowHeight = body->GetRowHeightAppUnits();

@@ -1475,7 +1475,7 @@ nsBoxFrame::PaintXULDebugOverlay(DrawTarget& aDrawTarget, nsPoint aPt)
 
   nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
 
-  kid = nsBox::GetChildBox(this);
+  kid = nsBox::GetChildXULBox(this);
   while (nullptr != kid) {
     bool isHorizontal = IsHorizontal();
 
@@ -1734,7 +1734,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
     //printf("%%%%%% inside box %%%%%%%\n");
 
     int count = 0;
-    nsIFrame* child = nsBox::GetChildBox(aBox);
+    nsIFrame* child = nsBox::GetChildXULBox(aBox);
 
     nsMargin m;
     nsMargin m2;
@@ -1837,7 +1837,7 @@ nsBoxFrame::DisplayDebugInfoFor(nsIFrame*  aBox,
 void
 nsBoxFrame::SetDebugOnChildList(nsBoxLayoutState& aState, nsIFrame* aChild, bool aDebug)
 {
-    nsIFrame* child = nsBox::GetChildBox(this);
+    nsIFrame* child = nsBox::GetChildXULBox(this);
      while (child)
      {
         child->SetDebug(aState, aDebug);

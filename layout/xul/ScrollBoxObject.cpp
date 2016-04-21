@@ -92,7 +92,7 @@ static nsIFrame* GetScrolledBox(BoxObject* aScrollBox) {
   nsIFrame* scrolledFrame = scrollFrame->GetScrolledFrame();
   if (!scrolledFrame)
     return nullptr;
-  return nsBox::GetChildBox(scrolledFrame);
+  return nsBox::GetChildXULBox(scrolledFrame);
 }
 
 void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
@@ -112,7 +112,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
     nsRect rect;
 
     // now get the scrolled boxes first child.
-    nsIFrame* child = nsBox::GetChildBox(scrolledBox);
+    nsIFrame* child = nsBox::GetChildXULBox(scrolledBox);
 
     bool horiz = scrolledBox->IsHorizontal();
     nsPoint cp = sf->GetScrollPosition();
@@ -174,7 +174,7 @@ void ScrollBoxObject::ScrollByIndex(int32_t dindexes, ErrorResult& aRv)
       }
 
    } else if (dindexes < 0) {
-      child = nsBox::GetChildBox(scrolledBox);
+      child = nsBox::GetChildXULBox(scrolledBox);
       while(child) {
         rect = child->GetRect();
         if (count >= curIndex + dindexes) {

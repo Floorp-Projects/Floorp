@@ -657,7 +657,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mChildInfosBeforeCount = 0;
   mChildInfosAfterCount = 0;
 
-  nsIFrame* childBox = nsBox::GetChildBox(mParentBox);
+  nsIFrame* childBox = nsBox::GetChildXULBox(mParentBox);
 
   while (nullptr != childBox) 
   { 
@@ -897,7 +897,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 
 static nsIFrame* GetChildBoxForContent(nsIFrame* aParentBox, nsIContent* aContent)
 {
-  nsIFrame* childBox = nsBox::GetChildBox(aParentBox);
+  nsIFrame* childBox = nsBox::GetChildXULBox(aParentBox);
 
   while (nullptr != childBox) {
     if (childBox->GetContent() == aContent) {
@@ -918,7 +918,7 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   // first set all the widths.
-  nsIFrame* child =  nsBox::GetChildBox(mOuter);
+  nsIFrame* child =  nsBox::GetChildXULBox(mOuter);
   while(child)
   {
     SetPreferredSize(state, child, onePixel, aIsHorizontal, nullptr);
