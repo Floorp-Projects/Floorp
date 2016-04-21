@@ -119,7 +119,8 @@ public:
                     nsStyleContext* aParentContext,
                     TreeMatchContext& aTreeMatchContext);
     inline already_AddRefed<nsStyleContext>
-    ResolveStyleForNonElement(nsStyleContext* aParentContext);
+    ResolveStyleForNonElement(nsStyleContext* aParentContext,
+                              nsIAtom* aPseudoTag);
     inline already_AddRefed<nsStyleContext>
     ResolvePseudoElementStyle(dom::Element* aParentElement,
                               mozilla::CSSPseudoElementType aType,

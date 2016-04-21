@@ -35,6 +35,7 @@
 #include "nsColor.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsNameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
 #include "nsError.h"
@@ -5922,6 +5923,13 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
         (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
          nsCSSPseudoClasses::PseudoClassIsUASheetAndChromeOnly(pseudoClassType))))) {
     // This pseudo-element or pseudo-class is not exposed to content.
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
+    UngetToken();
+    return eSelectorParsingStatus_Error;
+  }
+
+  if (nsCSSAnonBoxes::IsNonElement(pseudo)) {
+    // Non-element anonymous boxes should not match any rule.
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
     return eSelectorParsingStatus_Error;
