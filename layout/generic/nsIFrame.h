@@ -2917,7 +2917,7 @@ public:
   virtual nsresult GetXULPadding(nsMargin& aBorderAndPadding)=0;
   virtual nsresult GetXULMargin(nsMargin& aMargin)=0;
   virtual void SetXULLayoutManager(nsBoxLayout* aLayout) { }
-  virtual nsBoxLayout* GetLayoutManager() { return nullptr; }
+  virtual nsBoxLayout* GetXULLayoutManager() { return nullptr; }
   nsresult GetClientRect(nsRect& aContentRect);
 
   // For nsSprocketLayout
