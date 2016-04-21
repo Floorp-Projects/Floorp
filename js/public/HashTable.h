@@ -1563,6 +1563,33 @@ class HashTable : private AllocPolicy
         // which approach is best.
     }
 
+    // Note: |l| may be a reference to a piece of |u|, so this function
+    // must take care not to use |l| after moving |u|.
+    //
+    // Prefer to use putNewInfallible; this function does not check
+    // invariants.
+    template <typename... Args>
+    void putNewInfallibleInternal(const Lookup& l, Args&&... args)
+    {
+        MOZ_ASSERT(table);
+
+        HashNumber keyHash = prepareHash(l);
+        Entry* entry = &findFreeEntry(keyHash);
+        MOZ_ASSERT(entry);
+
+        if (entry->isRemoved()) {
+            METER(stats.addOverRemoved++);
+            removedCount--;
+            keyHash |= sCollisionBit;
+        }
+
+        entry->setLive(keyHash, mozilla::Forward<Args>(args)...);
+        entryCount++;
+#ifdef JS_DEBUG
+        mutationCount++;
+#endif
+    }
+
   public:
     void clear()
     {
@@ -1703,23 +1730,9 @@ class HashTable : private AllocPolicy
     template <typename... Args>
     void putNewInfallible(const Lookup& l, Args&&... args)
     {
-        MOZ_ASSERT(table);
-
-        HashNumber keyHash = prepareHash(l);
-        Entry* entry = &findFreeEntry(keyHash);
-        MOZ_ASSERT(entry);
-
-        if (entry->isRemoved()) {
-            METER(stats.addOverRemoved++);
-            removedCount--;
-            keyHash |= sCollisionBit;
-        }
-
-        entry->setLive(keyHash, mozilla::Forward<Args>(args)...);
-        entryCount++;
-#ifdef JS_DEBUG
-        mutationCount++;
-#endif
+        MOZ_ASSERT(!lookup(l).found());
+        mozilla::ReentrancyGuard g(*this);
+        putNewInfallibleInternal(l, mozilla::Forward<Args>(args)...);
     }
 
     // Note: |l| may be alias arguments in |args|, so this function must take
@@ -1771,7 +1784,7 @@ class HashTable : private AllocPolicy
         typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
         HashPolicy::setKey(t, const_cast<Key&>(k));
         remove(*p.entry_);
-        putNewInfallible(l, mozilla::Move(t));
+        putNewInfallibleInternal(l, mozilla::Move(t));
     }
 
     void rekeyAndMaybeRehash(Ptr p, const Lookup& l, const Key& k)

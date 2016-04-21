@@ -126,9 +126,10 @@ public:
   bool SendStopFrameTimeRecording(const uint32_t& startIndex, nsTArray<float>* intervals);
   bool SendNotifyRegionInvalidated(const nsIntRegion& region);
   bool SendRequestNotifyAfterRemotePaint();
-  bool SendClearApproximatelyVisibleRegions(uint64_t aLayersId, uint32_t aPresShellId);
-  bool SendNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                            const mozilla::CSSIntRegion& aRegion);
+  bool SendClearVisibleRegions(uint64_t aLayersId, uint32_t aPresShellId);
+  bool SendUpdateVisibleRegion(VisibilityCounter aCounter,
+                               const ScrollableLayerGuid& aGuid,
+                               const mozilla::CSSIntRegion& aRegion);
   bool IsSameProcess() const;
 
   static void ShutDown();

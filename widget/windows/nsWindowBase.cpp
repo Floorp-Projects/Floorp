@@ -9,6 +9,7 @@
 #include "KeyboardLayout.h"
 #include "WinUtils.h"
 #include "npapi.h"
+#include "nsAutoPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

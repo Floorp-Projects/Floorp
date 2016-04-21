@@ -10,7 +10,7 @@
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "Units.h"
 #include "mozilla/EventForwards.h"      // for nsEventStatus
-#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"                   // for nsTArray
 

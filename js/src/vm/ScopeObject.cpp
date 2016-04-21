@@ -1825,7 +1825,9 @@ class DebugScopeProxy : public BaseProxyHandler
         }
 
         /* The rest of the internal scopes do not have unaliased vars. */
-        MOZ_ASSERT(scope->is<DeclEnvObject>() || scope->is<DynamicWithObject>() ||
+        MOZ_ASSERT(!IsSyntacticScope(scope) ||
+                   scope->is<DeclEnvObject>() ||
+                   scope->is<DynamicWithObject>() ||
                    scope->as<CallObject>().isForEval());
         return true;
     }

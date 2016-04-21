@@ -133,16 +133,6 @@ CSSTransition::QueueEvents()
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
-  // Do not queue any event for disabled properties. This could happen
-  // if the property has a default value which derives value from other
-  // property, e.g. color.
-  nsCSSProperty property = TransitionProperty();
-  if (!nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledForAllContent) &&
-      (!nsContentUtils::IsSystemPrincipal(owningElement->NodePrincipal()) ||
-       !nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledInChrome))) {
-    return;
-  }
-
   nsPresContext* presContext = mOwningElement.GetRenderedPresContext();
   if (!presContext) {
     return;
@@ -150,7 +140,7 @@ CSSTransition::QueueEvents()
 
   nsTransitionManager* manager = presContext->TransitionManager();
   manager->QueueEvent(TransitionEventInfo(owningElement, owningPseudoType,
-                                          property,
+                                          TransitionProperty(),
                                           mEffect->GetComputedTiming()
                                             .mDuration,
                                           AnimationTimeToTimeStamp(EffectEnd()),
@@ -536,6 +526,13 @@ nsTransitionManager::ConsiderStartingTransition(
              "property out of range");
   NS_ASSERTION(!aElementTransitions ||
                aElementTransitions->mElement == aElement, "Element mismatch");
+
+  // Ignore disabled properties. We can arrive here if the transition-property
+  // is 'all' and the disabled property has a default value which derives value
+  // from another property, e.g. color.
+  if (!nsCSSProps::IsEnabled(aProperty, nsCSSProps::eEnabledForAllContent)) {
+    return;
+  }
 
   if (aWhichStarted->HasProperty(aProperty)) {
     // A later item in transition-property already started a

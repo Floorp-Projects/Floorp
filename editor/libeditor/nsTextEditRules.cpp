@@ -285,8 +285,7 @@ nsTextEditRules::WillDoAction(Selection* aSelection,
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
-      WillInsert(*aSelection, aCancel);
-      return NS_OK;
+      return WillInsert(aSelection, aCancel);
     default:
       return NS_ERROR_FAILURE;
   }
@@ -346,25 +345,25 @@ nsTextEditRules::DocumentIsEmpty(bool *aDocumentIsEmpty)
  ********************************************************/
 
 
-void
-nsTextEditRules::WillInsert(Selection& aSelection, bool* aCancel)
+nsresult
+nsTextEditRules::WillInsert(Selection* aSelection, bool* aCancel)
 {
-  MOZ_ASSERT(aCancel);
+  NS_ENSURE_TRUE(aSelection && aCancel, NS_ERROR_NULL_POINTER);
 
-  if (IsReadonly() || IsDisabled()) {
-    *aCancel = true;
-    return;
-  }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
 
   // initialize out param
   *aCancel = false;
 
   // check for the magic content node and delete it if it exists
-  if (mBogusNode) {
-    NS_ENSURE_TRUE_VOID(mEditor);
+  if (mBogusNode)
+  {
+    NS_ENSURE_STATE(mEditor);
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = nullptr;
   }
+
+  return NS_OK;
 }
 
 nsresult
@@ -413,7 +412,8 @@ nsTextEditRules::WillInsertBreak(Selection* aSelection,
       NS_ENSURE_SUCCESS(res, res);
     }
 
-    WillInsert(*aSelection, aCancel);
+    res = WillInsert(aSelection, aCancel);
+    NS_ENSURE_SUCCESS(res, res);
     // initialize out param
     // we want to ignore result of WillInsert()
     *aCancel = false;
@@ -651,7 +651,8 @@ nsTextEditRules::WillInsertText(EditAction aAction,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  WillInsert(*aSelection, aCancel);
+  res = WillInsert(aSelection, aCancel);
+  NS_ENSURE_SUCCESS(res, res);
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = false;

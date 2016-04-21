@@ -1330,22 +1330,6 @@ CSS_PROP_XUL(
     kBoxOrientKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // XXX bug 3935
-/* We treat -webkit-box-orient as a writing-mode-aware logical alias
- * for "flex-direction": */
-CSS_PROP_LOGICAL(
-    -webkit-box-orient,
-    webkit_box_orient,
-    WebkitBoxOrient,
-    CSS_PROPERTY_PARSE_VALUE |
-      CSS_PROPERTY_LOGICAL |
-      CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING,
-    "layout.css.prefixes.webkit",
-    VARIANT_HK,
-    kBoxOrientKTable,
-    WebkitBoxOrient,
-    Position,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
 CSS_PROP_XUL(
     -moz-box-pack,
     box_pack,
@@ -2197,6 +2181,12 @@ CSS_PROP_POSITION(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
+    grid-template,
+    grid_template,
+    GridTemplate,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled")
 CSS_PROP_POSITION(
     grid-template-areas,
     grid_template_areas,

@@ -80,16 +80,16 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
 #ifdef DEBUG_LAYOUT
-  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) override;
+  virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
 #endif
 
   // The following methods are all overridden so that the menupopup
@@ -263,7 +263,7 @@ protected:
 
 protected:
 #ifdef DEBUG_LAYOUT
-  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
+  nsresult SetXULDebug(nsBoxLayoutState& aState, nsIFrame* aList, bool aDebug);
 #endif
   nsresult Notify(nsITimer* aTimer);
 

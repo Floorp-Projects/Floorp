@@ -10,7 +10,6 @@
 
 #include <QPointF>
 
-#include "nsAutoPtr.h"
 #include "nsBaseWidget.h"
 #include "mozilla/EventForwards.h"
 

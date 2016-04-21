@@ -160,6 +160,27 @@ DOMEventTargetHelper::DisconnectFromOwner()
   }
 }
 
+nsPIDOMWindowInner*
+DOMEventTargetHelper::GetWindowIfCurrent() const
+{
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return nullptr;
+  }
+
+  return GetOwner();
+}
+
+nsIDocument*
+DOMEventTargetHelper::GetDocumentIfCurrent() const
+{
+  nsPIDOMWindowInner* win = GetWindowIfCurrent();
+  if (!win) {
+    return nullptr;
+  }
+
+  return win->GetDoc();
+}
+
 NS_IMETHODIMP
 DOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                           nsIDOMEventListener* aListener,
@@ -356,11 +377,10 @@ DOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
 nsresult
 DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 {
-  nsresult rv;
-  nsIScriptContext* context = GetContextForEventHandlers(&rv);
+  nsresult rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc =
-    nsContentUtils::GetDocumentFromScriptContext(context);
+  
+  nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
   // We can let listeners on workers to always handle all the events.
   *aRetVal = (doc && !nsContentUtils::IsChromeDoc(doc)) || !NS_IsMainThread();
   return rv;

@@ -34,7 +34,7 @@ nsStackFrame::nsStackFrame(nsStyleContext* aContext):
 {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);
-  SetLayoutManager(layout);
+  SetXULLayoutManager(layout);
 }
 
 // REVIEW: The old code put everything in the background layer. To be more

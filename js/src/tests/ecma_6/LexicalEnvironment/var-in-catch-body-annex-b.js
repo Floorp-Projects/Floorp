@@ -42,6 +42,17 @@ assertThrowsInstanceOf(function () {
        `);
 }, SyntaxError);
 
+// Tests that redeclaring a var inside the catch is not allowed if there's a
+// body-level lexical.
+assertThrowsInstanceOf(function () {
+  eval(`
+    let x;
+    try {} catch (x) {
+      var x;
+    }
+    `);
+}, SyntaxError);
+
 var log = '';
 var x = 'global-x';
 

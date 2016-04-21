@@ -275,7 +275,7 @@ FetchDriver::HttpFetch()
     case ReferrerPolicy::No_referrer_when_downgrade:
       net_referrerPolicy = net::RP_No_Referrer_When_Downgrade;
       break;
-    case ReferrerPolicy::Origin_only:
+    case ReferrerPolicy::Origin:
       net_referrerPolicy = net::RP_Origin;
       break;
     case ReferrerPolicy::Origin_when_cross_origin:

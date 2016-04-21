@@ -23,7 +23,6 @@
 #include "nsPrimitiveHelpers.h"
 
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

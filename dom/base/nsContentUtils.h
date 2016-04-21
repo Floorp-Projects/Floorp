@@ -1755,16 +1755,6 @@ public:
                                      bool aShift = false,
                                      bool aMeta = false);
 
-  /**
-   * Gets the nsIDocument given the script context. Will return nullptr on failure.
-   *
-   * @param aScriptContext the script context to get the document for; can be null
-   *
-   * @return the document associated with the script context
-   */
-  static nsIDocument*
-  GetDocumentFromScriptContext(nsIScriptContext* aScriptContext);
-
   static bool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal);
 
   /**

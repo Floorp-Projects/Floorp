@@ -371,9 +371,9 @@ function jsTestDriverBrowserInit()
 
   var testpathparts = properties.test.split(/\//);
 
-  if (testpathparts.length < 3)
+  if (testpathparts.length < 2)
   {
-    // must have at least suitepath/subsuite/testcase.js
+    // must have at least suitepath/testcase.js
     return;
   }
 
