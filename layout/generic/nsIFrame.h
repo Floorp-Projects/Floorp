@@ -2924,7 +2924,7 @@ public:
   virtual Valignment GetXULVAlign() const = 0;
   virtual Halignment GetXULHAlign() const = 0;
 
-  bool IsHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
+  bool IsXULHorizontal() const { return (mState & NS_STATE_IS_HORIZONTAL) != 0; }
   bool IsNormalDirection() const { return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0; }
 
   nsresult Redraw(nsBoxLayoutState& aState);

@@ -1206,7 +1206,7 @@ void
 ScrollFrameHelper::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
                                 nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
-  bool isHorizontal = aScrollbar->IsHorizontal();
+  bool isHorizontal = aScrollbar->IsXULHorizontal();
   nsIntPoint delta;
   if (isHorizontal) {
     const double kScrollMultiplier =
@@ -1252,7 +1252,7 @@ ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
                               nscoord aNewPos)
 {
   MOZ_ASSERT(aScrollbar != nullptr);
-  bool isHorizontal = aScrollbar->IsHorizontal();
+  bool isHorizontal = aScrollbar->IsXULHorizontal();
   nsPoint current = GetScrollPosition();
   nsPoint dest = current;
   if (isHorizontal) {
@@ -1292,7 +1292,7 @@ ScrollFrameHelper::ScrollByUnit(nsScrollbarFrame* aScrollbar,
                                 nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
   MOZ_ASSERT(aScrollbar != nullptr);
-  bool isHorizontal = aScrollbar->IsHorizontal();
+  bool isHorizontal = aScrollbar->IsXULHorizontal();
   nsIntPoint delta;
   if (isHorizontal) {
     delta.x = aDirection;

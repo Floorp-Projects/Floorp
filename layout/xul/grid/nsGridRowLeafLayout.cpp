@@ -39,7 +39,7 @@ nsGridRowLeafLayout::GetXULPrefSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   // If we are not in a grid. Then we just work like a box. But if we are in a grid
   // ask the grid for our size.
@@ -57,7 +57,7 @@ nsGridRowLeafLayout::GetXULMinSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   if (!grid)
     return nsGridRowLayout::GetXULMinSize(aBox, aState); 
@@ -73,7 +73,7 @@ nsGridRowLeafLayout::GetXULMaxSize(nsIFrame* aBox, nsBoxLayoutState& aState)
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   if (!grid)
     return nsGridRowLayout::GetXULMaxSize(aBox, aState); 
@@ -92,7 +92,7 @@ nsGridRowLeafLayout::ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aStat
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   if (grid)
     grid->CellAddedOrRemoved(aState, index, isHorizontal);
@@ -103,7 +103,7 @@ nsGridRowLeafLayout::PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aState, 
 {
   int32_t index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
-  bool isHorizontal = IsHorizontal(aBox);
+  bool isHorizontal = IsXULHorizontal(aBox);
 
   // Our base class SprocketLayout is giving us a chance to change the box sizes before layout
   // If we are a row lets change the sizes to match our columns. If we are a column then do the opposite
@@ -224,7 +224,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIFrame* aBox,
   // see if we are in a scrollable frame. If we are then there could be scrollbars present
   // if so we need to subtract them out to make sure our columns line up.
   if (aBox) {
-    bool isHorizontal = aBox->IsHorizontal();
+    bool isHorizontal = aBox->IsXULHorizontal();
 
     // go up the parent chain looking for scrollframes
     nscoord diff = 0;
