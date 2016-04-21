@@ -82,8 +82,10 @@ struct nsStyleVisibility;
 #define NS_STYLE_INELIGIBLE_FOR_SHARING    0x200000000
 // See nsStyleContext::HasChildThatUsesResetStyle
 #define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
+// See nsStyleContext::IsTextCombined
+#define NS_STYLE_IS_TEXT_COMBINED          0x800000000
 // See nsStyleContext::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_SHIFT        35
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        36
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
