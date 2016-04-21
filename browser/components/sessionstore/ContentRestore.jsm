@@ -138,7 +138,7 @@ ContentRestoreInternal.prototype = {
     // Add a listener to watch for reloads.
     let listener = new HistoryListener(this.docShell, () => {
       // On reload, restore tab contents.
-      this.restoreTabContent(null, callbacks.onLoadFinished);
+      this.restoreTabContent(null, false, callbacks.onLoadFinished);
     });
 
     webNavigation.sessionHistory.addSHistoryListener(listener);
@@ -175,7 +175,7 @@ ContentRestoreInternal.prototype = {
    * Start loading the current page. When the data has finished loading from the
    * network, finishCallback is called. Returns true if the load was successful.
    */
-  restoreTabContent: function (loadArguments, finishCallback) {
+  restoreTabContent: function (loadArguments, isRemotenessUpdate, finishCallback) {
     let tabData = this._tabData;
     this._tabData = null;
 
@@ -189,7 +189,7 @@ ContentRestoreInternal.prototype = {
     // switch-to-tab, but now it must go back to the correct value before the
     // load happens. Don't bother doing this if we're restoring immediately
     // due to a process switch.
-    if (!loadArguments) {
+    if (!isRemotenessUpdate) {
       webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
     }
 
