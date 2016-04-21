@@ -9,7 +9,6 @@
 // include math.h to pick up definition of M_ maths defines e.g. M_PI
 #include <math.h>
 
-#include "DrawMode.h"
 #include "gfx2DGlue.h"
 #include "gfxMatrix.h"
 #include "gfxPoint.h"
@@ -547,11 +546,9 @@ public:
    * Render a SVG glyph.
    * @param aElement the SVG glyph element to render
    * @param aContext the thebes aContext to draw to
-   * @param aDrawMode fill or stroke or both (see DrawMode)
    * @return true if rendering succeeded
    */
   static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext,
-                            DrawMode aDrawMode,
                             gfxTextContextPaint* aContextPaint);
   /**
    * Get the extents of a SVG glyph.

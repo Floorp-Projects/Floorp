@@ -209,23 +209,18 @@ gfxSVGGlyphsDocument::FindGlyphElements(Element *aElem)
  * If no such glyph exists, or in the case of an error return false
  * @param aContext The thebes aContext to draw to
  * @param aGlyphId The glyph id
- * @param aDrawMode Whether to fill or stroke or both (see |DrawMode|)
  * @return true iff rendering succeeded
  */
 bool
 gfxSVGGlyphs::RenderGlyph(gfxContext *aContext, uint32_t aGlyphId,
-                          DrawMode aDrawMode, gfxTextContextPaint *aContextPaint)
+                          gfxTextContextPaint *aContextPaint)
 {
-    if (aDrawMode == DrawMode::GLYPH_PATH) {
-        return false;
-    }
-
     gfxContextAutoSaveRestore aContextRestorer(aContext);
 
     Element *glyph = mGlyphIdMap.Get(aGlyphId);
     NS_ASSERTION(glyph, "No glyph element. Should check with HasSVGGlyph() first!");
 
-    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aDrawMode, aContextPaint);
+    return nsSVGUtils::PaintSVGGlyph(glyph, aContext, aContextPaint);
 }
 
 bool
