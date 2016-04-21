@@ -26,7 +26,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {setTimeout, clearTimeout} = require("sdk/timers");
 const {
   PREDEFINED,
   PRESETS,

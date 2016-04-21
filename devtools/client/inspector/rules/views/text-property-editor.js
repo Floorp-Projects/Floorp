@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {InplaceEditor, editableField} =
       require("devtools/client/shared/inplace-editor");
@@ -19,7 +19,6 @@ const {
   parseDeclarations,
   parseSingleValue,
 } = require("devtools/client/shared/css-parsing-utils");
-const {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const IOService = Cc["@mozilla.org/network/io-service;1"]

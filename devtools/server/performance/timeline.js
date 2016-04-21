@@ -25,7 +25,6 @@ const { Class } = require("sdk/core/heritage");
 // Be aggressive about lazy loading, as this will run on every
 // toolbox startup
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "Timers", "sdk/timers");
 loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
 loader.lazyRequireGetter(this, "Memory", "devtools/server/performance/memory", true);
 loader.lazyRequireGetter(this, "Framerate", "devtools/server/performance/framerate", true);
@@ -174,7 +173,7 @@ var Timeline = exports.Timeline = Class({
       }
     }
 
-    this._dataPullTimeout = Timers.setTimeout(() => {
+    this._dataPullTimeout = setTimeout(() => {
       this._pullTimelineData();
     }, DEFAULT_TIMELINE_DATA_PULL_TIMEOUT);
   },
@@ -308,7 +307,7 @@ var Timeline = exports.Timeline = Class({
     this._withDocLoadingEvents = false;
     this._withGCEvents = false;
 
-    Timers.clearTimeout(this._dataPullTimeout);
+    clearTimeout(this._dataPullTimeout);
 
     return endTime;
   }),
