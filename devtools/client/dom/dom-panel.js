@@ -23,8 +23,6 @@ function DomPanel(iframeWindow, toolbox) {
   this.onTabNavigated = this.onTabNavigated.bind(this);
   this.onContentMessage = this.onContentMessage.bind(this);
 
-  this.pendingRequests = new Map();
-
   EventEmitter.decorate(this);
 }
 
@@ -50,12 +48,10 @@ DomPanel.prototype = {
 
     this.initialize();
 
-    this.once("no-pending-requests", () => {
-      this.isReady = true;
-      this.emit("ready");
-      deferred.resolve(this);
-    });
+    this.isReady = true;
+    this.emit("ready");
 
+    deferred.resolve(this);
     return this._opening;
   }),
 
@@ -113,30 +109,14 @@ DomPanel.prototype = {
       return deferred.promise;
     }
 
-    // Bail out if target doesn't exist (toolbox maybe closed already).
     if (!this.target) {
+      console.error("No target!", grip);
+      deferred.reject(new Error("Failed to get debugger target."));
       return deferred.promise;
     }
 
-    // If a request for the grips is already in progress
-    // use the same promise.
-    let request = this.pendingRequests.get(grip.actor);
-    if (request) {
-      return request;
-    }
-
     let client = new ObjectClient(this.target.client, grip);
-    client.getPrototypeAndProperties(response => {
-      this.pendingRequests.delete(grip.actor, deferred.promise);
-      deferred.resolve(response);
-
-      // Fire an event about not having any pending requests.
-      if (!this.pendingRequests.size) {
-        this.emit("no-pending-requests");
-      }
-    });
-
-    this.pendingRequests.set(grip.actor, deferred.promise);
+    client.getPrototypeAndProperties(deferred.resolve);
 
     return deferred.promise;
   },
