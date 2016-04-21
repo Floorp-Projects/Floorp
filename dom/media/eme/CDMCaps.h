@@ -71,6 +71,10 @@ public:
     void GetSessionIdsForKeyId(const CencKeyId& aKeyId,
                                nsTArray<nsCString>& aOutSessionIds);
 
+    // Ensures all keys for a session are marked as 'unknown', i.e. removed.
+    // Returns true if a key status was changed.
+    bool RemoveKeysForSession(const nsString& aSessionId);
+
     // Sets the capabilities of the CDM. aCaps is the logical OR of the
     // GMP_EME_CAP_* flags from gmp-decryption.h.
     void SetCaps(uint64_t aCaps);
