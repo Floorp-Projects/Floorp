@@ -398,7 +398,7 @@ UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 }
 
 NS_IMETHODIMP_(bool)
-UIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
+UIEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), false);

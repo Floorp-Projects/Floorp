@@ -105,7 +105,7 @@ StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const
 
 bool
 StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
-                                   void** aIter)
+                                   PickleIterator* aIter)
 {
   MOZ_ASSERT(!Data());
 

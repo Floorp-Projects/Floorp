@@ -133,6 +133,9 @@ def _actorState(actor):
 def _backstagePass():
     return ExprCall(ExprVar('mozilla::ipc::PrivateIPDLInterface'))
 
+def _iterType(ptr):
+    return Type('PickleIterator', ptr=ptr)
+
 def _nullState(proto=None):
     pfx = ''
     if proto is not None:  pfx = proto.name() +'::'
@@ -4122,7 +4125,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         itervar = ExprVar('iter')
         case.addstmts([
             StmtDecl(Decl(_shmemIdType(), idvar.name)),
-            StmtDecl(Decl(Type.VOIDPTR, itervar.name), init=ExprLiteral.NULL)
+            StmtDecl(Decl(_iterType(ptr=0), itervar.name), init=ExprCall(ExprVar('PickleIterator'),
+                                                                         args=[ self.msgvar ]))
         ])
 
         failif = StmtIf(ExprNot(
@@ -4669,7 +4673,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             params=[ Decl(outtype, var.name),
                      Decl(Type('Message', ptr=1, const=1),
                           self.msgvar.name),
-                     Decl(Type('void', ptrptr=1), self.itervar.name)],
+                     Decl(_iterType(ptr=1), self.itervar.name)],
             warn_unused=not template,
             T=template,
             ret=Type.BOOL)
@@ -5150,8 +5154,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             start = 1
 
         stmts.extend((
-            [ StmtDecl(Decl(Type.VOIDPTR, self.itervar.name),
-                     init=ExprLiteral.NULL) ]
+            [ StmtDecl(Decl(_iterType(ptr=0), self.itervar.name),
+                     init=ExprCall(ExprVar('PickleIterator'),
+                                   args=[ msgvar ])) ]
             + decls + [ StmtDecl(Decl(p.bareType(side), p.var().name))
                       for p in md.params ]
             + [ Whitespace.NL ]
@@ -5174,8 +5179,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         itervar = self.itervar
         stmts.extend(
             [ Whitespace.NL,
-              StmtDecl(Decl(Type.VOIDPTR, itervar.name),
-                       init=ExprLiteral.NULL) ]
+              StmtDecl(Decl(_iterType(ptr=0), itervar.name),
+                       init=ExprCall(ExprVar('PickleIterator'),
+                                     args=[ self.replyvar ])) ]
             + [ self.checkedRead(r.ipdltype, r.var(),
                                  ExprAddrOf(self.replyvar),
                                  ExprAddrOf(self.itervar),

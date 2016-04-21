@@ -1848,7 +1848,7 @@ ParamTraits<Metadata>::Write(Message* aMsg, const paramType& aParam)
 }
 
 bool
-ParamTraits<Metadata>::Read(const Message* aMsg, void** aIter,
+ParamTraits<Metadata>::Read(const Message* aMsg, PickleIterator* aIter,
                             paramType* aResult)
 {
   for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
@@ -1887,7 +1887,7 @@ ParamTraits<WriteParams>::Write(Message* aMsg, const paramType& aParam)
 }
 
 bool
-ParamTraits<WriteParams>::Read(const Message* aMsg, void** aIter,
+ParamTraits<WriteParams>::Read(const Message* aMsg, PickleIterator* aIter,
                                paramType* aResult)
 {
   return ReadParam(aMsg, aIter, &aResult->mSize) &&

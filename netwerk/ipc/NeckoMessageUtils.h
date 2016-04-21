@@ -54,7 +54,7 @@ struct ParamTraits<Permission>
     WriteParam(aMsg, aParam.expireTime);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, Permission* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, Permission* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->origin) &&
            ReadParam(aMsg, aIter, &aResult->type) &&
@@ -112,7 +112,7 @@ struct ParamTraits<mozilla::net::NetAddr>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, mozilla::net::NetAddr* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, mozilla::net::NetAddr* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->raw.family))
       return false;
@@ -174,7 +174,7 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct>
     WriteParam(aMsg, aParam.cacheReadEnd);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, mozilla::net::ResourceTimingStruct* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, mozilla::net::ResourceTimingStruct* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->domainLookupStart) &&
            ReadParam(aMsg, aIter, &aResult->domainLookupEnd) &&

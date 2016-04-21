@@ -59,7 +59,7 @@ struct ParamTraits<mozilla::ipc::TransportDescriptor>
     WriteParam(aMsg, duplicateFromProcessId);
     WriteParam(aMsg, aParam.mDestinationProcessId);
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     DWORD duplicateFromProcessId;
     bool r = (ReadParam(aMsg, aIter, &aResult->mPipeName) &&

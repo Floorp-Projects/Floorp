@@ -54,7 +54,7 @@ struct ParamTraits<mozilla::net::RequestHeaderTuple>
     WriteParam(aMsg, aParam.mEmpty);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mHeader) ||
         !ReadParam(aMsg, aIter, &aResult->mValue)  ||
@@ -79,7 +79,7 @@ struct ParamTraits<mozilla::net::nsHttpAtom>
     WriteParam(aMsg, value);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsAutoCString value;
     if (!ReadParam(aMsg, aIter, &value))
@@ -121,7 +121,7 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint8_t variety;
     if (!ReadParam(aMsg, aIter, &aResult->header) ||
@@ -169,7 +169,7 @@ struct ParamTraits<mozilla::net::nsHttpHeaderArray>
     WriteParam(aMsg, p.mHeaders);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mHeaders))
       return false;
@@ -198,7 +198,7 @@ struct ParamTraits<mozilla::net::nsHttpResponseHead>
     WriteParam(aMsg, aParam.mPragmaNoCache);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mHeaders)             ||
         !ReadParam(aMsg, aIter, &aResult->mVersion)             ||
