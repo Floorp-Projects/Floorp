@@ -390,6 +390,17 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const ui
   return NS_OK;
 }
 
+/*static*/
+void nsPrefBranch::ReportToConsole(const nsAString& aMessage)
+{
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> console = do_GetService("@mozilla.org/consoleservice;1", &rv);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsAutoString message(aMessage);
+  console->LogStringMessage(message.get());
+}
 
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
