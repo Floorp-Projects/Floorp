@@ -202,6 +202,9 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mHasPainted(false)
     , mSurfaceDifferenceRect(0,0,0,0)
     , mDestroyed(false)
+#ifdef XP_WIN
+    , mLastKeyEventConsumed(false)
+#endif // #ifdef XP_WIN
     , mStackDepth(0)
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -1443,6 +1446,30 @@ PluginInstanceChild::RecvHandledWindowedPluginKeyEvent(
                        const NativeEventData& aKeyEventData,
                        const bool& aIsConsumed)
 {
+#if defined(OS_WIN)
+    const WinNativeKeyEventData* eventData =
+        static_cast<const WinNativeKeyEventData*>(aKeyEventData);
+    switch (eventData->mMessage) {
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            mLastKeyEventConsumed = aIsConsumed;
+            break;
+        case WM_CHAR:
+        case WM_SYSCHAR:
+        case WM_DEADCHAR:
+        case WM_SYSDEADCHAR:
+            // If preceding keydown or keyup event is consumed by the chrome
+            // process, we should consume WM_*CHAR messages too.
+            if (mLastKeyEventConsumed) {
+              return true;
+            }
+        default:
+            MOZ_CRASH("Needs to handle all messages posted to the parent");
+    }
+#endif // #if defined(OS_WIN)
+
     // Unknown key input shouldn't be sent to plugin for security.
     // XXX Is this possible if a plugin process which posted the message
     //     already crashed and this plugin process is recreated?
@@ -1468,8 +1495,6 @@ PluginInstanceChild::RecvHandledWindowedPluginKeyEvent(
     }
 
 #if defined(OS_WIN)
-    const WinNativeKeyEventData* eventData =
-        static_cast<const WinNativeKeyEventData*>(aKeyEventData);
     UINT message = 0;
     switch (eventData->mMessage) {
         case WM_KEYDOWN:
@@ -1670,6 +1695,7 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
             // Although, such case shouldn't occur.
             NS_WARN_IF(self->mPostingKeyEvents > 0);
             self->mPostingKeyEvents = 0;
+            self->mLastKeyEventConsumed = false;
             break;
 
         case WM_KEYDOWN:

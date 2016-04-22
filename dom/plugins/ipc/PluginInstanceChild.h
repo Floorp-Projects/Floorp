@@ -671,6 +671,14 @@ private:
     // Has this instance been destroyed, either by ActorDestroy or NPP_Destroy?
     bool mDestroyed;
 
+#ifdef XP_WIN
+    // WM_*CHAR messages are never consumed by chrome process's widget.
+    // So, if preceding keydown or keyup event is consumed by reserved
+    // shortcut key in the chrome process, we shouldn't send the following
+    // WM_*CHAR messages to the plugin.
+    bool mLastKeyEventConsumed;
+#endif // #ifdef XP_WIN
+
     // While IME in the process has composition, this is set to true.
     // Otherwise, false.
     static bool sIsIMEComposing;
