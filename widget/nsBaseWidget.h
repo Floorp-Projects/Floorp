@@ -525,6 +525,7 @@ protected:
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
+  RefPtr<GeckoContentController> mRootContentController;
   RefPtr<APZEventState> mAPZEventState;
   // Back buffer of BasicCompositor
   RefPtr<DrawTarget> mLastBackBuffer;

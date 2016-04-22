@@ -979,10 +979,10 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
         aInputBlockId, aFlags));
   };
 
-  RefPtr<GeckoContentController> controller = CreateRootContentController();
-  if (controller) {
+  mRootContentController = CreateRootContentController();
+  if (mRootContentController) {
     uint64_t rootLayerTreeId = mCompositorBridgeParent->RootLayerTreeId();
-    CompositorBridgeParent::SetControllerForLayerTree(rootLayerTreeId, controller);
+    CompositorBridgeParent::SetControllerForLayerTree(rootLayerTreeId, mRootContentController);
   }
 
   // When APZ is enabled, we can actually enable raw touch events because we
@@ -1300,6 +1300,10 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   if (!success || !lf) {
     NS_WARNING("Failed to create an OMT compositor.");
     mAPZC = nullptr;
+    if (mRootContentController) {
+      mRootContentController->Destroy();
+      mRootContentController = nullptr;
+    }
     DestroyCompositor();
     mLayerManager = nullptr;
     mCompositorBridgeChild = nullptr;
@@ -1418,6 +1422,14 @@ void nsBaseWidget::OnDestroy()
     mTextEventDispatcher->OnDestroyWidget();
     // Don't release it until this widget actually released because after this
     // is called, TextEventDispatcher() may create it again.
+  }
+
+  // If this widget is being destroyed, let the APZ code know to drop references
+  // to this widget. Callers of this function all should be holding a deathgrip
+  // on this widget already.
+  if (mRootContentController) {
+    mRootContentController->Destroy();
+    mRootContentController = nullptr;
   }
 }
 
