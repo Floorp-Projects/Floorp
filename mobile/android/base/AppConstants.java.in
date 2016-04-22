@@ -345,5 +345,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = AppConstants.NIGHTLY_BUILD;
+    // (bug 1266820) Temporarily disabled since no one is working on it.
+    public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = false;
 }
