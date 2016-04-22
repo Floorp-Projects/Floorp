@@ -107,6 +107,7 @@ public class ScanManager {
             mGPSScanner = new GPSScanner(context, this);
             mWifiScanner = new WifiScanner(context);
             mCellScanner = new CellScanner(context);
+            mPressureScanner = new PressureScanner(context);
         }
 
         if (AppGlobals.isDebug) {
@@ -117,6 +118,7 @@ public class ScanManager {
         if (mStumblingMode == ActiveOrPassiveStumbling.ACTIVE_STUMBLING) {
             mWifiScanner.start(mStumblingMode);
             mCellScanner.start(mStumblingMode);
+            mPressureScanner.start();
             // in passive mode, these scans are started by passive gps notifications
         }
         mIsScanning = true;
@@ -134,6 +136,9 @@ public class ScanManager {
         mGPSScanner.stop();
         mWifiScanner.stop();
         mCellScanner.stop();
+        if (mPressureScanner != null) {
+            mPressureScanner.stop();
+        }
 
         mIsScanning = false;
         return true;
