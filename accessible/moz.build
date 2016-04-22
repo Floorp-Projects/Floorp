@@ -21,5 +21,3 @@ if CONFIG['MOZ_XUL']:
     DIRS += ['xul']
 
 TEST_DIRS += ['tests/mochitest']
-
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']

@@ -89,11 +89,6 @@ const kSquareBulletText = String.fromCharCode(0x25fe) + " ";
 const MAX_TRIM_LENGTH = 100;
 
 /**
- * Services to determine if e10s is enabled.
- */
-Components.utils.import('resource://gre/modules/Services.jsm');
-
-/**
  * nsIAccessibleRetrieval service.
  */
 var gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
@@ -743,31 +738,6 @@ function getTextFromClipboard()
 }
 
 /**
- * Extract DOMNode id from an accessible. If e10s is enabled, DOMNode is not
- * present in parent process but, if available, DOMNode id is attached to an
- * accessible object.
- * @param  {nsIAccessible} accessible  accessible
- * @return {String?}                   DOMNode id if available
- */
-function getAccessibleDOMNodeID(accessible) {
-  if (accessible instanceof nsIAccessibleDocument) {
-    // If accessible is a document, trying to find its document body id.
-    try {
-      return accessible.DOMNode.body.id;
-    } catch (e) { /* This only works if accessible is not a proxy. */ }
-  }
-  try {
-    return accessible.DOMNode.id;
-  } catch (e) { /* This will fail if DOMNode is in different process. */ }
-  try {
-    // When e10s is enabled, accessible will have an "id" property if its
-    // corresponding DOMNode has an id. If accessible is a document, its "id"
-    // property corresponds to the "id" of its body element.
-    return accessible.id;
-  } catch (e) { /* This will fail if accessible is not a proxy. */ }
-}
-
-/**
  * Return pretty name for identifier, it may be ID, DOM node or accessible.
  */
 function prettyName(aIdentifier)
@@ -785,17 +755,10 @@ function prettyName(aIdentifier)
 
   if (aIdentifier instanceof nsIAccessible) {
     var acc = getAccessible(aIdentifier);
-    var domID = getAccessibleDOMNodeID(acc);
     var msg = "[";
     try {
-      if (Services.appinfo.browserTabsRemoteAutostart) {
-        if (domID) {
-          msg += `DOM node id: ${domID}, `;
-        }
-      } else {
-        msg += `${getNodePrettyName(acc.DOMNode)}, `;
-      }
-      msg += "role: " + roleToString(acc.role);
+      msg += getNodePrettyName(acc.DOMNode);
+      msg += ", role: " + roleToString(acc.role);
       if (acc.name)
         msg += ", name: '" + shortenString(acc.name) + "'";
     } catch (e) {
