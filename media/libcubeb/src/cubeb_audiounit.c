@@ -440,9 +440,6 @@ audiounit_get_input_device_id(AudioDeviceID * device_id)
   return CUBEB_OK;
 }
 
-static int audiounit_install_device_changed_callback(cubeb_stream * stm);
-static int audiounit_uninstall_device_changed_callback();
-
 static OSStatus
 audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
                                      const AudioObjectPropertyAddress * addresses,
@@ -453,6 +450,7 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
   for (UInt32 i = 0; i < address_count; i++) {
     switch(addresses[i].mSelector) {
     case kAudioHardwarePropertyDefaultOutputDevice:
+    case kAudioHardwarePropertyDefaultInputDevice:
       /* fall through */
     case kAudioDevicePropertyDataSource:
       pthread_mutex_lock(&stm->mutex);
@@ -467,48 +465,86 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
   return noErr;
 }
 
+OSStatus
+audiounit_add_listener(cubeb_stream * stm, AudioDeviceID id, AudioObjectPropertySelector selector,
+    AudioObjectPropertyScope scope, AudioObjectPropertyListenerProc listener)
+{
+  AudioObjectPropertyAddress address = {
+      selector,
+      scope,
+      kAudioObjectPropertyElementMaster
+  };
+
+  return AudioObjectAddPropertyListener(id, &address, listener, stm);
+}
+
+OSStatus
+audiounit_remove_listener(cubeb_stream * stm, AudioDeviceID id,
+                          AudioObjectPropertySelector selector,
+                          AudioObjectPropertyScope scope,
+                          AudioObjectPropertyListenerProc listener)
+{
+  AudioObjectPropertyAddress address = {
+      selector,
+      scope,
+      kAudioObjectPropertyElementMaster
+  };
+
+  return AudioObjectRemovePropertyListener(id, &address, listener, stm);
+}
+
 static int
 audiounit_install_device_changed_callback(cubeb_stream * stm)
 {
   OSStatus r;
-  AudioDeviceID id;
 
-  /* This event will notify us when the data source on the same device changes,
-   * for example when the user plugs in a normal (non-usb) headset in the
-   * headphone jack. */
-  AudioObjectPropertyAddress alive_address = {
-    kAudioDevicePropertyDataSource,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+  if (stm->output_unit) {
+    /* This event will notify us when the data source on the same device changes,
+     * for example when the user plugs in a normal (non-usb) headset in the
+     * headphone jack. */
+    AudioDeviceID output_dev_id;
+    r = audiounit_get_output_device_id(&output_dev_id);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  if (audiounit_get_output_device_id(&id) != noErr) {
-    return CUBEB_ERROR;
+    r = audiounit_add_listener(stm, output_dev_id, kAudioDevicePropertyDataSource,
+        kAudioObjectPropertyScopeOutput, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
+
+    /* This event will notify us when the default audio device changes,
+     * for example when the user plugs in a USB headset and the system chooses it
+     * automatically as the default, or when another device is chosen in the
+     * dropdown list. */
+    r = audiounit_add_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultOutputDevice,
+        kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
   }
 
-  r = AudioObjectAddPropertyListener(id, &alive_address,
-                                     &audiounit_property_listener_callback,
-                                     stm);
-  if (r != noErr) {
-    return CUBEB_ERROR;
-  }
+  if (stm->input_unit) {
+    /* This event will notify us when the data source on the input device changes. */
+    AudioDeviceID input_dev_id;
+    r = audiounit_get_input_device_id(&input_dev_id);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  /* This event will notify us when the default audio device changes,
-   * for example when the user plugs in a USB headset and the system chooses it
-   * automatically as the default, or when another device is chosen in the
-   * dropdown list. */
-  AudioObjectPropertyAddress default_device_address = {
-    kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+    r = audiounit_add_listener(stm, input_dev_id, kAudioDevicePropertyDataSource,
+        kAudioObjectPropertyScopeInput, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  r = AudioObjectAddPropertyListener(kAudioObjectSystemObject,
-                                     &default_device_address,
-                                     &audiounit_property_listener_callback,
-                                     stm);
-  if (r != noErr) {
-    return CUBEB_ERROR;
+    /* This event will notify us when the default input device changes. */
+    r = audiounit_add_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultInputDevice,
+        kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
   }
 
   return CUBEB_OK;
@@ -518,39 +554,46 @@ static int
 audiounit_uninstall_device_changed_callback(cubeb_stream * stm)
 {
   OSStatus r;
-  AudioDeviceID id;
 
-  AudioObjectPropertyAddress datasource_address = {
-    kAudioDevicePropertyDataSource,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+  if (stm->output_unit) {
+    AudioDeviceID output_dev_id;
+    r = audiounit_get_output_device_id(&output_dev_id);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
 
-  if (audiounit_get_output_device_id(&id) != noErr) {
-    return CUBEB_ERROR;
+    r = audiounit_remove_listener(stm, output_dev_id, kAudioDevicePropertyDataSource,
+        kAudioObjectPropertyScopeOutput, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
+
+    r = audiounit_remove_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultOutputDevice,
+        kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
   }
 
-  r = AudioObjectRemovePropertyListener(id, &datasource_address,
-                                        &audiounit_property_listener_callback,
-                                        stm);
-  if (r != noErr) {
-    return CUBEB_ERROR;
+  if (stm->input_unit) {
+    AudioDeviceID input_dev_id;
+    r = audiounit_get_input_device_id(&input_dev_id);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
+
+    r = audiounit_remove_listener(stm, input_dev_id, kAudioDevicePropertyDataSource,
+        kAudioObjectPropertyScopeInput, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
+
+    r = audiounit_remove_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultInputDevice,
+        kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
+    if (r != noErr) {
+      return CUBEB_ERROR;
+    }
   }
-
-  AudioObjectPropertyAddress default_device_address = {
-    kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  r = AudioObjectRemovePropertyListener(kAudioObjectSystemObject,
-                                        &default_device_address,
-                                        &audiounit_property_listener_callback,
-                                        stm);
-  if (r != noErr) {
-    return CUBEB_ERROR;
-  }
-
   return CUBEB_OK;
 }
 
@@ -1140,12 +1183,6 @@ audiounit_stream_init(cubeb * context,
   }
 
   *stream = stm;
-
-#if !TARGET_OS_IPHONE
-  /* we dont' check the return value here, because we want to be able to play
-   * even if we can't detect device changes. */
-  audiounit_install_device_changed_callback(stm);
-#endif
   LOG("Cubeb stream init successfully.\n");
   return CUBEB_OK;
 }
@@ -1446,11 +1483,23 @@ int audiounit_stream_device_destroy(cubeb_stream * stream,
 int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
                                                       cubeb_device_changed_callback  device_changed_callback)
 {
+  /* Note: second register without unregister first causes 'nope' error.
+   * Current implementation requires unregister before register a new cb. */
+  assert(!stream->device_changed_callback);
+
   pthread_mutex_lock(&stream->mutex);
   stream->device_changed_callback = device_changed_callback;
+  int r = CUBEB_OK;
+#if !TARGET_OS_IPHONE
+  if (device_changed_callback) {
+    r = audiounit_install_device_changed_callback(stream);
+  } else {
+    r = audiounit_uninstall_device_changed_callback(stream);
+  }
+#endif
   pthread_mutex_unlock(&stream->mutex);
 
-  return CUBEB_OK;
+  return r;
 }
 
 static OSStatus
