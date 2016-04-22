@@ -2579,6 +2579,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
+    JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
 
     JS_FN("IsMatchFlagsArgumentEnabled", IsMatchFlagsArgumentEnabled, 0,0),
     JS_FN("WarnOnceAboutFlagsArgument", WarnOnceAboutFlagsArgument, 0,0),

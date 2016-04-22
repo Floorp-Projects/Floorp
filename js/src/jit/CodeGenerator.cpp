@@ -1041,7 +1041,7 @@ RegExpPairCountAddress(MacroAssembler& masm, size_t inputOutputDataStartOffset)
 // otherwise jump to notFound or failure.
 static bool
 PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Register input,
-                        Register lastIndex, Register sticky,
+                        Register lastIndex,
                         Register temp1, Register temp2, Register temp3,
                         size_t inputOutputDataStartOffset,
                         RegExpShared::CompilationMode mode,
@@ -1152,39 +1152,18 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.storePtr(temp2, inputStartAddress);
         masm.loadStringLength(input, temp3);
 
-        Label stickyCode, done;
-        masm.branchTest32(Assembler::NonZero, sticky, sticky, &stickyCode);
+        Label isLatin1, done;
+        masm.branchLatin1String(input, &isLatin1);
         {
-            Label isLatin1;
-            masm.branchLatin1String(input, &isLatin1);
-            {
-                masm.lshiftPtr(Imm32(1), temp3);
-                masm.loadPtr(Address(temp1, RegExpShared::offsetOfNotStickyTwoByteJitCode(mode)),
-                             codePointer);
-            }
-            masm.jump(&done);
-            {
-                masm.bind(&isLatin1);
-                masm.loadPtr(Address(temp1, RegExpShared::offsetOfNotStickyLatin1JitCode(mode)),
-                             codePointer);
-            }
+            masm.lshiftPtr(Imm32(1), temp3);
+            masm.loadPtr(Address(temp1, RegExpShared::offsetOfTwoByteJitCode(mode)),
+                         codePointer);
         }
         masm.jump(&done);
         {
-            masm.bind(&stickyCode);
-            Label isLatin1;
-            masm.branchLatin1String(input, &isLatin1);
-            {
-                masm.lshiftPtr(Imm32(1), temp3);
-                masm.loadPtr(Address(temp1, RegExpShared::offsetOfStickyTwoByteJitCode(mode)),
-                             codePointer);
-            }
-            masm.jump(&done);
-            {
-                masm.bind(&isLatin1);
-                masm.loadPtr(Address(temp1, RegExpShared::offsetOfStickyLatin1JitCode(mode)),
-                             codePointer);
-            }
+            masm.bind(&isLatin1);
+            masm.loadPtr(Address(temp1, RegExpShared::offsetOfLatin1JitCode(mode)),
+                         codePointer);
         }
         masm.bind(&done);
 
@@ -1210,8 +1189,6 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
 
     // Save any volatile inputs.
     LiveGeneralRegisterSet volatileRegs;
-    if (sticky.volatile_())
-        volatileRegs.add(sticky);
     if (lastIndex.volatile_())
         volatileRegs.add(lastIndex);
     if (input.volatile_())
@@ -1240,7 +1217,6 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     Address matchesInputAddress(temp1, RegExpStatics::offsetOfMatchesInput());
     Address lazySourceAddress(temp1, RegExpStatics::offsetOfLazySource());
     Address lazyIndexAddress(temp1, RegExpStatics::offsetOfLazyIndex());
-    Address lazyStickyAddress(temp1, RegExpStatics::offsetOfLazySticky());
 
     masm.patchableCallPreBarrier(pendingInputAddress, MIRType_String);
     masm.patchableCallPreBarrier(matchesInputAddress, MIRType_String);
@@ -1248,7 +1224,6 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
 
     masm.storePtr(input, pendingInputAddress);
     masm.storePtr(input, matchesInputAddress);
-    masm.storePtr(sticky, lazyStickyAddress);
     masm.storePtr(lastIndex, Address(temp1, RegExpStatics::offsetOfLazyIndex()));
     masm.store32(Imm32(1), Address(temp1, RegExpStatics::offsetOfPendingLazyEvaluation()));
 
@@ -1503,7 +1478,6 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     Register regexp = RegExpMatcherRegExpReg;
     Register input = RegExpMatcherStringReg;
     Register lastIndex = RegExpMatcherLastIndexReg;
-    Register sticky = RegExpMatcherStickyReg;
     ValueOperand result = JSReturnOperand;
 
     // We are free to clobber all registers, as LRegExpMatcher is a call instruction.
@@ -1511,7 +1485,6 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     regs.take(input);
     regs.take(regexp);
     regs.take(lastIndex);
-    regs.take(sticky);
 
     // temp5 is used in single byte instructions when creating dependent
     // strings, and has restrictions on which register it can be on some
@@ -1527,12 +1500,11 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
 
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
+    Register temp3 = regs.takeAny();
 
-    Register maybeTemp3 = InvalidReg;
     Register maybeTemp4 = InvalidReg;
     if (!regs.empty()) {
         // There are not enough registers on x86.
-        maybeTemp3 = regs.takeAny();
         maybeTemp4 = regs.takeAny();
     }
 
@@ -1551,7 +1523,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     size_t inputOutputDataStartOffset = sizeof(void*);
 
     Label notFound, oolEntry;
-    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, sticky,
+    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp5, inputOutputDataStartOffset,
                                  RegExpShared::Normal, &notFound, &oolEntry))
     {
@@ -1615,15 +1587,13 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
         masm.branchLatin1String(input, &isLatin1);
 
         Label* failure = &oolEntry;
-        Register temp3 = (maybeTemp3 == InvalidReg) ? sticky : maybeTemp3;
-        Register temp4 = (maybeTemp3 == InvalidReg) ? lastIndex : maybeTemp4;
+        Register temp4 = (maybeTemp4 == InvalidReg) ? lastIndex : maybeTemp4;
 
         Label failureRestore;
-        if (maybeTemp3 == InvalidReg) {
+        if (maybeTemp4 == InvalidReg) {
             failure = &failureRestore;
 
-            // Save sticky and lastIndex values to temporary space.
-            masm.store32(sticky, Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+            // Save lastIndex value to temporary space.
             masm.store32(lastIndex, Address(object, elementsOffset + ObjectElements::offsetOfLength()));
         }
 
@@ -1653,16 +1623,14 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
             masm.jump(&matchLoop);
         }
 
-        if (maybeTemp3 == InvalidReg) {
-            // Restore sticky and lastIndex values from temporary space, both
-            // for success and failure cases.
+        if (maybeTemp4 == InvalidReg) {
+            // Restore lastIndex value from temporary space, both for success
+            // and failure cases.
 
-            masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()), sticky);
             masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfLength()), lastIndex);
             masm.jump(&done);
 
             masm.bind(&failureRestore);
-            masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfInitializedLength()), sticky);
             masm.load32(Address(object, elementsOffset + ObjectElements::offsetOfLength()), lastIndex);
 
             // Restore the match object for failure case.
@@ -1686,9 +1654,8 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     MOZ_ASSERT(templateObject->lookupPure(cx->names().index)->slot() == 0);
     MOZ_ASSERT(templateObject->lookupPure(cx->names().input)->slot() == 1);
 
-    // sticky is now free, because no more ool entry happens.
-    masm.load32(pairsVectorAddress, sticky);
-    masm.storeValue(JSVAL_TYPE_INT32, sticky, Address(temp2, 0));
+    masm.load32(pairsVectorAddress, temp3);
+    masm.storeValue(JSVAL_TYPE_INT32, temp3, Address(temp2, 0));
     masm.storeValue(JSVAL_TYPE_STRING, input, Address(temp2, sizeof(Value)));
 
     // All done!
@@ -1705,11 +1672,9 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     regsToSave.addUnchecked(regexp);
     regsToSave.addUnchecked(input);
     regsToSave.addUnchecked(lastIndex);
-    regsToSave.addUnchecked(sticky);
     regsToSave.addUnchecked(temp1);
     regsToSave.addUnchecked(temp2);
-    if (maybeTemp3 != InvalidReg)
-        regsToSave.addUnchecked(maybeTemp3);
+    regsToSave.addUnchecked(temp3);
     if (maybeTemp4 != InvalidReg)
         regsToSave.addUnchecked(maybeTemp4);
     regsToSave.addUnchecked(temp5);
@@ -1761,7 +1726,7 @@ class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*RegExpMatcherRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
-                                   int32_t lastIndex, bool sticky,
+                                   int32_t lastIndex,
                                    MatchPairs* pairs, MutableHandleValue output);
 static const VMFunction RegExpMatcherRawInfo = FunctionInfo<RegExpMatcherRawFn>(RegExpMatcherRaw);
 
@@ -1769,13 +1734,11 @@ void
 CodeGenerator::visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool)
 {
     LRegExpMatcher* lir = ool->lir();
-    Register sticky = ToRegister(lir->sticky());
     Register lastIndex = ToRegister(lir->lastIndex());
     Register input = ToRegister(lir->string());
     Register regexp = ToRegister(lir->regexp());
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(sticky);
     regs.take(lastIndex);
     regs.take(input);
     regs.take(regexp);
@@ -1785,7 +1748,6 @@ CodeGenerator::visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool)
         sizeof(irregexp::InputOutputData)), temp);
 
     pushArg(temp);
-    pushArg(sticky);
     pushArg(lastIndex);
     pushArg(input);
     pushArg(regexp);
@@ -1803,7 +1765,6 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpMatcherRegExpReg);
     MOZ_ASSERT(ToRegister(lir->string()) == RegExpMatcherStringReg);
     MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpMatcherLastIndexReg);
-    MOZ_ASSERT(ToRegister(lir->sticky()) == RegExpMatcherStickyReg);
     MOZ_ASSERT(GetValueOutput(lir) == JSReturnOperand);
 
 #if defined(JS_NUNBOX32)
@@ -1813,13 +1774,10 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     MOZ_ASSERT(RegExpMatcherStringReg != JSReturnReg_Data);
     MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg_Type);
     MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg_Data);
-    MOZ_ASSERT(RegExpMatcherStickyReg != JSReturnReg_Type);
-    MOZ_ASSERT(RegExpMatcherStickyReg != JSReturnReg_Data);
 #elif defined(JS_PUNBOX64)
     MOZ_ASSERT(RegExpMatcherRegExpReg != JSReturnReg);
     MOZ_ASSERT(RegExpMatcherStringReg != JSReturnReg);
     MOZ_ASSERT(RegExpMatcherLastIndexReg != JSReturnReg);
-    MOZ_ASSERT(RegExpMatcherStickyReg != JSReturnReg);
 #endif
 
     masm.reserveStack(RegExpReservedStack);
@@ -1844,7 +1802,6 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
     Register lastIndex = RegExpTesterLastIndexReg;
-    Register sticky = RegExpTesterStickyReg;
     Register result = ReturnReg;
 
     // We are free to clobber all registers, as LRegExpSearcher is a call instruction.
@@ -1852,7 +1809,6 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     regs.take(input);
     regs.take(regexp);
     regs.take(lastIndex);
-    regs.take(sticky);
 
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
@@ -1864,7 +1820,7 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     size_t inputOutputDataStartOffset = sizeof(void*);
 
     Label notFound, oolEntry;
-    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, sticky,
+    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, inputOutputDataStartOffset,
                                  RegExpShared::Normal, &notFound, &oolEntry))
     {
@@ -1926,7 +1882,7 @@ class OutOfLineRegExpSearcher : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*RegExpSearcherRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
-                                    int32_t lastIndex, bool sticky,
+                                    int32_t lastIndex,
                                     MatchPairs* pairs, int32_t* result);
 static const VMFunction RegExpSearcherRawInfo = FunctionInfo<RegExpSearcherRawFn>(RegExpSearcherRaw);
 
@@ -1934,13 +1890,11 @@ void
 CodeGenerator::visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool)
 {
     LRegExpSearcher* lir = ool->lir();
-    Register sticky = ToRegister(lir->sticky());
     Register lastIndex = ToRegister(lir->lastIndex());
     Register input = ToRegister(lir->string());
     Register regexp = ToRegister(lir->regexp());
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(sticky);
     regs.take(lastIndex);
     regs.take(input);
     regs.take(regexp);
@@ -1950,7 +1904,6 @@ CodeGenerator::visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool)
         sizeof(irregexp::InputOutputData)), temp);
 
     pushArg(temp);
-    pushArg(sticky);
     pushArg(lastIndex);
     pushArg(input);
     pushArg(regexp);
@@ -1968,13 +1921,11 @@ CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir)
     MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
     MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
     MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
-    MOZ_ASSERT(ToRegister(lir->sticky()) == RegExpTesterStickyReg);
     MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
 
     MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
     MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
     MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
-    MOZ_ASSERT(RegExpTesterStickyReg != ReturnReg);
 
     masm.reserveStack(RegExpReservedStack);
 
@@ -1998,7 +1949,6 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
     Register lastIndex = RegExpTesterLastIndexReg;
-    Register sticky = RegExpTesterStickyReg;
     Register result = ReturnReg;
 
     MacroAssembler masm(cx);
@@ -2012,7 +1962,6 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     regs.take(input);
     regs.take(regexp);
     regs.take(lastIndex);
-    regs.take(sticky);
 
     Register temp1 = regs.takeAny();
     Register temp2 = regs.takeAny();
@@ -2021,7 +1970,7 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     masm.reserveStack(sizeof(irregexp::InputOutputData));
 
     Label notFound, oolEntry;
-    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, sticky,
+    if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, 0,
                                  RegExpShared::MatchOnly, &notFound, &oolEntry))
     {
@@ -2080,19 +2029,17 @@ class OutOfLineRegExpTester : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*RegExpTesterRawFn)(JSContext* cx, HandleObject regexp, HandleString input,
-                                  int32_t lastIndex, bool sticky, int32_t* result);
+                                  int32_t lastIndex, int32_t* result);
 static const VMFunction RegExpTesterRawInfo = FunctionInfo<RegExpTesterRawFn>(RegExpTesterRaw);
 
 void
 CodeGenerator::visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool)
 {
     LRegExpTester* lir = ool->lir();
-    Register sticky = ToRegister(lir->sticky());
     Register lastIndex = ToRegister(lir->lastIndex());
     Register input = ToRegister(lir->string());
     Register regexp = ToRegister(lir->regexp());
 
-    pushArg(sticky);
     pushArg(lastIndex);
     pushArg(input);
     pushArg(regexp);
@@ -2110,13 +2057,11 @@ CodeGenerator::visitRegExpTester(LRegExpTester* lir)
     MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
     MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
     MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
-    MOZ_ASSERT(ToRegister(lir->sticky()) == RegExpTesterStickyReg);
     MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
 
     MOZ_ASSERT(RegExpTesterRegExpReg != ReturnReg);
     MOZ_ASSERT(RegExpTesterStringReg != ReturnReg);
     MOZ_ASSERT(RegExpTesterLastIndexReg != ReturnReg);
-    MOZ_ASSERT(RegExpTesterStickyReg != ReturnReg);
 
     OutOfLineRegExpTester* ool = new(alloc()) OutOfLineRegExpTester(lir);
     addOutOfLineCode(ool, lir->mir());

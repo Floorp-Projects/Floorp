@@ -34,13 +34,10 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
     // Step 13 (reordered).
     var nextSourcePosition = 0;
 
-    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-    var sticky = !!(flags & REGEXP_STICKY_FLAG);
-
     // Step 11.
     while (true) {
         // Step 11.a.
-        var result = RegExpMatcher(rx, S, lastIndex, sticky);
+        var result = RegExpMatcher(rx, S, lastIndex);
 
         // Step 11.b.
         if (result === null)
