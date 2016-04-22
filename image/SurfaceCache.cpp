@@ -35,7 +35,6 @@
 #include "nsTArray.h"
 #include "prsystem.h"
 #include "ShutdownTracker.h"
-#include "SVGImageContext.h"
 
 using std::max;
 using std::min;
