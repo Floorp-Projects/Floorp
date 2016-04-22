@@ -3569,13 +3569,6 @@ if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 fi
 
-dnl =========================================================
-dnl = Background service for downloading additional content at runtime.
-dnl =========================================================
-if test -n "$MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE"; then
-    AC_DEFINE(MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE)
-fi
-
 dnl ========================================================
 dnl = Include install tracking on Android
 dnl ========================================================
@@ -6799,7 +6792,6 @@ AC_SUBST(MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
-AC_SUBST(MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(MOZ_SWITCHBOARD)
