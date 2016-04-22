@@ -7159,10 +7159,10 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   // return true if the event target is in its child process
   bool targetIsIframe = IsTargetIframe(aTarget);
 
-  // Dispatch event directly if the event is synthesized from
-  // nsITextInputProcessor, or there is no need to fire
-  // beforeKey* and afterKey* events.
+  // Dispatch event directly if the event is a keypress event, a key event on
+  // plugin, or there is no need to fire beforeKey* and afterKey* events.
   if (aEvent.mMessage == eKeyPress ||
+      aEvent.IsKeyEventOnPlugin() ||
       !BeforeAfterKeyboardEventEnabled()) {
     ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
                                          aStatus, aEventCB);
@@ -7229,7 +7229,8 @@ PresShell::ForwardKeyToInputMethodApp(nsINode* aTarget,
                                       WidgetKeyboardEvent& aEvent,
                                       nsEventStatus* aStatus)
 {
-  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP) {
+  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP ||
+      aEvent.IsKeyEventOnPlugin()) {
     return false;
   }
 
