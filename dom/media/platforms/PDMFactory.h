@@ -97,6 +97,7 @@ private:
 
   bool mWMFFailedToLoad = false;
   bool mFFmpegFailedToLoad = false;
+  bool mGMPPDMFailedToStartup = false;
 };
 
 } // namespace mozilla

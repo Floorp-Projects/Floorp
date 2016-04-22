@@ -171,6 +171,9 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
     if (mFFmpegFailedToLoad) {
       aDiagnostics->SetFFmpegFailedToLoad();
     }
+    if (mGMPPDMFailedToStartup) {
+      aDiagnostics->SetGMPPDMFailedToStartup();
+    }
   }
 
   for (auto& current : mCurrentPDMs) {
@@ -334,8 +337,10 @@ PDMFactory::CreatePDMs()
 
   if (sGMPDecoderEnabled) {
     m = new GMPDecoderModule();
-    StartupPDM(m);
-  }  
+    if (!StartupPDM(m)) {
+      mGMPPDMFailedToStartup = true;
+    }
+  }
 }
 
 bool
@@ -360,6 +365,9 @@ PDMFactory::GetDecoder(const nsACString& aMimeType,
     }
     if (mFFmpegFailedToLoad) {
       aDiagnostics->SetFFmpegFailedToLoad();
+    }
+    if (mGMPPDMFailedToStartup) {
+      aDiagnostics->SetGMPPDMFailedToStartup();
     }
   }
 
