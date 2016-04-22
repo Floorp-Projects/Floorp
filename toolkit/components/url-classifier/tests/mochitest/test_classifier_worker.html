@@ -3,6 +3,7 @@
 <head>
   <title>Test the URI Classifier</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
@@ -14,17 +15,14 @@
 <script class="testbody" type="text/javascript">
 
 // Add some URLs to the malware database.
-var testData = "example.com/tests/toolkit/components/url-classifier/tests/mochitest/evilWorker.js";
-var testUpdate =
-  "n:1000\ni:test-malware-simple\nad:550\n" +
-  "a:550:32:" + testData.length + "\n" +
-  testData;
-
-testData = "example.com/tests/toolkit/components/url-classifier/tests/mochitest/unwantedWorker.js";
-testUpdate +=
-  "n:1000\ni:test-unwanted-simple\nad:550\n" +
-  "a:550:32:" + testData.length + "\n" +
-  testData;
+var testData = [
+  { url: "example.com/tests/toolkit/components/url-classifier/tests/mochitest/evilWorker.js",
+    db: "test-malware-simple"
+  },
+  { url: "example.com/tests/toolkit/components/url-classifier/tests/mochitest/unwantedWorker.js",
+    db: "test-unwanted-simple"
+  }
+];
 
 function loadTestFrame() {
   document.getElementById("testFrame").src =
@@ -42,25 +40,23 @@ function onmessage(event)
   is(pieces[0], "success", pieces[1]);
 }
 
-const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
-let classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
-
-classifierCommonScript.addMessageListener("loadTestFrame", () => {
+function updateSuccess() {
   SpecialPowers.pushPrefEnv(
     {"set" : [["browser.safebrowsing.malware.enabled", true]]},
     loadTestFrame);
-});
-classifierCommonScript.addMessageListener("updateError", ({ errorCode }) => {
+}
+
+function updateError(errorCode) {
   ok(false, "Couldn't update classifier. Error code: " + errorCode);
   // Abort test.
   SimpleTest.finish();
-});
+};
 
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() {
-    classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+    classifierHelper.addUrlToDB(testData, updateSuccess, updateError);
   });
 
 window.addEventListener("message", onmessage, false);
