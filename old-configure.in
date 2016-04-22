@@ -3603,13 +3603,6 @@ if test -n "$MOZ_ANDROID_MLS_STUMBLER"; then
 fi
 
 dnl =========================================================
-dnl = Whether to exclude font files in the build
-dnl =========================================================
-if test -n "$MOZ_ANDROID_EXCLUDE_FONTS"; then
-    AC_DEFINE(MOZ_ANDROID_EXCLUDE_FONTS)
-fi
-
-dnl =========================================================
 dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
 if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
@@ -6860,7 +6853,6 @@ AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE)
-AC_SUBST(MOZ_ANDROID_EXCLUDE_FONTS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(MOZ_SWITCHBOARD)
