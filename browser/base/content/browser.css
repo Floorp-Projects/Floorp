@@ -338,6 +338,14 @@ toolbarpaletteitem[removable="false"] {
   cursor: default;
 }
 
+%ifndef XP_MACOSX
+toolbarpaletteitem[place="palette"],
+toolbarpaletteitem[place="panel"],
+toolbarpaletteitem[place="toolbar"] {
+  -moz-user-focus: normal;
+}
+%endif
+
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 #personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
