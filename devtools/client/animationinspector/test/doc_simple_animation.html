@@ -82,6 +82,10 @@
       animation: no-compositor 10s cubic-bezier(.57,-0.02,1,.31) forwards;
     }
 
+    .compositor-notall {
+      animation: compositor-notall 2s infinite;
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -99,6 +103,19 @@
         margin-right: 600px;
       }
     }
+
+    @keyframes compositor-notall {
+      from {
+        opacity: 0;
+        width: 0px;
+        transform: translate(0px);
+      }
+      to {
+        opacity: 1;
+        width: 100px;
+        transform: translate(100px);
+      }
+    }
   </style>
 </head>
 <body>
@@ -113,6 +130,7 @@
   <div class="ball negative-delay"></div>
   <div class="ball no-compositor"></div>
   <div class="ball" id="endDelayed"></div>
+  <div class="ball compositor-notall"></div>
   <script>
     /* globals KeyframeEffect, Animation */
     "use strict";
