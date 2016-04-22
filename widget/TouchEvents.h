@@ -61,7 +61,8 @@ public:
     return result;
   }
 
-  enum ePanDirection
+  typedef int8_t PanDirectionType;
+  enum PanDirection : PanDirectionType
   {
     ePanNone,
     ePanVertical,
@@ -69,7 +70,7 @@ public:
     ePanBoth
   };
 
-  ePanDirection panDirection;
+  PanDirection panDirection;
   bool displayPanFeedback;
 
   void AssignGestureNotifyEventData(const WidgetGestureNotifyEvent& aEvent,
