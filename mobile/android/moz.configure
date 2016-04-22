@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+env_flag('MOZ_ANDROID_EXCLUDE_FONTS',
+         help='Whether to exclude font files from the build',
+         default=True)
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
