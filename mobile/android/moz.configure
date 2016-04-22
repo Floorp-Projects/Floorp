@@ -19,7 +19,11 @@ env_flag('MOZ_ANDROID_GCM',
 
 env_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',
          help='Enable system download manager on Android',
-         default=enabled_everywhere)
+         default=True)
+
+env_flag('MOZ_ANDROID_BEAM',
+         help='Enable NFC permission on Android',
+         default=True)
 
 @depends(target)
 def check_target(target):
