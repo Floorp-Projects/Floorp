@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import re
 import types
 import unittest
@@ -18,6 +19,8 @@ from mozunit import (
 )
 
 from mozbuild.preprocessor import Preprocessor
+from mozbuild.util import ReadOnlyNamespace
+from mozpack import path as mozpath
 
 
 class CompilerPreprocessor(Preprocessor):
@@ -322,6 +325,89 @@ class TestFakeCompiler(unittest.TestCase):
             '-bar': {
                 'E': 6,
             },
+        })
+
+
+class CompilerResult(ReadOnlyNamespace):
+    '''Helper of convenience to manipulate toolchain results in unit tests
+
+    When adding a dict, the result is a new CompilerResult with the values
+    from the dict replacing those from the CompilerResult, except for `flags`,
+    where the value from the dict extends the `flags` in `self`.
+    '''
+
+    def __init__(self, wrapper=None, compiler='', version='', type='',
+                 flags=None):
+        if flags is None:
+            flags = []
+        if wrapper is None:
+            wrapper = []
+        super(CompilerResult, self).__init__(
+            flags=flags,
+            version=version,
+            type=type,
+            compiler=mozpath.abspath(compiler),
+            wrapper=wrapper,
+        )
+
+    def __add__(self, other):
+        assert isinstance(other, dict)
+        result = copy.deepcopy(self.__dict__)
+        for k, v in other.iteritems():
+            if k == 'flags':
+                result.setdefault(k, []).extend(v)
+            else:
+                result[k] = v
+        return CompilerResult(**result)
+
+
+class TestCompilerResult(unittest.TestCase):
+    def test_compiler_result(self):
+        result = CompilerResult()
+        self.assertEquals(result.__dict__, {
+            'wrapper': [],
+            'compiler': mozpath.abspath(''),
+            'version': '',
+            'type': '',
+            'flags': [],
+        })
+
+        result = CompilerResult(
+            compiler='/usr/bin/gcc',
+            version='4.2.1',
+            type='gcc',
+            flags=['-std=gnu99'],
+        )
+        self.assertEquals(result.__dict__, {
+            'wrapper': [],
+            'compiler': mozpath.abspath('/usr/bin/gcc'),
+            'version': '4.2.1',
+            'type': 'gcc',
+            'flags': ['-std=gnu99'],
+        })
+
+        result2 = result + {'flags': ['-m32']}
+        self.assertEquals(result2.__dict__, {
+            'wrapper': [],
+            'compiler': mozpath.abspath('/usr/bin/gcc'),
+            'version': '4.2.1',
+            'type': 'gcc',
+            'flags': ['-std=gnu99', '-m32'],
+        })
+        # Original flags are untouched.
+        self.assertEquals(result.flags, ['-std=gnu99'])
+
+        result3 = result + {
+            'compiler': '/usr/bin/gcc-4.7',
+            'version': '4.7.3',
+            'flags': ['-m32'],
+        }
+        self.assertEquals(result3.__dict__, {
+            'wrapper': [],
+            'compiler': mozpath.abspath('/usr/bin/gcc-4.7'),
+            'version': '4.7.3',
+            'type': 'gcc',
+            'flags': ['-std=gnu99', '-m32'],
         })
 
 
