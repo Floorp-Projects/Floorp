@@ -3067,13 +3067,13 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 void
-MediaInputPort::BlockTrackIdImpl(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId)
 {
   mBlockedTracks.AppendElement(aTrackId);
 }
 
 already_AddRefed<Pledge<bool>>
-MediaInputPort::BlockTrackId(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
 {
   class Message : public ControlMessage {
   public:
@@ -3084,7 +3084,7 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
         mPort(aPort), mTrackId(aTrackId), mRunnable(aRunnable) {}
     void Run() override
     {
-      mPort->BlockTrackIdImpl(mTrackId);
+      mPort->BlockSourceTrackIdImpl(mTrackId);
       if (mRunnable) {
         mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
       }
@@ -3150,7 +3150,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
                        aInputNumber, aOutputNumber);
   if (aBlockedTracks) {
     for (TrackID trackID : *aBlockedTracks) {
-      port->BlockTrackIdImpl(trackID);
+      port->BlockSourceTrackIdImpl(trackID);
     }
   }
   port->SetGraphImpl(GraphImpl());
