@@ -44,27 +44,6 @@ Permissions::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 namespace {
 
 already_AddRefed<PermissionStatus>
-CreatePushPermissionStatus(JSContext* aCx,
-                           JS::Handle<JSObject*> aPermission,
-                           nsPIDOMWindowInner* aWindow,
-                           ErrorResult& aRv)
-{
-  PushPermissionDescriptor permission;
-  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aPermission));
-  if (NS_WARN_IF(!permission.Init(aCx, value))) {
-    aRv.NoteJSContextException(aCx);
-    return nullptr;
-  }
-
-  if (permission.mUserVisibleOnly) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
-  }
-
-  return PermissionStatus::Create(aWindow, permission.mName, aRv);
-}
-
-already_AddRefed<PermissionStatus>
 CreatePermissionStatus(JSContext* aCx,
                        JS::Handle<JSObject*> aPermission,
                        nsPIDOMWindowInner* aWindow,
@@ -80,10 +59,8 @@ CreatePermissionStatus(JSContext* aCx,
   switch (permission.mName) {
     case PermissionName::Geolocation:
     case PermissionName::Notifications:
-      return PermissionStatus::Create(aWindow, permission.mName, aRv);
-
     case PermissionName::Push:
-      return CreatePushPermissionStatus(aCx, aPermission, aWindow, aRv);
+      return PermissionStatus::Create(aWindow, permission.mName, aRv);
 
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled type");
