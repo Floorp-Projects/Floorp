@@ -13,6 +13,7 @@
 #include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
+#include "nsPluginHost.h"
 
 static mozilla::LazyLogModule sDecoderDoctorLog("DecoderDoctor");
 #define DD_LOG(level, arg, ...) MOZ_LOG(sDecoderDoctorLog, level, (arg, ##__VA_ARGS__))
@@ -291,6 +292,33 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
     DispatchNotification(
       mDocument->GetInnerWindow(), aNotificationType, aFormats);
   }
+}
+
+enum SilverlightPresence {
+  eNoSilverlight,
+  eSilverlightDisabled,
+  eSilverlightEnabled
+};
+static SilverlightPresence
+CheckSilverlight()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  if (!pluginHost) {
+    return eNoSilverlight;
+  }
+  nsTArray<nsCOMPtr<nsIInternalPluginTag>> plugins;
+  pluginHost->GetPlugins(plugins, /*aIncludeDisabled*/ true);
+  for (const auto& plugin : plugins) {
+    for (const auto& mime : plugin->MimeTypes()) {
+      if (mime.LowerCaseEqualsLiteral("application/x-silverlight")
+          || mime.LowerCaseEqualsLiteral("application/x-silverlight-2")) {
+        return plugin->IsEnabled() ? eSilverlightEnabled : eSilverlightDisabled;
+      }
+    }
+  }
+
+  return eNoSilverlight;
 }
 
 void
