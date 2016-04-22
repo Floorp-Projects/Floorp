@@ -37,6 +37,13 @@ env_flag('MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
          help='Background service for downloading additional content at runtime',
          default=True)
 
+# Enable the Switchboard A/B framework code.
+# Note: The framework is always included in the app. This flag controls
+# usage of the framework.
+env_flag('MOZ_SWITCHBOARD',
+         help='Include Switchboard A/B framework on Android',
+         default=True)
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
