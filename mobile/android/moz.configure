@@ -12,6 +12,11 @@ env_flag('MOZ_LOCALE_SWITCHER',
          help='Enable runtime locale switching',
          default=True)
 
+env_flag('MOZ_ANDROID_GCM',
+         help='Enable GCM registration on Nightly builds only',
+         default=enabled_in_nightly,
+         set_for_old_configure=True)
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
