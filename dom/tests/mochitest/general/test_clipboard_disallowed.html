@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Clipboard Events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<input id="input" value="INPUT TEXT" oncopy="checkAllowed(event)">
+
+<script>
+function doTest()
+{
+  document.getElementById("input").focus();
+  synthesizeKey("c", {accelKey: 1});
+}
+
+function checkAllowed(event)
+{
+  let clipboardData = event.clipboardData;
+
+  let exception;
+  try {
+    clipboardData.mozSetDataAt("text/customdata", document.getElementById("input"), 0);
+  } catch(ex) {
+    exception = ex;
+  }
+  is(String(exception).indexOf("SecurityError"), 0, "Cannot set non-string");
+
+  exception = null;
+  try {
+    clipboardData.mozSetDataAt("application/x-moz-file", "Test", 0);
+  } catch(ex) {
+    exception = ex;
+  }
+  is(String(exception).indexOf("SecurityError"), 0, "Cannot set file");
+
+  exception = null;
+  try {
+    clipboardData.mozSetDataAt("application/x-moz-file-promise", "Test", 0);
+  } catch(ex) {
+    exception = ex;
+  }
+  is(String(exception).indexOf("SecurityError"), 0, "Cannot set file promise");
+
+  exception = null;
+  try {
+    clipboardData.mozSetDataAt("application/something", "This is data", 0);
+  } catch(ex) {
+    exception = ex;
+  }
+  is(exception, null, "Can set custom data to a string");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(doTest);
+</script>

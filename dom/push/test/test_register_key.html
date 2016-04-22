@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1247685: Implement `applicationServerKey` for subscription association.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1247685</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247685">Mozilla Bug 1247685</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  var isTestingMismatchedKey = false;
+  var subscriptions = 0;
+  var testKey; // Generated in `start`.
+
+  function generateKey() {
+    return crypto.subtle.generateKey({
+      name: "ECDSA",
+      namedCurve: "P-256",
+    }, true, ["sign", "verify"]).then(cryptoKey =>
+      crypto.subtle.exportKey("raw", cryptoKey.publicKey)
+    ).then(publicKey => new Uint8Array(publicKey));
+  }
+
+  var registration;
+  add_task(function* start() {
+    yield setupPrefsAndReplaceService({
+      register(pageRecord) {
+        ok(pageRecord.appServerKey.length > 0,
+          "App server key should not be empty");
+        if (pageRecord.appServerKey.length != 65) {
+          throw { result:
+                  SpecialPowers.Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR };
+        }
+        if (isTestingMismatchedKey) {
+          throw { result:
+                  SpecialPowers.Cr.NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR };
+        }
+        return {
+          endpoint: "https://example.com/push/" + (++subscriptions),
+          appServerKey: pageRecord.appServerKey,
+        };
+      },
+
+      registration(pageRecord) {
+        return {
+          endpoint: "https://example.com/push/subWithKey",
+          appServerKey: testKey,
+        };
+      },
+    });
+    yield setPushPermission(true);
+    testKey = yield generateKey();
+
+    var url = "worker.js" + "?" + (Math.random());
+    registration = yield navigator.serviceWorker.register(url, {scope: "."});
+  });
+
+  var controlledFrame;
+  add_task(function* createControlledIFrame() {
+    controlledFrame = yield injectControlledFrame();
+  });
+
+  add_task(function* emptyKey() {
+    try {
+      yield registration.pushManager.subscribe({
+        applicationServerKey: new ArrayBuffer(0),
+      });
+      ok(false, "Should reject for empty app server keys");
+    } catch (error) {
+      ok(error instanceof DOMException,
+        "Wrong exception type for empty key");
+      is(error.name, "InvalidAccessError",
+        "Wrong exception name for empty key");
+    }
+  });
+
+  add_task(function* invalidKey() {
+    try {
+      yield registration.pushManager.subscribe({
+        applicationServerKey: new Uint8Array([0]),
+      });
+      ok(false, "Should reject for invalid app server keys");
+    } catch (error) {
+      ok(error instanceof DOMException,
+        "Wrong exception type for invalid key");
+      is(error.name, "InvalidAccessError",
+        "Wrong exception name for invalid key");
+    }
+  });
+
+  add_task(function* validKey() {
+    var pushSubscription = yield registration.pushManager.subscribe({
+      applicationServerKey: yield generateKey(),
+    });
+    is(pushSubscription.endpoint, "https://example.com/push/1",
+      "Wrong endpoint for subscription with key");
+  });
+
+  add_task(function* retrieveKey() {
+    var pushSubscription = yield registration.pushManager.getSubscription();
+    is(pushSubscription.endpoint, "https://example.com/push/subWithKey",
+      "Got wrong endpoint for subscription with key");
+    isDeeply(
+      new Uint8Array(pushSubscription.options.applicationServerKey),
+      testKey,
+      "Got wrong app server key"
+    );
+  });
+
+  add_task(function* mismatchedKey() {
+    isTestingMismatchedKey = true;
+    try {
+      yield registration.pushManager.subscribe({
+        applicationServerKey: yield generateKey(),
+      });
+      ok(false, "Should reject for mismatched app server keys");
+    } catch (error) {
+      ok(error instanceof DOMException,
+        "Wrong exception type for mismatched key");
+      is(error.name, "InvalidStateError",
+        "Wrong exception name for mismatched key");
+    } finally {
+      isTestingMismatchedKey = false;
+    }
+  });
+
+  add_task(function* emptyKeyInWorker() {
+    var errorInfo = yield sendRequestToWorker({
+      type: "subscribeWithKey",
+      key: new ArrayBuffer(0),
+    });
+    ok(errorInfo.isDOMException,
+      "Wrong exception type in worker for empty key");
+    is(errorInfo.name, "InvalidAccessError",
+      "Wrong exception name in worker for empty key");
+  });
+
+  add_task(function* invalidKeyInWorker() {
+    var errorInfo = yield sendRequestToWorker({
+      type: "subscribeWithKey",
+      key: new Uint8Array([1]),
+    });
+    ok(errorInfo.isDOMException,
+      "Wrong exception type in worker for invalid key");
+    is(errorInfo.name, "InvalidAccessError",
+      "Wrong exception name in worker for invalid key");
+  });
+
+  add_task(function* validKeyInWorker() {
+    var key = yield generateKey();
+    var data = yield sendRequestToWorker({
+      type: "subscribeWithKey",
+      key: key,
+    });
+    is(data.endpoint, "https://example.com/push/2",
+      "Wrong endpoint for subscription with key created in worker");
+    isDeeply(new Uint8Array(data.key), key,
+      "Wrong app server key for subscription created in worker");
+  });
+
+  add_task(function* mismatchedKeyInWorker() {
+    isTestingMismatchedKey = true;
+    try {
+      var errorInfo = yield sendRequestToWorker({
+        type: "subscribeWithKey",
+        key: yield generateKey(),
+      });
+      ok(errorInfo.isDOMException,
+        "Wrong exception type in worker for mismatched key");
+      is(errorInfo.name, "InvalidStateError",
+        "Wrong exception name in worker for mismatched key");
+    } finally {
+      isTestingMismatchedKey = false;
+    }
+  });
+
+  add_task(function* unsubscribe() {
+    is(subscriptions, 2, "Wrong subscription count");
+    controlledFrame.remove();
+  });
+
+  add_task(function* unregister() {
+    yield registration.unregister();
+  });
+
+</script>
+</body>
+</html>
+

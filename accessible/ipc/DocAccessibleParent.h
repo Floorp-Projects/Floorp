@@ -48,8 +48,10 @@ public:
   virtual bool RecvEvent(const uint64_t& aID, const uint32_t& aType)
     override;
 
-  virtual bool RecvShowEvent(const ShowEventData& aData) override;
-  virtual bool RecvHideEvent(const uint64_t& aRootID) override;
+  virtual bool RecvShowEvent(const ShowEventData& aData, const bool& aFromUser)
+    override;
+  virtual bool RecvHideEvent(const uint64_t& aRootID, const bool& aFromUser)
+    override;
   virtual bool RecvStateChangeEvent(const uint64_t& aID,
                                     const uint64_t& aState,
                                     const bool& aEnabled) override final;

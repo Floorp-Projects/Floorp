@@ -4427,10 +4427,12 @@ this.DOMApplicationRegistry = {
         return "INVALID_SEGMENTS_NUMBER";
       }
 
-      // We need to translate the base64 alphabet used in JWT to our base64 alphabet
-      // before calling atob.
-      let decodedReceipt = JSON.parse(atob(segments[1].replace(/-/g, '+')
-                                                      .replace(/_/g, '/')));
+      let jwtBuffer = ChromeUtils.base64URLDecode(segments[1], {
+        // JWT/JWS prohibits padding per RFC 7515, section 2.
+        padding: "reject",
+      });
+      let textDecoder = new TextDecoder("utf-8");
+      let decodedReceipt = JSON.parse(textDecoder.decode(jwtBuffer));
       if (!decodedReceipt) {
         return "INVALID_RECEIPT_ENCODING";
       }

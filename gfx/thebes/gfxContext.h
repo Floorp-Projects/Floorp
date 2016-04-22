@@ -642,6 +642,8 @@ public:
         return mMatrix;
     }
 
+    bool HasMatrix() const { return !!mContext; }
+
 private:
     gfxContext *mContext;
     gfxMatrix   mMatrix;

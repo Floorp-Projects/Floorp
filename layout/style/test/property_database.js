@@ -5426,11 +5426,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "all", "digits", "digits 2", "digits 3", "digits 4", "digits     3" ],
+    other_values: [ "all" ],
     invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
                       "digits 12", "none 3", "digits 3.1415", "digits3", "digits 1",
                       "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
   };
+  if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright-digits.enabled")) {
+    gCSSProperties["text-combine-upright"].other_values.push(
+      "digits", "digits 2", "digits 3", "digits 4", "digits     3");
+  }
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.masking.enabled")) {

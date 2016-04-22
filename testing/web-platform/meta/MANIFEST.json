@@ -28874,6 +28874,10 @@
         "url": "/web-animations/keyframe-effect/keyframe-handling.html"
       },
       {
+        "path": "web-animations/keyframe-effect/setFrames.html",
+        "url": "/web-animations/keyframe-effect/setFrames.html"
+      },
+      {
         "path": "webaudio/the-audio-api/the-audiobuffer-interface/idl-test.html",
         "url": "/webaudio/the-audio-api/the-audiobuffer-interface/idl-test.html"
       },

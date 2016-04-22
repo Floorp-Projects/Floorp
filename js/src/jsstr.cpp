@@ -682,8 +682,8 @@ js::str_toLowerCase(JSContext* cx, unsigned argc, Value* vp)
     return ToLowerCaseHelper(cx, CallArgsFromVp(argc, vp));
 }
 
-static bool
-str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -833,8 +833,8 @@ js::str_toUpperCase(JSContext* cx, unsigned argc, Value* vp)
     return ToUpperCaseHelper(cx, CallArgsFromVp(argc, vp));
 }
 
-static bool
-str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -859,8 +859,8 @@ str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
 }
 
 #if !EXPOSE_INTL_API
-static bool
-str_localeCompare(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_localeCompare(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedString str(cx, ThisToStringForStringProto(cx, args));
@@ -891,8 +891,8 @@ str_localeCompare(JSContext* cx, unsigned argc, Value* vp)
 
 #if EXPOSE_INTL_API
 /* ES6 20140210 draft 21.1.3.12. */
-static bool
-str_normalize(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1820,8 +1820,8 @@ js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* ES6 draft rc3 21.1.3.6. */
-static bool
-str_endsWith(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1939,20 +1939,20 @@ TrimString(JSContext* cx, Value* vp, bool trimLeft, bool trimRight)
     return true;
 }
 
-static bool
-str_trim(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_trim(JSContext* cx, unsigned argc, Value* vp)
 {
     return TrimString(cx, vp, true, true);
 }
 
-static bool
-str_trimLeft(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_trimLeft(JSContext* cx, unsigned argc, Value* vp)
 {
     return TrimString(cx, vp, true, false);
 }
 
-static bool
-str_trimRight(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_trimRight(JSContext* cx, unsigned argc, Value* vp)
 {
     return TrimString(cx, vp, false, true);
 }
@@ -2486,8 +2486,8 @@ js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, H
 /*
  * Python-esque sequence operations.
  */
-static bool
-str_concat(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::str_concat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JSString* str = ThisToStringForStringProto(cx, args);
@@ -2527,32 +2527,32 @@ static const JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     str_toString,          0,0),
     JS_FN(js_valueOf_str,      str_toString,          0,0),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE),
-    JS_INLINABLE_FN("charAt",  str_charAt,            1,JSFUN_GENERIC_NATIVE, StringCharAt),
-    JS_INLINABLE_FN("charCodeAt", str_charCodeAt,     1,JSFUN_GENERIC_NATIVE, StringCharCodeAt),
+    JS_FN("toLowerCase",       str_toLowerCase,       0,0),
+    JS_FN("toUpperCase",       str_toUpperCase,       0,0),
+    JS_INLINABLE_FN("charAt",  str_charAt,            1,0, StringCharAt),
+    JS_INLINABLE_FN("charCodeAt", str_charCodeAt,     1,0, StringCharCodeAt),
     JS_SELF_HOSTED_FN("substring", "String_substring", 2,0),
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2,0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2,0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1,0),
-    JS_FN("includes",          str_includes,          1,JSFUN_GENERIC_NATIVE),
-    JS_FN("indexOf",           str_indexOf,           1,JSFUN_GENERIC_NATIVE),
-    JS_FN("lastIndexOf",       str_lastIndexOf,       1,JSFUN_GENERIC_NATIVE),
-    JS_FN("startsWith",        str_startsWith,        1,JSFUN_GENERIC_NATIVE),
-    JS_FN("endsWith",          str_endsWith,          1,JSFUN_GENERIC_NATIVE),
-    JS_FN("trim",              str_trim,              0,JSFUN_GENERIC_NATIVE),
-    JS_FN("trimLeft",          str_trimLeft,          0,JSFUN_GENERIC_NATIVE),
-    JS_FN("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
+    JS_FN("includes",          str_includes,          1,0),
+    JS_FN("indexOf",           str_indexOf,           1,0),
+    JS_FN("lastIndexOf",       str_lastIndexOf,       1,0),
+    JS_FN("startsWith",        str_startsWith,        1,0),
+    JS_FN("endsWith",          str_endsWith,          1,0),
+    JS_FN("trim",              str_trim,              0,0),
+    JS_FN("trimLeft",          str_trimLeft,          0,0),
+    JS_FN("trimRight",         str_trimRight,         0,0),
+    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0),
+    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0),
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN("localeCompare", "String_localeCompare", 1,0),
 #else
-    JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
+    JS_FN("localeCompare",     str_localeCompare,     1,0),
 #endif
     JS_SELF_HOSTED_FN("repeat", "String_repeat",      1,0),
 #if EXPOSE_INTL_API
-    JS_FN("normalize",         str_normalize,         0,JSFUN_GENERIC_NATIVE),
+    JS_FN("normalize",         str_normalize,         0,0),
 #endif
 
     /* Perl-ish methods (search is actually Python-esque). */
@@ -2563,7 +2563,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
 
     /* Python-esque sequence methods. */
-    JS_FN("concat",            str_concat,            1,JSFUN_GENERIC_NATIVE),
+    JS_FN("concat",            str_concat,            1,0),
     JS_SELF_HOSTED_FN("slice", "String_slice",        2,0),
 
     /* HTML string methods. */
@@ -2716,11 +2716,26 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_SELF_HOSTED_FN("search",          "String_generic_search",       2,0),
     JS_SELF_HOSTED_FN("split",           "String_generic_split",        3,0),
 
-    // This must be at the end because of bug 853075: functions listed after
-    // self-hosted methods aren't available in self-hosted code.
+    JS_SELF_HOSTED_FN("toLowerCase",     "String_static_toLowerCase",   1,0),
+    JS_SELF_HOSTED_FN("toUpperCase",     "String_static_toUpperCase",   1,0),
+    JS_SELF_HOSTED_FN("charAt",          "String_static_charAt",        2,0),
+    JS_SELF_HOSTED_FN("charCodeAt",      "String_static_charCodeAt",    2,0),
+    JS_SELF_HOSTED_FN("includes",        "String_static_includes",      2,0),
+    JS_SELF_HOSTED_FN("indexOf",         "String_static_indexOf",       2,0),
+    JS_SELF_HOSTED_FN("lastIndexOf",     "String_static_lastIndexOf",   2,0),
+    JS_SELF_HOSTED_FN("startsWith",      "String_static_startsWith",    2,0),
+    JS_SELF_HOSTED_FN("endsWith",        "String_static_endsWith",      2,0),
+    JS_SELF_HOSTED_FN("trim",            "String_static_trim",          1,0),
+    JS_SELF_HOSTED_FN("trimLeft",        "String_static_trimLeft",      1,0),
+    JS_SELF_HOSTED_FN("trimRight",       "String_static_trimRight",     1,0),
+    JS_SELF_HOSTED_FN("toLocaleLowerCase","String_static_toLocaleLowerCase",1,0),
+    JS_SELF_HOSTED_FN("toLocaleUpperCase","String_static_toLocaleUpperCase",1,0),
 #if EXPOSE_INTL_API
-    JS_SELF_HOSTED_FN("localeCompare",   "String_static_localeCompare", 2,0),
+    JS_SELF_HOSTED_FN("normalize",       "String_static_normalize",     1,0),
 #endif
+    JS_SELF_HOSTED_FN("concat",          "String_static_concat",        2,0),
+
+    JS_SELF_HOSTED_FN("localeCompare",   "String_static_localeCompare", 2,0),
     JS_FS_END
 };
 
@@ -2752,9 +2767,6 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     if (!ctor)
         return nullptr;
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
-        return nullptr;
-
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -2769,6 +2781,9 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
      * uneval on the global object.
      */
     if (!JS_DefineFunctions(cx, global, string_functions))
+        return nullptr;
+
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
         return nullptr;
 
     return proto;

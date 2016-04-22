@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIST_INSTALL = False
-
 UNIFIED_SOURCES += [
     'nptest.cpp',
     'nptest_utils.cpp',
@@ -74,3 +72,9 @@ if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.
     # conversion from 'X' to 'Y' requires a narrowing conversion
     CXXFLAGS += ['-wd4838']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    FINAL_TARGET = 'dist/plugins/%s.plugin/Contents/MacOS' % cocoa_name
+    OBJDIR_FILES.dist.plugins['%s.plugin' % cocoa_name].Contents += ['%s/Info.plist' % relative_path]
+else:
+    FINAL_TARGET = 'dist/plugins'

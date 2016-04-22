@@ -63,7 +63,7 @@ GetCharProps2(uint32_t aCh)
         VERTICAL_ORIENTATION_R,
         XIDMOD_NOT_CHARS
 #else
-        MOZ_SCRIPT_UNKNOWN,
+        uint8_t(Script::UNKNOWN),
         PAIRED_BRACKET_TYPE_NONE,
         HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,
         eCharType_LeftToRight,
@@ -230,29 +230,29 @@ GetCombiningClass(uint32_t aCh)
 #endif
 }
 
-uint8_t
+Script
 GetScriptCode(uint32_t aCh)
 {
 #if ENABLE_INTL_API
     UErrorCode err = U_ZERO_ERROR;
-    return uscript_getScript(aCh, &err);
+    return Script(uscript_getScript(aCh, &err));
 #else
-    return GetCharProps2(aCh).mScriptCode;
+    return Script(GetCharProps2(aCh).mScriptCode);
 #endif
 }
 
 uint32_t
-GetScriptTagForCode(int32_t aScriptCode)
+GetScriptTagForCode(Script aScriptCode)
 {
 #if ENABLE_INTL_API
     const char* tag = uscript_getShortName(UScriptCode(aScriptCode));
     return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
 #else
     // this will safely return 0 for negative script codes, too :)
-    if (uint32_t(aScriptCode) > ArrayLength(sScriptCodeToTag)) {
+    if (static_cast<uint32_t>(aScriptCode) > ArrayLength(sScriptCodeToTag)) {
         return 0;
     }
-    return sScriptCodeToTag[aScriptCode];
+    return sScriptCodeToTag[static_cast<uint32_t>(aScriptCode)];
 #endif
 }
 
@@ -361,22 +361,22 @@ GetHanVariant(uint32_t aCh)
 }
 #endif
 
-uint32_t
-GetFullWidth(uint32_t aCh)
-{
-    // full-width mappings only exist for BMP characters; all others are
-    // returned unchanged
-    if (aCh < UNICODE_BMP_LIMIT) {
-        uint32_t v =
-            sFullWidthValues[sFullWidthPages[aCh >> kFullWidthCharBits]]
-                            [aCh & ((1 << kFullWidthCharBits) - 1)];
-        if (v) {
-            // return the mapped value if non-zero; else return original char
-            return v;
-        }
-    }
-    return aCh;
-}
+#define DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(prefix_) \
+  uint32_t Get##prefix_(uint32_t aCh) \
+  { \
+    if (aCh >= UNICODE_BMP_LIMIT) { \
+      return aCh; \
+    } \
+    auto page = s##prefix_##Pages[aCh >> k##prefix_##CharBits]; \
+    auto index = aCh & ((1 << k##prefix_##CharBits) - 1); \
+    uint32_t v = s##prefix_##Values[page][index]; \
+    return v ? v : aCh; \
+  }
+
+// full-width mappings only exist for BMP characters; all others are
+// returned unchanged
+DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(FullWidth)
+DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(FullWidthInverse)
 
 bool
 IsClusterExtender(uint32_t aCh, uint8_t aCategory)
@@ -491,6 +491,18 @@ ClusterIterator::Next()
 
     NS_ASSERTION(mText < mPos && mPos <= mLimit,
                  "ClusterIterator::Next has overshot the string!");
+}
+
+uint32_t
+CountGraphemeClusters(const char16_t* aText, uint32_t aLength)
+{
+  ClusterIterator iter(aText, aLength);
+  uint32_t result = 0;
+  while (!iter.AtEnd()) {
+    ++result;
+    iter.Next();
+  }
+  return result;
 }
 
 } // end namespace unicode

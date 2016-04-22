@@ -19,6 +19,9 @@
 #include "js/TypeDecls.h"
 
 namespace mozilla {
+
+class DecoderDoctorDiagnostics;
+
 namespace dom {
 
 class MediaKeySystemAccess final : public nsISupports,
@@ -56,7 +59,8 @@ public:
                                                  nsACString& aOutCdmVersion);
 
   static bool IsSupported(const nsAString& aKeySystem,
-                          const Sequence<MediaKeySystemConfiguration>& aConfigs);
+                          const Sequence<MediaKeySystemConfiguration>& aConfigs,
+                          DecoderDoctorDiagnostics* aDiagnostics);
 
   static void NotifyObservers(nsPIDOMWindowInner* aWindow,
                               const nsAString& aKeySystem,
@@ -68,7 +72,8 @@ public:
 
   static bool GetSupportedConfig(const nsAString& aKeySystem,
                                  const Sequence<MediaKeySystemConfiguration>& aConfigs,
-                                 MediaKeySystemConfiguration& aOutConfig);
+                                 MediaKeySystemConfiguration& aOutConfig,
+                                 DecoderDoctorDiagnostics* aDiagnostics);
 
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;

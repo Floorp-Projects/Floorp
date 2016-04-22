@@ -63,6 +63,7 @@ using namespace mozilla::media;
 #undef LOG
 #undef DECODER_LOG
 #undef VERBOSE_LOG
+#undef DUMP_LOG
 
 #define LOG(m, l, x, ...) \
   MOZ_LOG(m, l, ("Decoder=%p " x, mDecoderID, ##__VA_ARGS__))
@@ -78,6 +79,9 @@ using namespace mozilla::media;
 #define DECODER_WARN_HELPER(a, b) NS_WARNING b
 #define DECODER_WARN(x, ...) \
   DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get()))
+
+#define DUMP_LOG(x, ...) \
+  NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString("Decoder=%p " x, mDecoderID, ##__VA_ARGS__).get(), nullptr, nullptr, -1)
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -2662,6 +2666,28 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
   return (mReader->IsAsync() && mReader->VideoIsHardwareAccelerated())
     ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
     : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
+}
+
+void
+MediaDecoderStateMachine::DumpDebugInfo()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // It is fine to capture a raw pointer here because MediaDecoder only call
+  // this function before shutdown begins.
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    DUMP_LOG(
+      "GetMediaTime=%lld GetClock=%lld "
+      "mState=%s mPlayState=%d mDecodingFirstFrame=%d IsPlaying=%d "
+      "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
+      "mIsAudioPrerolling=%d mIsVideoPrerolling=%d",
+      GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1,
+      gMachineStateStr[mState], mPlayState.Ref(), mDecodingFirstFrame, IsPlaying(),
+      AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
+      mIsAudioPrerolling, mIsVideoPrerolling);
+  });
+
+  OwnerThread()->DispatchStateChange(r.forget());
 }
 
 void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,

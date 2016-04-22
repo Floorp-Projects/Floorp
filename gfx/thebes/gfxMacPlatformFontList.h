@@ -133,7 +133,7 @@ private:
 
     // search fonts system-wide for a given character, null otherwise
     gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
-                                     int32_t aRunScript,
+                                     Script aRunScript,
                                      const gfxFontStyle* aMatchStyle,
                                      uint32_t& aCmapCount,
                                      gfxFontFamily** aMatchedFamily) override;

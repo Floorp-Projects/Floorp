@@ -1846,19 +1846,6 @@ CounterStyle::IsDependentStyle() const
   }
 }
 
-static int32_t
-CountGraphemeClusters(const nsSubstring& aText)
-{
-  using mozilla::unicode::ClusterIterator;
-  ClusterIterator iter(aText.Data(), aText.Length());
-  int32_t result = 0;
-  while (!iter.AtEnd()) {
-    ++result;
-    iter.Next();
-  }
-  return result;
-}
-
 void
 CounterStyle::GetCounterText(CounterValue aOrdinal,
                              WritingMode aWritingMode,
@@ -1889,7 +1876,9 @@ CounterStyle::GetCounterText(CounterValue aOrdinal,
       GetPad(pad);
       // We have to calculate the difference here since suffix part of negative
       // sign may be appended to initialText later.
-      int32_t diff = pad.width - CountGraphemeClusters(initialText);
+      int32_t diff = pad.width -
+        unicode::CountGraphemeClusters(initialText.Data(),
+                                       initialText.Length());
       aResult.Truncate();
       if (useNegativeSign && aOrdinal < 0) {
         NegativeType negative;

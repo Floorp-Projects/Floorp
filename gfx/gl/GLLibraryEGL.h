@@ -499,14 +499,17 @@ public:
     }
 
     EGLDisplay Display() {
+        MOZ_ASSERT(mInitialized);
         return mEGLDisplay;
     }
 
     bool IsANGLE() const {
+        MOZ_ASSERT(mInitialized);
         return mIsANGLE;
     }
 
     bool IsWARP() const {
+        MOZ_ASSERT(mInitialized);
         return mIsWARP;
     }
 
