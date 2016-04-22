@@ -204,11 +204,20 @@ SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames)
 
 bool
 SFNTData::GetIndexForU16Name(const mozilla::u16string& aU16FullName,
-                             uint32_t* aIndex)
+                             uint32_t* aIndex, size_t aTruncatedLen)
 {
   for (size_t i = 0; i < mFonts.length(); ++i) {
     mozilla::u16string name;
-    if (mFonts[i]->GetU16FullName(name) && name == aU16FullName) {
+    if (!mFonts[i]->GetU16FullName(name)) {
+      continue;
+    }
+
+    if (aTruncatedLen) {
+      MOZ_ASSERT(aU16FullName.length() <= aTruncatedLen);
+      name = name.substr(0, aTruncatedLen);
+    }
+
+    if (name == aU16FullName) {
       *aIndex = i;
       return true;
     }
