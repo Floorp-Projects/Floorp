@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/DecoderDoctorNotificationBinding.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
@@ -287,9 +288,31 @@ DecoderDoctorDocumentWatcher::ReportAnalysis(
                                   aParams.IsEmpty() ? nullptr : params,
                                   aParams.IsEmpty() ? 0 : 1);
 
-  // For now, disable all front-end notifications by default.
-  // TODO: Future bugs will use finer-grained filtering instead.
-  if (Preferences::GetBool("media.decoderdoctor.enable-notification-bar", false)) {
+  // "media.decoder-doctor.notifications-allowed" controls which notifications
+  // may be dispatched to the front-end. It either contains:
+  // - '*' -> Allow everything.
+  // - Comma-separater list of ids -> Allow if aReportStringId (from
+  //                                  dom.properties) is one of them.
+  // - Nothing (missing or empty) -> Disable everything.
+  nsAdoptingCString filter =
+    Preferences::GetCString("media.decoder-doctor.notifications-allowed");
+  filter.StripWhitespace();
+  bool allowed = false;
+  if (!filter || filter.IsEmpty()) {
+    // Allow nothing.
+  } else if (filter.EqualsLiteral("*")) {
+    allowed = true;
+  } else for (uint32_t start = 0; start < filter.Length(); ) {
+    int32_t comma = filter.FindChar(',', start);
+    uint32_t end = (comma >= 0) ? uint32_t(comma) : filter.Length();
+    if (strncmp(aReportStringId, filter.Data() + start, end - start) == 0) {
+      allowed = true;
+      break;
+    }
+    // Skip comma. End of line will be caught in for 'while' clause.
+    start = end + 1;
+  }
+  if (allowed) {
     DispatchNotification(
       mDocument->GetInnerWindow(), aNotificationType, aParams);
   }
@@ -440,7 +463,7 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   if (!unplayableFormats.IsEmpty()) {
     DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, but no decoders for some requested formats: %s",
             this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
-    if (Preferences::GetBool("media.decoderdoctor.verbose", false)) {
+    if (Preferences::GetBool("media.decoder-doctor.verbose", false)) {
       ReportAnalysis(
         dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
         "MediaNoDecoders", unplayableFormats);

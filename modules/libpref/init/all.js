@@ -351,6 +351,13 @@ pref("media.mp3.enabled", true);
 pref("media.apple.mp3.enabled", true);
 pref("media.apple.mp4.enabled", true);
 #endif
+
+// Filter what triggers user notifications.
+// See DecoderDoctorDocumentWatcher::ReportAnalysis for details.
+pref("media.decoder-doctor.notifications-allowed", "MediaWidevineNoWMFNoSilverlight");
+// Whether we report partial failures.
+pref("media.decoder-doctor.verbose", false);
+
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
