@@ -15,7 +15,10 @@ from common import BaseConfigureTest
 from mozbuild.configure.util import Version
 from mozbuild.util import memoize
 from mozpack import path as mozpath
-from test_toolchain_helpers import FakeCompiler
+from test_toolchain_helpers import (
+    FakeCompiler,
+    CompilerResult,
+)
 
 
 DEFAULT_C99 = {
@@ -157,11 +160,8 @@ class BaseToolchainTest(BaseConfigureTest):
         - `results` is a dict associating result variable names from
           toolchain.configure (c_compiler, cxx_compiler, host_c_compiler,
           host_cxx_compiler) with a result.
-          The result can either be an error string, or a dict with the
-          following items: flags, version, type, compiler, wrapper. (wrapper
-          can be omitted when it's empty). Those items correspond to the
-          attributes of the object returned by toolchain.configure checks
-          and will be compared to them.
+          The result can either be an error string, or a CompilerResult
+          corresponding to the object returned by toolchain.configure checks.
           When the results for host_c_compiler are identical to c_compiler,
           they can be omitted. Likewise for host_cxx_compiler vs.
           cxx_compiler.
@@ -182,16 +182,12 @@ class BaseToolchainTest(BaseConfigureTest):
                 result = results.get(var[5:], {})
             else:
                 result = {}
-            if isinstance(result, dict):
-                result = dict(result)
-                result.setdefault('wrapper', [])
-                result['compiler'] = mozpath.abspath(result['compiler'])
             try:
                 self.out.truncate(0)
                 compiler = sandbox._value_for(sandbox[var])
                 # Add var on both ends to make it clear which of the
                 # variables is failing the test when that happens.
-                self.assertEquals((var, compiler.__dict__), (var, result))
+                self.assertEquals((var, compiler), (var, result))
             except SystemExit:
                 self.assertEquals((var, result),
                                   (var, self.out.getvalue().strip()))
@@ -216,49 +212,49 @@ class LinuxToolchainTest(BaseToolchainTest):
     GCC_4_7_RESULT = ('Only GCC 4.8 or newer is supported '
                       '(found version 4.7.3).')
     GXX_4_7_RESULT = GCC_4_7_RESULT
-    GCC_4_9_RESULT = {
-        'flags': ['-std=gnu99'],
-        'version': '4.9.3',
-        'type': 'gcc',
-        'compiler': '/usr/bin/gcc',
-    }
-    GXX_4_9_RESULT = {
-        'flags': ['-std=gnu++11'],
-        'version': '4.9.3',
-        'type': 'gcc',
-        'compiler': '/usr/bin/g++',
-    }
-    GCC_5_RESULT = {
-        'flags': ['-std=gnu99'],
-        'version': '5.2.1',
-        'type': 'gcc',
-        'compiler': '/usr/bin/gcc-5',
-    }
-    GXX_5_RESULT = {
-        'flags': ['-std=gnu++11'],
-        'version': '5.2.1',
-        'type': 'gcc',
-        'compiler': '/usr/bin/g++-5',
-    }
-    CLANG_3_3_RESULT = {
-        'flags': [],
-        'version': '3.3.0',
-        'type': 'clang',
-        'compiler': '/usr/bin/clang-3.3',
-    }
+    GCC_4_9_RESULT = CompilerResult(
+        flags=['-std=gnu99'],
+        version='4.9.3',
+        type='gcc',
+        compiler='/usr/bin/gcc',
+    )
+    GXX_4_9_RESULT = CompilerResult(
+        flags=['-std=gnu++11'],
+        version='4.9.3',
+        type='gcc',
+        compiler='/usr/bin/g++',
+    )
+    GCC_5_RESULT = CompilerResult(
+        flags=['-std=gnu99'],
+        version='5.2.1',
+        type='gcc',
+        compiler='/usr/bin/gcc-5',
+    )
+    GXX_5_RESULT = CompilerResult(
+        flags=['-std=gnu++11'],
+        version='5.2.1',
+        type='gcc',
+        compiler='/usr/bin/g++-5',
+    )
+    CLANG_3_3_RESULT = CompilerResult(
+        flags=[],
+        version='3.3.0',
+        type='clang',
+        compiler='/usr/bin/clang-3.3',
+    )
     CLANGXX_3_3_RESULT = 'Only clang/llvm 3.4 or newer is supported.'
-    CLANG_3_6_RESULT = {
-        'flags': ['-std=gnu99'],
-        'version': '3.6.2',
-        'type': 'clang',
-        'compiler': '/usr/bin/clang',
-    }
-    CLANGXX_3_6_RESULT = {
-        'flags': ['-std=gnu++11'],
-        'version': '3.6.2',
-        'type': 'clang',
-        'compiler': '/usr/bin/clang++',
-    }
+    CLANG_3_6_RESULT = CompilerResult(
+        flags=['-std=gnu99'],
+        version='3.6.2',
+        type='clang',
+        compiler='/usr/bin/clang',
+    )
+    CLANGXX_3_6_RESULT = CompilerResult(
+        flags=['-std=gnu++11'],
+        version='3.6.2',
+        type='clang',
+        compiler='/usr/bin/clang++',
+    )
 
     def test_gcc(self):
         # We'll try gcc and clang, and find gcc first.
@@ -374,13 +370,13 @@ class LinuxToolchainTest(BaseToolchainTest):
 
     def test_guess_cxx_clang(self):
         # When CXX is not set, we guess it from CC.
-        clang_3_6_result = dict(self.CLANG_3_6_RESULT)
-        clang_3_6_result['compiler'] = '/usr/bin/clang-3.6'
-        clangxx_3_6_result = dict(self.CLANGXX_3_6_RESULT)
-        clangxx_3_6_result['compiler'] = '/usr/bin/clang++-3.6'
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': clang_3_6_result,
-            'cxx_compiler': clangxx_3_6_result,
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'compiler': '/usr/bin/clang-3.6',
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'compiler': '/usr/bin/clang++-3.6',
+            },
         }, environ={
             'CC': 'clang-3.6',
         })
@@ -412,13 +408,13 @@ class LinuxToolchainTest(BaseToolchainTest):
             '/opt/clang/bin/clang': CLANG_3_6,
             '/opt/clang/bin/clang++': CLANGXX_3_6,
         })
-        absolute_clang = dict(self.CLANG_3_6_RESULT)
-        absolute_clang['compiler'] = '/opt/clang/bin/clang'
-        absolute_clangxx = dict(self.CLANGXX_3_6_RESULT)
-        absolute_clangxx['compiler'] = '/opt/clang/bin/clang++'
         result = {
-            'c_compiler': absolute_clang,
-            'cxx_compiler': absolute_clangxx,
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'compiler': '/opt/clang/bin/clang',
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'compiler': '/opt/clang/bin/clang++'
+            },
         }
         self.do_toolchain_test(paths, result, environ={
             'CC': '/opt/clang/bin/clang',
@@ -435,13 +431,13 @@ class LinuxToolchainTest(BaseToolchainTest):
             '/usr/bin/afl-clang-fast': CLANG_3_6,
             '/usr/bin/afl-clang-fast++': CLANGXX_3_6,
         })
-        afl_clang_result = dict(self.CLANG_3_6_RESULT)
-        afl_clang_result['compiler'] = '/usr/bin/afl-clang-fast'
-        afl_clangxx_result = dict(self.CLANGXX_3_6_RESULT)
-        afl_clangxx_result['compiler'] = '/usr/bin/afl-clang-fast++'
         self.do_toolchain_test(paths, {
-            'c_compiler': afl_clang_result,
-            'cxx_compiler': afl_clangxx_result,
+            'c_compiler': self.CLANG_3_6_RESULT + {
+                'compiler': '/usr/bin/afl-clang-fast',
+            },
+            'cxx_compiler': self.CLANGXX_3_6_RESULT + {
+                'compiler': '/usr/bin/afl-clang-fast++',
+            },
         }, environ={
             'CC': 'afl-clang-fast',
             'CXX': 'afl-clang-fast++',
@@ -546,36 +542,36 @@ class WindowsToolchainTest(BaseToolchainTest):
         'You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, '
         'or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2013u3_RESULT = {
-        'flags': [],
-        'version': '18.00.30723',
-        'type': 'msvc',
-        'compiler': '/opt/VS_2013u3/bin/cl',
-    }
+    VS_2013u3_RESULT = CompilerResult(
+        flags=[],
+        version='18.00.30723',
+        type='msvc',
+        compiler='/opt/VS_2013u3/bin/cl',
+    )
     VS_2015_RESULT = (
         'This version (19.00.23026) of the MSVC compiler is not supported.\n'
         'You must install Visual C++ 2013 Update 3, Visual C++ 2015 Update 1, '
         'or newer in order to build.\n'
         'See https://developer.mozilla.org/en/Windows_Build_Prerequisites')
-    VS_2015u1_RESULT = {
-        'flags': [],
-        'version': '19.00.23506',
-        'type': 'msvc',
-        'compiler': '/usr/bin/cl',
-    }
-    CLANG_CL_3_9_RESULT = {
-        'flags': ['-Xclang', '-std=gnu99',
-                  '-fms-compatibility-version=18.00.30723', '-fallback'],
-        'version': '18.00.30723',
-        'type': 'clang-cl',
-        'compiler': '/usr/bin/clang-cl',
-    }
-    CLANGXX_CL_3_9_RESULT = {
-        'flags': ['-fms-compatibility-version=18.00.30723', '-fallback'],
-        'version': '18.00.30723',
-        'type': 'clang-cl',
-        'compiler': '/usr/bin/clang-cl',
-    }
+    VS_2015u1_RESULT = CompilerResult(
+        flags=[],
+        version='19.00.23506',
+        type='msvc',
+        compiler='/usr/bin/cl',
+    )
+    CLANG_CL_3_9_RESULT = CompilerResult(
+        flags=['-Xclang', '-std=gnu99',
+               '-fms-compatibility-version=18.00.30723', '-fallback'],
+        version='18.00.30723',
+        type='clang-cl',
+        compiler='/usr/bin/clang-cl',
+    )
+    CLANGXX_CL_3_9_RESULT = CompilerResult(
+        flags=['-fms-compatibility-version=18.00.30723', '-fallback'],
+        version='18.00.30723',
+        type='clang-cl',
+        compiler='/usr/bin/clang-cl',
+    )
     CLANG_3_3_RESULT = LinuxToolchainTest.CLANG_3_3_RESULT
     CLANGXX_3_3_RESULT = LinuxToolchainTest.CLANGXX_3_3_RESULT
     CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
@@ -677,15 +673,13 @@ class CrossCompileToolchainTest(BaseToolchainTest):
         '/usr/bin/arm-linux-gnu-g++-5': GXX_5,
     }
     PATHS.update(LinuxToolchainTest.PATHS)
-    ARM_GCC_4_9_RESULT = dict(LinuxToolchainTest.GCC_4_9_RESULT)
-    ARM_GCC_4_9_RESULT['compiler'] = '/usr/bin/arm-linux-gnu-gcc'
-    ARM_GXX_4_9_RESULT = dict(LinuxToolchainTest.GXX_4_9_RESULT)
-    ARM_GXX_4_9_RESULT['compiler'] = '/usr/bin/arm-linux-gnu-g++'
     ARM_GCC_4_7_RESULT = LinuxToolchainTest.GXX_4_7_RESULT
-    ARM_GCC_5_RESULT = dict(LinuxToolchainTest.GCC_5_RESULT)
-    ARM_GCC_5_RESULT['compiler'] = '/usr/bin/arm-linux-gnu-gcc-5'
-    ARM_GXX_5_RESULT = dict(LinuxToolchainTest.GXX_5_RESULT)
-    ARM_GXX_5_RESULT['compiler'] = '/usr/bin/arm-linux-gnu-g++-5'
+    ARM_GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT + {
+        'compiler': '/usr/bin/arm-linux-gnu-gcc-5',
+    }
+    ARM_GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT + {
+        'compiler': '/usr/bin/arm-linux-gnu-g++-5',
+    }
     CLANG_3_6_RESULT = LinuxToolchainTest.CLANG_3_6_RESULT
     CLANGXX_3_6_RESULT = LinuxToolchainTest.CLANGXX_3_6_RESULT
     GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
@@ -693,8 +687,12 @@ class CrossCompileToolchainTest(BaseToolchainTest):
 
     def test_cross_gcc(self):
         self.do_toolchain_test(self.PATHS, {
-            'c_compiler': self.ARM_GCC_4_9_RESULT,
-            'cxx_compiler': self.ARM_GXX_4_9_RESULT,
+            'c_compiler': self.GCC_4_9_RESULT + {
+                'compiler': '/usr/bin/arm-linux-gnu-gcc',
+            },
+            'cxx_compiler': self.GXX_4_9_RESULT + {
+                'compiler': '/usr/bin/arm-linux-gnu-g++',
+            },
             'host_c_compiler': self.GCC_4_9_RESULT,
             'host_cxx_compiler': self.GXX_4_9_RESULT,
         }, args=['--target=arm-unknown-linux-gnu'])
