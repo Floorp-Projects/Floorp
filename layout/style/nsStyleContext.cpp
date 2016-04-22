@@ -815,7 +815,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     if (unicodeBidi == NS_STYLE_UNICODE_BIDI_NORMAL ||
         unicodeBidi == NS_STYLE_UNICODE_BIDI_EMBED) {
       unicodeBidi = NS_STYLE_UNICODE_BIDI_ISOLATE;
-    } else if (unicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    } else if (unicodeBidi == NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
       unicodeBidi = NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE;
     }
     if (unicodeBidi != textReset->mUnicodeBidi) {
