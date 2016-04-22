@@ -897,7 +897,7 @@ WebMTrackDemuxer::GetSamples(int32_t aNumSamples)
 void
 WebMTrackDemuxer::SetNextKeyFrameTime()
 {
-  if (mType != TrackInfo::kVideoTrack) {
+  if (mType != TrackInfo::kVideoTrack || mParent->IsMediaSource()) {
     return;
   }
 
