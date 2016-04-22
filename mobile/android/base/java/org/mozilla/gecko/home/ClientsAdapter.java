@@ -111,6 +111,21 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         return adapterList.size();
     }
 
+    private CombinedHistoryItem.ItemType getItemTypeForPosition(int position) {
+        if (position == 0) {
+            return NAVIGATION_BACK;
+        }
+
+        final Pair<String, Integer> pair = adapterList.get(position);
+        if (pair == null) {
+            return HIDDEN_DEVICES;
+        } else if (pair.second == -1) {
+            return CLIENT;
+        } else {
+            return CHILD;
+        }
+    }
+
     @Override
     public int getItemViewType(int position) {
         return CombinedHistoryItem.ItemType.itemTypeToViewType(getItemTypeForPosition(position));
@@ -154,6 +169,10 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         return list;
     }
 
+    public List<RemoteClient> getHiddenClients() {
+        return hiddenClients;
+    }
+
     public void toggleClient(int position) {
         final Pair<String, Integer> pair = adapterList.get(position);
         if (pair.second != -1) {
@@ -180,37 +199,6 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         }
         // TODO: Update arrow direction of expanded state.
         sState.setClientCollapsed(clientGuid, !isCollapsed);
-    }
-
-    public void removeItem(int position) {
-        final CombinedHistoryItem.ItemType itemType = getItemTypeForPosition(position);
-        switch (itemType) {
-            case CLIENT:
-                final String clientGuid = adapterList.get(position).first;
-                final RemoteClient client = visibleClients.remove(clientGuid);
-                final boolean hadHiddenClients = !hiddenClients.isEmpty();
-
-                int removeCount = sState.isClientCollapsed(clientGuid) ? 1 : client.tabs.size() + 1;
-                int c = removeCount;
-                while (c > 0) {
-                    adapterList.remove(position);
-                    c--;
-                }
-                notifyItemRangeRemoved(position, removeCount);
-
-                sState.setClientHidden(clientGuid, true);
-                hiddenClients.add(client);
-
-                if (!hadHiddenClients) {
-                    // Add item for unhiding clients;
-                    adapterList.add(null);
-                    notifyItemInserted(adapterList.size() - 1);
-                } else {
-                    // Update "hidden clients" item because number of hidden clients changed.
-                    notifyItemChanged(adapterList.size() - 1);
-                }
-                break;
-        }
     }
 
     public void unhideClients(List<RemoteClient> selectedClients) {
@@ -248,9 +236,35 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         }
     }
 
+    public void removeItem(int position) {
+        final CombinedHistoryItem.ItemType itemType = getItemTypeForPosition(position);
+        switch (itemType) {
+            case CLIENT:
+                final String clientGuid = adapterList.get(position).first;
+                final RemoteClient client = visibleClients.remove(clientGuid);
+                final boolean hadHiddenClients = !hiddenClients.isEmpty();
 
-    public List<RemoteClient> getHiddenClients() {
-        return hiddenClients;
+                int removeCount = sState.isClientCollapsed(clientGuid) ? 1 : client.tabs.size() + 1;
+                int c = removeCount;
+                while (c > 0) {
+                    adapterList.remove(position);
+                    c--;
+                }
+                notifyItemRangeRemoved(position, removeCount);
+
+                sState.setClientHidden(clientGuid, true);
+                hiddenClients.add(client);
+
+                if (!hadHiddenClients) {
+                    // Add item for unhiding clients;
+                    adapterList.add(null);
+                    notifyItemInserted(adapterList.size() - 1);
+                } else {
+                    // Update "hidden clients" item because number of hidden clients changed.
+                    notifyItemChanged(adapterList.size() - 1);
+                }
+                break;
+        }
     }
 
     @Override
@@ -261,7 +275,7 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         switch (itemType) {
             case CHILD:
                 info = new HomeContextMenuInfo(view, position, -1);
-                return CombinedHistoryPanel.populateChildInfoFromTab(info, visibleClients.get(pair.first).tabs.get(pair.second));
+                return populateChildInfoFromTab(info, visibleClients.get(pair.first).tabs.get(pair.second));
 
             case CLIENT:
                 info = new CombinedHistoryPanel.RemoteTabsClientContextMenuInfo(view, position, -1, visibleClients.get(pair.first));
@@ -270,18 +284,10 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         return null;
     }
 
-    private CombinedHistoryItem.ItemType getItemTypeForPosition(int position) {
-        if (position == 0) {
-            return NAVIGATION_BACK;
-        }
-
-        final Pair<String, Integer> pair = adapterList.get(position);
-        if (pair == null) {
-            return HIDDEN_DEVICES;
-        } else if (pair.second == -1) {
-            return CLIENT;
-        } else {
-            return CHILD;
-        }
+    protected static HomeContextMenuInfo populateChildInfoFromTab(HomeContextMenuInfo info, RemoteTab tab) {
+        info.url = tab.url;
+        info.title = tab.title;
+        return info;
     }
+
 }
