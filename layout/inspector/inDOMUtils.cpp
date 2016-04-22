@@ -37,6 +37,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
+#include "nsCSSPseudoClasses.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
