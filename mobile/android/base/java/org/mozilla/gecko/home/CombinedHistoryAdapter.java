@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.home;
 
+import android.content.res.Resources;
 import android.support.v7.widget.RecyclerView;
 
 import android.database.Cursor;
@@ -14,21 +15,39 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.home.CombinedHistoryPanel.SectionHeader;
+import org.mozilla.gecko.db.RemoteTab;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> implements CombinedHistoryRecyclerView.AdapterContextMenuBuilder {
     private static final int SYNCED_DEVICES_SMARTFOLDER_INDEX = 0;
+
+    // Array for the time ranges in milliseconds covered by each section.
+    static final HistorySectionsHelper.SectionDateRange[] sectionDateRangeArray = new HistorySectionsHelper.SectionDateRange[SectionHeader.values().length];
+
+    // Semantic names for the time covered by each section
+    public enum SectionHeader {
+        TODAY,
+        YESTERDAY,
+        WEEK,
+        THIS_MONTH,
+        MONTH_AGO,
+        TWO_MONTHS_AGO,
+        THREE_MONTHS_AGO,
+        FOUR_MONTHS_AGO,
+        FIVE_MONTHS_AGO,
+        OLDER_THAN_SIX_MONTHS
+    }
 
     private Cursor historyCursor;
     private DevicesUpdateHandler devicesUpdateHandler;
     private int deviceCount = 0;
 
     // We use a sparse array to store each section header's position in the panel [more cheaply than a HashMap].
-    private final SparseArray<CombinedHistoryPanel.SectionHeader> sectionHeaders;
+    private final SparseArray<SectionHeader> sectionHeaders;
 
-    public CombinedHistoryAdapter() {
+    public CombinedHistoryAdapter(Resources resources) {
         super();
         sectionHeaders = new SparseArray<>();
+        HistorySectionsHelper.updateRecentSectionOffset(resources, sectionDateRangeArray);
     }
 
     public void setHistory(Cursor history) {
@@ -52,33 +71,6 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
             };
         }
         return devicesUpdateHandler;
-    }
-
-    /**
-     * Transform an adapter position to the position for the data structure backing the item type.
-     *
-     * The type is not strictly necessary and could be fetched from <code>getItemTypeForPosition</code>,
-     * but is used for explicitness.
-     *
-     * @param type ItemType of the item
-     * @param position position in the adapter
-     * @return position of the item in the data structure
-     */
-    private int transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType type, int position) {
-        if (type == CombinedHistoryItem.ItemType.SECTION_HEADER) {
-            return position;
-        } else if (type == CombinedHistoryItem.ItemType.HISTORY){
-            return position - getHeadersBefore(position) - CombinedHistoryPanel.NUM_SMART_FOLDERS;
-        } else {
-            return position;
-        }
-    }
-
-    @Override
-    public HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position) {
-        HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, -1);
-        historyCursor.moveToPosition(transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType.HISTORY, position));
-        return CombinedHistoryPanel.populateHistoryInfoFromCursor(info, historyCursor);
     }
 
     @Override
@@ -116,7 +108,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 break;
 
             case SECTION_HEADER:
-                ((TextView) viewHolder.itemView).setText(CombinedHistoryPanel.getSectionHeaderTitle(sectionHeaders.get(localPosition)));
+                ((TextView) viewHolder.itemView).setText(getSectionHeaderTitle(sectionHeaders.get(localPosition)));
                 break;
 
             case HISTORY:
@@ -125,6 +117,26 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 }
                 ((CombinedHistoryItem.HistoryItem) viewHolder).bind(historyCursor);
                 break;
+        }
+    }
+
+    /**
+     * Transform an adapter position to the position for the data structure backing the item type.
+     *
+     * The type is not strictly necessary and could be fetched from <code>getItemTypeForPosition</code>,
+     * but is used for explicitness.
+     *
+     * @param type ItemType of the item
+     * @param position position in the adapter
+     * @return position of the item in the data structure
+     */
+    private int transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType type, int position) {
+        if (type == CombinedHistoryItem.ItemType.SECTION_HEADER) {
+            return position;
+        } else if (type == CombinedHistoryItem.ItemType.HISTORY){
+            return position - getHeadersBefore(position) - CombinedHistoryPanel.NUM_SMART_FOLDERS;
+        } else {
+            return position;
         }
     }
 
@@ -168,7 +180,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         do {
             final int historyPosition = c.getPosition();
             final long visitTime = c.getLong(c.getColumnIndexOrThrow(BrowserContract.History.DATE_LAST_VISITED));
-            final SectionHeader itemSection = CombinedHistoryPanel.getSectionFromTime(visitTime);
+            final SectionHeader itemSection = getSectionFromTime(visitTime);
 
             if (section != itemSection) {
                 section = itemSection;
@@ -179,6 +191,20 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 break;
             }
         } while (c.moveToNext());
+    }
+
+    private static String getSectionHeaderTitle(SectionHeader section) {
+        return sectionDateRangeArray[section.ordinal()].displayName;
+    }
+
+    private static SectionHeader getSectionFromTime(long time) {
+        for (int i = 0; i < SectionHeader.OLDER_THAN_SIX_MONTHS.ordinal(); i++) {
+            if (time > sectionDateRangeArray[i].start) {
+                return SectionHeader.values()[i];
+            }
+        }
+
+        return SectionHeader.OLDER_THAN_SIX_MONTHS;
     }
 
     /**
@@ -196,4 +222,28 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         }
         return sectionHeaders.size();
     }
+
+    @Override
+    public HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position) {
+        HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, -1);
+        historyCursor.moveToPosition(transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType.HISTORY, position));
+        return populateHistoryInfoFromCursor(info, historyCursor);
+    }
+
+    protected static HomeContextMenuInfo populateHistoryInfoFromCursor(HomeContextMenuInfo info, Cursor cursor) {
+        info.url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+        info.title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
+        info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
+        info.itemType = HomeContextMenuInfo.RemoveItemType.HISTORY;
+        final int bookmarkIdCol = cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID);
+        if (cursor.isNull(bookmarkIdCol)) {
+            // If this is a combined cursor, we may get a history item without a
+            // bookmark, in which case the bookmarks ID column value will be null.
+            info.bookmarkId =  -1;
+        } else {
+            info.bookmarkId = cursor.getInt(bookmarkIdCol);
+        }
+        return info;
+    }
+
 }
