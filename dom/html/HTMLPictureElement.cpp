@@ -43,23 +43,27 @@ NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 void
 HTMLPictureElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
-  // Find all img siblings after this <source> to notify them of its demise
   nsCOMPtr<nsIContent> child = GetChildAt(aIndex);
-  nsCOMPtr<nsIContent> nextSibling;
-  if (child && child->IsHTMLElement(nsGkAtoms::source)) {
-    nextSibling = child->GetNextSibling();
+
+  if (child && child->IsHTMLElement(nsGkAtoms::img)) {
+    HTMLImageElement* img = HTMLImageElement::FromContent(child);
+    if (img) {
+      img->PictureSourceRemoved(child->AsContent());
+    }
+  } else if (child && child->IsHTMLElement(nsGkAtoms::source)) {
+    // Find all img siblings after this <source> to notify them of its demise
+    nsCOMPtr<nsIContent> nextSibling = child->GetNextSibling();
+    if (nextSibling && nextSibling->GetParentNode() == this) {
+      do {
+        HTMLImageElement* img = HTMLImageElement::FromContent(nextSibling);
+        if (img) {
+          img->PictureSourceRemoved(child->AsContent());
+        }
+      } while ( (nextSibling = nextSibling->GetNextSibling()) );
+    }
   }
 
   nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
-
-  if (nextSibling && nextSibling->GetParentNode() == this) {
-    do {
-      HTMLImageElement* img = HTMLImageElement::FromContent(nextSibling);
-      if (img) {
-        img->PictureSourceRemoved(child->AsContent());
-      }
-    } while ( (nextSibling = nextSibling->GetNextSibling()) );
-  }
 }
 
 nsresult
