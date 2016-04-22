@@ -25,7 +25,8 @@ add_task(function* () {
   let animationEl = timeline.animationsEl.querySelector(".animation");
   ok(animationEl.classList.contains("fast-track"),
      "The animation element has the fast-track css class");
-  ok(hasTooltip(animationEl),
+  ok(hasTooltip(animationEl,
+                L10N.getStr("player.allPropertiesOnCompositorTooltip")),
      "The animation element has the right tooltip content");
 
   info("Select a node we know doesn't have an animation on the compositor");
@@ -34,14 +35,28 @@ add_task(function* () {
   animationEl = timeline.animationsEl.querySelector(".animation");
   ok(!animationEl.classList.contains("fast-track"),
      "The animation element does not have the fast-track css class");
-  ok(!hasTooltip(animationEl),
+  ok(!hasTooltip(animationEl,
+                 L10N.getStr("player.allPropertiesOnCompositorTooltip")),
+     "The animation element does not have oncompositor tooltip content");
+  ok(!hasTooltip(animationEl,
+                 L10N.getStr("player.somePropertiesOnCompositorTooltip")),
+     "The animation element does not have oncompositor tooltip content");
+
+  info("Select a node we know has animation on the compositor and not on the" +
+       " compositor");
+  yield selectNodeAndWaitForAnimations(".compositor-notall", inspector);
+
+  animationEl = timeline.animationsEl.querySelector(".animation");
+  ok(animationEl.classList.contains("fast-track"),
+     "The animation element has the fast-track css class");
+  ok(hasTooltip(animationEl,
+                L10N.getStr("player.somePropertiesOnCompositorTooltip")),
      "The animation element has the right tooltip content");
 });
 
-function hasTooltip(animationEl) {
+function hasTooltip(animationEl, expected) {
   let el = animationEl.querySelector(".name");
   let tooltip = el.getAttribute("title");
 
-  let expected = L10N.getStr("player.runningOnCompositorTooltip");
   return tooltip.indexOf(expected) !== -1;
 }
