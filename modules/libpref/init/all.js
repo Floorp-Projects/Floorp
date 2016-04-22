@@ -2581,11 +2581,7 @@ pref("dom.animations-api.core.enabled", true);
 // API) enabled?
 // Note that if dom.animations-api.core.enabled is true, this preference is
 // ignored.
-#ifdef RELEASE_BUILD
-pref("dom.animations-api.element-animate.enabled", false);
-#else
 pref("dom.animations-api.element-animate.enabled", true);
-#endif
 
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
