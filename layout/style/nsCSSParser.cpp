@@ -5924,10 +5924,10 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   if (!AgentRulesEnabled() &&
       ((pseudoElementType < CSSPseudoElementType::Count &&
         nsCSSPseudoElements::PseudoElementIsUASheetOnly(pseudoElementType)) ||
-       (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
+       (pseudoClassType != CSSPseudoClassType::NotPseudo &&
         nsCSSPseudoClasses::PseudoClassIsUASheetOnly(pseudoClassType)) ||
        (!ChromeRulesEnabled() &&
-        (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass &&
+        (pseudoClassType != CSSPseudoClassType::NotPseudo &&
          nsCSSPseudoClasses::PseudoClassIsUASheetAndChromeOnly(pseudoClassType))))) {
     // This pseudo-element or pseudo-class is not exposed to content.
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
@@ -5945,9 +5945,9 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
   // be a bit stricter regarding the pseudo-element parsing rules.
   if (pseudoElementType == CSSPseudoElementType::mozPlaceholder &&
-      pseudoClassType == nsCSSPseudoClasses::ePseudoClass_mozPlaceholder) {
+      pseudoClassType == CSSPseudoClassType::mozPlaceholder) {
     if (parsingPseudoElement) {
-      pseudoClassType = nsCSSPseudoClasses::ePseudoClass_NotPseudoClass;
+      pseudoClassType = CSSPseudoClassType::NotPseudo;
     } else {
       pseudoElementType = CSSPseudoElementType::NotPseudo;
     }
@@ -5971,7 +5971,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     (pseudoElementType == CSSPseudoElementType::AnonBox &&
      AgentRulesEnabled());
   bool isPseudoClass =
-    (pseudoClassType != nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
+    (pseudoClassType != CSSPseudoClassType::NotPseudo);
 
   NS_ASSERTION(!isPseudoClass ||
                pseudoElementType == CSSPseudoElementType::NotPseudo,
@@ -5993,7 +5993,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 #ifdef MOZ_XUL
        isTree ||
 #endif
-       nsCSSPseudoClasses::ePseudoClass_notPseudo == pseudoClassType ||
+       CSSPseudoClassType::notPseudo == pseudoClassType ||
        nsCSSPseudoClasses::HasStringArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasNthPairArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType))) {
@@ -6013,7 +6013,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   }
 
   if (!parsingPseudoElement &&
-      nsCSSPseudoClasses::ePseudoClass_notPseudo == pseudoClassType) {
+      CSSPseudoClassType::notPseudo == pseudoClassType) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelDoubleNot);
       UngetToken();
@@ -6244,8 +6244,8 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // -moz-locale-dir and -moz-dir take an identifier argument.  While
   // only 'ltr' and 'rtl' (case-insensitively) will match anything, any
   // other identifier is still valid.
-  if (aType == nsCSSPseudoClasses::ePseudoClass_mozLocaleDir ||
-      aType == nsCSSPseudoClasses::ePseudoClass_dir) {
+  if (aType == CSSPseudoClassType::mozLocaleDir ||
+      aType == CSSPseudoClassType::dir) {
     nsContentUtils::ASCIIToLower(mToken.mIdent); // case insensitive
   }
 
