@@ -395,11 +395,22 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
     RecordedFontData fontData(aFont);
     RecordedFontDetails fontDetails;
     if (fontData.GetFontDetails(fontDetails)) {
+      // Try to serialise the whole font, just in case this is a web font that
+      // is not present on the system.
       if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
         mRecorder->RecordEvent(fontData);
         mRecorder->AddStoredFontData(fontDetails.fontDataKey);
       }
       mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, fontDetails));
+    } else {
+      // If that fails, record just the font description and try to load it from
+      // the system on the other side.
+      RecordedFontDescriptor fontDesc(aFont);
+      if (fontDesc.IsValid()) {
+        mRecorder->RecordEvent(fontDesc);
+      } else {
+        gfxWarning() << "DrawTargetRecording::FillGlyphs failed to serialise ScaledFont";
+      }
     }
 #endif
     RecordingFontUserData *userData = new RecordingFontUserData;

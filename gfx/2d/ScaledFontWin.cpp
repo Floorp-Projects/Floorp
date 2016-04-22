@@ -75,6 +75,13 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
   return true;
 }
 
+bool
+ScaledFontWin::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
+{
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), mSize, aBaton);
+  return true;
+}
+
 #ifdef USE_SKIA
 SkTypeface* ScaledFontWin::GetSkTypeface()
 {
