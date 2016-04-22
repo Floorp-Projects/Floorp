@@ -149,10 +149,11 @@ const Utils = {
 
     // For security reasons we reject non-http(s) urls (see bug 354316),
     // we may need to revise this once we support more content types
-    // XXX this should be a "security exception" according to spec, but that
-    // isn't defined yet.
-    if (uri.scheme != "http" && uri.scheme != "https")
-      throw("Permission denied to add " + uri.spec + " as a content or protocol handler");
+    if (uri.scheme != "http" && uri.scheme != "https") {
+      throw this.getSecurityError(
+        "Permission denied to add " + uri.spec + " as a content or protocol handler",
+        aContentWindow);
+    }
 
     // We also reject handlers registered from a different host (see bug 402287)
     // The pref allows us to test the feature
@@ -160,7 +161,9 @@ const Utils = {
     if (!pb.getBoolPref(PREF_ALLOW_DIFFERENT_HOST) &&
         (!["http:", "https:"].includes(aContentWindow.location.protocol) ||
          aContentWindow.location.hostname != uri.host)) {
-      throw("Permission denied to add " + uri.spec + " as a content or protocol handler");
+      throw this.getSecurityError(
+        "Permission denied to add " + uri.spec + " as a content or protocol handler",
+        aContentWindow);
     }
 
     // If the uri doesn't contain '%s', it won't be a good handler
@@ -171,15 +174,15 @@ const Utils = {
   },
 
   // NB: Throws if aProtocol is not allowed.
-  checkProtocolHandlerAllowed(aProtocol, aURIString) {
+  checkProtocolHandlerAllowed(aProtocol, aURIString, aWindowOrNull) {
     // First, check to make sure this isn't already handled internally (we don't
     // want to let them take over, say "chrome").
     let handler = Services.io.getProtocolHandler(aProtocol);
     if (!(handler instanceof Ci.nsIExternalProtocolHandler)) {
       // This is handled internally, so we don't want them to register
-      // XXX this should be a "security exception" according to spec, but that
-      // isn't defined yet.
-      throw(`Permission denied to add ${aURIString} as a protocol handler`);
+      throw this.getSecurityError(
+        `Permission denied to add ${aURIString} as a protocol handler`,
+        aWindowOrNull);
     }
 
     // check if it is in the black list
@@ -192,9 +195,21 @@ const Utils = {
       allowed = pb.getBoolPref(PREF_HANDLER_EXTERNAL_PREFIX + "-default");
     }
     if (!allowed) {
-      // XXX this should be a "security exception" according to spec
-      throw(`Not allowed to register a protocol handler for ${aProtocol}`);
+      throw this.getSecurityError(
+        `Not allowed to register a protocol handler for ${aProtocol}`,
+        aWindowOrNull);
     }
+  },
+
+  // Return a SecurityError exception from the given Window if one is given.  If
+  // none is given, just return the given error string, for lack of anything
+  // better.
+  getSecurityError(errorString, aWindowOrNull) {
+    if (!aWindowOrNull) {
+      return errorString;
+    }
+
+    return new aWindowOrNull.DOMException(errorString, "SecurityError");
   },
 
   /**
@@ -404,7 +419,8 @@ WebContentConverterRegistrar.prototype = {
       return;
     }
 
-    Utils.checkProtocolHandlerAllowed(aProtocol, aURIString);
+    Utils.checkProtocolHandlerAllowed(aProtocol, aURIString,
+                                      haveWindow ? aBrowserOrWindow : null);
 
     // Now Ask the user and provide the proper callback
     let message = this._getFormattedString("addProtocolHandler",
@@ -472,11 +488,12 @@ WebContentConverterRegistrar.prototype = {
     }
 
     // We only support feed types at present.
-    // XXX this should be a "security exception" according to spec, but that
-    // isn't defined yet.
     let contentType = Utils.resolveContentType(aContentType);
-    if (contentType != TYPE_MAYBE_FEED)
+    // XXX We should be throwing a Utils.getSecurityError() here in at least
+    // some cases.  See bug 1266492.
+    if (contentType != TYPE_MAYBE_FEED) {
       return;
+    }
 
     if (aWindowOrBrowser) {
       let notificationBox;
@@ -998,6 +1015,8 @@ WebContentConverterRegistrarContent.prototype = {
                                          .messageManager;
 
     let uri = Utils.checkAndGetURI(aURIString, aBrowserOrWindow);
+    // XXX We should be throwing a Utils.getSecurityError() here in at least
+    // some cases.  See bug 1266492.
     if (Utils.resolveContentType(aContentType) != TYPE_MAYBE_FEED) {
       return;
     }
@@ -1018,7 +1037,7 @@ WebContentConverterRegistrarContent.prototype = {
                                          .messageManager;
 
     let uri = Utils.checkAndGetURI(aURIString, aBrowserOrWindow);
-    Utils.checkProtocolHandlerAllowed(aProtocol, aURIString);
+    Utils.checkProtocolHandlerAllowed(aProtocol, aURIString, aBrowserOrWindow);
 
     messageManager.sendAsyncMessage("WCCR:registerProtocolHandler",
                                     { protocol: aProtocol,
