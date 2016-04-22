@@ -779,8 +779,6 @@ protected:
   void DecVisibleCount(const VisibleFrames& aFrames,
                        VisibilityCounter aCounter,
                        Maybe<OnNonvisible> aNonvisibleAction = Nothing());
-  void ReportBadStateDuringVisibilityUpdate();
-  void SetInFrameVisibilityUpdate(bool aState);
 
   void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
   void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
@@ -976,8 +974,6 @@ protected:
 
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
-
-  bool                      mInFrameVisibilityUpdate : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };
