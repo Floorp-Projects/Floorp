@@ -1415,7 +1415,8 @@ var PARALLEL_TESTS = 2;
 var gTestPrefs = [
   ['media.recorder.max_memory', 1024],
   ["media.preload.default", 2], // default preload = metadata
-  ["media.preload.auto", 3] // auto preload = enough
+  ["media.preload.auto", 3], // auto preload = enough
+  ["media.test.dumpDebugInfo", true],
 ];
 
 // When true, we'll loop forever on whatever test we run. Use this to debug
@@ -1587,4 +1588,14 @@ function isSlowPlatform() {
 // like file_access_controls.html.
 if ("SimpleTest" in window) {
   SimpleTest.requestFlakyTimeout("untriaged");
+
+  // Register timeout function to dump debugging logs.
+  SimpleTest.registerTimeoutFunction(function() {
+    for (var v of document.getElementsByTagName("video")) {
+      v.mozDumpDebugInfo();
+    }
+    for (var a of document.getElementsByTagName("audio")) {
+      a.mozDumpDebugInfo();
+    }
+  });
 }

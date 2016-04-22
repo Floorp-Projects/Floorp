@@ -656,25 +656,6 @@ nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
     return NS_OK;
 }
 
-nsresult
-nsJARChannel::OverrideSecurityInfo(nsISupports* aSecurityInfo)
-{
-  MOZ_RELEASE_ASSERT(!mSecurityInfo,
-                     "This can only be called when we don't have a security info object already");
-  MOZ_RELEASE_ASSERT(aSecurityInfo,
-                     "This can only be called with a valid security info object");
-  mSecurityInfo = aSecurityInfo;
-  return NS_OK;
-}
-
-void
-nsJARChannel::OverrideURI(nsIURI* aRedirectedURI)
-{
-  MOZ_RELEASE_ASSERT(mLoadFlags & LOAD_REPLACE,
-                     "This can only happen if the LOAD_REPLACE flag is set");
-  mAppURI = aRedirectedURI;
-}
-
 NS_IMETHODIMP
 nsJARChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 {

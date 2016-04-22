@@ -548,7 +548,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
 
     if language == 'C++':
         @depends(valid_compiler, c_compiler)
-        def compiler_suite_consistency(compiler, c_compiler):
+        def valid_compiler(compiler, c_compiler):
             if compiler.type != c_compiler.type:
                 die('The %s C compiler is %s, while the %s C++ compiler is '
                     '%s. Need to use the same compiler suite.',
@@ -561,6 +561,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None):
                     'version.',
                     host_or_target_str, c_compiler.version,
                     host_or_target_str, compiler.version)
+            return compiler
 
     # Set CC/CXX/HOST_CC/HOST_CXX for old-configure, which needs the wrapper
     # and the flags that were part of the user input for those variables to

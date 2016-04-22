@@ -192,10 +192,10 @@ nsStyleContext::~nsStyleContext()
 
   nsPresContext *presContext = PresContext();
   DebugOnly<nsStyleSet*> geckoStyleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
-  MOZ_ASSERT(!geckoStyleSet ||
-             geckoStyleSet->GetRuleTree() == mSource.AsGeckoRuleNode()->RuleTree() ||
-             geckoStyleSet->IsInRuleTreeReconstruct(),
-             "destroying style context from old rule tree too late");
+  NS_ASSERTION(!geckoStyleSet ||
+               geckoStyleSet->GetRuleTree() == mSource.AsGeckoRuleNode()->RuleTree() ||
+               geckoStyleSet->IsInRuleTreeReconstruct(),
+               "destroying style context from old rule tree too late");
 
   if (mParent) {
     mParent->RemoveChild(this);
@@ -575,7 +575,7 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   // which represents text frames, as well as ruby pseudos are excluded
   // because we still want to set the flag for them.
   if (aContext->GetPseudoType() == CSSPseudoElementType::AnonBox &&
-      aContext->GetPseudo() != nsCSSAnonBoxes::mozNonElement &&
+      !nsCSSAnonBoxes::IsNonElement(aContext->GetPseudo()) &&
       !RubyUtils::IsRubyPseudo(aContext->GetPseudo())) {
     return false;
   }
@@ -639,6 +639,27 @@ ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 void
 nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
+#define GET_UNIQUE_STYLE_DATA(name_) \
+  static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
+
+  // Change writing mode of text frame for text-combine-upright. We use
+  // style structs of the parent to avoid triggering computation before
+  // we change the writing mode.
+  // It is safe to look at the parent's style because we are looking at
+  // inherited properties, and ::-moz-text never matches any rules.
+  if (mPseudoTag == nsCSSAnonBoxes::mozText && mParent &&
+      mParent->StyleVisibility()->mWritingMode !=
+        NS_STYLE_WRITING_MODE_HORIZONTAL_TB &&
+      mParent->StyleText()->mTextCombineUpright ==
+        NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL) {
+    MOZ_ASSERT(!PeekStyleVisibility(), "If StyleVisibility was already "
+               "computed, some properties may have been computed "
+               "incorrectly based on the old writing mode value");
+    nsStyleVisibility* mutableVis = GET_UNIQUE_STYLE_DATA(Visibility);
+    mutableVis->mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
+    AddStyleBit(NS_STYLE_IS_TEXT_COMBINED);
+  }
+
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
   if (mParent && mParent->HasTextDecorationLines()) {
@@ -664,8 +685,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
         presContext->StyleSet()->ResolveStyleFor(docElement, nullptr);
       auto dir = rootStyle->StyleVisibility()->mDirection;
       if (dir != StyleVisibility()->mDirection) {
-        nsStyleVisibility* uniqueVisibility =
-          (nsStyleVisibility*)GetUniqueStyleData(eStyleStruct_Visibility);
+        nsStyleVisibility* uniqueVisibility = GET_UNIQUE_STYLE_DATA(Visibility);
         uniqueVisibility->mDirection = dir;
       }
     }
@@ -683,7 +703,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER ||
         text->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT)
     {
-      nsStyleText* uniqueText = (nsStyleText*)GetUniqueStyleData(eStyleStruct_Text);
+      nsStyleText* uniqueText = GET_UNIQUE_STYLE_DATA(Text);
       uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
     }
   }
@@ -706,8 +726,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       displayVal = NS_STYLE_DISPLAY_BLOCK;
     }
     if (displayVal != disp->mDisplay) {
-      nsStyleDisplay* mutable_display =
-        static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
+      nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
       disp = mutable_display;
 
       // If we're in this code, then mOriginalDisplay doesn't matter
@@ -743,7 +762,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       containerDisp = containerContext->StyleDisplay();
     }
     if (ShouldBlockifyChildren(containerDisp) &&
-        GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
+        !nsCSSAnonBoxes::IsNonElement(GetPseudo())) {
       // NOTE: Technically, we shouldn't modify the 'display' value of
       // positioned elements, since they aren't flex/grid items. However,
       // we don't need to worry about checking for that, because if we're
@@ -757,8 +776,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
                      "We shouldn't be changing the display value of "
                      "positioned content (and we should have already "
                      "converted its display value to be block-level...)");
-        nsStyleDisplay* mutable_display =
-          static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
+        nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
         disp = mutable_display;
         mutable_display->mDisplay = displayVal;
       }
@@ -777,8 +795,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     uint8_t displayVal = disp->mDisplay;
     nsRuleNode::EnsureInlineDisplay(displayVal);
     if (displayVal != disp->mDisplay) {
-      nsStyleDisplay* mutable_display =
-        static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
+      nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
       disp = mutable_display;
       mutable_display->mDisplay = displayVal;
     }
@@ -798,12 +815,11 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     if (unicodeBidi == NS_STYLE_UNICODE_BIDI_NORMAL ||
         unicodeBidi == NS_STYLE_UNICODE_BIDI_EMBED) {
       unicodeBidi = NS_STYLE_UNICODE_BIDI_ISOLATE;
-    } else if (unicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+    } else if (unicodeBidi == NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
       unicodeBidi = NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE;
     }
     if (unicodeBidi != textReset->mUnicodeBidi) {
-      auto mutableTextReset = static_cast<nsStyleTextReset*>(
-        GetUniqueStyleData(eStyleStruct_TextReset));
+      nsStyleTextReset* mutableTextReset = GET_UNIQUE_STYLE_DATA(TextReset);
       mutableTextReset->mUnicodeBidi = unicodeBidi;
     }
   }
@@ -817,7 +833,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
    *   ...etc.
    */
   if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-      mPseudoTag != nsCSSAnonBoxes::mozNonElement &&
+      !nsCSSAnonBoxes::IsNonElement(mPseudoTag) &&
       mParent) {
     auto cbContext = mParent;
     while (cbContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
@@ -828,8 +844,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     // and text-orientation) here; just the writing-mode property is enough.
     if (StyleVisibility()->mWritingMode !=
           cbContext->StyleVisibility()->mWritingMode) {
-      nsStyleDisplay* mutable_display =
-        static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
+      nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
       disp = mutable_display;
       mutable_display->mOriginalDisplay = mutable_display->mDisplay =
         NS_STYLE_DISPLAY_INLINE_BLOCK;
@@ -838,6 +853,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 
   // Compute User Interface style, to trigger loads of cursors
   StyleUserInterface();
+#undef GET_UNIQUE_STYLE_DATA
 }
 
 nsChangeHint
@@ -1300,7 +1316,8 @@ ExtractColor(nsCSSProperty aProperty,
 {
   StyleAnimationValue val;
   ExtractAnimationValue(aProperty, aStyleContext, val);
-  return val.GetColorValue();
+  return val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor
+    ? aStyleContext->StyleColor()->mColor : val.GetColorValue();
 }
 
 static nscolor
@@ -1311,6 +1328,8 @@ ExtractColorLenient(nsCSSProperty aProperty,
   ExtractAnimationValue(aProperty, aStyleContext, val);
   if (val.GetUnit() == StyleAnimationValue::eUnit_Color) {
     return val.GetColorValue();
+  } else if (val.GetUnit() == StyleAnimationValue::eUnit_CurrentColor) {
+    return aStyleContext->StyleColor()->mColor;
   }
   return NS_RGBA(0, 0, 0, 0);
 }

@@ -880,14 +880,14 @@ gfxFontEntry::HasGraphiteSpaceContextuals()
 #define FEATURE_SCRIPT_MASK 0x000000ff // script index replaces low byte of tag
 
 // check for too many script codes
-PR_STATIC_ASSERT(MOZ_NUM_SCRIPT_CODES <= FEATURE_SCRIPT_MASK);
+PR_STATIC_ASSERT(int(Script::NUM_SCRIPT_CODES) <= FEATURE_SCRIPT_MASK);
 
 // high-order three bytes of tag with script in low-order byte
 #define SCRIPT_FEATURE(s,tag) (((~FEATURE_SCRIPT_MASK) & (tag)) | \
-                               ((FEATURE_SCRIPT_MASK) & (s)))
+                               ((FEATURE_SCRIPT_MASK) & static_cast<uint32_t>(s)))
 
 bool
-gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
+gfxFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
 {
     if (!mSupportedFeatures) {
         mSupportedFeatures = MakeUnique<nsDataHashtable<nsUint32HashKey,bool>>();
@@ -905,7 +905,7 @@ gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
                  "use of unknown feature tag");
 
     // note: graphite feature support uses the last script index
-    NS_ASSERTION(aScript < FEATURE_SCRIPT_MASK - 1,
+    NS_ASSERTION(int(aScript) < FEATURE_SCRIPT_MASK - 1,
                  "need to bump the size of the feature shift");
 
     uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);
@@ -965,7 +965,7 @@ gfxFontEntry::SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
 }
 
 const hb_set_t*
-gfxFontEntry::InputsForOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag)
+gfxFontEntry::InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
 {
     if (!mFeatureInputs) {
         mFeatureInputs = MakeUnique<nsDataHashtable<nsUint32HashKey,hb_set_t*>>();
@@ -1525,12 +1525,12 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
 
             if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
                 uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
-                uint32_t script = GetScriptCode(aMatchData->mCh);
+                Script script = GetScriptCode(aMatchData->mCh);
                 MOZ_LOG(log, LogLevel::Debug,\
                        ("(textrun-systemfallback-fonts) char: u+%6.6x "
                         "unicode-range: %d script: %d match: [%s]\n",
                         aMatchData->mCh,
-                        unicodeRange, script,
+                        unicodeRange, int(script),
                         NS_ConvertUTF16toUTF8(fe->Name()).get()));
             }
         }

@@ -85,6 +85,8 @@ protected:
   virtual bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*) override;
 
   /* Predictor Messsages */
+  virtual bool RecvPredOnPredictPrefetch(const URIParams& aURI,
+                                         const uint32_t& aHttpStatus) override;
   virtual bool RecvPredOnPredictPreconnect(const URIParams& aURI) override;
   virtual bool RecvPredOnPredictDNS(const URIParams& aURI) override;
 

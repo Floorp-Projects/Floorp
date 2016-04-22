@@ -6,7 +6,6 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
-const {base64UrlDecode} = Cu.import('resource://gre/modules/PushCrypto.jsm', {});
 
 var prefs;
 var tlsProfile;
@@ -129,7 +128,9 @@ add_task(function* test_pushNotifications() {
     pushEndpoint: serverURL + '/pushEndpoint4',
     pushReceiptEndpoint: serverURL + '/pushReceiptEndpoint4',
     scope: 'https://example.com/page/4',
-    p256dhPublicKey: base64UrlDecode('BEcvDzkWCrUtjU_wygL98sbQCQrW1lY9irtgGnlCc4B0JJXLCHB9MTM73qD6GZYfL0YOvKo8XLOflh-J4dMGklU'),
+    p256dhPublicKey: ChromeUtils.base64URLDecode('BEcvDzkWCrUtjU_wygL98sbQCQrW1lY9irtgGnlCc4B0JJXLCHB9MTM73qD6GZYfL0YOvKo8XLOflh-J4dMGklU', {
+      padding: "reject",
+    }),
     p256dhPrivateKey: {
       crv: 'P-256',
       d: 'fWi7tZaX0Pk6WnLrjQ3kiRq_g5XStL5pdH4pllNCqXw',
@@ -139,7 +140,9 @@ add_task(function* test_pushNotifications() {
       x: 'Ry8PORYKtS2NT_DKAv3yxtAJCtbWVj2Ku2AaeUJzgHQ',
       y: 'JJXLCHB9MTM73qD6GZYfL0YOvKo8XLOflh-J4dMGklU'
     },
-    authenticationSecret: base64UrlDecode('cwDVC1iwAn8E37mkR3tMSg'),
+    authenticationSecret: ChromeUtils.base64URLDecode('cwDVC1iwAn8E37mkR3tMSg', {
+      padding: "reject",
+    }),
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     quota: Infinity,

@@ -10,8 +10,7 @@ const Cu = Components.utils;
 Cu.importGlobalProperties(['crypto']);
 
 this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
-                         'getCryptoParams',
-                         'base64UrlDecode'];
+                         'getCryptoParams'];
 
 var UTF8 = new TextEncoder('utf-8');
 
@@ -27,6 +26,7 @@ var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
 var AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
 var P256DH_INFO = UTF8.encode('P-256\0');
 var ECDH_KEY = { name: 'ECDH', namedCurve: 'P-256' };
+var ECDSA_KEY =  { name: 'ECDSA', namedCurve: 'P-256' };
 // A default keyid with a name that won't conflict with a real keyid.
 var DEFAULT_KEYID = '';
 
@@ -118,34 +118,6 @@ function chunkArray(array, size) {
   return result;
 }
 
-this.base64UrlDecode = function(s) {
-  s = s.replace(/-/g, '+').replace(/_/g, '/');
-
-  // Replace padding if it was stripped by the sender.
-  // See http://tools.ietf.org/html/rfc4648#section-4
-  switch (s.length % 4) {
-    case 0:
-      break; // No pad chars in this case
-    case 2:
-      s += '==';
-      break; // Two pad chars
-    case 3:
-      s += '=';
-      break; // One pad char
-    default:
-      throw new Error('Illegal base64url string!');
-  }
-
-  // With correct padding restored, apply the standard base64 decoder
-  var decoded = atob(s);
-
-  var array = new Uint8Array(new ArrayBuffer(decoded.length));
-  for (var i = 0; i < decoded.length; i++) {
-    array[i] = decoded.charCodeAt(i);
-  }
-  return array;
-};
-
 this.concatArray = function(arrays) {
   var size = arrays.reduce((total, a) => total + a.byteLength, 0);
   var index = 0;
@@ -203,6 +175,12 @@ this.PushCrypto = {
     return crypto.getRandomValues(new Uint8Array(16));
   },
 
+  validateAppServerKey(key) {
+    return crypto.subtle.importKey('raw', key, ECDSA_KEY,
+                                   true, ['verify'])
+      .then(_ => key);
+  },
+
   generateKeys() {
     return crypto.subtle.generateKey(ECDH_KEY, true, ['deriveBits'])
       .then(cryptoKey =>
@@ -226,7 +204,11 @@ this.PushCrypto = {
       return Promise.reject(new Error('Data truncated'));
     }
 
-    let senderKey = base64UrlDecode(aSenderPublicKey)
+    let senderKey = ChromeUtils.base64URLDecode(aSenderPublicKey, {
+      // draft-ietf-httpbis-encryption-encoding-01 prohibits padding.
+      padding: "reject",
+    });
+
     return Promise.all([
       crypto.subtle.importKey('raw', senderKey, ECDH_KEY,
                               false, ['deriveBits']),
@@ -238,7 +220,8 @@ this.PushCrypto = {
                                    subscriptionPrivateKey, 256))
     .then(ikm => this._deriveKeyAndNonce(aPadSize,
                                          new Uint8Array(ikm),
-                                         base64UrlDecode(aSalt),
+                                         ChromeUtils.base64URLDecode(aSalt,
+                                                    { padding: "reject" }),
                                          aPublicKey,
                                          senderKey,
                                          aAuthenticationSecret))

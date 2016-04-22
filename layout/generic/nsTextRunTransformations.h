@@ -32,6 +32,7 @@ struct nsTransformedCharStyle final {
   uint8_t                 mTextTransform;
   uint8_t                 mMathVariant;
   bool                    mExplicitLanguage;
+  bool                    mForceNonFullWidth = false;
 
 private:
   ~nsTransformedCharStyle() {}

@@ -291,12 +291,16 @@ def mozconfig_options(mozconfig, help):
 option(env='MOZILLABUILD', nargs=1,
        help='Path to Mozilla Build (Windows-only)')
 
+option(env='CONFIG_SHELL', nargs=1, help='Path to a POSIX shell')
+
 # It feels dirty replicating this from python/mozbuild/mozbuild/mozconfig.py,
 # but the end goal being that the configure script would go away...
-@depends('MOZILLABUILD')
+@depends('CONFIG_SHELL', 'MOZILLABUILD')
 @checking('for a shell')
 @imports('sys')
-def shell(mozillabuild):
+def shell(value, mozillabuild):
+    if value:
+        return find_program(value[0])
     shell = 'sh'
     if mozillabuild:
         shell = mozillabuild[0] + '/msys/bin/sh'

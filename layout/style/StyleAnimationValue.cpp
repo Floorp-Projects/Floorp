@@ -468,6 +468,7 @@ StyleAnimationValue::ComputeDistance(nsCSSProperty aProperty,
     case eUnit_Normal:
     case eUnit_UnparsedString:
     case eUnit_URL:
+    case eUnit_CurrentColor:
       return false;
 
     case eUnit_Enumerated:
@@ -2212,6 +2213,7 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
     case eUnit_Normal:
     case eUnit_UnparsedString:
     case eUnit_URL:
+    case eUnit_CurrentColor:
       return false;
 
     case eUnit_Enumerated:
@@ -3007,6 +3009,9 @@ StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
       // colors can be alone, or part of a paint server
       aSpecifiedValue.SetColorValue(aComputedValue.GetColorValue());
       break;
+    case eUnit_CurrentColor:
+      aSpecifiedValue.SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
+      break;
     case eUnit_Calc:
     case eUnit_ObjectPosition:
     case eUnit_URL: {
@@ -3146,6 +3151,17 @@ inline void*
 StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
 {
   return reinterpret_cast<char*>(aStyleStruct) + aOffset;
+}
+
+static void
+SetCurrentOrActualColor(bool aIsForeground, nscolor aActualColor,
+                        StyleAnimationValue& aComputedValue)
+{
+  if (aIsForeground) {
+    aComputedValue.SetCurrentColorValue();
+  } else {
+    aComputedValue.SetColorValue(aActualColor);
+  }
 }
 
 static void
@@ -3605,14 +3621,17 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
 
         case eCSSProperty_text_emphasis_color: {
           auto styleText = static_cast<const nsStyleText*>(styleStruct);
-          nscolor color = styleText->mTextEmphasisColorForeground ?
-            aStyleContext->StyleColor()->mColor : styleText->mTextEmphasisColor;
-          aComputedValue.SetColorValue(color);
+          SetCurrentOrActualColor(styleText->mTextEmphasisColorForeground,
+                                  styleText->mTextEmphasisColor,
+                                  aComputedValue);
           break;
         }
 
         case eCSSProperty__webkit_text_fill_color: {
-          aComputedValue.SetColorValue(aStyleContext->GetTextFillColor());
+          auto styleText = static_cast<const nsStyleText*>(styleStruct);
+          SetCurrentOrActualColor(styleText->mWebkitTextFillColorForeground,
+                                  styleText->mWebkitTextFillColor,
+                                  aComputedValue);
           break;
         }
 
@@ -4178,6 +4197,7 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
     case eUnit_Normal:
     case eUnit_Auto:
     case eUnit_None:
+    case eUnit_CurrentColor:
       break;
     case eUnit_Enumerated:
     case eUnit_Visibility:
@@ -4320,6 +4340,13 @@ StyleAnimationValue::SetColorValue(nscolor aColor)
 }
 
 void
+StyleAnimationValue::SetCurrentColorValue()
+{
+  FreeValue();
+  mUnit = eUnit_CurrentColor;
+}
+
+void
 StyleAnimationValue::SetUnparsedStringValue(const nsString& aString)
 {
   FreeValue();
@@ -4449,6 +4476,7 @@ StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
     case eUnit_Normal:
     case eUnit_Auto:
     case eUnit_None:
+    case eUnit_CurrentColor:
       return true;
     case eUnit_Enumerated:
     case eUnit_Visibility:

@@ -52,7 +52,7 @@ public:
 
     virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const override;
+    virtual bool SupportsRobustness() const override { return false; }
 
     virtual bool SwapBuffers() override;
 

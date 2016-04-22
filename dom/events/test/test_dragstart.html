@@ -313,9 +313,9 @@ function test_DataTransfer(dt)
   checkOneDataItem(dt, ["text/plain", "text/html"],
                    ["Changed Second Item", "<em>Second Item</em>"], 1, "changed with setData item at index 1");
 
-  dt.mozSetDataAt("application/-moz-node", draggable, 2);
+  dt.mozSetDataAt("application/-moz-node", "draggable", 2);
   is(dt.mozItemCount, 3, "setDataAt node itemCount");
-  checkOneDataItem(dt, ["application/-moz-node"], [draggable], 2, "setDataAt node item at index 2");
+  checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 2, "setDataAt node item at index 2");
 
   dt.mozClearDataAt("text/html", 1);
   is(dt.mozItemCount, 3, "clearDataAt itemCount");
@@ -327,7 +327,7 @@ function test_DataTransfer(dt)
   is(dt.mozItemCount, 2, "clearDataAt last type itemCount");
   checkOneDataItem(dt, ["text/plain", "text/html"],
                    ["First Item", "Changed with setData"], 0, "clearDataAt last type at index 0");
-  checkOneDataItem(dt, ["application/-moz-node"], [draggable], 1, "clearDataAt last type item at index 2");
+  checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 1, "clearDataAt last type item at index 2");
   expectError(() => dt.mozGetDataAt("text/plain", 2),
               "IndexSizeError", "getDataAt after item removed index too high");
 
@@ -335,7 +335,7 @@ function test_DataTransfer(dt)
   dt.mozSetDataAt("text/unknown", "Unknown type", 1);
   is(dt.mozItemCount, 3, "add unknown type");
   checkOneDataItem(dt, ["application/-moz-node", "text/unknown"],
-                   [draggable, "Unknown type"], 1, "add unknown type item at index 1");
+                   ["draggable", "Unknown type"], 1, "add unknown type item at index 1");
   checkOneDataItem(dt, ["text/unknown"], ["Unknown type"], 2, "add unknown type item at index 2");
 
   dt.mozClearDataAt("", 1);

@@ -186,6 +186,31 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       free(clipboardDataPtr);
       break;
     }
+    else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
+      NSString* type = [cocoaPasteboard availableTypeFromArray:[NSArray arrayWithObject:kCustomTypesPboardType]];
+      if (!type) {
+        continue;
+      }
+
+      NSData* pasteboardData = GetDataFromPasteboard(cocoaPasteboard, type);
+      if (!pasteboardData) {
+        continue;
+      }
+
+      unsigned int dataLength = [pasteboardData length];
+      void* clipboardDataPtr = malloc(dataLength);
+      if (!clipboardDataPtr) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      [pasteboardData getBytes:clipboardDataPtr];
+
+      nsCOMPtr<nsISupports> genericDataWrapper;
+      nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
+                                                 getter_AddRefs(genericDataWrapper));
+
+      aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLength);
+      free(clipboardDataPtr);
+    }
     else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
              flavorStr.EqualsLiteral(kJPGImageMime) ||
              flavorStr.EqualsLiteral(kPNGImageMime) ||
@@ -330,7 +355,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
     return NS_OK;
 
   // first see if we have data for this in our cached transferable
-  if (mTransferable) {    
+  if (mTransferable) {
     nsCOMPtr<nsISupportsArray> transferableFlavorList;
     nsresult rv = mTransferable->FlavorsTransferableCanImport(getter_AddRefs(transferableFlavorList));
     if (NS_SUCCEEDED(rv)) {
@@ -364,6 +389,12 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
     if (nsClipboard::IsStringType(mimeType, &pboardType)) {
       NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
+        *outResult = true;
+        break;
+      }
+    } else if (!strcmp(aFlavorList[i], kCustomTypesMime)) {
+      NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:kCustomTypesPboardType]];
+      if (availableType) {
         *outResult = true;
         break;
       }
@@ -446,6 +477,20 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       [pasteboardOutputDict setObject:nativeString forKey:pboardType];
       
       free(data);
+    }
+    else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
+      void* data = nullptr;
+      uint32_t dataSize = 0;
+      nsCOMPtr<nsISupports> genericDataWrapper;
+      rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataSize);
+      nsPrimitiveHelpers::CreateDataFromPrimitive(flavorStr, genericDataWrapper, &data, dataSize);
+
+      if (data) {
+        NSData* nativeData = [NSData dataWithBytes:data length:dataSize];
+
+        [pasteboardOutputDict setObject:nativeData forKey:kCustomTypesPboardType];
+        free(data);
+      }
     }
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
              flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||

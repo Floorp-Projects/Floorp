@@ -215,6 +215,19 @@ CDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
 
+  bool keyStatusesChange = false;
+  {
+    CDMCaps::AutoLock caps(mProxy->Capabilites());
+    keyStatusesChange = caps.RemoveKeysForSession(NS_ConvertUTF8toUTF16(aSessionId));
+  }
+  if (keyStatusesChange) {
+    nsCOMPtr<nsIRunnable> task;
+    task = NS_NewRunnableMethodWithArg<nsString>(mProxy,
+      &CDMProxy::OnKeyStatusesChange,
+      NS_ConvertUTF8toUTF16(aSessionId));
+    NS_DispatchToMainThread(task);
+  }
+
   nsCOMPtr<nsIRunnable> task;
   task = NS_NewRunnableMethodWithArg<nsString>(mProxy,
                                                &CDMProxy::OnSessionClosed,

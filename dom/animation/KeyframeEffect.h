@@ -281,6 +281,8 @@ public:
   void SetAnimation(Animation* aAnimation);
   Animation* GetAnimation() const { return mAnimation; }
 
+  void SetFrames(JSContext* aContext, JS::Handle<JSObject*> aFrames,
+                 ErrorResult& aRv);
   void SetFrames(nsTArray<Keyframe>&& aFrames, nsStyleContext* aStyleContext);
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSProperty aProperty) const;

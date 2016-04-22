@@ -438,6 +438,37 @@ KeyframesEqualIgnoringComputedOffsets(const nsTArray<Keyframe>& aLhs,
   return true;
 }
 
+// https://w3c.github.io/web-animations/#dom-keyframeeffect-setframes
+void
+KeyframeEffectReadOnly::SetFrames(JSContext* aContext,
+                                  JS::Handle<JSObject*> aFrames,
+                                  ErrorResult& aRv)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aContext);
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsTArray<Keyframe> keyframes =
+    KeyframeUtils::GetKeyframesFromObject(aContext, aFrames, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  RefPtr<nsStyleContext> styleContext;
+  nsIPresShell* shell = doc->GetShell();
+  if (shell && mTarget) {
+    nsIAtom* pseudo =
+      mPseudoType < CSSPseudoElementType::Count ?
+      nsCSSPseudoElements::GetPseudoAtom(mPseudoType) : nullptr;
+    styleContext =
+      nsComputedDOMStyle::GetStyleContextForElement(mTarget, pseudo, shell);
+  }
+
+  SetFrames(Move(keyframes), styleContext);
+}
+
 void
 KeyframeEffectReadOnly::SetFrames(nsTArray<Keyframe>&& aFrames,
                                   nsStyleContext* aStyleContext)
@@ -725,27 +756,13 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     pseudoType = target.GetAsCSSPseudoElement().GetType();
   }
 
-  nsTArray<Keyframe> keyframes =
-    KeyframeUtils::GetKeyframesFromObject(aGlobal.Context(), aFrames, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
                            pseudoType, timingParams);
-
-  RefPtr<nsStyleContext> styleContext;
-  nsIPresShell* shell = doc->GetShell();
-  if (shell && targetElement) {
-    nsIAtom* pseudo =
-      pseudoType < CSSPseudoElementType::Count ?
-      nsCSSPseudoElements::GetPseudoAtom(pseudoType) : nullptr;
-    styleContext =
-      nsComputedDOMStyle::GetStyleContextForElement(targetElement, pseudo,
-                                                    shell);
+  effect->SetFrames(aGlobal.Context(), aFrames, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
   }
-  effect->SetFrames(Move(keyframes), styleContext);
 
   return effect.forget();
 }

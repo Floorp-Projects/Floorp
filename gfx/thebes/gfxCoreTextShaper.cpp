@@ -109,9 +109,10 @@ gfxCoreTextShaper::~gfxCoreTextShaper()
 }
 
 static bool
-IsBuggyIndicScript(int32_t aScript)
+IsBuggyIndicScript(unicode::Script aScript)
 {
-    return aScript == MOZ_SCRIPT_BENGALI || aScript == MOZ_SCRIPT_KANNADA;
+    return aScript == unicode::Script::BENGALI ||
+           aScript == unicode::Script::KANNADA;
 }
 
 bool
@@ -119,7 +120,7 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
                              const char16_t *aText,
                              uint32_t         aOffset,
                              uint32_t         aLength,
-                             int32_t          aScript,
+                             Script           aScript,
                              bool             aVertical,
                              gfxShapedText   *aShapedText)
 {

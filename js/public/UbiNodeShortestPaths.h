@@ -330,6 +330,19 @@ struct JS_PUBLIC_API(ShortestPaths)
     }
 };
 
+#ifdef DEBUG
+// A helper function to dump the first `maxNumPaths` shortest retaining paths to
+// `node` from the GC roots. Useful when GC things you expect to have been
+// reclaimed by the collector haven't been!
+//
+// Usage:
+//
+//     JSObject* foo = ...;
+//     JS::ubi::dumpPaths(rt, JS::ubi::Node(foo));
+JS_PUBLIC_API(void)
+dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths = 10);
+#endif
+
 } // namespace ubi
 } // namespace JS
 

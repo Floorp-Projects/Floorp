@@ -1,8 +1,9 @@
-var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
+var Cc = Components.classes;
 
+Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LoadContextInfo.jsm");
 
@@ -46,8 +47,39 @@ LoadContext.prototype = {
 
 var load_context = new LoadContext();
 
-var Verifier = function _verifier(testing, expected_preconnects, expected_preresolves) {
+var ValidityChecker = function(verifier, httpStatus) {
+  this.verifier = verifier;
+  this.httpStatus = httpStatus;
+};
+
+ValidityChecker.prototype = {
+  verifier: null,
+  httpStatus: 0,
+
+  QueryInterface: function listener_qi(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsICacheEntryOpenCallback)) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  onCacheEntryCheck: function(entry, appCache)
+  {
+    return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
+  },
+
+  onCacheEntryAvailable: function(entry, isnew, appCache, status)
+  {
+    // Check if forced valid
+    do_check_eq(entry.isForcedValid, this.httpStatus === 200);
+    this.verifier.maybe_run_next_test();
+  }
+}
+
+var Verifier = function _verifier(testing, expected_prefetches, expected_preconnects, expected_preresolves) {
   this.verifying = testing;
+  this.expected_prefetches = expected_prefetches;
   this.expected_preconnects = expected_preconnects;
   this.expected_preresolves = expected_preresolves;
 };
@@ -55,6 +87,7 @@ var Verifier = function _verifier(testing, expected_preconnects, expected_preres
 Verifier.prototype = {
   complete: false,
   verifying: null,
+  expected_prefetches: null,
   expected_preconnects: null,
   expected_preresolves: null,
 
@@ -72,7 +105,8 @@ Verifier.prototype = {
   },
 
   maybe_run_next_test: function verifier_maybe_run_next_test() {
-    if (this.expected_preconnects.length === 0 &&
+    if (this.expected_prefetches.length === 0 &&
+        this.expected_preconnects.length === 0 &&
         this.expected_preresolves.length === 0 &&
         !this.complete) {
       this.complete = true;
@@ -80,6 +114,21 @@ Verifier.prototype = {
       // This kicks off the ability to run the next test
       reset_predictor();
     }
+  },
+
+  onPredictPrefetch: function verifier_onPredictPrefetch(uri, status) {
+    var index = this.expected_prefetches.indexOf(uri.asciiSpec);
+    if (index == -1 && !this.complete) {
+      do_check_true(false, "Got prefetch for unexpected uri " + uri.asciiSpec);
+    } else {
+      this.expected_prefetches.splice(index, 1);
+    }
+
+    dump("checking validity of entry for " + uri.spec + "\n");
+    var checker = new ValidityChecker(this, status);
+    asyncOpenCacheEntry(uri.spec, "disk",
+        Ci.nsICacheStorage.OPEN_NORMALLY, LoadContextInfo.default,
+        checker);
   },
 
   onPredictPreconnect: function verifier_onPredictPreconnect(uri) {
@@ -172,7 +221,7 @@ function test_link_hover() {
   var referrer = newURI("http://localhost:4444/foo");
   var preconns = ["http://localhost:4444"];
 
-  var verifier = new Verifier("hover", preconns, []);
+  var verifier = new Verifier("hover", [], preconns, []);
   predictor.predict(uri, referrer, predictor.PREDICT_LINK, load_context, verifier);
 }
 
@@ -194,7 +243,7 @@ function continue_test_pageload() {
     preconns.push(extract_origin(sruri));
   }
 
-  var verifier = new Verifier("pageload", preconns, []);
+  var verifier = new Verifier("pageload", [], preconns, []);
   predictor.predict(pageload_toplevel, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
@@ -230,7 +279,7 @@ function continue_test_redrect() {
     preconns.push(extract_origin(sruri));
   }
 
-  var verifier = new Verifier("redirect", preconns, []);
+  var verifier = new Verifier("redirect", [], preconns, []);
   predictor.predict(redirect_inituri, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
@@ -263,7 +312,7 @@ function test_startup() {
     preconns.push(extract_origin(uri));
   }
 
-  var verifier = new Verifier("startup", preconns, []);
+  var verifier = new Verifier("startup", [], preconns, []);
   predictor.predict(null, null, predictor.PREDICT_STARTUP, load_context, verifier);
 }
 
@@ -277,7 +326,7 @@ function continue_test_dns() {
   predictor.learn(sruri, dns_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
 
   var preresolves = [extract_origin(sruri)];
-  var verifier = new Verifier("dns", [], preresolves);
+  var verifier = new Verifier("dns", [], [], preresolves);
   predictor.predict(dns_toplevel, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
@@ -313,7 +362,7 @@ function continue_test_origin() {
   }
 
   var loaduri = newURI("http://localhost:4444/anotherpage.html");
-  var verifier = new Verifier("origin", preconns, []);
+  var verifier = new Verifier("origin", [], preconns, []);
   predictor.predict(loaduri, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
@@ -327,8 +376,135 @@ function test_origin() {
   });
 }
 
+var httpserv = null;
+var prefetch_tluri;
+var prefetch_sruri;
+
+function prefetchHandler(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  var body = "Success (meow meow meow).";
+
+  response.bodyOutputStream.write(body, body.length);
+}
+
+var prefetchListener = {
+  onStartRequest: function(request, ctx) {
+    do_check_eq(request.status, Cr.NS_OK);
+  },
+
+  onDataAvailable: function(request, cx, stream, offset, cnt) {
+    read_stream(stream, cnt);
+  },
+
+  onStopRequest: function(request, ctx, status) {
+    run_next_test();
+  }
+};
+
+function test_prefetch_setup() {
+  // Disable preconnects and preresolves
+  Services.prefs.setIntPref("network.predictor.preconnect-min-confidence", 101);
+  Services.prefs.setIntPref("network.predictor.preresolve-min-confidence", 101);
+
+  Services.prefs.setBoolPref("network.predictor.enable-prefetch", true);
+
+  // Makes it so we only have to call test_prefetch_prime twice to make prefetch
+  // do its thing.
+  Services.prefs.setIntPref("network.predictor.prefetch-rolling-load-count", 2);
+
+  // This test does not run in e10s-mode, so we'll just go ahead and skip it.
+  // We've left the e10s test code in below, just in case someone wants to try
+  // to make it work at some point in the future.
+  if (!running_single_process) {
+    dump("skipping test_prefetch_setup due to e10s\n");
+    run_next_test();
+    return;
+  }
+
+  httpserv = new HttpServer();
+  httpserv.registerPathHandler("/cat.jpg", prefetchHandler);
+  httpserv.start(-1);
+
+  var tluri = "http://127.0.0.1:" + httpserv.identity.primaryPort + "/index.html";
+  var sruri = "http://127.0.0.1:" + httpserv.identity.primaryPort + "/cat.jpg";
+  prefetch_tluri = newURI(tluri);
+  prefetch_sruri = newURI(sruri);
+  if (!running_single_process && !is_child_process()) {
+    // Give the child process access to these values
+    sendCommand("prefetch_tluri = newURI(\"" + tluri + "\");");
+    sendCommand("prefetch_sruri = newURI(\"" + sruri + "\");");
+  }
+
+  run_next_test();
+}
+
+// Used to "prime the pump" for prefetch - it makes sure all our learns go
+// through as expected so that prefetching will happen.
+function test_prefetch_prime() {
+  // This test does not run in e10s-mode, so we'll just go ahead and skip it.
+  // We've left the e10s test code in below, just in case someone wants to try
+  // to make it work at some point in the future.
+  if (!running_single_process) {
+    dump("skipping test_prefetch_prime due to e10s\n");
+    run_next_test();
+    return;
+  }
+
+  open_and_continue([prefetch_tluri], function() {
+    if (running_single_process) {
+      predictor.learn(prefetch_tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+      predictor.learn(prefetch_sruri, prefetch_tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
+    } else {
+      sendCommand("predictor.learn(prefetch_tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);");
+      sendCommand("predictor.learn(prefetch_sruri, prefetch_tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);");
+    }
+
+    // This runs in the parent or only process
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var channel = ios.newChannel2(prefetch_sruri.asciiSpec, null, null, null,
+        Services.scriptSecurityManager.getSystemPrincipal(), null,
+        Ci.nsILoadInfo.SEC_NORMAL,
+        Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
+    channel.requestMethod = "GET";
+    channel.referrer = prefetch_tluri;
+    channel.asyncOpen(prefetchListener, channel);
+  });
+}
+
+function test_prefetch() {
+  // This test does not run in e10s-mode, so we'll just go ahead and skip it.
+  // We've left the e10s test code in below, just in case someone wants to try
+  // to make it work at some point in the future.
+  if (!running_single_process) {
+    dump("skipping test_prefetch due to e10s\n");
+    run_next_test();
+    return;
+  }
+
+  // Setup for this has all been taken care of by test_prefetch_prime, so we can
+  // continue on without pausing here.
+  if (running_single_process) {
+    continue_test_prefetch();
+  } else {
+    sendCommand("continue_test_prefetch();");
+  }
+}
+
+function continue_test_prefetch() {
+  var prefetches = [prefetch_sruri.asciiSpec];
+  var verifier = new Verifier("prefetch", prefetches, [], []);
+  predictor.predict(prefetch_tluri, null, predictor.PREDICT_LOAD, load_context, verifier);
+}
+
 function cleanup() {
   observer.cleaningUp = true;
+  if (running_single_process) {
+    // The http server is required (and started) by the prefetch test, which
+    // only runs in single-process mode, so don't try to shut it down if we're
+    // in e10s mode.
+    do_test_pending();
+    httpserv.stop(do_test_finished);
+  }
   reset_predictor();
 }
 
@@ -343,6 +519,10 @@ var tests = [
   // END DISABLED TESTS
   test_origin,
   test_dns,
+  test_prefetch_setup,
+  test_prefetch_prime,
+  test_prefetch_prime,
+  test_prefetch,
   // This must ALWAYS come last, to ensure we clean up after ourselves
   cleanup
 ];
@@ -399,6 +579,9 @@ function run_test_real() {
     Services.prefs.clearUserPref("network.predictor.cleaned-up");
     Services.prefs.clearUserPref("browser.cache.use_new_backend_temp");
     Services.prefs.clearUserPref("browser.cache.use_new_backend");
+    Services.prefs.clearUserPref("network.predictor.preresolve-min-confidence");
+    Services.prefs.clearUserPref("network.predictor.enable-prefetch");
+    Services.prefs.clearUserPref("network.predictor.prefetch-rolling-load-count");
   });
 
   run_next_test();

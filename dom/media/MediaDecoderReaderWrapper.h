@@ -27,8 +27,7 @@ typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
  */
 class MediaDecoderReaderWrapper {
   typedef MediaDecoderReader::MetadataPromise MetadataPromise;
-  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
-  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
+  typedef MediaDecoderReader::MediaDataPromise MediaDataPromise;
   typedef MediaDecoderReader::SeekPromise SeekPromise;
   typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
   typedef MediaDecoderReader::BufferedUpdatePromise BufferedUpdatePromise;
@@ -42,8 +41,8 @@ public:
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
   RefPtr<HaveStartTimePromise> AwaitStartTime();
-  RefPtr<AudioDataPromise> RequestAudioData();
-  RefPtr<VideoDataPromise> RequestVideoData(bool aSkipToNextKeyframe,
+  RefPtr<MediaDataPromise> RequestAudioData();
+  RefPtr<MediaDataPromise> RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold);
   RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);

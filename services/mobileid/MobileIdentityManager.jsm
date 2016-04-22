@@ -1002,10 +1002,12 @@ this.MobileIdentityManager = {
           return Promise.reject(ERROR_INVALID_ASSERTION);
         }
 
-        // We need to translate the base64 alphabet used in JWT to our base64
-        // alphabet before calling atob.
-        let decodedPayload = JSON.parse(atob(segments[1].replace(/-/g, '+')
-                                                        .replace(/_/g, '/')));
+        let payloadBuffer = ChromeUtils.base64URLDecode(segments[1], {
+          // `IdentityCryptoService` pads output.
+          padding: "require",
+        });
+        let textDecoder = new TextDecoder("utf-8");
+        let decodedPayload = JSON.parse(textDecoder.decode(payloadBuffer));
 
         if (!decodedPayload || !decodedPayload.verifiedMSISDN) {
           return Promise.reject(ERROR_INVALID_ASSERTION);

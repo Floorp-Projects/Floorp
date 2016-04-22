@@ -843,8 +843,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
              "shouldn't have created nsDisplayOutline item");
 
   uint8_t outlineStyle = ourOutline->GetOutlineStyle();
-  nscoord width;
-  ourOutline->GetOutlineWidth(width);
+  nscoord width = ourOutline->GetOutlineWidth();
 
   if (width == 0 && outlineStyle != NS_STYLE_BORDER_STYLE_AUTO) {
     // Empty outline

@@ -218,6 +218,13 @@ public:
                                 uint32_t aIndex,
                                 nsIPrincipal* aPrincipal);
 
+  // Variation of SetDataWithPrincipal with handles extracting
+  // kCustomTypesMime data into separate types.
+  void SetDataWithPrincipalFromOtherProcess(const nsAString& aFormat,
+                                            nsIVariant* aData,
+                                            uint32_t aIndex,
+                                            nsIPrincipal* aPrincipal);
+
   // returns a weak reference to the drag image
   Element* GetDragImage(int32_t* aX, int32_t* aY)
   {
@@ -260,6 +267,9 @@ protected:
 
   friend class ContentParent;
   void FillAllExternalData();
+
+  void FillInExternalCustomTypes(uint32_t aIndex, nsIPrincipal* aPrincipal);
+  void FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex, nsIPrincipal* aPrincipal);
 
   void MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
                             mozilla::ErrorResult& aRv);

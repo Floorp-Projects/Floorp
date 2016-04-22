@@ -17,7 +17,7 @@ interface nsIIdentitySignCallback;
  * byte sequence.
  * e.g. "eyJhbGciOiJSUzI1NiJ9"
  * http://en.wikipedia.org/wiki/Base64#Variants_summary_table
- * we use the no-padding approach to base64-url-encoding
+ * we use the padded approach to base64-url-encoding
  *
  * Callbacks take an "in nsresult rv" argument that indicates whether the async
  * operation succeeded. On success, rv will be a success code
