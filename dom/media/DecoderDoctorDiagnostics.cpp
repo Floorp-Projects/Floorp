@@ -303,9 +303,11 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
   bool FFMpegNeeded = false;
 #endif
   nsAutoString unplayableFormats;
+  nsAutoString unsupportedKeySystems;
 
   for (auto& diag : mDiagnosticsSequence) {
-    if (!diag.mDecoderDoctorDiagnostics.Format().IsEmpty()) {
+    switch (diag.mDecoderDoctorDiagnostics.Type()) {
+    case DecoderDoctorDiagnostics::eFormatSupportCheck:
       if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
         canPlay = true;
       } else {
@@ -319,6 +321,21 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
         }
         unplayableFormats += diag.mDecoderDoctorDiagnostics.Format();
       }
+      break;
+    case DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest:
+      if (!diag.mDecoderDoctorDiagnostics.IsKeySystemSupported()) {
+        if (!unsupportedKeySystems.IsEmpty()) {
+          unsupportedKeySystems += NS_LITERAL_STRING(", ");
+        }
+        unsupportedKeySystems += diag.mDecoderDoctorDiagnostics.KeySystem();
+      }
+      break;
+    default:
+      MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()
+                   == DecoderDoctorDiagnostics::eFormatSupportCheck
+                 || diag.mDecoderDoctorDiagnostics.Type()
+                      == DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest);
+      break;
     }
   }
 
@@ -410,6 +427,10 @@ DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
                                                  const char* aCallSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  // Make sure we only store once.
+  MOZ_ASSERT(mDiagnosticsType == eUnsaved);
+  mDiagnosticsType = eFormatSupportCheck;
+
   if (NS_WARN_IF(!aDocument)) {
     DD_WARN("DecoderDoctorDiagnostics[%p]::StoreFormatDiagnostics(nsIDocument* aDocument=nullptr, format='%s', can-play=%d, call site '%s')",
             this, NS_ConvertUTF16toUTF8(aFormat).get(), aCanPlay, aCallSite);
@@ -436,13 +457,64 @@ DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
   // StoreDiagnostics should only be called once, after all data is available,
   // so it is safe to Move() from this object.
   watcher->AddDiagnostics(Move(*this), aCallSite);
+  // Even though it's moved-from, the type should stay set
+  // (Only used to ensure that we do store only once.)
+  MOZ_ASSERT(mDiagnosticsType == eFormatSupportCheck);
+}
+
+void
+DecoderDoctorDiagnostics::StoreMediaKeySystemAccess(nsIDocument* aDocument,
+                                                    const nsAString& aKeySystem,
+                                                    bool aIsSupported,
+                                                    const char* aCallSite)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Make sure we only store once.
+  MOZ_ASSERT(mDiagnosticsType == eUnsaved);
+  mDiagnosticsType = eMediaKeySystemAccessRequest;
+
+  if (NS_WARN_IF(!aDocument)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreMediaKeySystemAccess(nsIDocument* aDocument=nullptr, keysystem='%s', supported=%d, call site '%s')",
+            this, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
+    return;
+  }
+  if (NS_WARN_IF(aKeySystem.IsEmpty())) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreMediaKeySystemAccess(nsIDocument* aDocument=%p, keysystem=<empty>, supported=%d, call site '%s')",
+            this, aDocument, aIsSupported, aCallSite);
+    return;
+  }
+
+  RefPtr<DecoderDoctorDocumentWatcher> watcher =
+    DecoderDoctorDocumentWatcher::RetrieveOrCreate(aDocument);
+
+  if (NS_WARN_IF(!watcher)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreMediaKeySystemAccess(nsIDocument* aDocument=%p, keysystem='%s', supported=%d, call site '%s') - Could not create document watcher",
+            this, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
+    return;
+  }
+
+  mKeySystem = aKeySystem;
+  mIsKeySystemSupported = aIsSupported;
+
+  // StoreDiagnostics should only be called once, after all data is available,
+  // so it is safe to Move() from this object.
+  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // Even though it's moved-from, the type should stay set
+  // (Only used to ensure that we do store only once.)
+  MOZ_ASSERT(mDiagnosticsType == eMediaKeySystemAccessRequest);
 }
 
 nsCString
 DecoderDoctorDiagnostics::GetDescription() const
 {
+  MOZ_ASSERT(mDiagnosticsType == eFormatSupportCheck
+             || mDiagnosticsType == eMediaKeySystemAccessRequest);
   nsCString s;
-  if (!mFormat.IsEmpty()) {
+  switch (mDiagnosticsType) {
+  case eUnsaved:
+    s = "Unsaved diagnostics, cannot get accurate description";
+    break;
+  case eFormatSupportCheck:
     s = "format='";
     s += NS_ConvertUTF16toUTF8(mFormat).get();
     s += mCanPlay ? "', can play" : "', cannot play";
@@ -452,8 +524,22 @@ DecoderDoctorDiagnostics::GetDescription() const
     if (mFFmpegFailedToLoad) {
       s += ", Linux platform decoder failed to load";
     }
-  } else {
-    s = "?";
+    break;
+  case eMediaKeySystemAccessRequest:
+    s = "key system='";
+    s += NS_ConvertUTF16toUTF8(mKeySystem).get();
+    s += mIsKeySystemSupported ? "', supported" : "', not supported";
+    switch (mKeySystemIssue) {
+    case eUnset:
+      break;
+    case eWidevineWithNoWMF:
+      s += ", Widevine with no WMF";
+      break;
+    }
+    break;
+    default:
+      s = "?";
+      break;
   }
   return s;
 }
