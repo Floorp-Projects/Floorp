@@ -18,9 +18,8 @@ dictionary PermissionDescriptor {
   required PermissionName name;
 };
 
-dictionary PushPermissionDescriptor : PermissionDescriptor {
-  boolean userVisibleOnly = false;
-};
+// We don't implement `PushPermissionDescriptor` because we use a background
+// message quota instead of `userVisibleOnly`.
 
 [Exposed=(Window)]
 interface Permissions {
