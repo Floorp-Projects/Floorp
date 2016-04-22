@@ -176,6 +176,11 @@ class BaseConfigureTest(unittest.TestCase):
             kwargs['stdout'] = out
             kwargs['stderr'] = out
 
+        if hasattr(self, 'TARGET'):
+            target = ['--target=%s' % self.TARGET]
+        else:
+            target = []
+
         if mozconfig:
             fh, mozconfig_path = tempfile.mkstemp()
             os.write(fh, mozconfig)
@@ -197,7 +202,8 @@ class BaseConfigureTest(unittest.TestCase):
             paths[mozpath.join(autoconf_dir, 'config.sub')] = self.config_sub
 
             sandbox = ConfigureTestSandbox(paths, config, environ,
-                                           ['configure'] + args, **kwargs)
+                                           ['configure'] + target + args,
+                                           **kwargs)
             sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
 
             return sandbox
