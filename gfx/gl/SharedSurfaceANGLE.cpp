@@ -117,8 +117,10 @@ SharedSurface_ANGLEShareHandle::~SharedSurface_ANGLEShareHandle()
 {
     mEGL->fDestroySurface(Display(), mPBuffer);
 
+    if (!mGL->MakeCurrent())
+        return;
+
     if (mFence) {
-        mGL->MakeCurrent();
         mGL->fDeleteFences(1, &mFence);
     }
 }
