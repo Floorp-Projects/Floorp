@@ -30,7 +30,7 @@ interface Animation : EventTarget {
            attribute double             playbackRate;
   [BinaryName="playStateFromJS"]
   readonly attribute AnimationPlayState playState;
-  [Throws]
+  [Func="nsDocument::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> ready;
   [Func="nsDocument::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> finished;
