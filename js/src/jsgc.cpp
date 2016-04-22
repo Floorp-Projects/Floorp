@@ -2634,7 +2634,10 @@ struct UpdatePointersTask : public GCParallelTask
 
     UpdatePointersTask(JSRuntime* rt, ArenasToUpdate* source, AutoLockHelperThreadState& lock)
       : rt_(rt), source_(source)
-    {}
+    {
+        arenas_.begin = nullptr;
+        arenas_.end = nullptr;
+    }
 
     ~UpdatePointersTask() override { join(); }
 
