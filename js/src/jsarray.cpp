@@ -931,6 +931,8 @@ ArraySpeciesCreate(JSContext* cx, HandleObject origArray, uint32_t length, Mutab
 {
     RootedId createId(cx, NameToId(cx->names().ArraySpeciesCreate));
     RootedFunction create(cx, JS::GetSelfHostedFunction(cx, "ArraySpeciesCreate", createId, 2));
+    if (!create)
+        return false;
 
     FixedInvokeArgs<2> args(cx);
 
