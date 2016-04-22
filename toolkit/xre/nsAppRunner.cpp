@@ -4656,6 +4656,8 @@ enum {
   kE10sDisabledForBidi = 6,
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
+  kE10sDisabledForXPAcceleration = 9, // not used yet
+  kE10sDisabledForGTK320 = 10,
 };
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
@@ -4732,6 +4734,15 @@ MultiprocessBlockPolicy() {
     gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
     return gMultiprocessBlockPolicy;
   }
+
+#if defined(MOZ_WIDGET_GTK) && defined(RELEASE_BUILD)
+  // Bug 1266213 - Workaround for bug 1264454
+  // Disable for users of 3.20 or higher
+  if (gtk_check_version(3, 20, 0) == nullptr) {
+    gMultiprocessBlockPolicy = kE10sDisabledForGTK320;
+    return gMultiprocessBlockPolicy;
+  }
+#endif
 
   /**
    * Avoids enabling e10s for certain locales that require bidi selection,
