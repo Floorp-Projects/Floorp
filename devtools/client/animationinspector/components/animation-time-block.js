@@ -175,7 +175,15 @@ AnimationTimeBlock.prototype = {
 
     // Adding a note that the animation is running on the compositor thread if
     // needed.
-    if (state.isRunningOnCompositor) {
+    if (state.propertyState) {
+      if (state.propertyState
+          .every(propState => propState.runningOnCompositor)) {
+        text += L10N.getStr("player.allPropertiesOnCompositorTooltip");
+      } else if (state.propertyState
+                 .some(propState => propState.runningOnCompositor)) {
+        text += L10N.getStr("player.somePropertiesOnCompositorTooltip");
+      }
+    } else if (state.isRunningOnCompositor) {
       text += L10N.getStr("player.runningOnCompositorTooltip");
     }
 

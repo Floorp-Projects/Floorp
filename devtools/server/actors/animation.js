@@ -249,6 +249,17 @@ var AnimationPlayerActor = ActorClass({
     return this.player.effect.getComputedTiming().iterationStart;
   },
 
+  getPropertiesCompositorStatus: function() {
+    let properties = this.player.effect.getProperties();
+    return properties.map(prop => {
+      return {
+        property: prop.property,
+        runningOnCompositor: prop.runningOnCompositor,
+        warning: prop.warning
+      };
+    });
+  },
+
   /**
    * Return the current start of the Animation.
    * @return {Object}
@@ -282,7 +293,10 @@ var AnimationPlayerActor = ActorClass({
       iterationStart: this.getIterationStart(),
       // animation is hitting the fast path or not. Returns false whenever the
       // animation is paused as it is taken off the compositor then.
-      isRunningOnCompositor: this.player.isRunningOnCompositor,
+      isRunningOnCompositor:
+        this.getPropertiesCompositorStatus()
+            .some(propState => propState.runningOnCompositor),
+      propertyState: this.getPropertiesCompositorStatus(),
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
@@ -512,6 +526,7 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       iterationCount: this._form.iterationCount,
       iterationStart: this._form.iterationStart,
       isRunningOnCompositor: this._form.isRunningOnCompositor,
+      propertyState: this._form.propertyState,
       documentCurrentTime: this._form.documentCurrentTime
     };
   },
