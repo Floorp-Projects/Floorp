@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.util import EnumString
+from collections import OrderedDict
 
 
 CompilerType = EnumString.subclass(
@@ -59,3 +60,24 @@ Endianness = EnumString.subclass(
     'big',
     'little',
 )
+
+# The order of those checks matter
+CPU_preprocessor_checks = OrderedDict((
+    ('x86', '__i386__ || _M_IX86'),
+    ('x86_64', '__x86_64__ || _M_X64'),
+    ('arm', '__arm__ || _M_ARM'),
+    ('aarch64', '__aarch64__'),
+    ('ia64', '__ia64__'),
+    ('s390x', '__s390x__'),
+    ('s390', '__s390__'),
+    ('ppc64', '__powerpc64__'),
+    ('ppc', '__powerpc__'),
+    ('Alpha', '__alpha__'),
+    ('hppa', '__hppa__'),
+    ('sparc64', '__sparc__ && __arch64__'),
+    ('sparc', '__sparc__'),
+    ('mips64', '__mips64'),
+    ('mips32', '__mips__'),
+))
+
+assert sorted(CPU_preprocessor_checks.keys()) == sorted(CPU.POSSIBLE_VALUES)

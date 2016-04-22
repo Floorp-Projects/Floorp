@@ -104,7 +104,8 @@ class ReadOnlyNamespace(object):
         return not (self == other)
 
     def __eq__(self, other):
-        return self is other or self.__dict__ == other.__dict__
+        return self is other or (
+            hasattr(other, '__dict__') and self.__dict__ == other.__dict__)
 
     def __repr__(self):
         return '<%s %r>' % (self.__class__.__name__, self.__dict__)
