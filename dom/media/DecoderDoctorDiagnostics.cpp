@@ -446,6 +446,9 @@ DecoderDoctorDiagnostics::GetDescription() const
     s = "format='";
     s += NS_ConvertUTF16toUTF8(mFormat).get();
     s += mCanPlay ? "', can play" : "', cannot play";
+    if (mWMFFailedToLoad) {
+      s += ", Windows platform decoder failed to load";
+    }
     if (mFFmpegFailedToLoad) {
       s += ", Linux platform decoder failed to load";
     }
