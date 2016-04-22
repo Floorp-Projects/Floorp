@@ -670,7 +670,10 @@ WebMDemuxer::DemuxPacket()
 {
   nestegg_packet* packet;
   int r = nestegg_read_packet(mContext, &packet);
-  if (r <= 0) {
+  if (r == 0) {
+    nestegg_read_reset(mContext);
+    return nullptr;
+  } else if (r < 0) {
     return nullptr;
   }
 
