@@ -869,7 +869,7 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
 void
 ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 {
-  if (aBuffer.data()) {
+  if (!aBuffer.empty()) {
     aBuffer.clear();
   }
 }
@@ -1040,7 +1040,7 @@ IDBObjectStore::ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo)
   // This is kind of tricky, we only want to release stuff on the main thread,
   // but we can end up being called on other threads if we have already been
   // cleared on the main thread.
-  if (!aReadInfo.mCloneBuffer.data() && !aReadInfo.mFiles.Length()) {
+  if (aReadInfo.mCloneBuffer.empty() && !aReadInfo.mFiles.Length()) {
     return;
   }
 
@@ -1061,12 +1061,17 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
     return true;
   }
 
-  auto* data = reinterpret_cast<uint64_t*>(aCloneReadInfo.mData.Elements());
+  char* data = reinterpret_cast<char*>(aCloneReadInfo.mData.Elements());
   size_t dataLen = aCloneReadInfo.mData.Length();
 
-  MOZ_ASSERT(!(dataLen % sizeof(*data)));
+  MOZ_ASSERT(!(dataLen % sizeof(uint64_t)));
 
   JSAutoRequest ar(aCx);
+
+  JSStructuredCloneData buf;
+  if (!buf.WriteBytes(data, dataLen)) {
+    return false;
+  }
 
   static const JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
@@ -1079,7 +1084,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
 
   // FIXME: Consider to use StructuredCloneHolder here and in other
   //        deserializing methods.
-  if (!JS_ReadStructuredClone(aCx, data, dataLen, JS_STRUCTURED_CLONE_VERSION,
+  if (!JS_ReadStructuredClone(aCx, buf, JS_STRUCTURED_CLONE_VERSION,
                               aValue, &callbacks, &aCloneReadInfo)) {
     return false;
   }
@@ -1102,14 +1107,16 @@ IDBObjectStore::DeserializeIndexValue(JSContext* aCx,
   }
 
   size_t dataLen = aCloneReadInfo.mData.Length();
+  char* data = reinterpret_cast<char*>(aCloneReadInfo.mData.Elements());
 
-  uint64_t* data =
-    const_cast<uint64_t*>(reinterpret_cast<uint64_t*>(
-      aCloneReadInfo.mData.Elements()));
-
-  MOZ_ASSERT(!(dataLen % sizeof(*data)));
+  MOZ_ASSERT(!(dataLen % sizeof(uint64_t)));
 
   JSAutoRequest ar(aCx);
+
+  JSStructuredCloneData buf;
+  if (!buf.WriteBytes(data, dataLen)) {
+    return false;
+  }
 
   static const JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback<IndexDeserializationHelper>,
@@ -1117,7 +1124,7 @@ IDBObjectStore::DeserializeIndexValue(JSContext* aCx,
     nullptr
   };
 
-  if (!JS_ReadStructuredClone(aCx, data, dataLen, JS_STRUCTURED_CLONE_VERSION,
+  if (!JS_ReadStructuredClone(aCx, buf, JS_STRUCTURED_CLONE_VERSION,
                               aValue, &callbacks, &aCloneReadInfo)) {
     return false;
   }
@@ -1141,15 +1148,18 @@ IDBObjectStore::DeserializeUpgradeValue(JSContext* aCx,
     return true;
   }
 
+
   size_t dataLen = aCloneReadInfo.mData.Length();
+  char* data = reinterpret_cast<char*>(aCloneReadInfo.mData.Elements());
 
-  uint64_t* data =
-    const_cast<uint64_t*>(reinterpret_cast<uint64_t*>(
-      aCloneReadInfo.mData.Elements()));
-
-  MOZ_ASSERT(!(dataLen % sizeof(*data)));
+  MOZ_ASSERT(!(dataLen % sizeof(uint64_t)));
 
   JSAutoRequest ar(aCx);
+
+  JSStructuredCloneData buf;
+  if (!buf.WriteBytes(data, dataLen)) {
+    return false;
+  }
 
   static JSStructuredCloneCallbacks callbacks = {
     CommonStructuredCloneReadCallback<UpgradeDeserializationHelper>,
@@ -1160,7 +1170,7 @@ IDBObjectStore::DeserializeUpgradeValue(JSContext* aCx,
     nullptr
   };
 
-  if (!JS_ReadStructuredClone(aCx, data, dataLen, JS_STRUCTURED_CLONE_VERSION,
+  if (!JS_ReadStructuredClone(aCx, buf, JS_STRUCTURED_CLONE_VERSION,
                               aValue, &callbacks, &aCloneReadInfo)) {
     return false;
   }
@@ -1292,15 +1302,21 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
   }
 
   FallibleTArray<uint8_t> cloneData;
-  if (NS_WARN_IF(!cloneData.SetLength(cloneWriteInfo.mCloneBuffer.nbytes(),
-                                      fallible))) {
+  size_t size = cloneWriteInfo.mCloneBuffer.data().Size();
+
+  if (NS_WARN_IF(!cloneData.SetLength(size, fallible))) {
     aRv = NS_ERROR_OUT_OF_MEMORY;
     return nullptr;
   }
 
-  // XXX Remove this
-  memcpy(cloneData.Elements(), cloneWriteInfo.mCloneBuffer.data(),
-         cloneWriteInfo.mCloneBuffer.nbytes());
+  const char* buf;
+  auto iter = cloneWriteInfo.mCloneBuffer.data().Iter();
+  cloneWriteInfo.mCloneBuffer.data().FlattenBytes(iter, &buf, size);
+
+  // FIXME Bug XXXXXX Change SerializedStructuredCloneReadInfo and
+  // SerializedStructuredCloneWriteInfo to use JSStructuredCloneData
+  // instead of raw buffer.
+  memcpy(cloneData.Elements(), buf, size);
 
   cloneWriteInfo.mCloneBuffer.clear();
 

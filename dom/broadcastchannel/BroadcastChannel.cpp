@@ -158,9 +158,13 @@ public:
 
     ClonedMessageData message;
 
+    bool success;
     SerializedStructuredCloneBuffer& buffer = message.data();
-    buffer.data = mData->BufferData();
-    buffer.dataLength = mData->BufferSize();
+    auto iter = mData->BufferData().Iter();
+    buffer.data = mData->BufferData().Borrow<js::SystemAllocPolicy>(iter, mData->BufferData().Size(), &success);
+    if (NS_WARN_IF(!success)) {
+      return NS_OK;
+    }
 
     PBackgroundChild* backgroundManager = mActor->Manager();
     MOZ_ASSERT(backgroundManager);

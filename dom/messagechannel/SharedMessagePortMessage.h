@@ -20,24 +20,10 @@ class SharedMessagePortMessage final : public StructuredCloneHolder
 public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessagePortMessage)
 
-  nsTArray<uint8_t> mData;
-
   SharedMessagePortMessage()
     : StructuredCloneHolder(CloningSupported, TransferringSupported,
                             DifferentProcess)
   {}
-
-  void Read(nsISupports* aParent,
-            JSContext* aCx,
-            JS::MutableHandle<JS::Value> aValue,
-            ErrorResult& aRv);
-
-  void Write(JSContext* aCx,
-             JS::Handle<JS::Value> aValue,
-             JS::Handle<JS::Value> aTransfer,
-             ErrorResult& aRv);
-
-  void Free();
 
   static void
   FromSharedToMessagesChild(
@@ -62,7 +48,7 @@ public:
                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
 private:
-  ~SharedMessagePortMessage();
+  ~SharedMessagePortMessage() {}
 };
 
 } // namespace dom
