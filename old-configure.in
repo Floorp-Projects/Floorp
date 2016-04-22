@@ -2723,7 +2723,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_ANDROID_APZ=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -3534,18 +3533,6 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
     else
         AC_MSG_ERROR([Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.])
     fi
-fi
-
-dnl ========================================================
-dnl = Enable the C++ async pan/zoom code instead of the Java version
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(android-apz,
-[  --enable-android-apz      Switch to C++ pan/zoom code],
-    MOZ_ANDROID_APZ=1,
-    MOZ_ANDROID_APZ=)
-if test -n "$MOZ_ANDROID_APZ"; then
-     dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_ANDROID_APZ)
 fi
 
 dnl ========================================================
@@ -6756,7 +6743,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
-AC_SUBST(MOZ_ANDROID_APZ)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
