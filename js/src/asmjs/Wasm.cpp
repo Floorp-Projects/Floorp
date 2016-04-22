@@ -222,8 +222,6 @@ DecodeBrTable(FunctionDecoder& f)
         return false;
 
     ExprType type = f.iter().brTable().type;
-    if (!IsVoid(type))
-        return f.iter().notYetImplemented("non-void br_table");
 
     uint32_t depth;
     for (size_t i = 0, e = f.iter().brTable().tableLength; i < e; ++i) {

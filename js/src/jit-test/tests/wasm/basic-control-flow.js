@@ -526,6 +526,45 @@ assertEq(f(1), 0);
 assertEq(f(2), 2);
 assertEq(f(3), -1);
 
+// br_table with values
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br_table 0 (i32.const 0)))))'), TypeError, mismatchError("void", "i32"));
+assertErrorMessage(() => wasmEvalText('(module (func (result i32) (block (br_table 0 (f32.const 0) (i32.const 0)))))'), TypeError, mismatchError("f32", "i32"));
+
+assertErrorMessage(() => wasmEvalText(`(module
+ (func
+  (result i32)
+  (block $outer
+   (block $inner
+    (br_table $outer $inner (f32.const 13.37) (i32.const 1))
+   )
+   (br $outer (i32.const 42))
+  )
+ )
+(export "" 0))`), TypeError, mismatchError("void", "i32"));
+
+assertEq(wasmEvalText(`(module (func (result i32) (block $default (br_table $default (i32.const 42) (i32.const 1)))) (export "" 0))`)(), 42);
+
+var f = wasmEvalText(`(module (func (param i32) (result i32)
+  (i32.add
+   (block $1
+    (block $0
+     (block $default
+      (br_table $0 $1 $default (get_local 0) (get_local 0))
+     )
+     (set_local 0 (i32.mul (i32.const 2) (get_local 0)))
+    )
+    (set_local 0 (i32.add (i32.const 4) (get_local 0)))
+   )
+   (i32.const 1)
+  )
+ ) (export "" 0))`);
+
+assertEq(f(0), 5);
+assertEq(f(1), 2);
+assertEq(f(2), 9);
+assertEq(f(3), 11);
+assertEq(f(4), 13);
+
 // ----------------------------------------------------------------------------
 // unreachable
 

@@ -471,18 +471,22 @@ class WasmAstBranchTable : public WasmAstExpr
     WasmAstExpr& index_;
     WasmRef default_;
     WasmRefVector table_;
+    WasmAstExpr* value_;
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::BranchTable;
-    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table)
+    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table,
+                                WasmAstExpr* maybeValue)
       : WasmAstExpr(Kind),
         index_(index),
         default_(def),
-        table_(Move(table))
+        table_(Move(table)),
+        value_(maybeValue)
     {}
     WasmAstExpr& index() const { return index_; }
     WasmRef& def() { return default_; }
     WasmRefVector& table() { return table_; }
+    WasmAstExpr* maybeValue() { return value_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -2800,7 +2804,17 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable)
     if (!index)
         return nullptr;
 
-    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table));
+    WasmAstExpr* value = nullptr;
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        value = index;
+        index = ParseExprInsideParens(c);
+        if (!index)
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table), value);
 }
 
 static WasmAstExpr*
@@ -3881,6 +3895,9 @@ EncodeReturn(Encoder& e, WasmAstReturn& r)
 static bool
 EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
 {
+    if (bt.maybeValue() ? !EncodeExpr(e, *bt.maybeValue()) : !e.writeExpr(Expr::Nop))
+        return false;
+
     if (!EncodeExpr(e, bt.index()))
         return false;
 
