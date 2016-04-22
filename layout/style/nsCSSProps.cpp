@@ -2919,6 +2919,12 @@ static const nsCSSProperty gTextEmphasisSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gWebkitTextStrokeSubpropTable[] = {
+  eCSSProperty__webkit_text_stroke_width,
+  eCSSProperty__webkit_text_stroke_color,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gTransitionSubpropTable[] = {
   eCSSProperty_transition_property,
   eCSSProperty_transition_duration,

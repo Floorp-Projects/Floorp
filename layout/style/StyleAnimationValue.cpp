@@ -3635,6 +3635,14 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty__webkit_text_stroke_color: {
+          auto styleText = static_cast<const nsStyleText*>(styleStruct);
+          SetCurrentOrActualColor(styleText->mWebkitTextStrokeColorForeground,
+                                  styleText->mWebkitTextStrokeColor,
+                                  aComputedValue);
+          break;
+        }
+
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);

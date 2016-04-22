@@ -1311,6 +1311,28 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // we don't have a shorthand that can express. Bail.
       break;
     }
+    case eCSSProperty__webkit_text_stroke: {
+      const nsCSSValue* strokeWidth =
+        data->ValueFor(eCSSProperty__webkit_text_stroke_width);
+      const nsCSSValue* strokeColor =
+        data->ValueFor(eCSSProperty__webkit_text_stroke_color);
+      bool isDefaultColor = strokeColor->GetUnit() == eCSSUnit_EnumColor &&
+        strokeColor->GetIntValue() == NS_COLOR_CURRENTCOLOR;
+
+      if (strokeWidth->GetUnit() != eCSSUnit_Integer ||
+          strokeWidth->GetIntValue() != 0 || isDefaultColor) {
+        AppendValueToString(eCSSProperty__webkit_text_stroke_width,
+                            aValue, aSerialization);
+        if (!isDefaultColor) {
+          aValue.Append(char16_t(' '));
+        }
+      }
+      if (!isDefaultColor) {
+        AppendValueToString(eCSSProperty__webkit_text_stroke_color,
+                            aValue, aSerialization);
+      }
+      break;
+    }
     case eCSSProperty_all:
       // If we got here, then we didn't have all "inherit" or "initial" or
       // "unset" values for all of the longhand property components of 'all'.
