@@ -7,11 +7,12 @@ package org.mozilla.gecko.home;
 
 import android.content.res.Resources;
 
-import org.mozilla.gecko.home.CombinedHistoryPanel.SectionHeader;
+import org.mozilla.gecko.home.CombinedHistoryAdapter.SectionHeader;
 import org.mozilla.gecko.R;
 
 import java.util.Calendar;
 import java.util.Locale;
+
 
 public class HistorySectionsHelper {
 
