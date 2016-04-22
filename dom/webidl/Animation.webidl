@@ -12,7 +12,7 @@
 
 enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
-[Func="nsDocument::IsWebAnimationsEnabled",
+[Func="nsDocument::IsElementAnimateEnabled",
  Constructor (optional KeyframeEffectReadOnly? effect = null,
               optional AnimationTimeline? timeline = null)]
 interface Animation : EventTarget {

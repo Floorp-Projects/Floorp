@@ -94,14 +94,14 @@ Animation::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Animation> animation = new Animation(global);
 
-  if (!aTimeline) {
-    // Bug 1096776: We do not support null timeline yet.
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
   if (!aEffect) {
     // Bug 1049975: We do not support null effect yet.
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR);
+    return nullptr;
+  }
+  if (!aTimeline) {
+    // Bug 1096776: We do not support null timeline yet.
+    aRv.Throw(NS_ERROR_DOM_ANIM_NO_TIMELINE_ERR);
     return nullptr;
   }
 
