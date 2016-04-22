@@ -12,211 +12,126 @@ from StringIO import StringIO
 from mozunit import main
 
 from common import BaseConfigureTest
+from mozbuild.configure.util import Version
+from mozbuild.util import memoize
 from mozpack import path as mozpath
 from test_toolchain_helpers import FakeCompiler
 
 
-GCC_4_7 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 7,
-        '__GNUC_PATCHLEVEL__': 3,
-        '__STDC__': 1,
-    },
-    '-std=gnu99': {
-        '__STDC_VERSION__': '199901L',
-    },
-})
-
-GXX_4_7 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 7,
-        '__GNUC_PATCHLEVEL__': 3,
-        '__STDC__': 1,
-        '__cplusplus': '199711L',
-    },
-    '-std=gnu++11': {
-        '__cplusplus': '201103L',
-    },
-})
-
-GCC_4_9 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 9,
-        '__GNUC_PATCHLEVEL__': 3,
-        '__STDC__': 1,
-    },
-    '-std=gnu99': {
-        '__STDC_VERSION__': '199901L',
-    },
-})
-
-GXX_4_9 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 9,
-        '__GNUC_PATCHLEVEL__': 3,
-        '__STDC__': 1,
-        '__cplusplus': '199711L',
-    },
-    '-std=gnu++11': {
-        '__cplusplus': '201103L',
-    },
-})
-
-GCC_5 = FakeCompiler({
-    None: {
-        '__GNUC__': 5,
-        '__GNUC_MINOR__': 2,
-        '__GNUC_PATCHLEVEL__': 1,
-        '__STDC__': 1,
-        '__STDC_VERSION__': '201112L',
-    },
-    '-std=gnu99': {
-        '__STDC_VERSION__': '199901L',
-    },
-})
-
-GXX_5 = FakeCompiler({
-    None: {
-        '__GNUC__': 5,
-        '__GNUC_MINOR__': 2,
-        '__GNUC_PATCHLEVEL__': 1,
-        '__STDC__': 1,
-        '__cplusplus': '199711L',
-    },
-    '-std=gnu++11': {
-        '__cplusplus': '201103L',
-    },
-})
-
-CLANG_3_3 = FakeCompiler({
-    '__GNUC__': 4,
-    '__GNUC_MINOR__': 2,
-    '__GNUC_PATCHLEVEL__': 1,
-    '__clang__': 1,
-    '__clang_major__': 3,
-    '__clang_minor__': 3,
-    '__clang_patchlevel__': 0,
-    '__STDC__': 1,
+DEFAULT_C99 = {
     '__STDC_VERSION__': '199901L',
-})
+}
 
-CLANGXX_3_3 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 2,
-        '__GNUC_PATCHLEVEL__': 1,
-        '__clang__': 1,
-        '__clang_major__': 3,
-        '__clang_minor__': 3,
-        '__clang_patchlevel__': 0,
+DEFAULT_C11 = {
+    '__STDC_VERSION__': '201112L',
+}
+
+DEFAULT_CXX_97 = {
+    '__cplusplus': '199711L',
+}
+
+DEFAULT_CXX_11 = {
+    '__cplusplus': '201103L',
+}
+
+SUPPORTS_GNU99 = {
+    '-std=gnu99': DEFAULT_C99,
+}
+
+SUPPORTS_GNUXX11 = {
+    '-std=gnu++11': DEFAULT_CXX_11,
+}
+
+
+@memoize
+def GCC_BASE(version):
+    version = Version(version)
+    return FakeCompiler({
+        '__GNUC__': version.major,
+        '__GNUC_MINOR__': version.minor,
+        '__GNUC_PATCHLEVEL__': version.patch,
         '__STDC__': 1,
-        '__cplusplus': '199711L',
-    },
+    })
+
+
+@memoize
+def GCC(version):
+    return GCC_BASE(version) + SUPPORTS_GNU99
+
+
+@memoize
+def GXX(version):
+    return GCC_BASE(version) + DEFAULT_CXX_97 + SUPPORTS_GNUXX11
+
+
+GCC_4_7 = GCC('4.7.3')
+GXX_4_7 = GXX('4.7.3')
+GCC_4_9 = GCC('4.9.3')
+GXX_4_9 = GXX('4.9.3')
+GCC_5 = GCC('5.2.1') + DEFAULT_C11
+GXX_5 = GXX('5.2.1')
+
+
+@memoize
+def CLANG_BASE(version):
+    version = Version(version)
+    return FakeCompiler({
+        '__clang__': 1,
+        '__clang_major__': version.major,
+        '__clang_minor__': version.minor,
+        '__clang_patchlevel__': version.patch,
+    })
+
+
+@memoize
+def CLANG(version):
+    return GCC_BASE('4.2.1') + CLANG_BASE(version) + SUPPORTS_GNU99
+
+
+@memoize
+def CLANGXX(version):
+    return (GCC_BASE('4.2.1') + CLANG_BASE(version) + DEFAULT_CXX_97 +
+            SUPPORTS_GNUXX11)
+
+
+CLANG_3_3 = CLANG('3.3.0') + DEFAULT_C99
+CLANGXX_3_3 = CLANGXX('3.3.0')
+CLANG_3_6 = CLANG('3.6.2') + DEFAULT_C11
+CLANGXX_3_6 = CLANGXX('3.6.2') + {
     '-std=gnu++11': {
-        '__cplusplus': '201103L',
-    },
-})
-
-CLANG_3_6 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 2,
-        '__GNUC_PATCHLEVEL__': 1,
-        '__clang__': 1,
-        '__clang_major__': 3,
-        '__clang_minor__': 6,
-        '__clang_patchlevel__': 2,
-        '__STDC__': 1,
-        '__STDC_VERSION__': '201112L',
-    },
-    '-std=gnu99': {
-        '__STDC_VERSION__': '199901L',
-    },
-})
-
-CLANGXX_3_6 = FakeCompiler({
-    None: {
-        '__GNUC__': 4,
-        '__GNUC_MINOR__': 2,
-        '__GNUC_PATCHLEVEL__': 1,
-        '__clang__': 1,
-        '__clang_major__': 3,
-        '__clang_minor__': 6,
-        '__clang_patchlevel__': 2,
-        '__STDC__': 1,
-        '__cplusplus': '199711L',
-    },
-    '-std=gnu++11': {
-        '__cplusplus': '201103L',
         '__cpp_static_assert': '200410',
     },
-})
+}
 
-VS_2013u2 = FakeCompiler({
-    None: {
-        '_MSC_VER': '1800',
-        '_MSC_FULL_VER': '180030501',
-    },
-    '*.cpp': {
-        '__cplusplus': '199711L',
-    },
-})
 
-VS_2013u3 = FakeCompiler({
-    None: {
-        '_MSC_VER': '1800',
-        '_MSC_FULL_VER': '180030723',
-    },
-    '*.cpp': {
-        '__cplusplus': '199711L',
-    },
-})
+@memoize
+def VS(version):
+    version = Version(version)
+    return FakeCompiler({
+        None: {
+            '_MSC_VER': '%02d%02d' % (version.major, version.minor),
+            '_MSC_FULL_VER': '%02d%02d%05d' % (version.major, version.minor,
+                                               version.patch),
+        },
+        '*.cpp': DEFAULT_CXX_97,
+    })
 
-VS_2015 = FakeCompiler({
-    None: {
-        '_MSC_VER': '1900',
-        '_MSC_FULL_VER': '190023026',
-    },
-    '*.cpp': {
-        '__cplusplus': '199711L',
-    },
-})
 
-VS_2015u1 = FakeCompiler({
-    None: {
-        '_MSC_VER': '1900',
-        '_MSC_FULL_VER': '190023506',
-    },
-    '*.cpp': {
-        '__cplusplus': '199711L',
-    },
-})
+VS_2013u2 = VS('18.00.30501')
+VS_2013u3 = VS('18.00.30723')
+VS_2015 = VS('19.00.23026')
+VS_2015u1 = VS('19.00.23506')
 
-CLANG_CL = FakeCompiler({
-    None: {
-        '__clang__': 1,
-        '__clang_major__': 3,
-        '__clang_minor__': 9,
-        '__clang_patchlevel__': 0,
-        '__STDC_VERSION__': '201112L',
-        '_MSC_VER': '1800',
-        '_MSC_FULL_VER': '180000000',
-    },
-    '-std=gnu99': {  # In reality, the option needs to be preceded by -Xclang.
-        '__STDC_VERSION__': '199901L',
-    },
+# Note: In reality, the -std=gnu* options are only supported when preceded by
+# -Xclang.
+CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
+                SUPPORTS_GNU99 + SUPPORTS_GNUXX11) + {
     '*.cpp': {
         '__STDC_VERSION__': False,
         '__cplusplus': '201103L',
     },
-    '-fms-compatibility-version=18.00.30723': {
-        '_MSC_FULL_VER': '180030723',
-    },
-})
+    '-fms-compatibility-version=18.00.30723': VS('18.00.30723')[None],
+}
 
 
 class BaseToolchainTest(BaseConfigureTest):
@@ -622,7 +537,7 @@ class WindowsToolchainTest(BaseToolchainTest):
         '/opt/VS_2013u3/bin/cl': VS_2013u3,
         '/opt/VS_2015/bin/cl': VS_2015,
         '/usr/bin/cl': VS_2015u1,
-        '/usr/bin/clang-cl': CLANG_CL,
+        '/usr/bin/clang-cl': CLANG_CL_3_9,
     }
     PATHS.update(LinuxToolchainTest.PATHS)
 
@@ -648,14 +563,14 @@ class WindowsToolchainTest(BaseToolchainTest):
         'type': 'msvc',
         'compiler': '/usr/bin/cl',
     }
-    CLANG_CL_RESULT = {
+    CLANG_CL_3_9_RESULT = {
         'flags': ['-Xclang', '-std=gnu99',
                   '-fms-compatibility-version=18.00.30723', '-fallback'],
         'version': '18.00.30723',
         'type': 'clang-cl',
         'compiler': '/usr/bin/clang-cl',
     }
-    CLANGXX_CL_RESULT = {
+    CLANGXX_CL_3_9_RESULT = {
         'flags': ['-fms-compatibility-version=18.00.30723', '-fallback'],
         'version': '18.00.30723',
         'type': 'clang-cl',
@@ -707,8 +622,8 @@ class WindowsToolchainTest(BaseToolchainTest):
             if os.path.basename(k) != 'cl'
         }
         self.do_toolchain_test(paths, {
-            'c_compiler': self.CLANG_CL_RESULT,
-            'cxx_compiler': self.CLANGXX_CL_RESULT,
+            'c_compiler': self.CLANG_CL_3_9_RESULT,
+            'cxx_compiler': self.CLANGXX_CL_3_9_RESULT,
         })
 
     def test_gcc(self):
