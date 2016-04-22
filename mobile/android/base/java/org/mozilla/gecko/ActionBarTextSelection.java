@@ -18,6 +18,8 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ActionModeCompat.Callback;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -208,6 +210,9 @@ class ActionBarTextSelection extends Layer implements TextSelection, GeckoEventL
                     } else if (event.equals("TextSelection:ActionbarInit")) {
                         // Init / Open the action bar. Note the current selectionID,
                         // cancel any pending actionBar close.
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
+                            TelemetryContract.Method.CONTENT, "text_selection");
+
                         selectionID = message.getString("selectionID");
                         mCurrentItems = null;
                         if (mActionModeTimerTask != null) {

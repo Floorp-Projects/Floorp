@@ -13,8 +13,11 @@ import android.view.ActionMode;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -113,6 +116,9 @@ public class FloatingToolbarTextSelection implements TextSelection, GeckoEventLi
 
     private void handleOnMainThread(final String event, final JSONObject message) {
         if ("TextSelection:ActionbarInit".equals(event)) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
+                TelemetryContract.Method.CONTENT, "text_selection");
+
             selectionID = message.optString("selectionID");
         } else if ("TextSelection:ActionbarStatus".equals(event)) {
             updateRect(message);
