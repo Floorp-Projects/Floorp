@@ -65,7 +65,7 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     // We cast here because for VS2015 char16_t != wchar_t, even though they are
     // both 16 bit.
     if (!sfntData->GetIndexForU16Name(
-          reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index)) {
+          reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index, LF_FACESIZE - 1)) {
       gfxWarning() << "Failed to get index for face name.";
       return false;
     }
