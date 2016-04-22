@@ -45,7 +45,7 @@ Be sure to follow these install instructions:
    selected)
 3. Under ``Windows and Web Development`` uncheck everything except
    ``Universal Windows App Development Tools`` and the items under it
-   (should be ``Tools (1.2)...`` and the ``Windows 10 SDK``).
+   (should be ``Tools (1.2.1)...`` and the ``Windows 10 SDK``).
 
 Once Visual Studio 2015 Community has been installed, from a checkout
 of mozilla-central, run something like the following to produce a ZIP
