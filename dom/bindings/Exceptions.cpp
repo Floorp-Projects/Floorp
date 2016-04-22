@@ -66,6 +66,24 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
   // thread.
   if (NS_IsMainThread() && !nsContentUtils::IsCallerChrome() &&
       aException->StealJSVal(thrown.address())) {
+    // Now check for the case when thrown is a number which matches
+    // aException->GetResult().  This would indicate that what actually got
+    // thrown was an nsresult value.  In that situation, we should go back
+    // through dom::Throw with that nsresult value, because it will make sure to
+    // create the right sort of Exception or DOMException, with the right
+    // global.
+    if (thrown.isNumber()) {
+      nsresult exceptionResult;
+      if (NS_SUCCEEDED(aException->GetResult(&exceptionResult)) &&
+          double(exceptionResult) == thrown.toNumber()) {
+        // The return value semantics here are a bit weird.  Throw() always
+        // returns false.  But we want to return true if we managed to throw an
+        // exception (otherwise our caller will assume OOM)... which Throw()
+        // always will.  So we just return true unconditionally.
+        Throw(aCx, exceptionResult);
+        return true;
+      }
+    }
     if (!JS_WrapValue(aCx, &thrown)) {
       return false;
     }
