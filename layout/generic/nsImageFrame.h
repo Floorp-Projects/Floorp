@@ -331,6 +331,7 @@ private:
   nsCOMPtr<imgINotificationObserver> mListener;
 
   nsCOMPtr<imgIContainer> mImage;
+  nsCOMPtr<imgIContainer> mPrevImage;
   nsSize mComputedSize;
   mozilla::IntrinsicSize mIntrinsicSize;
   nsSize mIntrinsicRatio;
@@ -411,8 +412,11 @@ public:
   typedef mozilla::layers::LayerManager LayerManager;
 
   nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
-                 imgIContainer* aImage)
-    : nsDisplayImageContainer(aBuilder, aFrame), mImage(aImage) {
+                 imgIContainer* aImage, imgIContainer* aPrevImage)
+    : nsDisplayImageContainer(aBuilder, aFrame)
+    , mImage(aImage)
+    , mPrevImage(aPrevImage)
+  {
     MOZ_COUNT_CTOR(nsDisplayImage);
   }
   virtual ~nsDisplayImage() {
@@ -461,6 +465,7 @@ public:
   NS_DISPLAY_DECL_NAME("Image", TYPE_IMAGE)
 private:
   nsCOMPtr<imgIContainer> mImage;
+  nsCOMPtr<imgIContainer> mPrevImage;
 };
 
 #endif /* nsImageFrame_h___ */
