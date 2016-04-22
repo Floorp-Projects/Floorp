@@ -19,6 +19,7 @@ extern LazyLogModule gMediaDecoderLog;
 // until it gets a sample from both channels, such that we can be guaranteed
 // to know the start time by the time On{Audio,Video}Decoded is called on MDSM.
 class StartTimeRendezvous {
+  typedef MediaDecoderReader::MediaDataPromise MediaDataPromise;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StartTimeRendezvous);
 
 public:
@@ -56,23 +57,17 @@ public:
     return mHaveStartTimePromise.Ensure(__func__);
   }
 
-  template<typename PromiseType>
-  struct PromiseSampleType {
-    typedef typename PromiseType::ResolveValueType::element_type Type;
-  };
-
-  template<typename PromiseType, MediaData::Type SampleType>
-  RefPtr<PromiseType>
-  ProcessFirstSample(typename PromiseSampleType<PromiseType>::Type* aData)
+  template<MediaData::Type SampleType>
+  RefPtr<MediaDataPromise>
+  ProcessFirstSample(MediaData* aData)
   {
-    typedef typename PromiseSampleType<PromiseType>::Type DataType;
-    typedef typename PromiseType::Private PromisePrivate;
+    typedef typename MediaDataPromise::Private PromisePrivate;
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
     MaybeSetChannelStartTime<SampleType>(aData->mTime);
 
     RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
-    RefPtr<DataType> data = aData;
+    RefPtr<MediaData> data = aData;
     RefPtr<StartTimeRendezvous> self = this;
     AwaitStartTime()->Then(
       mOwnerThread, __func__,
@@ -194,7 +189,7 @@ MediaDecoderReaderWrapper::RequestAudioData()
 
   if (!mStartTimeRendezvous->HaveStartTime()) {
     p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
-                &StartTimeRendezvous::ProcessFirstSample<MediaDataPromise, MediaData::AUDIO_DATA>,
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::AUDIO_DATA>,
                 &StartTimeRendezvous::FirstSampleRejected<MediaData::AUDIO_DATA>)
          ->CompletionPromise();
   }
@@ -223,7 +218,7 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
 
   if (!mStartTimeRendezvous->HaveStartTime()) {
     p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
-                &StartTimeRendezvous::ProcessFirstSample<MediaDataPromise, MediaData::VIDEO_DATA>,
+                &StartTimeRendezvous::ProcessFirstSample<MediaData::VIDEO_DATA>,
                 &StartTimeRendezvous::FirstSampleRejected<MediaData::VIDEO_DATA>)
          ->CompletionPromise();
   }
