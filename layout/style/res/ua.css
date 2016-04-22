@@ -359,7 +359,8 @@ div:-moz-native-anonymous.moz-accessiblecaret > div.image {
   background-position: center bottom;
   background-size: 100%;
   background-repeat: no-repeat;
-  bottom: 0;
+  background-origin: content-box;
+  top: 0;
   width: 100%;
   height: 100%;
 

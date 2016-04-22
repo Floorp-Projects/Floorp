@@ -336,6 +336,14 @@ input[type=number]::-moz-number-spin-box {
   display: none;
 }
 
+div:-moz-native-anonymous.moz-accessiblecaret > div.image {
+  /* border: 0.1px solid red; */ /* Uncomment border to see the touch target. */
+  padding-left: 59%;    /* ((48-22)/2)px / 22px ~= 59% */
+  padding-bottom: 59%;
+  padding-right: 59%;
+  left: -59%;
+}
+
 /* Override accessiblecaret css in layout/style/ua.css */
 div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
