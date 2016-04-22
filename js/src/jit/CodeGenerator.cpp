@@ -8134,6 +8134,17 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     if (mir->maybeUndefined()) {
         Label notEmpty;
         masm.branchTest32(Assembler::NonZero, lengthTemp, lengthTemp, &notEmpty);
+
+        // According to the spec we need to set the length 0 (which is already 0).
+        // This is observable when the array length is made non-writable.
+        // Handle this case in the OOL. When freezing an unboxed array it is converted
+        // to an normal array.
+        if (mir->unboxedType() == JSVAL_TYPE_MAGIC) {
+            Address elementFlags(elementsTemp, ObjectElements::offsetOfFlags());
+            Imm32 bit(ObjectElements::NONWRITABLE_ARRAY_LENGTH);
+            masm.branchTest32(Assembler::NonZero, elementFlags, bit, ool->entry());
+        }
+
         masm.moveValue(UndefinedValue(), out.valueReg());
         masm.jump(&done);
         masm.bind(&notEmpty);
