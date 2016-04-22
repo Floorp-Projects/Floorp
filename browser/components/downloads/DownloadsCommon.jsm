@@ -588,16 +588,16 @@ this.DownloadsCommon = {
     let message;
     switch (verdict) {
       case Downloads.Error.BLOCK_VERDICT_UNCOMMON:
-        message = s.unblockTypeUncommon;
+        message = s.unblockTypeUncommon2;
         break;
       case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
-        message = s.unblockTypePotentiallyUnwanted;
+        message = s.unblockTypePotentiallyUnwanted2;
         break;
       default: // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
         message = s.unblockTypeMalware;
         break;
     }
-    message += "\n\n" + s.unblockTip;
+    message += "\n\n" + s.unblockTip2;
 
     Services.ww.registerNotification(function onOpen(subj, topic) {
       if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
