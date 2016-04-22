@@ -47,8 +47,6 @@ StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
 inline
 StructuredCloneReadInfo::StructuredCloneReadInfo()
   : mDatabase(nullptr)
-  , mCloneBuffer(JS::StructuredCloneScope::SameProcessSameThread, nullptr,
-                 nullptr)
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
@@ -58,8 +56,6 @@ StructuredCloneReadInfo::StructuredCloneReadInfo(
                              SerializedStructuredCloneReadInfo&& aCloneReadInfo)
   : mData(Move(aCloneReadInfo.data()))
   , mDatabase(nullptr)
-  , mCloneBuffer(JS::StructuredCloneScope::SameProcessSameThread, nullptr,
-                 nullptr)
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
 }
