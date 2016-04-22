@@ -2747,7 +2747,6 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
-MOZ_SWITCHBOARD=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_SIMPLEPUSH=
@@ -3574,13 +3573,6 @@ dnl = Include install tracking on Android
 dnl ========================================================
 if test -n "$MOZ_INSTALL_TRACKING"; then
     AC_DEFINE(MOZ_INSTALL_TRACKING)
-fi
-
-dnl ========================================================
-dnl = Include Switchboard A/B framework on Android
-dnl ========================================================
-if test -n "$MOZ_SWITCHBOARD"; then
-    AC_DEFINE(MOZ_SWITCHBOARD)
 fi
 
 dnl ========================================================
@@ -6794,7 +6786,6 @@ AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
-AC_SUBST(MOZ_SWITCHBOARD)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
