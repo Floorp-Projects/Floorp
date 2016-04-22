@@ -123,6 +123,7 @@ public:
   virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight) override;
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   virtual nsCanvasFrame* GetCanvasFrame() const override;
+  virtual nsIFrame* GetRealPrimaryFrameFor(nsIContent* aContent) const override;
 
   virtual nsIFrame* GetPlaceholderFrameFor(nsIFrame* aFrame) const override;
   virtual void FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
