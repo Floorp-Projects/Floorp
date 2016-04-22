@@ -8,6 +8,10 @@ env_flag('MOZ_ANDROID_EXCLUDE_FONTS',
          help='Whether to exclude font files from the build',
          default=True)
 
+env_flag('MOZ_LOCALE_SWITCHER',
+         help='Enable runtime locale switching',
+         default=True)
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
