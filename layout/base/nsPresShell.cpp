@@ -11160,8 +11160,8 @@ PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
   *aPresShellSize += mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(aMallocSizeOf);
   *aPresShellSize += mInDisplayPortFrames.ShallowSizeOfExcludingThis(aMallocSizeOf);
   *aPresShellSize += mVisibleRegions
-                   ? mVisibleRegions->mApproximate.ShallowSizeOfExcludingThis(aMallocSizeOf) +
-                     mVisibleRegions->mInDisplayPort.ShallowSizeOfExcludingThis(aMallocSizeOf)
+                   ? mVisibleRegions->mApproximate.ShallowSizeOfIncludingThis(aMallocSizeOf) +
+                     mVisibleRegions->mInDisplayPort.ShallowSizeOfIncludingThis(aMallocSizeOf)
                    : 0;
   *aPresShellSize += mFramesToDirty.ShallowSizeOfExcludingThis(aMallocSizeOf);
   *aPresShellSize += aArenaObjectsSize->mOther;
