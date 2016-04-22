@@ -1507,7 +1507,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     WidgetKeyboardEvent keydownEvent(true, keyDownMessage, mWidget);
     nsEventStatus status = InitKeyEvent(keydownEvent, mModKeyState, &mMsg);
     bool dispatched =
-      mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
+      mDispatcher->DispatchKeyboardEvent(keyDownMessage, keydownEvent, status,
                                          const_cast<NativeKey*>(this));
     if (aEventDispatched) {
       *aEventDispatched = dispatched;
@@ -1765,11 +1765,11 @@ NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
     return true;
   }
 
-  WidgetKeyboardEvent keyupEvent(true, eKeyUp, mWidget);
-  nsEventStatus status = InitKeyEvent(keyupEvent, mModKeyState, &mMsg);
   EventMessage keyUpMessage = IsKeyMessageOnPlugin() ? eKeyUpOnPlugin : eKeyUp;
+  WidgetKeyboardEvent keyupEvent(true, keyUpMessage, mWidget);
+  nsEventStatus status = InitKeyEvent(keyupEvent, mModKeyState, &mMsg);
   bool dispatched =
-    mDispatcher->DispatchKeyboardEvent(eKeyUp, keyupEvent, status,
+    mDispatcher->DispatchKeyboardEvent(keyUpMessage, keyupEvent, status,
                                        const_cast<NativeKey*>(this));
   if (aEventDispatched) {
     *aEventDispatched = dispatched;
