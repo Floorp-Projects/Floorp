@@ -86,11 +86,6 @@ MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER=1
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
 
-# Enable GCM registration on Nightly builds only.
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_GCM=1
-fi
-
 # Enable C++ APZ.
 MOZ_ANDROID_APZ=1
 
