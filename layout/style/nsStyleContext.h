@@ -188,6 +188,16 @@ public:
            ? StyleColor()->mColor : StyleText()->mWebkitTextFillColor;
   }
 
+  /**
+   * Get the color that should be used to stroke text: either
+   * the current foreground color, or a separately-specified text stroke color.
+   */
+  nscolor GetTextStrokeColor() {
+    const nsStyleText* textStyle = StyleText();
+    return textStyle->mWebkitTextStrokeColorForeground
+           ? StyleColor()->mColor : textStyle->mWebkitTextStrokeColor;
+  }
+
   // Does this style context or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests

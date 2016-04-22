@@ -3928,6 +3928,22 @@ nsComputedDOMStyle::DoGetWebkitTextFillColor()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWebkitTextStrokeColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetToRGBAColor(val, mStyleContext->GetTextStrokeColor());
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetWebkitTextStrokeWidth()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  val->SetAppUnits(StyleText()->mWebkitTextStrokeWidth.GetCoordValue());
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetPointerEvents()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
