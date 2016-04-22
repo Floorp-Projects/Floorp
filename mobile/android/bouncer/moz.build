@@ -12,7 +12,8 @@ for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_APP_VERSION'):
     DEFINES[var] = CONFIG[var]
 
-for var in ('MOZ_ANDROID_GCM',):
+for var in ('MOZ_ANDROID_GCM',
+            'MOZ_ANDROID_DOWNLOADS_INTEGRATION'):
     if CONFIG[var]:
         DEFINES[var] = CONFIG[var]
 

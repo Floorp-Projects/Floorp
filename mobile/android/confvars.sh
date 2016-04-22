@@ -77,9 +77,6 @@ MOZ_ANDROID_SEARCH_ACTIVITY=1
 # Enable the Mozilla Location Service stumbler.
 MOZ_ANDROID_MLS_STUMBLER=1
 
-# Enable adding to the system downloads list.
-MOZ_ANDROID_DOWNLOADS_INTEGRATION=1
-
 # Build and package the install bouncer APK by default.
 MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER=1
 
