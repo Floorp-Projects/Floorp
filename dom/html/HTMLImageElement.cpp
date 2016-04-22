@@ -646,16 +646,6 @@ HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
     }
   }
 
-  if (GetParent() &&
-      GetParent()->IsHTMLElement(nsGkAtoms::picture) &&
-      HTMLPictureElement::IsPictureEnabled()) {
-    // Being removed from picture re-triggers selection, even if we
-    // weren't using a <source> peer
-    if (aNullParent) {
-      QueueImageLoadTask(true);
-    }
-  }
-
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
@@ -1083,6 +1073,10 @@ HTMLImageElement::PictureSourceRemoved(nsIContent *aSourceNode)
   if (!HTMLPictureElement::IsPictureEnabled()) {
     return;
   }
+
+  MOZ_ASSERT(aSourceNode == this ||
+             IsPreviousSibling(aSourceNode, this),
+             "Should not be getting notifications for non-previous-siblings");
 
   QueueImageLoadTask(true);
 }
