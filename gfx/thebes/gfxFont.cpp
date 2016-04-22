@@ -1612,11 +1612,6 @@ private:
         buf.mNumGlyphs = mNumGlyphs;
 
         gfxContext::AzureState state = mRunParams.context->CurrentState();
-        if ((mRunParams.drawMode &
-             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
-            (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) {
-            FlushStroke(buf, state);
-        }
         if (mRunParams.drawMode & DrawMode::GLYPH_FILL) {
             if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
@@ -1691,30 +1686,8 @@ private:
                 buf, mRunParams.context->mPathBuilder,
                 mRunParams.dt->GetBackendType(), &mat);
         }
-        if ((mRunParams.drawMode &
-             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
-            DrawMode::GLYPH_STROKE) {
-            FlushStroke(buf, state);
-        }
 
         mNumGlyphs = 0;
-    }
-
-    void FlushStroke(gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
-    {
-        RefPtr<Path> path =
-            mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
-        if (mFontParams.contextPaint) {
-            RefPtr<gfxPattern> strokePattern =
-                mFontParams.contextPaint->GetStrokePattern(
-                    mRunParams.context->GetDrawTarget(),
-                    mRunParams.context->CurrentMatrix());
-            if (strokePattern) {
-                mRunParams.dt->Stroke(path,
-                                      *strokePattern->GetPattern(mRunParams.dt),
-                                      aState.strokeOptions);
-            }
-        }
     }
 
     Glyph        mGlyphBuffer[GLYPH_BUFFER_SIZE];
