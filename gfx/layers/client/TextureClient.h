@@ -331,6 +331,13 @@ public:
 
   bool CanExposeMappedData() const { return mData->CanExposeMappedData(); }
 
+  /* TextureClientRecycleAllocator tracking to decide if we need
+   * to check with the compositor before recycling.
+   * Should be superceeded (and removed) by bug 1252835.
+   */
+  void SetInUse(bool aInUse) { mInUse = aInUse; }
+  bool IsInUse() { return mInUse; }
+
   /**
    * Returns a DrawTarget to draw into the TextureClient.
    * This function should never be called when not on the main thread!
@@ -629,6 +636,7 @@ protected:
   OpenMode mOpenMode;
   DebugOnly<uint32_t> mExpectedDtRefs;
   bool mIsLocked;
+  bool mInUse;
 
   bool mAddedToCompositableClient;
   bool mWorkaroundAnnoyingSharedSurfaceLifetimeIssues;
