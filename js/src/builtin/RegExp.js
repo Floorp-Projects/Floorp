@@ -200,8 +200,12 @@ function RegExpReplace(string, replaceValue) {
     if (IsRegExpMethodOptimizable(rx)) {
         // Steps 8-16.
         if (global) {
-            if (functionalReplace)
+            if (functionalReplace) {
+                var elemBase = GetElemBaseForLambda(replaceValue);
+                if (IsObject(elemBase))
+                    return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue, elemBase);
                 return RegExpGlobalReplaceOptFunc(rx, S, lengthS, replaceValue);
+            }
             if (firstDollarIndex !== -1)
                 return RegExpGlobalReplaceOptSubst(rx, S, lengthS, replaceValue, firstDollarIndex);
             if (lengthS < 0x7fff)
@@ -334,6 +338,7 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
 // Calculates functional/substitution replaceement from match result.
 // Used in the following functions:
 //   * RegExpGlobalReplaceOptFunc
+//   * RegExpGlobalReplaceOptElemBase
 //   * RegExpGlobalReplaceOptSubst
 //   * RegExpLocalReplaceOptFunc
 //   * RegExpLocalReplaceOptSubst
@@ -470,6 +475,15 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue)
 #define FUNCTIONAL
 #include "RegExpGlobalReplaceOpt.h.js"
 #undef FUNCTIONAL
+#undef FUNC_NAME
+
+// Conditions:
+//   * global flag is true
+//   * replaceValue is a function that returns element of an object
+#define FUNC_NAME RegExpGlobalReplaceOptElemBase
+#define ELEMBASE
+#include "RegExpGlobalReplaceOpt.h.js"
+#undef ELEMBASE
 #undef FUNC_NAME
 
 // Conditions:

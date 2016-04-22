@@ -2,6 +2,7 @@
 //   * RegExpGlobalReplaceOpt
 //   * RegExpGlobalReplaceOptFunc
 //   * RegExpGlobalReplaceOptSubst
+//   * RegExpGlobalReplaceOptElemBase
 // Define the following macro and include this file to declare function:
 //   * FUNC_NAME     -- function name (required)
 //       e.g.
@@ -9,7 +10,9 @@
 // Define the following macro (without value) to switch the code:
 //   * SUBSTITUTION     -- replaceValue is a string with "$"
 //   * FUNCTIONAL       -- replaceValue is a function
-//   * neither of above -- replaceValue is a string without "$"
+//   * ELEMBASE         -- replaceValue is a function that returns an element
+//                         of an object
+//   * none of above    -- replaceValue is a string without "$"
 
 // ES 2017 draft 03bfda119d060aca4099d2b77cf43f6d4f11cfa2 21.2.5.8
 // steps 8-16.
@@ -18,6 +21,9 @@
 function FUNC_NAME(rx, S, lengthS, replaceValue
 #ifdef SUBSTITUTION
                    , firstDollarIndex
+#endif
+#ifdef ELEMBASE
+                   , elemBase
 #endif
                   )
 {
@@ -43,12 +49,13 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
         if (result === null)
             break;
 
+        var nCaptures;
 #if defined(FUNCTIONAL) || defined(SUBSTITUTION)
         // Steps 14.a-b.
-        var nCaptures = std_Math_max(result.length - 1, 0);
+        nCaptures = std_Math_max(result.length - 1, 0);
 #endif
 
-        // Step 14.c.
+        // Step 14.c (reordered).
         var matched = result[0];
 
         // Step 14.d.
@@ -70,6 +77,24 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
 
                                                   nCaptures, replaceValue,
                                                   false, firstDollarIndex);
+#elif defined(ELEMBASE)
+        if (IsObject(elemBase)) {
+            var prop = GetStringDataProperty(elemBase, matched);
+            if (prop !== undefined)
+                replacement = prop;
+            else
+                elemBase = undefined;
+        }
+
+        if (!IsObject(elemBase)) {
+            // Steps 14.a-b (reordered).
+            nCaptures = std_Math_max(result.length - 1, 0);
+
+            replacement = RegExpGetComplexReplacement(result, matched, S, position,
+
+                                                      nCaptures, replaceValue,
+                                                      true, -1);
+        }
 #else
         replacement = replaceValue;
 #endif
