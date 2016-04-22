@@ -75,9 +75,7 @@ public:
 
   using MetadataPromise =
     MozPromise<RefPtr<MetadataHolder>, ReadMetadataFailureReason, IsExclusive>;
-  using AudioDataPromise =
-    MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
-  using VideoDataPromise =
+  using MediaDataPromise =
     MozPromise<RefPtr<MediaData>, NotDecodedReason, IsExclusive>;
   using SeekPromise = MozPromise<media::TimeUnit, nsresult, IsExclusive>;
 
@@ -135,7 +133,7 @@ public:
   // be resolved when it is complete. Don't hold the decoder
   // monitor while calling this, as the implementation may try to wait
   // on something that needs the monitor and deadlock.
-  virtual RefPtr<AudioDataPromise> RequestAudioData();
+  virtual RefPtr<MediaDataPromise> RequestAudioData();
 
   // Requests one video sample from the reader.
   //
@@ -143,7 +141,7 @@ public:
   // may try to wait on something that needs the monitor and deadlock.
   // If aSkipToKeyframe is true, the decode should skip ahead to the
   // the next keyframe at or after aTimeThreshold microseconds.
-  virtual RefPtr<VideoDataPromise>
+  virtual RefPtr<MediaDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   // By default, the state machine polls the reader once per second when it's
@@ -306,7 +304,7 @@ protected:
   // called.
   virtual media::TimeIntervals GetBuffered();
 
-  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
+  RefPtr<MediaDataPromise> DecodeToFirstVideoData();
 
   bool HaveStartTime()
   {
@@ -421,8 +419,8 @@ private:
 
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
-  MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
-  MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
+  MozPromiseHolder<MediaDataPromise> mBaseAudioPromise;
+  MozPromiseHolder<MediaDataPromise> mBaseVideoPromise;
 
   // Flags whether a the next audio/video sample comes after a "gap" or
   // "discontinuity" in the stream. For example after a seek.

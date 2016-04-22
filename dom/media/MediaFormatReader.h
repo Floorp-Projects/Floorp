@@ -37,10 +37,10 @@ public:
   size_t SizeOfVideoQueueInFrames() override;
   size_t SizeOfAudioQueueInFrames() override;
 
-  RefPtr<VideoDataPromise>
+  RefPtr<MediaDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) override;
 
-  RefPtr<AudioDataPromise> RequestAudioData() override;
+  RefPtr<MediaDataPromise> RequestAudioData() override;
 
   RefPtr<MetadataPromise> AsyncReadMetadata() override;
 
@@ -391,8 +391,8 @@ private:
     }
   };
 
-  DecoderDataWithPromise<AudioDataPromise> mAudio;
-  DecoderDataWithPromise<VideoDataPromise> mVideo;
+  DecoderDataWithPromise<MediaDataPromise> mAudio;
+  DecoderDataWithPromise<MediaDataPromise> mVideo;
 
   // Returns true when the decoder for this track needs input.
   bool NeedInput(DecoderData& aDecoder);
