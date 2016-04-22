@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,15 +16,56 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
+import org.w3c.dom.Text;
 
 public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
+    private static final String LOGTAG = "CombinedHistoryItem";
+
     public CombinedHistoryItem(View view) {
         super(view);
+    }
+
+    public enum ItemType {
+        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD, SYNCED_DEVICES;
+
+        public static ItemType viewTypeToItemType(int viewType) {
+            if (viewType >= ItemType.values().length) {
+                Log.e(LOGTAG, "No corresponding ItemType!");
+            }
+            return ItemType.values()[viewType];
+        }
+
+        public static int itemTypeToViewType(ItemType itemType) {
+            return itemType.ordinal();
+        }
     }
 
     public static class BasicItem extends CombinedHistoryItem {
         public BasicItem(View view) {
             super(view);
+        }
+    }
+
+    public static class SmartFolder extends CombinedHistoryItem {
+        final Context context;
+        final ImageView icon;
+        final TextView title;
+        final TextView subtext;
+
+        public SmartFolder(View view) {
+            super(view);
+            context = view.getContext();
+
+            icon = (ImageView) view.findViewById(R.id.device_type);
+            title = (TextView) view.findViewById(R.id.client);
+            subtext = (TextView) view.findViewById(R.id.last_synced);
+            view.findViewById(R.id.device_expanded).setVisibility(View.GONE);
+        }
+
+        public void bind(int drawableRes, int titleRes, int subtitleRes, int numDevices) {
+            icon.setImageResource(drawableRes);
+            title.setText(titleRes);
+            subtext.setText(context.getString(subtitleRes, numDevices));
         }
     }
 
@@ -49,21 +91,24 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
         final TextView nameView;
         final ImageView deviceTypeView;
         final TextView lastModifiedView;
+        final ImageView deviceExpanded;
 
         public ClientItem(View view) {
             super(view);
             nameView = (TextView) view.findViewById(R.id.client);
             deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
             lastModifiedView = (TextView) view.findViewById(R.id.last_synced);
+            deviceExpanded = (ImageView) view.findViewById(R.id.device_expanded);
         }
 
         public void bind(RemoteClient client, Context context) {
-                this.nameView.setText(client.name);
-                this.nameView.setTextColor(ContextCompat.getColor(context, R.color.placeholder_active_grey));
-                this.deviceTypeView.setImageResource("desktop".equals(client.deviceType) ? R.drawable.sync_desktop : R.drawable.sync_mobile);
+            this.nameView.setText(client.name);
+            this.nameView.setTextColor(ContextCompat.getColor(context, R.color.placeholder_active_grey));
+            this.deviceTypeView.setImageResource("desktop".equals(client.deviceType) ? R.drawable.sync_desktop : R.drawable.sync_mobile);
+            this.deviceExpanded.setImageResource(client.tabs.isEmpty() ? 0 : R.drawable.home_group_collapsed);
 
-                final long now = System.currentTimeMillis();
-                this.lastModifiedView.setText(RemoteTabsExpandableListAdapter.getLastSyncedString(context, now, client.lastModified));
+            final long now = System.currentTimeMillis();
+            this.lastModifiedView.setText(RemoteTabsExpandableListAdapter.getLastSyncedString(context, now, client.lastModified));
         }
     }
 }
