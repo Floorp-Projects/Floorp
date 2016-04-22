@@ -509,7 +509,7 @@ audiounit_install_device_changed_callback(cubeb_stream * stm)
     }
 
     r = audiounit_add_listener(stm, output_dev_id, kAudioDevicePropertyDataSource,
-        kAudioObjectPropertyScopeOutput, &audiounit_property_listener_callback);
+        kAudioDevicePropertyScopeOutput, &audiounit_property_listener_callback);
     if (r != noErr) {
       return CUBEB_ERROR;
     }
@@ -534,7 +534,7 @@ audiounit_install_device_changed_callback(cubeb_stream * stm)
     }
 
     r = audiounit_add_listener(stm, input_dev_id, kAudioDevicePropertyDataSource,
-        kAudioObjectPropertyScopeInput, &audiounit_property_listener_callback);
+        kAudioDevicePropertyScopeInput, &audiounit_property_listener_callback);
     if (r != noErr) {
       return CUBEB_ERROR;
     }
@@ -563,7 +563,7 @@ audiounit_uninstall_device_changed_callback(cubeb_stream * stm)
     }
 
     r = audiounit_remove_listener(stm, output_dev_id, kAudioDevicePropertyDataSource,
-        kAudioObjectPropertyScopeOutput, &audiounit_property_listener_callback);
+        kAudioDevicePropertyScopeOutput, &audiounit_property_listener_callback);
     if (r != noErr) {
       return CUBEB_ERROR;
     }
@@ -583,7 +583,7 @@ audiounit_uninstall_device_changed_callback(cubeb_stream * stm)
     }
 
     r = audiounit_remove_listener(stm, input_dev_id, kAudioDevicePropertyDataSource,
-        kAudioObjectPropertyScopeInput, &audiounit_property_listener_callback);
+        kAudioDevicePropertyScopeInput, &audiounit_property_listener_callback);
     if (r != noErr) {
       return CUBEB_ERROR;
     }
