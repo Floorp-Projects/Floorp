@@ -67,6 +67,8 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     if (!sfntData->GetIndexForU16Name(
           reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index, LF_FACESIZE - 1)) {
       gfxWarning() << "Failed to get index for face name.";
+      gfxDevCrash(LogReason::GetFontFileDataFailed) <<
+        "Failed to get index for face name |" << mLogFont.lfFaceName << "|.";
       return false;
     }
   }
