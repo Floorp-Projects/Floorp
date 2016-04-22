@@ -7,8 +7,9 @@
 #ifndef DecoderDoctorDiagnostics_h_
 #define DecoderDoctorDiagnostics_h_
 
+#include "nsString.h"
+
 class nsIDocument;
-class nsAString;
 
 namespace mozilla {
 
@@ -40,7 +41,19 @@ public:
                               bool aCanPlay,
                               const char* aCallSite);
 
-  // Description string, for logging purposes.
+  void StoreMediaKeySystemAccess(nsIDocument* aDocument,
+                                 const nsAString& aKeySystem,
+                                 bool aIsSupported,
+                                 const char* aCallSite);
+
+  enum DiagnosticsType {
+    eUnsaved,
+    eFormatSupportCheck,
+    eMediaKeySystemAccessRequest
+  };
+  DiagnosticsType Type() const { return mDiagnosticsType; }
+
+  // Description string, for logging purposes; only call on stored diags.
   nsCString GetDescription() const;
 
   // Methods to record diagnostic information:
@@ -54,13 +67,37 @@ public:
   void SetFFmpegFailedToLoad() { mFFmpegFailedToLoad = true; }
   bool DidFFmpegFailToLoad() const { return mFFmpegFailedToLoad; }
 
+  const nsAString& KeySystem() const { return mKeySystem; }
+  bool IsKeySystemSupported() const { return mIsKeySystemSupported; }
+  enum KeySystemIssue {
+    eUnset,
+    eWidevineWithNoWMF
+  };
+  void SetKeySystemIssue(KeySystemIssue aKeySystemIssue)
+  {
+    mKeySystemIssue = aKeySystemIssue;
+  }
+  KeySystemIssue GetKeySystemIssue() const
+  {
+    return mKeySystemIssue;
+  }
+
 private:
+  // Currently-known type of diagnostics. Set from one of the 'Store...' methods.
+  // This helps ensure diagnostics are only stored once,
+  // and makes it easy to know what information they contain.
+  DiagnosticsType mDiagnosticsType = eUnsaved;
+
   nsString mFormat;
   // True if there is at least one decoder that can play that format.
   bool mCanPlay = false;
 
   bool mWMFFailedToLoad = false;
   bool mFFmpegFailedToLoad = false;
+
+  nsString mKeySystem;
+  bool mIsKeySystemSupported = false;
+  KeySystemIssue mKeySystemIssue = eUnset;
 };
 
 } // namespace mozilla
