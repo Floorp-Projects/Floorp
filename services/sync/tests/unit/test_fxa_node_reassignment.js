@@ -58,13 +58,23 @@ var numTokenRequests = 0;
 
 function prepareServer(cbAfterTokenFetch) {
   let config = makeIdentityConfig({username: "johndoe"});
-  let server = new SyncServer();
+  // A server callback to ensure we don't accidentally hit the wrong endpoint
+  // after a node reassignment.
+  let callback = {
+    __proto__: SyncServerCallback,
+    onRequest(req, resp) {
+      let full = `${req.scheme}://${req.host}:${req.port}${req.path}`;
+      do_check_true(full.startsWith(config.fxaccount.token.endpoint),
+                    `request made to ${full}`);
+    }
+  }
+  let server = new SyncServer(callback);
   server.registerUser("johndoe");
   server.start();
 
   // Set the token endpoint for the initial token request that's done implicitly
   // via configureIdentity.
-  config.fxaccount.token.endpoint = server.baseURI + "1.1/johndoe";
+  config.fxaccount.token.endpoint = server.baseURI + "1.1/johndoe/";
   // And future token fetches will do magic around numReassigns.
   let numReassigns = 0;
   return configureIdentity(config).then(() => {
@@ -85,7 +95,6 @@ function prepareServer(cbAfterTokenFetch) {
         }
       },
     };
-    Service.clusterURL = config.fxaccount.token.endpoint;
     return server;
   });
 }
@@ -146,15 +155,53 @@ function* syncAndExpectNodeReassignment(server, firstNotification, between,
     Service.sync();
   }
 
-  // Make sure that it works!
-  _("Making request to " + url + " which should 401");
-  let request = new RESTRequest(url);
-  request.get(function () {
-    do_check_eq(request.response.status, 401);
+  // Make sure that we really do get a 401 (but we can only do that if we are
+  // already logged in, as the login process is what sets up the URLs)
+  if (Service.isLoggedIn) {
+    _("Making request to " + url + " which should 401");
+    let request = new RESTRequest(url);
+    request.get(function () {
+      do_check_eq(request.response.status, 401);
+      Utils.nextTick(onwards);
+    });
+  } else {
+    _("Skipping preliminary validation check for a 401 as we aren't logged in");
     Utils.nextTick(onwards);
-  });
+  }
   yield deferred.promise;
 }
+
+// Check that when we sync we don't request a new token by default - our
+// test setup has configured the client with a valid token, and that token
+// should be used to form the cluster URL.
+add_task(function* test_single_token_fetch() {
+  _("Test a normal sync only fetches 1 token");
+
+  let numTokenFetches = 0;
+
+  function afterTokenFetch() {
+    numTokenFetches++;
+  }
+
+  // Set the cluster URL to an "old" version - this is to ensure we don't
+  // use that old cached version for the first sync but prefer the value
+  // we got from the token (and as above, we are also checking we don't grab
+  // a new token). If the test actually attempts to connect to this URL
+  // it will crash.
+  Service.clusterURL = "http://example.com/";
+
+  let server = yield prepareServer(afterTokenFetch);
+
+  do_check_false(Service.isLoggedIn, "not already logged in");
+  Service.sync();
+  do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
+  do_check_eq(numTokenFetches, 0, "didn't fetch a new token");
+  // A bit hacky, but given we know how prepareServer works we can deduce
+  // that clusterURL we expect.
+  let expectedClusterURL = server.baseURI + "1.1/johndoe/";
+  do_check_eq(Service.clusterURL, expectedClusterURL);
+  yield new Promise(resolve => server.stop(resolve));
+});
 
 add_task(function* test_momentary_401_engine() {
   _("Test a failure for engine URLs that's resolved by reassignment.");

@@ -884,7 +884,7 @@ ErrorHandler.prototype = {
       case 401:
         this.service.logout();
         this._log.info("Got 401 response; resetting clusterURL.");
-        Svc.Prefs.reset("clusterURL");
+        this.service.clusterURL = null;
 
         let delay = 0;
         if (Svc.Prefs.get("lastSyncReassigned")) {

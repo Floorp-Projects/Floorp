@@ -393,6 +393,9 @@ this.BrowserIDManager.prototype = {
   resetCredentials: function() {
     this.resetSyncKey();
     this._token = null;
+    // The cluster URL comes from the token, so resetting it to empty will
+    // force Sync to not accidentally use a value from an earlier token.
+    Weave.Service.clusterURL = null;
   },
 
   /**
