@@ -99,10 +99,10 @@ DOMMediaStream::TrackPort::GetSourceTrackId() const
 }
 
 already_AddRefed<Pledge<bool>>
-DOMMediaStream::TrackPort::BlockTrackId(TrackID aTrackId)
+DOMMediaStream::TrackPort::BlockSourceTrackId(TrackID aTrackId)
 {
   if (mInputPort) {
-    return mInputPort->BlockTrackId(aTrackId);
+    return mInputPort->BlockSourceTrackId(aTrackId);
   }
   RefPtr<Pledge<bool>> rejected = new Pledge<bool>();
   rejected->Reject(NS_ERROR_FAILURE);
@@ -1241,7 +1241,7 @@ DOMMediaStream::BlockPlaybackTrack(TrackPort* aTrack)
 {
   MOZ_ASSERT(aTrack);
   ++mTracksPendingRemoval;
-  RefPtr<Pledge<bool>> p = aTrack->BlockTrackId(aTrack->GetTrack()->mTrackID);
+  RefPtr<Pledge<bool>> p = aTrack->BlockSourceTrackId(aTrack->GetTrack()->mTrackID);
   RefPtr<DOMMediaStream> self = this;
   p->Then([self] (const bool& aIgnore) { self->NotifyPlaybackTrackBlocked(); },
           [] (const nsresult& aIgnore) { NS_ERROR("Could not remove track from MSG"); }
