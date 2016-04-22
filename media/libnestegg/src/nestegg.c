@@ -126,7 +126,8 @@ enum ebml_type_enum {
 #define DESC_FLAG_OFFSET        (1 << 2)
 
 /* Block Header Flags */
-#define BLOCK_FLAGS_LACING      6
+#define SIMPLE_BLOCK_FLAGS_KEYFRAME (1 << 7)
+#define BLOCK_FLAGS_LACING          6
 
 /* Lacing Constants */
 #define LACING_NONE             0
@@ -203,10 +204,6 @@ struct info {
   struct ebml_type duration;
 };
 
-struct cluster {
-  struct ebml_type timecode;
-};
-
 struct video {
   struct ebml_type stereo_mode;
   struct ebml_type alpha_mode;
@@ -266,7 +263,6 @@ struct cues {
 struct segment {
   struct ebml_list seek_head;
   struct info info;
-  struct ebml_list cluster;
   struct tracks tracks;
   struct cues cues;
 };
@@ -284,7 +280,6 @@ struct list_node {
 
 struct saved_state {
   int64_t stream_offset;
-  struct list_node * ancestor;
   uint64_t last_id;
   uint64_t last_size;
   int last_valid;
@@ -316,6 +311,10 @@ struct nestegg {
   struct segment segment;
   int64_t segment_offset;
   unsigned int track_count;
+  /* Last read cluster. */
+  uint64_t cluster_timecode;
+  int read_cluster_timecode;
+  struct saved_state saved;
 };
 
 struct nestegg_packet {
@@ -327,6 +326,9 @@ struct nestegg_packet {
   struct block_additional * block_additional;
   int64_t discard_padding;
   int read_discard_padding;
+  int64_t reference_block;
+  int read_reference_block;
+  uint8_t keyframe;
 };
 
 /* Element Descriptor */
@@ -383,13 +385,6 @@ static struct ebml_element_desc ne_seek_head_elements[] = {
 static struct ebml_element_desc ne_info_elements[] = {
   E_FIELD(ID_TIMECODE_SCALE, TYPE_UINT, struct info, timecode_scale),
   E_FIELD(ID_DURATION, TYPE_FLOAT, struct info, duration),
-  E_LAST
-};
-
-static struct ebml_element_desc ne_cluster_elements[] = {
-  E_FIELD(ID_TIMECODE, TYPE_UINT, struct cluster, timecode),
-  E_SUSPEND(ID_BLOCK_GROUP, TYPE_MASTER),
-  E_SUSPEND(ID_SIMPLE_BLOCK, TYPE_BINARY),
   E_LAST
 };
 
@@ -459,7 +454,7 @@ static struct ebml_element_desc ne_cues_elements[] = {
 static struct ebml_element_desc ne_segment_elements[] = {
   E_MASTER(ID_SEEK_HEAD, TYPE_MASTER, struct segment, seek_head),
   E_SINGLE_MASTER(ID_INFO, TYPE_MASTER, struct segment, info),
-  E_MASTER(ID_CLUSTER, TYPE_MASTER, struct segment, cluster),
+  E_SUSPEND(ID_CLUSTER, TYPE_MASTER),
   E_SINGLE_MASTER(ID_TRACKS, TYPE_MASTER, struct segment, tracks),
   E_SINGLE_MASTER(ID_CUES, TYPE_MASTER, struct segment, cues),
   E_LAST
@@ -829,7 +824,6 @@ ne_ctx_save(nestegg * ctx, struct saved_state * s)
   s->stream_offset = ne_io_tell(ctx->io);
   if (s->stream_offset < 0)
     return -1;
-  s->ancestor = ctx->ancestor;
   s->last_id = ctx->last_id;
   s->last_size = ctx->last_size;
   s->last_valid = ctx->last_valid;
@@ -841,10 +835,11 @@ ne_ctx_restore(nestegg * ctx, struct saved_state * s)
 {
   int r;
 
+  if (s->stream_offset < 0)
+    return -1;
   r = ne_io_seek(ctx->io, s->stream_offset, NESTEGG_SEEK_SET);
   if (r != 0)
     return -1;
-  ctx->ancestor = s->ancestor;
   ctx->last_id = s->last_id;
   ctx->last_size = s->last_size;
   ctx->last_valid = s->last_valid;
@@ -999,8 +994,7 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
   uint64_t id, size, peeked_id;
   struct ebml_element_desc * element;
 
-  if (!ctx->ancestor)
-    return -1;
+  assert(ctx->ancestor);
 
   for (;;) {
     if (max_offset > 0 && ne_io_tell(ctx->io) >= max_offset) {
@@ -1016,8 +1010,7 @@ ne_parse(nestegg * ctx, struct ebml_element_desc * top_level, int64_t max_offset
     element = ne_find_element(id, ctx->ancestor->node);
     if (element) {
       if (element->flags & DESC_FLAG_SUSPEND) {
-        assert((element->id == ID_SIMPLE_BLOCK && element->type == TYPE_BINARY) ||
-               (element->id == ID_BLOCK_GROUP && element->type == TYPE_MASTER));
+        assert(element->id == ID_CLUSTER && element->type == TYPE_MASTER);
         ctx->log(ctx, NESTEGG_LOG_DEBUG, "suspend parse at %llx", id);
         r = 1;
         break;
@@ -1228,12 +1221,12 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   int r;
   int64_t timecode, abs_timecode;
   nestegg_packet * pkt;
-  struct cluster * cluster;
   struct frame * f, * last;
   struct track_entry * entry;
   double track_scale;
   uint64_t track_number, length, frame_sizes[256], cluster_tc, flags, frames, tc_scale, total;
   unsigned int i, lacing, track;
+  uint8_t keyframe = NESTEGG_PACKET_HAS_KEYFRAME_UNKNOWN;
   size_t consumed = 0;
 
   *data = NULL;
@@ -1263,6 +1256,12 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   consumed += 1;
 
   frames = 0;
+
+  /* Simple blocks have an explicit flag for if the contents a keyframes*/
+  if (block_id == ID_SIMPLE_BLOCK)
+    keyframe = (flags & SIMPLE_BLOCK_FLAGS_KEYFRAME) == SIMPLE_BLOCK_FLAGS_KEYFRAME ?
+                                                        NESTEGG_PACKET_HAS_KEYFRAME_TRUE :
+                                                        NESTEGG_PACKET_HAS_KEYFRAME_FALSE;
 
   /* Flags are different between Block and SimpleBlock, but lacing is
      encoded the same way. */
@@ -1329,10 +1328,9 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
 
   tc_scale = ne_get_timecode_scale(ctx);
 
-  assert(ctx->segment.cluster.tail->id == ID_CLUSTER);
-  cluster = ctx->segment.cluster.tail->data;
-  if (ne_get_uint(cluster->timecode, &cluster_tc) != 0)
+  if (!ctx->read_cluster_timecode)
     return -1;
+  cluster_tc = ctx->cluster_timecode;
 
   abs_timecode = timecode + cluster_tc;
   if (abs_timecode < 0)
@@ -1343,6 +1341,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
     return -1;
   pkt->track = track;
   pkt->timecode = abs_timecode * tc_scale * track_scale;
+  pkt->keyframe = keyframe;
 
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "%sblock t %lld pts %f f %llx frames: %llu",
            block_id == ID_BLOCK ? "" : "simple", pkt->track, pkt->timecode / 1e9, flags, frames);
@@ -1370,7 +1369,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
       free(f->data);
       free(f);
       nestegg_free_packet(pkt);
-      return -1;
+      return r;
     }
 
     if (!last)
@@ -1386,7 +1385,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
 }
 
 static int
-ne_read_block_additions(nestegg * ctx, uint64_t block_id, uint64_t block_size, struct block_additional ** pkt_block_additional)
+ne_read_block_additions(nestegg * ctx, uint64_t block_size, struct block_additional ** pkt_block_additional)
 {
   int r;
   uint64_t id, size, data_size;
@@ -1398,9 +1397,6 @@ ne_read_block_additions(nestegg * ctx, uint64_t block_id, uint64_t block_size, s
 
   assert(*pkt_block_additional == NULL);
 
-  if (block_id != ID_BLOCK_ADDITIONS)
-    return 1;
-
   block_additions_end = ne_io_tell(ctx->io) + block_size;
 
   while (ne_io_tell(ctx->io) < block_additions_end) {
@@ -1409,14 +1405,16 @@ ne_read_block_additions(nestegg * ctx, uint64_t block_id, uint64_t block_size, s
     has_data = 0;
     r = ne_read_element(ctx, &id, &size);
     if (r != 1)
-      return -1;
+      return r;
 
     if (id != ID_BLOCK_MORE) {
       /* We don't know what this element is, so skip over it */
       if (id != ID_VOID && id != ID_CRC32)
         ctx->log(ctx, NESTEGG_LOG_DEBUG,
                  "unknown element %llx in BlockAdditions", id);
-      ne_io_read_skip(ctx->io, size);
+      r = ne_io_read_skip(ctx->io, size);
+      if (r != 1)
+        return r;
       continue;
     }
 
@@ -1468,7 +1466,11 @@ ne_read_block_additions(nestegg * ctx, uint64_t block_id, uint64_t block_size, s
         if (id != ID_VOID && id != ID_CRC32)
           ctx->log(ctx, NESTEGG_LOG_DEBUG,
                    "unknown element %llx in BlockMore", id);
-        ne_io_read_skip(ctx->io, size);
+        r = ne_io_read_skip(ctx->io, size);
+        if (r != 1) {
+          free(data);
+          return r;
+        }
       }
     }
 
@@ -1582,14 +1584,6 @@ ne_find_cue_point_for_tstamp(nestegg * ctx, struct ebml_list_node * cue_point, u
   return prev;
 }
 
-static int
-ne_is_suspend_element(uint64_t id)
-{
-  if (id == ID_SIMPLE_BLOCK || id == ID_BLOCK_GROUP)
-    return 1;
-  return 0;
-}
-
 static void
 ne_null_log_callback(nestegg * ctx, unsigned int severity, char const * fmt, ...)
 {
@@ -1634,7 +1628,7 @@ ne_init_cue_points(nestegg * ctx, int64_t max_offset)
     if (id != ID_CUES)
       return -1;
 
-    ctx->ancestor = NULL;
+    assert(ctx->ancestor == NULL);
     if (ne_ctx_push(ctx, ne_top_level_elements, ctx) < 0)
       return -1;
     if (ne_ctx_push(ctx, ne_segment_elements, &ctx->segment) < 0)
@@ -1764,6 +1758,8 @@ ne_match_webm(nestegg_io io, int64_t max_offset)
      max_offset is not on a valid element end point. We only want to check
      the EBML ID and that the doctype is "webm". */
   ne_parse(ctx, NULL, max_offset);
+  while (ctx->ancestor)
+    ne_ctx_pop(ctx);
 
   if (ne_get_string(ctx->ebml.doctype, &doctype) != 0 ||
       strcmp(doctype, "webm") != 0) {
@@ -1824,6 +1820,8 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
   ne_ctx_push(ctx, ne_top_level_elements, ctx);
 
   r = ne_parse(ctx, NULL, max_offset);
+  while (ctx->ancestor)
+    ne_ctx_pop(ctx);
 
   if (r != 1) {
     nestegg_destroy(ctx);
@@ -1864,6 +1862,12 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
     track = track->next;
   }
 
+  r = ne_ctx_save(ctx, &ctx->saved);
+  if (r != 0) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
+
   *context = ctx;
 
   return 0;
@@ -1872,8 +1876,7 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
 void
 nestegg_destroy(nestegg * ctx)
 {
-  while (ctx->ancestor)
-    ne_ctx_pop(ctx);
+  assert(ctx->ancestor == NULL);
   ne_pool_destroy(ctx->alloc_pool);
   free(ctx->io);
   free(ctx);
@@ -1889,6 +1892,9 @@ nestegg_duration(nestegg * ctx, uint64_t * duration)
     return -1;
 
   tc_scale = ne_get_timecode_scale(ctx);
+
+  if (unscaled_duration < 0 || unscaled_duration > UINT64_MAX / tc_scale)
+    return -1;
 
   *duration = (uint64_t) (unscaled_duration * tc_scale);
   return 0;
@@ -1993,16 +1999,7 @@ nestegg_offset_seek(nestegg * ctx, uint64_t offset)
     return -1;
   ctx->last_valid = 0;
 
-  while (ctx->ancestor)
-    ne_ctx_pop(ctx);
-
-  ne_ctx_push(ctx, ne_top_level_elements, ctx);
-  ne_ctx_push(ctx, ne_segment_elements, &ctx->segment);
-
-  ctx->log(ctx, NESTEGG_LOG_DEBUG, "seek: parsing cluster elements");
-  r = ne_parse(ctx, NULL, -1);
-  if (r != 1)
-    return -1;
+  assert(ctx->ancestor == NULL);
 
   return 0;
 }
@@ -2037,12 +2034,9 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   if (ne_get_uint(pos->cluster_position, &seek_pos) != 0)
     return -1;
 
-  /* Seek and set up parser state for segment-level element (Cluster). */
+  /* Seek to (we assume) the start of a Cluster element. */
   r = nestegg_offset_seek(ctx, ctx->segment_offset + seek_pos);
   if (r != 0)
-    return -1;
-
-  if (!ne_is_suspend_element(ctx->last_id))
     return -1;
 
   return 0;
@@ -2326,6 +2320,13 @@ nestegg_track_default_duration(nestegg * ctx, unsigned int track,
 }
 
 int
+nestegg_read_reset(nestegg * ctx)
+{
+  assert(ctx->ancestor == NULL);
+  return ne_ctx_restore(ctx, &ctx->saved);
+}
+
+int
 nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
 {
   int r, read_block = 0;
@@ -2333,106 +2334,131 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
 
   *pkt = NULL;
 
-  for (;;) {
-    r = ne_peek_element(ctx, &id, &size);
+  assert(ctx->ancestor == NULL);
+
+  /* Prepare for read_reset to resume parsing from this point upon error. */
+  r = ne_ctx_save(ctx, &ctx->saved);
+  if (r != 0)
+    return -1;
+
+  while (!read_block) {
+    r = ne_read_element(ctx, &id, &size);
     if (r != 1)
       return r;
 
-    /* Any DESC_FLAG_SUSPEND fields must be handled here. */
-    if (ne_is_suspend_element(id)) {
+    switch (id) {
+    case ID_CLUSTER: {
       r = ne_read_element(ctx, &id, &size);
       if (r != 1)
         return r;
 
-      /* The only DESC_FLAG_SUSPEND fields are BlocksGroups and SimpleBlocks, which we
-         handle directly. */
-      if (id == ID_SIMPLE_BLOCK) {
-        r = ne_read_block(ctx, id, size, pkt);
+      /* Timecode must be the first element in a Cluster, per spec. */
+      if (id != ID_TIMECODE)
+        return -1;
+
+      r = ne_read_uint(ctx->io, &ctx->cluster_timecode, size);
+      if (r != 1)
+        return r;
+      ctx->read_cluster_timecode = 1;
+      break;
+    }
+    case ID_SIMPLE_BLOCK:
+      r = ne_read_block(ctx, id, size, pkt);
+      if (r != 1)
+        return r;
+
+      read_block = 1;
+      break;
+    case ID_BLOCK_GROUP: {
+      int64_t block_group_end;
+      uint64_t block_duration = 0;
+      int read_block_duration = 0;
+      int64_t discard_padding = 0;
+      int read_discard_padding = 0;
+      int64_t reference_block = 0;
+      int read_reference_block = 0;
+      struct block_additional * block_additional = NULL;
+
+      block_group_end = ne_io_tell(ctx->io) + size;
+
+      /* Read the entire BlockGroup manually. */
+      while (ne_io_tell(ctx->io) < block_group_end) {
+        r = ne_read_element(ctx, &id, &size);
         if (r != 1)
           return r;
 
-        read_block = 1;
-      } else {
-        int64_t block_group_end;
-        uint64_t block_duration = 0;
-        int read_block_duration = 0;
-        int64_t discard_padding = 0;
-        int read_discard_padding = 0;
-        struct block_additional * block_additional = NULL;
-
-        assert(id == ID_BLOCK_GROUP);
-
-        /* This makes ne_read_element read the next element instead of returning
-           information about the already "peeked" one. */
-        ctx->last_valid = 0;
-
-        block_group_end = ne_io_tell(ctx->io) + size;
-
-        /* Read the entire BlockGroup manually. */
-        while (ne_io_tell(ctx->io) < block_group_end) {
-          r = ne_read_element(ctx, &id, &size);
+        switch (id) {
+        case ID_BLOCK: {
+          r = ne_read_block(ctx, id, size, pkt);
           if (r != 1)
             return r;
 
-          switch (id) {
-          case ID_BLOCK: {
-            r = ne_read_block(ctx, id, size, pkt);
-            if (r != 1)
-              return r;
-
-            read_block = 1;
-            break;
-          }
-          case ID_BLOCK_DURATION: {
-            r = ne_read_uint(ctx->io, &block_duration, size);
-            if (r < 0)
-              return r;
-            block_duration *= ne_get_timecode_scale(ctx);
-            read_block_duration = 1;
-            break;
-          }
-          case ID_DISCARD_PADDING: {
-            r = ne_read_int(ctx->io, &discard_padding, size);
-            if (r < 0)
-              return r;
-            read_discard_padding = 1;
-            break;
-          }
-          case ID_BLOCK_ADDITIONS: {
-            r = ne_read_block_additions(ctx, id, size, &block_additional);
-            if (r < 0)
-              return r;
-            break;
-          }
-          default:
-            /* We don't know what this element is, so skip over it */
-            if (id != ID_VOID && id != ID_CRC32)
-              ctx->log(ctx, NESTEGG_LOG_DEBUG,
-                       "unknown element %llx in BlockGroup", id);
-            ne_io_read_skip(ctx->io, size);
-          }
+          read_block = 1;
+          break;
         }
-
-        assert(read_block == (pkt != NULL));
-        if (*pkt) {
-          (*pkt)->duration = block_duration;
-          (*pkt)->read_duration = read_block_duration;
-          (*pkt)->discard_padding = discard_padding;
-          (*pkt)->read_discard_padding = read_discard_padding;
-          (*pkt)->block_additional = block_additional;
-        } else {
-          free(block_additional);
+        case ID_BLOCK_DURATION: {
+          r = ne_read_uint(ctx->io, &block_duration, size);
+          if (r != 1)
+            return r;
+          block_duration *= ne_get_timecode_scale(ctx);
+          read_block_duration = 1;
+          break;
+        }
+        case ID_DISCARD_PADDING: {
+          r = ne_read_int(ctx->io, &discard_padding, size);
+          if (r != 1)
+            return r;
+          read_discard_padding = 1;
+          break;
+        }
+        case ID_BLOCK_ADDITIONS: {
+          r = ne_read_block_additions(ctx, size, &block_additional);
+          if (r != 1)
+            return r;
+          break;
+        }
+        case ID_REFERENCE_BLOCK: {
+          r = ne_read_int(ctx->io, &reference_block, size);
+          if (r != 1)
+            return r;
+          read_reference_block = 1;
+          break;
+        }
+        default:
+          /* We don't know what this element is, so skip over it */
+          if (id != ID_VOID && id != ID_CRC32)
+            ctx->log(ctx, NESTEGG_LOG_DEBUG,
+                     "read_packet: unknown element %llx in BlockGroup", id);
+          r = ne_io_read_skip(ctx->io, size);
+          if (r != 1)
+            return r;
         }
       }
 
-      /* If we have read a block and hit EOS when reading optional block
-         subelements, don't report EOS until the next call. */
-      return read_block;
+      assert(read_block == (*pkt != NULL));
+      if (*pkt) {
+        (*pkt)->duration = block_duration;
+        (*pkt)->read_duration = read_block_duration;
+        (*pkt)->discard_padding = discard_padding;
+        (*pkt)->read_discard_padding = read_discard_padding;
+        (*pkt)->reference_block = reference_block;
+        (*pkt)->read_reference_block = read_reference_block;
+        (*pkt)->block_additional = block_additional;
+        if ((*pkt)->read_reference_block)
+          /* If a packet has a reference block it contains
+             predictive frames and no keyframes */
+          (*pkt)->keyframe = NESTEGG_PACKET_HAS_KEYFRAME_FALSE;
+      } else {
+        free(block_additional);
+      }
+      break;
     }
-
-    r = ne_parse(ctx, NULL, -1);
-    if (r != 1)
-      return r;
+    default:
+      ctx->log(ctx, NESTEGG_LOG_DEBUG, "read_packet: unknown element %llx", id);
+      r = ne_io_read_skip(ctx->io, size);
+      if (r != 1)
+        return r;
+    }
   }
 
   return 1;
@@ -2459,6 +2485,12 @@ nestegg_free_packet(nestegg_packet * pkt)
   }
 
   free(pkt);
+}
+
+int
+nestegg_packet_has_keyframe(nestegg_packet * pkt)
+{
+  return pkt->keyframe;
 }
 
 int
@@ -2490,6 +2522,15 @@ nestegg_packet_discard_padding(nestegg_packet * pkt, int64_t * discard_padding)
   if (!pkt->read_discard_padding)
     return -1;
   *discard_padding = pkt->discard_padding;
+  return 0;
+}
+
+int
+nestegg_packet_reference_block(nestegg_packet * pkt, int64_t * reference_block)
+{
+  if (!pkt->read_reference_block)
+    return -1;
+  *reference_block = pkt->reference_block;
   return 0;
 }
 
