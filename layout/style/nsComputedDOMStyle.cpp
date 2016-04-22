@@ -2177,6 +2177,32 @@ nsComputedDOMStyle::DoGetImageLayerPosition(const nsStyleImageLayers& aLayers)
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetImageLayerPositionX(const nsStyleImageLayers& aLayers)
+{
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
+  for (uint32_t i = 0, i_end = aLayers.mPositionXCount; i < i_end; ++i) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToPositionCoord(aLayers.mLayers[i].mPosition.mXPosition, val);
+    valueList->AppendCSSValue(val.forget());
+  }
+
+  return valueList.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetImageLayerPositionY(const nsStyleImageLayers& aLayers)
+{
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
+  for (uint32_t i = 0, i_end = aLayers.mPositionYCount; i < i_end; ++i) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToPositionCoord(aLayers.mLayers[i].mPosition.mYPosition, val);
+    valueList->AppendCSSValue(val.forget());
+  }
+
+  return valueList.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetImageLayerRepeat(const nsStyleImageLayers& aLayers)
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
@@ -2363,6 +2389,20 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
 {
   const nsStyleImageLayers& layers = StyleBackground()->mImage;
   return DoGetImageLayerPosition(layers);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetBackgroundPositionX()
+{
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
+  return DoGetImageLayerPositionX(layers);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetBackgroundPositionY()
+{
+  const nsStyleImageLayers& layers = StyleBackground()->mImage;
+  return DoGetImageLayerPositionY(layers);
 }
 
 already_AddRefed<CSSValue>
@@ -6121,6 +6161,20 @@ nsComputedDOMStyle::DoGetMaskPosition()
 {
   const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
   return DoGetImageLayerPosition(layers);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetMaskPositionX()
+{
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
+  return DoGetImageLayerPositionX(layers);
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetMaskPositionY()
+{
+  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
+  return DoGetImageLayerPositionY(layers);
 }
 
 already_AddRefed<CSSValue>
