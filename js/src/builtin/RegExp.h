@@ -61,6 +61,12 @@ extern bool
 RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                 int32_t lastIndex, int32_t* endIndex);
 
+extern bool
+intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp);
+
 /*
  * The following functions are for use by self-hosted code.
  */

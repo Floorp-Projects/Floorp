@@ -2566,6 +2566,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpInstanceOptimizable),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
     JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
+    JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
+    JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
 
     JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
     JS_FN("FlatStringSearch", FlatStringSearch, 2,0),
