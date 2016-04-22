@@ -1292,7 +1292,8 @@ class FunctionCompiler
         return true;
     }
 
-    bool brTable(MDefinition* expr, uint32_t defaultDepth, const Uint32Vector& depths)
+    bool brTable(MDefinition* expr, uint32_t defaultDepth, const Uint32Vector& depths,
+                 MDefinition* maybeValue)
     {
         if (inDeadCode())
             return true;
@@ -1335,6 +1336,8 @@ class FunctionCompiler
             if (!table->addCase(caseIndex))
                 return false;
         }
+
+        pushDef(maybeValue);
 
         curBlock_->end(table);
         curBlock_ = nullptr;
@@ -1598,10 +1601,12 @@ EmitBrTable(FunctionCompiler& f)
     if (!f.iter().readBrTableEntry(type, &depth))
         return false;
 
-    if (tableLength == 0)
-        return f.br(depth, nullptr);
+    MDefinition* maybeValue = IsVoid(brTable.type) ? nullptr : brTable.value;
 
-    return f.brTable(brTable.index, depth, depths);
+    if (tableLength == 0)
+        return f.br(depth, maybeValue);
+
+    return f.brTable(brTable.index, depth, depths, maybeValue);
 }
 
 static bool

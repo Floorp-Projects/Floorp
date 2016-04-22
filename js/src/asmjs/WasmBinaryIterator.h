@@ -165,10 +165,11 @@ struct BrTableRecord
 {
     uint32_t tableLength;
     ExprType type;
+    Value value;
     Value index;
 
-    BrTableRecord(uint32_t tableLength, ExprType type, Value index)
-      : tableLength(tableLength), type(type), index(index)
+    BrTableRecord(uint32_t tableLength, ExprType type, Value value, Value index)
+      : tableLength(tableLength), type(type), value(value), index(index)
     {}
 };
 
@@ -1408,15 +1409,16 @@ ExprIter<Policy>::readBrTable()
     if (!popWithType(ExprType::I32, &index))
         return false;
 
-    uint32_t tableLength;
-    if (!readVarU32(&tableLength))
-        return fail("unable to read br_table table length");
-
+    // Leave the operand(s) in place; they become our result(s).
     TypeAndValue<Value> tv;
     if (!top(&tv))
         return false;
 
-    u_.brTable = BrTableRecord<Value>(tableLength, tv.type(), index);
+    uint32_t tableLength;
+    if (!readVarU32(&tableLength))
+        return fail("unable to read br_table table length");
+
+    u_.brTable = BrTableRecord<Value>(tableLength, tv.type(), tv.value(), index);
     return setInitialized();
 }
 
