@@ -2723,7 +2723,7 @@ EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
    *
    * Note: we'll have to one-off various cases to ensure a good usable behavior
    */
-  WidgetGestureNotifyEvent::ePanDirection panDirection =
+  WidgetGestureNotifyEvent::PanDirection panDirection =
     WidgetGestureNotifyEvent::ePanNone;
   bool displayPanFeedback = false;
   for (nsIFrame* current = targetFrame; current;

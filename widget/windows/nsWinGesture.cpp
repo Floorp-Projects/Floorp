@@ -119,7 +119,7 @@ bool nsWinGesture::InitLibrary()
 #define GCOUNT 5
 
 bool nsWinGesture::SetWinGestureSupport(HWND hWnd,
-                     WidgetGestureNotifyEvent::ePanDirection aDirection)
+                     WidgetGestureNotifyEvent::PanDirection aDirection)
 {
   if (!getGestureInfo)
     return false;
