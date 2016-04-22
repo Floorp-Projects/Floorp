@@ -901,9 +901,6 @@ TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
 IDirect3DDevice9*
 TextureHostD3D9::GetDevice()
 {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
   return mCompositor ? mCompositor->device() : nullptr;
 }
 
@@ -964,9 +961,6 @@ DXGITextureHostD3D9::DXGITextureHostD3D9(TextureFlags aFlags,
 IDirect3DDevice9*
 DXGITextureHostD3D9::GetDevice()
 {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
   return mCompositor ? mCompositor->device() : nullptr;
 }
 
@@ -1057,9 +1051,6 @@ DXGIYCbCrTextureHostD3D9::DXGIYCbCrTextureHostD3D9(TextureFlags aFlags,
 IDirect3DDevice9*
 DXGIYCbCrTextureHostD3D9::GetDevice()
 {
-  if (mFlags & TextureFlags::INVALID_COMPOSITOR) {
-    return nullptr;
-  }
   return mCompositor ? mCompositor->device() : nullptr;
 }
 
