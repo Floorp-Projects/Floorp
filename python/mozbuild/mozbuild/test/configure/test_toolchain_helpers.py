@@ -113,10 +113,10 @@ class TestCompilerPreprocessor(unittest.TestCase):
         self.assertEquals('IFDEF_A\nIF_A\nIF_B\nIF_NOT_C\n', pp.out.getvalue())
 
 
-class FakeCompiler(object):
+class FakeCompiler(dict):
     '''Defines a fake compiler for use in toolchain tests below.
 
-    The definition given when creating an instance can have one of two
+    The definitions given when creating an instance can have one of two
     forms:
     - a dict giving preprocessor symbols and their respective value, e.g.
         { '__GNUC__': 4, '__STDC__': 1 }
@@ -139,11 +139,20 @@ class FakeCompiler(object):
           '*.c': { '__STDC__': 1 },
           '*.cpp': { '__cplusplus': '199711L' },
         }
+
+    All the given definitions are merged together.
+
+    A FakeCompiler instance itself can be used as a definition to create
+    another FakeCompiler.
+
+    For convenience, FakeCompiler instances can be added (+) to one another.
     '''
-    def __init__(self, definition):
-        if definition.get(None) is None:
-            definition = {None: definition}
-        self._definition = definition
+    def __init__(self, *definitions):
+        for definition in definitions:
+            if all(not isinstance(d, dict) for d in definition.itervalues()):
+                definition = {None: definition}
+            for key, value in definition.iteritems():
+                self.setdefault(key, {}).update(value)
 
     def __call__(self, stdin, args):
         files = [arg for arg in args if not arg.startswith('-')]
@@ -151,7 +160,7 @@ class FakeCompiler(object):
         if '-E' in flags:
             assert len(files) == 1
             file = files[0]
-            pp = CompilerPreprocessor(self._definition[None])
+            pp = CompilerPreprocessor(self[None])
 
             def apply_defn(defn):
                 for k, v in defn.iteritems():
@@ -161,18 +170,21 @@ class FakeCompiler(object):
                     else:
                         pp.context[k] = v
 
-            for glob, defn in self._definition.iteritems():
+            for glob, defn in self.iteritems():
                 if glob and not glob.startswith('-') and fnmatch(file, glob):
                     apply_defn(defn)
 
             for flag in flags:
-                apply_defn(self._definition.get(flag, {}))
+                apply_defn(self.get(flag, {}))
 
             pp.out = StringIO()
             pp.do_include(file)
             return 0, pp.out.getvalue(), ''
 
         return 1, '', ''
+
+    def __add__(self, other):
+        return FakeCompiler(self, other)
 
 
 class TestFakeCompiler(unittest.TestCase):
@@ -227,6 +239,90 @@ class TestFakeCompiler(unittest.TestCase):
                               (0, '1 42 C', ''))
             self.assertEquals(compiler(None, ['-E', '-bar', 'file.c']),
                               (0, '1 bar bar', ''))
+
+    def test_multiple_definitions(self):
+        compiler = FakeCompiler({
+            'A': 1,
+            'B': 2,
+        }, {
+            'C': 3,
+        })
+
+        self.assertEquals(compiler, {
+            None: {
+                'A': 1,
+                'B': 2,
+                'C': 3,
+            },
+        })
+        compiler = FakeCompiler({
+            'A': 1,
+            'B': 2,
+        }, {
+            'B': 4,
+            'C': 3,
+        })
+
+        self.assertEquals(compiler, {
+            None: {
+                'A': 1,
+                'B': 4,
+                'C': 3,
+            },
+        })
+        compiler = FakeCompiler({
+            'A': 1,
+            'B': 2,
+        }, {
+            None: {
+                'B': 4,
+                'C': 3,
+            },
+            '-foo': {
+                'D': 5,
+            },
+        })
+
+        self.assertEquals(compiler, {
+            None: {
+                'A': 1,
+                'B': 4,
+                'C': 3,
+            },
+            '-foo': {
+                'D': 5,
+            },
+        })
+
+        compiler = FakeCompiler({
+            None: {
+                'A': 1,
+                'B': 2,
+            },
+            '-foo': {
+                'D': 5,
+            },
+        }, {
+            '-foo': {
+                'D': 5,
+            },
+            '-bar': {
+                'E': 6,
+            },
+        })
+
+        self.assertEquals(compiler, {
+            None: {
+                'A': 1,
+                'B': 2,
+            },
+            '-foo': {
+                'D': 5,
+            },
+            '-bar': {
+                'E': 6,
+            },
+        })
 
 
 if __name__ == '__main__':
