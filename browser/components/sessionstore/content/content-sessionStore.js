@@ -171,7 +171,7 @@ var MessageListener = {
     let epoch = gCurrentEpoch;
 
     // We need to pass the value of didStartLoad back to SessionStore.jsm.
-    let didStartLoad = gContentRestore.restoreTabContent(loadArguments, () => {
+    let didStartLoad = gContentRestore.restoreTabContent(loadArguments, isRemotenessUpdate, () => {
       // Tell SessionStore.jsm that it may want to restore some more tabs,
       // since it restores a max of MAX_CONCURRENT_TAB_RESTORES at a time.
       sendAsyncMessage("SessionStore:restoreTabContentComplete", {epoch, isRemotenessUpdate});

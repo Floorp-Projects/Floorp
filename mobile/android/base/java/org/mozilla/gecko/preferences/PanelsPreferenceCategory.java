@@ -163,6 +163,8 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             return;
         }
 
+        updateVisibilityPrefsForPanel(id, true);
+
         mConfigEditor.setDefault(id);
         mConfigEditor.apply();
 
@@ -232,13 +234,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SHOW, Method.DIALOG, id);
         }
 
-        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS).equals(id)) {
-            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, !toHide).apply();
-        }
-
-        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.HISTORY).equals(id)) {
-            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, !toHide).apply();
-        }
+        updateVisibilityPrefsForPanel(id, !toHide);
 
         pref.setHidden(toHide);
         setDefaultFromConfig();
@@ -251,5 +247,15 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     @Override
     protected void setFallbackDefault() {
         setDefaultFromConfig();
+    }
+
+    private void updateVisibilityPrefsForPanel(String panelId, boolean toShow) {
+        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.BOOKMARKS).equals(panelId)) {
+            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_BOOKMARKS_PANEL_ENABLED, toShow).apply();
+        }
+
+        if (HomeConfig.getIdForBuiltinPanelType(HomeConfig.PanelType.COMBINED_HISTORY).equals(panelId)) {
+            GeckoSharedPrefs.forProfile(getContext()).edit().putBoolean(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED, toShow).apply();
+        }
     }
 }
