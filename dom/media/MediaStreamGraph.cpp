@@ -46,7 +46,7 @@ namespace mozilla {
 LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
 #define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
-#define ENABLE_LIFECYCLE_LOG
+// #define ENABLE_LIFECYCLE_LOG
 
 // We don't use NSPR log here because we want this interleaved with adb logcat
 // on Android/B2G
