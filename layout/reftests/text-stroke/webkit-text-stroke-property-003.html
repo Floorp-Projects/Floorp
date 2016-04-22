@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>webkit-text-stroke: medium black</title>
+<link rel="author" title="Jeremy Chen" href="jeremychen@mozilla.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org">
+<link rel="help" href="https://compat.spec.whatwg.org/#the-webkit-text-stroke">
+<meta name="assert" content="medium keyword should take effect for webkit-text-stroke-width">
+<link rel="match" href="webkit-text-stroke-property-003-ref.html">
+<body>
+<div style="width: 500px; height: 200px;">
+<text style="padding-left: 0px; color: transparent; font-size: 64px; -webkit-text-stroke: medium black;">TEXT stroke</text>
+<!-- need this inline-block to make sure text is rendered at the same position as the SVG reference -->
+<div style="display:inline-block; width:0px; height:100px;"/>
+</div>
+<body>
+<html>

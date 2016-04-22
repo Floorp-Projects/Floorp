@@ -330,6 +330,9 @@ include ../tables/reftests/reftest.list
 # text/
 include text/reftest.list
 
+# text-stroke
+include text-stroke/reftest.list
+
 # text-decoration/
 include text-decoration/reftest.list
 
