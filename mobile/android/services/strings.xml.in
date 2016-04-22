@@ -28,14 +28,6 @@
 <string name="fxaccount_getting_started_description">&fxaccount_getting_started_description2;</string>
 <string name="fxaccount_getting_started_get_started">&fxaccount_getting_started_get_started;</string>
 
-<string name="fxaccount_confirm_account_header">&fxaccount_confirm_account_header;</string>
-<string name="fxaccount_confirm_account_resend_email">&fxaccount_confirm_account_resend_email;</string>
-
-<string name="fxaccount_sign_in_button_label">&fxaccount_sign_in_button_label;</string>
-
-<string name="fxaccount_finish_migrating_header">&fxaccount_finish_migrating_header;</string>
-<string name="fxaccount_finish_migrating_button_label">&fxaccount_finish_migrating_button_label;</string>
-
 <string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
 <string name="fxaccount_status_signed_in_as">&fxaccount_status_signed_in_as;</string>
 <string name="fxaccount_status_manage_account">&fxaccount_status_manage_account;</string>

@@ -19,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -31,7 +30,7 @@ import android.util.Pair;
 
 public final class HomeConfig {
     public static final String PREF_KEY_BOOKMARKS_PANEL_ENABLED = "bookmarksPanelEnabled";
-    public static final String PREF_KEY_HISTORY_PANEL_ENABLED = "historyPanelEnabled";
+    public static final String PREF_KEY_HISTORY_PANEL_ENABLED = "combinedHistoryPanelEnabled";
 
     /**
      * Used to determine what type of HomeFragment subclass to use when creating
@@ -43,12 +42,14 @@ public final class HomeConfig {
     public static enum PanelType implements Parcelable {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
-        HISTORY("history", HistoryPanel.class),
         COMBINED_HISTORY("combined_history", CombinedHistoryPanel.class),
-        REMOTE_TABS("remote_tabs", RemoteTabsPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
         RECENT_TABS("recent_tabs", RecentTabsPanel.class),
-        DYNAMIC("dynamic", DynamicPanel.class);
+        DYNAMIC("dynamic", DynamicPanel.class),
+        // Deprecated panels that should no longer exist but are kept around for
+        // migration code. Class references have been replaced with new version of the panel.
+        DEPRECATED_REMOTE_TABS("remote_tabs", CombinedHistoryPanel.class),
+        DEPRECATED_HISTORY("history", CombinedHistoryPanel.class);
 
         private final String mId;
         private final Class<?> mPanelClass;
@@ -1640,12 +1641,10 @@ public final class HomeConfig {
         case BOOKMARKS:
             return R.string.bookmarks_title;
 
+        case DEPRECATED_HISTORY:
+        case DEPRECATED_REMOTE_TABS:
         case COMBINED_HISTORY:
-        case HISTORY:
             return R.string.home_history_title;
-
-        case REMOTE_TABS:
-            return R.string.home_remote_tabs_title;
 
         case READING_LIST:
             return R.string.reading_list_title;
@@ -1666,13 +1665,13 @@ public final class HomeConfig {
         case BOOKMARKS:
             return BOOKMARKS_PANEL_ID;
 
-        case HISTORY:
+        case DEPRECATED_HISTORY:
             return HISTORY_PANEL_ID;
 
         case COMBINED_HISTORY:
             return COMBINED_HISTORY_PANEL_ID;
 
-        case REMOTE_TABS:
+        case DEPRECATED_REMOTE_TABS:
             return REMOTE_TABS_PANEL_ID;
 
         case READING_LIST:

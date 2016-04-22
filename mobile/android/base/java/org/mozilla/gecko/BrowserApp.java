@@ -3558,7 +3558,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.history_list) {
-            final String url = AboutPages.getURLForBuiltinPanelType(PanelType.HISTORY);
+            final String url = AboutPages.getURLForBuiltinPanelType(PanelType.COMBINED_HISTORY);
             Tabs.getInstance().loadUrl(url);
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.BOOKMARKS_HISTORY_MENU);
             return true;

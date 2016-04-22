@@ -166,10 +166,10 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
             JSONObject panelObj = jsonPanels.getJSONObject(i);
             final PanelConfig panelConfig = new PanelConfig(panelObj);
             final PanelType type = panelConfig.getType();
-            if (type == PanelType.HISTORY) {
+            if (type == PanelType.DEPRECATED_HISTORY) {
                 historyIndex = i;
                 historyFlags = panelConfig.getFlags();
-            } else if (type == PanelType.REMOTE_TABS) {
+            } else if (type == PanelType.DEPRECATED_REMOTE_TABS) {
                 syncIndex = i;
                 syncFlags = panelConfig.getFlags();
             } else if (type == PanelType.COMBINED_HISTORY) {
@@ -314,7 +314,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 case 2:
                     // Add "Remote Tabs"/"Synced Tabs" panel.
                     addBuiltinPanelConfig(context, jsonPanels,
-                            PanelType.REMOTE_TABS, Position.FRONT, Position.BACK);
+                            PanelType.DEPRECATED_REMOTE_TABS, Position.FRONT, Position.BACK);
                     break;
 
                 case 3:
@@ -323,7 +323,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                     // considered "low memory". Now, we expose the panel to all devices.
                     // This migration should only occur for "low memory" devices.
                     // Note: This will not agree with the default configuration, which
-                    // has REMOTE_TABS after READING_LIST on some devices.
+                    // has DEPRECATED_REMOTE_TABS after READING_LIST on some devices.
                     if (!readingListPanelExists(jsonPanels)) {
                         addBuiltinPanelConfig(context, jsonPanels,
                                 PanelType.READING_LIST, Position.BACK, Position.BACK);
@@ -490,7 +490,7 @@ public class HomeConfigPrefsBackend implements HomeConfigBackend {
                 || !prefs.contains(HomeConfig.PREF_KEY_HISTORY_PANEL_ENABLED)) {
 
             final String bookmarkType = PanelType.BOOKMARKS.toString();
-            final String historyType = PanelType.HISTORY.toString();
+            final String historyType = PanelType.COMBINED_HISTORY.toString();
             try {
                 for (int i = 0; i < panelsArray.length(); i++) {
                     final JSONObject panelObj = panelsArray.getJSONObject(i);
