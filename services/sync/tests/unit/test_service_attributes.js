@@ -29,7 +29,6 @@ function test_urls() {
 
     Service.serverURL = "http://weave.server/";
     Service.clusterURL = "http://weave.cluster/";
-    do_check_eq(Svc.Prefs.get("clusterURL"), "http://weave.cluster/");
 
     do_check_eq(Service.userBaseURL, "http://weave.cluster/1.1/johndoe/");
     do_check_eq(Service.infoURL,
@@ -63,11 +62,11 @@ function test_urls() {
     _("The 'serverURL' attributes updates/resets preferences.");
     // Identical value doesn't do anything
     Service.serverURL = Service.serverURL;
-    do_check_eq(Svc.Prefs.get("clusterURL"), "http://weave.cluster/");
+    do_check_eq(Service.clusterURL, "http://weave.cluster/");
 
     Service.serverURL = "http://different.auth.node/";
     do_check_eq(Svc.Prefs.get("serverURL"), "http://different.auth.node/");
-    do_check_eq(Svc.Prefs.get("clusterURL"), undefined);
+    do_check_eq(Service.clusterURL, "");
 
   } finally {
     Svc.Prefs.resetBranch("");

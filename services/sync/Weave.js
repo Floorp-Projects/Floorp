@@ -124,8 +124,7 @@ WeaveService.prototype = {
    */
   get enabled() {
     let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-    return prefs.prefHasUserValue("username") &&
-           prefs.prefHasUserValue("clusterURL");
+    return prefs.prefHasUserValue("username");
   },
 
   observe: function (subject, topic, data) {
