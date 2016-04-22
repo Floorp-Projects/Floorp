@@ -56,37 +56,41 @@ public class VisitsHelperTest {
         Uri visitsTestUri = testUri(BrowserContract.Visits.CONTENT_URI);
 
         BrowserProvider provider = new BrowserProvider();
-        provider.onCreate();
-        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY_URI.toString(), provider);
+        try {
+            provider.onCreate();
+            ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY_URI.toString(), provider);
 
-        final ShadowContentResolver cr = new ShadowContentResolver();
-        ContentProviderClient historyClient = cr.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
-        ContentProviderClient visitsClient = cr.acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
+            final ShadowContentResolver cr = new ShadowContentResolver();
+            ContentProviderClient historyClient = cr.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
+            ContentProviderClient visitsClient = cr.acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
 
-        ContentValues historyItem = new ContentValues();
-        historyItem.put(BrowserContract.History.URL, "https://www.mozilla.org");
-        historyItem.put(BrowserContract.History.GUID, "testGUID");
-        historyClient.insert(historyTestUri, historyItem);
+            ContentValues historyItem = new ContentValues();
+            historyItem.put(BrowserContract.History.URL, "https://www.mozilla.org");
+            historyItem.put(BrowserContract.History.GUID, "testGUID");
+            historyClient.insert(historyTestUri, historyItem);
 
-        Long baseDate = System.currentTimeMillis();
-        for (int i = 0; i < 30; i++) {
-            ContentValues visitItem = new ContentValues();
-            visitItem.put(BrowserContract.Visits.HISTORY_GUID, "testGUID");
-            visitItem.put(BrowserContract.Visits.DATE_VISITED, baseDate - i * 100);
-            visitItem.put(BrowserContract.Visits.VISIT_TYPE, 1);
-            visitItem.put(BrowserContract.Visits.IS_LOCAL, 1);
-            visitsClient.insert(visitsTestUri, visitItem);
-        }
+            Long baseDate = System.currentTimeMillis();
+            for (int i = 0; i < 30; i++) {
+                ContentValues visitItem = new ContentValues();
+                visitItem.put(BrowserContract.Visits.HISTORY_GUID, "testGUID");
+                visitItem.put(BrowserContract.Visits.DATE_VISITED, baseDate - i * 100);
+                visitItem.put(BrowserContract.Visits.VISIT_TYPE, 1);
+                visitItem.put(BrowserContract.Visits.IS_LOCAL, 1);
+                visitsClient.insert(visitsTestUri, visitItem);
+            }
 
-        // test that limit worked, that sorting is correct, and that both date and type are present
-        JSONArray recentVisits = VisitsHelper.getRecentHistoryVisitsForGUID(visitsClient, "testGUID", 10);
-        Assert.assertEquals(10, recentVisits.size());
-        for (int i = 0; i < recentVisits.size(); i++) {
-            JSONObject v = (JSONObject) recentVisits.get(i);
-            Long date = (Long) v.get("date");
-            Integer type = (Integer) v.get("type");
-            Assert.assertEquals(Long.valueOf(baseDate - i * 100), date);
-            Assert.assertEquals(Integer.valueOf(1), type);
+            // test that limit worked, that sorting is correct, and that both date and type are present
+            JSONArray recentVisits = VisitsHelper.getRecentHistoryVisitsForGUID(visitsClient, "testGUID", 10);
+            Assert.assertEquals(10, recentVisits.size());
+            for (int i = 0; i < recentVisits.size(); i++) {
+                JSONObject v = (JSONObject) recentVisits.get(i);
+                Long date = (Long) v.get("date");
+                Integer type = (Integer) v.get("type");
+                Assert.assertEquals(Long.valueOf(baseDate - i * 100), date);
+                Assert.assertEquals(Integer.valueOf(1), type);
+            }
+        } finally {
+            provider.shutdown();
         }
     }
 
