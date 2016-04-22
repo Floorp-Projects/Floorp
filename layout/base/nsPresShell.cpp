@@ -1183,19 +1183,10 @@ PresShell::Destroy()
 
   mSynthMouseMoveEvent.Revoke();
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "Destroy is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
-  mInFrameVisibilityUpdate = true;
-
   mUpdateApproximateFrameVisibilityEvent.Revoke();
   mNotifyCompositorOfVisibleRegionsChangeEvent.Revoke();
 
   ClearVisibleFramesSets(Some(OnNonvisible::DISCARD_IMAGES));
-
-  mInFrameVisibilityUpdate = false;
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5730,44 +5721,6 @@ PresShell::MarkFramesInListApproximatelyVisible(const nsDisplayList& aList)
   }
 }
 
-void
-PresShell::ReportBadStateDuringVisibilityUpdate()
-{
-  if (!NS_IsMainThread()) {
-    gfxCriticalNote << "Got null frame in frame visibility: off-main-thread";
-  }
-  if (mIsZombie) {
-    gfxCriticalNote << "Got null frame in frame visibility: mIsZombie";
-  }
-  if (mIsDestroying) {
-    gfxCriticalNote << "Got null frame in frame visibility: mIsDestroying";
-  }
-  if (mIsReflowing) {
-    gfxCriticalNote << "Got null frame in frame visibility: mIsReflowing";
-  }
-  if (mPaintingIsFrozen) {
-    gfxCriticalNote << "Got null frame in frame visibility: mPaintingIsFrozen";
-  }
-  if (mForwardingContainer) {
-    gfxCriticalNote << "Got null frame in frame visibility: mForwardingContainer";
-  }
-  if (mIsNeverPainting) {
-    gfxCriticalNote << "Got null frame in frame visibility: mIsNeverPainting";
-  }
-  if (mIsDocumentGone) {
-    gfxCriticalNote << "Got null frame in frame visibility: mIsDocumentGone";
-  }
-  if (!nsContentUtils::IsSafeToRunScript()) {
-    gfxCriticalNote << "Got null frame in frame visibility: not safe to run script";
-  }
-}
-
-void
-PresShell::SetInFrameVisibilityUpdate(bool aState)
-{
-  mInFrameVisibilityUpdate = aState;
-}
-
 /* static */ void
 PresShell::DecVisibleCount(const VisibleFrames& aFrames,
                            VisibilityCounter aCounter,
@@ -5775,13 +5728,6 @@ PresShell::DecVisibleCount(const VisibleFrames& aFrames,
 {
   for (auto iter = aFrames.ConstIter(); !iter.Done(); iter.Next()) {
     nsIFrame* frame = iter.Get()->GetKey();
-
-    if (MOZ_UNLIKELY(!frame)) {
-      // We are about to crash, annotate crash report with some info that might
-      // help debug the crash (bug 1251150)
-      ReportBadStateDuringVisibilityUpdate();
-    }
-
     // Decrement the frame's visible count if we're still tracking its
     // visibility. (We may not be, if the frame disabled visibility tracking
     // after we added it to the visible frames list.)
@@ -6014,14 +5960,7 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "DoUpdateApproximateFrameVisibility is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-  mInFrameVisibilityUpdate = true;
-
   if (mHaveShutDown || mIsDestroying) {
-    mInFrameVisibilityUpdate = false;
     return;
   }
 
@@ -6029,14 +5968,11 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
     ClearVisibleFramesSets(Some(OnNonvisible::DISCARD_IMAGES));
-    mInFrameVisibilityUpdate = false;
     return;
   }
 
   RebuildApproximateFrameVisibility(/* aRect = */ nullptr, aRemoveOnly);
   ClearVisibleFramesForUnvisitedPresShells(rootFrame->GetView(), true);
-
-  mInFrameVisibilityUpdate = false;
 
 #ifdef DEBUG_FRAME_VISIBILITY_DISPLAY_LIST
   // This can be used to debug the frame walker by comparing beforeFrameList
@@ -6193,13 +6129,6 @@ PresShell::MarkFrameVisibleInDisplayPort(nsIFrame* aFrame)
   }
 #endif
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "MarkFrameVisibleInDisplayPort is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
-  mInFrameVisibilityUpdate = true;
-
   if (!mInDisplayPortFrames.Contains(aFrame)) {
     MOZ_ASSERT(!AssumeAllFramesVisible());
     mInDisplayPortFrames.PutEntry(aFrame);
@@ -6207,8 +6136,6 @@ PresShell::MarkFrameVisibleInDisplayPort(nsIFrame* aFrame)
   }
 
   AddFrameToVisibleRegions(aFrame, VisibilityCounter::IN_DISPLAYPORT);
-
-  mInFrameVisibilityUpdate = false;
 }
 
 static void
@@ -6245,19 +6172,10 @@ PresShell::MarkFrameNonvisible(nsIFrame* aFrame)
     return;
   }
 
-  if (mInFrameVisibilityUpdate) {
-    gfxCriticalNoteOnce << "MarkFrameNonvisible is re-entering on "
-                        << (NS_IsMainThread() ? "" : "non-") << "main thread";
-  }
-
-  mInFrameVisibilityUpdate = true;
-
   RemoveFrameFromVisibleSet(aFrame, mApproximatelyVisibleFrames,
                             VisibilityCounter::MAY_BECOME_VISIBLE);
   RemoveFrameFromVisibleSet(aFrame, mInDisplayPortFrames,
                             VisibilityCounter::IN_DISPLAYPORT);
-
-  mInFrameVisibilityUpdate = false;
 }
 
 class nsAutoNotifyDidPaint
@@ -11124,12 +11042,6 @@ PresShell::UpdateImageLockingState()
   nsresult rv = mDocument->SetImageLockingState(locked);
 
   if (locked) {
-    if (mInFrameVisibilityUpdate) {
-      gfxCriticalNoteOnce << "UpdateImageLockingState is re-entering on "
-                          << (NS_IsMainThread() ? "" : "non-") << "main thread";
-    }
-    mInFrameVisibilityUpdate = true;
-
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
     for (auto iter = mApproximatelyVisibleFrames.Iter(); !iter.Done(); iter.Next()) {
@@ -11138,7 +11050,6 @@ PresShell::UpdateImageLockingState()
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }
-    mInFrameVisibilityUpdate = false;
   }
 
   return rv;
