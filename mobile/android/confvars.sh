@@ -68,9 +68,6 @@ fi
 # Mark as WebGL conformant
 MOZ_WEBGL_CONFORMANT=1
 
-# Enable the Mozilla Location Service stumbler.
-MOZ_ANDROID_MLS_STUMBLER=1
-
 # Build and package the install bouncer APK by default.
 MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER=1
 
