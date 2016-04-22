@@ -326,6 +326,42 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   PaintInternal(aBuilder, aCtx, mVisibleRect, &bgClipRect);
 }
 
+bool
+nsDisplayCanvasBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
+                                                           const nsRect& aClipRect,
+                                                           gfxRect* aDestRect)
+{
+  if (!mBackgroundStyle)
+    return false;
+
+  if (mBackgroundStyle->mImage.mLayers.Length() != 1)
+    return false;
+
+
+  nsPresContext* presContext = mFrame->PresContext();
+  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
+
+  if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
+    return false;
+
+   nsBackgroundLayerState state =
+     nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
+                                       borderArea, aClipRect, layer);
+
+
+  // We only care about images here, not gradients.
+  if (!mIsRasterImage)
+    return false;
+
+  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  *aDestRect = nsLayoutUtils::RectToGfxRect(state.mFillArea, appUnitsPerDevPixel);
+
+  return true;
+}
+
+
 void
 nsDisplayCanvasThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
                                        nsRenderingContext* aCtx)
