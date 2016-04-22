@@ -79,7 +79,7 @@ runTest(`
   (block $m (block (block (br $m))))
   (block $k (br_if 0 (i32.const 0)) (return))
   (block $n (block (block (br_if 2 (i32.const 1)) (nop))))
-  (block $1 (block $2 (block $3 (br_table $2 $3 $1 (i32.const 1)) )) (nop))
+  (block $1 (block $2 (block $3 (br_table $2 $3 $1 (nop) (i32.const 1)) )) (nop))
   (loop $exit $cont (br_if $cont (i32.const 0)) (nop))
   (return)
 )

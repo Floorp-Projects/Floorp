@@ -6406,6 +6406,10 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
     // The default block is the last one.
     uint32_t defaultDepth = numCases;
 
+    // Write the subexpression returned by the break table.
+    if (!f.encoder().writeExpr(Expr::Nop))
+        return false;
+
     // Subtract lowest case value, so that all the cases start from 0.
     if (low) {
         if (!CheckSwitchExpr(f, switchExpr))
