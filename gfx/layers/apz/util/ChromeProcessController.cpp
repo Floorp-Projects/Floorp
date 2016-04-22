@@ -69,6 +69,13 @@ ChromeProcessController::PostDelayedTask(Task* aTask, int aDelayMs)
 }
 
 void
+ChromeProcessController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                                 const uint32_t& aScrollGeneration)
+{
+  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+}
+
+void
 ChromeProcessController::Destroy()
 {
   if (MessageLoop::current() != mUILoop) {
