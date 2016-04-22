@@ -115,10 +115,9 @@ CryptoBuffer::FromJwkBase64(const nsString& aBase64)
   NS_ConvertUTF16toUTF8 temp(aBase64);
   temp.StripWhitespace();
 
-  Base64URLDecodeOptions options;
   // JWK prohibits padding per RFC 7515, section 2.
-  options.mPadding = Base64URLDecodePadding::Reject;
-  nsresult rv = Base64URLDecode(temp, options, *this);
+  nsresult rv = Base64URLDecode(temp, Base64URLDecodePaddingPolicy::Reject,
+                                *this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -134,9 +133,8 @@ CryptoBuffer::ToJwkBase64(nsString& aBase64)
   }
 
   nsAutoCString base64;
-  Base64URLEncodeOptions options;
-  options.mPad = false;
-  nsresult rv = Base64URLEncode(Length(), Elements(), options, base64);
+  nsresult rv = Base64URLEncode(Length(), Elements(),
+                                Base64URLEncodePaddingPolicy::Omit, base64);
   NS_ENSURE_SUCCESS(rv, rv);
 
   CopyASCIItoUTF16(base64, aBase64);

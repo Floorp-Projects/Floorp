@@ -215,11 +215,9 @@ NS_IMETHODIMP
 IdentityCryptoService::Base64UrlEncode(const nsACString & utf8Input,
                                        nsACString & result)
 {
-  dom::Base64URLEncodeOptions options;
-  options.mPad = true;
   return Base64URLEncode(utf8Input.Length(),
-    reinterpret_cast<const uint8_t*>(utf8Input.BeginReading()), options,
-    result);
+    reinterpret_cast<const uint8_t*>(utf8Input.BeginReading()),
+    Base64URLEncodePaddingPolicy::Include, result);
 }
 
 KeyPair::KeyPair(SECKEYPrivateKey * privateKey, SECKEYPublicKey * publicKey)
@@ -513,9 +511,9 @@ SignRunnable::Run()
           mRv = MapSECStatus(PK11_Sign(mPrivateKey, &sig, &hashItem));
         }
         if (NS_SUCCEEDED(mRv)) {
-          dom::Base64URLEncodeOptions encodeOptions;
-          encodeOptions.mPad = true;
-          mRv = Base64URLEncode(sig.len, sig.data, encodeOptions, mSignature);
+          mRv = Base64URLEncode(sig.len, sig.data,
+                                Base64URLEncodePaddingPolicy::Include,
+                                mSignature);
         }
         SECITEM_FreeItem(&sig, false);
       }
