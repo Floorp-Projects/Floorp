@@ -1205,7 +1205,7 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
     EventStates()
   };
   static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
-                static_cast<size_t>(CSSPseudoClassType::NotPseudo) + 1,
+                static_cast<size_t>(CSSPseudoClassType::MAX),
                 "Length of PseudoClassStates array is incorrect");
 
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
