@@ -1679,6 +1679,13 @@ private:
                                           mFontParams.renderingOptions);
             }
         }
+        if ((mRunParams.drawMode &
+             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
+            DrawMode::GLYPH_STROKE) {
+            state.color = gfx::Color::FromABGR(mRunParams.textStrokeColor);
+            state.strokeOptions.mLineWidth = mRunParams.textStrokeWidth;
+            FlushStroke(buf, state);
+        }
         if (mRunParams.drawMode & DrawMode::GLYPH_PATH) {
             mRunParams.context->EnsurePathBuilder();
             Matrix mat = mRunParams.dt->GetTransform();
@@ -1688,6 +1695,15 @@ private:
         }
 
         mNumGlyphs = 0;
+    }
+
+    void FlushStroke(gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
+    {
+        RefPtr<Path> path =
+            mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
+        mRunParams.dt->Stroke(path,
+                              ColorPattern(aState.color),
+                              aState.strokeOptions);
     }
 
     Glyph        mGlyphBuffer[GLYPH_BUFFER_SIZE];
