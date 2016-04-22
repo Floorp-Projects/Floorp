@@ -75,7 +75,6 @@ struct DefaultJitOptions
     uint32_t smallFunctionMaxBytecodeLength_;
     uint32_t jumpThreshold;
     mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
-    mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
     // The options below affect the rest of the VM, and not just the JIT.

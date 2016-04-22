@@ -178,17 +178,6 @@ DefaultJitOptions::DefaultJitOptions()
             Warn(forcedDefaultIonWarmUpThresholdEnv, env);
     }
 
-    // Same but for compiling small functions.
-    const char* forcedDefaultIonSmallFunctionWarmUpThresholdEnv =
-        "JIT_OPTION_forcedDefaultIonSmallFunctionWarmUpThreshold";
-    if (const char* env = getenv(forcedDefaultIonSmallFunctionWarmUpThresholdEnv)) {
-        Maybe<int> value = ParseInt(env);
-        if (value.isSome())
-            forcedDefaultIonSmallFunctionWarmUpThreshold.emplace(value.ref());
-        else
-            Warn(forcedDefaultIonSmallFunctionWarmUpThresholdEnv, env);
-    }
-
     // Force the used register allocator instead of letting the optimization
     // pass decide.
     const char* forcedRegisterAllocatorEnv = "JIT_OPTION_forcedRegisterAllocator";
@@ -224,8 +213,6 @@ DefaultJitOptions::setEagerCompilation()
     baselineWarmUpThreshold = 0;
     forcedDefaultIonWarmUpThreshold.reset();
     forcedDefaultIonWarmUpThreshold.emplace(0);
-    forcedDefaultIonSmallFunctionWarmUpThreshold.reset();
-    forcedDefaultIonSmallFunctionWarmUpThreshold.emplace(0);
 }
 
 void
@@ -233,8 +220,6 @@ DefaultJitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold)
 {
     forcedDefaultIonWarmUpThreshold.reset();
     forcedDefaultIonWarmUpThreshold.emplace(warmUpThreshold);
-    forcedDefaultIonSmallFunctionWarmUpThreshold.reset();
-    forcedDefaultIonSmallFunctionWarmUpThreshold.emplace(warmUpThreshold);
 
     // Undo eager compilation
     if (eagerCompilation && warmUpThreshold != 0) {
