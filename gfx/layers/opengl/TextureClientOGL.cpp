@@ -51,6 +51,17 @@ EGLImageTextureData::CreateTextureClient(EGLImageImage* aImage, gfx::IntSize aSi
   );
 }
 
+void
+EGLImageTextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = mSize;
+  aInfo.format = gfx::SurfaceFormat::UNKNOWN;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
+}
+
 bool
 EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
@@ -99,6 +110,17 @@ AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTexture* aSur
 
 AndroidSurfaceTextureData::~AndroidSurfaceTextureData()
 {}
+
+void
+AndroidSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = mSize;
+  aInfo.format = gfx::SurfaceFormat::UNKNOWN;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
+}
 
 bool
 AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)

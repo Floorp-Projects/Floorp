@@ -24,6 +24,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/mozalloc.h"           // for operator delete
+#include "mozilla/gfx/CriticalSection.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
@@ -181,25 +182,32 @@ class D3D11TextureData;
 
 class TextureData {
 public:
+  struct Info {
+    gfx::IntSize size;
+    gfx::SurfaceFormat format;
+    bool hasIntermediateBuffer;
+    bool hasSynchronization;
+    bool supportsMoz2D;
+    bool canExposeMappedData;
+
+    Info()
+    : format(gfx::SurfaceFormat::UNKNOWN)
+    , hasIntermediateBuffer(false)
+    , hasSynchronization(false)
+    , supportsMoz2D(false)
+    , canExposeMappedData(false)
+    {}
+  };
+
   TextureData() { MOZ_COUNT_CTOR(TextureData); }
 
   virtual ~TextureData() { MOZ_COUNT_DTOR(TextureData); }
 
-  virtual gfx::IntSize GetSize() const = 0;
-
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
+  virtual void FillInfo(TextureData::Info& aInfo) const = 0;
 
   virtual bool Lock(OpenMode aMode, FenceHandle* aFence) = 0;
 
   virtual void Unlock() = 0;
-
-  virtual bool SupportsMoz2D() const { return false; }
-
-  virtual bool CanExposeMappedData() const { return false; }
-
-  virtual bool HasIntermediateBuffer() const = 0;
-
-  virtual bool HasSynchronization() const { return false; }
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() { return nullptr; }
 
@@ -327,9 +335,29 @@ public:
 
   bool IsLocked() const { return mIsLocked; }
 
-  bool CanExposeDrawTarget() const { return mData->SupportsMoz2D(); }
+  gfx::IntSize GetSize() const { return mInfo.size; }
 
-  bool CanExposeMappedData() const { return mData->CanExposeMappedData(); }
+  gfx::SurfaceFormat GetFormat() const { return mInfo.format; }
+
+  /**
+   * Returns true if this texture has a synchronization mechanism (mutex, fence, etc.).
+   * Textures that do not implement synchronization should be immutable or should
+   * use immediate uploads (see TextureFlags in CompositorTypes.h)
+   * Even if a texture does not implement synchronization, Lock and Unlock need
+   * to be used appropriately since the latter are also there to map/numap data.
+   */
+  bool HasSynchronization() const { return mInfo.hasSynchronization; }
+
+  /**
+   * Indicates whether the TextureClient implementation is backed by an
+   * in-memory buffer. The consequence of this is that locking the
+   * TextureClient does not contend with locking the texture on the host side.
+   */
+  bool HasIntermediateBuffer() const { return mInfo.hasIntermediateBuffer; }
+
+  bool CanExposeDrawTarget() const { return mInfo.supportsMoz2D; }
+
+  bool CanExposeMappedData() const { return mInfo.canExposeMappedData; }
 
   /**
    * Returns a DrawTarget to draw into the TextureClient.
@@ -372,25 +400,11 @@ public:
    */
   void UpdateFromSurface(gfx::SourceSurface* aSurface);
 
-  virtual gfx::SurfaceFormat GetFormat() const;
-
   /**
    * This method is strictly for debugging. It causes locking and
    * needless copies.
    */
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() {
-    Lock(OpenMode::OPEN_READ);
-    RefPtr<gfx::DataSourceSurface> data;
-    RefPtr<gfx::DrawTarget> dt = BorrowDrawTarget();
-    if (dt) {
-      RefPtr<gfx::SourceSurface> surf = dt->Snapshot();
-      if (surf) {
-        data = surf->GetDataSurface();
-      }
-    }
-    Unlock();
-    return data.forget();
-  }
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
@@ -402,22 +416,6 @@ public:
   bool CopyToTextureClient(TextureClient* aTarget,
                            const gfx::IntRect* aRect,
                            const gfx::IntPoint* aPoint);
-
-  /**
-   * Returns true if this texture has a synchronization mechanism (mutex, fence, etc.).
-   * Textures that do not implement synchronization should be immutable or should
-   * use immediate uploads (see TextureFlags in CompositorTypes.h)
-   * Even if a texture does not implement synchronization, Lock and Unlock need
-   * to be used appropriately since the latter are also there to map/numap data.
-   */
-  bool HasSynchronization() const { return false; }
-
-  /**
-   * Indicates whether the TextureClient implementation is backed by an
-   * in-memory buffer. The consequence of this is that locking the
-   * TextureClient does not contend with locking the texture on the host side.
-   */
-  bool HasIntermediateBuffer() const;
 
   /**
    * Allocate and deallocate a TextureChild actor.
@@ -435,9 +433,7 @@ public:
   /**
    * Get the TextureClient corresponding to the actor passed in parameter.
    */
-  static TextureClient* AsTextureClient(PTextureChild* actor);
-
-  gfx::IntSize GetSize() const;
+  static already_AddRefed<TextureClient> AsTextureClient(PTextureChild* actor);
 
   /**
    * TextureFlags contain important information about various aspects
@@ -456,6 +452,7 @@ public:
 
   void RemoveFlags(TextureFlags aFlags);
 
+  // The TextureClient must not be locked when calling this method.
   void RecycleTexture(TextureFlags aFlags);
 
   /**
@@ -505,6 +502,7 @@ public:
    * Create and init the TextureChild/Parent IPDL actor pair.
    *
    * Should be called only once per TextureClient.
+   * The TextureClient must not be locked when calling this method.
    */
   bool InitIPDLActor(CompositableForwarder* aForwarder);
 
@@ -618,6 +616,10 @@ protected:
    */
   bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor);
 
+  void LockActor() const;
+  void UnlockActor() const;
+
+  TextureData::Info mInfo;
 
   RefPtr<ClientIPCAllocator> mAllocator;
   RefPtr<TextureChild> mActor;
