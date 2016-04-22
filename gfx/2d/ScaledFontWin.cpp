@@ -40,7 +40,6 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     table = 0;
     tableSize = ::GetFontData(dc.GetDC(), table, 0, nullptr, 0);
     if (tableSize == GDI_ERROR) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to get font data from GDI";
       return false;
     }
   }
@@ -50,7 +49,6 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
   uint32_t sizeGot =
     ::GetFontData(dc.GetDC(), table, 0, fontData.get(), tableSize);
   if (sizeGot != tableSize) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "GDI did not return enough data for font: wanted " << tableSize << ", got " << sizeGot;
     return false;
   }
 
@@ -60,7 +58,7 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     UniquePtr<SFNTData> sfntData = SFNTData::Create(fontData.get(),
                                                     tableSize);
     if (!sfntData) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to create SFNTData for GetFontFileData.";
+      gfxWarning() << "Failed to create SFNTData for GetFontFileData.";
       return false;
     }
 
@@ -68,7 +66,7 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     // both 16 bit.
     if (!sfntData->GetIndexForU16Name(
           reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index)) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to get index for face name.";
+      gfxWarning() << "Failed to get index for face name.";
       return false;
     }
   }
