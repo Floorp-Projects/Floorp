@@ -158,7 +158,6 @@ def old_configure_options(*options):
     '--enable-accessibility',
     '--enable-address-sanitizer',
     '--enable-alsa',
-    '--enable-android-apz',
     '--enable-android-omx',
     '--enable-android-resource-constrained',
     '--enable-approximate-location',
