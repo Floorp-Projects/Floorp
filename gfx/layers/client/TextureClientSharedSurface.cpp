@@ -35,10 +35,15 @@ void
 SharedSurfaceTextureData::Deallocate(ClientIPCAllocator*)
 {}
 
-gfx::IntSize
-SharedSurfaceTextureData::GetSize() const
+void
+SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
 {
-  return mSurf->mSize;
+  aInfo.size = mSurf->mSize;
+  aInfo.format = gfx::SurfaceFormat::UNKNOWN;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
 }
 
 bool
