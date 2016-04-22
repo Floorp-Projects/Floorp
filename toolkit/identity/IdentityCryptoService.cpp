@@ -44,28 +44,6 @@ HexEncode(const SECItem * it, nsACString & result)
   }
 }
 
-nsresult
-Base64UrlEncodeImpl(const nsACString & utf8Input, nsACString & result)
-{
-  nsresult rv = Base64Encode(utf8Input, result);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsACString::char_type * out = result.BeginWriting();
-  nsACString::size_type length = result.Length();
-  // base64url encoding is defined in RFC 4648. It replaces the last two
-  // alphabet characters of base64 encoding with '-' and '_' respectively.
-  for (unsigned int i = 0; i < length; ++i) {
-    if (out[i] == '+') {
-      out[i] = '-';
-    } else if (out[i] == '/') {
-      out[i] = '_';
-    }
-  }
-
-  return NS_OK;
-}
-
 #define DSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("DS160"))
 #define RSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("RS256"))
 
@@ -237,7 +215,11 @@ NS_IMETHODIMP
 IdentityCryptoService::Base64UrlEncode(const nsACString & utf8Input,
                                        nsACString & result)
 {
-  return Base64UrlEncodeImpl(utf8Input, result);
+  dom::Base64URLEncodeOptions options;
+  options.mPad = true;
+  return Base64URLEncode(utf8Input.Length(),
+    reinterpret_cast<const uint8_t*>(utf8Input.BeginReading()), options,
+    result);
 }
 
 KeyPair::KeyPair(SECKEYPrivateKey * privateKey, SECKEYPublicKey * publicKey)
@@ -531,9 +513,9 @@ SignRunnable::Run()
           mRv = MapSECStatus(PK11_Sign(mPrivateKey, &sig, &hashItem));
         }
         if (NS_SUCCEEDED(mRv)) {
-          nsDependentCSubstring sigString(
-            reinterpret_cast<const char*>(sig.data), sig.len);
-          mRv = Base64UrlEncodeImpl(sigString, mSignature);
+          dom::Base64URLEncodeOptions encodeOptions;
+          encodeOptions.mPad = true;
+          mRv = Base64URLEncode(sig.len, sig.data, encodeOptions, mSignature);
         }
         SECITEM_FreeItem(&sig, false);
       }

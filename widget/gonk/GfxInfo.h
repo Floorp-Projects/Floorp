@@ -58,6 +58,7 @@ protected:
                                         int32_t *aStatus,
                                         nsAString & aSuggestedDriverVersion,
                                         const nsTArray<GfxDriverInfo>& aDriverInfo,
+                                        nsACString& aFailureId,
                                         OperatingSystem* aOS = nullptr);
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo();
 };

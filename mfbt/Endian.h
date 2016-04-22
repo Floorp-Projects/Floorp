@@ -150,11 +150,9 @@
 #    define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
 #  endif
 #elif defined(__GNUC__)
-#  if MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
-#    define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
-#  endif
+#  define MOZ_HAVE_BUILTIN_BYTESWAP16 __builtin_bswap16
 #elif defined(_MSC_VER)
-#    define MOZ_HAVE_BUILTIN_BYTESWAP16 _byteswap_ushort
+#  define MOZ_HAVE_BUILTIN_BYTESWAP16 _byteswap_ushort
 #endif
 
 namespace mozilla {

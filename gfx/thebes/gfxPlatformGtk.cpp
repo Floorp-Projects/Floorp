@@ -198,7 +198,7 @@ static const char kFontNanumGothic[] = "NanumGothic";
 
 void
 gfxPlatformGtk::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                                       int32_t aRunScript,
+                                       Script aRunScript,
                                        nsTArray<const char*>& aFontList)
 {
     aFontList.AppendElement(kFontDejaVuSerif);

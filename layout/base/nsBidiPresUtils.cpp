@@ -84,7 +84,7 @@ static char16_t GetBidiControl(nsStyleContext* aStyleContext,
     return kLRO;
   }
   const nsStyleTextReset* text = aStyleContext->StyleTextReset();
-  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
+  if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       return kRLO;
     }

@@ -123,6 +123,7 @@ public:
   virtual nsresult ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight) override;
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const override;
   virtual nsCanvasFrame* GetCanvasFrame() const override;
+  virtual nsIFrame* GetRealPrimaryFrameFor(nsIContent* aContent) const override;
 
   virtual nsIFrame* GetPlaceholderFrameFor(nsIFrame* aFrame) const override;
   virtual void FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
@@ -778,8 +779,6 @@ protected:
   void DecVisibleCount(const VisibleFrames& aFrames,
                        VisibilityCounter aCounter,
                        Maybe<OnNonvisible> aNonvisibleAction = Nothing());
-  void ReportBadStateDuringVisibilityUpdate();
-  void SetInFrameVisibilityUpdate(bool aState);
 
   void InitVisibleRegionsIfVisualizationEnabled(VisibilityCounter aForCounter);
   void AddFrameToVisibleRegions(nsIFrame* aFrame, VisibilityCounter aForCounter);
@@ -975,8 +974,6 @@ protected:
 
   // Whether the widget has received a paint message yet.
   bool                      mHasReceivedPaintMessage : 1;
-
-  bool                      mInFrameVisibilityUpdate : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

@@ -79,6 +79,18 @@ _cairo_atomic_int_get (cairo_atomic_int_t *x)
     return __atomic_load_n(x, __ATOMIC_SEQ_CST);
 }
 
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x)
+{
+    return __atomic_load_n(x, __ATOMIC_RELAXED);
+}
+
+static cairo_always_inline void
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val)
+{
+    __atomic_store_n(x, val, __ATOMIC_RELAXED);
+}
+
 static cairo_always_inline void *
 _cairo_atomic_ptr_get (void **x)
 {
@@ -154,6 +166,8 @@ _cairo_atomic_ptr_cmpxchg_return_old_impl(void **x, void *oldv, void *newv)
 typedef volatile long cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) ((int)*x)
+# define _cairo_atomic_int_get_relaxed(x) ((int)*(x))
+# define _cairo_atomic_int_set_relaxed(x, val) (*(x) = (val))
 # define _cairo_atomic_ptr_get(x) ((void*)*x)
 
 # define _cairo_atomic_int_inc(x) ((void) InterlockedIncrement(x))
@@ -183,6 +197,18 @@ _cairo_atomic_int_get (cairo_atomic_int_t *x)
     return *x;
 }
 
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x)
+{
+    return *x;
+}
+
+static cairo_always_inline void
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val)
+{
+    *x = val;
+}
+
 static cairo_always_inline void *
 _cairo_atomic_ptr_get (void **x)
 {
@@ -191,6 +217,8 @@ _cairo_atomic_ptr_get (void **x)
 }
 #else
 # define _cairo_atomic_int_get(x) (*x)
+# define _cairo_atomic_int_get_relaxed(x) (*(x))
+# define _cairo_atomic_int_set_relaxed(x, val) (*(x) = (val))
 # define _cairo_atomic_ptr_get(x) (*x)
 #endif
 
@@ -225,6 +253,8 @@ typedef long long cairo_atomic_intptr_t;
 typedef  AO_t cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) (AO_load_full (x))
+# define _cairo_atomic_int_get_relaxed(x) (AO_load_full (x))
+# define _cairo_atomic_int_set_relaxed(x, val) (AO_store_full ((x), (val)))
 
 # define _cairo_atomic_int_inc(x) ((void) AO_fetch_and_add1_full(x))
 # define _cairo_atomic_int_dec_and_test(x) (AO_fetch_and_sub1_full(x) == 1)
@@ -254,6 +284,8 @@ typedef unsigned long long cairo_atomic_intptr_t;
 typedef int32_t cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) (OSMemoryBarrier(), *(x))
+# define _cairo_atomic_int_get_relaxed(x) (*(x))
+# define _cairo_atomic_int_set_relaxed(x, val) (*(x) = (val))
 
 # define _cairo_atomic_int_inc(x) ((void) OSAtomicIncrement32Barrier (x))
 # define _cairo_atomic_int_dec_and_test(x) (OSAtomicDecrement32Barrier (x) == 0)
@@ -309,9 +341,15 @@ _cairo_atomic_ptr_cmpxchg_return_old_impl (void **x, void *oldv, void *newv);
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
 cairo_private cairo_atomic_int_t
 _cairo_atomic_int_get (cairo_atomic_int_t *x);
+cairo_private cairo_atomic_int_t
+_cairo_atomic_int_get_relaxed (cairo_atomic_int_t *x);
+void
+_cairo_atomic_int_set_relaxed (cairo_atomic_int_t *x, cairo_atomic_int_t val);
 # define _cairo_atomic_ptr_get(x) (void *) _cairo_atomic_int_get((cairo_atomic_int_t *) x)
 #else
 # define _cairo_atomic_int_get(x) (*x)
+# define _cairo_atomic_int_get_relaxed(x) (*(x))
+# define _cairo_atomic_int_set_relaxed(x, val) (*(x) = (val))
 # define _cairo_atomic_ptr_get(x) (*x)
 #endif
 

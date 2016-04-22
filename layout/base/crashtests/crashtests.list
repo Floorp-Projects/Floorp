@@ -294,7 +294,7 @@ load 469861-1.xhtml
 load 469861-2.xhtml
 load 470851-1.xhtml
 load 471594-1.xhtml
-asserts-if(Android&&!asyncPan,2) load 473042.xhtml # bug 1034369 (may also cause a few assertions to be registered on the next test)
+asserts-if(Android&&!asyncPan,1-2) load 473042.xhtml # bug 1034369 (may also cause a few assertions to be registered on the next test)
 asserts(0-5) load 474075.html # bug 847368
 load 477333-1.xhtml
 load 477731-1.html

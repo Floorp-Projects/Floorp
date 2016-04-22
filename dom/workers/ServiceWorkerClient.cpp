@@ -35,6 +35,7 @@ NS_INTERFACE_MAP_END
 
 ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   : mWindowId(0)
+  , mFrameType(FrameType::None)
 {
   MOZ_ASSERT(aDoc);
   nsresult rv = aDoc->GetOrCreateId(mClientId);
@@ -64,8 +65,9 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   }
 
   RefPtr<nsGlobalWindow> outerWindow = nsGlobalWindow::Cast(aDoc->GetWindow());
-  MOZ_ASSERT(outerWindow);
-  if (!outerWindow->IsTopLevelWindow()) {
+  if (!outerWindow) {
+    MOZ_ASSERT(mFrameType == FrameType::None);
+  } else if (!outerWindow->IsTopLevelWindow()) {
     mFrameType = FrameType::Nested;
   } else if (outerWindow->HadOriginalOpener()) {
     mFrameType = FrameType::Auxiliary;

@@ -97,6 +97,12 @@ PushServiceBase.prototype = {
     }
     request.onPushSubscription(Cr.NS_OK, new PushSubscription(props));
   },
+
+  _deliverSubscriptionError(request, error) {
+    let result = typeof error.result == "number" ?
+                 error.result : Cr.NS_ERROR_FAILURE;
+    request.onPushSubscription(result, null);
+  },
 };
 
 /**
@@ -129,12 +135,17 @@ Object.assign(PushServiceParent.prototype, {
   // nsIPushService methods
 
   subscribe(scope, principal, callback) {
-    return this._handleRequest("Push:Register", principal, {
+    this.subscribeWithKey(scope, principal, 0, null, callback);
+  },
+
+  subscribeWithKey(scope, principal, keyLen, key, callback) {
+    this._handleRequest("Push:Register", principal, {
       scope: scope,
+      appServerKey: key,
     }).then(result => {
       this._deliverSubscription(callback, result);
     }, error => {
-      callback.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
+      this._deliverSubscriptionError(callback, error);
     }).catch(Cu.reportError);
   },
 
@@ -154,7 +165,7 @@ Object.assign(PushServiceParent.prototype, {
     }).then(result => {
       this._deliverSubscription(callback, result);
     }, error => {
-      callback.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
+      this._deliverSubscriptionError(callback, error);
     }).catch(Cu.reportError);
   },
 
@@ -213,6 +224,7 @@ Object.assign(PushServiceParent.prototype, {
     }, error => {
       sender.sendAsyncMessage(this._getResponseName(name, "KO"), {
         requestID: data.requestID,
+        result: error.result,
       });
     }).catch(Cu.reportError);
   },
@@ -330,9 +342,14 @@ Object.assign(PushServiceContent.prototype, {
   // nsIPushService methods
 
   subscribe(scope, principal, callback) {
+    this.subscribeWithKey(scope, principal, 0, null, callback);
+  },
+
+  subscribeWithKey(scope, principal, keyLen, key, callback) {
     let requestId = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Register", {
       scope: scope,
+      appServerKey: key,
       requestID: requestId,
     }, null, principal);
   },
@@ -411,7 +428,7 @@ Object.assign(PushServiceContent.prototype, {
 
       case "PushService:Register:KO":
       case "PushService:Registration:KO":
-        request.onPushSubscription(Cr.NS_ERROR_FAILURE, null);
+        this._deliverSubscriptionError(request, data);
         break;
 
       case "PushService:Unregister:OK":
@@ -493,11 +510,15 @@ PushSubscription.prototype = {
    * receive the key size and buffer as out parameters.
    */
   getKey(name, outKeyLen) {
-    if (name === "p256dh") {
-      return this._getRawKey(this._props.p256dhKey, outKeyLen);
-    }
-    if (name === "auth") {
-      return this._getRawKey(this._props.authenticationSecret, outKeyLen);
+    switch (name) {
+      case "p256dh":
+        return this._getRawKey(this._props.p256dhKey, outKeyLen);
+
+      case "auth":
+        return this._getRawKey(this._props.authenticationSecret, outKeyLen);
+
+      case "appServer":
+        return this._getRawKey(this._props.appServerKey, outKeyLen);
     }
     return null;
   },

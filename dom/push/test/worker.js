@@ -73,20 +73,20 @@ function handlePush(event) {
   broadcast(event, {type: "finished", okay: "no"});
 }
 
-function handleMessage(event) {
-  if (event.data.type == "publicKey") {
-    reply(event, self.registration.pushManager.getSubscription().then(
+var testHandlers = {
+  publicKey(data) {
+    return self.registration.pushManager.getSubscription().then(
       subscription => ({
         p256dh: subscription.getKey("p256dh"),
         auth: subscription.getKey("auth"),
       })
-    ));
-    return;
-  }
-  if (event.data.type == "resubscribe") {
-    reply(event, self.registration.pushManager.getSubscription().then(
+    );
+  },
+
+  resubscribe(data) {
+    return self.registration.pushManager.getSubscription().then(
       subscription => {
-        assert(subscription.endpoint == event.data.endpoint,
+        assert(subscription.endpoint == data.endpoint,
           "Wrong push endpoint in worker");
         return subscription.unsubscribe();
       }
@@ -100,11 +100,11 @@ function handleMessage(event) {
       return {
         endpoint: subscription.endpoint,
       };
-    }));
-    return;
-  }
-  if (event.data.type == "denySubscribe") {
-    reply(event, self.registration.pushManager.getSubscription().then(
+    });
+  },
+
+  denySubscribe(data) {
+    return self.registration.pushManager.getSubscription().then(
       subscription => {
         assert(!subscription,
           "Should not return worker subscription with revoked permission");
@@ -117,11 +117,34 @@ function handleMessage(event) {
           };
         });
       }
-    ));
-    return;
+    );
+  },
+
+  subscribeWithKey(data) {
+    return self.registration.pushManager.subscribe({
+      applicationServerKey: data.key,
+    }).then(subscription => {
+      return {
+        endpoint: subscription.endpoint,
+        key: subscription.options.applicationServerKey,
+      };
+    }, error => {
+      return {
+        isDOMException: error instanceof DOMException,
+        name: error.name,
+      };
+    });
+  },
+};
+
+function handleMessage(event) {
+  var handler = testHandlers[event.data.type];
+  if (handler) {
+    reply(event, handler(event.data));
+  } else {
+    reply(event, Promise.reject(
+      "Invalid message type: " + event.data.type));
   }
-  reply(event, Promise.reject(
-    "Invalid message type: " + event.data.type));
 }
 
 function handlePushSubscriptionChange(event) {

@@ -48,6 +48,7 @@ class WorkerPrivate;
 
 class Promise;
 class PushManagerImpl;
+struct PushSubscriptionOptionsInit;
 
 class PushManager final : public nsISupports
                         , public nsWrapperCache
@@ -85,18 +86,23 @@ public:
                                       ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  Subscribe(ErrorResult& aRv);
+  PerformSubscriptionActionFromWorker(SubscriptionAction aAction,
+                                      const PushSubscriptionOptionsInit& aOptions,
+                                      ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  Subscribe(const PushSubscriptionOptionsInit& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   GetSubscription(ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  PermissionState(ErrorResult& aRv);
-
-protected:
-  ~PushManager();
+  PermissionState(const PushSubscriptionOptionsInit& aOptions,
+                  ErrorResult& aRv);
 
 private:
+  ~PushManager();
+
   // The following are only set and accessed on the main thread.
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<PushManagerImpl> mImpl;

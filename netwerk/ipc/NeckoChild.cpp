@@ -344,6 +344,25 @@ NeckoChild::RecvAsyncAuthPromptForNestedFrame(const TabId& aNestedFrameId,
 
 /* Predictor Messages */
 bool
+NeckoChild::RecvPredOnPredictPrefetch(const URIParams& aURI,
+                                      const uint32_t& aHttpStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "PredictorChild::RecvOnPredictPrefetch "
+                                "off main thread.");
+
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+
+  // Get the current predictor
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsINetworkPredictorVerifier> predictor =
+    do_GetService("@mozilla.org/network/predictor;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  predictor->OnPredictPrefetch(uri, aHttpStatus);
+  return true;
+}
+
+bool
 NeckoChild::RecvPredOnPredictPreconnect(const URIParams& aURI)
 {
   MOZ_ASSERT(NS_IsMainThread(), "PredictorChild::RecvOnPredictPreconnect "

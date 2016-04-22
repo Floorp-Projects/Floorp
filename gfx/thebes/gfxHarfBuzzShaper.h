@@ -31,7 +31,7 @@ public:
                            const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
-                           int32_t          aScript,
+                           Script           aScript,
                            bool             aVertical,
                            gfxShapedText   *aShapedText);
 
@@ -79,10 +79,10 @@ public:
     }
 
     static hb_script_t
-    GetHBScriptUsedForShaping(int32_t aScript) {
+    GetHBScriptUsedForShaping(Script aScript) {
         // Decide what harfbuzz script code will be used for shaping
         hb_script_t hbScript;
-        if (aScript <= MOZ_SCRIPT_INHERITED) {
+        if (aScript <= Script::INHERITED) {
             // For unresolved "common" or "inherited" runs,
             // default to Latin for now.
             hbScript = HB_SCRIPT_LATIN;

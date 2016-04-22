@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPDecoderModule.h"
+#include "DecoderDoctorDiagnostics.h"
 #include "GMPAudioDecoder.h"
 #include "GMPVideoDecoder.h"
 #include "MediaDataDecoderProxy.h"
@@ -55,6 +56,13 @@ GMPDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
     return nullptr;
   }
 
+  if (aDiagnostics) {
+    const Maybe<nsCString> preferredGMP = PreferredGMP(aConfig.mMimeType);
+    if (preferredGMP.isSome()) {
+      aDiagnostics->SetGMP(preferredGMP.value());
+    }
+  }
+
   RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
   wrapper->SetProxyTarget(new GMPVideoDecoder(aConfig,
                                               aLayersBackend,
@@ -72,6 +80,13 @@ GMPDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 {
   if (!aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     return nullptr;
+  }
+
+  if (aDiagnostics) {
+    const Maybe<nsCString> preferredGMP = PreferredGMP(aConfig.mMimeType);
+    if (preferredGMP.isSome()) {
+      aDiagnostics->SetGMP(preferredGMP.value());
+    }
   }
 
   RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
@@ -232,7 +247,12 @@ bool
 GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                    DecoderDoctorDiagnostics* aDiagnostics) const
 {
-  return SupportsMimeType(aMimeType, PreferredGMP(aMimeType));
+  const Maybe<nsCString> preferredGMP = PreferredGMP(aMimeType);
+  bool rv = SupportsMimeType(aMimeType, preferredGMP);
+  if (rv && aDiagnostics && preferredGMP.isSome()) {
+    aDiagnostics->SetGMP(preferredGMP.value());
+  }
+  return rv;
 }
 
 } // namespace mozilla

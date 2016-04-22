@@ -1,7 +1,6 @@
 'use strict';
 
 const {
-  base64UrlDecode,
   getCryptoParams,
   PushCrypto,
 } = Cu.import('resource://gre/modules/PushCrypto.jsm', {});
@@ -138,7 +137,9 @@ add_task(function* test_crypto_decodeMsg() {
     x: 'sd85ZCbEG6dEkGMCmDyGBIt454Qy-Yo-1xhbaT2Jlk4',
     y: 'vr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs',
   };
-  let publicKey = base64UrlDecode('BLHfOWQmxBunRJBjApg8hgSLeOeEMvmKPtcYW2k9iZZOvr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs');
+  let publicKey = ChromeUtils.base64URLDecode('BLHfOWQmxBunRJBjApg8hgSLeOeEMvmKPtcYW2k9iZZOvr3cKpQ-Sp1kpZ9HipNjUCwSA55yy0uM8N9byE8dmLs', {
+    padding: "reject",
+  });
 
   let expectedSuccesses = [{
     desc: 'padSize = 2, rs = 24, pad = 0',
@@ -177,8 +178,13 @@ add_task(function* test_crypto_decodeMsg() {
     padSize: 2,
   }];
   for (let test of expectedSuccesses) {
-    let authSecret = test.authSecret ? base64UrlDecode(test.authSecret) : null;
-    let result = yield PushCrypto.decodeMsg(base64UrlDecode(test.data),
+    let authSecret = test.authSecret ? ChromeUtils.base64URLDecode(test.authSecret, {
+      padding: "reject",
+    }) : null;
+    let data = ChromeUtils.base64URLDecode(test.data, {
+      padding: "reject",
+    });
+    let result = yield PushCrypto.decodeMsg(data,
                                             privateKey, publicKey,
                                             test.senderPublicKey, test.salt,
                                             test.rs, authSecret, test.padSize);
@@ -223,9 +229,14 @@ add_task(function* test_crypto_decodeMsg() {
     rs: 25,
   }];
   for (let test of expectedFailures) {
-    let authSecret = test.authSecret ? base64UrlDecode(test.authSecret) : null;
+    let authSecret = test.authSecret ? ChromeUtils.base64URLDecode(test.authSecret, {
+      padding: "reject",
+    }) : null;
+    let data = ChromeUtils.base64URLDecode(test.data, {
+      padding: "reject",
+    });
     yield rejects(
-      PushCrypto.decodeMsg(base64UrlDecode(test.data), privateKey, publicKey,
+      PushCrypto.decodeMsg(data, privateKey, publicKey,
                            test.senderPublicKey, test.salt, test.rs,
                            authSecret, test.padSize),
       test.desc

@@ -67,6 +67,7 @@
 #include "mozilla/StyleSetHandleInlines.h"
 
 #include <algorithm>
+#include <limits>
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -1902,7 +1903,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     lastStyleContext = f->StyleContext();
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->StyleText();
-    if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
+    if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform ||
+        // text-combine-upright requires converting from full-width
+        // characters to non-full-width correspendent in some cases.
+        lastStyleContext->IsTextCombined()) {
       anyTextTransformStyle = true;
     }
     if (textStyle->HasTextEmphasis()) {
@@ -2133,9 +2137,14 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         uint32_t offset = iter.GetSkippedOffset();
         iter.AdvanceOriginal(f->GetContentLength());
         uint32_t end = iter.GetSkippedOffset();
-        if (sc != f->StyleContext()) {
+        // Text-combined frames have content-dependent transform, so we
+        // want to create new nsTransformedCharStyle for them anyway.
+        if (sc != f->StyleContext() || sc->IsTextCombined()) {
           sc = f->StyleContext();
           charStyle = new nsTransformedCharStyle(sc);
+          if (sc->IsTextCombined() && f->CountGraphemeClusters() > 1) {
+            charStyle->mForceNonFullWidth = true;
+          }
         }
         uint32_t j;
         for (j = offset; j < end; ++j) {
@@ -3068,6 +3077,16 @@ static void FindClusterEnd(gfxTextRun* aTextRun, int32_t aOriginalEnd,
 void
 PropertyProvider::ComputeJustification(Range aRange)
 {
+  // Horizontal-in-vertical frame is orthogonal to the line, so it
+  // doesn't actually include any justification opportunity inside.
+  // Note: although the spec says such frame should be treated as a
+  // U+FFFC, which indicates it is justifiable on its sides, we don't
+  // do that because it is difficult to implement, and doesn't make
+  // any difference in common use cases.
+  if (mFrame->StyleContext()->IsTextCombined()) {
+    return;
+  }
+
   bool isCJ = IsChineseOrJapanese(mFrame);
   nsSkipCharsRunIterator run(
     mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aRange.Length());
@@ -3159,6 +3178,10 @@ PropertyProvider::GetSpacingInternal(Range aRange, Spacing* aSpacing,
   for (index = 0; index < aRange.Length(); ++index) {
     aSpacing[index].mBefore = 0.0;
     aSpacing[index].mAfter = 0.0;
+  }
+
+  if (mFrame->StyleContext()->IsTextCombined()) {
+    return;
   }
 
   // Find our offset into the original+transformed string
@@ -4709,6 +4732,15 @@ nsDisplayText::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   }
 }
 
+NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(TextCombineScaleFactorProperty, float)
+
+static float
+GetTextCombineScaleFactor(nsTextFrame* aFrame)
+{
+  float factor = aFrame->Properties().Get(TextCombineScaleFactorProperty());
+  return factor ? factor : 1.0f;
+}
+
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) {
@@ -4718,8 +4750,9 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
   // antialiased pixels beyond the measured text extents.
   // This is temporary until we do this in the actual calculation of text extents.
-  LayoutDeviceRect extraVisible = LayoutDeviceRect::FromAppUnits(
-    mVisibleRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
+  LayoutDeviceRect extraVisible =
+    LayoutDeviceRect::FromAppUnits(mVisibleRect, A2D);
   extraVisible.Inflate(1);
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
 
@@ -4743,6 +4776,18 @@ nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(mVisIEndEdge >= 0, "illegal end edge");
 
   nsPoint framePt = ToReferenceFrame();
+  if (f->StyleContext()->IsTextCombined()) {
+    float scaleFactor = GetTextCombineScaleFactor(f);
+    if (scaleFactor != 1.0f) {
+      // Setup matrix to compress text for text-combine-upright if
+      // necessary. This is done here because we want selection be
+      // compressed at the same time as text.
+      gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
+      gfxMatrix mat = ctx->CurrentMatrix()
+        .Translate(pt).Scale(scaleFactor, 1.0).Translate(-pt);
+      ctx->SetMatrix(mat);
+    }
+  }
   nsTextFrame::PaintTextParams params(aCtx->ThebesContext());
   params.framePt = gfxPoint(framePt.x, framePt.y);
 
@@ -4908,9 +4953,12 @@ nsTextFrame::GetTextDecorations(
   nscolor overrideColor = NS_RGBA(0, 0, 0, 0);
 
   bool nearestBlockFound = false;
-  WritingMode wm = GetWritingMode();
+  // Use writing mode of parent frame for orthogonal text frame to work.
+  // See comment in nsTextFrame::DrawTextRunAndDecorations.
+  WritingMode wm = GetParent()->GetWritingMode();
   bool vertical = wm.IsVertical();
 
+  nscoord ascent = GetLogicalBaseline(wm);
   // physicalBlockStartOffset represents the offset from our baseline
   // to f's physical block start, which is top in horizontal writing
   // mode, and left in vertical writing modes, in our coordinate space.
@@ -4918,7 +4966,7 @@ nsTextFrame::GetTextDecorations(
   // but for vertical-rl, it is logical block end, and consequently in
   // that case, it starts from the descent instead of ascent.
   nscoord physicalBlockStartOffset =
-    wm.IsVerticalRL() ? GetSize().width - mAscent : mAscent;
+    wm.IsVerticalRL() ? GetSize().width - ascent : ascent;
   // baselineOffset represents the offset from our baseline to f's baseline or
   // the nearest block's baseline, in our coordinate space, whichever is closest
   // during the particular iteration
@@ -5082,14 +5130,15 @@ struct EmphasisMarkInfo
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(EmphasisMarkProperty, EmphasisMarkInfo)
 
 UniquePtr<gfxTextRun>
-GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame, nsFontMetrics* aFontMetrics,
-                                WritingMode aWM, const nsStyleText* aStyleText)
+GenerateTextRunForEmphasisMarks(nsTextFrame* aFrame,
+                                nsFontMetrics* aFontMetrics,
+                                nsStyleContext* aStyleContext,
+                                const nsStyleText* aStyleText)
 {
   const nsString& emphasisString = aStyleText->mTextEmphasisStyleString;
   RefPtr<DrawTarget> dt = CreateReferenceDrawTarget(aFrame);
   auto appUnitsPerDevUnit = aFrame->PresContext()->AppUnitsPerDevPixel();
-  uint32_t flags = nsLayoutUtils::
-    GetTextRunOrientFlagsForStyle(aFrame->StyleContext());
+  uint32_t flags = nsLayoutUtils::GetTextRunOrientFlagsForStyle(aStyleContext);
   if (flags == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
     // The emphasis marks should always be rendered upright per spec.
     flags = gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
@@ -5121,24 +5170,31 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
     return nsRect();
   }
 
+  nsStyleContext* styleContext = StyleContext();
+  bool isTextCombined = styleContext->IsTextCombined();
+  if (isTextCombined) {
+    styleContext = styleContext->GetParent();
+  }
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-    GetFontMetricsOfEmphasisMarks(StyleContext(), GetFontSizeInflation());
+    GetFontMetricsOfEmphasisMarks(styleContext, GetFontSizeInflation());
   EmphasisMarkInfo* info = new EmphasisMarkInfo;
   info->textRun =
-    GenerateTextRunForEmphasisMarks(this, fm, aWM, styleText);
+    GenerateTextRunForEmphasisMarks(this, fm, styleContext, styleText);
   info->advance = info->textRun->GetAdvanceWidth();
 
   // Calculate the baseline offset
   LogicalSide side = styleText->TextEmphasisSide(aWM);
-  nsFontMetrics* baseFontMetrics = aProvider.GetFontMetrics();
-  LogicalSize frameSize = GetLogicalSize();
+  LogicalSize frameSize = GetLogicalSize(aWM);
   // The overflow rect is inflated in the inline direction by half
   // advance of the emphasis mark on each side, so that even if a mark
   // is drawn for a zero-width character, it won't be clipped.
   LogicalRect overflowRect(aWM, -info->advance / 2,
-                           /* BStart to be computed below */0,
+                           /* BStart to be computed below */ 0,
                            frameSize.ISize(aWM) + info->advance,
                            fm->MaxAscent() + fm->MaxDescent());
+  RefPtr<nsFontMetrics> baseFontMetrics = isTextCombined
+    ? nsLayoutUtils::GetInflatedFontMetricsForFrame(GetParent())
+    : do_AddRef(aProvider.GetFontMetrics());
   // When the writing mode is vertical-lr the line is inverted, and thus
   // the ascent and descent are swapped.
   nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
@@ -5157,6 +5213,11 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
     info->baselineOffset = absOffset + endLeading;
     overflowRect.BStart(aWM) = frameSize.BSize(aWM) + endLeading;
   }
+  // If text combined, fix the gap between the text frame and its parent.
+  if (isTextCombined) {
+    nscoord gap = (baseFontMetrics->MaxHeight() - frameSize.BSize(aWM)) / 2;
+    overflowRect.BStart(aWM) += gap * (side == eLogicalSideBStart ? -1 : 1);
+  }
 
   Properties().Set(EmphasisMarkProperty(), info);
   return overflowRect.GetPhysicalRect(aWM, frameSize.GetPhysicalSize(aWM));
@@ -5171,10 +5232,9 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 {
   const WritingMode wm = GetWritingMode();
   bool verticalRun = mTextRun->IsVertical();
-  bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
-  bool inverted = wm.IsLineInverted();
 
   if (IsFloatingFirstLetterChild()) {
+    bool inverted = wm.IsLineInverted();
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
     // In this case, aBlock is the ::first-letter frame.
@@ -5220,6 +5280,13 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     //     isn't realistic, we don't need to compute it now.
   }
   if (aIncludeTextDecorations) {
+    // Use writing mode of parent frame for orthogonal text frame to
+    // work. See comment in nsTextFrame::DrawTextRunAndDecorations.
+    WritingMode parentWM = GetParent()->GetWritingMode();
+    bool verticalDec = parentWM.IsVertical();
+    bool useVerticalMetrics = verticalDec != verticalRun
+      ? verticalDec : verticalRun && mTextRun->UseCenterBaseline();
+
     // Since CSS 2.1 requires that text-decoration defined on ancestors maintain
     // style and position, they can be drawn at virtually any y-offset, so
     // maxima and minima are required to reliably generate the rectangle for
@@ -5230,12 +5297,12 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       nscoord inflationMinFontSize =
         nsLayoutUtils::InflationMinFontSizeFor(aBlock);
 
-      const nscoord measure = verticalRun ? GetSize().height : GetSize().width;
-      const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
-                     gfxWidth = measure / appUnitsPerDevUnit;
-      gfxFloat ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
+      const nscoord measure = verticalDec ? GetSize().height : GetSize().width;
+      const gfxFloat app = aPresContext->AppUnitsPerDevPixel();
+      gfxFloat gfxWidth = measure / app;
+      gfxFloat ascent = gfxFloat(GetLogicalBaseline(parentWM)) / app;
       nscoord frameBStart = 0;
-      if (wm.IsVerticalRL()) {
+      if (parentWM.IsVerticalRL()) {
         frameBStart = GetSize().width;
         ascent = -ascent;
       }
@@ -5246,7 +5313,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       nsCSSRendering::DecorationRectParams params;
       params.lineSize = Size(gfxWidth, 0);
       params.ascent = ascent;
-      params.vertical = verticalRun;
+      params.vertical = verticalDec;
 
       nscoord topOrLeft(nscoord_MAX), bottomOrRight(nscoord_MIN);
       typedef gfxFont::Metrics Metrics;
@@ -5271,10 +5338,10 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
         params.offset = decorationOffsetDir * metrics.*lineOffset;
         const nsRect decorationRect =
           nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
-          (verticalRun ? nsPoint(frameBStart - dec.mBaselineOffset, 0)
+          (verticalDec ? nsPoint(frameBStart - dec.mBaselineOffset, 0)
                        : nsPoint(0, -dec.mBaselineOffset));
 
-        if (verticalRun) {
+        if (verticalDec) {
           topOrLeft = std::min(decorationRect.x, topOrLeft);
           bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
         } else {
@@ -5303,12 +5370,12 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
       aVisualOverflowRect->UnionRect(
         *aVisualOverflowRect,
-        verticalRun ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
+        verticalDec ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
                     : nsRect(0, topOrLeft, measure, bottomOrRight - topOrLeft));
     }
 
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
-                                   UpdateTextEmphasis(wm, aProvider));
+                                   UpdateTextEmphasis(parentWM, aProvider));
   }
 
   // Text-shadow overflows
@@ -6130,7 +6197,7 @@ nsTextFrame::PaintTextWithSelection(
 void
 nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
                                const gfxPoint& aTextBaselinePt,
-                               Range aRange,
+                               const gfxPoint& aFramePt, Range aRange,
                                const nscolor* aDecorationOverrideColor,
                                PropertyProvider* aProvider)
 {
@@ -6139,10 +6206,22 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
     return;
   }
 
+  bool isTextCombined = StyleContext()->IsTextCombined();
   nscolor color = aDecorationOverrideColor ? *aDecorationOverrideColor :
     nsLayoutUtils::GetColor(this, eCSSProperty_text_emphasis_color);
   aContext->SetColor(Color::FromABGR(color));
-  gfxPoint pt(aTextBaselinePt);
+  gfxPoint pt;
+  if (!isTextCombined) {
+    pt = aTextBaselinePt;
+  } else {
+    MOZ_ASSERT(aWM.IsVertical());
+    pt = aFramePt;
+    if (aWM.IsVerticalRL()) {
+      pt.x += GetSize().width - GetLogicalBaseline(aWM);
+    } else {
+      pt.x += GetLogicalBaseline(aWM);
+    }
+  }
   if (!aWM.IsVertical()) {
     pt.y += info->baselineOffset;
   } else {
@@ -6152,8 +6231,14 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
       pt.x += info->baselineOffset;
     }
   }
-  mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
-                              pt, aRange, aProvider);
+  if (!isTextCombined) {
+    mTextRun->DrawEmphasisMarks(aContext, info->textRun.get(), info->advance,
+                                pt, aRange, aProvider);
+  } else {
+    pt.y += (GetSize().height - info->advance) / 2;
+    info->textRun->Draw(Range(info->textRun.get()), pt,
+                        gfxTextRun::DrawParams(aContext));
+  }
 }
 
 nscolor
@@ -6585,8 +6670,18 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
 {
     const gfxFloat app =
       aParams.textStyle->PresContext()->AppUnitsPerDevPixel();
+    // Writing mode of parent frame is used because the text frame may
+    // be orthogonal to its parent when text-combine-upright is used or
+    // its parent has "display: contents", and in those cases, we want
+    // to draw the decoration lines according to parents' direction
+    // rather than ours.
+    const WritingMode wm = GetParent()->GetWritingMode();
+    bool verticalDec = wm.IsVertical();
     bool verticalRun = mTextRun->IsVertical();
-    bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
+    // If the text run and the decoration is orthogonal, we choose the
+    // metrics for decoration so that decoration line won't be broken.
+    bool useVerticalMetrics = verticalDec != verticalRun
+      ? verticalDec : verticalRun && mTextRun->UseCenterBaseline();
 
     // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
     nscoord x = NSToCoordRound(aParams.framePt.x);
@@ -6595,9 +6690,9 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     // 'measure' here is textrun-relative, so for a horizontal run it's the
     // width, while for a vertical run it's the height of the decoration
     const nsSize frameSize = GetSize();
-    nscoord measure = verticalRun ? frameSize.height : frameSize.width;
+    nscoord measure = verticalDec ? frameSize.height : frameSize.width;
 
-    if (verticalRun) {
+    if (verticalDec) {
       aParams.clipEdges->Intersect(&y, &measure);
     } else {
       aParams.clipEdges->Intersect(&x, &measure);
@@ -6605,14 +6700,12 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
 
     // decSize is a textrun-relative size, so its 'width' field is actually
     // the run-relative measure, and 'height' will be the line thickness
-    gfxFloat ascent = gfxFloat(mAscent) / app;
-
+    gfxFloat ascent = gfxFloat(GetLogicalBaseline(wm)) / app;
     // The starting edge of the frame in block direction
-    gfxFloat frameBStart = verticalRun ? aParams.framePt.x : aParams.framePt.y;
+    gfxFloat frameBStart = verticalDec ? aParams.framePt.x : aParams.framePt.y;
 
-    // In vertical-rl mode, block coordinates are measured from the right,
-    // so we need to adjust here.
-    const WritingMode wm = GetWritingMode();
+    // In vertical-rl mode, block coordinates are measured from the
+    // right, so we need to adjust here.
     if (wm.IsVerticalRL()) {
       frameBStart += frameSize.width;
       ascent = -ascent;
@@ -6633,10 +6726,25 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
     // pt is the physical point where the decoration is to be drawn,
     // relative to the frame; one of its coordinates will be updated below.
     params.pt = Point(x / app, y / app);
-    Float& bCoord = verticalRun ? params.pt.x : params.pt.y;
+    Float& bCoord = verticalDec ? params.pt.x : params.pt.y;
     params.lineSize = Size(measure / app, 0);
     params.ascent = ascent;
-    params.vertical = verticalRun;
+    params.vertical = verticalDec;
+
+    // The matrix of the context may have been altered for text-combine-
+    // upright. However, we want to draw decoration lines unscaled, thus
+    // we need to revert the scaling here.
+    gfxContextMatrixAutoSaveRestore scaledRestorer;
+    if (StyleContext()->IsTextCombined()) {
+      float scaleFactor = GetTextCombineScaleFactor(this);
+      if (scaleFactor != 1.0f) {
+        scaledRestorer.SetContext(aParams.context);
+        gfxMatrix unscaled = aParams.context->CurrentMatrix();
+        gfxPoint pt(x / app, y / app);
+        unscaled.Translate(pt).Scale(1.0f / scaleFactor, 1.0f).Translate(-pt);
+        aParams.context->SetMatrix(unscaled);
+      }
+    }
 
     typedef gfxFont::Metrics Metrics;
     auto paintDecorationLine = [&](const LineDecoration& dec,
@@ -6673,12 +6781,21 @@ nsTextFrame::DrawTextRunAndDecorations(Range aRange,
       paintDecorationLine(dec, &Metrics::underlineSize, &Metrics::maxAscent);
     }
 
-    // CSS 2.1 mandates that text be painted after over/underlines, and *then*
-    // line-throughs
-    DrawTextRun(aRange, aTextBaselinePt, aParams);
+    {
+      gfxContextMatrixAutoSaveRestore unscaledRestorer;
+      if (scaledRestorer.HasMatrix()) {
+        unscaledRestorer.SetContext(aParams.context);
+        aParams.context->SetMatrix(scaledRestorer.Matrix());
+      }
+
+      // CSS 2.1 mandates that text be painted after over/underlines,
+      // and *then* line-throughs
+      DrawTextRun(aRange, aTextBaselinePt, aParams);
+    }
 
     // Emphasis marks
-    DrawEmphasisMarks(aParams.context, wm, aTextBaselinePt, aRange,
+    DrawEmphasisMarks(aParams.context, wm,
+                      aTextBaselinePt, aParams.framePt, aRange,
                       aParams.decorationOverrideColor, aParams.provider);
 
     // Line-throughs
@@ -6806,6 +6923,9 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
   gfxFloat width = mTextRun->IsVertical()
     ? (mTextRun->IsInlineReversed() ? mRect.height - aPoint.y : aPoint.y)
     : (mTextRun->IsInlineReversed() ? mRect.width - aPoint.x : aPoint.x);
+  if (StyleContext()->IsTextCombined()) {
+    width /= GetTextCombineScaleFactor(this);
+  }
   gfxFloat fitWidth;
   Range skippedRange = ComputeTransformedRange(provider);
 
@@ -7066,6 +7186,9 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
       outPoint->x = mRect.width - iSize;
     } else {
       outPoint->x = iSize;
+    }
+    if (StyleContext()->IsTextCombined()) {
+      outPoint->x *= GetTextCombineScaleFactor(this);
     }
   }
 
@@ -7592,6 +7715,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   // want to allow this to split a ligature.
   bool allowSplitLigature;
 
+  typedef unicode::Script Script;
   switch (unicode::GetScriptCode(aFrag->CharAt(aOffset + i))) {
     default:
       allowSplitLigature = true;
@@ -7604,39 +7728,39 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
     // rule.
 
     // Indic
-    case MOZ_SCRIPT_BENGALI:
-    case MOZ_SCRIPT_DEVANAGARI:
-    case MOZ_SCRIPT_GUJARATI:
-    case MOZ_SCRIPT_GURMUKHI:
-    case MOZ_SCRIPT_KANNADA:
-    case MOZ_SCRIPT_MALAYALAM:
-    case MOZ_SCRIPT_ORIYA:
-    case MOZ_SCRIPT_TAMIL:
-    case MOZ_SCRIPT_TELUGU:
-    case MOZ_SCRIPT_SINHALA:
-    case MOZ_SCRIPT_BALINESE:
-    case MOZ_SCRIPT_LEPCHA:
-    case MOZ_SCRIPT_REJANG:
-    case MOZ_SCRIPT_SUNDANESE:
-    case MOZ_SCRIPT_JAVANESE:
-    case MOZ_SCRIPT_KAITHI:
-    case MOZ_SCRIPT_MEETEI_MAYEK:
-    case MOZ_SCRIPT_CHAKMA:
-    case MOZ_SCRIPT_SHARADA:
-    case MOZ_SCRIPT_TAKRI:
-    case MOZ_SCRIPT_KHMER:
+    case Script::BENGALI:
+    case Script::DEVANAGARI:
+    case Script::GUJARATI:
+    case Script::GURMUKHI:
+    case Script::KANNADA:
+    case Script::MALAYALAM:
+    case Script::ORIYA:
+    case Script::TAMIL:
+    case Script::TELUGU:
+    case Script::SINHALA:
+    case Script::BALINESE:
+    case Script::LEPCHA:
+    case Script::REJANG:
+    case Script::SUNDANESE:
+    case Script::JAVANESE:
+    case Script::KAITHI:
+    case Script::MEETEI_MAYEK:
+    case Script::CHAKMA:
+    case Script::SHARADA:
+    case Script::TAKRI:
+    case Script::KHMER:
 
     // Tibetan
-    case MOZ_SCRIPT_TIBETAN:
+    case Script::TIBETAN:
 
     // Myanmar
-    case MOZ_SCRIPT_MYANMAR:
+    case Script::MYANMAR:
 
     // Other SEAsian
-    case MOZ_SCRIPT_BUGINESE:
-    case MOZ_SCRIPT_NEW_TAI_LUE:
-    case MOZ_SCRIPT_CHAM:
-    case MOZ_SCRIPT_TAI_THAM:
+    case Script::BUGINESE:
+    case Script::NEW_TAI_LUE:
+    case Script::CHAM:
+    case Script::TAI_THAM:
 
     // What about Thai/Lao - any special handling needed?
     // Should we special-case Arabic lam-alef?
@@ -7747,6 +7871,16 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
   gfxFloat tabWidth = -1;
   uint32_t start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
+
+  // text-combine-upright frame is constantly 1em on inline-axis.
+  if (StyleContext()->IsTextCombined()) {
+    if (textRun->CanBreakLineBefore(start)) {
+      aData->OptionallyBreak();
+    }
+    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    aData->mTrailingWhitespace = 0;
+    return;
+  }
 
   AutoTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
   bool *hyphBreakBefore = nullptr;
@@ -7901,6 +8035,13 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
   const nsTextFragment* frag = mContent->GetText();
   PropertyProvider provider(textRun, textStyle, frag, this,
                             iter, INT32_MAX, nullptr, 0, aTextRunType);
+
+  // text-combine-upright frame is constantly 1em on inline-axis.
+  if (StyleContext()->IsTextCombined()) {
+    aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
+    aData->mTrailingWhitespace = 0;
+    return;
+  }
 
   bool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
   bool preformatNewlines = textStyle->NewlineIsSignificant(this);
@@ -8635,6 +8776,11 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   bool usedHyphenation;
   gfxFloat trimmedWidth = 0;
   gfxFloat availWidth = aAvailableWidth;
+  if (StyleContext()->IsTextCombined()) {
+    // If text-combine-upright is 'all', we would compress whatever long
+    // text into ~1em width, so there is no limited on the avail width.
+    availWidth = std::numeric_limits<gfxFloat>::infinity();
+  }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
@@ -8742,7 +8888,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   if (!brokeText && lastBreak >= 0) {
     // Since everything fit and no break was forced,
     // record the last break opportunity
-    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= aAvailableWidth,
+    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= availWidth,
                  "If the text doesn't fit, and we have a break opportunity, why didn't MeasureText use it?");
     MOZ_ASSERT(lastBreak >= offset, "Strange break position");
     aLineLayout.NotifyOptionalBreakPosition(this, lastBreak - offset,
@@ -8790,11 +8936,31 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
     finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
   }
+  if (StyleContext()->IsTextCombined()) {
+    nsFontMetrics* fm = provider.GetFontMetrics();
+    gfxFloat width = finalSize.ISize(wm);
+    gfxFloat em = fm->EmHeight();
+    // Compress the characters in horizontal axis if necessary.
+    if (width <= em) {
+      Properties().Remove(TextCombineScaleFactorProperty());
+    } else {
+      Properties().Set(TextCombineScaleFactorProperty(), em / width);
+      finalSize.ISize(wm) = em;
+    }
+    // Make the characters be in an 1em square.
+    if (finalSize.BSize(wm) != em) {
+      aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
+                                   (em - finalSize.BSize(wm)) / 2);
+      finalSize.BSize(wm) = em;
+    }
+  }
   aMetrics.SetSize(wm, finalSize);
 
   NS_ASSERTION(aMetrics.BlockStartAscent() >= 0,
                "Negative ascent???");
-  NS_ASSERTION(aMetrics.BSize(aMetrics.GetWritingMode()) -
+  NS_ASSERTION((StyleContext()->IsTextCombined()
+                ? aMetrics.ISize(aMetrics.GetWritingMode())
+                : aMetrics.BSize(aMetrics.GetWritingMode())) -
                aMetrics.BlockStartAscent() >= 0,
                "Negative descent???");
 
@@ -9399,9 +9565,23 @@ nsTextFrame::IsAtEndOfLine() const
 }
 
 nscoord
-nsTextFrame::GetLogicalBaseline(WritingMode aWritingMode ) const
+nsTextFrame::GetLogicalBaseline(WritingMode aWM) const
 {
-  return mAscent;
+  if (!aWM.IsOrthogonalTo(GetWritingMode())) {
+    return mAscent;
+  }
+
+  // When the text frame has a writing mode orthogonal to the desired
+  // writing mode, return a baseline coincides its parent frame.
+  nsIFrame* parent = GetParent();
+  nsPoint position = GetNormalPosition();
+  nscoord parentAscent = parent->GetLogicalBaseline(aWM);
+  if (aWM.IsVerticalRL()) {
+    nscoord parentDescent = parent->GetSize().width - parentAscent;
+    nscoord descent = parentDescent - position.x;
+    return GetSize().width - descent;
+  }
+  return parentAscent - (aWM.IsVertical() ? position.x : position.y);
 }
 
 bool
@@ -9468,4 +9648,14 @@ nsTextFrame::GetJustificationAssignment() const
   result.mGapsAtStart = encoded >> 8;
   result.mGapsAtEnd = encoded & 0xFF;
   return result;
+}
+
+uint32_t
+nsTextFrame::CountGraphemeClusters() const
+{
+  const nsTextFragment* frag = GetContent()->GetText();
+  MOZ_ASSERT(frag, "Text frame must have text fragment");
+  nsAutoString content;
+  frag->AppendTo(content, GetContentOffset(), GetContentLength());
+  return unicode::CountGraphemeClusters(content.Data(), content.Length());
 }

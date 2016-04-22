@@ -47,7 +47,7 @@ public:
     virtual gfxPlatformFontList* CreatePlatformFontList();
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                                        int32_t aRunScript,
+                                        Script aRunScript,
                                         nsTArray<const char*>& aFontList);
 
     gfxFontGroup*

@@ -95,7 +95,9 @@ private:
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
 
+  bool mWMFFailedToLoad = false;
   bool mFFmpegFailedToLoad = false;
+  bool mGMPPDMFailedToStartup = false;
 };
 
 } // namespace mozilla
