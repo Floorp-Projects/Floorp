@@ -18,7 +18,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 31
+#define DATABASE_SCHEMA_VERSION 32
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -191,6 +191,8 @@ public:
    */
   already_AddRefed<mozIStorageAsyncStatement> GetAsyncStatement(const nsACString& aQuery) const;
 
+  uint32_t MaxUrlLength();
+
 protected:
   /**
    * Finalizes the cached statements and closes the database connection.
@@ -265,6 +267,7 @@ protected:
   nsresult MigrateV28Up();
   nsresult MigrateV30Up();
   nsresult MigrateV31Up();
+  nsresult MigrateV32Up();
 
   nsresult UpdateBookmarkRootTitles();
 
@@ -306,6 +309,12 @@ private:
    */
   RefPtr<ClientsShutdownBlocker> mClientsShutdown;
   RefPtr<ConnectionShutdownBlocker> mConnectionShutdown;
+
+  // Maximum length of a stored url.
+  // For performance reasons we don't store very long urls in history, since
+  // they are slower to search through and cause abnormal database growth,
+  // affecting the awesomebar fetch time.
+  uint32_t mMaxUrlLength;
 };
 
 } // namespace places
