@@ -201,6 +201,13 @@ public:
 
   virtual media::TimeIntervals GetBuffered() = 0;
 
+  // By default, it is assumed that the entire resource can be evicted once
+  // all samples have been demuxed.
+  virtual int64_t GetEvictionOffset(const media::TimeUnit& aTime)
+  {
+    return INT64_MAX;
+  }
+
   // If the MediaTrackDemuxer and MediaDataDemuxer hold cross references.
   // BreakCycles must be overridden.
   virtual void BreakCycles()
