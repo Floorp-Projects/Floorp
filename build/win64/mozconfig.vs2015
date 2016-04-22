@@ -1,6 +1,6 @@
 if [ -z "${VSPATH}" ]; then
     TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2015u1"
+    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2015u2"
 fi
 
 export WINDOWSSDKDIR="${VSPATH}/SDK"
