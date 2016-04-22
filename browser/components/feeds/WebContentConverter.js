@@ -459,6 +459,18 @@ WebContentConverterRegistrar.prototype = {
   registerContentHandler(aContentType, aURIString, aTitle, aWindowOrBrowser) {
     LOG("registerContentHandler(" + aContentType + "," + aURIString + "," + aTitle + ")");
 
+    // Make sure to do our URL checks up front, before our content type check,
+    // just like the WebContentConverterRegistrarContent does.
+    let haveWindow = aWindowOrBrowser &&
+                     (aWindowOrBrowser instanceof Ci.nsIDOMWindow);
+    let uri;
+    if (haveWindow) {
+      uri = Utils.checkAndGetURI(aURIString, aWindowOrBrowser);
+    } else if (aWindowOrBrowser) {
+      // uri was vetted in the content process.
+      uri = Utils.makeURI(aURIString, null);
+    }
+
     // We only support feed types at present.
     // XXX this should be a "security exception" according to spec, but that
     // isn't defined yet.
@@ -467,18 +479,12 @@ WebContentConverterRegistrar.prototype = {
       return;
 
     if (aWindowOrBrowser) {
-      let haveWindow = (aWindowOrBrowser instanceof Ci.nsIDOMWindow);
-      let uri;
       let notificationBox;
       if (haveWindow) {
-        uri = Utils.checkAndGetURI(aURIString, aWindowOrBrowser);
-
         let browserWindow = this._getBrowserWindowForContentWindow(aWindowOrBrowser);
         let browserElement = this._getBrowserForContentWindow(browserWindow, aWindowOrBrowser);
         notificationBox = browserElement.getTabBrowser().getNotificationBox(browserElement);
       } else {
-        // uri was vetted in the content process.
-        uri = Utils.makeURI(aURIString, null);
         notificationBox = aWindowOrBrowser.getTabBrowser()
                                           .getNotificationBox(aWindowOrBrowser);
       }
