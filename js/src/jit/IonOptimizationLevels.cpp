@@ -49,6 +49,7 @@ OptimizationInfo::initNormalOptimizationInfo()
     scalarReplacement_ = true;
     smallFunctionMaxInlineDepth_ = 10;
     compilerWarmUpThreshold_ = CompilerWarmupThreshold;
+    compilerSmallFunctionWarmUpThreshold_ = CompilerSmallFunctionWarmupThreshold;
     inliningWarmUpThresholdFactor_ = 0.125;
     inliningRecompileThresholdFactor_ = 4;
 }
@@ -85,6 +86,12 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
     uint32_t warmUpThreshold = compilerWarmUpThreshold_;
     if (JitOptions.forcedDefaultIonWarmUpThreshold.isSome())
         warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.ref();
+
+    if (JitOptions.isSmallFunction(script)) {
+        warmUpThreshold = compilerSmallFunctionWarmUpThreshold_;
+        if (JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold.isSome())
+            warmUpThreshold = JitOptions.forcedDefaultIonSmallFunctionWarmUpThreshold.ref();
+    }
 
     // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the warm-up counter
