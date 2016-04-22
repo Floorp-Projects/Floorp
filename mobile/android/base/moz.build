@@ -385,6 +385,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/BookmarksListView.java',
     'home/BookmarksPanel.java',
     'home/BrowserSearch.java',
+    'home/ClientsAdapter.java',
     'home/CombinedHistoryAdapter.java',
     'home/CombinedHistoryItem.java',
     'home/CombinedHistoryPanel.java',
