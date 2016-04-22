@@ -77,11 +77,11 @@ SharedSurface_GLXDrawable::UnlockProdImpl()
 bool
 SharedSurface_GLXDrawable::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
-  if (!mXlibSurface)
-      return false;
+    if (!mXlibSurface)
+        return false;
 
-   *out_descriptor = layers::SurfaceDescriptorX11(mXlibSurface, mInSameProcess);
-   return true;
+    *out_descriptor = layers::SurfaceDescriptorX11(mXlibSurface, mInSameProcess);
+    return true;
 }
 
 bool

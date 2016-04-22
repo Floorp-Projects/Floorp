@@ -135,7 +135,6 @@ SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
 {
 }
 
-
 bool
 SharedSurface_Gralloc::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
 {
@@ -145,10 +144,11 @@ SharedSurface_Gralloc::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
 
 SharedSurface_Gralloc::~SharedSurface_Gralloc()
 {
-
     DEBUG_PRINT("[SharedSurface_Gralloc %p] destroyed\n", this);
 
-    mGL->MakeCurrent();
+    if (!mGL->MakeCurrent())
+        return;
+
     mGL->fDeleteTextures(1, &mProdTex);
 
     if (mSync) {
