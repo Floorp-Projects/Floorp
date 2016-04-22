@@ -3085,6 +3085,16 @@ js_strcmp(const char16_t* lhs, const char16_t* rhs)
     }
 }
 
+int32_t
+js_fputs(const char16_t* s, FILE* f)
+{
+    while (*s != 0) {
+        if (fputwc(wchar_t(*s), f) == WEOF)
+            return WEOF;
+    }
+    return 1;
+}
+
 UniqueChars
 js::DuplicateString(js::ExclusiveContext* cx, const char* s)
 {
