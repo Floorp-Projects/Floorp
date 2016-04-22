@@ -1883,6 +1883,11 @@ MediaDecoder::DumpDebugInfo()
            "state: mPlayState=%s mIsDormant=%d, mShuttingDown=%d",
            mInfo->mAudio.mChannels, mInfo->mAudio.mRate, mInfo->HasAudio(), mInfo->HasVideo(),
            PlayStateStr(), mIsDormant, mShuttingDown);
+
+  nsString str;
+  GetMozDebugReaderData(str);
+  DUMP_LOG("reader data:\n%s", NS_ConvertUTF16toUTF8(str).get());
+
   if (!mShuttingDown && GetStateMachine()) {
     GetStateMachine()->DumpDebugInfo();
   }
