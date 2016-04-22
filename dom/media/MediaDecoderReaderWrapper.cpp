@@ -20,8 +20,6 @@ extern LazyLogModule gMediaDecoderLog;
 // to know the start time by the time On{Audio,Video}Decoded is called on MDSM.
 class StartTimeRendezvous {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StartTimeRendezvous);
-  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
-  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
 
 public:
   StartTimeRendezvous(AbstractThread* aOwnerThread,
@@ -185,7 +183,7 @@ MediaDecoderReaderWrapper::AwaitStartTime()
   return mStartTimeRendezvous->AwaitStartTime();
 }
 
-RefPtr<MediaDecoderReaderWrapper::AudioDataPromise>
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
@@ -196,7 +194,7 @@ MediaDecoderReaderWrapper::RequestAudioData()
 
   if (!mStartTimeRendezvous->HaveStartTime()) {
     p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
-                &StartTimeRendezvous::ProcessFirstSample<AudioDataPromise, MediaData::AUDIO_DATA>,
+                &StartTimeRendezvous::ProcessFirstSample<MediaDataPromise, MediaData::AUDIO_DATA>,
                 &StartTimeRendezvous::FirstSampleRejected<MediaData::AUDIO_DATA>)
          ->CompletionPromise();
   }
@@ -207,7 +205,7 @@ MediaDecoderReaderWrapper::RequestAudioData()
           ->CompletionPromise();
 }
 
-RefPtr<MediaDecoderReaderWrapper::VideoDataPromise>
+RefPtr<MediaDecoderReaderWrapper::MediaDataPromise>
 MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
                                             media::TimeUnit aTimeThreshold)
 {
@@ -225,7 +223,7 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
 
   if (!mStartTimeRendezvous->HaveStartTime()) {
     p = p->Then(mOwnerThread, __func__, mStartTimeRendezvous.get(),
-                &StartTimeRendezvous::ProcessFirstSample<VideoDataPromise, MediaData::VIDEO_DATA>,
+                &StartTimeRendezvous::ProcessFirstSample<MediaDataPromise, MediaData::VIDEO_DATA>,
                 &StartTimeRendezvous::FirstSampleRejected<MediaData::VIDEO_DATA>)
          ->CompletionPromise();
   }

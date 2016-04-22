@@ -484,7 +484,7 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThr
   return nextKeyframe < aTimeThreshold && nextKeyframe.ToMicroseconds() >= 0;
 }
 
-RefPtr<MediaDecoderReader::VideoDataPromise>
+RefPtr<MediaDecoderReader::MediaDataPromise>
 MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
                                     int64_t aTimeThreshold)
 {
@@ -499,17 +499,17 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
 
   if (!HasVideo()) {
     LOG("called with no video track");
-    return VideoDataPromise::CreateAndReject(DECODE_ERROR, __func__);
+    return MediaDataPromise::CreateAndReject(DECODE_ERROR, __func__);
   }
 
   if (IsSeeking()) {
     LOG("called mid-seek. Rejecting.");
-    return VideoDataPromise::CreateAndReject(CANCELED, __func__);
+    return MediaDataPromise::CreateAndReject(CANCELED, __func__);
   }
 
   if (mShutdown) {
     NS_WARNING("RequestVideoData on shutdown MediaFormatReader!");
-    return VideoDataPromise::CreateAndReject(CANCELED, __func__);
+    return MediaDataPromise::CreateAndReject(CANCELED, __func__);
   }
 
   media::TimeUnit timeThreshold{media::TimeUnit::FromMicroseconds(aTimeThreshold)};
@@ -525,12 +525,12 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
     mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
 
     Flush(TrackInfo::kVideoTrack);
-    RefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
+    RefPtr<MediaDataPromise> p = mVideo.mPromise.Ensure(__func__);
     SkipVideoDemuxToNextKeyFrame(timeThreshold);
     return p;
   }
 
-  RefPtr<VideoDataPromise> p = mVideo.mPromise.Ensure(__func__);
+  RefPtr<MediaDataPromise> p = mVideo.mPromise.Ensure(__func__);
   NotifyDecodingRequested(TrackInfo::kVideoTrack);
 
   return p;
@@ -590,7 +590,7 @@ MediaFormatReader::OnVideoDemuxCompleted(RefPtr<MediaTrackDemuxer::SamplesHolder
   ScheduleUpdate(TrackInfo::kVideoTrack);
 }
 
-RefPtr<MediaDecoderReader::AudioDataPromise>
+RefPtr<MediaDecoderReader::MediaDataPromise>
 MediaFormatReader::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -603,20 +603,20 @@ MediaFormatReader::RequestAudioData()
 
   if (!HasAudio()) {
     LOG("called with no audio track");
-    return AudioDataPromise::CreateAndReject(DECODE_ERROR, __func__);
+    return MediaDataPromise::CreateAndReject(DECODE_ERROR, __func__);
   }
 
   if (IsSeeking()) {
     LOG("called mid-seek. Rejecting.");
-    return AudioDataPromise::CreateAndReject(CANCELED, __func__);
+    return MediaDataPromise::CreateAndReject(CANCELED, __func__);
   }
 
   if (mShutdown) {
     NS_WARNING("RequestAudioData on shutdown MediaFormatReader!");
-    return AudioDataPromise::CreateAndReject(CANCELED, __func__);
+    return MediaDataPromise::CreateAndReject(CANCELED, __func__);
   }
 
-  RefPtr<AudioDataPromise> p = mAudio.mPromise.Ensure(__func__);
+  RefPtr<MediaDataPromise> p = mAudio.mPromise.Ensure(__func__);
   NotifyDecodingRequested(TrackInfo::kAudioTrack);
 
   return p;
