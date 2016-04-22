@@ -608,18 +608,18 @@ RegExpShared::trace(JSTracer* trc)
 
 bool
 RegExpShared::compile(JSContext* cx, HandleLinearString input,
-                      CompilationMode mode, bool sticky, ForceByteCodeEnum force)
+                      CompilationMode mode, ForceByteCodeEnum force)
 {
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
 
     RootedAtom pattern(cx, source);
-    return compile(cx, pattern, input, mode, sticky, force);
+    return compile(cx, pattern, input, mode, force);
 }
 
 bool
 RegExpShared::compile(JSContext* cx, HandleAtom pattern, HandleLinearString input,
-                      CompilationMode mode, bool sticky, ForceByteCodeEnum force)
+                      CompilationMode mode, ForceByteCodeEnum force)
 {
     if (!ignoreCase() && !StringHasRegExpMetaChars(pattern))
         canStringMatch = true;
@@ -645,14 +645,14 @@ RegExpShared::compile(JSContext* cx, HandleAtom pattern, HandleLinearString inpu
                                                          input->hasLatin1Chars(),
                                                          mode == MatchOnly,
                                                          force == ForceByteCode,
-                                                         sticky, unicode());
+                                                         sticky(), unicode());
     if (code.empty())
         return false;
 
     MOZ_ASSERT(!code.jitCode || !code.byteCode);
     MOZ_ASSERT_IF(force == ForceByteCode, code.byteCode);
 
-    RegExpCompilation& compilation = this->compilation(mode, sticky, input->hasLatin1Chars());
+    RegExpCompilation& compilation = this->compilation(mode, input->hasLatin1Chars());
     if (code.jitCode)
         compilation.jitCode = code.jitCode;
     else if (code.byteCode)
@@ -663,15 +663,15 @@ RegExpShared::compile(JSContext* cx, HandleAtom pattern, HandleLinearString inpu
 
 bool
 RegExpShared::compileIfNecessary(JSContext* cx, HandleLinearString input,
-                                 CompilationMode mode, bool sticky, ForceByteCodeEnum force)
+                                 CompilationMode mode, ForceByteCodeEnum force)
 {
-    if (isCompiled(mode, sticky, input->hasLatin1Chars(), force))
+    if (isCompiled(mode, input->hasLatin1Chars(), force))
         return true;
-    return compile(cx, input, mode, sticky, force);
+    return compile(cx, input, mode, force);
 }
 
 RegExpRunStatus
-RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start, bool sticky,
+RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start,
                       MatchPairs* matches, size_t* endIndex)
 {
     MOZ_ASSERT_IF(matches, !endIndex);
@@ -681,7 +681,7 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start, boo
     CompilationMode mode = matches ? Normal : MatchOnly;
 
     /* Compile the code at point-of-use. */
-    if (!compileIfNecessary(cx, input, mode, sticky, DontForceByteCode))
+    if (!compileIfNecessary(cx, input, mode, DontForceByteCode))
         return RegExpRunStatus_Error;
 
     /*
@@ -701,7 +701,7 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start, boo
     if (canStringMatch) {
         MOZ_ASSERT(pairCount() == 1);
         size_t sourceLength = source->length();
-        if (sticky) {
+        if (sticky()) {
             // First part checks size_t overflow.
             if (sourceLength + start < sourceLength || sourceLength + start > length)
                 return RegExpRunStatus_Success_NotFound;
@@ -735,7 +735,7 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start, boo
     }
 
     do {
-        jit::JitCode* code = compilation(mode, sticky, input->hasLatin1Chars()).jitCode;
+        jit::JitCode* code = compilation(mode, input->hasLatin1Chars()).jitCode;
         if (!code)
             break;
 
@@ -774,10 +774,10 @@ RegExpShared::execute(JSContext* cx, HandleLinearString input, size_t start, boo
     } while (false);
 
     // Compile bytecode for the RegExp if necessary.
-    if (!compileIfNecessary(cx, input, mode, sticky, ForceByteCode))
+    if (!compileIfNecessary(cx, input, mode, ForceByteCode))
         return RegExpRunStatus_Error;
 
-    uint8_t* byteCode = compilation(mode, sticky, input->hasLatin1Chars()).byteCode;
+    uint8_t* byteCode = compilation(mode, input->hasLatin1Chars()).byteCode;
     AutoTraceLog logInterpreter(logger, TraceLogger_IrregexpExecute);
 
     AutoStableStringChars inputChars(cx);

@@ -417,13 +417,10 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue)
     // Step 13 (reordered).
     var nextSourcePosition = 0;
 
-    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-    var sticky = !!(flags & REGEXP_STICKY_FLAG);
-
     // Step 11.
     while (true) {
         // Step 11.a.
-        var result = RegExpSearcher(rx, S, lastIndex, sticky);
+        var result = RegExpSearcher(rx, S, lastIndex);
 
         // Step 11.b.
         if (result === -1)
@@ -523,11 +520,8 @@ function RegExpSearch(string) {
 
     var result;
     if (IsRegExpMethodOptimizable(rx) && S.length < 0x7fff) {
-        var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-        var sticky = !!(flags & REGEXP_STICKY_FLAG);
-
         // Step 6.
-        result = RegExpSearcher(rx, S, 0, sticky);
+        result = RegExpSearcher(rx, S, 0);
 
         // Step 8.
         if (result === -1)
@@ -590,15 +584,28 @@ function RegExpSplit(string, limit) {
     // Steps 6-7.
     var unicodeMatching = callFunction(std_String_includes, flags, "u");
 
-    // Steps 8-9.
-    var newFlags;
-    if (callFunction(std_String_includes, flags, "y"))
-        newFlags = flags;
-    else
-        newFlags = flags + "y";
+    // Step 14 (reordered).
+    var size = S.length;
 
-    // Step 10.
-    var splitter = new C(rx, newFlags);
+    var optimizable = IsRegExpSplitOptimizable(C);
+    var splitter;
+    if (optimizable && size !== 0) {
+        // Steps 8-9 (skipped).
+
+        // Step 10.
+        // If split operation is optimizable, perform non-sticky match.
+        splitter = regexp_construct_no_sticky(rx, flags);
+    } else {
+        // Steps 8-9.
+        var newFlags;
+        if (callFunction(std_String_includes, flags, "y"))
+            newFlags = flags;
+        else
+            newFlags = flags + "y";
+
+        // Step 10.
+        splitter = new C(rx, newFlags);
+    }
 
     // Step 11.
     var A = [];
@@ -612,9 +619,6 @@ function RegExpSplit(string, limit) {
         lim = MAX_NUMERIC_INDEX;
     else
         lim = limit >>> 0;
-
-    // Step 14.
-    var size = S.length;
 
     // Step 16;
     var p = 0;
@@ -639,8 +643,6 @@ function RegExpSplit(string, limit) {
         return A;
     }
 
-    var optimizable = IsRegExpSplitOptimizable(C);
-
     // Step 18.
     var q = p;
 
@@ -652,8 +654,7 @@ function RegExpSplit(string, limit) {
             // splitter.lastIndex is not used.
 
             // Step 19.b.
-            // Directly call RegExpMatcher to ignore flags and find first match.
-            z = RegExpMatcher(splitter, S, q, false);
+            z = RegExpMatcher(splitter, S, q);
 
             // Step 19.c.
             if (z === null)
@@ -797,14 +798,11 @@ function RegExpBuiltinExec(R, S, forTest) {
     // Step 5.
     var flags = UnsafeGetInt32FromReservedSlot(R, REGEXP_FLAGS_SLOT);
 
-    // Step 6.
-    var global = !!(flags & REGEXP_GLOBAL_FLAG);
-
-    // Step 7.
-    var sticky = !!(flags & REGEXP_STICKY_FLAG);
+    // Steps 6-7.
+    var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
 
     // Step 8.
-    if (!global && !sticky) {
+    if (!globalOrSticky) {
         lastIndex = 0;
     } else {
         if (lastIndex > S.length) {
@@ -816,7 +814,7 @@ function RegExpBuiltinExec(R, S, forTest) {
 
     if (forTest) {
         // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
-        var endIndex = RegExpTester(R, S, lastIndex, sticky);
+        var endIndex = RegExpTester(R, S, lastIndex);
         if (endIndex == -1) {
             // Steps 12.a.i-ii, 12.c.i.1-2.
             R.lastIndex = 0;
@@ -824,20 +822,20 @@ function RegExpBuiltinExec(R, S, forTest) {
         }
 
         // Step 15.
-        if (global || sticky)
+        if (globalOrSticky)
             R.lastIndex = endIndex;
 
         return true;
     }
 
     // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
-    var result = RegExpMatcher(R, S, lastIndex, sticky);
+    var result = RegExpMatcher(R, S, lastIndex);
     if (result === null) {
         // Steps 12.a.i-ii, 12.c.i.1-2.
         R.lastIndex = 0;
     } else {
         // Step 15.
-        if (global || sticky)
+        if (globalOrSticky)
             R.lastIndex = result.index + result[0].length;
     }
 
