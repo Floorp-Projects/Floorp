@@ -2736,9 +2736,6 @@ protected:
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
   bool TryOptimizeToImageLayer(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
-  bool IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
-                                  const nsRect& aClipRect,
-                                  gfxRect* aDestRect);
   bool IsNonEmptyFixedImage() const;
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
   bool ShouldTreatAsFixed() const;
