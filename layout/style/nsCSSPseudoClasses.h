@@ -29,7 +29,8 @@ enum class CSSPseudoClassType : CSSPseudoClassTypeBase
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
   Count,
-  NotPseudo   // This value MUST be last! SelectorMatches depends on it.
+  NotPseudo,  // This value MUST be second last! SelectorMatches depends on it.
+  MAX
 };
 
 } // namespace mozilla

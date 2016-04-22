@@ -1621,8 +1621,8 @@ static const EventStates sPseudoClassStates[] = {
   EventStates()
 };
 static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
-              static_cast<size_t>(CSSPseudoClassType::NotPseudo) + 1,
-              "CSSPseudoClassType::NotPseudo is no longer at the end of"
+              static_cast<size_t>(CSSPseudoClassType::MAX),
+              "CSSPseudoClassType::MAX is no longer equal to the length of "
               "sPseudoClassStates");
 
 static bool
