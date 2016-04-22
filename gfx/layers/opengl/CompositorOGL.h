@@ -193,8 +193,7 @@ class CompositorOGL final : public Compositor
 
   std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
 public:
-  explicit CompositorOGL(CompositorBridgeParent* aParent,
-                         nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
+  explicit CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
                          bool aUseExternalSurfaceSize = false);
 
 protected:

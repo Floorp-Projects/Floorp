@@ -158,9 +158,8 @@ private:
   bool mInitOkay;
 };
 
-CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, nsIWidget* aWidget)
-  : Compositor(aParent)
-  , mAttachments(nullptr)
+CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
+  : mAttachments(nullptr)
   , mWidget(aWidget)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
