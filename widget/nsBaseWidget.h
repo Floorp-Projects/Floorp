@@ -513,6 +513,7 @@ protected:
   RefPtr<CompositorParent> mCompositorParent;
   RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<APZCTreeManager> mAPZC;
+  RefPtr<GeckoContentController> mRootContentController;
   RefPtr<APZEventState> mAPZEventState;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
   RefPtr<WidgetShutdownObserver> mShutdownObserver;

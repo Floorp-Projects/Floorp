@@ -952,12 +952,12 @@ CompositorParent::ActorDestroy(ActorDestroyReason why)
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-    { // scope lock
-      MonitorAutoLock lock(*sIndirectLayerTreesLock);
-      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
-    }
     mCompositionManager = nullptr;
     mCompositor = nullptr;
+  }
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
   }
 }
 
