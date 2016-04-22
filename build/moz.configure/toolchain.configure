@@ -351,7 +351,11 @@ def check_compiler(compiler, language):
         flags.append('-fms-compatibility-version=18.00.30723')
         flags.append('-fallback')
 
-    return info.type, info.version, flags
+    return namespace(
+        type=info.type,
+        version=info.version,
+        flags=flags,
+    )
 
 
 @template
@@ -526,17 +530,15 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                     quote(os.path.dirname(found_compiler)),
                     quote(os.path.dirname(full_path)))
 
-        type, version, more_flags = check_compiler(
-            wrapper + [compiler] + flags, language)
+        info = check_compiler(wrapper + [compiler] + flags, language)
 
         # Check that the additional flags we got are enough to not require any
         # more flags.
-        if more_flags:
-            flags += more_flags
-            type, version, more_flags = check_compiler(
-                wrapper + [compiler] + flags, language)
+        if info.flags:
+            flags += info.flags
+            info = check_compiler(wrapper + [compiler] + flags, language)
 
-        if more_flags:
+        if info.flags:
             raise FatalCheckError(
                 'Unknown compiler or compiler not supported.')
 
@@ -545,33 +547,34 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         # Check the compiler version here instead of in `compiler_version` so
         # that the `checking` message doesn't pretend the compiler can be used
         # to then bail out one line later.
-        if type == 'gcc' and version < '4.8.0':
+        if info.type == 'gcc' and info.version < '4.8.0':
             raise FatalCheckError(
                 'Only GCC 4.8 or newer is supported (found version %s).'
-                % version)
+                % info.version)
 
         # If you want to bump the version check here search for
         # __cpp_static_assert above, and see the associated comment.
-        if type == 'clang' and not version:
+        if info.type == 'clang' and not info.version:
             raise FatalCheckError(
                 'Only clang/llvm 3.4 or newer is supported.')
 
-        if type == 'msvc':
-            if version < '18.00.30723' or ('19' < version < '19.00.23506'):
+        if info.type == 'msvc':
+            if info.version < '18.00.30723' or (
+                    '19' < info.version < '19.00.23506'):
                 raise FatalCheckError(
                     'This version (%s) of the MSVC compiler is not '
                     'supported.\n'
                     'You must install Visual C++ 2013 Update 3, Visual '
                     'C++ 2015 Update 1, or newer in order to build.\n'
                     'See https://developer.mozilla.org/en/'
-                    'Windows_Build_Prerequisites' % version)
+                    'Windows_Build_Prerequisites' % info.version)
 
         return namespace(
             wrapper=wrapper,
             compiler=compiler,
             flags=flags,
-            type=type,
-            version=version,
+            type=info.type,
+            version=info.version,
         )
 
     @depends(valid_compiler)
