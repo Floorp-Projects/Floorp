@@ -348,6 +348,11 @@ InspectorPanel.prototype = {
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
+    if (!Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
+       defaultTab == "fontinspector") {
+      defaultTab = "ruleview";
+    }
+
     this._setDefaultSidebar = (event, toolId) => {
       Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
     };
