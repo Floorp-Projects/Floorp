@@ -378,7 +378,8 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue)
     // Step 13 (reordered).
     var nextSourcePosition = 0;
 
-    var sticky = !!rx.sticky;
+    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+    var sticky = !!(flags & REGEXP_STICKY_FLAG);
 
     // Step 11.
     while (true) {
@@ -432,7 +433,8 @@ function RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue)
     // Step 13 (reordered).
     var nextSourcePosition = 0;
 
-    var sticky = !!rx.sticky;
+    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+    var sticky = !!(flags & REGEXP_STICKY_FLAG);
 
     // Step 11.
     while (true) {
@@ -483,7 +485,8 @@ function RegExpGlobalReplaceOpt(rx, S, lengthS, replaceValue)
 // Optimized path for @@replace without global flag.
 function RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue)
 {
-    var sticky = !!rx.sticky;
+    var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+    var sticky = !!(flags & REGEXP_STICKY_FLAG);
 
     var lastIndex;
     if (sticky) {
@@ -547,7 +550,8 @@ function RegExpSearch(string) {
 
     var result;
     if (IsRegExpMethodOptimizable(rx) && S.length < 0x7fff) {
-        var sticky = !!rx.sticky;
+        var flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+        var sticky = !!(flags & REGEXP_STICKY_FLAG);
 
         // Step 6.
         result = RegExpSearcher(rx, S, 0, sticky);
