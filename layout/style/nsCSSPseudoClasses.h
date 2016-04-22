@@ -36,10 +36,9 @@ enum class CSSPseudoClassType : CSSPseudoClassTypeBase
 
 class nsCSSPseudoClasses
 {
-public:
-  // TODO: Move to private in later patch
   typedef mozilla::CSSPseudoClassType Type;
 
+public:
   static void AddRefAtoms();
 
   static Type GetPseudoType(nsIAtom* aAtom);

@@ -769,13 +769,13 @@ protected:
                                                        bool           aIsNegated);
 
   nsSelectorParsingStatus ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
-                                                       nsCSSPseudoClasses::Type aType);
+                                                       CSSPseudoClassType aType);
 
   nsSelectorParsingStatus ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
-                                                         nsCSSPseudoClasses::Type aType);
+                                                         CSSPseudoClassType aType);
 
   nsSelectorParsingStatus ParsePseudoClassWithSelectorListArg(nsCSSSelector& aSelector,
-                                                              nsCSSPseudoClasses::Type aType);
+                                                              CSSPseudoClassType aType);
 
   nsSelectorParsingStatus ParseNegatedSimpleSelector(int32_t&       aDataMask,
                                                      nsCSSSelector& aSelector);
@@ -5916,7 +5916,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   bool isTreePseudo = false;
   CSSPseudoElementType pseudoElementType =
     nsCSSPseudoElements::GetPseudoType(pseudo);
-  nsCSSPseudoClasses::Type pseudoClassType =
+  CSSPseudoClassType pseudoClassType =
     nsCSSPseudoClasses::GetPseudoType(pseudo);
   bool pseudoClassIsUserAction =
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
@@ -6228,7 +6228,7 @@ CSSParserImpl::ParseNegatedSimpleSelector(int32_t&       aDataMask,
 //
 CSSParserImpl::nsSelectorParsingStatus
 CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
-                                            nsCSSPseudoClasses::Type aType)
+                                            CSSPseudoClassType aType)
 {
   if (! GetToken(true)) { // premature eof
     REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
@@ -6263,7 +6263,7 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
 
 CSSParserImpl::nsSelectorParsingStatus
 CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
-                                              nsCSSPseudoClasses::Type aType)
+                                              CSSPseudoClassType aType)
 {
   int32_t numbers[2] = { 0, 0 };
   int32_t sign[2] = { 1, 1 };
@@ -6431,7 +6431,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
 //
 CSSParserImpl::nsSelectorParsingStatus
 CSSParserImpl::ParsePseudoClassWithSelectorListArg(nsCSSSelector& aSelector,
-                                                   nsCSSPseudoClasses::Type aType)
+                                                   CSSPseudoClassType aType)
 {
   nsAutoPtr<nsCSSSelectorList> slist;
   if (! ParseSelectorList(*getter_Transfers(slist), char16_t(')'))) {
