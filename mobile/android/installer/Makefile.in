@@ -41,6 +41,10 @@ ifdef MOZ_ANDROID_EXCLUDE_FONTS
 DEFINES += -DMOZ_ANDROID_EXCLUDE_FONTS=1
 endif
 
+ifdef MOZ_ANDROID_GCM
+DEFINES += -DMOZ_ANDROID_GCM=1
+endif
+
 MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

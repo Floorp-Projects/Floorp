@@ -3623,13 +3623,6 @@ if test -n "$MOZ_SWITCHBOARD"; then
 fi
 
 dnl ========================================================
-dnl = Enable GCM on Android.
-dnl ========================================================
-if test -n "$MOZ_ANDROID_GCM"; then
-    AC_DEFINE(MOZ_ANDROID_GCM)
-fi
-
-dnl ========================================================
 dnl = Enable IPDL's "expensive" unit tests
 dnl ========================================================
 MOZ_IPDL_TESTS=
@@ -6834,7 +6827,6 @@ AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
-AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
 AC_SUBST(MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER)

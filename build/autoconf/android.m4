@@ -225,8 +225,6 @@ AC_DEFUN([MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING],
 [
 
 if test -n "$MOZ_ANDROID_GCM" ; then
-    AC_SUBST(MOZ_ANDROID_GCM)
-
     MOZ_ANDROID_AAR(play-services-base, 8.1.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-basement, 8.1.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-gcm, 8.1.0, google, com/google/android/gms)
