@@ -2587,30 +2587,6 @@ nsDisplayBackgroundImage::ComputeShouldTreatAsFixed(bool isTransformedFixed) con
 }
 
 bool
-nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
-                                                     const nsRect& aClipRect,
-                                                     gfxRect* aDestRect)
-{
-  if (!mBackgroundStyle)
-    return false;
-
-  if (mBackgroundStyle->mImage.mLayers.Length() != 1)
-    return false;
-
-  if (!ShouldTreatAsFixed())
-    return false;
-
-  // We only care about images here, not gradients.
-  if (!mIsRasterImage)
-    return false;
-
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  *aDestRect = nsLayoutUtils::RectToGfxRect(mFillRect, appUnitsPerDevPixel);
-
-  return true;
-}
-
-bool
 nsDisplayBackgroundImage::IsNonEmptyFixedImage() const
 {
   return ShouldTreatAsFixed() &&
