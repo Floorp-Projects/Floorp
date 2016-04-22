@@ -387,7 +387,7 @@ body {
   align-items: center;
   padding: 0 2px;
   box-sizing: border-box;
-  --fast-track-icon-width: 12px;
+  --fast-track-icon-width: 15px;
   z-index: 1;
 }
 
@@ -407,13 +407,23 @@ body {
   content: "";
   display: block;
   position: absolute;
-  top: 0;
+  top: 1px;
   right: 0;
   height: 100%;
   width: var(--fast-track-icon-width);
   z-index: 1;
+}
 
-  background-image: url("images/animation-fast-track.svg");
+.animation-timeline .all-properties .name::after {
+  background-color: white;
+  clip-path: url(images/animation-fast-track.svg#thunderbolt);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.animation-timeline .some-properties .name::after {
+  background-color: var(--theme-content-color3);
+  clip-path: url(images/animation-fast-track.svg#thunderbolt);
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -527,6 +537,32 @@ body {
 .animation-timeline .animated-properties .name div {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.animated-properties.cssanimation {
+  --background-color: var(--theme-contrast-background);
+}
+
+.animated-properties.csstransition {
+  --background-color: var(--theme-highlight-blue);
+}
+
+.animated-properties.scriptanimation {
+  --background-color: var(--theme-graphs-green);
+}
+
+.animation-timeline .animated-properties .oncompositor::before {
+  content: "";
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  background-color: var(--background-color);
+  clip-path: url(images/animation-fast-track.svg#thunderbolt);
+  vertical-align: middle;
+}
+
+.animation-timeline .animated-properties .warning {
+  text-decoration: underline dotted;
 }
 
 .animation-timeline .animated-properties .frames {
