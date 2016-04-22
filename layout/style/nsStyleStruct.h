@@ -2090,6 +2090,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText
     return !mTextEmphasisStyleString.IsEmpty();
   }
 
+  bool HasWebkitTextStroke() const {
+    return mWebkitTextStrokeWidth.GetCoordValue() > 0;
+  }
+
   // These are defined in nsStyleStructInlines.h.
   inline bool HasTextShadow() const;
   inline nsCSSShadowArray* GetTextShadow() const;
