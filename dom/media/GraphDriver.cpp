@@ -23,7 +23,7 @@ extern mozilla::LazyLogModule gMediaStreamGraphLog;
 
 // We don't use NSPR log here because we want this interleaved with adb logcat
 // on Android/B2G
-// #define ENABLE_LIFECYCLE_LOG
+#define ENABLE_LIFECYCLE_LOG
 #ifdef ENABLE_LIFECYCLE_LOG
 #ifdef ANDROID
 #include "android/log.h"
@@ -660,12 +660,9 @@ AudioCallbackDriver::Init()
       return;
     }
   }
-#ifdef XP_MACOSX
-  // Currently, only mac cares about this
   bool aec;
   Unused << mGraphImpl->AudioTrackPresent(aec);
   SetMicrophoneActive(aec);
-#endif
 
   cubeb_stream_register_device_changed_callback(mAudioStream,
                                                 AudioCallbackDriver::DeviceChangedCallback_s);
@@ -1070,34 +1067,14 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive)
 
 void
 AudioCallbackDriver::DeviceChangedCallback() {
-#ifdef XP_MACOSX
+  // Tell the audio engine the device has changed, it might want to reset some
+  // state.
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
+  if (mAudioInput) {
+    mAudioInput->DeviceChanged();
+  }
+#ifdef XP_MACOSX
   PanOutputIfNeeded(mMicrophoneActive);
-  // On OSX, changing the output device causes the audio thread to no call the
-  // audio callback, so we're unable to process real-time input data, and this
-  // results in latency building up.
-  // We switch to a system driver until audio callbacks are called again, so we
-  // still pull from the input stream, so that everything works apart from the
-  // audio output.
-
-  // Don't bother doing the device switching dance if the graph is not RUNNING
-  // (starting up, shutting down), because we haven't started pulling from the
-  // SourceMediaStream.
-  if (!GraphImpl()->Running()) {
-    return;
-  }
-
-  if (mSelfReference) {
-    return;
-  }
-  STREAM_LOG(LogLevel::Error, ("Switching to SystemClockDriver during output switch"));
-  mSelfReference.Take(this);
-  mCallbackReceivedWhileSwitching = 0;
-  SetNextDriver(new SystemClockDriver(GraphImpl()));
-  RemoveCallback();
-  mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd);
-  mGraphImpl->SetCurrentDriver(mNextDriver);
-  mNextDriver->Start();
 #endif
 }
 

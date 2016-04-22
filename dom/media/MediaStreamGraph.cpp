@@ -46,7 +46,7 @@ namespace mozilla {
 LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
 #define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
-// #define ENABLE_LIFECYCLE_LOG
+#define ENABLE_LIFECYCLE_LOG
 
 // We don't use NSPR log here because we want this interleaved with adb logcat
 // on Android/B2G
@@ -138,7 +138,7 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
   }
 
   STREAM_LOG(LogLevel::Debug, ("Removed media stream %p from graph %p, count %lu",
-                               aStream, this, mStreams.Length()))
+                               aStream, this, mStreams.Length()));
   LIFECYCLE_LOG("Removed media stream %p from graph %p, count %lu",
                 aStream, this, mStreams.Length());
 
