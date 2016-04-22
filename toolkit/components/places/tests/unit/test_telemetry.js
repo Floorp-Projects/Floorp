@@ -24,9 +24,41 @@ var histograms = {
   PLACES_MAINTENANCE_DAYSFROMLAST: val => do_check_true(val >= 0),
 }
 
-function run_test()
-{
-  run_next_test();
+/**
+ * Forces an expiration run.
+ *
+ * @param [optional] aLimit
+ *        Limit for the expiration.  Pass -1 for unlimited.
+ *        Any other non-positive value will just expire orphans.
+ *
+ * @return {Promise}
+ * @resolves When expiration finishes.
+ * @rejects Never.
+ */
+function promiseForceExpirationStep(aLimit) {
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
+  expire.observe(null, "places-debug-start-expiration", aLimit);
+  return promise;
+}
+
+/**
+ * Returns a PRTime in the past usable to add expirable visits.
+ *
+ * param [optional] daysAgo
+ *       Expiration ignores any visit added in the last 7 days, so by default
+ *       this will be set to 7.
+ * @note to be safe against DST issues we go back one day more.
+ */
+function getExpirablePRTime(daysAgo = 7) {
+  let dateObj = new Date();
+  // Normalize to midnight
+  dateObj.setHours(0);
+  dateObj.setMinutes(0);
+  dateObj.setSeconds(0);
+  dateObj.setMilliseconds(0);
+  dateObj = new Date(dateObj.getTime() - (daysAgo + 1) * 86400000);
+  return dateObj.getTime() * 1000;
 }
 
 add_task(function* test_execute()
@@ -62,16 +94,16 @@ add_task(function* test_execute()
   yield PlacesTestUtils.promiseAsyncUpdates();
 
   // Test expiration probes.
-  for (let i = 0; i < 2; i++) {
+  let now =  getExpirablePRTime();
+  for (let i = 0; i < 3; i++) {
     yield PlacesTestUtils.addVisits({
       uri: NetUtil.newURI("http://" +  i + ".moz.org/"),
-      visitDate: Date.now() // [sic]
+      visitDate: now++
     });
   }
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);
-  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
-  expire.observe(null, "places-debug-start-expiration", 1);
-  expire.observe(null, "places-debug-start-expiration", -1);
+  yield promiseForceExpirationStep(2);
+  yield promiseForceExpirationStep(2);
 
   // Test autocomplete probes.
   /*
