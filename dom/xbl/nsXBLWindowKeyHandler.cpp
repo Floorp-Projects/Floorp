@@ -406,7 +406,9 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInDefaultEventGroup(
   WidgetKeyboardEvent* widgetKeyboardEvent =
     aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
 
-  if (widgetKeyboardEvent->mFlags.mOnlySystemGroupDispatchInContent) {
+  if (widgetKeyboardEvent->mIsReserved) {
+    MOZ_RELEASE_ASSERT(
+      widgetKeyboardEvent->mFlags.mOnlySystemGroupDispatchInContent);
     MOZ_RELEASE_ASSERT(
       widgetKeyboardEvent->mFlags.mNoCrossProcessBoundaryForwarding);
     return;
@@ -414,6 +416,7 @@ nsXBLWindowKeyHandler::HandleEventOnCaptureInDefaultEventGroup(
 
   bool isReserved = false;
   if (HasHandlerForEvent(aEvent, &isReserved) && isReserved) {
+    widgetKeyboardEvent->mIsReserved = true;
     // For reserved commands (such as Open New Tab), we don't to wait for
     // the content to answer (so mWantReplyFromContentProcess remains false),
     // neither to give a chance for content to override its behavior.
