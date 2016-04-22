@@ -804,7 +804,7 @@ function RegExpExec(R, S, forTest) {
     return forTest ? result !== null : result;
 }
 
-// ES6 21.2.5.2.2.
+// ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2.
 function RegExpBuiltinExec(R, S, forTest) {
     // ES6 21.2.5.2.1 step 6.
     // This check is here for RegExpTest.  RegExp_prototype_Exec does same
@@ -812,51 +812,54 @@ function RegExpBuiltinExec(R, S, forTest) {
     if (!IsRegExpObject(R))
         return callFunction(CallRegExpMethodIfWrapped, R, R, S, forTest, "RegExpBuiltinExec");
 
-    // Step 1-2 (skipped).
+    // Steps 1-2 (skipped).
 
-    // Steps 4-5.
+    // Step 4.
     var lastIndex = ToLength(R.lastIndex);
 
-    // Steps 6-7.
-    var global = !!R.global;
+    // Step 5.
+    var flags = UnsafeGetInt32FromReservedSlot(R, REGEXP_FLAGS_SLOT);
 
-    // Steps 8-9.
-    var sticky = !!R.sticky;
+    // Step 6.
+    var global = !!(flags & REGEXP_GLOBAL_FLAG);
 
-    // Step 10.
+    // Step 7.
+    var sticky = !!(flags & REGEXP_STICKY_FLAG);
+
+    // Step 8.
     if (!global && !sticky) {
         lastIndex = 0;
     } else {
         if (lastIndex > S.length) {
-            // Steps 15.a.i-ii, 15.c.i.1-2.
+            // Steps 12.a.i-ii, 12.c.i.1-2.
             R.lastIndex = 0;
             return forTest ? false : null;
         }
     }
 
     if (forTest) {
-        // Steps 3, 11-17, except 15.a.i-ii, 15.c.i.1-2.
+        // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
         var endIndex = RegExpTester(R, S, lastIndex, sticky);
         if (endIndex == -1) {
-            // Steps 15.a.i-ii, 15.c.i.1-2.
+            // Steps 12.a.i-ii, 12.c.i.1-2.
             R.lastIndex = 0;
             return false;
         }
 
-        // Step 18.
+        // Step 15.
         if (global || sticky)
             R.lastIndex = endIndex;
 
         return true;
     }
 
-    // Steps 3, 11-17, except 15.a.i-ii, 15.c.i.1-2.
+    // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
     var result = RegExpMatcher(R, S, lastIndex, sticky);
     if (result === null) {
-        // Steps 15.a.i-ii, 15.c.i.1-2.
+        // Steps 12.a.i-ii, 12.c.i.1-2.
         R.lastIndex = 0;
     } else {
-        // Step 18.
+        // Step 15.
         if (global || sticky)
             R.lastIndex = result.index + result[0].length;
     }
