@@ -2075,36 +2075,31 @@ class CloneBufferObject : public NativeObject {
         Rooted<CloneBufferObject*> obj(cx, Create(cx));
         if (!obj)
             return nullptr;
-        uint64_t* datap;
-        size_t nbytes;
-        buffer->steal(&datap, &nbytes);
-        obj->setData(datap);
-        obj->setNBytes(nbytes);
+        auto data = js::MakeUnique<JSStructuredCloneData>();
+        if (!data) {
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+        buffer->steal(data.get());
+        obj->setData(data.release());
         return obj;
     }
 
-    uint64_t* data() const {
-        return static_cast<uint64_t*>(getReservedSlot(DATA_SLOT).toPrivate());
+    JSStructuredCloneData* data() const {
+        return static_cast<JSStructuredCloneData*>(getReservedSlot(DATA_SLOT).toPrivate());
     }
 
-    void setData(uint64_t* aData) {
+    void setData(JSStructuredCloneData* aData) {
         MOZ_ASSERT(!data());
         setReservedSlot(DATA_SLOT, PrivateValue(aData));
     }
 
-    size_t nbytes() const {
-        return getReservedSlot(LENGTH_SLOT).toInt32();
-    }
-
-    void setNBytes(size_t nbytes) {
-        MOZ_ASSERT(nbytes <= UINT32_MAX);
-        setReservedSlot(LENGTH_SLOT, Int32Value(nbytes));
-    }
-
     // Discard an owned clone buffer.
     void discard() {
-        if (data())
-            JS_ClearStructuredClone(data(), nbytes(), nullptr, nullptr);
+        if (data()) {
+            JSAutoStructuredCloneBuffer clonebuf;
+            clonebuf.adopt(Move(*data()));
+        }
         setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
     }
 
@@ -2131,8 +2126,12 @@ class CloneBufferObject : public NativeObject {
         char* str = JS_EncodeString(cx, args[0].toString());
         if (!str)
             return false;
-        obj->setData(reinterpret_cast<uint64_t*>(str));
-        obj->setNBytes(JS_GetStringLength(args[0].toString()));
+        size_t nbytes = JS_GetStringLength(args[0].toString());
+        MOZ_ASSERT(nbytes % sizeof(uint64_t) == 0);
+        auto buf = js::MakeUnique<JSStructuredCloneData>(nbytes, nbytes, nbytes);
+        js_memcpy(buf->Start(), str, nbytes);
+        JS_free(cx, str);
+        obj->setData(buf.release());
 
         args.rval().setUndefined();
         return true;
@@ -2160,7 +2159,7 @@ class CloneBufferObject : public NativeObject {
         }
 
         bool hasTransferable;
-        if (!JS_StructuredCloneHasTransferables(obj->data(), obj->nbytes(), &hasTransferable))
+        if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
             return false;
 
         if (hasTransferable) {
@@ -2168,7 +2167,11 @@ class CloneBufferObject : public NativeObject {
             return false;
         }
 
-        JSString* str = JS_NewStringCopyN(cx, reinterpret_cast<char*>(obj->data()), obj->nbytes());
+        const char* buffer;
+        size_t size = obj->data()->Size();
+        auto iter = obj->data()->Iter();
+        obj->data()->FlattenBytes(iter, &buffer, size);
+        JSString* str = JS_NewStringCopyN(cx, buffer, size);
         if (!str)
             return false;
         args.rval().setString(str);
@@ -2249,11 +2252,11 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     }
 
     bool hasTransferable;
-    if (!JS_StructuredCloneHasTransferables(obj->data(), obj->nbytes(), &hasTransferable))
+    if (!JS_StructuredCloneHasTransferables(*obj->data(), &hasTransferable))
         return false;
 
     RootedValue deserialized(cx);
-    if (!JS_ReadStructuredClone(cx, obj->data(), obj->nbytes(),
+    if (!JS_ReadStructuredClone(cx, *obj->data(),
                                 JS_STRUCTURED_CLONE_VERSION, &deserialized, nullptr, nullptr)) {
         return false;
     }

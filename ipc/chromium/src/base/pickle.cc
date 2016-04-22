@@ -425,9 +425,20 @@ bool Pickle::FlattenBytes(PickleIterator* iter, const char** data, uint32_t leng
   return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length) - length);
 }
 
-bool Pickle::ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buffers) const
+bool Pickle::ExtractBuffers(PickleIterator* iter, size_t length, BufferList* buffers,
+                            uint32_t alignment) const
 {
+  DCHECK(iter);
+  DCHECK(buffers);
+  DCHECK(alignment == 4 || alignment == 8);
+  DCHECK(intptr_t(header_) % alignment == 0);
+
   if (AlignInt(length) < length) {
+    return false;
+  }
+
+  uint32_t padding_len = intptr_t(iter->iter_.Data()) % alignment;
+  if (!iter->iter_.AdvanceAcrossSegments(buffers_, padding_len)) {
     return false;
   }
 

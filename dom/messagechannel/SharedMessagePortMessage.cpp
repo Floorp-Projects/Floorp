@@ -20,66 +20,6 @@ using namespace ipc;
 
 namespace dom {
 
-void
-SharedMessagePortMessage::Read(nsISupports* aParent,
-                               JSContext* aCx,
-                               JS::MutableHandle<JS::Value> aValue,
-                               ErrorResult& aRv)
-{
-  if (mData.IsEmpty()) {
-    return;
-  }
-
-  auto* data = reinterpret_cast<uint64_t*>(mData.Elements());
-  size_t dataLen = mData.Length();
-  MOZ_ASSERT(!(dataLen % sizeof(*data)));
-
-  ReadFromBuffer(aParent, aCx, data, dataLen, aValue, aRv);
-  NS_WARN_IF(aRv.Failed());
-
-  Free();
-}
-
-void
-SharedMessagePortMessage::Write(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue,
-                                JS::Handle<JS::Value> aTransfer,
-                                ErrorResult& aRv)
-{
-  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  FallibleTArray<uint8_t> cloneData;
-
-  MoveBufferDataToArray(cloneData, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  MOZ_ASSERT(mData.IsEmpty());
-  mData.SwapElements(cloneData);
-}
-
-void
-SharedMessagePortMessage::Free()
-{
-  if (!mData.IsEmpty()) {
-    auto* data = reinterpret_cast<uint64_t*>(mData.Elements());
-    size_t dataLen = mData.Length();
-    MOZ_ASSERT(!(dataLen % sizeof(*data)));
-
-    FreeBuffer(data, dataLen);
-    mData.Clear();
-  }
-}
-
-SharedMessagePortMessage::~SharedMessagePortMessage()
-{
-  Free();
-}
-
 /* static */ void
 SharedMessagePortMessage::FromSharedToMessagesChild(
                       MessagePortChild* aActor,
@@ -95,7 +35,8 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
 
   for (auto& data : aData) {
     MessagePortMessage* message = aArray.AppendElement();
-    message->data().SwapElements(data->mData);
+    data->mBuffer->abandon();
+    data->mBuffer->steal(&message->data().data);
 
     const nsTArray<RefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
@@ -127,7 +68,9 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
   for (auto& message : aArray) {
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
-    data->mData.SwapElements(message.data());
+    data->mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>();
+    data->mBuffer->adopt(Move(message.data().data), JS_STRUCTURED_CLONE_VERSION,
+                         &StructuredCloneHolder::sCallbacks, data.get());
 
     const nsTArray<PBlobChild*>& blobs = message.blobsChild();
     if (!blobs.IsEmpty()) {
@@ -167,7 +110,8 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
 
   for (auto& data : aData) {
     MessagePortMessage* message = aArray.AppendElement(mozilla::fallible);
-    message->data().SwapElements(data->mData);
+    data->mBuffer->abandon();
+    data->mBuffer->steal(&message->data().data);
 
     const nsTArray<RefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
@@ -201,7 +145,9 @@ SharedMessagePortMessage::FromMessagesToSharedParent(
   for (auto& message : aArray) {
     RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
-    data->mData.SwapElements(message.data());
+    data->mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>();
+    data->mBuffer->adopt(Move(message.data().data), JS_STRUCTURED_CLONE_VERSION,
+                         &StructuredCloneHolder::sCallbacks, data.get());
 
     const nsTArray<PBlobParent*>& blobs = message.blobsParent();
     if (!blobs.IsEmpty()) {
