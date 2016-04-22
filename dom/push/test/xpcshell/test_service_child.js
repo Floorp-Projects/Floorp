@@ -3,9 +3,25 @@
 
 'use strict';
 
+Cu.importGlobalProperties(["crypto"]);
+
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 var db;
+
+function done() {
+  do_test_finished();
+  run_next_test();
+}
+
+function generateKey() {
+  return crypto.subtle.generateKey({
+    name: "ECDSA",
+    namedCurve: "P-256",
+  }, true, ["sign", "verify"]).then(cryptoKey =>
+    crypto.subtle.exportKey("raw", cryptoKey.publicKey)
+  ).then(publicKey => new Uint8Array(publicKey));
+}
 
 function run_test() {
   if (isParent) {
@@ -38,6 +54,69 @@ add_test(function test_subscribe_success() {
       run_next_test();
     }
   );
+});
+
+add_test(function test_subscribeWithKey_error() {
+  do_test_pending();
+
+  let invalidKey = [0, 1];
+  PushServiceComponent.subscribeWithKey(
+    'https://example.com/sub-key/invalid',
+    Services.scriptSecurityManager.getSystemPrincipal(),
+    invalidKey.length,
+    invalidKey,
+    (result, subscription) => {
+      ok(!Components.isSuccessCode(result), 'Expected error creating subscription with invalid key');
+      equal(result, Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR, 'Wrong error code for invalid key');
+      strictEqual(subscription, null, 'Unexpected subscription');
+
+      do_test_finished();
+      run_next_test();
+    }
+  );
+});
+
+add_test(function test_subscribeWithKey_success() {
+  do_test_pending();
+
+  generateKey().then(key => {
+    PushServiceComponent.subscribeWithKey(
+      'https://example.com/sub-key/ok',
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      key.length,
+      key,
+      (result, subscription) => {
+        ok(Components.isSuccessCode(result), 'Error creating subscription with key');
+        notStrictEqual(subscription, null, 'Expected subscription');
+        done();
+      }
+    );
+  }, error => {
+    ok(false, "Error generating app server key");
+    done();
+  });
+});
+
+add_test(function test_subscribeWithKey_conflict() {
+  do_test_pending();
+
+  generateKey().then(differentKey => {
+    PushServiceComponent.subscribeWithKey(
+      'https://example.com/sub-key/ok',
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      differentKey.length,
+      differentKey,
+      (result, subscription) => {
+        ok(!Components.isSuccessCode(result), 'Expected error creating subscription with conflicting key');
+        equal(result, Cr.NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR, 'Wrong error code for mismatched key');
+        strictEqual(subscription, null, 'Unexpected subscription');
+        done();
+      }
+    );
+  }, error => {
+    ok(false, "Error generating different app server key");
+    done();
+  });
 });
 
 add_test(function test_subscribe_error() {

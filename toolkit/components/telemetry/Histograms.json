@@ -2423,6 +2423,33 @@
     "n_buckets": 50,
     "description": "How many actual predictions (preresolves, preconnects, ...) happen"
   },
+  "PREDICTOR_TOTAL_PREFETCHES": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 50,
+    "description": "How many actual prefetches happen"
+  },
+  "PREDICTOR_TOTAL_PREFETCHES_USED": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 1000000,
+    "n_buckets": 50,
+    "description": "How many prefetches are actually used by a channel"
+  },
+  "PREDICTOR_PREFETCH_TIME": {
+    "expires_in_version": "never",
+    "alert_emails": [],
+    "bug_numbers": [1016628],
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "How long it takes from OnStartRequest to OnStopRequest for a prefetch"
+  },
   "PREDICTOR_TOTAL_PRECONNECTS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -6262,6 +6289,21 @@
     "kind": "boolean",
     "description": "Whether Ogg audio/video encountered are chained or not.",
     "bug_numbers": [1230295]
+  },
+  "MEDIA_HLS_CANPLAY_REQUESTED": {
+    "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Reports a true value when a page requests canPlayType for an HTTP Live Streaming media type (or generic m3u playlist).",
+    "bug_numbers": [1262659]
+  },
+  "MEDIA_HLS_DECODER_SUCCESS": {
+    "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
+    "bug_numbers": [1262659]
+
   },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "alert_emails": ["cpearce@mozilla.com"],

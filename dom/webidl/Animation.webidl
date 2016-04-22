@@ -12,7 +12,7 @@
 
 enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
-[Func="nsDocument::IsWebAnimationsEnabled",
+[Func="nsDocument::IsElementAnimateEnabled",
  Constructor (optional KeyframeEffectReadOnly? effect = null,
               optional AnimationTimeline? timeline = null)]
 interface Animation : EventTarget {
@@ -30,7 +30,7 @@ interface Animation : EventTarget {
            attribute double             playbackRate;
   [BinaryName="playStateFromJS"]
   readonly attribute AnimationPlayState playState;
-  [Throws]
+  [Func="nsDocument::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> ready;
   [Func="nsDocument::IsWebAnimationsEnabled", Throws]
   readonly attribute Promise<Animation> finished;

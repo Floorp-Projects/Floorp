@@ -46,27 +46,27 @@ Push.prototype = {
                                           Ci.nsISupportsWeakReference,
                                           Ci.nsIObserver]),
 
-  init: function(aWindow) {
+  init: function(win) {
     console.debug("init()");
 
-    this._window = aWindow;
+    this._window = win;
 
-    this.initDOMRequestHelper(aWindow);
+    this.initDOMRequestHelper(win);
 
-    this._principal = aWindow.document.nodePrincipal;
+    this._principal = win.document.nodePrincipal;
   },
 
   __init: function(scope) {
     this._scope = scope;
   },
 
-  askPermission: function (aAllowCallback, aCancelCallback) {
+  askPermission: function () {
     console.debug("askPermission()");
 
     return this.createPromise((resolve, reject) => {
       let permissionDenied = () => {
         reject(new this._window.DOMException(
-          "User denied permission to use the Push API",
+          "User denied permission to use the Push API.",
           "PermissionDeniedError"
         ));
       };
@@ -89,7 +89,7 @@ Push.prototype = {
     });
   },
 
-  subscribe: function() {
+  subscribe: function(options) {
     console.debug("subscribe()", this._scope);
 
     let histogram = Services.telemetry.getHistogramById("PUSH_API_USED");
@@ -97,7 +97,22 @@ Push.prototype = {
     return this.askPermission().then(() =>
       this.createPromise((resolve, reject) => {
         let callback = new PushSubscriptionCallback(this, resolve, reject);
-        PushService.subscribe(this._scope, this._principal, callback);
+
+        if (!options || !options.applicationServerKey) {
+          PushService.subscribe(this._scope, this._principal, callback);
+          return;
+        }
+
+        let appServerKey = options.applicationServerKey;
+        let keyView = new Uint8Array(ArrayBuffer.isView(appServerKey) ?
+                                     appServerKey.buffer : appServerKey);
+        if (keyView.byteLength === 0) {
+          callback._rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
+          return;
+        }
+        PushService.subscribeWithKey(this._scope, this._principal,
+                                     appServerKey.length, appServerKey,
+                                     callback);
       })
     );
   },
@@ -190,10 +205,7 @@ PushSubscriptionCallback.prototype = {
   onPushSubscription: function(ok, subscription) {
     let {pushManager} = this;
     if (!Components.isSuccessCode(ok)) {
-      this.reject(new pushManager._window.DOMException(
-        "Error retrieving push subscription",
-        "AbortError"
-      ));
+      this._rejectWithError(ok);
       return;
     }
 
@@ -202,12 +214,20 @@ PushSubscriptionCallback.prototype = {
       return;
     }
 
-    let publicKey = this._getKey(subscription, "p256dh");
+    let p256dhKey = this._getKey(subscription, "p256dh");
     let authSecret = this._getKey(subscription, "auth");
-    let sub = new pushManager._window.PushSubscription(subscription.endpoint,
-                                                       pushManager._scope,
-                                                       publicKey,
-                                                       authSecret);
+    let options = {
+      endpoint: subscription.endpoint,
+      scope: pushManager._scope,
+      p256dhKey: p256dhKey,
+      authSecret: authSecret,
+    };
+    let appServerKey = this._getKey(subscription, "appServer");
+    if (appServerKey) {
+      // Avoid passing null keys to work around bug 1256449.
+      options.appServerKey = appServerKey;
+    }
+    let sub = new pushManager._window.PushSubscription(options);
     this.resolve(sub);
   },
 
@@ -221,6 +241,32 @@ PushSubscriptionCallback.prototype = {
     let keyView = new Uint8Array(key);
     keyView.set(rawKey);
     return key;
+  },
+
+  _rejectWithError: function(result) {
+    let error;
+    switch (result) {
+      case Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR:
+        error = new this.pushManager._window.DOMException(
+          "Invalid raw ECDSA P-256 public key.",
+          "InvalidAccessError"
+        );
+        break;
+
+      case Cr.NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR:
+        error = new this.pushManager._window.DOMException(
+          "A subscription with a different application server key already exists.",
+          "InvalidStateError"
+        );
+        break;
+
+      default:
+        error = new this.pushManager._window.DOMException(
+          "Error retrieving push subscription.",
+          "AbortError"
+        );
+    }
+    this.reject(error);
   },
 };
 

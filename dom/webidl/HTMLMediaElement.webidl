@@ -107,6 +107,9 @@ partial interface HTMLMediaElement {
   [ChromeOnly]
   readonly attribute DOMString mozDebugReaderData;
 
+  [Pref="media.test.dumpDebugInfo"]
+  void mozDumpDebugInfo();
+
   attribute MediaStream? srcObject;
   // TODO: remove prefixed version soon (1183495).
   attribute MediaStream? mozSrcObject;

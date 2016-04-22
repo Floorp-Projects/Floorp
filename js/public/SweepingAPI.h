@@ -31,6 +31,7 @@ class WeakCache : public js::WeakCacheBase<T>,
     friend class mozilla::LinkedListElement<WeakCache<T>>;
     friend class mozilla::LinkedList<WeakCache<T>>;
 
+    WeakCache() = delete;
     WeakCache(const WeakCache&) = delete;
 
     using SweepFn = void (*)(T*);
@@ -38,6 +39,8 @@ class WeakCache : public js::WeakCacheBase<T>,
     T cache;
 
   public:
+    using Type = T;
+
     template <typename U>
     WeakCache(Zone* zone, U&& initial)
       : cache(mozilla::Forward<U>(initial))

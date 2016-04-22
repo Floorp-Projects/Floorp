@@ -48,7 +48,7 @@ class MediaOmxReader : public MediaOmxCommonReader
   MozPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
 
   MozPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
-  MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
+  MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mSeekRequest;
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
   android::sp<android::MediaExtractor> mExtractor;

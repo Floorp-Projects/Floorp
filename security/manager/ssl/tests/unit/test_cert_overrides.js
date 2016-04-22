@@ -41,7 +41,7 @@ function check_telemetry() {
         "Actual and expected MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY counts should match");
   equal(histogram.counts[12], 1,
         "Actual and expected MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA counts should match");
-  equal(histogram.counts[13], 0,
+  equal(histogram.counts[13], 1,
         "Actual and expected MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE counts should match");
   equal(histogram.counts[14], 2,
         "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE counts should match");
@@ -232,11 +232,10 @@ function add_simple_tests() {
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_CA_CERT_INVALID);
 
-  // This host presents a 1016-bit RSA key. NSS determines this key is too
-  // small and terminates the connection. The error is not overridable.
-  add_prevented_cert_override_test("inadequate-key-size-ee.example.com",
-                                   Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                                   SSL_ERROR_WEAK_SERVER_CERT_KEY);
+  // This host presents a 1016-bit RSA key.
+  add_cert_override_test("inadequate-key-size-ee.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 
   add_cert_override_test("ipAddressAsDNSNameInSAN.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH,

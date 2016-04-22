@@ -6082,8 +6082,12 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
 
         Address keyAddress(front, ValueMap::Entry::offsetOfKey());
         Address valueAddress(front, ValueMap::Entry::offsetOfValue());
-        masm.storeValue(keyAddress, Address(result, elementsOffset), temp);
-        masm.storeValue(valueAddress, Address(result, elementsOffset + sizeof(Value)), temp);
+        Address keyElemAddress(result, elementsOffset);
+        Address valueElemAddress(result, elementsOffset + sizeof(Value));
+        masm.patchableCallPreBarrier(keyElemAddress, MIRType_Value);
+        masm.patchableCallPreBarrier(valueElemAddress, MIRType_Value);
+        masm.storeValue(keyAddress, keyElemAddress, temp);
+        masm.storeValue(valueAddress, valueElemAddress, temp);
 
         Label keyIsNotObject, valueIsNotNurseryObject, emitBarrier;
         masm.branchTestObject(Assembler::NotEqual, keyAddress, &keyIsNotObject);

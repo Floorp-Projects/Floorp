@@ -82,8 +82,10 @@ struct nsStyleVisibility;
 #define NS_STYLE_INELIGIBLE_FOR_SHARING    0x200000000
 // See nsStyleContext::HasChildThatUsesResetStyle
 #define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
+// See nsStyleContext::IsTextCombined
+#define NS_STYLE_IS_TEXT_COMBINED          0x800000000
 // See nsStyleContext::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_SHIFT        35
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        36
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
@@ -1350,13 +1352,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline
   nsStyleCoord  mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
   nscoord       mOutlineOffset;   // [reset]
 
-  bool GetOutlineWidth(nscoord& aWidth) const
+  nscoord GetOutlineWidth() const
   {
-    if (mHasCachedOutline) {
-      aWidth = mCachedOutlineWidth;
-      return true;
-    }
-    return false;
+    return mCachedOutlineWidth;
   }
 
   uint8_t GetOutlineStyle(void) const
@@ -1403,7 +1401,6 @@ protected:
 
   nscolor       mOutlineColor;    // [reset]
 
-  bool          mHasCachedOutline;
   uint8_t       mOutlineStyle;    // [reset] See nsStyleConsts.h
 
   nscoord       mTwipsPerPixel;

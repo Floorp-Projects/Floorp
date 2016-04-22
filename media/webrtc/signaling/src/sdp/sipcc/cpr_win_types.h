@@ -21,42 +21,10 @@
 #include <stdlib.h>
 
 /*
- * Determine the SDK we are using by making simplifying assumptions:
- * - If the compiler is Visual C, assume we are using the Microsoft SDK,
- * - If the compiler is GCC. assume we are using the MinGW W32API SDK.
- */
-#ifdef _MSC_VER
-#define CPR_WIN32_SDK_MICROSOFT
-#endif
-#ifdef __GNUC__
-#define CPR_WIN32_SDK_MINGW
-#endif
-
-/*
  * Define POSIX types
  *     [u]int[8,16,32,64]_t
- *
- * The MinGW SDK has <stdint.h>, the Microsoft SDK has (or is it Visual C?):
- *     __int{8,16,32,64}.
  */
-#if defined(CPR_WIN32_SDK_MINGW)
 #include <stdint.h>
-#elif defined(_MSC_VER) && defined(CPR_WIN32_SDK_MICROSOFT)
-#if _MSC_VER >= 1600
-#include <stdint.h>
-#elif defined(CPR_STDINT_INCLUDE)
-#include CPR_STDINT_INCLUDE
-#else
-typedef __int8  int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned char  uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#endif
-#endif
 
 /*
  * Define boolean
@@ -101,4 +69,3 @@ typedef int pid_t;
 /* DONE defined in windef.h */
 
 #endif // _CPR_WIN_TYPES_H_
-

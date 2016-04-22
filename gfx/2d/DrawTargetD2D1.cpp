@@ -1201,9 +1201,15 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
     return;
   }
 
-  mDC->CreateCommandList(getter_AddRefs(mCommandList));
+  HRESULT result = mDC->CreateCommandList(getter_AddRefs(mCommandList));
   mDC->SetTarget(mCommandList);
   mUsedCommandListsSincePurge++;
+
+  // This is where we should have a valid command list.  If we don't, something is
+  // wrong, and it's likely an OOM.
+  if (!mCommandList) {
+    gfxDevCrash(LogReason::InvalidCommandList) << "Invalid D2D1.1 command list on creation " << mUsedCommandListsSincePurge << ", " << gfx::hexa(result);
+  }
 
   D2D1_RECT_F rect;
   bool isAligned;
@@ -1236,6 +1242,10 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
   }
 
   mDC->SetTarget(CurrentTarget());
+  if (!mCommandList) {
+    gfxDevCrash(LogReason::InvalidCommandList) << "Invalid D21.1 command list on finalize";
+    return;
+  }
   mCommandList->Close();
 
   RefPtr<ID2D1CommandList> source = mCommandList;

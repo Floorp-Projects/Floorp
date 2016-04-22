@@ -21,7 +21,6 @@ const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
 const {
   PushCrypto,
-  base64UrlDecode,
   getCryptoParams,
 } = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
@@ -907,6 +906,7 @@ this.PushServiceWebSocket = {
         originAttributes: tmp.record.originAttributes,
         version: null,
         systemRecord: tmp.record.systemRecord,
+        appServerKey: tmp.record.appServerKey,
         ctime: Date.now(),
       });
       Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_WS_TIME").add(Date.now() - tmp.ctime);
@@ -936,7 +936,10 @@ this.PushServiceWebSocket = {
     } else {
       let params = getCryptoParams(update.headers);
       if (params) {
-        let message = base64UrlDecode(update.data);
+        let message = ChromeUtils.base64URLDecode(update.data, {
+          // The Push server may append padding.
+          padding: "ignore",
+        });
         promise = this._mainPushService.receivedPushMessage(
           update.channelID,
           update.version,
@@ -1044,6 +1047,13 @@ this.PushServiceWebSocket = {
 
     let data = {channelID: this._generateID(),
                 messageType: "register"};
+
+    if (record.appServerKey) {
+      data.key = ChromeUtils.base64URLEncode(record.appServerKey, {
+        // The Push server requires padding.
+        pad: true,
+      });
+    }
 
     return new Promise((resolve, reject) => {
       this._registerRequests.set(data.channelID, {

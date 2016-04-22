@@ -72,6 +72,7 @@ var supported_properties = {
     "-moz-column-gap": [ test_length_transition,
                          test_length_clamped ],
     "-moz-column-rule-color": [ test_color_transition,
+                                test_currentcolor_transition,
                                 test_border_color_transition ],
     "-moz-column-rule-width": [ test_length_transition,
                                 test_length_clamped ],
@@ -82,7 +83,8 @@ var supported_properties = {
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
-    "background-color": [ test_color_transition ],
+    "background-color": [ test_color_transition,
+                          test_currentcolor_transition ],
     "background-position": [ test_background_position_transition,
                              // FIXME: We don't currently test clamping,
                              // since background-position uses calc() as
@@ -94,20 +96,24 @@ var supported_properties = {
                          // intermediate form.
                          /* test_length_percent_pair_clamped */ ],
     "border-bottom-color": [ test_color_transition,
+                             test_currentcolor_transition,
                              test_border_color_transition ],
     "border-bottom-width": [ test_length_transition,
                              test_length_clamped ],
     "border-left-color": [ test_color_transition,
+                           test_currentcolor_transition,
                            test_border_color_transition ],
     "border-left-width": [ test_length_transition,
                            test_length_clamped ],
     "border-right-color": [ test_color_transition,
+                            test_currentcolor_transition,
                             test_border_color_transition ],
     "border-right-width": [ test_length_transition,
                             test_length_clamped ],
     "border-spacing": [ test_length_pair_transition,
                         test_length_pair_transition_clamped ],
     "border-top-color": [ test_color_transition,
+                          test_currentcolor_transition,
                           test_border_color_transition ],
     "border-top-width": [ test_length_transition,
                            test_length_clamped ],
@@ -116,8 +122,10 @@ var supported_properties = {
                 test_length_unclamped, test_percent_unclamped ],
     "clip": [ test_rect_transition ],
     "clip-path": [ test_clip_path_transition ],
-    "color": [ test_color_transition ],
-    "fill": [ test_color_transition ],
+    "color": [ test_color_transition,
+               test_currentcolor_transition ],
+    "fill": [ test_color_transition,
+              test_currentcolor_transition ],
     "fill-opacity" : [ test_float_zeroToOne_transition,
                        // opacity is clamped in computed style
                        // (not parsing/interpolation)
@@ -129,7 +137,8 @@ var supported_properties = {
                    test_float_aboveOne_transition ],
     "flex-shrink": [ test_float_zeroToOne_transition,
                      test_float_aboveOne_transition ],
-    "flood-color": [ test_color_transition ],
+    "flood-color": [ test_color_transition,
+                     test_currentcolor_transition ],
     "flood-opacity" : [ test_float_zeroToOne_transition,
                         // opacity is clamped in computed style
                         // (not parsing/interpolation)
@@ -152,7 +161,8 @@ var supported_properties = {
               test_length_percent_calc_transition,
               test_length_unclamped, test_percent_unclamped ],
     "letter-spacing": [ test_length_transition, test_length_unclamped ],
-    "lighting-color": [ test_color_transition ],
+    "lighting-color": [ test_color_transition,
+                        test_currentcolor_transition ],
     // NOTE: when calc() is supported on 'line-height', we should add
     // test_length_percent_calc_transition.
     "line-height": [ test_length_transition, test_percent_transition,
@@ -189,7 +199,8 @@ var supported_properties = {
                   // (not parsing/interpolation)
                   test_float_zeroToOne_clamped ],
     "order": [ test_integer_transition ],
-    "outline-color": [ test_color_transition ],
+    "outline-color": [ test_color_transition,
+                       test_currentcolor_transition ],
     "outline-offset": [ test_length_transition, test_length_unclamped ],
     "outline-width": [ test_length_transition, test_length_clamped ],
     "padding-bottom": [ test_length_transition, test_percent_transition,
@@ -211,12 +222,14 @@ var supported_properties = {
     "right": [ test_length_transition, test_percent_transition,
                test_length_percent_calc_transition,
                test_length_unclamped, test_percent_unclamped ],
-    "stop-color": [ test_color_transition ],
+    "stop-color": [ test_color_transition,
+                    test_currentcolor_transition ],
     "stop-opacity" : [ test_float_zeroToOne_transition,
                        // opacity is clamped in computed style
                        // (not parsing/interpolation)
                        test_float_zeroToOne_clamped ],
-    "stroke": [ test_color_transition ],
+    "stroke": [ test_color_transition,
+                test_currentcolor_transition ],
     "stroke-dasharray": [ test_dasharray_transition ],
     // NOTE: when calc() is supported on 'stroke-dashoffset', we should
     // add test_length_percent_calc_transition.
@@ -233,11 +246,12 @@ var supported_properties = {
     "stroke-width": [ test_length_transition_svg, test_percent_transition,
                       test_length_clamped_svg, test_percent_clamped ],
     "text-decoration": [ test_color_shorthand_transition,
+                         test_currentcolor_shorthand_transition,
                          test_border_color_shorthand_transition ],
     "text-decoration-color": [ test_color_transition,
+                               test_currentcolor_transition,
                                test_border_color_transition ],
-    "text-emphasis-color": [ test_color_transition,
-                             test_border_color_transition ],
+    "text-emphasis-color": [ test_color_transition ],
     "text-indent": [ test_length_transition, test_percent_transition,
                      test_length_percent_calc_transition,
                      test_length_unclamped, test_percent_unclamped ],
@@ -258,8 +272,7 @@ var supported_properties = {
                test_length_clamped, test_percent_clamped ],
     "word-spacing": [ test_length_transition, test_length_unclamped ],
     "z-index": [ test_integer_transition, test_pos_integer_or_auto_transition ],
-    "-webkit-text-fill-color": [ test_color_transition,
-                                 test_border_color_transition ]
+    "-webkit-text-fill-color": [ test_color_transition ]
 };
 
 if (SupportsMaskShorthand()) {
@@ -1235,25 +1248,10 @@ function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   is(get_color(cs.getPropertyValue(prop)), "rgb(210, 42, 32)",
      "color-valued property " + prop + ": interpolation of colors");
 
-  div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "rgb(128, 64, 0)", "");
-  (prop == "color" ? div.parentNode : div).style.
-    setProperty("color", "rgb(0, 0, 128)", "");
-  is(get_color(cs.getPropertyValue(prop)), "rgb(128, 64, 0)",
-     "color-valued property " + prop + ": computed value before transition");
-  div.style.setProperty("transition-property", prop, "");
-  div.style.setProperty(prop, "currentColor", "");
-  is(get_color(cs.getPropertyValue(prop)), "rgb(96, 48, 32)",
-     "color-valued property " + prop + ": interpolation of currentColor");
-
   if (!is_shorthand) {
     check_distance(prop, "rgb(255, 28, 0)", "rgb(210, 42, 32)",
                          "rgb(75, 84, 128)");
-    check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)",
-                         "currentColor");
   }
-
-  (prop == "color" ? div.parentNode : div).style.removeProperty("color");
 
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
@@ -1282,6 +1280,26 @@ function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 
+function test_currentcolor_transition(prop, get_color=(x => x), is_shorthand=false) {
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "rgb(128, 64, 0)", "");
+  (prop == "color" ? div.parentNode : div).style.
+    setProperty("color", "rgb(0, 0, 128)", "");
+  is(get_color(cs.getPropertyValue(prop)), "rgb(128, 64, 0)",
+     "color-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "currentColor", "");
+  is(get_color(cs.getPropertyValue(prop)), "rgb(96, 48, 32)",
+     "color-valued property " + prop + ": interpolation of currentColor");
+
+  if (!is_shorthand) {
+    check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)",
+                         "currentColor");
+  }
+
+  (prop == "color" ? div.parentNode : div).style.removeProperty("color");
+}
+
 function test_border_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "rgb(128, 64, 0)", "");
@@ -1308,6 +1326,10 @@ function get_color_from_shorthand_value(value) {
 
 function test_color_shorthand_transition(prop) {
   test_color_transition(prop, get_color_from_shorthand_value, true);
+}
+
+function test_currentcolor_shorthand_transition(prop) {
+  test_currentcolor_transition(prop, get_color_from_shorthand_value, true);
 }
 
 function test_border_color_shorthand_transition(prop) {

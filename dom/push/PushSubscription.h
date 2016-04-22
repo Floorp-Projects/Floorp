@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PushSubscriptionBinding.h"
+#include "mozilla/dom/PushSubscriptionOptionsBinding.h"
 #include "mozilla/dom/TypedArray.h"
 
 class nsIGlobalObject;
@@ -39,7 +40,8 @@ public:
                    const nsAString& aEndpoint,
                    const nsAString& aScope,
                    nsTArray<uint8_t>&& aP256dhKey,
-                   nsTArray<uint8_t>&& aAuthSecret);
+                   nsTArray<uint8_t>&& aAuthSecret,
+                   nsTArray<uint8_t>&& aAppServerKey);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -59,26 +61,26 @@ public:
   void
   GetKey(JSContext* cx,
          PushEncryptionKeyName aType,
-         JS::MutableHandle<JSObject*> aKey);
+         JS::MutableHandle<JSObject*> aKey,
+         ErrorResult& aRv);
 
   static already_AddRefed<PushSubscription>
   Constructor(GlobalObject& aGlobal,
-              const nsAString& aEndpoint,
-              const nsAString& aScope,
-              const Nullable<ArrayBuffer>& aP256dhKey,
-              const Nullable<ArrayBuffer>& aAuthSecret,
+              const PushSubscriptionInit& aInitDict,
               ErrorResult& aRv);
 
   already_AddRefed<Promise>
   Unsubscribe(ErrorResult& aRv);
 
   void
-  ToJSON(PushSubscriptionJSON& aJSON);
+  ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv);
 
-protected:
-  ~PushSubscription();
+  already_AddRefed<PushSubscriptionOptions>
+  Options();
 
 private:
+  ~PushSubscription();
+
   already_AddRefed<Promise>
   UnsubscribeFromWorker(ErrorResult& aRv);
 
@@ -87,6 +89,7 @@ private:
   nsTArray<uint8_t> mRawP256dhKey;
   nsTArray<uint8_t> mAuthSecret;
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<PushSubscriptionOptions> mOptions;
 };
 
 } // namespace dom

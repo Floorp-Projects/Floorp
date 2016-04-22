@@ -166,11 +166,16 @@ class nsStyleSet final
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
   // for everything after the first letter.
   //
-  // Perhaps this should go away and we shouldn't even create style
-  // contexts for such content nodes.  However, not doing any rule
-  // matching for them is a first step.
+  // aPseudoTag can be either mozText or mozOtherNonElement.
+  //
+  // Perhaps mozOtherNonElement should go away and we shouldn't even
+  // create style contexts for such content nodes.  However, not doing
+  // any rule matching for them is a first step.
+  // When text-combine-upright is not present, we may also want to avoid
+  // resolving style contexts for text frames as well.
   already_AddRefed<nsStyleContext>
-  ResolveStyleForNonElement(nsStyleContext* aParentContext);
+  ResolveStyleForNonElement(nsStyleContext* aParentContext,
+                            nsIAtom* aPseudoTag);
 
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the CSSPseudoElementType for the

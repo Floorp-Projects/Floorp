@@ -4,60 +4,24 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from StringIO import StringIO
-import os
-import tempfile
-import textwrap
-import unittest
-
 from mozunit import main
+from mozpack import path as mozpath
 
-from mozbuild.configure import ConfigureSandbox
-
-from buildconfig import (
-    topobjdir,
-    topsrcdir,
-)
+from common import BaseConfigureTest
 
 
-class TestMozConfigure(unittest.TestCase):
-    def setUp(self):
-        self._cwd = os.getcwd()
-
-    def tearDown(self):
-        os.chdir(self._cwd)
-
-    def get_value_for(self, key, args=[], environ={}, mozconfig=''):
-        os.chdir(topobjdir)
-
-        config = {}
-        out = StringIO()
-
-        fh, mozconfig_path = tempfile.mkstemp()
-        os.write(fh, mozconfig)
-        os.close(fh)
-
-        try:
-            environ = dict(environ,
-                           OLD_CONFIGURE=os.path.join(topsrcdir, 'configure'),
-                           MOZCONFIG=mozconfig_path)
-
-            sandbox = ConfigureSandbox(config, environ, ['configure'] + args,
-                                       out, out)
-            sandbox.include_file(os.path.join(topsrcdir, 'moz.configure'))
+class TestMozConfigure(BaseConfigureTest):
+    def test_moz_configure_options(self):
+        def get_value_for(args=[], environ={}, mozconfig=''):
+            sandbox = self.get_sandbox({}, {}, args, environ, mozconfig)
 
             # Add a fake old-configure option
             sandbox.option_impl('--with-foo', nargs='*',
                                 help='Help missing for old configure options')
 
-            return sandbox._value_for(sandbox[key])
-        finally:
-            os.remove(mozconfig_path)
-
-    def test_moz_configure_options(self):
-        def get_value_for(args=[], environ={}, mozconfig=''):
-            return self.get_value_for('all_configure_options', args, environ,
-                                      mozconfig)
+            result = sandbox._value_for(sandbox['all_configure_options'])
+            shell = mozpath.abspath('/bin/sh')
+            return result.replace('CONFIG_SHELL=%s ' % shell, '')
 
         self.assertEquals('--enable-application=browser',
                           get_value_for(['--enable-application=browser']))

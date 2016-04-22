@@ -165,8 +165,14 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
   if (aDiagnostics) {
     // If libraries failed to load, the following loop over mCurrentPDMs
     // will not even try to use them. So we record failures now.
+    if (mWMFFailedToLoad) {
+      aDiagnostics->SetWMFFailedToLoad();
+    }
     if (mFFmpegFailedToLoad) {
       aDiagnostics->SetFFmpegFailedToLoad();
+    }
+    if (mGMPPDMFailedToStartup) {
+      aDiagnostics->SetGMPPDMFailedToStartup();
     }
   }
 
@@ -290,7 +296,9 @@ PDMFactory::CreatePDMs()
 #ifdef XP_WIN
   if (sWMFDecoderEnabled) {
     m = new WMFDecoderModule();
-    StartupPDM(m);
+    if (!StartupPDM(m)) {
+      mWMFFailedToLoad = true;
+    }
   }
 #endif
 #ifdef MOZ_FFVPX
@@ -329,8 +337,10 @@ PDMFactory::CreatePDMs()
 
   if (sGMPDecoderEnabled) {
     m = new GMPDecoderModule();
-    StartupPDM(m);
-  }  
+    if (!StartupPDM(m)) {
+      mGMPPDMFailedToStartup = true;
+    }
+  }
 }
 
 bool
@@ -350,8 +360,14 @@ PDMFactory::GetDecoder(const nsACString& aMimeType,
   if (aDiagnostics) {
     // If libraries failed to load, the following loop over mCurrentPDMs
     // will not even try to use them. So we record failures now.
+    if (mWMFFailedToLoad) {
+      aDiagnostics->SetWMFFailedToLoad();
+    }
     if (mFFmpegFailedToLoad) {
       aDiagnostics->SetFFmpegFailedToLoad();
+    }
+    if (mGMPPDMFailedToStartup) {
+      aDiagnostics->SetGMPPDMFailedToStartup();
     }
   }
 

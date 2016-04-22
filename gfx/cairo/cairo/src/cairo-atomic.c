@@ -101,6 +101,20 @@ _cairo_atomic_int_get (cairo_atomic_intptr_t *x)
 
     return ret;
 }
+
+cairo_atomic_intptr_t
+_cairo_atomic_int_get_relaxed (cairo_atomic_intptr_t *x)
+{
+    return _cairo_atomic_int_get (x);
+}
+
+void
+_cairo_atomic_int_set_relaxed (cairo_atomic_intptr_t *x, cairo_atomic_intptr_t val)
+{
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    *x = val;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+}
 #endif
 
 #endif

@@ -9,7 +9,6 @@ task:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}
       - --test-packages-url={{test_packages_url}}
-      - --download-symbols=true # This value is to be ondemand for opt jobs
       - --test-type=testharness
       - --total-chunk={{total_chunks}}
       - --this-chunk={{chunk}}

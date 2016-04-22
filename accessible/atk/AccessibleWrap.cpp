@@ -1354,16 +1354,33 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
         break;
 
     case nsIAccessibleEvent::EVENT_SHOW:
-        return FireAtkShowHideEvent(aEvent, atkObj, true);
+      {
+        AccMutationEvent* event = downcast_accEvent(aEvent);
+        Accessible* parentAcc = event ? event->Parent() : accessible->Parent();
+        AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
+        NS_ENSURE_STATE(parent);
+        auto obj = reinterpret_cast<MaiAtkObject*>(atkObj);
+        obj->FireAtkShowHideEvent(parent, true, aEvent->IsFromUserInput());
+        return NS_OK;
+      }
 
     case nsIAccessibleEvent::EVENT_HIDE:
+      {
         // XXX - Handle native dialog accessibles.
         if (!accessible->IsRoot() && accessible->HasARIARole() &&
             accessible->ARIARole() == roles::DIALOG) {
           guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
           g_signal_emit(atkObj, id, 0);
         }
-        return FireAtkShowHideEvent(aEvent, atkObj, false);
+
+        AccMutationEvent* event = downcast_accEvent(aEvent);
+        Accessible* parentAcc = event ? event->Parent() : accessible->Parent();
+        AtkObject* parent = AccessibleWrap::GetAtkObject(parentAcc);
+        NS_ENSURE_STATE(parent);
+        auto obj = reinterpret_cast<MaiAtkObject*>(atkObj);
+        obj->FireAtkShowHideEvent(parent, false, aEvent->IsFromUserInput());
+        return NS_OK;
+      }
 
         /*
          * Because dealing with menu is very different between nsIAccessible
@@ -1568,6 +1585,14 @@ MaiAtkObject::FireTextChangeEvent(const nsString& aStr, int32_t aStart,
   }
 }
 
+void
+a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible* aParent,
+                         bool aInsert, bool aFromUser)
+{
+  MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  obj->FireAtkShowHideEvent(GetWrapperFor(aParent), aInsert, aFromUser);
+}
+
 #define ADD_EVENT "children_changed::add"
 #define HIDE_EVENT "children_changed::remove"
 
@@ -1576,19 +1601,13 @@ static const char *kMutationStrings[2][2] = {
   { HIDE_EVENT, ADD_EVENT },
 };
 
-nsresult
-AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
-                                     AtkObject* aObject, bool aIsAdded)
+void
+MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
+                                   bool aFromUser)
 {
-    int32_t indexInParent = getIndexInParentCB(aObject);
-    AtkObject *parentObject = getParentCB(aObject);
-    NS_ENSURE_STATE(parentObject);
-
-    bool isFromUserInput = aEvent->IsFromUserInput();
-    const char *signal_name = kMutationStrings[isFromUserInput][aIsAdded];
-    g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, nullptr);
-
-    return NS_OK;
+    int32_t indexInParent = getIndexInParentCB(&this->parent);
+    const char *signal_name = kMutationStrings[aFromUser][aIsAdded];
+    g_signal_emit_by_name(aParent, signal_name, indexInParent, this, nullptr);
 }
 
 // static

@@ -730,9 +730,8 @@ nsAppShell::LegacyGeckoEvent::Run()
             mozilla::services::GetObserverService();
 
         const NS_ConvertUTF16toUTF8 topic(curEvent->Characters());
-        const nsPromiseFlatString& data = PromiseFlatString(curEvent->CharactersExtra());
 
-        obsServ->NotifyObservers(nullptr, topic.get(), data.get());
+        obsServ->NotifyObservers(nullptr, topic.get(), curEvent->CharactersExtra().get());
         break;
     }
 
@@ -748,8 +747,8 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         obs->StopSession(
-                nsString(curEvent->Characters()).get(),
-                nsString(curEvent->CharactersExtra()).get(),
+                curEvent->Characters().get(),
+                curEvent->CharactersExtra().get(),
                 curEvent->Time()
                 );
         break;
@@ -767,7 +766,7 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         obs->StartSession(
-                nsString(curEvent->Characters()).get(),
+                curEvent->Characters().get(),
                 curEvent->Time()
                 );
         break;
@@ -785,10 +784,10 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         obs->AddEvent(
-                nsString(curEvent->Data()).get(),
-                nsString(curEvent->Characters()).get(),
+                curEvent->Data().get(),
+                curEvent->Characters().get(),
                 curEvent->Time(),
-                nsString(curEvent->CharactersExtra()).get()
+                curEvent->CharactersExtra().get()
                 );
         break;
     }
@@ -829,7 +828,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         nsCOMPtr<nsIURI> visitedURI;
         if (history &&
             NS_SUCCEEDED(NS_NewURI(getter_AddRefs(visitedURI),
-                                   nsString(curEvent->Characters())))) {
+                                   curEvent->Characters()))) {
             history->NotifyVisited(visitedURI);
         }
 #endif
@@ -884,7 +883,7 @@ nsAppShell::LegacyGeckoEvent::Run()
 
         if (observer) {
             observer->Observe(nullptr, NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()).get(),
-                              nsString(curEvent->Data()).get());
+                              curEvent->Data().get());
         } else {
             ALOG("Call_Observer event: Observer was not found!");
         }
@@ -918,7 +917,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         if (os) {
             os->NotifyObservers(nullptr,
                                 NS_NETWORK_LINK_TOPIC,
-                                nsString(curEvent->Characters()).get());
+                                curEvent->Characters().get());
         }
         break;
     }

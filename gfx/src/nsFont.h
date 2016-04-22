@@ -55,6 +55,7 @@ struct nsFont {
   uint8_t variantCaps;
   uint8_t variantNumeric;
   uint8_t variantPosition;
+  uint8_t variantWidth;
 
   uint16_t variantLigatures;
   uint16_t variantEastAsian;

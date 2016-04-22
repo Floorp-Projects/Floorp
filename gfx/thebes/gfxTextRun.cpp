@@ -569,7 +569,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
     NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH ||
-                 !(int(aParams.drawMode) & int(DrawMode::GLYPH_PATH)),
+                 !(aParams.drawMode & DrawMode::GLYPH_PATH),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
     NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                  "callback must not be specified unless using GLYPH_PATH");
@@ -1348,7 +1348,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
     gfxShapedWord* sw = aFont->GetShapedWord(aDrawTarget,
                                              &space, 1,
                                              gfxShapedWord::HashMix(0, ' '), 
-                                             MOZ_SCRIPT_LATIN,
+                                             Script::LATIN,
                                              vertical,
                                              mAppUnitsPerDevUnit,
                                              flags,
@@ -2004,7 +2004,7 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
             // find one that does.
             uint8_t matchType;
             RefPtr<gfxFont> spaceFont =
-                FindFontForChar(' ', 0, 0, MOZ_SCRIPT_LATIN, nullptr,
+                FindFontForChar(' ', 0, 0, Script::LATIN, nullptr,
                                 &matchType);
             if (spaceFont) {
                 textRun->SetSpaceGlyph(spaceFont, aParams->mDrawTarget, 0,
@@ -2205,7 +2205,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
                          "serif" :
                          (mFamilyList.GetDefaultFontType() == eFamily_sans_serif ?
                           "sans-serif" : "none")),
-                        lang.get(), MOZ_SCRIPT_LATIN, aLength,
+                        lang.get(), Script::LATIN, aLength,
                         uint32_t(mStyle.weight), uint32_t(mStyle.stretch),
                         (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
                         (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
@@ -2218,7 +2218,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
             // the text is still purely 8-bit; bypass the script-run itemizer
             // and treat it as a single Latin run
             InitScriptRun(aDrawTarget, aTextRun, aString,
-                          0, aLength, MOZ_SCRIPT_LATIN, aMFR);
+                          0, aLength, Script::LATIN, aMFR);
         } else {
             const char16_t *textPtr;
             if (transformedString) {
@@ -2234,7 +2234,7 @@ gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget,
             gfxScriptItemizer scriptRuns(textPtr, aLength);
 
             uint32_t runStart = 0, runLimit = aLength;
-            int32_t runScript = MOZ_SCRIPT_LATIN;
+            Script runScript = Script::LATIN;
             while (scriptRuns.Next(runStart, runLimit, runScript)) {
 
                 if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
@@ -2317,7 +2317,7 @@ gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget,
                             uint32_t aOffset, // position of the script run
                                               // within the textrun
                             uint32_t aLength, // length of the script run
-                            int32_t aRunScript,
+                            Script aRunScript,
                             gfxMissingFontRecorder *aMFR)
 {
     NS_ASSERTION(aLength > 0, "don't call InitScriptRun for a 0-length run");
@@ -2580,7 +2580,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
 
 already_AddRefed<gfxFont>
 gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh,
-                                      int32_t aRunScript)
+                                      Script aRunScript)
 {
     GlobalFontMatch data(aCh, aRunScript, &mStyle);
     aFamily->SearchAllFontsForChar(&data);
@@ -2632,7 +2632,7 @@ gfxFontGroup::GetUnderlineOffset()
 
 already_AddRefed<gfxFont>
 gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
-                              int32_t aRunScript, gfxFont *aPrevMatchedFont,
+                              Script aRunScript, gfxFont *aPrevMatchedFont,
                               uint8_t *aMatchType)
 {
     // If the char is a cluster extender, we want to use the same font
@@ -2832,7 +2832,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
     }
 
     // never fall back for characters from unknown scripts
-    if (aRunScript == HB_SCRIPT_UNKNOWN) {
+    if (aRunScript == Script::UNKNOWN) {
         return nullptr;
     }
 
@@ -2854,7 +2854,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
 template<typename T>
 void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
                                  const T *aString, uint32_t aLength,
-                                 int32_t aRunScript, uint16_t aOrientation)
+                                 Script aRunScript, uint16_t aOrientation)
 {
     NS_ASSERTION(aRanges.Length() == 0, "aRanges must be initially empty");
     NS_ASSERTION(aLength > 0, "don't call ComputeRanges for zero-length text");
@@ -3162,7 +3162,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
 
 already_AddRefed<gfxFont>
 gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
-                                          int32_t aRunScript)
+                                          Script aRunScript)
 {
     gfxFontEntry *fe = 
         gfxPlatformFontList::PlatformFontList()->
@@ -3209,7 +3209,10 @@ gfxMissingFontRecorder::Flush()
             if (!fontNeeded.IsEmpty()) {
                 fontNeeded.Append(char16_t(','));
             }
-            uint32_t tag = GetScriptTagForCode(i * 32 + j);
+            uint32_t sc = i * 32 + j;
+            MOZ_ASSERT(sc < static_cast<uint32_t>(Script::NUM_SCRIPT_CODES),
+                       "how did we set the bit for an invalid script code?");
+            uint32_t tag = GetScriptTagForCode(static_cast<Script>(sc));
             fontNeeded.Append(char16_t(tag >> 24));
             fontNeeded.Append(char16_t((tag >> 16) & 0xff));
             fontNeeded.Append(char16_t((tag >> 8) & 0xff));
