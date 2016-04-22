@@ -121,15 +121,17 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 
   CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
   nsCOMPtr<nsIException> existingException = runtime->GetPendingException();
-  if (existingException) {
+  // Make sure to clear the pending exception now.  Either we're going to reuse
+  // it (and we already grabbed it), or we plan to throw something else and this
+  // pending exception is no longer relevant.
+  runtime->SetPendingException(nullptr);
+
+  // Ignore the pending exception if we have a non-default message passed in.
+  if (aMessage.IsEmpty() && existingException) {
     nsresult nr;
     if (NS_SUCCEEDED(existingException->GetResult(&nr)) &&
         aRv == nr) {
       // Reuse the existing exception.
-
-      // Clear pending exception
-      runtime->SetPendingException(nullptr);
-
       if (!ThrowExceptionObject(aCx, existingException)) {
         // If we weren't able to throw an exception we're
         // most likely out of memory
