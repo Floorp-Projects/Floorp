@@ -114,9 +114,6 @@ IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
                                                aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
-        if (aDiagnostics) {
-          aDiagnostics->SetCanPlay();
-        }
         return NS_OK;
       } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
         if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
@@ -130,9 +127,6 @@ IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics)
                                                codecs,
                                                aDiagnostics) == CANPLAY_NO) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-        }
-        if (aDiagnostics) {
-          aDiagnostics->SetCanPlay();
         }
         return NS_OK;
       }
@@ -232,16 +226,10 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
   nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
-  if (NS_SUCCEEDED(rv)) {
-    diagnostics.SetCanPlay();
-  }
-  if (GetOwner()) {
-    diagnostics.StoreDiagnostics(GetOwner()->GetExtantDoc(), aType,
-                                 "AddSourceBuffer with owner window's doc");
-  } else {
-    diagnostics.StoreDiagnostics(nullptr, aType,
-                                 "AddSourceBuffer with nothing");
-  }
+  diagnostics.StoreFormatDiagnostics(GetOwner()
+                                     ? GetOwner()->GetExtantDoc()
+                                     : nullptr,
+                                     aType, NS_SUCCEEDED(rv), __func__);
   MSE_API("AddSourceBuffer(aType=%s)%s",
           NS_ConvertUTF16toUTF8(aType).get(),
           rv == NS_OK ? "" : " [not supported]");
@@ -362,17 +350,9 @@ MediaSource::IsTypeSupported(const GlobalObject& aOwner, const nsAString& aType)
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
   nsresult rv = mozilla::IsTypeSupported(aType, &diagnostics);
-  if (NS_SUCCEEDED(rv)) {
-    diagnostics.SetCanPlay();
-  }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aOwner.GetAsSupports());
-  if (window) {
-    diagnostics.StoreDiagnostics(window->GetExtantDoc(), aType,
-                                 "IsTypeSupported with aOwner window's doc");
-  } else {
-    diagnostics.StoreDiagnostics(nullptr, aType,
-                                 "IsTypeSupported with nothing");
-  }
+  diagnostics.StoreFormatDiagnostics(window ? window->GetExtantDoc() : nullptr,
+                                     aType, NS_SUCCEEDED(rv), __func__);
 #define this nullptr
   MSE_API("IsTypeSupported(aType=%s)%s ",
           NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "OK" : "[not supported]");

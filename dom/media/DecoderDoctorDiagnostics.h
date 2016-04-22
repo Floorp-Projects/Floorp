@@ -35,20 +35,25 @@ public:
   // given format. All diagnostics for a document will be analyzed together
   // within a short timeframe.
   // Should only be called once.
-  void StoreDiagnostics(nsIDocument* aDocument,
-                        const nsAString& aFormat,
-                        const char* aCallSite);
+  void StoreFormatDiagnostics(nsIDocument* aDocument,
+                              const nsAString& aFormat,
+                              bool aCanPlay,
+                              const char* aCallSite);
+
+  // Description string, for logging purposes.
+  nsCString GetDescription() const;
 
   // Methods to record diagnostic information:
 
-  void SetCanPlay() { mCanPlay = true; }
+  const nsAString& Format() const { return mFormat; }
   bool CanPlay() const { return mCanPlay; }
 
   void SetFFmpegFailedToLoad() { mFFmpegFailedToLoad = true; }
   bool DidFFmpegFailToLoad() const { return mFFmpegFailedToLoad; }
 
 private:
-  // True if there is at least one decoder that can play the media.
+  nsString mFormat;
+  // True if there is at least one decoder that can play that format.
   bool mCanPlay = false;
 
   bool mFFmpegFailedToLoad = false;

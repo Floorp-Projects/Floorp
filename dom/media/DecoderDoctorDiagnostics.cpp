@@ -35,15 +35,14 @@ namespace mozilla
 class DecoderDoctorDocumentWatcher : public nsITimerCallback
 {
 public:
-  static RefPtr<DecoderDoctorDocumentWatcher>
+  static already_AddRefed<DecoderDoctorDocumentWatcher>
   RetrieveOrCreate(nsIDocument* aDocument);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
-  void AddDiagnostics(const nsAString& aFormat,
-                      const char* aCallSite,
-                      DecoderDoctorDiagnostics&& aDiagnostics);
+  void AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnostics,
+                      const char* aCallSite);
 
 private:
   explicit DecoderDoctorDocumentWatcher(nsIDocument* aDocument);
@@ -85,21 +84,17 @@ private:
   struct Diagnostics
   {
     Diagnostics(DecoderDoctorDiagnostics&& aDiagnostics,
-                const nsAString& aFormat,
                 const char* aCallSite)
       : mDecoderDoctorDiagnostics(Move(aDiagnostics))
-      , mFormat(aFormat)
       , mCallSite(aCallSite)
     {}
     Diagnostics(const Diagnostics&) = delete;
     Diagnostics(Diagnostics&& aOther)
       : mDecoderDoctorDiagnostics(Move(aOther.mDecoderDoctorDiagnostics))
-      , mFormat(Move(aOther.mFormat))
       , mCallSite(Move(aOther.mCallSite))
     {}
 
     const DecoderDoctorDiagnostics mDecoderDoctorDiagnostics;
-    const nsString mFormat;
     const nsCString mCallSite;
   };
   typedef nsTArray<Diagnostics> DiagnosticsSequence;
@@ -113,7 +108,7 @@ private:
 NS_IMPL_ISUPPORTS(DecoderDoctorDocumentWatcher, nsITimerCallback)
 
 // static
-RefPtr<DecoderDoctorDocumentWatcher>
+already_AddRefed<DecoderDoctorDocumentWatcher>
 DecoderDoctorDocumentWatcher::RetrieveOrCreate(nsIDocument* aDocument)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -136,7 +131,7 @@ DecoderDoctorDocumentWatcher::RetrieveOrCreate(nsIDocument* aDocument)
     // Released in DestroyPropertyCallback().
     NS_ADDREF(watcher.get());
   }
-  return watcher;
+  return watcher.forget();
 }
 
 DecoderDoctorDocumentWatcher::DecoderDoctorDocumentWatcher(nsIDocument* aDocument)
@@ -305,57 +300,60 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
 
   bool canPlay = false;
 #if defined(MOZ_FFMPEG)
-  bool PlatformDecoderNeeded = false;
+  bool FFMpegNeeded = false;
 #endif
-  nsAutoString formats;
+  nsAutoString unplayableFormats;
+
   for (auto& diag : mDiagnosticsSequence) {
-    if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
-      canPlay = true;
-    } else {
+    if (!diag.mDecoderDoctorDiagnostics.Format().IsEmpty()) {
+      if (diag.mDecoderDoctorDiagnostics.CanPlay()) {
+        canPlay = true;
+      } else {
 #if defined(MOZ_FFMPEG)
-      if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
-        PlatformDecoderNeeded = true;
-      }
+        if (diag.mDecoderDoctorDiagnostics.DidFFmpegFailToLoad()) {
+          FFMpegNeeded = true;
+        }
 #endif
-      if (!formats.IsEmpty()) {
-        formats += NS_LITERAL_STRING(", ");
+        if (!unplayableFormats.IsEmpty()) {
+          unplayableFormats += NS_LITERAL_STRING(", ");
+        }
+        unplayableFormats += diag.mDecoderDoctorDiagnostics.Format();
       }
-      formats += diag.mFormat;
     }
   }
+
   if (!canPlay) {
 #if defined(MOZ_FFMPEG)
-    if (PlatformDecoderNeeded) {
-      DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - formats: %s -> Cannot play media because platform decoder was not found",
-               this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
+    if (FFMpegNeeded) {
+      DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - unplayable formats: %s -> Cannot play media because platform decoder was not found",
+               this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
       ReportAnalysis(dom::DecoderDoctorNotificationType::Platform_decoder_not_found,
-                     "MediaPlatformDecoderNotFound", formats);
+                     "MediaPlatformDecoderNotFound", unplayableFormats);
     } else
 #endif
     {
-      DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Cannot play media, formats: %s",
-              this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
+      DD_WARN("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Cannot play media, unplayable formats: %s",
+              this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
       ReportAnalysis(dom::DecoderDoctorNotificationType::Cannot_play,
-                     "MediaCannotPlayNoDecoders", formats);
+                     "MediaCannotPlayNoDecoders", unplayableFormats);
     }
-  } else if (!formats.IsEmpty()) {
-    DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Can play media, but no decoders for some requested formats: %s",
-            this, mDocument, NS_ConvertUTF16toUTF8(formats).get());
+  } else if (!unplayableFormats.IsEmpty()) {
+    DD_INFO("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, but no decoders for some requested formats: %s",
+            this, mDocument, NS_ConvertUTF16toUTF8(unplayableFormats).get());
     if (Preferences::GetBool("media.decoderdoctor.verbose", false)) {
       ReportAnalysis(
         dom::DecoderDoctorNotificationType::Can_play_but_some_missing_decoders,
-        "MediaNoDecoders", formats);
+        "MediaNoDecoders", unplayableFormats);
     }
   } else {
-    DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::Notify() - Can play media, decoders available for all requested formats",
+    DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::SynthesizeAnalysis() - Can play media, decoders available for all requested formats",
              this, mDocument);
   }
 }
 
 void
-DecoderDoctorDocumentWatcher::AddDiagnostics(const nsAString& aFormat,
-                                            const char* aCallSite,
-                                            DecoderDoctorDiagnostics&& aDiagnostics)
+DecoderDoctorDocumentWatcher::AddDiagnostics(DecoderDoctorDiagnostics&& aDiagnostics,
+                                             const char* aCallSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -363,11 +361,10 @@ DecoderDoctorDocumentWatcher::AddDiagnostics(const nsAString& aFormat,
     return;
   }
 
-  DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(format='%s', call site '%s', can play=%d, platform lib failed to load=%d)",
-           this, mDocument, NS_ConvertUTF16toUTF8(aFormat).get(),
-           aCallSite, aDiagnostics.CanPlay(), aDiagnostics.DidFFmpegFailToLoad());
+  DD_DEBUG("DecoderDoctorDocumentWatcher[%p, doc=%p]::AddDiagnostics(DecoderDoctorDiagnostics{%s}, call site '%s')",
+           this, mDocument, aDiagnostics.GetDescription().Data(), aCallSite);
   mDiagnosticsSequence.AppendElement(
-    Diagnostics(Move(aDiagnostics), aFormat, aCallSite));
+    Diagnostics(Move(aDiagnostics), aCallSite));
   EnsureTimerIsStarted();
 }
 
@@ -407,14 +404,20 @@ DecoderDoctorDocumentWatcher::Notify(nsITimer* timer)
 
 
 void
-DecoderDoctorDiagnostics::StoreDiagnostics(nsIDocument* aDocument,
-                                           const nsAString& aFormat,
-                                           const char* aCallSite)
+DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
+                                                 const nsAString& aFormat,
+                                                 bool aCanPlay,
+                                                 const char* aCallSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!aDocument)) {
-    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDiagnostics(nsIDocument* aDocument=nullptr, format='%s', call site '%s')",
-            this, NS_ConvertUTF16toUTF8(aFormat).get(), aCallSite);
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreFormatDiagnostics(nsIDocument* aDocument=nullptr, format='%s', can-play=%d, call site '%s')",
+            this, NS_ConvertUTF16toUTF8(aFormat).get(), aCanPlay, aCallSite);
+    return;
+  }
+  if (NS_WARN_IF(aFormat.IsEmpty())) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreFormatDiagnostics(nsIDocument* aDocument=%p, format=<empty>, can-play=%d, call site '%s')",
+            this, aDocument, aCanPlay, aCallSite);
     return;
   }
 
@@ -422,14 +425,34 @@ DecoderDoctorDiagnostics::StoreDiagnostics(nsIDocument* aDocument,
     DecoderDoctorDocumentWatcher::RetrieveOrCreate(aDocument);
 
   if (NS_WARN_IF(!watcher)) {
-    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDiagnostics(nsIDocument* aDocument=nullptr, format='%s', call site '%s') - Could not create document watcher",
-            this, NS_ConvertUTF16toUTF8(aFormat).get(), aCallSite);
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreFormatDiagnostics(nsIDocument* aDocument=%p, format='%s', can-play=%d, call site '%s') - Could not create document watcher",
+            this, aDocument, NS_ConvertUTF16toUTF8(aFormat).get(), aCanPlay, aCallSite);
     return;
   }
 
+  mFormat = aFormat;
+  mCanPlay = aCanPlay;
+
   // StoreDiagnostics should only be called once, after all data is available,
   // so it is safe to Move() from this object.
-  watcher->AddDiagnostics(aFormat, aCallSite, Move(*this));
+  watcher->AddDiagnostics(Move(*this), aCallSite);
+}
+
+nsCString
+DecoderDoctorDiagnostics::GetDescription() const
+{
+  nsCString s;
+  if (!mFormat.IsEmpty()) {
+    s = "format='";
+    s += NS_ConvertUTF16toUTF8(mFormat).get();
+    s += mCanPlay ? "', can play" : "', cannot play";
+    if (mFFmpegFailedToLoad) {
+      s += ", Linux platform decoder failed to load";
+    }
+  } else {
+    s = "?";
+  }
+  return s;
 }
 
 } // namespace mozilla
