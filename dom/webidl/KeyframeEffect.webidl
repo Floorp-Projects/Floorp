@@ -77,6 +77,6 @@ interface KeyframeEffect : KeyframeEffectReadOnly {
   // inherit attribute CompositeOperation          composite;
   // Bug 1244590 - implement spacing modes
   // inherit attribute DOMString                   spacing;
-  // Bug 1244591 - implement setFrames
-  // void setFrames (object? frames);
+  [Throws]
+  void setFrames (object? frames);
 };

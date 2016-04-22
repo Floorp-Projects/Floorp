@@ -94,9 +94,10 @@ StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
 }
 
 already_AddRefed<nsStyleContext>
-StyleSetHandle::Ptr::ResolveStyleForNonElement(nsStyleContext* aParentContext)
+StyleSetHandle::Ptr::ResolveStyleForNonElement(nsStyleContext* aParentContext,
+                                               nsIAtom* aPseudoTag)
 {
-  FORWARD(ResolveStyleForNonElement, (aParentContext));
+  FORWARD(ResolveStyleForNonElement, (aParentContext, aPseudoTag));
 }
 
 already_AddRefed<nsStyleContext>

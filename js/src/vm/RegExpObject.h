@@ -12,6 +12,7 @@
 
 #include "jscntxt.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "proxy/Proxy.h"
@@ -56,6 +57,13 @@ enum RegExpFlag
     NoFlags         = 0x00,
     AllFlags        = 0x1f
 };
+
+static_assert(IgnoreCaseFlag == REGEXP_IGNORECASE_FLAG &&
+              GlobalFlag == REGEXP_GLOBAL_FLAG &&
+              MultilineFlag == REGEXP_MULTILINE_FLAG &&
+              StickyFlag == REGEXP_STICKY_FLAG &&
+              UnicodeFlag == REGEXP_UNICODE_FLAG,
+              "Flag values should be in sync with self-hosted JS");
 
 enum RegExpRunStatus
 {
@@ -394,6 +402,9 @@ class RegExpObject : public NativeObject
     static const unsigned LAST_INDEX_SLOT          = 0;
     static const unsigned SOURCE_SLOT              = 1;
     static const unsigned FLAGS_SLOT               = 2;
+
+    static_assert(RegExpObject::FLAGS_SLOT == REGEXP_FLAGS_SLOT,
+                  "FLAGS_SLOT values should be in sync with self-hosted JS");
 
   public:
     static const unsigned RESERVED_SLOTS = 3;

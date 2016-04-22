@@ -733,10 +733,16 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     nsAutoRef<FcPattern> renderPattern
         (FcFontRenderPrepare(nullptr, pattern, mFontPattern));
 
+    FcBool autohint;
+    if (FcPatternGetBool(renderPattern, FC_AUTOHINT, 0, &autohint) != FcResultMatch) {
+      autohint = FcFalse;
+    }
+
     cairo_scaled_font_t* scaledFont =
         CreateScaledFont(renderPattern, aFontStyle, aNeedsBold);
     gfxFont* newFont =
-        new gfxFontconfigFont(scaledFont, this, aFontStyle, aNeedsBold);
+        new gfxFontconfigFont(scaledFont, this, aFontStyle, aNeedsBold,
+                              bool(autohint));
     cairo_scaled_font_destroy(scaledFont);
 
     return newFont;
@@ -850,8 +856,10 @@ gfxFontconfigFontFamily::AddFontPattern(FcPattern* aFontPattern)
 gfxFontconfigFont::gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
                                      gfxFontEntry *aFontEntry,
                                      const gfxFontStyle *aFontStyle,
-                                     bool aNeedsBold) :
-    gfxFT2FontBase(aScaledFont, aFontEntry, aFontStyle)
+                                     bool aNeedsBold,
+                                     bool aAutoHinting) :
+    gfxFT2FontBase(aScaledFont, aFontEntry, aFontStyle),
+    mAutoHinting(aAutoHinting)
 {
 }
 
@@ -876,9 +884,10 @@ gfxFontconfigFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
   mozilla::gfx::AntialiasMode aaMode =
     mozilla::gfx::CairoAntialiasToGfxAntialias(antialias);
 
-  // We don't want to force the use of the autohinter over the font's built in hints
+  bool autohint = GetAutoHinting();
+
   // The fontconfig AA mode must be passed along because it may override the hinting style.
-  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, false, aaMode);
+  return mozilla::gfx::Factory::CreateCairoGlyphRenderingOptions(hinting, autohint, aaMode);
 }
 #endif
 

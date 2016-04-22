@@ -200,6 +200,7 @@ my @numericvalue;
 my @hanVariant;
 my @bidicategory;
 my @fullWidth;
+my @fullWidthInverse;
 my @verticalOrientation;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
@@ -212,6 +213,7 @@ for (my $i = 0; $i < 0x110000; ++$i) {
     $hanVariant[$i] = 0;
     $bidicategory[$i] = $bidicategoryCode{"L"};
     $fullWidth[$i] = 0;
+    $fullWidthInverse[$i] = 0;
     $verticalOrientation[$i] = 1; # default for unlisted codepoints is 'R'
 }
 
@@ -336,11 +338,13 @@ while (<FH>) {
           my $wideChar = hex(substr($fields[5], 9));
           die "didn't expect supplementary-plane values here" if $usv > 0xffff || $wideChar > 0xffff;
           $fullWidth[$usv] = $wideChar;
+          $fullWidthInverse[$wideChar] = $usv;
         }
         elsif ($fields[5] =~ /^<wide>/) {
           my $narrowChar = hex(substr($fields[5], 7));
           die "didn't expect supplementary-plane values here" if $usv > 0xffff || $narrowChar > 0xffff;
           $fullWidth[$narrowChar] = $usv;
+          $fullWidthInverse[$usv] = $narrowChar;
         }
     }
 }
@@ -687,6 +691,13 @@ sub sprintFullWidth
 }
 &genTables("", "", "FullWidth", "", "uint16_t", 10, 6, \&sprintFullWidth, 0, 2, 1);
 
+sub sprintFullWidthInverse
+{
+  my $usv = shift;
+  return sprintf("0x%04x,", $fullWidthInverse[$usv]);
+}
+&genTables("", "", "FullWidthInverse", "", "uint16_t", 10, 6, \&sprintFullWidthInverse, 0, 2, 1);
+
 sub sprintCasemap
 {
   my $usv = shift;
@@ -800,13 +811,17 @@ __END
 
 close DATA_TABLES;
 
-print HEADER "enum {\n";
+print HEADER "namespace mozilla {\n";
+print HEADER "namespace unicode {\n";
+print HEADER "enum class Script {\n";
 for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
-  print HEADER "  MOZ_SCRIPT_", $scriptCodeToName[$i], " = ", $i, ",\n";
+  print HEADER "  ", $scriptCodeToName[$i], " = ", $i, ",\n";
 }
-print HEADER "\n  MOZ_NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
-print HEADER "\n  MOZ_SCRIPT_INVALID = -1\n";
-print HEADER "};\n\n";
+print HEADER "\n  NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
+print HEADER "\n  INVALID = -1\n";
+print HEADER "};\n";
+print HEADER "} // namespace unicode\n";
+print HEADER "} // namespace mozilla\n\n";
 
 print HEADER <<__END;
 #endif

@@ -403,7 +403,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           message_tail = input_overflow_buf_.data();
           end = message_tail + input_overflow_buf_.size();
         } else {
-          buf = (char*)malloc(len);
+          buf = (char*)moz_xmalloc(len);
           memcpy(buf, p, len);
         }
         Message m(buf, len, Message::OWNS);

@@ -70,7 +70,7 @@ public:
     return mSampleRate;
   }
 
-  int32_t Length() const
+  uint32_t Length() const
   {
     return mLength;
   }

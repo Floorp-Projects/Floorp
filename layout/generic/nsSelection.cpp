@@ -2126,7 +2126,17 @@ nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
   if (NS_SUCCEEDED(sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
                                                     true))) {
     if (frame) {
-      wm = frame->GetWritingMode();
+      if (!frame->StyleContext()->IsTextCombined()) {
+        wm = frame->GetWritingMode();
+      } else {
+        // Using different direction for horizontal-in-vertical would
+        // make it hard to navigate via keyboard. Inherit the moving
+        // direction from its parent.
+        MOZ_ASSERT(frame->GetType() == nsGkAtoms::textFrame);
+        wm = frame->GetParent()->GetWritingMode();
+        MOZ_ASSERT(wm.IsVertical(), "Text combined "
+                   "can only appear in vertical text");
+      }
     }
   }
 

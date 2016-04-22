@@ -51,10 +51,14 @@ static const uint64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
 
 // avoid redefined macro in unified build
 #undef DECODER_LOG
+#undef DUMP_LOG
 
 LazyLogModule gMediaDecoderLog("MediaDecoder");
 #define DECODER_LOG(x, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
+
+#define DUMP_LOG(x, ...) \
+  NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString("Decoder=%p " x, this, ##__VA_ARGS__).get(), nullptr, nullptr, -1)
 
 static const char*
 ToPlayStateStr(MediaDecoder::PlayState aState)
@@ -1870,6 +1874,23 @@ MediaDecoder::NextFrameBufferedStatus()
   return GetBuffered().Contains(interval)
     ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
     : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+}
+
+void
+MediaDecoder::DumpDebugInfo()
+{
+  DUMP_LOG("metadata: channels=%u rate=%u hasAudio=%d hasVideo=%d, "
+           "state: mPlayState=%s mIsDormant=%d, mShuttingDown=%d",
+           mInfo->mAudio.mChannels, mInfo->mAudio.mRate, mInfo->HasAudio(), mInfo->HasVideo(),
+           PlayStateStr(), mIsDormant, mShuttingDown);
+
+  nsString str;
+  GetMozDebugReaderData(str);
+  DUMP_LOG("reader data:\n%s", NS_ConvertUTF16toUTF8(str).get());
+
+  if (!mShuttingDown && GetStateMachine()) {
+    GetStateMachine()->DumpDebugInfo();
+  }
 }
 
 void

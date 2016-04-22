@@ -483,9 +483,9 @@ public:
     double Z() { return mZ; }
     double W() { return mW; }
     const nsIntRect& Rect() { return mRect; }
-    nsAString& Characters() { return mCharacters; }
-    nsAString& CharactersExtra() { return mCharactersExtra; }
-    nsAString& Data() { return mData; }
+    nsString& Characters() { return mCharacters; }
+    nsString& CharactersExtra() { return mCharactersExtra; }
+    nsString& Data() { return mData; }
     int MetaState() { return mMetaState; }
     Modifiers DOMModifiers() const;
     bool IsAltPressed() const { return (mMetaState & AMETA_ALT_MASK) != 0; }

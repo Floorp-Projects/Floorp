@@ -440,13 +440,13 @@ void nsView::SetFloating(bool aFloatingView)
 		mVFlags &= ~NS_VIEW_FLAG_FLOATING;
 }
 
-void nsView::InvalidateHierarchy(nsViewManager *aViewManagerParent)
+void nsView::InvalidateHierarchy()
 {
   if (mViewManager->GetRootView() == this)
     mViewManager->InvalidateHierarchy();
 
   for (nsView *child = mFirstChild; child; child = child->GetNextSibling())
-    child->InvalidateHierarchy(aViewManagerParent);
+    child->InvalidateHierarchy();
 }
 
 void nsView::InsertChild(nsView *aChild, nsView *aSibling)
@@ -477,7 +477,7 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     nsViewManager *vm = aChild->GetViewManager();
     if (vm->GetRootView() == aChild)
     {
-      aChild->InvalidateHierarchy(nullptr); // don't care about releasing grabs
+      aChild->InvalidateHierarchy();
     }
   }
 }
@@ -513,7 +513,7 @@ void nsView::RemoveChild(nsView *child)
     nsViewManager *vm = child->GetViewManager();
     if (vm->GetRootView() == child)
     {
-      child->InvalidateHierarchy(GetViewManager());
+      child->InvalidateHierarchy();
     }
   }
 }

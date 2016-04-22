@@ -1328,7 +1328,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
       return S_OK;
     }
   }
-  else {
+  else if ( aFE.cfFormat != nsClipboard::CF_CUSTOMTYPES ) {
     // we assume that any data that isn't caught above is unicode. This may
     // be an erroneous assumption, but is true so far.
     allocLen += sizeof(char16_t);

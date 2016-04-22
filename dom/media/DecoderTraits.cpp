@@ -9,6 +9,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #include "OggDecoder.h"
 #include "OggReader.h"
@@ -170,6 +171,21 @@ DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
 DecoderTraits::IsWebMAudioType(const nsACString& aType)
 {
   return aType.EqualsASCII("audio/webm");
+}
+
+static char const *const gHttpLiveStreamingTypes[] = {
+  // For m3u8.
+  // https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
+  "application/vnd.apple.mpegurl",
+  // Some sites serve these as the informal m3u type.
+  "audio/x-mpegurl",
+  nullptr
+};
+
+static bool
+IsHttpLiveStreamingType(const nsACString& aType)
+{
+  return CodecListContains(gHttpLiveStreamingTypes, aType);
 }
 
 #ifdef MOZ_OMX_DECODER
@@ -477,6 +493,10 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (IsHttpLiveStreamingType(nsDependentCString(aMIMEType))) {
+    Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_REQUESTED, true);
+  }
+
   if (aHaveRequestedCodecs) {
     CanPlayStatus result = CanHandleCodecsType(aMIMEType,
                                                aRequestedCodecs,
@@ -620,6 +640,11 @@ InstantiateDecoder(const nsACString& aType,
     return decoder.forget();
   }
 #endif
+
+  if (IsHttpLiveStreamingType(aType)) {
+    // We don't have an HLS decoder.
+    Telemetry::Accumulate(Telemetry::MEDIA_HLS_DECODER_SUCCESS, false);
+  }
 
   return nullptr;
 }

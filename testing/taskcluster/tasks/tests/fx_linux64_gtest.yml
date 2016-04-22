@@ -8,7 +8,6 @@ task:
       - --no-read-buildbot-config
       - --installer-url={{build_url}}
       - --test-packages-url={{test_packages_url}}
-      - --download-symbols=true # This value is to be ondemand for opt jobs
       - --{{suite}}-suite={{flavor}}
     env:
         MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'

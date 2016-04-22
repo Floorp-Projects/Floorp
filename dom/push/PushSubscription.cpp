@@ -12,6 +12,8 @@
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/PushSubscriptionOptions.h"
+#include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/workers/Workers.h"
@@ -191,26 +193,14 @@ private:
   nsString mScope;
 };
 
-bool
-CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
-                       nsTArray<uint8_t>& aArray)
-{
-  aBuffer.ComputeLengthAndData();
-  if (!aArray.SetLength(aBuffer.Length(), fallible) ||
-      !aArray.ReplaceElementsAt(0, aBuffer.Length(), aBuffer.Data(),
-                                aBuffer.Length(), fallible)) {
-    return false;
-  }
-  return true;
-}
-
 } // anonymous namespace
 
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    const nsAString& aEndpoint,
                                    const nsAString& aScope,
                                    nsTArray<uint8_t>&& aRawP256dhKey,
-                                   nsTArray<uint8_t>&& aAuthSecret)
+                                   nsTArray<uint8_t>&& aAuthSecret,
+                                   nsTArray<uint8_t>&& aAppServerKey)
   : mEndpoint(aEndpoint)
   , mScope(aScope)
   , mRawP256dhKey(Move(aRawP256dhKey))
@@ -227,13 +217,13 @@ PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
     worker->AssertIsOnWorkerThread();
 #endif
   }
+  mOptions = new PushSubscriptionOptions(mGlobal, Move(aAppServerKey));
 }
 
 PushSubscription::~PushSubscription()
 {}
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushSubscription, mGlobal)
-
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PushSubscription, mGlobal, mOptions)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PushSubscription)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PushSubscription)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PushSubscription)
@@ -250,28 +240,46 @@ PushSubscription::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 // static
 already_AddRefed<PushSubscription>
 PushSubscription::Constructor(GlobalObject& aGlobal,
-                              const nsAString& aEndpoint,
-                              const nsAString& aScope,
-                              const Nullable<ArrayBuffer>& aP256dhKey,
-                              const Nullable<ArrayBuffer>& aAuthSecret,
+                              const PushSubscriptionInit& aInitDict,
                               ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-  nsTArray<uint8_t> rawKey, authSecret;
-  if ((!aP256dhKey.IsNull() && !CopyArrayBufferToArray(aP256dhKey.Value(),
-                                                       rawKey)) ||
-      (!aAuthSecret.IsNull() && !CopyArrayBufferToArray(aAuthSecret.Value(),
-                                                        authSecret))) {
+  nsTArray<uint8_t> rawKey;
+  if (aInitDict.mP256dhKey.WasPassed() &&
+      !aInitDict.mP256dhKey.Value().IsNull() &&
+      !PushUtil::CopyArrayBufferToArray(aInitDict.mP256dhKey.Value().Value(),
+                                        rawKey)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
+  nsTArray<uint8_t> authSecret;
+  if (aInitDict.mAuthSecret.WasPassed() &&
+      !aInitDict.mAuthSecret.Value().IsNull() &&
+      !PushUtil::CopyArrayBufferToArray(aInitDict.mAuthSecret.Value().Value(),
+                                        authSecret)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  nsTArray<uint8_t> appServerKey;
+  if (aInitDict.mAppServerKey.WasPassed() &&
+      !aInitDict.mAppServerKey.Value().IsNull()) {
+    const OwningArrayBufferViewOrArrayBuffer& bufferSource =
+      aInitDict.mAppServerKey.Value().Value();
+    if (!PushUtil::CopyBufferSourceToArray(bufferSource, appServerKey)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
+
   RefPtr<PushSubscription> sub = new PushSubscription(global,
-                                                      aEndpoint,
-                                                      aScope,
+                                                      aInitDict.mEndpoint,
+                                                      aInitDict.mScope,
                                                       Move(rawKey),
-                                                      Move(authSecret));
+                                                      Move(authSecret),
+                                                      Move(appServerKey));
 
   return sub.forget();
 }
@@ -315,37 +323,51 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
 void
 PushSubscription::GetKey(JSContext* aCx,
                          PushEncryptionKeyName aType,
-                         JS::MutableHandle<JSObject*> aKey)
+                         JS::MutableHandle<JSObject*> aKey,
+                         ErrorResult& aRv)
 {
-  if (aType == PushEncryptionKeyName::P256dh && !mRawP256dhKey.IsEmpty()) {
-    aKey.set(ArrayBuffer::Create(aCx,
-                                 mRawP256dhKey.Length(),
-                                 mRawP256dhKey.Elements()));
-  } else if (aType == PushEncryptionKeyName::Auth && !mAuthSecret.IsEmpty()) {
-    aKey.set(ArrayBuffer::Create(aCx,
-                                 mAuthSecret.Length(),
-                                 mAuthSecret.Elements()));
+  if (aType == PushEncryptionKeyName::P256dh) {
+    PushUtil::CopyArrayToArrayBuffer(aCx, mRawP256dhKey, aKey, aRv);
+  } else if (aType == PushEncryptionKeyName::Auth) {
+    PushUtil::CopyArrayToArrayBuffer(aCx, mAuthSecret, aKey, aRv);
   } else {
     aKey.set(nullptr);
   }
 }
 
 void
-PushSubscription::ToJSON(PushSubscriptionJSON& aJSON)
+PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
 {
   aJSON.mEndpoint.Construct();
   aJSON.mEndpoint.Value() = mEndpoint;
 
+  Base64URLEncodeOptions encodeOptions;
+  encodeOptions.mPad = false;
+
   aJSON.mKeys.mP256dh.Construct();
   nsresult rv = Base64URLEncode(mRawP256dhKey.Length(),
                                 mRawP256dhKey.Elements(),
+                                encodeOptions,
                                 aJSON.mKeys.mP256dh.Value());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   aJSON.mKeys.mAuth.Construct();
   rv = Base64URLEncode(mAuthSecret.Length(), mAuthSecret.Elements(),
-                       aJSON.mKeys.mAuth.Value());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+                       encodeOptions, aJSON.mKeys.mAuth.Value());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+}
+
+already_AddRefed<PushSubscriptionOptions>
+PushSubscription::Options()
+{
+  RefPtr<PushSubscriptionOptions> options = mOptions;
+  return options.forget();
 }
 
 already_AddRefed<Promise>

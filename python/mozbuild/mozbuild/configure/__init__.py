@@ -533,6 +533,8 @@ class ConfigureSandbox(dict):
                 raise TypeError("Unexpected type: '%s'" % type(value).__name__)
             if value is not None and not self.RE_MODULE.match(value):
                 raise ValueError("Invalid argument to @imports: '%s'" % value)
+        if _as and '.' in _as:
+            raise ValueError("Invalid argument to @imports: '%s'" % _as)
 
         def decorator(func):
             if func in self._templates:
@@ -552,27 +554,33 @@ class ConfigureSandbox(dict):
 
     def _apply_imports(self, func, glob):
         for _from, _import, _as in self._imports.get(func, ()):
-            # The special `__sandbox__` module gives access to the sandbox
-            # instance.
-            if _from is None and _import == '__sandbox__':
-                glob[_as or _import] = self
-                continue
-            # Special case for the open() builtin, because otherwise, using it
-            # fails with "IOError: file() constructor not accessible in
-            # restricted mode"
-            if _from == '__builtin__' and _import == 'open':
-                glob[_as or _import] = \
-                    lambda *args, **kwargs: open(*args, **kwargs)
-                continue
-            # Until this proves to be a performance problem, just construct an
-            # import statement and execute it.
-            import_line = ''
-            if _from:
-                import_line += 'from %s ' % _from
-            import_line += 'import %s' % _import
+            _from = '%s.' % _from if _from else ''
             if _as:
-                import_line += ' as %s' % _as
-            exec_(import_line, {}, glob)
+                glob[_as] = self._get_one_import('%s%s' % (_from, _import))
+            else:
+                what = _import.split('.')[0]
+                glob[what] = self._get_one_import('%s%s' % (_from, what))
+
+    def _get_one_import(self, what):
+        # The special `__sandbox__` module gives access to the sandbox
+        # instance.
+        if what == '__sandbox__':
+            return self
+        # Special case for the open() builtin, because otherwise, using it
+        # fails with "IOError: file() constructor not accessible in
+        # restricted mode"
+        if what == '__builtin__.open':
+            return lambda *args, **kwargs: open(*args, **kwargs)
+        # Until this proves to be a performance problem, just construct an
+        # import statement and execute it.
+        import_line = ''
+        if '.' in what:
+            _from, what = what.rsplit('.', 1)
+            import_line += 'from %s ' % _from
+        import_line += 'import %s as imported' % what
+        glob = {}
+        exec_(import_line, {}, glob)
+        return glob['imported']
 
     def _resolve_and_set(self, data, name, value):
         # Don't set anything when --help was on the command line
@@ -735,7 +743,9 @@ class ConfigureSandbox(dict):
         ))
         @wraps(new_func)
         def wrapped(*args, **kwargs):
-            self._apply_imports(func, glob)
+            if func in self._imports:
+                self._apply_imports(func, glob)
+                del self._imports[func]
             return new_func(*args, **kwargs)
 
         self._prepared_functions.add(wrapped)

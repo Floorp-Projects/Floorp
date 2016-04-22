@@ -1156,6 +1156,8 @@ void CacheStorageService::RemoveEntryForceValid(nsACString const &aContextKey,
 {
   mozilla::MutexAutoLock lock(mForcedValidEntriesLock);
 
+  LOG(("CacheStorageService::RemoveEntryForceValid context='%s' entryKey=%s",
+       aContextKey.BeginReading(), aEntryKey.BeginReading()));
   mForcedValidEntries.Remove(aContextKey + aEntryKey);
 }
 

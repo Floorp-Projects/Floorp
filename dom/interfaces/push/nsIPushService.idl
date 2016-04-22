@@ -97,6 +97,16 @@ interface nsIPushService : nsISupports
                  in nsIPushSubscriptionCallback callback);
 
   /**
+   * Creates a restricted push subscription with the given public |key|. The
+   * application server must use the corresponding private key to authenticate
+   * message delivery requests, as described in draft-thomson-webpush-vapid.
+   */
+  void subscribeWithKey(in DOMString scope, in nsIPrincipal principal,
+                        in uint32_t keyLength,
+                        [const, array, size_is(keyLength)] in uint8_t key,
+                        in nsIPushSubscriptionCallback callback);
+
+  /**
    * Removes a push subscription for the given |scope|.
    */
   void unsubscribe(in DOMString scope, in nsIPrincipal principal,

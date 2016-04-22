@@ -18,7 +18,8 @@ namespace mozilla {
 namespace a11y {
 
 bool
-DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
+DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
+                                   const bool& aFromUser)
 {
   if (mShutdown)
     return true;
@@ -56,6 +57,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
+  ProxyShowHideEvent(parent->ChildAt(newChildIdx), parent, true, aFromUser);
   return true;
 }
 
@@ -103,7 +105,8 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
 }
 
 bool
-DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
+DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
+                                   const bool& aFromUser)
 {
   if (mShutdown)
     return true;
@@ -130,6 +133,7 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
   }
 
   ProxyAccessible* parent = root->Parent();
+  ProxyShowHideEvent(root, parent, false, aFromUser);
   parent->RemoveChild(root);
   root->Shutdown();
 

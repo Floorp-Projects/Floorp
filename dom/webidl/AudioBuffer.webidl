@@ -13,12 +13,12 @@
 interface AudioBuffer {
 
     readonly attribute float sampleRate;
-    readonly attribute long length;
+    readonly attribute unsigned long length;
 
     // in seconds 
     readonly attribute double duration;
 
-    readonly attribute long numberOfChannels;
+    readonly attribute unsigned long numberOfChannels;
 
     [Throws]
     Float32Array getChannelData(unsigned long channel);

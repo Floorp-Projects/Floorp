@@ -12,9 +12,18 @@
 
 interface nsIURI;
 
-[scriptable, uuid(00360c7d-a046-4f8d-a1fc-8bdc0f0fb444)]
+[scriptable, uuid(2e43bb32-dabf-4494-9f90-2b3195b1c73d)]
 interface nsINetworkPredictorVerifier : nsISupports
 {
+    /**
+     * Callback for when we do a predictive prefetch
+     *
+     * @param uri - The URI that was prefetched
+     * @param status - The request status code returned by the
+     *   prefetch attempt e.g. 200 (OK):w
+     */
+    void onPredictPrefetch(in nsIURI uri, in uint32_t status);
+
     /**
      * Callback for when we do a predictive preconnect
      *
