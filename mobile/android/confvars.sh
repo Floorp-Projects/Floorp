@@ -54,9 +54,6 @@ fi
 # Enable UI for healthreporter
 MOZ_SERVICES_HEALTHREPORT=1
 
-# Enable runtime locale switching.
-MOZ_LOCALE_SWITCHER=1
-
 # Enable second screen using native Android libraries, provided we're
 # not resource constrained.
 if test -z "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
