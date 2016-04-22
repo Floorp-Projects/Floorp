@@ -389,10 +389,6 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
 {
   EnsurePatternDependenciesStored(aPattern);
 
-  if (aFont->GetType() != FontType::DWRITE && aFont->GetType() != FontType::GDI) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "Unexpected ScaledFont type " << (int)aFont->GetType();
-  }
-
   if (!aFont->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get()))) {
   // TODO support font in b2g recordings
 #ifndef MOZ_WIDGET_GONK
