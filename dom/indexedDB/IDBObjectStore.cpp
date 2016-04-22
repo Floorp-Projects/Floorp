@@ -105,36 +105,6 @@ struct IDBObjectStore::StructuredCloneWriteInfo
   {
     MOZ_COUNT_DTOR(StructuredCloneWriteInfo);
   }
-
-  bool
-  operator==(const StructuredCloneWriteInfo& aOther) const
-  {
-    return this->mCloneBuffer.nbytes() == aOther.mCloneBuffer.nbytes() &&
-           this->mCloneBuffer.data() == aOther.mCloneBuffer.data() &&
-           this->mBlobOrMutableFiles == aOther.mBlobOrMutableFiles &&
-           this->mDatabase == aOther.mDatabase &&
-           this->mOffsetToKeyProp == aOther.mOffsetToKeyProp;
-  }
-
-  bool
-  SetFromSerialized(const SerializedStructuredCloneWriteInfo& aOther)
-  {
-    if (aOther.data().IsEmpty()) {
-      mCloneBuffer.clear();
-    } else {
-      auto* aOtherBuffer =
-        reinterpret_cast<uint64_t*>(
-          const_cast<uint8_t*>(aOther.data().Elements()));
-      if (!mCloneBuffer.copy(aOtherBuffer, aOther.data().Length())) {
-        return false;
-      }
-    }
-
-    mBlobOrMutableFiles.Clear();
-
-    mOffsetToKeyProp = aOther.offsetToKeyProp();
-    return true;
-  }
 };
 
 namespace {
