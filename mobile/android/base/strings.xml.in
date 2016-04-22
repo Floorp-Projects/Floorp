@@ -439,6 +439,8 @@
   <string name="home_top_sites_title">&home_top_sites_title;</string>
   <string name="home_top_sites_add">&home_top_sites_add;</string>
   <string name="home_history_title">&home_history_title;</string>
+  <string name="home_synced_devices_smartfolder">&home_synced_devices_smartfolder;</string>
+  <string name="home_synced_devices_number">&home_synced_devices_number;</string>
   <string name="home_history_back_to">&home_history_back_to;</string>
   <string name="home_clear_history_button">&home_clear_history_button;</string>
   <string name="home_clear_history_confirm">&home_clear_history_confirm;</string>

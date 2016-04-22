@@ -536,6 +536,8 @@ size. -->
      with the page title defined in aboutHome.dtd -->
 <!ENTITY home_title "&brandShortName; Home">
 <!ENTITY home_history_title "History">
+<!ENTITY home_synced_devices_smartfolder "Synced devices">
+<!ENTITY home_synced_devices_number "&formatD; devices">
 <!ENTITY home_history_back_to "Go back to all history">
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">
