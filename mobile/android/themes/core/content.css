@@ -347,19 +347,19 @@ div:-moz-native-anonymous.moz-accessiblecaret > div.image {
 /* Override accessiblecaret css in layout/style/ua.css */
 div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
-  bottom: -11%; /* space between the blinking cursor and the caret */
+  top: 11%; /* space between the blinking cursor and the caret */
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-hdpi.png");
   margin-left: -50%;
-  bottom: -1%; /* space between the selection highlight and the caret */
+  top: 1%; /* space between the selection highlight and the caret */
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-hdpi.png");
   margin-left: 47%;
-  bottom: -1%; /* space between the selection highlight and the caret */
+  top: 1%; /* space between the selection highlight and the caret */
 }
 
 @media (min-resolution: 1.5dppx) {
