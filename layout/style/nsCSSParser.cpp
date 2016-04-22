@@ -5993,7 +5993,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
 #ifdef MOZ_XUL
        isTree ||
 #endif
-       CSSPseudoClassType::notPseudo == pseudoClassType ||
+       CSSPseudoClassType::negation == pseudoClassType ||
        nsCSSPseudoClasses::HasStringArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasNthPairArg(pseudoClassType) ||
        nsCSSPseudoClasses::HasSelectorListArg(pseudoClassType))) {
@@ -6013,7 +6013,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   }
 
   if (!parsingPseudoElement &&
-      CSSPseudoClassType::notPseudo == pseudoClassType) {
+      CSSPseudoClassType::negation == pseudoClassType) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelDoubleNot);
       UngetToken();
