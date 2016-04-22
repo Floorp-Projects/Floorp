@@ -208,8 +208,10 @@ case "$target" in
         # secure CRT functions.
         # MSVC warning C4819 warns some UTF-8 characters (e.g. copyright sign)
         # on non-Western system locales even if it is in a comment.
+        # MSVC warning wd4595 warns non-member operator new or delete functions
+        # may not be declared inline, as of VS2015 Update 2.
         CFLAGS="$CFLAGS -wd4819"
-        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4800 -wd4819 -D_CRT_SECURE_NO_WARNINGS"
+        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4800 -wd4819 -wd4595 -D_CRT_SECURE_NO_WARNINGS"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],
