@@ -54,9 +54,6 @@ public:
 
     nsresult Init(nsIURI *uri);
 
-    nsresult OverrideSecurityInfo(nsISupports* aSecurityInfo);
-    void OverrideURI(nsIURI* aRedirectedURI);
-
 private:
     virtual ~nsJARChannel();
 

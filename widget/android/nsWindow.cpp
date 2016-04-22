@@ -1328,11 +1328,16 @@ nsWindow::Destroy(void)
         mGeckoViewSupport = nullptr;
     }
 
+    // Stuff below may release the last ref to this
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
     while (mChildren.Length()) {
         // why do we still have children?
         ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[0]);
         mChildren[0]->SetParent(nullptr);
     }
+
+    nsBaseWidget::Destroy();
 
     if (IsTopLevel())
         gTopLevelWindows.RemoveElement(this);

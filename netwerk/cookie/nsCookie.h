@@ -56,9 +56,9 @@ class nsCookie : public nsICookie2
      , mExpiry(aExpiry)
      , mLastAccessed(aLastAccessed)
      , mCreationTime(aCreationTime)
-     , mIsSession(aIsSession != false)
-     , mIsSecure(aIsSecure != false)
-     , mIsHttpOnly(aIsHttpOnly != false)
+     , mIsSession(aIsSession)
+     , mIsSecure(aIsSecure)
+     , mIsHttpOnly(aIsHttpOnly)
      , mOriginAttributes(aOriginAttributes)
     {
     }
@@ -101,7 +101,7 @@ class nsCookie : public nsICookie2
     // setters
     inline void SetExpiry(int64_t aExpiry)        { mExpiry = aExpiry; }
     inline void SetLastAccessed(int64_t aTime)    { mLastAccessed = aTime; }
-    inline void SetIsSession(bool aIsSession)   { mIsSession = (bool) aIsSession; }
+    inline void SetIsSession(bool aIsSession)     { mIsSession = aIsSession; }
     // Set the creation time manually, overriding the monotonicity checks in
     // Create(). Use with caution!
     inline void SetCreationTime(int64_t aTime)    { mCreationTime = aTime; }
@@ -111,6 +111,7 @@ class nsCookie : public nsICookie2
   protected:
     virtual ~nsCookie() {}
 
+  private:
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
     // so we save on the overhead of using nsCStrings. However, we

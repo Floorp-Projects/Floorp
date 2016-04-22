@@ -35,9 +35,9 @@ inline nsIUGenCategory::nsUGenCategory GetGenCategory(uint32_t aCh) {
 
 nsCharType GetBidiCat(uint32_t aCh);
 
-uint8_t GetScriptCode(uint32_t aCh);
+Script GetScriptCode(uint32_t aCh);
 
-uint32_t GetScriptTagForCode(int32_t aScriptCode);
+uint32_t GetScriptTagForCode(Script aScriptCode);
 
 /* This MUST match the values assigned by genUnicodePropertyData.pl! */
 enum VerticalOrientation {
@@ -101,6 +101,11 @@ HanVariantType GetHanVariant(uint32_t aCh);
 #endif
 
 uint32_t GetFullWidth(uint32_t aCh);
+// This is the reverse function of GetFullWidth which guarantees that
+// for every codepoint c, GetFullWidthInverse(GetFullWidth(c)) == c.
+// Note that, this function does not guarantee to convert all wide
+// form characters to their possible narrow form.
+uint32_t GetFullWidthInverse(uint32_t aCh);
 
 bool IsClusterExtender(uint32_t aCh, uint8_t aCategory);
 
@@ -145,6 +150,9 @@ private:
     const char16_t* mText;
 #endif
 };
+
+// Count the number of grapheme clusters in the given string
+uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 
 } // end namespace unicode
 

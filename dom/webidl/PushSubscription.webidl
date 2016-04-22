@@ -27,16 +27,27 @@ dictionary PushSubscriptionJSON
   PushSubscriptionKeys keys;
 };
 
+dictionary PushSubscriptionInit
+{
+  required USVString endpoint;
+  required USVString scope;
+  ArrayBuffer? p256dhKey;
+  ArrayBuffer? authSecret;
+  BufferSource? appServerKey;
+};
+
 [Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled",
- ChromeConstructor(DOMString pushEndpoint, DOMString scope,
-                   ArrayBuffer? key, ArrayBuffer? authSecret)]
+ ChromeConstructor(PushSubscriptionInit initDict)]
 interface PushSubscription
 {
-    readonly attribute USVString endpoint;
-    ArrayBuffer? getKey(PushEncryptionKeyName name);
-    [Throws, UseCounter]
-    Promise<boolean> unsubscribe();
+  readonly attribute USVString endpoint;
+  readonly attribute PushSubscriptionOptions options;
+  [Throws]
+  ArrayBuffer? getKey(PushEncryptionKeyName name);
+  [Throws, UseCounter]
+  Promise<boolean> unsubscribe();
 
-    // Implements the custom serializer specified in Push API, section 9.
-    PushSubscriptionJSON toJSON();
+  // Implements the custom serializer specified in Push API, section 9.
+  [Throws]
+  PushSubscriptionJSON toJSON();
 };

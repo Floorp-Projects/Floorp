@@ -564,6 +564,14 @@ HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
   }
 }
 
+void
+HTMLMediaElement::MozDumpDebugInfo()
+{
+  if (mDecoder) {
+    mDecoder->DumpDebugInfo();
+  }
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {
@@ -1065,10 +1073,8 @@ void HTMLMediaElement::LoadFromSourceChildren()
     if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
       DecoderDoctorDiagnostics diagnostics;
       CanPlayStatus canPlay = GetCanPlay(type, &diagnostics);
-      if (canPlay != CANPLAY_NO) {
-        diagnostics.SetCanPlay();
-      }
-      diagnostics.StoreDiagnostics(OwnerDoc(), type, __func__);
+      diagnostics.StoreFormatDiagnostics(
+        OwnerDoc(), type, canPlay != CANPLAY_NO, __func__);
       if (canPlay == CANPLAY_NO) {
         DispatchAsyncSourceError(child);
         const char16_t* params[] = { type.get(), src.get() };
@@ -2916,10 +2922,8 @@ HTMLMediaElement::CanPlayType(const nsAString& aType, nsAString& aResult)
 {
   DecoderDoctorDiagnostics diagnostics;
   CanPlayStatus canPlay = GetCanPlay(aType, &diagnostics);
-  if (canPlay != CANPLAY_NO) {
-    diagnostics.SetCanPlay();
-  }
-  diagnostics.StoreDiagnostics(OwnerDoc(), aType, __func__);
+  diagnostics.StoreFormatDiagnostics(
+    OwnerDoc(), aType, canPlay != CANPLAY_NO, __func__);
   switch (canPlay) {
   case CANPLAY_NO:
     aResult.Truncate();
@@ -2983,12 +2987,10 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   DecoderDoctorDiagnostics diagnostics;
   RefPtr<MediaDecoder> decoder =
     DecoderTraits::CreateDecoder(mimeType, this, &diagnostics);
-  if (decoder) {
-    diagnostics.SetCanPlay();
-  }
-  diagnostics.StoreDiagnostics(OwnerDoc(),
-                               NS_ConvertASCIItoUTF16(mimeType),
-                               __func__);
+  diagnostics.StoreFormatDiagnostics(OwnerDoc(),
+                                     NS_ConvertASCIItoUTF16(mimeType),
+                                     decoder != nullptr,
+                                     __func__);
   if (!decoder) {
     nsAutoString src;
     GetCurrentSrc(src);
@@ -5147,6 +5149,9 @@ already_AddRefed<Promise>
 HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
                                ErrorResult& aRv)
 {
+  LOG(LogLevel::Debug, ("%p SetMediaKeys(%p) mMediaKeys=%p mDecoder=%p",
+    this, aMediaKeys, mMediaKeys.get(), mDecoder.get()));
+
   if (MozAudioCaptured()) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;

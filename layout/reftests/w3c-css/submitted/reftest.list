@@ -78,3 +78,6 @@ include variables/reftest.list
 
 # CSS will-change Level 1
 include will-change/reftest.list
+
+# CSS Writing Modes Level 3
+include writing-modes-3/reftest.list

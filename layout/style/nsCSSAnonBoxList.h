@@ -19,7 +19,13 @@
 // OUTPUT_CLASS=nsCSSAnonBoxes
 // MACRO_NAME=CSS_ANON_BOX
 
-CSS_ANON_BOX(mozNonElement, ":-moz-non-element")
+// ::-moz-text and ::-moz-other-non-element are non-elements which no
+// rule will match.
+CSS_ANON_BOX(mozText, ":-moz-text")
+// This anonymous box has two uses:
+// 1. placeholder frames,
+// 2. nsFirstLetterFrames for content outside the ::first-letter.
+CSS_ANON_BOX(mozOtherNonElement, ":-moz-other-non-element")
 
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
 CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")

@@ -126,6 +126,7 @@ child:
   async AppOfflineStatus(uint32_t appId, bool offline);
 
   /* Predictor Methods */
+  async PredOnPredictPrefetch(URIParams uri, uint32_t httpStatus);
   async PredOnPredictPreconnect(URIParams uri);
   async PredOnPredictDNS(URIParams uri);
 

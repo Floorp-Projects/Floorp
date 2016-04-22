@@ -1004,7 +1004,7 @@ GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
     // If aFrame isn't an anonymous container, then it'll do.
     if (!pseudoTag ||                                 // No pseudotag.
         !nsCSSAnonBoxes::IsAnonBox(pseudoTag) ||      // Pseudotag isn't anon.
-        pseudoTag == nsCSSAnonBoxes::mozNonElement) { // Text, not a container.
+        nsCSSAnonBoxes::IsNonElement(pseudoTag)) {    // Text, not a container.
       break;
     }
 

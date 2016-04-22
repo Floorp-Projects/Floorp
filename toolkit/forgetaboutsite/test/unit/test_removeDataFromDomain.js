@@ -481,24 +481,6 @@ function* test_push_cleared()
   const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
 
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
-
-  PushService.init({
-    serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
-    db,
-    makeWebSocket(uri) {
-      return new MockWebSocket(uri, {
-        onHello(request) {
-          this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
-            status: 200,
-            uaid: userAgentID,
-          }));
-        },
-      });
-    }
-  });
 
   function push_registration_exists(aURL, ps)
   {
@@ -516,20 +498,44 @@ function* test_push_cleared()
     });
   }
 
-  const TEST_URL = "https://www.mozilla.org/scope/";
-  do_check_false(yield push_registration_exists(TEST_URL, ps));
-  yield db.put({
-    channelID,
-    pushEndpoint: 'https://example.org/update/clear-success',
-    scope: TEST_URL,
-    version: 1,
-    originAttributes: '',
-    quota: Infinity,
-  });
-  do_check_true(yield push_registration_exists(TEST_URL, ps));
-  ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  yield waitForPurgeNotification();
-  do_check_false(yield push_registration_exists(TEST_URL, ps));
+  try {
+    PushService.init({
+      serverURI: "wss://push.example.org/",
+      networkInfo: new MockDesktopNetworkInfo(),
+      db,
+      makeWebSocket(uri) {
+        return new MockWebSocket(uri, {
+          onHello(request) {
+            this.serverSendMsg(JSON.stringify({
+              messageType: 'hello',
+              status: 200,
+              uaid: userAgentID,
+            }));
+          },
+        });
+      }
+    });
+
+    const TEST_URL = "https://www.mozilla.org/scope/";
+    do_check_false(yield push_registration_exists(TEST_URL, ps));
+    yield db.put({
+      channelID,
+      pushEndpoint: 'https://example.org/update/clear-success',
+      scope: TEST_URL,
+      version: 1,
+      originAttributes: '',
+      quota: Infinity,
+    });
+    do_check_true(yield push_registration_exists(TEST_URL, ps));
+
+    let promisePurgeNotification = waitForPurgeNotification();
+    yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
+    yield promisePurgeNotification;
+
+    do_check_false(yield push_registration_exists(TEST_URL, ps));
+  } finally {
+    yield PushService._shutdownService();
+  }
 }
 
 // Cache

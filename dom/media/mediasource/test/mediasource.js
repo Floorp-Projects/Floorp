@@ -19,6 +19,7 @@ function runWithMSE(testFunction) {
   addLoadEvent(function () {
     SpecialPowers.pushPrefEnv({"set": [
       [ "media.mediasource.enabled", true ],
+      [ "media.test.dumpDebugInfo", true ],
     ]},
                               bootstrapTest);
   });
@@ -105,3 +106,13 @@ function fetchAndLoad(sb, prefix, chunks, suffix) {
     return rv;
   });
 }
+
+//Register timeout function to dump debugging logs.
+SimpleTest.registerTimeoutFunction(function() {
+  for (var v of document.getElementsByTagName("video")) {
+    v.mozDumpDebugInfo();
+  }
+  for (var a of document.getElementsByTagName("audio")) {
+    a.mozDumpDebugInfo();
+  }
+});

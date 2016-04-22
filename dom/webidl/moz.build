@@ -727,6 +727,7 @@ else:
         'PushManager.webidl',
         'PushMessageData.webidl',
         'PushSubscription.webidl',
+        'PushSubscriptionOptions.webidl',
     ]
 
 if CONFIG['MOZ_NFC']:

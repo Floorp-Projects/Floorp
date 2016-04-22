@@ -944,6 +944,8 @@
 #define MODULE NS_ERROR_MODULE_DOM_ANIM
   ERROR(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR,              FAILURE(1)),
   ERROR(NS_ERROR_DOM_ANIM_NO_TARGET_ERR,                  FAILURE(2)),
+  ERROR(NS_ERROR_DOM_ANIM_NO_TIMELINE_ERR,                FAILURE(3)),
+  ERROR(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR,                  FAILURE(4)),
 #undef MODULE
 
   /* ======================================================================= */
@@ -951,9 +953,11 @@
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_DOM_PUSH
   ERROR(NS_ERROR_DOM_PUSH_INVALID_REGISTRATION_ERR, FAILURE(1)),
-  ERROR(NS_ERROR_DOM_PUSH_DENIED_ERR, FAILURE(2)),
-  ERROR(NS_ERROR_DOM_PUSH_ABORT_ERR, FAILURE(3)),
-  ERROR(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE, FAILURE(4)),
+  ERROR(NS_ERROR_DOM_PUSH_DENIED_ERR,               FAILURE(2)),
+  ERROR(NS_ERROR_DOM_PUSH_ABORT_ERR,                FAILURE(3)),
+  ERROR(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE,      FAILURE(4)),
+  ERROR(NS_ERROR_DOM_PUSH_INVALID_KEY_ERR,          FAILURE(5)),
+  ERROR(NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR,       FAILURE(6)),
 #undef MODULE
 
   /* ======================================================================= */

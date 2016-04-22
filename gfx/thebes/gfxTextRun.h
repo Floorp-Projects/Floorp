@@ -759,6 +759,8 @@ private:
 
 class gfxFontGroup : public gfxTextRunFactory {
 public:
+    typedef mozilla::unicode::Script Script;
+
     static void Shutdown(); // platform must call this to release the languageAtomService
 
     gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
@@ -863,7 +865,7 @@ public:
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(uint32_t ch, uint32_t prevCh, uint32_t aNextCh,
-                        int32_t aRunScript, gfxFont *aPrevMatchedFont,
+                        Script aRunScript, gfxFont *aPrevMatchedFont,
                         uint8_t *aMatchType);
 
     gfxUserFontSet* GetUserFontSet();
@@ -912,12 +914,12 @@ protected:
 
     already_AddRefed<gfxFont>
         WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
-                                    int32_t aRunScript);
+                                    Script aRunScript);
 
     template<typename T>
     void ComputeRanges(nsTArray<gfxTextRange>& mRanges,
                        const T *aString, uint32_t aLength,
-                       int32_t aRunScript, uint16_t aOrientation);
+                       Script aRunScript, uint16_t aOrientation);
 
     class FamilyFace {
     public:
@@ -1144,7 +1146,7 @@ protected:
                        const T *aString,
                        uint32_t aScriptRunStart,
                        uint32_t aScriptRunEnd,
-                       int32_t aRunScript,
+                       Script aRunScript,
                        gfxMissingFontRecorder *aMFR);
 
     // Helper for font-matching:
@@ -1152,7 +1154,7 @@ protected:
     // whether the family might have a font for a given character
     already_AddRefed<gfxFont>
     FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh,
-                            int32_t aRunScript);
+                            Script aRunScript);
 
    // helper methods for looking up fonts
 
@@ -1193,10 +1195,10 @@ public:
     }
 
     // record this script code in our mMissingFonts bitset
-    void RecordScript(int32_t aScriptCode)
+    void RecordScript(mozilla::unicode::Script aScriptCode)
     {
-        mMissingFonts[uint32_t(aScriptCode) >> 5] |=
-            (1 << (uint32_t(aScriptCode) & 0x1f));
+        mMissingFonts[static_cast<uint32_t>(aScriptCode) >> 5] |=
+            (1 << (static_cast<uint32_t>(aScriptCode) & 0x1f));
     }
 
     // send a notification of any missing-scripts that have been
@@ -1213,7 +1215,7 @@ public:
 private:
     // Number of 32-bit words needed for the missing-script flags
     static const uint32_t kNumScriptBitsWords =
-        ((MOZ_NUM_SCRIPT_CODES + 31) / 32);
+        ((static_cast<int>(mozilla::unicode::Script::NUM_SCRIPT_CODES) + 31) / 32);
     uint32_t mMissingFonts[kNumScriptBitsWords];
 };
 

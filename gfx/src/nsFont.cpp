@@ -50,6 +50,7 @@ nsFont::Init()
   variantLigatures = 0;
   variantNumeric = 0;
   variantPosition = NS_FONT_VARIANT_POSITION_NORMAL;
+  variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
 }
 
 nsFont::nsFont(const nsFont& aOther) = default;
@@ -81,6 +82,7 @@ bool nsFont::Equals(const nsFont& aOther) const
       (variantLigatures == aOther.variantLigatures) &&
       (variantNumeric == aOther.variantNumeric) &&
       (variantPosition == aOther.variantPosition) &&
+      (variantWidth == aOther.variantWidth) &&
       (alternateValues == aOther.alternateValues) &&
       (featureValueLookup == aOther.featureValueLookup) &&
       (smoothing == aOther.smoothing)) {
@@ -170,6 +172,23 @@ AddFontFeaturesBitmask(uint32_t aValue, uint32_t aMin, uint32_t aMax,
   }
 }
 
+static uint32_t
+FontFeatureTagForVariantWidth(uint32_t aVariantWidth)
+{
+  switch (aVariantWidth) {
+    case NS_FONT_VARIANT_WIDTH_FULL:
+      return TRUETYPE_TAG('f','w','i','d');
+    case NS_FONT_VARIANT_WIDTH_HALF:
+      return TRUETYPE_TAG('h','w','i','d');
+    case NS_FONT_VARIANT_WIDTH_THIRD:
+      return TRUETYPE_TAG('t','w','i','d');
+    case NS_FONT_VARIANT_WIDTH_QUARTER:
+      return TRUETYPE_TAG('q','w','i','d');
+    default:
+      return 0;
+  }
+}
+
 void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
 {
   // add in font-variant features
@@ -255,6 +274,13 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
 
   // -- position
   aStyle->variantSubSuper = variantPosition;
+
+  // -- width
+  setting.mTag = FontFeatureTagForVariantWidth(variantWidth);
+  if (setting.mTag) {
+    setting.mValue = 1;
+    aStyle->featureSettings.AppendElement(setting);
+  }
 
   // indicate common-path case when neither variantCaps or variantSubSuper are set
   aStyle->noFallbackVariantFeatures =

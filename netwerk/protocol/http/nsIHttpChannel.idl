@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[builtinclass, scriptable, uuid(b2596105-3d0d-4e6a-824f-0539713bb879)]
+[builtinclass, scriptable, uuid(c5a4a073-4539-49c7-a3f2-cec3f0619c6c)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************

@@ -49,6 +49,8 @@ interface nsIDOMNode;
 // a synthetic flavor, put into the transferable once we know the destination directory of a file drag
 #define kFilePromiseDirectoryMime   "application/x-moz-file-promise-dir"
 
+#define kCustomTypesMime "application/x-moz-custom-clipdata"
+
 %}
 
 

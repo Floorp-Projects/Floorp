@@ -330,6 +330,7 @@ SubscriptionListener.prototype = {
       scope: this._subInfo.record.scope,
       originAttributes: this._subInfo.record.originAttributes,
       systemRecord: this._subInfo.record.systemRecord,
+      appServerKey: this._subInfo.record.appServerKey,
       ctime: Date.now(),
     });
 
@@ -710,6 +711,11 @@ this.PushServiceHttp2 = {
   unregister: function(aRecord) {
     this._shutdownSubscription(aRecord.subscriptionUri);
     return this._unsubscribeResource(aRecord.subscriptionUri);
+  },
+
+  reportDeliveryError: function(messageID, reason) {
+    console.warn("reportDeliveryError: Ignoring message delivery error",
+      messageID, reason);
   },
 
   /** Push server has deleted subscription.

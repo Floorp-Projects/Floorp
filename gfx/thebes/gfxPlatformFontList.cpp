@@ -477,7 +477,7 @@ gfxPlatformFontList::GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamily
 
 gfxFontEntry*
 gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
-                                           int32_t aRunScript,
+                                           Script aRunScript,
                                            const gfxFontStyle* aStyle)
  {
     gfxFontEntry* fontEntry = nullptr;
@@ -526,7 +526,7 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
 
     if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
         uint32_t unicodeRange = FindCharUnicodeRange(aCh);
-        int32_t script = mozilla::unicode::GetScriptCode(aCh);
+        Script script = mozilla::unicode::GetScriptCode(aCh);
         MOZ_LOG(log, LogLevel::Warning,\
                ("(textrun-systemfallback-%s) char: u+%6.6x "
                  "unicode-range: %d script: %d match: [%s]"
@@ -557,7 +557,8 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
 
     // track the script for which fallback occurred (incremented one make it
     // 1-based)
-    Telemetry::Accumulate(Telemetry::SYSTEM_FONT_FALLBACK_SCRIPT, aRunScript + 1);
+    Telemetry::Accumulate(Telemetry::SYSTEM_FONT_FALLBACK_SCRIPT,
+                          int(aRunScript) + 1);
 
     return fontEntry;
 }
@@ -566,7 +567,7 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
 
 gfxFontEntry*
 gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
-                                        int32_t aRunScript,
+                                        Script aRunScript,
                                         const gfxFontStyle* aMatchStyle,
                                         gfxFontFamily** aMatchedFamily)
 {
@@ -602,7 +603,7 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
 
 gfxFontEntry*
 gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
-                                        int32_t aRunScript,
+                                        Script aRunScript,
                                         const gfxFontStyle* aMatchStyle,
                                         uint32_t& aCmapCount,
                                         gfxFontFamily** aMatchedFamily)
