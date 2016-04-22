@@ -15,7 +15,8 @@
 #include "CPOWTimer.h"
 #include "WrapperFactory.h"
 
-#include "nsIRemoteTagService.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDOMDocument.h"
 
 using namespace js;
 using namespace JS;
@@ -1096,23 +1097,33 @@ WrapperOwner::ok(JSContext* cx, const ReturnStatus& status, ObjectOpResult& resu
     return result.succeed();
 }
 
+// CPOWs can have a tag string attached to them, originating in the local
+// process from this function.  It's sent with the CPOW to the remote process,
+// where it can be fetched with Components.utils.getCrossProcessWrapperTag.
+static nsCString
+GetRemoteObjectTag(JS::Handle<JSObject*> obj)
+{
+    if (nsCOMPtr<nsISupports> supports = xpc::UnwrapReflectorToISupports(obj)) {
+        nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(supports));
+        if (treeItem)
+            return NS_LITERAL_CSTRING("ContentDocShellTreeItem");
+
+        nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
+        if (doc)
+            return NS_LITERAL_CSTRING("ContentDocument");
+    }
+
+    return NS_LITERAL_CSTRING("generic");
+}
+
 static RemoteObject
 MakeRemoteObject(JSContext* cx, ObjectId id, HandleObject obj)
 {
-    nsCString objectTag;
-
-    nsCOMPtr<nsIRemoteTagService> service =
-        do_GetService("@mozilla.org/addons/remote-tag-service;1");
-    if (service) {
-        RootedValue objVal(cx, ObjectValue(*obj));
-        service->GetRemoteObjectTag(objVal, objectTag);
-    }
-
     return RemoteObject(id.serialize(),
                         JS::IsCallable(obj),
                         JS::IsConstructor(obj),
                         dom::IsDOMObject(obj),
-                        objectTag);
+                        GetRemoteObjectTag(obj));
 }
 
 bool
