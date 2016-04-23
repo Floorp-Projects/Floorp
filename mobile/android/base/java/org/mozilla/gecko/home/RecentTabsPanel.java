@@ -329,6 +329,9 @@ public class RecentTabsPanel extends HomeFragment
                 }
             }
 
+            // We need to ensure that the session restore code has updated sessionstore.bak as necessary.
+            GeckoProfile.get(context).waitForOldSessionDataProcessing();
+
             final String jsonString = GeckoProfile.get(context).readSessionFile(true);
             if (jsonString == null) {
                 // No previous session data

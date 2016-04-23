@@ -77,6 +77,8 @@ public final class GeckoProfile {
     private static final String SESSION_FILE_BACKUP = "sessionstore.bak";
     private static final long MAX_BACKUP_FILE_AGE = 1000 * 3600 * 24; // 24 hours
 
+    private boolean mOldSessionDataProcessed = false;
+
     private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName;
 
@@ -599,6 +601,22 @@ public final class GeckoProfile {
             if (sessionFileBackup != null && sessionFileBackup.exists() &&
                     System.currentTimeMillis() - sessionFileBackup.lastModified() > MAX_BACKUP_FILE_AGE) {
                 sessionFileBackup.delete();
+            }
+        }
+        synchronized (this) {
+            mOldSessionDataProcessed = true;
+            notifyAll();
+        }
+    }
+
+    public void waitForOldSessionDataProcessing() {
+        synchronized (this) {
+            while (!mOldSessionDataProcessed) {
+                try {
+                    wait();
+                } catch (final InterruptedException e) {
+                    // Ignore and wait again.
+                }
             }
         }
     }
