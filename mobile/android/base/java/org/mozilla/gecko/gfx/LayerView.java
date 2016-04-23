@@ -702,7 +702,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         if (msg == Tabs.TabEvents.VIEWPORT_CHANGE && Tabs.getInstance().isSelectedTab(tab) && mLayerClient != null) {
             setZoomConstraints(tab.getZoomConstraints());
             setIsRTL(tab.getIsRTL());

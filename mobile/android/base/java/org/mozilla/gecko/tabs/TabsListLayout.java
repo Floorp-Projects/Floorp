@@ -108,7 +108,7 @@ class TabsListLayout extends TwoWayView
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         switch (msg) {
             case ADDED:
                 // Refresh the list to make sure the new tab is added in the right position.
