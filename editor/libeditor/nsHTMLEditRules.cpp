@@ -135,7 +135,7 @@ class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
     {
       if (mHTMLEditor->IsEditable(aNode) &&
           (nsHTMLEditUtils::IsListItem(aNode) ||
-           nsHTMLEditUtils::IsTableCellOrCaption(*aNode))) {
+           nsHTMLEditUtils::IsTableCellOrCaption(GetAsDOMNode(aNode)))) {
         bool bIsEmptyNode;
         nsresult res = mHTMLEditor->IsEmptyNode(aNode, &bIsEmptyNode, false, false);
         NS_ENSURE_SUCCESS(res, false);
@@ -651,7 +651,7 @@ nsHTMLEditRules::WillDoAction(Selection* aSelection,
     case EditAction::removeAbsolutePosition:
       return WillRemoveAbsolutePosition(aSelection, aCancel, aHandled);
     case EditAction::align:
-      return WillAlign(*aSelection, *info->alignType, aCancel, aHandled);
+      return WillAlign(aSelection, info->alignType, aCancel, aHandled);
     case EditAction::makeBasicBlock:
       return WillMakeBasicBlock(aSelection, info->blockType, aCancel, aHandled);
     case EditAction::removeList:
@@ -4601,117 +4601,128 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode,
 
 
 nsresult
-nsHTMLEditRules::WillAlign(Selection& aSelection,
-                           const nsAString& aAlignType,
-                           bool* aCancel,
-                           bool* aHandled)
+nsHTMLEditRules::WillAlign(Selection* aSelection,
+                           const nsAString *alignType,
+                           bool *aCancel,
+                           bool *aHandled)
 {
-  MOZ_ASSERT(aCancel && aHandled);
+  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+  WillInsert(*aSelection, aCancel);
 
-  WillInsert(aSelection, aCancel);
-
-  // Initialize out param.  We want to ignore result of WillInsert().
+  // initialize out param
+  // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = false;
 
-  nsresult rv = NormalizeSelection(&aSelection);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
+  nsresult res = NormalizeSelection(aSelection);
+  NS_ENSURE_SUCCESS(res, res);
+  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
 
-  // Convert the selection ranges into "promoted" selection ranges: This
-  // basically just expands the range to include the immediate block parent,
-  // and then further expands to include any ancestors whose children are all
-  // in the range
+  // convert the selection ranges into "promoted" selection ranges:
+  // this basically just expands the range to include the immediate
+  // block parent, and then further expands to include any ancestors
+  // whose children are all in the range
   *aHandled = true;
   nsTArray<OwningNonNull<nsINode>> nodeArray;
-  rv = GetNodesFromSelection(aSelection, EditAction::align, nodeArray);
-  NS_ENSURE_SUCCESS(rv, rv);
+  res = GetNodesFromSelection(*aSelection, EditAction::align, nodeArray);
+  NS_ENSURE_SUCCESS(res, res);
 
-  // If we don't have any nodes, or we have only a single br, then we are
-  // creating an empty alignment div.  We have to do some different things for
-  // these.
-  bool emptyDiv = nodeArray.IsEmpty();
-  if (nodeArray.Length() == 1) {
-    OwningNonNull<nsINode> node = nodeArray[0];
+  // if we don't have any nodes, or we have only a single br, then we are
+  // creating an empty alignment div.  We have to do some different things for these.
+  bool emptyDiv = false;
+  int32_t listCount = nodeArray.Length();
+  if (!listCount) emptyDiv = true;
+  if (listCount == 1)
+  {
+    OwningNonNull<nsINode> theNode = nodeArray[0];
 
-    if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(node))) {
-      // The node is a table element, an hr, a paragraph, a div or a section
-      // header; in HTML 4, it can directly carry the ALIGN attribute and we
-      // don't need to make a div! If we are in CSS mode, all the work is done
-      // in AlignBlock
-      rv = AlignBlock(static_cast<nsIDOMElement*>(node->AsDOMNode()),
-                       &aAlignType, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(theNode))) {
+      // the node is a table element, an horiz rule, a paragraph, a div
+      // or a section header; in HTML 4, it can directly carry the ALIGN
+      // attribute and we don't need to make a div! If we are in CSS mode,
+      // all the work is done in AlignBlock
+      nsCOMPtr<nsIDOMElement> theElem = do_QueryInterface(theNode);
+      res = AlignBlock(theElem, alignType, true);
+      NS_ENSURE_SUCCESS(res, res);
       return NS_OK;
     }
 
-    if (nsTextEditUtils::IsBreak(node)) {
-      // The special case emptyDiv code (below) that consumes BRs can cause
-      // tables to split if the start node of the selection is not in a table
-      // cell or caption, for example parent is a <tr>.  Avoid this unnecessary
-      // splitting if possible by leaving emptyDiv FALSE so that we fall
-      // through to the normal case alignment code.
+    if (nsTextEditUtils::IsBreak(theNode))
+    {
+      // The special case emptyDiv code (below) that consumes BRs can
+      // cause tables to split if the start node of the selection is
+      // not in a table cell or caption, for example parent is a <tr>.
+      // Avoid this unnecessary splitting if possible by leaving emptyDiv
+      // FALSE so that we fall through to the normal case alignment code.
       //
-      // XXX: It seems a little error prone for the emptyDiv special case code
-      // to assume that the start node of the selection is the parent of the
-      // single node in the nodeArray, as the paragraph above points out. Do we
-      // rely on the selection start node because of the fact that nodeArray
-      // can be empty?  We should probably revisit this issue. - kin
+      // XXX: It seems a little error prone for the emptyDiv special
+      //      case code to assume that the start node of the selection
+      //      is the parent of the single node in the nodeArray, as
+      //      the paragraph above points out. Do we rely on the selection
+      //      start node because of the fact that nodeArray can be empty?
+      //      We should probably revisit this issue. - kin
 
-      NS_ENSURE_STATE(aSelection.GetRangeAt(0) &&
-                      aSelection.GetRangeAt(0)->GetStartParent());
-      OwningNonNull<nsINode> parent =
-        *aSelection.GetRangeAt(0)->GetStartParent();
+      nsCOMPtr<nsIDOMNode> parent;
+      int32_t offset;
+      NS_ENSURE_STATE(mHTMLEditor);
+      res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(parent), &offset);
 
-      emptyDiv = !nsHTMLEditUtils::IsTableElement(parent) ||
-                 nsHTMLEditUtils::IsTableCellOrCaption(parent);
+      if (!nsHTMLEditUtils::IsTableElement(parent) || nsHTMLEditUtils::IsTableCellOrCaption(parent))
+        emptyDiv = true;
     }
   }
-  if (emptyDiv) {
-    NS_ENSURE_STATE(aSelection.GetRangeAt(0) &&
-                    aSelection.GetRangeAt(0)->GetStartParent());
-    OwningNonNull<nsINode> parent =
-      *aSelection.GetRangeAt(0)->GetStartParent();
-    int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
+  if (emptyDiv)
+  {
+    nsCOMPtr<nsIDOMNode> brNode, sib;
+    NS_NAMED_LITERAL_STRING(divType, "div");
 
-    rv = SplitAsNeeded(*nsGkAtoms::div, parent, offset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Consume a trailing br, if any.  This is to keep an alignment from
+    NS_ENSURE_STATE(aSelection->GetRangeAt(0));
+    nsCOMPtr<nsINode> parent = aSelection->GetRangeAt(0)->GetStartParent();
+    int32_t offset = aSelection->GetRangeAt(0)->StartOffset();
+    NS_ENSURE_STATE(parent);
+
+    res = SplitAsNeeded(*nsGkAtoms::div, parent, offset);
+    NS_ENSURE_SUCCESS(res, res);
+    // consume a trailing br, if any.  This is to keep an alignment from
     // creating extra lines, if possible.
-    nsCOMPtr<nsIContent> brContent =
-      mHTMLEditor->GetNextHTMLNode(parent, offset);
-    if (brContent && nsTextEditUtils::IsBreak(brContent)) {
-      // Making use of html structure... if next node after where we are
-      // putting our div is not a block, then the br we found is in same block
-      // we are, so it's safe to consume it.
-      nsCOMPtr<nsIContent> sibling = mHTMLEditor->GetNextHTMLSibling(parent,
-                                                                     offset);
-      if (!IsBlockNode(GetAsDOMNode(sibling))) {
-        rv = mHTMLEditor->DeleteNode(brContent);
-        NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(mHTMLEditor);
+    res = mHTMLEditor->GetNextHTMLNode(GetAsDOMNode(parent), offset,
+                                       address_of(brNode));
+    NS_ENSURE_SUCCESS(res, res);
+    if (brNode && nsTextEditUtils::IsBreak(brNode))
+    {
+      // making use of html structure... if next node after where
+      // we are putting our div is not a block, then the br we
+      // found is in same block we are, so its safe to consume it.
+      NS_ENSURE_STATE(mHTMLEditor);
+      res = mHTMLEditor->GetNextHTMLSibling(GetAsDOMNode(parent), offset,
+                                            address_of(sib));
+      NS_ENSURE_SUCCESS(res, res);
+      if (!IsBlockNode(sib))
+      {
+        NS_ENSURE_STATE(mHTMLEditor);
+        res = mHTMLEditor->DeleteNode(brNode);
+        NS_ENSURE_SUCCESS(res, res);
       }
     }
-    nsCOMPtr<Element> div = mHTMLEditor->CreateNode(nsGkAtoms::div, parent,
-                                                    offset);
-    NS_ENSURE_STATE(div);
-    // Remember our new block for postprocessing
-    mNewBlock = div->AsDOMNode();
-    // Set up the alignment on the div, using HTML or CSS
-    rv = AlignBlock(static_cast<nsIDOMElement*>(GetAsDOMNode(div)),
-                    &aAlignType, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(mHTMLEditor);
+    nsCOMPtr<Element> theDiv = mHTMLEditor->CreateNode(nsGkAtoms::div, parent,
+                                                       offset);
+    NS_ENSURE_STATE(theDiv);
+    // remember our new block for postprocessing
+    mNewBlock = GetAsDOMNode(theDiv);
+    // set up the alignment on the div, using HTML or CSS
+    nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(theDiv);
+    res = AlignBlock(divElem, alignType, true);
+    NS_ENSURE_SUCCESS(res, res);
     *aHandled = true;
-    // Put in a moz-br so that it won't get deleted
-    rv = CreateMozBR(div->AsDOMNode(), 0);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aSelection.Collapse(div, 0);
-    // Don't reset our selection in this case.
-    selectionResetter.Abort();
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
+    // put in a moz-br so that it won't get deleted
+    res = CreateMozBR(GetAsDOMNode(theDiv), 0);
+    NS_ENSURE_SUCCESS(res, res);
+    res = aSelection->Collapse(theDiv, 0);
+    selectionResetter.Abort();  // don't reset our selection in this case.
+    return res;
   }
 
   // Next we detect all the transitions in the array, where a transition
@@ -4720,99 +4731,109 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
   nsTArray<bool> transitionList;
   MakeTransitionList(nodeArray, transitionList);
 
-  // Okay, now go through all the nodes and give them an align attrib or put
-  // them in a div, or whatever is appropriate.  Woohoo!
+  // Ok, now go through all the nodes and give them an align attrib or put them in a div,
+  // or whatever is appropriate.  Wohoo!
 
+  nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curDiv;
   bool useCSS = mHTMLEditor->IsCSSEnabled();
-  for (size_t i = 0; i < nodeArray.Length(); i++) {
-    auto& curNode = nodeArray[i];
-    // Here's where we actually figure out what to do
+  for (int32_t i = 0; i < listCount; ++i) {
+    // here's where we actually figure out what to do
+    nsCOMPtr<nsIDOMNode> curNode = nodeArray[i]->AsDOMNode();
+    nsCOMPtr<nsIContent> curContent = do_QueryInterface(curNode);
+    NS_ENSURE_STATE(curContent);
 
     // Ignore all non-editable nodes.  Leave them be.
-    if (!mHTMLEditor->IsEditable(curNode)) {
+    if (!mHTMLEditor->IsEditable(curNode)) continue;
+
+    curParent = curContent->GetParentNode();
+    int32_t offset = curParent ? curParent->IndexOf(curContent) : -1;
+
+    // the node is a table element, an horiz rule, a paragraph, a div
+    // or a section header; in HTML 4, it can directly carry the ALIGN
+    // attribute and we don't need to nest it, just set the alignment.
+    // In CSS, assign the corresponding CSS styles in AlignBlock
+    if (nsHTMLEditUtils::SupportsAlignAttr(curNode))
+    {
+      nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(curNode);
+      res = AlignBlock(curElem, alignType, false);
+      NS_ENSURE_SUCCESS(res, res);
+      // clear out curDiv so that we don't put nodes after this one into it
+      curDiv = 0;
       continue;
     }
 
-    // The node is a table element, an hr, a paragraph, a div or a section
-    // header; in HTML 4, it can directly carry the ALIGN attribute and we
-    // don't need to nest it, just set the alignment.  In CSS, assign the
-    // corresponding CSS styles in AlignBlock
-    if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(curNode))) {
-      rv = AlignBlock(static_cast<nsIDOMElement*>(curNode->AsDOMNode()),
-                      &aAlignType, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // Clear out curDiv so that we don't put nodes after this one into it
-      curDiv = nullptr;
-      continue;
-    }
-
-    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
-
-    // Skip insignificant formatting text nodes to prevent unnecessary
-    // structure splitting!
+    // Skip insignificant formatting text nodes to prevent
+    // unnecessary structure splitting!
     bool isEmptyTextNode = false;
-    if (curNode->GetAsText() &&
-        ((nsHTMLEditUtils::IsTableElement(curParent) &&
-          !nsHTMLEditUtils::IsTableCellOrCaption(*curParent)) ||
-         nsHTMLEditUtils::IsList(curParent) ||
-         (NS_SUCCEEDED(mHTMLEditor->IsEmptyNode(curNode, &isEmptyTextNode)) &&
-          isEmptyTextNode))) {
+    if (nsEditor::IsTextNode(curNode) &&
+       ((nsHTMLEditUtils::IsTableElement(curParent) &&
+         !nsHTMLEditUtils::IsTableCellOrCaption(GetAsDOMNode(curParent))) ||
+        nsHTMLEditUtils::IsList(curParent) ||
+        (NS_SUCCEEDED(mHTMLEditor->IsEmptyNode(curNode, &isEmptyTextNode)) && isEmptyTextNode)))
       continue;
-    }
 
-    // If it's a list item, or a list inside a list, forget any "current" div,
-    // and instead put divs inside the appropriate block (td, li, etc)
-    if (nsHTMLEditUtils::IsListItem(curNode) ||
-        nsHTMLEditUtils::IsList(curNode)) {
-      rv = RemoveAlignment(GetAsDOMNode(curNode), aAlignType, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // if it's a list item, or a list
+    // inside a list, forget any "current" div, and instead put divs inside
+    // the appropriate block (td, li, etc)
+    if ( nsHTMLEditUtils::IsListItem(curNode)
+         || nsHTMLEditUtils::IsList(curNode))
+    {
+      res = RemoveAlignment(curNode, *alignType, true);
+      NS_ENSURE_SUCCESS(res, res);
       if (useCSS) {
-        mHTMLEditor->mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(
-            curNode->AsElement(), nullptr, &NS_LITERAL_STRING("align"),
-            &aAlignType, false);
-        curDiv = nullptr;
-        continue;
-      } else if (nsHTMLEditUtils::IsList(curParent)) {
-        // If we don't use CSS, add a contraint to list element: they have to
-        // be inside another list, i.e., >= second level of nesting
-        rv = AlignInnerBlocks(*curNode, &aAlignType);
-        NS_ENSURE_SUCCESS(rv, rv);
-        curDiv = nullptr;
+        nsCOMPtr<nsIDOMElement> curElem = do_QueryInterface(curNode);
+        NS_NAMED_LITERAL_STRING(attrName, "align");
+        int32_t count;
+        mHTMLEditor->mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(curNode, nullptr,
+                                                                &attrName, alignType,
+                                                                &count, false);
+        curDiv = 0;
         continue;
       }
-      // Clear out curDiv so that we don't put nodes after this one into it
+      else if (nsHTMLEditUtils::IsList(curParent)) {
+        // if we don't use CSS, add a contraint to list element : they have
+        // to be inside another list, ie >= second level of nesting
+        res = AlignInnerBlocks(*curContent, alignType);
+        NS_ENSURE_SUCCESS(res, res);
+        curDiv = 0;
+        continue;
+      }
+      // clear out curDiv so that we don't put nodes after this one into it
     }
 
-    // Need to make a div to put things in if we haven't already, or if this
-    // node doesn't go in div we used earlier.
-    if (!curDiv || transitionList[i]) {
+    // need to make a div to put things in if we haven't already,
+    // or if this node doesn't go in div we used earlier.
+    if (!curDiv || transitionList[i])
+    {
       // First, check that our element can contain a div.
       if (!mEditor->CanContainTag(*curParent, *nsGkAtoms::div)) {
-        // Cancelled
-        return NS_OK;
+        return NS_OK; // cancelled
       }
 
-      rv = SplitAsNeeded(*nsGkAtoms::div, curParent, offset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      res = SplitAsNeeded(*nsGkAtoms::div, curParent, offset);
+      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_STATE(mHTMLEditor);
       curDiv = mHTMLEditor->CreateNode(nsGkAtoms::div, curParent, offset);
       NS_ENSURE_STATE(curDiv);
-      // Remember our new block for postprocessing
-      mNewBlock = curDiv->AsDOMNode();
-      // Set up the alignment on the div
-      rv = AlignBlock(static_cast<nsIDOMElement*>(curDiv->AsDOMNode()),
-                       &aAlignType, true);
+      // remember our new block for postprocessing
+      mNewBlock = GetAsDOMNode(curDiv);
+      // set up the alignment on the div
+      nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
+      res = AlignBlock(divElem, alignType, true);
+      //nsAutoString attr(NS_LITERAL_STRING("align"));
+      //res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
+      //NS_ENSURE_SUCCESS(res, res);
+      // curDiv is now the correct thing to put curNode in
     }
 
-    NS_ENSURE_STATE(curNode->IsContent());
-
-    // Tuck the node into the end of the active div
-    rv = mHTMLEditor->MoveNode(curNode->AsContent(), curDiv, -1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // tuck the node into the end of the active div
+    NS_ENSURE_STATE(mHTMLEditor);
+    res = mHTMLEditor->MoveNode(curContent, curDiv, -1);
+    NS_ENSURE_SUCCESS(res, res);
   }
 
-  return NS_OK;
+  return res;
 }
 
 
