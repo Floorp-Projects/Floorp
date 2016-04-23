@@ -98,8 +98,8 @@ CopySubscriptionKeyToArray(nsIPushSubscription* aSubscription,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (!aKey.SetLength(keyLen, fallible) ||
-      !aKey.ReplaceElementsAt(0, keyLen, keyBuffer, keyLen, fallible)) {
+  if (!aKey.SetCapacity(keyLen, fallible) ||
+      !aKey.InsertElementsAt(0, keyBuffer, keyLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

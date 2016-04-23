@@ -207,7 +207,7 @@ public:
                    ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Blob> Blob(ErrorResult& aRv);
 
-  PushMessageData(nsISupports* aOwner, const nsTArray<uint8_t>& aBytes);
+  PushMessageData(nsISupports* aOwner, nsTArray<uint8_t>&& aBytes);
 private:
   nsCOMPtr<nsISupports> mOwner;
   nsTArray<uint8_t> mBytes;
