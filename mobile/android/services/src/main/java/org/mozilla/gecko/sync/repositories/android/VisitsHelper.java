@@ -106,7 +106,7 @@ public class VisitsHelper {
 
         final ContentValues cv = new ContentValues();
         cv.put(Visits.HISTORY_GUID, guid);
-        cv.put(Visits.IS_LOCAL, isLocal ? 1 : 0);
+        cv.put(Visits.IS_LOCAL, isLocal ? Visits.VISIT_IS_LOCAL : Visits.VISIT_IS_REMOTE);
         cv.put(Visits.VISIT_TYPE, (Long) visit.get(SYNC_TYPE_KEY));
         cv.put(Visits.DATE_VISITED, (Long) visit.get(SYNC_DATE_KEY));
 
