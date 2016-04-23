@@ -134,7 +134,7 @@ public class TwoLinePageRow extends LinearLayout
      * This method is always invoked on the UI thread.
      */
     @Override
-    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final String data) {
         // Carefully check if this tab event is relevant to this row.
         final String pageUrl = mPageUrl;
         if (pageUrl == null) {
