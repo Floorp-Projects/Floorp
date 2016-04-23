@@ -1568,7 +1568,7 @@ nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
   // host is the block parent itself, just append a br.
   nsCOMPtr<Element> host = mHTMLEditor->GetActiveEditingHost();
   if (!nsEditorUtils::IsDescendantOf(blockParent, host)) {
-    res = StandardBreakImpl(GetAsDOMNode(node), offset, &aSelection);
+    res = StandardBreakImpl(node, offset, aSelection);
     NS_ENSURE_SUCCESS(res, res);
     *aHandled = true;
     return NS_OK;
@@ -1609,92 +1609,85 @@ nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
   // If not already handled then do the standard thing
   if (!(*aHandled)) {
     *aHandled = true;
-    return StandardBreakImpl(GetAsDOMNode(node), offset, &aSelection);
+    return StandardBreakImpl(node, offset, aSelection);
   }
   return NS_OK;
 }
 
 nsresult
-nsHTMLEditRules::StandardBreakImpl(nsIDOMNode* aNode, int32_t aOffset,
-                                   Selection* aSelection)
+nsHTMLEditRules::StandardBreakImpl(nsINode& aNode, int32_t aOffset,
+                                   Selection& aSelection)
 {
-  nsCOMPtr<nsIDOMNode> brNode;
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  nsCOMPtr<Element> brNode;
   bool bAfterBlock = false;
   bool bBeforeBlock = false;
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> node(aNode);
+  nsCOMPtr<nsINode> node = &aNode;
+  nsresult res;
 
   if (IsPlaintextEditor()) {
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->CreateBR(node, aOffset, address_of(brNode));
+    brNode = mHTMLEditor->CreateBR(node, aOffset);
+    NS_ENSURE_STATE(brNode);
   } else {
-    NS_ENSURE_STATE(mHTMLEditor);
     nsWSRunObject wsObj(mHTMLEditor, node, aOffset);
     int32_t visOffset = 0;
     WSType wsType;
-    nsCOMPtr<nsINode> node_(do_QueryInterface(node)), visNode;
-    wsObj.PriorVisibleNode(node_, aOffset, address_of(visNode),
+    nsCOMPtr<nsINode> visNode;
+    wsObj.PriorVisibleNode(node, aOffset, address_of(visNode),
                            &visOffset, &wsType);
     if (wsType & WSType::block) {
       bAfterBlock = true;
     }
-    wsObj.NextVisibleNode(node_, aOffset, address_of(visNode),
+    wsObj.NextVisibleNode(node, aOffset, address_of(visNode),
                           &visOffset, &wsType);
     if (wsType & WSType::block) {
       bBeforeBlock = true;
     }
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<nsIDOMNode> linkNode;
-    if (mHTMLEditor->IsInLink(node, address_of(linkNode))) {
-      // split the link
-      nsCOMPtr<nsIDOMNode> linkParent;
-      res = linkNode->GetParentNode(getter_AddRefs(linkParent));
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<nsIContent> linkNodeContent = do_QueryInterface(linkNode);
-      NS_ENSURE_STATE(linkNodeContent || !linkNode);
-      aOffset = mHTMLEditor->SplitNodeDeep(*linkNodeContent,
-          *node_->AsContent(), aOffset, nsHTMLEditor::EmptyContainers::no);
+    nsCOMPtr<nsIDOMNode> linkDOMNode;
+    if (mHTMLEditor->IsInLink(GetAsDOMNode(node), address_of(linkDOMNode))) {
+      // Split the link
+      nsCOMPtr<Element> linkNode = do_QueryInterface(linkDOMNode);
+      NS_ENSURE_STATE(linkNode || !linkDOMNode);
+      nsCOMPtr<nsINode> linkParent = linkNode->GetParentNode();
+      aOffset = mHTMLEditor->SplitNodeDeep(*linkNode, *node->AsContent(),
+                                           aOffset,
+                                           nsHTMLEditor::EmptyContainers::no);
       NS_ENSURE_STATE(aOffset != -1);
       node = linkParent;
     }
-    node_ = do_QueryInterface(node);
-    nsCOMPtr<Element> br =
-      wsObj.InsertBreak(address_of(node_), &aOffset, nsIEditor::eNone);
-    node = GetAsDOMNode(node_);
-    brNode = GetAsDOMNode(br);
+    brNode = wsObj.InsertBreak(address_of(node), &aOffset, nsIEditor::eNone);
     NS_ENSURE_TRUE(brNode, NS_ERROR_FAILURE);
   }
-  NS_ENSURE_SUCCESS(res, res);
-  node = nsEditor::GetNodeLocation(brNode, &aOffset);
+  node = brNode->GetParentNode();
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+  int32_t offset = node->IndexOf(brNode);
   if (bAfterBlock && bBeforeBlock) {
-    // we just placed a br between block boundaries.  This is the one case
+    // We just placed a br between block boundaries.  This is the one case
     // where we want the selection to be before the br we just placed, as the
     // br will be on a new line, rather than at end of prior line.
-    aSelection->SetInterlinePosition(true);
-    res = aSelection->Collapse(node, aOffset);
+    aSelection.SetInterlinePosition(true);
+    res = aSelection.Collapse(node, offset);
+    NS_ENSURE_SUCCESS(res, res);
   } else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsWSRunObject wsObj(mHTMLEditor, node, aOffset+1);
+    nsWSRunObject wsObj(mHTMLEditor, node, offset + 1);
     nsCOMPtr<nsINode> secondBR;
     int32_t visOffset = 0;
     WSType wsType;
-    nsCOMPtr<nsINode> node_(do_QueryInterface(node));
-    wsObj.NextVisibleNode(node_, aOffset+1, address_of(secondBR),
+    wsObj.NextVisibleNode(node, offset + 1, address_of(secondBR),
                           &visOffset, &wsType);
     if (wsType == WSType::br) {
-      // the next thing after the break we inserted is another break.  Move
-      // the 2nd break to be the first breaks sibling.  This will prevent them
+      // The next thing after the break we inserted is another break.  Move the
+      // second break to be the first break's sibling.  This will prevent them
       // from being in different inline nodes, which would break
       // SetInterlinePosition().  It will also assure that if the user clicks
-      // away and then clicks back on their new blank line, they will still
-      // get the style from the line above.
-      int32_t brOffset;
-      nsCOMPtr<nsIDOMNode> brParent = nsEditor::GetNodeLocation(GetAsDOMNode(secondBR), &brOffset);
-      if (brParent != node || brOffset != aOffset + 1) {
-        NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->MoveNode(secondBR->AsContent(), node_, aOffset + 1);
+      // away and then clicks back on their new blank line, they will still get
+      // the style from the line above.
+      nsCOMPtr<nsINode> brParent = secondBR->GetParentNode();
+      int32_t brOffset = brParent ? brParent->IndexOf(secondBR) : -1;
+      if (brParent != node || brOffset != offset + 1) {
+        res = mHTMLEditor->MoveNode(secondBR->AsContent(), node, offset + 1);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -1705,16 +1698,16 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode* aNode, int32_t aOffset,
 
     // An exception to this is if the break has a next sibling that is a block
     // node.  Then we stick to the left to avoid an uber caret.
-    nsCOMPtr<nsIDOMNode> siblingNode;
-    brNode->GetNextSibling(getter_AddRefs(siblingNode));
-    if (siblingNode && IsBlockNode(siblingNode)) {
-      aSelection->SetInterlinePosition(false);
+    nsCOMPtr<nsIContent> siblingNode = brNode->GetNextSibling();
+    if (siblingNode && IsBlockNode(GetAsDOMNode(siblingNode))) {
+      aSelection.SetInterlinePosition(false);
     } else {
-      aSelection->SetInterlinePosition(true);
+      aSelection.SetInterlinePosition(true);
     }
-    res = aSelection->Collapse(node, aOffset+1);
+    res = aSelection.Collapse(node, offset + 1);
+    NS_ENSURE_SUCCESS(res, res);
   }
-  return res;
+  return NS_OK;
 }
 
 nsresult

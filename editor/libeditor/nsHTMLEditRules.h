@@ -137,8 +137,8 @@ protected:
   nsresult WillLoadHTML(mozilla::dom::Selection* aSelection, bool* aCancel);
   nsresult WillInsertBreak(mozilla::dom::Selection& aSelection,
                            bool* aCancel, bool* aHandled);
-  nsresult StandardBreakImpl(nsIDOMNode* aNode, int32_t aOffset,
-                             mozilla::dom::Selection* aSelection);
+  nsresult StandardBreakImpl(nsINode& aNode, int32_t aOffset,
+                             mozilla::dom::Selection& aSelection);
   nsresult DidInsertBreak(mozilla::dom::Selection* aSelection,
                           nsresult aResult);
   nsresult SplitMailCites(mozilla::dom::Selection* aSelection, bool* aHandled);
