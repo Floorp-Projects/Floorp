@@ -15,28 +15,19 @@ define(function(require, exports, module) {
   const { Caption } = createFactories(require("./caption"));
 
   // Shortcuts
-  const DOM = React.DOM;
+  const { span } = React.DOM;
 
   /**
    * Renders an object. An object is represented by a list of its
    * properties enclosed in curly brackets.
    */
   const Obj = React.createClass({
-    displayName: "Obj",
-
-    render: function() {
-      let object = this.props.object;
-      let props = this.shortPropIterator(object);
-
-      return (
-        ObjectBox({className: "object"},
-          DOM.span({className: "objectTitle"}, this.getTitle(object)),
-          DOM.span({className: "objectLeftBrace", role: "presentation"}, "{"),
-          props,
-          DOM.span({className: "objectRightBrace"}, "}")
-        )
-      );
+    propTypes: {
+      object: React.PropTypes.object,
+      mode: React.PropTypes.string,
     },
+
+    displayName: "Obj",
 
     getTitle: function() {
       return "";
@@ -61,10 +52,10 @@ define(function(require, exports, module) {
     },
 
     propIterator: function(object, max) {
-      function isInterestingProp(t, value) {
-        return (t == "boolean" || t == "number" || (t == "string" && value) ||
-          (t == "object" && value && value.toString));
-      }
+      let isInterestingProp = (t, value) => {
+        // Do not pick objects, it could cause recursion.
+        return (t == "boolean" || t == "number" || (t == "string" && value));
+      };
 
       // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=945377
       if (Object.prototype.toString.call(object) === "[object Generator]") {
@@ -73,16 +64,15 @@ define(function(require, exports, module) {
 
       // Object members with non-empty values are preferred since it gives the
       // user a better overview of the object.
-      let props = [];
-      this.getProps(props, object, max, isInterestingProp);
+      let props = this.getProps(object, max, isInterestingProp);
 
       if (props.length <= max) {
         // There are not enough props yet (or at least, not enough props to
         // be able to know whether we should print "more..." or not).
         // Let's display also empty members and functions.
-        this.getProps(props, object, max, function(t, value) {
+        props = props.concat(this.getProps(object, max, (t, value) => {
           return !isInterestingProp(t, value);
-        });
+        }));
       }
 
       if (props.length > max) {
@@ -100,10 +90,12 @@ define(function(require, exports, module) {
       return props;
     },
 
-    getProps: function(props, object, max, filter) {
+    getProps: function(object, max, filter) {
+      let props = [];
+
       max = max || 3;
       if (!object) {
-        return [];
+        return props;
       }
 
       let mode = this.props.mode;
@@ -111,7 +103,7 @@ define(function(require, exports, module) {
       try {
         for (let name in object) {
           if (props.length > max) {
-            return [];
+            return props;
           }
 
           let value;
@@ -137,7 +129,21 @@ define(function(require, exports, module) {
         console.error(err);
       }
 
-      return [];
+      return props;
+    },
+
+    render: function() {
+      let object = this.props.object;
+      let props = this.shortPropIterator(object);
+
+      return (
+        ObjectBox({className: "object"},
+          span({className: "objectTitle"}, this.getTitle(object)),
+          span({className: "objectLeftBrace", role: "presentation"}, "{"),
+          props,
+          span({className: "objectRightBrace"}, "}")
+        )
+      );
     },
   });
 
@@ -145,6 +151,14 @@ define(function(require, exports, module) {
    * Renders object property, name-value pair.
    */
   let PropRep = React.createFactory(React.createClass({
+    propTypes: {
+      object: React.PropTypes.any,
+      mode: React.PropTypes.string,
+      name: React.PropTypes.string,
+      equal: React.PropTypes.string,
+      delim: React.PropTypes.string,
+    },
+
     displayName: "PropRep",
 
     render: function() {
@@ -153,12 +167,12 @@ define(function(require, exports, module) {
       let mode = this.props.mode;
 
       return (
-        DOM.span({},
-          DOM.span({
+        span({},
+          span({
             "className": "nodeName"},
             this.props.name
           ),
-          DOM.span({
+          span({
             "className": "objectEqual",
             role: "presentation"},
             this.props.equal
@@ -167,7 +181,7 @@ define(function(require, exports, module) {
             object: object,
             mode: mode
           }),
-          DOM.span({
+          span({
             "className": "objectComma",
             role: "presentation"},
             this.props.delim
