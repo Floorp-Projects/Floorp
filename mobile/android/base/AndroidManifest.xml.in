@@ -159,6 +159,10 @@
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />
 
+        <activity android:name="org.mozilla.gecko.promotion.SimpleHelperUI"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
         <activity android:name="org.mozilla.gecko.promotion.HomeScreenPrompt"
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />
