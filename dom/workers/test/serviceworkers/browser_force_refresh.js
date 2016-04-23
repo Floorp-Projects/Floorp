@@ -14,7 +14,7 @@ function forceRefresh() {
 
 function frameScript() {
   function eventHandler(event) {
-    sendAsyncMessage("test:event", {type: event.type, detail: event.detail});
+    sendAsyncMessage("test:event", {type: event.type});
   }
 
   // These are tab-local, so no need to unregister them.
@@ -22,7 +22,6 @@ function frameScript() {
   addEventListener('base-register', eventHandler, true, true);
   addEventListener('base-sw-ready', eventHandler, true, true);
   addEventListener('cached-load', eventHandler, true, true);
-  addEventListener('cached-failure', eventHandler, true, true);
 }
 
 function test() {
@@ -48,14 +47,13 @@ function test() {
       executeSoon(finish);
     }
 
-    var maxCacheLoadCount = 3;
-    var cachedLoadCount = 0;
+    var cachedLoad = false;
     var baseLoadCount = 0;
 
     function eventHandler(msg) {
       if (msg.data.type === 'base-load') {
         baseLoadCount += 1;
-        if (cachedLoadCount === maxCacheLoadCount) {
+        if (cachedLoad) {
           is(baseLoadCount, 2, 'cached load should occur before second base load');
           return done();
         }
@@ -64,23 +62,17 @@ function test() {
           return done();
         }
       } else if (msg.data.type === 'base-register') {
-        ok(!cachedLoadCount, 'cached load should not occur before base register');
+        ok(!cachedLoad, 'cached load should not occur before base register');
         is(baseLoadCount, 1, 'register should occur after first base load');
       } else if (msg.data.type === 'base-sw-ready') {
-        ok(!cachedLoadCount, 'cached load should not occur before base ready');
+        ok(!cachedLoad, 'cached load should not occur before base ready');
         is(baseLoadCount, 1, 'ready should occur after first base load');
         refresh();
       } else if (msg.data.type === 'cached-load') {
-        ok(cachedLoadCount < maxCacheLoadCount, 'cached load should not occur too many times');
+        ok(!cachedLoad, 'cached load should not occur twice');
         is(baseLoadCount, 1, 'cache load occur after first base load');
-        cachedLoadCount += 1;
-        if (cachedLoadCount < maxCacheLoadCount) {
-          return refresh();
-        }
+        cachedLoad = true;
         forceRefresh();
-      } else if (msg.data.type === 'cached-failure') {
-        ok(false, 'failure: ' + msg.data.detail);
-        done();
       }
 
       return;
