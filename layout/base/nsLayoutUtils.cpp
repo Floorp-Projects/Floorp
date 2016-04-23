@@ -1577,6 +1577,17 @@ nsLayoutUtils::GetStyleFrame(const nsIContent* aContent)
   return nsLayoutUtils::GetStyleFrame(frame);
 }
 
+/* static */ nsIFrame*
+nsLayoutUtils::GetRealPrimaryFrameFor(const nsIContent* aContent)
+{
+  nsIFrame *frame = aContent->GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+
+  return nsPlaceholderFrame::GetRealFrameFor(frame);
+}
+
 nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(nsGkAtoms::placeholderFrame == aFrame->GetType(),
