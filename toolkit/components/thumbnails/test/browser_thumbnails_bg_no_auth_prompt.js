@@ -10,7 +10,7 @@
 // appear - how long should the watcher be active before assuming it's not
 // going to appear?)
 function* runTests() {
-  let url = "http://mochi.test:8888/browser/browser/base/content/test/general/authenticate.sjs?user=anyone";
+  let url = "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/authenticate.sjs?user=anyone";
   ok(!thumbnailExists(url), "Thumbnail file should not already exist.");
 
   let capturedURL = yield bgCapture(url);

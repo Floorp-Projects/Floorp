@@ -227,6 +227,9 @@ public class BrowserContract {
         public static final String TABLE_NAME = "visits";
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "visits");
+
+        public static final int VISIT_IS_LOCAL = 1;
+        public static final int VISIT_IS_REMOTE = 0;
     }
 
     // Combined bookmarks and history

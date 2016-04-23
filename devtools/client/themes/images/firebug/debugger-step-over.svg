@@ -2,23 +2,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
-    <defs>
-        <linearGradient id="c">
-            <stop offset="0" stop-color="#dd8506"/>
-            <stop offset="1" stop-color="#f4a24b"/>
-        </linearGradient>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#e68507"/>
-            <stop offset="1" stop-color="#f4b65f"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#f3a952"/>
-            <stop offset="1" stop-color="#fadbba"/>
-        </linearGradient>
-        <linearGradient x1="9.06" y1="13.305" x2="9.06" y2="1.704" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(3)"/>
-        <linearGradient x1="3.865" y1="14.919" x2="3.865" y2="13.049" id="f" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(3)"/>
-        <linearGradient x1="12.911" y1="12.657" x2="2.554" y2="2.3" id="e" xlink:href="#c" gradientUnits="userSpaceOnUse"/>
-    </defs>
-    <path d="M4.698 2.46h3.7c3.052 0 5.102 1.828 5.102 4.568v3.565h1.962L12.077 13.5l-3.383-2.914h1.9V7.74c0-1.793-.486-2.454-2.047-2.492-.791-.02-1.842 0-2.647 0-1.821 0-2.368.81-2.368 2.488V12.5H.522S.518 9.04.518 7.03c0-2.72 2.209-4.57 4.179-4.57z" fill="url(#d)" stroke="url(#e)" stroke-linejoin="round"/>
-    <path fill="url(#f)" d="M5.016 12.987h4.01v1.995h-4.01z"/>
+  <defs>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#dd8506"/>
+      <stop offset="1" stop-color="#f4a24b"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#e68507"/>
+      <stop offset="1" stop-color="#f4b65f"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#f3a952"/>
+      <stop offset="1" stop-color="#fadbba"/>
+    </linearGradient>
+    <linearGradient x1="9.06" y1="13.305" x2="9.06" y2="1.704" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(3)"/>
+    <linearGradient x1="3.865" y1="14.919" x2="3.865" y2="13.049" id="f" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(3)"/>
+    <linearGradient x1="12.911" y1="12.657" x2="2.554" y2="2.3" id="e" xlink:href="#c" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path d="M4.698 2.46h3.7c3.052 0 5.102 1.828 5.102 4.568v3.565h1.962L12.077 13.5l-3.383-2.914h1.9V7.74c0-1.793-.486-2.454-2.047-2.492-.791-.02-1.842 0-2.647 0-1.821 0-2.368.81-2.368 2.488V12.5H.522S.518 9.04.518 7.03c0-2.72 2.209-4.57 4.179-4.57z" fill="url(#d)" stroke="url(#e)" stroke-linejoin="round"/>
+  <path fill="url(#f)" d="M5.016 12.987h4.01v1.995h-4.01z"/>
 </svg>

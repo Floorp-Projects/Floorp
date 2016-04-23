@@ -2,17 +2,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
-    <defs>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#464f5a"/>
-            <stop offset="1" stop-color="#7e8b9a"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#6a7786"/>
-            <stop offset="1" stop-color="#abb3bd"/>
-        </linearGradient>
-        <linearGradient xlink:href="#a" id="c" x1="13.108" y1="13.135" x2="2.763" y2="2.791" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.9618 0 0 .9618 .306 1036.661)"/>
-        <linearGradient xlink:href="#b" id="d" x1="14.815" y1="11.602" x2="4.34" y2="1.127" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.9618 0 0 .9618 .306 1036.661)"/>
-    </defs>
-    <path style="marker:none" d="M7.23 1036.661c-.426 0-.665.445-.768.962l-.25 1.25a5.77 5.77 0 0 0-.825.345l-1.063-.71c-.477-.205-.924-.437-1.225-.135l-1.088 1.087c-.301.302-.157.786.136 1.225l.706 1.062a5.77 5.77 0 0 0-.333.824l-1.258.252c-.482.193-.962.344-.962.77v1.538c0 .427.445.665.962.769l1.258.252a5.77 5.77 0 0 0 .34.815l-.713 1.073c-.205.477-.437.92-.136 1.223l1.088 1.089c.301.301.786.155 1.225-.137l1.069-.712a5.77 5.77 0 0 0 .815.33l.254 1.268c.192.482.342.962.768.962h1.54c.426 0 .665-.445.768-.962l.254-1.264a5.77 5.77 0 0 0 .81-.338l1.074.716c.477.204.924.438 1.225.137l1.088-1.09c.301-.301.157-.784-.136-1.222l-.71-1.067a5.77 5.77 0 0 0 .333-.821l1.262-.252c.482-.193.962-.342.962-.769v-1.538c0-.426-.445-.667-.962-.77l-1.253-.252a5.77 5.77 0 0 0-.342-.819l.71-1.067c.205-.477.437-.923.136-1.225l-1.088-1.087c-.301-.302-.786-.158-1.225.135l-1.057.706a5.77 5.77 0 0 0-.829-.336l-.252-1.255c-.192-.482-.342-.962-.768-.962H7.23zm.77 4.81a2.885 2.885 0 0 1 2.885 2.885A2.885 2.885 0 0 1 8 1047.24a2.885 2.885 0 0 1-2.885-2.885A2.885 2.885 0 0 1 8 1041.47z" color="#000" overflow="visible" fill="url(#c)" stroke="url(#d)" stroke-width=".6" stroke-linejoin="round" transform="translate(0 -1036.362)"/>
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#464f5a"/>
+      <stop offset="1" stop-color="#7e8b9a"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#6a7786"/>
+      <stop offset="1" stop-color="#abb3bd"/>
+    </linearGradient>
+    <linearGradient xlink:href="#a" id="c" x1="13.108" y1="13.135" x2="2.763" y2="2.791" gradientUnits="userSpaceOnUse" gradientTransform="translate(.306 1036.661) scale(.9618)"/>
+    <linearGradient xlink:href="#b" id="d" x1="14.815" y1="11.602" x2="4.34" y2="1.127" gradientUnits="userSpaceOnUse" gradientTransform="translate(.306 1036.661) scale(.9618)"/>
+  </defs>
+  <path style="marker:none" d="M7.23 1036.661c-.426 0-.665.445-.768.962l-.25 1.25a5.77 5.77 0 0 0-.825.345l-1.063-.71c-.477-.205-.924-.437-1.225-.135l-1.088 1.087c-.301.302-.157.786.136 1.225l.706 1.062a5.77 5.77 0 0 0-.333.824l-1.258.252c-.482.193-.962.344-.962.77v1.538c0 .427.445.665.962.769l1.258.252a5.77 5.77 0 0 0 .34.815l-.713 1.073c-.205.477-.437.92-.136 1.223l1.088 1.089c.301.301.786.155 1.225-.137l1.069-.712a5.77 5.77 0 0 0 .815.33l.254 1.268c.192.482.342.962.768.962h1.54c.426 0 .665-.445.768-.962l.254-1.264a5.77 5.77 0 0 0 .81-.338l1.074.716c.477.204.924.438 1.225.137l1.088-1.09c.301-.301.157-.784-.136-1.222l-.71-1.067a5.77 5.77 0 0 0 .333-.821l1.262-.252c.482-.193.962-.342.962-.769v-1.538c0-.426-.445-.667-.962-.77l-1.253-.252a5.77 5.77 0 0 0-.342-.819l.71-1.067c.205-.477.437-.923.136-1.225l-1.088-1.087c-.301-.302-.786-.158-1.225.135l-1.057.706a5.77 5.77 0 0 0-.829-.336l-.252-1.255c-.192-.482-.342-.962-.768-.962H7.23zm.77 4.81a2.885 2.885 0 0 1 2.885 2.885A2.885 2.885 0 0 1 8 1047.24a2.885 2.885 0 0 1-2.885-2.885A2.885 2.885 0 0 1 8 1041.47z" color="#000" overflow="visible" fill="url(#c)" stroke="url(#d)" stroke-width=".6" stroke-linejoin="round" transform="translate(0 -1036.362)"/>
 </svg>

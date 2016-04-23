@@ -2,13 +2,13 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="11" height="12">
-    <defs>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#b4aa00"/>
-            <stop offset=".659" stop-color="#f5e600"/>
-            <stop offset="1" stop-color="#f5e600"/>
-        </linearGradient>
-        <linearGradient x1="1.256" y1="6.226" x2=".157" y2=".942" id="b" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.1625 0 0 1.2744 1.663 1040.82)"/>
-    </defs>
-    <path d="M8.553 1046.88l-2.742 1.735c-4.951 3.273-5.215 3.09-5.215.035v-6.845c0-2.706.26-2.927 5.215.208l2.593 1.641c2.642 1.553 2.642 1.648.149 3.226z" fill="url(#b)" stroke-width="1.217" stroke-linejoin="round" transform="matrix(1 0 0 .95762 0 -995.06)" stroke="#888000"/>
+  <defs>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#b4aa00"/>
+      <stop offset=".659" stop-color="#f5e600"/>
+      <stop offset="1" stop-color="#f5e600"/>
+    </linearGradient>
+    <linearGradient x1="1.256" y1="6.226" x2=".157" y2=".942" id="b" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1.1625 0 0 1.2744 1.663 1040.82)"/>
+  </defs>
+  <path d="M8.553 1046.88l-2.742 1.735c-4.951 3.273-5.215 3.09-5.215.035v-6.845c0-2.706.26-2.927 5.215.208l2.593 1.641c2.642 1.553 2.642 1.648.149 3.226z" fill="url(#b)" stroke-width="1.217" stroke-linejoin="round" transform="matrix(1 0 0 .95762 0 -995.06)" stroke="#888000"/>
 </svg>

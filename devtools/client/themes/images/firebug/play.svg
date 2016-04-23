@@ -2,21 +2,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
-    <defs>
-        <linearGradient id="c">
-            <stop offset="0" stop-color="#2959b8"/>
-            <stop offset="1" stop-color="#83ace8"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#5c87d0"/>
-            <stop offset="1" stop-color="#abc7ed"/>
-        </linearGradient>
-        <linearGradient x1="1.472" y1="-4.098" x2="1.472" y2="6.772" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.65609 0 0 -1.01925 4.494 9.401)"/>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#fff" stop-opacity=".706"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient x1="10.18" y1="8.767" x2="3.926" y2="2.99" id="e" xlink:href="#c" gradientUnits="userSpaceOnUse"/>
-    </defs>
-    <path d="M11.788 8L4.5 1.204v13.592z" fill="url(#d)" stroke="url(#e)" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#2959b8"/>
+      <stop offset="1" stop-color="#83ace8"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#5c87d0"/>
+      <stop offset="1" stop-color="#abc7ed"/>
+    </linearGradient>
+    <linearGradient x1="1.472" y1="-4.098" x2="1.472" y2="6.772" id="c" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(.65609 0 0 -1.01925 4.494 9.401)"/>
+    <linearGradient x1="10.18" y1="8.767" x2="3.926" y2="2.99" id="d" xlink:href="#b" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path d="M11.788 8L4.5 1.204v13.592z" fill="url(#c)" stroke="url(#d)" stroke-linejoin="round"/>
 </svg>
