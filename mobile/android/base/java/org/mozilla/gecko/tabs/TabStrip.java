@@ -107,7 +107,7 @@ public class TabStrip extends ThemedLinearLayout
 
     private class TabsListener implements Tabs.OnTabsChangedListener {
         @Override
-        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
             switch (msg) {
                 case RESTORED:
                     tabStripView.restoreTabs();

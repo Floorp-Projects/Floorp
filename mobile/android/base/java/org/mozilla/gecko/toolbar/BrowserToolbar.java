@@ -403,7 +403,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     @Override
-    public void onTabChanged(@NonNull Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(@NonNull Tab tab, Tabs.TabEvents msg, String data) {
         Log.d(LOGTAG, "onTabChanged: " + msg);
         final Tabs tabs = Tabs.getInstance();
 

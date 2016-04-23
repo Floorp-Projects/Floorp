@@ -581,7 +581,7 @@ public class Tabs implements GeckoEventListener {
     }
 
     public interface OnTabsChangedListener {
-        public void onTabChanged(Tab tab, TabEvents msg, Object data);
+        void onTabChanged(Tab tab, TabEvents msg, String data);
     }
 
     private static final List<OnTabsChangedListener> TABS_CHANGED_LISTENERS = new CopyOnWriteArrayList<OnTabsChangedListener>();
@@ -624,7 +624,7 @@ public class Tabs implements GeckoEventListener {
         notifyListeners(tab, msg, "");
     }
 
-    public void notifyListeners(final Tab tab, final TabEvents msg, final Object data) {
+    public void notifyListeners(final Tab tab, final TabEvents msg, final String data) {
         if (tab == null &&
             msg != TabEvents.RESTORED) {
             throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");

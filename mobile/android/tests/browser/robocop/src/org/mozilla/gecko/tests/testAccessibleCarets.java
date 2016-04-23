@@ -57,7 +57,7 @@ public class testAccessibleCarets extends JavascriptTest {
      */
     private class TabsListener implements Tabs.OnTabsChangedListener {
         @Override
-        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
             switch (msg) {
                 case STOP:
                     final JSONObject args = new JSONObject();
