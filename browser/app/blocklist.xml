@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1460557697000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1461272551000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -331,10 +331,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i916" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
-                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i916" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="39.0a1" maxVersion="*" />
                           </targetApplication>
@@ -535,11 +533,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i1128" id="youtubeunblocker@unblocker.yt">
-                        <versionRange  minVersion="43.4.1" maxVersion="77.5.1" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="0.6.16" severity="1">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -739,10 +733,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i502" id="{df6bb2ec-333b-4267-8c4f-3f27dc8c6e07}">
+      <emItem  blockID="i487" id="{df6bb2ec-333b-4267-8c4f-3f27dc8c6e07}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -887,12 +879,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i481" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
+      <emItem  blockID="i429" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1192,10 +1180,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i654" id="{7b1bf0b6-a1b9-42b0-b75d-252036438bdc}">
+      <emItem  blockID="i638" id="{7b1bf0b6-a1b9-42b0-b75d-252036438bdc}">
                         <versionRange  minVersion="27.8" maxVersion="27.9" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="27.8" maxVersion="27.9" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1224,10 +1210,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i61" id="youtube@youtube3.com">
+      <emItem  blockID="i57" id="youtube@youtube3.com">
                         <versionRange  minVersion="0" maxVersion="*">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1336,18 +1320,14 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i454" id="sqlmoz@facebook.com">
+      <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i402" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
-                        <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1697,13 +1677,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i1" id="mozilla_cc@internetdownloadmanager.com">
-                        <versionRange  minVersion="2.1" maxVersion="3.3">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                                <versionRange  minVersion=" " maxVersion="6.9.8">
+      <emItem  blockID="i14" id="mozilla_cc@internetdownloadmanager.com">
+                        <versionRange  minVersion="0" maxVersion="6.9.8">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="3.7a1pre" maxVersion="*" />
                           </targetApplication>
@@ -1739,10 +1714,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i480" id="pluggets@gmail.com">
+      <emItem  blockID="i435" id="pluggets@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2047,9 +2020,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i392" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
-                        <versionRange  minVersion="0" maxVersion="1.7.999" severity="1">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2745,13 +2716,6 @@
                           </targetApplication>
                   </versionRange>
                         </pluginItem>
-      <pluginItem  blockID="p27">
-      <match name="name" exp="QuickTime Plug-in 7[.]1[.]" />            <match name="filename" exp="npqtplugin.?[.]dll" />                                    <versionRange >
-                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="3.*" />
-                          </targetApplication>
-                  </versionRange>
-                        </pluginItem>
       <pluginItem  blockID="p28">
                   <match name="filename" exp="NPFFAddOn.dll" />                </pluginItem>
       <pluginItem  blockID="p31">
@@ -3108,9 +3072,6 @@
                         </pluginItem>
       <pluginItem  blockID="p408">
                   <match name="filename" exp="QuickTime Plugin\.plugin" />                      <versionRange  minVersion="0" maxVersion="7.6.5" severity="0" vulnerabilitystatus="1"></versionRange>
-                        </pluginItem>
-      <pluginItem  blockID="p410">
-                  <match name="filename" exp="npqtplugin\.dll" />                      <versionRange  minVersion="0" maxVersion="7.7.3" severity="0" vulnerabilitystatus="1"></versionRange>
                         </pluginItem>
       <pluginItem  blockID="p412">
       <match name="name" exp="Java\(TM\) Plug-in 1\.6\.0_4[2-5]([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
@@ -3476,6 +3437,10 @@
       <pluginItem  os="Linux" blockID="p1150">
                   <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.569" maxVersion="11.2.202.577" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1151">
+                  <match name="filename" exp="npqtplugin\.dll" />                      <versionRange  minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="2"></versionRange>
+                            <infoURL>https://support.apple.com/en-us/HT205771</infoURL>
           </pluginItem>
     </pluginItems>
 
