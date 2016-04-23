@@ -670,6 +670,10 @@ protected:
                                 nsIContent** aOutLeftNode = nullptr,
                                 nsIContent** aOutRightNode = nullptr);
   nsresult ApplyDefaultProperties();
+  nsresult RemoveStyleInside(nsIDOMNode *aNode,
+                             nsIAtom *aProperty,
+                             const nsAString *aAttribute,
+                             const bool aChildrenOnly = false);
   nsresult RemoveStyleInside(nsIContent& aNode,
                              nsIAtom* aProperty,
                              const nsAString* aAttribute,
@@ -681,6 +685,7 @@ protected:
   bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
   bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
+  bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
 
   nsresult RemoveBlockContainer(nsIDOMNode *inNode);
