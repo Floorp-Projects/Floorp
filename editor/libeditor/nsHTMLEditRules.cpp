@@ -2236,7 +2236,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
 
   // Else we have a non-collapsed selection.  First adjust the selection.
-  res = ExpandSelectionForDeletion(*aSelection);
+  res = ExpandSelectionForDeletion(aSelection);
   NS_ENSURE_SUCCESS(res, res);
 
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
@@ -5038,138 +5038,180 @@ nsHTMLEditRules::GetInnerContent(nsINode& aNode,
   }
 }
 
-/**
- * Promotes selection to include blocks that have all their children selected.
- */
+///////////////////////////////////////////////////////////////////////////
+// ExpandSelectionForDeletion: this promotes our selection to include blocks
+// that have all their children selected.
+//
 nsresult
-nsHTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
+nsHTMLEditRules::ExpandSelectionForDeletion(Selection* aSelection)
 {
-  // Don't need to touch collapsed selections
-  if (aSelection.Collapsed()) {
+  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
+
+  // don't need to touch collapsed selections
+  if (aSelection->Collapsed()) {
     return NS_OK;
   }
 
-  // We don't need to mess with cell selections, and we assume multirange
-  // selections are those.
-  if (aSelection.RangeCount() != 1) {
-    return NS_OK;
-  }
+  int32_t rangeCount;
+  nsresult res = aSelection->GetRangeCount(&rangeCount);
+  NS_ENSURE_SUCCESS(res, res);
 
-  // Find current sel start and end
-  NS_ENSURE_TRUE(aSelection.GetRangeAt(0), NS_ERROR_NULL_POINTER);
-  OwningNonNull<nsRange> range = *aSelection.GetRangeAt(0);
+  // we don't need to mess with cell selections, and we assume multirange selections are those.
+  if (rangeCount != 1) return NS_OK;
 
-  nsCOMPtr<nsINode> selStartNode = range->GetStartParent();
-  int32_t selStartOffset = range->StartOffset();
-  nsCOMPtr<nsINode> selEndNode = range->GetEndParent();
-  int32_t selEndOffset = range->EndOffset();
+  // find current sel start and end
+  RefPtr<nsRange> range = aSelection->GetRangeAt(0);
+  NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMNode> selStartNode, selEndNode, selCommon;
+  int32_t selStartOffset, selEndOffset;
 
-  // Find current selection common block parent
-  nsCOMPtr<Element> selCommon =
-    nsHTMLEditor::GetBlock(*range->GetCommonAncestor());
+  res = range->GetStartContainer(getter_AddRefs(selStartNode));
+  NS_ENSURE_SUCCESS(res, res);
+  res = range->GetStartOffset(&selStartOffset);
+  NS_ENSURE_SUCCESS(res, res);
+  res = range->GetEndContainer(getter_AddRefs(selEndNode));
+  NS_ENSURE_SUCCESS(res, res);
+  res = range->GetEndOffset(&selEndOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // find current selection common block parent
+  res = range->GetCommonAncestorContainer(getter_AddRefs(selCommon));
+  NS_ENSURE_SUCCESS(res, res);
+  if (!IsBlockNode(selCommon))
+    selCommon = nsHTMLEditor::GetBlockNodeParent(selCommon);
   NS_ENSURE_STATE(selCommon);
 
-  // Set up for loops and cache our root element
-  nsCOMPtr<nsINode> firstBRParent;
+  // set up for loops and cache our root element
+  bool stillLooking = true;
+  nsCOMPtr<nsIDOMNode> firstBRParent;
   nsCOMPtr<nsINode> unused;
-  int32_t visOffset = 0, firstBROffset = 0;
+  int32_t visOffset=0, firstBROffset=0;
   WSType wsType;
-  nsCOMPtr<Element> root = mHTMLEditor->GetActiveEditingHost();
-  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> rootContent = mHTMLEditor->GetActiveEditingHost();
+  nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(rootContent);
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
 
-  // Find previous visible thingy before start of selection
-  if (selStartNode != selCommon && selStartNode != root) {
-    while (true) {
+  // find previous visible thingy before start of selection
+  if ((selStartNode!=selCommon) && (selStartNode!=rootElement))
+  {
+    while (stillLooking)
+    {
       nsWSRunObject wsObj(mHTMLEditor, selStartNode, selStartOffset);
-      wsObj.PriorVisibleNode(selStartNode, selStartOffset, address_of(unused),
+      nsCOMPtr<nsINode> selStartNode_(do_QueryInterface(selStartNode));
+      wsObj.PriorVisibleNode(selStartNode_, selStartOffset, address_of(unused),
                              &visOffset, &wsType);
-      if (wsType != WSType::thisBlock) {
-        break;
+      if (wsType == WSType::thisBlock) {
+        // we want to keep looking up.  But stop if we are crossing table element
+        // boundaries, or if we hit the root.
+        if (nsHTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
+            selCommon == GetAsDOMNode(wsObj.mStartReasonNode) ||
+            rootElement == GetAsDOMNode(wsObj.mStartReasonNode)) {
+          stillLooking = false;
+        }
+        else
+        {
+          selStartNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mStartReasonNode),
+                                                   &selStartOffset);
+        }
       }
-      // We want to keep looking up.  But stop if we are crossing table
-      // element boundaries, or if we hit the root.
-      if (nsHTMLEditUtils::IsTableElement(wsObj.mStartReasonNode) ||
-          selCommon == wsObj.mStartReasonNode ||
-          root == wsObj.mStartReasonNode) {
-        break;
+      else
+      {
+        stillLooking = false;
       }
-      selStartNode = wsObj.mStartReasonNode->GetParentNode();
-      selStartOffset = selStartNode ?
-        selStartNode->IndexOf(wsObj.mStartReasonNode) : -1;
     }
   }
 
-  // Find next visible thingy after end of selection
-  if (selEndNode != selCommon && selEndNode != root) {
-    while (true) {
+  stillLooking = true;
+  // find next visible thingy after end of selection
+  if ((selEndNode!=selCommon) && (selEndNode!=rootElement))
+  {
+    while (stillLooking)
+    {
       nsWSRunObject wsObj(mHTMLEditor, selEndNode, selEndOffset);
-      wsObj.NextVisibleNode(selEndNode, selEndOffset, address_of(unused),
+      nsCOMPtr<nsINode> selEndNode_(do_QueryInterface(selEndNode));
+      wsObj.NextVisibleNode(selEndNode_, selEndOffset, address_of(unused),
                             &visOffset, &wsType);
       if (wsType == WSType::br) {
-        if (mHTMLEditor->IsVisBreak(wsObj.mEndReasonNode)) {
-          break;
+        if (mHTMLEditor->IsVisBreak(wsObj.mEndReasonNode))
+        {
+          stillLooking = false;
         }
-        if (!firstBRParent) {
-          firstBRParent = selEndNode;
-          firstBROffset = selEndOffset;
+        else
+        {
+          if (!firstBRParent)
+          {
+            firstBRParent = selEndNode;
+            firstBROffset = selEndOffset;
+          }
+          selEndNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mEndReasonNode), &selEndOffset);
+          ++selEndOffset;
         }
-        selEndNode = wsObj.mEndReasonNode->GetParentNode();
-        selEndOffset = selEndNode
-          ? selEndNode->IndexOf(wsObj.mEndReasonNode) + 1 : 0;
       } else if (wsType == WSType::thisBlock) {
-        // We want to keep looking up.  But stop if we are crossing table
-        // element boundaries, or if we hit the root.
+        // we want to keep looking up.  But stop if we are crossing table element
+        // boundaries, or if we hit the root.
         if (nsHTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
-            selCommon == wsObj.mEndReasonNode ||
-            root == wsObj.mEndReasonNode) {
-          break;
+            selCommon == GetAsDOMNode(wsObj.mEndReasonNode) ||
+            rootElement == GetAsDOMNode(wsObj.mEndReasonNode)) {
+          stillLooking = false;
         }
-        selEndNode = wsObj.mEndReasonNode->GetParentNode();
-        selEndOffset = 1 + selEndNode->IndexOf(wsObj.mEndReasonNode);
-      } else {
-        break;
+        else
+        {
+          selEndNode = nsEditor::GetNodeLocation(GetAsDOMNode(wsObj.mEndReasonNode), &selEndOffset);
+          ++selEndOffset;
+        }
+       }
+      else
+      {
+        stillLooking = false;
       }
     }
   }
-  // Now set the selection to the new range
-  aSelection.Collapse(selStartNode, selStartOffset);
+  // now set the selection to the new range
+  aSelection->Collapse(selStartNode, selStartOffset);
 
-  // Expand selection endpoint only if we didn't pass a br, or if we really
-  // needed to pass that br (i.e., its block is now totally selected)
-  nsresult res;
+  // expand selection endpoint only if we didnt pass a br,
+  // or if we really needed to pass that br (ie, its block is now
+  // totally selected)
   bool doEndExpansion = true;
-  if (firstBRParent) {
-    // Find block node containing br
-    nsCOMPtr<Element> brBlock = nsHTMLEditor::GetBlock(*firstBRParent);
-    bool nodeBefore = false, nodeAfter = false;
+  if (firstBRParent)
+  {
+    // find block node containing br
+    nsCOMPtr<nsIDOMNode> brBlock = firstBRParent;
+    if (!IsBlockNode(brBlock))
+      brBlock = nsHTMLEditor::GetBlockNodeParent(brBlock);
+    bool nodeBefore=false, nodeAfter=false;
 
-    // Create a range that represents expanded selection
-    RefPtr<nsRange> range = new nsRange(selStartNode);
+    // create a range that represents expanded selection
+    nsCOMPtr<nsINode> node = do_QueryInterface(selStartNode);
+    NS_ENSURE_STATE(node);
+    RefPtr<nsRange> range = new nsRange(node);
     res = range->SetStart(selStartNode, selStartOffset);
     NS_ENSURE_SUCCESS(res, res);
     res = range->SetEnd(selEndNode, selEndOffset);
     NS_ENSURE_SUCCESS(res, res);
 
-    // Check if block is entirely inside range
-    if (brBlock) {
-      nsRange::CompareNodeToRange(brBlock, range, &nodeBefore, &nodeAfter);
+    // check if block is entirely inside range
+    nsCOMPtr<nsIContent> brContentBlock = do_QueryInterface(brBlock);
+    if (brContentBlock) {
+      res = nsRange::CompareNodeToRange(brContentBlock, range, &nodeBefore,
+                                        &nodeAfter);
     }
 
-    // If block isn't contained, forgo grabbing the br in expanded selection
-    if (nodeBefore || nodeAfter) {
+    // if block isn't contained, forgo grabbing the br in the expanded selection
+    if (nodeBefore || nodeAfter)
       doEndExpansion = false;
-    }
   }
-  if (doEndExpansion) {
-    res = aSelection.Extend(selEndNode, selEndOffset);
-    NS_ENSURE_SUCCESS(res, res);
-  } else {
-    // Only expand to just before br
-    res = aSelection.Extend(firstBRParent, firstBROffset);
-    NS_ENSURE_SUCCESS(res, res);
+  if (doEndExpansion)
+  {
+    res = aSelection->Extend(selEndNode, selEndOffset);
+  }
+  else
+  {
+    // only expand to just before br
+    res = aSelection->Extend(firstBRParent, firstBROffset);
   }
 
-  return NS_OK;
+  return res;
 }
 
 
