@@ -635,7 +635,7 @@ nsHTMLEditRules::WillDoAction(Selection* aSelection,
       return WillLoadHTML(aSelection, aCancel);
     case EditAction::insertBreak:
       UndefineCaretBidiLevel(aSelection);
-      return WillInsertBreak(aSelection, aCancel, aHandled);
+      return WillInsertBreak(*aSelection, aCancel, aHandled);
     case EditAction::deleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction,
                                  info->stripWrappers, aCancel, aHandled);
@@ -1515,118 +1515,101 @@ nsHTMLEditRules::WillLoadHTML(Selection* aSelection, bool* aCancel)
 }
 
 nsresult
-nsHTMLEditRules::WillInsertBreak(Selection* aSelection,
-                                 bool* aCancel, bool* aHandled)
+nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
+                                 bool* aHandled)
 {
-  if (!aSelection || !aCancel || !aHandled) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  // initialize out params
+  MOZ_ASSERT(aCancel && aHandled);
   *aCancel = false;
   *aHandled = false;
 
-  // if the selection isn't collapsed, delete it.
-  nsresult res = NS_OK;
-  if (!aSelection->Collapsed()) {
-    NS_ENSURE_STATE(mHTMLEditor);
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  // If the selection isn't collapsed, delete it.
+  nsresult res;
+  if (!aSelection.Collapsed()) {
     res = mHTMLEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  WillInsert(*aSelection, aCancel);
+  WillInsert(aSelection, aCancel);
 
-  // initialize out param
-  // we want to ignore result of WillInsert()
+  // Initialize out param.  We want to ignore result of WillInsert().
   *aCancel = false;
 
-  // split any mailcites in the way.
-  // should we abort this if we encounter table cell boundaries?
+  // Split any mailcites in the way.  Should we abort this if we encounter
+  // table cell boundaries?
   if (IsMailEditor()) {
-    res = SplitMailCites(aSelection, aHandled);
+    res = SplitMailCites(&aSelection, aHandled);
     NS_ENSURE_SUCCESS(res, res);
     if (*aHandled) {
       return NS_OK;
     }
   }
 
-  // smart splitting rules
-  nsCOMPtr<nsIDOMNode> node;
-  int32_t offset;
+  // Smart splitting rules
+  NS_ENSURE_TRUE(aSelection.GetRangeAt(0) &&
+                 aSelection.GetRangeAt(0)->GetStartParent(),
+                 NS_ERROR_FAILURE);
+  OwningNonNull<nsINode> node = *aSelection.GetRangeAt(0)->GetStartParent();
+  int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node),
-                                           &offset);
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
-  // do nothing if the node is read-only
-  NS_ENSURE_STATE(mHTMLEditor);
+  // Do nothing if the node is read-only
   if (!mHTMLEditor->IsModifiableNode(node)) {
     *aCancel = true;
     return NS_OK;
   }
 
-  // identify the block
-  nsCOMPtr<nsIDOMNode> blockParent;
-  if (IsBlockNode(node)) {
-    blockParent = node;
-  } else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    blockParent = mHTMLEditor->GetBlockNodeParent(node);
-  }
+  // Identify the block
+  nsCOMPtr<Element> blockParent = mHTMLEditor->GetBlock(node);
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
-  // if the active editing host is an inline element, or if the active editing
+  // If the active editing host is an inline element, or if the active editing
   // host is the block parent itself, just append a br.
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIContent> hostContent = mHTMLEditor->GetActiveEditingHost();
-  nsCOMPtr<nsIDOMNode> hostNode = do_QueryInterface(hostContent);
-  if (!nsEditorUtils::IsDescendantOf(blockParent, hostNode)) {
-    res = StandardBreakImpl(node, offset, aSelection);
+  nsCOMPtr<Element> host = mHTMLEditor->GetActiveEditingHost();
+  if (!nsEditorUtils::IsDescendantOf(blockParent, host)) {
+    res = StandardBreakImpl(GetAsDOMNode(node), offset, &aSelection);
     NS_ENSURE_SUCCESS(res, res);
     *aHandled = true;
     return NS_OK;
   }
 
-  // if block is empty, populate with br.  (for example, imagine a div that
-  // contains the word "text".  the user selects "text" and types return.
-  // "text" is deleted leaving an empty block.  we want to put in one br to
-  // make block have a line.  then code further below will put in a second br.)
+  // If block is empty, populate with br.  (For example, imagine a div that
+  // contains the word "text".  The user selects "text" and types return.
+  // "Text" is deleted leaving an empty block.  We want to put in one br to
+  // make block have a line.  Then code further below will put in a second br.)
   bool isEmpty;
-  IsEmptyBlock(blockParent, &isEmpty);
+  IsEmptyBlock(GetAsDOMNode(blockParent), &isEmpty);
   if (isEmpty) {
-    uint32_t blockLen;
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetLengthOfDOMNode(blockParent, blockLen);
-    NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMNode> brNode;
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->CreateBR(blockParent, blockLen, address_of(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> br = mHTMLEditor->CreateBR(blockParent,
+                                                 blockParent->Length());
+    NS_ENSURE_STATE(br);
   }
 
-  nsCOMPtr<nsIDOMNode> listItem = IsInListItem(blockParent);
-  if (listItem && listItem != hostNode) {
-    ReturnInListItem(aSelection, listItem, node, offset);
+  nsCOMPtr<Element> listItem = IsInListItem(blockParent);
+  if (listItem && listItem != host) {
+    ReturnInListItem(&aSelection, GetAsDOMNode(listItem), GetAsDOMNode(node),
+                     offset);
     *aHandled = true;
     return NS_OK;
-  } else if (nsHTMLEditUtils::IsHeader(blockParent)) {
-    // headers: close (or split) header
-    ReturnInHeader(aSelection, blockParent, node, offset);
+  } else if (nsHTMLEditUtils::IsHeader(*blockParent)) {
+    // Headers: close (or split) header
+    ReturnInHeader(&aSelection, GetAsDOMNode(blockParent), GetAsDOMNode(node),
+                   offset);
     *aHandled = true;
     return NS_OK;
-  } else if (nsHTMLEditUtils::IsParagraph(blockParent)) {
-    // paragraphs: special rules to look for <br>s
-    res = ReturnInParagraph(aSelection, blockParent, node, offset,
-                            aCancel, aHandled);
+  } else if (blockParent->IsHTMLElement(nsGkAtoms::p)) {
+    // Paragraphs: special rules to look for <br>s
+    res = ReturnInParagraph(&aSelection, GetAsDOMNode(blockParent),
+                            GetAsDOMNode(node), offset, aCancel, aHandled);
     NS_ENSURE_SUCCESS(res, res);
-    // fall through, we may not have handled it in ReturnInParagraph()
+    // Fall through, we may not have handled it in ReturnInParagraph()
   }
 
-  // if not already handled then do the standard thing
+  // If not already handled then do the standard thing
   if (!(*aHandled)) {
     *aHandled = true;
-    return StandardBreakImpl(node, offset, aSelection);
+    return StandardBreakImpl(GetAsDOMNode(node), offset, &aSelection);
   }
   return NS_OK;
 }
@@ -6374,14 +6357,6 @@ nsHTMLEditRules::MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray
 //               Also stops on the active editor host (contenteditable).
 //               Also test if aNode is an li itself.
 //
-already_AddRefed<nsIDOMNode>
-nsHTMLEditRules::IsInListItem(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsIDOMNode> retval = do_QueryInterface(IsInListItem(node));
-  return retval.forget();
-}
-
 Element*
 nsHTMLEditRules::IsInListItem(nsINode* aNode)
 {
