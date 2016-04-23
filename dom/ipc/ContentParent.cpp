@@ -265,7 +265,7 @@ using namespace mozilla::system;
 #endif
 
 #ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushNotifier.h"
+#include "nsIPushNotifier.h"
 #endif
 
 #ifdef XP_WIN
@@ -5842,13 +5842,11 @@ ContentParent::RecvNotifyPushObservers(const nsCString& aScope,
                                        const nsString& aMessageId)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifyPushObservers(aScope, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5862,13 +5860,11 @@ ContentParent::RecvNotifyPushObserversWithData(const nsCString& aScope,
                                                InfallibleTArray<uint8_t>&& aData)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifyPushObservers(aScope, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5880,13 +5876,11 @@ bool
 ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope);
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -5899,13 +5893,11 @@ ContentParent::RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
                                                        const uint16_t& aReason)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifySubscriptionLostObservers(aScope, aReason);
   Unused << NS_WARN_IF(NS_FAILED(rv));
