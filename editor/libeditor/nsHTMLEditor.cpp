@@ -1134,7 +1134,7 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
   return NS_OK;
 }
 
-already_AddRefed<Element>
+Element*
 nsHTMLEditor::CreateBR(nsINode* aNode, int32_t aOffset, EDirection aSelect)
 {
   nsCOMPtr<nsIDOMNode> parent = GetAsDOMNode(aNode);
@@ -1143,7 +1143,7 @@ nsHTMLEditor::CreateBR(nsINode* aNode, int32_t aOffset, EDirection aSelect)
   // We assume everything is fine if the br is not null, irrespective of retval
   CreateBRImpl(address_of(parent), &offset, address_of(outBRNode), aSelect);
   nsCOMPtr<Element> ret = do_QueryInterface(outBRNode);
-  return ret.forget();
+  return ret;
 }
 
 NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, int32_t aOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
@@ -4773,7 +4773,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    *aOutBrNode = GetAsDOMNode(CreateBR(deepestStyle, 0).take());
+    *aOutBrNode = GetAsDOMNode(CreateBR(deepestStyle, 0));
     NS_ENSURE_STATE(*aOutBrNode);
   }
   return NS_OK;
