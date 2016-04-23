@@ -507,6 +507,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'PrivateTab.java',
     'promotion/AddToHomeScreenPromotion.java',
     'promotion/HomeScreenPrompt.java',
+    'promotion/SimpleHelperUI.java',
     'prompts/ColorPickerInput.java',
     'prompts/IconGridInput.java',
     'prompts/IntentChooserPrompt.java',
