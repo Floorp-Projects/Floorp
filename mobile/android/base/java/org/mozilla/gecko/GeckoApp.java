@@ -1452,6 +1452,22 @@ public abstract class GeckoApp
         return null;
     }
 
+    private String getIntentURI(SafeIntent intent) {
+        final String passedUri;
+        final String uri = getURIFromIntent(intent);
+
+        if (!TextUtils.isEmpty(uri)) {
+            passedUri = uri;
+        } else {
+            passedUri = null;
+        }
+        return passedUri;
+    }
+
+    private boolean invokedWithExternalURL(String uri) {
+        return uri != null && !AboutPages.isAboutHome(uri);
+    }
+
     private void initialize() {
         mInitialized = true;
 
@@ -1461,16 +1477,9 @@ public abstract class GeckoApp
         final SafeIntent intent = new SafeIntent(getIntent());
         final String action = intent.getAction();
 
-        final String uri = getURIFromIntent(intent);
+        final String passedUri = getIntentURI(intent);
 
-        final String passedUri;
-        if (!TextUtils.isEmpty(uri)) {
-            passedUri = uri;
-        } else {
-            passedUri = null;
-        }
-
-        final boolean isExternalURL = passedUri != null && !AboutPages.isAboutHome(passedUri);
+        final boolean isExternalURL = invokedWithExternalURL(passedUri);
 
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.
