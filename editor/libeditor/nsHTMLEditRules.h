@@ -216,8 +216,9 @@ protected:
                           mozilla::dom::Selection* aSelection,
                           nsCOMPtr<nsIDOMNode> *aSelNode,
                           int32_t *aOffset);
-  nsresult ReturnInListItem(mozilla::dom::Selection* aSelection,
-                            nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
+  nsresult ReturnInListItem(mozilla::dom::Selection& aSelection,
+                            mozilla::dom::Element& aHeader,
+                            nsINode& aNode,
                             int32_t aOffset);
   nsresult AfterEditInner(EditAction action,
                           nsIEditor::EDirection aDirection);
