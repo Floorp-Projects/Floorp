@@ -21,6 +21,11 @@
 #include "mozilla/sandboxTarget.h"
 #endif
 
+#if defined(MOZ_CRASHREPORTER) && defined(XP_WIN)
+#include "aclapi.h"
+#include "sddl.h"
+#endif
+
 using namespace IPC;
 
 using base::GetCurrentProcId;
@@ -300,7 +305,8 @@ bool DuplicateHandle(HANDLE aSourceHandle,
 #endif
 
 #ifdef MOZ_CRASHREPORTER
-void AnnotateSystemError()
+void
+AnnotateSystemError()
 {
   int64_t error = 0;
 #if defined(XP_WIN)
@@ -309,9 +315,91 @@ void AnnotateSystemError()
   error = errno;
 #endif
   if (error) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("SystemError"),
-                                       nsPrintfCString("%lld", error));
+    CrashReporter::AnnotateCrashReport(
+      NS_LITERAL_CSTRING("IPCSystemError"),
+      nsPrintfCString("%lld", error));
   }
+}
+
+void
+AnnotateProcessInformation(base::ProcessId aPid)
+{
+#ifdef XP_WIN
+  HANDLE processHandle = OpenProcess(READ_CONTROL|PROCESS_QUERY_INFORMATION, FALSE, aPid);
+  if (!processHandle) {
+    CrashReporter::AnnotateCrashReport(
+      NS_LITERAL_CSTRING("IPCExtraSystemError"),
+      nsPrintfCString("Failed to get information of process %d, error(%d)",
+                      aPid,
+                      ::GetLastError()));
+    return;
+  }
+
+  DWORD exitCode = 0;
+  if (!::GetExitCodeProcess(processHandle, &exitCode)) {
+    CrashReporter::AnnotateCrashReport(
+      NS_LITERAL_CSTRING("IPCExtraSystemError"),
+      nsPrintfCString("Failed to get exit information of process %d, error(%d)",
+                      aPid,
+                      ::GetLastError()));
+    return;
+  }
+
+  if (exitCode != STILL_ACTIVE) {
+    CrashReporter::AnnotateCrashReport(
+      NS_LITERAL_CSTRING("IPCExtraSystemError"),
+      nsPrintfCString("Process %d is not alive. Exit code: %d",
+                      aPid,
+                      exitCode));
+    return;
+  }
+
+  PSECURITY_DESCRIPTOR secDesc = nullptr;
+  PSID ownerSid = nullptr;
+  DWORD rv = ::GetSecurityInfo(processHandle,
+                               SE_KERNEL_OBJECT,
+                               OWNER_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                               &ownerSid,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               &secDesc);
+  if (rv != ERROR_SUCCESS) {
+    // GetSecurityInfo() failed.
+    CrashReporter::AnnotateCrashReport(
+      NS_LITERAL_CSTRING("IPCExtraSystemError"),
+      nsPrintfCString("Failed to get security information of process %d,"
+                      " error(%d)",
+                      aPid,
+                      rv));
+    return;
+  }
+
+  LPTSTR ownerSidStr = nullptr;
+  nsString annotation{};
+  annotation.AppendLiteral("Owner: ");
+  if (::ConvertSidToStringSid(ownerSid, &ownerSidStr)) {
+    annotation.Append(ownerSidStr);
+  }
+  ::LocalFree(ownerSidStr);
+
+  LPTSTR secDescStr = nullptr;
+  annotation.AppendLiteral(", Security Descriptor: ");
+  if (::ConvertSecurityDescriptorToStringSecurityDescriptor(secDesc,
+                                                            SDDL_REVISION_1,
+                                                            DACL_SECURITY_INFORMATION,
+                                                            &secDescStr,
+                                                            nullptr)) {
+    annotation.Append(secDescStr);
+  }
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("IPCExtraSystemError"),
+    NS_ConvertUTF16toUTF8(annotation));
+
+  ::LocalFree(secDescStr);
+  ::LocalFree(secDesc);
+#endif
 }
 #endif
 
