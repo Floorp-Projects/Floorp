@@ -126,7 +126,7 @@ protected:
   void InitFields();
 
   // nsHTMLEditRules implementation methods
-  nsresult WillInsert(mozilla::dom::Selection* aSelection, bool* aCancel);
+  void WillInsert(mozilla::dom::Selection& aSelection, bool* aCancel);
   nsresult WillInsertText(  EditAction aAction,
                             mozilla::dom::Selection* aSelection,
                             bool            *aCancel,
