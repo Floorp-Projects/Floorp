@@ -41,7 +41,7 @@ function checkPromptState(promptState, expectedState) {
 
 let selectVal = {};
 let isOK;
-let state, action;
+let gChromeScript, state, action;
 
 function handlePrompt() {
   return new Promise(resolve => {
@@ -54,6 +54,8 @@ function handlePrompt() {
   });
 }
 
+let url = SimpleTest.getTestFileURL("chromeScript.js");
+gChromeScript = SpecialPowers.loadChromeScript(url);
 
 // =====
 add_task(function* test_select_empty_list() {
@@ -138,6 +140,11 @@ add_task(function* test_cancel_prompt() {
     is(selectVal.value, 0, "checking selected index");
 
     yield promptDone;
+});
+
+// =====
+add_task(function* cleanup() {
+    gChromeScript.destroy();
 });
 
 </script>
