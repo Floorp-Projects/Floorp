@@ -77,6 +77,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
+import android.support.annotation.WorkerThread;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -201,6 +202,8 @@ public abstract class GeckoApp
 
     protected boolean mLastSessionCrashed;
     protected boolean mShouldRestore;
+    private boolean mSessionRestoreParsingFinished = false;
+
     protected boolean mInitialized;
     protected boolean mWindowFocusInitialized;
     private Telemetry.Timer mJavaUiStartupTimer;
@@ -1276,6 +1279,43 @@ public abstract class GeckoApp
             mPrivateBrowsingSession = savedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
         }
 
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                // If we are doing a restore, read the session data so we can send it to Gecko later.
+                String restoreMessage = null;
+                if (!mIsRestoringActivity && mShouldRestore) {
+                    try {
+                        // restoreSessionTabs() will create simple tab stubs with the
+                        // URL and title for each page, but we also need to restore
+                        // session history. restoreSessionTabs() will inject the IDs
+                        // of the tab stubs into the JSON data (which holds the session
+                        // history). This JSON data is then sent to Gecko so session
+                        // history can be restored for each tab.
+                        final SafeIntent intent = new SafeIntent(getIntent());
+                        restoreMessage = restoreSessionTabs(invokedWithExternalURL(getIntentURI(intent)));
+                    } catch (SessionRestoreException e) {
+                        // If restore failed, do a normal startup
+                        Log.e(LOGTAG, "An error occurred during restore", e);
+                        mShouldRestore = false;
+                    }
+                }
+
+                synchronized (this) {
+                    mSessionRestoreParsingFinished = true;
+                    notifyAll();
+                }
+
+                // If we are doing a restore, send the parsed session data to Gecko.
+                if (!mIsRestoringActivity) {
+                    GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
+                }
+
+                // Make sure sessionstore.bak is either updated or deleted as necessary.
+                getProfile().updateSessionFile(mShouldRestore);
+            }
+        });
+
         // Perform background initialization.
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -1489,26 +1529,17 @@ public abstract class GeckoApp
 
         initializeChrome();
 
-        // If we are doing a restore, read the session data and send it to Gecko
-        if (!mIsRestoringActivity) {
-            String restoreMessage = null;
-            if (mShouldRestore) {
+        // We need to wait here because mShouldRestore can revert back to
+        // false if a parsing error occurs and the startup tab we load
+        // depends on whether we restore tabs or not.
+        synchronized (this) {
+            while (!mSessionRestoreParsingFinished) {
                 try {
-                    // restoreSessionTabs() will create simple tab stubs with the
-                    // URL and title for each page, but we also need to restore
-                    // session history. restoreSessionTabs() will inject the IDs
-                    // of the tab stubs into the JSON data (which holds the session
-                    // history). This JSON data is then sent to Gecko so session
-                    // history can be restored for each tab.
-                    restoreMessage = restoreSessionTabs(isExternalURL);
-                } catch (SessionRestoreException e) {
-                    // If restore failed, do a normal startup
-                    Log.e(LOGTAG, "An error occurred during restore", e);
-                    mShouldRestore = false;
+                    wait();
+                } catch (final InterruptedException e) {
+                    // Ignore and wait again.
                 }
             }
-
-            GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
         }
 
         // External URLs should always be loaded regardless of whether Gecko is
@@ -1539,9 +1570,6 @@ public abstract class GeckoApp
 
             processTabQueue();
         }
-
-        // Make sure sessionstore.bak is either updated or deleted as necessary.
-        getProfile().updateSessionFile(mShouldRestore);
 
         recordStartupActionTelemetry(passedUri, action);
 
@@ -1651,6 +1679,7 @@ public abstract class GeckoApp
         });
     }
 
+    @WorkerThread
     private String restoreSessionTabs(final boolean isExternalURL) throws SessionRestoreException {
         try {
             String sessionString = getProfile().readSessionFile(false);
@@ -1666,7 +1695,7 @@ public abstract class GeckoApp
                 final JSONObject windowObject = new JSONObject();
                 SessionParser parser = new SessionParser() {
                     @Override
-                    public void onTabRead(SessionTab sessionTab) {
+                    public void onTabRead(final SessionTab sessionTab) {
                         JSONObject tabObject = sessionTab.getTabObject();
 
                         int flags = Tabs.LOADURL_NEW_TAB;
@@ -1674,8 +1703,13 @@ public abstract class GeckoApp
                         flags |= (tabObject.optBoolean("desktopMode") ? Tabs.LOADURL_DESKTOP : 0);
                         flags |= (tabObject.optBoolean("isPrivate") ? Tabs.LOADURL_PRIVATE : 0);
 
-                        Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
-                        tab.updateTitle(sessionTab.getTitle());
+                        final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
+                        ThreadUtils.postToUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tab.updateTitle(sessionTab.getTitle());
+                            }
+                        });
 
                         try {
                             tabObject.put("tabId", tab.getId());
