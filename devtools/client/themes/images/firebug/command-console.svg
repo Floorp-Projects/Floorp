@@ -1,0 +1,31 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
+  <defs>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#325de6"/>
+      <stop offset="1" stop-color="#8ba3f1"/>
+    </linearGradient>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#1a47d6"/>
+      <stop offset="1" stop-color="#6786ed"/>
+    </linearGradient>
+    <linearGradient x1="7.771" y1="13.61" x2="7.771" y2="2.16" id="e" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-.70047 0 0 .8 8.145 1037.962)"/>
+    <linearGradient x1="7.21" y1="14.919" x2="7.21" y2="1.081" id="f" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-.70047 0 0 .8 8.145 1037.962)"/>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#282828"/>
+      <stop offset="1" stop-color="#505050"/>
+    </linearGradient>
+    <linearGradient id="d">
+      <stop offset="0"/>
+      <stop offset="1" stop-color="#3c3c3c"/>
+    </linearGradient>
+    <linearGradient x1="7.771" y1="15.451" x2="7.771" y2="3.941" id="g" xlink:href="#c" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-.9204 0 0 .56 15.804 1039.472)"/>
+    <linearGradient x1="7.21" y1="16.411" x2="7.21" y2="3.037" id="h" xlink:href="#d" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-.9204 0 0 .56 15.804 1039.472)"/>
+  </defs>
+  <g stroke-linejoin="round">
+    <path d="M1.14 1039.162l4.56 5.167-4.56 5.233-.84-.8 3.166-4.433-3.166-4.367z" fill="url(#e)" stroke="url(#f)" stroke-width=".6" transform="translate(0 -1036.362)"/>
+    <path d="M5.688 1040.05v1.125h10.125v-1.125H5.687zm2.5 3.75v1.125h7.624v-1.125H8.189zm-2.5 3.75v1.125h10.125v-1.125H5.687z" style="marker:none" color="#000" fill="url(#g)" stroke="url(#h)" stroke-width=".4" overflow="visible" transform="translate(0 -1036.362)"/>
+  </g>
+</svg>

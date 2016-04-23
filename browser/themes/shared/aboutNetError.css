@@ -2,80 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/in-content/common.css");
+@import url("chrome://browser/skin/error-pages.css");
 
 body {
-  display: flex;
-  box-sizing: border-box;
-  min-height: 100vh;
-  padding: 0 48px;
-  align-items: center;
-  justify-content: center;
+  background-image: linear-gradient(-45deg, #eeeeee,     #eeeeee 33%,
+                                            #fbfbfb 33%, #fbfbfb 66%,
+                                            #eeeeee 66%, #eeeeee);
 }
 
-ul, ol {
-  margin: 0;
-  padding: 0;
-  -moz-margin-start: 1em;
+body.certerror {
+  background-image: linear-gradient(-45deg, #f0d000,     #f0d000 33%,
+                                            #fedc00 33%, #fedc00 66%,
+                                            #f0d000 66%, #f0d000);
 }
 
-ul > li, ol > li {
-  margin-bottom: .5em;
-}
-
-ul {
-  list-style: disc;
-}
-
-#errorPageContainer {
-  position: relative;
-  min-width: 320px;
-  max-width: 512px;
-}
-
-#errorTitle {
-  background: url("chrome://global/skin/icons/info.svg") left 0 no-repeat;
-  background-size: 3em;
-  -moz-margin-start: -5em;
-  -moz-padding-start: 5em;
-}
-
-body.certerror #errorTitle {
-  background-image: url("chrome://browser/skin/cert-error.svg");
-}
-
-#errorTitleText {
-  border-bottom: 1px solid #C1C1C1;
-  padding-bottom: 0.4em;
-}
-
-#errorTitleText:-moz-dir(rtl) {
-  background-position: right 0;
-}
-
-#errorTitle[sslv3=true],
-#errorTitle[weakCrypto=true] {
+body.certerror .title {
   background-image: url("cert-error.svg");
-}
-
-#errorTryAgain {
-  margin-top: 1.2em;
-  min-width: 150px
 }
 
 #errorContainer {
   display: none;
-}
-
-@media (max-width: 675px) {
-  #errorTitle,
-  #errorTitle[sslv3=true],
-  #errorTitle[weakCrypto=true] {
-    padding-top: 0;
-    background-image: none;
-    -moz-padding-start: 0;
-    -moz-margin-start: 0;
-  }
 }
 
 /* Pressing the retry button will cause the cursor to flicker from a pointer to
@@ -89,42 +35,40 @@ button:disabled {
   display: none;
 }
 
-#buttonContainer {
+#certErrorButtonContainer {
   display: none;
-  flex-flow: row wrap;
 }
 
-#buttonSpacer {
-  flex: 1;
+body.certerror #certErrorButtonContainer {
+  display: flex;
+}
+
+body.certerror #netErrorButtonContainer {
+  display: none;
+}
+
+#errorTryAgain {
+  margin-top: 1.2em;
+  min-width: 150px;
 }
 
 #returnButton {
-  background-color: var(--in-content-primary-button-background);
-  border: none;
-  color: var(--in-content-selected-text);
   min-width: 250px;
-  margin-inline-start: 0;
-}
-
-#returnButton:hover {
-  background-color: var(--in-content-primary-button-background-hover) !important;
-}
-
-#returnButton:hover:active {
-  background-color: var(--in-content-primary-button-background-active) !important;
 }
 
 #advancedButton {
   display: none;
-  min-width: 150px;
+}
+
+body.certerror #advancedButton {
+  display: block;
 }
 
 #certificateErrorReporting {
   display: none;
 }
 
-#weakCryptoAdvancedPanel,
-#badCertAdvancedPanel {
+.advanced-panel {
   /* Hidden until the link is clicked */
   display: none;
   background-color: white;
@@ -155,13 +99,13 @@ span#hostname {
   cursor: pointer;
 }
 
-body:not(.certerror) #errorCode {
+#errorCode:not([href]) {
   color: var(--in-content-page-color);
   cursor: text;
   text-decoration: none;
 }
 
-body.certerror #errorCode {
+#errorCode[href] {
   white-space: nowrap;
 }
 

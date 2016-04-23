@@ -2,24 +2,24 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
-    <defs>
-        <linearGradient id="b">
-            <stop offset="0" stop-color="#f2451d"/>
-            <stop offset=".101" stop-color="#f01428" stop-opacity=".8"/>
-            <stop offset=".897" stop-color="#de8493"/>
-            <stop offset="1" stop-color="#efc3cc"/>
-        </linearGradient>
-        <linearGradient id="a">
-            <stop offset="0" stop-color="#520e0d"/>
-            <stop offset="1" stop-color="#c4181d"/>
-        </linearGradient>
-        <linearGradient x1="7.231" y1="1051.323" x2="7.231" y2="1037.401" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1036.362)"/>
-        <linearGradient x1="8.769" y1="1049.931" x2="8.769" y2="1038.668" id="c" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1036.362)"/>
-        <filter height="1.48" y="-.24" width="1.48" x="-.24" id="e" color-interpolation-filters="sRGB">
-            <feGaussianBlur stdDeviation=".8"/>
-        </filter>
-    </defs>
-    <rect y="1.5" x="1.5" ry="2" rx="2" height="13" width="13" fill="url(#c)" stroke="url(#d)" stroke-linejoin="round"/>
-    <path style="marker:none" d="M4.5 5v8h8V5zm1 1h6v4h-6z" color="#000" overflow="visible" opacity=".4" filter="url(#e)"/>
-    <path style="marker:none" d="M4 4v8h8V4zm1 1h6v4H5z" color="#000" overflow="visible" fill="#fff"/>
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#f2451d"/>
+      <stop offset=".101" stop-color="#f01428" stop-opacity=".8"/>
+      <stop offset=".897" stop-color="#de8493"/>
+      <stop offset="1" stop-color="#efc3cc"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#520e0d"/>
+      <stop offset="1" stop-color="#c4181d"/>
+    </linearGradient>
+    <linearGradient x1="7.231" y1="1051.323" x2="7.231" y2="1037.401" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1036.362)"/>
+    <linearGradient x1="8.769" y1="1049.931" x2="8.769" y2="1038.668" id="c" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1036.362)"/>
+    <filter height="1.48" y="-.24" width="1.48" x="-.24" id="e" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation=".8"/>
+    </filter>
+  </defs>
+  <rect y="1.5" x="1.5" ry="2" rx="2" height="13" width="13" fill="url(#c)" stroke="url(#d)" stroke-linejoin="round"/>
+  <path style="marker:none" d="M4.5 5v8h8V5zm1 1h6v4h-6z" color="#000" overflow="visible" opacity=".4" filter="url(#e)"/>
+  <path style="marker:none" d="M4 4v8h8V4zm1 1h6v4H5z" color="#000" overflow="visible" fill="#fff"/>
 </svg>

@@ -115,11 +115,6 @@
       }
 
       function showAdvancedButton(allowOverride) {
-        // Display weak crypto advanced UI
-        document.getElementById("buttonContainer").style.display = "flex";
-        document.getElementById("advancedButton").style.display = "block";
-        document.getElementById("errorTryAgain").style.display = "none";
-
         // Get the hostname and add it to the panel
         var panelId = gIsCertError ? "badCertAdvancedPanel" : "weakCryptoAdvancedPanel";
         var panel = document.getElementById(panelId);
@@ -222,21 +217,15 @@
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
-        var errTitle = document.getElementById("et_" + err);
-        var errDesc  = document.getElementById("ed_" + err);
+        var errTitle = document.getElementById("et_" + err).innerHTML;
+        var errDesc  = document.getElementById("ed_" + err).innerHTML;
         if (!errTitle || !errDesc)
         {
-          errTitle = document.getElementById("et_generic");
-          errDesc  = document.getElementById("ed_generic");
+          errTitle = document.getElementById("et_generic").innerHTML;
+          errDesc  = document.getElementById("ed_generic").innerHTML;
         }
 
-        var title = document.getElementById("errorTitleText");
-        if (title)
-        {
-          title.parentNode.replaceChild(errTitle, title);
-          // change id to the replaced child's id so styling works
-          errTitle.id = "errorTitleText";
-        }
+        document.querySelector(".title-text").innerHTML = errTitle;
 
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
@@ -255,22 +244,18 @@
         var ld = document.getElementById("errorLongDesc");
         if (ld)
         {
-          ld.parentNode.replaceChild(errDesc, ld);
-          // change id to the replaced child's id so styling works
-          errDesc.id = "errorLongDesc";
+          ld.innerHTML = errDesc;
         }
 
         if (err == "sslv3Used") {
-          document.getElementById("errorTitle").setAttribute("sslv3", "true");
-          document.getElementById("errorTryAgain").style.display = "none";
           document.getElementById("learnMoreContainer").style.display = "block";
           var learnMoreLink = document.getElementById("learnMoreLink");
           learnMoreLink.href = "https://support.mozilla.org/kb/how-resolve-sslv3-error-messages-firefox";
-          document.getElementById("buttonContainer").style.display = "flex";
+          document.body.className = "certerror";
         }
 
         if (err == "weakCryptoUsed") {
-          document.getElementById("errorTitle").setAttribute("weakCrypto", "true");
+          document.body.className = "certerror";
         }
 
         // remove undisplayed errors to avoid bug 39098
@@ -297,13 +282,13 @@
         if (err == "remoteXUL") {
           // Remove the "Try again" button for remote XUL errors given that
           // it is useless.
-          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("netErrorButtonContainer").style.display = "none";
         }
 
         if (err == "cspBlocked") {
           // Remove the "Try again" button for CSP violations, since it's
           // almost certainly useless. (Bug 553180)
-          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("netErrorButtonContainer").style.display = "none";
         }
 
         window.addEventListener("AboutNetErrorOptions", function(evt) {
@@ -553,11 +538,11 @@
     </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+    <div id="errorPageContainer" class="container">
 
       <!-- Error Title -->
-      <div id="errorTitle">
-        <h1 id="errorTitleText" />
+      <div class="title">
+        <h1 class="title-text"/>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
@@ -576,14 +561,17 @@
           <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
         </div>
 
-        <div id="buttonContainer">
-          <button id="returnButton" autocomplete="off" autofocus="true">&returnToPreviousPage.label;</button>
-          <div id="buttonSpacer"></div>
+        <div id="certErrorButtonContainer" class="button-container">
+          <button id="returnButton" class="primary" autocomplete="off" autofocus="true">&returnToPreviousPage.label;</button>
+          <div class="button-spacer"></div>
           <button id="advancedButton" autocomplete="off" autofocus="true">&advanced.label;</button>
         </div>
       </div>
 
-      <button id="errorTryAgain" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
+      <div id="netErrorButtonContainer" class="button-container">
+        <button id="errorTryAgain" class="primary" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
+      </div>
+
       <script>
         // Only do autofocus if we're the toplevel frame; otherwise we
         // don't want to call attention to ourselves!  The key part is
@@ -592,11 +580,10 @@
         // button.
         if (window.top == window) {
             var button = document.getElementById("errorTryAgain");
-            var nextSibling = button.nextSibling;
             var parent = button.parentNode;
-            parent.removeChild(button);
+            button.remove();
             button.setAttribute("autofocus", "true");
-            parent.insertBefore(button, nextSibling);
+            parent.appendChild(button);
         }
       </script>
 
@@ -609,7 +596,7 @@
         </p>
       </div>
 
-      <div id="weakCryptoAdvancedPanel">
+      <div id="weakCryptoAdvancedPanel" class="advanced-panel">
         <div id="weakCryptoAdvancedDescription">
           <p>&weakCryptoAdvanced.longDesc;</p>
         </div>
@@ -619,7 +606,7 @@
         </div>
       </div>
 
-      <div id="badCertAdvancedPanel">
+      <div id="badCertAdvancedPanel" class="advanced-panel">
         <p id="badCertTechnicalInfo"/>
         <button id="exceptionDialogButton">&securityOverride.exceptionButtonLabel;</button>
       </div>

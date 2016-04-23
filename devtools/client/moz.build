@@ -12,6 +12,7 @@ DIRS += [
     'canvasdebugger',
     'commandline',
     'debugger',
+    'dom',
     'eyedropper',
     'framework',
     'inspector',
