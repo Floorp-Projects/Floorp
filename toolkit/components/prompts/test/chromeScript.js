@@ -81,7 +81,6 @@ function getSelectState(ui) {
 function getPromptState(ui) {
   let state = {};
   state.msg         = ui.infoBody.textContent;
-  state.titleHidden = ui.infoTitle.getAttribute("hidden") == "true";
   state.textHidden  = ui.loginContainer.hidden;
   state.passHidden  = ui.password1Container.hidden;
   state.checkHidden = ui.checkboxContainer.hidden;
@@ -175,11 +174,6 @@ function dismissPrompt(ui, action) {
     case 2:
       ui.button2.click();
       break;
-    case "ESC":
-      // XXX This is assuming tab-modal.
-      let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-      EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, browserWin);
-      break;
     case "pollOK":
       // Buttons are disabled at the moment, poll until they're reenabled.
       // Can't use setInterval here, because the window's in a modal state
@@ -196,6 +190,39 @@ function dismissPrompt(ui, action) {
       throw "dismissPrompt action listed unknown button.";
   }
 }
+
+
+addMessageListener("cancelPrompt", message => {
+  cancelPromptWhenItAppears();
+});
+
+function cancelPromptWhenItAppears() {
+  let interval = setInterval(() => {
+    if (cancelPrompt()) {
+      clearInterval(interval);
+    }
+  }, 100);
+}
+
+function cancelPrompt() {
+  let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let gBrowser = browserWin.gBrowser;
+  let promptManager = gBrowser.getTabModalPromptBox(gBrowser.selectedBrowser);
+  let prompts = promptManager.listPrompts();
+  if (!prompts.length) {
+    return false;
+  }
+  sendAsyncMessage("promptCanceled", {
+    ui: {
+      infoTitle: {
+        hidden: prompts[0].ui.infoTitle.getAttribute("hidden") == "true",
+      },
+    },
+  });
+  EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, browserWin);
+  return true;
+}
+
 
 function getDialogDoc() {
   // Trudge through all the open windows, until we find the one

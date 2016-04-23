@@ -3,12 +3,10 @@
   <title>Test for Bug 620145</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="runtest()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=620145">Mozilla Bug 620145</a>
 <pre id="test">
 </pre>
@@ -24,60 +22,64 @@
 <button id="button" onmouseup="openAlert()">Button</button>
 
 <script class="testbody" type="text/javascript">
-var selectionTest = false;
-var state, action;
+SimpleTest.waitForExplicitFinish();
 
-function openAlert() {
-  info("opening alert...");
-  alert("hello!");
-  info("...alert done.");
+var selectionTest = false;
+var testNum = 0;
+
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  var Services = SpecialPowers.Cu
+                              .import("resource://gre/modules/Services.jsm")
+                              .Services;
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
 }
 
-add_task(function* runTest() {
+function openAlert() {
+  ok(true, "opening alert...");
+  alert("hello!");
+  ok(true, "...alert done.");
+}
+
+function runtest()
+{
   // The <button> in this test's HTML opens a prompt when clicked.
   // Here we send the events to simulate clicking it.
-  info("isTabModal? " + isTabModal);
+  ok(true, "starting test");
+  isTabModal = hasTabModalPrompts();
+  if (!isTabModal)
+    todo(false, "Test is run with tab modal prompts disabled.");
+  else
+    ok(true, "Test is run with tab modal prompts enabled.");
+
   selectionTest = isTabModal;
 
-  state = {
-    msg         : "hello!",
-    iconClass   : "alert-icon",
-    titleHidden : true,
-    textHidden  : true,
-    passHidden  : true,
-    checkHidden : true,
-    textValue   : "",
-    passValue   : "",
-    checkMsg    : "",
-    checked     : false,
-    focused     : "button0",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick: "ok",
-  };
-
-  promptDone = handlePrompt(action);
+  let url = SimpleTest.getTestFileURL("chromeScript.js");
+  let chrome = SpecialPowers.loadChromeScript(url);
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var button = $("button");
   dispatchMouseEvent(button, "mousedown");
   dispatchMouseEvent(button, "mouseup");
+
   // alert appears at this point, to be closed by the chrome script.
 
-  yield promptDone;
   checkSelection();
 
-  // using same state and action.
-  promptDone = handlePrompt(action);
+  chrome.sendAsyncMessage("cancelPrompt");
 
   var text = $("text");
   dispatchMouseEvent(text, "mousedown");
   dispatchMouseEvent(text, "mouseup");
+
   // alert appears at this point, to be closed by the chrome script.
 
-  yield promptDone;
   checkSelection();
-});
+
+  chrome.destroy();
+  SimpleTest.finish();
+}
 
 function dispatchMouseEvent(target, type)
 {
