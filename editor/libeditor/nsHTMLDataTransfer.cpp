@@ -344,7 +344,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
     if (aClearStyle) {
       // pasting does not inherit local inline styles
-      nsCOMPtr<nsINode> tmpNode = selection->GetAnchorNode();
+      nsCOMPtr<nsIDOMNode> tmpNode =
+        do_QueryInterface(selection->GetAnchorNode());
       int32_t tmpOffset = static_cast<int32_t>(selection->AnchorOffset());
       rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
