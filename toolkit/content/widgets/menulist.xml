@@ -254,10 +254,6 @@
             event.initEvent("ValueChange", true, true);
             this.dispatchEvent(event);
 
-            if (this.menuBoxObject) {
-              this.menuBoxObject.activeChild = this.mSelectedInternal;
-            }
-
             return val;
           ]]>
         </setter>
