@@ -1678,6 +1678,11 @@ nsDocument::~nsDocument()
   mImageTracker.Clear();
 
   mPlugins.Clear();
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->RemoveObserver(this, "service-worker-get-client");
+  }
 }
 
 NS_INTERFACE_TABLE_HEAD(nsDocument)
@@ -2078,6 +2083,11 @@ nsDocument::Init()
   mScriptLoader = new nsScriptLoader(this);
 
   mozilla::HoldJSObjects(this);
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->AddObserver(this, "service-worker-get-client", /* ownsWeak */ true);
+  }
 
   return NS_OK;
 }
@@ -4678,27 +4688,6 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
         mMaybeServiceWorkerControlled = false;
       }
       swm->MaybeStopControlling(this);
-    }
-
-    // Remove ourself from the list of clients.  We only register
-    // content principal documents in this list.
-    if (!nsContentUtils::IsSystemPrincipal(GetPrincipal()) &&
-        !GetPrincipal()->GetIsNullPrincipal()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os) {
-        os->RemoveObserver(this, "service-worker-get-client");
-      }
-    }
-
-  } else if (!mScriptGlobalObject && aScriptGlobalObject &&
-             !nsContentUtils::IsSystemPrincipal(GetPrincipal()) &&
-             !GetPrincipal()->GetIsNullPrincipal()) {
-    // This document is being activated.  Register it in the list of
-    // clients.  We only do this for content principal documents
-    // since we can never observe system or null principals.
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->AddObserver(this, "service-worker-get-client", /* ownsWeak */ false);
     }
   }
 
@@ -12457,18 +12446,11 @@ nsDocument::Observe(nsISupports *aSubject,
       OnAppThemeChanged();
     }
   } else if (strcmp("service-worker-get-client", aTopic) == 0) {
-    // No need to generate the ID if it doesn't exist here.  The ID being
-    // requested must already be generated in order to passed in as
-    // aSubject.
-    nsString clientId = GetId();
+    nsAutoString clientId;
+    GetOrCreateId(clientId);
     if (!clientId.IsEmpty() && clientId.Equals(aData)) {
       nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_QueryInterface(aSubject);
       if (ifptr) {
-#ifdef DEBUG
-        nsCOMPtr<nsISupports> value;
-        MOZ_ALWAYS_SUCCEEDS(ifptr->GetData(getter_AddRefs(value)));
-        MOZ_ASSERT(!value);
-#endif
         ifptr->SetData(static_cast<nsIDocument*>(this));
         ifptr->SetDataIID(&NS_GET_IID(nsIDocument));
       }
