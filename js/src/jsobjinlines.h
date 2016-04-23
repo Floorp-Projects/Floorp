@@ -824,26 +824,6 @@ GetClassOfValue(JSContext* cx, HandleValue v, ESClassValue* classValue)
     return GetBuiltinClass(cx, obj, classValue);
 }
 
-inline bool
-Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp)
-{
-    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-        return Proxy::boxedValue_unbox(cx, obj, vp);
-
-    if (obj->is<BooleanObject>())
-        vp.setBoolean(obj->as<BooleanObject>().unbox());
-    else if (obj->is<NumberObject>())
-        vp.setNumber(obj->as<NumberObject>().unbox());
-    else if (obj->is<StringObject>())
-        vp.setString(obj->as<StringObject>().unbox());
-    else if (obj->is<DateObject>())
-        vp.set(obj->as<DateObject>().UTCTime());
-    else
-        vp.setUndefined();
-
-    return true;
-}
-
 extern NativeObject*
 InitClass(JSContext* cx, HandleObject obj, HandleObject parent_proto,
           const Class* clasp, JSNative constructor, unsigned nargs,
