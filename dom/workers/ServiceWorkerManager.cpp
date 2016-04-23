@@ -1946,7 +1946,12 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc,
                                             const nsAString& aDocumentId)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aDoc);
+
+  // We keep a set of documents that service workers may choose to start
+  // controlling using claim().
+  MOZ_ASSERT(!mAllDocuments.Contains(aDoc));
+  mAllDocuments.PutEntry(aDoc);
+
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(aDoc);
   if (registration) {
@@ -1958,7 +1963,6 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc,
 void
 ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
 {
-  AssertIsOnMainThread();
   MOZ_ASSERT(aDoc);
   RefPtr<ServiceWorkerRegistrationInfo> registration;
   mControlledDocuments.Remove(aDoc, getter_AddRefs(registration));
@@ -1968,6 +1972,8 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
   if (registration) {
     StopControllingADocument(registration);
   }
+
+  mAllDocuments.RemoveEntry(aDoc);
 }
 
 void
@@ -2836,28 +2842,10 @@ ServiceWorkerManager::ClaimClients(nsIPrincipal* aPrincipal,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = obs->EnumerateObservers("service-worker-get-client",
-                                        getter_AddRefs(enumerator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool loop = true;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&loop)) && loop) {
-    nsCOMPtr<nsISupports> ptr;
-    rv = enumerator->GetNext(getter_AddRefs(ptr));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
-    MaybeClaimClient(doc, registration);
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  for (auto iter = mAllDocuments.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(iter.Get()->GetKey());
+    swm->MaybeClaimClient(document, registration);
   }
 
   return NS_OK;
