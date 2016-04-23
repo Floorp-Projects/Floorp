@@ -3918,3 +3918,23 @@ js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor,
     pctor.set(args.rval());
     return true;
 }
+
+bool
+js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp)
+{
+    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
+        return Proxy::boxedValue_unbox(cx, obj, vp);
+
+    if (obj->is<BooleanObject>())
+        vp.setBoolean(obj->as<BooleanObject>().unbox());
+    else if (obj->is<NumberObject>())
+        vp.setNumber(obj->as<NumberObject>().unbox());
+    else if (obj->is<StringObject>())
+        vp.setString(obj->as<StringObject>().unbox());
+    else if (obj->is<DateObject>())
+        vp.set(obj->as<DateObject>().UTCTime());
+    else
+        vp.setUndefined();
+
+    return true;
+}
