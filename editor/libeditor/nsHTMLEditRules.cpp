@@ -312,28 +312,23 @@ NS_IMETHODIMP
 nsHTMLEditRules::BeforeEdit(EditAction action,
                             nsIEditor::EDirection aDirection)
 {
-  if (mLockRulesSniffing) {
-    return NS_OK;
-  }
+  if (mLockRulesSniffing) return NS_OK;
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
-
-  nsAutoLockRulesSniffing lockIt(this);
+  nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
   mDidExplicitlySetInterline = false;
 
-  if (!mActionNesting) {
-    mActionNesting++;
-
-    // Clear our flag about if just deleted a range
+  if (!mActionNesting++)
+  {
+    // clear our flag about if just deleted a range
     mDidRangedDelete = false;
 
-    // Remember where our selection was before edit action took place:
+    // remember where our selection was before edit action took place:
 
-    // Get selection
+    // get selection
+    NS_ENSURE_STATE(mHTMLEditor);
     RefPtr<Selection> selection = mHTMLEditor->GetSelection();
 
-    // Get the selection location
+    // get the selection location
     if (!selection->RangeCount()) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -341,37 +336,42 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
     mRangeItem->startOffset = selection->GetRangeAt(0)->StartOffset();
     mRangeItem->endNode = selection->GetRangeAt(0)->GetEndParent();
     mRangeItem->endOffset = selection->GetRangeAt(0)->EndOffset();
-    nsCOMPtr<nsINode> selStartNode = mRangeItem->startNode;
-    nsCOMPtr<nsINode> selEndNode = mRangeItem->endNode;
+    nsCOMPtr<nsIDOMNode> selStartNode = GetAsDOMNode(mRangeItem->startNode);
+    nsCOMPtr<nsIDOMNode> selEndNode = GetAsDOMNode(mRangeItem->endNode);
 
-    // Register with range updater to track this as we perturb the doc
+    // register this range with range updater to track this as we perturb the doc
+    NS_ENSURE_STATE(mHTMLEditor);
     (mHTMLEditor->mRangeUpdater).RegisterRangeItem(mRangeItem);
 
-    // Clear deletion state bool
+    // clear deletion state bool
     mDidDeleteSelection = false;
 
-    // Clear out mDocChangeRange and mUtilRange
-    if (mDocChangeRange) {
-      // Clear out our accounting of what changed
+    // clear out mDocChangeRange and mUtilRange
+    if(mDocChangeRange)
+    {
+      // clear out our accounting of what changed
       mDocChangeRange->Reset();
     }
-    if (mUtilRange) {
-      // Ditto for mUtilRange.
+    if(mUtilRange)
+    {
+      // ditto for mUtilRange.
       mUtilRange->Reset();
     }
 
-    // Remember current inline styles for deletion and normal insertion ops
+    // remember current inline styles for deletion and normal insertion operations
     if (action == EditAction::insertText ||
         action == EditAction::insertIMEText ||
         action == EditAction::deleteSelection ||
         IsStyleCachePreservingAction(action)) {
-      nsCOMPtr<nsINode> selNode =
-        aDirection == nsIEditor::eNext ? selEndNode : selStartNode;
-      nsresult rv = CacheInlineStyles(GetAsDOMNode(selNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIDOMNode> selNode = selStartNode;
+      if (aDirection == nsIEditor::eNext)
+        selNode = selEndNode;
+      nsresult res = CacheInlineStyles(selNode);
+      NS_ENSURE_SUCCESS(res, res);
     }
 
     // Stabilize the document against contenteditable count changes
+    NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
@@ -381,9 +381,9 @@ nsHTMLEditRules::BeforeEdit(EditAction action,
       mRestoreContentEditableCount = true;
     }
 
-    // Check that selection is in subtree defined by body node
+    // check that selection is in subtree defined by body node
     ConfirmSelectionInBody();
-    // Let rules remember the top level action
+    // let rules remember the top level action
     mTheAction = action;
   }
   return NS_OK;
@@ -394,27 +394,24 @@ NS_IMETHODIMP
 nsHTMLEditRules::AfterEdit(EditAction action,
                            nsIEditor::EDirection aDirection)
 {
-  if (mLockRulesSniffing) {
-    return NS_OK;
-  }
-
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+  if (mLockRulesSniffing) return NS_OK;
 
   nsAutoLockRulesSniffing lockIt(this);
 
-  MOZ_ASSERT(mActionNesting > 0);
-  nsresult rv = NS_OK;
-  mActionNesting--;
-  if (!mActionNesting) {
-    // Do all the tricky stuff
-    rv = AfterEditInner(action, aDirection);
+  NS_PRECONDITION(mActionNesting>0, "bad action nesting!");
+  nsresult res = NS_OK;
+  if (!--mActionNesting)
+  {
+    // do all the tricky stuff
+    res = AfterEditInner(action, aDirection);
 
-    // Free up selectionState range item
+    // free up selectionState range item
+    NS_ENSURE_STATE(mHTMLEditor);
     (mHTMLEditor->mRangeUpdater).DropRangeItem(mRangeItem);
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
+      NS_ENSURE_STATE(mHTMLEditor);
       nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
       NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
       nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
@@ -426,9 +423,7 @@ nsHTMLEditRules::AfterEdit(EditAction action,
     }
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return res;
 }
 
 
