@@ -49,6 +49,7 @@ import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -1601,6 +1602,7 @@ public abstract class GeckoApp
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onGlobalLayout() {
         if (Versions.preJB) {
@@ -2329,6 +2331,7 @@ public abstract class GeckoApp
     private void doShutdown() {
         // Shut down GeckoApp activity.
         runOnUiThread(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
             @Override public void run() {
                 if (!isFinishing() && (Versions.preJBMR1 || !isDestroyed())) {
                     finish();
