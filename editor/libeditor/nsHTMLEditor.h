@@ -755,7 +755,7 @@ protected:
                                    bool aTrustedInput,
                                    bool aClearStyle = true);
 
-  nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
+  nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
 
   void SetElementPosition(mozilla::dom::Element& aElement,
