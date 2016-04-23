@@ -168,7 +168,7 @@
 #endif
 
 #ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushNotifier.h"
+#include "nsIPushNotifier.h"
 #endif
 
 #include "mozilla/dom/File.h"
@@ -3267,13 +3267,11 @@ ContentChild::RecvPush(const nsCString& aScope,
                        const nsString& aMessageId)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifyPushObservers(aScope, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -3292,13 +3290,11 @@ ContentChild::RecvPushWithData(const nsCString& aScope,
                                InfallibleTArray<uint8_t>&& aData)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifyPushObservers(aScope, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -3315,13 +3311,11 @@ ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
                                          const IPC::Principal& aPrincipal)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
 
   nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope);
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -3337,13 +3331,11 @@ ContentChild::RecvPushError(const nsCString& aScope, const nsString& aMessage,
                             const uint32_t& aFlags)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+  nsCOMPtr<nsIPushNotifier> pushNotifier =
       do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifierIface)) {
+  if (NS_WARN_IF(!pushNotifier)) {
       return true;
   }
-  PushNotifier* pushNotifier =
-    static_cast<PushNotifier*>(pushNotifierIface.get());
   pushNotifier->NotifyErrorWorkers(aScope, aMessage, aFlags);
 #endif
   return true;
