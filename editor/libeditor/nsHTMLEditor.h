@@ -678,7 +678,6 @@ protected:
                                     const nsAString* aAttribute);
 
   bool NodeIsProperty(nsIDOMNode *aNode);
-  bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
   bool IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset);
   bool IsOnlyAttribute(const nsIContent* aElement, const nsAString& aAttribute);
