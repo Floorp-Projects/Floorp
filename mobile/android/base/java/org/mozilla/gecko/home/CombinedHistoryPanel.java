@@ -192,26 +192,23 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
+            boolean showEmptyView = false;
             switch (loaderId) {
                 case LOADER_ID_HISTORY:
                     mHistoryAdapter.setHistory(c);
-                    if (mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT) {
-                        updateEmptyView(mHistoryAdapter.getItemCount() <= NUM_SMART_FOLDERS, OnPanelLevelChangeListener.PanelLevel.PARENT);
-                    }
+                    showEmptyView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS;
                     break;
 
                 case LOADER_ID_REMOTE:
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     mHistoryAdapter.getDeviceUpdateHandler().onDeviceCountUpdated(clients.size());
                     mClientsAdapter.setClients(clients);
-                    if (mPanelLevel == OnPanelLevelChangeListener.PanelLevel.CHILD) {
-                        updateEmptyView(mClientsAdapter.getItemCount() <= 2, OnPanelLevelChangeListener.PanelLevel.CHILD);
-                    }
+                    showEmptyView = mClientsAdapter.getItemCount() == 1;
                     break;
             }
 
-            // TODO: Add "Clear all history" button.
-//            updateButtonFromLevel(mPanelLevel);
+            updateEmptyView(showEmptyView, mPanelLevel);
+            updateButtonFromLevel();
         }
 
         @Override
@@ -237,27 +234,23 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     mRecyclerView.swapAdapter(mClientsAdapter, false);
                     break;
             }
-            load();
+            updateButtonFromLevel();
             return true;
-           // updateButtonFromLevel(level);
         }
     }
 
-    private void updateButtonFromLevel(OnPanelLevelChangeListener.PanelLevel level) {
-        mPanelLevel = level;
-        switch (level) {
-            case CHILD:
-                mPanelFooterButton.setVisibility(View.VISIBLE);
-                mPanelFooterButton.setText(R.string.home_open_all);
-                break;
+    private void updateButtonFromLevel() {
+        switch (mPanelLevel) {
             case PARENT:
                 final boolean historyRestricted = !Restrictions.isAllowed(getActivity(), Restrictable.CLEAR_HISTORY);
                 if (historyRestricted || mHistoryAdapter.getItemCount() <= NUM_SMART_FOLDERS) {
                     mPanelFooterButton.setVisibility(View.GONE);
                 } else {
                     mPanelFooterButton.setVisibility(View.VISIBLE);
-                    mPanelFooterButton.setText(R.string.home_clear_history_button);
                 }
+                break;
+            case CHILD:
+                mPanelFooterButton.setVisibility(View.GONE);
                 break;
         }
     }
