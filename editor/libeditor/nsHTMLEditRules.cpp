@@ -1571,7 +1571,8 @@ nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
     return NS_OK;
   } else if (nsHTMLEditUtils::IsHeader(*blockParent)) {
     // Headers: close (or split) header
-    ReturnInHeader(aSelection, *blockParent, node, offset);
+    ReturnInHeader(&aSelection, GetAsDOMNode(blockParent), GetAsDOMNode(node),
+                   offset);
     *aHandled = true;
     return NS_OK;
   } else if (blockParent->IsHTMLElement(nsGkAtoms::p)) {
@@ -6286,85 +6287,101 @@ nsHTMLEditRules::IsInListItem(nsINode* aNode)
 }
 
 
-/**
- * ReturnInHeader: do the right thing for returns pressed in headers
- */
+///////////////////////////////////////////////////////////////////////////
+// ReturnInHeader: do the right thing for returns pressed in headers
+//
 nsresult
-nsHTMLEditRules::ReturnInHeader(Selection& aSelection,
-                                Element& aHeader,
-                                nsINode& aNode,
+nsHTMLEditRules::ReturnInHeader(Selection* aSelection,
+                                nsIDOMNode *aHeader,
+                                nsIDOMNode *aNode,
                                 int32_t aOffset)
 {
+  nsCOMPtr<Element> header = do_QueryInterface(aHeader);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(aSelection && header && node, NS_ERROR_NULL_POINTER);
+
+  // remeber where the header is
+  int32_t offset;
+  nsCOMPtr<nsIDOMNode> headerParent = nsEditor::GetNodeLocation(aHeader, &offset);
+
+  // get ws code to adjust any ws
   NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
-
-  // Remember where the header is
-  nsCOMPtr<nsINode> headerParent = aHeader.GetParentNode();
-  int32_t offset = headerParent ? headerParent->IndexOf(&aHeader) : -1;
-
-  // Get ws code to adjust any ws
-  nsCOMPtr<nsINode> node = &aNode;
   nsresult res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
                                                            address_of(node),
                                                            &aOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  // Split the header
+  // split the header
   NS_ENSURE_STATE(node->IsContent());
-  mHTMLEditor->SplitNodeDeep(aHeader, *node->AsContent(), aOffset);
+  NS_ENSURE_STATE(mHTMLEditor);
+  mHTMLEditor->SplitNodeDeep(*header, *node->AsContent(), aOffset);
 
-  // If the left-hand heading is empty, put a mozbr in it
-  nsCOMPtr<nsIContent> prevItem = mHTMLEditor->GetPriorHTMLSibling(&aHeader);
-  if (prevItem && nsHTMLEditUtils::IsHeader(*prevItem)) {
-    bool isEmptyNode;
-    res = mHTMLEditor->IsEmptyNode(prevItem, &isEmptyNode);
+  // if the leftand heading is empty, put a mozbr in it
+  nsCOMPtr<nsIDOMNode> prevItem;
+  NS_ENSURE_STATE(mHTMLEditor);
+  mHTMLEditor->GetPriorHTMLSibling(aHeader, address_of(prevItem));
+  if (prevItem && nsHTMLEditUtils::IsHeader(prevItem))
+  {
+    bool bIsEmptyNode;
+    NS_ENSURE_STATE(mHTMLEditor);
+    res = mHTMLEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
     NS_ENSURE_SUCCESS(res, res);
-    if (isEmptyNode) {
-      res = CreateMozBR(prevItem->AsDOMNode(), 0);
+    if (bIsEmptyNode) {
+      res = CreateMozBR(prevItem, 0);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
 
-  // If the new (righthand) header node is empty, delete it
+  // if the new (righthand) header node is empty, delete it
   bool isEmpty;
-  res = IsEmptyBlock(aHeader.AsDOMNode(), &isEmpty, true);
+  res = IsEmptyBlock(aHeader, &isEmpty, true);
   NS_ENSURE_SUCCESS(res, res);
-  if (isEmpty) {
-    res = mHTMLEditor->DeleteNode(&aHeader);
+  if (isEmpty)
+  {
+    NS_ENSURE_STATE(mHTMLEditor);
+    res = mHTMLEditor->DeleteNode(aHeader);
     NS_ENSURE_SUCCESS(res, res);
-    // Layout tells the caret to blink in a weird place if we don't place a
-    // break after the header.
-    nsCOMPtr<nsIContent> sibling =
-      mHTMLEditor->GetNextHTMLSibling(headerParent, offset + 1);
-    if (!sibling || !sibling->IsHTMLElement(nsGkAtoms::br)) {
+    // layout tells the caret to blink in a weird place
+    // if we don't place a break after the header.
+    nsCOMPtr<nsIDOMNode> sibling;
+    NS_ENSURE_STATE(mHTMLEditor);
+    res = mHTMLEditor->GetNextHTMLSibling(headerParent, offset+1, address_of(sibling));
+    NS_ENSURE_SUCCESS(res, res);
+    if (!sibling || !nsTextEditUtils::IsBreak(sibling))
+    {
       ClearCachedStyles();
+      NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mTypeInState->ClearAllProps();
 
-      // Create a paragraph
-      nsCOMPtr<Element> pNode =
-        mHTMLEditor->CreateNode(nsGkAtoms::p, headerParent, offset + 1);
-      NS_ENSURE_STATE(pNode);
-
-      // Append a <br> to it
-      nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(pNode, 0);
-      NS_ENSURE_STATE(brNode);
-
-      // Set selection to before the break
-      res = aSelection.Collapse(pNode, 0);
+      // create a paragraph
+      NS_NAMED_LITERAL_STRING(pType, "p");
+      nsCOMPtr<nsIDOMNode> pNode;
+      NS_ENSURE_STATE(mHTMLEditor);
+      res = mHTMLEditor->CreateNode(pType, headerParent, offset+1, getter_AddRefs(pNode));
       NS_ENSURE_SUCCESS(res, res);
-    } else {
-      headerParent = sibling->GetParentNode();
-      offset = headerParent ? headerParent->IndexOf(sibling) : -1;
-      // Put selection after break
-      res = aSelection.Collapse(headerParent, offset + 1);
+
+      // append a <br> to it
+      nsCOMPtr<nsIDOMNode> brNode;
+      NS_ENSURE_STATE(mHTMLEditor);
+      res = mHTMLEditor->CreateBR(pNode, 0, address_of(brNode));
       NS_ENSURE_SUCCESS(res, res);
+
+      // set selection to before the break
+      res = aSelection->Collapse(pNode, 0);
     }
-  } else {
-    // Put selection at front of righthand heading
-    res = aSelection.Collapse(&aHeader, 0);
-    NS_ENSURE_SUCCESS(res, res);
+    else
+    {
+      headerParent = nsEditor::GetNodeLocation(sibling, &offset);
+      // put selection after break
+      res = aSelection->Collapse(headerParent,offset+1);
+    }
   }
-  return NS_OK;
+  else
+  {
+    // put selection at front of righthand heading
+    res = aSelection->Collapse(aHeader,0);
+  }
+  return res;
 }
 
 ///////////////////////////////////////////////////////////////////////////
