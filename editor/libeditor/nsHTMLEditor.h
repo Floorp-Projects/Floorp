@@ -664,11 +664,12 @@ protected:
   nsresult SplitStyleAboveRange(nsRange* aRange,
                                 nsIAtom *aProperty,
                                 const nsAString *aAttribute);
-  nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                                nsIAtom* aProperty,
-                                const nsAString* aAttribute,
-                                nsIContent** aOutLeftNode = nullptr,
-                                nsIContent** aOutRightNode = nullptr);
+  nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
+                                int32_t *aOffset,
+                                nsIAtom *aProperty,
+                                const nsAString *aAttribute,
+                                nsCOMPtr<nsIDOMNode> *outLeftNode = nullptr,
+                                nsCOMPtr<nsIDOMNode> *outRightNode = nullptr);
   nsresult ApplyDefaultProperties();
   nsresult RemoveStyleInside(nsIDOMNode *aNode,
                              nsIAtom *aProperty,
