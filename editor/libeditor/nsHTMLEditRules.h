@@ -249,10 +249,10 @@ protected:
 
   nsresult CreateStyleForInsertText(mozilla::dom::Selection& aSelection,
                                     nsIDocument& aDoc);
-  enum class MozBRCounts { yes, no };
-  nsresult IsEmptyBlock(mozilla::dom::Element& aNode,
-                        bool* aOutIsEmptyBlock,
-                        MozBRCounts aMozBRCounts = MozBRCounts::yes);
+  nsresult IsEmptyBlock(nsIDOMNode *aNode,
+                        bool *outIsEmptyBlock,
+                        bool aMozBRDoesntCount = false,
+                        bool aListItemsNotEmpty = false);
   nsresult CheckForEmptyBlock(nsINode* aStartNode,
                               mozilla::dom::Element* aBodyNode,
                               mozilla::dom::Selection* aSelection,
