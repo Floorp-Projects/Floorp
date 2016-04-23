@@ -1284,10 +1284,11 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   // we need to get the doc
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
-  NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIDOMDocument> domDoc = mHTMLEditor->GetDOMDocument();
+  NS_ENSURE_TRUE(doc && domDoc, NS_ERROR_NOT_INITIALIZED);
 
   // for every property that is set, insert a new inline style node
-  res = CreateStyleForInsertText(*aSelection, *doc);
+  res = CreateStyleForInsertText(aSelection, domDoc);
   NS_ENSURE_SUCCESS(res, res);
 
   // get the (collapsed) selection location
@@ -4419,16 +4420,16 @@ nsHTMLEditRules::ConvertListType(Element* aList,
 //
 //
 nsresult
-nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
-                                          nsIDocument& aDoc)
+nsHTMLEditRules::CreateStyleForInsertText(Selection* aSelection,
+                                          nsIDOMDocument *aDoc)
 {
-  MOZ_ASSERT(mHTMLEditor->mTypeInState);
+  MOZ_ASSERT(aSelection && aDoc && mHTMLEditor->mTypeInState);
 
   nsresult res;
   bool weDidSomething = false;
-  NS_ENSURE_STATE(aSelection.GetRangeAt(0));
-  nsCOMPtr<nsINode> node = aSelection.GetRangeAt(0)->GetStartParent();
-  int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
+  NS_ENSURE_STATE(aSelection->GetRangeAt(0));
+  nsCOMPtr<nsINode> node = aSelection->GetRangeAt(0)->GetStartParent();
+  int32_t offset = aSelection->GetRangeAt(0)->StartOffset();
 
   // next examine our present style and make sure default styles are either
   // present or explicitly overridden.  If neither, add the default style to
@@ -4461,12 +4462,13 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     }
   }
 
-  nsCOMPtr<Element> rootElement = aDoc.GetRootElement();
-  NS_ENSURE_STATE(rootElement);
+  nsCOMPtr<nsIDOMElement> rootElement;
+  res = aDoc->GetDocumentElement(getter_AddRefs(rootElement));
+  NS_ENSURE_SUCCESS(res, res);
 
   // process clearing any styles first
   nsAutoPtr<PropItem> item(mHTMLEditor->mTypeInState->TakeClearProperty());
-  while (item && node != rootElement) {
+  while (item && GetAsDOMNode(node) != rootElement) {
     NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->ClearStyle(address_of(node), &offset,
                                   item->tag, &item->attr);
@@ -4492,9 +4494,14 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     if (!mHTMLEditor->IsContainer(node)) {
       return NS_OK;
     }
-    OwningNonNull<Text> newNode = aDoc.CreateTextNode(EmptyString());
+    nsCOMPtr<nsIContent> newNode;
+    nsCOMPtr<nsIDOMText> nodeAsText;
+    res = aDoc->CreateTextNode(EmptyString(), getter_AddRefs(nodeAsText));
+    NS_ENSURE_SUCCESS(res, res);
+    NS_ENSURE_TRUE(nodeAsText, NS_ERROR_NULL_POINTER);
+    newNode = do_QueryInterface(nodeAsText);
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->InsertNode(newNode, *node, offset);
+    res = mHTMLEditor->InsertNode(*newNode, *node, offset);
     NS_ENSURE_SUCCESS(res, res);
     node = newNode;
     offset = 0;
@@ -4502,11 +4509,11 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
 
     if (relFontSize) {
       // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
-      nsHTMLEditor::FontSize dir = relFontSize > 0 ?
-        nsHTMLEditor::FontSize::incr : nsHTMLEditor::FontSize::decr;
+      int32_t dir = relFontSize > 0 ? 1 : -1;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+        res = mHTMLEditor->RelativeFontChangeOnTextNode(dir, nodeAsText,
+                                                        0, -1);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -4521,7 +4528,7 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
     }
   }
   if (weDidSomething) {
-    return aSelection.Collapse(node, offset);
+    return aSelection->Collapse(node, offset);
   }
 
   return NS_OK;
