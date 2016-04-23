@@ -174,8 +174,8 @@ protected:
                           bool* aCancel, bool* aHandled);
   nsresult WillOutdent(mozilla::dom::Selection* aSelection,
                        bool* aCancel, bool* aHandled);
-  nsresult WillAlign(mozilla::dom::Selection& aSelection,
-                     const nsAString& aAlignType,
+  nsresult WillAlign(mozilla::dom::Selection* aSelection,
+                     const nsAString* alignType,
                      bool* aCancel, bool* aHandled);
   nsresult WillAbsolutePosition(mozilla::dom::Selection* aSelection,
                                 bool* aCancel, bool* aHandled);
