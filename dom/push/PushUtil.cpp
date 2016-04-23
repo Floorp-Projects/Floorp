@@ -11,10 +11,20 @@ namespace dom {
 PushUtil::CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
                                  nsTArray<uint8_t>& aArray)
 {
+  MOZ_ASSERT(aArray.IsEmpty());
   aBuffer.ComputeLengthAndData();
-  return aArray.SetLength(aBuffer.Length(), fallible) &&
-         aArray.ReplaceElementsAt(0, aBuffer.Length(), aBuffer.Data(),
-                                  aBuffer.Length(), fallible);
+  return aArray.SetCapacity(aBuffer.Length(), fallible) &&
+         aArray.InsertElementsAt(0, aBuffer.Data(), aBuffer.Length(), fallible);
+}
+
+/* static */ bool
+PushUtil::CopyArrayBufferViewToArray(const ArrayBufferView& aView,
+                                     nsTArray<uint8_t>& aArray)
+{
+  MOZ_ASSERT(aArray.IsEmpty());
+  aView.ComputeLengthAndData();
+  return aArray.SetCapacity(aView.Length(), fallible) &&
+         aArray.InsertElementsAt(0, aView.Data(), aView.Length(), fallible);
 }
 
 /* static */ bool
@@ -25,11 +35,7 @@ PushUtil::CopyBufferSourceToArray(
     return CopyArrayBufferToArray(aSource.GetAsArrayBuffer(), aArray);
   }
   if (aSource.IsArrayBufferView()) {
-    const ArrayBufferView& view = aSource.GetAsArrayBufferView();
-    view.ComputeLengthAndData();
-    return aArray.SetLength(view.Length(), fallible) &&
-           aArray.ReplaceElementsAt(0, view.Length(), view.Data(),
-                                    view.Length(), fallible);
+    return CopyArrayBufferViewToArray(aSource.GetAsArrayBufferView(), aArray);
   }
   MOZ_CRASH("Uninitialized union: expected buffer or view");
 }
