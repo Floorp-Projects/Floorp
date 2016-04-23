@@ -51,7 +51,7 @@ SOURCES += [
     'utils.c',
 ]
 
-if CONFIG['_MSC_VER']:
+if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         '../compat/strtod.c'
     ]
