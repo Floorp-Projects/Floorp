@@ -640,10 +640,10 @@ protected:
   nsresult RelativeFontChange(FontSize aDir);
 
   /* helper routines for font size changing */
-  nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange,
-                                         nsIDOMCharacterData *aTextNode,
-                                         int32_t aStartOffset,
-                                         int32_t aEndOffset);
+  nsresult RelativeFontChangeOnTextNode(FontSize aDir,
+                                        mozilla::dom::Text& aTextNode,
+                                        int32_t aStartOffset,
+                                        int32_t aEndOffset);
   nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
