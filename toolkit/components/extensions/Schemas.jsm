@@ -9,20 +9,24 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.importGlobalProperties(["URL"]);
+
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   instanceOf,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
+                                   "@mozilla.org/addons/content-policy;1",
+                                   "nsIAddonContentPolicy");
+
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
 /* globals Schemas, URL */
-
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
-Cu.importGlobalProperties(["URL"]);
 
 function readJSON(url) {
   return new Promise((resolve, reject) => {
@@ -255,6 +259,14 @@ const FORMATS = {
     }
 
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
+  },
+
+  contentSecurityPolicy(string, context) {
+    let error = contentPolicyService.validateAddonCSP(string);
+    if (error != null) {
+      throw new SyntaxError(error);
+    }
+    return string;
   },
 
   date(string, context) {

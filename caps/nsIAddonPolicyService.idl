@@ -15,6 +15,25 @@
 interface nsIAddonPolicyService : nsISupports
 {
   /**
+   * Returns the base content security policy, which is applied to all
+   * extension documents, in addition to any custom policies.
+   */
+  readonly attribute AString baseCSP;
+
+  /**
+   * Returns the default content security policy which applies to extension
+   * documents which do not specify any custom policies.
+   */
+  readonly attribute AString defaultCSP;
+
+  /**
+   * Returns the content security policy which applies to documents belonging
+   * to the extension with the given ID. This may be either a custom policy,
+   * if one was supplied, or the default policy if one was not.
+   */
+  AString getAddonCSP(in AString aAddonId);
+
+  /**
    * Returns true if unprivileged code associated with the given addon may load
    * data from |aURI|.
    */

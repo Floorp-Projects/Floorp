@@ -263,6 +263,10 @@ pref("services.kinto.update_enabled", true);
 /* Don't let XPIProvider install distribution add-ons; we do our own thing on mobile. */
 pref("extensions.installDistroAddons", false);
 
+// Add-on content security policies.
+pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
+pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
+
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
