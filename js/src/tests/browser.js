@@ -30,7 +30,23 @@
     };
     global.newGlobal = newGlobal;
   }
+
+  // This function is *only* used in this file!  Ultimately it should only be
+  // used by other exports in this IIFE, but for now just export it so that
+  // functions not exported within this IIFE (but still in this file) can use
+  // it.
+  function DocumentWrite(s) {
+    try {
+      var msgDiv = global.document.createElement('div');
+      msgDiv.innerHTML = s;
+      global.document.body.appendChild(msgDiv);
+    } catch (e) {
+      global.document.write(s + '<br>\n');
+    }
+  }
+  global.DocumentWrite = DocumentWrite;
 })(this);
+
 
 var gPageCompleted;
 var GLOBAL = this + '';
@@ -75,21 +91,6 @@ function htmlesc(str) {
   if (str == '&')
     return '&amp;';
   return str;
-}
-
-function DocumentWrite(s)
-{
-  try
-  {
-    var msgDiv = document.createElement('div');
-    msgDiv.innerHTML = s;
-    document.body.appendChild(msgDiv);
-    msgDiv = null;
-  }
-  catch(excp)
-  {
-    document.write(s + '<br>\n');
-  }
 }
 
 function print() {
