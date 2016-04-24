@@ -5,12 +5,11 @@
 
 // Tests the getCanonicalLocales function for duplicate locales scenario.
 
-assertShallowArray(
-  Intl.getCanonicalLocales(
-    ['ab-cd', 'ff', 'de-rt', 'ab-Cd']), ['ab-CD', 'ff', 'de-RT']);
+assertEqArray(Intl.getCanonicalLocales(['ab-cd', 'ff', 'de-rt', 'ab-Cd']),
+              ['ab-CD', 'ff', 'de-RT']);
 
 var locales = Intl.getCanonicalLocales(["en-US", "en-US"]);
-assertShallowArray(locales, ['en-US']);
+assertEqArray(locales, ['en-US']);
 
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);
