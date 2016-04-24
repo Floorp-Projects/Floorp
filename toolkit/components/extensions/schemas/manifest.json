@@ -149,6 +149,13 @@
             "items": { "$ref": "ContentScript" }
           },
 
+          "content_security_policy": {
+            "type": "string",
+            "optional": true,
+            "format": "contentSecurityPolicy",
+            "onError": "warn"
+          },
+
           "permissions": {
             "type": "array",
             "items": {
