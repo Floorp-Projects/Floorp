@@ -2,54 +2,30 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY aboutPrivateBrowsing.notPrivate       "You are currently not in a private window.">
-<!ENTITY privatebrowsingpage.openPrivateWindow.label "Open a Private Window">
+<!ENTITY aboutPrivateBrowsing.notPrivate                 "You are currently not in a private window.">
+<!ENTITY privatebrowsingpage.openPrivateWindow.label     "Open a Private Window">
 <!ENTITY privatebrowsingpage.openPrivateWindow.accesskey "P">
 
-<!ENTITY privateBrowsing.title                 "Private Browsing">
+<!ENTITY privateBrowsing.title                           "Private Browsing">
+<!ENTITY privateBrowsing.title.tracking                  "Private Browsing with Tracking Protection">
+<!ENTITY aboutPrivateBrowsing.info.notsaved.before       "When you browse in a Private Window, Firefox ">
+<!ENTITY aboutPrivateBrowsing.info.notsaved.emphasize    "does not save">
+<!ENTITY aboutPrivateBrowsing.info.notsaved.after        ":">
+<!ENTITY aboutPrivateBrowsing.info.visited               "visited pages">
+<!ENTITY aboutPrivateBrowsing.info.searches              "searches">
+<!ENTITY aboutPrivateBrowsing.info.cookies               "cookies">
+<!ENTITY aboutPrivateBrowsing.info.temporaryFiles        "temporary files">
+<!ENTITY aboutPrivateBrowsing.info.saved.before          "Firefox ">
+<!ENTITY aboutPrivateBrowsing.info.saved.emphasize       "will save">
+<!ENTITY aboutPrivateBrowsing.info.saved.after           "your:">
+<!ENTITY aboutPrivateBrowsing.info.downloads             "downloads">
+<!ENTITY aboutPrivateBrowsing.info.bookmarks             "bookmarks">
+<!ENTITY aboutPrivateBrowsing.note.before                "Private Browsing ">
+<!ENTITY aboutPrivateBrowsing.note.emphasize             "doesn’t make you anonymous">
+<!ENTITY aboutPrivateBrowsing.note.after                 " on the Internet. Your employer or Internet service provider can still know what page you visit.">
+<!ENTITY aboutPrivateBrowsing.learnMore2                 "Learn more about">
+<!ENTITY aboutPrivateBrowsing.learnMore2.title           "Private Browsing">
 
-<!-- LOCALIZATION NOTE (aboutPrivateBrowsing.width1):
-     Width of the Private Browsing section. This should depend primarily on the
-     length of the headers and text, but should be roughly 1.5 times the width
-     of the Tracking Protection section, and in general not much larger than
-     30em to prevent the sections from wrapping on smaller window sizes.
-     -->
-<!ENTITY aboutPrivateBrowsing.width1           "30em">
-<!ENTITY aboutPrivateBrowsing.title            "You’re browsing privately">
-
-<!ENTITY aboutPrivateBrowsing.info.notsaved    "Not Saved">
-<!ENTITY aboutPrivateBrowsing.info.history     "History">
-<!ENTITY aboutPrivateBrowsing.info.searches    "Searches">
-<!ENTITY aboutPrivateBrowsing.info.cookies     "Cookies">
-<!ENTITY aboutPrivateBrowsing.info.temporaryFiles "Temporary Files">
-
-<!ENTITY aboutPrivateBrowsing.info.saved       "Saved">
-<!ENTITY aboutPrivateBrowsing.info.downloads   "Downloads">
-<!ENTITY aboutPrivateBrowsing.info.bookmarks   "Bookmarks">
-
-<!ENTITY aboutPrivateBrowsing.note1            "Please note that your employer or Internet service provider can still track the pages you visit.">
-<!ENTITY aboutPrivateBrowsing.learnMore        "Learn More.">
-
-<!-- LOCALIZATION NOTE (trackingProtection.width1):
-     Width of the Tracking Protection section. It is fine for the enabled or
-     disabled indicator or the words in the title to wrap to the next line, but
-     you can expand or reduce this section to fit better, as long as the width
-     of the Private Browsing section is roughly 1.5 times the width of this one.
-     Note that the required space may vary between platforms because fonts are
-     different, so testing on Windows, Mac, and Linux is encouraged.
-     -->
-<!ENTITY trackingProtection.width1             "22em">
-<!ENTITY trackingProtection.title              "Tracking Protection">
-
-<!-- LOCALIZATION NOTE (trackingProtection.state.width):
-     Width of the element representing the enabled or disabled indicator.
-     -->
-<!ENTITY trackingProtection.state.width        "6ch">
-<!ENTITY trackingProtection.state.enabled      "ON">
-<!ENTITY trackingProtection.state.disabled     "OFF">
-
-<!ENTITY trackingProtection.description1       "Private windows now block parts of the page that may track your browsing activity.">
-
-<!ENTITY trackingProtection.disable            "Turn Tracking Protection Off">
-<!ENTITY trackingProtection.enable             "Turn Tracking Protection On">
-<!ENTITY trackingProtection.startTour1         "See how this works">
+<!ENTITY trackingProtection.title                        "Tracking Protection">
+<!ENTITY trackingProtection.description2                 "Some websites use trackers that can monitor your activity across the Internet. With Tracking Protection Firefox will block many trackers that can collect information about your browsing behavior.">
+<!ENTITY trackingProtection.startTour1                   "See how it works">
