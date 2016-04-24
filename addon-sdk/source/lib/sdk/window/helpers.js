@@ -6,7 +6,7 @@
 const { defer, all } = require('../core/promise');
 const events = require('../system/events');
 const { open: openWindow, onFocus, getToplevelWindow,
-        isInteractive, getOuterId } = require('./utils');
+        isInteractive, isStartupFinished, getOuterId } = require('./utils');
 const { Ci } = require("chrome");
 
 function open(uri, options) {
@@ -48,6 +48,24 @@ function ready(window) {
   return result;
 }
 exports.ready = ready;
+
+function startup(window) {
+  let { promise: result, resolve } = defer();
+
+  if (isStartupFinished(window)) {
+    resolve(window);
+  } else {
+    events.on("browser-delayed-startup-finished", function listener({subject}) {
+      if (subject === window) {
+        events.off("browser-delayed-startup-finished", listener);
+        resolve(window);
+      }
+    });
+  }
+
+  return result;
+}
+exports.startup = startup;
 
 function promise(target, evt, capture) {
   let deferred = defer();
