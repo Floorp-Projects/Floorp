@@ -30,3 +30,18 @@ interface nsIAddonPolicyService : nsISupports
    */
   AString extensionURIToAddonId(in nsIURI aURI);
 };
+
+/**
+ * This interface exposes functionality related to add-on content policy
+ * enforcement.
+ */
+[scriptable,uuid(7a4fe60b-9131-45f5-83f3-dc63b5d71a5d)]
+interface nsIAddonContentPolicy : nsISupports
+{
+  /**
+   * Checks a custom content security policy string, to ensure that it meets
+   * minimum security requirements. Returns null for valid policies, or a
+   * string describing the error for invalid policies.
+   */
+  AString validateAddonCSP(in AString aPolicyString);
+};
