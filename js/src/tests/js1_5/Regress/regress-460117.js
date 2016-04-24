@@ -35,11 +35,9 @@ function test()
 
   reportCompare(expect, actual, summary + ' : nonjit');
 
-  jit(true);
 
   t({ bar: 123, baz: 123, quux: 123 }, 'bar baz quux');
 
-  jit(false);
 
   reportCompare(expect, actual, summary + ' : jit');
 

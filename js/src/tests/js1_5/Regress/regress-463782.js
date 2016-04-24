@@ -12,7 +12,6 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 function dateCheck() {
   return true;
@@ -62,7 +61,6 @@ function placeAd2() {
 
 placeAd2();
 
-jit(false);
 
 reportCompare(expect, actual, summary);
 

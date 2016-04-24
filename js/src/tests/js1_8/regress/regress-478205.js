@@ -20,11 +20,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   for each (let x in ['', '']) { switch([]) {} }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
