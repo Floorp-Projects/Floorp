@@ -12,10 +12,8 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 (function f() { for each (let i in [0, {}, 0, 1.5, {}, 0, 1.5, 0, 0]) { }})();
 
-jit(false);
 
 reportCompare(expect, actual, summary);

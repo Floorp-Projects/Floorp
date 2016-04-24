@@ -33,7 +33,6 @@ function test()
     actual = ex + '';
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

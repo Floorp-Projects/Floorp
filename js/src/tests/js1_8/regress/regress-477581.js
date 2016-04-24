@@ -21,7 +21,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
  
   function g() { yield 2; }
   var iterables = [[1], [], [], [], g()];
@@ -29,7 +28,6 @@ function test()
     for each (let j in iterables[i])
                ;
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

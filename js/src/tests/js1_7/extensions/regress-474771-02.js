@@ -12,11 +12,9 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 this.__defineSetter__('x', function(){});
 for (var j = 0; j < 5; ++j) { x = 3; }
 
-jit(false);
 
 reportCompare(expect, actual, summary);

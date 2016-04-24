@@ -22,11 +22,9 @@ function test()
  
   expect = '11111';
 
-  jit(true);
 
   (function(d) { for (let j = 0; j < 5; ++j) { actual += ('' + d); } })({valueOf: function()1});
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

@@ -38,10 +38,8 @@ var expect = is_space.join(',');
 var actual = chars.map(function(ch) { return /\s/.test(ch); }).join(',');
 reportCompare(expect, actual, summary);
  
-jit(true);
 var actual = chars.map(function(ch) { return /\s/.test(ch); }).join(',');
 reportCompare(expect, actual, summary);
-jit(false);
  
 exitFunc ('test');
 }

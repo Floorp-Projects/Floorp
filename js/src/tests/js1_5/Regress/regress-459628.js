@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
 (function() { 
   for (var odjoff = 0; odjoff < 4; ++odjoff) { 
@@ -28,7 +27,6 @@ function test()
   } 
 })();
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

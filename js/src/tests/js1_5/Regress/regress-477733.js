@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   function g() {
     [];
@@ -36,7 +35,6 @@ function test()
     g();
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

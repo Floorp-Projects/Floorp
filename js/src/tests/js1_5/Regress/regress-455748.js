@@ -20,11 +20,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   for (var j = 0; j < 5; ++j) { if([1][-0]) { } }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

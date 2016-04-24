@@ -24,7 +24,6 @@ function test()
 
   for each (let j in [null, 2, 3]) { }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

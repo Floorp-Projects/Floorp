@@ -22,9 +22,7 @@ function test()
  
   expect = 'NaN';
 
-  jit(true);
   for each (i in [4, 'a', 'b', (void 0)]) print(actual = '' + (i + i));
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

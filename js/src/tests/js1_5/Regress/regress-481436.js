@@ -13,7 +13,6 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 function search(m, n) {
   if (m.name == n)
@@ -35,6 +34,5 @@ function crash() {
 
 crash();
 
-jit(false);
 
 reportCompare(expect, actual, summary);

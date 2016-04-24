@@ -20,12 +20,10 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   function gen() { for (var j = 0; j < 4; ++j) { NaN; yield 3; } }
   for (let i in gen()) { }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
