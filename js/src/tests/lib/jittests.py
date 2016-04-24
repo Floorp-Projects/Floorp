@@ -300,7 +300,7 @@ def find_tests(substring=None):
         for filename in filenames:
             if not filename.endswith('.js'):
                 continue
-            if filename in ('shell.js', 'browser.js', 'jsref.js'):
+            if filename in ('shell.js', 'browser.js'):
                 continue
             test = os.path.join(dirpath, filename)
             if substring is None \
