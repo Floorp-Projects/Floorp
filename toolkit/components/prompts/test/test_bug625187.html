@@ -27,6 +27,9 @@
 <pre id="test"></pre>
 
 <script class="testbody" type="text/javascript">
+var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
+var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
+
 add_task(function* runTest()
 {
   // This test depends on tab modal prompts being enabled.
@@ -34,6 +37,11 @@ add_task(function* runTest()
     todo(false, "Test disabled when tab modal prompts are not enabled.");
     return;
   }
+
+  info("Ensuring iframe1 has loaded...");
+  yield iframe1Loaded;
+  info("Ensuring iframe2 has loaded...");
+  yield iframe2Loaded;
 
   state = {
     msg         : "hello world",

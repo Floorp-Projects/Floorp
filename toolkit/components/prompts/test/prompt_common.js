@@ -3,12 +3,14 @@ const Cc = SpecialPowers.Cc;
 ok(Ci != null, "Access Ci");
 ok(Cc != null, "Access Cc");
 
-var isSelectDialog = false;
-var isTabModal = false;
-if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
-    isTabModal = true;
+function hasTabModalPrompts() {
+  var prefName = "prompts.tab_modal.enabled";
+  var Services = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm").Services;
+  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+         Services.prefs.getBoolPref(prefName);
 }
-
+var isTabModal = hasTabModalPrompts();
+var isSelectDialog = false;
 var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
 var isLinux = ("@mozilla.org/gnome-gconf-service;1" in SpecialPowers.Cc);
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
@@ -17,6 +19,15 @@ var isE10S = SpecialPowers.Services.appinfo.processType == 2;
 var gChromeScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL("chromeScript.js"));
 SimpleTest.registerCleanupFunction(() => gChromeScript.destroy());
 
+function onloadPromiseFor(id) {
+  var iframe = document.getElementById(id);
+  return new Promise(resolve => {
+    iframe.addEventListener("load", function onload(e) {
+      iframe.removeEventListener("load", onload);
+      resolve(true);
+    });
+  });
+}
 
 function handlePrompt() {
   return new Promise(resolve => {
