@@ -45,10 +45,10 @@ function zoomTab1() {
 function finishTest() {
   Task.spawn(function () {
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
-    FullZoom.reset();
+    yield FullZoom.reset();
     yield FullZoomHelper.removeTabAndWaitForLocationChange(gTab1);
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab2);
-    FullZoom.reset();
+    yield FullZoom.reset();
     yield FullZoomHelper.removeTabAndWaitForLocationChange(gTab2);
   }).then(finish, FullZoomHelper.failAndContinue(finish));
 }
