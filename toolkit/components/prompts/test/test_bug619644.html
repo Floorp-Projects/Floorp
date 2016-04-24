@@ -8,50 +8,67 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619644
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=619644">Mozilla Bug 619644</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-function hasTabModalPrompts() {
-  var prefName = "prompts.tab_modal.enabled";
-  Services = SpecialPowers.Services;
-  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-         Services.prefs.getBoolPref(prefName);
-}
-
-if (!hasTabModalPrompts()) {
-  todo(false, "Test disabled when tab modal prompts are not enabled.");
-} else {
-SimpleTest.waitForExplicitFinish();
-
 // This is a little yucky, but it works
 // The contents of bug619644_inner.html
 const expectedFinalDoc =
 "<head><\/head><body><p>Original content<\/p>\n<script>\n    window.opener.postMessage(\"\", \"*\");\n    confirm (\"Message\");\n    document.write (\"Extra content\");\n    window.opener.postMessage(document.documentElement.innerHTML, \"*\");\n<\/script>Extra content<\/body>";
 
-let gChromeMessageManager;
+if (!isTabModal) {
+  todo(false, "Test disabled when tab modal prompts are not enabled.");
+} else {
+  inittest();
+}
 
-function runtest(e)
-{
+var promptDone;
+
+function inittest() {
+  window.addEventListener("message", runtest, false);
+  window.open("bug619644_inner.html", "619644");
+
+  SimpleTest.waitForExplicitFinish();
+}
+
+function runtest(e) {
   window.removeEventListener("message", runtest, false);
   window.addEventListener("message", checktest, false);
 
-  let url = SimpleTest.getTestFileURL("chromeScript.js");
-  gChromeMessageManager = SpecialPowers.loadChromeScript(url);
-  gChromeMessageManager.sendAsyncMessage("cancelPrompt");
+  state = {
+      msg         : "Message",
+      iconClass   : "question-icon",
+      titleHidden : true,
+      textHidden  : true,
+      passHidden  : true,
+      checkHidden : true,
+      textValue   : "",
+      passValue   : "",
+      checkMsg    : "",
+      checked     : false,
+      focused     : "button0",
+      defButton   : "button0",
+  };
+  action = {
+      buttonClick: "ESC",
+  };
+
+  promptDone = handlePrompt(action);
 }
 
 function checktest(e) {
   is(e.data, expectedFinalDoc, "ESC press should not abort document load");
   e.source.close();
-  gChromeMessageManager.destroy();
-  SimpleTest.finish();
+  promptDone.then(endtest);
 }
 
-window.addEventListener("message", runtest, false);
-window.open("bug619644_inner.html", "619644");
+function endtest() {
+  info("Ending test");
+  SimpleTest.finish();
 }
 </script>
 </pre>
