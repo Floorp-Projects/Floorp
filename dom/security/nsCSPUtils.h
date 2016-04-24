@@ -145,7 +145,11 @@ inline const char* CSP_EnumToKeyword(enum CSPKeyword aKey)
   static_assert((sizeof(CSPStrKeywords) / sizeof(CSPStrKeywords[0]) ==
                 static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)),
                 "CSP_LAST_KEYWORD_VALUE does not match length of CSPStrKeywords");
-  return CSPStrKeywords[static_cast<uint32_t>(aKey)];
+
+  if (static_cast<uint32_t>(aKey) < static_cast<uint32_t>(CSP_LAST_KEYWORD_VALUE)) {
+      return CSPStrKeywords[static_cast<uint32_t>(aKey)];
+  }
+  return "error: invalid keyword in CSP_EnumToKeyword";
 }
 
 inline CSPKeyword CSP_KeywordToEnum(const nsAString& aKey)
