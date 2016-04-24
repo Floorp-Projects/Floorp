@@ -818,8 +818,8 @@ HTMLInputElement::IsPopupBlocked() const
     return true;
   }
 
-  // Check if page is allowed to open the popup
-  if (win->GetPopupControlState() <= openControlled) {
+  // Check if page can open a popup without abuse regardless of allowed events
+  if (win->GetPopupControlState() <= openBlocked) {
     return false;
   }
 
