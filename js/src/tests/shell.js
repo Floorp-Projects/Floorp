@@ -14,9 +14,55 @@
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
    **********************************************************************/
 
+  var undefined; // sigh
+
   var Error = global.Error;
   var Number = global.Number;
   var TypeError = global.TypeError;
+
+  var ArrayIsArray = global.Array.isArray;
+  var ObjectCreate = global.Object.create;
+  var ObjectDefineProperty = global.Object.defineProperty;
+  var ReflectApply = global.Reflect.apply;
+  var StringPrototypeEndsWith = global.String.prototype.endsWith;
+
+  /****************************
+   * GENERAL HELPER FUNCTIONS *
+   ****************************/
+
+  // We could use Array.prototype.pop, but we don't so it's clear exactly what
+  // dependencies this function has on test-modifiable behavior (i.e. none).
+  function ArrayPop(arr) {
+    assertEq(ArrayIsArray(arr), true,
+             "ArrayPop must only be used on actual arrays");
+
+    var len = arr.length;
+    if (len === 0)
+      return undefined;
+
+    var v = arr[len - 1];
+    arr.length--;
+    return v;
+  }
+
+  // We *cannot* use Array.prototype.push for this, because that function sets
+  // the new trailing element, which could invoke a setter (left by a test) on
+  // Array.prototype or Object.prototype.
+  function ArrayPush(arr, val) {
+    assertEq(ArrayIsArray(arr), true,
+             "ArrayPush must only be used on actual arrays");
+
+    var desc = ObjectCreate(null);
+    desc.value = val;
+    desc.enumerable = true;
+    desc.configurable = true;
+    desc.writable = true;
+    ObjectDefineProperty(arr, arr.length, desc);
+  }
+
+  function StringEndsWith(str, needle) {
+    return ReflectApply(StringPrototypeEndsWith, str, [needle]);
+  }
 
   /****************************
    * TESTING FUNCTION EXPORTS *
@@ -107,6 +153,57 @@
   }
   global.startTest = startTest;
 
+  var callStack = [];
+
+  /**
+   * Puts funcName at the top of the call stack.  This stack is used to show
+   * a function-reported-from field when reporting failures.
+   */
+  function enterFunc(funcName) {
+    assertEq(typeof funcName, "string",
+             "enterFunc must be given a string funcName");
+
+    if (!StringEndsWith(funcName, "()"))
+      funcName += "()";
+
+    ArrayPush(callStack, funcName);
+  }
+  global.enterFunc = enterFunc;
+
+  /**
+   * Pops the top funcName off the call stack.  funcName, if provided, is used
+   * to check push-pop balance.
+   */
+  function exitFunc(funcName) {
+    assertEq(typeof funcName === "string" || typeof funcName === "undefined",
+             true,
+             "exitFunc must be given no arguments or a string");
+
+    var lastFunc = ArrayPop(callStack);
+    assertEq(typeof lastFunc, "string", "exitFunc called too many times");
+
+    if (funcName) {
+      if (!StringEndsWith(funcName, "()"))
+        funcName += "()";
+
+      if (lastFunc !== funcName) {
+        // XXX Eliminate this dependency on global.reportCompare's identity.
+        global.reportCompare(funcName, lastFunc,
+                             "Test driver failure wrong exit function ");
+      }
+    }
+  }
+  global.exitFunc = exitFunc;
+
+  /** Peeks at the top of the call stack. */
+  function currentFunc() {
+    assertEq(callStack.length > 0, true,
+             "must be a current function to examine");
+
+    return callStack[callStack.length - 1];
+  }
+  global.currentFunc = currentFunc;
+
   /*****************************************************
    * RHINO-SPECIFIC EXPORTS (are these used any more?) *
    *****************************************************/
@@ -134,7 +231,6 @@ var STATUS = "STATUS: ";
 var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test - ';
-var callStack = new Array();
 
 var gDelayTestDriverEnd = false;
 
@@ -450,18 +546,6 @@ function reportMatch (expectedRegExp, actual, description) {
 }
 
 /*
- * Puts funcName at the top of the call stack.  This stack is used to show
- * a function-reported-from field when reporting failures.
- */
-function enterFunc (funcName)
-{
-  if (!funcName.match(/\(\)$/))
-    funcName += "()";
-
-  callStack.push(funcName);
-}
-
-/*
  * An xorshift pseudo-random number generator see:
  * https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
  * This generator will always produce a value, n, where
@@ -493,32 +577,6 @@ function *Permutations(items) {
                 yield [items[0]].concat(e);
         }
     }
-}
-
-/*
- * Pops the top funcName off the call stack.  funcName is optional, and can be
- * used to check push-pop balance.
- */
-function exitFunc (funcName)
-{
-  var lastFunc = callStack.pop();
-
-  if (funcName)
-  {
-    if (!funcName.match(/\(\)$/))
-      funcName += "()";
-
-    if (lastFunc != funcName)
-      reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
-  }
-}
-
-/*
- * Peeks at the top of the call stack.
- */
-function currentFunc()
-{
-  return callStack[callStack.length - 1];
 }
 
 /*
