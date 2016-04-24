@@ -3,67 +3,205 @@
   <title>Test for DOM prompts</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runtest()">
+<body>
 <pre id="test">
 </pre>
 
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+var rv;
+var state, action;
 
-var selectionTest = false;
-var testNum = 0;
+add_task(function* test_alert_ok() {
+    info("Starting test: Alert");
+    state = {
+        msg         : "This is the alert text.",
+        iconClass   : "alert-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
 
-function hasTabModalPrompts() {
-  var prefName = "prompts.tab_modal.enabled";
-  var Services = SpecialPowers.Cu
-                              .import("resource://gre/modules/Services.jsm")
-                              .Services;
-  return Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-         Services.prefs.getBoolPref(prefName);
-}
+    promptDone = handlePrompt(action);
 
-function runtest()
-{
-  isTabModal = hasTabModalPrompts();
-  if (!isTabModal) {
-    todo(false, "Test is run with tab modal prompts disabled.");
-    SimpleTest.finish();
-    return;
-  }
+    alert("This is the alert text.");
 
-  ok(true, "Test is run with tab modal prompts enabled.");
+    yield promptDone;
+});
 
-  let url = SimpleTest.getTestFileURL("chromeScript.js");
-  let chrome = SpecialPowers.loadChromeScript(url);
-  chrome.sendAsyncMessage("cancelPrompt");
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_alert_noargs() {
+    info("Starting test: Alert with no args");
+    state = {
+        msg         : "",
+        iconClass   : "alert-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
 
-  try {
-    alert();
-    ok(true, "alert() without arguments should not throw!");
-  } catch(e) {
-    ok(false, "alert() without arguments should not throw!");
-  }
+    promptDone = handlePrompt(action);
 
-  chrome.sendAsyncMessage("cancelPrompt");
+    try {
+        alert();
+        ok(true, "alert() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "alert() without arguments should not throw!");
+    }
 
-  try {
-    confirm();
-    ok(true, "confirm() without arguments should not throw!");
-  } catch(e) {
-    ok(false, "confirm() without arguments should not throw!");
-  }
+    yield promptDone;
+});
 
-  chrome.destroy();
-  SimpleTest.finish();
-}
 
-function handleDialog(ui, testNum)
-{
-  synthesizeMouse(ui.button0, 5, 5, { }, SpecialPowers.unwrap(ui.button0.ownerDocument.defaultView));
-}
+add_task(function* test_confirm_ok() {
+    info("Starting test: Confirm");
+    state = {
+        msg         : "This is the confirm text.",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    rv = confirm("This is the confirm text.");
+    is(rv, true, "check prompt return value");
+
+    yield promptDone;
+});
+
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_confirm_noargs() {
+    info("Starting test: Confirm with no args");
+    state = {
+        msg         : "",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    try {
+        rv = confirm();
+        ok(true, "confirm() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "confirm() without arguments should not throw!");
+    }
+    is(rv, true, "check prompt return value");
+
+    yield promptDone;
+});
+
+
+add_task(function* test_prompt_ok() {
+    info("Starting test: Prompt");
+    state = {
+        msg         : "This is the Prompt text.",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    rv = prompt("This is the Prompt text.");
+    is(rv, "", "check prompt return value");
+
+    yield promptDone;
+});
+
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_prompt_noargs() {
+    info("Starting test: Prompt with no args");
+    state = {
+        msg         : "",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    try {
+        rv = prompt();
+        ok(true, "prompt() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "prompt() without arguments should not throw!");
+    }
+    is(rv, "", "check prompt return value");
+
+    yield promptDone;
+});
+
 </script>
 
 </body>
