@@ -1396,13 +1396,11 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   }),
 
   startup() {
-    try {
-      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
-    } catch (e) {
-      return Promise.reject(e);
-    }
-
+    let started = false;
     return this.readManifest().then(() => {
+      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
+      started = true;
+
       if (!this.hasShutdown) {
         return this.initLocale();
       }
@@ -1428,7 +1426,9 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
-      ExtensionManagement.shutdownExtension(this.uuid);
+      if (started) {
+        ExtensionManagement.shutdownExtension(this.uuid);
+      }
 
       this.cleanupGeneratedFile();
 
