@@ -26,7 +26,7 @@ add_task(function test() {
     about_pb_title = "Open a private window?";
     pb_page_with_title = test_title + " - (Private Browsing)";
     pb_page_without_title = app_name + " - (Private Browsing)";
-    pb_about_pb_title = "You\u2019re browsing privately - (Private Browsing)";
+    pb_about_pb_title = "Private Browsing - (Private Browsing)";
   }
   else {
     page_with_title = test_title + " - " + app_name;
@@ -34,7 +34,7 @@ add_task(function test() {
     about_pb_title = "Open a private window?" + " - " + app_name;
     pb_page_with_title = test_title + " - " + app_name + " (Private Browsing)";
     pb_page_without_title = app_name + " (Private Browsing)";
-    pb_about_pb_title = "You\u2019re browsing privately - " + app_name + " (Private Browsing)";
+    pb_about_pb_title = "Private Browsing - " + app_name + " (Private Browsing)";
   }
 
   function* testTabTitle(aWindow, url, insidePB, expected_title) {
