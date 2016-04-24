@@ -45,6 +45,7 @@ add_test(function test_subscribe_success() {
     Services.scriptSecurityManager.getSystemPrincipal(),
     (result, subscription) => {
       ok(Components.isSuccessCode(result), 'Error creating subscription');
+      ok(subscription.isSystemSubscription, 'Expected system subscription');
       ok(subscription.endpoint.startsWith('https://example.org/push'), 'Wrong endpoint prefix');
       equal(subscription.pushCount, 0, 'Wrong push count');
       equal(subscription.lastPush, 0, 'Wrong last push time');
@@ -240,6 +241,8 @@ add_test(function test_subscribe_app_principal() {
     ok(Components.isSuccessCode(result), 'Error creating subscription');
     ok(subscription.endpoint.startsWith('https://example.org/push'),
       'Wrong push endpoint in app subscription');
+    ok(!subscription.isSystemSubscription,
+      'Unexpected system subscription for app principal');
     equal(subscription.quota, 16, 'Wrong quota for app subscription');
 
     do_test_finished();
@@ -256,6 +259,8 @@ add_test(function test_subscribe_origin_principal() {
   PushServiceComponent.subscribe(scope, principal, (result, subscription) => {
     ok(Components.isSuccessCode(result),
       'Expected error creating subscription with origin principal');
+    ok(!subscription.isSystemSubscription,
+      'Unexpected system subscription for origin principal');
     equal(subscription.quota, 16, 'Wrong quota for origin subscription');
 
     do_test_finished();
@@ -270,9 +275,9 @@ add_test(function test_subscribe_null_principal() {
     Services.scriptSecurityManager.createNullPrincipal({}),
     (result, subscription) => {
       ok(!Components.isSuccessCode(result),
-        'Expected error creating subscription with expanded principal');
+        'Expected error creating subscription with null principal');
       strictEqual(subscription, null,
-        'Unexpected subscription with expanded principal');
+        'Unexpected subscription with null principal');
 
       do_test_finished();
       run_next_test();

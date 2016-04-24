@@ -18,6 +18,7 @@ interface nsIPushSubscription : nsISupports
   readonly attribute long long pushCount;
   readonly attribute long long lastPush;
   readonly attribute long quota;
+  readonly attribute bool isSystemSubscription;
 
   bool quotaApplies();
   bool isExpired();
