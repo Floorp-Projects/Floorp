@@ -281,10 +281,6 @@ function gczeal(z)
   SpecialPowers.setGCZeal(z);
 }
 
-function jit(on)
-{
-}
-
 function jsTestDriverBrowserInit()
 {
 
@@ -386,18 +382,6 @@ function jsTestDriverBrowserInit()
   {
     gczeal(Number(properties.gczeal));
   }
-
-  /*
-   * since the default setting of jit changed from false to true
-   * in http://hg.mozilla.org/tracemonkey/rev/685e00e68be9
-   * bisections which depend upon jit settings can be thrown off.
-   * default jit(false) when not running jsreftests to make bisections
-   * depending upon jit settings consistent over time. This is not needed
-   * in shell tests as the default jit setting has not changed there.
-   */
-
-  if (properties.jit  || !document.location.href.match(/jsreftest.html/))
-    jit(properties.jit);
 
   var testpathparts = properties.test.split(/\//);
 

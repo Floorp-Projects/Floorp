@@ -945,10 +945,6 @@ function jsTestDriverEnd()
 
 }
 
-function jit(on)
-{
-}
-
 function assertEqArray(a1, a2) {
   assertEq(a1.length, a2.length);
   for (var i = 0; i < a1.length; i++) {
