@@ -106,9 +106,6 @@ public:
 
   nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
 
-  // Set of all documents that may be controlled by a service worker.
-  nsTHashtable<nsISupportsHashKey> mAllDocuments;
-
   // Track all documents that have attempted to register a service worker for a
   // given scope.
   typedef nsTArray<nsCOMPtr<nsIWeakReference>> WeakDocumentList;
