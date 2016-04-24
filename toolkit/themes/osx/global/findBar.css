@@ -81,6 +81,14 @@ label.findbar-find-fast:-moz-lwtheme,
   margin: 0;
 }
 
+@media (-moz-mac-yosemite-theme) {
+  .findbar-find-previous,
+  .findbar-find-next {
+    border-radius: 3px;
+    box-shadow: none;
+  }
+}
+
 .findbar-highlight,
 .findbar-case-sensitive {
   -moz-margin-end: 5px;
@@ -136,6 +144,18 @@ label.findbar-find-fast:-moz-lwtheme,
 
 .findbar-textbox:-moz-locale-dir(rtl) {
   border-radius: 0 10000px 10000px 0;
+}
+
+@media (-moz-mac-yosemite-theme) {
+  .findbar-textbox {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    box-shadow: none;
+  }
+
+  .findbar-textbox:-moz-locale-dir(rtl) {
+    border-radius: 0 3px 3px 0;
+  }
 }
 
 .findbar-textbox:not([focused="true"]):-moz-lwtheme {
