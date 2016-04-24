@@ -367,7 +367,7 @@ PathBuilderD2D::Finish()
 
   HRESULT hr = mSink->Close();
   if (FAILED(hr)) {
-    gfxDebug() << "Failed to close PathSink. Code: " << hexa(hr);
+    gfxCriticalNote << "Failed to close PathSink. Code: " << hexa(hr);
     return nullptr;
   }
 
