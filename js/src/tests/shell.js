@@ -89,6 +89,20 @@
     global.assertEq = assertEq;
   }
 
+  function assertEqArray(actual, expected) {
+    var len = actual.length;
+    assertEq(len, expected.length, "mismatching array lengths");
+
+    var i = 0;
+    try {
+      for (; i < len; i++)
+        assertEq(actual[i], expected[i], "mismatch at element " + i);
+    } catch (e) {
+      throw new Error("Exception thrown at index " + i + ": " + e);
+    }
+  }
+  global.assertEqArray = assertEqArray;
+
   function assertThrows(f) {
     var ok = false;
     try {
@@ -1001,15 +1015,4 @@ function jsTestDriverEnd()
     gTestcases[i].dump();
   }
 
-}
-
-function assertEqArray(a1, a2) {
-  assertEq(a1.length, a2.length);
-  for (var i = 0; i < a1.length; i++) {
-    try {
-      assertEq(a1[i], a2[i]);
-    } catch (e) {
-      throw new Error("At index " + i + ": " + e);
-    }
-  }
 }
