@@ -3,6 +3,110 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// NOTE: If you're adding new test harness functionality -- first, should you
+//       at all?  Most stuff is better in specific tests, or in nested shell.js
+//       or browser.js.  Second, supposing you should, please add it to this
+//       IIFE for better modularity/resilience against tests that have to do
+//       particularly bizarre things that might break the harness.
+
+(function(global) {
+  /**********************************************************************
+   * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
+   **********************************************************************/
+
+  var Error = global.Error;
+  var Number = global.Number;
+  var TypeError = global.TypeError;
+
+  /****************************
+   * TESTING FUNCTION EXPORTS *
+   ****************************/
+
+  function SameValue(v1, v2) {
+    // We could |return Object.is(v1, v2);|, but that's less portable.
+    if (v1 === 0 && v2 === 0)
+      return 1 / v1 === 1 / v2;
+    if (v1 !== v1 && v2 !== v2)
+      return true;
+    return v1 === v2;
+  }
+
+  var assertEq = global.assertEq;
+  if (typeof assertEq !== "function") {
+    assertEq = function assertEq(actual, expected, message) {
+      if (!SameValue(actual, expected)) {
+        throw new TypeError('Assertion failed: got "' + actual + '", ' +
+                            'expected "' + expected +
+                            (message ? ": " + message : ""));
+      }
+    };
+    global.assertEq = assertEq;
+  }
+
+  function assertThrows(f) {
+    var ok = false;
+    try {
+      f();
+    } catch (exc) {
+      ok = true;
+    }
+    if (!ok)
+      throw new Error("Assertion failed: " + f + " did not throw as expected");
+  }
+  global.assertThrows = assertThrows;
+
+  /****************************
+   * UTILITY FUNCTION EXPORTS *
+   ****************************/
+
+  // Eventually this polyfill should be defined here, not in browser.js.  For
+  // now tolerate more-resilient code depending on less-resilient code.
+  assertEq(typeof global.print, "function",
+           "print function is pre-existing, either provided by the shell or " +
+           "the already-executed top-level browser.js");
+
+  /******************************************************
+   * TEST METADATA EXPORTS (these are of dubious value) *
+   ******************************************************/
+
+  global.SECTION = "";
+  global.VERSION = "";
+  global.BUGNUMBER = "";
+
+  /*************************************************************************
+   * HARNESS-CENTRIC EXPORTS (we should generally work to eliminate these) *
+   *************************************************************************/
+
+  /** Set up test environment. */
+  function startTest() {
+    if (global.BUGNUMBER)
+      global.print("BUGNUMBER: " + global.BUGNUMBER);
+  }
+  global.startTest = startTest;
+
+  /*****************************************************
+   * RHINO-SPECIFIC EXPORTS (are these used any more?) *
+   *****************************************************/
+
+  function inRhino() {
+    return typeof global.defineClass === "function";
+  }
+  global.inRhino = inRhino;
+
+  function GetContext() {
+    return global.Packages.com.netscape.javascript.Context.getCurrentContext();
+  }
+  global.GetContext = GetContext;
+
+  function OptLevel(i) {
+    i = Number(i);
+    var cx = GetContext();
+    cx.setOptimizationLevel(i);
+  }
+  global.OptLevel = OptLevel;
+})(this);
+
+
 var STATUS = "STATUS: ";
 var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
@@ -13,16 +117,11 @@ var gDelayTestDriverEnd = false;
 
 var gTestcases = new Array();
 var gTc = gTestcases.length;
-var BUGNUMBER = '';
 var summary = '';
 var description = '';
 var expected = '';
 var actual = '';
 var msg = '';
-
-var SECTION = "";
-var VERSION = "";
-var BUGNUMBER = "";
 
 /*
  * constant strings
@@ -54,18 +153,6 @@ function testPassesUnlessItThrows() {
 
 function AddTestCase( description, expect, actual ) {
   new TestCase( SECTION, description, expect, actual );
-}
-
-/*
- * Set up test environment.
- *
- */
-function startTest() {
-  // print out bugnumber
-
-  if ( BUGNUMBER ) {
-    print ("BUGNUMBER: " + BUGNUMBER );
-  }
 }
 
 function TestCase(n, d, e, a)
@@ -217,36 +304,6 @@ function escapeString (str)
   }
 
   return result;
-}
-
-/*
- * assertEq(actual, expected [, message])
- *   Throw if the two arguments are not the same.  The sameness of two values
- *   is determined as follows.  If both values are zero, they are the same iff
- *   their signs are the same.  Otherwise, if both values are NaN, they are the
- *   same.  Otherwise, they are the same if they compare equal using ===.
- * see https://bugzilla.mozilla.org/show_bug.cgi?id=480199 and
- *     https://bugzilla.mozilla.org/show_bug.cgi?id=515285
- */
-if (typeof assertEq == 'undefined')
-{
-  var assertEq =
-    function (actual, expected, message)
-    {
-      function SameValue(v1, v2)
-      {
-        if (v1 === 0 && v2 === 0)
-          return 1 / v1 === 1 / v2;
-        if (v1 !== v1 && v2 !== v2)
-          return true;
-        return v1 === v2;
-      }
-      if (!SameValue(actual, expected))
-      {
-        throw new TypeError('Assertion failed: got "' + actual + '", expected "' + expected +
-                            (message ? ": " + message : ""));
-      }
-    };
 }
 
 /*
@@ -880,18 +937,6 @@ function assertEqArray(a1, a2) {
   }
 }
 
-function assertThrows(f) {
-    var ok = false;
-    try {
-        f();
-    } catch (exc) {
-        ok = true;
-    }
-    if (!ok)
-        throw new Error("Assertion failed: " + f + " did not throw as expected");
-}
-
-
 function assertThrowsInstanceOf(f, ctor, msg) {
   var fullmsg;
   try {
@@ -907,23 +952,3 @@ function assertThrowsInstanceOf(f, ctor, msg) {
     fullmsg += " - " + msg;
   throw new Error(fullmsg);
 };
-
-/*
- * Some tests need to know if we are in Rhino as opposed to SpiderMonkey
- */
-function inRhino()
-{
-  return (typeof defineClass == "function");
-}
-
-/* these functions are useful for running tests manually in Rhino */
-
-function GetContext() {
-  return Packages.com.netscape.javascript.Context.getCurrentContext();
-}
-function OptLevel( i ) {
-  i = Number(i);
-  var cx = GetContext();
-  cx.setOptimizationLevel(i);
-}
-/* end of Rhino functions */
