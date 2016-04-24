@@ -15,11 +15,11 @@
 <script type="application/javascript" src="chrome://browser/content/browser-ctrlTab.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-customization.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-devedition.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-eme.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-feeds.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-fullScreen.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-fullZoom.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-gestureSupport.js"/>
+<script type="application/javascript" src="chrome://browser/content/browser-media.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-plugins.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-refreshblocker.js"/>
