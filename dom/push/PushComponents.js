@@ -248,7 +248,7 @@ Object.assign(PushServiceParent.prototype, {
 
     // System subscriptions can only be created by chrome callers, and are
     // exempt from the background message quota and permission checks. They
-    // also use XPCOM observer notifications instead of service worker events.
+    // also do not fire service worker events.
     data.systemRecord = principal.isSystemPrincipal;
 
     data.originAttributes =
@@ -487,6 +487,15 @@ PushSubscription.prototype = {
    */
   get quota() {
     return this._props.quota;
+  },
+
+  /**
+   * Indicates whether this subscription was created with the system principal.
+   * System subscriptions are exempt from the background message quota and
+   * permission checks.
+   */
+  get isSystemSubscription() {
+    return !!this._props.systemRecord;
   },
 
   /**
