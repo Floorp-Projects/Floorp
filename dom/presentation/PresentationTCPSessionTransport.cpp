@@ -107,7 +107,7 @@ PresentationTCPSessionTransport::BuildTCPSenderTransport(nsISocketTransport* aTr
     return rv;
   }
 
-  mRole = nsIPresentationService::ROLE_CONTROLLER;
+  mType = nsIPresentationSessionTransportBuilder::TYPE_SENDER;
 
   nsCOMPtr<nsIPresentationSessionTransport> sessionTransport = do_QueryObject(this);
   nsCOMPtr<nsIRunnable> onSessionTransportRunnable =
@@ -117,6 +117,7 @@ PresentationTCPSessionTransport::BuildTCPSenderTransport(nsISocketTransport* aTr
                                          sessionTransport);
 
   NS_DispatchToCurrentThread(onSessionTransportRunnable);
+
 
   nsCOMPtr<nsIRunnable> setReadyStateRunnable =
     NS_NewRunnableMethodWithArgs<ReadyState>(this,
@@ -189,7 +190,7 @@ PresentationTCPSessionTransport::BuildTCPReceiverTransport(nsIPresentationChanne
     return rv;
   }
 
-  mRole = nsIPresentationService::ROLE_RECEIVER;
+  mType = nsIPresentationSessionTransportBuilder::TYPE_RECEIVER;
 
   nsCOMPtr<nsIPresentationSessionTransport> sessionTransport = do_QueryObject(this);
   nsCOMPtr<nsIRunnable> runnable =
