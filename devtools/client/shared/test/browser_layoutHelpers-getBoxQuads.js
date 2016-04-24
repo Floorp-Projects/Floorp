@@ -25,7 +25,7 @@ add_task(function* () {
   returnsLikeGetBoxQuadsInSimpleCase(doc);
   takesIframesOffsetsIntoAccount(doc);
   takesScrollingIntoAccount(doc);
-  takesZoomIntoAccount(doc);
+  yield takesZoomIntoAccount(doc);
   returnsMultipleItemsForWrappingInlineElements(doc);
 
   gBrowser.removeCurrentTab();
@@ -173,7 +173,7 @@ function takesScrollingIntoAccount(doc) {
   is(quad.p1.y, 0, "p1.y of the scrolled node is correct after scrolling up");
 }
 
-function takesZoomIntoAccount(doc) {
+function* takesZoomIntoAccount(doc) {
   info("Checks that if the page is zoomed in/out, the quad returned is correct");
 
   // Hard-coding coordinates in this zoom test is a bad idea as it can vary
@@ -193,7 +193,7 @@ function takesZoomIntoAccount(doc) {
     "The zoomed in quad is bigger than the default one");
 
   info("Zoom out");
-  window.FullZoom.reset();
+  yield window.FullZoom.reset();
   window.FullZoom.reduce();
   let [zoomedOutQuad] = getAdjustedQuads(doc.defaultView, node);
 
@@ -202,7 +202,7 @@ function takesZoomIntoAccount(doc) {
   ok(zoomedOutQuad.bounds.height < defaultQuad.bounds.height,
     "The zoomed out quad is smaller than the default one");
 
-  window.FullZoom.reset();
+  yield window.FullZoom.reset();
 }
 
 function returnsMultipleItemsForWrappingInlineElements(doc) {
