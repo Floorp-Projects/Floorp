@@ -23,11 +23,9 @@ function test()
   expect = 'falsy,falsy,falsy,falsy,falsy,';
   actual = '';
 
-  jit(true);
 
   for (var i=0;i<5;++i) actual += (!(NaN) ? "falsy" : "truthy") + ',';
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

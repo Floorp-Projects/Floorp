@@ -19,7 +19,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   function f() {
     var a = 1;
@@ -50,7 +49,6 @@ function test()
     skip = false;
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary + ': return value 10');
 

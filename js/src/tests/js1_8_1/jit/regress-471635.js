@@ -19,7 +19,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   (function(){
     for (var i = 1; i < 20; ++i) {
@@ -40,7 +39,6 @@ function test()
     skip = false;
   }
 
-  jit(false);
 
   if (!skip)
   {

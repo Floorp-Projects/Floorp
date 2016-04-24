@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
  
   for (iters = 0; iters < 11500; ++iters) {
     for each (let x in ['', '', '']){}
@@ -40,7 +39,6 @@ function test()
     toString = c;
   }
 
-  jit(true);
 
   delete __proto__.x;
 

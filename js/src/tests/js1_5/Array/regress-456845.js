@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   try
   { 
@@ -40,11 +39,9 @@ function test()
       var x; while (x = popArrs[a].pop()) {  }
     }
 
-    jit(false);
   }
   catch(ex)
   {
-    jit(false);
     actual = ex + '';
   }
 

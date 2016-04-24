@@ -30,7 +30,6 @@ function test()
   {
     gDelayTestDriverEnd = true;
 
-    jit(true);
 
     function newScriptWithLoop(m)
     {
@@ -47,7 +46,6 @@ function test()
       div.appendChild(newScriptWithLoop(1));
       document.body.appendChild(div);
 
-      jit(false);
 
       reportCompare(expect, actual, summary);
       gDelayTestDriverEnd = false;

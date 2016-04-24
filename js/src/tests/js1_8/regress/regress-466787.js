@@ -22,12 +22,10 @@ function test()
 
   expect = '4444';
 
-  jit(true);
 
   for (let j = 0; j < 4; ++j) { for each (let one in [new Number(1)]) {
         print(actual += '' + (3 + one)); } }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

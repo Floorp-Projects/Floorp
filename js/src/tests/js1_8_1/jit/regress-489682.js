@@ -12,7 +12,6 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 var v = 0;
 
@@ -25,7 +24,6 @@ for each (var a in [0, {}, {}, {}]) {
          }
 print(v);
 
-jit(false);
 
 expect = '0';
 actual = v + '';

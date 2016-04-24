@@ -20,11 +20,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true); 
   var out = [];
   for (let j = 0; j < 5; ++j) { out.push(6 - ((void 0) ^ 0x80000005)); }
   print(uneval(out));
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

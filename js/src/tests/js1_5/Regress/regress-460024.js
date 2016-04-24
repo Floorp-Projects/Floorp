@@ -23,7 +23,6 @@ function test()
   expect = 'PASS';
   actual = 'FAIL';
 
-  jit(true);
 
   var js = 'Function.prototype.inherits = function(a) {' +
   '  actual = "PASS";' +
@@ -33,7 +32,6 @@ function test()
   function doeval(callback) { callback(js) };
   doeval(eval);
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

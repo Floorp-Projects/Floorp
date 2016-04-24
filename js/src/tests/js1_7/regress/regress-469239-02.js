@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   for (let b=0;b<9;++b) {
     for each (let h in [33, 3, /x/]) {
@@ -30,7 +29,6 @@ function test()
       }
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

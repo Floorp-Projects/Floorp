@@ -20,14 +20,12 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   var a = new String("foo");
   for (i = 0; i < 300; i++) {
     a.match(/bar/);
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
