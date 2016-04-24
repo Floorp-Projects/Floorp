@@ -2677,7 +2677,7 @@ public class BrowserApp extends GeckoApp
             case ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK:
                 if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS) {
                     openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(PanelType.BOOKMARKS));
-                } else if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE){
+                } else if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE) {
                     showReaderModeBookmarkAddedSnackbar();
                 }
                 break;
