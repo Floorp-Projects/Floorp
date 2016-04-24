@@ -325,7 +325,7 @@ PresentationSessionInfo::UntrackFromService()
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId, mRole);
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
 
   return NS_OK;
 }
@@ -660,7 +660,7 @@ PresentationControllingInfo::NotifyOpened()
   mBuilder = builder;
   mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
 
-  return builder->BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
+  return builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_SENDER,
                                             GetWindow(),
                                             mControlChannel,
                                             this);
@@ -874,7 +874,7 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
 
     mBuilder = builder;
     mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
-    rv = builder->BuildDataChannelTransport(nsIPresentationService::ROLE_RECEIVER,
+    rv = builder->BuildDataChannelTransport(nsIPresentationSessionTransportBuilder::TYPE_RECEIVER,
                                             GetWindow(),
                                             mControlChannel,
                                             this);
@@ -910,7 +910,7 @@ PresentationPresentingInfo::UntrackFromService()
   if (NS_WARN_IF(!service)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId, mRole);
+  static_cast<PresentationService*>(service.get())->UntrackSessionInfo(mSessionId);
 
   return NS_OK;
 }

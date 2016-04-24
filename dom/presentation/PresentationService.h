@@ -33,23 +33,14 @@ public:
   bool Init();
 
   already_AddRefed<PresentationSessionInfo>
-  GetSessionInfo(const nsAString& aSessionId, const uint8_t aRole)
+  GetSessionInfo(const nsAString& aSessionId)
   {
-    MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
-               aRole == nsIPresentationService::ROLE_RECEIVER);
-
     RefPtr<PresentationSessionInfo> info;
-    if (aRole == nsIPresentationService::ROLE_CONTROLLER) {
-      return mSessionInfoAtController.Get(aSessionId, getter_AddRefs(info)) ?
-             info.forget() : nullptr;
-    } else {
-      return mSessionInfoAtReceiver.Get(aSessionId, getter_AddRefs(info)) ?
-             info.forget() : nullptr;
-    }
+    return mSessionInfo.Get(aSessionId, getter_AddRefs(info)) ?
+           info.forget() : nullptr;
   }
 
   bool IsSessionAccessible(const nsAString& aSessionId,
-                           const uint8_t aRole,
                            base::ProcessId aProcessId);
 
 private:
@@ -70,8 +61,7 @@ private:
   // been called in any place until many-to-one session becomes supported.
   nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
 
-  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtController;
-  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfoAtReceiver;
+  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
 
   // Store the mapping between the window ID of the in-process page and the ID
   // of the responding session. It's used for an in-process receiver page to

@@ -35,15 +35,11 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
                                                const nsAString& aId,
-                                               const uint8_t aRole,
                                                PresentationConnectionState aState)
   : DOMEventTargetHelper(aWindow)
   , mId(aId)
   , mState(aState)
 {
-  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
-             aRole == nsIPresentationService::ROLE_RECEIVER);
-  mRole = aRole;
 }
 
 /* virtual */ PresentationConnection::~PresentationConnection()
@@ -53,13 +49,10 @@ PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
 /* static */ already_AddRefed<PresentationConnection>
 PresentationConnection::Create(nsPIDOMWindowInner* aWindow,
                                const nsAString& aId,
-                               const uint8_t aRole,
                                PresentationConnectionState aState)
 {
-  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
-             aRole == nsIPresentationService::ROLE_RECEIVER);
   RefPtr<PresentationConnection> connection =
-    new PresentationConnection(aWindow, aId, aRole, aState);
+    new PresentationConnection(aWindow, aId, aState);
   return NS_WARN_IF(!connection->Init()) ? nullptr : connection.forget();
 }
 
@@ -76,7 +69,7 @@ PresentationConnection::Init()
     return false;
   }
 
-  nsresult rv = service->RegisterSessionListener(mId, mRole, this);
+  nsresult rv = service->RegisterSessionListener(mId, this);
   if(NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
@@ -93,7 +86,7 @@ PresentationConnection::Shutdown()
     return;
   }
 
-  nsresult rv = service->UnregisterSessionListener(mId, mRole);
+  nsresult rv = service->UnregisterSessionListener(mId);
   NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -140,7 +133,7 @@ PresentationConnection::Send(const nsAString& aData,
     return;
   }
 
-  nsresult rv = service->SendSessionMessage(mId, mRole, aData);
+  nsresult rv = service->SendSessionMessage(mId, aData);
   if(NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -173,7 +166,7 @@ PresentationConnection::Terminate(ErrorResult& aRv)
     return;
   }
 
-  NS_WARN_IF(NS_FAILED(service->TerminateSession(mId, mRole)));
+  NS_WARN_IF(NS_FAILED(service->TerminateSession(mId)));
 }
 
 NS_IMETHODIMP
@@ -214,7 +207,7 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    nsresult rv = service->UnregisterSessionListener(mId, mRole);
+    nsresult rv = service->UnregisterSessionListener(mId);
     if(NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
