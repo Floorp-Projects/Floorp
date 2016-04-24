@@ -38,7 +38,6 @@ function mandelbrotValueOO (aC, aIterMax) {
 }
 
 function f(trace) {
-  jit(trace);
   var start = Date.now();
   const width = 60;
   const height = 60;
