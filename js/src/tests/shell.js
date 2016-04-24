@@ -6,7 +6,7 @@
 // NOTE: If you're adding new test harness functionality -- first, should you
 //       at all?  Most stuff is better in specific tests, or in nested shell.js
 //       or browser.js.  Second, supposing you should, please add it to this
-//       IIFE for better modularity/resilience against tests that have to do
+//       IIFE for better modularity/resilience against tests that must do
 //       particularly bizarre things that might break the harness.
 
 (function(global) {

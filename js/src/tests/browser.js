@@ -3,6 +3,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// NOTE: If you're adding new test harness functionality to this file -- first,
+//       should you at all?  Most stuff is better in specific tests, or in
+//       nested shell.js/browser.js.  Second, can you instead add it to
+//       shell.js?  Our goal is to unify these two files for readability, and
+//       the plan is to empty out this file into that one over time.  Third,
+//       supposing you must add to this file, please add it to this IIFE for
+//       better modularity/resilience against tests that must do particularly
+//       bizarre things that might break the harness.
+
+(function(global) {
+  /****************************
+   * UTILITY FUNCTION EXPORTS *
+   ****************************/
+
+  var newGlobal = global.newGlobal;
+  if (typeof newGlobal !== "function") {
+    newGlobal = function newGlobal() {
+      var iframe = global.document.createElement("iframe");
+      global.document.documentElement.appendChild(iframe);
+      var win = iframe.contentWindow;
+      iframe.remove();
+      // Shim in "evaluate"
+      win.evaluate = win.eval;
+      return win;
+    };
+    global.newGlobal = newGlobal;
+  }
+})(this);
+
 var gPageCompleted;
 var GLOBAL = this + '';
 
@@ -558,16 +587,6 @@ function closeDialog()
       subject.close();
     }
   }
-}
-
-function newGlobal() {
-  var iframe = document.createElement("iframe");
-  document.documentElement.appendChild(iframe);
-  var win = iframe.contentWindow;
-  iframe.remove();
-  // Shim in "evaluate"
-  win.evaluate = win.eval;
-  return win;
 }
 
 registerDialogCloser();
