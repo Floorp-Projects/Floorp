@@ -97,13 +97,13 @@ function* do_test(test) {
   });
   info("Initial mouse move");
   yield new Promise(resolve => {
-    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 100, 5, resolve);
+    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 50, 5, resolve);
   });
   info("Waiting");
-  yield new Promise(resolve => setTimeout(resolve, 100));
+  yield new Promise(resolve => setTimeout(resolve, 200));
   info("Second mouse move");
   yield new Promise(resolve => {
-    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 110, 15, resolve);
+    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 70, 5, resolve);
   });
   info("Waiting for tooltip to open");
   let tooltip = yield awaitTooltipOpen;

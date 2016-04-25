@@ -15,7 +15,7 @@
     "global": true,
     "Extension": true,
     "ExtensionManagement": true,
-    "ExtensionPage": true,
+    "ExtensionContext": true,
     "GlobalManager": true,
     "openOptionsPage": true,
     "runSafe": true,

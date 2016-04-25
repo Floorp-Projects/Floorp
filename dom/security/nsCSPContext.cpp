@@ -288,6 +288,15 @@ nsCSPContext::GetPolicy(uint32_t aIndex, nsAString& outStr)
   return NS_OK;
 }
 
+const nsCSPPolicy*
+nsCSPContext::GetPolicy(uint32_t aIndex)
+{
+  if (aIndex >= mPolicies.Length()) {
+    return nullptr;
+  }
+  return mPolicies[aIndex];
+}
+
 NS_IMETHODIMP
 nsCSPContext::GetPolicyCount(uint32_t *outPolicyCount)
 {

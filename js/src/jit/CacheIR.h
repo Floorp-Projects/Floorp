@@ -83,6 +83,7 @@ class ObjOperandId : public OperandId
     _(GuardGroup)                         \
     _(GuardProto)                         \
     _(GuardClass)                         \
+    _(GuardSpecificObject)                \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
@@ -259,6 +260,10 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::GuardClass, obj);
         buffer_.writeByte(uint32_t(kind));
     }
+    void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
+        writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
+        addStubWord(uintptr_t(expected), StubField::GCType::JSObject);
+    }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
     }
@@ -385,6 +390,7 @@ class MOZ_RAII GetPropIRGenerator
     bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;

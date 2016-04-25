@@ -91,6 +91,10 @@ public:
     virtual nsresult GetScrollCaptureContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) = 0;
     virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling) = 0;
 #endif
+  virtual nsresult HandledWindowedPluginKeyEvent(
+                     NPP aInstance,
+                     const mozilla::NativeEventData& aNativeKeyData,
+                     bool aIsCOnsumed) = 0;
 
   /**
    * The next three methods are the third leg in the trip to

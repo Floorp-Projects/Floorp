@@ -96,6 +96,7 @@ EXPORTS += [
     'nsBaseWidget.h',
     'nsDeviceContextSpecProxy.h',
     'nsIDeviceContextSpec.h',
+    'nsIKeyEventInPluginCallback.h',
     'nsIPluginWidget.h',
     'nsIRollupListener.h',
     'nsIWidget.h',

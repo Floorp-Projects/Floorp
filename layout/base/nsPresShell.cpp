@@ -4553,18 +4553,6 @@ PresShell::StyleRuleRemoved(StyleSheetHandle aStyleSheet)
 }
 
 nsIFrame*
-PresShell::GetRealPrimaryFrameFor(nsIContent* aContent) const
-{
-  if (aContent->GetComposedDoc() != GetDocument()) {
-    return nullptr;
-  }
-  nsIFrame *primaryFrame = aContent->GetPrimaryFrame();
-  if (!primaryFrame)
-    return nullptr;
-  return nsPlaceholderFrame::GetRealFrameFor(primaryFrame);
-}
-
-nsIFrame*
 PresShell::GetPlaceholderFrameFor(nsIFrame* aFrame) const
 {
   return mFrameConstructor->GetPlaceholderFrameFor(aFrame);
@@ -7159,10 +7147,10 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
   // return true if the event target is in its child process
   bool targetIsIframe = IsTargetIframe(aTarget);
 
-  // Dispatch event directly if the event is synthesized from
-  // nsITextInputProcessor, or there is no need to fire
-  // beforeKey* and afterKey* events.
+  // Dispatch event directly if the event is a keypress event, a key event on
+  // plugin, or there is no need to fire beforeKey* and afterKey* events.
   if (aEvent.mMessage == eKeyPress ||
+      aEvent.IsKeyEventOnPlugin() ||
       !BeforeAfterKeyboardEventEnabled()) {
     ForwardKeyToInputMethodAppOrDispatch(targetIsIframe, aTarget, aEvent,
                                          aStatus, aEventCB);
@@ -7229,7 +7217,8 @@ PresShell::ForwardKeyToInputMethodApp(nsINode* aTarget,
                                       WidgetKeyboardEvent& aEvent,
                                       nsEventStatus* aStatus)
 {
-  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP) {
+  if (!XRE_IsParentProcess() || aEvent.mIsSynthesizedByTIP ||
+      aEvent.IsKeyEventOnPlugin()) {
     return false;
   }
 

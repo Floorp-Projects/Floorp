@@ -98,7 +98,8 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumberZeroLength)
   Reader reader(input);
 
   Input item;
-  ASSERT_EQ(Result::ERROR_BAD_DER, CertificateSerialNumber(reader, item));
+  ASSERT_EQ(Result::ERROR_INVALID_INTEGER_ENCODING,
+            CertificateSerialNumber(reader, item));
 }
 
 TEST_F(pkixder_pki_types_tests, OptionalVersionV1ExplicitEncodingAllowed)

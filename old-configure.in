@@ -269,30 +269,6 @@ MOZ_TOOL_VARIABLES
 
 MOZ_RUST_SUPPORT
 
-dnl ========================================================
-dnl Check for MacOS deployment target version
-dnl ========================================================
-
-MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.6)
-                          Set the minimum MacOS version needed at runtime],
-                      [_MACOSX_DEPLOYMENT_TARGET=$enableval])
-
-case "$target" in
-*-darwin*)
-    if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
-        dnl Use the specified value
-        export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-    else
-        dnl No value specified on the command line or in the environment,
-        dnl use architecture minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.6
-    fi
-    ;;
-esac
-
-AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
-
 AC_PROG_CPP
 AC_PROG_CXXCPP
 
@@ -2723,7 +2699,6 @@ MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
-MOZ_ANDROID_APZ=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -2745,14 +2720,8 @@ BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
-MOZ_ANDROID_BEAM=
-MOZ_LOCALE_SWITCHER=
-MOZ_ANDROID_SEARCH_ACTIVITY=
-MOZ_ANDROID_DOWNLOADS_INTEGRATION=
-MOZ_ANDROID_MLS_STUMBLER=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
-MOZ_SWITCHBOARD=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_SIMPLEPUSH=
@@ -3543,18 +3512,6 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
 fi
 
 dnl ========================================================
-dnl = Enable the C++ async pan/zoom code instead of the Java version
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(android-apz,
-[  --enable-android-apz      Switch to C++ pan/zoom code],
-    MOZ_ANDROID_APZ=1,
-    MOZ_ANDROID_APZ=)
-if test -n "$MOZ_ANDROID_APZ"; then
-     dnl Do this if defined in confvars.sh
-     AC_DEFINE(MOZ_ANDROID_APZ)
-fi
-
-dnl ========================================================
 dnl = Disable WebSMS backend
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(websms-backend,
@@ -3567,48 +3524,6 @@ if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
 fi
 
-dnl ========================================================
-dnl = Enable runtime locale switching on Android
-dnl ========================================================
-if test -n "$MOZ_LOCALE_SWITCHER"; then
-    AC_DEFINE(MOZ_LOCALE_SWITCHER)
-fi
-
-dnl ========================================================
-dnl = Enable system download manager on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_DOWNLOADS_INTEGRATION"; then
-    AC_DEFINE(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
-fi
-
-dnl ========================================================
-dnl = Enable NFC permission on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_BEAM"; then
-    AC_DEFINE(MOZ_ANDROID_BEAM)
-fi
-
-dnl ========================================================
-dnl = Include Search Activity on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_SEARCH_ACTIVITY"; then
-    AC_DEFINE(MOZ_ANDROID_SEARCH_ACTIVITY)
-fi
-
-dnl ========================================================
-dnl = Include Mozilla Location Service Stumbler on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_MLS_STUMBLER"; then
-    AC_DEFINE(MOZ_ANDROID_MLS_STUMBLER)
-fi
-
-dnl =========================================================
-dnl = Whether to exclude font files in the build
-dnl =========================================================
-if test -n "$MOZ_ANDROID_EXCLUDE_FONTS"; then
-    AC_DEFINE(MOZ_ANDROID_EXCLUDE_FONTS)
-fi
-
 dnl =========================================================
 dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
@@ -3616,32 +3531,11 @@ if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
     AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 fi
 
-dnl =========================================================
-dnl = Background service for downloading additional content at runtime.
-dnl =========================================================
-if test -n "$MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE"; then
-    AC_DEFINE(MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE)
-fi
-
 dnl ========================================================
 dnl = Include install tracking on Android
 dnl ========================================================
 if test -n "$MOZ_INSTALL_TRACKING"; then
     AC_DEFINE(MOZ_INSTALL_TRACKING)
-fi
-
-dnl ========================================================
-dnl = Include Switchboard A/B framework on Android
-dnl ========================================================
-if test -n "$MOZ_SWITCHBOARD"; then
-    AC_DEFINE(MOZ_SWITCHBOARD)
-fi
-
-dnl ========================================================
-dnl = Enable GCM on Android.
-dnl ========================================================
-if test -n "$MOZ_ANDROID_GCM"; then
-    AC_DEFINE(MOZ_ANDROID_GCM)
 fi
 
 dnl ========================================================
@@ -6825,7 +6719,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
-AC_SUBST(MOZ_ANDROID_APZ)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
@@ -6847,23 +6740,14 @@ AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
-AC_SUBST(MOZ_ANDROID_BEAM)
-AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
-AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
-AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
 AC_SUBST(MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER)
-AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
-AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
-AC_SUBST(MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE)
-AC_SUBST(MOZ_ANDROID_EXCLUDE_FONTS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
-AC_SUBST(MOZ_SWITCHBOARD)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)

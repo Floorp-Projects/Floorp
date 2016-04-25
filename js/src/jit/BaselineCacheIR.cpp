@@ -774,6 +774,20 @@ BaselineCacheIRCompiler::emitGuardClass()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardSpecificObject()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.branchPtr(Assembler::NotEqual, addr, obj, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardNoUnboxedExpando()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());

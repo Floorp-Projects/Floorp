@@ -34,6 +34,88 @@ class U2FSignCallback;
 namespace mozilla {
 namespace dom {
 
+// These enumerations are defined in the FIDO U2F Javascript API under the
+// interface "ErrorCode" as constant integers, and thus in the U2F.webidl file.
+// Any changes to these must occur in both locations.
+enum class ErrorCode {
+  OK = 0,
+  OTHER_ERROR = 1,
+  BAD_REQUEST = 2,
+  CONFIGURATION_UNSUPPORTED = 3,
+  DEVICE_INELIGIBLE = 4,
+  TIMEOUT = 5
+};
+
+class U2FTask : public nsRunnable
+{
+public:
+  U2FTask(const nsAString& aOrigin,
+          const nsAString& aAppId);
+
+  nsString mOrigin;
+  nsString mAppId;
+
+  virtual
+  void ReturnError(ErrorCode code) = 0;
+
+protected:
+  virtual ~U2FTask();
+};
+
+class U2FRegisterTask final : public nsNSSShutDownObject,
+                              public U2FTask
+{
+public:
+  U2FRegisterTask(const nsAString& aOrigin,
+                  const nsAString& aAppId,
+                  const Sequence<RegisterRequest>& aRegisterRequests,
+                  const Sequence<RegisteredKey>& aRegisteredKeys,
+                  U2FRegisterCallback* aCallback,
+                  const nsCOMPtr<nsINSSU2FToken>& aNSSToken);
+
+  // No NSS resources to release.
+  virtual
+  void virtualDestroyNSSReference() override {};
+
+  void ReturnError(ErrorCode code) override;
+
+  NS_DECL_NSIRUNNABLE
+private:
+  ~U2FRegisterTask();
+
+  Sequence<RegisterRequest> mRegisterRequests;
+  Sequence<RegisteredKey> mRegisteredKeys;
+  RefPtr<U2FRegisterCallback> mCallback;
+  nsCOMPtr<nsINSSU2FToken> mNSSToken;
+};
+
+class U2FSignTask final : public nsNSSShutDownObject,
+                          public U2FTask
+{
+public:
+  U2FSignTask(const nsAString& aOrigin,
+              const nsAString& aAppId,
+              const nsAString& aChallenge,
+              const Sequence<RegisteredKey>& aRegisteredKeys,
+              U2FSignCallback* aCallback,
+              const nsCOMPtr<nsINSSU2FToken>& aNSSToken);
+
+  // No NSS resources to release.
+  virtual
+  void virtualDestroyNSSReference() override {};
+
+  void ReturnError(ErrorCode code) override;
+
+  NS_DECL_NSIRUNNABLE
+private:
+  ~U2FSignTask();
+
+  nsString mChallenge;
+  Sequence<RegisteredKey> mRegisteredKeys;
+  RefPtr<U2FSignCallback> mCallback;
+  nsCOMPtr<nsINSSU2FToken> mNSSToken;
+};
+
 class U2F final : public nsISupports,
                   public nsWrapperCache,
                   public nsNSSShutDownObject
@@ -82,37 +164,7 @@ private:
   USBToken mUSBToken;
   nsCOMPtr<nsINSSU2FToken> mNSSToken;
 
-  static const nsString FinishEnrollment;
-  static const nsString GetAssertion;
-
   ~U2F();
-
-  nsresult
-  AssembleClientData(const nsAString& aTyp,
-                     const nsAString& aChallenge,
-                     CryptoBuffer& aClientData) const;
-
-  // ValidAppID determines whether the supplied FIDO AppID is valid for
-  // the current FacetID, e.g., the current origin. If the supplied
-  // aAppId param is null or empty, it will be filled in per the algorithm.
-  // See https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-appid-and-facets.html
-  // for a description of the algorithm.
-  bool
-  ValidAppID(/* in/out */ nsString& aAppId) const;
-
-  nsresult
-  NSSTokenIsCompatible(const nsString& versionString, bool* isCompatible);
-
-  nsresult
-  NSSTokenIsRegistered(CryptoBuffer& keyHandle, bool* isRegistered);
-
-  nsresult
-  NSSTokenRegister(CryptoBuffer& application, CryptoBuffer& challenge,
-                   CryptoBuffer& registrationData);
-
-  nsresult
-  NSSTokenSign(CryptoBuffer& keyHandle, CryptoBuffer& application,
-               CryptoBuffer& challenge, CryptoBuffer& signatureData);
 };
 
 } // namespace dom

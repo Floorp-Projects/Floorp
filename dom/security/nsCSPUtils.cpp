@@ -375,6 +375,12 @@ nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
   return permitsScheme(mScheme, aUri, aReportOnly, aUpgradeInsecure);
 }
 
+bool
+nsCSPSchemeSrc::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return aVisitor->visitSchemeSrc(*this);
+}
+
 void
 nsCSPSchemeSrc::toString(nsAString& outStr) const
 {
@@ -534,6 +540,12 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   return true;
 }
 
+bool
+nsCSPHostSrc::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return aVisitor->visitHostSrc(*this);
+}
+
 void
 nsCSPHostSrc::toString(nsAString& outStr) const
 {
@@ -611,6 +623,12 @@ nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce)
   return mKeyword == aKeyword;
 }
 
+bool
+nsCSPKeywordSrc::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return aVisitor->visitKeywordSrc(*this);
+}
+
 void
 nsCSPKeywordSrc::toString(nsAString& outStr) const
 {
@@ -665,6 +683,12 @@ nsCSPNonceSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) c
     return false;
   }
   return mNonce.Equals(aHashOrNonce);
+}
+
+bool
+nsCSPNonceSrc::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return aVisitor->visitNonceSrc(*this);
 }
 
 void
@@ -724,6 +748,12 @@ nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) co
   return NS_ConvertUTF16toUTF8(mHash).Equals(hash);
 }
 
+bool
+nsCSPHashSrc::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return aVisitor->visitHashSrc(*this);
+}
+
 void
 nsCSPHashSrc::toString(nsAString& outStr) const
 {
@@ -743,6 +773,12 @@ nsCSPReportURI::nsCSPReportURI(nsIURI *aURI)
 
 nsCSPReportURI::~nsCSPReportURI()
 {
+}
+
+bool
+nsCSPReportURI::visit(nsCSPSrcVisitor* aVisitor) const
+{
+  return false;
 }
 
 void
@@ -947,6 +983,17 @@ nsCSPDirective::getReportURIs(nsTArray<nsString> &outReportURIs) const
     mSrcs[i]->toString(tmpReportURI);
     outReportURIs.AppendElement(tmpReportURI);
   }
+}
+
+bool
+nsCSPDirective::visitSrcs(nsCSPSrcVisitor* aVisitor) const
+{
+  for (uint32_t i = 0; i < mSrcs.Length(); i++) {
+    if (!mSrcs[i]->visit(aVisitor)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool nsCSPDirective::equals(CSPDirective aDirective) const
@@ -1255,4 +1302,15 @@ nsCSPPolicy::getReportURIs(nsTArray<nsString>& outReportURIs) const
       return;
     }
   }
+}
+
+bool
+nsCSPPolicy::visitDirectiveSrcs(CSPDirective aDir, nsCSPSrcVisitor* aVisitor) const
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(aDir)) {
+      return mDirectives[i]->visitSrcs(aVisitor);
+    }
+  }
+  return false;
 }

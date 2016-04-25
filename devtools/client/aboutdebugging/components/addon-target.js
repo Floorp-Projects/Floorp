@@ -41,7 +41,7 @@ module.exports = createClass({
   render() {
     let { target, debugDisabled } = this.props;
 
-    return dom.div({ className: "target-container" },
+    return dom.li({ className: "target-container" },
       dom.img({
         className: "target-icon",
         role: "presentation",

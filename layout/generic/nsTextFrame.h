@@ -413,6 +413,8 @@ public:
     gfxTextContextPaint* contextPaint = nullptr;
     DrawPathCallbacks* callbacks = nullptr;
     nscolor textColor = NS_RGBA(0, 0, 0, 0);
+    nscolor textStrokeColor = NS_RGBA(0, 0, 0, 0);
+    float textStrokeWidth = 0.0f;
     bool drawSoftHyphen = false;
     explicit DrawTextRunParams(gfxContext* aContext)
       : context(aContext) {}

@@ -21,6 +21,12 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
+%{C++
+class nsCSPPolicy;
+%}
+
+[ptr] native CSPPolicyPtr(const nsCSPPolicy);
+
 [scriptable, builtinclass, uuid(b3c4c0ae-bd5e-4cad-87e0-8d210dbb3f9f)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
@@ -59,6 +65,13 @@ interface nsIContentSecurityPolicy : nsISerializable
    * index.
    */
   AString getPolicy(in unsigned long index);
+
+  /**
+   * Accessor method for a read-only pointer the policy object at a given
+   * index. Returns a null pointer if the index is larger than the current
+   * policy count.
+   */
+  [noscript,notxpcom,nostdcall] CSPPolicyPtr GetPolicy(in unsigned long index);
 
   /**
    * Returns the number of policies attached to this CSP instance.  Useful with

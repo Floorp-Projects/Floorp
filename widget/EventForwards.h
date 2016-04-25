@@ -139,6 +139,8 @@ struct EventFlags;
 
 class WidgetEventTime;
 
+class NativeEventData;
+
 // TextEvents.h
 struct AlternativeCharCode;
 struct ShortcutKeyCandidate;

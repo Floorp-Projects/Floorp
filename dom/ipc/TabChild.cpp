@@ -1655,13 +1655,15 @@ bool
 TabChild::RecvSizeModeChanged(const nsSizeMode& aSizeMode)
 {
   mPuppetWidget->SetSizeMode(aSizeMode);
+  if (!mPuppetWidget->IsVisible()) {
+    return true;
+  }
   nsCOMPtr<nsIDocument> document(GetDocument());
   nsCOMPtr<nsIPresShell> presShell = document->GetShell();
   if (presShell) {
     nsPresContext* presContext = presShell->GetPresContext();
     if (presContext) {
-      presContext->MediaFeatureValuesChangedAllDocuments(eRestyle_Subtree,
-                                                         NS_STYLE_HINT_REFLOW);
+      presContext->SizeModeChanged(aSizeMode);
     }
   }
   return true;
@@ -2480,6 +2482,18 @@ TabChild::RecvNavigateByKey(const bool& aForward, const bool& aForDocumentNaviga
     SendRequestFocus(false);
   }
 
+  return true;
+}
+
+bool
+TabChild::RecvHandledWindowedPluginKeyEvent(
+            const NativeEventData& aKeyEventData,
+            const bool& aIsConsumed)
+{
+  if (NS_WARN_IF(!mPuppetWidget)) {
+    return true;
+  }
+  mPuppetWidget->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
   return true;
 }
 

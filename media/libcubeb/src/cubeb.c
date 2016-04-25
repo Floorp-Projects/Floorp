@@ -384,7 +384,7 @@ int cubeb_stream_device_destroy(cubeb_stream * stream,
 int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
                                                   cubeb_device_changed_callback device_changed_callback)
 {
-  if (!stream || !device_changed_callback) {
+  if (!stream) {
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 

@@ -2014,6 +2014,19 @@ PluginModuleParent::UpdateScrollState(NPP aInstance, bool aIsScrolling)
 }
 #endif
 
+nsresult
+PluginModuleParent::HandledWindowedPluginKeyEvent(
+                        NPP aInstance,
+                        const NativeEventData& aNativeKeyData,
+                        bool aIsConsumed)
+{
+    PluginInstanceParent* parent = PluginInstanceParent::Cast(aInstance);
+    if (NS_WARN_IF(!parent)) {
+        return NS_ERROR_FAILURE;
+    }
+    return parent->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed);
+}
+
 void
 PluginModuleParent::OnInitFailure()
 {

@@ -389,21 +389,28 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
 {
   EnsurePatternDependenciesStored(aPattern);
 
-  if (aFont->GetType() != FontType::DWRITE && aFont->GetType() != FontType::GDI) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "Unexpected ScaledFont type " << (int)aFont->GetType();
-  }
-
   if (!aFont->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get()))) {
   // TODO support font in b2g recordings
 #ifndef MOZ_WIDGET_GONK
     RecordedFontData fontData(aFont);
     RecordedFontDetails fontDetails;
     if (fontData.GetFontDetails(fontDetails)) {
+      // Try to serialise the whole font, just in case this is a web font that
+      // is not present on the system.
       if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
         mRecorder->RecordEvent(fontData);
         mRecorder->AddStoredFontData(fontDetails.fontDataKey);
       }
       mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, fontDetails));
+    } else {
+      // If that fails, record just the font description and try to load it from
+      // the system on the other side.
+      RecordedFontDescriptor fontDesc(aFont);
+      if (fontDesc.IsValid()) {
+        mRecorder->RecordEvent(fontDesc);
+      } else {
+        gfxWarning() << "DrawTargetRecording::FillGlyphs failed to serialise ScaledFont";
+      }
     }
 #endif
     RecordingFontUserData *userData = new RecordingFontUserData;

@@ -13,12 +13,14 @@ module.exports = createClass({
 
   render() {
     let { tabs, selectedTabId, selectTab } = this.props;
-    let tabLinks = tabs.map(({ id, name, icon }) => {
+    let tabLinks = tabs.map(({ panelId, id, name, icon }) => {
       let selected = id == selectedTabId;
-      return TabMenuEntry({ tabId: id, name, icon, selected, selectTab });
+      return TabMenuEntry({
+        tabId: id, panelId, name, icon, selected, selectTab
+      });
     });
 
     // "categories" id used for styling purposes
-    return dom.div({ id: "categories" }, tabLinks);
+    return dom.div({ id: "categories", role: "tablist" }, tabLinks);
   },
 });

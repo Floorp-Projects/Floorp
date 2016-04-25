@@ -26,7 +26,7 @@ add_task(function* () {
 
   let swTab = yield addTab(TAB_URL);
 
-  let serviceWorkersElement = document.getElementById("service-workers");
+  let serviceWorkersElement = getServiceWorkerList(document);
 
   yield waitForMutation(serviceWorkersElement, { childList: true });
 

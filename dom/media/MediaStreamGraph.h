@@ -209,6 +209,11 @@ public:
   virtual void NotifyInputData(MediaStreamGraph* aGraph,
                                const AudioDataValue* aBuffer, size_t aFrames,
                                TrackRate aRate, uint32_t aChannels) = 0;
+
+  /**
+   * Called when the underlying audio device has changed.
+   */
+  virtual void DeviceChanged() = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
@@ -1238,13 +1243,14 @@ public:
   TrackID GetDestinationTrackId() { return mDestTrack; }
 
   /**
-   * Block aTrackId in the port. Consumers will interpret this track as ended.
+   * Block aTrackId in the source stream from being passed through the port.
+   * Consumers will interpret this track as ended.
    * Returns a pledge that resolves on the main thread after the track block has
    * been applied by the MSG.
    */
-  already_AddRefed<media::Pledge<bool, nsresult>> BlockTrackId(TrackID aTrackId);
+  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
 private:
-  void BlockTrackIdImpl(TrackID aTrackId);
+  void BlockSourceTrackIdImpl(TrackID aTrackId);
 
 public:
   // Returns true if aTrackId has not been blocked and this port has not

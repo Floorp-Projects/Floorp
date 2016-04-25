@@ -40,7 +40,6 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     table = 0;
     tableSize = ::GetFontData(dc.GetDC(), table, 0, nullptr, 0);
     if (tableSize == GDI_ERROR) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to get font data from GDI";
       return false;
     }
   }
@@ -50,7 +49,6 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
   uint32_t sizeGot =
     ::GetFontData(dc.GetDC(), table, 0, fontData.get(), tableSize);
   if (sizeGot != tableSize) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "GDI did not return enough data for font: wanted " << tableSize << ", got " << sizeGot;
     return false;
   }
 
@@ -60,20 +58,29 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     UniquePtr<SFNTData> sfntData = SFNTData::Create(fontData.get(),
                                                     tableSize);
     if (!sfntData) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to create SFNTData for GetFontFileData.";
+      gfxWarning() << "Failed to create SFNTData for GetFontFileData.";
       return false;
     }
 
     // We cast here because for VS2015 char16_t != wchar_t, even though they are
     // both 16 bit.
     if (!sfntData->GetIndexForU16Name(
-          reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index)) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to get index for face name.";
+          reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index, LF_FACESIZE - 1)) {
+      gfxWarning() << "Failed to get index for face name.";
+      gfxDevCrash(LogReason::GetFontFileDataFailed) <<
+        "Failed to get index for face name |" << mLogFont.lfFaceName << "|.";
       return false;
     }
   }
 
   aDataCallback(fontData.get(), tableSize, index, mSize, aBaton);
+  return true;
+}
+
+bool
+ScaledFontWin::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
+{
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), mSize, aBaton);
   return true;
 }
 

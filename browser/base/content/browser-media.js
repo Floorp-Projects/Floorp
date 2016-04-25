@@ -181,7 +181,84 @@ XPCOMUtils.defineLazyGetter(gEMEHandler, "_brandShortName", function() {
   return document.getElementById("bundle_brand").getString("brandShortName");
 });
 
+let gDecoderDoctorHandler = {
+  shouldShowLearnMoreButton() {
+    return AppConstants.platform == "win";
+  },
+
+  getLabelForNotificationBox(type) {
+    if (type == "adobe-cdm-not-found" &&
+        AppConstants.platform == "win") {
+      if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
+        // We supply our own Learn More button so we don't need to populate the message here.
+        return gNavigatorBundle.getFormattedString("emeNotifications.drmContentDisabled.message", [""]);
+      }
+      return gNavigatorBundle.getString("decoder.noCodecs.message");
+    }
+    if (type == "adobe-cdm-not-activated" &&
+        AppConstants.platform == "win") {
+      if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
+        return gNavigatorBundle.getString("decoder.noCodecsXP.message");
+      }
+      return gNavigatorBundle.getString("decoder.noCodecs.message");
+    }
+    if (type == "platform-decoder-not-found") {
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
+        return gNavigatorBundle.getString("decoder.noHWAcceleration.message");
+      }
+      if (AppConstants.platform == "linux") {
+        return gNavigatorBundle.getString("decoder.noCodecsLinux.message");
+      }
+    }
+    return "";
+  },
+
+  receiveMessage({target: browser, data: data}) {
+    let box = gBrowser.getNotificationBox(browser);
+    let notificationId = "decoder-doctor-notification";
+    if (box.getNotificationWithValue(notificationId)) {
+      return;
+    }
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(data);
+    } catch (ex) {
+      Cu.reportError("Malformed Decoder Doctor message with data: " + data);
+      return;
+    }
+    let {type} = parsedData;
+    type = type.toLowerCase();
+    let title = gDecoderDoctorHandler.getLabelForNotificationBox(type);
+    if (!title) {
+      return;
+    }
+
+    let buttons = [];
+    if (gDecoderDoctorHandler.shouldShowLearnMoreButton()) {
+      buttons.push({
+        label: gNavigatorBundle.getString("decoder.noCodecs.button"),
+        accessKey: gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
+        callback() {
+          let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+          openUILinkIn(baseURL + "fix-video-audio-problems-firefox-windows", "tab");
+        }
+      });
+    }
+
+    box.appendNotification(
+      title,
+      notificationId,
+      "", // This uses the info icon as specified below.
+      box.PRIORITY_INFO_LOW,
+      buttons
+    );
+  },
+}
+
+window.messageManager.addMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
 window.messageManager.addMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
 window.addEventListener("unload", function() {
   window.messageManager.removeMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
+  window.messageManager.removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
 }, false);

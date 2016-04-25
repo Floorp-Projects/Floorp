@@ -62,6 +62,8 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
             return false;
         if (!emitted_ && !tryAttachUnboxedExpando(*writer, obj, objId))
             return false;
+        if (!emitted_ && !tryAttachModuleNamespace(*writer, obj, objId))
+            return false;
     }
 
     return true;
@@ -316,5 +318,37 @@ GetPropIRGenerator::tryAttachObjectLength(CacheIRWriter& writer, HandleObject ob
         return true;
     }
 
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
+                                             ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (!obj->is<ModuleNamespaceObject>())
+        return true;
+
+    Rooted<ModuleNamespaceObject*> ns(cx_, &obj->as<ModuleNamespaceObject>());
+    RootedModuleEnvironmentObject env(cx_);
+    RootedShape shape(cx_);
+    if (!ns->bindings().lookup(NameToId(name_), env.address(), shape.address()))
+        return true;
+
+    // Don't emit a stub until the target binding has been initialized.
+    if (env->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+        return true;
+
+    if (IsIonEnabled(cx_))
+        EnsureTrackPropertyTypes(cx_, env, shape->propid());
+
+    emitted_ = true;
+
+    // Check for the specific namespace object.
+    writer.guardSpecificObject(objId, ns);
+
+    ObjOperandId envId = writer.loadObject(env);
+    EmitLoadSlotResult(writer, envId, env, shape);
     return true;
 }

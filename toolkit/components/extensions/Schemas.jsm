@@ -9,24 +9,28 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.importGlobalProperties(["URL"]);
+
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   instanceOf,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
+                                   "@mozilla.org/addons/content-policy;1",
+                                   "nsIAddonContentPolicy");
+
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
 /* globals Schemas, URL */
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
-Cu.importGlobalProperties(["URL"]);
-
-function readJSON(uri) {
+function readJSON(url) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch({uri, loadUsingSystemPrincipal: true}, (inputStream, status) => {
+    NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
         reject(new Error(status));
         return;
@@ -89,11 +93,18 @@ class Context {
       },
     };
 
-    let props = ["addListener", "callFunction", "callAsyncFunction",
-                 "hasListener", "removeListener",
-                 "getProperty", "setProperty",
-                 "checkLoadURL", "logError",
-                 "preprocessors"];
+    let methods = ["addListener", "callFunction",
+                   "callFunctionNoReturn", "callAsyncFunction",
+                   "hasListener", "removeListener",
+                   "getProperty", "setProperty",
+                   "checkLoadURL", "logError"];
+    for (let method of methods) {
+      if (method in params) {
+        this[method] = params[method].bind(params);
+      }
+    }
+
+    let props = ["preprocessors"];
     for (let prop of props) {
       if (prop in params) {
         if (prop in this && typeof this[prop] == "object") {
@@ -248,6 +259,14 @@ const FORMATS = {
     }
 
     throw new SyntaxError(`String ${JSON.stringify(string)} must be a relative URL`);
+  },
+
+  contentSecurityPolicy(string, context) {
+    let error = contentPolicyService.validateAddonCSP(string);
+    if (error != null) {
+      throw new SyntaxError(error);
+    }
+    return string;
   },
 
   date(string, context) {
@@ -631,7 +650,15 @@ class ObjectType extends Type {
     for (let prop of Object.keys(this.properties)) {
       let error = checkProperty(prop, this.properties[prop], result);
       if (error) {
-        return error;
+        let {onError} = this.properties[prop];
+        if (onError == "warn") {
+          context.logError(error.error);
+        } else if (onError != "ignore") {
+          return error;
+        }
+
+        result[prop] = null;
+        remainingProps.delete(prop);
       }
     }
 
@@ -1002,6 +1029,12 @@ class FunctionEntry extends CallEntry {
         let callback = actuals.pop();
         return context.callAsyncFunction(path, name, actuals, callback);
       };
+    } else if (!this.returns) {
+      stub = (...args) => {
+        this.checkDeprecated(context);
+        let actuals = this.checkParameters(args, context);
+        return context.callFunctionNoReturn(path, name, actuals);
+      };
     } else {
       stub = (...args) => {
         this.checkDeprecated(context);
@@ -1058,6 +1091,15 @@ class Event extends CallEntry {
 }
 
 this.Schemas = {
+  initialized: false,
+
+  // Set of URLs that we have loaded via the load() method.
+  loadedUrls: new Set(),
+
+  // Maps a schema URL to the JSON contained in that schema file. This
+  // is useful for sending the JSON across processes.
+  schemaJSON: new Map(),
+
   // Map[<schema-name> -> Map[<symbol-name> -> Entry]]
   // This keeps track of all the schemas that have been loaded so far.
   namespaces: new Map(),
@@ -1156,9 +1198,10 @@ this.Schemas = {
       let parseProperty = (type, extraProps = []) => {
         return {
           type: this.parseType(path, type,
-                               ["unsupported", ...extraProps]),
+                               ["unsupported", "onError", ...extraProps]),
           optional: type.optional || false,
           unsupported: type.unsupported || false,
+          onError: type.onError || null,
         };
       };
 
@@ -1332,8 +1375,32 @@ this.Schemas = {
     this.register(namespaceName, event.name, e);
   },
 
-  load(uri) {
-    return readJSON(uri).then(json => {
+  init() {
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      let data = Services.cpmm.initialProcessData;
+      let schemas = data["Extension:Schemas"];
+      if (schemas) {
+        this.schemaJSON = schemas;
+      }
+      Services.cpmm.addMessageListener("Schema:Add", this);
+    }
+  },
+
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "Schema:Add":
+        this.schemaJSON.set(msg.data.url, msg.data.schema);
+        break;
+    }
+  },
+
+  load(url) {
+    let loadFromJSON = json => {
       for (let namespace of json) {
         let name = namespace.namespace;
 
@@ -1357,14 +1424,35 @@ this.Schemas = {
           this.loadEvent(name, event);
         }
       }
-    });
+    };
+
+    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
+      return readJSON(url).then(json => {
+        this.schemaJSON.set(url, json);
+
+        let data = Services.ppmm.initialProcessData;
+        data["Extension:Schemas"] = this.schemaJSON;
+
+        Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
+
+        loadFromJSON(json);
+      });
+    } else {
+      if (this.loadedUrls.has(url)) {
+        return;
+      }
+      this.loadedUrls.add(url);
+
+      let schema = this.schemaJSON.get(url);
+      loadFromJSON(schema);
+    }
   },
 
   inject(dest, wrapperFuncs) {
     for (let [namespace, ns] of this.namespaces) {
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (wrapperFuncs.shouldInject([namespace], name)) {
+        if (wrapperFuncs.shouldInject(namespace, name)) {
           entry.inject([namespace], name, obj, new Context(wrapperFuncs));
         }
       }

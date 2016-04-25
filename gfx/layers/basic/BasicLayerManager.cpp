@@ -864,7 +864,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   paintLayerContext.Apply2DTransform();
 
-  const nsIntRegion visibleRegion = aLayer->GetLocalVisibleRegion().ToUnknownRegion();
+  nsIntRegion visibleRegion = aLayer->GetLocalVisibleRegion().ToUnknownRegion();
   // If needsGroup is true, we'll clip to the visible region after we've popped the group
   if (needsClipToVisibleRegion && !needsGroup) {
     gfxUtils::ClipToRegion(aTarget, visibleRegion);
@@ -897,7 +897,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       return;
     }
 
-    const IntRect& bounds = visibleRegion.GetBounds();
+    IntRect bounds = visibleRegion.GetBounds();
     RefPtr<DrawTarget> untransformedDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),
                                                                    SurfaceFormat::B8G8R8A8);
@@ -934,6 +934,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                                                 ToRect(aTarget->GetClipExtents()));
     xformBounds.RoundOut();
     effectiveTransform.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+    effectiveTransform.PreTranslate(bounds.x, bounds.y, 0);
 
     RefPtr<SourceSurface> untransformedSurf = untransformedDT->Snapshot();
     RefPtr<DrawTarget> xformDT =

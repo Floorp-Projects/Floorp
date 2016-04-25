@@ -129,6 +129,10 @@ public:
     virtual nsresult GetScrollCaptureContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
     virtual nsresult UpdateScrollState(NPP aInstance, bool aIsScrolling) override;
 #endif
+    virtual nsresult HandledWindowedPluginKeyEvent(
+                       NPP aInstance,
+                       const mozilla::NativeEventData& aNativeKeyData,
+                       bool aIsCOnsumed) override;
 
 private:
     NP_InitializeFunc mNP_Initialize;

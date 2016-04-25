@@ -59,7 +59,7 @@ function String_match(regexp) {
 
     // Step 5 (optimized case).
     if (IsStringMatchOptimizable() && !flags)
-        return RegExpMatcher(rx, S, 0, false);
+        return RegExpMatcher(rx, S, 0);
 
     // Step 5.
     return callContentFunction(GetMethod(rx, std_match), rx, S);

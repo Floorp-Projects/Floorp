@@ -237,13 +237,13 @@ def write_zip(zip_path, prefix=None):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('usage: %s create-zip <filename.zip>' % sys.argv[0])
+        print('usage: %s create-zip <path-prefix>' % sys.argv[0])
         sys.exit(1)
 
     assert sys.argv[1] == 'create-zip'
-    destzip = sys.argv[2]
-    # TODO make prefix a CLI argument
-    write_zip(destzip, prefix='vs2015u1')
+    prefix = os.path.basename(sys.argv[2])
+    destzip = '%s.zip' % sys.argv[2]
+    write_zip(destzip, prefix=prefix)
 
     sha1 = hashlib.sha1()
     sha256 = hashlib.sha256()

@@ -263,6 +263,10 @@ pref("services.kinto.update_enabled", true);
 /* Don't let XPIProvider install distribution add-ons; we do our own thing on mobile. */
 pref("extensions.installDistroAddons", false);
 
+// Add-on content security policies.
+pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
+pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
+
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
@@ -923,11 +927,6 @@ pref("layout.accessiblecaret.timeout_ms", 0);
 
 // Android generates long tap (mouse) events.
 pref("layout.accessiblecaret.use_long_tap_injector", false);
-
-// AccessibleCarets behaviour is extended to support Android specific
-// requirements to hide carets while maintaining ActionBar visiblity during page
-// scroll.
-pref("layout.accessiblecaret.extendedvisibility", true);
 
 // Androids carets are always tilt to match the text selection guideline.
 pref("layout.accessiblecaret.always_tilt", true);

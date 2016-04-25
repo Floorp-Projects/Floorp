@@ -296,6 +296,11 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute unsigned long appId;
 
     /**
+     * Gets the ID of the add-on this principal belongs to.
+     */
+    readonly attribute AString addonId;
+
+    /**
      * Gets the id of the user context this principal is inside.  If this
      * principal is inside the default userContext, this returns
      * nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID.

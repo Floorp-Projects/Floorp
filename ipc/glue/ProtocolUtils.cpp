@@ -22,8 +22,8 @@
 #endif
 
 #if defined(MOZ_CRASHREPORTER) && defined(XP_WIN)
-#include "Aclapi.h"
-#include "Sddl.h"
+#include "aclapi.h"
+#include "sddl.h"
 #endif
 
 using namespace IPC;

@@ -4310,18 +4310,17 @@ class LRegExp : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
-class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 4, 0>
+class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 3, 0>
 {
   public:
     LIR_HEADER(RegExpMatcher)
 
     LRegExpMatcher(const LAllocation& regexp, const LAllocation& string,
-                   const LAllocation& lastIndex, const LAllocation& sticky)
+                   const LAllocation& lastIndex)
     {
         setOperand(0, regexp);
         setOperand(1, string);
         setOperand(2, lastIndex);
-        setOperand(3, sticky);
     }
 
     const LAllocation* regexp() {
@@ -4332,9 +4331,6 @@ class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 4, 0>
     }
     const LAllocation* lastIndex() {
         return getOperand(2);
-    }
-    const LAllocation* sticky() {
-        return getOperand(3);
     }
 
     const MRegExpMatcher* mir() const {
@@ -4342,18 +4338,17 @@ class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 4, 0>
     }
 };
 
-class LRegExpSearcher : public LCallInstructionHelper<1, 4, 0>
+class LRegExpSearcher : public LCallInstructionHelper<1, 3, 0>
 {
   public:
     LIR_HEADER(RegExpSearcher)
 
     LRegExpSearcher(const LAllocation& regexp, const LAllocation& string,
-                    const LAllocation& lastIndex, const LAllocation& sticky)
+                    const LAllocation& lastIndex)
     {
         setOperand(0, regexp);
         setOperand(1, string);
         setOperand(2, lastIndex);
-        setOperand(3, sticky);
     }
 
     const LAllocation* regexp() {
@@ -4364,9 +4359,6 @@ class LRegExpSearcher : public LCallInstructionHelper<1, 4, 0>
     }
     const LAllocation* lastIndex() {
         return getOperand(2);
-    }
-    const LAllocation* sticky() {
-        return getOperand(3);
     }
 
     const MRegExpSearcher* mir() const {
@@ -4374,18 +4366,17 @@ class LRegExpSearcher : public LCallInstructionHelper<1, 4, 0>
     }
 };
 
-class LRegExpTester : public LCallInstructionHelper<1, 4, 0>
+class LRegExpTester : public LCallInstructionHelper<1, 3, 0>
 {
   public:
     LIR_HEADER(RegExpTester)
 
     LRegExpTester(const LAllocation& regexp, const LAllocation& string,
-                  const LAllocation& lastIndex, const LAllocation& sticky)
+                  const LAllocation& lastIndex)
     {
         setOperand(0, regexp);
         setOperand(1, string);
         setOperand(2, lastIndex);
-        setOperand(3, sticky);
     }
 
     const LAllocation* regexp() {
@@ -4396,9 +4387,6 @@ class LRegExpTester : public LCallInstructionHelper<1, 4, 0>
     }
     const LAllocation* lastIndex() {
         return getOperand(2);
-    }
-    const LAllocation* sticky() {
-        return getOperand(3);
     }
 
     const MRegExpTester* mir() const {

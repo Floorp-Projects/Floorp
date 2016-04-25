@@ -31,12 +31,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
                                   "resource://gre/modules/MatchPattern.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
-                                  "resource://gre/modules/MessageChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
+                                  "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
@@ -50,6 +52,7 @@ var {
   flushJarCache,
   detectLanguage,
   promiseDocumentReady,
+  ChildAPIManager,
 } = ExtensionUtils;
 
 function isWhenBeforeOrSame(when1, when2) {
@@ -281,7 +284,7 @@ var ExtensionManager;
 // frame.
 class ExtensionContext extends BaseContext {
   constructor(extensionId, contentWindow, contextOptions = {}) {
-    super();
+    super(extensionId);
 
     let {isExtensionPage} = contextOptions;
 
@@ -368,6 +371,23 @@ class ExtensionContext extends BaseContext {
     // reason. However, we waive here anyway in case that changes.
     Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
 
+    let apis = {
+      "storage": "chrome://extensions/content/schemas/storage.json",
+      "test": "chrome://extensions/content/schemas/test.json",
+    };
+
+    let incognito = PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
+    this.childManager = new ChildAPIManager(this, mm, Object.keys(apis), {
+      type: "content_script",
+      url,
+      incognito,
+    });
+
+    for (let api in apis) {
+      Schemas.load(apis[api]);
+    }
+    Schemas.inject(this.chromeObj, this.childManager);
+
     injectAPI(api(this), this.chromeObj);
 
     // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
@@ -408,6 +428,8 @@ class ExtensionContext extends BaseContext {
 
   close() {
     super.unload();
+
+    this.childManager.close();
 
     // Overwrite the content script APIs with an empty object if the APIs objects are still
     // defined in the content window (See Bug 1214658 for rationale).
@@ -715,6 +737,8 @@ ExtensionManager = {
   extensions: new Map(),
 
   init() {
+    Schemas.init();
+
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);
     Services.cpmm.addMessageListener("Extension:FlushJarCache", this);

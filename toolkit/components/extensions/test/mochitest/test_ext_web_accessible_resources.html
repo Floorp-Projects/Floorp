@@ -148,23 +148,29 @@ add_task(function* test_web_accessible_resources() {
 
       "accessible.html": `<html><head>
         <meta charset="utf-8">
-        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+        <script src="accessible.js"></${"script"}>
       </head></html>`,
+
+      "accessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "inaccessible.html": `<html><head>
         <meta charset="utf-8">
-        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+        <script src="inaccessible.js"></${"script"}>
       </head></html>`,
+
+      "inaccessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "wild1.html": `<html><head>
         <meta charset="utf-8">
-        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+        <script src="wild.js"></${"script"}>
       </head></html>`,
 
       "wild2.htm": `<html><head>
         <meta charset="utf-8">
-        <script>browser.runtime.sendMessage(["page-script", location.href]);</${"script"}>
+        <script src="wild.js"></${"script"}>
       </head></html>`,
+
+      "wild.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
     },
   });
 

@@ -2,7 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-disable mozilla/no-cpows-in-tests */
-/* global sendAsyncMessage */
 
 "use strict";
 
@@ -32,7 +31,7 @@ add_task(function* () {
   let { tab, document } = yield openAboutDebugging("workers");
 
   // Listen for mutations in the service-workers list.
-  let serviceWorkersElement = document.getElementById("service-workers");
+  let serviceWorkersElement = getServiceWorkerList(document);
   let onMutation = waitForMutation(serviceWorkersElement, { childList: true });
 
   // Open a tab that registers an empty service worker.

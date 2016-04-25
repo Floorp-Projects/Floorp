@@ -10,7 +10,8 @@ enum CaretChangedReason {
   "longpressonemptycontent",
   "taponcaret",
   "presscaret",
-  "releasecaret"
+  "releasecaret",
+  "scroll"
 };
 
 dictionary CaretStateChangedEventInit : EventInit {

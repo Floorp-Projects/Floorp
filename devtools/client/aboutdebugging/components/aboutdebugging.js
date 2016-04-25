@@ -23,11 +23,13 @@ const Strings = Services.strings.createBundle(
 
 const tabs = [{
   id: "addons",
+  panelId: "tab-addons",
   name: Strings.GetStringFromName("addons"),
   icon: "chrome://devtools/skin/images/debugging-addons.svg",
   component: AddonsTab
 }, {
   id: "workers",
+  panelId: "tab-workers",
   name: Strings.GetStringFromName("workers"),
   icon: "chrome://devtools/skin/images/debugging-workers.svg",
   component: WorkersTab
@@ -83,7 +85,7 @@ module.exports = createClass({
     return dom.div({ className: "app" },
       TabMenu({ tabs, selectedTabId, selectTab }),
       dom.div({ className: "main-content" },
-        selectedTab.component({ client })
+        selectedTab.component({ client, id: selectedTab.panelId })
       )
     );
   }

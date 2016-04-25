@@ -228,7 +228,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedNotShortestPossibleDER)
   Reader reader(input);
 
   uint8_t value = 0;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(reader, value));
+  ASSERT_EQ(Result::ERROR_INVALID_INTEGER_ENCODING, Enumerated(reader, value));
 }
 
 TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
@@ -246,7 +246,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedOutOfAcceptedRange)
   Reader reader(input);
 
   uint8_t value = 0;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(reader, value));
+  ASSERT_EQ(Result::ERROR_INVALID_INTEGER_ENCODING, Enumerated(reader, value));
 }
 
 TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
@@ -259,7 +259,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
   Reader reader(input);
 
   uint8_t value = 0;
-  ASSERT_EQ(Result::ERROR_BAD_DER, Enumerated(reader, value));
+  ASSERT_EQ(Result::ERROR_INVALID_INTEGER_ENCODING, Enumerated(reader, value));
 }
 
 ////////////////////////////////////////
@@ -897,10 +897,14 @@ struct IntegerTestParams
   ByteString encoded;
   struct PositiveIntegerParams
   {
-    bool isValid;
+    Result expectedResult;
     Input::size_type significantBytesIfValid;
   } positiveInteger;
-  uint8_t smallNonnegativeIntegerValue;
+  struct SmallNonnegativeIntegerParams
+  {
+    Result expectedResult;
+    uint8_t valueIfValid;
+  } smallNonnegativeInteger;
 };
 
 class pkixder_universal_types_tests_Integer
@@ -914,60 +918,120 @@ class pkixder_universal_types_tests_Integer
 static const IntegerTestParams INTEGER_TEST_PARAMS[] =
 {
   // Zero is encoded with one value byte of 0x00.
-  { TLV(2, ByteString()), { false, INVALID }, INVALID },
-  { TLV(2, "\x00"), { false, INVALID }, 0 },
+  { TLV(2, ByteString()),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x00"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Success, 0 } },
 
   // Positive single-byte values
-  { TLV(2, "\x01"), { true, 1 }, 1 },
-  { TLV(2, "\x02"), { true, 1 }, 2 },
-  { TLV(2, "\x7e"), { true, 1 }, 0x7e },
-  { TLV(2, "\x7f"), { true, 1 }, 0x7f },
+  { TLV(2, "\x01"), { Success, 1 }, { Success, 1} },
+  { TLV(2, "\x02"), { Success, 1 }, { Success, 2} },
+  { TLV(2, "\x7e"), { Success, 1 }, { Success, 0x7e} },
+  { TLV(2, "\x7f"), { Success, 1 }, { Success, 0x7f} },
 
   // Negative single-byte values
-  { TLV(2, "\x80"), { false, INVALID }, INVALID },
-  { TLV(2, "\x81"), { false, INVALID }, INVALID },
-  { TLV(2, "\xFE"), { false, INVALID }, INVALID },
-  { TLV(2, "\xFF"), { false, INVALID }, INVALID },
+  { TLV(2, "\x80"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x81"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\xFE"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\xFF"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // Positive two-byte values not starting with 0x00
-  { TLV(2, "\x7F\x00"), { true, 2 }, INVALID },
-  { TLV(2, "\x01\x00"), { true, 2 }, INVALID },
-  { TLV(2, "\x01\x02"), { true, 2 }, INVALID },
+  { TLV(2, "\x7F\x00"),
+    { Success, 2 },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x01\x00"),
+    { Success, 2 },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x01\x02"),
+    { Success, 2 },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // Negative two-byte values not starting with 0xFF
-  { TLV(2, "\x80\x00"), { false, INVALID }, INVALID },
-  { TLV(2, "\x80\x7F"), { false, INVALID }, INVALID },
-  { TLV(2, "\x80\x80"), { false, INVALID }, INVALID },
-  { TLV(2, "\x80\xFF"), { false, INVALID }, INVALID },
+  { TLV(2, "\x80\x00"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x80\x7F"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x80\x80"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x80\xFF"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // The leading zero is necessary.
-  { TLV(2, "\x00\x80"), { true, 1}, INVALID },
-  { TLV(2, "\x00\x81"), { true, 1}, INVALID },
-  { TLV(2, "\x00\xFF"), { true, 1}, INVALID },
+  { TLV(2, "\x00\x80"),
+    { Success, 1},
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x00\x81"),
+    { Success, 1},
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x00\xFF"),
+    { Success, 1},
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // The leading zero is unnecessary.
-  { TLV(2, "\x00\x01"), { false, INVALID }, INVALID },
-  { TLV(2, "\x00\x7F"), { false, INVALID }, INVALID },
+  { TLV(2, "\x00\x01"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\x00\x7F"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // The leading 0xFF is necessary.
-  { TLV(2, "\xFF\x00"), { false, INVALID }, INVALID },
-  { TLV(2, "\xFF\x7F"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFF\x00"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\xFF\x7F"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // The leading 0xFF is unnecessary.
-  { TLV(2, "\xFF\x80"), { false, INVALID }, INVALID },
-  { TLV(2, "\xFF\xFF"), { false, INVALID }, INVALID },
+  { TLV(2, "\xFF\x80"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
+  { TLV(2, "\xFF\xFF"),
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 
   // Truncated values
-  { TLV(2, 1, ByteString(/*missing value*/)), { false, INVALID }, INVALID },
-  { TLV(2, 3, "\x11\x22" /*truncated*/), { false, INVALID }, INVALID },
-  { TLV(2, 4, "\x11\x22" /*truncated*/), { false, INVALID }, INVALID },
-  { TLV(2, 2, "\x00" /*truncated*/), { false, INVALID }, INVALID },
-  { TLV(2, 2, "\xFF" /*truncated*/), { false, INVALID }, INVALID },
-  { TLV(2, 3, "\x00\x80" /*truncated*/), { false, INVALID }, INVALID },
-  { TLV(2, 3, "\xFF\x00" /*truncated*/), { false, INVALID }, INVALID },
+  { TLV(2, 1, ByteString(/*missing value*/)),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 3, "\x11\x22" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 4, "\x11\x22" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 2, "\x00" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 2, "\xFF" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 3, "\x00\x80" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
+  { TLV(2, 3, "\xFF\x00" /*truncated*/),
+    { Result::ERROR_BAD_DER, INVALID },
+    { Result::ERROR_BAD_DER, INVALID } },
 
   // Misc. larger values
-  { TLV(2, 4, "\x11\x22\x33\x44"), { true, 4 }, INVALID },
+  { TLV(2, 4, "\x11\x22\x33\x44"),
+    { Success, 4 },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
   { TLV(2,
         "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
         "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
@@ -986,7 +1050,8 @@ static const IntegerTestParams INTEGER_TEST_PARAMS[] =
         "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
         "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"
         "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x00"),
-    { true, 256 }, INVALID },
+    { Success, 256 },
+    { Result::ERROR_INVALID_INTEGER_ENCODING, INVALID } },
 };
 
 TEST_P(pkixder_universal_types_tests_Integer, Integer)
@@ -996,13 +1061,11 @@ TEST_P(pkixder_universal_types_tests_Integer, Integer)
   ASSERT_EQ(Success, input.Init(params.encoded.data(),
                                 params.encoded.length()));
   Reader reader(input);
-  Result expectedResult = params.smallNonnegativeIntegerValue != INVALID
-                        ? Success
-                        : Result::ERROR_BAD_DER;
+  Result expectedResult = params.smallNonnegativeInteger.expectedResult;
   uint8_t value;
   ASSERT_EQ(expectedResult, der::Integer(reader, value));
   if (expectedResult == Success) {
-    ASSERT_EQ(params.smallNonnegativeIntegerValue, value);
+    ASSERT_EQ(params.smallNonnegativeInteger.valueIfValid, value);
     ASSERT_TRUE(reader.AtEnd());
   }
 }
@@ -1015,9 +1078,7 @@ TEST_P(pkixder_universal_types_tests_Integer,
   ASSERT_EQ(Success, input.Init(params.encoded.data(),
                                 params.encoded.length()));
   Reader reader(input);
-  Result expectedResult = params.positiveInteger.isValid
-                        ? Success
-                        : Result::ERROR_BAD_DER;
+  Result expectedResult = params.positiveInteger.expectedResult;
   Input value;
   ASSERT_EQ(expectedResult, der::PositiveInteger(reader, value));
   if (expectedResult == Success) {
@@ -1038,9 +1099,7 @@ TEST_P(pkixder_universal_types_tests_Integer,
   ASSERT_EQ(Success, input.Init(params.encoded.data(),
                                 params.encoded.length()));
   Reader reader(input);
-  Result expectedResult = params.positiveInteger.isValid
-                        ? Success
-                        : Result::ERROR_BAD_DER;
+  Result expectedResult = params.positiveInteger.expectedResult;
   Input value;
   Input::size_type significantBytes = INVALID;
   ASSERT_EQ(expectedResult, der::PositiveInteger(reader, value,

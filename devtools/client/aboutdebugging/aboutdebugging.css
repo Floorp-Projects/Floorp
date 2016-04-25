@@ -50,6 +50,11 @@ button {
   margin-bottom: 35px;
 }
 
+.target-list {
+  margin: 0;
+  padding: 0;
+}
+
 .target-container {
   margin-top: 5px;
   min-height: 34px;

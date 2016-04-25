@@ -311,6 +311,9 @@ public:
                    aPosition) override;
   virtual void DefaultProcOfPluginEvent(
                  const mozilla::WidgetPluginEvent& aEvent) override;
+  virtual nsresult OnWindowedPluginKeyEvent(
+                     const mozilla::NativeEventData& aKeyEventData,
+                     nsIKeyEventInPluginCallback* aCallback) override;
 
 protected:
   virtual ~nsWindow();
@@ -472,6 +475,9 @@ private:
   void                    UpdateGlass();
 protected:
 #endif // MOZ_XUL
+
+  HDC GetWindowSurface();
+  void FreeWindowSurface(HDC dc);
 
   static bool             IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void                    IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);

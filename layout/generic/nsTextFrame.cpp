@@ -294,6 +294,23 @@ public:
   }
 
   nscolor GetTextColor();
+
+  // SVG text has its own painting process, so we should never get its stroke
+  // property from here.
+  nscolor GetWebkitTextStrokeColor() {
+    if (mFrame->IsSVGText()) {
+      return 0;
+    }
+    return mFrame->StyleContext()->GetTextStrokeColor();
+  }
+  float GetWebkitTextStrokeWidth() {
+    if (mFrame->IsSVGText()) {
+      return 0.0f;
+    }
+    nscoord coord = mFrame->StyleText()->mWebkitTextStrokeWidth.GetCoordValue();
+    return mFrame->PresContext()->AppUnitsToFloatDevPixels(coord);
+  }
+
   /**
    * Compute the colors for normally-selected text. Returns false if
    * the normal selection is not being displayed.
@@ -4810,8 +4827,9 @@ nsTextFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame");
 
-  bool isTextTransparent =
-    NS_GET_A(StyleContext()->GetTextFillColor()) == 0;
+  nsStyleContext* sc = StyleContext();
+  bool isTextTransparent = (NS_GET_A(sc->GetTextFillColor()) == 0) &&
+                           (NS_GET_A(sc->GetTextStrokeColor()) == 0);
   Maybe<bool> isSelected;
   if (((GetStateBits() & TEXT_NO_RENDERED_GLYPHS) ||
        (isTextTransparent && !StyleText()->HasTextShadow())) &&
@@ -5232,6 +5250,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 {
   const WritingMode wm = GetWritingMode();
   bool verticalRun = mTextRun->IsVertical();
+  const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel();
 
   if (IsFloatingFirstLetterChild()) {
     bool inverted = wm.IsLineInverted();
@@ -5253,7 +5272,6 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                  : fontMetrics->MaxAscent();
 
     nsCSSRendering::DecorationRectParams params;
-    gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel();
     Float gfxWidth =
       (verticalRun ? aVisualOverflowRect->height
                    : aVisualOverflowRect->width) /
@@ -5298,9 +5316,9 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
         nsLayoutUtils::InflationMinFontSizeFor(aBlock);
 
       const nscoord measure = verticalDec ? GetSize().height : GetSize().width;
-      const gfxFloat app = aPresContext->AppUnitsPerDevPixel();
-      gfxFloat gfxWidth = measure / app;
-      gfxFloat ascent = gfxFloat(GetLogicalBaseline(parentWM)) / app;
+      gfxFloat gfxWidth = measure / appUnitsPerDevUnit;
+      gfxFloat ascent = gfxFloat(GetLogicalBaseline(parentWM))
+                          / appUnitsPerDevUnit;
       nscoord frameBStart = 0;
       if (parentWM.IsVerticalRL()) {
         frameBStart = GetSize().width;
@@ -5376,6 +5394,17 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
                                    UpdateTextEmphasis(parentWM, aProvider));
+  }
+
+  // text-stroke overflows
+  nscoord textStrokeWidth = StyleText()->mWebkitTextStrokeWidth.GetCoordValue();
+  if (textStrokeWidth > 0) {
+    nsRect strokeRect = *aVisualOverflowRect;
+    strokeRect.x -= textStrokeWidth;
+    strokeRect.y -= textStrokeWidth;
+    strokeRect.width += textStrokeWidth;
+    strokeRect.height += textStrokeWidth;
+    aVisualOverflowRect->UnionRect(*aVisualOverflowRect, strokeRect);
   }
 
   // Text-shadow overflows
@@ -6056,6 +6085,8 @@ nsTextFrame::PaintTextWithSelectionColors(
 
     // Draw text segment
     params.textColor = foreground;
+    params.textStrokeColor = aParams.textPaintStyle->GetWebkitTextStrokeColor();
+    params.textStrokeWidth = aParams.textPaintStyle->GetWebkitTextStrokeWidth();
     params.drawSoftHyphen = hyphenWidth > 0;
     DrawText(range, textBaselinePt, params);
     advance += hyphenWidth;
@@ -6583,6 +6614,13 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
     foregroundColor = gfxColor.ToABGR();
   }
 
+  nscolor textStrokeColor = textPaintStyle.GetWebkitTextStrokeColor();
+  if (aOpacity != 1.0f) {
+    gfx::Color gfxColor = gfx::Color::FromABGR(textStrokeColor);
+    gfxColor.a *= aOpacity;
+    textStrokeColor = gfxColor.ToABGR();
+  }
+
   range = Range(startOffset, startOffset + maxLength);
   if (!aParams.callbacks) {
     const nsStyleText* textStyle = StyleText();
@@ -6604,6 +6642,8 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   params.advanceWidth = &advanceWidth;
   params.textStyle = &textPaintStyle;
   params.textColor = foregroundColor;
+  params.textStrokeColor = textStrokeColor;
+  params.textStrokeWidth = textPaintStyle.GetWebkitTextStrokeWidth();
   params.clipEdges = &clipEdges;
   params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
   params.contextPaint = aParams.contextPaint;
@@ -6618,18 +6658,30 @@ DrawTextRun(gfxTextRun* aTextRun,
             const nsTextFrame::DrawTextRunParams& aParams)
 {
   gfxTextRun::DrawParams params(aParams.context);
-  params.drawMode = aParams.callbacks ? DrawMode::GLYPH_PATH
-                                      : DrawMode::GLYPH_FILL;
   params.provider = aParams.provider;
   params.advanceWidth = aParams.advanceWidth;
   params.contextPaint = aParams.contextPaint;
   params.callbacks = aParams.callbacks;
   if (aParams.callbacks) {
     aParams.callbacks->NotifyBeforeText(aParams.textColor);
+    params.drawMode = DrawMode::GLYPH_PATH;
     aTextRun->Draw(aRange, aTextBaselinePt, params);
     aParams.callbacks->NotifyAfterText();
   } else {
-    aParams.context->SetColor(Color::FromABGR(aParams.textColor));
+    if (NS_GET_A(aParams.textColor) != 0) {
+      // Default drawMode is DrawMode::GLYPH_FILL
+      aParams.context->SetColor(Color::FromABGR(aParams.textColor));
+    } else {
+      params.drawMode = DrawMode::GLYPH_STROKE;
+    }
+
+    if (NS_GET_A(aParams.textStrokeColor) != 0 &&
+        aParams.textStrokeWidth != 0.0f) {
+      params.drawMode |= DrawMode::GLYPH_STROKE;
+      params.textStrokeWidth = aParams.textStrokeWidth;
+      params.textStrokeColor = aParams.textStrokeColor;
+    }
+
     aTextRun->Draw(aRange, aTextBaselinePt, params);
   }
 }
