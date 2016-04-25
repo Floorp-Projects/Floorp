@@ -1447,6 +1447,54 @@ js::RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinea
 }
 
 bool
+js::GetFirstDollarIndex(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedString str(cx, args[0].toString());
+
+    int32_t index = -1;
+    if (!GetFirstDollarIndexRaw(cx, str, &index))
+        return false;
+
+    args.rval().setInt32(index);
+    return true;
+}
+
+template <typename TextChar>
+static MOZ_ALWAYS_INLINE int
+GetFirstDollarIndexImpl(const TextChar* text, uint32_t textLen)
+{
+    const TextChar* end = text + textLen;
+    for (const TextChar* c = text; c != end; ++c) {
+        if (*c == '$')
+            return c - text;
+    }
+    return -1;
+}
+
+bool
+js::GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index)
+{
+    uint32_t len = str->length();
+
+    // Should be handled in different path.
+    MOZ_ASSERT(len != 0);
+
+    JSLinearString* text = str->ensureLinear(cx);
+    if (!text)
+        return false;
+
+    JS::AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars())
+        *index = GetFirstDollarIndexImpl(text->latin1Chars(nogc), len);
+    else
+        *index = GetFirstDollarIndexImpl(text->twoByteChars(nogc), len);
+
+    return true;
+}
+
+bool
 js::RegExpPrototypeOptimizable(JSContext* cx, unsigned argc, Value* vp)
 {
     // This can only be called from self-hosted code.
