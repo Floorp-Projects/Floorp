@@ -26,6 +26,7 @@
     <menupopup id="storage-tree-popup">
       <menuitem id="storage-tree-popup-delete-all"
                 label="&storage.popupMenu.deleteAllLabel;"/>
+      <menuitem id="storage-tree-popup-delete-database"/>
     </menupopup>
     <menupopup id="storage-table-popup">
       <menuitem id="storage-table-popup-delete"/>
