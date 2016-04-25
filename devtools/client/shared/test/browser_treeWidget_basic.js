@@ -3,15 +3,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that the tree widget api works fine
+"use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,<head>" +
   "<link rel='stylesheet' type='text/css' href='chrome://devtools/skin/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
-add_task(function*() {
+add_task(function* () {
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"
@@ -40,8 +41,14 @@ function populateTree(tree, doc) {
     label: "Level 3 - Child 1",
     type: "dir"
   }]);
-  tree.add(["level1", "level2-1", { id: "level3-2", label: "Level 3 - Child 2"}]);
-  tree.add(["level1", "level2-1", { id: "level3-3", label: "Level 3 - Child 3"}]);
+  tree.add(["level1", "level2-1", {
+    id: "level3-2",
+    label: "Level 3 - Child 2"
+  }]);
+  tree.add(["level1", "level2-1", {
+    id: "level3-3",
+    label: "Level 3 - Child 3"
+  }]);
   tree.add(["level1", {
     id: "level2-2",
     label: "Level 2.1"
@@ -67,7 +74,8 @@ function populateTree(tree, doc) {
  * Test if the nodes are inserted correctly in the tree.
  */
 function testTreeItemInsertedCorrectly(tree, doc) {
-  is(tree.root.children.children.length, 2, "Number of top level elements match");
+  is(tree.root.children.children.length, 2,
+     "Number of top level elements match");
   is(tree.root.children.firstChild.lastChild.children.length, 3,
      "Number of first second level elements match");
   is(tree.root.children.lastChild.lastChild.children.length, 1,
@@ -83,7 +91,8 @@ function testTreeItemInsertedCorrectly(tree, doc) {
   is(tree.root.children.firstChild.nextSibling.dataset.id,
      JSON.stringify(["level1.1"]),
      "Data id of second top level element matches");
-  is(tree.root.children.firstChild.nextSibling.firstChild.textContent, "level1.1",
+  is(tree.root.children.firstChild.nextSibling.firstChild.textContent,
+     "level1.1",
      "Text content of second top level element matches");
 
   // Adding a new non text item in the tree.
@@ -116,7 +125,7 @@ function testTreeItemInsertedCorrectly(tree, doc) {
 function populateUnsortedTree(tree, doc) {
   tree.sorted = false;
 
-  tree.add([{ id: "g-1", label: "g-1"}])
+  tree.add([{ id: "g-1", label: "g-1"}]);
   tree.add(["g-1", { id: "d-2", label: "d-2.1"}]);
   tree.add(["g-1", { id: "b-2", label: "b-2.2"}]);
   tree.add(["g-1", { id: "a-2", label: "a-2.3"}]);
@@ -189,7 +198,7 @@ function testAPI(tree, doc) {
   // test if clear selection works
   tree.clearSelection();
   ok(!doc.querySelector(".theme-selected"),
-     "Nothing selected after clear selection call")
+     "Nothing selected after clear selection call");
 
   // test if collapseAll/expandAll work
   ok(doc.querySelectorAll("[expanded]").length > 0,
@@ -232,6 +241,11 @@ function testAPI(tree, doc) {
   ok(!doc.querySelector("[data-id='" +
        JSON.stringify(["level1", "level2", "level3"]) + "']"),
      "level1-level2-level3 item does not exist after removing");
+  let level2item = doc.querySelector("[data-id='" +
+       JSON.stringify(["level1", "level2"]) + "'] > .tree-widget-item");
+  ok(level2item.hasAttribute("empty"),
+     "level1-level2 item is marked as empty after removing");
+
   tree.add([{
     id: "level1",
     label: "Level 1"
