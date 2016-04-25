@@ -269,6 +269,20 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_TOOLKIT_SEARCH:
+#ifdef MOZ_TOOLKIT_SEARCH
+  true,
+#else
+  false,
+#endif
+
+  MOZ_ENABLE_PROFILER_SPS:
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  true,
+#else
+  false,
+#endif
+
   DLL_PREFIX: "@DLL_PREFIX@",
   DLL_SUFFIX: "@DLL_SUFFIX@",
 
