@@ -251,6 +251,18 @@ function testColorConversions() {
                      ]);
 }
 
+function testDraw() {
+  return Promise.all([doOneDrawTest("RGB24"),
+                      doOneDrawTest("BGR24"),
+                      doOneDrawTest("YUV444P", 5),
+                      doOneDrawTest("YUV422P", 2),
+                      doOneDrawTest("YUV420P", 2),
+                      doOneDrawTest("YUV420SP_NV12", 2),
+                      doOneDrawTest("YUV420SP_NV21", 2),
+                      doOneDrawTest("HSV", 2),
+                      doOneDrawTest("Lab", 2)]);
+}
+
 // Create an ImageBitmap, _bitmap_, from the _source_.
 // Read the underlying data of _bitmap_ into _bitmapBuffer_.
 // Compare the _bitmapBuffer_ with gGroundTruthImageData.
@@ -414,6 +426,73 @@ function testColorConversion(sourceFromat, destinationFormat, tolerance, shouldT
         );
       },
       function(ev) {
+        reject(ev);
+      }
+    );
+  });
+}
+
+function doOneDrawTest(sourceFromat, tolerance) {
+  tolerance = tolerance || 0;
+  var destinationFormat = "RGBA32";
+
+  return new Promise(function(resolve, reject) {
+
+    var [srcData, dstData] = getTestData(sourceFromat, destinationFormat);
+    ok(!!srcData, "Get valid srcData of type:" + sourceFromat);
+    ok(!!dstData, "Get valid dstData of type:" + destinationFormat);
+
+    var p = createImageBitmap(srcData.buffer,
+                              0,
+                              srcData.bufferLength,
+                              srcData.format,
+                              srcData.pixelLayout);
+
+    p.then(
+      function(srcBitmap) {
+        ok(!!srcBitmap, "Should get a valid srcBitmap.");
+        ok(srcBitmap.findOptimalFormat() == sourceFromat, "srcBitmap.findOptimalFormat():" + srcBitmap.findOptimalFormat() +
+                                                          " should equal to sourceFromat:" + sourceFromat);
+
+        var canvas = document.createElement("canvas");
+        canvas.width = srcBitmap.width;
+        canvas.height = srcBitmap.height;
+        var ctx = canvas.getContext("2d");
+
+        ctx.drawImage(srcBitmap, 0, 0, srcBitmap.width, srcBitmap.height);
+
+        // Get an ImageData from the canvas.
+        var imageData = ctx.getImageData(0, 0, srcBitmap.width, srcBitmap.height);
+
+        for (var i = 0; i < srcBitmap.height; ++i) {
+          for (var j = 0; j < srcBitmap.width; ++j) {
+            var pixelOffset = i * srcBitmap.width * dstData.channelCount + j * dstData.channelCount;
+            var dstImageDataValue_R = imageData.data[pixelOffset + 0];
+            var dstImageDataValue_G = imageData.data[pixelOffset + 1];
+            var dstImageDataValue_B = imageData.data[pixelOffset + 2];
+            var dstImageDataValue_A = imageData.data[pixelOffset + 3];
+
+            var logPrefix = "[" + sourceFromat + " -> " + destinationFormat + "] pixel(" + i + "," + j + ")";
+
+            var dstDataValue_R = dstData.getPixelValue(i, j, 0);
+            var dstDataValue_G = dstData.getPixelValue(i, j, 1);
+            var dstDataValue_B = dstData.getPixelValue(i, j, 2);
+            var dstDataValue_A = dstData.getPixelValue(i, j, 3);
+            ok(Math.abs(dstImageDataValue_R - dstDataValue_R) <= tolerance,
+               logPrefix + "channnel(R): dstImageDataValue:" + dstImageDataValue_R + " should equal to dstDataValue_R: " + dstDataValue_R);
+            ok(Math.abs(dstImageDataValue_G - dstDataValue_G) <= tolerance,
+               logPrefix + "channnel(G): dstImageDataValue:" + dstImageDataValue_G + " should equal to dstDataValue_G: " + dstDataValue_G);
+            ok(Math.abs(dstImageDataValue_B - dstDataValue_B) <= tolerance,
+               logPrefix + "channnel(B): dstImageDataValue:" + dstImageDataValue_B + " should equal to dstDataValue_B: " + dstDataValue_B);
+            ok(Math.abs(dstImageDataValue_A - dstDataValue_A) <= tolerance,
+               logPrefix + "channnel(A): dstImageDataValue:" + dstImageDataValue_A + " should equal to dstDataValue_A: " + dstDataValue_A);
+          }
+        }
+
+        resolve();
+      },
+      function(ev) {
+        failed(ev);
         reject(ev);
       }
     );
