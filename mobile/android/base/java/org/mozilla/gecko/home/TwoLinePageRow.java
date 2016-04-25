@@ -24,6 +24,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
@@ -70,7 +71,7 @@ public class TwoLinePageRow extends LinearLayout
             }
 
             if (favicon == null) {
-                v.showDefaultFavicon();
+                v.showDefaultFavicon(url);
                 return;
             }
 
