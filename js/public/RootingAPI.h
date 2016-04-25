@@ -634,18 +634,25 @@ namespace JS {
 template <typename T>
 class MOZ_RAII Rooted : public js::RootedBase<T>
 {
-    /* Note: CX is a subclass of either ContextFriendFields or PerThreadDataFriendFields. */
-    void registerWithRootLists(js::RootLists& roots) {
-        this->stack = &roots.stackRoots_[JS::MapTypeToRootKind<T>::kind];
+    inline void registerWithRootLists(js::RootedListHeads& roots) {
+        this->stack = &roots[JS::MapTypeToRootKind<T>::kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }
 
-    js::RootLists& rootLists(js::ContextFriendFields* cx) { return cx->roots; }
-    js::RootLists& rootLists(JSContext* cx) { return js::ContextFriendFields::get(cx)->roots; }
-    js::RootLists& rootLists(js::PerThreadDataFriendFields* pt) { return pt->roots; }
-    js::RootLists& rootLists(JSRuntime* rt) {
-        return js::PerThreadDataFriendFields::getMainThread(rt)->roots;
+    inline js::RootedListHeads& rootLists(js::ContextFriendFields* cx) {
+        return rootLists(reinterpret_cast<JSContext*>(cx));
+    }
+    inline js::RootedListHeads& rootLists(JSContext* cx) {
+        if (JS::Zone* zone = js::GetContextZone(cx))
+            return JS::shadow::Zone::asShadowZone(zone)->stackRoots_;
+        return rootLists(js::GetRuntime(cx));
+    }
+    inline js::RootedListHeads& rootLists(js::PerThreadDataFriendFields* pt) {
+        return pt->roots.stackRoots_;
+    }
+    inline js::RootedListHeads& rootLists(JSRuntime* rt) {
+        return js::PerThreadDataFriendFields::getMainThread(rt)->roots.stackRoots_;
     }
 
   public:

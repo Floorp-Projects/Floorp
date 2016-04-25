@@ -265,12 +265,15 @@ enum StackKind
     StackKindCount
 };
 
+using RootedListHeads = mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit,
+                                                 JS::Rooted<void*>*>;
+
 // Abstracts JS rooting mechanisms so they can be shared between the JSContext
 // and JSRuntime.
 class RootLists
 {
     // Stack GC roots for Rooted GC heap pointers.
-    mozilla::EnumeratedArray<JS::RootKind, JS::RootKind::Limit, JS::Rooted<void*>*> stackRoots_;
+    RootedListHeads stackRoots_;
     template <typename T> friend class JS::Rooted;
 
     // Stack GC roots for AutoFooRooter classes.
