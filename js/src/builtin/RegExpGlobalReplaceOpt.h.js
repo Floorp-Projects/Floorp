@@ -80,10 +80,12 @@ function FUNC_NAME(rx, S, lengthS, replaceValue
 #elif defined(ELEMBASE)
         if (IsObject(elemBase)) {
             var prop = GetStringDataProperty(elemBase, matched);
-            if (prop !== undefined)
+            if (prop !== undefined) {
+                assert(typeof prop === "string", "GetStringDataProperty should return either string or undefined");
                 replacement = prop;
-            else
+            } else {
                 elemBase = undefined;
+            }
         }
 
         if (!IsObject(elemBase)) {
