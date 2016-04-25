@@ -88,6 +88,7 @@ ExtensionManagement.registerSchema("chrome://extensions/content/schemas/notifica
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/runtime.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/storage.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/test.json");
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/events.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_navigation.json");
 ExtensionManagement.registerSchema("chrome://extensions/content/schemas/web_request.json");
 
