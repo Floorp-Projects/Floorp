@@ -1078,16 +1078,6 @@ public:
   friend class MediaStreamGraphImpl;
 
 protected:
-  struct ThreadAndRunnable {
-    void Init(TaskQueue* aTarget, nsIRunnable* aRunnable)
-    {
-      mTarget = aTarget;
-      mRunnable = aRunnable;
-    }
-
-    RefPtr<TaskQueue> mTarget;
-    nsCOMPtr<nsIRunnable> mRunnable;
-  };
   enum TrackCommands {
     TRACK_CREATE = MediaStreamListener::TRACK_EVENT_CREATED,
     TRACK_END = MediaStreamListener::TRACK_EVENT_ENDED
@@ -1455,7 +1445,6 @@ public:
   // IdealAudioBlockSize()/AudioStream::PreferredSampleRate(). A stream that
   // never blocks and has a track with the ideal audio rate will produce audio
   // in multiples of the block size.
-  //
 
   // Initializing an graph that outputs audio can be quite long on some
   // platforms. Code that want to output audio at some point can express the
