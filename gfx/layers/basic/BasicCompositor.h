@@ -48,6 +48,9 @@ protected:
   virtual ~BasicCompositor();
 
 public:
+
+  virtual BasicCompositor* AsBasicCompositor() override { return this; }
+
   virtual bool Initialize() override;
 
   virtual void Destroy() override;
@@ -141,6 +144,8 @@ private:
 
   uint32_t mMaxTextureSize;
 };
+
+BasicCompositor* AssertBasicCompositor(Compositor* aCompositor);
 
 } // namespace layers
 } // namespace mozilla
