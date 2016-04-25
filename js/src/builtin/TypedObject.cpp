@@ -691,12 +691,16 @@ ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Construct a canonical string `new ArrayType(<elementType>, N)`:
     StringBuffer contents(cx);
-    contents.append("new ArrayType(");
-    contents.append(&elementType->stringRepr());
-    contents.append(", ");
+    if (!contents.append("new ArrayType("))
+        return false;
+    if (!contents.append(&elementType->stringRepr()))
+        return false;
+    if (!contents.append(", "))
+        return false;
     if (!NumberValueToStringBuffer(cx, NumberValue(length), contents))
         return false;
-    contents.append(")");
+    if (!contents.append(")"))
+        return false;
     RootedAtom stringRepr(cx, contents.finishAtom());
     if (!stringRepr)
         return false;
