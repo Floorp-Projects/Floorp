@@ -649,7 +649,7 @@ public:
    *
    * N.B. Although a T*, only the range [0, length()) is constructed.
    */
-  MOZ_WARN_UNUSED_RESULT T* extractRawBuffer();
+  MOZ_WARN_UNUSED_RESULT T* extractOrCopyRawBuffer();
 
   /**
    * Transfer ownership of an array of objects into the vector.  The caller
@@ -1301,7 +1301,7 @@ Vector<T, N, AP>::popCopy()
 
 template<typename T, size_t N, class AP>
 inline T*
-Vector<T, N, AP>::extractRawBuffer()
+Vector<T, N, AP>::extractOrCopyRawBuffer()
 {
   T* ret;
   if (usingInlineStorage()) {
