@@ -537,10 +537,20 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   // event because it will think this is done by a script.
   // So, we can safely send one by ourself.
   mInput->SetFilesOrDirectories(newFilesOrDirectories, true);
-  return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                                              static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
-                                              NS_LITERAL_STRING("change"), true,
-                                              false);
+
+  nsresult rv = NS_OK;
+  rv = nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
+                                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                            NS_LITERAL_STRING("input"), true,
+                                            false);
+  NS_WARN_IF(NS_FAILED(rv));
+
+  rv = nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
+                                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                            NS_LITERAL_STRING("change"), true,
+                                            false);
+
+  return rv;
 }
 
 NS_IMPL_ISUPPORTS(HTMLInputElement::nsFilePickerShownCallback,
@@ -3849,6 +3859,12 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         DoSetChecked(originalCheckedValue, true, true);
       }
     } else {
+      // Fire input event and then change event.
+      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                           static_cast<nsIDOMHTMLInputElement*>(this),
+                                           NS_LITERAL_STRING("input"), true,
+                                           false);
+
       nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                            static_cast<nsIDOMHTMLInputElement*>(this),
                                            NS_LITERAL_STRING("change"), true,

@@ -166,6 +166,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
         is(NonTextInputChange[i], 1, NonTextInputTypes[i] + " input element should have dispatched change event.");
         input.blur();
         is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
+
+        // Test that change event is not dispatched if click event is cancelled.
+        function preventDefault(e) {
+          e.preventDefault();
+        }
+        input.addEventListener("click", preventDefault, false);
+        input.click();
+        is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched if click event is cancelled");
+        input.removeEventListener("click", preventDefault, false);
       }
     }
 
