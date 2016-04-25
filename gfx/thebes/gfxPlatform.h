@@ -446,7 +446,7 @@ public:
     static bool CanUseDirect3D9();
     static bool CanUseDirect3D11();
     virtual bool CanUseHardwareVideoDecoding();
-    static bool CanUseDirect3D11ANGLE();
+    virtual bool CanUseDirect3D11ANGLE() { return false; }
 
     // Returns whether or not layers acceleration should be used. This should
     // only be called on the parent process.
