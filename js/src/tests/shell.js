@@ -840,20 +840,6 @@ function stopTest() {
   }
 }
 
-/*
- * Convenience function for displaying failed test cases.  Useful
- * when running tests manually.
- *
- */
-function getFailedCases() {
-  for ( var i = 0; i < gTestcases.length; i++ ) {
-    if ( ! gTestcases[i].passed ) {
-      print( gTestcases[i].description + " = " +gTestcases[i].actual +
-             " expected: " + gTestcases[i].expect );
-    }
-  }
-}
-
 function jsTestDriverEnd()
 {
   // gDelayTestDriverEnd is used to
