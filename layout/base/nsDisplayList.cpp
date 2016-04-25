@@ -504,7 +504,7 @@ ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
   // Then, nsDisplayBackgroundImage paints bg-images into this clipped region,
   // so we get images embedded in text shape!
 
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::GENERATE_GLYPH, false);
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilderMode::GENERATE_GLYPH, false);
 
   builder.EnterPresShell(aFrame);
   nsDisplayList list;
@@ -644,7 +644,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
 }
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    Mode aMode, bool aBuildCaret)
+    nsDisplayListBuilderMode aMode, bool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
       mLayerEventRegions(nullptr),
