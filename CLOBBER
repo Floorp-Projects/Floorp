@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Bug 1264786 needed a clobber and bug 1254356 hasn't been uplifted to aurora to fix the clobberer
+Merge day clobber
