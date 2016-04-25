@@ -6,7 +6,9 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.favicons.FaviconGenerator;
 import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -17,6 +19,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.ImageView;
 /**
@@ -25,6 +28,8 @@ import android.widget.ImageView;
  * selected is the dominant colour of the provided Favicon.
  */
 public class FaviconView extends ImageView {
+    private static final String LOGTAG = "GeckoFaviconView";
+
     private static String DEFAULT_FAVICON_KEY = FaviconView.class.getSimpleName() + "DefaultFavicon";
 
     // Default x/y-radius of the oval used to round the corners of the background (dp)
@@ -184,8 +189,10 @@ public class FaviconView extends ImageView {
      */
     private void updateImageInternal(Bitmap bitmap, String key, boolean allowScaling) {
         if (bitmap == null) {
-            showDefaultFavicon();
-            return;
+            Log.w(LOGTAG, "updateImageInternal() called without bitmap");
+
+            // At this point we do not have a page URL anymore.
+            showDefaultFavicon(null);
         }
 
         // Reassigning the same bitmap? Don't bother.
@@ -201,13 +208,23 @@ public class FaviconView extends ImageView {
         formatImage();
     }
 
-    public void showDefaultFavicon() {
-        // We handle the default favicon as any other favicon to avoid the complications of special
-        // casing it. This means that the icon can be scaled both up and down, and the dominant
-        // color box can used if it is enabled in XML attrs.
-        final Bitmap defaultFaviconBitmap = BitmapFactory.decodeResource(getResources(),
-                R.drawable.favicon_globe);
-        updateAndScaleImage(defaultFaviconBitmap, DEFAULT_FAVICON_KEY);
+    public void showDefaultFavicon(final String pageURL) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final Bitmap favicon = FaviconGenerator.generate(getContext(), pageURL);
+
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // We handle the default favicon as any other favicon to avoid the complications of special
+                        // casing it. This means that the icon can be scaled both up and down, and the dominant
+                        // color box can used if it is enabled in XML attrs.
+                        updateAndScaleImage(favicon, DEFAULT_FAVICON_KEY);
+                    }
+                });
+            }
+        });
     }
 
     private void showNoImage() {
