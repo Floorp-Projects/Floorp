@@ -17,11 +17,15 @@ Services.scriptloader.loadSubScript(
 const constants = require("devtools/client/dom/content/constants");
 
 // Uncomment this pref to dump all devtools emitted events to the console.
-// Services.prefs.setBoolPref("devtools.dump.emit", true);
+// Services.prefs.setBoolPref("devtools.dom.enabled", true);
+
+// Enable the DOM panel
+Services.prefs.setBoolPref("devtools.dom.enabled", true);
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
   Services.prefs.clearUserPref("devtools.dump.emit");
+  Services.prefs.clearUserPref("devtools.dom.enabled");
 });
 
 /**
