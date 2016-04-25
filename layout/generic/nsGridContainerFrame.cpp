@@ -112,7 +112,7 @@ struct nsGridContainerFrame::TrackSize
     eMaxContentMinSizing =     0x4,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    eFlexMinSizing =           0x8,
+    eFlexMinSizing =           0x8, // not really used ATM due to a spec change
     eAutoMaxSizing =          0x10,
     eMinContentMaxSizing =    0x20,
     eMaxContentMaxSizing =    0x40,
@@ -167,15 +167,13 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
   }
   // http://dev.w3.org/csswg/css-grid/#algo-init
   switch (minSizeUnit) {
+    case eStyleUnit_FlexFraction:
     case eStyleUnit_Auto:
       mState = eAutoMinSizing;
       break;
     case eStyleUnit_Enumerated:
       mState = IsMinContent(aMinCoord) ? eMinContentMinSizing
                                        : eMaxContentMinSizing;
-      break;
-    case eStyleUnit_FlexFraction:
-      mState = eFlexMinSizing;
       break;
     default:
       mBase = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
