@@ -5,6 +5,10 @@ if (typeof(classifierHelper) == "undefined") {
 const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
 var classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
 
+const ADD_CHUNKNUM = 524;
+const SUB_CHUNKNUM = 523;
+const HASHLEN = 32;
+
 // addUrlToDB & removeUrlFromDB are asynchronous, queue the task to ensure
 // the callback follow correct order.
 classifierHelper._updates = [];
@@ -18,11 +22,17 @@ classifierHelper._updatesToCleanup = [];
 classifierHelper.addUrlToDB = function(updateData, onsuccess, onerror) {
   var testUpdate = "";
   for (var update of updateData) {
+    var LISTNAME = update.db;
+    var CHUNKDATA = update.url;
+    var CHUNKLEN = CHUNKDATA.length;
+
     classifierHelper._updatesToCleanup.push(update);
     testUpdate +=
-      "n:1000\ni:" + update.db + "\nad:1\n" +
-      "a:524:32:" + update.url.length + "\n" +
-      update.url;
+      "n:1000\n" +
+      "i:" + LISTNAME + "\n" +
+      "ad:1\n" +
+      "a:" + ADD_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+      CHUNKDATA;
   }
 
   classifierHelper._update(testUpdate, onsuccess, onerror);
@@ -33,10 +43,15 @@ classifierHelper.addUrlToDB = function(updateData, onsuccess, onerror) {
 classifierHelper.removeUrlFromDB = function(updateData, onsuccess, onerror) {
   var testUpdate = "";
   for (var update of updateData) {
+    var LISTNAME = update.db;
+    var CHUNKDATA = ADD_CHUNKNUM + ":" + update.url;
+    var CHUNKLEN = CHUNKDATA.length;
+
     testUpdate +=
-      "n:1000\ni:" + update.db + "\nsd:1\n" +
-      "s:524:32:" + (4 + update.url.length) + "\n" +
-      "524:" + update.url;
+      "n:1000\n" +
+      "i:" + LISTNAME + "\n" +
+      "s:" + SUB_CHUNKNUM + ":" + HASHLEN + ":" + CHUNKLEN + "\n" +
+      CHUNKDATA;
   }
 
   classifierHelper._updatesToCleanup =
