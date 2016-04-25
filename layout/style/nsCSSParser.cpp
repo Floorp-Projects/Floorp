@@ -8735,6 +8735,10 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
         !func->Item(2).IsLengthPercentCalcUnit()) {
       return CSSParseResult::Error;
     }
+    // Reject 'fr' min-sizing.
+    if (func->Item(1).GetUnit() == eCSSUnit_FlexFraction) {
+      return CSSParseResult::Error;
+    }
     return CSSParseResult::Ok;
   }
   SkipUntil(')');
