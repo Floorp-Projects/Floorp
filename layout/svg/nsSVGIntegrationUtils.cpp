@@ -798,6 +798,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   nsRenderingContext context(aContext);
   nsLayoutUtils::PaintFrame(&context, mFrame,
                             dirty, NS_RGBA(0, 0, 0, 0),
+                            nsDisplayListBuilderMode::PAINTING,
                             flags);
 
   nsIFrame* currentFrame = mFrame;
@@ -812,6 +813,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
 
     nsLayoutUtils::PaintFrame(&context, currentFrame,
                               dirty - offset, NS_RGBA(0, 0, 0, 0),
+                              nsDisplayListBuilderMode::PAINTING,
                               flags);
 
     aContext->Restore();
