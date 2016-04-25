@@ -262,8 +262,6 @@ var GLOBAL = this + '';
 var PASSED = " PASSED! ";
 var FAILED = " FAILED! ";
 
-var DEBUG = false;
-
 var DESCRIPTION;
 var EXPECTED;
 
