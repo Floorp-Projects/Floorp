@@ -898,7 +898,7 @@ struct ParamTraits<mozilla::StereoMode>
   : public ContiguousEnumSerializer<
              mozilla::StereoMode,
              mozilla::StereoMode::MONO,
-             mozilla::StereoMode::TOP_BOTTOM>
+             mozilla::StereoMode::MAX>
 {};
 
 template <>
