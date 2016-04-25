@@ -1036,6 +1036,9 @@ AudioContext::StartRendering(ErrorResult& aRv)
 
   mIsStarted = true;
   RefPtr<Promise> promise = Promise::Create(parentObject, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   mDestination->StartRendering(promise);
 
   OnStateChanged(nullptr, AudioContextState::Running);
