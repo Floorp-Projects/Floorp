@@ -4,7 +4,7 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --with-l10n-base=../../l10n
 ac_add_options --with-windows-version=603
-ac_add_options --with-branding=browser/branding/nightly
+ac_add_options --with-branding=browser/branding/aurora
 
 export MOZILLA_OFFICIAL=1
 
