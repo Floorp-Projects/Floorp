@@ -9,7 +9,6 @@ import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -67,7 +66,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private ClientsAdapter mClientsAdapter;
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
 
-    private OnPanelLevelChangeListener.PanelLevel mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
+    private OnPanelLevelChangeListener.PanelLevel mPanelLevel;
     private Button mPanelFooterButton;
 
     // Reference to the View to display when there are no results.
@@ -111,7 +110,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     }
 
     private void setUpRecyclerView() {
-        mRecyclerView.setAdapter(mHistoryAdapter);
+        if (mPanelLevel == null) {
+            mPanelLevel = OnPanelLevelChangeListener.PanelLevel.PARENT;
+        }
+
+        mRecyclerView.setAdapter(mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT ? mHistoryAdapter : mClientsAdapter);
 
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
@@ -125,11 +128,6 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
     }
 
     @Override
