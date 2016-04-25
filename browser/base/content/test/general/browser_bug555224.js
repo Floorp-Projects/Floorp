@@ -10,7 +10,7 @@ function testBackgroundLoad() {
 
     yield FullZoomHelper.removeTabAndWaitForLocationChange(gBgTab);
 
-    FullZoom.reset();
+    yield FullZoom.reset();
     yield FullZoomHelper.removeTabAndWaitForLocationChange(gTestTab);
     finish();
   });

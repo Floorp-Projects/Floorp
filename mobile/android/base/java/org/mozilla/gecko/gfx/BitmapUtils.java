@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -154,7 +153,7 @@ public final class BitmapUtils {
          runOnBitmapFoundOnUiThread(loader, tab.getThumbnail());
          Tabs.registerOnTabsChangedListener(new Tabs.OnTabsChangedListener() {
                  @Override
-                 public void onTabChanged(Tab t, Tabs.TabEvents msg, Object data) {
+                 public void onTabChanged(Tab t, Tabs.TabEvents msg, String data) {
                      if (tab == t && msg == Tabs.TabEvents.THUMBNAIL) {
                          Tabs.unregisterOnTabsChangedListener(this);
                          runOnBitmapFoundOnUiThread(loader, t.getThumbnail());

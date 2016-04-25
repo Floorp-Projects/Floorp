@@ -15,28 +15,22 @@
 
           "applications": {
             "type": "object",
+            "optional": true,
             "properties": {
               "gecko": {
-                "type": "object",
-                "properties": {
-                  "id": { "$ref": "ExtensionID" },
+                "$ref": "FirefoxSpecificProperties",
+                "optional": true
+              }
+            }
+          },
 
-                  "update_url": {
-                    "type": "string",
-                    "format": "url",
-                    "optional": true
-                  },
-
-                  "strict_min_version": {
-                    "type": "string",
-                    "optional": true
-                  },
-
-                  "strict_max_version": {
-                    "type": "string",
-                    "optional": true
-                  }
-                }
+          "browser_specific_settings": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "gecko": {
+                "$ref": "FirefoxSpecificProperties",
+                "optional": true
               }
             }
           },
@@ -211,6 +205,32 @@
             "pattern": "(?i)^[a-z0-9-._]*@[a-z0-9-._]+$"
           }
         ]
+      },
+      {
+        "id": "FirefoxSpecificProperties",
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "ExtensionID",
+            "optional": true
+          },
+
+          "update_url": {
+            "type": "string",
+            "format": "url",
+            "optional": true
+          },
+
+          "strict_min_version": {
+            "type": "string",
+            "optional": true
+          },
+
+          "strict_max_version": {
+            "type": "string",
+            "optional": true
+          }
+        }
       },
       {
         "id": "MatchPattern",

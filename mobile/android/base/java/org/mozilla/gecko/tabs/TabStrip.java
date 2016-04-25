@@ -16,7 +16,6 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
-import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.BrowserApp.TabStripInterface;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -108,7 +107,7 @@ public class TabStrip extends ThemedLinearLayout
 
     private class TabsListener implements Tabs.OnTabsChangedListener {
         @Override
-        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
             switch (msg) {
                 case RESTORED:
                     tabStripView.restoreTabs();

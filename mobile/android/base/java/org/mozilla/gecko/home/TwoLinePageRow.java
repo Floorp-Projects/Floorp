@@ -134,7 +134,7 @@ public class TwoLinePageRow extends LinearLayout
      * This method is always invoked on the UI thread.
      */
     @Override
-    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final String data) {
         // Carefully check if this tab event is relevant to this row.
         final String pageUrl = mPageUrl;
         if (pageUrl == null) {
@@ -146,11 +146,24 @@ public class TwoLinePageRow extends LinearLayout
 
         // Return early if the page URL doesn't match the current tab URL,
         // or the old tab URL.
+        // data is an empty String for ADDED/CLOSED, and contains the previous/old URL during
+        // LOCATION_CHANGE (the new URL is retrieved using tab.getURL()).
+        // tabURL and data may be about:reader URLs if the current or old tab page was a reader view
+        // page, however pageUrl will always be a plain URL (i.e. we only add about:reader when opening
+        // a reader view bookmark, at all other times it's a normal bookmark with normal URL).
         final String tabUrl = tab.getURL();
-        if (!pageUrl.equals(tabUrl) && !pageUrl.equals(data)) {
+        if (!pageUrl.equals(ReaderModeUtils.stripAboutReaderUrl(tabUrl)) &&
+            !pageUrl.equals(ReaderModeUtils.stripAboutReaderUrl(data))) {
             return;
         }
 
+        // Note: we *might* need to update the display status (i.e. switch-to-tab icon/label) if
+        // a matching tab has been opened/closed/switched to a different page. updateDisplayedUrl() will
+        // determine the changes (if any) that actually need to be made. A tab change with a matching URL
+        // does not imply that any changes are needed - e.g. if a given URL is already open in one tab, and
+        // is also opened in a second tab, the switch-to-tab status doesn't change, closing 1 of 2 tabs with a URL
+        // similarly doesn't change the switch-to-tab display, etc. (However closing the last tab for
+        // a given URL does require a status change, as does opening the first tab with that URL.)
         switch (msg) {
             case ADDED:
             case CLOSED:

@@ -1,0 +1,186 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/info-pages.css");
+
+:root {
+  --color-background-light: #fff;
+  --color-background-dark: #303033;
+  --color-background-dark-purple: #1c023c;
+
+  --color-grey-lightest: #fbfbfb;
+  --color-grey: #b1b1b1;
+
+  --color-blue: #0996f8;
+  --color-blue-dark: #0670cc;
+  --color-blue-darker: #005bab;
+
+  --color-darkTheme-purple-text: #beb8cc;
+  --color-darkTheme-purple-text-strong: #ebe3fc;
+
+  --icon-margin: 64px;
+}
+
+body {
+  padding: 40px;
+  background-color: var(--color-background-light);
+  font-size: 1.5em;
+}
+
+body.private {
+  color: var(--color-darkTheme-purple-text);
+  background-color: var(--color-background-dark-purple);
+}
+
+a:link {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-blue-dark);
+  text-decoration: underline;
+}
+
+a:hover:active {
+  color: var(--color-blue-darker);
+}
+
+a:visited {
+  color: var(--color-blue-darker);
+}
+
+.about-content-container {
+  width: 780px;
+}
+
+section.section-main {
+  margin-bottom: 48px;
+  -moz-margin-start: var(--icon-margin);
+  -moz-padding-start: 24px;
+}
+
+p {
+  line-height: 1.5em;
+}
+
+.list-row {
+  overflow: auto;
+}
+
+.list-row > ul > li {
+  float: left;
+  width: 220px;
+  margin-left: 1em;
+  margin-bottom: 0;
+}
+
+.title {
+  background-image: url("chrome://browser/skin/privatebrowsing/private-browsing.svg");
+  background-size: 64px;
+  background-position: left, center;
+  font-weight: lighter;
+  line-height: 1.5em;
+  color: var(--color-darkTheme-purple-text);
+  min-height: 64px;
+  -moz-margin-start: 0;
+  -moz-padding-start: calc(var(--icon-margin) + 24px);
+}
+
+.about-subheader {
+  display: flex;
+  align-items: center;
+  font-size: 1.5em;
+  font-weight: lighter;
+  min-height: 32px;
+  background-image: url("chrome://browser/skin/privatebrowsing/tracking-protection.svg");
+  background-repeat: no-repeat;
+  background-size: 32px;
+  -moz-margin-start: calc(var(--icon-margin) - 32px);
+  -moz-padding-start: 56px;
+}
+
+.about-subheader.tp-off {
+  background-image: url("chrome://browser/skin/privatebrowsing/tracking-protection-off.svg");
+}
+
+.about-info {
+  font-size: .875em;
+}
+
+.tpTitle {
+  margin-right: 12px;
+}
+
+.private strong {
+  color: var(--color-grey-lightest);
+  font-weight: normal;
+}
+
+a.button {
+  padding: 5px 40px;
+  background-color: #381e59;
+  border: 1px solid #43256a;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.toggle + .toggle-btn {
+  box-sizing: border-box;
+  cursor: pointer;
+  min-width: 60px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: var(--color-grey);
+  border: 1px var(--color-grey) solid;
+  padding: 2px;
+}
+
+.toggle + .toggle-btn::after,
+.toggle + .toggle-btn::before {
+  position: relative;
+  display: block;
+  content: "";
+  width: 19px;
+  height: 100%;
+}
+
+.toggle + .toggle-btn::after {
+  left: 0;
+  box-shadow: 0 0 1px 1px hsla(0, 0%, 0%, .1),
+              0 1px 0 hsla(0, 0%, 0%, .2);
+  border-radius: 50%;
+  background: white;
+  transition: left .2s ease;
+}
+
+.toggle + .toggle-btn::before {
+  float: left;
+  left: 9px;
+  visibility: hidden;
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-image: url("chrome://browser/skin/privatebrowsing/check.svg");
+}
+
+.toggle:checked + .toggle-btn {
+  background: #3fc455;
+  border: 1px solid #269939;
+}
+
+.toggle:checked + .toggle-btn::after {
+  left: 35px;
+}
+
+.toggle:checked + .toggle-btn::before {
+  visibility: visible;
+}
+
+.toggle:-moz-focusring + .toggle-btn {
+  outline: 2px solid rgba(0, 149, 221, 0.5);
+  outline-offset: 1px;
+  -moz-outline-radius: 2px;
+}

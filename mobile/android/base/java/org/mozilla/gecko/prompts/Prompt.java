@@ -133,7 +133,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     }
 
     @Override
-    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final String data) {
         if (tab != Tabs.getInstance().getTab(mTabId)) {
             return;
         }

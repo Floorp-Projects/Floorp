@@ -261,6 +261,14 @@ toolbarpaletteitem[place="toolbar"] {
   margin-bottom: 25px;
 }
 
+toolbarpaletteitem[place="palette"]:-moz-focusring,
+toolbarpaletteitem[place="panel"]:-moz-focusring,
+toolbarpaletteitem[place="toolbar"]:-moz-focusring {
+  outline: 1px dotted rgba(0,0,0,.5);
+  outline-offset: -5px;
+  -moz-outline-radius: 2.5px;
+}
+
 #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
 #wrapper-edit-controls[place="palette"] > #edit-controls > separator,
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,

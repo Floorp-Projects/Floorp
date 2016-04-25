@@ -556,7 +556,7 @@ var FullZoomHelper = {
   },
 
   reset: function reset() {
-    return new Promise(resolve => FullZoom.reset(resolve));
+    return FullZoom.reset();
   },
 
   BACK: 0,

@@ -18,6 +18,8 @@ add_task(function*() {
   ok(zoomResetButton, "Zoom reset button exists in Panel Menu");
 
   zoomResetButton.click();
+  yield new Promise(SimpleTest.executeSoon);
+
   let pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
   let expectedZoomLevel = 100;
   let buttonZoomLevel = parseInt(zoomResetButton.getAttribute("label"), 10);
