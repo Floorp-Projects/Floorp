@@ -30,9 +30,9 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
   , mDOMStream(
-      DOMAudioNodeMediaStream::CreateTrackUnionStream(GetOwner(),
-                                                      this,
-                                                      aContext->Graph()))
+      DOMAudioNodeMediaStream::CreateTrackUnionStreamAsInput(GetOwner(),
+                                                             this,
+                                                             aContext->Graph()))
 {
   // Ensure an audio track with the correct ID is exposed to JS
   nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();

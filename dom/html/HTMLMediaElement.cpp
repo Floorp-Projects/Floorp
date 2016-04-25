@@ -2039,7 +2039,7 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
   MediaStreamTrackSourceGetter* getter = new CaptureStreamTrackSourceGetter(this);
-  out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph, getter);
+  out->mStream = DOMMediaStream::CreateTrackUnionStreamAsInput(window, aGraph, getter);
   out->mFinishWhenEnded = aFinishWhenEnded;
 
   mAudioCaptured = true;
