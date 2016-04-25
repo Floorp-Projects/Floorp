@@ -99,14 +99,14 @@ add_task(function* test_toggleTrackingProtection() {
 
   let promisePrefChanged = waitForPrefChanged();
   yield ContentTask.spawn(tab, {}, function* () {
-    content.document.getElementById("disableTrackingProtection").click();
+    content.document.getElementById("tpButton").click();
   });
   yield promisePrefChanged;
   ok(!prefBranch.getBoolPref("enabled"), "Tracking Protection is disabled.");
 
   promisePrefChanged = waitForPrefChanged();
   yield ContentTask.spawn(tab, {}, function* () {
-    content.document.getElementById("enableTrackingProtection").click();
+    content.document.getElementById("tpButton").click();
   });
   yield promisePrefChanged;
   ok(prefBranch.getBoolPref("enabled"), "Tracking Protection is enabled.");

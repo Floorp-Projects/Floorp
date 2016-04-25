@@ -7,18 +7,18 @@
 <!ENTITY  warnAddonInstall.label        "Warn me when sites try to install add-ons">
 <!ENTITY  warnAddonInstall.accesskey    "W">
 
-<!-- LOCALIZATION NOTE (blockWebForgeries.label, blockAttackSites.label):
-  The methods by which forged (phished) and attack sites will be detected by
-  phishing providers will vary from human review to machine-based heuristics to a
-  combination of both, so it's important that these strings and
-  useDownloadedList.label convey the meaning "reported" (and not something like
-  "known").
+<!-- LOCALIZATION NOTE (enableSafeBrowsing.label, blockDownloads.label, blockUncommonUnwanted.label):
+  It is important that wording follows the guidelines outlined on this page:
+  https://developers.google.com/safe-browsing/developers_guide_v2#AcceptableUsage
 -->
-<!ENTITY  blockAttackSites.label     "Block reported attack sites">
-<!ENTITY  blockAttackSites.accesskey "k">
+<!ENTITY  enableSafeBrowsing.label        "Block dangerous and deceptive content">
+<!ENTITY  enableSafeBrowsing.accesskey    "B">
 
-<!ENTITY  blockWebForgeries.label     "Block reported web forgeries">
-<!ENTITY  blockWebForgeries.accesskey "B">
+<!ENTITY  blockDownloads.label            "Block dangerous downloads">
+<!ENTITY  blockDownloads.accesskey        "D">
+
+<!ENTITY  blockUncommonUnwanted.label     "Warn me about unwanted and uncommon software">
+<!ENTITY  blockUncommonUnwanted.accesskey "C">
 
 <!ENTITY  addonExceptions.label         "Exceptions…">
 <!ENTITY  addonExceptions.accesskey     "E">

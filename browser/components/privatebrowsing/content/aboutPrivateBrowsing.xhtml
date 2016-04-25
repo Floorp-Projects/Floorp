@@ -21,6 +21,7 @@
   <head>
     <link id="favicon" rel="icon" type="image/png"/>
     <link rel="stylesheet" href="chrome://browser/content/aboutPrivateBrowsing.css" type="text/css" media="all"/>
+    <link rel="stylesheet" href="chrome://browser/skin/privatebrowsing/aboutPrivateBrowsing.css" type="text/css" media="all"/>
     <script type="application/javascript;version=1.7" src="chrome://browser/content/aboutPrivateBrowsing.js"></script>
   </head>
 
@@ -31,56 +32,61 @@
             class="showNormal"
             label="&privatebrowsingpage.openPrivateWindow.label;"
             accesskey="&privatebrowsingpage.openPrivateWindow.accesskey;"/>
-    <div id="bar" class="showPrivate">&privateBrowsing.title;</div>
-    <div id="main" class="showPrivate">
-      <div id="privateBrowsingSection"
-           style="width: &aboutPrivateBrowsing.width1;">
-        <div class="sectionHeader">&aboutPrivateBrowsing.title;</div>
-        <div id="list-area">
-          <div>
-            <p class="list-header">&aboutPrivateBrowsing.info.notsaved;</p>
-            <ul id="forgotten">
-              <li>&aboutPrivateBrowsing.info.history;</li>
-              <li>&aboutPrivateBrowsing.info.searches;</li>
-              <li>&aboutPrivateBrowsing.info.cookies;</li>
-              <li>&aboutPrivateBrowsing.info.temporaryFiles;</li>
-            </ul>
-          </div>
-          <div>
-            <p class="list-header">&aboutPrivateBrowsing.info.saved;</p>
-            <ul id="kept">
-              <li>&aboutPrivateBrowsing.info.downloads;</li>
-              <li>&aboutPrivateBrowsing.info.bookmarks;</li>
-            </ul>
-          </div>
+    <div class="showPrivate about-content-container">
+      <h1 class="title">
+        <span id="title">&privateBrowsing.title;</span>
+        <span id="titleTracking">&privateBrowsing.title.tracking;</span>
+      </h1>
+      <section class="section-main">
+        <p>
+          &aboutPrivateBrowsing.info.notsaved.before;
+          <strong>&aboutPrivateBrowsing.info.notsaved.emphasize;</strong>&aboutPrivateBrowsing.info.notsaved.after;
+        </p>
+        <div class="list-row">
+          <ul>
+            <li>&aboutPrivateBrowsing.info.visited;</li>
+            <li>&aboutPrivateBrowsing.info.cookies;</li>
+            <li>&aboutPrivateBrowsing.info.searches;</li>
+            <li>&aboutPrivateBrowsing.info.temporaryFiles;</li>
+          </ul>
         </div>
-        <p>&aboutPrivateBrowsing.note1;</p>
-        <a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore;</a>
-      </div>
-      <div id="trackingProtectionSection"
-           style="width: &trackingProtection.width1;">
-        <div class="sectionHeader">&trackingProtection.title;
-          <span id="tpEnabled"
-                style="width: &trackingProtection.state.width;"
-                class="showTpEnabled">&trackingProtection.state.enabled;</span>
-          <span id="tpDisabled"
-                style="width: &trackingProtection.state.width;"
-                class="showTpDisabled">&trackingProtection.state.disabled;</span>
+        <p>
+          &aboutPrivateBrowsing.info.saved.before;
+          <strong>&aboutPrivateBrowsing.info.saved.emphasize;</strong>
+          &aboutPrivateBrowsing.info.saved.after;
+        </p>
+        <div class="list-row">
+          <ul>
+            <li>&aboutPrivateBrowsing.info.bookmarks;</li>
+            <li>&aboutPrivateBrowsing.info.downloads;</li>
+          </ul>
         </div>
-        <p id="tpDiagram"/>
-        <p>&trackingProtection.description1;</p>
-        <!-- Use text links to implement plain styled buttons without an href. -->
-        <label xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-               id="disableTrackingProtection"
-               class="text-link showTpEnabled showGlobalTpDisabled"
-               value="&trackingProtection.disable;"/>
-        <label xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-               id="enableTrackingProtection"
-               class="text-link showTpDisabled showGlobalTpDisabled"
-               value="&trackingProtection.enable;"/>
-        <p id="tpStartTour"
-           class="showTpEnabled"><a id="startTour">&trackingProtection.startTour1;</a></p>
-      </div>
+        <p>
+          &aboutPrivateBrowsing.note.before;
+          <strong>&aboutPrivateBrowsing.note.emphasize;</strong>
+          &aboutPrivateBrowsing.note.after;
+        </p>
+      </section>
+
+      <h2 id="tpSubHeader" class="about-subheader">
+        <span class="tpTitle">&trackingProtection.title;</span>
+        <input id="tpToggle" class="toggle toggle-input" type="checkbox"/>
+        <span id="tpButton" class="toggle-btn"></span>
+      </h2>
+
+      <section class="section-main">
+        <p>&trackingProtection.description2;</p>
+        <p>
+          <a id="startTour" class="button">&trackingProtection.startTour1;</a>
+        </p>
+      </section>
+
+      <section class="section-main">
+        <p class="about-info">&aboutPrivateBrowsing.learnMore2;
+          <a id="learnMore" target="_blank">&aboutPrivateBrowsing.learnMore2.title;</a>.
+        </p>
+      </section>
+
     </div>
   </body>
 </html>

@@ -9,7 +9,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -300,7 +299,7 @@ final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     // Tabs.OnTabsChangedListener implementation
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         if ((Tabs.getInstance().isSelectedTab(tab) && msg == Tabs.TabEvents.STOP) || msg == Tabs.TabEvents.SELECTED) {
             mWaitForTouchListeners = tab.getHasTouchListeners();
         }

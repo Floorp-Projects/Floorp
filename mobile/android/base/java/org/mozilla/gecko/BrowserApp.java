@@ -58,6 +58,7 @@ import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
+import org.mozilla.gecko.promotion.SimpleHelperUI;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
@@ -210,6 +211,9 @@ public class BrowserApp extends GeckoApp
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
     private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
+    private static final int ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK = 3001;
+    private static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS = 3002;
+    private static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE = 3003;
 
     public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
 
@@ -317,7 +321,7 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, TabEvents msg, String data) {
         if (tab == null) {
             // Only RESTORED is allowed a null tab: it's the only event that
             // isn't tied to a specific tab.
@@ -371,7 +375,26 @@ public class BrowserApp extends GeckoApp
                 if (!AboutPages.isAboutReader(tab.getURL())) {
                     showBookmarkAddedSnackbar();
                 } else {
-                    showReaderModeBookmarkAddedSnackbar();
+                    final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
+
+                    final boolean hasFirstReaderViewPromptBeenShownBefore = prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false);
+
+                    if (hasFirstReaderViewPromptBeenShownBefore) {
+                        showReaderModeBookmarkAddedSnackbar();
+                    } else {
+                        SimpleHelperUI.show(this,
+                                SimpleHelperUI.FIRST_RVBP_SHOWN_TELEMETRYEXTRA,
+                                ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK,
+                                R.string.helper_first_offline_bookmark_title, R.string.helper_first_offline_bookmark_message,
+                                R.drawable.helper_first_readerview_bookmark, R.string.helper_first_offline_bookmark_button,
+                                ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS,
+                                ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE);
+
+                        GeckoSharedPrefs.forProfile(this)
+                                .edit()
+                                .putBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, true)
+                                .apply();
+                    }
                 }
                 break;
             case BOOKMARK_REMOVED:
@@ -2649,6 +2672,14 @@ public class BrowserApp extends GeckoApp
 
             case ACTIVITY_REQUEST_TAB_QUEUE:
                 TabQueueHelper.processTabQueuePromptResponse(resultCode, this);
+                break;
+
+            case ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK:
+                if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS) {
+                    openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(PanelType.BOOKMARKS));
+                } else if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE) {
+                    showReaderModeBookmarkAddedSnackbar();
+                }
                 break;
 
             default:

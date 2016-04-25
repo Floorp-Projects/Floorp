@@ -8,6 +8,7 @@ browser.jar:
     content/browser/schemas/commands.json
     content/browser/schemas/context_menus.json
     content/browser/schemas/context_menus_internal.json
+    content/browser/schemas/history.json
     content/browser/schemas/page_action.json
     content/browser/schemas/tabs.json
     content/browser/schemas/windows.json

@@ -15,7 +15,7 @@ function start_test_prefNotSet() {
 function continue_test_prefNotSet () {
   Task.spawn(function () {
     is(ZoomManager.zoom, 1, "zoom level pref should not apply to an image");
-    FullZoom.reset();
+    yield FullZoom.reset();
 
     yield FullZoomHelper.load(gBrowser.selectedTab, "http://mochi.test:8888/browser/browser/base/content/test/general/zoom_test.html");
   }).then(end_test_prefNotSet, FullZoomHelper.failAndContinue(finish));
@@ -26,7 +26,7 @@ function end_test_prefNotSet() {
     is(ZoomManager.zoom, zoomLevel, "the zoom level should have persisted");
 
     // Reset the zoom so that other tests have a fresh zoom level
-    FullZoom.reset();
+    yield FullZoom.reset();
     yield FullZoomHelper.removeTabAndWaitForLocationChange();
     finish();
   });

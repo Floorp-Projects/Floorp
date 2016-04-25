@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.db.UrlAnnotations;
@@ -275,7 +274,7 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.
         switch (msg) {

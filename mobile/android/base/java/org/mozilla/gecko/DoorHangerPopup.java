@@ -147,7 +147,7 @@ public class DoorHangerPopup extends AnchoredPopup
 
     // This callback is automatically executed on the UI thread.
     @Override
-    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final String data) {
         switch (msg) {
             case CLOSED:
                 // Remove any doorhangers for a tab when it's closed (make

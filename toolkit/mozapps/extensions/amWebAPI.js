@@ -76,16 +76,13 @@ const APIBroker = {
 
 APIBroker.init();
 
-function Addon(win, properties) {
+function Addon(window, properties) {
+  this.window = window;
+
   // We trust the webidl binding to broker access to our properties.
   for (let key of Object.keys(properties)) {
     this[key] = properties[key];
   }
-
-  this.uninstall = function() {
-    let err = new win.Error("not yet implemented");
-    return win.Promise.reject(err);
-  };
 }
 
 function AddonInstall(window, properties) {
@@ -127,6 +124,12 @@ function WebAPITask(generator) {
     });
   }
 }
+
+Addon.prototype = {
+  uninstall: WebAPITask(function*() {
+    return yield APIBroker.sendRequest("addonUninstall", this.id);
+  }),
+};
 
 const INSTALL_EVENTS = [
   "onDownloadStarted",

@@ -18,66 +18,7 @@ Prompter tests: modal prompts
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.8">
 
-var isOSX = ("nsILocalFileMac" in SpecialPowers.Ci);
-var isLinux = ("@mozilla.org/gnome-gconf-service;1" in SpecialPowers.Cc);
-var isE10S = SpecialPowers.Services.appinfo.processType == 2;
-
-function checkPromptState(promptState, expectedState) {
-    // XXX check title? OS X has title in content
-    is(promptState.msg,         expectedState.msg,         "Checking expected message");
-    is(promptState.textHidden,  expectedState.textHidden,  "Checking textbox visibility");
-    is(promptState.passHidden,  expectedState.passHidden,  "Checking passbox visibility");
-    is(promptState.checkHidden, expectedState.checkHidden, "Checking checkbox visibility");
-    is(promptState.checkMsg,    expectedState.checkMsg,    "Checking checkbox label");
-    is(promptState.checked,     expectedState.checked,     "Checking checkbox checked");
-    if (!isTabModal)
-      is(promptState.iconClass, "spaced " + expectedState.iconClass, "Checking expected icon CSS class");
-    is(promptState.textValue, expectedState.textValue, "Checking textbox value");
-    is(promptState.passValue, expectedState.passValue, "Checking passbox value");
-
-    if (expectedState.butt0Label) {
-        is(promptState.butt0Label, expectedState.butt0Label, "Checking accept-button label");
-    }
-    if (expectedState.butt1Label) {
-        is(promptState.butt1Label, expectedState.butt1Label, "Checking cancel-button label");
-    }
-    if (expectedState.butt2Label) {
-        is(promptState.butt2Label, expectedState.butt2Label, "Checking extra1-button label");
-    }
-
-    // For prompts with a time-delay button.
-    if (expectedState.butt0Disabled) {
-        is(promptState.butt0Disabled, true,  "Checking accept-button is disabled");
-        is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
-    }
-
-    is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
-    is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
-    is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
-
-    if (isLinux && (!promptState.focused || isE10S)) {
-        todo(false, "Focus seems missing or wrong on Linux"); // bug 1265077
-    } else if (isOSX && expectedState.focused && expectedState.focused.startsWith("button")) {
-        is(promptState.focused, "infoBody", "buttons don't focus on OS X, but infoBody does instead");
-    } else {
-        is(promptState.focused, expectedState.focused, "Checking focused element");
-    }
-}
-
-
 function* runTests() {
-
-    function handlePrompt() {
-      return new Promise(resolve => {
-        gChromeScript.addMessageListener("promptHandled", function handled(msg) {
-          gChromeScript.removeMessageListener("promptHandled", handled);
-          checkPromptState(msg.promptState, state);
-          resolve(true);
-        });
-        gChromeScript.sendAsyncMessage("handlePrompt", { action: action, isTabModal: isTabModal});
-      });
-    }
-
     let ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
@@ -108,6 +49,7 @@ function* runTests() {
         msg   : "This is the alert text.",
         title : "TestTitle",
         iconClass   : "alert-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -137,6 +79,7 @@ function* runTests() {
         msg   : "This is the alertCheck text.",
         title : "TestTitle",
         iconClass   : "alert-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -166,6 +109,7 @@ function* runTests() {
         msg   : "This is the alertCheck text.",
         title : "TestTitle",
         iconClass   : "alert-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -198,6 +142,7 @@ function* runTests() {
         msg   : "This is the confirm text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -228,6 +173,7 @@ function* runTests() {
         msg   : "This is the confirm text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -258,6 +204,7 @@ function* runTests() {
         msg   : "This is the confirmCheck text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -288,6 +235,7 @@ function* runTests() {
         msg   : "This is the confirmCheck text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -318,6 +266,7 @@ function* runTests() {
         msg   : "This is the confirmCheck text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -351,6 +300,7 @@ function* runTests() {
         msg   : "This is the confirmCheck text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -384,6 +334,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : true,
@@ -417,6 +368,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : true,
@@ -449,6 +401,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : true,
@@ -481,6 +434,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : true,
@@ -514,6 +468,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : false,
@@ -549,6 +504,7 @@ function* runTests() {
         msg   : "This is the prompt text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : true,
         checkHidden : false,
@@ -585,6 +541,7 @@ function* runTests() {
         msg   : "This is the pUAP text.",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : false,
         checkHidden : false,
@@ -624,6 +581,7 @@ function* runTests() {
         msg   : "This is the pUAP text.",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : false,
         checkHidden : false,
@@ -663,6 +621,7 @@ function* runTests() {
         msg   : "This is the promptPassword text.",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : false,
         checkHidden : false,
@@ -699,6 +658,7 @@ function* runTests() {
         msg   : "This is the promptPassword text.",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : false,
         checkHidden : false,
@@ -735,6 +695,7 @@ function* runTests() {
         msg   : "This is the confirmEx text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -768,6 +729,7 @@ function* runTests() {
         msg   : "This is the confirmEx text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -801,6 +763,7 @@ function* runTests() {
         msg   : "This is the confirmEx text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -842,6 +805,7 @@ function* runTests() {
         msg   : "This is the confirmEx text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -884,6 +848,7 @@ function* runTests() {
         msg   : "This is the confirmEx text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : false,
@@ -927,6 +892,7 @@ function* runTests() {
         msg   : "This is the alert text.",
         title : "TestTitle",
         iconClass   : "alert-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -959,6 +925,7 @@ function* runTests() {
         msg   : "This is the confirmEx delay text.",
         title : "TestTitle",
         iconClass   : "question-icon",
+        titleHidden : true,
         textHidden  : true,
         passHidden  : true,
         checkHidden : true,
@@ -1023,6 +990,7 @@ function* runTests() {
         msg : 'Enter username and password for http://example.com',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : false,
         checkHidden : false,
@@ -1063,6 +1031,7 @@ function* runTests() {
               'abcdefghi \u2026"',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
+        titleHidden : true,
         textHidden  : false,
         passHidden  : false,
         checkHidden : false,
@@ -1099,8 +1068,8 @@ function* runTests() {
     }
 }
 
-let gChromeScript;
 let state, action;
+let usePromptService;
 
 /*
  * Run the body of the 3 times:
@@ -1111,9 +1080,6 @@ let state, action;
 
 add_task(function* runPromptTests() {
   info("Process type: " + SpecialPowers.Services.appinfo.processType);
-
-  let url = SimpleTest.getTestFileURL("chromeScript.js");
-  gChromeScript = SpecialPowers.loadChromeScript(url);
 
   isTabModal = false; usePromptService = true;
   info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
@@ -1128,8 +1094,6 @@ add_task(function* runPromptTests() {
       info("Running tests with: isTabModal=" + isTabModal + ", usePromptService=" + usePromptService);
       yield* runTests();
   }
-
-  gChromeScript.destroy();
 });
 
 </script>

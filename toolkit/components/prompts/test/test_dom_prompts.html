@@ -1,0 +1,208 @@
+<html>
+<head>
+  <title>Test for DOM prompts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+var rv;
+var state, action;
+
+add_task(function* test_alert_ok() {
+    info("Starting test: Alert");
+    state = {
+        msg         : "This is the alert text.",
+        iconClass   : "alert-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    alert("This is the alert text.");
+
+    yield promptDone;
+});
+
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_alert_noargs() {
+    info("Starting test: Alert with no args");
+    state = {
+        msg         : "",
+        iconClass   : "alert-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    try {
+        alert();
+        ok(true, "alert() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "alert() without arguments should not throw!");
+    }
+
+    yield promptDone;
+});
+
+
+add_task(function* test_confirm_ok() {
+    info("Starting test: Confirm");
+    state = {
+        msg         : "This is the confirm text.",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    rv = confirm("This is the confirm text.");
+    is(rv, true, "check prompt return value");
+
+    yield promptDone;
+});
+
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_confirm_noargs() {
+    info("Starting test: Confirm with no args");
+    state = {
+        msg         : "",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : true,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "button0",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    try {
+        rv = confirm();
+        ok(true, "confirm() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "confirm() without arguments should not throw!");
+    }
+    is(rv, true, "check prompt return value");
+
+    yield promptDone;
+});
+
+
+add_task(function* test_prompt_ok() {
+    info("Starting test: Prompt");
+    state = {
+        msg         : "This is the Prompt text.",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    rv = prompt("This is the Prompt text.");
+    is(rv, "", "check prompt return value");
+
+    yield promptDone;
+});
+
+// bug 861605 made the arguments to alert/confirm optional (prompt already was).
+add_task(function* test_prompt_noargs() {
+    info("Starting test: Prompt with no args");
+    state = {
+        msg         : "",
+        iconClass   : "question-icon",
+        titleHidden : true,
+        textHidden  : false,
+        passHidden  : true,
+        checkHidden : true,
+        textValue   : "",
+        passValue   : "",
+        checkMsg    : "",
+        checked     : false,
+        focused     : "textField",
+        defButton   : "button0",
+    };
+    action = {
+        buttonClick: "ok",
+    };
+
+    promptDone = handlePrompt(action);
+
+    try {
+        rv = prompt();
+        ok(true, "prompt() without arguments should not throw!");
+    } catch(e) {
+        ok(false, "prompt() without arguments should not throw!");
+    }
+    is(rv, "", "check prompt return value");
+
+    yield promptDone;
+});
+
+</script>
+
+</body>
+</html>
