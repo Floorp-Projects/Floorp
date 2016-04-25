@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: flex min-sizing</title>
+  <title>CSS Grid Test: flex/auto min-sizing</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
   <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-grid-template-columns-minmax">
   <link rel="match" href="grid-flex-min-sizing-001-ref.html">
@@ -22,108 +22,113 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
  width:140px;
 }
 
+/*
+ * NOTE Due to a spec change, 'fr' min-sizing inside minmax() is now
+ * invalid, so they were replaced in this test with 'auto' instead (for now).
+ */
+
 .g1 {
- grid-template-columns: minmax(1fr,min-content)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,min-content)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         1fr;
 }
 
 .g2 {
- grid-template-columns: minmax(1fr,max-content)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,max-content)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         1fr;
 }
 
 .g3 {
- grid-template-columns: minmax(1fr,auto)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,auto)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         1fr;
 }
 
 .g4 {
- grid-template-columns: minmax(1fr,0)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,0)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         1fr;
 }
 
 .g5 {
  grid-template-columns: minmax(20px,0)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         1fr;
 }
 
 .g6 {
- grid-template-columns: minmax(1fr,0)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,0)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .g7 {
  grid-template-columns: minmax(20px,1fr)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .g8 {
- grid-template-columns: minmax(1fr,1fr)
-                        minmax(1fr,0)
-                        minmax(1fr,0)
+ grid-template-columns: minmax(auto,1fr)
+                        minmax(auto,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .g9 {
  grid-template-columns: 20px
                         30px
-                        minmax(1fr,0)
+                        minmax(auto,0)
                         10px;
 }
 
 .gA {
- grid-template-columns: minmax(1fr,0)
+ grid-template-columns: minmax(auto,0)
                         minmax(min-content,40px)
-                        minmax(1fr,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .gB {
- grid-template-columns: minmax(1fr,0)
+ grid-template-columns: minmax(auto,0)
                         minmax(auto,40px)
-                        minmax(1fr,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .gC {
- grid-template-columns: minmax(1fr,20px)
+ grid-template-columns: minmax(auto,20px)
                         minmax(auto,40px)
-                        minmax(1fr,0)
+                        minmax(auto,0)
                         20px;
 }
 
 .gD {
  grid-template-columns: minmax(auto,20px)
                         minmax(auto,40px)
-                        minmax(1fr,0)
+                        minmax(auto,0)
                         min-content;
 }
 
 .gE {
  grid-template-columns: minmax(auto,20px)
                         minmax(auto,40px)
-                        minmax(1fr,20px)
+                        minmax(auto,20px)
                         auto;
 }
 
 .gF {
  grid-template-columns: minmax(auto,20px)
                         minmax(min-content,max-content)
-                        minmax(1fr,40px)
+                        minmax(auto,40px)
                         auto;
 }
 
