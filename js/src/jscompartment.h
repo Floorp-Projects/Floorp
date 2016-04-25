@@ -530,15 +530,7 @@ struct JSCompartment
     MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandleObject obj,
                                      JS::HandleObject existingArg = nullptr);
     MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<js::PropertyDescriptor> desc);
-
-    template<typename T> MOZ_MUST_USE bool wrap(JSContext* cx,
-                                                JS::AutoVectorRooter<T>& vec) {
-        for (size_t i = 0; i < vec.length(); ++i) {
-            if (!wrap(cx, vec[i]))
-                return false;
-        }
-        return true;
-    };
+    MOZ_MUST_USE bool wrap(JSContext* cx, JS::MutableHandle<JS::GCVector<JS::Value>> vec);
 
     MOZ_MUST_USE bool putWrapper(JSContext* cx, const js::CrossCompartmentKey& wrapped,
                                  const js::Value& wrapper);
