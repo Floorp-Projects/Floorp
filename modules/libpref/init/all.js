@@ -4505,8 +4505,6 @@ pref("layers.prefer-d3d9", false);
 pref("layers.d3d11.force-warp", false);
 pref("layers.d3d11.disable-warp", true);
 
-// cf. Bug 1215265
-pref("layers.child-process-shutdown", false);
 #endif
 
 // Force all possible layers to be always active layers

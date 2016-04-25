@@ -17,6 +17,7 @@
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"      // for Transport
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/media/MediaSystemResourceManagerParent.h" // for MediaSystemResourceManagerParent
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
@@ -59,6 +60,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   , mTransport(aTransport)
   , mSetChildThreadPriority(false)
   , mClosed(false)
+  , mSubprocess(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   sMainLoop = MessageLoop::current();
@@ -99,6 +101,11 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // Can't alloc/dealloc shmems from now on.
   mClosed = true;
+
+  if (mSubprocess) {
+    mSubprocess->DissociateActor();
+    mSubprocess = nullptr;
+  }
 
   MessageLoop::current()->PostTask(
     FROM_HERE,
@@ -194,10 +201,16 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
 }
 
 /*static*/ PImageBridgeParent*
-ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
+ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId, GeckoChildProcessHost* aProcessHost)
 {
   MessageLoop* loop = CompositorBridgeParent::CompositorLoop();
   RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
+
+  if (aProcessHost) {
+    bridge->mSubprocess = aProcessHost;
+    aProcessHost->AssociateActor();
+  }
+
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
                                      bridge.get(), aTransport, aChildProcessId));
@@ -359,7 +372,7 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
     if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
       Transport* transport = OpenDescriptor(aFds[i].fd(),
                                             Transport::MODE_SERVER);
-      PImageBridgeParent* bridge = Create(transport, base::GetProcId(aPeerProcess));
+      PImageBridgeParent* bridge = Create(transport, base::GetProcId(aPeerProcess), mSubprocess);
       bridge->CloneManagees(this, aCtx);
       bridge->IToplevelProtocol::SetTransport(transport);
       // The reference to the compositor thread is held in OnChannelConnected().
