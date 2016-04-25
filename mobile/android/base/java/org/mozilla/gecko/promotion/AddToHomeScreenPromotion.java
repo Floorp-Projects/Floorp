@@ -6,8 +6,9 @@
 package org.mozilla.gecko.promotion;
 
 import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
-import android.support.annotation.WorkerThread;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.keepsafe.switchboard.SwitchBoard;
@@ -15,21 +16,26 @@ import com.keepsafe.switchboard.SwitchBoard;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
+import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
+
+import java.lang.ref.WeakReference;
 
 import ch.boye.httpclientandroidlib.util.TextUtils;
 
 /**
  * Promote "Add to home screen" if user visits website often.
  */
-public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
+public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs.OnTabsChangedListener {
     private static class URLHistory {
         public final long visits;
         public final long lastVisit;
@@ -46,34 +52,49 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
     private static final String EXPERIMENT_LAST_VISIT_MINIMUM_AGE = "lastVisitMinimumAgeMs";
     private static final String EXPERIMENT_LAST_VISIT_MAXIMUM_AGE = "lastVisitMaximumAgeMs";
 
-    private Activity activity;
+    private WeakReference<Activity> activityReference;
     private boolean isEnabled;
+    private boolean isInForeground;
     private int minimumVisits;
     private int lastVisitMinimumAgeMs;
     private int lastVisitMaximumAgeMs;
 
-    public AddToHomeScreenPromotion(Activity activity) {
-        this.activity = activity;
+    @Override
+    public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
+        activityReference = new WeakReference<Activity>(browserApp);
+        isInForeground = true;
 
-        initializeExperiment();
+        initializeExperiment(browserApp);
     }
 
-    public void resume() {
+    @Override
+    public void onResume(BrowserApp browserApp) {
         Tabs.registerOnTabsChangedListener(this);
     }
 
-    public void pause() {
+    @Override
+    public void onPause(BrowserApp browserApp) {
         Tabs.unregisterOnTabsChangedListener(this);
     }
 
-    private void initializeExperiment() {
-        if (!SwitchBoard.isInExperiment(activity, Experiments.PROMOTE_ADD_TO_HOMESCREEN)) {
+    @Override
+    public void onTabsTrayShown(BrowserApp browserApp, TabsPanel tabsPanel) {
+        isInForeground = false;
+    }
+
+    @Override
+    public void onTabsTrayHidden(BrowserApp browserApp, TabsPanel tabsPanel) {
+        isInForeground = true;
+    }
+
+    private void initializeExperiment(Context context) {
+        if (!SwitchBoard.isInExperiment(context, Experiments.PROMOTE_ADD_TO_HOMESCREEN)) {
             Log.v(LOGTAG, "Experiment not enabled");
             // Experiment is not enabled. No need to try to read values.
             return;
         }
 
-        JSONObject values = SwitchBoard.getExperimentValuesFromJson(activity, Experiments.PROMOTE_ADD_TO_HOMESCREEN);
+        JSONObject values = SwitchBoard.getExperimentValuesFromJson(context, Experiments.PROMOTE_ADD_TO_HOMESCREEN);
         if (values == null) {
             // We didn't get any values for this experiment. Let's disable it instead of picking default
             // values that might be bad.
@@ -109,14 +130,22 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
             return;
         }
 
-        if (Tabs.TabEvents.LOADED == msg) {
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    maybeShowPromotionForUrl(tab.getURL(), tab.getTitle());
-                }
-            });
+        if (Tabs.TabEvents.LOADED != msg) {
+            return;
         }
+
+        if (!isInForeground) {
+            // We only want to show this prompt if this tab is in the foreground and not on top
+            // of the tabs tray.
+            return;
+        }
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                maybeShowPromotionForUrl(tab.getURL(), tab.getTitle());
+            }
+        });
     }
 
     private void maybeShowPromotionForUrl(String url, String title) {
@@ -124,14 +153,19 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
             return;
         }
 
-        if (!shouldShowPromotion(url, title)) {
+        final Context context = activityReference.get();
+        if (context == null) {
             return;
         }
 
-        HomeScreenPrompt.show(activity, url, title);
+        if (!shouldShowPromotion(context, url, title)) {
+            return;
+        }
+
+        HomeScreenPrompt.show(context, url, title);
     }
 
-    private boolean shouldShowPromotion(String url, String title) {
+    private boolean shouldShowPromotion(Context context, String url, String title) {
         if (TextUtils.isEmpty(url) || TextUtils.isEmpty(title)) {
             // We require an URL and a title for the shortcut.
             return false;
@@ -147,7 +181,7 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
             return false;
         }
 
-        URLHistory history = getHistoryForURL(url);
+        URLHistory history = getHistoryForURL(context, url);
         if (history == null) {
             // There's no history for this URL yet or we can't read it right now. Just ignore.
             return false;
@@ -170,7 +204,7 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
             return false;
         }
 
-        if (hasAcceptedOrDeclinedHomeScreenShortcut(url)) {
+        if (hasAcceptedOrDeclinedHomeScreenShortcut(context, url)) {
             // The user has already created a shortcut in the past or actively declined to create one.
             // Let's not ask again for this url - We do not want to be annoying.
             return false;
@@ -179,18 +213,18 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
         return true;
     }
 
-    protected boolean hasAcceptedOrDeclinedHomeScreenShortcut(String url) {
-        final UrlAnnotations urlAnnotations = GeckoProfile.get(activity).getDB().getUrlAnnotations();
-        return urlAnnotations.hasAcceptedOrDeclinedHomeScreenShortcut(activity.getContentResolver(), url);
+    protected boolean hasAcceptedOrDeclinedHomeScreenShortcut(Context context, String url) {
+        final UrlAnnotations urlAnnotations = GeckoProfile.get(context).getDB().getUrlAnnotations();
+        return urlAnnotations.hasAcceptedOrDeclinedHomeScreenShortcut(context.getContentResolver(), url);
     }
 
-    protected URLHistory getHistoryForURL(String url) {
-        final GeckoProfile profile = GeckoProfile.get(activity);
+    protected URLHistory getHistoryForURL(Context context, String url) {
+        final GeckoProfile profile = GeckoProfile.get(context);
         final BrowserDB browserDB = profile.getDB();
 
         Cursor cursor = null;
         try {
-            cursor = browserDB.getHistoryForURL(activity.getContentResolver(), url);
+            cursor = browserDB.getHistoryForURL(context.getContentResolver(), url);
 
             if (cursor.moveToFirst()) {
                 return new URLHistory(
