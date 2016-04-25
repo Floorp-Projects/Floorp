@@ -380,7 +380,9 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
         LayerManager* manager = widget->GetLayerManager(&isRetainingManager);
         if (isRetainingManager) {
           manager->BeginTransaction();
-          nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(), NS_RGB(255, 255, 255),
+          nsLayoutUtils::PaintFrame(nullptr, rootFrame, nsRegion(),
+                                    NS_RGB(255, 255, 255),
+                                    nsDisplayListBuilderMode::PAINTING,
                                     nsLayoutUtils::PAINT_WIDGET_LAYERS |
                                     nsLayoutUtils::PAINT_EXISTING_TRANSACTION);
         }
