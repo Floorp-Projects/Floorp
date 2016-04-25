@@ -984,7 +984,7 @@ function notifyAction(aEngine, aVerb) {
   }
 }
 
-function  parseJsonFromStream(aInputStream) {
+function parseJsonFromStream(aInputStream) {
   const json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
   const data = json.decodeFromStream(aInputStream, aInputStream.available());
   return data;
@@ -2135,7 +2135,8 @@ Engine.prototype = {
     return this.getAttr("alias");
   },
   set alias(val) {
-    this.setAttr("alias", val);
+    var value = val ? val.trim() : null;
+    this.setAttr("alias", value);
     notifyAction(this, SEARCH_ENGINE_CHANGED);
   },
 
