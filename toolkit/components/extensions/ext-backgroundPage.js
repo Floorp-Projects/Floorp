@@ -86,7 +86,6 @@ BackgroundPage.prototype = {
             let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
             require("devtools/client/framework/devtools-browser");
             let hudservice = require("devtools/client/webconsole/hudservice");
-            let {console} = Cu.import("resource://gre/modules/Console.jsm", {});
             hudservice.toggleBrowserConsole().catch(Cu.reportError);
           } else {
             // the Browser Console was already open
@@ -101,7 +100,7 @@ BackgroundPage.prototype = {
         window.console.log(text);
       };
       Components.utils.exportFunction(alertOverwrite, window, {
-        defineAs: "alert"
+        defineAs: "alert",
       });
       if (event.target != window.document) {
         return;
