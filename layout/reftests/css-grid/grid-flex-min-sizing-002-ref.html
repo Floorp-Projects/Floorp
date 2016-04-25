@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: flex min-sizing</title>
+  <title>Reference: flex/auto min-sizing</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151212">
   <style type="text/css">
 body,html { color:black; background:white; font-family:monospace; font-size:16px; padding:0; margin:0; }
@@ -25,47 +25,45 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
 }
 
 .g1 {
- grid-template-columns: minmax(min-content,min-content)
-                        minmax(min-content,0)
-                        minmax(min-content,0)
+ grid-template-columns: minmax(4px,0)
+                        minmax(0,0)
+                        minmax(0,0)
                         1fr;
 }
 
 .g2 {
- grid-template-columns: minmax(min-content,max-content)
-                        minmax(min-content,0)
-                        minmax(min-content,0)
+ grid-template-columns: minmax(4px,0)
+                        0
+                        0
                         1fr;
 }
 
 .g3 {
- grid-template-columns: minmax(min-content,auto)
-                        minmax(min-content,0)
-                        minmax(min-content,0)
+ grid-template-columns: minmax(4px,0)
+                        0
+                        0
                         1fr;
 }
 
 .g4 {
- grid-template-columns: minmax(0,0)
-                        minmax(0,0)
-                        minmax(0,0)
+ grid-template-columns: minmax(2px,0)
+                        1px
+                        1px
                         1fr;
- min-width:24px;
 }
 
 .g5 {
  grid-template-columns: minmax(20px,0)
                         minmax(0,0)
                         minmax(0,0)
-                        4px;
+                        0;
 }
 
 .g6 {
- grid-template-columns: minmax(0,0)
-                        minmax(0,0)
-                        minmax(0,0)
+ grid-template-columns: minmax(2px,0)
+                        minmax(1px,0)
+                        minmax(1px,0)
                         20px;
- min-width:44px;
 }
 
 .g7 {
@@ -97,37 +95,37 @@ body,html { color:black; background:white; font-family:monospace; font-size:16px
 }
 
 .gB {
- grid-template-columns: minmax(min-content,0)
-                        minmax(auto,40px)
-                        minmax(0,0)
+ grid-template-columns: minmax(4px,0)
+                        0
+                        0
                         20px;
 }
 
 .gC {
- grid-template-columns: minmax(min-content,20px)
-                        minmax(auto,40px)
-                        minmax(0,0)
+ grid-template-columns: minmax(4px,0)
+                        0
+                        0
                         20px;
 }
 
 .gD {
- grid-template-columns: minmax(min-content,20px)
-                        minmax(auto,40px)
-                        minmax(0,0)
-                        min-content;
+ grid-template-columns: minmax(4px,0)
+                        0
+                        0
+                        0;
 }
 
 .gE {
- grid-template-columns: minmax(min-content,20px)
-                        minmax(min-content,40px)
-                        minmax(7px,20px)
-                        auto;
+ grid-template-columns: minmax(2px,0)
+                        minmax(1px,0)
+                        minmax(1px,0)
+                        0px;
 }
 
 .gF {
- grid-template-columns: minmax(min-content,20px)
-                        minmax(0,max-content)
-                        minmax(0,40px)
+ grid-template-columns: 22px
+                        1px
+                        1px
                         auto;
 }
 
