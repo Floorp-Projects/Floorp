@@ -234,26 +234,21 @@ class GeckoInputConnection
     }
 
     private void showSoftInput() {
+        final View v = getView();
         final InputMethodManager imm = getInputMethodManager();
-        if (imm != null) {
-            final View v = getView();
-
-            if (v.hasFocus() && !imm.isActive(v)) {
-                // Workaround: The view has focus but it is not the active view for the input method. (Bug 1211848)
-                refocusAndShowSoftInput(imm, v);
-            } else {
-                imm.showSoftInput(v, 0);
-            }
+        if (v == null || imm == null) {
+            return;
         }
-    }
 
-    private static void refocusAndShowSoftInput(final InputMethodManager imm, final View v) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        v.post(new Runnable() {
             @Override
             public void run() {
-                v.clearFocus();
-                v.requestFocus();
-
+                if (v.hasFocus() && !imm.isActive(v)) {
+                    // Marshmallow workaround: The view has focus but it is not the active
+                    // view for the input method. (Bug 1211848)
+                    v.clearFocus();
+                    v.requestFocus();
+                }
                 imm.showSoftInput(v, 0);
             }
         });
