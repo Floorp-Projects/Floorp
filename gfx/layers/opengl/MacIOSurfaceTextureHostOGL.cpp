@@ -68,7 +68,13 @@ MacIOSurfaceTextureHostOGL::Lock()
 void
 MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
-  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  CompositorOGL* glCompositor = AssertGLCompositor(aCompositor);
+  if (!glCompositor) {
+    mTextureSource = nullptr;
+    mCompositor = nullptr;
+    return;
+  }
+
   if (mCompositor != glCompositor) {
     // Cannot share GL texture identifiers across compositors.
     mTextureSource = nullptr;
@@ -141,8 +147,8 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilt
 void
 MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
-  mCompositor = static_cast<CompositorOGL*>(aCompositor);
-  if (mNextSibling) {
+  mCompositor = AssertGLCompositor(aCompositor);
+  if (mCompositor && mNextSibling) {
     mNextSibling->SetCompositor(aCompositor);
   }
 }

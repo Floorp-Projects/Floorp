@@ -493,11 +493,24 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   return true;
 }
 
+static CompositorD3D9* AssertD3D9Compositor(Compositor* aCompositor)
+{
+  CompositorD3D9* compositor = aCompositor ? aCompositor->AsCompositorD3D9()
+                                           : nullptr;
+  if (!compositor) {
+    gfxCriticalNote << "[D3D9] Attempt to set an incompatible compositor";
+  }
+  return compositor;
+}
+
 void
 DataTextureSourceD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  CompositorD3D9* d3dCompositor = static_cast<CompositorD3D9*>(aCompositor);
+  CompositorD3D9* d3dCompositor = AssertD3D9Compositor(aCompositor);
+  if (!d3dCompositor) {
+    Reset();
+    return;
+  }
   if (mCompositor && mCompositor != d3dCompositor) {
     Reset();
   }
@@ -910,7 +923,11 @@ TextureHostD3D9::GetDevice()
 void
 TextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
+    mTextureSource = nullptr;
+    return;
+  }
   if (mTextureSource) {
     mTextureSource->SetCompositor(aCompositor);
   }
@@ -1031,8 +1048,10 @@ DXGITextureHostD3D9::Unlock()
 void
 DXGITextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
+    mTextureSource = nullptr;
+  }
 }
 
 void
@@ -1066,8 +1085,12 @@ DXGIYCbCrTextureHostD3D9::GetDevice()
 void
 DXGIYCbCrTextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
+  mCompositor = AssertD3D9Compositor(aCompositor);
+  if (!mCompositor) {
+    mTextureSources[0] = nullptr;
+    mTextureSources[1] = nullptr;
+    mTextureSources[2] = nullptr;
+  }
 }
 
 bool
