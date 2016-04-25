@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
@@ -35,8 +35,8 @@ const SPECIALVALUES = new Set([
  *                                  return this.rgba.
  *   color.longHex === "#ff0000" // If alpha channel is present then we return
  *                                  this.rgba.
- *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present then we return
- *                                     this.rgba.
+ *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present
+ *                                  // then we return this.rgba.
  *   color.rgba === "rgba(255, 0, 0, 1)"
  *   color.hsl === "hsl(0, 100%, 50%)"
  *   color.hsla === "hsla(0, 100%, 50%, 1)" // If alpha channel is present
@@ -128,7 +128,7 @@ CssColor.prototype = {
     try {
       let tuple = this._getRGBATuple();
       return !(tuple.r || tuple.g || tuple.b || tuple.a);
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   },
@@ -151,7 +151,7 @@ CssColor.prototype = {
       }
       let {r, g, b} = tuple;
       return DOMUtils.rgbToColorName(r, g, b);
-    } catch(e) {
+    } catch (e) {
       return this.hex;
     }
   },
@@ -184,7 +184,8 @@ CssColor.prototype = {
     }
 
     let tuple = this._getRGBATuple();
-    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6);
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) +
+                  (tuple.b << 0)).toString(16).substr(-6);
   },
 
   get rgb() {
@@ -210,7 +211,7 @@ CssColor.prototype = {
     }
     if (this.lowerCased.startsWith("rgba(")) {
       // The color is valid and begins with rgba(.
-        return this.authored;
+      return this.authored;
     }
     let components = this._getRGBATuple();
     return "rgba(" + components.r + ", " +
@@ -311,7 +312,7 @@ CssColor.prototype = {
   toString: function() {
     let color;
 
-    switch(this.colorUnit) {
+    switch (this.colorUnit) {
       case CssColor.COLORUNIT.authored:
         color = this.authored;
         break;
@@ -358,12 +359,11 @@ CssColor.prototype = {
     }
 
     let {r, g, b} = this._getRGBATuple();
-    let [h,s,l] = rgbToHsl([r,g,b]);
+    let [h, s, l] = rgbToHsl([r, g, b]);
     if (maybeAlpha !== undefined) {
       return "hsla(" + h + ", " + s + "%, " + l + "%, " + maybeAlpha + ")";
-    } else {
-      return "hsl(" + h + ", " + s + "%, " + l + "%)";
     }
+    return "hsl(" + h + ", " + s + "%, " + l + "%)";
   },
 
   /**
@@ -382,7 +382,7 @@ CssColor.prototype = {
  * @return {array}
  *         Array of hsl values.
  */
-function rgbToHsl([r,g,b]) {
+function rgbToHsl([r, g, b]) {
   r = r / 255;
   g = g / 255;
   b = b / 255;
@@ -393,13 +393,13 @@ function rgbToHsl([r,g,b]) {
   let s;
   let l = (max + min) / 2;
 
-  if (max == min){
+  if (max == min) {
     h = s = 0;
   } else {
     let d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-    switch(max) {
+    switch (max) {
       case r:
         h = ((g - b) / d) % 6;
         break;
@@ -469,6 +469,6 @@ function classifyColor(value) {
   return CssColor.COLORUNIT.name;
 }
 
-loader.lazyGetter(this, "DOMUtils", function () {
+loader.lazyGetter(this, "DOMUtils", function() {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
