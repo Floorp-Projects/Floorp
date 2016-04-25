@@ -429,7 +429,7 @@ void MediaDecoderStateMachine::DiscardStreamData()
 
   const auto clockTime = GetClock();
   while (true) {
-    const MediaData* a = AudioQueue().PeekFront();
+    RefPtr<MediaData> a = AudioQueue().PeekFront();
 
     // If we discard audio samples fed to the stream immediately, we will
     // keep decoding audio samples till the end and consume a lot of memory.
@@ -1977,7 +1977,7 @@ MediaDecoderStateMachine::SeekCompleted()
   if (seekTime == Duration().ToMicroseconds()) {
     newCurrentTime = seekTime;
   } else if (HasAudio()) {
-    MediaData* audio = AudioQueue().PeekFront();
+    RefPtr<MediaData> audio = AudioQueue().PeekFront();
     // Though we adjust the newCurrentTime in audio-based, and supplemented
     // by video. For better UX, should NOT bind the slide position to
     // the first audio data timestamp directly.
