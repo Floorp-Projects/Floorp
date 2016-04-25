@@ -2816,7 +2816,8 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
     return true;
   }
 
-  nsDisplayListBuilder builder(root, nsDisplayListBuilder::TRANSFORM_COMPUTATION,
+  nsDisplayListBuilder builder(root,
+                               nsDisplayListBuilderMode::TRANSFORM_COMPUTATION,
                                false/*don't build caret*/);
   nsDisplayList list;
   nsDisplayTransform* item =
@@ -3070,7 +3071,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   PROFILER_LABEL("nsLayoutUtils", "GetFramesForArea",
     js::ProfileEntry::Category::GRAPHICS);
 
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
+  nsDisplayListBuilder builder(aFrame,
+                               nsDisplayListBuilderMode::EVENT_DELIVERY,
                                false);
   nsDisplayList list;
 
@@ -3326,7 +3328,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilderMode::PAINTING,
                            !(aFlags & PAINT_HIDE_CARET));
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(true);
