@@ -22,13 +22,6 @@ const OPTIMAL_TIME_INTERVAL_MAX_ITERS = 100;
 // Time graduations should be multiple of one of these number.
 const OPTIMAL_TIME_INTERVAL_MULTIPLES = [1, 2.5, 5];
 
-// RGB color for the time interval background.
-const TIME_INTERVAL_COLOR = [128, 136, 144];
-// byte
-const TIME_INTERVAL_OPACITY_MIN = 64;
-// byte
-const TIME_INTERVAL_OPACITY_MAX = 96;
-
 const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 
 /**
@@ -63,63 +56,6 @@ function createNode(options) {
 }
 
 exports.createNode = createNode;
-
-/**
- * Given a data-scale, draw the background for a graph (vertical lines) into a
- * canvas and set that canvas as an image-element with an ID that can be used
- * from CSS.
- * @param {Document} document The document where the image-element should be
- * set.
- * @param {String} id The ID for the image-element.
- * @param {Number} graphWidth The width of the graph.
- * @param {Number} intervalWidth The width of one interval
- */
-function drawGraphElementBackground(document, id, graphWidth, intervalWidth) {
-  let canvas = document.createElement("canvas");
-  let ctx = canvas.getContext("2d");
-
-  // Don't do anything if the graph or the intervals have a width of 0
-  if (graphWidth === 0 || intervalWidth === 0) {
-    return;
-  }
-
-  // Set the canvas width (as requested) and height (1px, repeated along the Y
-  // axis).
-  canvas.width = graphWidth;
-  canvas.height = 1;
-
-  // Create the image data array which will receive the pixels.
-  let imageData = ctx.createImageData(canvas.width, canvas.height);
-  let pixelArray = imageData.data;
-
-  let buf = new ArrayBuffer(pixelArray.length);
-  let view8bit = new Uint8ClampedArray(buf);
-  let view32bit = new Uint32Array(buf);
-
-  // Build new millisecond tick lines...
-  let [r, g, b] = TIME_INTERVAL_COLOR;
-  let opacities = [TIME_INTERVAL_OPACITY_MAX, TIME_INTERVAL_OPACITY_MIN];
-
-  // Insert one tick line on each interval
-  for (let i = 0; i <= graphWidth / intervalWidth; i++) {
-    let x = i * intervalWidth;
-    // Ensure the last line is drawn on canvas
-    if (x >= graphWidth) {
-      x = graphWidth - 0.5;
-    }
-    let position = x | 0;
-    let alphaComponent = opacities[i % opacities.length];
-
-    view32bit[position] = (alphaComponent << 24) | (b << 16) | (g << 8) | r;
-  }
-
-  // Flush the image data and cache the waterfall background.
-  pixelArray.set(view8bit);
-  ctx.putImageData(imageData, 0, 0);
-  document.mozSetImageElement(id, canvas);
-}
-
-exports.drawGraphElementBackground = drawGraphElementBackground;
 
 /**
  * Find the optimal interval between time graduations in the animation timeline
