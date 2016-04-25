@@ -383,7 +383,7 @@ VideoSink::UpdateRenderedVideoFrames()
     RefPtr<MediaData> currentFrame = VideoQueue().PopFront();
     int32_t framesRemoved = 0;
     while (VideoQueue().GetSize() > 0) {
-      MediaData* nextFrame = VideoQueue().PeekFront();
+      RefPtr<MediaData> nextFrame = VideoQueue().PeekFront();
       if (nextFrame->mTime > clockTime) {
         remainingTime = nextFrame->mTime - clockTime;
         break;
