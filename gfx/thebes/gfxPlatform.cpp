@@ -879,8 +879,8 @@ gfxPlatform::ShutdownLayersIPC()
         gfx::VRManagerChild::ShutDown();
         // cf bug 1215265.
         if (gfxPrefs::ChildProcessShutdown()) {
-          layers::ImageBridgeChild::ShutDown();
           layers::CompositorBridgeChild::ShutDown();
+          layers::ImageBridgeChild::ShutDown();
         }
 
     } else if (XRE_IsParentProcess()) {

@@ -72,9 +72,9 @@ AccessibleCaretManager::sSelectionBarEnabled = false;
 /*static*/ bool
 AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
 /*static*/ bool
-AccessibleCaretManager::sCaretsExtendedVisibility = false;
-/*static*/ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
+/*static*/ bool
+AccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = true;
 /*static*/ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
 /*static*/ bool
@@ -102,10 +102,10 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
                                  "layout.accessiblecaret.bar.enabled");
     Preferences::AddBoolVarCache(&sCaretShownWhenLongTappingOnEmptyContent,
       "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
-    Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
-                                 "layout.accessiblecaret.extendedvisibility");
     Preferences::AddBoolVarCache(&sCaretsAlwaysTilt,
                                  "layout.accessiblecaret.always_tilt");
+    Preferences::AddBoolVarCache(&sCaretsAlwaysShowWhenScrolling,
+      "layout.accessiblecaret.always_show_when_scrolling", true);
     Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
       "layout.accessiblecaret.allow_script_change_updates");
     Preferences::AddBoolVarCache(&sCaretsAllowDraggingAcrossOtherCaret,
@@ -196,18 +196,6 @@ AccessibleCaretManager::HideCarets()
     AC_LOG("%s", __FUNCTION__);
     mFirstCaret->SetAppearance(Appearance::None);
     mSecondCaret->SetAppearance(Appearance::None);
-    DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
-    CancelCaretTimeoutTimer();
-  }
-}
-
-void
-AccessibleCaretManager::DoNotShowCarets()
-{
-  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
-    AC_LOG("%s", __FUNCTION__);
-    mFirstCaret->SetAppearance(Appearance::NormalNotShown);
-    mSecondCaret->SetAppearance(Appearance::NormalNotShown);
     DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
     CancelCaretTimeoutTimer();
   }
@@ -626,14 +614,19 @@ AccessibleCaretManager::OnScrollStart()
 {
   AC_LOG("%s", __FUNCTION__);
 
-  mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
-  mSecondCaretAppearanceOnScrollStart = mSecondCaret->GetAppearance();
-
-  // Hide the carets. (Extended visibility makes them "NormalNotShown").
-  if (sCaretsExtendedVisibility) {
-    DoNotShowCarets();
-  } else {
+  if (!sCaretsAlwaysShowWhenScrolling) {
+    // Backup the appearance so that we can restore them after the scrolling
+    // ends.
+    mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
+    mSecondCaretAppearanceOnScrollStart = mSecondCaret->GetAppearance();
     HideCarets();
+    return;
+  }
+
+  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+    // Dispatch the event only if one of the carets is logically visible like in
+    // HideCarets().
+    DispatchCaretStateChangedEvent(CaretChangedReason::Scroll);
   }
 }
 
@@ -644,8 +637,11 @@ AccessibleCaretManager::OnScrollEnd()
     return;
   }
 
-  mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
-  mSecondCaret->SetAppearance(mSecondCaretAppearanceOnScrollStart);
+  if (!sCaretsAlwaysShowWhenScrolling) {
+    // Restore the appearance which is saved before the scrolling is started.
+    mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
+    mSecondCaret->SetAppearance(mSecondCaretAppearanceOnScrollStart);
+  }
 
   if (GetCaretMode() == CaretMode::Cursor) {
     if (!mFirstCaret->IsLogicallyVisible()) {

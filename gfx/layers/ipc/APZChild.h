@@ -28,6 +28,9 @@ public:
 
   virtual bool RecvUpdateFrame(const FrameMetrics& frame) override;
 
+  virtual bool RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
+                                           const uint32_t& aScrollGeneration) override;
+
   virtual bool RecvHandleDoubleTap(const CSSPoint& aPoint,
                                    const Modifiers& aModifiers,
                                    const ScrollableLayerGuid& aGuid) override;

@@ -38,6 +38,7 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
 
     JS::ubi::RootList rootList(rt, nogc);
     MOZ_ASSERT(rootList.init());
+    rootList.wantNames = true;
 
     NodeSet targets;
     bool ok = targets.init() && targets.putNew(node);
@@ -50,7 +51,11 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
     ok = paths->forEachPath(node, [&](Path& path) {
         fprintf(stderr, "Path %d:\n", i++);
         for (auto backEdge : path) {
-            fprintf(stderr, "    predecessor = %p\n", (void*) backEdge->predecessor().identifier());
+            fprintf(stderr, "    %p ", (void*) backEdge->predecessor().identifier());
+
+            js_fputs(backEdge->predecessor().typeName(), stderr);
+            fprintf(stderr, "\n");
+
             fprintf(stderr, "            |\n");
             fprintf(stderr, "            |\n");
             fprintf(stderr, "        '");
@@ -58,19 +63,23 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
             const char16_t* name = backEdge->name().get();
             if (!name)
                 name = (const char16_t*) MOZ_UTF16("<no edge name>");
-            auto len = js_strlen(name);
-            for (size_t i = 0; i < len; i++)
-                fprintf(stderr, "%c", char(name[i]));
+            js_fputs(name, stderr);
             fprintf(stderr, "'\n");
 
             fprintf(stderr, "            |\n");
             fprintf(stderr, "            V\n");
         }
 
-        fprintf(stderr, "    target = %p\n\n\n", (void*) node.identifier());
+        fprintf(stderr, "    %p ", (void*) node.identifier());
+        js_fputs(node.typeName(), stderr);
+        fprintf(stderr, "\n\n");
+
         return true;
     });
     MOZ_ASSERT(ok);
+
+    if (i == 0)
+        fprintf(stderr, "No retaining paths found.\n");
 }
 #endif
 

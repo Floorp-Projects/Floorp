@@ -144,7 +144,6 @@ if CONFIG['MOZ_WEBRTC']:
     if CONFIG['OS_TARGET'] == 'WINNT':
         OS_LIBS += [
             'secur32',
-            'crypt32',
             'iphlpapi',
             'strmiids',
             'dmoguids',
@@ -188,6 +187,7 @@ if CONFIG['OS_ARCH'] == 'FreeBSD':
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
+        'crypt32',
         'shell32',
         'ole32',
         'version',

@@ -31,7 +31,6 @@ class RegExpStatics
     RelocatablePtrAtom      lazySource;
     RegExpFlag              lazyFlags;
     size_t                  lazyIndex;
-    bool                    lazySticky;
 
     /* The latest RegExp input, set before execution. */
     RelocatablePtrString    pendingInput;
@@ -64,7 +63,7 @@ class RegExpStatics
   public:
     /* Mutators. */
     inline void updateLazily(JSContext* cx, JSLinearString* input,
-                             RegExpShared* shared, size_t lastIndex, bool sticky);
+                             RegExpShared* shared, size_t lastIndex);
     inline bool updateFromMatchPairs(JSContext* cx, JSLinearString* input, MatchPairs& newPairs);
 
     inline void clear();
@@ -133,10 +132,6 @@ class RegExpStatics
 
     static size_t offsetOfLazyIndex() {
         return offsetof(RegExpStatics, lazyIndex);
-    }
-
-    static size_t offsetOfLazySticky() {
-        return offsetof(RegExpStatics, lazySticky);
     }
 
     static size_t offsetOfPendingLazyEvaluation() {
@@ -327,7 +322,7 @@ RegExpStatics::getRightContext(JSSubString* out) const
 
 inline void
 RegExpStatics::updateLazily(JSContext* cx, JSLinearString* input,
-                            RegExpShared* shared, size_t lastIndex, bool sticky)
+                            RegExpShared* shared, size_t lastIndex)
 {
     MOZ_ASSERT(input && shared);
 
@@ -338,7 +333,6 @@ RegExpStatics::updateLazily(JSContext* cx, JSLinearString* input,
     lazySource = shared->source;
     lazyFlags = shared->flags;
     lazyIndex = lastIndex;
-    lazySticky = sticky;
     pendingLazyEvaluation = 1;
 }
 
@@ -372,7 +366,6 @@ RegExpStatics::clear()
     lazySource = nullptr;
     lazyFlags = RegExpFlag(0);
     lazyIndex = size_t(-1);
-    lazySticky = false;
     pendingInput = nullptr;
     pendingLazyEvaluation = false;
 }

@@ -118,7 +118,7 @@ const COMMENT_REGEXP = new RegExp(String.raw`
 
 var scriptScope = this;
 
-var ExtensionPage, GlobalManager;
+var ExtensionContext, GlobalManager;
 
 // This object loads the ext-*.js scripts that define the extension API.
 var Management = {
@@ -147,7 +147,7 @@ var Management = {
     for (let script of ExtensionManagement.getScripts()) {
       let scope = {extensions: this,
                    global: scriptScope,
-                   ExtensionPage: ExtensionPage,
+                   ExtensionContext: ExtensionContext,
                    GlobalManager: GlobalManager};
       Services.scriptloader.loadSubScript(script, scope, "UTF-8");
 
@@ -184,7 +184,7 @@ var Management = {
 
   // Mash together into a single object all the APIs registered by the
   // functions above. Return the merged object.
-  generateAPIs(extension, context, apis) {
+  generateAPIs(extension, context, apis, namespaces = null) {
     let obj = {};
 
     // Recursively copy properties from source to dest.
@@ -203,6 +203,9 @@ var Management = {
     }
 
     for (let api of apis) {
+      if (namespaces && !namespaces.includes(api.namespace)) {
+        continue;
+      }
       if (api.permission) {
         if (!extension.hasPermission(api.permission)) {
           continue;
@@ -242,9 +245,9 @@ var Management = {
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
 // |incognito| is the content running in a private context (default: false).
-ExtensionPage = class extends BaseContext {
+ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
-    super();
+    super(extension.id);
 
     let {type, contentWindow, uri} = params;
     this.extension = extension;
@@ -269,7 +272,9 @@ ExtensionPage = class extends BaseContext {
     let filter = {extensionId: extension.id};
     this.messenger = new Messenger(this, [Services.mm, Services.ppmm], sender, filter, delegate);
 
-    this.extension.views.add(this);
+    if (this.externallyVisible) {
+      this.extension.views.add(this);
+    }
   }
 
   get cloneScope() {
@@ -278,6 +283,10 @@ ExtensionPage = class extends BaseContext {
 
   get principal() {
     return this.contentWindow.document.nodePrincipal;
+  }
+
+  get externallyVisible() {
+    return true;
   }
 
   // Called when the extension shuts down.
@@ -300,9 +309,171 @@ ExtensionPage = class extends BaseContext {
 
     Management.emit("page-unload", this);
 
-    this.extension.views.delete(this);
+    if (this.externallyVisible) {
+      this.extension.views.delete(this);
+    }
   }
 };
+
+class ProxyContext extends ExtensionContext {
+  constructor(extension, params, messageManager, principal) {
+    params.contentWindow = null;
+    params.uri = NetUtil.newURI(params.url);
+
+    super(extension, params);
+    this.messageManager = messageManager;
+    this.principal_ = principal;
+
+    this.apiObj = {};
+    GlobalManager.injectInObject(extension, this, null, this.apiObj, ["storage", "test"]);
+
+    this.listenerProxies = new Map();
+
+    this.sandbox = Cu.Sandbox(principal, {});
+  }
+
+  get principal() {
+    return this.principal_;
+  }
+
+  get cloneScope() {
+    return this.sandbox;
+  }
+
+  get externallyVisible() {
+    return false;
+  }
+}
+
+function findPathInObject(obj, path) {
+  for (let elt of path) {
+    obj = obj[elt];
+  }
+  return obj;
+}
+
+let ParentAPIManager = {
+  proxyContexts: new Map(),
+
+  init() {
+    Services.obs.addObserver(this, "message-manager-close", false);
+
+    Services.mm.addMessageListener("API:CreateProxyContext", this);
+    Services.mm.addMessageListener("API:CloseProxyContext", this, true);
+    Services.mm.addMessageListener("API:Call", this);
+    Services.mm.addMessageListener("API:AddListener", this);
+    Services.mm.addMessageListener("API:RemoveListener", this);
+  },
+
+  // "message-manager-close" observer.
+  observe(subject, topic, data) {
+    let mm = subject;
+    for (let [childId, context] of this.proxyContexts) {
+      if (context.messageManager == mm) {
+        this.closeProxyContext(childId);
+      }
+    }
+  },
+
+  receiveMessage({name, data, target}) {
+    switch (name) {
+      case "API:CreateProxyContext":
+        this.createProxyContext(data, target);
+        break;
+
+      case "API:CloseProxyContext":
+        this.closeProxyContext(data.childId);
+        break;
+
+      case "API:Call":
+        this.call(data, target);
+        break;
+
+      case "API:AddListener":
+        this.addListener(data, target);
+        break;
+
+      case "API:RemoveListener":
+        this.removeListener(data);
+        break;
+    }
+  },
+
+  createProxyContext(data, target) {
+    let {extensionId, childId, principal} = data;
+    let extension = GlobalManager.getExtension(extensionId);
+
+    let context = new ProxyContext(extension, data, target.messageManager, principal);
+    this.proxyContexts.set(childId, context);
+  },
+
+  closeProxyContext(childId) {
+    if (!this.proxyContexts.has(childId)) {
+      return;
+    }
+    let context = this.proxyContexts.get(childId);
+    context.unload();
+    this.proxyContexts.delete(childId);
+  },
+
+  call(data, target) {
+    let context = this.proxyContexts.get(data.childId);
+    function callback(...cbArgs) {
+      let lastError = context.lastError;
+
+      target.messageManager.sendAsyncMessage("API:CallResult", {
+        childId: data.childId,
+        callId: data.callId,
+        args: cbArgs,
+        lastError: lastError ? lastError.message : null,
+      });
+    }
+
+    let args = data.args;
+    args = Cu.cloneInto(args, context.sandbox);
+    if (data.callId) {
+      args = args.concat(callback);
+    }
+    try {
+      findPathInObject(context.apiObj, data.path)[data.name](...args);
+    } catch (e) {
+      let msg = e.message || "API failed";
+      target.messageManager.sendAsyncMessage("API:CallResult", {
+        childId: data.childId,
+        callId: data.callId,
+        lastError: msg,
+      });
+    }
+  },
+
+  addListener(data, target) {
+    let context = this.proxyContexts.get(data.childId);
+
+    function listener(...listenerArgs) {
+      target.messageManager.sendAsyncMessage("API:RunListener", {
+        childId: data.childId,
+        path: data.path,
+        name: data.name,
+        args: listenerArgs,
+      });
+    }
+
+    let ref = data.path.concat(data.name).join(".");
+    context.listenerProxies.set(ref, listener);
+
+    let args = Cu.cloneInto(data.args, context.sandbox);
+    findPathInObject(context.apiObj, data.path)[data.name].addListener(listener, ...args);
+  },
+
+  removeListener(data) {
+    let context = this.proxyContexts.get(data.childId);
+    let ref = data.path.concat(data.name).join(".");
+    let listener = context.listenerProxies.get(ref);
+    findPathInObject(context.apiObj, data.path)[data.name].removeListener(listener);
+  },
+};
+
+ParentAPIManager.init();
 
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
@@ -324,7 +495,7 @@ GlobalManager = {
   // Number of extensions currently enabled.
   count: 0,
 
-  // Map[docShell -> {extension, context}] where context is an ExtensionPage.
+  // Map[docShell -> {extension, context}] where context is an ExtensionContext.
   docShells: new Map(),
 
   // Map[extension ID -> Extension]. Determines which extension is
@@ -356,8 +527,81 @@ GlobalManager = {
     this.extensionMap.delete(extension.id);
   },
 
+  getExtension(extensionId) {
+    return this.extensionMap.get(extensionId);
+  },
+
   injectInDocShell(docShell, extension, context) {
     this.docShells.set(docShell, {extension, context});
+  },
+
+  injectInObject(extension, context, defaultCallback, dest, namespaces = null) {
+    let api = Management.generateAPIs(extension, context, Management.apis, namespaces);
+    injectAPI(api, dest);
+
+    let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis, namespaces);
+
+    // Add in any extra API namespaces which do not have implementations
+    // outside of their schema file.
+    schemaApi.extensionTypes = {};
+
+    let schemaWrapper = {
+      get cloneScope() {
+        return context.cloneScope;
+      },
+
+      callFunction(path, name, args) {
+        return findPathInObject(schemaApi, path)[name](...args);
+      },
+
+      callFunctionNoReturn(path, name, args) {
+        return findPathInObject(schemaApi, path)[name](...args);
+      },
+
+      callAsyncFunction(path, name, args, callback) {
+        // We pass an empty stub function as a default callback for
+        // the `chrome` API, so promise objects are not returned,
+        // and lastError values are reported immediately.
+        if (callback === null) {
+          callback = defaultCallback;
+        }
+
+        let promise;
+        try {
+          promise = findPathInObject(schemaApi, path)[name](...args);
+        } catch (e) {
+          promise = Promise.reject(e);
+        }
+
+        return context.wrapPromise(promise || Promise.resolve(), callback);
+      },
+
+      shouldInject(namespace, name) {
+        if (namespaces && namespaces.indexOf(namespace) == -1) {
+          return false;
+        }
+        return findPathInObject(schemaApi, [namespace]) != null;
+      },
+
+      getProperty(path, name) {
+        return findPathInObject(schemaApi, path)[name];
+      },
+
+      setProperty(path, name, value) {
+        findPathInObject(schemaApi, path)[name] = value;
+      },
+
+      addListener(path, name, listener, args) {
+        return findPathInObject(schemaApi, path)[name].addListener.call(null, listener, ...args);
+      },
+      removeListener(path, name, listener) {
+        return findPathInObject(schemaApi, path)[name].removeListener.call(null, listener);
+      },
+      hasListener(path, name, listener) {
+        return findPathInObject(schemaApi, path)[name].hasListener.call(null, listener);
+      },
+    };
+    Schemas.inject(dest, schemaWrapper);
   },
 
   observe(contentWindow, topic, data) {
@@ -368,76 +612,7 @@ GlobalManager = {
       // does not.
       let injectObject = (name, defaultCallback) => {
         let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
-
-        let api = Management.generateAPIs(extension, context, Management.apis);
-        injectAPI(api, browserObj);
-
-        let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
-
-        // Add in any extra API namespaces which do not have implementations
-        // outside of their schema file.
-        schemaApi.extensionTypes = {};
-
-        function findPath(path) {
-          let obj = schemaApi;
-          for (let elt of path) {
-            if (!(elt in obj)) {
-              return null;
-            }
-            obj = obj[elt];
-          }
-          return obj;
-        }
-        let schemaWrapper = {
-          get cloneScope() {
-            return context.cloneScope;
-          },
-
-          callFunction(path, name, args) {
-            return findPath(path)[name](...args);
-          },
-
-          callAsyncFunction(path, name, args, callback) {
-            // We pass an empty stub function as a default callback for
-            // the `chrome` API, so promise objects are not returned,
-            // and lastError values are reported immediately.
-            if (callback === null) {
-              callback = defaultCallback;
-            }
-
-            let promise;
-            try {
-              promise = findPath(path)[name](...args);
-            } catch (e) {
-              promise = Promise.reject(e);
-            }
-
-            return context.wrapPromise(promise || Promise.resolve(), callback);
-          },
-
-          shouldInject(path, name) {
-            return findPath(path) != null;
-          },
-
-          getProperty(path, name) {
-            return findPath(path)[name];
-          },
-
-          setProperty(path, name, value) {
-            findPath(path)[name] = value;
-          },
-
-          addListener(path, name, listener, args) {
-            return findPath(path)[name].addListener.call(null, listener, ...args);
-          },
-          removeListener(path, name, listener) {
-            return findPath(path)[name].removeListener.call(null, listener);
-          },
-          hasListener(path, name, listener) {
-            return findPath(path)[name].hasListener.call(null, listener);
-          },
-        };
-        Schemas.inject(browserObj, schemaWrapper);
+        this.injectInObject(extension, context, defaultCallback, browserObj);
       };
 
       injectObject("browser", null);
@@ -490,7 +665,7 @@ GlobalManager = {
       }
     }
 
-    let context = new ExtensionPage(extension, {type, contentWindow, uri, docShell, incognito});
+    let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
     inject(extension, context);
 
     let eventHandler = docShell.chromeEventHandler;
@@ -1221,13 +1396,11 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   }),
 
   startup() {
-    try {
-      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
-    } catch (e) {
-      return Promise.reject(e);
-    }
-
+    let started = false;
     return this.readManifest().then(() => {
+      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
+      started = true;
+
       if (!this.hasShutdown) {
         return this.initLocale();
       }
@@ -1253,7 +1426,9 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
-      ExtensionManagement.shutdownExtension(this.uuid);
+      if (started) {
+        ExtensionManagement.shutdownExtension(this.uuid);
+      }
 
       this.cleanupGeneratedFile();
 

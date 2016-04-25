@@ -499,6 +499,46 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
   }
 }
 
+#define ResetProcessingIfNeeded(_processing)                        \
+do {                                                                \
+  webrtc::_processing##Modes mode;                                  \
+  int rv = mVoEProcessing->Get##_processing##Status(enabled, mode); \
+  if (rv) {                                                         \
+    NS_WARNING("Could not get the status of the "                   \
+     #_processing " on device change.");                            \
+    return;                                                         \
+  }                                                                 \
+                                                                    \
+  if (enabled) {                                                    \
+    rv = mVoEProcessing->Set##_processing##Status(!enabled);        \
+    if (rv) {                                                       \
+      NS_WARNING("Could not reset the status of the "               \
+      #_processing " on device change.");                           \
+      return;                                                       \
+    }                                                               \
+                                                                    \
+    rv = mVoEProcessing->Set##_processing##Status(enabled);         \
+    if (rv) {                                                       \
+      NS_WARNING("Could not reset the status of the "               \
+      #_processing " on device change.");                           \
+      return;                                                       \
+    }                                                               \
+  }                                                                 \
+}  while(0)
+
+
+
+
+
+void
+MediaEngineWebRTCMicrophoneSource::DeviceChanged() {
+  // Reset some processing
+  bool enabled;
+  ResetProcessingIfNeeded(Agc);
+  ResetProcessingIfNeeded(Ec);
+  ResetProcessingIfNeeded(Ns);
+}
+
 void
 MediaEngineWebRTCMicrophoneSource::Init()
 {

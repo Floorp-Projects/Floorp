@@ -172,6 +172,18 @@
           var secOverride = document.getElementById("securityOverrideDiv");
           secOverride.parentNode.removeChild(secOverride);
         }
+
+        if (err == "inadequateSecurityError") {
+          // Remove the "Try again" button for HTTP/2 inadequate security as it
+          // is useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+
+          var container = document.getElementById("errorLongDesc");
+          for (var span of container.querySelectorAll("span.hostname")) {
+            span.textContent = document.location.hostname;
+          }
+        }
+
         addDomainErrorLinks();
       }
 
@@ -314,6 +326,7 @@
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
         <h1 id="et_weakCryptoUsed">&weakCryptoUsed.title;</h1>
+        <h1 id="et_inadequateSecurityError">&inadequateSecurityError.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -346,6 +359,7 @@
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
         <div id="ed_sslv3Used">&sslv3Used.longDesc;</div>
         <div id="ed_weakCryptoUsed">&weakCryptoUsed.longDesc;</div>
+        <div id="ed_inadequateSecurityError">&inadequateSecurityError.longDesc;</div>
       </div>
     </div>
 

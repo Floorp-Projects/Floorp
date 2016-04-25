@@ -334,4 +334,17 @@ PluginPRLibrary::UpdateScrollState(NPP aInstance, bool aIsScrolling)
 }
 #endif
 
+nsresult
+PluginPRLibrary::HandledWindowedPluginKeyEvent(
+                   NPP aInstance,
+                   const NativeEventData& aNativeKeyData,
+                   bool aIsConsumed)
+{
+  nsNPAPIPluginInstance* instance = (nsNPAPIPluginInstance*)aInstance->ndata;
+  if (NS_WARN_IF(!instance)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  return NS_OK;
+}
+
 } // namespace mozilla

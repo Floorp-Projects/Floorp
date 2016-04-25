@@ -629,6 +629,9 @@ NS_IMETHODIMP nsChildView::Destroy()
     return NS_OK;
   mOnDestroyCalled = true;
 
+  // Stuff below may delete the last ref to this
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
   [mView widgetDestroyed];
 
   nsBaseWidget::Destroy();

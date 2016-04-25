@@ -196,3 +196,8 @@ Strict Transport Security (HSTS) to specify that &brandShortName; only connect
 to it securely. As a result, it is not possible to add an exception for this
 certificate.">
 <!ENTITY certerror.copyToClipboard.label "Copy text to clipboard">
+
+<!ENTITY inadequateSecurityError.title "Your connection is not secure">
+<!-- LOCALIZATION NOTE (inadequateSecurityError.longDesc) - Do not translate
+     "NS_ERROR_NET_INADEQUATE_SECURITY". -->
+<!ENTITY inadequateSecurityError.longDesc "<p><span class='hostname'></span> uses security technology that is outdated and vulnerable to attack. An attacker could easily reveal information which you thought to be safe. The website administrator will need to fix the server first before you can visit the site.</p><p>Error code: NS_ERROR_NET_INADEQUATE_SECURITY</p>">

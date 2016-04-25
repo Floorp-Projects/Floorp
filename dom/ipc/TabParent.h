@@ -22,6 +22,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
+#include "nsIKeyEventInPluginCallback.h"
 #include "nsISecureBrowserUI.h"
 #include "nsITabParent.h"
 #include "nsIWebBrowserPersistable.h"
@@ -82,6 +83,7 @@ class TabParent final : public PBrowserParent
                       , public nsITabParent
                       , public nsIAuthPromptProvider
                       , public nsISecureBrowserUI
+                      , public nsIKeyEventInPluginCallback
                       , public nsSupportsWeakReference
                       , public TabContext
                       , public nsAPostRefreshObserver
@@ -254,6 +256,15 @@ public:
                                    const nsString& aActionHint,
                                    const int32_t& aCause,
                                    const int32_t& aFocusChange) override;
+
+
+  // See nsIKeyEventInPluginCallback
+  virtual void HandledWindowedPluginKeyEvent(
+                 const NativeEventData& aKeyEventData,
+                 bool aIsConsumed) override;
+
+  virtual bool RecvOnWindowedPluginKeyEvent(
+                 const NativeEventData& aKeyEventData) override;
 
   virtual bool RecvRequestFocus(const bool& aCanRaise) override;
 

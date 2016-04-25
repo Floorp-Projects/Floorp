@@ -91,6 +91,7 @@ child:
   // The following methods correspond to functions on the GeckoContentController
   // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
   // in that file for these functions.
+  async AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
   async HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
   async HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid, bool aCallTakeFocusForClickFromTap);
   async HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);

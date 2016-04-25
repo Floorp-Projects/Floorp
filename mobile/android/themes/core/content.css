@@ -336,22 +336,30 @@ input[type=number]::-moz-number-spin-box {
   display: none;
 }
 
+div:-moz-native-anonymous.moz-accessiblecaret > div.image {
+  /* border: 0.1px solid red; */ /* Uncomment border to see the touch target. */
+  padding-left: 59%;    /* ((48-22)/2)px / 22px ~= 59% */
+  padding-bottom: 59%;
+  padding-right: 59%;
+  left: -59%;
+}
+
 /* Override accessiblecaret css in layout/style/ua.css */
 div:-moz-native-anonymous.moz-accessiblecaret.normal > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
-  bottom: -11%; /* space between the blinking cursor and the caret */
+  top: 11%; /* space between the blinking cursor and the caret */
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-hdpi.png");
   margin-left: -50%;
-  bottom: -1%; /* space between the selection highlight and the caret */
+  top: 1%; /* space between the selection highlight and the caret */
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > div.image {
   background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-hdpi.png");
   margin-left: 47%;
-  bottom: -1%; /* space between the selection highlight and the caret */
+  top: 1%; /* space between the selection highlight and the caret */
 }
 
 @media (min-resolution: 1.5dppx) {

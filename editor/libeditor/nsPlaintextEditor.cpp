@@ -436,7 +436,7 @@ nsPlaintextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
   }
 }
 
-already_AddRefed<Element>
+Element*
 nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
                                 int32_t* aInOutOffset,
                                 EDirection aSelect)
@@ -447,7 +447,7 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent,
   CreateBRImpl(address_of(parent), aInOutOffset, address_of(br), aSelect);
   *aInOutParent = do_QueryInterface(parent);
   nsCOMPtr<Element> ret(do_QueryInterface(br));
-  return ret.forget();
+  return ret;
 }
 
 nsresult

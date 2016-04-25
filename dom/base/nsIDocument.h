@@ -2793,6 +2793,11 @@ protected:
     FlushUserFontSet();
   }
 
+  const nsString& GetId() const
+  {
+    return mId;
+  }
+
   nsCString mReferrer;
   nsString mLastModified;
 

@@ -4051,6 +4051,38 @@ CSS_PROP_TEXT(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
+    -webkit-text-stroke,
+    _webkit_text_stroke,
+    WebkitTextStroke,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.prefixes.webkit")
+CSS_PROP_TEXT(
+    -webkit-text-stroke-color,
+    _webkit_text_stroke_color,
+    WebkitTextStrokeColor,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    "layout.css.prefixes.webkit",
+    VARIANT_HC,
+    nullptr,
+    offsetof(nsStyleText, mWebkitTextStrokeColor),
+    eStyleAnimType_Custom)
+CSS_PROP_TEXT(
+    -webkit-text-stroke-width,
+    _webkit_text_stroke_width,
+    WebkitTextStrokeWidth,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.prefixes.webkit",
+    VARIANT_HKL | VARIANT_CALC,
+    kBorderWidthKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_TEXT(
     text-transform,
     text_transform,

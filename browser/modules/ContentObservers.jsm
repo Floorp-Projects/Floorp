@@ -27,6 +27,14 @@ var gEMEUIObserver = function(subject, topic, data) {
   }
 };
 
+var gDecoderDoctorObserver = function(subject, topic, data) {
+  let win = subject.top;
+  let mm = getMessageManagerForWindow(win);
+  if (mm) {
+    mm.sendAsyncMessage("DecoderDoctor:Notification", data);
+  }
+};
+
 function getMessageManagerForWindow(aContentWindow) {
   let ir = aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDocShell)
@@ -44,3 +52,4 @@ function getMessageManagerForWindow(aContentWindow) {
 }
 
 Services.obs.addObserver(gEMEUIObserver, "mediakeys-request", false);
+Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification", false);

@@ -56,7 +56,8 @@ public:
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint) override;
+                                nsIAtom* aAttribute, bool* aShouldRepaint,
+                                const nsAttrValue* aOldValue) override;
 
   NS_IMETHOD ThemeChanged() override;
 

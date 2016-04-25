@@ -149,6 +149,8 @@ public:
                        const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels) override
   {}
+  void DeviceChanged() override
+  {}
   bool IsFake() override {
     return true;
   }

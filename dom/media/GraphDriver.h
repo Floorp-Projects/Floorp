@@ -430,14 +430,6 @@ public:
                                          void* aPromise,
                                          dom::AudioContextOperation aOperation);
 
-  bool IsSwitchingDevice() {
-#ifdef XP_MACOSX
-    return mSelfReference;
-#else
-    return false;
-#endif
-  }
-
   /**
    * Whether the audio callback is processing. This is for asserting only.
    */
@@ -530,23 +522,10 @@ private:
   /* This is atomic and is set by the audio callback thread. It can be read by
    * any thread safely. */
   Atomic<bool> mInCallback;
-
-#ifdef XP_MACOSX
   /**
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
   bool mMicrophoneActive;
-
-  /* Implements the workaround for the osx audio stack when changing output
-   * devices. See comments in .cpp */
-  bool OSXDeviceSwitchingWorkaround();
-  /* Self-reference that keep this driver alive when switching output audio
-   * device and making the graph running temporarily off a SystemClockDriver.  */
-  SelfReference<AudioCallbackDriver> mSelfReference;
-  /* While switching devices, we keep track of the number of callbacks received,
-   * since OSX seems to still call us _sometimes_. */
-  uint32_t mCallbackReceivedWhileSwitching;
-#endif
 };
 
 class AsyncCubebTask : public nsRunnable

@@ -29,6 +29,10 @@ let gWhitelist = [{
     key: "weakCryptoAdvanced.override",
     type: "single-quote"
   }, {
+    file: "netError.dtd",
+    key: "inadequateSecurityError.longDesc",
+    type: "single-quote"
+  }, {
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.malwarePage.shortDesc",
     type: "single-quote"

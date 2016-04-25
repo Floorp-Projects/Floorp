@@ -106,13 +106,13 @@ module.exports = createClass({
   },
 
   render() {
-    let { client } = this.props;
+    let { client, id } = this.props;
     let { debugDisabled, extensions: targets } = this.state;
     let name = Strings.GetStringFromName("extensions");
     let targetClass = AddonTarget;
 
     return dom.div({
-      id: "tab-addons",
+      id: id,
       className: "tab",
       role: "tabpanel",
       "aria-labelledby": "tab-addons-header-name"

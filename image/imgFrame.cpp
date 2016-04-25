@@ -75,7 +75,7 @@ AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
   int32_t stride = VolatileSurfaceStride(size, format);
   RefPtr<VolatileBuffer> buf = new VolatileBuffer();
   if (buf->Init(stride * size.height,
-                1 << gfxAlphaRecovery::GoodAlignmentLog2())) {
+                size_t(1) << gfxAlphaRecovery::GoodAlignmentLog2())) {
     return buf.forget();
   }
 
