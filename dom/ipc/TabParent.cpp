@@ -3287,12 +3287,14 @@ TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
 bool
 TabParent::RecvGetTabCount(uint32_t* aValue)
 {
+  *aValue = 0;
+
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
-  NS_ENSURE_TRUE(xulBrowserWindow, false);
+  NS_ENSURE_TRUE(xulBrowserWindow, true);
 
   uint32_t tabCount;
   nsresult rv = xulBrowserWindow->GetTabCount(&tabCount);
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
 
   *aValue = tabCount;
   return true;
