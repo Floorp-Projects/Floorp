@@ -8,7 +8,6 @@
 
 const {
   createNode,
-  drawGraphElementBackground,
   findOptimalTimeInterval,
   TimeScale
 } = require("devtools/client/animationinspector/utils");
@@ -437,9 +436,6 @@ AnimationsTimeline.prototype = {
                           animationDuration / width;
     let intervalLength = findOptimalTimeInterval(minTimeInterval);
     let intervalWidth = intervalLength * width / animationDuration;
-
-    drawGraphElementBackground(this.win.document, "time-graduations",
-                               width, intervalWidth);
 
     // And the time graduation header.
     this.timeHeaderEl.innerHTML = "";

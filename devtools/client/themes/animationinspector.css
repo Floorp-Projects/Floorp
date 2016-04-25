@@ -47,8 +47,7 @@
   --timeline-animation-height: 20px;
   /* The size of a keyframe marker in the keyframes diagram */
   --keyframes-marker-size: 10px;
-  /* The color of the time graduation borders. This should match the the color
-     devtools/client/animationinspector/utils.js */
+  /* The color of the time graduation borders */
   --time-graduation-border-color: rgba(128, 136, 144, .5);
 }
 
@@ -227,17 +226,6 @@ body {
   height: 100%;
   overflow: hidden;
   position: relative;
-  /* The timeline gets its background-image from a canvas element created in
-     /devtools/client/animationinspector/utils.js drawGraphElementBackground
-     thanks to document.mozSetImageElement("time-graduations", canvas)
-     This is done so that the background can be built dynamically from script */
-  background-image: -moz-element(#time-graduations);
-  background-repeat: repeat-y;
-  /* Make the background be 100% of the timeline area so that it resizes with
-     it and subtract the width of the sidebar and the buffer at the right of the
-     timeline */
-  background-size: calc(100% - var(--timeline-sidebar-width) - var(--keyframes-marker-size)) 100%;
-  background-position: var(--timeline-sidebar-width) 0;
   display: flex;
   flex-direction: column;
 }
@@ -299,7 +287,10 @@ body {
 
 .animation-timeline .time-header .time-tick {
   position: absolute;
-  top: 3px;
+  top: 0;
+  height: 100vh;
+  padding-top: 3px;
+  border-left: 0.5px solid var(--time-graduation-border-color);
 }
 
 .animation-timeline .animations {
