@@ -2337,19 +2337,22 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
-  mBounds = GetBoundsInternal(aBuilder);
-  if (ShouldFixToViewport(aBuilder)) {
-    mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
-  }
-  
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
 
+  bool isTransformedFixed;
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
-                                      borderArea, borderArea, layer);
+                                      borderArea, borderArea, layer,
+                                      &isTransformedFixed);
+  mShouldTreatAsFixed = ComputeShouldTreatAsFixed(isTransformedFixed);
+
+  mBounds = GetBoundsInternal(aBuilder);
+  if (ShouldFixToViewport(aBuilder)) {
+    mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
+  }
 
   mFillRect = state.mFillArea;
   mDestRect = state.mDestArea;
@@ -2582,6 +2585,28 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
 }
 
 bool
+nsDisplayBackgroundImage::ShouldTreatAsFixed() const
+{
+  return mShouldTreatAsFixed;
+}
+
+bool
+nsDisplayBackgroundImage::ComputeShouldTreatAsFixed(bool isTransformedFixed) const
+{
+  if (!mBackgroundStyle)
+    return false;
+
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
+  if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
+    return false;
+
+  // background-attachment:fixed is treated as background-attachment:scroll
+  // if it's affected by a transform.
+  // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=17521.
+  return !isTransformedFixed;
+}
+
+bool
 nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
                                                      const nsRect& aClipRect,
                                                      gfxRect* aDestRect)
@@ -2592,8 +2617,7 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
   if (mBackgroundStyle->mImage.mLayers.Length() != 1)
     return false;
 
-  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
-  if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
+  if (!ShouldTreatAsFixed())
     return false;
 
   // We only care about images here, not gradients.
@@ -2609,7 +2633,7 @@ nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuil
 bool
 nsDisplayBackgroundImage::IsNonEmptyFixedImage() const
 {
-  return mBackgroundStyle->mImage.mLayers[mLayer].mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
+  return ShouldTreatAsFixed() &&
          !mBackgroundStyle->mImage.mLayers[mLayer].mImage.IsEmpty();
 }
 
@@ -2871,11 +2895,13 @@ nsDisplayBackgroundImage::GetPositioningArea()
     return nsRect();
   }
   nsIFrame* attachedToFrame;
+  bool transformedFixed;
   return nsCSSRendering::ComputeImageLayerPositioningArea(
       mFrame->PresContext(), mFrame,
       nsRect(ToReferenceFrame(), mFrame->GetSize()),
       mBackgroundStyle->mImage.mLayers[mLayer],
-      &attachedToFrame) + ToReferenceFrame();
+      &attachedToFrame,
+      &transformedFixed) + ToReferenceFrame();
 }
 
 bool
