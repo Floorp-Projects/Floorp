@@ -2721,6 +2721,8 @@ protected:
                                   gfxRect* aDestRect);
   bool IsNonEmptyFixedImage() const;
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
+  bool ShouldTreatAsFixed() const;
+  bool ComputeShouldTreatAsFixed(bool isTransformedFixed) const;
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -2745,6 +2747,8 @@ protected:
   nsRect mBounds;
   uint32_t mLayer;
   bool mIsRasterImage;
+  /* Whether the image should be treated as fixed to the viewport. */
+  bool mShouldTreatAsFixed;
 };
 
 

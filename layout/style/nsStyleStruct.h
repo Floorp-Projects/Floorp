@@ -815,7 +815,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   // but we don't want to do that when there's no image.
   // Not inline because it uses an nsCOMPtr<imgIRequest>
   // FIXME: Should be in nsStyleStructInlines.h.
-  bool HasFixedBackground() const;
+  bool HasFixedBackground(nsIFrame* aFrame) const;
 
   const nsStyleImageLayers::Layer& BottomLayer() const { return mImage.BottomLayer(); }
 
