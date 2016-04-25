@@ -734,6 +734,10 @@ public:
 
   uint32_t GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const;
 
+  // Once the main size has been resolved, should we bother doing layout to
+  // establish the cross size?
+  bool CanMainSizeInfluenceCrossSize(const FlexboxAxisTracker& aAxisTracker) const;
+
 protected:
   // Helper called by the constructor, to set mNeedsMinSizeAutoResolution:
   void CheckForMinSizeAuto(const nsHTMLReflowState& aFlexItemReflowState,
@@ -1876,6 +1880,38 @@ FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const
              "should only have examined 2 margins");
 
   return numAutoMargins;
+}
+
+bool
+FlexItem::CanMainSizeInfluenceCrossSize(
+  const FlexboxAxisTracker& aAxisTracker) const
+{
+  if (mIsStretched) {
+    // We've already had our cross-size stretched for "align-self:stretch").
+    // The container is imposing its cross size on us.
+    return false;
+  }
+
+  if (mIsStrut) {
+    // Struts (for visibility:collapse items) have a predetermined size;
+    // no need to measure anything.
+    return false;
+  }
+
+  if (aAxisTracker.IsCrossAxisHorizontal()) {
+    // If the cross axis is horizontal, then changes to the item's main size
+    // (height) can't influence its cross size (width), if the item is a block
+    // with a horizontal writing-mode.
+    // XXXdholbert This doesn't account for vertical writing-modes, items with
+    // aspect ratios, items that are multicol elements, & items that are
+    // multi-line vertical flex containers. In all of those cases, a change to
+    // the height could influence the width.
+    return false;
+  }
+
+  // Default assumption, if we haven't proven otherwise: the resolved main size
+  // *can* change the cross size.
+  return true;
 }
 
 // Keeps track of our position along a particular axis (where a '0' position
@@ -3901,25 +3937,9 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   nscoord sumLineCrossSizes = 0;
   for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     for (FlexItem* item = line->GetFirstItem(); item; item = item->getNext()) {
-      // Note that we may already have the correct cross size. (We guess at it
-      // in GenerateFlexItemForChild(), and we also may resolve it early for
-      // stretched flex items.)
-      //
-      // We can skip measuring an item's cross size here in a few scenarios:
-      // (A) If the flex item has already been stretched, then we're imposing
-      //     the container's cross size on it; no need to measure.
-      // (B) If the flex item is a "strut", then it's just a placeholder with a
-      //     predetermined cross size; no need to measure.
-      // (C) If the item's main-size can't affect its cross-size, then the
-      //     item's tentative cross size (which we got from the reflow state in
-      //     GenerateFlexItemForChild()) is correct. So, no need to re-measure.
-      //     (For now, this is equivalent to checking if the cross-axis is
-      //     horizontal, because until we enable vertical writing-modes, an
-      //     element's computed width can't be influenced by its computed
-      //     height.)
-      if (!item->IsStretched() && // !A
-          !item->IsStrut() &&     // !B
-          !aAxisTracker.IsCrossAxisHorizontal()) { // !C
+      // The item may already have the correct cross-size; only recalculate
+      // if the item's main size resolution (flexing) could have influenced it:
+      if (item->CanMainSizeInfluenceCrossSize(aAxisTracker)) {
         WritingMode wm = item->Frame()->GetWritingMode();
         LogicalSize availSize = aReflowState.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
