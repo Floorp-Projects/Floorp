@@ -8,8 +8,10 @@
 #test_certificates = (
 #    'ca.pem',
 #    'no-san-old.pem',
+#    'no-san-older.pem',
 #    'no-san-recent.pem',
 #    'san-contains-no-hostnames-old.pem',
+#    'san-contains-no-hostnames-older.pem',
 #    'san-contains-no-hostnames-recent.pem',
 #)
 #
