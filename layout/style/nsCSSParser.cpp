@@ -10812,7 +10812,7 @@ CSSParserImpl::ParseWebkitTextStroke()
     eCSSProperty__webkit_text_stroke_color
   };
 
-  const size_t numProps = ArrayLength(kWebkitTextStrokeIDs);
+  const size_t numProps = MOZ_ARRAY_LENGTH(kWebkitTextStrokeIDs);
   nsCSSValue values[numProps];
 
   int32_t found = ParseChoice(values, kWebkitTextStrokeIDs, numProps);
