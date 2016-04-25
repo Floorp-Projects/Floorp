@@ -235,7 +235,7 @@ struct RangePaintInfo {
   nsPoint mRootOffset;
 
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
-    : mRange(aRange), mBuilder(aFrame, nsDisplayListBuilder::PAINTING, false)
+    : mRange(aRange), mBuilder(aFrame, nsDisplayListBuilderMode::PAINTING, false)
   {
     MOZ_COUNT_CTOR(RangePaintInfo);
   }
@@ -5968,7 +5968,7 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
   // they produce the same results (mApproximatelyVisibleFrames holds the frames the
   // display list thinks are visible, beforeFrameList holds the frames the
   // frame walker thinks are visible).
-  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::FRAME_VISIBILITY, false);
+  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilderMode::FRAME_VISIBILITY, false);
   nsRect updateRect(nsPoint(0, 0), rootFrame->GetSize());
   nsIFrame* rootScroll = GetRootScrollFrame();
   if (rootScroll) {
@@ -6202,7 +6202,7 @@ public:
     }
     nsRegion region;
     nsDisplayListBuilder builder(mFrame,
-                                 nsDisplayListBuilder::EVENT_DELIVERY,
+                                 nsDisplayListBuilderMode::EVENT_DELIVERY,
                                  /* aBuildCert= */ false);
     nsDisplayList list;
     AutoTArray<nsIFrame*, 100> outFrames;
