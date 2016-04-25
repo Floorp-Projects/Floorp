@@ -1711,7 +1711,16 @@ js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
 
-    RootedNativeObject obj(cx, &args[0].toObject().as<NativeObject>());
+    RootedObject obj(cx, &args[0].toObject());
+    if (!obj->isNative()) {
+        // The object is already checked to be native in GetElemBaseForLambda,
+        // but it can be swapped to the other class that is non-native.
+        // Return undefined to mark failure to get the property.
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedNativeObject nobj(cx, &obj->as<NativeObject>());
     RootedString name(cx, args[1].toString());
 
     RootedAtom atom(cx, AtomizeString(cx, name));
@@ -1719,7 +1728,7 @@ js::intrinsic_GetStringDataProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     RootedValue v(cx);
-    if (HasDataProperty(cx, obj, AtomToId(atom), v.address()) && v.isString())
+    if (HasDataProperty(cx, nobj, AtomToId(atom), v.address()) && v.isString())
         args.rval().set(v);
     else
         args.rval().setUndefined();
