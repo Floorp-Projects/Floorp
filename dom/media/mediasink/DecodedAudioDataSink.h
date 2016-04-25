@@ -17,7 +17,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Monitor.h"
 
 namespace mozilla {
 
@@ -77,9 +77,6 @@ private:
   // the current audio time.
   const int64_t mStartTime;
 
-  // PCM frames written to the stream so far.
-  Atomic<int64_t> mWritten;
-
   // Keep the last good position returned from the audio stream. Used to ensure
   // position returned by GetPosition() is mono-increasing in spite of audio
   // stream error. Used on the task queue of MDSM only.
@@ -100,8 +97,18 @@ private:
    */
   // The AudioData at which AudioStream::DataSource is reading.
   RefPtr<AudioData> mCurrentData;
+
+  // Monitor protecting access to mCursor and mWritten.
+  // mCursor is created/destroyed on the cubeb thread, while we must also
+  // ensure that mWritten and mCursor::Available() get modified simultaneously.
+  // (written on cubeb thread, and read on MDSM task queue).
+  mutable Monitor mMonitor;
   // Keep track of the read position of mCurrentData.
   UniquePtr<AudioBufferCursor> mCursor;
+
+  // PCM frames written to the stream so far.
+  int64_t mWritten;
+
   // True if there is any error in processing audio data like overflow.
   Atomic<bool> mErrored;
 
