@@ -410,15 +410,15 @@ WriteBarrierPost(JSRuntime* rt, ValueSet* set, const Value& key)
 
 bool
 MapObject::getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
-                                       JS::AutoValueVector* entries)
+                                       JS::MutableHandle<GCVector<JS::Value>> entries)
 {
     ValueMap* map = obj->as<MapObject>().getData();
     if (!map)
         return false;
 
     for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
-        if (!entries->append(r.front().key.get()) ||
-            !entries->append(r.front().value))
+        if (!entries.append(r.front().key.get()) ||
+            !entries.append(r.front().value))
         {
             return false;
         }
@@ -1075,14 +1075,14 @@ SetObject::initClass(JSContext* cx, JSObject* obj)
 
 
 bool
-SetObject::keys(JSContext* cx, HandleObject obj, JS::AutoValueVector* keys)
+SetObject::keys(JSContext* cx, HandleObject obj, JS::MutableHandle<GCVector<JS::Value>> keys)
 {
     ValueSet* set = obj->as<SetObject>().getData();
     if (!set)
         return false;
 
     for (ValueSet::Range r = set->all(); !r.empty(); r.popFront()) {
-        if (!keys->append(r.front().get()))
+        if (!keys.append(r.front().get()))
             return false;
     }
 

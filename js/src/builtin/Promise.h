@@ -54,7 +54,7 @@ class PromiseObject : public NativeObject
         MOZ_ASSERT(state() != JS::PromiseState::Pending);
         return resolutionTime() - allocationTime();
     }
-    bool dependentPromises(JSContext* cx, AutoValueVector& values);
+    bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
     double getID();
 };
 

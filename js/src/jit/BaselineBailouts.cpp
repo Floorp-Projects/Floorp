@@ -580,7 +580,7 @@ static bool
 InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 HandleFunction fun, HandleScript script, IonScript* ionScript,
                 SnapshotIterator& iter, bool invalidate, BaselineStackBuilder& builder,
-                AutoValueVector& startFrameFormals, MutableHandleFunction nextCallee,
+                MutableHandle<GCVector<Value>> startFrameFormals, MutableHandleFunction nextCallee,
                 jsbytecode** callPC, const ExceptionBailoutInfo* excInfo)
 {
     // The Baseline frames we will reconstruct on the heap are not rooted, so GC
@@ -1530,7 +1530,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     RootedScript caller(cx);
     jsbytecode* callerPC = nullptr;
     RootedFunction fun(cx, callee);
-    AutoValueVector startFrameFormals(cx);
+    Rooted<GCVector<Value>> startFrameFormals(cx, GCVector<Value>(cx));
 
     gc::AutoSuppressGC suppress(cx);
 
@@ -1560,7 +1560,7 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
         jsbytecode* callPC = nullptr;
         RootedFunction nextCallee(cx, nullptr);
         if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
-                             snapIter, invalidate, builder, startFrameFormals,
+                             snapIter, invalidate, builder, &startFrameFormals,
                              &nextCallee, &callPC, passExcInfo ? excInfo : nullptr))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
