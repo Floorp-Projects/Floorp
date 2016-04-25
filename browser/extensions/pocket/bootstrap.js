@@ -59,17 +59,6 @@ function setDefaultPrefs() {
   }
 }
 
-function* allBrowserWindows() {
-  var winEnum = Services.wm.getEnumerator("navigator:browser");
-  while (winEnum.hasMoreElements()) {
-    let win = winEnum.getNext();
-    // skip closed windows
-    if (win.closed)
-      continue;
-    yield win;
-  }
-}
-
 function createElementWithAttrs(document, type, attrs) {
   let element = document.createElement(type);
   Object.keys(attrs).forEach(function (attr) {
@@ -221,7 +210,7 @@ var PocketContextMenu = {
     Services.obs.removeObserver(this, "on-build-contextmenu");
     // loop through windows and remove context menus
     // iterate through all windows and add pocket to them
-    for (let win of allBrowserWindows()) {
+    for (let win of CustomizableUI.windows) {
       let document = win.document;
       for (let id of ["context-pocket", "context-savelinktopocket"]) {
         let element = document.getElementById(id);
@@ -383,7 +372,7 @@ var PocketOverlay = {
     CreatePocketWidget(reason);
     PocketContextMenu.init();
 
-    for (let win of allBrowserWindows()) {
+    for (let win of CustomizableUI.windows) {
       this.onWindowOpened(win);
     }
   },
@@ -391,7 +380,7 @@ var PocketOverlay = {
     AboutSaved.unregister();
     AboutSignup.unregister();
     CustomizableUI.removeListener(this);
-    for (let window of allBrowserWindows()) {
+    for (let window of CustomizableUI.windows) {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",
                       "panelMenu_pocketSeparator", "menu_pocketSeparator",
                       "BMB_pocketSeparator"]) {
