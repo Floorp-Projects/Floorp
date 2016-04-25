@@ -1046,6 +1046,13 @@ AudioContext::StartRendering(ErrorResult& aRv)
   return promise.forget();
 }
 
+unsigned long
+AudioContext::Length()
+{
+  MOZ_ASSERT(mIsOffline);
+  return mDestination->Length();
+}
+
 void
 AudioContext::Mute() const
 {
