@@ -39,6 +39,7 @@ function registerMockedFactory(contractId, mockedClassId, mockedFactory) {
 
 function registerOriginalFactory(contractId, mockedClassId, mockedFactory, originalClassId, originalFactory) {
   if (originalFactory) {
+    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(mockedClassId, mockedFactory);
     registrar.registerFactory(originalClassId, "", contractId, originalFactory);
   }
@@ -110,42 +111,35 @@ const mockedControlChannel = {
     return this._listener;
   },
   sendOffer: function(offer) {
-    var isValid = false;
-    try {
-      var addresses = offer.tcpAddress;
-      if (addresses.length > 0) {
-        for (var i = 0; i < addresses.length; i++) {
-          // Ensure CString addresses are used. Otherwise, an error will be thrown.
-          addresses.queryElementAt(i, Ci.nsISupportsCString);
-        }
-
-        isValid = true;
-      }
-    } catch (e) {
-      isValid = false;
-    }
-
-    sendAsyncMessage('offer-sent', isValid);
+    sendAsyncMessage('offer-sent', this._isValidSDP(offer));
   },
   sendAnswer: function(answer) {
-    var isValid = false;
-    try {
-      var addresses = answer.tcpAddress;
-      if (addresses.length > 0) {
-        for (var i = 0; i < addresses.length; i++) {
-          // Ensure CString addresses are used. Otherwise, an error will be thrown.
-          addresses.queryElementAt(i, Ci.nsISupportsCString);
-        }
+    sendAsyncMessage('answer-sent', this._isValidSDP(answer));
 
-        isValid = true;
-      }
-    } catch (e) {
-      isValid = false;
+    if (answer.type == Ci.nsIPresentationChannelDescription.TYPE_TCP) {
+      this._listener.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
     }
+  },
+  _isValidSDP: function(aSDP) {
+    var isValid = false;
+    if (aSDP.type == Ci.nsIPresentationChannelDescription.TYPE_TCP) {
+      try {
+        var addresses = aSDP.tcpAddress;
+        if (addresses.length > 0) {
+          for (var i = 0; i < addresses.length; i++) {
+            // Ensure CString addresses are used. Otherwise, an error will be thrown.
+            addresses.queryElementAt(i, Ci.nsISupportsCString);
+          }
 
-    sendAsyncMessage('answer-sent', isValid);
-
-    this._listener.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();
+          isValid = true;
+        }
+      } catch (e) {
+        isValid = false;
+      }
+    } else if (aSDP.type == Ci.nsIPresentationChannelDescription.TYPE_DATACHANNEL) {
+      isValid = (aSDP.dataChannelSDP == "test-sdp");
+    }
+    return isValid;
   },
   close: function(reason) {
     sendAsyncMessage('control-channel-closed', reason);
@@ -257,6 +251,7 @@ const mockedSessionTransport = {
   },
   // in-process case
   buildDataChannelTransport: function(role, window, listener) {
+    dump("PresentationSessionChromeScript: build data channel transport\n");
     this._listener = listener;
     this._role = role;
 
