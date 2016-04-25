@@ -220,7 +220,7 @@ public:
     // compositing layer. Since we know their background painting area can't
     // change (unless the viewport size itself changes), async scrolling
     // will work well.
-    return mBackgroundStyle->mImage.mLayers[mLayer].mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
+    return ShouldTreatAsFixed() &&
            !mBackgroundStyle->mImage.mLayers[mLayer].mImage.IsEmpty();
   }
  
