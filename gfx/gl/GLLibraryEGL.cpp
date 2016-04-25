@@ -179,7 +179,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl)
             return GetAndInitDisplay(egl, LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
 
         if (gfxPrefs::WebGLANGLETryD3D11() &&
-            gfxPlatform::CanUseDirect3D11ANGLE())
+            gfxPlatform::GetPlatform()->CanUseDirect3D11ANGLE())
         {
             ret = GetAndInitDisplay(egl, LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
         }
