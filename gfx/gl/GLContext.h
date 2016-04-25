@@ -3412,7 +3412,6 @@ public:
 
 protected:
     SurfaceCaps mCaps;
-    nsAutoPtr<GLFormats> mGLFormats;
 
 public:
     const SurfaceCaps& Caps() const {
@@ -3421,14 +3420,6 @@ public:
 
     // Only varies based on bpp16 and alpha.
     GLFormats ChooseGLFormats(const SurfaceCaps& caps) const;
-    void UpdateGLFormats(const SurfaceCaps& caps) {
-        mGLFormats = new GLFormats(ChooseGLFormats(caps));
-    }
-
-    const GLFormats& GetGLFormats() const {
-        MOZ_ASSERT(mGLFormats);
-        return *mGLFormats;
-    }
 
     bool IsFramebufferComplete(GLuint fb, GLenum* status = nullptr);
 

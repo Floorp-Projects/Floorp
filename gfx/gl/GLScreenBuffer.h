@@ -211,6 +211,8 @@ public:
         return mDraw->mSamples;
     }
 
+    uint32_t DepthBits() const;
+
     void DeletingFB(GLuint fb);
 
     const gfx::IntSize& Size() const {
