@@ -291,7 +291,6 @@ nsContextMenu.prototype = {
                     this.onImage || this.onVideo || this.onAudio || this.onSocial ||
                     this.onCanvas));
     bookmarkPage.setAttribute("tooltiptext", bookmarkPage.getAttribute("buttontooltiptext"));
-    bookmarkPage.disabled = bookmarkPage.hasAttribute("stardisabled");
 
     this.showItem("context-bookmarklink", (this.onLink && !this.onMailtoLink &&
                                            !this.onSocial) || this.onPlainTextLink);
