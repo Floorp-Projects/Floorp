@@ -151,6 +151,7 @@ namespace jit {
     _(RegExpTester)                                                         \
     _(RegExpPrototypeOptimizable)                                           \
     _(RegExpInstanceOptimizable)                                            \
+    _(GetFirstDollarIndex)                                                  \
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
