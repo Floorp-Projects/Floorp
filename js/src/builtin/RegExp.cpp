@@ -1473,24 +1473,28 @@ GetFirstDollarIndexImpl(const TextChar* text, uint32_t textLen)
     return -1;
 }
 
-bool
-js::GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index)
+int32_t
+js::GetFirstDollarIndexRawFlat(JSLinearString* text)
 {
-    uint32_t len = str->length();
-
+    uint32_t len = text->length();
     // Should be handled in different path.
     MOZ_ASSERT(len != 0);
 
+    JS::AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars())
+        return GetFirstDollarIndexImpl(text->latin1Chars(nogc), len);
+
+    return  GetFirstDollarIndexImpl(text->twoByteChars(nogc), len);
+}
+
+bool
+js::GetFirstDollarIndexRaw(JSContext* cx, HandleString str, int32_t* index)
+{
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
         return false;
 
-    JS::AutoCheckCannotGC nogc;
-    if (text->hasLatin1Chars())
-        *index = GetFirstDollarIndexImpl(text->latin1Chars(nogc), len);
-    else
-        *index = GetFirstDollarIndexImpl(text->twoByteChars(nogc), len);
-
+    *index = GetFirstDollarIndexRawFlat(text);
     return true;
 }
 
