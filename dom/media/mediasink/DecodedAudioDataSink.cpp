@@ -39,11 +39,12 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
                                            dom::AudioChannel aChannel)
   : AudioSink(aAudioQueue)
   , mStartTime(aStartTime)
-  , mWritten(0)
   , mLastGoodPosition(0)
   , mInfo(aInfo)
   , mChannel(aChannel)
   , mPlaying(true)
+  , mMonitor("DecodedAudioDataSink")
+  , mWritten(0)
   , mErrored(false)
   , mPlaybackComplete(false)
   , mOwnerThread(aThread)
@@ -122,8 +123,13 @@ DecodedAudioDataSink::HasUnplayedFrames()
 {
   // Experimentation suggests that GetPositionInFrames() is zero-indexed,
   // so we need to add 1 here before comparing it to mWritten.
+  int64_t total;
+  {
+    MonitorAutoLock mon(mMonitor);
+    total = mWritten + (mCursor.get() ? mCursor->Available() : 0);
+  }
   return mProcessedQueue.GetSize() ||
-         (mAudioStream && mAudioStream->GetPositionInFrames() + 1 < mWritten);
+         (mAudioStream && mAudioStream->GetPositionInFrames() + 1 < total);
 }
 
 void
@@ -208,7 +214,12 @@ DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 int64_t
 DecodedAudioDataSink::GetEndTime() const
 {
-  CheckedInt64 playedUsecs = FramesToUsecs(mWritten, mOutputRate) + mStartTime;
+  int64_t written;
+  {
+    MonitorAutoLock mon(mMonitor);
+    written = mWritten;
+  }
+  CheckedInt64 playedUsecs = FramesToUsecs(written, mOutputRate) + mStartTime;
   if (!playedUsecs.isValid()) {
     NS_WARNING("Int overflow calculating audio end time");
     return -1;
@@ -272,9 +283,12 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
     // when mProcessedQueue is read and mWritten is updated.
     needPopping = true;
     mCurrentData = mProcessedQueue.PeekFront();
-    mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
-                                            mCurrentData->mChannels,
-                                            mCurrentData->mFrames);
+    {
+      MonitorAutoLock mon(mMonitor);
+      mCursor = MakeUnique<AudioBufferCursor>(mCurrentData->mAudioData.get(),
+                                              mCurrentData->mChannels,
+                                              mCurrentData->mFrames);
+    }
     MOZ_ASSERT(mCurrentData->mFrames > 0);
     mProcessedQueueLength -=
       FramesToUsecs(mCurrentData->mFrames, mOutputRate).value();
@@ -288,8 +302,11 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
   UniquePtr<AudioStream::Chunk> chunk =
     MakeUnique<Chunk>(mCurrentData, framesToPop, mCursor->Ptr());
 
-  mWritten += framesToPop;
-  mCursor->Advance(framesToPop);
+  {
+    MonitorAutoLock mon(mMonitor);
+    mWritten += framesToPop;
+    mCursor->Advance(framesToPop);
+  }
 
   // All frames are popped. Reset mCurrentData so we can pop new elements from
   // the audio queue in next calls to PopFrames().
