@@ -3296,6 +3296,7 @@ nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame)
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
+                          nsDisplayListBuilderMode aBuilderMode,
                           uint32_t aFlags)
 {
   PROFILER_LABEL("nsLayoutUtils", "PaintFrame",
@@ -3328,8 +3329,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilderMode::PAINTING,
-                           !(aFlags & PAINT_HIDE_CARET));
+  nsDisplayListBuilder builder(aFrame, aBuilderMode,
+                               !(aFlags & PAINT_HIDE_CARET));
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(true);
   }
