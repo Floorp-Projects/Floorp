@@ -193,8 +193,16 @@ class ZoneCellIterImpl
 
   public:
     ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) {
+        JSRuntime* rt = zone->runtimeFromAnyThread();
         MOZ_ASSERT(zone);
-        MOZ_ASSERT(zone->runtimeFromAnyThread()->gc.nursery.isEmpty());
+        MOZ_ASSERT(rt->gc.nursery.isEmpty());
+
+        // We have a single-threaded runtime, so there's no need to protect
+        // against other threads iterating or allocating. However, we do have
+        // background finalization; we may have to wait for this to finish if
+        // it's currently active.
+        if (IsBackgroundFinalized(kind) && zone->arenas.needBackgroundFinalizeWait(kind))
+            rt->gc.waitBackgroundSweepEnd();
 
         arenaIter.init(zone, kind);
         if (!arenaIter.done())
@@ -248,13 +256,6 @@ class ZoneCellIter
         // that allows us to iterate.
         JSRuntime* rt = zone->runtimeFromMainThread();
         if (!rt->isHeapBusy()) {
-            // We have a single-threaded runtime, so there's no need to protect
-            // against other threads iterating or allocating. However, we do
-            // have background finalization; we have to wait for this to finish
-            // if it's currently active.
-            if (IsBackgroundFinalized(kind) && zone->arenas.needBackgroundFinalizeWait(kind))
-                rt->gc.waitBackgroundSweepEnd();
-
             // Evict the nursery before iterating so we can see all things.
             rt->gc.evictNursery();
 
