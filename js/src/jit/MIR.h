@@ -8122,6 +8122,8 @@ class MGetFirstDollarIndex
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
 class MStringReplace

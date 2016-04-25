@@ -5290,6 +5290,18 @@ MArrayJoin::foldsTo(TempAllocator& alloc)
     return substr;
 }
 
+MDefinition*
+MGetFirstDollarIndex::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* strArg = str();
+    if (!strArg->isConstant())
+        return this;
+
+    JSAtom* atom = &strArg->toConstant()->toString()->asAtom();
+    int32_t index = GetFirstDollarIndexRawFlat(atom);
+    return MConstant::New(alloc, Int32Value(index));
+}
+
 MConvertUnboxedObjectToNative*
 MConvertUnboxedObjectToNative::New(TempAllocator& alloc, MDefinition* obj, ObjectGroup* group)
 {
