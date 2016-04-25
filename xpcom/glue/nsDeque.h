@@ -124,13 +124,13 @@ public:
    * @return  the first item in container
    */
 
-  void* Peek();
+  void* Peek() const;
   /**
    * Return topmost item without removing it.
    *
    * @return  the first item in container
    */
-  void* PeekFront();
+  void* PeekFront() const;
 
   /**
    * Retrieve a member from the deque without removing it.
