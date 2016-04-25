@@ -7,6 +7,9 @@ const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Com
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
+const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
+                      .getService(Ci.nsIUUIDGenerator);
+
 function registerMockedFactory(contractId, mockedClassId, mockedFactory) {
   var originalClassId, originalFactory;
 
@@ -39,7 +42,7 @@ function registerOriginalFactory(contractId, mockedClassId, mockedFactory, origi
   }
 }
 
-const sessionId = 'test-session-id';
+const sessionId = 'test-session-id-' + uuidGenerator.generateUUID().toString();
 
 const address = Cc["@mozilla.org/supports-cstring;1"]
                   .createInstance(Ci.nsISupportsCString);
@@ -293,8 +296,6 @@ const mockedRequestUIGlue = {
 };
 
 // Register mocked factories.
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                      .getService(Ci.nsIUUIDGenerator);
 const originalFactoryData = [];
 originalFactoryData.push(registerMockedFactory("@mozilla.org/presentation-device/prompt;1",
                                                uuidGenerator.generateUUID(),
