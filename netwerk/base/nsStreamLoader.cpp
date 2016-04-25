@@ -98,7 +98,7 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     // provide nsIStreamLoader::request during call to OnStreamComplete
     mRequest = request;
     size_t length = mData.length();
-    uint8_t* elems = mData.extractRawBuffer();
+    uint8_t* elems = mData.extractOrCopyRawBuffer();
     nsresult rv = mObserver->OnStreamComplete(this, mContext, aStatus,
                                               length, elems);
     if (rv != NS_SUCCESS_ADOPTED_DATA) {
