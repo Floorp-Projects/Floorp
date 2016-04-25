@@ -37,8 +37,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.responsive.html.enabled");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 });
-const { ResponsiveUIManager } = Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+const { ResponsiveUIManager } = require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
 const { loadDeviceList } = require("devtools/client/responsive.html/devices");
+const { getOwnerWindow } = require("sdk/tabs/utils");
 
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
@@ -48,7 +49,7 @@ const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 var openRDM = Task.async(function* (tab) {
   info("Opening responsive design mode");
   let manager = ResponsiveUIManager;
-  let ui = yield manager.openIfNeeded(window, tab);
+  let ui = yield manager.openIfNeeded(getOwnerWindow(tab), tab);
   info("Responsive design mode opened");
   return { ui, manager };
 });
