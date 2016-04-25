@@ -99,7 +99,8 @@ enum class StereoMode {
   LEFT_RIGHT,
   RIGHT_LEFT,
   BOTTOM_TOP,
-  TOP_BOTTOM
+  TOP_BOTTOM,
+  MAX,
 };
 
 } // namespace mozilla
