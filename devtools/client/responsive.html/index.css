@@ -32,21 +32,14 @@
 #root,
 html, body {
   margin: 0;
-  height: 100%;
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 #app {
   /* Center the viewports container */
   display: flex;
-  justify-content: center;
   align-items: center;
   flex-direction: column;
+  height: 100vh;
 
   /* Snap to the top of the app when there isn't enough vertical space anymore
      to center the viewports (so we don't lose the global toolbar) */
@@ -85,7 +78,7 @@ html, body {
   color: var(--theme-body-color-alt);
   border-radius: 2px;
   box-shadow: var(--rdm-box-shadow);
-  margin: 30px 0;
+  margin: 10% 0 30px 0;
   padding: 4px 5px;
   display: inline-flex;
   -moz-user-select: none;
