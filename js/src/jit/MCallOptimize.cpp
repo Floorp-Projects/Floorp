@@ -188,6 +188,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineRegExpPrototypeOptimizable(callInfo);
       case InlinableNative::RegExpInstanceOptimizable:
         return inlineRegExpInstanceOptimizable(callInfo);
+      case InlinableNative::GetFirstDollarIndex:
+        return inlineGetFirstDollarIndex(callInfo);
 
       // String natives.
       case InlinableNative::String:
@@ -1948,6 +1950,31 @@ IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
     MInstruction* opt = MRegExpInstanceOptimizable::New(alloc(), rxArg, protoArg);
     current->add(opt);
     current->push(opt);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineGetFirstDollarIndex(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* strArg = callInfo.getArg(0);
+
+    if (strArg->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* ins = MGetFirstDollarIndex::New(alloc(), strArg);
+    current->add(ins);
+    current->push(ins);
 
     return InliningStatus_Inlined;
 }

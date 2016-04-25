@@ -4439,6 +4439,32 @@ class LRegExpInstanceOptimizable : public LInstructionHelper<1, 2, 1>
     }
 };
 
+class LGetFirstDollarIndex : public LInstructionHelper<1, 1, 3>
+{
+  public:
+    LIR_HEADER(GetFirstDollarIndex);
+    explicit LGetFirstDollarIndex(const LAllocation& str, const LDefinition& temp0,
+                                  const LDefinition& temp1, const LDefinition& temp2) {
+        setOperand(0, str);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, temp2);
+    }
+
+    const LAllocation* str() {
+        return getOperand(0);
+    }
+    const LDefinition* temp0() {
+        return getTemp(0);
+    }
+    const LDefinition* temp1() {
+        return getTemp(1);
+    }
+    const LDefinition* temp2() {
+        return getTemp(2);
+    }
+};
+
 class LStringReplace: public LCallInstructionHelper<1, 3, 0>
 {
   public:

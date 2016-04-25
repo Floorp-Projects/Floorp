@@ -842,6 +842,7 @@ class IonBuilder
     InliningStatus inlineIsRegExpObject(CallInfo& callInfo);
     InliningStatus inlineRegExpPrototypeOptimizable(CallInfo& callInfo);
     InliningStatus inlineRegExpInstanceOptimizable(CallInfo& callInfo);
+    InliningStatus inlineGetFirstDollarIndex(CallInfo& callInfo);
 
     // Object natives and intrinsics.
     InliningStatus inlineObjectCreate(CallInfo& callInfo);

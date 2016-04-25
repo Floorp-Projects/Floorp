@@ -8099,6 +8099,31 @@ class MRegExpInstanceOptimizable
     }
 };
 
+class MGetFirstDollarIndex
+  : public MUnaryInstruction,
+    public StringPolicy<0>::Data
+{
+    explicit MGetFirstDollarIndex(MDefinition* str)
+      : MUnaryInstruction(str)
+    {
+        setResultType(MIRType_Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetFirstDollarIndex)
+
+    static MGetFirstDollarIndex* New(TempAllocator& alloc, MDefinition* str) {
+        return new(alloc) MGetFirstDollarIndex(str);
+    }
+    MDefinition* str() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 class MStringReplace
   : public MTernaryInstruction,
     public Mix3Policy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >::Data
