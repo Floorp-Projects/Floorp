@@ -23,7 +23,9 @@ namespace mozilla { namespace psm {
 // maintaining some backwards compatibility. If configured with the mode
 // "EnforceAfter23August2016", name matching will only fall back to using the
 // subject common name for certificates where the notBefore field is before 23
-// August 2016.
+// August 2016. Similarly, the mode "EnforceAfter23August2015" is also
+// available. This is to provide a balance between allowing preexisting
+// long-lived certificates and detecting newly-issued problematic certificates.
 // Note that this implementation does not actually directly enforce that if the
 // subject common name is present, its value corresponds to a dNSName or
 // iPAddress entry in the subject alternative name extension.
@@ -34,7 +36,8 @@ public:
   enum class Mode {
     DoNotEnforce = 0,
     EnforceAfter23August2016 = 1,
-    Enforce = 2,
+    EnforceAfter23August2015 = 2,
+    Enforce = 3,
   };
 
   explicit BRNameMatchingPolicy(Mode mode)
