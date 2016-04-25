@@ -20,8 +20,6 @@ function ok(expect, msg) {
 function runTests() {
 
   prepareSources().
-    then(testExceptions).
-    then(testColorConversions()).
     then( function() { return Promise.all([testAccessing_randomTest("Video", gVideo, 20), // video might use slightly different frames
                                            testAccessing_randomTest("Image", gImage, 0),
                                            testAccessing_randomTest("Canvas", gCanvas, 0),
@@ -40,6 +38,9 @@ function runTests() {
                                            testCreateFromArrayBffer_randomTest("PNG", gPNGBlob, 0),
                                            testCreateFromArrayBffer_randomTest("JPEG", gJPEGBlob, 10) // JPEG loses information
                                           ]); }).
+    then(testDraw()).
+    then(testExceptions).
+    then(testColorConversions()).
     then(function() {window.parent.postMessage({"type": "finish"}, "*");}, function(ev) { failed(ev); window.parent.postMessage({"type": "finish"}, "*"); });
 }
 
