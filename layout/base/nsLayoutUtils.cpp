@@ -9190,3 +9190,15 @@ nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
       });
   }
 }
+
+/* static */ bool
+nsLayoutUtils::IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame)
+{
+  for (nsIFrame* f = aForFrame; f != aTopFrame; f = f->GetParent()) {
+    if (f->IsTransformed()) {
+      return true;
+    }
+  }
+  return false;
+}
+
