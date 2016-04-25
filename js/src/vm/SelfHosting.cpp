@@ -2566,6 +2566,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     RegExpInstanceOptimizable),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
     JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
+    JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
+    JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
 
     JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
     JS_FN("FlatStringSearch", FlatStringSearch, 2,0),
@@ -2579,6 +2581,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
+    JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
 
     JS_FN("IsMatchFlagsArgumentEnabled", IsMatchFlagsArgumentEnabled, 0,0),
     JS_FN("WarnOnceAboutFlagsArgument", WarnOnceAboutFlagsArgument, 0,0),

@@ -896,6 +896,8 @@ private:
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;
 
+  void AcknowledgeScrollUpdate() const;
+
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains
    * out of APZC instances. These chains can only be walked or manipulated

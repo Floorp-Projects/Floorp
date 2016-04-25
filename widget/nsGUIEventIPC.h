@@ -89,6 +89,22 @@ struct ParamTraits<mozilla::WidgetEvent>
 };
 
 template<>
+struct ParamTraits<mozilla::NativeEventData>
+{
+  typedef mozilla::NativeEventData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mBuffer);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mBuffer);
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetGUIEvent>
 {
   typedef mozilla::WidgetGUIEvent paramType;
@@ -96,13 +112,13 @@ struct ParamTraits<mozilla::WidgetGUIEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetEvent>(aParam));
-    WriteParam(aMsg, aParam.mPluginEvent.mBuffer);
+    WriteParam(aMsg, aParam.mPluginEvent);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, static_cast<mozilla::WidgetEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->mPluginEvent.mBuffer);
+           ReadParam(aMsg, aIter, &aResult->mPluginEvent);
   }
 };
 
@@ -382,6 +398,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.alternativeCharCodes);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.mIsRepeat);
+    WriteParam(aMsg, aParam.mIsReserved);
     WriteParam(aMsg, aParam.location);
     WriteParam(aMsg, aParam.mUniqueId);
     WriteParam(aMsg, aParam.mIsSynthesizedByTIP);
@@ -416,6 +433,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->alternativeCharCodes) &&
         ReadParam(aMsg, aIter, &aResult->isChar) &&
         ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
+        ReadParam(aMsg, aIter, &aResult->mIsReserved) &&
         ReadParam(aMsg, aIter, &aResult->location) &&
         ReadParam(aMsg, aIter, &aResult->mUniqueId) &&
         ReadParam(aMsg, aIter, &aResult->mIsSynthesizedByTIP) &&

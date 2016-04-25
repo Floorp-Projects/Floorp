@@ -67,6 +67,7 @@ using mozilla::EventMessage from "mozilla/EventForwards.h";
 using nsEventStatus from "mozilla/EventForwards.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
+using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
 
 namespace mozilla {
 namespace dom {
@@ -282,6 +283,16 @@ parent:
      * Set IME candidate window by windowless plugin if plugin has focus.
      */
     async SetCandidateWindowForPlugin(CandidateWindowPosition aPosition);
+
+    /**
+     * Notifies the parent process of native key event data received in a
+     * plugin process directly.
+     *
+     * aKeyEventData    The native key event data.  The actual type copied into
+     *                  NativeEventData depending on the caller.  Please check
+     *                  PluginInstanceChild.
+     */
+    prio(urgent) async OnWindowedPluginKeyEvent(NativeEventData aKeyEventData);
 
     /**
      *  When plugin event isn't consumed, call this
@@ -731,6 +742,18 @@ child:
      * is bound to a frameloader element.
      */
     async SetUseGlobalHistory(bool aUse);
+
+    /**
+     * HandledWindowedPluginKeyEvent() is always called after posting a native
+     * key event with OnWindowedPluginKeyEvent().
+     *
+     * @param aKeyEventData      The key event which was posted to the parent
+     *                           process.
+     * @param aIsConsumed        true if aKeyEventData is consumed in the
+     *                           parent process.  Otherwise, false.
+     */
+    async HandledWindowedPluginKeyEvent(NativeEventData aKeyEventData,
+                                        bool aIsConsumed);
 
 /*
  * FIXME: write protocol!

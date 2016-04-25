@@ -3457,7 +3457,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
 
     mScrollMetadata = aScrollMetadata;
     if (scrollOffsetUpdated) {
-      needContentRepaint = true;
+      AcknowledgeScrollUpdate();
     }
     mExpectedGeckoMetrics = aLayerMetrics;
     ShareCompositorFrameMetrics();
@@ -3532,6 +3532,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // correct this we need to update mExpectedGeckoMetrics to be the
       // last thing we know was painted by Gecko.
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
+      AcknowledgeScrollUpdate();
       mExpectedGeckoMetrics = aLayerMetrics;
 
       // Cancel the animation (which might also trigger a repaint request)
@@ -3563,7 +3564,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     // See comment on the similar code in the |if (scrollOffsetUpdated)| block
     // above.
     mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
-    needContentRepaint = true;
+    AcknowledgeScrollUpdate();
     mExpectedGeckoMetrics = aLayerMetrics;
 
     SmoothScrollTo(mFrameMetrics.GetSmoothScrollOffset());
@@ -3573,6 +3574,21 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     RequestContentRepaint();
   }
   UpdateSharedCompositorFrameMetrics();
+}
+
+void
+AsyncPanZoomController::AcknowledgeScrollUpdate() const
+{
+  // Once layout issues a scroll offset update, it becomes impervious to
+  // scroll offset updates from APZ until we acknowledge the update it sent.
+  // This prevents APZ updates from clobbering scroll updates from other
+  // more "legitimate" sources like content scripts.
+  RefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    APZC_LOG("%p sending scroll update acknowledgement with gen %u\n", this, mFrameMetrics.GetScrollGeneration());
+    controller->AcknowledgeScrollUpdate(mFrameMetrics.GetScrollId(),
+                                        mFrameMetrics.GetScrollGeneration());
+  }
 }
 
 const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() const {

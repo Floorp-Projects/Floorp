@@ -516,6 +516,13 @@ BasePrincipal::GetAppId(uint32_t* aAppId)
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Assign(mOriginAttributes.mAddonId);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetUserContextId(uint32_t* aUserContextId)
 {
   *aUserContextId = UserContextId();

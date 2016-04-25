@@ -1013,10 +1013,9 @@ RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedObject regexp(cx, &iter.read().toObject());
     RootedString input(cx, iter.read().toString());
     int32_t lastIndex = iter.read().toInt32();
-    bool sticky = iter.read().toBoolean();
 
     RootedValue result(cx);
-    if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, sticky, nullptr, &result))
+    if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, nullptr, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -1040,10 +1039,9 @@ RRegExpSearcher::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedObject regexp(cx, &iter.read().toObject());
     RootedString input(cx, iter.read().toString());
     int32_t lastIndex = iter.read().toInt32();
-    bool sticky = iter.read().toBoolean();
 
     int32_t result;
-    if (!RegExpSearcherRaw(cx, regexp, input, lastIndex, sticky, nullptr, &result))
+    if (!RegExpSearcherRaw(cx, regexp, input, lastIndex, nullptr, &result))
         return false;
 
     RootedValue resultVal(cx);
@@ -1069,10 +1067,9 @@ RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedString string(cx, iter.read().toString());
     RootedObject regexp(cx, &iter.read().toObject());
     int32_t lastIndex = iter.read().toInt32();
-    bool sticky = iter.read().toBoolean();
     int32_t endIndex;
 
-    if (!js::RegExpTesterRaw(cx, regexp, string, lastIndex, sticky, &endIndex))
+    if (!js::RegExpTesterRaw(cx, regexp, string, lastIndex, &endIndex))
         return false;
 
     RootedValue result(cx);

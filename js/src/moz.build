@@ -742,6 +742,8 @@ selfhosted.inputs = [
     'builtin/Object.js',
     'builtin/Reflect.js',
     'builtin/RegExp.js',
+    'builtin/RegExpGlobalReplaceOpt.h.js',
+    'builtin/RegExpLocalReplaceOpt.h.js',
     'builtin/String.js',
     'builtin/Set.js',
     'builtin/Sorting.js',

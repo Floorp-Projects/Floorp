@@ -69,6 +69,13 @@ ChromeProcessController::PostDelayedTask(Task* aTask, int aDelayMs)
 }
 
 void
+ChromeProcessController::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                                 const uint32_t& aScrollGeneration)
+{
+  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+}
+
+void
 ChromeProcessController::Destroy()
 {
   if (MessageLoop::current() != mUILoop) {
@@ -85,6 +92,9 @@ ChromeProcessController::Destroy()
 nsIPresShell*
 ChromeProcessController::GetPresShell() const
 {
+  if (!mWidget) {
+    return nullptr;
+  }
   if (nsView* view = nsView::GetViewFor(mWidget)) {
     return view->GetPresShell();
   }

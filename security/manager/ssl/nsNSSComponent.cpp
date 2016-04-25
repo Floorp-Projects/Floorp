@@ -58,9 +58,9 @@
 #include "nsILocalFileWin.h"
 
 #include "windows.h" // this needs to be before the following includes
-#include "Lmcons.h"
-#include "Sddl.h"
-#include "Wincrypt.h"
+#include "lmcons.h"
+#include "sddl.h"
+#include "wincrypt.h"
 #include "nsIWindowsRegKey.h"
 #endif
 

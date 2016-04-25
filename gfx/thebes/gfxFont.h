@@ -28,6 +28,7 @@
 #include "nsDataHashtable.h"
 #include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
+#include "nsColor.h"
 
 typedef struct _cairo cairo_t;
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
@@ -2182,6 +2183,8 @@ struct TextRunDrawParams {
     mozilla::gfx::Color      fontSmoothingBGColor;
     gfxFloat                 direction;
     double                   devPerApp;
+    float                    textStrokeWidth;
+    nscolor                  textStrokeColor;
     DrawMode                 drawMode;
     bool                     isVerticalRun;
     bool                     isRTL;

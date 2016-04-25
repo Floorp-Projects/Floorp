@@ -60,6 +60,10 @@ function unregister(swr) {
   return executeInContent("devtools:sw-test:unregister");
 }
 
+function registerAndUnregisterInFrame() {
+  return executeInContent("devtools:sw-test:iframe:register-and-unregister");
+}
+
 function testRegisterFails(data) {
   is(data.success, false, "Register should fail with security error");
   return promise.resolve();
@@ -107,6 +111,8 @@ function start() {
     .then(register)
     .then(testRegisterSuccesses)
     .then(unregister)
+    .then(registerAndUnregisterInFrame)
+    .then(testRegisterSuccesses)
     // Workers should be turned back off when we closes the toolbox
     .then(toolbox.destroy.bind(toolbox))
     .then(reload)

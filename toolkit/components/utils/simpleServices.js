@@ -62,13 +62,33 @@ RemoteTagServiceService.prototype = {
 function AddonPolicyService()
 {
   this.wrappedJSObject = this;
+  this.cspStrings = new Map();
   this.mayLoadURICallbacks = new Map();
   this.localizeCallbacks = new Map();
+
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this, "baseCSP", "extensions.webextensions.base-content-security-policy",
+    "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; " +
+    "object-src 'self' https://* moz-extension: blob: filesystem:;");
+
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this, "defaultCSP", "extensions.webextensions.default-content-security-policy",
+    "script-src 'self'; object-src 'self';");
 }
 
 AddonPolicyService.prototype = {
   classID: Components.ID("{89560ed3-72e3-498d-a0e8-ffe50334d7c5}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonPolicyService]),
+
+  /**
+   * Returns the content security policy which applies to documents belonging
+   * to the extension with the given ID. This may be either a custom policy,
+   * if one was supplied, or the default policy if one was not.
+   */
+  getAddonCSP(aAddonId) {
+    let csp = this.cspStrings.get(aAddonId);
+    return csp || this.defaultCSP;
+  },
 
   /*
    * Invokes a callback (if any) associated with the addon to determine whether
@@ -133,6 +153,19 @@ AddonPolicyService.prototype = {
       this.mayLoadURICallbacks.set(aAddonId, aCallback);
     } else {
       this.mayLoadURICallbacks.delete(aAddonId);
+    }
+  },
+
+  /*
+   * Sets the custom CSP string to be used for the add-on. Not accessible over
+   * XPCOM - callers should use .wrappedJSObject on the service to call it
+   * directly.
+   */
+  setAddonCSP(aAddonId, aCSPString) {
+    if (aCSPString) {
+      this.cspStrings.set(aAddonId, aCSPString);
+    } else {
+      this.cspStrings.delete(aAddonId);
     }
   },
 

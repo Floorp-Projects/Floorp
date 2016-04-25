@@ -306,10 +306,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool ice_tcp = Preferences::GetBool("media.peerconnection.ice.tcp", false);
-  if (!XRE_IsParentProcess()) {
-    CSFLogError(logTag, "%s: ICE TCP not support on e10s", __FUNCTION__);
-    ice_tcp = false;
-  }
 #else
   bool ice_tcp = false;
 #endif
@@ -700,6 +696,8 @@ PeerConnectionMedia::RollbackIceRestart()
                     RefPtr<PeerConnectionMedia>(this),
                     &PeerConnectionMedia::RollbackIceRestart_s),
                 NS_DISPATCH_NORMAL);
+
+  mIceRestartState = ICE_RESTART_NONE;
 }
 
 void

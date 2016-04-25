@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 #include <stdint.h> // for intptr_t
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "PluginInstanceParent.h"
@@ -2659,6 +2660,33 @@ PluginInstanceParent::RecvRequestCommitOrCancel(const bool& aCommitted)
         owner->RequestCommitOrCancel(aCommitted);
     }
 #endif
+    return true;
+}
+
+nsresult
+PluginInstanceParent::HandledWindowedPluginKeyEvent(
+                        const NativeEventData& aKeyEventData,
+                        bool aIsConsumed)
+{
+    if (NS_WARN_IF(!SendHandledWindowedPluginKeyEvent(aKeyEventData,
+                                                      aIsConsumed))) {
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+bool
+PluginInstanceParent::RecvOnWindowedPluginKeyEvent(
+                        const NativeEventData& aKeyEventData)
+{
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (NS_WARN_IF(!owner)) {
+        // Notifies the plugin process of the key event being not consumed
+        // by us.
+        HandledWindowedPluginKeyEvent(aKeyEventData, false);
+        return true;
+    }
+    owner->OnWindowedPluginKeyEvent(aKeyEventData);
     return true;
 }
 

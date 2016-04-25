@@ -135,12 +135,12 @@ class RegExpShared
     bool               canStringMatch;
     bool               marked_;
 
-    RegExpCompilation  compilationArray[8];
+    RegExpCompilation  compilationArray[4];
 
-    static int CompilationIndex(CompilationMode mode, bool sticky, bool latin1) {
+    static int CompilationIndex(CompilationMode mode, bool latin1) {
         switch (mode) {
-          case Normal:    return sticky ? (latin1 ? 0 : 1) : (latin1 ? 2 : 3);
-          case MatchOnly: return sticky ? (latin1 ? 4 : 5) : (latin1 ? 6 : 7);
+          case Normal:    return latin1 ? 0 : 1;
+          case MatchOnly: return latin1 ? 2 : 3;
         }
         MOZ_CRASH();
     }
@@ -150,19 +150,19 @@ class RegExpShared
 
     /* Internal functions. */
     bool compile(JSContext* cx, HandleLinearString input,
-                 CompilationMode mode, bool sticky, ForceByteCodeEnum force);
+                 CompilationMode mode, ForceByteCodeEnum force);
     bool compile(JSContext* cx, HandleAtom pattern, HandleLinearString input,
-                 CompilationMode mode, bool sticky, ForceByteCodeEnum force);
+                 CompilationMode mode, ForceByteCodeEnum force);
 
     bool compileIfNecessary(JSContext* cx, HandleLinearString input,
-                            CompilationMode mode, bool sticky, ForceByteCodeEnum force);
+                            CompilationMode mode, ForceByteCodeEnum force);
 
-    const RegExpCompilation& compilation(CompilationMode mode, bool sticky, bool latin1) const {
-        return compilationArray[CompilationIndex(mode, sticky, latin1)];
+    const RegExpCompilation& compilation(CompilationMode mode, bool latin1) const {
+        return compilationArray[CompilationIndex(mode, latin1)];
     }
 
-    RegExpCompilation& compilation(CompilationMode mode, bool sticky, bool latin1) {
-        return compilationArray[CompilationIndex(mode, sticky, latin1)];
+    RegExpCompilation& compilation(CompilationMode mode, bool latin1) {
+        return compilationArray[CompilationIndex(mode, latin1)];
     }
 
   public:
@@ -172,7 +172,7 @@ class RegExpShared
     // Execute this RegExp on input starting from searchIndex, filling in
     // matches if specified and otherwise only determining if there is a match.
     RegExpRunStatus execute(JSContext* cx, HandleLinearString input, size_t searchIndex,
-                            bool sticky, MatchPairs* matches, size_t* endIndex);
+                            MatchPairs* matches, size_t* endIndex);
 
     // Register a table with this RegExpShared, and take ownership.
     bool addTable(uint8_t* table) {
@@ -197,15 +197,13 @@ class RegExpShared
     bool sticky() const                 { return flags & StickyFlag; }
     bool unicode() const                { return flags & UnicodeFlag; }
 
-    bool isCompiled(CompilationMode mode, bool sticky, bool latin1,
+    bool isCompiled(CompilationMode mode, bool latin1,
                     ForceByteCodeEnum force = DontForceByteCode) const {
-        return compilation(mode, sticky, latin1).compiled(force);
+        return compilation(mode, latin1).compiled(force);
     }
     bool isCompiled() const {
-        return isCompiled(Normal, true, true) || isCompiled(Normal, true, false)
-            || isCompiled(Normal, false, true) || isCompiled(Normal, false, false)
-            || isCompiled(MatchOnly, true, true) || isCompiled(MatchOnly, true, false)
-            || isCompiled(MatchOnly, false, true) || isCompiled(MatchOnly, false, false);
+        return isCompiled(Normal, true) || isCompiled(Normal, false)
+            || isCompiled(MatchOnly, true) || isCompiled(MatchOnly, false);
     }
 
     void trace(JSTracer* trc);
@@ -226,24 +224,14 @@ class RegExpShared
         return offsetof(RegExpShared, parenCount);
     }
 
-    static size_t offsetOfStickyLatin1JitCode(CompilationMode mode) {
+    static size_t offsetOfLatin1JitCode(CompilationMode mode) {
         return offsetof(RegExpShared, compilationArray)
-             + (CompilationIndex(mode, true, true) * sizeof(RegExpCompilation))
+             + (CompilationIndex(mode, true) * sizeof(RegExpCompilation))
              + offsetof(RegExpCompilation, jitCode);
     }
-    static size_t offsetOfNotStickyLatin1JitCode(CompilationMode mode) {
+    static size_t offsetOfTwoByteJitCode(CompilationMode mode) {
         return offsetof(RegExpShared, compilationArray)
-             + (CompilationIndex(mode, false, true) * sizeof(RegExpCompilation))
-             + offsetof(RegExpCompilation, jitCode);
-    }
-    static size_t offsetOfStickyTwoByteJitCode(CompilationMode mode) {
-        return offsetof(RegExpShared, compilationArray)
-             + (CompilationIndex(mode, true, false) * sizeof(RegExpCompilation))
-             + offsetof(RegExpCompilation, jitCode);
-    }
-    static size_t offsetOfNotStickyTwoByteJitCode(CompilationMode mode) {
-        return offsetof(RegExpShared, compilationArray)
-             + (CompilationIndex(mode, false, false) * sizeof(RegExpCompilation))
+             + (CompilationIndex(mode, false) * sizeof(RegExpCompilation))
              + offsetof(RegExpCompilation, jitCode);
     }
 

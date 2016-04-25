@@ -575,7 +575,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
                  "callback must not be specified unless using GLYPH_PATH");
 
     bool skipDrawing = mSkipDrawing;
-    if (aParams.drawMode == DrawMode::GLYPH_FILL) {
+    if (aParams.drawMode & DrawMode::GLYPH_FILL) {
         Color currentColor;
         if (aParams.context->GetDeviceColor(currentColor) &&
             currentColor.a == 0) {
@@ -605,7 +605,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
     Color currentColor;
     bool needToRestore = false;
 
-    if (aParams.drawMode == DrawMode::GLYPH_FILL &&
+    if (aParams.drawMode & DrawMode::GLYPH_FILL &&
         HasNonOpaqueNonTransparentColor(aParams.context, currentColor) &&
         HasSyntheticBoldOrColor(this, aRange)) {
         needToRestore = true;
@@ -626,6 +626,8 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
     params.isVerticalRun = IsVertical();
     params.isRTL = IsRightToLeft();
     params.direction = direction;
+    params.textStrokeWidth = aParams.textStrokeWidth;
+    params.textStrokeColor = aParams.textStrokeColor;
     params.drawMode = aParams.drawMode;
     params.callbacks = aParams.callbacks;
     params.runContextPaint = aParams.contextPaint;
@@ -645,7 +647,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
         Range ligatureRange(start, end);
         ShrinkToLigatureBoundaries(&ligatureRange);
 
-        bool drawPartial = aParams.drawMode == DrawMode::GLYPH_FILL ||
+        bool drawPartial = (aParams.drawMode & DrawMode::GLYPH_FILL) ||
                            (aParams.drawMode == DrawMode::GLYPH_PATH &&
                             aParams.callbacks);
         gfxPoint origPt = aPt;

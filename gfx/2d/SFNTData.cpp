@@ -116,7 +116,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
 
   // Check to see if this is a font collection.
   if (aDataLength < sizeof(TTCHeader)) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "Font data too short: length = " << aDataLength;
+    gfxWarning() << "Font data too short.";
     return nullptr;
   }
 
@@ -124,7 +124,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
   if (ttcHeader->ttcTag == TRUETYPE_TAG('t', 't', 'c', 'f')) {
     uint32_t numFonts = ttcHeader->numFonts;
     if (aDataLength < sizeof(TTCHeader) + (numFonts * sizeof(BigEndianUint32))) {
-      gfxDevCrash(LogReason::GetFontFileDataFailed) << "Font data too short to contain full TTC Header: numFonts = " << numFonts << "; length = " << aDataLength;
+      gfxWarning() << "Font data too short to contain full TTC Header.";
       return nullptr;
     }
 
@@ -134,7 +134,6 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
     const BigEndianUint32* endOfOffsets = offset + numFonts;
     while (offset != endOfOffsets) {
       if (!sfntData->AddFont(aFontData, aDataLength, *offset)) {
-        gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to add font data from TTC";
         return nullptr;
       }
       ++offset;
@@ -145,7 +144,6 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
 
   UniquePtr<SFNTData> sfntData(new SFNTData);
   if (!sfntData->AddFont(aFontData, aDataLength, 0)) {
-    gfxDevCrash(LogReason::GetFontFileDataFailed) << "Failed to add single font data";
     return nullptr;
   }
 
@@ -206,11 +204,20 @@ SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames)
 
 bool
 SFNTData::GetIndexForU16Name(const mozilla::u16string& aU16FullName,
-                             uint32_t* aIndex)
+                             uint32_t* aIndex, size_t aTruncatedLen)
 {
   for (size_t i = 0; i < mFonts.length(); ++i) {
     mozilla::u16string name;
-    if (mFonts[i]->GetU16FullName(name) && name == aU16FullName) {
+    if (!mFonts[i]->GetU16FullName(name)) {
+      continue;
+    }
+
+    if (aTruncatedLen) {
+      MOZ_ASSERT(aU16FullName.length() <= aTruncatedLen);
+      name = name.substr(0, aTruncatedLen);
+    }
+
+    if (name == aU16FullName) {
       *aIndex = i;
       return true;
     }
@@ -225,7 +232,7 @@ SFNTData::AddFont(const uint8_t *aFontData, uint32_t aDataLength,
 {
   uint32_t remainingLength = aDataLength - aOffset;
   if (remainingLength < sizeof(OffsetTable)) {
-    gfxCriticalError() << "Font data too short to contain OffsetTable: offset = " << aOffset << "; length = " << aDataLength;
+    gfxWarning() << "Font data too short to contain OffsetTable " << aOffset;
     return false;
   }
 
@@ -233,7 +240,7 @@ SFNTData::AddFont(const uint8_t *aFontData, uint32_t aDataLength,
     reinterpret_cast<const OffsetTable*>(aFontData + aOffset);
   if (remainingLength <
       sizeof(OffsetTable) + (offsetTable->numTables * sizeof(TableDirEntry))) {
-    gfxCriticalError() << "Font data too short to contain tables. numTables = " << offsetTable->numTables << "; offset = " << aOffset << "; length = " << aDataLength;
+    gfxWarning() << "Font data too short to contain tables.";
     return false;
   }
 

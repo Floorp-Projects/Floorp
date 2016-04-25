@@ -71,17 +71,10 @@ this.ExtensionStorage = {
    */
   sanitize(value, global) {
     // We can't trust that the global has privileges to access this
-    // value enough to clone it using a privileged JSON object. And JSON
-    // objects don't support X-ray wrappers, so we can't use the JSON
-    // object from the unprivileged global directly, either.
-    //
-    // So, instead, we create a new one, which we know is clean,
-    // belonging to the same principal as the unprivileged scope, and
-    // use that instead.
-    let JSON_ = Cu.waiveXrays(Cu.Sandbox(global).JSON);
+    // value enough to clone it using a privileged JSON object.
+    let JSON_ = Cu.waiveXrays(global.JSON);
 
     let json = JSON_.stringify(value, jsonReplacer);
-
     return JSON.parse(json);
   },
 

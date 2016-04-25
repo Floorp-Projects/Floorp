@@ -70,6 +70,29 @@ def android_ndk_include(compile_env, build_project, _):
 include(android_ndk_include)
 
 
+# MacOS deployment target version
+# ==============================================================
+# This needs to happen before any compilation test is done.
+
+option('--enable-macos-target', env='MACOSX_DEPLOYMENT_TARGET', nargs=1,
+       default='10.6', help='Set the minimum MacOS version needed at runtime')
+
+@depends('--enable-macos-target', target)
+@imports(_from='os', _import='environ')
+def macos_target(value, target):
+    if value and target.os == 'OSX':
+        # Ensure every compiler process we spawn uses this value.
+        environ['MACOSX_DEPLOYMENT_TARGET'] = value[0]
+        return value[0]
+    if value and value.origin != 'default':
+        die('--enable-macos-target cannot be used when targeting %s',
+            target.os)
+
+
+set_config('MACOSX_DEPLOYMENT_TARGET', macos_target)
+add_old_configure_assignment('MACOSX_DEPLOYMENT_TARGET', macos_target)
+
+
 # Compiler wrappers
 # ==============================================================
 # Normally, we'd use js_option and automatically have those variables

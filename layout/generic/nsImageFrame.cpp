@@ -557,12 +557,12 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     // This is valid and for the current request, so update our stored image
     // container, orienting according to our style.
     mImage = nsLayoutUtils::OrientImage(aImage, StyleVisibility()->mImageOrientation);
-    
+
     intrinsicSizeChanged = UpdateIntrinsicSize(mImage);
     intrinsicSizeChanged = UpdateIntrinsicRatio(mImage) || intrinsicSizeChanged;
   } else {
     // We no longer have a valid image, so release our stored image container.
-    mImage = nullptr;
+    mImage = mPrevImage = nullptr;
 
     // Have to size to 0,0 so that GetDesiredSize recalculates the size.
     mIntrinsicSize.width.SetCoordValue(0);
@@ -586,6 +586,8 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
       // so we're ready to request a decode.
       MaybeDecodeForPredictedSize();
     }
+
+    mPrevImage = nullptr;
   }
 
   return NS_OK;
@@ -675,7 +677,7 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
     intrinsicSizeChanged = UpdateIntrinsicRatio(mImage) || intrinsicSizeChanged;
   } else {
     // We no longer have a valid image, so release our stored image container.
-    mImage = nullptr;
+    mImage = mPrevImage = nullptr;
 
     // Have to size to 0,0 so that GetDesiredSize recalculates the size
     mIntrinsicSize.width.SetCoordValue(0);
@@ -696,6 +698,8 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
         // so we're ready to request a decode.
         MaybeDecodeForPredictedSize();
       }
+
+      mPrevImage = nullptr;
     }
     // Update border+content to account for image change
     InvalidateFrame();
@@ -1486,7 +1490,8 @@ static void PaintDebugImageMap(nsIFrame* aFrame, DrawTarget* aDrawTarget,
 
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
-                      nsRenderingContext* aCtx) {
+                      nsRenderingContext* aCtx)
+{
   uint32_t flags = imgIContainer::FLAG_NONE;
   if (aBuilder->ShouldSyncDecodeImages()) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
@@ -1497,6 +1502,17 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
 
   DrawResult result = static_cast<nsImageFrame*>(mFrame)->
     PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage, flags);
+
+  if (result == DrawResult::NOT_READY ||
+      result == DrawResult::INCOMPLETE ||
+      result == DrawResult::TEMPORARY_ERROR) {
+    // If the current image failed to paint because it's still loading or
+    // decoding, try painting the previous image.
+    if (mPrevImage) {
+      result = static_cast<nsImageFrame*>(mFrame)->
+        PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mPrevImage, flags);
+    }
+  }
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -1692,6 +1708,12 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
     map->Draw(this, *drawTarget, black, strokeOptions);
   }
 
+  if (result == DrawResult::SUCCESS) {
+    mPrevImage = aImage;
+  } else if (result == DrawResult::BAD_IMAGE) {
+    mPrevImage = nullptr;
+  }
+
   return result;
 }
 
@@ -1746,7 +1768,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
     } else {
       aLists.Content()->AppendNewToTop(new (aBuilder)
-        nsDisplayImage(aBuilder, this, mImage));
+        nsDisplayImage(aBuilder, this, mImage, mPrevImage));
 
       // If we were previously displaying an icon, we're not anymore
       if (mDisplayingIcon) {

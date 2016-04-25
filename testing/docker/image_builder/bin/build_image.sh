@@ -9,7 +9,7 @@ set -x -e -v
 # Prefix errors with taskcluster error prefix so that they are parsed by Treeherder
 raise_error() {
    echo
-   echo "[taskcluster:error] Error: $1"
+   echo "[taskcluster-image-build:error] $1"
    exit 1
 }
 
@@ -21,7 +21,9 @@ mkdir /artifacts
 
 if [ ! -z "$CONTEXT_URL" ]; then
     mkdir /context
-    curl -L "$CONTEXT_URL" | tar -xz --strip-components 1 -C /context
+    if ! curl -L --retry 5 --connect-timeout 30 "$CONTEXT_URL" | tar -xz --strip-components 1 -C /context; then
+        raise_error "Error downloading image context from decision task."
+    fi
     CONTEXT_PATH=/context
 else
     tc-vcs checkout /home/worker/workspace/src $BASE_REPOSITORY $HEAD_REPOSITORY $HEAD_REV $HEAD_REF

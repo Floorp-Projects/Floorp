@@ -61,13 +61,15 @@ NS_IMPL_STRING_ATTR(HTMLSharedElement, Target, target)
 NS_IMETHODIMP
 HTMLSharedElement::GetHref(nsAString& aValue)
 {
+  MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::base),
+             "This should only get called for <base> elements");
   nsAutoString href;
   GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> uri;
   nsIDocument* doc = OwnerDoc();
   nsContentUtils::NewURIWithDocumentCharset(
-    getter_AddRefs(uri), href, doc, doc->GetDocumentURI());
+    getter_AddRefs(uri), href, doc, doc->GetFallbackBaseURI());
 
   if (!uri) {
     aValue = href;

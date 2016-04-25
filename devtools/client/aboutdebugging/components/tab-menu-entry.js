@@ -14,16 +14,25 @@ module.exports = createClass({
     this.props.selectTab(this.props.tabId);
   },
 
+  onKeyUp(event) {
+    if ([" ", "Enter"].includes(event.key)) {
+      this.props.selectTab(this.props.tabId);
+    }
+  },
+
   render() {
-    let { icon, name, selected } = this.props;
+    let { panelId, icon, name, selected } = this.props;
 
     // Here .category, .category-icon, .category-name classnames are used to
     // apply common styles defined.
     let className = "category" + (selected ? " selected" : "");
     return dom.div({
       "aria-selected": selected,
+      "aria-controls": panelId,
       className,
       onClick: this.onClick,
+      onKeyUp: this.onKeyUp,
+      tabIndex: "0",
       role: "tab" },
     dom.img({ className: "category-icon", src: icon, role: "presentation" }),
     dom.div({ className: "category-name" }, name));

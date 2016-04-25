@@ -73,13 +73,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef XP_WIN
 #include <wtypes.h>
 #include <winuser.h>
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL (0x020E)
-#endif
-#ifndef SPI_GETWHEELSCROLLCHARS
-#define SPI_GETWHEELSCROLLCHARS (0x006C)
-#endif
-#endif
+#include "mozilla/widget/WinMessages.h"
+#endif // #ifdef XP_WIN
 
 #ifdef XP_MACOSX
 #include "ComplexTextInputPanel.h"
@@ -423,6 +418,7 @@ NS_IMPL_ISUPPORTS(nsPluginInstanceOwner,
                   nsIPluginInstanceOwner,
                   nsIDOMEventListener,
                   nsIPrivacyTransitionObserver,
+                  nsIKeyEventInPluginCallback,
                   nsISupportsWeakReference)
 
 nsresult
@@ -998,7 +994,57 @@ nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
   }
   return true;
 }
+
 #endif // #ifdef XP_WIN
+
+void
+nsPluginInstanceOwner::HandledWindowedPluginKeyEvent(
+                         const NativeEventData& aKeyEventData,
+                         bool aIsConsumed)
+{
+  if (NS_WARN_IF(!mInstance)) {
+    return;
+  }
+  nsresult rv =
+    mInstance->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
+  NS_WARN_IF(NS_FAILED(rv));
+}
+
+void
+nsPluginInstanceOwner::OnWindowedPluginKeyEvent(
+                         const NativeEventData& aKeyEventData)
+{
+  if (NS_WARN_IF(!mPluginFrame)) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> widget = mPluginFrame->PresContext()->GetRootWidget();
+  if (NS_WARN_IF(!widget)) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  nsresult rv = widget->OnWindowedPluginKeyEvent(aKeyEventData, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return;
+  }
+
+  // If the key event is posted to another process, we need to wait a call
+  // of HandledWindowedPluginKeyEvent().  So, nothing to do here in this case.
+  if (rv == NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY) {
+    return;
+  }
+
+  // Otherwise, the key event is handled synchronously.  Let's notify the
+  // plugin process of the key event's result.
+  bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
+  HandledWindowedPluginKeyEvent(aKeyEventData, consumed);
+}
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
@@ -3280,14 +3326,10 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
 
 void* nsPluginInstanceOwner::GetPluginPort()
 {
-//!!! Port must be released for windowless plugins on Windows, because it is HDC !!!
-
   void* result = nullptr;
   if (mWidget) {
 #ifdef XP_WIN
-    if (mPluginWindow && (mPluginWindow->type == NPWindowTypeDrawable))
-      result = mWidget->GetNativeData(NS_NATIVE_GRAPHIC); // HDC
-    else
+    if (!mPluginWindow || mPluginWindow->type == NPWindowTypeWindow)
 #endif
       result = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT); // HWND/gdk window
   }
@@ -3297,12 +3339,6 @@ void* nsPluginInstanceOwner::GetPluginPort()
 
 void nsPluginInstanceOwner::ReleasePluginPort(void * pluginPort)
 {
-#ifdef XP_WIN
-  if (mWidget && mPluginWindow &&
-      mPluginWindow->type == NPWindowTypeDrawable) {
-    mWidget->FreeNativeData((HDC)pluginPort, NS_NATIVE_GRAPHIC);
-  }
-#endif
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)

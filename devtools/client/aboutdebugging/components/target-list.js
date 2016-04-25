@@ -25,9 +25,9 @@ module.exports = createClass({
     });
 
     return dom.div({ id: this.props.id, className: "targets" },
-      dom.h4(null, this.props.name),
+      dom.h2(null, this.props.name),
       targets.length > 0 ?
-        targets :
+        dom.ul({ className: "target-list" }, targets) :
         dom.p(null, Strings.GetStringFromName("nothing"))
     );
   },

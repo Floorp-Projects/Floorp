@@ -21,11 +21,11 @@
 "unpack": true
 },
 {
-"version": "Visual Studio 2015 Update 1 / SDK 10.0.10586.0",
-"size": 330570496,
-"digest": "0379fd087705f54aeb335449e6c623cd550b656d7110acafd1e5b315e1fc9272b7cdd1e37f99d575b16ecba4e8e4fe3af965967a3944c023b83caf68fa684888",
+"version": "Visual Studio 2015 Update 2 / SDK 10.0.10586.0/212",
+"size": 332343834,
+"digest": "55814aaabcd4aa51fe85918ec02a8c29bc067d41ee79ddcfd628daaba5a06d4241a73a51bf5a8bc69cc762b52551009f44b05e65682c45b4684c17fb2d017c2c",
 "algorithm": "sha512",
-"filename": "vs2015u1.zip",
+"filename": "vs2015u2.zip",
 "unpack": true
 }
 ]

@@ -139,8 +139,8 @@ def get_config_defines(buildconfig):
   return env
 
 def process_inputs(namespace, c_out, msg_file, inputs):
-  deps = [path for path in inputs if path.endswith(".h")]
-  sources = [path for path in inputs if path.endswith(".js")]
+  deps = [path for path in inputs if path.endswith(".h") or path.endswith(".h.js")]
+  sources = [path for path in inputs if path.endswith(".js") and not path.endswith(".h.js")]
   assert len(deps) + len(sources) == len(inputs)
   cxx = shlex.split(buildconfig.substs['CXX'])
   cxx_option = buildconfig.substs['PREPROCESS_OPTION']

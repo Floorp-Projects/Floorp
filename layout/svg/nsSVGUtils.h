@@ -9,6 +9,7 @@
 // include math.h to pick up definition of M_ maths defines e.g. M_PI
 #include <math.h>
 
+#include "DrawMode.h"
 #include "gfx2DGlue.h"
 #include "gfxMatrix.h"
 #include "gfxPoint.h"
@@ -46,6 +47,7 @@ struct nsStyleSVGPaint;
 struct nsRect;
 
 namespace mozilla {
+struct SVGTextContextPaint;
 namespace dom {
 class Element;
 class UserSpaceMetrics;
@@ -178,9 +180,11 @@ class nsSVGUtils
 public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::gfx::AntialiasMode AntialiasMode;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
   typedef mozilla::gfx::Size Size;
+  typedef mozilla::SVGTextContextPaint SVGTextContextPaint;
 
   static void Init();
 
@@ -491,6 +495,13 @@ public:
 
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
+
+  static DrawMode
+  SetupContextPaint(const DrawTarget* aDrawTarget,
+                    const gfxMatrix& aContextMatrix,
+                    nsIFrame* aFrame,
+                    gfxTextContextPaint* aOuterContextPaint,
+                    SVGTextContextPaint* aThisContextPaint);
 
   static void
   MakeFillPatternFor(nsIFrame *aFrame,

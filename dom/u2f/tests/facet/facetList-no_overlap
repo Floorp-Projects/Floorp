@@ -1,9 +1,0 @@
-{
-  "trustedFacets" : [{
-    "version": { "major": 1, "minor" : 0 },
-    "ids": [
-     "https://example.net",
-     "http://www.example.com"
-    ]
-  }]
-}

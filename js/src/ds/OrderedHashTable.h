@@ -635,7 +635,8 @@ class OrderedHashTable
             return true;
         }
 
-        size_t newHashBuckets = 1 << (HashNumberSizeBits - newHashShift);
+        size_t newHashBuckets =
+            size_t(1) << (HashNumberSizeBits - newHashShift);
         Data** newHashTable = alloc.template pod_malloc<Data*>(newHashBuckets);
         if (!newHashTable)
             return false;

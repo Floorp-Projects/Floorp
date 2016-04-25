@@ -40,6 +40,13 @@ NS_EVENT_MESSAGE(eKeyPress)
 NS_EVENT_MESSAGE(eKeyUp)
 NS_EVENT_MESSAGE(eKeyDown)
 
+// These messages are dispatched when PluginInstaceChild receives native
+// keyboard events directly and it posts the information to the widget.
+// These messages shouldn't be handled by content and non-reserved chrome
+// event handlers.
+NS_EVENT_MESSAGE(eKeyDownOnPlugin)
+NS_EVENT_MESSAGE(eKeyUpOnPlugin)
+
 NS_EVENT_MESSAGE(eBeforeKeyDown)
 NS_EVENT_MESSAGE(eAfterKeyDown)
 NS_EVENT_MESSAGE(eBeforeKeyUp)

@@ -1770,7 +1770,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
         MOZ_ASSERT(result);
       }
       APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
-          result, aNode, *aOutHitResult);
+          result, resultNode, *aOutHitResult);
       return result;
   }
 

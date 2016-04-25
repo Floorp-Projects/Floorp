@@ -1552,12 +1552,18 @@ IMEContentObserver::IMENotificationSender::Run()
 
   // If notifications caused some new change, we should notify them now.
   if (mIMEContentObserver->NeedsToNotifyIMEOfSomething()) {
-    MOZ_LOG(sIMECOLog, LogLevel::Debug,
-      ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
-       "posting IMENotificationSender to current thread", this));
-    mIMEContentObserver->mQueuedSender =
-      new IMENotificationSender(mIMEContentObserver);
-    NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+    if (mIMEContentObserver->GetState() == eState_StoppedObserving) {
+      MOZ_LOG(sIMECOLog, LogLevel::Debug,
+        ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
+         "waiting IMENotificationSender to be reinitialized", this));
+    } else {
+      MOZ_LOG(sIMECOLog, LogLevel::Debug,
+        ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
+         "posting IMENotificationSender to current thread", this));
+      mIMEContentObserver->mQueuedSender =
+        new IMENotificationSender(mIMEContentObserver);
+      NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+    }
   }
   return NS_OK;
 }

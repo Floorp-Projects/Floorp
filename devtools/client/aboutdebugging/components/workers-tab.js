@@ -100,11 +100,11 @@ module.exports = createClass({
   },
 
   render() {
-    let { client } = this.props;
+    let { client, id } = this.props;
     let { workers } = this.state;
 
     return dom.div({
-      id: "tab-workers",
+      id: id,
       className: "tab",
       role: "tabpanel",
       "aria-labelledby": "tab-workers-header-name"

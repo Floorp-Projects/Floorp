@@ -82,9 +82,9 @@ function() {
       var clientDataJSON = "";
       base64ToBytesUrlSafe(regResponse.clientData).map(x => clientDataJSON += String.fromCharCode(x));
       var clientData = JSON.parse(clientDataJSON);
-      local_is(clientData.typ, "navigator.id.finishEnrollment", "Data type matches");
-      local_is(clientData.challenge, state.regRequest.challenge, "Register challenge matches");
-      local_is(clientData.origin, window.location.origin, "Origins are the same");
+      local_is(clientData.typ, "navigator.id.finishEnrollment", "Register - Data type matches");
+      local_is(clientData.challenge, state.regRequest.challenge, "Register - Challenge matches");
+      local_is(clientData.origin, window.location.origin, "Register - Origins are the same");
 
       // Verify the signature from the attestation certificate
       deriveAppAndChallengeParam(state.appId, string2buffer(clientDataJSON))
@@ -161,9 +161,9 @@ function() {
       var clientDataJSON = "";
       base64ToBytesUrlSafe(signResponse.clientData).map(x => clientDataJSON += String.fromCharCode(x));
       var clientData = JSON.parse(clientDataJSON);
-      local_is(clientData.typ, "navigator.id.getAssertion", "Data type matches");
-      local_is(clientData.challenge, state.signChallenge, "Sign challenge matches");
-      local_is(clientData.origin, window.location.origin, "Origins are the same");
+      local_is(clientData.typ, "navigator.id.getAssertion", "Sign - Data type matches");
+      local_is(clientData.challenge, state.signChallenge, "Sign - Challenge matches");
+      local_is(clientData.origin, window.location.origin, "Sign - Origins are the same");
 
       // Parse the signature data
       var signatureData = base64ToBytesUrlSafe(signResponse.signatureData);

@@ -782,20 +782,6 @@ MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
 }
 #endif
 
-template <typename Units>
-Maybe<IntRectTyped<Units>>
-IntersectMaybeRects(const Maybe<IntRectTyped<Units>>& a,
-                    const Maybe<IntRectTyped<Units>>& b)
-{
-  if (!a) {
-    return b;
-  } else if (!b) {
-    return a;
-  } else {
-    return Some(a->Intersect(*b));
-  }
-}
-
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                                           bool* aOutFoundRoot,

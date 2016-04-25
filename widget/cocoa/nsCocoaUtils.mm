@@ -494,7 +494,8 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 
     mozilla::image::DrawResult res =
       aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
-                   aWhichFrame, Filter::POINT, Nothing(),
+                   aWhichFrame, Filter::POINT,
+                   /* no SVGImageContext */ Nothing(),
                    imgIContainer::FLAG_SYNC_DECODE);
 
     if (res != mozilla::image::DrawResult::SUCCESS) {

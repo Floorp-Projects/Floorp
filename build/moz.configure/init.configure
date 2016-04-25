@@ -654,9 +654,9 @@ add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_BUILD)
-@depends(check_build_environment)
+@depends(check_build_environment, '--help')
 @imports(_from='__builtin__', _import='open')
-def milestone(build_env):
+def milestone(build_env, _):
     milestone_path = os.path.join(build_env.topsrcdir,
                                   'config',
                                   'milestone.txt')
@@ -684,6 +684,39 @@ set_define('RELEASE_BUILD', delayed_getattr(milestone, 'is_release'))
 add_old_configure_assignment('RELEASE_BUILD',
                              delayed_getattr(milestone, 'is_release'))
 
+# A template providing a shorthand for tying an environment-set option to
+# the corresponding variable in set_config, where the value of that variable
+# passed to set_config only depends on the provided value and default.
+# If required, the set_as_define and set_for_old_configure arguments
+# will additionally cause the variable to be set using set_define and
+# add_old_configure_assignment. util.configure would be an appropriate place for
+# this, but it uses add_old_configure_assignment, which is defined in this file.
+@template
+def env_flag(env=None, set_for_old_configure=False, set_as_define=False,
+             **kwargs):
+
+    if not env:
+        configure_error("An env_flag must be passed a variable name to set.")
+
+    opt = option(env=env, **kwargs)
+
+    @depends(opt.option)
+    def option_implementation(value):
+        if value:
+            if len(value):
+                return value
+            return bool(value)
+
+    set_config(env, option_implementation)
+    if set_as_define:
+        set_define(env, option_implementation)
+    if set_for_old_configure:
+        add_old_configure_assignment(env, option_implementation)
+
+# milestone.is_nightly corresponds to cases NIGHTLY_BUILD is set.
+@depends(milestone, '--help')
+def enabled_in_nightly(milestone, _):
+    return milestone.is_nightly
 
 # Set the MOZ_CONFIGURE_OPTIONS variable with all the options that
 # were passed somehow (environment, command line, mozconfig)

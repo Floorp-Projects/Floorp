@@ -1899,6 +1899,44 @@ TabParent::RecvOnEventNeedingAckHandled(const EventMessage& aMessage)
   return true;
 }
 
+void
+TabParent::HandledWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
+                                         bool aIsConsumed)
+{
+  bool ok = SendHandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
+  NS_WARN_IF(!ok);
+}
+
+bool
+TabParent::RecvOnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return true;
+  }
+  nsresult rv = widget->OnWindowedPluginKeyEvent(aKeyEventData, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Notifies the plugin process of the key event being not consumed by us.
+    HandledWindowedPluginKeyEvent(aKeyEventData, false);
+    return true;
+  }
+
+  // If the key event is posted to another process, we need to wait a call
+  // of HandledWindowedPluginKeyEvent().  So, nothing to do here in this case.
+  if (rv == NS_SUCCESS_EVENT_HANDLED_ASYNCHRONOUSLY) {
+    return true;
+  }
+
+  // Otherwise, the key event is handled synchronously.  Let's notify the
+  // plugin process of the key event's result.
+  bool consumed = (rv == NS_SUCCESS_EVENT_CONSUMED);
+  HandledWindowedPluginKeyEvent(aKeyEventData, consumed);
+
+  return true;
+}
+
 bool
 TabParent::RecvRequestFocus(const bool& aCanRaise)
 {

@@ -279,7 +279,7 @@ class BasePopup {
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .allowScriptsToClose();
 
-      this.context = new ExtensionPage(this.extension, {
+      this.context = new ExtensionContext(this.extension, {
         type: "popup",
         contentWindow,
         uri: popupURI,

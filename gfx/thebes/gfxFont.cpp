@@ -1612,11 +1612,6 @@ private:
         buf.mNumGlyphs = mNumGlyphs;
 
         gfxContext::AzureState state = mRunParams.context->CurrentState();
-        if ((mRunParams.drawMode &
-             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
-            (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) {
-            FlushStroke(buf, state);
-        }
         if (mRunParams.drawMode & DrawMode::GLYPH_FILL) {
             if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
@@ -1684,17 +1679,19 @@ private:
                                           mFontParams.renderingOptions);
             }
         }
+        if ((mRunParams.drawMode &
+             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
+            DrawMode::GLYPH_STROKE) {
+            state.color = gfx::Color::FromABGR(mRunParams.textStrokeColor);
+            state.strokeOptions.mLineWidth = mRunParams.textStrokeWidth;
+            FlushStroke(buf, state);
+        }
         if (mRunParams.drawMode & DrawMode::GLYPH_PATH) {
             mRunParams.context->EnsurePathBuilder();
             Matrix mat = mRunParams.dt->GetTransform();
             mFontParams.scaledFont->CopyGlyphsToBuilder(
                 buf, mRunParams.context->mPathBuilder,
                 mRunParams.dt->GetBackendType(), &mat);
-        }
-        if ((mRunParams.drawMode &
-             (DrawMode::GLYPH_STROKE | DrawMode::GLYPH_STROKE_UNDERNEATH)) ==
-            DrawMode::GLYPH_STROKE) {
-            FlushStroke(buf, state);
         }
 
         mNumGlyphs = 0;
@@ -1704,17 +1701,9 @@ private:
     {
         RefPtr<Path> path =
             mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
-        if (mFontParams.contextPaint) {
-            RefPtr<gfxPattern> strokePattern =
-                mFontParams.contextPaint->GetStrokePattern(
-                    mRunParams.context->GetDrawTarget(),
-                    mRunParams.context->CurrentMatrix());
-            if (strokePattern) {
-                mRunParams.dt->Stroke(path,
-                                      *strokePattern->GetPattern(mRunParams.dt),
-                                      aState.strokeOptions);
-            }
-        }
+        mRunParams.dt->Stroke(path,
+                              ColorPattern(aState.color),
+                              aState.strokeOptions);
     }
 
     Glyph        mGlyphBuffer[GLYPH_BUFFER_SIZE];

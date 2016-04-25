@@ -10,6 +10,7 @@
 #include "AudioNodeEngineNEON.h"
 #endif
 #ifdef USE_SSE2
+#include "mozilla/SSE.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngineSSE2.h"
 #endif

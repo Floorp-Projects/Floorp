@@ -7,6 +7,7 @@
 #ifndef nsXBLWindowKeyHandler_h__
 #define nsXBLWindowKeyHandler_h__
 
+#include "mozilla/EventForwards.h"
 #include "nsWeakPtr.h"
 #include "nsIDOMEventListener.h"
 
@@ -72,6 +73,12 @@ protected:
   // attribute.
   bool HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
                           bool* aOutReservedForChrome = nullptr);
+
+  // Returns event type for matching between aWidgetKeyboardEvent and
+  // shortcut key handlers.  This is used for calling WalkHandlers(),
+  // WalkHandlersInternal() and WalkHandlersAndExecute().
+  nsIAtom* ConvertEventToDOMEventType(
+             const mozilla::WidgetKeyboardEvent& aWidgetKeyboardEvent) const;
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document

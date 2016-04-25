@@ -4717,6 +4717,47 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
              text->mWebkitTextFillColor, conditions);
   }
 
+  // -webkit-text-stroke-color: color, string, inherit, initial
+  const nsCSSValue* webkitTextStrokeColorValue =
+    aRuleData->ValueForWebkitTextStrokeColor();
+  if (webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Null) {
+    // We don't want to change anything in this case.
+  } else if (webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Inherit ||
+             webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Unset) {
+    conditions.SetUncacheable();
+    text->mWebkitTextStrokeColorForeground =
+      parentText->mWebkitTextStrokeColorForeground;
+    text->mWebkitTextStrokeColor = parentText->mWebkitTextStrokeColor;
+  } else if ((webkitTextStrokeColorValue->GetUnit() == eCSSUnit_EnumColor &&
+              webkitTextStrokeColorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR) ||
+             webkitTextStrokeColorValue->GetUnit() == eCSSUnit_Initial) {
+    text->mWebkitTextStrokeColorForeground = true;
+    text->mWebkitTextStrokeColor = mPresContext->DefaultColor();
+  } else {
+    text->mWebkitTextStrokeColorForeground = false;
+    SetColor(*webkitTextStrokeColorValue, 0, mPresContext, aContext,
+             text->mWebkitTextStrokeColor, conditions);
+  }
+
+  // -webkit-text-stroke-width: length, inherit, initial, enum
+  const nsCSSValue*
+    webkitTextStrokeWidthValue = aRuleData->ValueForWebkitTextStrokeWidth();
+  if (webkitTextStrokeWidthValue->GetUnit() == eCSSUnit_Enumerated) {
+    NS_ASSERTION(webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
+                 webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
+                 webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
+                 "Unexpected enum value");
+    text->mWebkitTextStrokeWidth.SetCoordValue(
+      mPresContext->GetBorderWidthTable()[webkitTextStrokeWidthValue->GetIntValue()]);
+  } else {
+    SetCoord(*webkitTextStrokeWidthValue, text->mWebkitTextStrokeWidth,
+             parentText->mWebkitTextStrokeWidth,
+             SETCOORD_LH | SETCOORD_CALC_LENGTH_ONLY |
+               SETCOORD_CALC_CLAMP_NONNEGATIVE |
+               SETCOORD_INITIAL_ZERO | SETCOORD_UNSET_INHERIT,
+             aContext, mPresContext, conditions);
+  }
+
   // -moz-control-character-visibility: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForControlCharacterVisibility(),
               text->mControlCharacterVisibility,

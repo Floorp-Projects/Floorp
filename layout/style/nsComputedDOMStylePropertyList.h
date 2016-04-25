@@ -303,6 +303,9 @@ COMPUTED_STYLE_PROP(_moz_window_shadow,            WindowShadow)
 \* ********************************** */
 
 COMPUTED_STYLE_PROP(_webkit_text_fill_color,       WebkitTextFillColor)
+//// COMPUTED_STYLE_PROP(webkit-text-stroke,       WebkitTextStroke)
+COMPUTED_STYLE_PROP(_webkit_text_stroke_color,     WebkitTextStrokeColor)
+COMPUTED_STYLE_PROP(_webkit_text_stroke_width,     WebkitTextStrokeWidth)
 
 /* ***************************** *\
  * Implementations of SVG styles *

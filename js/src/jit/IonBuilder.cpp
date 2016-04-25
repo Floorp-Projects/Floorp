@@ -12221,9 +12221,13 @@ IonBuilder::getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName
         }
 
         // Monomorphic load from an unboxed object.
-        obj = addGroupGuard(obj, receivers[0].group, Bailout_ShapeGuard);
+        ObjectGroup* group = receivers[0].group;
+        if (obj->resultTypeSet() && !obj->resultTypeSet()->hasType(TypeSet::ObjectType(group)))
+            return true;
 
-        const UnboxedLayout::Property* property = receivers[0].group->unboxedLayout().lookup(name);
+        obj = addGroupGuard(obj, group, Bailout_ShapeGuard);
+
+        const UnboxedLayout::Property* property = group->unboxedLayout().lookup(name);
         MInstruction* load = loadUnboxedProperty(obj, property->offset, property->type, barrier, types);
         current->push(load);
 
@@ -12977,6 +12981,9 @@ IonBuilder::setPropTryInlineAccess(bool* emitted, MDefinition* obj,
         spew("Inlining monomorphic unboxed SETPROP");
 
         ObjectGroup* group = receivers[0].group;
+        if (!objTypes->hasType(TypeSet::ObjectType(group)))
+            return true;
+
         obj = addGroupGuard(obj, group, Bailout_ShapeGuard);
 
         const UnboxedLayout::Property* property = group->unboxedLayout().lookup(name);
