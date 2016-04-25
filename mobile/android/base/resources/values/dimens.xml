@@ -50,6 +50,7 @@
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_bg">32dp</dimen>
+    <dimen name="favicon_corner_radius">4dp</dimen>
     <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
          this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
          redesign sometime after this is written) you should increase this value to the largest
