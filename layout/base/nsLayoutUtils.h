@@ -2817,6 +2817,13 @@ public:
    */
   static nsBlockFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
+  /**
+   * Walks up the frame tree from |aForFrame| up to |aTopFrame|, or to the
+   * root of the frame tree if |aTopFrame| is nullptr, and returns true if
+   * a transformed frame is encountered.
+   */
+  static bool IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame = nullptr);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
