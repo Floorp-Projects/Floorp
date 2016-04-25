@@ -1880,18 +1880,19 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
   TreeMutation mt(aContainer);
   if (child) {
     mt.BeforeRemoval(child);
-    UpdateTreeInternal(child, false);
+    MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
+    aContainer->RemoveChild(child);
+    UncacheChildrenInSubtree(child);
+    mt.Done();
+    return;
   }
-  else {
-    TreeWalker walker(aContainer, aChildNode, TreeWalker::eWalkCache);
-    Accessible* child = walker.Next();
-    if (child) {
-      do {
-        mt.BeforeRemoval(child);
-        UpdateTreeInternal(child, false);
-      }
-      while ((child = walker.Next()));
-    }
+
+  TreeWalker walker(aContainer, aChildNode, TreeWalker::eWalkCache);
+  while (Accessible* child = walker.Next()) {
+    mt.BeforeRemoval(child);
+    MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
+    aContainer->RemoveChild(child);
+    UncacheChildrenInSubtree(child);
   }
   mt.Done();
 }
@@ -1923,17 +1924,6 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert)
       updateFlags = eAlertAccessible;
       FireDelayedEvent(nsIAccessibleEvent::EVENT_ALERT, aChild);
     }
-  } else {
-    // Update the tree for content removal.
-    // The accessible parent may differ from container accessible if
-    // the parent doesn't have own DOM node like list accessible for HTML
-    // selects.
-    Accessible* parent = aChild->Parent();
-    NS_ASSERTION(parent, "No accessible parent?!");
-    if (parent)
-      parent->RemoveChild(aChild);
-
-    UncacheChildrenInSubtree(aChild);
   }
 
   // XXX: do we really want to send focus to focused DOM node not taking into
