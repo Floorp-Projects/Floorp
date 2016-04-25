@@ -528,7 +528,7 @@ class MochitestBase(object):
         self.update_mozinfo()
         self.server = None
         self.wsserver = None
-        self.websocketprocessbridge = None
+        self.websocketProcessBridge = None
         self.sslTunnel = None
         self._active_tests = None
         self._locations = None
@@ -814,11 +814,11 @@ class MochitestBase(object):
         command = [sys.executable,
                    os.path.join("websocketprocessbridge",
                                 "websocketprocessbridge.py")]
-        self.websocketprocessbridge = mozprocess.ProcessHandler(command,
+        self.websocketProcessBridge = mozprocess.ProcessHandler(command,
                                                                 cwd=SCRIPT_DIR)
-        self.websocketprocessbridge.run()
+        self.websocketProcessBridge.run()
         self.log.info("runtests.py | websocket/process bridge pid: %d"
-                      % self.websocketprocessbridge.pid)
+                      % self.websocketProcessBridge.pid)
 
         # ensure the server is up, wait for at most ten seconds
         for i in range(1,100):
@@ -892,12 +892,12 @@ class MochitestBase(object):
             except Exception:
                 self.log.critical('Exception stopping ssltunnel')
 
-        if self.websocketprocessbridge is not None:
+        if self.websocketProcessBridge is not None:
             try:
-                self.log.info('Stopping websocket/process bridge')
-                self.websocketprocessbridge.kill()
+                self.log.info('Stopping websocketProcessBridge')
+                self.websocketProcessBridge.kill()
             except Exception:
-                self.log.critical('Exception stopping websocket/process bridge')
+                self.log.critical('Exception stopping websocketProcessBridge')
 
     def copyExtraFilesToProfile(self, options):
         "Copy extra files or dirs specified on the command line to the testing profile."
