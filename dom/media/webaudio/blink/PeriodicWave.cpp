@@ -45,13 +45,15 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::create(float sampleRate,
                      const float* real,
                      const float* imag,
-                     size_t numberOfComponents)
+                     size_t numberOfComponents,
+                     bool disableNormalization)
 {
     bool isGood = real && imag && numberOfComponents > 0;
     MOZ_ASSERT(isGood);
     if (isGood) {
         RefPtr<PeriodicWave> periodicWave =
-            new PeriodicWave(sampleRate, numberOfComponents);
+            new PeriodicWave(sampleRate, numberOfComponents,
+                             disableNormalization);
 
         // Limit the number of components used to those for frequencies below the
         // Nyquist of the fixed length inverse FFT.
@@ -74,7 +76,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSine(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize, false);
     periodicWave->generateBasicWaveform(OscillatorType::Sine);
     return periodicWave.forget();
 }
@@ -83,7 +85,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSquare(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize, false);
     periodicWave->generateBasicWaveform(OscillatorType::Square);
     return periodicWave.forget();
 }
@@ -92,7 +94,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSawtooth(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize, false);
     periodicWave->generateBasicWaveform(OscillatorType::Sawtooth);
     return periodicWave.forget();
 }
@@ -101,16 +103,17 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createTriangle(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize, false);
     periodicWave->generateBasicWaveform(OscillatorType::Triangle);
     return periodicWave.forget();
 }
 
-PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
+PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents, bool disableNormalization)
     : m_sampleRate(sampleRate)
     , m_centsPerRange(CentsPerRange)
     , m_maxPartialsInBandLimitedTable(0)
     , m_normalizationScale(1.0f)
+    , m_disableNormalization(disableNormalization)
 {
     float nyquist = 0.5 * m_sampleRate;
 
@@ -271,7 +274,7 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
 
     // For the first range (which has the highest power), calculate
     // its peak value then compute normalization scale.
-    if (!rangeIndex) {
+    if (!m_disableNormalization && !rangeIndex) {
         float maxValue;
         maxValue = AudioBufferPeakValue(data, m_periodicWaveSize);
 
@@ -280,7 +283,9 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
     }
 
     // Apply normalization scale.
-    AudioBufferInPlaceScale(data, m_normalizationScale, m_periodicWaveSize);
+    if (!m_disableNormalization) {
+      AudioBufferInPlaceScale(data, m_normalizationScale, m_periodicWaveSize);
+    }
 }
 
 void PeriodicWave::generateBasicWaveform(OscillatorType shape)
