@@ -49,11 +49,11 @@ add_task(function* testAlertNotShownInBackgroundWindow() {
     .getService(Ci.nsIConsoleAPIStorage).getEvents();
   // This is the warning that is output after the first `alert()` call is made.
   let alertWarningEvent = events[events.length - 2];
-  is(alertWarningEvent.arguments[0], "alert() is not supported in background windows; please use console.log instead.")
+  is(alertWarningEvent.arguments[0], "alert() is not supported in background windows; please use console.log instead.");
   // This is the actual alert text that should be present in the console
   // instead of as an `alert`.
   let alertEvent = events[events.length - 1];
-  is(alertEvent.arguments[0], "I am an alert in the background.")
+  is(alertEvent.arguments[0], "I am an alert in the background.");
 
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   require("devtools/client/framework/devtools-browser");
