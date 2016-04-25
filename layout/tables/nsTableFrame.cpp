@@ -1095,7 +1095,7 @@ nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
   nsStyleContext *bgSC;
   if (!nsCSSRendering::FindBackground(aFrame, &bgSC))
     return;
-  if (!bgSC->StyleBackground()->HasFixedBackground())
+  if (!bgSC->StyleBackground()->HasFixedBackground(aFrame))
     return;
 
   mPartHasFixedBackground = true;
