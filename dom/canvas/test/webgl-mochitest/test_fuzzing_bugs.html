@@ -53,9 +53,39 @@ function webGL2ClearBufferXXX_bug1252414() {
   ok(true, 'WebGL2 clearBufferXXX call during loseContext');
 }
 
+// Test gl function for multiple gl contexts switch.
+function getFramebufferAttachmentParameter_bug1267100()
+{
+  var canvas1 = document.createElement('canvas');
+  var canvas2 = document.createElement('canvas');
+
+  var gl1 = null;
+  gl1 = canvas1.getContext('webgl') || canvas1.getContext('experimental-webgl');
+  if (!gl1) {
+    todo(false, 'WebGL getFramebufferAttachmentParameter test, webgl is unavailable.');
+    return;
+  }
+  var gl2 = null;
+  gl2 = canvas2.getContext('webgl') || canvas2.getContext('experimental-webgl');
+  if (!gl2) {
+    todo(false, 'WebGL getFramebufferAttachmentParameter test, webgl is unavailable.');
+    return;
+  }
+
+  gl1.bindFramebuffer(gl1.FRAMEBUFFER, gl1.createFramebuffer());
+  gl2.scissor(0, 1, 2, 3);
+  // The gl call should still work even though we use another gl context before.
+  gl1.getFramebufferAttachmentParameter(gl1.FRAMEBUFFER,
+                                        gl1.COLOR_ATTACHMENT0,
+                                        gl1.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+
+  ok(true, 'WebGL test getFramebufferAttachmentParameter');
+}
+
 function run() {
   webGL2ClearBufferXXX_bug1252414();
   framebufferTexture2D_bug1257593();
+  getFramebufferAttachmentParameter_bug1267100();
 
   SimpleTest.finish();
 }
