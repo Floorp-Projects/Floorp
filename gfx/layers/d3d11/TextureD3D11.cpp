@@ -636,14 +636,29 @@ DXGITextureHostD3D11::GetDevice()
   return gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
 }
 
+static CompositorD3D11* AssertD3D11Compositor(Compositor* aCompositor)
+{
+  CompositorD3D11* compositor = aCompositor ? aCompositor->AsCompositorD3D11()
+                                            : nullptr;
+  if (!compositor) {
+    gfxCriticalNote << "[D3D11] Attempt to set an incompatible compositor.";
+  }
+  return compositor;
+}
+
 void
 DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = static_cast<CompositorD3D11*>(aCompositor);
-  if (mTextureSource) {
-    mTextureSource->SetCompositor(aCompositor);
-  }
+  CompositorD3D11* d3dCompositor = AssertD3D11Compositor(aCompositor);
+  if (!d3dCompositor) {
+     mCompositor = nullptr;
+     mTextureSource = nullptr;
+     return;
+   }
+   mCompositor = d3dCompositor;
+   if (mTextureSource) {
+     mTextureSource->SetCompositor(aCompositor);
+   }
 }
 
 bool
@@ -747,9 +762,8 @@ DXGIYCbCrTextureHostD3D11::GetDevice()
 void
 DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = static_cast<CompositorD3D11*>(aCompositor);
-  if (mTextureSources[0]) {
+  mCompositor = AssertD3D11Compositor(aCompositor);
+  if (!mCompositor) {
     mTextureSources[0]->SetCompositor(aCompositor);
   }
 }
@@ -974,8 +988,11 @@ DataTextureSourceD3D11::GetTileRect()
 void
 DataTextureSourceD3D11::SetCompositor(Compositor* aCompositor)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = static_cast<CompositorD3D11*>(aCompositor);
+  CompositorD3D11* d3dCompositor = AssertD3D11Compositor(aCompositor);
+  if (!d3dCompositor) {
+    return;
+  }
+  mCompositor = d3dCompositor;
   if (mNextSibling) {
     mNextSibling->SetCompositor(aCompositor);
   }
