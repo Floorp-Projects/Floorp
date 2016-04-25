@@ -212,6 +212,10 @@ ArrayInfo(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 ArrayConstructor(JSContext* cx, unsigned argc, Value* vp);
 
+// Like Array constructor, but doesn't perform GetPrototypeFromConstructor.
+extern bool
+array_construct(JSContext* cx, unsigned argc, Value* vp);
+
 extern bool
 IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result);
 
