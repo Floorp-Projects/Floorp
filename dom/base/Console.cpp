@@ -96,6 +96,7 @@ public:
     , mIDType(eUnknown)
     , mOuterIDNumber(0)
     , mInnerIDNumber(0)
+    , mStatus(eUnused)
 #ifdef DEBUG
     , mOwningThread(PR_GetCurrentThread())
 #endif
