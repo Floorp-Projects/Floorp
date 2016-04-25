@@ -65,25 +65,31 @@ MarkExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* nam
     }
 }
 
+static inline void
+TraceStackRoots(JSTracer* trc, RootedListHeads& stackRoots)
+{
+#define MARK_ROOTS(name, type, _) \
+    MarkExactStackRootList<type*>(trc, stackRoots[JS::RootKind::name], "exact-" #name);
+JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
+#undef MARK_ROOTS
+    MarkExactStackRootList<jsid>(trc, stackRoots[JS::RootKind::Id], "exact-id");
+    MarkExactStackRootList<Value>(trc, stackRoots[JS::RootKind::Value], "exact-value");
+    MarkExactStackRootList<ConcreteTraceable,
+                           js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(
+        trc, stackRoots[JS::RootKind::Traceable], "Traceable");
+}
+
 void
 js::RootLists::traceStackRoots(JSTracer* trc)
 {
-#define MARK_ROOTS(name, type, _) \
-    MarkExactStackRootList<type*>(trc, stackRoots_[JS::RootKind::name], "exact-" #name);
-JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
-#undef MARK_ROOTS
-    MarkExactStackRootList<jsid>(trc, stackRoots_[JS::RootKind::Id], "exact-id");
-    MarkExactStackRootList<Value>(trc, stackRoots_[JS::RootKind::Value], "exact-value");
-    MarkExactStackRootList<ConcreteTraceable,
-                           js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(
-        trc, stackRoots_[JS::RootKind::Traceable], "Traceable");
+    TraceStackRoots(trc, stackRoots_);
 }
 
 static void
 MarkExactStackRoots(JSRuntime* rt, JSTracer* trc)
 {
-    for (ContextIter cx(rt); !cx.done(); cx.next())
-        cx->roots.traceStackRoots(trc);
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
+        TraceStackRoots(trc, zone->stackRoots_);
     rt->mainThread.roots.traceStackRoots(trc);
 }
 
@@ -113,8 +119,6 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 static void
 MarkPersistentRooted(JSRuntime* rt, JSTracer* trc)
 {
-    for (ContextIter cx(rt); !cx.done(); cx.next())
-        cx->roots.tracePersistentRoots(trc);
     rt->mainThread.roots.tracePersistentRoots(trc);
 }
 
