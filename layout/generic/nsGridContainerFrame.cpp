@@ -5213,15 +5213,6 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Our children are all grid-level boxes, which behave the same as
   // inline-blocks in painting, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
-  // Also, we capture positioned descendants so we can sort them by
-  // CSS 'order'.
-  nsDisplayList positionedDescendants;
-  nsDisplayListSet childLists(aLists.BlockBorderBackgrounds(),
-                              aLists.BlockBorderBackgrounds(),
-                              aLists.Floats(),
-                              aLists.Content(),
-                              &positionedDescendants,
-                              aLists.Outlines());
   typedef GridItemCSSOrderIterator::OrderState OrderState;
   OrderState order = HasAnyStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
                        ? OrderState::eKnownOrdered
@@ -5230,11 +5221,9 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 GridItemCSSOrderIterator::eIncludeAll, order);
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
-    BuildDisplayListForChild(aBuilder, child, aDirtyRect, childLists,
+    BuildDisplayListForChild(aBuilder, child, aDirtyRect, aLists,
                              ::GetDisplayFlagsForGridItem(child));
   }
-  positionedDescendants.SortByCSSOrder();
-  aLists.PositionedDescendants()->AppendToTop(&positionedDescendants);
 }
 
 bool
