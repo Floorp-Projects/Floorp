@@ -994,7 +994,7 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
 bool
 JSStructuredCloneWriter::traverseMap(HandleObject obj)
 {
-    AutoValueVector newEntries(context());
+    Rooted<GCVector<Value>> newEntries(context(), GCVector<Value>(context()));
     {
         // If there is no wrapper, the compartment munging is a no-op.
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
@@ -1003,7 +1003,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
         if (!MapObject::getKeysAndValuesInterleaved(context(), unwrapped, &newEntries))
             return false;
     }
-    if (!context()->compartment()->wrap(context(), newEntries))
+    if (!context()->compartment()->wrap(context(), &newEntries))
         return false;
 
     for (size_t i = newEntries.length(); i > 0; --i) {
@@ -1024,7 +1024,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
 bool
 JSStructuredCloneWriter::traverseSet(HandleObject obj)
 {
-    AutoValueVector keys(context());
+    Rooted<GCVector<Value>> keys(context(), GCVector<Value>(context()));
     {
         // If there is no wrapper, the compartment munging is a no-op.
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
@@ -1033,7 +1033,7 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
         if (!SetObject::keys(context(), unwrapped, &keys))
             return false;
     }
-    if (!context()->compartment()->wrap(context(), keys))
+    if (!context()->compartment()->wrap(context(), &keys))
         return false;
 
     for (size_t i = keys.length(); i > 0; --i) {

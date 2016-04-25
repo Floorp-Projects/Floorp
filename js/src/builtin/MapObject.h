@@ -89,7 +89,7 @@ class MapObject : public NativeObject {
     static const Class class_;
 
     static bool getKeysAndValuesInterleaved(JSContext* cx, HandleObject obj,
-                                            JS::AutoValueVector* entries);
+                                            JS::MutableHandle<GCVector<JS::Value>> entries);
     static bool entries(JSContext* cx, unsigned argc, Value* vp);
     static bool has(JSContext* cx, unsigned argc, Value* vp);
     static MapObject* create(JSContext* cx, HandleObject proto = nullptr);
@@ -178,7 +178,7 @@ class SetObject : public NativeObject {
     static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
-    static bool keys(JSContext *cx, HandleObject obj, JS::AutoValueVector *keys);
+    static bool keys(JSContext *cx, HandleObject obj, JS::MutableHandle<GCVector<JS::Value>> keys);
     static bool values(JSContext *cx, unsigned argc, Value *vp);
     static bool add(JSContext *cx, HandleObject obj, HandleValue key);
     static bool has(JSContext *cx, unsigned argc, Value *vp);

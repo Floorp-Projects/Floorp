@@ -2511,7 +2511,7 @@ struct FindPathHandler {
     typedef JS::ubi::BreadthFirst<FindPathHandler> Traversal;
 
     FindPathHandler(JSContext*cx, JS::ubi::Node start, JS::ubi::Node target,
-                    AutoValueVector& nodes, Vector<EdgeName>& edges)
+                    MutableHandle<GCVector<Value>> nodes, Vector<EdgeName>& edges)
       : cx(cx), start(start), target(target), foundPath(false),
         nodes(nodes), edges(edges) { }
 
@@ -2580,7 +2580,7 @@ struct FindPathHandler {
     // - edges[i] is the name of the edge from nodes[i] to nodes[i-1].
     // - edges[0] is the name of the edge from nodes[0] to the target.
     // - The last node, nodes[n-1], is the start node.
-    AutoValueVector& nodes;
+    MutableHandle<GCVector<Value>> nodes;
     Vector<EdgeName>& edges;
 };
 
@@ -2613,7 +2613,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    AutoValueVector nodes(cx);
+    Rooted<GCVector<Value>> nodes(cx, GCVector<Value>(cx));
     Vector<heaptools::EdgeName> edges(cx);
 
     {
@@ -2623,7 +2623,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         JS::ubi::Node start(args[0]), target(args[1]);
 
-        heaptools::FindPathHandler handler(cx, start, target, nodes, edges);
+        heaptools::FindPathHandler handler(cx, start, target, &nodes, edges);
         heaptools::FindPathHandler::Traversal traversal(cx->runtime(), handler, autoCannotGC);
         if (!traversal.init() || !traversal.addStart(start))
             return false;
