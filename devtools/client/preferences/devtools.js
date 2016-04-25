@@ -213,6 +213,9 @@ pref("devtools.webaudioeditor.enabled", false);
 // Enable Scratchpad
 pref("devtools.scratchpad.enabled", false);
 
+// Make sure the DOM panel is hidden by default
+pref("devtools.dom.enabled", false);
+
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
 
