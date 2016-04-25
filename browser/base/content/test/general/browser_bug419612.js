@@ -18,7 +18,7 @@ function test() {
     is(tab2Zoom, tab1Zoom, "Zoom should affect background tabs");
 
     gPrefService.setBoolPref("browser.zoom.updateBackgroundTabs", false);
-    FullZoom.reset();
+    yield FullZoom.reset();
     gBrowser.selectedTab = tab1;
     tab1Zoom = ZoomManager.getZoomForBrowser(tab1.linkedBrowser);
     tab2Zoom = ZoomManager.getZoomForBrowser(tab2.linkedBrowser);

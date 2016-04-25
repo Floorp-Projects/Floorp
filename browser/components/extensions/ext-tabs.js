@@ -104,7 +104,133 @@ global.currentWindow = function(context) {
   return WindowManager.topWindow;
 };
 
-// TODO: activeTab permission
+let tabListener = {
+  init() {
+    if (this.initialized) {
+      return;
+    }
+
+    this.adoptedTabs = new WeakMap();
+
+    this.handleWindowOpen = this.handleWindowOpen.bind(this);
+    this.handleWindowClose = this.handleWindowClose.bind(this);
+
+    AllWindowEvents.addListener("TabClose", this);
+    AllWindowEvents.addListener("TabOpen", this);
+    WindowListManager.addOpenListener(this.handleWindowOpen);
+    WindowListManager.addCloseListener(this.handleWindowClose);
+
+    EventEmitter.decorate(this);
+
+    this.initialized = true;
+  },
+
+  destroy() {
+    AllWindowEvents.removeListener("TabClose", this);
+    AllWindowEvents.removeListener("TabOpen", this);
+    WindowListManager.removeOpenListener(this.handleWindowOpen);
+    WindowListManager.removeCloseListener(this.handleWindowClose);
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "TabOpen":
+        if (event.detail.adoptedTab) {
+          this.adoptedTabs.set(event.detail.adoptedTab, event.target);
+        }
+
+        // We need to delay sending this event until the next tick, since the
+        // tab does not have its final index when the TabOpen event is dispatched.
+        Promise.resolve().then(() => {
+          if (event.detail.adoptedTab) {
+            this.emitAttached(event.originalTarget);
+          } else {
+            this.emitCreated(event.originalTarget);
+          }
+        });
+        break;
+
+      case "TabClose":
+        let tab = event.originalTarget;
+
+        if (event.detail.adoptedBy) {
+          this.emitDetached(tab, event.detail.adoptedBy);
+        } else {
+          this.emitRemoved(tab, false);
+        }
+        break;
+    }
+  },
+
+  handleWindowOpen(window) {
+    if (window.arguments[0] instanceof window.XULElement) {
+      // If the first window argument is a XUL element, it means the
+      // window is about to adopt a tab from another window to replace its
+      // initial tab.
+      //
+      // Note that this event handler depends on running before the
+      // delayed startup code in browser.js, which is currently triggered
+      // by the first MozAfterPaint event. That code handles finally
+      // adopting the tab, and clears it from the arguments list in the
+      // process, so if we run later than it, we're too late.
+      let tab = window.arguments[0];
+      this.adoptedTabs.set(tab, window.gBrowser.tabs[0]);
+
+      // We need to be sure to fire this event after the onDetached event
+      // for the original tab.
+      let listener = (event, details) => {
+        if (details.tab == tab) {
+          this.off("tab-detached", listener);
+
+          Promise.resolve().then(() => {
+            this.emitAttached(details.adoptedBy);
+          });
+        }
+      };
+
+      this.on("tab-detached", listener);
+    } else {
+      for (let tab of window.gBrowser.tabs) {
+        this.emitCreated(tab);
+      }
+    }
+  },
+
+  handleWindowClose(window) {
+    for (let tab of window.gBrowser.tabs) {
+      if (this.adoptedTabs.has(tab)) {
+        this.emitDetached(tab, this.adoptedTabs.get(tab));
+      } else {
+        this.emitRemoved(tab, true);
+      }
+    }
+  },
+
+  emitAttached(tab) {
+    let newWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
+    let tabId = TabManager.getId(tab);
+
+    this.emit("tab-attached", {tab, tabId, newWindowId, newPosition: tab._tPos});
+  },
+
+  emitDetached(tab, adoptedBy) {
+    let oldWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
+    let tabId = TabManager.getId(tab);
+
+    this.emit("tab-detached", {tab, adoptedBy, tabId, oldWindowId, oldPosition: tab._tPos});
+  },
+
+  emitCreated(tab) {
+    this.emit("tab-created", {tab});
+  },
+
+  emitRemoved(tab, isWindowClosing) {
+    let windowId = WindowManager.getId(tab.ownerDocument.defaultView);
+    let tabId = TabManager.getId(tab);
+
+    this.emit("tab-removed", {tab, tabId, windowId, isWindowClosing});
+  },
+};
 
 extensions.registerSchemaAPI("tabs", null, (extension, context) => {
   let self = {
@@ -117,40 +243,14 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       onCreated: new EventManager(context, "tabs.onCreated", fire => {
-        let listener = event => {
-          if (event.detail.adoptedTab) {
-            // This tab is being created to adopt a tab from another window. We
-            // map this event to an onAttached, rather than onCreated, event.
-            return;
-          }
-
-          // We need to delay sending this event until the next tick, since the
-          // tab does not have its final index when the TabOpen event is dispatched.
-          let tab = event.originalTarget;
-          Promise.resolve().then(() => {
-            fire(TabManager.convert(extension, tab));
-          });
+        let listener = (eventName, event) => {
+          fire(TabManager.convert(extension, event.tab));
         };
 
-        let windowListener = window => {
-          if (window.arguments[0] instanceof window.XULElement) {
-            // If the first window argument is a XUL element, it means the
-            // window is about to adopt a tab from another window to replace its
-            // initial tab, which means we need to skip the onCreated event, and
-            // fire an onAttached event instead.
-            return;
-          }
-
-          for (let tab of window.gBrowser.tabs) {
-            fire(TabManager.convert(extension, tab));
-          }
-        };
-
-        WindowListManager.addOpenListener(windowListener);
-        AllWindowEvents.addListener("TabOpen", listener);
+        tabListener.init();
+        tabListener.on("tab-created", listener);
         return () => {
-          WindowListManager.removeOpenListener(windowListener);
-          AllWindowEvents.removeListener("TabOpen", listener);
+          tabListener.off("tab-created", listener);
         };
       }).api(),
 
@@ -168,96 +268,38 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       onAttached: new EventManager(context, "tabs.onAttached", fire => {
-        let fireForTab = tab => {
-          let newWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
-          fire(TabManager.getId(tab), {newWindowId, newPosition: tab._tPos});
+        let listener = (eventName, event) => {
+          fire(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
         };
 
-        let listener = event => {
-          if (event.detail.adoptedTab) {
-            // We need to delay sending this event until the next tick, since the
-            // tab does not have its final index when the TabOpen event is dispatched.
-            Promise.resolve().then(() => {
-              fireForTab(event.originalTarget);
-            });
-          }
-        };
-
-        let windowListener = window => {
-          if (window.arguments[0] instanceof window.XULElement) {
-            // If the first window argument is a XUL element, it means the
-            // window is about to adopt a tab from another window to replace its
-            // initial tab.
-            //
-            // Note that this event handler depends on running before the
-            // delayed startup code in browser.js, which is currently triggered
-            // by the first MozAfterPaint event. That code handles finally
-            // adopting the tab, and clears it from the arguments list in the
-            // process, so if we run later than it, we're too late.
-            let tab = window.arguments[0];
-
-            // We need to be sure to fire this event after the onDetached event
-            // for the original tab.
-            tab.addEventListener("TabClose", function listener(event) {
-              tab.removeEventListener("TabClose", listener);
-              Promise.resolve().then(() => {
-                fireForTab(event.detail.adoptedBy);
-              });
-            });
-          }
-        };
-
-        WindowListManager.addOpenListener(windowListener);
-        AllWindowEvents.addListener("TabOpen", listener);
+        tabListener.init();
+        tabListener.on("tab-attached", listener);
         return () => {
-          WindowListManager.removeOpenListener(windowListener);
-          AllWindowEvents.removeListener("TabOpen", listener);
+          tabListener.off("tab-attached", listener);
         };
       }).api(),
 
       onDetached: new EventManager(context, "tabs.onDetached", fire => {
-        let listener = event => {
-          if (event.detail.adoptedBy) {
-            let tab = event.originalTarget;
-            let oldWindowId = WindowManager.getId(tab.ownerDocument.defaultView);
-            fire(TabManager.getId(tab), {oldWindowId, oldPosition: tab._tPos});
-          }
+        let listener = (eventName, event) => {
+          fire(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
         };
 
-        AllWindowEvents.addListener("TabClose", listener);
+        tabListener.init();
+        tabListener.on("tab-detached", listener);
         return () => {
-          AllWindowEvents.removeListener("TabClose", listener);
+          tabListener.off("tab-detached", listener);
         };
       }).api(),
 
       onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
-        let fireForTab = (tab, isWindowClosing) => {
-          let tabId = TabManager.getId(tab);
-          let windowId = WindowManager.getId(tab.ownerDocument.defaultView);
-
-          fire(tabId, {windowId, isWindowClosing});
+        let listener = (eventName, event) => {
+          fire(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
         };
 
-        let tabListener = event => {
-          // Only fire if this tab is not being moved to another window. If it
-          // is being adopted by another window, we fire an onDetached, rather
-          // than an onRemoved, event.
-          if (!event.detail.adoptedBy) {
-            fireForTab(event.originalTarget, false);
-          }
-        };
-
-        let windowListener = window => {
-          for (let tab of window.gBrowser.tabs) {
-            fireForTab(tab, true);
-          }
-        };
-
-        WindowListManager.addCloseListener(windowListener);
-        AllWindowEvents.addListener("TabClose", tabListener);
+        tabListener.init();
+        tabListener.on("tab-removed", listener);
         return () => {
-          WindowListManager.removeCloseListener(windowListener);
-          AllWindowEvents.removeListener("TabClose", tabListener);
+          tabListener.off("tab-removed", listener);
         };
       }).api(),
 
@@ -860,6 +902,61 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
             return resolve(TabManager.convert(extension, newTab));
           });
         });
+      },
+
+      getZoom(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {ZoomManager} = tab.ownerDocument.defaultView;
+        let zoom = ZoomManager.getZoomForBrowser(tab.linkedBrowser);
+
+        return Promise.resolve(zoom);
+      },
+
+      setZoom(tabId, zoom) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {FullZoom, ZoomManager} = tab.ownerDocument.defaultView;
+
+        if (zoom === 0) {
+          // A value of zero means use the default zoom factor.
+          return FullZoom.reset(tab.linkedBrowser);
+        } else if (zoom >= ZoomManager.MIN && zoom <= ZoomManager.MAX) {
+          FullZoom.setZoom(zoom, tab.linkedBrowser);
+        } else {
+          return Promise.reject({
+            message: `Zoom value ${zoom} out of range (must be between ${ZoomManager.MIN} and ${ZoomManager.MAX})`,
+          });
+        }
+
+        return Promise.resolve();
+      },
+
+      _getZoomSettings(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let {FullZoom} = tab.ownerDocument.defaultView;
+
+        return {
+          mode: "automatic",
+          scope: FullZoom.siteSpecific ? "per-origin" : "per-tab",
+          defaultZoomFactor: 1,
+        };
+      },
+
+      getZoomSettings(tabId) {
+        return Promise.resolve(this._getZoomSettings(tabId));
+      },
+
+      setZoomSettings(tabId, settings) {
+        let tab = tabId ? TabManager.getTab(tabId) : TabManager.activeTab;
+
+        let currentSettings = this._getZoomSettings(tab.id);
+
+        if (!Object.keys(settings).every(key => settings[key] === currentSettings[key])) {
+          return Promise.reject(`Unsupported zoom settings: ${JSON.stringify(settings)}`);
+        }
+        return Promise.resolve();
       },
     },
   };

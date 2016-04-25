@@ -1129,7 +1129,8 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
                       AddonManager.PERM_CAN_ENABLE |
                       AddonManager.PERM_CAN_DISABLE |
                       AddonManager.PERM_CAN_UPGRADE;
-  this.operationsRequiringRestart = aOperationsRequiringRestart ||
+  this.operationsRequiringRestart = (aOperationsRequiringRestart != undefined) ?
+    aOperationsRequiringRestart :
     (AddonManager.OP_NEEDS_RESTART_INSTALL |
      AddonManager.OP_NEEDS_RESTART_UNINSTALL |
      AddonManager.OP_NEEDS_RESTART_ENABLE |

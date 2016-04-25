@@ -71,7 +71,7 @@
           <!-- Only shown on OS X, since it has no dialog title -->
           <description id="info.title"
 #ifndef XP_MACOSX
-            style="display: none"
+            hidden="true"
 #else
             style="margin-bottom: 1em"
 #endif

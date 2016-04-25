@@ -190,25 +190,6 @@ add_task(function* test_manifest_localization() {
   addon.uninstall();
 });
 
-// Missing ID should cause a failure
-add_task(function*() {
-  writeWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-  }, profileDir, ID);
-
-  yield promiseRestartManager();
-
-  let addon = yield promiseAddonByID(ID);
-  do_check_eq(addon, null);
-
-  let file = getFileForAddon(profileDir, ID);
-  do_check_false(file.exists());
-
-  yield promiseRestartManager();
-});
-
 // Missing version should cause a failure
 add_task(function*() {
   writeWebManifestForExtension({

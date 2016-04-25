@@ -338,6 +338,14 @@ toolbarpaletteitem[removable="false"] {
   cursor: default;
 }
 
+%ifndef XP_MACOSX
+toolbarpaletteitem[place="palette"],
+toolbarpaletteitem[place="panel"],
+toolbarpaletteitem[place="toolbar"] {
+  -moz-user-focus: normal;
+}
+%endif
+
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 #personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
@@ -613,14 +621,6 @@ toolbarbutton.bookmark-item {
 #editBMPanel_tagsSelector {
   /* override default listbox width from xul.css */
   width: auto;
-}
-
-/* The star doesn't make sense as text */
-toolbar[mode="text"] #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  display: -moz-box !important;
-}
-toolbar[mode="text"] #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
-  display: none;
 }
 
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
@@ -1012,24 +1012,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
                                                    #downloads-indicator-progress-area
 {
   visibility: hidden;
-}
-
-/* Hacks for toolbar full and text modes, until bug 573329 removes them */
-
-toolbar[mode="text"] > #downloads-button {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-pack: center;
-}
-
-toolbar[mode="text"] > #downloads-button > .toolbarbutton-text {
-  -moz-box-ordinal-group: 1;
-}
-
-toolbar[mode="text"] > #downloads-button > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  display: -moz-box;
-  -moz-box-ordinal-group: 2;
-  visibility: collapse;
 }
 
 /* hide chat chrome when chat is fullscreen */
