@@ -404,7 +404,7 @@ IS_HYPHEN(char16_t u)
 }
 
 static int8_t
-GetClass(char32_t u)
+GetClass(uint32_t u)
 {
   if (u < 0x10000) {
     uint16_t h = u & 0xFF00;
@@ -464,8 +464,8 @@ GetClass(char32_t u)
       }
     } else if (0x3100 == h) { 
       if (l <= 0xbf) { // Hangul Compatibility Jamo, Bopomofo, Kanbun
-                      // XXX: This is per UAX #14, but UAX #14 may change
-                      // the line breaking rules about Kanbun and Bopomofo.
+                       // XXX: This is per UAX #14, but UAX #14 may change
+                       // the line breaking rules about Kanbun and Bopomofo.
         return CLASS_BREAKABLE;
       }
       if (l >= 0xf0) { // Katakana small letters for Ainu
@@ -513,7 +513,7 @@ GetClass(char32_t u)
     /* ALPHABETIC = 2,                    [AL] */ CLASS_CHARACTER,
     /* BREAK_BOTH = 3,                    [B2] */ CLASS_CHARACTER,
     /* BREAK_AFTER = 4,                   [BA] */ CLASS_CHARACTER,
-    /* BREAK_BEFORE = 5,                  [BB] */ CLASS_OPEN_LIKE_CHARACTER, // ???
+    /* BREAK_BEFORE = 5,                  [BB] */ CLASS_OPEN_LIKE_CHARACTER,
     /* MANDATORY_BREAK = 6,               [BK] */ CLASS_CHARACTER,
     /* CONTINGENT_BREAK = 7,              [CB] */ CLASS_CHARACTER,
     /* CLOSE_PUNCTUATION = 8,             [CL] */ CLASS_CHARACTER,
@@ -526,7 +526,7 @@ GetClass(char32_t u)
     /* INSEPARABLE = 15,                  [IN] */ CLASS_CLOSE_LIKE_CHARACTER,
     /* INFIX_NUMERIC = 16,                [IS] */ CLASS_CHARACTER,
     /* LINE_FEED = 17,                    [LF] */ CLASS_BREAKABLE,
-    /* NONSTARTER = 18,                   [NS] */ CLASS_CLOSE,
+    /* NONSTARTER = 18,                   [NS] */ CLASS_CLOSE_LIKE_CHARACTER,
     /* NUMERIC = 19,                      [NU] */ CLASS_CHARACTER,
     /* OPEN_PUNCTUATION = 20,             [OP] */ CLASS_CHARACTER,
     /* POSTFIX_NUMERIC = 21,              [PO] */ CLASS_CHARACTER,
@@ -938,6 +938,8 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
     }
 
     if (ch > 0xffff) {
+      // Supplementary-plane character: mark that we cannot break before the
+      // trailing low surrogate, and advance past it.
       ++cur;
       aBreakBefore[cur] = false;
       state.AdvanceIndex();
