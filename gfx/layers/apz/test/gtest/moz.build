@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'TestPanning.cpp',
     'TestPinching.cpp',
     'TestScrollHandoff.cpp',
+    'TestSnapping.cpp',
     'TestTreeManager.cpp',
 ]
 

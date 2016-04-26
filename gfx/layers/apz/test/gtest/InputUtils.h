@@ -491,4 +491,15 @@ Wheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
   return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
 }
 
+template<class InputReceiver>
+nsEventStatus
+SmoothWheel(const RefPtr<InputReceiver>& aTarget, const ScreenIntPoint& aPoint,
+            const ScreenPoint& aDelta, TimeStamp aTime, uint64_t* aOutInputBlockId = nullptr)
+{
+  ScrollWheelInput input(MillisecondsSinceStartup(aTime), aTime, 0,
+      ScrollWheelInput::SCROLLMODE_SMOOTH, ScrollWheelInput::SCROLLDELTA_LINE,
+      aPoint, aDelta.x, aDelta.y, false);
+  return aTarget->ReceiveInputEvent(input, nullptr, aOutInputBlockId);
+}
+
 #endif // mozilla_layers_InputUtils_h
