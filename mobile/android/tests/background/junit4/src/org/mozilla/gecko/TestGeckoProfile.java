@@ -128,7 +128,7 @@ public class TestGeckoProfile {
         final JSONObject objMissingClientId = new JSONObject();
         objMissingClientId.put("irrelevantKey", validClientId);
         assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
-        FileUtil.writeJSONObjectToFile(clientIdFile, objMissingClientId);
+        FileUtils.writeJSONObjectToFile(clientIdFile, objMissingClientId);
 
         final String clientIdForMissingAttr = profile.getClientId();
         assertValidClientId(clientIdForMissingAttr);
@@ -210,7 +210,7 @@ public class TestGeckoProfile {
         final long expectedDate = System.currentTimeMillis();
         final JSONObject expectedObj = new JSONObject();
         expectedObj.put(PROFILE_CREATION_DATE_JSON_ATTR, expectedDate);
-        FileUtil.writeJSONObjectToFile(timesFile, expectedObj);
+        FileUtils.writeJSONObjectToFile(timesFile, expectedObj);
 
         final Context context = RuntimeEnvironment.application;
         final long actualDate = profile.getAndPersistProfileCreationDate(context);
@@ -250,6 +250,6 @@ public class TestGeckoProfile {
     private void writeClientIdToFile(final File file, final String clientId) throws Exception {
         final JSONObject obj = new JSONObject();
         obj.put(CLIENT_ID_JSON_ATTR, clientId);
-        FileUtil.writeJSONObjectToFile(file, obj);
+        FileUtils.writeJSONObjectToFile(file, obj);
     }
 }
