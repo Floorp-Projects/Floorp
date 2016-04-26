@@ -104,13 +104,13 @@ function run_test() {
 }
 
 add_task(function* asyncSetup() {
-  yield TelemetryController.setup();
+  yield TelemetryController.testSetup();
 
   gClientID = yield ClientID.getClientID();
 
   // We should have cached the client id now. Lets confirm that by
   // checking the client id before the async ping setup is finished.
-  let promisePingSetup = TelemetryController.reset();
+  let promisePingSetup = TelemetryController.testReset();
   do_check_eq(TelemetryController.clientID, gClientID);
   yield promisePingSetup;
 });
@@ -171,13 +171,13 @@ add_task(function* test_disableDataUpload() {
   // Disable FHR upload to send a deletion ping again.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, false);
 
-  // Wait on sending activity to settle, as |TelemetryController.reset()| doesn't do that.
+  // Wait on sending activity to settle, as |TelemetryController.testReset()| doesn't do that.
   yield TelemetrySend.testWaitOnOutgoingPings();
   // Wait for the pending pings to be deleted. Resetting TelemetryController doesn't
   // trigger the shutdown, so we need to call it ourselves.
   yield TelemetryStorage.shutdown();
   // Simulate a restart, and spin the send task.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
 
   // Disabling Telemetry upload must clear out all the pending pings.
   let pendingPings = yield TelemetryStorage.loadPendingPingList();
@@ -187,11 +187,11 @@ add_task(function* test_disableDataUpload() {
   // Enable the ping server again.
   PingServer.start();
   // We set the new server using the pref, otherwise it would get reset with
-  // |TelemetryController.reset|.
+  // |TelemetryController.testReset|.
   Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
 
   // Reset the controller to spin the ping sending task.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   ping = yield PingServer.promiseNextPing();
   checkPingFormat(ping, DELETION_PING_TYPE, true, false);
 
@@ -301,7 +301,7 @@ add_task(function* test_midnightPingSendFuzzing() {
   });
 
   PingServer.clearRequests();
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
 
   // A ping after midnight within the fuzzing delay should not get sent.
   now = new Date(2030, 5, 2, 0, 40, 0);
@@ -382,7 +382,7 @@ add_task(function* test_telemetryEnabledUnexpectedValue(){
   // Set the preferences controlling the Telemetry status to a string.
   Preferences.set(PREF_ENABLED, "false");
   // Check that Telemetry is not enabled.
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   Assert.equal(Telemetry.canRecordExtended, false,
                "Invalid values must not enable Telemetry recording.");
 
@@ -391,13 +391,13 @@ add_task(function* test_telemetryEnabledUnexpectedValue(){
 
   // Make sure that flipping it to true works.
   Preferences.set(PREF_ENABLED, true);
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   Assert.equal(Telemetry.canRecordExtended, true,
                "True must enable Telemetry recording.");
 
   // Also check that the false works as well.
   Preferences.set(PREF_ENABLED, false);
-  yield TelemetryController.reset();
+  yield TelemetryController.testReset();
   Assert.equal(Telemetry.canRecordExtended, false,
                "False must disable Telemetry recording.");
 });
