@@ -10,6 +10,8 @@
 #define __sslt_h_
 
 #include "prtypes.h"
+#include "secitem.h"
+#include "certt.h"
 
 typedef struct SSL3StatisticsStr {
     /* statistics from ssl3_SendClientHello (sch) */
@@ -41,6 +43,7 @@ typedef enum {
     ssl_kea_dh = 2,
     ssl_kea_fortezza = 3, /* deprecated, now unused */
     ssl_kea_ecdh = 4,
+    ssl_kea_ecdh_psk = 5,
     ssl_kea_size /* number of ssl_kea_ algorithms */
 } SSLKEAType;
 
@@ -62,8 +65,7 @@ typedef enum {
     ssl_sign_null = 0, /* "anonymous" in TLS */
     ssl_sign_rsa = 1,
     ssl_sign_dsa = 2,
-    ssl_sign_ecdsa = 3,
-    ssl_sign_psk = 4
+    ssl_sign_ecdsa = 3
 } SSLSignType;
 
 /* Values of this enum match the HashAlgorithm enum from
@@ -85,14 +87,26 @@ typedef struct SSLSignatureAndHashAlgStr {
     SSLSignType sigAlg;
 } SSLSignatureAndHashAlg;
 
+/*
+** SSLAuthType describes the type of key that is used to authenticate a
+** connection.  That is, the type of key in the end-entity certificate.
+*/
 typedef enum {
     ssl_auth_null = 0,
-    ssl_auth_rsa = 1,
+    ssl_auth_rsa_decrypt = 1, /* static RSA */
     ssl_auth_dsa = 2,
-    ssl_auth_kea = 3,
+    ssl_auth_kea = 3, /* unused */
     ssl_auth_ecdsa = 4,
-    ssl_auth_psk = 5         /* Used for both PSK and (EC)DHE-PSK */
+    ssl_auth_ecdh_rsa = 5, /* ECDH cert with an RSA signature */
+    ssl_auth_ecdh_ecdsa = 6, /* ECDH cert with an ECDSA signature */
+    ssl_auth_rsa_sign = 7, /* RSA PKCS#1.5 signing */
+    ssl_auth_rsa_pss = 8,
+    ssl_auth_psk = 9,
+    ssl_auth_size /* number of authentication types */
 } SSLAuthType;
+
+/* This is defined for backward compatibility reasons */
+#define ssl_auth_rsa ssl_auth_rsa_decrypt
 
 typedef enum {
     ssl_calg_null = 0,
@@ -124,6 +138,22 @@ typedef enum {
     ssl_compression_deflate = 1 /* RFC 3749 */
 } SSLCompressionMethod;
 
+typedef struct SSLExtraServerCertDataStr {
+    /* When this struct is passed to SSL_ConfigServerCert, and authType is set
+     * to a value other than ssl_auth_null, this limits the use of the key to
+     * the type defined; otherwise, the certificate is configured for all
+     * compatible types. */
+    SSLAuthType authType;
+    /* The remainder of the certificate chain. */
+    const CERTCertificateList *certChain;
+    /* A set of one or more stapled OCSP responses for the certificate.  This is
+     * used to generate the OCSP stapling answer provided by the server. */
+    const SECItemArray *stapledOCSPResponses;
+    /* A serialized sign_certificate_timestamp extension, used to answer
+     * requests from clients for this data. */
+    const SECItem *signedCertTimestamps;
+} SSLExtraServerCertData;
+
 typedef struct SSLChannelInfoStr {
     /* |length| is obsolete. On return, SSL_GetChannelInfo sets |length| to the
      * smaller of the |len| argument and the length of the struct. The caller
@@ -151,12 +181,31 @@ typedef struct SSLChannelInfoStr {
     const char* compressionMethodName;
     SSLCompressionMethod compressionMethod;
 
+    /*
+     * Any attributes that follow MUST NOT accessed directly using their
+     * names. Instead, you must use the accessor macros
+     *   SSL_CHANNEL_INFO_FIELD_GET and SSL_CHANNEL_INFO_FIELD_SET,
+     * which check at runtime that the dynamically linked version of NSS
+     * supports the attribute.
+     * The names of the attributes must start with "UseMacroToAccess_".
+     * (Only internal NSS library code may access the attributes directly,
+     *  but NSS tools MUST use the macros.)
+     */
+
     /* The following fields are added in NSS 3.21.
      * This field only has meaning in TLS < 1.3 and will be set to
      *  PR_FALSE in TLS 1.3.
      */
-    PRBool extendedMasterSecretUsed;
+    PRBool UseMacroToAccess_extendedMasterSecretUsed;
 } SSLChannelInfo;
+
+/* Use these macros to access the entries in SSLChannelInfo that are named
+ * starting with "UseMacroToAccess_" */
+#define SSL_CHANNEL_INFO_FIELD_EXISTS(info, field) \
+   ((info).length >= (offsetof(SSLChannelInfo, UseMacroToAccess_##field) + sizeof((info).UseMacroToAccess_##field)))
+
+#define SSL_CHANNEL_INFO_FIELD_GET(info,field) \
+   (SSL_CHANNEL_INFO_FIELD_EXISTS(info,field) ? info.UseMacroToAccess_##field : -1)
 
 /* Preliminary channel info */
 #define ssl_preinfo_version (1U << 0)
@@ -189,7 +238,7 @@ typedef struct SSLCipherSuiteInfoStr {
 
     /* server authentication info */
     const char* authAlgorithmName;
-    SSLAuthType authAlgorithm;
+    SSLAuthType authAlgorithm; /* deprecated, use |authType| */
 
     /* key exchange algorithm info */
     const char* keaTypeName;
@@ -214,6 +263,10 @@ typedef struct SSLCipherSuiteInfoStr {
     PRUintn isExportable : 1;
     PRUintn nonStandard : 1;
     PRUintn reservedBits : 29;
+
+    /* This reports the correct authentication type for the cipher suite, use
+     * this instead of |authAlgorithm|. */
+    SSLAuthType authType;
 
 } SSLCipherSuiteInfo;
 

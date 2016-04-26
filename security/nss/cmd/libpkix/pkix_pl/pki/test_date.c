@@ -8,8 +8,6 @@
  *
  */
 
-
-
 #include "testutil.h"
 #include "testutil_nss.h"
 
@@ -17,92 +15,92 @@ static void *plContext = NULL;
 
 static void
 createDates(char *goodInput, char *diffInput,
-                    PKIX_PL_Date **goodDate,
-                    PKIX_PL_Date **equalDate,
-                    PKIX_PL_Date **diffDate){
+            PKIX_PL_Date **goodDate,
+            PKIX_PL_Date **equalDate,
+            PKIX_PL_Date **diffDate)
+{
 
-        subTest("PKIX_PL_Date_Create <goodDate>");
-        *goodDate = createDate(goodInput, plContext);
+    subTest("PKIX_PL_Date_Create <goodDate>");
+    *goodDate = createDate(goodInput, plContext);
 
-        subTest("PKIX_PL_Date_Create <equalDate>");
-        *equalDate = createDate(goodInput, plContext);
+    subTest("PKIX_PL_Date_Create <equalDate>");
+    *equalDate = createDate(goodInput, plContext);
 
-        subTest("PKIX_PL_Date_Create <diffDate>");
-        *diffDate = createDate(diffInput, plContext);
-
+    subTest("PKIX_PL_Date_Create <diffDate>");
+    *diffDate = createDate(diffInput, plContext);
 }
 
 static void
 testDestroy(void *goodObject, void *equalObject, void *diffObject)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("PKIX_PL_Date_Destroy");
+    subTest("PKIX_PL_Date_Destroy");
 
-        PKIX_TEST_DECREF_BC(goodObject);
-        PKIX_TEST_DECREF_BC(equalObject);
-        PKIX_TEST_DECREF_BC(diffObject);
+    PKIX_TEST_DECREF_BC(goodObject);
+    PKIX_TEST_DECREF_BC(equalObject);
+    PKIX_TEST_DECREF_BC(diffObject);
 
 cleanup:
 
-        PKIX_TEST_RETURN();
-
+    PKIX_TEST_RETURN();
 }
 
-static
-void testDate(char *goodInput, char *diffInput){
+static void
+testDate(char *goodInput, char *diffInput)
+{
 
-        PKIX_PL_Date *goodDate = NULL;
-        PKIX_PL_Date *equalDate = NULL;
-        PKIX_PL_Date *diffDate = NULL;
+    PKIX_PL_Date *goodDate = NULL;
+    PKIX_PL_Date *equalDate = NULL;
+    PKIX_PL_Date *diffDate = NULL;
 
-        /*
+    /*
          * The ASCII rep of the date will vary by platform and locale
          * This particular string was generated on a SPARC running Solaris 9
          * in an English locale
          */
-        /* char *expectedAscii = "Mon Mar 29 08:48:47 2004"; */
-        char *expectedAscii = "Mon Mar 29, 2004";
+    /* char *expectedAscii = "Mon Mar 29 08:48:47 2004"; */
+    char *expectedAscii = "Mon Mar 29, 2004";
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        createDates(goodInput, diffInput,
-                    &goodDate, &equalDate, &diffDate);
+    createDates(goodInput, diffInput,
+                &goodDate, &equalDate, &diffDate);
 
-        PKIX_TEST_EQ_HASH_TOSTR_DUP
-                (goodDate, equalDate, diffDate, expectedAscii, Date, PKIX_TRUE);
+    PKIX_TEST_EQ_HASH_TOSTR_DUP(goodDate, equalDate, diffDate, expectedAscii, Date, PKIX_TRUE);
 
-        testDestroy(goodDate, equalDate, diffDate);
+    testDestroy(goodDate, equalDate, diffDate);
 
-        PKIX_TEST_RETURN();
-
+    PKIX_TEST_RETURN();
 }
 
-int test_date(int argc, char *argv[]) {
+int
+test_date(int argc, char *argv[])
+{
 
-        char *goodInput = NULL;
-        char *diffInput = NULL;
-        PKIX_UInt32 actualMinorVersion;
-        PKIX_UInt32 j = 0;
+    char *goodInput = NULL;
+    char *diffInput = NULL;
+    PKIX_UInt32 actualMinorVersion;
+    PKIX_UInt32 j = 0;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        startTests("Date");
+    startTests("Date");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        goodInput = "040329134847Z";
-        diffInput = "050329135847Z";
-        testDate(goodInput, diffInput);
+    goodInput = "040329134847Z";
+    diffInput = "050329135847Z";
+    testDate(goodInput, diffInput);
 
 cleanup:
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("Date");
+    endTests("Date");
 
-        return (0);
+    return (0);
 }

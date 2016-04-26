@@ -16,7 +16,7 @@
 #include "nss.h"
 #include "secport.h"
 
-typedef int (*mainTestFn)(int argc, char* argv[]);
+typedef int (*mainTestFn)(int argc, char *argv[]);
 
 extern int libpkix_buildthreads(int argc, char *argv[]);
 extern int nss_threads(int argc, char *argv[]);
@@ -88,84 +88,84 @@ extern int dumpcert(int argc, char *argv[]);
 extern int dumpcrl(int argc, char *argv[]);
 extern int validate_chain(int argc, char *argv[]);
 
-
 typedef struct {
     char *fnName;
     mainTestFn fnPointer;
 } testFunctionRef;
 
 testFunctionRef testFnRefTable[] = {
-    {"libpkix_buildthreads",           libpkix_buildthreads},
-    {"nss_threads",                    nss_threads},
-    {"test_certselector",              test_certselector},
-    {"test_comcertselparams",          test_comcertselparams},
-    {"test_certchainchecker",          test_certchainchecker},
-    {"test_comcrlselparams",           test_comcrlselparams},
-    {"test_crlselector",               test_crlselector},
-    {"test_procparams",                test_procparams},
-    {"test_resourcelimits",            test_resourcelimits},
-    {"test_trustanchor",               test_trustanchor},
-    {"test_valparams",                 test_valparams},
-    {"test_buildresult",               test_buildresult},
-    {"test_policynode",                test_policynode},
-    {"test_valresult",                 test_valresult},
-    {"test_verifynode",                test_verifynode},
-    {"test_store",                     test_store},
-    {"test_basicchecker",              test_basicchecker},
-    {"test_basicconstraintschecker",   test_basicconstraintschecker},
-    {"test_buildchain",                test_buildchain},
-    {"test_buildchain_partialchain",   test_buildchain_partialchain},
-    {"test_buildchain_resourcelimits", test_buildchain_resourcelimits},
-    {"test_buildchain_uchecker",       test_buildchain_uchecker},
-    {"test_customcrlchecker",          test_customcrlchecker},
-    {"test_defaultcrlchecker2stores",  test_defaultcrlchecker2stores},
-    {"test_ocsp",                      test_ocsp},
-    {"test_policychecker",             test_policychecker},
-    {"test_subjaltnamechecker",        test_subjaltnamechecker},
-    {"test_validatechain",             test_validatechain},
-    {"test_validatechain_NB",          test_validatechain_NB},
-    {"test_validatechain_bc",          test_validatechain_bc},
-    {"test_error",                     test_error},
-    {"test_list",                      test_list},
-    {"test_list2",                     test_list2},
-    {"test_logger",                    test_logger},
-    {"test_colcertstore",              test_colcertstore},
-    {"test_ekuchecker",                test_ekuchecker},
-    {"test_httpcertstore",             test_httpcertstore},
-    {"test_pk11certstore",             test_pk11certstore},
-    {"test_socket",                    test_socket},
-    {"test_authorityinfoaccess",       test_authorityinfoaccess},
-    {"test_cert",                      test_cert},
-    {"test_crl",                       test_crl},
-    {"test_crlentry",                  test_crlentry},
-    {"test_date",                      test_date},
-    {"test_generalname",               test_generalname},
-    {"test_nameconstraints",           test_nameconstraints},
-    {"test_subjectinfoaccess",         test_subjectinfoaccess},
-    {"test_x500name",                  test_x500name},
-    {"stress_test",                    stress_test},
-    {"test_bigint",                    test_bigint},
-    {"test_bytearray",                 test_bytearray},
-    {"test_hashtable",                 test_hashtable},
-    {"test_mem",                       test_mem},
-    {"test_monitorlock",               test_monitorlock},
-    {"test_mutex",                     test_mutex},
-    {"test_mutex2",                    test_mutex2},
-    {"test_mutex3",                    test_mutex3},
-    {"test_object",                    test_object},
-    {"test_oid",                       test_oid},
-/*  {"test_rwlock",                    test_rwlock }*/
-    {"test_string",                    test_string},
-    {"test_string2",                   test_string2},
-    {"build_chain",                    build_chain},
-    {"dumpcert",                       dumpcert},
-    {"dumpcrl",                        dumpcrl},
-    {"validate_chain",                 validate_chain},
-    {NULL,                             NULL },
+    { "libpkix_buildthreads", libpkix_buildthreads },
+    { "nss_threads", nss_threads },
+    { "test_certselector", test_certselector },
+    { "test_comcertselparams", test_comcertselparams },
+    { "test_certchainchecker", test_certchainchecker },
+    { "test_comcrlselparams", test_comcrlselparams },
+    { "test_crlselector", test_crlselector },
+    { "test_procparams", test_procparams },
+    { "test_resourcelimits", test_resourcelimits },
+    { "test_trustanchor", test_trustanchor },
+    { "test_valparams", test_valparams },
+    { "test_buildresult", test_buildresult },
+    { "test_policynode", test_policynode },
+    { "test_valresult", test_valresult },
+    { "test_verifynode", test_verifynode },
+    { "test_store", test_store },
+    { "test_basicchecker", test_basicchecker },
+    { "test_basicconstraintschecker", test_basicconstraintschecker },
+    { "test_buildchain", test_buildchain },
+    { "test_buildchain_partialchain", test_buildchain_partialchain },
+    { "test_buildchain_resourcelimits", test_buildchain_resourcelimits },
+    { "test_buildchain_uchecker", test_buildchain_uchecker },
+    { "test_customcrlchecker", test_customcrlchecker },
+    { "test_defaultcrlchecker2stores", test_defaultcrlchecker2stores },
+    { "test_ocsp", test_ocsp },
+    { "test_policychecker", test_policychecker },
+    { "test_subjaltnamechecker", test_subjaltnamechecker },
+    { "test_validatechain", test_validatechain },
+    { "test_validatechain_NB", test_validatechain_NB },
+    { "test_validatechain_bc", test_validatechain_bc },
+    { "test_error", test_error },
+    { "test_list", test_list },
+    { "test_list2", test_list2 },
+    { "test_logger", test_logger },
+    { "test_colcertstore", test_colcertstore },
+    { "test_ekuchecker", test_ekuchecker },
+    { "test_httpcertstore", test_httpcertstore },
+    { "test_pk11certstore", test_pk11certstore },
+    { "test_socket", test_socket },
+    { "test_authorityinfoaccess", test_authorityinfoaccess },
+    { "test_cert", test_cert },
+    { "test_crl", test_crl },
+    { "test_crlentry", test_crlentry },
+    { "test_date", test_date },
+    { "test_generalname", test_generalname },
+    { "test_nameconstraints", test_nameconstraints },
+    { "test_subjectinfoaccess", test_subjectinfoaccess },
+    { "test_x500name", test_x500name },
+    { "stress_test", stress_test },
+    { "test_bigint", test_bigint },
+    { "test_bytearray", test_bytearray },
+    { "test_hashtable", test_hashtable },
+    { "test_mem", test_mem },
+    { "test_monitorlock", test_monitorlock },
+    { "test_mutex", test_mutex },
+    { "test_mutex2", test_mutex2 },
+    { "test_mutex3", test_mutex3 },
+    { "test_object", test_object },
+    { "test_oid", test_oid },
+    /*  {"test_rwlock",                    test_rwlock }*/
+    { "test_string", test_string },
+    { "test_string2", test_string2 },
+    { "build_chain", build_chain },
+    { "dumpcert", dumpcert },
+    { "dumpcrl", dumpcrl },
+    { "validate_chain", validate_chain },
+    { NULL, NULL },
 };
 
-static
-void printUsage(char *cmdName) {
+static void
+printUsage(char *cmdName)
+{
     int fnCounter = 0;
 
     fprintf(stderr, "Usage: %s [test name] [arg1]...[argN]\n\n", cmdName);
@@ -181,22 +181,22 @@ void printUsage(char *cmdName) {
 }
 
 static SECStatus
-getTestArguments(int         argc,
-                 char      **argv,
+getTestArguments(int argc,
+                 char **argv,
                  mainTestFn *ptestFn,
-                 char      **pdbPath,
-                 int        *pargc,
-                 char     ***pargv)
+                 char **pdbPath,
+                 int *pargc,
+                 char ***pargv)
 {
     PLOptState *optstate = NULL;
     PLOptStatus status;
     mainTestFn testFunction = NULL;
     char **wArgv = NULL;
-    char  *dbPath = NULL;
-    char  *fnName = NULL;
-    int    wArgc = 0;
-    int    fnCounter = 0;
-    
+    char *dbPath = NULL;
+    char *fnName = NULL;
+    int wArgc = 0;
+    int fnCounter = 0;
+
     if (argc < 2) {
         printf("ERROR: insufficient number of arguments: %s.\n", fnName);
         return SECFailure;
@@ -215,7 +215,7 @@ getTestArguments(int         argc,
         return SECFailure;
     }
 
-    wArgv = PORT_ZNewArray(char*, argc);
+    wArgv = PORT_ZNewArray(char *, argc);
     if (!wArgv) {
         return SECFailure;
     }
@@ -227,14 +227,14 @@ getTestArguments(int         argc,
     optstate = PL_CreateOptState(argc - 1, argv + 1, "d:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
-        case 'd':
-            dbPath = (char*)optstate->value;
-            break;
+            case 'd':
+                dbPath = (char *)optstate->value;
+                break;
 
-        default:
-            wArgv[wArgc] = (char*)optstate->value;
-            wArgc += 1;
-            break;
+            default:
+                wArgv[wArgc] = (char *)optstate->value;
+                wArgc += 1;
+                break;
         }
     }
     PL_DestroyOptState(optstate);
@@ -243,22 +243,21 @@ getTestArguments(int         argc,
     *pdbPath = dbPath;
     *pargc = wArgc;
     *pargv = wArgv;
-    
+
     return SECSuccess;
 }
 
-
-static
-int runCmd(mainTestFn fnPointer,
-           int argc,
-           char **argv,
-           char *dbPath)
+static int
+runCmd(mainTestFn fnPointer,
+       int argc,
+       char **argv,
+       char *dbPath)
 {
     int retStat = 0;
-    
+
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    
+
     /* if using databases, use NSS_Init and not NSS_NoDB_Init */
     if (dbPath && PORT_Strlen(dbPath) != 0) {
         if (NSS_Init(dbPath) != SECSuccess)
@@ -276,7 +275,9 @@ int runCmd(mainTestFn fnPointer,
     return retStat;
 }
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv)
+{
     mainTestFn testFunction = NULL;
     char *dbPath = NULL;
     char **testArgv = NULL;
@@ -289,11 +290,10 @@ int main(int argc, char **argv) {
         printUsage(argv[0]);
         return 1;
     }
-    
+
     rv = runCmd(testFunction, testArgc, testArgv, dbPath);
 
     PORT_Free(testArgv);
 
     return rv;
 }
-

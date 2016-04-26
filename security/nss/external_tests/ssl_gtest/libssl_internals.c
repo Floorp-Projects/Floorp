@@ -29,11 +29,14 @@ PRUint32
 SSLInt_DetermineKEABits(PRUint16 serverKeyBits, SSLAuthType authAlgorithm) {
     // For ECDSA authentication we expect a curve for key exchange with the
     // same strength as the one used for the certificate's signature.
-    if (authAlgorithm == ssl_auth_ecdsa) {
+    if (authAlgorithm == ssl_auth_ecdsa ||
+        authAlgorithm == ssl_auth_ecdh_rsa ||
+        authAlgorithm == ssl_auth_ecdh_ecdsa) {
         return serverKeyBits;
     }
 
-    PORT_Assert(authAlgorithm == ssl_auth_rsa);
+    PORT_Assert(authAlgorithm == ssl_auth_rsa_decrypt ||
+                authAlgorithm == ssl_auth_rsa_sign);
     PRUint32 minKeaBits;
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
     // P-192 is the smallest curve we want to use.

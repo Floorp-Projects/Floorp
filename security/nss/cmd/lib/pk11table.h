@@ -63,7 +63,7 @@ typedef enum {
     ArgMechanismInfo,
     ArgInitializeArgs,
     ArgFunctionList,
-/* Modifier Flags */
+    /* Modifier Flags */
     ArgMask = 0xff,
     ArgOut = 0x100,
     ArgArray = 0x200,
@@ -74,8 +74,7 @@ typedef enum {
     ArgFull = 0x4000
 } ArgType;
 
-typedef enum _constType
-{
+typedef enum _constType {
     ConstNone,
     ConstBool,
     ConstInfoFlags,
@@ -103,19 +102,19 @@ typedef struct _constant {
     CK_ULONG value;
     ConstType type;
     ConstType attrType;
-} Constant ;
+} Constant;
 
 /*
  * Values structures.
  */
 typedef struct _values {
-    ArgType	type;
-    ConstType	constType;
-    int		size;
-    char	*filename;
-    void	*data;
-    int 	reference;
-    int		arraySize;
+    ArgType type;
+    ConstType constType;
+    int size;
+    char *filename;
+    void *data;
+    int reference;
+    int arraySize;
 } Value;
 
 /*
@@ -137,10 +136,10 @@ struct _variable {
  * structure for master command array
  */
 typedef struct _commands {
-    char	*fname;
-    FunctionType	fType;
-    char	*helpString;
-    ArgType	args[MAX_ARGS];
+    char *fname;
+    FunctionType fType;
+    char *helpString;
+    ArgType args[MAX_ARGS];
 } Commands;
 
 typedef struct _module {
@@ -149,8 +148,8 @@ typedef struct _module {
 } Module;
 
 typedef struct _topics {
-    char	*name;
-    char	*helpString;
+    char *name;
+    char *helpString;
 } Topics;
 
 /*
@@ -177,4 +176,3 @@ getNameFromAttribute(CK_ATTRIBUTE_TYPE type);
 extern unsigned int totalKnownType(ConstType type);
 
 #endif /* _PK11_TABLE_H_ */
-
