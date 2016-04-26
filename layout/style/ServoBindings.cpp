@@ -254,7 +254,8 @@ Servo_GetComputedValues(RawGeckoElement* element)
 
 ServoComputedValues*
 Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
-                                       nsIAtom* pseudoTag)
+                                       nsIAtom* pseudoTag,
+                                       RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValuesForAnonymousBox in a "
             "non-MOZ_STYLO build");
