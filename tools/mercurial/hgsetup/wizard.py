@@ -44,12 +44,16 @@ To begin, press the enter/return key.
 
 # This should match MODERN_MERCURIAL_VERSION in
 # python/mozboot/mozboot/base.py.
-OLDEST_NON_LEGACY_VERSION = LooseVersion('3.5.2')
+OLDEST_NON_LEGACY_VERSION = LooseVersion('3.7.3')
 LEGACY_MERCURIAL = '''
 You are running an out of date Mercurial client (%s).
 
 For a faster and better Mercurial experience, we HIGHLY recommend you
 upgrade.
+
+Legacy versions of Mercurial have known security vulnerabilities. Failure
+to upgrade may leave you exposed. You are highly encouraged to upgrade
+in case you aren't running a patched version.
 '''.strip()
 
 MISSING_USERNAME = '''
