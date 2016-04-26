@@ -40,7 +40,6 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
     log = log or _get_default_logger()
 
     processString = "%s process:" % processType
-    expectedLeaks = {}
     crashedOnPurpose = False
     totalBytesLeaked = None
     logAsWarning = False
@@ -92,17 +91,9 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                 logAsWarning = True
                 continue
             if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
-                currExpectedLeak = expectedLeaks.get(name, 0)
-                if not expectedLeaks or numLeaked <= currExpectedLeak:
-                    if not expectedLeaks:
-                        leakedObjectNames.append(name)
-                    leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s"
-                                                % (processString, numLeaked, name))
-                else:
-                    leakedObjectNames.append(name)
-                    leakedObjectAnalysis.append("WARNING | leakcheck | %s leaked too many %s (expected %d, got %d)"
-                                                % (processString, name, currExpectedLeak, numLeaked))
-
+                leakedObjectNames.append(name)
+                leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s"
+                                            % (processString, numLeaked, name))
 
     leakAnalysis.extend(leakedObjectAnalysis)
     if logAsWarning:
@@ -132,7 +123,7 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                  processString)
         return
 
-    if totalBytesLeaked > leakThreshold or (expectedLeaks and leakedObjectNames):
+    if totalBytesLeaked > leakThreshold:
         logAsWarning = True
         # Fail the run if we're over the threshold (which defaults to 0)
         prefix = "TEST-UNEXPECTED-FAIL"
