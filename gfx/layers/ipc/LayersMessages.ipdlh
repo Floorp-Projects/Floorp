@@ -326,6 +326,7 @@ struct TexturedTileDescriptor {
   MaybeTexture textureOnWhite;
   IntRect updateRect;
   TileLock sharedLock;
+  bool wasPlaceholder;
 };
 
 struct PlaceholderTileDescriptor {

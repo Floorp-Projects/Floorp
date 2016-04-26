@@ -506,7 +506,7 @@ TileClient::PrivateProtector::Set(TileClient * const aContainer, TextureClient* 
 
 // Placeholder
 TileClient::TileClient()
-  : mCompositableClient(nullptr)
+  : mCompositableClient(nullptr), mWasPlaceholder(false)
 {
 }
 
@@ -527,6 +527,7 @@ TileClient::TileClient(const TileClient& o)
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
+  mWasPlaceholder = o.mWasPlaceholder;
   mUpdateRect = o.mUpdateRect;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
@@ -548,6 +549,7 @@ TileClient::operator=(const TileClient& o)
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
+  mWasPlaceholder = o.mWasPlaceholder;
   mUpdateRect = o.mUpdateRect;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
@@ -832,9 +834,12 @@ TileDescriptor
 TileClient::GetTileDescriptor()
 {
   if (IsPlaceholderTile()) {
+    mWasPlaceholder = true;
     return PlaceholderTileDescriptor();
   }
   MOZ_ASSERT(mFrontLock);
+  bool wasPlaceholder = mWasPlaceholder;
+  mWasPlaceholder = false;
   if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {
     // AddRef here and Release when receiving on the host side to make sure the
     // reference count doesn't go to zero before the host receives the message.
@@ -846,13 +851,15 @@ TileClient::GetTileDescriptor()
     return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
                                   mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor()) : MaybeTexture(null_t()),
                                   mUpdateRect,
-                                  TileLock(uintptr_t(mFrontLock.get())));
+                                  TileLock(uintptr_t(mFrontLock.get())),
+                                  wasPlaceholder);
   } else {
     gfxShmSharedReadLock *lock = static_cast<gfxShmSharedReadLock*>(mFrontLock.get());
     return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
                                   mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor()) : MaybeTexture(null_t()),
                                   mUpdateRect,
-                                  TileLock(lock->GetShmemSection()));
+                                  TileLock(lock->GetShmemSection()),
+                                  wasPlaceholder);
   }
 }
 
@@ -879,12 +886,7 @@ ClientMultiTiledLayerBuffer::GetSurfaceDescriptorTiles()
   InfallibleTArray<TileDescriptor> tiles;
 
   for (TileClient& tile : mRetainedTiles) {
-    TileDescriptor tileDesc;
-    if (tile.IsPlaceholderTile()) {
-      tileDesc = PlaceholderTileDescriptor();
-    } else {
-      tileDesc = tile.GetTileDescriptor();
-    }
+    TileDescriptor tileDesc = tile.GetTileDescriptor();
     tiles.AppendElement(tileDesc);
     // Reset the update rect
     tile.mUpdateRect = IntRect();
