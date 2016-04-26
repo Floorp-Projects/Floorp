@@ -268,7 +268,7 @@ private:
   // GMP thread only.
   void gmp_Decrypt(RefPtr<DecryptJob> aJob);
 
-  class RejectPromiseTask : public nsRunnable {
+  class RejectPromiseTask : public Runnable {
   public:
     RejectPromiseTask(CDMProxy* aProxy,
                       PromiseId aId,

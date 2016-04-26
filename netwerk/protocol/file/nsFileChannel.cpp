@@ -33,7 +33,7 @@ using namespace mozilla::net;
 
 //-----------------------------------------------------------------------------
 
-class nsFileCopyEvent : public nsRunnable {
+class nsFileCopyEvent : public Runnable {
 public:
   nsFileCopyEvent(nsIOutputStream *dest, nsIInputStream *source, int64_t len)
     : mDest(dest)

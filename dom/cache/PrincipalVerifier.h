@@ -22,7 +22,7 @@ namespace cache {
 
 class ManagerId;
 
-class PrincipalVerifier final : public nsRunnable
+class PrincipalVerifier final : public Runnable
 {
 public:
   // An interface to be implemented by code wishing to use the

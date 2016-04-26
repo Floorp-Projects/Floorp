@@ -83,7 +83,7 @@ private:
   bool mOuterTransaction;
 };
 
-class RestoreSelectionState : public nsRunnable {
+class RestoreSelectionState : public Runnable {
 public:
   RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame)
     : mFrame(aFrame),
@@ -1087,7 +1087,7 @@ nsTextEditorState::GetSelectionController() const
 }
 
 // Helper class, used below in BindToFrame().
-class PrepareEditorEvent : public nsRunnable {
+class PrepareEditorEvent : public Runnable {
 public:
   PrepareEditorEvent(nsTextEditorState &aState,
                      nsIContent *aOwnerContent,

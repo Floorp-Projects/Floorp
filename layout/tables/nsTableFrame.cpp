@@ -4797,7 +4797,7 @@ GetPaintStyleInfo(const nsIFrame* aFrame,
   }
 }
 
-class nsDelayedCalcBCBorders : public nsRunnable {
+class nsDelayedCalcBCBorders : public Runnable {
 public:
   explicit nsDelayedCalcBCBorders(nsIFrame* aFrame) :
     mFrame(aFrame) {}

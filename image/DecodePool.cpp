@@ -36,7 +36,7 @@ namespace image {
 // Helper runnables.
 ///////////////////////////////////////////////////////////////////////////////
 
-class NotifyProgressWorker : public nsRunnable
+class NotifyProgressWorker : public Runnable
 {
 public:
   /**
@@ -79,7 +79,7 @@ private:
   const SurfaceFlags mSurfaceFlags;
 };
 
-class NotifyDecodeCompleteWorker : public nsRunnable
+class NotifyDecodeCompleteWorker : public Runnable
 {
 public:
   /**
@@ -111,7 +111,7 @@ private:
 
 #ifdef MOZ_NUWA_PROCESS
 
-class RegisterDecodeIOThreadWithNuwaRunnable : public nsRunnable
+class RegisterDecodeIOThreadWithNuwaRunnable : public Runnable
 {
 public:
   NS_IMETHOD Run()
@@ -260,7 +260,7 @@ private:
   bool mShuttingDown;
 };
 
-class DecodePoolWorker : public nsRunnable
+class DecodePoolWorker : public Runnable
 {
 public:
   explicit DecodePoolWorker(DecodePoolImpl* aImpl) : mImpl(aImpl) { }

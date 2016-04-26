@@ -680,7 +680,7 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
 
 namespace {
 
-class AsyncInitDatabase final : public nsRunnable
+class AsyncInitDatabase final : public Runnable
 {
 public:
   AsyncInitDatabase(Connection* aConnection,

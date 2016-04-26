@@ -108,7 +108,7 @@ LazyIdleThread::EnableIdleTimeout()
   }
 
   if (mThread) {
-    nsCOMPtr<nsIRunnable> runnable(new nsRunnable());
+    nsCOMPtr<nsIRunnable> runnable(new Runnable());
     if (NS_FAILED(Dispatch(runnable.forget(), NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch!");
     }

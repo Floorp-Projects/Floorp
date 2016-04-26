@@ -26,7 +26,7 @@
 using namespace mozilla;
 
 namespace {
-class ShortTermURISpecCache : public nsRunnable {
+class ShortTermURISpecCache : public Runnable {
 public:
   ShortTermURISpecCache() : mPending(false) {}
 

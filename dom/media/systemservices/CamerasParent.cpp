@@ -40,7 +40,7 @@ namespace camera {
 //   called "VideoCapture". On Windows this is a thread with an event loop
 //   suitable for UI access.
 
-class FrameSizeChangeRunnable : public nsRunnable {
+class FrameSizeChangeRunnable : public Runnable {
 public:
   FrameSizeChangeRunnable(CamerasParent *aParent, CaptureEngine capEngine,
                           int cap_id, unsigned int aWidth, unsigned int aHeight)
@@ -89,7 +89,7 @@ CallbackHelper::FrameSizeChange(unsigned int w, unsigned int h,
   return 0;
 }
 
-class DeliverFrameRunnable : public nsRunnable {
+class DeliverFrameRunnable : public Runnable {
 public:
   DeliverFrameRunnable(CamerasParent *aParent,
                        CaptureEngine engine,
@@ -165,7 +165,7 @@ CamerasParent::Observe(nsISupports *aSubject,
 }
 
 nsresult
-CamerasParent::DispatchToVideoCaptureThread(nsRunnable *event)
+CamerasParent::DispatchToVideoCaptureThread(Runnable *event)
 {
   // Don't try to dispatch if we're already on the right thread.
   // There's a potential deadlock because the mThreadMonitor is likely
@@ -195,7 +195,7 @@ CamerasParent::StopVideoCapture()
   // from PBackground (when the Actor shuts down).
   // Shut down the WebRTC stack (on the capture thread)
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self]() -> nsresult {
       MonitorAutoLock lock(self->mThreadMonitor);
       self->CloseEngines();
@@ -220,7 +220,7 @@ CamerasParent::StopVideoCapture()
   if (self->mVideoCaptureThread) {
     base::Thread *thread = self->mVideoCaptureThread;
     self->mVideoCaptureThread = nullptr;
-    RefPtr<nsRunnable> threadShutdown =
+    RefPtr<Runnable> threadShutdown =
       media::NewRunnableFrom([thread]() -> nsresult {
         if (thread->IsRunning()) {
           thread->Stop();
@@ -481,7 +481,7 @@ CamerasParent::RecvNumberOfCaptureDevices(const int& aCapEngine)
   LOG((__PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine]() -> nsresult {
       int num = -1;
       if (self->EnsureInitialized(aCapEngine)) {
@@ -517,7 +517,7 @@ CamerasParent::RecvNumberOfCapabilities(const int& aCapEngine,
   LOG(("Getting caps for %s", unique_id.get()));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, unique_id, aCapEngine]() -> nsresult {
       int num = -1;
       if (self->EnsureInitialized(aCapEngine)) {
@@ -557,7 +557,7 @@ CamerasParent::RecvGetCaptureCapability(const int &aCapEngine,
   LOG(("RecvGetCaptureCapability: %s %d", unique_id.get(), num));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, unique_id, aCapEngine, num]() -> nsresult {
       webrtc::CaptureCapability webrtcCaps;
       int error = -1;
@@ -605,7 +605,7 @@ CamerasParent::RecvGetCaptureDevice(const int& aCapEngine,
   LOG((__PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, aListNumber]() -> nsresult {
       char deviceName[MediaEngineSource::kMaxDeviceNameLength];
       char deviceUniqueId[MediaEngineSource::kMaxUniqueIdLength];
@@ -719,7 +719,7 @@ CamerasParent::RecvAllocateCaptureDevice(const int& aCapEngine,
 {
   LOG(("%s: Verifying permissions for %s", __PRETTY_FUNCTION__, aOrigin.get()));
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> mainthread_runnable =
+  RefPtr<Runnable> mainthread_runnable =
     media::NewRunnableFrom([self, aCapEngine, unique_id, aOrigin]() -> nsresult {
       // Verify whether the claimed origin has received permission
       // to use the camera, either persistently or this session (one shot).
@@ -737,7 +737,7 @@ CamerasParent::RecvAllocateCaptureDevice(const int& aCapEngine,
       // After retrieving the permission (or not) on the main thread,
       // bounce to the WebRTC thread to allocate the device (or not),
       // then bounce back to the IPC thread for the reply to content.
-      RefPtr<nsRunnable> webrtc_runnable =
+      RefPtr<Runnable> webrtc_runnable =
       media::NewRunnableFrom([self, allowed, aCapEngine, unique_id]() -> nsresult {
         int numdev = -1;
         int error = -1;
@@ -788,7 +788,7 @@ CamerasParent::RecvReleaseCaptureDevice(const int& aCapEngine,
   LOG(("RecvReleaseCamera device nr %d", numdev));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, numdev]() -> nsresult {
       int error = self->ReleaseCaptureDevice(aCapEngine, numdev);
       RefPtr<nsIRunnable> ipc_runnable =
@@ -822,7 +822,7 @@ CamerasParent::RecvStartCapture(const int& aCapEngine,
   LOG((__PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, capnum, ipcCaps]() -> nsresult {
       CallbackHelper** cbh;
       webrtc::ExternalRenderer* render;
@@ -904,7 +904,7 @@ CamerasParent::RecvStopCapture(const int& aCapEngine,
   LOG((__PRETTY_FUNCTION__));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> webrtc_runnable =
+  RefPtr<Runnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, capnum]() -> nsresult {
       self->StopCapture(aCapEngine, capnum);
       return NS_OK;
@@ -969,7 +969,7 @@ CamerasParent::CamerasParent()
   LOG(("Spinning up WebRTC Cameras Thread"));
 
   RefPtr<CamerasParent> self(this);
-  RefPtr<nsRunnable> threadStart =
+  RefPtr<Runnable> threadStart =
     media::NewRunnableFrom([self]() -> nsresult {
       // Register thread shutdown observer
       nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

@@ -782,7 +782,7 @@ GeckoMediaPluginServiceParent::LoadFromEnvironment()
   return GenericPromise::All(thread, promises);
 }
 
-class NotifyObserversTask final : public nsRunnable {
+class NotifyObserversTask final : public mozilla::Runnable {
 public:
   explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
     : mTopic(aTopic)
@@ -878,11 +878,6 @@ GeckoMediaPluginServiceParent::RemoveAndDeletePluginDirectory(
                      aDefer));
 }
 
-class DummyRunnable : public nsRunnable {
-public:
-  NS_IMETHOD Run() { return NS_OK; }
-};
-
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::GetPluginVersionForAPI(const nsACString& aAPI,
                                                       nsTArray<nsCString>* aTags,
@@ -933,7 +928,7 @@ GeckoMediaPluginServiceParent::EnsurePluginsOnDiskScanned()
     // cause an event to be dispatched to which scans for plugins. We
     // dispatch a sync event to the GMP thread here in order to wait until
     // after the GMP thread has scanned any paths in MOZ_GMP_PATH.
-    nsresult rv = GMPDispatch(new DummyRunnable(), NS_DISPATCH_SYNC);
+    nsresult rv = GMPDispatch(new mozilla::Runnable(), NS_DISPATCH_SYNC);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(mScannedPluginOnDisk, "Should have scanned MOZ_GMP_PATH by now");
   }
@@ -1833,7 +1828,7 @@ GMPServiceParent::RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
                                                       *aVersion));
 }
 
-class DeleteGMPServiceParent : public nsRunnable
+class DeleteGMPServiceParent : public mozilla::Runnable
 {
 public:
   explicit DeleteGMPServiceParent(GMPServiceParent* aToDelete)
@@ -1856,7 +1851,7 @@ GMPServiceParent::ActorDestroy(ActorDestroyReason aWhy)
   NS_DispatchToCurrentThread(new DeleteGMPServiceParent(this));
 }
 
-class OpenPGMPServiceParent : public nsRunnable
+class OpenPGMPServiceParent : public mozilla::Runnable
 {
 public:
   OpenPGMPServiceParent(GMPServiceParent* aGMPServiceParent,

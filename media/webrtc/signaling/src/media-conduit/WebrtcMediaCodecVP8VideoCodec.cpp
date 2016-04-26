@@ -71,7 +71,7 @@ ShutdownThread(nsCOMPtr<nsIThread>& aThread)
 //   should contains corresponding info such as image size and timestamps for
 //   DrainOutput() implementation to construct data needed by encoded/decoded
 //   callbacks.
-class MediaCodecOutputDrain : public nsRunnable
+class MediaCodecOutputDrain : public Runnable
 {
 public:
   void Start() {

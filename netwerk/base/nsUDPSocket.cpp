@@ -75,7 +75,7 @@ ResolveHost(const nsACString &host, nsIDNSListener *listener)
 
 //-----------------------------------------------------------------------------
 
-class SetSocketOptionRunnable : public nsRunnable
+class SetSocketOptionRunnable : public Runnable
 {
 public:
   SetSocketOptionRunnable(nsUDPSocket* aSocket, const PRSocketOptionData& aOpt)
@@ -762,7 +762,7 @@ nsUDPSocket::SaveNetworkStats(bool aEnforce)
   if (aEnforce || total > NETWORK_STATS_THRESHOLD) {
     // Create the event to save the network statistics.
     // the event is then dispathed to the main thread.
-    RefPtr<nsRunnable> event =
+    RefPtr<Runnable> event =
       new SaveNetworkStatsEvent(mAppId, mIsInIsolatedMozBrowserElement, mActiveNetworkInfo,
                                 mByteReadCount, mByteWriteCount, false);
     NS_DispatchToMainThread(event);
@@ -848,7 +848,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
 
-  class OnPacketReceivedRunnable : public nsRunnable
+  class OnPacketReceivedRunnable : public Runnable
   {
   public:
     OnPacketReceivedRunnable(const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
@@ -867,7 +867,7 @@ public:
     nsCOMPtr<nsIUDPMessage> mMessage;
   };
 
-  class OnStopListeningRunnable : public nsRunnable
+  class OnStopListeningRunnable : public Runnable
   {
   public:
     OnStopListeningRunnable(const nsMainThreadPtrHandle<nsIUDPSocketListener>& aListener,
@@ -953,7 +953,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
 
-  class OnPacketReceivedRunnable : public nsRunnable
+  class OnPacketReceivedRunnable : public Runnable
   {
   public:
     OnPacketReceivedRunnable(const nsCOMPtr<nsIUDPSocketListener>& aListener,
@@ -972,7 +972,7 @@ public:
     nsCOMPtr<nsIUDPMessage> mMessage;
   };
 
-  class OnStopListeningRunnable : public nsRunnable
+  class OnStopListeningRunnable : public Runnable
   {
   public:
     OnStopListeningRunnable(const nsCOMPtr<nsIUDPSocketListener>& aListener,
@@ -1132,7 +1132,7 @@ PendingSendStream::OnLookupComplete(nsICancelable *request,
   return NS_OK;
 }
 
-class SendRequestRunnable: public nsRunnable {
+class SendRequestRunnable: public Runnable {
 public:
   SendRequestRunnable(nsUDPSocket *aSocket,
                       const NetAddr &aAddr,

@@ -55,7 +55,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebAudioDecodeJob, Release)
 
 using namespace dom;
 
-class ReportResultTask final : public nsRunnable
+class ReportResultTask final : public Runnable
 {
 public:
   ReportResultTask(WebAudioDecodeJob& aDecodeJob,
@@ -94,7 +94,7 @@ enum class PhaseEnum : int
   Done
 };
 
-class MediaDecodeTask final : public nsRunnable
+class MediaDecodeTask final : public Runnable
 {
 public:
   MediaDecodeTask(const char* aContentType, uint8_t* aBuffer,

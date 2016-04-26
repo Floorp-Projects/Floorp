@@ -140,7 +140,7 @@ InActiveDocument(nsIContent *aContent)
 /// Runnables and helper classes
 ///
 
-class nsAsyncInstantiateEvent : public nsRunnable {
+class nsAsyncInstantiateEvent : public Runnable {
 public:
   explicit nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
@@ -173,7 +173,7 @@ nsAsyncInstantiateEvent::Run()
 // (outside an active document) or stopped (in a document but unrendered). This
 // is used to allow scripts to move a plugin around the document hierarchy
 // without re-instantiating it.
-class CheckPluginStopEvent : public nsRunnable {
+class CheckPluginStopEvent : public Runnable {
 public:
   explicit CheckPluginStopEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
@@ -248,7 +248,7 @@ CheckPluginStopEvent::Run()
 /**
  * Helper task for firing simple events
  */
-class nsSimplePluginEvent : public nsRunnable {
+class nsSimplePluginEvent : public Runnable {
 public:
   nsSimplePluginEvent(nsIContent* aTarget, const nsAString &aEvent)
     : mTarget(aTarget)
@@ -301,7 +301,7 @@ nsSimplePluginEvent::Run()
 /**
  * A task for firing PluginCrashed DOM Events.
  */
-class nsPluginCrashedEvent : public nsRunnable {
+class nsPluginCrashedEvent : public Runnable {
 public:
   nsCOMPtr<nsIContent> mContent;
   nsString mPluginDumpID;
@@ -360,7 +360,7 @@ nsPluginCrashedEvent::Run()
   return NS_OK;
 }
 
-class nsStopPluginRunnable : public nsRunnable, public nsITimerCallback
+class nsStopPluginRunnable : public Runnable, public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -374,7 +374,7 @@ public:
     NS_ASSERTION(aContent, "need a nsObjectLoadingContent");
   }
 
-  // nsRunnable
+  // Runnable
   NS_IMETHOD Run() override;
 
   // nsITimerCallback
@@ -389,7 +389,7 @@ private:
   nsCOMPtr<nsIObjectLoadingContent> mContent;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsStopPluginRunnable, Runnable, nsITimerCallback)
 
 NS_IMETHODIMP
 nsStopPluginRunnable::Notify(nsITimer *aTimer)

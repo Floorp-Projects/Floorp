@@ -149,7 +149,7 @@ WMFVideoMFTManager::GetMediaSubtypeGUID()
   };
 }
 
-class CreateDXVAManagerEvent : public nsRunnable {
+class CreateDXVAManagerEvent : public Runnable {
 public:
   CreateDXVAManagerEvent(LayersBackend aBackend, nsCString& aFailureReason)
     : mBackend(aBackend)

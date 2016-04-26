@@ -22,7 +22,7 @@ namespace dom {
  * CameraClosedListenerProxy and CameraClosedMessage
  */
 template<class T>
-class CameraClosedMessage : public nsRunnable
+class CameraClosedMessage : public Runnable
 {
 public:
   explicit CameraClosedMessage(nsMainThreadPtrHandle<T> aListener)

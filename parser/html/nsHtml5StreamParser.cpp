@@ -114,7 +114,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-class nsHtml5ExecutorFlusher : public nsRunnable
+class nsHtml5ExecutorFlusher : public Runnable
 {
   private:
     RefPtr<nsHtml5TreeOpExecutor> mExecutor;
@@ -131,7 +131,7 @@ class nsHtml5ExecutorFlusher : public nsRunnable
     }
 };
 
-class nsHtml5LoadFlusher : public nsRunnable
+class nsHtml5LoadFlusher : public Runnable
 {
   private:
     RefPtr<nsHtml5TreeOpExecutor> mExecutor;
@@ -1041,7 +1041,7 @@ nsHtml5StreamParser::DoStopRequest()
   ParseAvailableData(); 
 }
 
-class nsHtml5RequestStopper : public nsRunnable
+class nsHtml5RequestStopper : public Runnable
 {
   private:
     nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
@@ -1123,7 +1123,7 @@ nsHtml5StreamParser::DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength)
   mFlushTimerArmed = true;
 }
 
-class nsHtml5DataAvailable : public nsRunnable
+class nsHtml5DataAvailable : public Runnable
 {
   private:
     nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
@@ -1446,7 +1446,7 @@ nsHtml5StreamParser::ParseAvailableData()
   }
 }
 
-class nsHtml5StreamParserContinuation : public nsRunnable
+class nsHtml5StreamParserContinuation : public Runnable
 {
 private:
   nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;
@@ -1612,7 +1612,7 @@ nsHtml5StreamParser::ContinueAfterFailedCharsetSwitch()
   }
 }
 
-class nsHtml5TimerKungFu : public nsRunnable
+class nsHtml5TimerKungFu : public Runnable
 {
 private:
   nsHtml5RefPtr<nsHtml5StreamParser> mStreamParser;

@@ -54,7 +54,7 @@ TimerThread::InitLocks()
 
 namespace {
 
-class TimerObserverRunnable : public nsRunnable
+class TimerObserverRunnable : public Runnable
 {
 public:
   explicit TimerObserverRunnable(nsIObserver* aObserver)

@@ -8,7 +8,7 @@
 #include "nsThreadUtils.h"
 #include "nsIContent.h"
 
-class nsHtml5SVGLoadDispatcher : public nsRunnable
+class nsHtml5SVGLoadDispatcher : public mozilla::Runnable
 {
   private:
     nsCOMPtr<nsIContent> mElement;

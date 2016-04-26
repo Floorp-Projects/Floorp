@@ -57,7 +57,7 @@ using namespace mozilla::dom;
 
 namespace {
 
-class DumpMemoryInfoToTempDirRunnable : public nsRunnable
+class DumpMemoryInfoToTempDirRunnable : public Runnable
 {
 public:
   DumpMemoryInfoToTempDirRunnable(const nsAString& aIdentifier,
@@ -84,7 +84,7 @@ private:
 };
 
 class GCAndCCLogDumpRunnable final
-  : public nsRunnable
+  : public Runnable
   , public nsIDumpGCAndCCLogsCallback
 {
 public:
@@ -127,7 +127,7 @@ private:
   const bool mDumpChildProcesses;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(GCAndCCLogDumpRunnable, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(GCAndCCLogDumpRunnable, Runnable,
                             nsIDumpGCAndCCLogsCallback)
 
 } // namespace

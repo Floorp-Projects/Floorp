@@ -1709,7 +1709,7 @@ nsDownloadManager::GetDownload(uint32_t aID, nsIDownload **aDownloadItem)
 }
 
 namespace {
-class AsyncResult : public nsRunnable
+class AsyncResult : public Runnable
 {
 public:
   AsyncResult(nsresult aStatus, nsIDownload* aResult,

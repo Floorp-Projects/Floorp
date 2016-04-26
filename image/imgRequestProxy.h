@@ -138,7 +138,7 @@ protected:
   class imgCancelRunnable;
   friend class imgCancelRunnable;
 
-  class imgCancelRunnable : public nsRunnable
+  class imgCancelRunnable : public mozilla::Runnable
   {
     public:
       imgCancelRunnable(imgRequestProxy* owner, nsresult status)

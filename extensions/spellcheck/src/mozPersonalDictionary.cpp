@@ -53,7 +53,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(mozPersonalDictionary, mEncoder)
 
-class mozPersonalDictionaryLoader final : public nsRunnable
+class mozPersonalDictionaryLoader final : public mozilla::Runnable
 {
 public:
   explicit mozPersonalDictionaryLoader(mozPersonalDictionary *dict) : mDict(dict)
@@ -74,7 +74,7 @@ private:
   RefPtr<mozPersonalDictionary> mDict;
 };
 
-class mozPersonalDictionarySave final : public nsRunnable
+class mozPersonalDictionarySave final : public mozilla::Runnable
 {
 public:
   explicit mozPersonalDictionarySave(mozPersonalDictionary *aDict,

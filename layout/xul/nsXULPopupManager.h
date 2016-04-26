@@ -183,7 +183,7 @@ public:
 };
 
 // this class is used for dispatching popupshowing events asynchronously.
-class nsXULPopupShowingEvent : public nsRunnable
+class nsXULPopupShowingEvent : public mozilla::Runnable
 {
 public:
   nsXULPopupShowingEvent(nsIContent *aPopup,
@@ -205,7 +205,7 @@ private:
 };
 
 // this class is used for dispatching popuphiding events asynchronously.
-class nsXULPopupHidingEvent : public nsRunnable
+class nsXULPopupHidingEvent : public mozilla::Runnable
 {
 public:
   nsXULPopupHidingEvent(nsIContent *aPopup,
@@ -237,7 +237,7 @@ private:
 };
 
 // this class is used for dispatching menu command events asynchronously.
-class nsXULMenuCommandEvent : public nsRunnable
+class nsXULMenuCommandEvent : public mozilla::Runnable
 {
 public:
   nsXULMenuCommandEvent(nsIContent *aMenu,

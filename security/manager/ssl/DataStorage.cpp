@@ -163,7 +163,7 @@ DataStorage::Init(bool& aDataWillPersist)
   return NS_OK;
 }
 
-class DataStorage::Reader : public nsRunnable
+class DataStorage::Reader : public Runnable
 {
 public:
   explicit Reader(DataStorage* aDataStorage)
@@ -629,7 +629,7 @@ DataStorage::Remove(const nsCString& aKey, DataStorageType aType)
   });
 }
 
-class DataStorage::Writer : public nsRunnable
+class DataStorage::Writer : public Runnable
 {
 public:
   Writer(nsCString& aData, DataStorage* aDataStorage)

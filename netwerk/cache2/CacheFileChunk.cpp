@@ -13,7 +13,7 @@ namespace net {
 
 #define kMinBufSize        512
 
-class NotifyUpdateListenerEvent : public nsRunnable {
+class NotifyUpdateListenerEvent : public Runnable {
 public:
   NotifyUpdateListenerEvent(CacheFileChunkListener *aCallback,
                             CacheFileChunk *aChunk)

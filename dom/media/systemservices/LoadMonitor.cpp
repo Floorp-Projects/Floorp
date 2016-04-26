@@ -94,7 +94,7 @@ LoadMonitor::Observe(nsISupports* /* aSubject */,
   return NS_OK;
 }
 
-class LoadMonitorAddObserver : public nsRunnable
+class LoadMonitorAddObserver : public Runnable
 {
 public:
   explicit LoadMonitorAddObserver(RefPtr<LoadMonitor> loadMonitor)
@@ -119,7 +119,7 @@ private:
   RefPtr<LoadMonitor> mLoadMonitor;
 };
 
-class LoadMonitorRemoveObserver : public nsRunnable
+class LoadMonitorRemoveObserver : public Runnable
 {
 public:
   explicit LoadMonitorRemoveObserver(RefPtr<LoadMonitor> loadMonitor)
@@ -532,7 +532,7 @@ nsresult RTCLoadInfo::UpdateProcessLoad() {
 
 // Note: This class can't be in the anonymous namespace, because then we can't
 // declare it as a friend of LoadMonitor.
-class LoadInfoCollectRunner : public nsRunnable
+class LoadInfoCollectRunner : public Runnable
 {
 public:
   LoadInfoCollectRunner(RefPtr<LoadMonitor> loadMonitor,

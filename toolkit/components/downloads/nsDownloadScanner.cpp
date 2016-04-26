@@ -289,7 +289,7 @@ nsDownloadScanner::ScannerThreadFunction(void *p)
 // The sole purpose of this class is to release an object on the main thread
 // It assumes that its creator will addref it and it will release itself on
 // the main thread too
-class ReleaseDispatcher : public nsRunnable {
+class ReleaseDispatcher : public mozilla::Runnable {
 public:
   ReleaseDispatcher(nsISupports *ptr)
     : mPtr(ptr) {}

@@ -122,7 +122,7 @@ public:
   }
 
 
-  class OnCompleteTask final : public nsRunnable
+  class OnCompleteTask final : public Runnable
   {
   public:
     OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
@@ -198,7 +198,7 @@ private:
   bool mBufferAllocated;
 };
 
-class InputMutedRunnable final : public nsRunnable
+class InputMutedRunnable final : public Runnable
 {
 public:
   InputMutedRunnable(AudioNodeStream* aStream,

@@ -526,7 +526,7 @@ public:
   RefPtr<PresShell> mPresShell;
 };
 
-class nsBeforeFirstPaintDispatcher : public nsRunnable
+class nsBeforeFirstPaintDispatcher : public Runnable
 {
 public:
   explicit nsBeforeFirstPaintDispatcher(nsIDocument* aDocument)
@@ -6421,7 +6421,7 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
   }
 }
 
-class AsyncCheckPointerCaptureStateCaller : public nsRunnable
+class AsyncCheckPointerCaptureStateCaller : public Runnable
 {
 public:
   explicit AsyncCheckPointerCaptureStateCaller(int32_t aPointerId)

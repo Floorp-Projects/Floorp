@@ -60,7 +60,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 using namespace mozilla::layers;
 
-class nsImageBoxFrameEvent : public nsRunnable
+class nsImageBoxFrameEvent : public Runnable
 {
 public:
   nsImageBoxFrameEvent(nsIContent *content, EventMessage message)

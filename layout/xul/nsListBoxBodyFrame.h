@@ -149,7 +149,7 @@ protected:
   class nsPositionChangedEvent;
   friend class nsPositionChangedEvent;
 
-  class nsPositionChangedEvent : public nsRunnable
+  class nsPositionChangedEvent : public mozilla::Runnable
   {
   public:
     nsPositionChangedEvent(nsListBoxBodyFrame* aFrame,

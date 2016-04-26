@@ -337,7 +337,7 @@ public:
     }
 };
 
-class TabChild::CachedFileDescriptorCallbackRunnable : public nsRunnable
+class TabChild::CachedFileDescriptorCallbackRunnable : public Runnable
 {
     typedef TabChild::CachedFileDescriptorInfo CachedFileDescriptorInfo;
 
@@ -373,7 +373,7 @@ private:
 };
 
 class TabChild::DelayedDeleteRunnable final
-  : public nsRunnable
+  : public Runnable
 {
     RefPtr<TabChild> mTabChild;
 

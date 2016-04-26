@@ -1404,7 +1404,7 @@ nsPluginHost::GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPl
   return NS_ERROR_FAILURE;
 }
 
-class nsPluginUnloadRunnable : public nsRunnable
+class nsPluginUnloadRunnable : public Runnable
 {
 public:
   explicit nsPluginUnloadRunnable(uint32_t aPluginId) : mPluginId(aPluginId) {}
@@ -4180,7 +4180,7 @@ nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag)
 
 // Runnable that does an async destroy of a plugin.
 
-class nsPluginDestroyRunnable : public nsRunnable,
+class nsPluginDestroyRunnable : public Runnable,
                                 public PRCList
 {
 public:

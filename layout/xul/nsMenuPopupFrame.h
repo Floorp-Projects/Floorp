@@ -130,7 +130,8 @@ class nsView;
 class nsMenuPopupFrame;
 
 // this class is used for dispatching popupshown events asynchronously.
-class nsXULPopupShownEvent : public nsRunnable, public nsIDOMEventListener
+class nsXULPopupShownEvent : public mozilla::Runnable,
+                             public nsIDOMEventListener
 {
 public:
   nsXULPopupShownEvent(nsIContent *aPopup, nsPresContext* aPresContext)

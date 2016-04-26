@@ -18,7 +18,7 @@ USING_ARCHIVEREADER_NAMESPACE
 /**
  * Class used to make asynchronous the ArchiveRequest.
  */
-class ArchiveRequestEvent : public nsRunnable
+class ArchiveRequestEvent : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE

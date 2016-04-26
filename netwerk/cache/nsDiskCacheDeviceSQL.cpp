@@ -246,7 +246,7 @@ nsOfflineCacheEvictionFunction::Apply()
   Reset();
 }
 
-class nsOfflineCacheDiscardCache : public nsRunnable
+class nsOfflineCacheDiscardCache : public Runnable
 {
 public:
   nsOfflineCacheDiscardCache(nsOfflineCacheDevice *device,
@@ -868,7 +868,7 @@ nsApplicationCache::GetUsage(uint32_t *usage)
  * nsCloseDBEvent
  *****************************************************************************/
 
-class nsCloseDBEvent : public nsRunnable {
+class nsCloseDBEvent : public Runnable {
 public:
   explicit nsCloseDBEvent(mozIStorageConnection *aDB)
   {

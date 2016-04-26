@@ -436,7 +436,7 @@ protected:
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;
 
-  class RemoveElementRunnable : public nsRunnable {
+  class RemoveElementRunnable : public Runnable {
   public:
     explicit RemoveElementRunnable(HTMLFormElement* aForm)
       : mForm(aForm)

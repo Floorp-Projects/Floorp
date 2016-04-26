@@ -556,7 +556,7 @@ HangMonitorParent::Open(Transport* aTransport, ProcessId aPid,
   MOZ_ASSERT(ok);
 }
 
-class HangObserverNotifier final : public nsRunnable
+class HangObserverNotifier final : public Runnable
 {
 public:
   HangObserverNotifier(HangMonitoredProcess* aProcess,
@@ -637,7 +637,7 @@ HangMonitorParent::RecvHangEvidence(const HangData& aHangData)
   return true;
 }
 
-class ClearHangNotifier final : public nsRunnable
+class ClearHangNotifier final : public Runnable
 {
 public:
   explicit ClearHangNotifier(HangMonitoredProcess* aProcess)

@@ -28,7 +28,7 @@
 #ifdef DO_STATUS_REPORT // {
 namespace {
 
-class DumpStatusInfoToTempDirRunnable : public nsRunnable
+class DumpStatusInfoToTempDirRunnable : public mozilla::Runnable
 {
 public:
   DumpStatusInfoToTempDirRunnable()

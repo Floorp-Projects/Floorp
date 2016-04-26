@@ -113,7 +113,7 @@ ProgressTracker::GetImageStatus() const
 }
 
 // A helper class to allow us to call SyncNotify asynchronously.
-class AsyncNotifyRunnable : public nsRunnable
+class AsyncNotifyRunnable : public Runnable
 {
   public:
     AsyncNotifyRunnable(ProgressTracker* aTracker,
@@ -193,7 +193,7 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 
 // A helper class to allow us to call SyncNotify asynchronously for a given,
 // fixed, state.
-class AsyncNotifyCurrentStateRunnable : public nsRunnable
+class AsyncNotifyCurrentStateRunnable : public Runnable
 {
   public:
     AsyncNotifyCurrentStateRunnable(ProgressTracker* aProgressTracker,

@@ -79,7 +79,7 @@ private:
 };
 
 // Shuts down a thread asynchronously.
-class ShutdownThreadEvent : public nsRunnable
+class ShutdownThreadEvent : public Runnable
 {
 public:
   explicit ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
@@ -94,7 +94,7 @@ private:
 };
 
 template<class T>
-class DeleteObjectTask: public nsRunnable {
+class DeleteObjectTask: public Runnable {
 public:
   explicit DeleteObjectTask(nsAutoPtr<T>& aObject)
     : mObject(aObject)

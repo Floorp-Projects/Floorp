@@ -849,7 +849,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     if (NS_IsMainThread()) {
       OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
     } else {
-      class OnTransportStatusAsyncEvent : public nsRunnable
+      class OnTransportStatusAsyncEvent : public mozilla::Runnable
       {
         RefPtr<nsBaseChannel> mChannel;
         int64_t mProgress;

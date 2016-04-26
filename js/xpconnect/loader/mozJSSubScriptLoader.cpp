@@ -726,7 +726,7 @@ private:
 
 NS_IMPL_ISUPPORTS(ScriptPrecompiler, nsIIncrementalStreamLoaderObserver);
 
-class NotifyPrecompilationCompleteRunnable : public nsRunnable
+class NotifyPrecompilationCompleteRunnable : public Runnable
 {
 public:
     NS_DECL_NSIRUNNABLE

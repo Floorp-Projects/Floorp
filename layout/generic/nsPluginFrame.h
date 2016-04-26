@@ -289,7 +289,7 @@ private:
     return region;
   }
 
-  class PluginEventNotifier : public nsRunnable {
+  class PluginEventNotifier : public mozilla::Runnable {
   public:
     explicit PluginEventNotifier(const nsString &aEventType) : 
       mEventType(aEventType) {}

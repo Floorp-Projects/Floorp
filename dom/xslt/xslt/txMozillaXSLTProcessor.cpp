@@ -538,7 +538,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
     return mVariables.add(varName, var);
 }
 
-class nsTransformBlockerEvent : public nsRunnable {
+class nsTransformBlockerEvent : public mozilla::Runnable {
 public:
   RefPtr<txMozillaXSLTProcessor> mProcessor;
 

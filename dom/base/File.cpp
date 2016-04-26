@@ -866,7 +866,7 @@ BlobImplFile::GetSize(ErrorResult& aRv)
 
 namespace {
 
-class GetTypeRunnable final : public nsRunnable
+class GetTypeRunnable final : public Runnable
 {
 public:
   GetTypeRunnable(WorkerPrivate* aWorkerPrivate,

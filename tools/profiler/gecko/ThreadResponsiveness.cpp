@@ -16,7 +16,7 @@ using mozilla::Monitor;
 using mozilla::MonitorAutoLock;
 using mozilla::TimeStamp;
 
-class CheckResponsivenessTask : public nsRunnable,
+class CheckResponsivenessTask : public mozilla::Runnable,
                                 public nsITimerCallback {
 public:
   CheckResponsivenessTask()
@@ -79,7 +79,8 @@ private:
   bool mStop;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, nsRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, mozilla::Runnable,
+                            nsITimerCallback)
 
 ThreadResponsiveness::ThreadResponsiveness(ThreadProfile *aThreadProfile)
   : mThreadProfile(aThreadProfile)

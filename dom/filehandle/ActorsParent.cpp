@@ -61,7 +61,7 @@ const uint32_t kStreamCopyBlockSize = 32768;
 } // namespace
 
 class FileHandleThreadPool::FileHandleQueue final
-  : public nsRunnable
+  : public Runnable
 {
   friend class FileHandleThreadPool;
 
@@ -570,7 +570,7 @@ protected:
 };
 
 class CopyFileHandleOp::ProgressRunnable final
-  : public nsRunnable
+  : public Runnable
 {
   RefPtr<CopyFileHandleOp> mCopyFileHandleOp;
   uint64_t mProgress;

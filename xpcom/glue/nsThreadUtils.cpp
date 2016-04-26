@@ -32,16 +32,16 @@ using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
-NS_IMPL_ISUPPORTS(nsRunnable, nsIRunnable)
+NS_IMPL_ISUPPORTS(Runnable, nsIRunnable)
 
 NS_IMETHODIMP
-nsRunnable::Run()
+Runnable::Run()
 {
   // Do nothing
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable,
                             nsICancelableRunnable)
 
 nsresult

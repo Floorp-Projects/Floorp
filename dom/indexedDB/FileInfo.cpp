@@ -50,7 +50,7 @@ private:
 };
 
 class CleanupFileRunnable final
-  : public nsRunnable
+  : public Runnable
 {
   RefPtr<FileManager> mFileManager;
   int64_t mFileId;
@@ -243,7 +243,7 @@ CleanupFileRunnable::DoCleanup(FileManager* aFileManager, int64_t aFileId)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(CleanupFileRunnable, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(CleanupFileRunnable, Runnable)
 
 NS_IMETHODIMP
 CleanupFileRunnable::Run()

@@ -50,7 +50,7 @@ namespace mozilla {
 // changes listed in mBlockChanges to file. Read() checks mBlockChanges and
 // determines the current data to return, reading from file or from
 // mBlockChanges as necessary.
-class FileBlockCache : public nsRunnable {
+class FileBlockCache : public Runnable {
 public:
   enum {
     BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE

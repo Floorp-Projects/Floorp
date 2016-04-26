@@ -25,7 +25,7 @@ static LazyLogModule gStreamCopierLog("nsStreamCopier");
 /**
  * An event used to perform initialization off the main thread.
  */
-class AsyncApplyBufferingPolicyEvent final: public nsRunnable
+class AsyncApplyBufferingPolicyEvent final: public Runnable
 {
 public:
     /**
