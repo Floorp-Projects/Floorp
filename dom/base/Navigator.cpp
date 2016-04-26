@@ -139,6 +139,52 @@ static bool sVibratorEnabled   = false;
 static uint32_t sMaxVibrateMS  = 0;
 static uint32_t sMaxVibrateListLen = 0;
 
+static void
+AddPermission(nsIPrincipal* aPrincipal, const char* aType, uint32_t aPermission,
+              uint32_t aExpireType, int64_t aExpireTime)
+{
+  MOZ_ASSERT(aType);
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (!permMgr) {
+    return;
+  }
+  permMgr->AddFromPrincipal(aPrincipal, aType, aPermission, aExpireType,
+                            aExpireTime);
+}
+
+static uint32_t
+GetPermission(nsPIDOMWindowInner* aWindow, const char* aType)
+{
+  MOZ_ASSERT(aType);
+
+  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (!permMgr) {
+    return permission;
+  }
+  permMgr->TestPermissionFromWindow(aWindow, aType, &permission);
+  return permission;
+}
+
+static uint32_t
+GetPermission(nsIPrincipal* aPrincipal, const char* aType)
+{
+  MOZ_ASSERT(aType);
+  MOZ_ASSERT(aPrincipal);
+
+  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  if (!permMgr) {
+    return permission;
+  }
+  permMgr->TestPermissionFromPrincipal(aPrincipal, aType, &permission);
+  return permission;
+}
+
 /* static */
 void
 Navigator::Init()
@@ -2184,12 +2230,7 @@ Navigator::CheckPermission(nsPIDOMWindowInner* aWindow, const char* aType)
     return false;
   }
 
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromWindow(aWindow, aType, &permission);
+  uint32_t permission = GetPermission(aWindow, aType);
   return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
@@ -2244,14 +2285,9 @@ Navigator::HasWifiManagerSupport(JSContext* /* unused */,
   // and test directly with permission manager.
 
   nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal);
+  uint32_t permission = GetPermission(principal, "wifi-manage");
 
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromPrincipal(principal, "wifi-manage", &permission);
-  return nsIPermissionManager::ALLOW_ACTION == permission;
+  return permission == nsIPermissionManager::ALLOW_ACTION;
 }
 
 #ifdef MOZ_NFC
@@ -2293,12 +2329,8 @@ Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
   }
 
   nsIPrincipal* principal = doc->NodePrincipal();
+  uint32_t permission = GetPermission(principal, "mobileid");
 
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-  permMgr->TestPermissionFromPrincipal(principal, "mobileid", &permission);
   return permission == nsIPermissionManager::PROMPT_ACTION ||
          permission == nsIPermissionManager::ALLOW_ACTION;
 }
