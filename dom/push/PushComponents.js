@@ -24,9 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "PushService", function() {
   return PushService;
 });
 
-// Observer notification topics for system subscriptions. These are duplicated
-// and used in `PushNotifier.cpp`. They're exposed on `nsIPushService` instead
-// of `nsIPushNotifier` so that JS callers only need to import this service.
+// Observer notification topics for push messages and subscription status
+// changes. These are duplicated and used in `nsIPushNotifier`. They're exposed
+// on `nsIPushService` so that JS callers only need to import this service.
 const OBSERVER_TOPIC_PUSH = "push-message";
 const OBSERVER_TOPIC_SUBSCRIPTION_CHANGE = "push-subscription-change";
 const OBSERVER_TOPIC_SUBSCRIPTION_LOST = "push-subscription-lost";

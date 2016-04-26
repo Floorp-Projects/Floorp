@@ -365,8 +365,8 @@ PushNotifier::DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
 bool
 PushNotifier::ShouldNotifyWorkers(nsIPrincipal* aPrincipal)
 {
-  // System subscriptions use XPCOM observer notifications instead of service
-  // worker events. The `testing.notifyWorkers` pref disables worker events for
+  // System subscriptions use observer notifications instead of service worker
+  // events. The `testing.notifyWorkers` pref disables worker events for
   // non-system subscriptions.
   return !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
          Preferences::GetBool("dom.push.testing.notifyWorkers", true);
