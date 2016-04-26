@@ -259,7 +259,7 @@ AboutReader.prototype = {
   },
 
   _onReaderClose: function() {
-    this._win.location.href = this._getOriginalUrl();
+    ReaderMode.leaveReaderMode(this._mm.docShell, this._win);
   },
 
   _setFontSize: function(newFontSize) {
