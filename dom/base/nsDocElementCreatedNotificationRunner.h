@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 
-class nsDocElementCreatedNotificationRunner : public nsRunnable
+class nsDocElementCreatedNotificationRunner : public mozilla::Runnable
 {
 public:
   explicit nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)

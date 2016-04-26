@@ -156,7 +156,7 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 
 namespace {
 
-class FinishResponse final : public nsRunnable
+class FinishResponse final : public Runnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   RefPtr<InternalResponse> mInternalResponse;

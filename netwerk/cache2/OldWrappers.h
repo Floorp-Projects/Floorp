@@ -148,7 +148,7 @@ private:
 };
 
 
-class _OldCacheLoad : public nsRunnable
+class _OldCacheLoad : public Runnable
                     , public nsICacheListener
 {
 public:
@@ -246,7 +246,7 @@ private:
   bool mHit; // set to true when the device was found
 };
 
-class _OldGetDiskConsumption : public nsRunnable,
+class _OldGetDiskConsumption : public Runnable,
                                public nsICacheVisitor
 {
 public:

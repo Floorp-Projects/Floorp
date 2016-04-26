@@ -2816,7 +2816,8 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
     return true;
   }
 
-  nsDisplayListBuilder builder(root, nsDisplayListBuilder::TRANSFORM_COMPUTATION,
+  nsDisplayListBuilder builder(root,
+                               nsDisplayListBuilderMode::TRANSFORM_COMPUTATION,
                                false/*don't build caret*/);
   nsDisplayList list;
   nsDisplayTransform* item =
@@ -3070,7 +3071,8 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   PROFILER_LABEL("nsLayoutUtils", "GetFramesForArea",
     js::ProfileEntry::Category::GRAPHICS);
 
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::EVENT_DELIVERY,
+  nsDisplayListBuilder builder(aFrame,
+                               nsDisplayListBuilderMode::EVENT_DELIVERY,
                                false);
   nsDisplayList list;
 
@@ -3294,6 +3296,7 @@ nsLayoutUtils::ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame)
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
+                          nsDisplayListBuilderMode aBuilderMode,
                           uint32_t aFlags)
 {
   PROFILER_LABEL("nsLayoutUtils", "PaintFrame",
@@ -3326,8 +3329,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   TimeStamp startBuildDisplayList = TimeStamp::Now();
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
-                           !(aFlags & PAINT_HIDE_CARET));
+  nsDisplayListBuilder builder(aFrame, aBuilderMode,
+                               !(aFlags & PAINT_HIDE_CARET));
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(true);
   }
@@ -3439,6 +3442,20 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       js::ProfileEntry::Category::GRAPHICS);
 
     aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+#ifdef DEBUG
+    if (builder.IsForGenerateGlyphPath()) {
+      // PaintFrame is called to generate text glyph by
+      // nsDisplayBackgroundImage::Paint or nsDisplayBackgroundColor::Paint.
+      //
+      // Assert that we do not generate and put nsDisplayBackgroundImage or
+      // nsDisplayBackgroundColor into the list again, which would lead to
+      // infinite recursion.
+      for (nsDisplayItem* i = list.GetBottom(); i; i = i->GetAbove()) {
+        MOZ_ASSERT(nsDisplayItem::TYPE_BACKGROUND != i->GetType() &&
+                   nsDisplayItem::TYPE_BACKGROUND_COLOR != i->GetType());
+      }
+    }
+#endif
   }
 
   nsIAtom* frameType = aFrame->GetType();
@@ -9190,3 +9207,15 @@ nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
       });
   }
 }
+
+/* static */ bool
+nsLayoutUtils::IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame)
+{
+  for (nsIFrame* f = aForFrame; f != aTopFrame; f = f->GetParent()) {
+    if (f->IsTransformed()) {
+      return true;
+    }
+  }
+  return false;
+}
+

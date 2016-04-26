@@ -123,6 +123,7 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 random-if(B2G||Mulet) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
+== fixed-bg-inside-transform.html fixed-bg-inside-transform-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
@@ -170,4 +171,5 @@ pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,1,44) == b
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,1,44) == background-clip-text-1b.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,1,44) == background-clip-text-1c.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,1,44) == background-clip-text-1d.html background-clip-text-1-ref.html
+pref(layout.css.background-clip-text.enabled,true) fuzzy-if(winWidget,1,44) == background-clip-text-1e.html background-clip-text-1-ref.html
 pref(layout.css.background-clip-text.enabled,false) != background-clip-text-1a.html background-clip-text-1-ref.html

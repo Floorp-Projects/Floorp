@@ -300,7 +300,7 @@ DOMStorageDBParent::ReleaseIPDLReference()
 
 namespace {
 
-class SendInitialChildDataRunnable : public nsRunnable
+class SendInitialChildDataRunnable : public Runnable
 {
 public:
   explicit SendInitialChildDataRunnable(DOMStorageDBParent* aParent)
@@ -633,7 +633,7 @@ DOMStorageDBParent::Observe(const char* aTopic,
 namespace {
 
 // Results must be sent back on the main thread
-class LoadRunnable : public nsRunnable
+class LoadRunnable : public Runnable
 {
 public:
   enum TaskType {
@@ -746,7 +746,7 @@ DOMStorageDBParent::CacheParentBridge::LoadWait()
 
 namespace {
 
-class UsageRunnable : public nsRunnable
+class UsageRunnable : public Runnable
 {
 public:
   UsageRunnable(DOMStorageDBParent* aParent, const nsACString& aOriginScope, const int64_t& aUsage)

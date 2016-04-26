@@ -138,7 +138,7 @@ private:
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 
-class UnsubscribeRunnable final : public nsRunnable
+class UnsubscribeRunnable final : public Runnable
 {
 public:
   UnsubscribeRunnable(PromiseWorkerProxy* aProxy,
@@ -341,13 +341,10 @@ PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
   aJSON.mEndpoint.Construct();
   aJSON.mEndpoint.Value() = mEndpoint;
 
-  Base64URLEncodeOptions encodeOptions;
-  encodeOptions.mPad = false;
-
   aJSON.mKeys.mP256dh.Construct();
   nsresult rv = Base64URLEncode(mRawP256dhKey.Length(),
                                 mRawP256dhKey.Elements(),
-                                encodeOptions,
+                                Base64URLEncodePaddingPolicy::Omit,
                                 aJSON.mKeys.mP256dh.Value());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
@@ -356,7 +353,8 @@ PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv)
 
   aJSON.mKeys.mAuth.Construct();
   rv = Base64URLEncode(mAuthSecret.Length(), mAuthSecret.Elements(),
-                       encodeOptions, aJSON.mKeys.mAuth.Value());
+                       Base64URLEncodePaddingPolicy::Omit,
+                       aJSON.mKeys.mAuth.Value());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;

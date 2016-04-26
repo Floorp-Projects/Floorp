@@ -262,7 +262,7 @@ private:
 
 NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushSubscriptionCallback)
 
-class GetSubscriptionRunnable final : public nsRunnable
+class GetSubscriptionRunnable final : public Runnable
 {
 public:
   GetSubscriptionRunnable(PromiseWorkerProxy* aProxy,
@@ -393,7 +393,7 @@ private:
   PushPermissionState mState;
 };
 
-class PermissionStateRunnable final : public nsRunnable
+class PermissionStateRunnable final : public Runnable
 {
 public:
   explicit PermissionStateRunnable(PromiseWorkerProxy* aProxy)

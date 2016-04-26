@@ -244,7 +244,7 @@ private:
   // start URI classifier if requested
   void ClassifyURI();
 
-  class RedirectRunnable : public nsRunnable
+  class RedirectRunnable : public mozilla::Runnable
   {
   public:
     RedirectRunnable(nsBaseChannel* chan, nsIChannel* newChannel)

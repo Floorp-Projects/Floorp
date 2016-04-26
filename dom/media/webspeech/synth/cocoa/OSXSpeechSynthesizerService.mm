@@ -208,7 +208,7 @@ struct OSXVoice
   bool mIsDefault;
 };
 
-class RegisterVoicesRunnable final : public nsRunnable
+class RegisterVoicesRunnable final : public Runnable
 {
 public:
   RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService,
@@ -256,7 +256,7 @@ RegisterVoicesRunnable::Run()
   return NS_OK;
 }
 
-class EnumVoicesRunnable final : public nsRunnable
+class EnumVoicesRunnable final : public Runnable
 {
 public:
   explicit EnumVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService)

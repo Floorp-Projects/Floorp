@@ -30,7 +30,7 @@ DOMCameraControlListener::~DOMCameraControlListener()
 }
 
 // Boilerplate callback runnable
-class DOMCameraControlListener::DOMCallback : public nsRunnable
+class DOMCameraControlListener::DOMCallback : public Runnable
 {
 public:
   explicit DOMCallback(nsMainThreadPtrHandle<nsISupports> aDOMCameraControl)

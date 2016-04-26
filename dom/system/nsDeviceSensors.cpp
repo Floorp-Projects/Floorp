@@ -137,7 +137,7 @@ NS_IMETHODIMP nsDeviceSensors::HasWindowListener(uint32_t aType, nsIDOMWindow *a
   return NS_OK;
 }
 
-class DeviceSensorTestEvent : public nsRunnable
+class DeviceSensorTestEvent : public Runnable
 {
 public:
   DeviceSensorTestEvent(nsDeviceSensors* aTarget,

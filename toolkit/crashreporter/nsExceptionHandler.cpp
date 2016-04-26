@@ -316,7 +316,7 @@ static bool OOPInitialized();
 #ifdef MOZ_CRASHREPORTER_INJECTOR
 static nsIThread* sInjectorThread;
 
-class ReportInjectedCrash : public nsRunnable
+class ReportInjectedCrash : public Runnable
 {
 public:
   explicit ReportInjectedCrash(uint32_t pid) : mPID(pid) { }
@@ -3179,7 +3179,7 @@ OOPInitialized()
 void
 OOPInit()
 {
-  class ProxyToMainThread : public nsRunnable
+  class ProxyToMainThread : public Runnable
   {
   public:
     NS_IMETHOD Run() {

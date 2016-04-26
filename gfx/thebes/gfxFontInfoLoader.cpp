@@ -39,7 +39,7 @@ FontInfoData::Load()
     mLoadTime = TimeStamp::Now() - start;
 }
 
-class FontInfoLoadCompleteEvent : public nsRunnable {
+class FontInfoLoadCompleteEvent : public Runnable {
     virtual ~FontInfoLoadCompleteEvent() {}
 
     NS_DECL_ISUPPORTS_INHERITED
@@ -53,7 +53,7 @@ class FontInfoLoadCompleteEvent : public nsRunnable {
     RefPtr<FontInfoData> mFontInfo;
 };
 
-class AsyncFontInfoLoader : public nsRunnable {
+class AsyncFontInfoLoader : public Runnable {
     virtual ~AsyncFontInfoLoader() {}
 
     NS_DECL_ISUPPORTS_INHERITED
@@ -70,7 +70,7 @@ class AsyncFontInfoLoader : public nsRunnable {
     RefPtr<FontInfoLoadCompleteEvent> mCompleteEvent;
 };
 
-class ShutdownThreadEvent : public nsRunnable {
+class ShutdownThreadEvent : public Runnable {
     virtual ~ShutdownThreadEvent() {}
 
     NS_DECL_ISUPPORTS_INHERITED
@@ -83,7 +83,7 @@ class ShutdownThreadEvent : public nsRunnable {
     nsCOMPtr<nsIThread> mThread;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(ShutdownThreadEvent, nsRunnable);
+NS_IMPL_ISUPPORTS_INHERITED0(ShutdownThreadEvent, Runnable);
 
 // runs on main thread after async font info loading is done
 nsresult
@@ -97,7 +97,7 @@ FontInfoLoadCompleteEvent::Run()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(FontInfoLoadCompleteEvent, nsRunnable);
+NS_IMPL_ISUPPORTS_INHERITED0(FontInfoLoadCompleteEvent, Runnable);
 
 // runs on separate thread
 nsresult
@@ -112,7 +112,7 @@ AsyncFontInfoLoader::Run()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(AsyncFontInfoLoader, nsRunnable);
+NS_IMPL_ISUPPORTS_INHERITED0(AsyncFontInfoLoader, Runnable);
 
 NS_IMPL_ISUPPORTS(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 

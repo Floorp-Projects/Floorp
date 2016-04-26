@@ -50,7 +50,7 @@
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 using namespace mozilla;
 
-class nsDiskCacheDeviceDeactivateEntryEvent : public nsRunnable {
+class nsDiskCacheDeviceDeactivateEntryEvent : public Runnable {
 public:
     nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice *device,
                                           nsCacheEntry * entry,
@@ -80,7 +80,7 @@ private:
     nsDiskCacheBinding *mBinding;
 };
 
-class nsEvictDiskCacheEntriesEvent : public nsRunnable {
+class nsEvictDiskCacheEntriesEvent : public Runnable {
 public:
     explicit nsEvictDiskCacheEntriesEvent(nsDiskCacheDevice *device)
         : mDevice(device) {}

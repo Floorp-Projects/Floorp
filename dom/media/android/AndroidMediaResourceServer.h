@@ -37,7 +37,7 @@ class MediaResource;
   this is done by the Start() static method by synchronously
   dispatching to the main thread.
 */
-class AndroidMediaResourceServer : public nsRunnable
+class AndroidMediaResourceServer : public Runnable
 {
 private:
   // Mutex protecting private members of AndroidMediaResourceServer.

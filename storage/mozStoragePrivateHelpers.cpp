@@ -248,7 +248,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
 }
 
 namespace {
-class CallbackEvent : public nsRunnable
+class CallbackEvent : public Runnable
 {
 public:
   explicit CallbackEvent(mozIStorageCompletionCallback *aCallback)

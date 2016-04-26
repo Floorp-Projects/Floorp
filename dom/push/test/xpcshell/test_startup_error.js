@@ -14,7 +14,6 @@ add_task(function* test_startup_error() {
 
   PushService.init({
     serverURI: 'wss://push.example.org/',
-    networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
       getAllExpired(prev) {
         return Promise.reject('database corruption on startup');
@@ -45,7 +44,6 @@ add_task(function* test_startup_error() {
 
   PushService.init({
     serverURI: 'wss://push.example.org/',
-    networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
       getAllUnexpired(prev) {
         return Promise.reject('database corruption on connect');

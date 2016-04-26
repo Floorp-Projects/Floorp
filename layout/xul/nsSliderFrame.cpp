@@ -196,7 +196,7 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, int32_t d
     return defaultValue;
 }
 
-class nsValueChangedRunnable : public nsRunnable
+class nsValueChangedRunnable : public Runnable
 {
 public:
   nsValueChangedRunnable(nsISliderListener* aListener,
@@ -219,7 +219,7 @@ public:
   bool mUserChanged;
 };
 
-class nsDragStateChangedRunnable : public nsRunnable
+class nsDragStateChangedRunnable : public Runnable
 {
 public:
   nsDragStateChangedRunnable(nsISliderListener* aListener,

@@ -133,6 +133,20 @@ public:
     length_ += length;
   }
 
+  /** Prepend `length` zero-ed elements to the end of the array, resizing the
+   * array if needed.
+   * @parameter length the number of elements to prepend to the array.
+   */
+  void push_front_silence(size_t length)
+  {
+    if (length_ + length > capacity_) {
+      reserve(length + length_);
+    }
+    PodMove(data_ + length, data_, length_);
+    PodZero(data_, length);
+    length_ += length;
+  }
+
   /** Return the number of free elements in the array. */
   size_t available() const
   {

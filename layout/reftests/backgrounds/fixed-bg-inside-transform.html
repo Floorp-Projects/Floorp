@@ -1,0 +1,35 @@
+<html>
+<head>
+<style>
+	body {
+	  height: 4000px;
+	  margin: 0;
+	}
+
+	#outer {
+	  margin: 200px;
+	  height: 700px;
+	  width: 300px;
+	  transform: rotate(45deg);
+	  -webkit-transform: rotate(45deg);
+	  overflow: hidden;
+	}
+
+	#inner {
+	  height: 700px;
+	  background-image: radial-gradient(farthest-corner at center, blue, black);
+	  background-size: 300px 300px;
+	  background-position: 200px 200px;
+	  background-color: lime;
+	  background-repeat: no-repeat;
+	  background-attachment: fixed;
+	}
+</style>
+</head>
+<body>
+<div id="outer">
+	<div id="inner">
+	</div>
+</div>
+</body>
+</html>

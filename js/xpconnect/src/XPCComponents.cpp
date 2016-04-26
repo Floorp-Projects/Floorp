@@ -2620,7 +2620,7 @@ nsXPCComponents_Utils::ForceShrinkingGC()
     return NS_OK;
 }
 
-class PreciseGCRunnable : public nsRunnable
+class PreciseGCRunnable : public Runnable
 {
   public:
     PreciseGCRunnable(ScheduledGCCallback* aCallback, bool aShrinking)

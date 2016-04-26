@@ -35,6 +35,9 @@ public:
 
   // Called when the BufferedAmount drops below the BufferedAmountLowThreshold
   virtual nsresult OnBufferLow(nsISupports *aContext) = 0;
+
+  // Called when the BufferedAmount drops to 0
+  virtual nsresult NotBuffered(nsISupports *aContext) = 0;
 };
 
 }

@@ -169,7 +169,7 @@ int main(int argc, char** argv)
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
     for (uint32_t i = 0; i < NUMBER_OF_THREADS; i++) {
-      nsCOMPtr<nsIRunnable> runnable = new nsRunnable();
+      nsCOMPtr<nsIRunnable> runnable = new Runnable();
       NS_ENSURE_TRUE(runnable, 1);
 
       rv = pool->Dispatch(runnable, NS_DISPATCH_NORMAL);

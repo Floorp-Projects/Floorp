@@ -248,7 +248,7 @@ nsSHEntryShared::RemoveFromBFCacheSync()
   return NS_OK;
 }
 
-class DestroyViewerEvent : public nsRunnable
+class DestroyViewerEvent : public mozilla::Runnable
 {
 public:
   DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument)

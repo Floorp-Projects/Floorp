@@ -809,7 +809,7 @@ AndroidBridge::OpenGraphicsLibraries()
 }
 
 namespace mozilla {
-    class TracerRunnable : public nsRunnable{
+    class TracerRunnable : public Runnable{
     public:
         TracerRunnable() {
             mTracerLock = new Mutex("TracerRunnable");
