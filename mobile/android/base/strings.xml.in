@@ -299,7 +299,8 @@
 
   <string name="content_notification_summary">&content_notification_summary;</string>
   <string name="content_notification_title_plural">&content_notification_title_plural;</string>
-  <string name="content_notification_action_settings">&content_notification_action_settings;</string>
+  <string name="content_notification_action_settings">&content_notification_action_settings2;</string>
+  <string name="content_notification_action_read_now">&content_notification_action_read_now;</string>
   <string name="content_notification_updated_on">&content_notification_updated_on;</string>
 
   <string name="pref_default_browser">&pref_default_browser;</string>
