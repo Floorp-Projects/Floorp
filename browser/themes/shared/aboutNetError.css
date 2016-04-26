@@ -68,6 +68,15 @@ body.certerror #advancedButton {
   display: none;
 }
 
+.container {
+  position: relative;
+}
+
+#advancedPanelContainer {
+  position: absolute;
+  padding: 24px 0;
+}
+
 .advanced-panel {
   /* Hidden until the link is clicked */
   display: none;
@@ -78,7 +87,6 @@ body.certerror #advancedButton {
   padding: 0 12px 12px 12px;
   box-shadow: 0 0 4px #ddd;
   font-size: 0.9em;
-  margin-top: 24px;
 }
 
 #overrideWeakCryptoPanel {
