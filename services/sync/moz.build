@@ -19,6 +19,8 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES['services-sync'] += [
     'modules/addonsreconciler.js',
     'modules/addonutils.js',
+    'modules/bookmark_utils.js',
+    'modules/bookmark_validator.js',
     'modules/browserid_identity.js',
     'modules/engines.js',
     'modules/FxaMigrator.jsm',
