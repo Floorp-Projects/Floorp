@@ -3553,6 +3553,12 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
              "HandleDrag can only handle mouse event");
 
+  RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
+  bool mouseDown = frameselection->GetDragState();
+  if (!mouseDown) {
+    return NS_OK;
+  }
+
   nsIFrame* scrollbar =
     nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::scrollbarFrame);
   if (!scrollbar) {
@@ -3564,12 +3570,6 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
       return NS_OK;
     }
   }
-  nsIPresShell *presShell = aPresContext->PresShell();
-
-  RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
-  bool mouseDown = frameselection->GetDragState();
-  if (!mouseDown)
-    return NS_OK;
 
   frameselection->StopAutoScrollTimer();
 
@@ -3578,6 +3578,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   int32_t contentOffset;
   int32_t target;
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
   nsresult result;
   result = GetDataForTableSelection(frameselection, presShell, mouseEvent,
                                     getter_AddRefs(parentContent),
