@@ -17,7 +17,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.util.Scanner;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,19 +91,6 @@ public class FileUtils {
 
         // Even if this is a dir, it should now be empty and delete should work
         return file.delete();
-    }
-
-    // Shortcut to slurp a file without messing around with streams.
-    public static String getFileContents(File file) throws IOException {
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(file, "UTF-8");
-            return scanner.useDelimiter("\\A").next();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-        }
     }
 
     /**
