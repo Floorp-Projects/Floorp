@@ -107,7 +107,7 @@ struct AtomHasher
     static void rekey(AtomStateEntry& k, const AtomStateEntry& newKey) { k = newKey; }
 };
 
-using AtomSet = js::GCHashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy>;
+using AtomSet = JS::GCHashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy>;
 
 // This class is a wrapper for AtomSet that is used to ensure the AtomSet is
 // not modified. It should only expose read-only methods from AtomSet.

@@ -109,7 +109,7 @@ class IdToObjectMap
 class ObjectToIdMap
 {
     using Hasher = js::MovableCellHasher<JS::Heap<JSObject*>>;
-    using Table = js::GCHashMap<JS::Heap<JSObject*>, ObjectId, Hasher, js::SystemAllocPolicy>;
+    using Table = JS::GCHashMap<JS::Heap<JSObject*>, ObjectId, Hasher, js::SystemAllocPolicy>;
 
   public:
     bool init();

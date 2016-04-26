@@ -170,6 +170,19 @@ extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
 extern JS_PUBLIC_DATA(const JS::HandleId) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const JS::HandleId) JSID_EMPTYHANDLE;
 
+namespace JS {
+
+template <>
+struct GCPolicy<jsid>
+{
+    static jsid initial() { return JSID_VOID; }
+    static void trace(JSTracer* trc, jsid* idp, const char* name) {
+        js::UnsafeTraceManuallyBarrieredEdge(trc, idp, name);
+    }
+};
+
+} // namespace JS
+
 namespace js {
 
 template <>
@@ -181,15 +194,6 @@ struct DefaultHasher<jsid>
     }
     static bool match(jsid id1, jsid id2) {
         return id1 == id2;
-    }
-};
-
-template <>
-struct GCPolicy<jsid>
-{
-    static jsid initial() { return JSID_VOID; }
-    static void trace(JSTracer* trc, jsid* idp, const char* name) {
-        js::UnsafeTraceManuallyBarrieredEdge(trc, idp, name);
     }
 };
 
