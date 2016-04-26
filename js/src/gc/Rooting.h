@@ -56,10 +56,10 @@ typedef JS::Rooted<PlainObject*>       RootedPlainObject;
 typedef JS::Rooted<SavedFrame*>        RootedSavedFrame;
 typedef JS::Rooted<ScriptSourceObject*> RootedScriptSource;
 
-typedef GCVector<JSFunction*>   FunctionVector;
-typedef GCVector<PropertyName*> PropertyNameVector;
-typedef GCVector<Shape*>        ShapeVector;
-typedef GCVector<JSString*>     StringVector;
+typedef JS::GCVector<JSFunction*>   FunctionVector;
+typedef JS::GCVector<PropertyName*> PropertyNameVector;
+typedef JS::GCVector<Shape*>        ShapeVector;
+typedef JS::GCVector<JSString*>     StringVector;
 
 } /* namespace js */
 

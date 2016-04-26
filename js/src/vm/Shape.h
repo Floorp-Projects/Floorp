@@ -525,7 +525,7 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
     static inline bool match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup);
 };
 
-using BaseShapeSet = js::GCHashSet<ReadBarriered<UnownedBaseShape*>,
+using BaseShapeSet = JS::GCHashSet<ReadBarriered<UnownedBaseShape*>,
                                    StackBaseShape,
                                    SystemAllocPolicy>;
 
@@ -1125,7 +1125,7 @@ struct InitialShapeEntry
     }
 };
 
-using InitialShapeSet = js::GCHashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy>;
+using InitialShapeSet = JS::GCHashSet<InitialShapeEntry, InitialShapeEntry, SystemAllocPolicy>;
 
 struct StackShape
 {

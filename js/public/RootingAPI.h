@@ -222,7 +222,7 @@ class Heap : public js::HeapBase<T>
     Heap() {
         static_assert(sizeof(T) == sizeof(Heap<T>),
                       "Heap<T> must be binary compatible with T.");
-        init(js::GCPolicy<T>::initial());
+        init(GCPolicy<T>::initial());
     }
     explicit Heap(T p) { init(p); }
 
@@ -235,7 +235,7 @@ class Heap : public js::HeapBase<T>
     explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
     ~Heap() {
-        post(ptr, js::GCPolicy<T>::initial());
+        post(ptr, GCPolicy<T>::initial());
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -259,7 +259,7 @@ class Heap : public js::HeapBase<T>
   private:
     void init(T newPtr) {
         ptr = newPtr;
-        post(js::GCPolicy<T>::initial(), ptr);
+        post(GCPolicy<T>::initial(), ptr);
     }
 
     void set(T newPtr) {
@@ -600,7 +600,7 @@ class DispatchWrapper
   public:
     template <typename U>
     MOZ_IMPLICIT DispatchWrapper(U&& initial)
-      : tracer(&GCPolicy<T>::trace),
+      : tracer(&JS::GCPolicy<T>::trace),
         storage(mozilla::Forward<U>(initial))
     { }
 
@@ -657,7 +657,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
   public:
     template <typename RootingContext>
     explicit Rooted(const RootingContext& cx)
-      : ptr(js::GCPolicy<T>::initial())
+      : ptr(GCPolicy<T>::initial())
     {
         registerWithRootLists(rootLists(cx));
     }
@@ -762,7 +762,7 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
 {
   public:
     template <typename CX>
-    explicit FakeRooted(CX* cx) : ptr(GCPolicy<T>::initial()) {}
+    explicit FakeRooted(CX* cx) : ptr(JS::GCPolicy<T>::initial()) {}
 
     template <typename CX>
     FakeRooted(CX* cx, T initial) : ptr(initial) {}
@@ -976,11 +976,11 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
     }
 
   public:
-    PersistentRooted() : ptr(js::GCPolicy<T>::initial()) {}
+    PersistentRooted() : ptr(GCPolicy<T>::initial()) {}
 
     template <typename RootingContext>
     explicit PersistentRooted(const RootingContext& cx)
-      : ptr(js::GCPolicy<T>::initial())
+      : ptr(GCPolicy<T>::initial())
     {
         registerWithRootLists(rootLists(cx));
     }
@@ -1013,7 +1013,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     template <typename RootingContext>
     void init(const RootingContext& cx) {
-        init(cx, js::GCPolicy<T>::initial());
+        init(cx, GCPolicy<T>::initial());
     }
 
     template <typename RootingContext, typename U>
@@ -1024,7 +1024,7 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
 
     void reset() {
         if (initialized()) {
-            set(js::GCPolicy<T>::initial());
+            set(GCPolicy<T>::initial());
             ListBase::remove();
         }
     }

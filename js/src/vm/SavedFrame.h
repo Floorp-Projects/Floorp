@@ -136,9 +136,9 @@ class SavedFrame : public NativeObject {
     struct Lookup;
     struct HashPolicy;
 
-    typedef GCHashSet<js::ReadBarriered<SavedFrame*>,
-                      HashPolicy,
-                      SystemAllocPolicy> Set;
+    typedef JS::GCHashSet<ReadBarriered<SavedFrame*>,
+                          HashPolicy,
+                          SystemAllocPolicy> Set;
 
     class AutoLookupVector;
 

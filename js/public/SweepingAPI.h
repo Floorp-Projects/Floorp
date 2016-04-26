@@ -45,7 +45,7 @@ class WeakCache : public js::WeakCacheBase<T>,
     WeakCache(Zone* zone, U&& initial)
       : cache(mozilla::Forward<U>(initial))
     {
-        sweeper = js::GCPolicy<T>::sweep;
+        sweeper = GCPolicy<T>::sweep;
         shadow::RegisterWeakCache(zone, reinterpret_cast<WeakCache<void*>*>(this));
     }
     WeakCache(WeakCache&& other)
