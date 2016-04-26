@@ -664,6 +664,10 @@ void NrIceCtx::internal_DeinitializeGlobal() {
   initialized = false;
 }
 
+void NrIceCtx::internal_SetTimerAccelarator(int divider) {
+  ctx_->test_timer_divider = divider;
+}
+
 NrIceCtx::~NrIceCtx() {
   MOZ_MTLOG(ML_DEBUG, "Destroying ICE ctx '" << name_ <<"'");
   nr_ice_peer_ctx_destroy(&peer_);
