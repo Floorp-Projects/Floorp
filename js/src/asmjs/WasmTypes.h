@@ -89,13 +89,13 @@ static inline jit::MIRType
 ToMIRType(ValType vt)
 {
     switch (vt) {
-      case ValType::I32: return jit::MIRType_Int32;
-      case ValType::I64: return jit::MIRType_Int64;
-      case ValType::F32: return jit::MIRType_Float32;
-      case ValType::F64: return jit::MIRType_Double;
-      case ValType::I32x4: return jit::MIRType_Int32x4;
-      case ValType::F32x4: return jit::MIRType_Float32x4;
-      case ValType::B32x4: return jit::MIRType_Bool32x4;
+      case ValType::I32: return jit::MIRType::Int32;
+      case ValType::I64: return jit::MIRType::Int64;
+      case ValType::F32: return jit::MIRType::Float32;
+      case ValType::F64: return jit::MIRType::Double;
+      case ValType::I32x4: return jit::MIRType::Int32x4;
+      case ValType::F32x4: return jit::MIRType::Float32x4;
+      case ValType::B32x4: return jit::MIRType::Bool32x4;
       case ValType::Limit: break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
@@ -104,7 +104,7 @@ ToMIRType(ValType vt)
 static inline jit::MIRType
 ToMIRType(ExprType et)
 {
-    return IsVoid(et) ? jit::MIRType_None : ToMIRType(ValType(et));
+    return IsVoid(et) ? jit::MIRType::None : ToMIRType(ValType(et));
 }
 
 static inline const char*

@@ -1914,7 +1914,7 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
     Register cond = ToRegister(ins->condExpr());
     const LAllocation* falseExpr = ins->falseExpr();
 
-    if (mirType == MIRType_Int32) {
+    if (mirType == MIRType::Int32) {
         Register out = ToRegister(ins->output());
         MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
         masm.as_movz(out, ToRegister(falseExpr), cond);
@@ -1925,9 +1925,9 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
     MOZ_ASSERT(ToFloatRegister(ins->trueExpr()) == out, "true expr input is reused for output");
 
     if (falseExpr->isFloatReg()) {
-        if (mirType == MIRType_Float32)
+        if (mirType == MIRType::Float32)
             masm.as_movz(Assembler::SingleFloat, out, ToFloatRegister(falseExpr), cond);
-        else if (mirType == MIRType_Double)
+        else if (mirType == MIRType::Double)
             masm.as_movz(Assembler::DoubleFloat, out, ToFloatRegister(falseExpr), cond);
         else
             MOZ_CRASH("unhandled type in visitAsmSelect!");
@@ -1935,9 +1935,9 @@ CodeGeneratorMIPSShared::visitAsmSelect(LAsmSelect* ins)
         Label done;
         masm.ma_b(cond, cond, &done, Assembler::NonZero, ShortJump);
 
-        if (mirType == MIRType_Float32)
+        if (mirType == MIRType::Float32)
             masm.loadFloat32(ToAddress(falseExpr), out);
-        else if (mirType == MIRType_Double)
+        else if (mirType == MIRType::Double)
             masm.loadDouble(ToAddress(falseExpr), out);
         else
             MOZ_CRASH("unhandled type in visitAsmSelect!");
@@ -1956,16 +1956,16 @@ CodeGeneratorMIPSShared::visitAsmReinterpret(LAsmReinterpret* lir)
     DebugOnly<MIRType> from = ins->input()->type();
 
     switch (to) {
-      case MIRType_Int32:
-        MOZ_ASSERT(from == MIRType_Float32);
+      case MIRType::Int32:
+        MOZ_ASSERT(from == MIRType::Float32);
         masm.as_mfc1(ToRegister(lir->output()), ToFloatRegister(lir->input()));
         break;
-      case MIRType_Float32:
-        MOZ_ASSERT(from == MIRType_Int32);
+      case MIRType::Float32:
+        MOZ_ASSERT(from == MIRType::Int32);
         masm.as_mtc1(ToRegister(lir->input()), ToFloatRegister(lir->output()));
         break;
-      case MIRType_Double:
-      case MIRType_Int64:
+      case MIRType::Double:
+      case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
         MOZ_CRASH("unexpected AsmReinterpret");
@@ -2028,9 +2028,9 @@ CodeGeneratorMIPSShared::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
 {
     const MAsmJSLoadGlobalVar* mir = ins->mir();
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
-    if (mir->type() == MIRType_Int32)
+    if (mir->type() == MIRType::Int32)
         masm.load32(Address(GlobalReg, addr), ToRegister(ins->output()));
-    else if (mir->type() == MIRType_Float32)
+    else if (mir->type() == MIRType::Float32)
         masm.loadFloat32(Address(GlobalReg, addr), ToFloatRegister(ins->output()));
     else
         masm.loadDouble(Address(GlobalReg, addr), ToFloatRegister(ins->output()));
@@ -2043,9 +2043,9 @@ CodeGeneratorMIPSShared::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
 
     MOZ_ASSERT(IsNumberType(mir->value()->type()));
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
-    if (mir->value()->type() == MIRType_Int32)
+    if (mir->value()->type() == MIRType::Int32)
         masm.store32(ToRegister(ins->value()), Address(GlobalReg, addr));
-    else if (mir->value()->type() == MIRType_Float32)
+    else if (mir->value()->type() == MIRType::Float32)
         masm.storeFloat32(ToFloatRegister(ins->value()), Address(GlobalReg, addr));
     else
         masm.storeDouble(ToFloatRegister(ins->value()), Address(GlobalReg, addr));

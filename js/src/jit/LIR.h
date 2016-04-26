@@ -588,39 +588,39 @@ class LDefinition
 
     static inline Type TypeFrom(MIRType type) {
         switch (type) {
-          case MIRType_Boolean:
-          case MIRType_Int32:
+          case MIRType::Boolean:
+          case MIRType::Int32:
             // The stack slot allocator doesn't currently support allocating
-            // 1-byte slots, so for now we lower MIRType_Boolean into INT32.
+            // 1-byte slots, so for now we lower MIRType::Boolean into INT32.
             static_assert(sizeof(bool) <= sizeof(int32_t), "bool doesn't fit in an int32 slot");
             return LDefinition::INT32;
-          case MIRType_String:
-          case MIRType_Symbol:
-          case MIRType_Object:
-          case MIRType_ObjectOrNull:
+          case MIRType::String:
+          case MIRType::Symbol:
+          case MIRType::Object:
+          case MIRType::ObjectOrNull:
             return LDefinition::OBJECT;
-          case MIRType_Double:
+          case MIRType::Double:
             return LDefinition::DOUBLE;
-          case MIRType_Float32:
+          case MIRType::Float32:
             return LDefinition::FLOAT32;
 #if defined(JS_PUNBOX64)
-          case MIRType_Value:
+          case MIRType::Value:
             return LDefinition::BOX;
 #endif
-          case MIRType_SinCosDouble:
+          case MIRType::SinCosDouble:
             return LDefinition::SINCOS;
-          case MIRType_Slots:
-          case MIRType_Elements:
+          case MIRType::Slots:
+          case MIRType::Elements:
             return LDefinition::SLOTS;
-          case MIRType_Pointer:
+          case MIRType::Pointer:
 #if JS_BITS_PER_WORD == 64
-          case MIRType_Int64:
+          case MIRType::Int64:
 #endif
             return LDefinition::GENERAL;
-          case MIRType_Bool32x4:
-          case MIRType_Int32x4:
+          case MIRType::Bool32x4:
+          case MIRType::Int32x4:
             return LDefinition::INT32X4;
-          case MIRType_Float32x4:
+          case MIRType::Float32x4:
             return LDefinition::FLOAT32X4;
           default:
             MOZ_CRASH("unexpected type");

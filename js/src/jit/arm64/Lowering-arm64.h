@@ -34,7 +34,7 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     bool needTempForPostBarrier() { return true; }
 
     // ARM64 has a scratch register, so no need for another temp for dispatch ICs.
-    LDefinition tempForDispatchCache(MIRType outputType = MIRType_None) {
+    LDefinition tempForDispatchCache(MIRType outputType = MIRType::None) {
         return LDefinition::BogusTemp();
     }
 
