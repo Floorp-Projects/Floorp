@@ -4462,7 +4462,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
     fprintf(stderr, " %p %s:%" PRIuSIZE " ", script.get(), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {
-        if (js::PropertyName* name = script->functionNonDelazifying()->name())
+        if (JSAtom* name = script->functionNonDelazifying()->name())
             name->dumpCharsNoNewline();
     }
 

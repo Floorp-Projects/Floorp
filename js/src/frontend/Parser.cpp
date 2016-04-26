@@ -942,8 +942,7 @@ Parser<ParseHandler>::reportBadReturn(Node pn, ParseReportKind kind,
                                       unsigned errnum, unsigned anonerrnum)
 {
     JSAutoByteString name;
-    JSAtom* atom = pc->sc->asFunctionBox()->function()->atom();
-    if (atom) {
+    if (JSAtom* atom = pc->sc->asFunctionBox()->function()->name()) {
         if (!AtomToPrintableString(context, atom, &name))
             return false;
     } else {
@@ -3211,10 +3210,10 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     if (!body)
         return false;
 
-    if ((kind != Method && !IsConstructorKind(kind)) && fun->name() &&
-        !checkStrictBinding(fun->name(), pn))
-    {
-        return false;
+    if ((kind != Method && !IsConstructorKind(kind)) && fun->name()) {
+        RootedPropertyName propertyName(context, fun->name()->asPropertyName());
+        if (!checkStrictBinding(propertyName, pn))
+            return false;
     }
 
     if (bodyType == StatementListBody) {
@@ -5713,7 +5712,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!kid)
             return null();
 
-        if (!checkExportedName(kid->pn_funbox->function()->atom()))
+        if (!checkExportedName(kid->pn_funbox->function()->name()))
             return null();
         break;
 

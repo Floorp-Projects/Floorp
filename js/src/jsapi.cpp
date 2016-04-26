@@ -3659,7 +3659,7 @@ JS_GetFunctionObject(JSFunction* fun)
 JS_PUBLIC_API(JSString*)
 JS_GetFunctionId(JSFunction* fun)
 {
-    return fun->atom();
+    return fun->name();
 }
 
 JS_PUBLIC_API(JSString*)
