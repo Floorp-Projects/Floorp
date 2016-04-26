@@ -52,6 +52,11 @@ this.webrtcUI = {
     mm.removeMessageListener("webrtc:Request", this);
     mm.removeMessageListener("webrtc:CancelRequest", this);
     mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
+
+    if (gIndicatorWindow) {
+      gIndicatorWindow.close();
+      gIndicatorWindow = null;
+    }
   },
 
   processIndicators: new Map(),

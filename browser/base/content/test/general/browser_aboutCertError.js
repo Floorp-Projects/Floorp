@@ -105,6 +105,105 @@ add_task(function* checkBadStsCert() {
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+const PREF_KINTO_CLOCK_SKEW_SECONDS = "services.kinto.clock_skew_seconds";
+
+add_task(function* checkWrongSystemTimeWarning() {
+  function* setUpPage() {
+    let browser;
+    let certErrorLoaded;
+    let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+      gBrowser.selectedTab = gBrowser.addTab(BAD_CERT);
+      browser = gBrowser.selectedBrowser;
+      certErrorLoaded = waitForCertErrorLoad(browser);
+    }, false);
+
+    info("Loading and waiting for the cert error");
+    yield certErrorLoaded;
+
+    return yield ContentTask.spawn(browser, null, function* () {
+      let doc = content.document;
+      let div = doc.getElementById("wrongSystemTimePanel");
+      let systemDateDiv = doc.getElementById("wrongSystemTime_systemDate");
+      let actualDateDiv = doc.getElementById("wrongSystemTime_actualDate");
+
+      return {
+        divDisplay: content.getComputedStyle(div).display,
+        text: div.textContent,
+        systemDate: systemDateDiv.textContent,
+        actualDate: actualDateDiv.textContent
+      };
+    });
+  }
+
+  let formatter = new Intl.DateTimeFormat();
+
+  // pretend we have a positively skewed (ahead) system time
+  let serverDate = new Date("2015/10/27");
+  let serverDateFmt = formatter.format(serverDate);
+  let localDateFmt = formatter.format(new Date());
+
+  let skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
+  yield new Promise(r => SpecialPowers.pushPrefEnv({set:
+    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+
+  info("Loading a bad cert page with a skewed clock");
+  let message = yield Task.spawn(setUpPage);
+
+  isnot(message.divDisplay, "none", "Wrong time message information is visible");
+  ok(message.text.includes("because your clock appears to show the wrong time"),
+     "Correct error message found");
+  ok(message.text.includes("expired.example.com"), "URL found in error message");
+  ok(message.systemDate.includes(localDateFmt), "correct local date displayed");
+  ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // pretend we have a negatively skewed (behind) system time
+  serverDate = new Date();
+  serverDate.setYear(serverDate.getFullYear() + 1);
+  serverDateFmt = formatter.format(serverDate);
+
+  skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
+  yield new Promise(r => SpecialPowers.pushPrefEnv({set:
+    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+
+  info("Loading a bad cert page with a skewed clock");
+  message = yield Task.spawn(setUpPage);
+
+  isnot(message.divDisplay, "none", "Wrong time message information is visible");
+  ok(message.text.includes("because your clock appears to show the wrong time"),
+     "Correct error message found");
+  ok(message.text.includes("expired.example.com"), "URL found in error message");
+  ok(message.systemDate.includes(localDateFmt), "correct local date displayed");
+  ok(message.actualDate.includes(serverDateFmt), "correct server date displayed");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // pretend we only have a slightly skewed system time, four hours
+  skew = 60 * 60 * 4;
+  yield new Promise(r => SpecialPowers.pushPrefEnv({set:
+    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+
+  info("Loading a bad cert page with an only slightly skewed clock");
+  message = yield Task.spawn(setUpPage);
+
+  is(message.divDisplay, "none", "Wrong time message information is not visible");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // now pretend we have no skewed system time
+  skew = 0;
+  yield new Promise(r => SpecialPowers.pushPrefEnv({set:
+    [[PREF_KINTO_CLOCK_SKEW_SECONDS, skew]]}, r));
+
+  info("Loading a bad cert page with no skewed clock");
+  message = yield Task.spawn(setUpPage);
+
+  is(message.divDisplay, "none", "Wrong time message information is not visible");
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(function* checkAdvancedDetails() {
   info("Loading a bad cert page and verifying the advanced details section");
   let browser;
@@ -146,12 +245,12 @@ add_task(function* checkAdvancedDetails() {
                                 .QueryInterface(Ci.nsISerializable);
     let serializedSecurityInfo = serhelper.serializeToString(serializable);
     return {
-      divDisplay: div.style.display,
+      divDisplay: content.getComputedStyle(div).display,
       text: text.textContent,
       securityInfoAsString: serializedSecurityInfo
     };
   });
-  is(message.divDisplay, "block", "Debug information is visible");
+  isnot(message.divDisplay, "none", "Debug information is visible");
   ok(message.text.includes(BAD_CERT), "Correct URL found");
   ok(message.text.includes("Certificate has expired"),
      "Correct error message found");
@@ -218,12 +317,12 @@ add_task(function* checkAdvancedDetailsForHSTS() {
                                 .QueryInterface(Ci.nsISerializable);
     let serializedSecurityInfo = serhelper.serializeToString(serializable);
     return {
-      divDisplay: div.style.display,
+      divDisplay: content.getComputedStyle(div).display,
       text: text.textContent,
       securityInfoAsString: serializedSecurityInfo
     };
   });
-  is(message.divDisplay, "block", "Debug information is visible");
+  isnot(message.divDisplay, "none", "Debug information is visible");
   ok(message.text.includes(badStsUri.spec), "Correct URL found");
   ok(message.text.includes("requested domain name does not match the server's certificate"),
      "Correct error message found");
