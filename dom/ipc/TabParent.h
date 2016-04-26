@@ -312,6 +312,12 @@ public:
 
   virtual bool RecvRequestFocus(const bool& aCanRaise) override;
 
+  virtual bool RecvLookUpDictionary(
+                 const nsString& aText,
+                 nsTArray<mozilla::FontRange>&& aFontRangeArray,
+                 const bool& aIsVertical,
+                 const LayoutDeviceIntPoint& aPoint) override;
+
   virtual bool
   RecvEnableDisableCommands(const nsString& aAction,
                             nsTArray<nsCString>&& aEnabledCommands,
