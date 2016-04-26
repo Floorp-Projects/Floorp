@@ -138,6 +138,7 @@ enum class LogReason : int {
   TextureAliveAfterShutdown,
   InvalidContext,
   InvalidCommandList,
+  AsyncTransactionTimeout,
   // End
   MustBeLessThanThis = 101,
 };

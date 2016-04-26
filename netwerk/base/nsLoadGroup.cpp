@@ -18,7 +18,7 @@
 #include "nsITimedChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
-#include "nsISchedulingContext.h"
+#include "nsIRequestContext.h"
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
 
@@ -125,20 +125,20 @@ nsLoadGroup::~nsLoadGroup()
 
     mDefaultLoadRequest = 0;
 
-    if (mSchedulingContext) {
-        nsID scid;
-        mSchedulingContext->GetID(&scid);
+    if (mRequestContext) {
+        nsID rcid;
+        mRequestContext->GetID(&rcid);
 
         if (IsNeckoChild() && gNeckoChild) {
-            char scid_str[NSID_LENGTH];
-            scid.ToProvidedString(scid_str);
+            char rcid_str[NSID_LENGTH];
+            rcid.ToProvidedString(rcid_str);
 
-            nsCString scid_nscs;
-            scid_nscs.AssignASCII(scid_str);
+            nsCString rcid_nscs;
+            rcid_nscs.AssignASCII(rcid_str);
 
-            gNeckoChild->SendRemoveSchedulingContext(scid_nscs);
+            gNeckoChild->SendRemoveRequestContext(rcid_nscs);
         } else {
-            mSchedulingContextService->RemoveSchedulingContext(scid);
+            mRequestContextService->RemoveRequestContext(rcid);
         }
     }
 
@@ -701,12 +701,12 @@ nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::GetSchedulingContextID(nsID *aSCID)
+nsLoadGroup::GetRequestContextID(nsID *aRCID)
 {
-    if (!mSchedulingContext) {
+    if (!mRequestContext) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    return mSchedulingContext->GetID(aSCID);
+    return mRequestContext->GetID(aRCID);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1069,12 +1069,12 @@ nsresult nsLoadGroup::MergeDefaultLoadFlags(nsIRequest *aRequest,
 
 nsresult nsLoadGroup::Init()
 {
-    mSchedulingContextService = do_GetService("@mozilla.org/network/scheduling-context-service;1");
-    if (mSchedulingContextService) {
-        nsID schedulingContextID;
-        if (NS_SUCCEEDED(mSchedulingContextService->NewSchedulingContextID(&schedulingContextID))) {
-            mSchedulingContextService->GetSchedulingContext(schedulingContextID,
-                                                            getter_AddRefs(mSchedulingContext));
+    mRequestContextService = do_GetService("@mozilla.org/network/request-context-service;1");
+    if (mRequestContextService) {
+        nsID requestContextID;
+        if (NS_SUCCEEDED(mRequestContextService->NewRequestContextID(&requestContextID))) {
+            mRequestContextService->GetRequestContext(requestContextID,
+                                                      getter_AddRefs(mRequestContext));
         }
     }
 

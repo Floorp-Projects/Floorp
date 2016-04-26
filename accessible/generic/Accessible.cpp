@@ -884,6 +884,15 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
                                       event->IsFromUserInput());
           break;
                                                      }
+        case nsIAccessibleEvent::EVENT_SELECTION:
+        case nsIAccessibleEvent::EVENT_SELECTION_ADD:
+        case nsIAccessibleEvent::EVENT_SELECTION_REMOVE: {
+          AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
+          uint64_t widgetID = selEvent->Widget()->IsDoc() ? 0 :
+            reinterpret_cast<uintptr_t>(selEvent->Widget());
+          ipcDoc->SendSelectionEvent(id, widgetID, aEvent->GetEventType());
+          break;
+                                                         }
         default:
                                                          ipcDoc->SendEvent(id, aEvent->GetEventType());
       }

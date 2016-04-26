@@ -114,7 +114,7 @@ struct HttpChannelOpenArgs
   OptionalHttpResponseHead    synthesizedResponseHead;
   nsCString                   synthesizedSecurityInfoSerialization;
   uint32_t                    cacheKey;
-  nsCString                   schedulingContextID;
+  nsCString                   requestContextID;
   OptionalCorsPreflightArgs   preflightArgs;
   uint32_t                    initialRwin;
   bool                        blockAuthPrompt;

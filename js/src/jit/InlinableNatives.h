@@ -70,6 +70,7 @@
     _(IsRegExpObject)               \
     _(RegExpPrototypeOptimizable)   \
     _(RegExpInstanceOptimizable)    \
+    _(GetFirstDollarIndex)          \
                                     \
     _(String)                       \
     _(StringCharCodeAt)             \

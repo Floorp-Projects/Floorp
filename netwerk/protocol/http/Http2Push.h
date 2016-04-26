@@ -17,7 +17,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsHttpRequestHead.h"
 #include "nsILoadGroup.h"
-#include "nsISchedulingContext.h"
+#include "nsIRequestContext.h"
 #include "nsString.h"
 #include "PSpdyPush.h"
 
@@ -48,7 +48,7 @@ public:
   nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) override;
   void AdjustInitialWindow() override;
 
-  nsISchedulingContext *SchedulingContext() override { return mSchedulingContext; };
+  nsIRequestContext *RequestContext() override { return mRequestContext; };
   void ConnectPushedStream(Http2Stream *consumer);
 
   bool TryOnPush();
@@ -72,7 +72,7 @@ private:
   Http2Stream *mConsumerStream; // paired request stream that consumes from
                                 // real http/2 one.. null until a match is made.
 
-  nsCOMPtr<nsISchedulingContext> mSchedulingContext;
+  nsCOMPtr<nsIRequestContext> mRequestContext;
 
   nsAHttpTransaction *mAssociatedTransaction;
 

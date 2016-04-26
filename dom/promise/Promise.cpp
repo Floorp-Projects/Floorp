@@ -525,6 +525,10 @@ Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
 already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv)
 {
+  if (!aGlobal) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
   RefPtr<Promise> p = new Promise(aGlobal);
   p->CreateWrapper(nullptr, aRv);
   if (aRv.Failed()) {
@@ -859,6 +863,10 @@ already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
                 JS::Handle<JSObject*> aDesiredProto)
 {
+  if (!aGlobal) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
   RefPtr<Promise> p = new Promise(aGlobal);
   p->CreateWrapper(aDesiredProto, aRv);
   if (aRv.Failed()) {
