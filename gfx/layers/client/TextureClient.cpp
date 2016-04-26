@@ -97,7 +97,6 @@ public:
 
   TextureChild()
   : mForwarder(nullptr)
-  , mMonitor("TextureChild")
   , mTextureClient(nullptr)
   , mTextureData(nullptr)
   , mDestroyed(false)
@@ -117,10 +116,10 @@ public:
 
   void WaitForCompositorRecycle()
   {
-    {
-      MonitorAutoLock mon(mMonitor);
-      mWaitForRecycle = mDestroyed ? nullptr : mTextureClient;
-    }
+    Lock();
+    mWaitForRecycle = mDestroyed ? nullptr : mTextureClient;
+    Unlock();
+
     RECYCLE_LOG("[CLIENT] Wait for recycle %p\n", mWaitForRecycle.get());
     MOZ_ASSERT(CanSend());
     SendClientRecycle();
@@ -129,10 +128,10 @@ public:
   void CancelWaitForCompositorRecycle()
   {
     RECYCLE_LOG("[CLIENT] Cancelling wait for recycle %p\n", mWaitForRecycle.get());
-    {
-      MonitorAutoLock mon(mMonitor);
-      mWaitForRecycle = nullptr;
-    }
+
+    Lock();
+    mWaitForRecycle = nullptr;
+    Unlock();
   }
 
   CompositableForwarder* GetForwarder() { return mForwarder; }
@@ -142,6 +141,10 @@ public:
   void ActorDestroy(ActorDestroyReason why) override;
 
   bool IPCOpen() const { return mIPCOpen; }
+
+  void Lock() const { mLock.Enter(); }
+
+  void Unlock() const { mLock.Leave(); }
 
 private:
 
@@ -160,16 +163,11 @@ private:
     Release();
   }
 
-  void SetTextureClient(TextureClient* aTextureClient) {
-    MonitorAutoLock mon(mMonitor);
-    mTextureClient = aTextureClient;
-  }
+  mutable gfx::CriticalSection mLock;
 
   RefPtr<CompositableForwarder> mForwarder;
   RefPtr<TextureClient> mWaitForRecycle;
 
-  // Monitor protecting mTextureClient.
-  Monitor mMonitor;
   TextureClient* mTextureClient;
   TextureData* mTextureData;
   Atomic<bool> mDestroyed;
@@ -320,12 +318,15 @@ DeallocateTextureClient(TextureDeallocParams params)
 
 void TextureClient::Destroy(bool aForceSync)
 {
-  MOZ_ASSERT(!IsLocked());
+  if (mActor) {
+    mActor->Lock();
+  }
 
   RefPtr<TextureChild> actor = mActor;
   mActor = nullptr;
 
   if (actor && !actor->mDestroyed.compareExchange(false, true)) {
+    actor->Unlock();
     actor = nullptr;
   }
 
@@ -349,6 +350,14 @@ void TextureClient::Destroy(bool aForceSync)
     // client side, but having asynchronous deallocate in some of the cases will
     // be a worthwhile optimization.
     params.syncDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT) || aForceSync;
+
+    // Release the lock before calling DeallocateTextureClient because the latter
+    // may wait for the main thread which could create a dead-lock.
+
+    if (actor) {
+      actor->Unlock();
+    }
+
     DeallocateTextureClient(params);
   }
 }
@@ -359,6 +368,22 @@ TextureClient::DestroyFallback(PTextureChild* aActor)
   // should not end up here so crash debug builds.
   MOZ_ASSERT(false);
   return aActor->SendDestroySync();
+}
+
+void
+TextureClient::LockActor() const
+{
+  if (mActor) {
+    mActor->Lock();
+  }
+}
+
+void
+TextureClient::UnlockActor() const
+{
+  if (mActor) {
+    mActor->Unlock();
+  }
 }
 
 bool
@@ -374,6 +399,8 @@ TextureClient::Lock(OpenMode aMode)
     mRemoveFromCompositableWaiter->WaitComplete();
     mRemoveFromCompositableWaiter = nullptr;
   }
+
+  LockActor();
 
   mIsLocked = mData->Lock(aMode, mReleaseFenceHandle.IsValid() ? &mReleaseFenceHandle : nullptr);
   mOpenMode = aMode;
@@ -394,6 +421,10 @@ TextureClient::Lock(OpenMode aMode)
       Unlock();
       return false;
     }
+  }
+
+  if (!mIsLocked) {
+    UnlockActor();
   }
 
   return mIsLocked;
@@ -426,27 +457,8 @@ TextureClient::Unlock()
   mData->Unlock();
   mIsLocked = false;
   mOpenMode = OpenMode::OPEN_NONE;
-}
 
-bool
-TextureClient::HasIntermediateBuffer() const
-{
-  MOZ_ASSERT(IsValid());
-  return mData->HasIntermediateBuffer();
-}
-
-gfx::IntSize
-TextureClient::GetSize() const
-{
-  MOZ_ASSERT(IsValid());
-  return mData->GetSize();
-}
-
-gfx::SurfaceFormat
-TextureClient::GetFormat() const
-{
-  MOZ_ASSERT(IsValid());
-  return mData->GetFormat();
+  UnlockActor();
 }
 
 TextureClient::~TextureClient()
@@ -491,7 +503,16 @@ already_AddRefed<TextureClient>
 TextureClient::CreateSimilar(TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
 {
   MOZ_ASSERT(IsValid());
+
+  MOZ_ASSERT(!mIsLocked);
+  if (mIsLocked) {
+    return nullptr;
+  }
+
+  LockActor();
   TextureData* data = mData->CreateSimilar(mAllocator, aFlags, aAllocFlags);
+  UnlockActor();
+
   if (!data) {
     return nullptr;
   }
@@ -539,21 +560,23 @@ TextureClient::BorrowMappedData(MappedTextureData& aMap)
   //  return nullptr;
   //}
 
-  return mData->BorrowMappedData(aMap);
+  return mData ? mData->BorrowMappedData(aMap) : false;
 }
 
 bool
 TextureClient::BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap)
 {
   MOZ_ASSERT(IsValid());
-  return mData->BorrowMappedYCbCrData(aMap);
+
+  return mData ? mData->BorrowMappedYCbCrData(aMap) : false;
 }
 
 bool
 TextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
   MOZ_ASSERT(IsValid());
-  return mData->Serialize(aOutDescriptor);
+
+  return mData ? mData->Serialize(aOutDescriptor) : false;
 }
 
 void
@@ -590,18 +613,29 @@ TextureClient::DestroyIPDLActor(PTextureChild* actor)
 }
 
 // static
-TextureClient*
+already_AddRefed<TextureClient>
 TextureClient::AsTextureClient(PTextureChild* actor)
 {
   if (!actor) {
     return nullptr;
   }
+
   TextureChild* tc = static_cast<TextureChild*>(actor);
+
+  // TODO: This is not entirely race-free because TextureClient's ref count
+  // can reach zero on another thread and AsTextureClient gets called before
+  // Destroy.
+  tc->Lock();
+
   if (tc->mDestroyed) {
+    tc->Unlock();
     return nullptr;
   }
 
-  return tc->mTextureClient;
+  RefPtr<TextureClient> texture = tc->mTextureClient;
+  tc->Unlock();
+
+  return texture.forget();
 }
 
 bool
@@ -635,6 +669,12 @@ void
 TextureClient::RecycleTexture(TextureFlags aFlags)
 {
   MOZ_ASSERT(GetFlags() & TextureFlags::RECYCLE);
+  MOZ_ASSERT(!mIsLocked);
+  if (mIsLocked) {
+    return;
+  }
+
+  LockActor();
 
   mAddedToCompositableClient = false;
   if (mFlags != aFlags) {
@@ -643,6 +683,8 @@ TextureClient::RecycleTexture(TextureFlags aFlags)
       mActor->SendRecycleTexture(mFlags);
     }
   }
+
+  UnlockActor();
 }
 
 void
@@ -706,6 +748,13 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
   mActor->mForwarder = aForwarder;
   mActor->mTextureClient = this;
   mActor->mMainThreadOnly = !!(mFlags & TextureFlags::DEALLOCATE_MAIN_THREAD);
+
+  // If the TextureClient is already locked, we have to lock TextureChild's mutex
+  // since it will be unlocked in TextureClient::Unlock.
+  if (mIsLocked) {
+    LockActor();
+  }
+
   return mActor->IPCOpen();
 }
 
@@ -922,6 +971,7 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, ClientIPCA
 , mPoolTracker(nullptr)
 #endif
 {
+  mData->FillInfo(mInfo);
   mFlags |= mData->GetTextureFlags();
 }
 
@@ -982,6 +1032,22 @@ TextureClient::RemoveFromCompositable(CompositableClient* aCompositable,
 void
 TextureClient::SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) {
   mRemoveFromCompositableWaiter = aWaiter;
+}
+
+already_AddRefed<gfx::DataSourceSurface>
+TextureClient::GetAsSurface()
+{
+  Lock(OpenMode::OPEN_READ);
+  RefPtr<gfx::DataSourceSurface> data;
+  RefPtr<gfx::DrawTarget> dt = BorrowDrawTarget();
+  if (dt) {
+    RefPtr<gfx::SourceSurface> surf = dt->Snapshot();
+    if (surf) {
+      data = surf->GetDataSurface();
+    }
+  }
+  Unlock();
+  return data.forget();
 }
 
 void

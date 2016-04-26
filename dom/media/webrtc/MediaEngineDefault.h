@@ -16,7 +16,7 @@
 #include "MediaEngine.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
 
@@ -134,7 +134,7 @@ public:
                   const PrincipalHandle& aPrincipalHandle) override
   {
 #ifdef DEBUG
-    StreamBuffer::Track* data = aSource->FindTrack(aId);
+    StreamTracks::Track* data = aSource->FindTrack(aId);
     NS_WARN_IF_FALSE(!data || data->IsEnded() ||
                      aDesiredTime <= aSource->GetEndOfAppendedData(aId),
                      "MediaEngineDefaultAudioSource data underrun");

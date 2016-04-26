@@ -16,30 +16,64 @@
 
 /*
  * Description of the test:
- * We load a page in an iframe (served over http://example.com) that tries to set the 'base'
- * to (http://mochi.test). We load that page using different policies and verify that
- * setting the base-uri is correctly blocked by CSP.
+ * We load a page in an iframe (served over http://example.com) that tries to
+ * modify the 'base' either through setting or also removing the base-uri. We
+ * load that page using different policies and verify that setting the base-uri
+ * is correctly blocked by CSP.
  */
 
 SimpleTest.waitForExplicitFinish();
 
 var tests = [
-  {
-    policy: "base-uri http://mochi.test;",
-    result: "http://mochi.test"
+  { csp: "base-uri http://mochi.test;",
+    base1: "http://mochi.test",
+    base2: "",
+    action: "enforce-csp",
+    result: "http://mochi.test",
+    desc: "CSP allows base uri" 
   },
-  {
-    policy: "base-uri http://example.com;",
-    result: "http://example.com"
+  { csp: "base-uri http://example.com;",
+    base1: "http://mochi.test",
+    base2: "",
+    action: "enforce-csp",
+    result: "http://example.com",
+    desc: "CSP blocks base uri"
   },
-  {
-    policy: "base-uri https:",
-    result: "http://example.com"
+  { csp: "base-uri https:",
+    base1: "http://mochi.test",
+    base2: "",
+    action: "enforce-csp",
+    result: "http://example.com",
+    desc: "CSP blocks http base"
   },
-  {
-    policy: "base-uri 'none'",
-    result: "http://example.com"
-  }
+  { csp: "base-uri 'none'",
+    base1: "http://mochi.test",
+    base2: "",
+    action: "enforce-csp",
+    result: "http://example.com",
+    desc: "CSP allows no base modification"
+  },
+  { csp: "",
+    base1: "http://foo:foo/",
+    base2: "",
+    action: "enforce-csp",
+    result: "http://example.com",
+    desc: "Invalid base should be ignored"
+  },
+  { csp: "base-uri http://mochi.test",
+    base1: "http://mochi.test",
+    base2: "http://test1.example.com",
+    action: "remove-base1",
+    result: "http://example.com",
+    desc: "Removing first base should result in fallback base"
+  },
+  { csp: "",
+    base1: "http://mochi.test",
+    base2: "http://test1.example.com",
+    action: "remove-base1",
+    result: "http://test1.example.com",
+    desc: "Removing first base should result in the second base"
+  },
 ];
 
 // initializing to -1 so we start at index 0 when we start the test
@@ -57,7 +91,9 @@ function receiveMessage(event) {
   var result = event.data.result;
   // we only care about the base uri, so instead of comparing the complete uri
   // we just make sure that the base is correct which is sufficient here.
-  ok(result.startsWith(tests[counter].result), "Restricting base-uri in test " + counter + "!");
+  ok(result.startsWith(tests[counter].result), 
+     `${tests[counter].desc}: Expected a base URI that starts
+      with ${tests[counter].result} but got ${result}`);
   loadNextTest();
 }
 
@@ -67,12 +103,16 @@ function loadNextTest() {
     finishTest();
     return;
   }
-  var src = "http://example.com/tests/dom/security/test/csp/file_testserver.sjs";
-  // append the file that should be served
-  src += "?file=" + escape("tests/dom/security/test/csp/file_base-uri.html");
+  var src = "http://example.com/tests/dom/security/test/csp/file_base_uri_server.sjs";
   // append the CSP that should be used to serve the file
   // please note that we have to include 'unsafe-inline' to permit sending the postMessage
-  src += "&csp=" + escape("script-src 'unsafe-inline'; " + tests[counter].policy);
+  src += "?csp=" + escape("script-src 'unsafe-inline'; " + tests[counter].csp);
+  // append potential base tags
+  src += "&base1=" + escape(tests[counter].base1);
+  src += "&base2=" + escape(tests[counter].base2);
+  // append potential action
+  src += "&action=" + escape(tests[counter].action);
+
   document.getElementById("testframe").src = src;
 }
 

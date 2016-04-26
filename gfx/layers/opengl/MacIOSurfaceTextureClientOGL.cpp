@@ -39,16 +39,15 @@ MacIOSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-gfx::IntSize
-MacIOSurfaceTextureData::GetSize() const
+void
+MacIOSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
 {
-  return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
-}
-
-gfx::SurfaceFormat
-MacIOSurfaceTextureData::GetFormat() const
-{
-  return mSurface->GetFormat();
+  aInfo.size = gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
+  aInfo.format = mSurface->GetFormat();
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
 }
 
 already_AddRefed<gfx::DataSourceSurface>

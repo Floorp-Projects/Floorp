@@ -509,16 +509,20 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
   if (GetD2D1Status() == FeatureStatus::Available) {
-    mRenderMode = RENDER_DIRECT2D;
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
   } else {
-    mRenderMode = RENDER_GDI;
     canvasMask |= BackendTypeBit(BackendType::SKIA);
   }
   contentMask |= BackendTypeBit(BackendType::SKIA);
   InitBackendPrefs(canvasMask, defaultBackend, contentMask, defaultBackend);
+}
+
+bool
+gfxWindowsPlatform::IsDirect2DBackend()
+{
+  return GetDefaultContentBackend() == BackendType::DIRECT2D1_1;
 }
 
 void
@@ -2886,16 +2890,18 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
     aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
+  bool allowTryingD3D9 = false;
   if (!gfxPrefs::LayersPreferD3D9()) {
     if (gfxPlatform::CanUseDirect3D11() && mD3D11Device) {
       aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
     } else {
+      allowTryingD3D9 = gfxPrefs::LayersAllowD3D9Fallback();
       NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
     }
   }
 
-  if (gfxPrefs::LayersPreferD3D9() || !IsVistaOrLater()) {
-    // We don't want D3D9 except on Windows XP
+  if (gfxPrefs::LayersPreferD3D9() || !IsVistaOrLater() || allowTryingD3D9) {
+    // We don't want D3D9 except on Windows XP, unless we failed to get D3D11
     if (gfxPlatform::CanUseDirect3D9()) {
       aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
     } else {

@@ -195,6 +195,31 @@ BufferTextureData::CreateForYCbCr(ClientIPCAllocator* aAllocator,
                        aTextureFlags);
 }
 
+void
+BufferTextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = GetSize();
+  aInfo.format = GetFormat();
+  aInfo.hasSynchronization = false;
+  aInfo.canExposeMappedData = true;
+
+  if (mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor) {
+    aInfo.hasIntermediateBuffer = true;
+  } else {
+    aInfo.hasIntermediateBuffer = mDescriptor.get_RGBDescriptor().hasIntermediateBuffer();
+  }
+
+  switch (aInfo.format) {
+    case gfx::SurfaceFormat::YUV:
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::UNKNOWN:
+      aInfo.supportsMoz2D = false;
+      break;
+    default:
+      aInfo.supportsMoz2D = true;
+  }
+}
+
 gfx::IntSize
 BufferTextureData::GetSize() const
 {
@@ -205,29 +230,6 @@ gfx::SurfaceFormat
 BufferTextureData::GetFormat() const
 {
   return ImageDataSerializer::FormatFromBufferDescriptor(mDescriptor);
-}
-
-
-bool
-BufferTextureData::HasIntermediateBuffer() const
-{
-  if (mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor) {
-    return true;
-  }
-  return mDescriptor.get_RGBDescriptor().hasIntermediateBuffer();
-}
-
-bool
-BufferTextureData::SupportsMoz2D() const
-{
-  switch (GetFormat()) {
-    case gfx::SurfaceFormat::YUV:
-    case gfx::SurfaceFormat::NV12:
-    case gfx::SurfaceFormat::UNKNOWN:
-      return false;
-    default:
-      return true;
-  }
 }
 
 already_AddRefed<gfx::DrawTarget>

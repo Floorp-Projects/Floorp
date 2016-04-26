@@ -1035,7 +1035,7 @@ nsHTMLEditor::UpdateBaseURL()
   // If no base tag, then set baseURL to the document's URL.  This is very
   // important, else relative URLs for links and images are wrong
   if (!nodeList || !nodeList->Item(0)) {
-    return doc->SetBaseURI(doc->GetDocumentURI());
+    doc->SetBaseURI(doc->GetDocumentURI());
   }
   return NS_OK;
 }

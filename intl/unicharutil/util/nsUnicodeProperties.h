@@ -35,6 +35,8 @@ inline nsIUGenCategory::nsUGenCategory GetGenCategory(uint32_t aCh) {
 
 nsCharType GetBidiCat(uint32_t aCh);
 
+uint8_t GetLineBreakClass(uint32_t aCh);
+
 Script GetScriptCode(uint32_t aCh);
 
 uint32_t GetScriptTagForCode(Script aScriptCode);

@@ -21,9 +21,12 @@ class EventListenerManager;
 
 namespace dom {
 
+class AddEventListenerOptionsOrBoolean;
 class Event;
 class EventListener;
+class EventListenerOptionsOrBoolean;
 class EventHandlerNonNull;
+
 template <class T> struct Nullable;
 
 // IID for the dom::EventTarget interface
@@ -43,12 +46,12 @@ public:
   using nsIDOMEventTarget::DispatchEvent;
   virtual void AddEventListener(const nsAString& aType,
                                 EventListener* aCallback,
-                                bool aCapture,
+                                const AddEventListenerOptionsOrBoolean& aOptions,
                                 const Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) = 0;
   virtual void RemoveEventListener(const nsAString& aType,
                                    EventListener* aCallback,
-                                   bool aCapture,
+                                   const EventListenerOptionsOrBoolean& aOptions,
                                    ErrorResult& aRv);
   bool DispatchEvent(JSContext* aCx, Event& aEvent, ErrorResult& aRv);
 

@@ -10,7 +10,7 @@
 #include "nsError.h"
 #include "nsID.h"
 #include "nsIPrincipal.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
