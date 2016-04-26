@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 /**
  * This service maps file system paths where add-ons reside to the ID
  * of the add-on. Paths are added by the add-on manager. They can
@@ -26,4 +28,10 @@ interface amIAddonPathService : nsISupports
    * associated with the given add-on ID.
    */
   void insertPath(in AString path, in AString addonId);
+
+  /**
+   * Given a URI to a file, return the ID of the add-on that the file belongs
+   * to. Returns an empty string if there is no add-on there.
+   */
+  AString mapURIToAddonId(in nsIURI aURI);
 };
