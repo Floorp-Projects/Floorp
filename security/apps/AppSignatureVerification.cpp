@@ -651,6 +651,27 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
                       KeyPurposeId::id_kp_codeSigning,
                       CertPolicyId::anyPolicy,
                       nullptr/*stapledOCSPResponse*/);
+  if (rv == Result::ERROR_EXPIRED_CERTIFICATE) {
+    // For code-signing you normally need trusted 3rd-party timestamps to
+    // handle expiration properly. The signer could always mess with their
+    // system clock so you can't trust the certificate was un-expired when
+    // the signing took place. The choice is either to ignore expiration
+    // or to enforce expiration at time of use. The latter leads to the
+    // user-hostile result that perfectly good code stops working.
+    //
+    // Our package format doesn't support timestamps (nor do we have a
+    // trusted 3rd party timestamper), but since we sign all of our apps and
+    // add-ons ourselves we can trust ourselves not to mess with the clock
+    // on the signing systems. We also have a revocation mechanism if we
+    // need it. It's OK to ignore cert expiration under these conditions.
+    //
+    // This is an invalid approach if
+    //  * we issue certs to let others sign their own packages
+    //  * mozilla::pkix returns "expired" when there are "worse" problems
+    //    with the certificate or chain.
+    // (see bug 1267318)
+    rv = Success;
+  }
   if (rv != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(rv));
   }
