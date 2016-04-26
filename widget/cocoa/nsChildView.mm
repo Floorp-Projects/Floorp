@@ -5453,6 +5453,17 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   return mTextInputHandler->FirstRectForCharacterRange(aRange, actualRange);
 }
 
+- (void)quickLookWithEvent:(NSEvent*)event
+{
+  // Show dictionary by current point
+  WidgetContentCommandEvent
+    contentCommandEvent(true, eContentCommandLookUpDictionary, mGeckoChild);
+  NSPoint point = [self convertPoint:[event locationInWindow] fromView:nil];
+  contentCommandEvent.mRefPoint = mGeckoChild->CocoaPointsToDevPixels(point);
+  mGeckoChild->DispatchWindowEvent(contentCommandEvent);
+  // The widget might have been destroyed.
+}
+
 - (NSInteger)windowLevel
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
