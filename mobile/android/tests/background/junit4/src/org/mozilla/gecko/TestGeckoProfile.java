@@ -15,6 +15,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.helpers.FileUtil;
+import org.mozilla.gecko.util.FileUtils;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
@@ -138,7 +139,7 @@ public class TestGeckoProfile {
     public void testGetClientIdInvalidIdFileFormat() throws Exception {
         final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
         assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
-        FileUtil.writeStringToFile(clientIdFile, "clientID: \"" + validClientId + "\"");
+        FileUtils.writeStringToFile(clientIdFile, "clientID: \"" + validClientId + "\"");
 
         final String clientIdForInvalidFormat = profile.getClientId();
         assertValidClientId(clientIdForInvalidFormat);

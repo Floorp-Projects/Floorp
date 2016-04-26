@@ -6,6 +6,7 @@
 package org.mozilla.gecko.helpers;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.util.FileUtils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,15 +29,7 @@ public class FileUtil {
     }
 
     public static void writeJSONObjectToFile(final File file, final JSONObject obj) throws Exception {
-        writeStringToFile(file, obj.toString());
+        FileUtils.writeStringToFile(file, obj.toString());
     }
 
-    public static void writeStringToFile(final File file, final String str) throws Exception {
-        final FileWriter writer = new FileWriter(file, false);
-        try {
-            writer.write(str);
-        } finally {
-            writer.close();
-        }
-    }
 }
