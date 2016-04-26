@@ -18,7 +18,7 @@ namespace jit {
 static bool
 CanUnboxSimdPhi(const JitCompartment* jitCompartment, MPhi* phi, SimdType unboxType)
 {
-    MOZ_ASSERT(phi->type() == MIRType_Object);
+    MOZ_ASSERT(phi->type() == MIRType::Object);
 
     // If we are unboxing, we are more than likely to have boxed this SIMD type
     // once in baseline, otherwise, we cannot create a MSimdBox as we have no

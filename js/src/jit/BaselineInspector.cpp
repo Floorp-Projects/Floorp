@@ -254,29 +254,29 @@ MIRType
 BaselineInspector::expectedResultType(jsbytecode* pc)
 {
     // Look at the IC entries for this op to guess what type it will produce,
-    // returning MIRType_None otherwise.
+    // returning MIRType::None otherwise.
 
     ICStub* stub = monomorphicStub(pc);
     if (!stub)
-        return MIRType_None;
+        return MIRType::None;
 
     switch (stub->kind()) {
       case ICStub::BinaryArith_Int32:
         if (stub->toBinaryArith_Int32()->allowDouble())
-            return MIRType_Double;
-        return MIRType_Int32;
+            return MIRType::Double;
+        return MIRType::Int32;
       case ICStub::BinaryArith_BooleanWithInt32:
       case ICStub::UnaryArith_Int32:
       case ICStub::BinaryArith_DoubleWithInt32:
-        return MIRType_Int32;
+        return MIRType::Int32;
       case ICStub::BinaryArith_Double:
       case ICStub::UnaryArith_Double:
-        return MIRType_Double;
+        return MIRType::Double;
       case ICStub::BinaryArith_StringConcat:
       case ICStub::BinaryArith_StringObjectConcat:
-        return MIRType_String;
+        return MIRType::String;
       default:
-        return MIRType_None;
+        return MIRType::None;
     }
 }
 
@@ -376,12 +376,12 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
         return false;
 
     if (sawDouble) {
-        *result = MIRType_Double;
+        *result = MIRType::Double;
         return true;
     }
 
     MOZ_ASSERT(sawInt32);
-    *result = MIRType_Int32;
+    *result = MIRType::Int32;
     return true;
 }
 
@@ -389,7 +389,7 @@ MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
 {
     if (!hasBaselineScript())
-        return MIRType_None;
+        return MIRType::None;
 
     MIRType result;
     ICStub* stubs[2];
@@ -399,7 +399,7 @@ BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
     if (stub->isBinaryArith_Fallback() &&
         stub->toBinaryArith_Fallback()->hadUnoptimizableOperands())
     {
-        return MIRType_None;
+        return MIRType::None;
     }
 
     stubs[0] = monomorphicStub(pc);
@@ -413,7 +413,7 @@ BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc)
             return result;
     }
 
-    return MIRType_None;
+    return MIRType::None;
 }
 
 bool
@@ -772,38 +772,38 @@ GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub)
 
     // For now, all CacheIR stubs expect an object.
     MOZ_ALWAYS_TRUE(reader.matchOp(CacheOp::GuardIsObject, ObjOperandId(0)));
-    return MIRType_Object;
+    return MIRType::Object;
 }
 
 MIRType
 BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
 {
     if (!hasBaselineScript())
-        return MIRType_Value;
+        return MIRType::Value;
 
     const ICEntry& entry = icEntryFromPC(pc);
-    MIRType type = MIRType_None;
+    MIRType type = MIRType::None;
 
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
         MIRType stubType;
         switch (stub->kind()) {
           case ICStub::GetProp_Fallback:
             if (stub->toGetProp_Fallback()->hadUnoptimizableAccess())
-                return MIRType_Value;
+                return MIRType::Value;
             continue;
 
           case ICStub::GetElem_Fallback:
             if (stub->toGetElem_Fallback()->hadUnoptimizableAccess())
-                return MIRType_Value;
+                return MIRType::Value;
             continue;
 
           case ICStub::GetProp_Generic:
-            return MIRType_Value;
+            return MIRType::Value;
 
           case ICStub::GetProp_ArgumentsLength:
           case ICStub::GetElem_Arguments:
             // Either an object or magic arguments.
-            return MIRType_Value;
+            return MIRType::Value;
 
           case ICStub::GetProp_Unboxed:
           case ICStub::GetProp_TypedObject:
@@ -825,7 +825,7 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetElem_Dense:
           case ICStub::GetElem_TypedArray:
           case ICStub::GetElem_UnboxedArray:
-            stubType = MIRType_Object;
+            stubType = MIRType::Object;
             break;
 
           case ICStub::GetProp_Primitive:
@@ -833,28 +833,28 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
             break;
 
           case ICStub::GetProp_StringLength:
-            stubType = MIRType_String;
+            stubType = MIRType::String;
             break;
 
           case ICStub::CacheIR_Monitored:
             stubType = GetCacheIRExpectedInputType(stub->toCacheIR_Monitored());
-            if (stubType == MIRType_Value)
-                return MIRType_Value;
+            if (stubType == MIRType::Value)
+                return MIRType::Value;
             break;
 
           default:
             MOZ_CRASH("Unexpected stub");
         }
 
-        if (type != MIRType_None) {
+        if (type != MIRType::None) {
             if (type != stubType)
-                return MIRType_Value;
+                return MIRType::Value;
         } else {
             type = stubType;
         }
     }
 
-    return (type == MIRType_None) ? MIRType_Value : type;
+    return (type == MIRType::None) ? MIRType::Value : type;
 }
 
 bool

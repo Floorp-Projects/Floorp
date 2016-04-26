@@ -1530,17 +1530,17 @@ void
 MacroAssemblerMIPS64Compat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
                                               MIRType slotType)
 {
-    if (valueType == MIRType_Double) {
+    if (valueType == MIRType::Double) {
         storeDouble(value.reg().typedReg().fpu(), dest);
         return;
     }
 
     // For known integers and booleans, we can just store the unboxed value if
     // the slot has the same type.
-    if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) && slotType == valueType) {
+    if ((valueType == MIRType::Int32 || valueType == MIRType::Boolean) && slotType == valueType) {
         if (value.constant()) {
             Value val = value.value();
-            if (valueType == MIRType_Int32)
+            if (valueType == MIRType::Int32)
                 store32(Imm32(val.toInt32()), dest);
             else
                 store32(Imm32(val.toBoolean() ? 1 : 0), dest);

@@ -716,15 +716,15 @@ inline void*
 IonMarkFunction(MIRType type)
 {
     switch (type) {
-      case MIRType_Value:
+      case MIRType::Value:
         return JS_FUNC_TO_DATA_PTR(void*, MarkValueFromIon);
-      case MIRType_String:
+      case MIRType::String:
         return JS_FUNC_TO_DATA_PTR(void*, MarkStringFromIon);
-      case MIRType_Object:
+      case MIRType::Object:
         return JS_FUNC_TO_DATA_PTR(void*, MarkObjectFromIon);
-      case MIRType_Shape:
+      case MIRType::Shape:
         return JS_FUNC_TO_DATA_PTR(void*, MarkShapeFromIon);
-      case MIRType_ObjectGroup:
+      case MIRType::ObjectGroup:
         return JS_FUNC_TO_DATA_PTR(void*, MarkObjectGroupFromIon);
       default: MOZ_CRASH();
     }

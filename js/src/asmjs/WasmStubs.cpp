@@ -166,12 +166,12 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
         unsigned argOffset = iter.index() * Module::SizeOfEntryArg;
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
-        MOZ_ASSERT_IF(type == MIRType_Int64, JitOptions.wasmTestMode);
+        MOZ_ASSERT_IF(type == MIRType::Int64, JitOptions.wasmTestMode);
         switch (iter->kind()) {
           case ABIArg::GPR:
-            if (type == MIRType_Int32)
+            if (type == MIRType::Int32)
                 masm.load32(src, iter->gpr());
-            else if (type == MIRType_Int64)
+            else if (type == MIRType::Int64)
                 masm.load64(src, iter->gpr64());
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
@@ -183,17 +183,17 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
             static_assert(Module::SizeOfEntryArg >= jit::Simd128DataSize,
                           "EntryArg must be big enough to store SIMD values");
             switch (type) {
-              case MIRType_Int32x4:
-              case MIRType_Bool32x4:
+              case MIRType::Int32x4:
+              case MIRType::Bool32x4:
                 masm.loadUnalignedInt32x4(src, iter->fpu());
                 break;
-              case MIRType_Float32x4:
+              case MIRType::Float32x4:
                 masm.loadUnalignedFloat32x4(src, iter->fpu());
                 break;
-              case MIRType_Double:
+              case MIRType::Double:
                 masm.loadDouble(src, iter->fpu());
                 break;
-              case MIRType_Float32:
+              case MIRType::Float32:
                 masm.loadFloat32(src, iter->fpu());
                 break;
               default:
@@ -204,29 +204,29 @@ wasm::GenerateEntry(MacroAssembler& masm, unsigned target, const Sig& sig, bool 
           }
           case ABIArg::Stack:
             switch (type) {
-              case MIRType_Int32:
+              case MIRType::Int32:
                 masm.load32(src, scratch);
                 masm.storePtr(scratch, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType_Int64:
+              case MIRType::Int64:
                 masm.load64(src, scratch64);
                 masm.store64(scratch64, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType_Double:
+              case MIRType::Double:
                 masm.loadDouble(src, ScratchDoubleReg);
                 masm.storeDouble(ScratchDoubleReg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType_Float32:
+              case MIRType::Float32:
                 masm.loadFloat32(src, ScratchFloat32Reg);
                 masm.storeFloat32(ScratchFloat32Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType_Int32x4:
-              case MIRType_Bool32x4:
+              case MIRType::Int32x4:
+              case MIRType::Bool32x4:
                 masm.loadUnalignedInt32x4(src, ScratchSimd128Reg);
                 masm.storeAlignedInt32x4(ScratchSimd128Reg,
                                          Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
-              case MIRType_Float32x4:
+              case MIRType::Float32x4:
                 masm.loadUnalignedFloat32x4(src, ScratchSimd128Reg);
                 masm.storeAlignedFloat32x4(ScratchSimd128Reg,
                                            Address(masm.getStackPointer(), iter->offsetFromArgBase()));
@@ -303,16 +303,16 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
         Address dstAddr(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
         MIRType type = i.mirType();
-        MOZ_ASSERT_IF(type == MIRType_Int64, JitOptions.wasmTestMode);
+        MOZ_ASSERT_IF(type == MIRType::Int64, JitOptions.wasmTestMode);
 
         switch (i->kind()) {
           case ABIArg::GPR:
-            if (type == MIRType_Int32) {
+            if (type == MIRType::Int32) {
                 if (toValue)
                     masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
                 else
                     masm.store32(i->gpr(), dstAddr);
-            } else if (type == MIRType_Int64) {
+            } else if (type == MIRType::Int64) {
                 // We can't box int64 into Values (yet).
                 if (toValue)
                     masm.breakpoint();
@@ -331,7 +331,7 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
             MOZ_ASSERT(IsFloatingPointType(type));
             FloatRegister srcReg = i->fpu();
             if (toValue) {
-                if (type == MIRType_Float32) {
+                if (type == MIRType::Float32) {
                     masm.convertFloat32ToDouble(i->fpu(), ScratchDoubleReg);
                     srcReg = ScratchDoubleReg;
                 }
@@ -341,14 +341,14 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
             break;
           }
           case ABIArg::Stack:
-            if (type == MIRType_Int32) {
+            if (type == MIRType::Int32) {
                 Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
                 masm.load32(src, scratch);
                 if (toValue)
                     masm.storeValue(JSVAL_TYPE_INT32, scratch, dstAddr);
                 else
                     masm.store32(scratch, dstAddr);
-            } else if (type == MIRType_Int64) {
+            } else if (type == MIRType::Int64) {
                 // We can't box int64 into Values (yet).
                 if (toValue) {
                     masm.breakpoint();
@@ -361,7 +361,7 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                 MOZ_ASSERT(IsFloatingPointType(type));
                 Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
                 if (toValue) {
-                    if (type == MIRType_Float32) {
+                    if (type == MIRType::Float32) {
                         masm.loadFloat32(src, ScratchFloat32Reg);
                         masm.convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
                     } else {
@@ -389,9 +389,9 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
     masm.setFramePushed(0);
 
     // Argument types for InvokeImport_*:
-    static const MIRType typeArray[] = { MIRType_Pointer,   // ImportExit
-                                         MIRType_Int32,     // argc
-                                         MIRType_Pointer }; // argv
+    static const MIRType typeArray[] = { MIRType::Pointer,   // ImportExit
+                                         MIRType::Int32,     // argc
+                                         MIRType::Pointer }; // argv
     MIRTypeVector invokeArgTypes;
     MOZ_ALWAYS_TRUE(invokeArgTypes.append(typeArray, ArrayLength(typeArray)));
 
@@ -745,7 +745,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
         // Coercion calls use the following stack layout (sp grows to the left):
         //   | args | padding | Value argv[1] | padding | exit AsmJSFrame |
         MIRTypeVector coerceArgTypes;
-        JS_ALWAYS_TRUE(coerceArgTypes.append(MIRType_Pointer));
+        JS_ALWAYS_TRUE(coerceArgTypes.append(MIRType::Pointer));
         unsigned offsetToCoerceArgv = AlignBytes(StackArgBytes(coerceArgTypes), sizeof(Value));
         MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
         AssertStackAlignment(masm, ABIStackAlignment);
