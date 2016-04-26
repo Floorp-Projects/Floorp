@@ -153,7 +153,9 @@ void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, f
     // Nyquist frequency.
     unsigned numberOfPartials = numberOfPartialsForRange(0);
     float nyquist = 0.5 * m_sampleRate;
-    numberOfPartials = std::min(numberOfPartials, (unsigned)(nyquist / fundamentalFrequency));
+    if (fundamentalFrequency != 0.0) {
+        numberOfPartials = std::min(numberOfPartials, (unsigned)(nyquist / fundamentalFrequency));
+    }
     if (numberOfPartials > m_maxPartialsInBandLimitedTable) {
         for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
             m_bandLimitedTables[rangeIndex] = 0;
@@ -240,8 +242,10 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
 
     // Limit number of partials to those below Nyquist frequency
     float nyquist = 0.5 * m_sampleRate;
-    numberOfPartials = std::min(numberOfPartials,
-                                (unsigned)(nyquist / fundamentalFrequency));
+    if (fundamentalFrequency != 0.0) {
+        numberOfPartials = std::min(numberOfPartials,
+                                    (unsigned)(nyquist / fundamentalFrequency));
+    }
 
     // Copy from loaded frequency data and generate complex conjugate
     // because of the way the inverse FFT is defined.
