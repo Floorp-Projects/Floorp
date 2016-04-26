@@ -6,6 +6,7 @@
 
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/EventTargetBinding.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -14,12 +15,12 @@ namespace dom {
 void
 EventTarget::RemoveEventListener(const nsAString& aType,
                                  EventListener* aListener,
-                                 bool aUseCapture,
+                                 const EventListenerOptionsOrBoolean& aOptions,
                                  ErrorResult& aRv)
 {
   EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
-    elm->RemoveEventListener(aType, aListener, aUseCapture);
+    elm->RemoveEventListener(aType, aListener, aOptions);
   }
 }
 

@@ -72,7 +72,7 @@ public:
   using dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 dom::EventListener* aListener,
-                                bool aCapture,
+                                const dom::AddEventListenerOptionsOrBoolean& aOptions,
                                 const dom::Nullable<bool>& aWantsUntrusted,
                                 ErrorResult& aRv) override;
 

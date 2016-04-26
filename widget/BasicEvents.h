@@ -264,6 +264,59 @@ public:
 
 class WidgetEvent : public WidgetEventTime
 {
+private:
+  void SetDefaultCancelableAndBubbles()
+  {
+    switch (mClass) {
+      case eEditorInputEventClass:
+        mFlags.mCancelable = false;
+        mFlags.mBubbles = mFlags.mIsTrusted;
+        break;
+      case eMouseEventClass:
+        mFlags.mCancelable = (mMessage != eMouseEnter &&
+                              mMessage != eMouseLeave);
+        mFlags.mBubbles = (mMessage != eMouseEnter &&
+                           mMessage != eMouseLeave);
+        break;
+      case ePointerEventClass:
+        mFlags.mCancelable = (mMessage != ePointerEnter &&
+                              mMessage != ePointerLeave &&
+                              mMessage != ePointerCancel &&
+                              mMessage != ePointerGotCapture &&
+                              mMessage != ePointerLostCapture);
+        mFlags.mBubbles = (mMessage != ePointerEnter &&
+                           mMessage != ePointerLeave);
+        break;
+      case eDragEventClass:
+        mFlags.mCancelable = (mMessage != eDragExit &&
+                              mMessage != eDragLeave &&
+                              mMessage != eDragEnd);
+        mFlags.mBubbles = true;
+        break;
+      case eSMILTimeEventClass:
+        mFlags.mCancelable = false;
+        mFlags.mBubbles = false;
+        break;
+      case eTransitionEventClass:
+      case eAnimationEventClass:
+      case eSVGZoomEventClass:
+        mFlags.mCancelable = false;
+        mFlags.mBubbles = true;
+        break;
+      case eCompositionEventClass:
+        // XXX compositionstart is cancelable in draft of DOM3 Events.
+        //     However, it doesn't make sense for us, we cannot cancel
+        //     composition when we send compositionstart event.
+        mFlags.mCancelable = false;
+        mFlags.mBubbles = true;
+        break;
+      default:
+        mFlags.mCancelable = true;
+        mFlags.mBubbles = true;
+        break;
+    }
+  }
+
 protected:
   WidgetEvent(bool aIsTrusted,
               EventMessage aMessage,
@@ -278,8 +331,7 @@ protected:
     MOZ_COUNT_CTOR(WidgetEvent);
     mFlags.Clear();
     mFlags.mIsTrusted = aIsTrusted;
-    mFlags.mCancelable = true;
-    mFlags.mBubbles = true;
+    SetDefaultCancelableAndBubbles();
   }
 
   WidgetEvent()
@@ -290,18 +342,8 @@ protected:
 
 public:
   WidgetEvent(bool aIsTrusted, EventMessage aMessage)
-    : WidgetEventTime()
-    , mClass(eBasicEventClass)
-    , mMessage(aMessage)
-    , mRefPoint(0, 0)
-    , mLastRefPoint(0, 0)
-    , mSpecifiedEventType(nullptr)
+    : WidgetEvent(aIsTrusted, aMessage, eBasicEventClass)
   {
-    MOZ_COUNT_CTOR(WidgetEvent);
-    mFlags.Clear();
-    mFlags.mIsTrusted = aIsTrusted;
-    mFlags.mCancelable = true;
-    mFlags.mBubbles = true;
   }
 
   virtual ~WidgetEvent()

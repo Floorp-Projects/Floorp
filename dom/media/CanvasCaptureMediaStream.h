@@ -8,7 +8,7 @@
 
 #include "DOMMediaStream.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 
 class nsIPrincipal;
 

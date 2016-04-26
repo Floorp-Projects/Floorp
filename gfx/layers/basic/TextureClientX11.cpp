@@ -47,6 +47,16 @@ X11TextureData::Unlock()
   }
 }
 
+void
+X11TextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = mSize;
+  aInfo.format = mFormat;
+  aInfo.supportsMoz2D = true;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+  aInfo.canExposeMappedData = false;
+}
 
 bool
 X11TextureData::Serialize(SurfaceDescriptor& aOutDescriptor)

@@ -13232,7 +13232,7 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer* aContentViewer)
   if (baseURI) {
     nsIDocument* document = aContentViewer->GetDocument();
     if (document) {
-      rv = document->SetBaseURI(baseURI);
+      document->SetBaseURI(baseURI);
     }
   }
   return rv;

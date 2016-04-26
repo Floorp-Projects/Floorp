@@ -18,6 +18,7 @@
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
 #include "nsContentCID.h"
+#include "nsDeviceContext.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsRange.h"
@@ -80,6 +81,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsHTMLEditor.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/layers/ScrollInputMethods.h"
+#include "nsViewManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -4659,9 +4661,9 @@ Selection::StartAutoScrollTimer(nsIFrame* aFrame, nsPoint& aPoint,
 nsresult
 Selection::StopAutoScrollTimer()
 {
-  if (mAutoScrollTimer)
+  if (mAutoScrollTimer) {
     return mAutoScrollTimer->Stop();
-
+  }
   return NS_OK; 
 }
 
@@ -4674,29 +4676,57 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint& aPoint)
     (void)mAutoScrollTimer->Stop();
 
   nsPresContext* presContext = aFrame->PresContext();
+  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
   if (!rootPC)
     return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
+  nsWeakFrame weakRootFrame(rootmostFrame);
+  nsWeakFrame weakFrame(aFrame);
   // Get the point relative to the root most frame because the scroll we are
   // about to do will change the coordinates of aFrame.
   nsPoint globalPoint = aPoint + aFrame->GetOffsetToCrossDoc(rootmostFrame);
 
-  bool didScroll = presContext->PresShell()->ScrollFrameRectIntoView(
-    aFrame, 
-    nsRect(aPoint, nsSize(0, 0)),
-    nsIPresShell::ScrollAxis(),
-    nsIPresShell::ScrollAxis(),
-    0);
+  bool done = false;
+  bool didScroll;
+  while (true) {
+    didScroll = shell->ScrollFrameRectIntoView(
+                  aFrame, nsRect(aPoint, nsSize(0, 0)),
+                  nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
+                  0);
+    if (!weakFrame || !weakRootFrame) {
+      return NS_OK;
+    }
+    if (!didScroll && !done) {
+      // If aPoint is at the screen edge then try to scroll anyway, once.
+      RefPtr<nsDeviceContext> dx = shell->GetViewManager()->GetDeviceContext();
+      nsRect screen;
+      dx->GetRect(screen);
+      nsPoint screenPoint = globalPoint +
+                            rootmostFrame->GetScreenRectInAppUnits().TopLeft();
+      nscoord onePx = nsPresContext::AppUnitsPerCSSPixel();
+      nscoord scrollAmount = 10 * onePx;
+      if (std::abs(screen.x - screenPoint.x) <= onePx) {
+        aPoint.x -= scrollAmount;
+      } else if (std::abs(screen.XMost() - screenPoint.x) <= onePx) {
+        aPoint.x += scrollAmount;
+      } else if (std::abs(screen.y - screenPoint.y) <= onePx) {
+        aPoint.y -= scrollAmount;
+      } else if (std::abs(screen.YMost() - screenPoint.y) <= onePx) {
+        aPoint.y += scrollAmount;
+      } else {
+        break;
+      }
+      done = true;
+      continue;
+    }
+    break;
+  }
 
-  //
   // Start the AutoScroll timer if necessary.
-  //
-
-  if (didScroll && mAutoScrollTimer)
-  {
+  if (didScroll && mAutoScrollTimer) {
     nsPoint presContextPoint = globalPoint -
-      presContext->PresShell()->FrameManager()->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
+      shell->FrameManager()->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
     mAutoScrollTimer->Start(presContext, presContextPoint);
   }
 
