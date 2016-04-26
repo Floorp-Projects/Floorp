@@ -181,7 +181,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
       mStopped(false)
     {}
 
-    class StartRunnable final : public nsRunnable {
+    class StartRunnable final : public mozilla::Runnable {
       public:
         explicit StartRunnable(FuzzTestThreadState* threadState) :
           mThreadState(threadState)

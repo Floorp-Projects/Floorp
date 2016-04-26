@@ -61,22 +61,6 @@ MockWebSocketParent.prototype = {
   },
 };
 
-function MockNetworkInfo() {}
-
-MockNetworkInfo.prototype = {
-  getNetworkInformation() {
-    return {mcc: '', mnc: '', ip: ''};
-  },
-
-  getNetworkState(callback) {
-    callback({mcc: '', mnc: '', ip: '', netid: ''});
-  },
-
-  getNetworkStateChangeEventName() {
-    return 'network:offline-status-changed';
-  }
-};
-
 var pushService = Cc["@mozilla.org/push/Service;1"].
                   getService(Ci.nsIPushService).
                   wrappedJSObject;
@@ -87,7 +71,6 @@ var serverMsgs = [];
 addMessageListener("socket-setup", function () {
   pushService.replaceServiceBackend({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockNetworkInfo(),
     makeWebSocket(uri) {
       mockSocket = new MockWebSocketParent(uri);
       while (serverMsgs.length > 0) {

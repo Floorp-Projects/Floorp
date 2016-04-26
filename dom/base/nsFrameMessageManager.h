@@ -317,7 +317,7 @@ private:
 /* A helper class for taking care of many details for async message sending
    within a single process.  Intended to be used like so:
 
-   class MyAsyncMessage : public nsSameProcessAsyncMessageBase, public nsRunnable
+   class MyAsyncMessage : public nsSameProcessAsyncMessageBase, public Runnable
    {
      NS_IMETHOD Run() {
        ReceiveMessage(..., ...);

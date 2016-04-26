@@ -373,7 +373,7 @@ private:
  * A Runnable designed to call a mozIStorageCompletionCallback on
  * the appropriate thread.
  */
-class CallbackComplete final : public nsRunnable
+class CallbackComplete final : public Runnable
 {
 public:
   /**

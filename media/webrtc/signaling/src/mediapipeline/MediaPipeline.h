@@ -278,7 +278,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   bool IsRtp(const unsigned char *data, size_t len);
 };
 
-class ConduitDeleteEvent: public nsRunnable
+class ConduitDeleteEvent: public Runnable
 {
 public:
   explicit ConduitDeleteEvent(already_AddRefed<MediaSessionConduit> aConduit) :

@@ -283,7 +283,7 @@ public:
   }
 };
 
-class TeardownURLRunnable : public nsRunnable
+class TeardownURLRunnable : public Runnable
 {
 public:
   explicit TeardownURLRunnable(URLProxy* aURLProxy)

@@ -672,7 +672,7 @@ static void DoStartTask() {
 }
 
 static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
-  class StartTask : public nsRunnable {
+  class StartTask : public Runnable {
   public:
     NS_IMETHOD Run() {
       DoStartTask();

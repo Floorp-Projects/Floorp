@@ -1714,7 +1714,7 @@ GetFailedProfileLockFile(nsIFile* *aFile, nsIFile* aProfileDir)
   return NS_OK;
 }
 
-class nsFetchTelemetryData : public nsRunnable
+class nsFetchTelemetryData : public Runnable
 {
 public:
   nsFetchTelemetryData(const char* aShutdownTimeFilename,

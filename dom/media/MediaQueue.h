@@ -36,7 +36,7 @@ public:
     Reset();
   }
 
-  inline size_t GetSize() {
+  inline size_t GetSize() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return nsDeque::GetSize();
   }
@@ -65,12 +65,12 @@ public:
     return rv.forget();
   }
 
-  inline RefPtr<T> Peek() {
+  inline RefPtr<T> Peek() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return static_cast<T*>(nsDeque::Peek());
   }
 
-  inline RefPtr<T> PeekFront() {
+  inline RefPtr<T> PeekFront() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return static_cast<T*>(nsDeque::PeekFront());
   }
@@ -83,7 +83,7 @@ public:
     mEndOfStream = false;
   }
 
-  bool AtEndOfStream() {
+  bool AtEndOfStream() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return GetSize() == 0 && mEndOfStream;
   }
@@ -91,7 +91,7 @@ public:
   // Returns true if the media queue has had its last item added to it.
   // This happens when the media stream has been completely decoded. Note this
   // does not mean that the corresponding stream has finished playback.
-  bool IsFinished() {
+  bool IsFinished() const {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mEndOfStream;
   }

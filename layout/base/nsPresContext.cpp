@@ -111,7 +111,7 @@ public:
 
 namespace {
 
-class CharSetChangingRunnable : public nsRunnable
+class CharSetChangingRunnable : public Runnable
 {
 public:
   CharSetChangingRunnable(nsPresContext* aPresContext,
@@ -2400,7 +2400,7 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
   return true;
 }
 
-class DelayedFireDOMPaintEvent : public nsRunnable {
+class DelayedFireDOMPaintEvent : public Runnable {
 public:
   DelayedFireDOMPaintEvent(nsPresContext* aPresContext,
                            nsInvalidateRequestList* aList,

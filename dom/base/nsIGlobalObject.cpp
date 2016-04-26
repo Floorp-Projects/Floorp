@@ -39,7 +39,7 @@ nsIGlobalObject::UnregisterHostObjectURI(const nsACString& aURI)
 
 namespace {
 
-class UnlinkHostObjectURIsRunnable final : public nsRunnable
+class UnlinkHostObjectURIsRunnable final : public mozilla::Runnable
 {
 public:
   explicit UnlinkHostObjectURIsRunnable(nsTArray<nsCString>& aURIs)

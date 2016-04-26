@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-class InjectCrashRunnable : public nsRunnable
+class InjectCrashRunnable : public Runnable
 {
 public:
   InjectCrashRunnable(DWORD pid);

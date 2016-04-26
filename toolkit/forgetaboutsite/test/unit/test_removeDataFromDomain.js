@@ -501,7 +501,6 @@ function* test_push_cleared()
   try {
     PushService.init({
       serverURI: "wss://push.example.org/",
-      networkInfo: new MockDesktopNetworkInfo(),
       db,
       makeWebSocket(uri) {
         return new MockWebSocket(uri, {

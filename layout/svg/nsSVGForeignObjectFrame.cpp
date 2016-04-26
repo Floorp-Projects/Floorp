@@ -276,7 +276,9 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   }
   nsRenderingContext rendCtx(&aContext);
   nsresult rv = nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),
-                                          NS_RGBA(0,0,0,0), flags);
+                                          NS_RGBA(0,0,0,0),
+                                          nsDisplayListBuilderMode::PAINTING,
+                                          flags);
 
   aContext.Restore();
 

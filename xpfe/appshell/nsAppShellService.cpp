@@ -402,7 +402,7 @@ WebBrowserChrome2Stub::Blur()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-class BrowserDestroyer final : public nsRunnable
+class BrowserDestroyer final : public Runnable
 {
 public:
   BrowserDestroyer(nsIWebBrowser *aBrowser, nsISupports *aContainer) :

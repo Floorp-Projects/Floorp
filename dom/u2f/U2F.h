@@ -28,12 +28,6 @@ struct RegisteredKey;
 class U2FRegisterCallback;
 class U2FSignCallback;
 
-} // namespace dom
-} // namespace mozilla
-
-namespace mozilla {
-namespace dom {
-
 // These enumerations are defined in the FIDO U2F Javascript API under the
 // interface "ErrorCode" as constant integers, and thus in the U2F.webidl file.
 // Any changes to these must occur in both locations.
@@ -46,7 +40,7 @@ enum class ErrorCode {
   TIMEOUT = 5
 };
 
-class U2FTask : public nsRunnable
+class U2FTask : public Runnable
 {
 public:
   U2FTask(const nsAString& aOrigin,

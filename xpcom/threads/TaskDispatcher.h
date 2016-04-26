@@ -169,7 +169,7 @@ private:
     AbstractThread::DispatchFailureHandling mFailureHandling;
   };
 
-  class TaskGroupRunnable : public nsRunnable
+  class TaskGroupRunnable : public Runnable
   {
     public:
       explicit TaskGroupRunnable(UniquePtr<PerThreadTaskGroup>&& aTasks) : mTasks(Move(aTasks)) {}

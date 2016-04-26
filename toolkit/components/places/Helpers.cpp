@@ -382,7 +382,7 @@ PlacesEvent::Notify()
 
 NS_IMPL_ISUPPORTS_INHERITED0(
   PlacesEvent
-, nsRunnable
+, Runnable
 )
 
 ////////////////////////////////////////////////////////////////////////////////

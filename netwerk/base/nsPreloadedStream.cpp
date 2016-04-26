@@ -107,7 +107,7 @@ nsPreloadedStream::CloseWithStatus(nsresult aStatus)
     return mStream->CloseWithStatus(aStatus);
 }
 
-class RunOnThread : public nsRunnable
+class RunOnThread : public Runnable
 {
 public:
     RunOnThread(nsIAsyncInputStream *aStream,

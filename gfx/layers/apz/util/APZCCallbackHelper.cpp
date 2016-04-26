@@ -330,7 +330,7 @@ APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
   }
 }
 
-class AcknowledgeScrollUpdateEvent : public nsRunnable
+class AcknowledgeScrollUpdateEvent : public Runnable
 {
     typedef mozilla::layers::FrameMetrics::ViewID ViewID;
 
@@ -341,7 +341,7 @@ public:
     {
     }
 
-    NS_IMETHOD Run() {
+    NS_IMETHOD Run() override {
         MOZ_ASSERT(NS_IsMainThread());
 
         nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(mScrollId);

@@ -231,7 +231,7 @@ LogInvalidCertError(nsNSSSocketInfo* socketInfo,
 // This will cause the PR_Poll in the STS thread to return, so things work
 // correctly even if the STS thread is blocked polling (only) on the file
 // descriptor that is waiting for this result.
-class SSLServerCertVerificationResult : public nsRunnable
+class SSLServerCertVerificationResult : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -704,7 +704,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
 // TransportSecurityInfo::mCallbacks. nsHttpConnection::GetInterface must always
 // execute on the main thread, with the socket transport service thread
 // blocked.
-class CertErrorRunnableRunnable : public nsRunnable
+class CertErrorRunnableRunnable : public Runnable
 {
 public:
   explicit CertErrorRunnableRunnable(CertErrorRunnable* certErrorRunnable)
@@ -726,7 +726,7 @@ private:
   RefPtr<CertErrorRunnable> mCertErrorRunnable;
 };
 
-class SSLServerCertVerificationJob : public nsRunnable
+class SSLServerCertVerificationJob : public Runnable
 {
 public:
   // Must be called only on the socket transport thread

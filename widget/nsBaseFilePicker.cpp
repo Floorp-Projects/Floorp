@@ -64,7 +64,7 @@ LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
  * A runnable to dispatch from the main thread to the main thread to display
  * the file picker while letting the showAsync method return right away.
 */
-class AsyncShowFilePicker : public nsRunnable
+class AsyncShowFilePicker : public mozilla::Runnable
 {
 public:
   AsyncShowFilePicker(nsIFilePicker *aFilePicker,

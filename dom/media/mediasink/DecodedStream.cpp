@@ -270,7 +270,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   mPlaying = true;
   ConnectListener();
 
-  class R : public nsRunnable {
+  class R : public Runnable {
     typedef MozPromiseHolder<GenericPromise> Promise;
   public:
     R(PlaybackInfoInit&& aInit, Promise&& aPromise, OutputStreamManager* aManager)

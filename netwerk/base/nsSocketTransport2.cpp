@@ -69,7 +69,7 @@ static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
-class nsSocketEvent : public nsRunnable
+class nsSocketEvent : public Runnable
 {
 public:
     nsSocketEvent(nsSocketTransport *transport, uint32_t type,
@@ -1770,7 +1770,7 @@ nsSocketTransport::GetFD_Locked()
     return mFD;
 }
 
-class ThunkPRClose : public nsRunnable
+class ThunkPRClose : public Runnable
 {
 public:
   explicit ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}

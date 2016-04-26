@@ -28,7 +28,7 @@ using namespace mozilla;
   * containing an unknown appId.
   */
 class DummyChannel : public nsIJARChannel
-                          , nsRunnable
+                          , Runnable
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -52,7 +52,7 @@ private:
   nsCOMPtr<nsILoadInfo>       mLoadInfo;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(DummyChannel, nsRunnable, nsIRequest, nsIChannel, nsIJARChannel)
+NS_IMPL_ISUPPORTS_INHERITED(DummyChannel, Runnable, nsIRequest, nsIChannel, nsIJARChannel)
 
 DummyChannel::DummyChannel() : mPending(false)
                              , mSuspendCount(0)

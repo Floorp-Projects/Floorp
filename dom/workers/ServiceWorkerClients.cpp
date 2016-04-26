@@ -60,7 +60,7 @@ ServiceWorkerClients::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 namespace {
 
-class GetRunnable final : public nsRunnable
+class GetRunnable final : public Runnable
 {
   class ResolvePromiseWorkerRunnable final : public WorkerRunnable
   {
@@ -142,7 +142,7 @@ public:
   }
 };
 
-class MatchAllRunnable final : public nsRunnable
+class MatchAllRunnable final : public Runnable
 {
   class ResolvePromiseWorkerRunnable final : public WorkerRunnable
   {
@@ -256,7 +256,7 @@ public:
   }
 };
 
-class ClaimRunnable final : public nsRunnable
+class ClaimRunnable final : public Runnable
 {
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
@@ -469,7 +469,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-class OpenWindowRunnable final : public nsRunnable
+class OpenWindowRunnable final : public Runnable
 {
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsString mUrl;

@@ -1140,6 +1140,15 @@ DataChannelConnection::SendDeferredMessages()
                                                 this, channel)));
             was_over_threshold = false;
           }
+          if (buffered_amount == 0) {
+            // buffered-to-not-buffered transition; tell the DOM code in case this makes it
+            // available for GC
+            LOG(("%s: sending NO_LONGER_BUFFERED for %s/%s: %u", __FUNCTION__,
+                 channel->mLabel.get(), channel->mProtocol.get(), channel->mStream));
+            NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
+                                                DataChannelOnMessageAvailable::NO_LONGER_BUFFERED,
+                                                this, channel)));
+          }
         }
       }
       if (channel->mBufferedData.IsEmpty())
@@ -2304,7 +2313,7 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
   return SendMsgInternal(channel, data, len, ppid_final);
 }
 
-class ReadBlobRunnable : public nsRunnable {
+class ReadBlobRunnable : public Runnable {
 public:
   ReadBlobRunnable(DataChannelConnection* aConnection, uint16_t aStream,
     nsIInputStream* aBlob) :
@@ -2349,7 +2358,7 @@ DataChannelConnection::SendBlob(uint16_t stream, nsIInputStream *aBlob)
   return 0;
 }
 
-class DataChannelBlobSendRunnable : public nsRunnable
+class DataChannelBlobSendRunnable : public Runnable
 {
 public:
   DataChannelBlobSendRunnable(already_AddRefed<DataChannelConnection>& aConnection,
@@ -2572,6 +2581,9 @@ DataChannel::DestroyLocked()
                 !mConnection->FindChannelByStream(mStream));
   mStream = INVALID_STREAM;
   mState = CLOSED;
+  NS_DispatchToMainThread(do_AddRef(new DataChannelOnMessageAvailable(
+                                      DataChannelOnMessageAvailable::ON_CHANNEL_CLOSED,
+                                      mConnection, this)));
   mConnection = nullptr;
 }
 

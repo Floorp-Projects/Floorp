@@ -26,7 +26,15 @@ namespace {
 StaticRefPtr<nsXULAlerts> gXULAlerts;
 } // anonymous namespace
 
-NS_IMPL_ISUPPORTS(nsXULAlertObserver, nsIObserver)
+NS_IMPL_CYCLE_COLLECTION(nsXULAlertObserver, mAlertWindow)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULAlertObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULAlertObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULAlertObserver)
 
 NS_IMETHODIMP
 nsXULAlertObserver::Observe(nsISupports* aSubject, const char* aTopic,
@@ -48,6 +56,8 @@ nsXULAlertObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return rv;
 }
 
+// We don't cycle collect nsXULAlerts since gXULAlerts will keep the instance
+// alive till shutdown anyway.
 NS_IMPL_ISUPPORTS(nsXULAlerts, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsIconURI)
 
 /* static */ already_AddRefed<nsXULAlerts>
