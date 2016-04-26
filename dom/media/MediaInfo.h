@@ -14,7 +14,7 @@
 #include "nsTArray.h"
 #include "ImageTypes.h"
 #include "MediaData.h"
-#include "StreamBuffer.h" // for TrackID
+#include "StreamTracks.h" // for TrackID
 #include "TimeUnits.h"
 
 namespace mozilla {

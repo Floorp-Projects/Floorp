@@ -32,6 +32,7 @@
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
+#include "nsTextNode.h"
 
 #include "PLDHashTable.h"
 #include "mozilla/Snprintf.h"

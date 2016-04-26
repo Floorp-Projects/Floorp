@@ -960,7 +960,7 @@ enum ESClassValue {
 };
 
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
-inline bool
+bool
 Unbox(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
 
 #ifdef DEBUG

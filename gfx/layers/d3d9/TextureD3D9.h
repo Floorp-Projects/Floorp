@@ -182,21 +182,15 @@ class D3D9TextureData : public TextureData
 public:
   ~D3D9TextureData();
 
-  virtual bool SupportsMoz2D() const override { return true; }
-
-  virtual bool HasIntermediateBuffer() const override { return true; }
-
   virtual bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
 
   virtual bool Lock(OpenMode aMode, FenceHandle*) override;
 
   virtual void Unlock() override;
 
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
+
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
-
-  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
-
-  virtual gfx::IntSize GetSize() const override { return mSize; }
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
@@ -236,17 +230,13 @@ public:
 
   ~DXGID3D9TextureData();
 
-  virtual gfx::IntSize GetSize() const override { return gfx::IntSize(mDesc.Width, mDesc.Height); }
-
-  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
 
   virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
 
   virtual void Unlock() override {}
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual void Deallocate(ClientIPCAllocator* aAllocator) override {}
 
@@ -259,6 +249,8 @@ public:
   {
     return mDesc;
   }
+
+  gfx::IntSize GetSize() const { return gfx::IntSize(mDesc.Width, mDesc.Height); }
 
 protected:
   DXGID3D9TextureData(gfx::SurfaceFormat aFormat,

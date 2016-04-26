@@ -117,6 +117,17 @@ public:
   HBITMAP mBitmap;
 };
 
+void
+DIBTextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = mSize;
+  aInfo.format = mFormat;
+  aInfo.hasIntermediateBuffer = true;
+  aInfo.hasSynchronization = false;
+  aInfo.supportsMoz2D = true;
+  aInfo.canExposeMappedData = false;
+}
+
 already_AddRefed<gfx::DrawTarget>
 DIBTextureData::BorrowDrawTarget()
 {
@@ -257,7 +268,7 @@ ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 bool
 ShmemDIBTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  if (GetFormat() == gfx::SurfaceFormat::UNKNOWN) {
+  if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     return false;
   }
 

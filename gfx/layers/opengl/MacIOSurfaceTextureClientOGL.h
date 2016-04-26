@@ -20,17 +20,13 @@ public:
 
   ~MacIOSurfaceTextureData();
 
-  virtual gfx::IntSize GetSize() const override;
-
-  virtual gfx::SurfaceFormat GetFormat() const override;
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
 
   virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
 
   virtual void Unlock() override {}
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
-
-  virtual bool HasIntermediateBuffer() const override { return false; }
 
   virtual void Deallocate(ClientIPCAllocator*) override { mSurface = nullptr; }
 

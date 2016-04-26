@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Thu Apr 21 12:58:48 2016 from UCD data files with version info:
+ * Created on Tue Apr 26 07:40:35 2016 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -43,6 +43,9 @@ Standard.
 
 # HangulSyllableType-8.0.0.txt
 # Date: 2014-12-16, 23:07:45 GMT [MD]
+
+# LineBreak-8.0.0.txt
+# Date: 2015-02-13, 09:15:00 GMT [KW, LI]
 
 # File: xidmodifications.txt
 # Version: 8.0.0
@@ -94,6 +97,7 @@ struct nsCharProps2 {
   unsigned char mXidmod:4;
   signed char   mNumericValue:5;
   unsigned char mVertOrient:2;
+  unsigned char mLineBreak; // only 6 bits actually needed
 };
 
 #endif

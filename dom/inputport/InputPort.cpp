@@ -64,7 +64,7 @@ InputPort::Init(nsIInputPortData* aData, nsIInputPortListener* aListener, ErrorR
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);
-  mStream = DOMMediaStream::CreateSourceStream(GetOwner(), graph);
+  mStream = DOMMediaStream::CreateSourceStreamAsInput(GetOwner(), graph);
 }
 
 void

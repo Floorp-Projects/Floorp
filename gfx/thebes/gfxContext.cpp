@@ -122,24 +122,6 @@ gfxContext::~gfxContext()
   MOZ_COUNT_DTOR(gfxContext);
 }
 
-already_AddRefed<gfxASurface>
-gfxContext::CurrentSurface()
-{
-  if (mDT->GetBackendType() == BackendType::CAIRO) {
-    cairo_t* ctx = static_cast<cairo_t*>
-      (mDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
-    if (ctx) {
-      cairo_surface_t* s = cairo_get_group_target(ctx);
-      if (s) {
-        return gfxASurface::Wrap(s);
-      }
-    }
-  }
-
-  // An Azure context doesn't have a surface backing it.
-  return nullptr;
-}
-
 void
 gfxContext::Save()
 {
