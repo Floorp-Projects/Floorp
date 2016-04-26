@@ -360,7 +360,7 @@ public class Distribution {
         }
 
         try {
-            JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
+            JSONObject all = FileUtils.readJSONObjectFromFile(descFile);
 
             if (!all.has("Global")) {
                 Log.e(LOGTAG, "Distribution preferences.json has no Global entry!");
@@ -392,7 +392,7 @@ public class Distribution {
         }
 
         try {
-            final JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
+            final JSONObject all = FileUtils.readJSONObjectFromFile(descFile);
 
             if (!all.has("AndroidPreferences")) {
                 return new JSONObject();
@@ -419,7 +419,7 @@ public class Distribution {
         }
 
         try {
-            return new JSONArray(FileUtils.getFileContents(bookmarks));
+            return new JSONArray(FileUtils.readStringFromFile(bookmarks));
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting bookmarks", e);
             Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
