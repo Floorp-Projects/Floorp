@@ -27,9 +27,4 @@ public class FileUtil {
         }
         return new JSONObject(builder.toString());
     }
-
-    public static void writeJSONObjectToFile(final File file, final JSONObject obj) throws Exception {
-        FileUtils.writeStringToFile(file, obj.toString());
-    }
-
 }
