@@ -179,6 +179,7 @@ public class CheckForUpdatesAction extends FeedAction {
                 .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
+                .addAction(createOpenAction(feed))
                 .addAction(createNotificationSettingsAction())
                 .build();
 
@@ -202,6 +203,7 @@ public class CheckForUpdatesAction extends FeedAction {
                 .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
+                .addAction(createOpenAction(feeds))
                 .setNumber(feeds.size())
                 .addAction(createNotificationSettingsAction())
                 .build();
@@ -229,6 +231,25 @@ public class CheckForUpdatesAction extends FeedAction {
         return intent;
     }
 
+    private NotificationCompat.Action createOpenAction(Feed feed) {
+        final List<Feed> feeds = new ArrayList<>();
+        feeds.add(feed);
+
+        return createOpenAction(feeds);
+    }
+
+    private NotificationCompat.Action createOpenAction(List<Feed> feeds) {
+        Intent intent = createOpenIntent(feeds);
+        intent.putExtra(ContentNotificationsDelegate.EXTRA_READ_BUTTON, true);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        return new NotificationCompat.Action(
+                R.drawable.open_in_browser,
+                context.getString(R.string.content_notification_action_read_now),
+                pendingIntent);
+    }
+
     private NotificationCompat.Action createNotificationSettingsAction() {
         final Intent intent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
         intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
@@ -239,7 +260,7 @@ public class CheckForUpdatesAction extends FeedAction {
         PendingIntent settingsIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         return new NotificationCompat.Action(
-                R.drawable.firefox_settings_alert,
+                R.drawable.settings_notifications,
                 context.getString(R.string.content_notification_action_settings),
                 settingsIntent);
     }
