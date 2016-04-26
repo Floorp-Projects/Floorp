@@ -152,9 +152,9 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MediaStream* source = mInputs[0]->GetSource();
   AutoTArray<AudioSegment,1> audioSegments;
   uint32_t inputChannels = 0;
-  for (StreamBuffer::TrackIter tracks(source->mBuffer, MediaSegment::AUDIO);
+  for (StreamTracks::TrackIter tracks(source->mTracks, MediaSegment::AUDIO);
        !tracks.IsEnded(); tracks.Next()) {
-    const StreamBuffer::Track& inputTrack = *tracks;
+    const StreamTracks::Track& inputTrack = *tracks;
     if (!mInputs[0]->PassTrackThrough(tracks->GetID())) {
       continue;
     }

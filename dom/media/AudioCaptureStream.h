@@ -8,7 +8,7 @@
 
 #include "MediaStreamGraph.h"
 #include "AudioMixer.h"
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include <algorithm>
 
 namespace mozilla

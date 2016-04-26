@@ -638,32 +638,28 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
       RefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
-      RefPtr<gfxASurface> renderingSurface =
-          renderingContext->CurrentSurface();
-      NS_ENSURE_TRUE(renderingSurface, NS_ERROR_OUT_OF_MEMORY);
+      DrawTarget* drawTarget = renderingContext->GetDrawTarget();
+      if (NS_WARN_IF(!drawTarget)) {
+        return NS_ERROR_FAILURE;
+      }
 
       for (int32_t i = mCurrentCanvasList.Length() - 1; i >= 0 ; i--) {
         HTMLCanvasElement* canvas = mCurrentCanvasList[i];
         nsIntSize size = canvas->GetSize();
 
-        RefPtr<gfxASurface> printSurface = renderingSurface->
-           CreateSimilarSurface(
-             gfxContentType::COLOR_ALPHA,
-             size
-           );
-
-        if (!printSurface) {
+        RefPtr<DrawTarget> canvasTarget =
+          drawTarget->CreateSimilarDrawTarget(size, drawTarget->GetFormat());
+        if (!canvasTarget) {
           continue;
         }
 
         nsICanvasRenderingContextInternal* ctx = canvas->GetContextAtIndex(0);
-
         if (!ctx) {
           continue;
         }
 
-          // Initialize the context with the new printSurface.
-        ctx->InitializeWithSurface(nullptr, printSurface, size.width, size.height);
+        // Initialize the context with the new DrawTarget.
+        ctx->InitializeWithDrawTarget(nullptr, canvasTarget);
 
         // Start the rendering process.
         nsWeakFrame weakFrame = this;

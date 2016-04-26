@@ -41,21 +41,13 @@ public:
 
   virtual void Unlock() override {}
 
-  virtual gfx::IntSize GetSize() const override;
-
-  virtual gfx::SurfaceFormat GetFormat() const override;
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
-
-  virtual bool CanExposeMappedData() const override { return true; }
 
   virtual bool BorrowMappedData(MappedTextureData& aMap) override;
 
   virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap) override;
-
-  virtual bool SupportsMoz2D() const override;
-
-  virtual bool HasIntermediateBuffer() const override;
 
   // use TextureClient's default implementation
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
@@ -64,6 +56,10 @@ public:
   void SetDesciptor(const BufferDescriptor& aDesc);
 
 protected:
+  gfx::IntSize GetSize() const;
+
+  gfx::SurfaceFormat GetFormat() const;
+
   static BufferTextureData* CreateInternal(ClientIPCAllocator* aAllocator,
                                            const BufferDescriptor& aDesc,
                                            gfx::BackendType aMoz2DBackend,

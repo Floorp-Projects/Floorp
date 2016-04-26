@@ -45,21 +45,11 @@ public:
 
   virtual void Unlock() override;
 
-  virtual gfx::IntSize GetSize() const override { return mSize; }
-
-  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual bool CanExposeMappedData() const override { return true; }
-
   virtual bool BorrowMappedData(MappedTextureData& aMap) override;
-
-  virtual bool SupportsMoz2D() const override { return true; }
-
-  virtual bool HasIntermediateBuffer() const override { return false; }
-
-  virtual bool HasSynchronization() const override { return true; }
 
   virtual void Deallocate(ClientIPCAllocator*) override;
 

@@ -55,6 +55,7 @@
  **************************************************************/
 
 #include "gfx2DGlue.h"
+#include "gfxEnv.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "mozilla/MathAlgorithms.h"
@@ -3710,10 +3711,6 @@ already_AddRefed<mozilla::gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
-  NS_ASSERTION(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_GDI),
-               "Unexpected render mode for remote drawing");
-
   HDC dc = GetWindowSurface();
   RefPtr<gfxASurface> surf;
 
@@ -3753,7 +3750,7 @@ void
 nsWindow::EndRemoteDrawing()
 {
   if (mTransparencyMode == eTransparencyTransparent) {
-    MOZ_ASSERT(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)
+    MOZ_ASSERT(gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend()
                || mTransparentSurface);
     UpdateTranslucentWindow();
   }
@@ -4984,6 +4981,15 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       if (!mCustomNonClient)
         break;
+
+      // There is a case that rendered result is not kept. Bug 1237617
+      if (wParam == TRUE &&
+          !gfxEnv::DisableForcePresent() &&
+          gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
+        nsCOMPtr<nsIRunnable> event =
+          NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
+        NS_DispatchToMainThread(event);
+      }
 
       // let the dwm handle nc painting on glass
       // Never allow native painting if we are on fullscreen
@@ -6619,8 +6625,7 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
       w->Move(configuration.mBounds.x, configuration.mBounds.y);
 
 
-      if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-          gfxWindowsPlatform::RENDER_DIRECT2D ||
+      if (gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend() ||
           GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_BASIC) {
         // XXX - Workaround for Bug 587508. This will invalidate the part of the
         // plugin window that might be touched by moving content somehow. The
@@ -6850,8 +6855,7 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
     // done just once.
     // Check for Direct2D first.
     sHasBogusPopupsDropShadowOnMultiMonitor =
-      gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-        gfxWindowsPlatform::RENDER_DIRECT2D ? TRI_TRUE : TRI_FALSE;
+      gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend() ? TRI_TRUE : TRI_FALSE;
     if (!sHasBogusPopupsDropShadowOnMultiMonitor) {
       // Otherwise check if Direct3D 9 may be used.
       if (gfxPlatform::GetPlatform()->ShouldUseLayersAcceleration() &&
