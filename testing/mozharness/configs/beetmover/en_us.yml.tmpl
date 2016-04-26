@@ -32,6 +32,9 @@ mapping:
     mozharness_package:
       artifact: {{ artifact_base_url }}/mozharness.zip
       s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/mozharness.zip
+    xpi:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.langpack.xpi
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/xpi/{{ locale }}.xpi
 
   {% if platform == "win32" %}
     full_installer:
