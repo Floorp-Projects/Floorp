@@ -212,7 +212,7 @@ public:
         }
 
         RefPtr<ID3D11Device> device;
-        if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device)) {
+        if (!gfxWindowsPlatform::GetPlatform()->GetD3D11DeviceForCurrentThread(&device)) {
             return;
         }
 
@@ -268,7 +268,7 @@ SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* o
     MOZ_ASSERT(out_surface);
 
     RefPtr<ID3D11Device> device;
-    if (!gfxWindowsPlatform::GetPlatform()->GetD3D11Device(&device)) {
+    if (!gfxWindowsPlatform::GetPlatform()->GetD3D11DeviceForCurrentThread(&device)) {
         return false;
     }
 
