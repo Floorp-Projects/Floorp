@@ -637,10 +637,19 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     // SkFontHost_cairo does not support subpixel text, so only enable it for other font hosts.
     paint.mPaint.setSubpixelText(true);
 
-    if (aFont->GetType() == FontType::MAC) {
+    if (aFont->GetType() == FontType::MAC &&
+       (shouldLCDRenderText || aOptions.mAntialiasMode == AntialiasMode::GRAY)) {
+      // SkFontHost_mac only enables CG Font Smoothing if hinting is disabled.
+      // CG Font Smoothing normally enables subpixel AA in CG, but Skia supports
+      // font smoothing with grayscale AA.
       // SkFontHost_mac only supports subpixel antialiasing when hinting is turned off.
-      // For grayscale AA, we want to disable font smoothing as the only time we should
-      // use grayscale AA is with explicit -moz-osx-font-smoothing
+      // We can get grayscale AA if we have -moz-osx-font-smoothing: grayscale
+      // explicitly enabled or for transparent surfaces.
+      // If we have AA grayscale explicit through the draw options,
+      // then we want to disable font smoothing.
+      // If we have a transparent surface, shouldLCDRenderText will be false. But unless
+      // grayscale font smoothing is explicitly requested, we still want Skia to use
+      // CG Font smoothing.
       paint.mPaint.setHinting(SkPaint::kNo_Hinting);
     } else {
       paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
