@@ -129,6 +129,16 @@ AddonPathService::InsertPath(const nsAString& path, const nsAString& addonIdStri
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AddonPathService::MapURIToAddonId(nsIURI* aURI, nsAString& addonIdString)
+{
+  if (JSAddonId* id = MapURIToAddonID(aURI)) {
+    JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(JS::StringOfAddonId(id));
+    AssignJSFlatString(addonIdString, flat);
+  }
+  return NS_OK;
+}
+
 static nsresult
 ResolveURI(nsIURI* aURI, nsAString& out)
 {
