@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "secerr.h"
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
@@ -16,7 +15,6 @@ extern "C" {
 #include "libssl_internals.h"
 }
 
-#include "scoped_ptrs.h"
 #include "tls_parser.h"
 #include "tls_filter.h"
 #include "tls_connect.h"
@@ -110,44 +108,42 @@ class TlsServerKeyExchangeEcdhe {
   DataBuffer public_key_;
 };
 
-class TlsChaCha20Poly1305Test : public TlsConnectTls12 {};
+class TlsChaCha20Poly1305Test : public TlsConnectTls12 {
+ public:
+  void ConnectSendReceive(PRUint32 cipher_suite)
+  {
+    // Disable all ciphers.
+    client_->DisableCiphersByKeyExchange(ssl_kea_rsa);
+    client_->DisableCiphersByKeyExchange(ssl_kea_dh);
+    client_->DisableCiphersByKeyExchange(ssl_kea_ecdh);
+
+    // Re-enable ChaCha20/Poly1305.
+    SECStatus rv = SSL_CipherPrefSet(client_->ssl_fd(), cipher_suite, PR_TRUE);
+    EXPECT_EQ(SECSuccess, rv);
+
+    Connect();
+    SendReceive();
+
+    // Check that we used the right cipher suite.
+    int16_t actual, expected = static_cast<int16_t>(cipher_suite);
+    EXPECT_TRUE(client_->cipher_suite(&actual) && actual == expected);
+    EXPECT_TRUE(server_->cipher_suite(&actual) && actual == expected);
+  }
+};
 
 TEST_P(TlsConnectGeneric, SetupOnly) {}
 
 TEST_P(TlsConnectGeneric, Connect) {
   SetExpectedVersion(std::get<1>(GetParam()));
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
 TEST_P(TlsConnectGeneric, ConnectEcdsa) {
   SetExpectedVersion(std::get<1>(GetParam()));
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
-}
-
-TEST_P(TlsConnectGenericPre13, ConnectEcdh) {
-  SetExpectedVersion(std::get<1>(GetParam()));
-  Reset(TlsAgent::kServerEcdhEcdsa);
-  DisableDheAndEcdheCiphers();
-  EnableSomeEcdhCiphers();
-
-  Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdh_ecdsa);
-}
-
-TEST_P(TlsConnectGenericPre13, ConnectEcdhWithoutDisablingSuites) {
-  SetExpectedVersion(std::get<1>(GetParam()));
-  Reset(TlsAgent::kServerEcdhEcdsa);
-  EnableSomeEcdhCiphers();
-
-  Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdh_ecdsa);
-}
-
-TEST_P(TlsConnectStreamPre13, ConnectRC4) {
-  ConnectWithCipherSuite(TLS_RSA_WITH_RC4_128_SHA);
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectFalseStart) {
@@ -160,7 +156,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumed) {
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
   Connect();
 
-  Reset();
+  ResetRsa();
   ExpectResumption(RESUME_SESSIONID);
   Connect();
 }
@@ -170,7 +166,7 @@ TEST_P(TlsConnectGeneric, ConnectClientCacheDisabled) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ExpectResumption(RESUME_NONE);
   Connect();
   SendReceive();
@@ -181,7 +177,7 @@ TEST_P(TlsConnectGeneric, ConnectServerCacheDisabled) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ExpectResumption(RESUME_NONE);
   Connect();
   SendReceive();
@@ -192,7 +188,7 @@ TEST_P(TlsConnectGeneric, ConnectSessionCacheDisabled) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ExpectResumption(RESUME_NONE);
   Connect();
   SendReceive();
@@ -204,7 +200,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeSupportBoth) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   ExpectResumption(RESUME_TICKET);
   Connect();
@@ -218,7 +214,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientTicketServerBoth) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_TICKET, RESUME_BOTH);
   ExpectResumption(RESUME_NONE);
   Connect();
@@ -231,7 +227,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicket) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_TICKET);
   Connect();
@@ -245,7 +241,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeClientServerTicketOnly) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
   Connect();
@@ -257,7 +253,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeClientBothServerNone) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_BOTH, RESUME_NONE);
   ExpectResumption(RESUME_NONE);
   Connect();
@@ -269,7 +265,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeClientNoneServerBoth) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_NONE, RESUME_BOTH);
   ExpectResumption(RESUME_NONE);
   Connect();
@@ -286,7 +282,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumeWithHigherVersion) {
                            SSL_LIBRARY_VERSION_TLS_1_1);
   Connect();
 
-  Reset();
+  ResetRsa();
   EnsureTlsSetup();
   SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_2);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
@@ -303,7 +299,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {
   Connect();
   SendReceive();
 
-  Reset();
+  ResetRsa();
   ClearServerCache();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ExpectResumption(RESUME_NONE);
@@ -311,56 +307,11 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {
   SendReceive();
 }
 
-// This callback switches out the "server" cert used on the server with
-// the "client" certificate, which should be the same type.
-static int32_t SwitchCertificates(TlsAgent& agent, const SECItem *srvNameArr,
-                                  uint32_t srvNameArrSize) {
-  bool ok = agent.ConfigServerCert("client");
-  if (!ok) return SSL_SNI_SEND_ALERT;
-
-  return 0; // first config
-};
-
-TEST_P(TlsConnectGeneric, ServerSNICertSwitch) {
-  Connect();
-  ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
-
-  Reset();
-  EnsureTlsSetup();
-  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
-
-  server_->SetSniCallback(SwitchCertificates);
-
-  Connect();
-  ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  EXPECT_FALSE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
-}
-
-TEST_P(TlsConnectGeneric, ServerSNICertTypeSwitch) {
-  Reset(TlsAgent::kServerEcdsa);
-  Connect();
-  ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
-
-  Reset();
-  EnsureTlsSetup();
-  ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
-
-  // Because we configure an RSA certificate here, it only adds a second, unused
-  // certificate, which has no effect on what the server uses.
-  server_->SetSniCallback(SwitchCertificates);
-
-  Connect();
-  ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
-  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
-  EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
-}
-
 TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
 // In TLS 1.3, the client sends its cert rejection on the
@@ -376,12 +327,12 @@ TEST_P(TlsConnectStream, DISABLED_ClientAuthRequiredRejected) {
 TEST_P(TlsConnectGeneric, ClientAuthRequestedRejected) {
   server_->RequestClientAuth(false);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
 
 TEST_P(TlsConnectGeneric, ClientAuthEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
@@ -408,7 +359,7 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   Connect();
 }
 
@@ -422,7 +373,7 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
   };
   client_->SetSignatureAlgorithms(clientAlgorithms,
                                   PR_ARRAY_SIZE(clientAlgorithms));
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   Connect();
 }
 
@@ -431,7 +382,7 @@ TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   Connect();
 }
 
@@ -445,19 +396,19 @@ TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
                                   PR_ARRAY_SIZE(SignatureRsaSha256));
   DisableDheAndEcdheCiphers();
   Connect();
-  CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
+  CheckKeys(ssl_kea_rsa, ssl_auth_rsa);
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSA) {
   DisableDheAndEcdheCiphers();
   Connect();
-  CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
+  CheckKeys(ssl_kea_rsa, ssl_auth_rsa);
 }
 
 // Signature algorithms governs both verification and generation of signatures.
 // With ECDSA, we need to at least have a common signature algorithm configured.
 TEST_P(TlsConnectTls12, SignatureAlgorithmNoOverlapEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
@@ -467,7 +418,7 @@ TEST_P(TlsConnectTls12, SignatureAlgorithmNoOverlapEcdsa) {
 
 // Pre 1.2, a mismatch on signature algorithms shouldn't affect anything.
 TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+  ResetEcdsa();
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
@@ -586,7 +537,7 @@ TEST_P(TlsConnectStreamPre13, ConnectAndServerRenegotiate) {
 TEST_P(TlsConnectGenericPre13, ConnectDhe) {
   DisableEcdheCiphers();
   Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_dh, ssl_auth_rsa);
 }
 
 // Test that a totally bogus EPMS is handled correctly.
@@ -632,7 +583,7 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
 
 TEST_P(TlsConnectGeneric, ConnectEcdhe) {
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 }
 
 // Prior to TLS 1.3, we were not fully ephemeral; though 1.3 fixes that
@@ -641,18 +592,18 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceReuseKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
   // Restart
-  Reset();
+  ResetRsa();
   TlsInspectorRecordHandshakeMessage* i2 =
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -673,12 +624,12 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
   server_->SetPacketFilter(i1);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   TlsServerKeyExchangeEcdhe dhe1;
   EXPECT_TRUE(dhe1.Parse(i1->buffer()));
 
   // Restart
-  Reset();
+  ResetRsa();
   server_->EnsureTlsSetup();
   rv = SSL_OptionSet(server_->ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
   EXPECT_EQ(SECSuccess, rv);
@@ -687,7 +638,7 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdheTwiceNewKey) {
   server_->SetPacketFilter(i2);
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 
   TlsServerKeyExchangeEcdhe dhe2;
   EXPECT_TRUE(dhe2.Parse(i2->buffer()));
@@ -704,16 +655,16 @@ TEST_P(TlsConnectGeneric, ConnectSendReceive) {
 }
 
 TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305DheRsa) {
-  ConnectWithCipherSuite(TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+  ConnectSendReceive(TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
 }
 
 TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305EcdheRsa) {
-  ConnectWithCipherSuite(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+  ConnectSendReceive(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
 }
 
 TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305EcdheEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
-  ConnectWithCipherSuite(TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
+  ResetEcdsa();
+  ConnectSendReceive(TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
 }
 
 // The next two tests takes advantage of the fact that we
@@ -757,7 +708,7 @@ TEST_P(TlsConnectStream, ShortRead) {
 TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecret) {
   EnableExtendedMasterSecret();
   Connect();
-  Reset();
+  ResetRsa();
   ExpectResumption(RESUME_SESSIONID);
   EnableExtendedMasterSecret();
   Connect();
@@ -812,7 +763,7 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretECDHE) {
   EnableExtendedMasterSecret();
   Connect();
 
-  Reset();
+  ResetRsa();
   EnableExtendedMasterSecret();
   ExpectResumption(RESUME_SESSIONID);
   Connect();
@@ -823,7 +774,7 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretTicket) {
   EnableExtendedMasterSecret();
   Connect();
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
 
   EnableExtendedMasterSecret();
@@ -850,7 +801,7 @@ TEST_P(TlsConnectGenericPre13,
   EnableExtendedMasterSecret();
   Connect();
 
-  Reset();
+  ResetRsa();
   server_->EnableExtendedMasterSecret();
   auto alert_recorder = new TlsAlertRecorder();
   server_->SetPacketFilter(alert_recorder);
@@ -865,7 +816,7 @@ TEST_P(TlsConnectGenericPre13,
   ExpectExtendedMasterSecret(false);
   Connect();
 
-  Reset();
+  ResetRsa();
   EnableExtendedMasterSecret();
   ExpectResumption(RESUME_NONE);
   Connect();
@@ -1003,11 +954,9 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   Connect();
   SendReceive(); // Need to read so that we absorb the session ticket.
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  uint16_t original_suite;
-  EXPECT_TRUE(client_->cipher_suite(&original_suite));
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
 
-  Reset();
+  ResetRsa();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture *c1 =
       new TlsExtensionCapture(kTlsExtensionPreSharedKey);
@@ -1018,12 +967,11 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   DataBuffer psk1(c1->extension());
   ASSERT_GE(psk1.len(), 0UL);
-  ASSERT_TRUE(!!client_->peer_cert());
 
-  Reset();
+  ResetRsa();
   ClearStats();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture *c2 =
@@ -1035,18 +983,9 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   SendReceive();
-  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa);
   DataBuffer psk2(c2->extension());
   ASSERT_GE(psk2.len(), 0UL);
-  ASSERT_TRUE(!!client_->peer_cert());
-
-  // Check that the cipher suite is reported the same on both sides, though in
-  // TLS 1.3 resumption actually negotiates a different cipher suite.
-  uint16_t resumed_suite;
-  EXPECT_TRUE(server_->cipher_suite(&resumed_suite));
-  EXPECT_EQ(original_suite, resumed_suite);
-  EXPECT_TRUE(client_->cipher_suite(&resumed_suite));
-  EXPECT_EQ(original_suite, resumed_suite);
 
   // TODO(ekr@rtfm.com): This will change when we fix bug 1257047.
   ASSERT_EQ(psk1, psk2);
@@ -1171,64 +1110,6 @@ TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   Connect();
   server_->SendData(10);
   Receive(10);
-}
-
-// Replace the point in the client key exchange message with an empty one
-class ECCClientKEXFilter : public TlsHandshakeFilter {
-public:
-  ECCClientKEXFilter() {}
-
-protected:
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
-                                               const DataBuffer &input,
-                                               DataBuffer *output) {
-    if (header.handshake_type() != kTlsHandshakeClientKeyExchange) {
-      return KEEP;
-    }
-
-    // Replace the client key exchange message with an empty point
-    output->Allocate(1);
-    output->Write(0, 0U, 1); // set point length 0
-    return CHANGE;
-  }
-};
-
-// Replace the point in the server key exchange message with an empty one
-class ECCServerKEXFilter : public TlsHandshakeFilter {
-public:
-  ECCServerKEXFilter() {}
-
-protected:
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
-                                               const DataBuffer &input,
-                                               DataBuffer *output) {
-    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
-      return KEEP;
-    }
-
-    // Replace the server key exchange message with an empty point
-    output->Allocate(4);
-    output->Write(0, 3U, 1); // named curve
-    uint32_t curve;
-    EXPECT_TRUE(input.Read(1, 2, &curve)); // get curve id
-    output->Write(1, curve, 2); // write curve id
-    output->Write(3, 0U, 1); // point length 0
-    return CHANGE;
-  }
-};
-
-TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyServerPoint) {
-  // add packet filter
-  server_->SetPacketFilter(new ECCServerKEXFilter());
-  ConnectExpectFail();
-  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_KEY_EXCH);
-}
-
-TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyClientPoint) {
-  // add packet filter
-  client_->SetPacketFilter(new ECCClientKEXFilter());
-  ConnectExpectFail();
-  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
 }
 
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
