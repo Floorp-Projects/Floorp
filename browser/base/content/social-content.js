@@ -18,22 +18,12 @@ var gContent = content;
 
 // social frames are always treated as app tabs
 docShell.isAppTab = true;
-var gHookedWindowCloseForPanelClose = false;
 
 var gDOMContentLoaded = false;
 addEventListener("DOMContentLoaded", function() {
-  if (event.target == content.document) {
-    gDOMContentLoaded = true;
-    sendAsyncMessage("DOMContentLoaded");
-  }
+  gDOMContentLoaded = true;
+  sendAsyncMessage("DOMContentLoaded");
 });
-addEventListener("unload", function(event) {
-  if (event.target == content.document) {
-    gDOMContentLoaded = false;
-    gHookedWindowCloseForPanelClose = false;
-  }
-}, true);
-
 var gDOMTitleChangedByUs = false;
 addEventListener("DOMTitleChanged", function(e) {
   if (!gDOMTitleChangedByUs) {
@@ -43,6 +33,7 @@ addEventListener("DOMTitleChanged", function(e) {
   }
   gDOMTitleChangedByUs = false;
 });
+var gHookedWindowCloseForPanelClose = false;
 
 addEventListener("Social:Notification", function(event) {
   let frame = docShell.chromeEventHandler;
@@ -51,15 +42,6 @@ addEventListener("Social:Notification", function(event) {
     "origin": origin,
     "detail": JSON.parse(event.detail)
   });
-});
-
-addMessageListener("Social:OpenGraphData", (message) => {
-  let ev = new content.CustomEvent("OpenGraphData", { detail: JSON.stringify(message.data) });
-  content.dispatchEvent(ev);
-});
-
-addMessageListener("Social:ClearFrame", (message) => {
-  docShell.createAboutBlankContentViewer(null);
 });
 
 // Error handling class used to listen for network errors in the social frames
