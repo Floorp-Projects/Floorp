@@ -87,8 +87,10 @@ const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const IMAGE_FETCHING_TIMEOUT = 500;
+const RX_FUNC_NAME = /((var|const|let)\s+)?([\w$.]+\s*[:=]\s*)*(function)?\s*\*?\s*([\w$]+)?\s*$/;
+
 // The possible completions to a ':' with added score to give certain values
 // some preference.
 const PSEUDO_SELECTORS = [
@@ -553,28 +555,22 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     /*
     The script returned is the whole script and
     scriptSource.substr(script.sourceStart, script.sourceLength) returns
-    something like:
+    something like this:
       () { doSomething(); }
 
-    So we need to work back to the preceeding \n, ; or } so we can get the
-      appropriate function info e.g.:
-      () => { doSomething(); }
-      function doit() { doSomething(); }
-      doit: function() { doSomething(); }
+    So we need to use some regex magic to get the appropriate function info
+    e.g.:
+      () => { ... }
+      function doit() { ... }
+      doit: function() { ... }
+      es6func() { ... }
+      var|let|const foo = function () { ... }
+      function generator*() { ... }
     */
     let scriptBeforeFunc = scriptSource.substr(0, script.sourceStart);
-    let lastEnding = Math.max(
-      scriptBeforeFunc.lastIndexOf(";"),
-      scriptBeforeFunc.lastIndexOf("}"),
-      scriptBeforeFunc.lastIndexOf("{"),
-      scriptBeforeFunc.lastIndexOf("("),
-      scriptBeforeFunc.lastIndexOf(","),
-      scriptBeforeFunc.lastIndexOf("!")
-    );
-
-    if (lastEnding !== -1) {
-      let functionPrefix = scriptBeforeFunc.substr(lastEnding + 1);
-      functionSource = functionPrefix + functionSource;
+    let matches = scriptBeforeFunc.match(RX_FUNC_NAME);
+    if (matches && matches.length > 0) {
+      functionSource = matches[0].trim() + functionSource;
     }
 
     let dom0 = false;

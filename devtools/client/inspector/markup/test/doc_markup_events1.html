@@ -19,15 +19,6 @@
     #noevents,
     #DOM0,
     #handleevent,
-    #fatarrow,
-    #bound,
-    #boundhe {
-      border: 1px solid #000;
-      width: 200px;
-      min-height: 1em;
-      cursor: pointer;
-    }
-
     #output,
     #noevents {
       cursor: auto;
@@ -41,22 +32,14 @@
       function init() {
         let container = document.getElementById("container");
         let multiple = document.getElementById("multiple");
-        let fatarrow = document.getElementById("fatarrow");
 
         container.addEventListener("mouseover", mouseoverHandler, true);
         multiple.addEventListener("click", clickHandler, false);
         multiple.addEventListener("mouseup", mouseupHandler, false);
 
-        new handleEventClick();
-        new boundHandleEventClick();
-
-        let bound = document.getElementById("bound");
-        boundClickHandler = boundClickHandler.bind(this);
-        bound.addEventListener("click", boundClickHandler);
-
-        fatarrow.addEventListener("click", event => {
-          alert("Yay for the fat arrow!");
-        });
+        let he = new handleEventClick();
+        let handleevent = document.getElementById("handleevent");
+        handleevent.addEventListener("click", he);
       }
 
       function mouseoverHandler(event) {
@@ -71,54 +54,38 @@
         output.textContent = "click";
       }
 
-      function boundClickHandler(event) {
-        alert("Bound event clicked");
-      }
-
       function mouseupHandler(event) {
         let output = document.getElementById("output");
         output.textContent = "mouseup";
       }
 
       function handleEventClick(hehe) {
-        let handleevent = document.getElementById("handleevent");
-        handleevent.addEventListener("click", this);
+
       }
 
       handleEventClick.prototype = {
         handleEvent: function(blah) {
-          alert("handleEvent clicked");
-        }
-      };
-
-      function boundHandleEventClick() {
-        let boundhe = document.getElementById("boundhe");
-        this.handleEvent = this.handleEvent.bind(this);
-        boundhe.addEventListener("click", this);
-      }
-
-      boundHandleEventClick.prototype = {
-        handleEvent: function() {
-          alert("boundHandleEvent clicked");
+          alert("handleEvent");
         }
       };
 
       function noeventsClickHandler(event) {
         alert("noevents has an event listener");
-      };
+      }
 
       function addNoeventsClickHandler() {
         let noevents = document.getElementById("noevents");
         noevents.addEventListener("click", noeventsClickHandler);
-      };
+      }
 
       function removeNoeventsClickHandler() {
         let noevents = document.getElementById("noevents");
         noevents.removeEventListener("click", noeventsClickHandler);
-      };
+      }
     </script>
   </head>
   <body onload="init();">
+    <h1>Events test 1</h1>
     <div id="container">
       <div>1</div>
       <div>2</div>
@@ -139,11 +106,8 @@
       <div id="multiple">multiple</div>
     </div>
     <div id="output"></div>
-    <div id="noevents">No events here</div>
-    <div id="DOM0" onclick="alert('hi')">DOM0 event here</div>
-    <div id="handleevent">handleEvent event here</div>
-    <div id="fatarrow">Fat arrow event</div>
-    <div id="boundhe">Bound handleEvent</div>
-    <div id="bound">Bound event</div>
+    <div id="noevents">noevents</div>
+    <div id="DOM0" onclick="alert('DOM0')">DOM0 event here</div>
+    <div id="handleevent">handleEvent</div>
   </body>
 </html>
