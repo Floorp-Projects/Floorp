@@ -86,6 +86,20 @@ UnreachableTrap()
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNREACHABLE);
 }
 
+static void
+IntegerOverflowTrap()
+{
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_INTEGER_OVERFLOW);
+}
+
+static void
+InvalidConversionToIntegerTrap()
+{
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_INVALID_CONVERSION);
+}
+
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
@@ -238,6 +252,10 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(BadIndirectCall, Args_General0);
       case SymbolicAddress::UnreachableTrap:
         return FuncCast(UnreachableTrap, Args_General0);
+      case SymbolicAddress::IntegerOverflowTrap:
+        return FuncCast(IntegerOverflowTrap, Args_General0);
+      case SymbolicAddress::InvalidConversionToIntegerTrap:
+        return FuncCast(InvalidConversionToIntegerTrap, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::InvokeImport_Void:
