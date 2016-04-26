@@ -36,9 +36,8 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
 {
     mozilla::Maybe<AutoCheckCannotGC> nogc;
 
-    JS::ubi::RootList rootList(rt, nogc);
+    JS::ubi::RootList rootList(rt, nogc, true);
     MOZ_ASSERT(rootList.init());
-    rootList.wantNames = true;
 
     NodeSet targets;
     bool ok = targets.init() && targets.putNew(node);
