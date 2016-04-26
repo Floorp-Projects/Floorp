@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class PlayingRefChangeHandler final : public nsRunnable
+class PlayingRefChangeHandler final : public Runnable
 {
 public:
   enum ChangeType { ADDREF, RELEASE };

@@ -450,7 +450,7 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
     return n;
 }
 
-class NotifyDNSResolution: public nsRunnable
+class NotifyDNSResolution: public Runnable
 {
 public:
     explicit NotifyDNSResolution(const nsACString &aHostname)
@@ -1052,7 +1052,7 @@ nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     // - mLock
 
     size_t n = mallocSizeOf(this);
-    n += mResolver->SizeOfIncludingThis(mallocSizeOf);
+    n += mResolver ? mResolver->SizeOfIncludingThis(mallocSizeOf) : 0;
     n += mIPv4OnlyDomains.SizeOfExcludingThisIfUnshared(mallocSizeOf);
     n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
     return n;

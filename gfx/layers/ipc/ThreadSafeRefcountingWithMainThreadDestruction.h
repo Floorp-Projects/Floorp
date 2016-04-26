@@ -39,7 +39,7 @@ struct HelperForMainThreadDestruction
 };
 
 template<typename T>
-struct DeleteOnMainThreadTask: public nsRunnable
+struct DeleteOnMainThreadTask : public Runnable
 {
   T* mToDelete;
   explicit DeleteOnMainThreadTask(T* aToDelete) : mToDelete(aToDelete) {}

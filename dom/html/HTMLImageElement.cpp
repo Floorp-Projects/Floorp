@@ -77,7 +77,7 @@ namespace dom {
 // Calls LoadSelectedImage on host element unless it has been superseded or
 // canceled -- this is the synchronous section of "update the image data".
 // https://html.spec.whatwg.org/multipage/embedded-content.html#update-the-image-data
-class ImageLoadTask : public nsRunnable
+class ImageLoadTask : public Runnable
 {
 public:
   ImageLoadTask(HTMLImageElement *aElement, bool aAlwaysLoad)
@@ -1151,7 +1151,12 @@ HTMLImageElement::UpdateResponsiveSource()
     mResponsiveSelector = nullptr;
   }
 
-  return !hadSelector || mResponsiveSelector;
+  // If we reach this point, either:
+  // - there was no selector originally, and there is not one now
+  // - there was no selector originally, and there is one now
+  // - there was a selector, and there is a different one now
+  // - there was a selector, and there is not one now
+  return hadSelector || mResponsiveSelector;
 }
 
 /*static */ bool

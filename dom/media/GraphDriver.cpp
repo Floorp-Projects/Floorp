@@ -163,7 +163,7 @@ ThreadedDriver::~ThreadedDriver()
     mThread->Shutdown();
   }
 }
-class MediaStreamGraphInitThreadRunnable : public nsRunnable {
+class MediaStreamGraphInitThreadRunnable : public Runnable {
 public:
   explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
     : mDriver(aDriver)
@@ -405,7 +405,7 @@ OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTi
 
 }
 
-class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
+class MediaStreamGraphShutdownThreadRunnable : public Runnable {
 public:
   explicit MediaStreamGraphShutdownThreadRunnable(nsIThread* aThread)
     : mThread(aThread)

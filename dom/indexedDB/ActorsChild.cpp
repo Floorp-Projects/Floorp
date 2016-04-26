@@ -898,7 +898,7 @@ protected:
   Recv__delete__(const uint32_t& aPermission) override;
 };
 
-class WorkerPermissionChallenge final : public nsRunnable
+class WorkerPermissionChallenge final : public Runnable
                                       , public WorkerFeature
 {
 public:

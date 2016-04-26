@@ -339,7 +339,7 @@ private:
   RefPtr<SourceMediaStream> mStream; // threadsafe refcnt
 };
 
-class GetUserMediaNotificationEvent: public nsRunnable
+class GetUserMediaNotificationEvent: public Runnable
 {
   public:
     enum GetUserMediaStatus {
@@ -389,7 +389,7 @@ typedef enum {
 class MediaManager;
 class GetUserMediaTask;
 
-class ReleaseMediaOperationResource : public nsRunnable
+class ReleaseMediaOperationResource : public Runnable
 {
 public:
   ReleaseMediaOperationResource(already_AddRefed<DOMMediaStream> aStream,

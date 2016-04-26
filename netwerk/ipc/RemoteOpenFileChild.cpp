@@ -35,7 +35,7 @@ namespace net {
 // Helper class to dispatch events async on windows/OSX
 //-----------------------------------------------------------------------------
 
-class CallsListenerInNewEvent : public nsRunnable
+class CallsListenerInNewEvent : public Runnable
 {
 public:
     CallsListenerInNewEvent(nsIRemoteOpenFileListener *aListener, nsresult aRv)

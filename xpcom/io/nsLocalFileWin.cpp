@@ -78,7 +78,7 @@ using namespace mozilla;
  * A runnable to dispatch back to the main thread when
  * AsyncLocalFileWinOperation completes.
 */
-class AsyncLocalFileWinDone : public nsRunnable
+class AsyncLocalFileWinDone : public Runnable
 {
 public:
   AsyncLocalFileWinDone() :
@@ -107,7 +107,7 @@ private:
  * A runnable to dispatch from the main thread when an async operation should
  * be performed.
 */
-class AsyncLocalFileWinOperation : public nsRunnable
+class AsyncLocalFileWinOperation : public Runnable
 {
 public:
   enum FileOp { RevealOp, LaunchOp };

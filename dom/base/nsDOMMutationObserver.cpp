@@ -855,7 +855,7 @@ nsDOMMutationObserver::HandleMutation()
   mCallback->Call(this, mutations, *this);
 }
 
-class AsyncMutationHandler : public nsRunnable
+class AsyncMutationHandler : public mozilla::Runnable
 {
 public:
   NS_IMETHOD Run()

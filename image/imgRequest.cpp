@@ -308,7 +308,7 @@ imgRequest::CancelAndAbort(nsresult aStatus)
   }
 }
 
-class imgRequestMainThreadCancel : public nsRunnable
+class imgRequestMainThreadCancel : public Runnable
 {
 public:
   imgRequestMainThreadCancel(imgRequest* aImgRequest, nsresult aStatus)
@@ -358,7 +358,7 @@ imgRequest::ContinueCancel(nsresult aStatus)
   }
 }
 
-class imgRequestMainThreadEvict : public nsRunnable
+class imgRequestMainThreadEvict : public Runnable
 {
 public:
   explicit imgRequestMainThreadEvict(imgRequest* aImgRequest)
@@ -992,7 +992,7 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
   return result;
 }
 
-class FinishPreparingForNewPartRunnable final : public nsRunnable
+class FinishPreparingForNewPartRunnable final : public Runnable
 {
 public:
   FinishPreparingForNewPartRunnable(imgRequest* aImgRequest,

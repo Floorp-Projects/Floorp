@@ -29,7 +29,7 @@
 namespace mozilla {
 namespace crashreporter {
 
-class LSPAnnotationGatherer : public nsRunnable
+class LSPAnnotationGatherer : public Runnable
 {
   ~LSPAnnotationGatherer() {}
 

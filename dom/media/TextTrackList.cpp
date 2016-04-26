@@ -136,7 +136,7 @@ TextTrackList::DidSeek()
   }
 }
 
-class TrackEventRunner final: public nsRunnable
+class TrackEventRunner final: public Runnable
 {
 public:
   TrackEventRunner(TextTrackList* aList, nsIDOMEvent* aEvent)

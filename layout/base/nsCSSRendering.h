@@ -528,7 +528,8 @@ struct nsCSSRendering {
                                    nsIFrame* aForFrame,
                                    const nsRect& aBorderArea,
                                    const nsStyleImageLayers::Layer& aLayer,
-                                   nsIFrame** aAttachedToFrame);
+                                   nsIFrame** aAttachedToFrame,
+                                   bool* aOutTransformedFixed);
 
   static nsBackgroundLayerState
   PrepareImageLayer(nsPresContext* aPresContext,
@@ -537,6 +538,7 @@ struct nsCSSRendering {
                     const nsRect& aBorderArea,
                     const nsRect& aBGClipRect,
                     const nsStyleImageLayers::Layer& aLayer,
+                    bool* aOutIsTransformedFixed = nullptr,
                     CompositionOp aCompositionOp = CompositionOp::OP_OVER);
 
   struct ImageLayerClipState {

@@ -15,7 +15,7 @@ nsresult CreateResetProfile(nsIToolkitProfileService* aProfileSvc,
 
 nsresult ProfileResetCleanup(nsIToolkitProfile* aOldProfile);
 
-class ProfileResetCleanupResultTask : public nsRunnable
+class ProfileResetCleanupResultTask : public mozilla::Runnable
 {
 public:
   ProfileResetCleanupResultTask()
@@ -34,7 +34,7 @@ private:
   nsCOMPtr<nsIThread> mWorkerThread;
 };
 
-class ProfileResetCleanupAsyncTask : public nsRunnable
+class ProfileResetCleanupAsyncTask : public mozilla::Runnable
 {
 public:
   ProfileResetCleanupAsyncTask(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,

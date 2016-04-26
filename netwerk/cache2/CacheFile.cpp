@@ -28,7 +28,7 @@
 namespace mozilla {
 namespace net {
 
-class NotifyCacheFileListenerEvent : public nsRunnable {
+class NotifyCacheFileListenerEvent : public Runnable {
 public:
   NotifyCacheFileListenerEvent(CacheFileListener *aCallback,
                                nsresult aResult,
@@ -65,7 +65,7 @@ protected:
   bool                        mIsNew;
 };
 
-class NotifyChunkListenerEvent : public nsRunnable {
+class NotifyChunkListenerEvent : public Runnable {
 public:
   NotifyChunkListenerEvent(CacheFileChunkListener *aCallback,
                            nsresult aResult,

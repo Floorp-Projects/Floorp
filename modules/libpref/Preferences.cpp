@@ -374,7 +374,7 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 }
 
 namespace {
-class AddPreferencesMemoryReporterRunnable : public nsRunnable
+class AddPreferencesMemoryReporterRunnable : public Runnable
 {
   NS_IMETHOD Run()
   {

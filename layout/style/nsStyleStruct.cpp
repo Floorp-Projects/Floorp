@@ -2684,12 +2684,13 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
   return hint;
 }
 
-bool nsStyleBackground::HasFixedBackground() const
+bool nsStyleBackground::HasFixedBackground(nsIFrame* aFrame) const
 {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer &layer = mImage.mLayers[i];
     if (layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
-        !layer.mImage.IsEmpty()) {
+        !layer.mImage.IsEmpty() &&
+        !nsLayoutUtils::IsTransformed(aFrame)) {
       return true;
     }
   }

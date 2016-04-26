@@ -351,7 +351,7 @@ private:
 
 NS_IMPL_ISUPPORTS(GMPShutdownObserver, nsIRunnable, nsIObserver)
 
-class NotifyObserversTask : public nsRunnable {
+class NotifyObserversTask : public Runnable {
 public:
   explicit NotifyObserversTask(const char* aTopic)
     : mTopic(aTopic)
@@ -621,7 +621,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     updates.AppendElement(aUpdate);
     CreateDecryptor(aOrigin, aTopLevelOrigin, aInPBMode, Move(updates));
   }
-  class Updates : public nsRunnable
+  class Updates : public Runnable
   {
   public:
     Updates(GMPStorageTest* aRunner, nsTArray<nsCString>&& aUpdates)

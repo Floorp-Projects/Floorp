@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 
 namespace {
-class InputPortServiceNotifyRunnable final : public nsRunnable
+class InputPortServiceNotifyRunnable final : public Runnable
 {
 public:
   InputPortServiceNotifyRunnable(

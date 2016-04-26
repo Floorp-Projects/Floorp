@@ -41,7 +41,7 @@ namespace mozilla {
  * Dispatch or Skip.
  *
  */
-class CryptoTask : public nsRunnable,
+class CryptoTask : public Runnable,
                    public nsNSSShutDownObject
 {
 public:

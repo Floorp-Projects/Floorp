@@ -493,48 +493,28 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
 static void
 ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
-                     const gfxRect& aFillRect)
+                     const nsRect& aFillRect)
 {
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
   // 1. Ask every text frame objects in aFrame puts glyph paths into aContext.
-  // 2. Then, clip aContext.
+  // 2. Clip aContext.
   //
   // Then, nsDisplayBackgroundImage paints bg-images into this clipped region,
   // so we get images embedded in text shape!
 
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::GENERATE_GLYPH, false);
-
-  builder.EnterPresShell(aFrame);
-  nsDisplayList list;
-  aFrame->BuildDisplayListForStackingContext(&builder,
-                                      nsRect(nsPoint(0, 0), aFrame->GetSize()),
-                                      &list);
-  builder.LeavePresShell(aFrame);
-
-#ifdef DEBUG
-  // ClipBackgroundByText is called by nsDisplayBackgroundImage::Paint or
-  // nsDisplayBackgroundColor::Paint.
-  // Assert that we do not generate and put nsDisplayBackgroundImage or
-  // nsDisplayBackgroundColor into the list again, which would lead to
-  // infinite recursion.
-  for (nsDisplayItem* i = list.GetBottom(); i; i = i->GetAbove()) {
-    MOZ_ASSERT(nsDisplayItem::TYPE_BACKGROUND != i->GetType() &&
-               nsDisplayItem::TYPE_BACKGROUND_COLOR != i->GetType());
-  }
-#endif
-
   gfxContext* ctx = aContext->ThebesContext();
   gfxContextMatrixAutoSaveRestore save(ctx);
-  ctx->SetMatrix(ctx->CurrentMatrix().Translate(aFillRect.TopLeft()));
+  gfxRect bounds = nsLayoutUtils::RectToGfxRect(aFillRect, aFrame->PresContext()->AppUnitsPerDevPixel());
+  ctx->SetMatrix(ctx->CurrentMatrix().Translate(bounds.TopLeft()));
   ctx->NewPath();
 
-  RefPtr<LayerManager> layerManager =
-    list.PaintRoot(&builder, aContext, nsDisplayList::PAINT_DEFAULT);
+  nsLayoutUtils::PaintFrame(aContext, aFrame, aFrame->GetRect(),
+                            NS_RGB(255, 255, 255),
+                            nsDisplayListBuilderMode::GENERATE_GLYPH, 0);
 
   ctx->Clip();
-  list.DeleteAll();
 }
 
 /* static */ void
@@ -644,7 +624,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
 }
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    Mode aMode, bool aBuildCaret)
+    nsDisplayListBuilderMode aMode, bool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
       mLayerEventRegions(nullptr),
@@ -2337,19 +2317,22 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
-  mBounds = GetBoundsInternal(aBuilder);
-  if (ShouldFixToViewport(aBuilder)) {
-    mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
-  }
-  
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
 
+  bool isTransformedFixed;
   nsBackgroundLayerState state =
     nsCSSRendering::PrepareImageLayer(presContext, mFrame, flags,
-                                      borderArea, borderArea, layer);
+                                      borderArea, borderArea, layer,
+                                      &isTransformedFixed);
+  mShouldTreatAsFixed = ComputeShouldTreatAsFixed(isTransformedFixed);
+
+  mBounds = GetBoundsInternal(aBuilder);
+  if (ShouldFixToViewport(aBuilder)) {
+    mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
+  }
 
   mFillRect = state.mFillArea;
   mDestRect = state.mDestArea;
@@ -2582,34 +2565,31 @@ static bool RoundedRectContainsRect(const nsRect& aRoundedRect,
 }
 
 bool
-nsDisplayBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder* aBuilder,
-                                                     const nsRect& aClipRect,
-                                                     gfxRect* aDestRect)
+nsDisplayBackgroundImage::ShouldTreatAsFixed() const
+{
+  return mShouldTreatAsFixed;
+}
+
+bool
+nsDisplayBackgroundImage::ComputeShouldTreatAsFixed(bool isTransformedFixed) const
 {
   if (!mBackgroundStyle)
-    return false;
-
-  if (mBackgroundStyle->mImage.mLayers.Length() != 1)
     return false;
 
   const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
   if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
     return false;
 
-  // We only care about images here, not gradients.
-  if (!mIsRasterImage)
-    return false;
-
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  *aDestRect = nsLayoutUtils::RectToGfxRect(mFillRect, appUnitsPerDevPixel);
-
-  return true;
+  // background-attachment:fixed is treated as background-attachment:scroll
+  // if it's affected by a transform.
+  // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=17521.
+  return !isTransformedFixed;
 }
 
 bool
 nsDisplayBackgroundImage::IsNonEmptyFixedImage() const
 {
-  return mBackgroundStyle->mImage.mLayers[mLayer].mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED &&
+  return ShouldTreatAsFixed() &&
          !mBackgroundStyle->mImage.mLayers[mLayer].mImage.IsEmpty();
 }
 
@@ -2871,11 +2851,13 @@ nsDisplayBackgroundImage::GetPositioningArea()
     return nsRect();
   }
   nsIFrame* attachedToFrame;
+  bool transformedFixed;
   return nsCSSRendering::ComputeImageLayerPositioningArea(
       mFrame->PresContext(), mFrame,
       nsRect(ToReferenceFrame(), mFrame->GetSize()),
       mBackgroundStyle->mImage.mLayers[mLayer],
-      &attachedToFrame) + ToReferenceFrame();
+      &attachedToFrame,
+      &transformedFixed) + ToReferenceFrame();
 }
 
 bool
@@ -2929,9 +2911,8 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-    gfxRect bounds = nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
     ctx->Save();
-    ClipBackgroundByText(mFrame, aCtx, bounds);
+    ClipBackgroundByText(mFrame, aCtx, borderBox);
   }
 
   image::DrawResult result =
@@ -3360,19 +3341,19 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 #else
   gfxContext* ctx = aCtx->ThebesContext();
 
-  gfxRect bounds =
-    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
-
   uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
     gfxContextAutoSaveRestore save(ctx);
 
-    ClipBackgroundByText(mFrame, aCtx, bounds);
+    ClipBackgroundByText(mFrame, aCtx, borderBox);
     ctx->SetColor(mColor);
     ctx->Fill();
 
     return;
   }
+
+  gfxRect bounds =
+    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
 
   ctx->SetColor(mColor);
   ctx->NewPath();

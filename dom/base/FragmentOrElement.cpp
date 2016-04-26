@@ -1237,7 +1237,7 @@ FragmentOrElement::FireNodeInserted(nsIDocument* aDoc,
 
 #define SUBTREE_UNBINDINGS_PER_RUNNABLE 500
 
-class ContentUnbinder : public nsRunnable
+class ContentUnbinder : public Runnable
 {
 public:
   ContentUnbinder()

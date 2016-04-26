@@ -159,7 +159,7 @@ ChildDNSRecord::ReportUnusable(uint16_t aPort)
 // CancelDNSRequestEvent
 //-----------------------------------------------------------------------------
 
-class CancelDNSRequestEvent : public nsRunnable
+class CancelDNSRequestEvent : public Runnable
 {
 public:
   CancelDNSRequestEvent(DNSRequestChild* aDnsReq, nsresult aReason)
