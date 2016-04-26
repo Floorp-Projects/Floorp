@@ -19,11 +19,13 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 
 public class FileUtils {
     private static final String LOGTAG = "GeckoFileUtils";
+
     /*
     * A basic Filter for checking a filename and age.
     **/
@@ -103,6 +105,21 @@ public class FileUtils {
                 scanner.close();
             }
         }
+    }
+
+    /**
+     * A generic solution to read a JSONObject from a file. See
+     * {@link #readStringFromFile(File)} for more details.
+     *
+     * @throws IOException if the file is empty, or another IOException occurs
+     * @throws JSONException if the file could not be converted to a JSONObject.
+     */
+    public static JSONObject readJSONObjectFromFile(final File file) throws IOException, JSONException {
+        if (file.length() == 0) {
+            // Redirect this exception so it's clearer than when the JSON parser catches it.
+            throw new IOException("Given file is empty - the JSON parser cannot create an object from an empty file");
+        }
+        return new JSONObject(readStringFromFile(file));
     }
 
     /**

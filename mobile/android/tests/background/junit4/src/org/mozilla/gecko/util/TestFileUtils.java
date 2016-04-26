@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.util;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +44,27 @@ public class TestFileUtils {
     public void setUp() throws Exception {
         testFile = tempDir.newFile();
         nonExistentFile = new File(tempDir.getRoot(), "non-existent-file");
+    }
+
+    @Test
+    public void testReadJSONObjectFromFile() throws Exception {
+        final JSONObject expected = new JSONObject("{\"str\": \"some str\"}");
+        writeStringToFile(testFile, expected.toString());
+
+        final JSONObject actual = FileUtils.readJSONObjectFromFile(testFile);
+        assertEquals("JSON contains expected str", expected.getString("str"), actual.getString("str"));
+    }
+
+    @Test(expected=IOException.class)
+    public void testReadJSONObjectFromFileEmptyFile() throws Exception {
+        assertEquals("Test file is empty", 0, testFile.length());
+        FileUtils.readJSONObjectFromFile(testFile); // expected to throw
+    }
+
+    @Test(expected=JSONException.class)
+    public void testReadJSONObjectFromFileInvalidJSON() throws Exception {
+        writeStringToFile(testFile, "not a json str");
+        FileUtils.readJSONObjectFromFile(testFile); // expected to throw
     }
 
     @Test
