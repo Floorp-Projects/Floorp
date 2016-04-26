@@ -244,3 +244,8 @@
 .theme-firebug .devtools-toolbarbutton {
   min-width: 24px;
 }
+
+/* Move the Inspector button a bit down (looks better) */
+.theme-firebug #command-button-pick > image {
+  margin-bottom: -4px;
+}
