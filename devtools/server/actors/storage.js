@@ -1519,6 +1519,31 @@ StorageActors.createActor({
     events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
   },
 
+  /**
+   * Remove an indexedDB database from given host with a given name.
+   */
+  removeDatabase: method(Task.async(function* (host, name) {
+    let win = this.storageActor.getWindowFromHost(host);
+    if (win) {
+      let principal = win.document.nodePrincipal;
+      let result = yield this.removeDB(host, principal, name);
+      if (!result.error) {
+        if (this.hostVsStores.has(host)) {
+          this.hostVsStores.get(host).delete(name);
+        }
+        this.storageActor.update("deleted", "indexedDB", {
+          [host]: [ JSON.stringify([name]) ]
+        });
+      }
+    }
+  }), {
+    request: {
+      host: Arg(0, "string"),
+      name: Arg(1, "string"),
+    },
+    response: {}
+  }),
+
   getHostName: function(location) {
     if (!location.host) {
       return location.href;
@@ -1691,8 +1716,7 @@ StorageActors.createActor({
       this.getNameFromDatabaseFile = indexedDBHelpers.getNameFromDatabaseFile;
       this.getValuesForHost = indexedDBHelpers.getValuesForHost;
       this.getObjectStoreData = indexedDBHelpers.getObjectStoreData;
-      this.patchMetadataMapsAndProtos =
-        indexedDBHelpers.patchMetadataMapsAndProtos;
+      this.removeDB = indexedDBHelpers.removeDB;
       return;
     }
 
@@ -1710,13 +1734,14 @@ StorageActors.createActor({
       callParentProcessAsync.bind(null, "getDBNamesForHost");
     this.getValuesForHost =
       callParentProcessAsync.bind(null, "getValuesForHost");
+    this.removeDB =
+      callParentProcessAsync.bind(null, "removeDB");
 
     addMessageListener("storage:storage-indexedDB-request-child", msg => {
       switch (msg.json.method) {
         case "backToChild":
           let func = msg.json.args.shift();
           let deferred = unresolvedPromises.get(func);
-
           if (deferred) {
             unresolvedPromises.delete(func);
             deferred.resolve(msg.json.args[0]);
@@ -1767,14 +1792,12 @@ var indexedDBHelpers = {
       let dbData = new DatabaseMetadata(host, db);
       db.close();
 
-      this.backToChild("getDBMetaData", dbData);
-      success.resolve(dbData);
+      success.resolve(this.backToChild("getDBMetaData", dbData));
     };
     request.onerror = () => {
-      console.error("Error opening indexeddb database " + name + " for host " +
-                    host);
-      this.backToChild("getDBMetaData", null);
-      success.resolve(null);
+      console.error(
+        `Error opening indexeddb database ${name} for host ${host}`);
+      success.resolve(this.backToChild("getDBMetaData", null));
     };
     return success.promise;
   }),
@@ -1787,7 +1810,31 @@ var indexedDBHelpers = {
     return require("indexedDB").openForPrincipal(principal, name);
   },
 
-    /**
+  removeDB: Task.async(function* (host, principal, name) {
+    let request = require("indexedDB").deleteForPrincipal(principal, name);
+
+    let result = new promise(resolve => {
+      request.onsuccess = () => {
+        resolve({});
+      };
+
+      request.onblocked = () => {
+        console.error(
+          `Deleting indexedDB database ${name} for host ${host} is blocked`);
+        resolve({ error: "blocked" });
+      };
+
+      request.onerror = () => {
+        console.error(
+          `Error deleting indexedDB database ${name} for host ${host}`);
+        resolve({ error: request.error });
+      };
+    });
+
+    return this.backToChild("removeDB", yield result);
+  }),
+
+  /**
    * Fetches all the databases and their metadata for the given `host`.
    */
   getDBNamesForHost: Task.async(function* (host) {
@@ -2042,28 +2089,25 @@ var indexedDBHelpers = {
   },
 
   handleChildRequest: function(msg) {
-    let host;
-    let name;
     let args = msg.data.args;
 
     switch (msg.json.method) {
       case "getDBMetaData": {
-        host = args[0];
-        let principal = args[1];
-        name = args[2];
+        let [host, principal, name] = args;
         return indexedDBHelpers.getDBMetaData(host, principal, name);
       }
-      case "getDBNamesForHost":
-        host = args[0];
+      case "getDBNamesForHost": {
+        let [host] = args;
         return indexedDBHelpers.getDBNamesForHost(host);
+      }
       case "getValuesForHost": {
-        host = args[0];
-        name = args[1];
-        let options = args[2];
-        let hostVsStores = args[3];
-        let principal = args[4];
+        let [host, name, options, hostVsStores, principal] = args;
         return indexedDBHelpers.getValuesForHost(host, name, options,
                                                  hostVsStores, principal);
+      }
+      case "removeDB": {
+        let [host, principal, name] = args;
+        return indexedDBHelpers.removeDB(host, principal, name);
       }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);

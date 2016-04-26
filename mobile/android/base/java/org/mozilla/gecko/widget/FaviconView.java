@@ -16,6 +16,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.widget.ImageView;
 /**
  * Special version of ImageView for favicons.
@@ -24,6 +26,9 @@ import android.widget.ImageView;
  */
 public class FaviconView extends ImageView {
     private static String DEFAULT_FAVICON_KEY = FaviconView.class.getSimpleName() + "DefaultFavicon";
+
+    // Default x/y-radius of the oval used to round the corners of the background (dp)
+    private static final int DEFAULT_CORNER_RADIUS_DP = 4;
 
     private Bitmap mIconBitmap;
 
@@ -45,20 +50,14 @@ public class FaviconView extends ImageView {
     // Dominant color of the favicon.
     private int mDominantColor;
 
-    // Stroke width for the border.
-    private static float sStrokeWidth;
-
-    // Paint for drawing the stroke.
-    private static final Paint sStrokePaint;
-
     // Paint for drawing the background.
     private static final Paint sBackgroundPaint;
 
-    // Size of the stroke rectangle.
-    private final RectF mStrokeRect;
-
     // Size of the background rectangle.
     private final RectF mBackgroundRect;
+
+    // The x/y-radius of the oval used to round the corners of the background (pixels)
+    private final float mBackgroundCornerRadius;
 
     // Type of the border whose value is defined in attrs.xml .
     private final boolean isDominantBorderEnabled;
@@ -68,9 +67,6 @@ public class FaviconView extends ImageView {
 
     // Initializing the static paints.
     static {
-        sStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        sStrokePaint.setStyle(Paint.Style.STROKE);
-
         sBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         sBackgroundPaint.setStyle(Paint.Style.FILL);
     }
@@ -90,16 +86,10 @@ public class FaviconView extends ImageView {
             setScaleType(ImageView.ScaleType.CENTER);
         }
 
-        mStrokeRect = new RectF();
-        mBackgroundRect = new RectF();
+        final DisplayMetrics metrics = getResources().getDisplayMetrics();
 
-        if (sStrokeWidth == 0) {
-            sStrokeWidth = getResources().getDisplayMetrics().density;
-            sStrokePaint.setStrokeWidth(sStrokeWidth);
-        }
-
-        mStrokeRect.left = mStrokeRect.top = sStrokeWidth;
-        mBackgroundRect.left = mBackgroundRect.top = sStrokeWidth * 2.0f;
+        mBackgroundRect = new RectF(0, 0, 0, 0);
+        mBackgroundCornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_CORNER_RADIUS_DP, metrics);
     }
 
     @Override
@@ -114,26 +104,21 @@ public class FaviconView extends ImageView {
         mActualWidth = w;
         mActualHeight = h;
 
-        mStrokeRect.right = w - sStrokeWidth;
-        mStrokeRect.bottom = h - sStrokeWidth;
-        mBackgroundRect.right = mStrokeRect.right - sStrokeWidth;
-        mBackgroundRect.bottom = mStrokeRect.bottom - sStrokeWidth;
+        mBackgroundRect.right = w;
+        mBackgroundRect.bottom = h;
 
         formatImage();
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
         if (isDominantBorderEnabled) {
-            // 27.5% transparent dominant color.
-            sBackgroundPaint.setColor(mDominantColor & 0x46FFFFFF);
-            canvas.drawRect(mStrokeRect, sBackgroundPaint);
+            sBackgroundPaint.setColor(mDominantColor & 0x7FFFFFFF);
 
-            sStrokePaint.setColor(mDominantColor);
-            canvas.drawRoundRect(mStrokeRect, sStrokeWidth, sStrokeWidth, sStrokePaint);
+            canvas.drawRoundRect(mBackgroundRect, mBackgroundCornerRadius, mBackgroundCornerRadius, sBackgroundPaint);
         }
+
+        super.onDraw(canvas);
     }
 
     /**

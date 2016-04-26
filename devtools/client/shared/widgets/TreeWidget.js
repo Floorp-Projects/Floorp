@@ -538,6 +538,9 @@ TreeItem.prototype = {
       if (!items.length) {
         this.items.delete(id);
       }
+      if (this.items.size == 0) {
+        this.label.setAttribute("empty", "true");
+      }
       deleted.remove(items);
     } else if (!id) {
       this.destroy();
