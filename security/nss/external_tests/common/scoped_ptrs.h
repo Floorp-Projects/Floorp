@@ -7,23 +7,20 @@
 #ifndef scoped_ptrs_h__
 #define scoped_ptrs_h__
 
-#include "cert.h"
 #include "keyhi.h"
-#include "pk11pub.h"
 
 namespace nss_test {
 
 struct ScopedDelete {
-  void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
+  void operator()(PK11SlotInfo* slot) { PK11_FreeSlot(slot); }
+  void operator()(SECItem* item) { SECITEM_FreeItem(item, true); }
+  void operator()(PK11SymKey* key) { PK11_FreeSymKey(key); }
+  void operator()(SECKEYPublicKey* key) { SECKEY_DestroyPublicKey(key); }
+  void operator()(SECKEYPrivateKey* key) { SECKEY_DestroyPrivateKey(key); }
+  void operator()(SECAlgorithmID* id) { SECOID_DestroyAlgorithmID(id, true); }
   void operator()(CERTSubjectPublicKeyInfo* spki) {
     SECKEY_DestroySubjectPublicKeyInfo(spki);
   }
-  void operator()(PK11SlotInfo* slot) { PK11_FreeSlot(slot); }
-  void operator()(PK11SymKey* key) { PK11_FreeSymKey(key); }
-  void operator()(SECAlgorithmID* id) { SECOID_DestroyAlgorithmID(id, true); }
-  void operator()(SECItem* item) { SECITEM_FreeItem(item, true); }
-  void operator()(SECKEYPublicKey* key) { SECKEY_DestroyPublicKey(key); }
-  void operator()(SECKEYPrivateKey* key) { SECKEY_DestroyPrivateKey(key); }
 };
 
 template<class T>
@@ -33,14 +30,13 @@ struct ScopedMaybeDelete {
 
 #define SCOPED(x) typedef std::unique_ptr<x, ScopedMaybeDelete<x> > Scoped ## x
 
-SCOPED(CERTCertificate);
-SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(PK11SlotInfo);
-SCOPED(PK11SymKey);
-SCOPED(SECAlgorithmID);
 SCOPED(SECItem);
+SCOPED(PK11SymKey);
 SCOPED(SECKEYPublicKey);
 SCOPED(SECKEYPrivateKey);
+SCOPED(SECAlgorithmID);
+SCOPED(CERTSubjectPublicKeyInfo);
 
 #undef SCOPED
 
