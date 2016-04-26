@@ -702,7 +702,7 @@ TextAttrsMgr::TextDecorValue::
   bool isForegroundColor = false;
   textReset->GetDecorationColor(mColor, isForegroundColor);
   if (isForegroundColor)
-    mColor = aFrame->StyleContext()->GetTextFillColor();
+    mColor = aFrame->StyleColor()->mColor;
 
   mLine = textReset->mTextDecorationLine &
     (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |

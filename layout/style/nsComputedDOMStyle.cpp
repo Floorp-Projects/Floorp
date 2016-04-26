@@ -3627,7 +3627,7 @@ nsComputedDOMStyle::DoGetTextDecorationColor()
   bool isForeground;
   StyleTextReset()->GetDecorationColor(color, isForeground);
   if (isForeground) {
-    color = mStyleContext->GetTextFillColor();
+    color = StyleColor()->mColor;
   }
 
   SetToRGBAColor(val, color);
