@@ -3091,6 +3091,7 @@ js_fputs(const char16_t* s, FILE* f)
     while (*s != 0) {
         if (fputwc(wchar_t(*s), f) == WEOF)
             return WEOF;
+        s++;
     }
     return 1;
 }
