@@ -739,20 +739,6 @@ WebGLContext::AssertCachedState()
 
     ////////////////
 
-    AssertUintParamCorrect(gl, LOCAL_GL_MAX_COLOR_ATTACHMENTS, mGLMaxColorAttachments);
-    AssertUintParamCorrect(gl, LOCAL_GL_MAX_DRAW_BUFFERS, mGLMaxDrawBuffers);
-
-    if (IsWebGL2() ||
-        IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-    {
-        MOZ_ASSERT(mImplMaxColorAttachments == std::min(mGLMaxColorAttachments,
-                                                        mGLMaxDrawBuffers));
-        MOZ_ASSERT(mImplMaxDrawBuffers == mGLMaxDrawBuffers);
-    } else {
-        MOZ_ASSERT(mImplMaxColorAttachments == 1);
-        MOZ_ASSERT(mImplMaxDrawBuffers == 1);
-    }
-
     // Draw state
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DEPTH_TEST) == mDepthTestEnabled);
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DITHER) == mDitherEnabled);
