@@ -138,7 +138,8 @@ function openTab(window, url, options) {
     return window.BrowserApp.addTab(url, {
       selected: options.inBackground ? false : true,
       pinned: options.isPinned || false,
-      isPrivate: options.isPrivate || false
+      isPrivate: options.isPrivate || false,
+      parentId: window.BrowserApp.selectedTab.id
     });
   }
 

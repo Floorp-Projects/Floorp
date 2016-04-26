@@ -529,6 +529,12 @@ html, body, #app, #memory-tool {
   padding: 0;
 }
 
+/* Override Firebug styles for toolbar buttons to fix entire row height. */
+.theme-firebug .heap-tree-item-individuals > button {
+  margin: 0 auto;
+  min-height: inherit;
+}
+
 /**
  * Tree map
  */

@@ -8,52 +8,37 @@
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
-const { Cc, Ci } = require("chrome");
 
-Object.defineProperty(this, "addonManager", {
-  get: (function () {
-    let cached;
-    return () => {
-      if (cached === undefined) {
-        // catch errors as the addonManager might not exist in this environment
-        // (eg, xpcshell)
-        try {
-          cached = Cc["@mozilla.org/addons/integration;1"]
-                      .getService(Ci.amIAddonManager);
-        } catch (ex) {
-          cached = null;
-        }
-      }
-      return cached;
-    }
-  }())
-});
+loader.lazyServiceGetter(this, "AddonPathService",
+                         "@mozilla.org/addon-path-service;1",
+                         "amIAddonPathService");
 
 const B2G_ID = "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}";
 const GRAPHENE_ID = "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}";
 
 /**
- * This is a wrapper around amIAddonManager.mapURIToAddonID which always returns
+ * This is a wrapper around amIAddonPathService.mapURIToAddonID which always returns
  * false on B2G and graphene to avoid loading the add-on manager there and
  * reports any exceptions rather than throwing so that the caller doesn't have
  * to worry about them.
  */
-module.exports = function mapURIToAddonID(uri, id) {
-  if (!Services.appinfo
-      || Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT
-      || Services.appinfo.ID === undefined /* XPCShell */
-      || Services.appinfo.ID == B2G_ID
-      || Services.appinfo.ID == GRAPHENE_ID
-      || !uri
-      || !addonManager) {
+if (!Services.appinfo
+    || Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT
+    || Services.appinfo.ID === undefined /* XPCShell */
+    || Services.appinfo.ID == B2G_ID
+    || Services.appinfo.ID == GRAPHENE_ID
+    || !AddonPathService) {
+  module.exports = function mapURIToAddonId(uri) {
     return false;
-  }
-
-  try {
-    return addonManager.mapURIToAddonID(uri, id);
-  }
-  catch (e) {
-    DevToolsUtils.reportException("mapURIToAddonID", e);
-    return false;
-  }
-};
+  };
+} else {
+  module.exports = function mapURIToAddonId(uri) {
+    try {
+      return AddonPathService.mapURIToAddonId(uri);
+    }
+    catch (e) {
+      DevToolsUtils.reportException("mapURIToAddonId", e);
+      return false;
+    }
+  };
+}
