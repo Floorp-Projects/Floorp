@@ -620,13 +620,6 @@ addEventListener("pageshow", function(event) {
     });
   }
 });
-addEventListener("pagehide", function(event) {
-  if (event.target == content.document) {
-    sendAsyncMessage("PageVisibility:Hide", {
-      persisted: event.persisted,
-    });
-  }
-});
 
 var PageMetadataMessenger = {
   init() {
