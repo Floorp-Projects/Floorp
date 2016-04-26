@@ -72,6 +72,7 @@ protected:
     metrics.SetScrollableRect(aScrollableRect);
     metrics.SetScrollOffset(CSSPoint(0, 0));
     metrics.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
+    metrics.SetLineScrollAmount(LayoutDeviceIntSize(5, 10));
     metrics.SetAllowVerticalScrollWithWheel(true);
     return metadata;
   }
