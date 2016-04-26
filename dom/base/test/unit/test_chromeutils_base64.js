@@ -88,8 +88,10 @@ function testDecode(input, decoded) {
 function test_base64URLDecode() {
   throws(_ => ChromeUtils.base64URLDecode(""), /TypeError/,
          "Should require decoding options");
-  throws(_ => ChromeUtils.base64URLEncode("", {}), /TypeError/,
+  throws(_ => ChromeUtils.base64URLDecode("", {}), /TypeError/,
          "Decoding should require the padding option");
+  throws(_ => ChromeUtils.base64URLDecode("", { padding: "chocolate" }),
+         "Decoding should throw for invalid padding policy");
 
   for (let {decoded, encoded} of binaryTests) {
     testDecode(encoded, decoded);

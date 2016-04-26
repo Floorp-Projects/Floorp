@@ -78,7 +78,7 @@ StaticAutoPtr<Mutex> nsAppShell::sAppShellLock;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
-class ThumbnailRunnable : public nsRunnable {
+class ThumbnailRunnable : public Runnable {
 public:
     ThumbnailRunnable(nsIAndroidBrowserApp* aBrowserApp, int aTabId,
                        const nsTArray<nsIntPoint>& aPoints, RefCountedJavaObject* aBuffer):

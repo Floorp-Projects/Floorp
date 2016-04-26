@@ -19,7 +19,7 @@ using mozilla::ipc::MessageChannel;
 
 namespace {
 
-class DeferNPObjectReleaseRunnable : public nsRunnable
+class DeferNPObjectReleaseRunnable : public mozilla::Runnable
 {
 public:
   DeferNPObjectReleaseRunnable(const NPNetscapeFuncs* f, NPObject* o)

@@ -1360,7 +1360,7 @@ void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
   AddObject(key);
 }
 
-class nsIDocument::SelectorCacheKeyDeleter final : public nsRunnable
+class nsIDocument::SelectorCacheKeyDeleter final : public Runnable
 {
 public:
   explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
@@ -9147,7 +9147,7 @@ nsDocument::UnblockOnload(bool aFireSync)
   }
 }
 
-class nsUnblockOnloadEvent : public nsRunnable {
+class nsUnblockOnloadEvent : public Runnable {
 public:
   explicit nsUnblockOnloadEvent(nsDocument* aDoc) : mDoc(aDoc) {}
   NS_IMETHOD Run() {
@@ -10021,7 +10021,7 @@ nsDocument::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
   return CSSLoader()->LoadSheetSync(uri, mode, isAgentSheet, aSheet);
 }
 
-class nsDelayedEventDispatcher : public nsRunnable
+class nsDelayedEventDispatcher : public Runnable
 {
 public:
   explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<nsIDocument>>& aDocuments)
@@ -11210,7 +11210,7 @@ AskWindowToExitFullscreen(nsIDocument* aDoc)
   }
 }
 
-class nsCallExitFullscreen : public nsRunnable
+class nsCallExitFullscreen : public Runnable
 {
 public:
   explicit nsCallExitFullscreen(nsIDocument* aDoc)
@@ -11284,7 +11284,7 @@ ResetFullScreen(nsIDocument* aDocument, void* aData)
 // Since nsIDocument::ExitFullscreenInDocTree() could be called from
 // Element::UnbindFromTree() where it is not safe to synchronously run
 // script. This runnable is the script part of that function.
-class ExitFullscreenScriptRunnable : public nsRunnable
+class ExitFullscreenScriptRunnable : public Runnable
 {
 public:
   explicit ExitFullscreenScriptRunnable(nsCOMArray<nsIDocument>&& aDocuments)
@@ -11478,7 +11478,7 @@ nsDocument::RestorePreviousFullScreenState()
   }
 }
 
-class nsCallRequestFullScreen : public nsRunnable
+class nsCallRequestFullScreen : public Runnable
 {
 public:
   explicit nsCallRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
@@ -11725,8 +11725,8 @@ GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
   if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
     // explicitly disabled. Note IsCallerChrome() returns true when running
-    // in an nsRunnable, so don't use GetMozFullScreenEnabled() from an
-    // nsRunnable!
+    // in a Runnable, so don't use GetMozFullScreenEnabled() from a
+    // Runnable!
     return nullptr;
   }
 
@@ -12251,7 +12251,7 @@ static const uint8_t kPointerLockRequestLimit = 2;
 class nsPointerLockPermissionRequest;
 mozilla::StaticRefPtr<nsPointerLockPermissionRequest> gPendingPointerLockRequest;
 
-class nsPointerLockPermissionRequest : public nsRunnable,
+class nsPointerLockPermissionRequest : public Runnable,
                                        public nsIContentPermissionRequest
 {
 public:
@@ -12326,7 +12326,7 @@ protected:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsPointerLockPermissionRequest,
-                            nsRunnable,
+                            Runnable,
                             nsIContentPermissionRequest)
 
 NS_IMETHODIMP

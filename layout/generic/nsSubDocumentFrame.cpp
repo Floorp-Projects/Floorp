@@ -76,7 +76,7 @@ NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
   NS_QUERYFRAME_ENTRY(nsSubDocumentFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsAtomicContainerFrame)
 
-class AsyncFrameInit : public nsRunnable
+class AsyncFrameInit : public Runnable
 {
 public:
   explicit AsyncFrameInit(nsIFrame* aFrame) : mFrame(aFrame) {}
@@ -922,7 +922,7 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
-class nsHideViewer : public nsRunnable {
+class nsHideViewer : public Runnable {
 public:
   nsHideViewer(nsIContent* aFrameElement,
                nsFrameLoader* aFrameLoader,

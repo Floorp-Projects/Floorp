@@ -472,7 +472,7 @@ mozInlineSpellStatus::PositionToCollapsedRange(nsIDOMDocument* aDocument,
 
 // mozInlineSpellResume
 
-class mozInlineSpellResume : public nsRunnable
+class mozInlineSpellResume : public Runnable
 {
 public:
   mozInlineSpellResume(const mozInlineSpellStatus& aStatus,

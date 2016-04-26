@@ -17,7 +17,7 @@
 class nsIWidget;
 
 class AsyncColorChooser :
-  public nsRunnable
+  public mozilla::Runnable
 {
 public:
   AsyncColorChooser(COLORREF aInitialColor,

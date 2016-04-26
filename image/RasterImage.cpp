@@ -760,7 +760,7 @@ RasterImage::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
   }
 }
 
-class OnAddedFrameRunnable : public nsRunnable
+class OnAddedFrameRunnable : public Runnable
 {
 public:
   OnAddedFrameRunnable(RasterImage* aImage,

@@ -22,7 +22,7 @@ int gTestsIndex = 0;
 
 #define TEST_INFO_STR "TEST-INFO | (%s) | "
 
-class RunNextTest : public nsRunnable
+class RunNextTest : public mozilla::Runnable
 {
 public:
   NS_IMETHOD Run()

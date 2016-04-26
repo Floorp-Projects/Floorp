@@ -21,7 +21,7 @@ class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
 class KeepAliveToken;
 
-class LifeCycleEventCallback : public nsRunnable
+class LifeCycleEventCallback : public Runnable
 {
 public:
   // Called on the worker thread.

@@ -145,7 +145,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIFTPEVENTSINK
 
-    class OnFTPControlLogRunnable : public nsRunnable
+    class OnFTPControlLogRunnable : public Runnable
     {
     public:
         OnFTPControlLogRunnable(nsIFTPEventSink* aTarget,

@@ -2511,9 +2511,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     buildingDisplayList.SetReferenceFrameAndCurrentOffset(outerReferenceFrame,
       GetOffsetToCrossDoc(outerReferenceFrame));
 
-    nsDisplayTransform *transformItem =
-      new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList, dirtyRect);
-    resultList.AppendNewToTop(transformItem);
+    if (!aBuilder->IsForGenerateGlyphPath()) {
+      nsDisplayTransform *transformItem =
+        new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList, dirtyRect);
+      resultList.AppendNewToTop(transformItem);
+    }
 
     if (HasPerspective()) {
       if (!useFixedPosition && !useStickyPosition) {

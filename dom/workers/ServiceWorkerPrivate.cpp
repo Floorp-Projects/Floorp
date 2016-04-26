@@ -240,7 +240,7 @@ public:
 
 NS_IMPL_ISUPPORTS0(KeepAliveHandler)
 
-class RegistrationUpdateRunnable : public nsRunnable
+class RegistrationUpdateRunnable : public Runnable
 {
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   const bool mNeedTimeCheck;
@@ -1278,7 +1278,7 @@ public:
 private:
   ~FetchEventRunnable() {}
 
-  class ResumeRequest final : public nsRunnable {
+  class ResumeRequest final : public Runnable {
     nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   public:
     explicit ResumeRequest(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)

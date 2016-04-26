@@ -47,7 +47,6 @@ add_task(function* test_notification_duplicate() {
   let ackPromise = new Promise(resolve => ackDone = after(2, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
-    networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {

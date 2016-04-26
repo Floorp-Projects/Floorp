@@ -76,7 +76,7 @@ class FilePickerParent : public PFilePickerParent
   bool CreateFilePicker();
 
   // This runnable is used to do some I/O operation on a separate thread.
-  class IORunnable : public nsRunnable
+  class IORunnable : public Runnable
   {
     FilePickerParent* mFilePickerParent;
     nsTArray<nsCOMPtr<nsIFile>> mFiles;

@@ -98,7 +98,7 @@ struct PageData
  * Base class for events declared in this file.  This class's main purpose is
  * to declare a destructor which releases mCallback on the main thread.
  */
-class AsyncFaviconHelperBase : public nsRunnable
+class AsyncFaviconHelperBase : public Runnable
 {
 protected:
   explicit AsyncFaviconHelperBase(nsCOMPtr<nsIFaviconDataCallback>& aCallback);

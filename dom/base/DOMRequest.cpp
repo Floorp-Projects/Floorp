@@ -295,7 +295,7 @@ DOMRequestService::FireDetailedError(nsIDOMDOMRequest* aRequest,
   return NS_OK;
 }
 
-class FireSuccessAsyncTask : public nsRunnable
+class FireSuccessAsyncTask : public mozilla::Runnable
 {
 
   FireSuccessAsyncTask(DOMRequest* aRequest,
@@ -332,7 +332,7 @@ private:
   JS::PersistentRooted<JS::Value> mResult;
 };
 
-class FireErrorAsyncTask : public nsRunnable
+class FireErrorAsyncTask : public mozilla::Runnable
 {
 public:
   FireErrorAsyncTask(DOMRequest* aRequest,

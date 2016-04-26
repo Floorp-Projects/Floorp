@@ -72,7 +72,7 @@ public:
   }
 };
 
-class ClientFocusRunnable final : public nsRunnable
+class ClientFocusRunnable final : public Runnable
 {
   uint64_t mWindowId;
   RefPtr<PromiseWorkerProxy> mPromiseProxy;

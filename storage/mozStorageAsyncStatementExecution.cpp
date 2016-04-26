@@ -50,7 +50,7 @@ typedef AsyncExecuteStatements::StatementDataArray StatementDataArray;
 /**
  * Notifies a callback with a result set.
  */
-class CallbackResultNotifier : public nsRunnable
+class CallbackResultNotifier : public Runnable
 {
 public:
   CallbackResultNotifier(mozIStorageStatementCallback *aCallback,
@@ -88,7 +88,7 @@ private:
 /**
  * Notifies the calling thread that an error has occurred.
  */
-class ErrorNotifier : public nsRunnable
+class ErrorNotifier : public Runnable
 {
 public:
   ErrorNotifier(mozIStorageStatementCallback *aCallback,
@@ -125,7 +125,7 @@ private:
  * Notifies the calling thread that the statement has finished executing.  Takes
  * ownership of the StatementData so it is released on the proper thread.
  */
-class CompletionNotifier : public nsRunnable
+class CompletionNotifier : public Runnable
 {
 public:
   /**

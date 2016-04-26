@@ -25,7 +25,7 @@ enum State {
   TEST_DONE
 };
 
-class DatabaseLocker : public nsRunnable
+class DatabaseLocker : public mozilla::Runnable
 {
 public:
   explicit DatabaseLocker(const char* aSQL)

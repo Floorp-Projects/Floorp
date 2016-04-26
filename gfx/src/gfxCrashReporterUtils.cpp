@@ -65,7 +65,7 @@ ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-class RegisterObserverRunnable : public nsRunnable {
+class RegisterObserverRunnable : public Runnable {
 public:
   NS_IMETHOD Run() override {
     // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,

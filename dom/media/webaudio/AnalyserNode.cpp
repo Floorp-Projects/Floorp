@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(AnalyserNode, AudioNode)
 
 class AnalyserNodeEngine final : public AudioNodeEngine
 {
-  class TransferBuffer final : public nsRunnable
+  class TransferBuffer final : public Runnable
   {
   public:
     TransferBuffer(AudioNodeStream* aStream,

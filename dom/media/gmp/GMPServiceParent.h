@@ -118,7 +118,7 @@ private:
   nsresult EnsurePluginsOnDiskScanned();
   nsresult InitStorage();
 
-  class PathRunnable : public nsRunnable
+  class PathRunnable : public Runnable
   {
   public:
     enum EOperation {

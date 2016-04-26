@@ -50,7 +50,7 @@ public:
                                const nsCString &newPACURL) = 0;
 };
 
-class PendingPACQuery final : public nsRunnable,
+class PendingPACQuery final : public mozilla::Runnable,
                               public mozilla::LinkedListElement<PendingPACQuery>
 {
 public:
@@ -67,7 +67,7 @@ public:
   nsCString                  mHost;
   int32_t                    mPort;
 
-  NS_IMETHOD Run(void);     /* nsRunnable */
+  NS_IMETHOD Run(void);     /* Runnable */
 
 private:
   nsPACMan                  *mPACMan;  // weak reference

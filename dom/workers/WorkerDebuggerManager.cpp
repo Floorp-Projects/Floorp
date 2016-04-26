@@ -16,7 +16,7 @@ USING_WORKERS_NAMESPACE
 
 namespace {
 
-class RegisterDebuggerMainThreadRunnable final : public nsRunnable
+class RegisterDebuggerMainThreadRunnable final : public mozilla::Runnable
 {
   WorkerPrivate* mWorkerPrivate;
   bool mNotifyListeners;
@@ -43,7 +43,7 @@ private:
   }
 };
 
-class UnregisterDebuggerMainThreadRunnable final : public nsRunnable
+class UnregisterDebuggerMainThreadRunnable final : public mozilla::Runnable
 {
   WorkerPrivate* mWorkerPrivate;
 

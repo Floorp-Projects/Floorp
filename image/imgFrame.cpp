@@ -816,7 +816,7 @@ imgFrame::AssertImageDataLocked() const
 #endif
 }
 
-class UnlockImageDataRunnable : public nsRunnable
+class UnlockImageDataRunnable : public Runnable
 {
 public:
   explicit UnlockImageDataRunnable(imgFrame* aTarget)

@@ -312,7 +312,7 @@ private:
   JSContext* mCx;
 };
 
-class ConsoleRunnable : public nsRunnable
+class ConsoleRunnable : public Runnable
                       , public WorkerFeature
                       , public StructuredCloneHolderBase
 {

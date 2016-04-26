@@ -5912,7 +5912,7 @@ GetFullscreenTransitionDuration(bool aEnterFullscreen,
   }
 }
 
-class FullscreenTransitionTask : public nsRunnable
+class FullscreenTransitionTask : public Runnable
 {
 public:
   FullscreenTransitionTask(const FullscreenTransitionDuration& aDuration,
@@ -8148,7 +8148,7 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   PostMessageMoz(aCx, aMessage, aTargetOrigin, transferArray, aError);
 }
 
-class nsCloseEvent : public nsRunnable {
+class nsCloseEvent : public Runnable {
 
   RefPtr<nsGlobalWindow> mWindow;
   bool mIndirect;
@@ -8529,7 +8529,7 @@ nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
   }
 }
 
-class nsPendingTimeoutRunner : public nsRunnable
+class nsPendingTimeoutRunner : public Runnable
 {
 public:
   explicit nsPendingTimeoutRunner(nsGlobalWindow* aWindow)
@@ -8629,7 +8629,7 @@ struct BrowserCompartmentMatcher : public js::CompartmentFilter {
 };
 
 
-class WindowDestroyedEvent : public nsRunnable
+class WindowDestroyedEvent : public Runnable
 {
 public:
   WindowDestroyedEvent(nsIDOMWindow* aWindow, uint64_t aID,
@@ -9060,7 +9060,7 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
   }
 }
 
-class ChildCommandDispatcher : public nsRunnable
+class ChildCommandDispatcher : public Runnable
 {
 public:
   ChildCommandDispatcher(nsGlobalWindow* aWindow,
@@ -9090,7 +9090,7 @@ private:
   nsString                             mAction;
 };
 
-class CommandDispatcher : public nsRunnable
+class CommandDispatcher : public Runnable
 {
 public:
   CommandDispatcher(nsIDOMXULCommandDispatcher* aDispatcher,
@@ -9890,7 +9890,7 @@ nsGlobalWindow::PageHidden()
   mNeedsFocus = true;
 }
 
-class HashchangeCallback : public nsRunnable
+class HashchangeCallback : public Runnable
 {
 public:
   HashchangeCallback(const nsAString &aOldURL,
@@ -10497,7 +10497,7 @@ nsGlobalWindow::FireOfflineStatusEventIfChanged()
   nsContentUtils::DispatchTrustedEvent(mDoc, eventTarget, name, true, false);
 }
 
-class NotifyIdleObserverRunnable : public nsRunnable
+class NotifyIdleObserverRunnable : public Runnable
 {
 public:
   NotifyIdleObserverRunnable(nsIIdleObserver* aIdleObserver,

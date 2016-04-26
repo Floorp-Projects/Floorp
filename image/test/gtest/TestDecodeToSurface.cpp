@@ -32,7 +32,7 @@ TEST(ImageDecodeToSurface, ImageModuleAvailable)
   EXPECT_TRUE(imgTools != nullptr);
 }
 
-class DecodeToSurfaceRunnable : public nsRunnable
+class DecodeToSurfaceRunnable : public Runnable
 {
 public:
   DecodeToSurfaceRunnable(RefPtr<SourceSurface>& aSurface,

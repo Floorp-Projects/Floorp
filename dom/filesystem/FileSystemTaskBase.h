@@ -207,7 +207,7 @@ private:
 
 // This class is the 'alter ego' of FileSystemTaskChildBase in the PBackground
 // world.
-class FileSystemTaskParentBase : public nsRunnable
+class FileSystemTaskParentBase : public Runnable
 {
 public:
   /*

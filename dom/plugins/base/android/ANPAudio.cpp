@@ -107,7 +107,7 @@ struct ANPAudioTrack {
   ANPAudioTrack() : lock("ANPAudioTrack") { }
 };
 
-class AudioRunnable : public nsRunnable
+class AudioRunnable : public mozilla::Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
