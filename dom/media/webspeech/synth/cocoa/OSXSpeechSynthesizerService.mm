@@ -17,14 +17,23 @@
 
 #import <Cocoa/Cocoa.h>
 
+// We can escape the default delimiters ("[[" and "]]") by temporarily
+// changing the delimiters just before they appear, and changing them back
+// just after.
+#define DLIM_ESCAPE_START "[[dlim (( ))]]"
+#define DLIM_ESCAPE_END "((dlim [[ ]]))"
+
 using namespace mozilla;
 
 class SpeechTaskCallback final : public nsISpeechTaskCallback
 {
 public:
-  SpeechTaskCallback(nsISpeechTask* aTask, NSSpeechSynthesizer* aSynth)
+  SpeechTaskCallback(nsISpeechTask* aTask,
+                     NSSpeechSynthesizer* aSynth,
+                     const nsTArray<size_t>& aOffsets)
     : mTask(aTask)
     , mSpeechSynthesizer(aSynth)
+    , mOffsets(aOffsets)
   {
     mStartingTime = TimeStamp::Now();
   }
@@ -50,6 +59,7 @@ private:
   NSSpeechSynthesizer* mSpeechSynthesizer;
   TimeStamp mStartingTime;
   uint32_t mCurrentIndex;
+  nsTArray<size_t> mOffsets;
 };
 
 NS_IMPL_CYCLE_COLLECTION(SpeechTaskCallback, mTask);
@@ -129,7 +139,7 @@ SpeechTaskCallback::GetTimeDurationFromStart()
 void
 SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex)
 {
-  mCurrentIndex = aIndex;
+  mCurrentIndex = mOffsets[aIndex];
   if (!mTask) {
     return;
   }
@@ -392,7 +402,34 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText,
            forProperty:NSSpeechPitchBaseProperty error:nil];
   }
 
-  RefPtr<SpeechTaskCallback> callback = new SpeechTaskCallback(aTask, synth);
+  nsAutoString escapedText;
+  // We need to map the the offsets from the given text to the escaped text.
+  // The index of the offsets array is the position in the escaped text,
+  // the element value is the position in the user-supplied text.
+  nsTArray<size_t> offsets;
+  offsets.SetCapacity(aText.Length());
+
+  // This loop looks for occurances of "[[" or "]]", escapes them, and
+  // populates the offsets array to supply a map to the original offsets.
+  for (size_t i = 0; i < aText.Length(); i++) {
+    if (aText.Length() > i + 1 &&
+        ((aText[i] == ']' && aText[i+1] == ']') ||
+         (aText[i] == '[' && aText[i+1] == '['))) {
+      escapedText.AppendLiteral(DLIM_ESCAPE_START);
+      offsets.AppendElements(strlen(DLIM_ESCAPE_START));
+      escapedText.Append(aText[i]);
+      offsets.AppendElement(i);
+      escapedText.Append(aText[++i]);
+      offsets.AppendElement(i);
+      escapedText.AppendLiteral(DLIM_ESCAPE_END);
+      offsets.AppendElements(strlen(DLIM_ESCAPE_END));
+    } else {
+      escapedText.Append(aText[i]);
+      offsets.AppendElement(i);
+    }
+  }
+
+  RefPtr<SpeechTaskCallback> callback = new SpeechTaskCallback(aTask, synth, offsets);
   nsresult rv = aTask->Setup(callback, 0, 0, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -400,7 +437,7 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText,
   [synth setDelegate:delegate];
   [delegate release ];
 
-  NSString* text = nsCocoaUtils::ToNSString(aText);
+  NSString* text = nsCocoaUtils::ToNSString(escapedText);
   BOOL success = [synth startSpeakingString:text];
   NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
