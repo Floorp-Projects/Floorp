@@ -471,6 +471,7 @@ ExtensionTabManager.prototype = {
 
   convert(tab) {
     let window = tab.ownerDocument.defaultView;
+    let browser = tab.linkedBrowser;
 
     let mutedInfo = {muted: tab.muted};
     if (tab.muteReason === null) {
@@ -489,17 +490,17 @@ ExtensionTabManager.prototype = {
       active: tab.selected,
       pinned: tab.pinned,
       status: TabManager.getStatus(tab),
-      incognito: PrivateBrowsingUtils.isBrowserPrivate(tab.linkedBrowser),
-      width: tab.linkedBrowser.clientWidth,
-      height: tab.linkedBrowser.clientHeight,
+      incognito: PrivateBrowsingUtils.isBrowserPrivate(browser),
+      width: browser.frameLoader.lazyWidth || browser.clientWidth,
+      height: browser.frameLoader.lazyHeight || browser.clientHeight,
       audible: tab.soundPlaying,
       mutedInfo,
     };
 
     if (this.hasTabPermission(tab)) {
-      result.url = tab.linkedBrowser.currentURI.spec;
-      if (tab.linkedBrowser.contentTitle) {
-        result.title = tab.linkedBrowser.contentTitle;
+      result.url = browser.currentURI.spec;
+      if (browser.contentTitle) {
+        result.title = browser.contentTitle;
       }
       let icon = window.gBrowser.getIcon(tab);
       if (icon) {
