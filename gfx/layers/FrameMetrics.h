@@ -761,6 +761,16 @@ struct ScrollSnapInfo {
     , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
   {}
 
+  bool operator==(const ScrollSnapInfo& aOther) const
+  {
+    return mScrollSnapTypeX == aOther.mScrollSnapTypeX &&
+           mScrollSnapTypeY == aOther.mScrollSnapTypeY &&
+           mScrollSnapIntervalX == aOther.mScrollSnapIntervalX &&
+           mScrollSnapIntervalY == aOther.mScrollSnapIntervalY &&
+           mScrollSnapDestination == aOther.mScrollSnapDestination &&
+           mScrollSnapCoordinates == aOther.mScrollSnapCoordinates;
+  }
+
   // The scroll frame's scroll-snap-type.
   // One of NS_STYLE_SCROLL_SNAP_{NONE, MANDATORY, PROXIMITY}.
   uint8_t mScrollSnapTypeX;
@@ -800,8 +810,8 @@ public:
 
   bool operator==(const ScrollMetadata& aOther) const
   {
-    // TODO(botond): Should we include mSnapInfo in the comparison?
     return mMetrics == aOther.mMetrics &&
+           mSnapInfo == aOther.mSnapInfo &&
            mMaskLayerIndex == aOther.mMaskLayerIndex &&
            mClipRect == aOther.mClipRect;
   }
