@@ -413,6 +413,8 @@ int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char *ufrag, ch
 
     ctx->Ta = 20;
 
+    ctx->test_timer_divider = 0;
+
     if (r=nr_socket_factory_create_int(NULL, &default_socket_factory_vtbl, &ctx->socket_factory))
       ABORT(r);
 

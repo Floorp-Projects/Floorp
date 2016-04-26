@@ -125,7 +125,6 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
     if(r=r_data_copy(&pair->stun_client->params.ice_binding_request.password,
       &rcand->stream->l2r_pass))
       ABORT(r);
-    pair->stun_client->params.ice_binding_request.priority=t_priority;
     /* TODO(ekr@rtfm.com): Do we need to frob this when we change role. Bug 890667 */
     pair->stun_client->params.ice_binding_request.control = pctx->controlling?
       NR_ICE_CONTROLLING:NR_ICE_CONTROLLED;
