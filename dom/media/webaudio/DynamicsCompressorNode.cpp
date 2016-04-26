@@ -143,7 +143,7 @@ private:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    class Command final : public nsRunnable
+    class Command final : public Runnable
     {
     public:
       Command(AudioNodeStream* aStream, float aReduction)

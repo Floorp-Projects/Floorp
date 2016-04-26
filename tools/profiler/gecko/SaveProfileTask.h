@@ -25,7 +25,7 @@
  * This is an event used to save the profile on the main thread
  * to be sure that it is not being modified while saving.
  */
-class SaveProfileTask : public nsRunnable {
+class SaveProfileTask : public mozilla::Runnable {
 public:
   SaveProfileTask() {}
 

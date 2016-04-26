@@ -9,7 +9,7 @@
 #include "nsThreadUtils.h"
 
 template <class T>
-class nsHtml5RefPtrReleaser : public nsRunnable
+class nsHtml5RefPtrReleaser : public mozilla::Runnable
   {
     private:
       T* mPtr;

@@ -59,7 +59,7 @@ AppendStateToStr(SourceBufferAttributes::AppendState aState)
 static Atomic<uint32_t> sStreamSourceID(0u);
 
 #ifdef MOZ_EME
-class DispatchKeyNeededEvent : public nsRunnable {
+class DispatchKeyNeededEvent : public Runnable {
 public:
   DispatchKeyNeededEvent(AbstractMediaDecoder* aDecoder,
                          nsTArray<uint8_t>& aInitData,

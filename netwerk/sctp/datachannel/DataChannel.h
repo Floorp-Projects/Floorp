@@ -444,7 +444,7 @@ private:
 // used to dispatch notifications of incoming data to the main thread
 // Patterned on CallOnMessageAvailable in WebSockets
 // Also used to proxy other items to MainThread
-class DataChannelOnMessageAvailable : public nsRunnable
+class DataChannelOnMessageAvailable : public Runnable
 {
 public:
   enum {

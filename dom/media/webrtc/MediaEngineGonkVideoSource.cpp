@@ -564,7 +564,7 @@ MediaEngineGonkVideoSource::OnUserError(UserContext aContext, nsresult aError)
 
   // A main thread runnable to send error code to all queued
   // MediaEnginePhotoCallbacks.
-  class TakePhotoError : public nsRunnable {
+  class TakePhotoError : public Runnable {
   public:
     TakePhotoError(nsTArray<RefPtr<MediaEnginePhotoCallback>>& aCallbacks,
                    nsresult aRv)
@@ -606,7 +606,7 @@ MediaEngineGonkVideoSource::OnTakePictureComplete(const uint8_t* aData, uint32_t
 
   // Create a main thread runnable to generate a blob and call all current queued
   // MediaEnginePhotoCallbacks.
-  class GenerateBlobRunnable : public nsRunnable {
+  class GenerateBlobRunnable : public Runnable {
   public:
     GenerateBlobRunnable(nsTArray<RefPtr<MediaEnginePhotoCallback>>& aCallbacks,
                          const uint8_t* aData,

@@ -424,7 +424,7 @@ protected:
 // dispatch the tasks from the worker thread to the main thread.
 //
 // Note that the derived class must override MainThreadRun.
-class WorkerMainThreadRunnable : public nsRunnable
+class WorkerMainThreadRunnable : public Runnable
 {
 protected:
   WorkerPrivate* mWorkerPrivate;

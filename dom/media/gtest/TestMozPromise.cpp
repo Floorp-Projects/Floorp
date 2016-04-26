@@ -34,7 +34,7 @@ private:
   RefPtr<TaskQueue> mTaskQueue;
 };
 
-class DelayedResolveOrReject : public nsRunnable
+class DelayedResolveOrReject : public Runnable
 {
 public:
   DelayedResolveOrReject(TaskQueue* aTaskQueue,

@@ -210,7 +210,7 @@ private:
     ~PicoVoice() {}
 };
 
-class PicoCallbackRunnable : public nsRunnable,
+class PicoCallbackRunnable : public Runnable,
                              public nsISpeechTaskCallback
 {
   friend class PicoSynthDataRunnable;
@@ -261,9 +261,9 @@ private:
   RefPtr<nsPicoService> mService;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(PicoCallbackRunnable, nsRunnable, nsISpeechTaskCallback)
+NS_IMPL_ISUPPORTS_INHERITED(PicoCallbackRunnable, Runnable, nsISpeechTaskCallback)
 
-// nsRunnable
+// Runnable
 
 NS_IMETHODIMP
 PicoCallbackRunnable::Run()
@@ -342,7 +342,7 @@ void
 PicoCallbackRunnable::DispatchSynthDataRunnable(
   already_AddRefed<SharedBuffer>&& aBuffer, size_t aBufferSize)
 {
-  class PicoSynthDataRunnable final : public nsRunnable
+  class PicoSynthDataRunnable final : public Runnable
   {
   public:
     PicoSynthDataRunnable(already_AddRefed<SharedBuffer>& aBuffer,

@@ -168,7 +168,7 @@ CrashReporterParent::FinalizeChildData()
   }
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  class NotifyOnMainThread : public nsRunnable
+  class NotifyOnMainThread : public Runnable
   {
   public:
     explicit NotifyOnMainThread(CrashReporterParent* aCR)

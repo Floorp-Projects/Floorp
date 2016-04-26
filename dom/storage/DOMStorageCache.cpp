@@ -690,7 +690,7 @@ DOMStorageUsage::DOMStorageUsage(const nsACString& aOriginScope)
 
 namespace {
 
-class LoadUsageRunnable : public nsRunnable
+class LoadUsageRunnable : public Runnable
 {
 public:
   LoadUsageRunnable(int64_t* aUsage, const int64_t aDelta)

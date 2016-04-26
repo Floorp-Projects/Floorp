@@ -378,7 +378,7 @@ ImportLoader::RemoveLinkElement(nsINode* aNode)
 // be set on the link element before the load event is fired even
 // if ImportLoader::Get returns an already loaded import and we
 // fire the load event immediately on the new referring link element.
-class AsyncEvent : public nsRunnable {
+class AsyncEvent : public Runnable {
 public:
   AsyncEvent(nsINode* aNode, bool aSuccess)
     : mNode(aNode)

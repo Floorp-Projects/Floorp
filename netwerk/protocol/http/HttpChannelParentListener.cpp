@@ -277,7 +277,7 @@ public:
 
 NS_IMPL_ISUPPORTS(HeaderVisitor, nsIHttpHeaderVisitor)
 
-class FinishSynthesizedResponse : public nsRunnable
+class FinishSynthesizedResponse : public Runnable
 {
   nsCOMPtr<nsIInterceptedChannel> mChannel;
 public:

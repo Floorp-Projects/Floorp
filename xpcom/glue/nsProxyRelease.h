@@ -22,7 +22,7 @@
 
 
 template<class T>
-class nsProxyReleaseEvent : public nsRunnable
+class nsProxyReleaseEvent : public mozilla::Runnable
 {
 public:
   explicit nsProxyReleaseEvent(already_AddRefed<T> aDoomed)

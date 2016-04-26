@@ -1235,7 +1235,7 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
         new_frame->ShallowCopy(*frame);
       }
       RefPtr<WebrtcVideoConduit> self(this);
-      RefPtr<nsRunnable> webrtc_runnable =
+      RefPtr<Runnable> webrtc_runnable =
         media::NewRunnableFrom([self, width, height, new_frame]() -> nsresult {
             UniquePtr<webrtc::I420VideoFrame> local_frame(new_frame); // Simplify cleanup
 

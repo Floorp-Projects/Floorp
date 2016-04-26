@@ -340,7 +340,7 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 }
 
 #ifdef MOZ_NUWA_PROCESS
-class NuwaMarkLinkMonitorThreadRunner : public nsRunnable
+class NuwaMarkLinkMonitorThreadRunner : public Runnable
 {
     NS_IMETHODIMP Run() override
     {

@@ -471,7 +471,7 @@ nsCategoryManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
 namespace {
 
-class CategoryNotificationRunnable : public nsRunnable
+class CategoryNotificationRunnable : public Runnable
 {
 public:
   CategoryNotificationRunnable(nsISupports* aSubject,

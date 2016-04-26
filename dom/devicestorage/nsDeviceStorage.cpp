@@ -487,7 +487,7 @@ DeviceStorageTypeChecker::IsSharedMediaRoot(const nsAString& aType)
 #endif
 }
 
-class IOEventComplete : public nsRunnable
+class IOEventComplete : public Runnable
 {
 public:
   IOEventComplete(DeviceStorageFile *aFile, const char *aType)

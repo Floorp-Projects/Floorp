@@ -88,7 +88,7 @@ private:
 
 NS_IMPL_ISUPPORTS(KeyPair, nsIIdentityKeyPair)
 
-class KeyGenRunnable : public nsRunnable, public nsNSSShutDownObject
+class KeyGenRunnable : public Runnable, public nsNSSShutDownObject
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -124,7 +124,7 @@ private:
   void operator=(const KeyGenRunnable &) = delete;
 };
 
-class SignRunnable : public nsRunnable, public nsNSSShutDownObject
+class SignRunnable : public Runnable, public nsNSSShutDownObject
 {
 public:
   NS_DECL_NSIRUNNABLE

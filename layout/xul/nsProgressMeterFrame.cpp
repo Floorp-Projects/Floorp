@@ -22,7 +22,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
 
-class nsReflowFrameRunnable : public nsRunnable
+class nsReflowFrameRunnable : public mozilla::Runnable
 {
 public:
   nsReflowFrameRunnable(nsIFrame* aFrame,

@@ -78,7 +78,7 @@ nsSMILTimedElement::InstanceTimeComparator::LessThan(
 
 namespace
 {
-  class AsyncTimeEventRunner : public nsRunnable
+  class AsyncTimeEventRunner : public Runnable
   {
   protected:
     RefPtr<nsIContent> mTarget;

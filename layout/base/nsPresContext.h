@@ -1517,7 +1517,7 @@ protected:
    */
   void CancelApplyPluginGeometryTimer();
 
-  class RunWillPaintObservers : public nsRunnable {
+  class RunWillPaintObservers : public mozilla::Runnable {
   public:
     explicit RunWillPaintObservers(nsRootPresContext* aPresContext) : mPresContext(aPresContext) {}
     void Revoke() { mPresContext = nullptr; }

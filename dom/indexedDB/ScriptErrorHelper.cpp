@@ -16,7 +16,7 @@
 
 namespace {
 
-class ScriptErrorRunnable final : public nsRunnable
+class ScriptErrorRunnable final : public mozilla::Runnable
 {
   nsString mMessage;
   nsCString mMessageName;

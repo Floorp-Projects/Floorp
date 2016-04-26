@@ -2237,7 +2237,7 @@ WebSocketChannel::EnsureHdrOut(uint32_t size)
 
 namespace {
 
-class RemoveObserverRunnable : public nsRunnable
+class RemoveObserverRunnable : public Runnable
 {
   RefPtr<WebSocketChannel> mChannel;
 
@@ -3916,7 +3916,7 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
 
   // Create the event to save the network statistics.
   // the event is then dispatched to the main thread.
-  RefPtr<nsRunnable> event =
+  RefPtr<Runnable> event =
     new SaveNetworkStatsEvent(mAppId, mIsInIsolatedMozBrowser, mActiveNetworkInfo,
                               countRecv, countSent, false);
   NS_DispatchToMainThread(event);

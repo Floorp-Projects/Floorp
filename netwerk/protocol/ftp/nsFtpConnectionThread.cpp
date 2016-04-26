@@ -1789,7 +1789,7 @@ nsFtpState::KillControlConnection()
     mControlConnection = nullptr;
 }
 
-class nsFtpAsyncAlert : public nsRunnable
+class nsFtpAsyncAlert : public Runnable
 {
 public:
     nsFtpAsyncAlert(nsIPrompt *aPrompter, nsString aResponseMsg)
@@ -2125,7 +2125,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
 
     // Create the event to save the network statistics.
     // the event is then dispathed to the main thread.
-    RefPtr<nsRunnable> event =
+    RefPtr<Runnable> event =
         new SaveNetworkStatsEvent(appId, isInBrowser, mActiveNetworkInfo,
                                   mCountRecv, 0, false);
     NS_DispatchToMainThread(event);

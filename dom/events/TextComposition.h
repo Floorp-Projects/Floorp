@@ -380,7 +380,7 @@ private:
    * CompositionEventDispatcher dispatches the specified composition (or text)
    * event.
    */
-  class CompositionEventDispatcher : public nsRunnable
+  class CompositionEventDispatcher : public Runnable
   {
   public:
     CompositionEventDispatcher(TextComposition* aTextComposition,

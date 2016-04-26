@@ -300,7 +300,7 @@ protected:
   class ThenValueBase : public Request
   {
   public:
-    class ResolveOrRejectRunnable : public nsRunnable
+    class ResolveOrRejectRunnable : public Runnable
     {
     public:
       ResolveOrRejectRunnable(ThenValueBase* aThenValue, MozPromise* aPromise)
@@ -366,8 +366,8 @@ protected:
       aPromise->mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!aPromise->IsPending());
 
-      RefPtr<nsRunnable> runnable =
-        static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveOrRejectRunnable)(this, aPromise));
+      RefPtr<Runnable> runnable =
+        static_cast<Runnable*>(new (typename ThenValueBase::ResolveOrRejectRunnable)(this, aPromise));
       PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
                   aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
                   runnable.get(), aPromise, this);
@@ -949,7 +949,7 @@ private:
 };
 
 template<typename PromiseType, typename ThisType, typename ...ArgTypes>
-class ProxyRunnable : public nsRunnable
+class ProxyRunnable : public Runnable
 {
 public:
   ProxyRunnable(typename PromiseType::Private* aProxyPromise, MethodCall<PromiseType, ThisType, ArgTypes...>* aMethodCall)

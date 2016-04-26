@@ -42,7 +42,7 @@ static char* GetResource(Decoder *aDecoder)
   return static_cast<char*>(aDecoder->mResource);
 }
 
-class GetIntPrefEvent : public nsRunnable {
+class GetIntPrefEvent : public Runnable {
 public:
   GetIntPrefEvent(const char* aPref, int32_t* aResult)
     : mPref(aPref), mResult(aResult) {}

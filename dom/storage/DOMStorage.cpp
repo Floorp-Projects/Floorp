@@ -176,7 +176,7 @@ DOMStorage::Clear(ErrorResult& aRv)
 
 namespace {
 
-class StorageNotifierRunnable : public nsRunnable
+class StorageNotifierRunnable : public Runnable
 {
 public:
   StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType)

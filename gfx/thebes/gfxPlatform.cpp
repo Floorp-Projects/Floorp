@@ -297,7 +297,7 @@ void CrashStatsLogForwarder::UpdateCrashReport()
   }
 }
 
-class LogForwarderEvent : public nsRunnable
+class LogForwarderEvent : public Runnable
 {
   virtual ~LogForwarderEvent() {}
 
@@ -316,7 +316,7 @@ protected:
   nsCString mMessage;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(LogForwarderEvent, nsRunnable);
+NS_IMPL_ISUPPORTS_INHERITED0(LogForwarderEvent, Runnable);
 
 void CrashStatsLogForwarder::Log(const std::string& aString)
 {
@@ -339,7 +339,7 @@ void CrashStatsLogForwarder::Log(const std::string& aString)
   }
 }
 
-class CrashTelemetryEvent : public nsRunnable
+class CrashTelemetryEvent : public Runnable
 {
   virtual ~CrashTelemetryEvent() {}
 
@@ -357,7 +357,7 @@ protected:
   uint32_t mReason;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(CrashTelemetryEvent, nsRunnable);
+NS_IMPL_ISUPPORTS_INHERITED0(CrashTelemetryEvent, Runnable);
 
 void
 CrashStatsLogForwarder::CrashAction(LogReason aReason)

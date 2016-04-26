@@ -87,13 +87,13 @@ class RunnableArgsTest : public MtransportTest {
   RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_){}
 
   void Test1Arg() {
-    nsRunnable * r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable * r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     r->Run();
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    nsRunnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     r->Run();
     ASSERT_EQ(2, ran_);
   }
@@ -116,13 +116,13 @@ class DispatchTest : public MtransportTest {
   }
 
   void Test1Arg() {
-    nsRunnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    nsRunnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(2, ran_);
   }

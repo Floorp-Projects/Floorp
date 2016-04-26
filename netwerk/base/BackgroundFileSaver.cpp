@@ -62,7 +62,7 @@ static LazyLogModule prlog("BackgroundFileSaver");
  * Runnable object used to notify the control thread that file contents will now
  * be saved to the specified file.
  */
-class NotifyTargetChangeRunnable final : public nsRunnable
+class NotifyTargetChangeRunnable final : public Runnable
 {
 public:
   NotifyTargetChangeRunnable(BackgroundFileSaver *aSaver, nsIFile *aTarget)

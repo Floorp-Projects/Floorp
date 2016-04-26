@@ -269,7 +269,7 @@ nsMenuBarFrame::CurrentMenuIsBeingDestroyed()
   mCurrentMenu = nullptr;
 }
 
-class nsMenuBarSwitchMenu : public nsRunnable
+class nsMenuBarSwitchMenu : public Runnable
 {
 public:
   nsMenuBarSwitchMenu(nsIContent* aMenuBar,

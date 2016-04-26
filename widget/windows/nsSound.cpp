@@ -32,7 +32,7 @@ using mozilla::LogLevel;
 
 PRLogModuleInfo* gWin32SoundLog = nullptr;
 
-class nsSoundPlayer: public nsRunnable {
+class nsSoundPlayer: public mozilla::Runnable {
 public:
   nsSoundPlayer(nsSound *aSound, const wchar_t* aSoundName) :
     mSoundName(aSoundName), mSound(aSound)
@@ -60,7 +60,7 @@ protected:
     NS_IF_ADDREF(mSound);
   }
 
-  class SoundReleaser: public nsRunnable {
+  class SoundReleaser: public mozilla::Runnable {
   public:
     SoundReleaser(nsSound* aSound) :
       mSound(aSound)

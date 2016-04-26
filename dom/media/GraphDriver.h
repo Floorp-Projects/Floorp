@@ -528,7 +528,7 @@ private:
   bool mMicrophoneActive;
 };
 
-class AsyncCubebTask : public nsRunnable
+class AsyncCubebTask : public Runnable
 {
 public:
 

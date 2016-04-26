@@ -101,7 +101,7 @@ struct DeferredFinalizeFunctionHolder
   void* data;
 };
 
-class IncrementalFinalizeRunnable : public nsRunnable
+class IncrementalFinalizeRunnable : public Runnable
 {
   typedef AutoTArray<DeferredFinalizeFunctionHolder, 16> DeferredFinalizeArray;
   typedef CycleCollectedJSRuntime::DeferredFinalizerTable DeferredFinalizerTable;
@@ -915,7 +915,7 @@ CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
   return self->CustomContextCallback(aContext, aOperation);
 }
 
-class PromiseJobRunnable final : public nsRunnable
+class PromiseJobRunnable final : public Runnable
 {
 public:
   PromiseJobRunnable(JSContext* aCx, JS::HandleObject aCallback)

@@ -223,7 +223,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   return result.forget();
 }
 
-class DispatchResizeToControls : public nsRunnable
+class DispatchResizeToControls : public Runnable
 {
 public:
   explicit DispatchResizeToControls(nsIContent* aContent)
@@ -305,7 +305,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                                        aReflowState.ComputedWidth(),
                                        aReflowState.ComputedHeight()));
       if (child->GetSize() != size) {
-        RefPtr<nsRunnable> event = new DispatchResizeToControls(child->GetContent());
+        RefPtr<Runnable> event = new DispatchResizeToControls(child->GetContent());
         nsContentUtils::AddScriptRunner(event);
       }
     } else if (child->GetContent() == mCaptionDiv) {

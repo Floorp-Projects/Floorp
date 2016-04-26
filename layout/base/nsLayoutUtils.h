@@ -2957,7 +2957,7 @@ void StrokeLineWithSnapping(const nsPoint& aP1, const nsPoint& aP2,
   } // namespace layout
 } // namespace mozilla
 
-class nsSetAttrRunnable : public nsRunnable
+class nsSetAttrRunnable : public mozilla::Runnable
 {
 public:
   nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
@@ -2972,7 +2972,7 @@ public:
   nsAutoString mValue;
 };
 
-class nsUnsetAttrRunnable : public nsRunnable
+class nsUnsetAttrRunnable : public mozilla::Runnable
 {
 public:
   nsUnsetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName);

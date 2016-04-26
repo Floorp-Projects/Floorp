@@ -29,6 +29,8 @@
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
 
+using namespace mozilla;
+
 namespace {
 class SocketTransportServiceTest : public MtransportTest {
  public:
@@ -74,7 +76,7 @@ class SocketTransportServiceTest : public MtransportTest {
 
 
 // Received an event.
-class EventReceived : public nsRunnable {
+class EventReceived : public Runnable {
 public:
   explicit EventReceived(SocketTransportServiceTest *test) :
       test_(test) {}
@@ -89,7 +91,7 @@ public:
 
 
 // Register our listener on the socket
-class RegisterEvent : public nsRunnable {
+class RegisterEvent : public Runnable {
 public:
   explicit RegisterEvent(SocketTransportServiceTest *test) :
       test_(test) {}

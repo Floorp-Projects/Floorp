@@ -1947,7 +1947,7 @@ HttpBaseChannel::GetResponseVersion(uint32_t *major, uint32_t *minor)
 
 namespace {
 
-class CookieNotifierRunnable : public nsRunnable
+class CookieNotifierRunnable : public Runnable
 {
 public:
   CookieNotifierRunnable(HttpBaseChannel* aChannel, char const * aCookie)

@@ -968,7 +968,7 @@ nsGonkCameraControl::GetCameraHw()
 nsresult
 nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
 {
-  class SetThumbnailSize : public nsRunnable
+  class SetThumbnailSize : public Runnable
   {
   public:
     SetThumbnailSize(nsGonkCameraControl* aCameraControl, const Size& aSize)
@@ -1086,7 +1086,7 @@ nsGonkCameraControl::RationalizeRotation(int32_t aRotation)
 nsresult
 nsGonkCameraControl::SetPictureSize(const Size& aSize)
 {
-  class SetPictureSize : public nsRunnable
+  class SetPictureSize : public Runnable
   {
   public:
     SetPictureSize(nsGonkCameraControl* aCameraControl, const Size& aSize)
@@ -1288,7 +1288,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
 nsresult
 nsGonkCameraControl::StopRecordingImpl()
 {
-  class RecordingComplete : public nsRunnable
+  class RecordingComplete : public Runnable
   {
   public:
     RecordingComplete(already_AddRefed<DeviceStorageFile> aFile)
@@ -1472,7 +1472,7 @@ nsGonkCameraControl::OnAutoFocusMoving(bool aIsMoving)
 void
 nsGonkCameraControl::OnAutoFocusComplete(bool aSuccess, bool aExpired)
 {
-  class AutoFocusComplete : public nsRunnable
+  class AutoFocusComplete : public Runnable
   {
   public:
     AutoFocusComplete(nsGonkCameraControl* aCameraControl, bool aSuccess, bool aExpired)
@@ -2247,7 +2247,7 @@ nsGonkCameraControl::OnRateLimitPreview(bool aLimit)
 void
 nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeight, int32_t aRotation)
 {
-  class PosterRunnable : public nsRunnable {
+  class PosterRunnable : public Runnable {
   public:
     PosterRunnable(nsGonkCameraControl* aTarget, Image* aImage,
                    uint32_t aWidth, uint32_t aHeight, int32_t aRotation)

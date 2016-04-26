@@ -147,7 +147,7 @@ private:
   void
   DispatchTask(FunctionType aFun)
   {
-    RefPtr<nsRunnable> r = NS_NewRunnableFunction(aFun);
+    RefPtr<Runnable> r = NS_NewRunnableFunction(aFun);
     mTaskQueue->Dispatch(r.forget());
   }
 

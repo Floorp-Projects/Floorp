@@ -1414,7 +1414,7 @@ IsWifiActive()
 }
 
 class
-nsWakeupNotifier : public nsRunnable
+nsWakeupNotifier : public Runnable
 {
 public:
     explicit nsWakeupNotifier(nsIIOServiceInternal *ioService)
@@ -1978,7 +1978,7 @@ nsIOService::NotifyAppOfflineStatus(uint32_t appId, int32_t state)
 
 namespace {
 
-class SetAppOfflineMainThread : public nsRunnable
+class SetAppOfflineMainThread : public Runnable
 {
 public:
     SetAppOfflineMainThread(uint32_t aAppId, int32_t aState)

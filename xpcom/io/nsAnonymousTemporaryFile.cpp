@@ -85,7 +85,7 @@ GetTempDir(nsIFile** aTempDir)
 
 namespace {
 
-class nsRemoteAnonymousTemporaryFileRunnable : public nsRunnable
+class nsRemoteAnonymousTemporaryFileRunnable : public Runnable
 {
 public:
   dom::FileDescOrError *mResultPtr;

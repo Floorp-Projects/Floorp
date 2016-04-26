@@ -62,7 +62,7 @@ TestingPrefChangedCallback(const char* aPrefName,
 }
 
 class AbortOperationsRunnable final
-  : public nsRunnable
+  : public Runnable
 {
   ContentParentId mContentParentId;
 

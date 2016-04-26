@@ -47,7 +47,7 @@ GMPContentParent::~GMPContentParent()
                                    new DeleteTask<Transport>(GetTransport()));
 }
 
-class ReleaseGMPContentParent : public nsRunnable
+class ReleaseGMPContentParent : public Runnable
 {
 public:
   explicit ReleaseGMPContentParent(GMPContentParent* aToRelease)

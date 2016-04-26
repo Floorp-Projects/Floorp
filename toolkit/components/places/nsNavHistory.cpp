@@ -543,7 +543,7 @@ nsNavHistory::NotifyManyFrecenciesChanged()
 
 namespace {
 
-class FrecencyNotification : public nsRunnable
+class FrecencyNotification : public Runnable
 {
 public:
   FrecencyNotification(const nsACString& aSpec,

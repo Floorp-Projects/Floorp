@@ -65,7 +65,7 @@ namespace gmp {
 
 static StaticRefPtr<GeckoMediaPluginService> sSingletonService;
 
-class GMPServiceCreateHelper final : public nsRunnable
+class GMPServiceCreateHelper final : public mozilla::Runnable
 {
   RefPtr<GeckoMediaPluginService> mService;
 

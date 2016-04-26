@@ -128,7 +128,7 @@ WebSocketChannelChild::IsEncrypted() const
   return mEncrypted;
 }
 
-class WrappedChannelEvent : public nsRunnable
+class WrappedChannelEvent : public Runnable
 {
 public:
   explicit WrappedChannelEvent(ChannelEvent *aChannelEvent)
@@ -479,7 +479,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   return NS_OK;
 }
 
-class CloseEvent : public nsRunnable
+class CloseEvent : public Runnable
 {
 public:
   CloseEvent(WebSocketChannelChild *aChild,
@@ -527,7 +527,7 @@ WebSocketChannelChild::Close(uint16_t code, const nsACString & reason)
   return NS_OK;
 }
 
-class MsgEvent : public nsRunnable
+class MsgEvent : public Runnable
 {
 public:
   MsgEvent(WebSocketChannelChild *aChild,
@@ -602,7 +602,7 @@ WebSocketChannelChild::SendBinaryMsg(const nsACString &aMsg)
   return NS_OK;
 }
 
-class BinaryStreamEvent : public nsRunnable
+class BinaryStreamEvent : public Runnable
 {
 public:
   BinaryStreamEvent(WebSocketChannelChild *aChild,

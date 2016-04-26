@@ -186,18 +186,18 @@ Factory::CreateInstance(nsISupports* aDelegate,
   return NS_OK;
 }
 
-class Runnable : public nsRunnable
+class TestRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
 
-  Runnable() : mFirstRunnableDone(false) { }
+  TestRunnable() : mFirstRunnableDone(false) { }
 
   bool mFirstRunnableDone;
 };
 
 NS_IMETHODIMP
-Runnable::Run()
+TestRunnable::Run()
 {
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
 
   AutoCreateAndDestroyReentrantMonitor mon1(&gReentrantMonitor);
 
-  RefPtr<Runnable> runnable = new Runnable();
+  RefPtr<TestRunnable> runnable = new TestRunnable();
   NS_ENSURE_TRUE(runnable, 1);
 
   // Run the classID test

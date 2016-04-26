@@ -17,7 +17,7 @@ extern "C" {
   jclass __jsjni_GetGlobalClassRef(const char *className);
 }
 
-class GetGlobalClassRefRunnable : public nsRunnable {
+class GetGlobalClassRefRunnable : public mozilla::Runnable {
   public:
     GetGlobalClassRefRunnable(const char *className, jclass *foundClass) :
         mClassName(className), mResult(foundClass) {}

@@ -988,7 +988,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 /**
  * Dispatched from the main thread to send reports for one CSP violation.
  */
-class CSPReportSenderRunnable final : public nsRunnable
+class CSPReportSenderRunnable final : public Runnable
 {
   public:
     CSPReportSenderRunnable(nsISupports* aBlockedContentSource,
