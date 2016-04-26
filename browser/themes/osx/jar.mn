@@ -144,7 +144,6 @@ browser.jar:
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
 * skin/classic/browser/preferences/in-content/dialog.css      (preferences/in-content/dialog.css)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
-  skin/classic/browser/preferences/search.css               (preferences/search.css)
   skin/classic/browser/preferences/checkbox.png             (preferences/checkbox.png)
   skin/classic/browser/preferences/checkbox@2x.png          (preferences/checkbox@2x.png)
   skin/classic/browser/yosemite/preferences/checkbox.png    (preferences/checkbox-yosemite.png)

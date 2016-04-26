@@ -459,13 +459,13 @@ addMessageListener("TextZoom", function (aMessage) {
 
 addEventListener("FullZoomChange", function () {
   if (ZoomManager.refreshFullZoom()) {
-    sendAsyncMessage("FullZoomChange", { value:  ZoomManager.fullZoom});
+    sendAsyncMessage("FullZoomChange", { value: ZoomManager.fullZoom });
   }
 }, false);
 
 addEventListener("TextZoomChange", function (aEvent) {
   if (ZoomManager.refreshTextZoom()) {
-    sendAsyncMessage("TextZoomChange", { value:  ZoomManager.textZoom});
+    sendAsyncMessage("TextZoomChange", { value: ZoomManager.textZoom });
   }
 }, false);
 

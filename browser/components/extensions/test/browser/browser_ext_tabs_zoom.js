@@ -40,13 +40,43 @@ add_task(function* () {
       });
     }
 
-    let checkZoom = (tabId, newValue) => {
+
+    let zoomEvents = [];
+    let eventPromises = [];
+    browser.tabs.onZoomChange.addListener(info => {
+      zoomEvents.push(info);
+      if (eventPromises.length) {
+        eventPromises.shift().resolve();
+      }
+    });
+
+    let checkZoom = (tabId, newValue, oldValue = null) => {
+      let awaitEvent;
+      if (oldValue != null && !zoomEvents.length) {
+        awaitEvent = new Promise(resolve => {
+          eventPromises.push({resolve});
+        });
+      }
+
       return Promise.all([
         browser.tabs.getZoom(tabId),
         msg("get-zoom", tabId),
+        awaitEvent,
       ]).then(([apiZoom, realZoom]) => {
         browser.test.assertEq(newValue, apiZoom, `Got expected zoom value from API`);
         browser.test.assertEq(newValue, realZoom, `Got expected zoom value from parent`);
+
+        if (oldValue != null) {
+          let event = zoomEvents.shift();
+          browser.test.assertEq(tabId, event.tabId, `Got expected zoom event tab ID`);
+          browser.test.assertEq(newValue, event.newZoomFactor, `Got expected zoom event zoom factor`);
+          browser.test.assertEq(oldValue, event.oldZoomFactor, `Got expected zoom event old zoom factor`);
+
+          browser.test.assertEq(3, Object.keys(event.zoomSettings).length, `Zoom settings should have 3 keys`);
+          browser.test.assertEq("automatic", event.zoomSettings.mode, `Mode should be "automatic"`);
+          browser.test.assertEq("per-origin", event.zoomSettings.scope, `Scope should be "per-origin"`);
+          browser.test.assertEq(1, event.zoomSettings.defaultZoomFactor, `Default zoom should be 1`);
+        }
       });
     };
 
@@ -61,7 +91,7 @@ add_task(function* () {
     }).then(() => {
       return browser.tabs.setZoom(tabIds[0], 2);
     }).then(() => {
-      return checkZoom(tabIds[0], 2);
+      return checkZoom(tabIds[0], 2, 1);
     }).then(() => {
       return browser.tabs.getZoomSettings(tabIds[0]);
     }).then(zoomSettings => {
@@ -80,29 +110,29 @@ add_task(function* () {
 
       return promiseUpdated(tabIds[1], "url");
     }).then(() => {
-      return checkZoom(tabIds[1], 2);
+      return checkZoom(tabIds[1], 2, 1);
     }).then(() => {
       browser.test.log(`Update zoom in tab 2, expect changes in both tabs`);
       return browser.tabs.setZoom(tabIds[1], 1.5);
     }).then(() => {
-      return checkZoom(tabIds[1], 1.5);
+      return checkZoom(tabIds[1], 1.5, 2);
     }).then(() => {
       browser.test.log(`Switch to tab 1, expect asynchronous zoom change just after the switch`);
       return browser.tabs.update(tabIds[0], {active: true});
     }).then(() => {
       return new Promise(resolve => setTimeout(resolve, 0));
     }).then(() => {
-      return checkZoom(tabIds[0], 1.5);
+      return checkZoom(tabIds[0], 1.5, 2);
     }).then(() => {
       browser.test.log("Set zoom to 0, expect it set to 1");
       return browser.tabs.setZoom(tabIds[0], 0);
     }).then(() => {
-      return checkZoom(tabIds[0], 1);
+      return checkZoom(tabIds[0], 1, 1.5);
     }).then(() => {
       browser.test.log("Change zoom externally, expect changes reflected");
       return msg("enlarge");
     }).then(() => {
-      return checkZoom(tabIds[0], 1.1);
+      return checkZoom(tabIds[0], 1.1, 1);
     }).then(() => {
       return Promise.all([
         browser.tabs.setZoom(tabIds[0], 0),
@@ -110,8 +140,8 @@ add_task(function* () {
       ]);
     }).then(() => {
       return Promise.all([
-        checkZoom(tabIds[0], 1),
-        checkZoom(tabIds[1], 1),
+        checkZoom(tabIds[0], 1, 1.1),
+        checkZoom(tabIds[1], 1, 1.5),
       ]);
     }).then(() => {
       browser.test.log("Check that invalid zoom values throw an error");
