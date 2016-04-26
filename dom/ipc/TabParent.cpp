@@ -3415,6 +3415,22 @@ TabParent::RecvGetTabCount(uint32_t* aValue)
   return true;
 }
 
+bool
+TabParent::RecvLookUpDictionary(const nsString& aText,
+                                nsTArray<FontRange>&& aFontRangeArray,
+                                const bool& aIsVertical,
+                                const LayoutDeviceIntPoint& aPoint)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  widget->LookUpDictionary(aText, aFontRangeArray, aIsVertical,
+                           aPoint - GetChildProcessOffset());
+  return true;
+}
+
 NS_IMETHODIMP
 FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
 {
