@@ -56,22 +56,13 @@ template<typename T, size_t N, class AP, bool IsPod>
 struct VectorImpl
 {
   /*
-   * Constructs a default object in the uninitialized memory at *aDst.
+   * Constructs an object in the uninitialized memory at *aDst with aArgs.
    */
+  template<typename... Args>
   MOZ_NONNULL(1)
-  static inline void new_(T* aDst)
+  static inline void new_(T* aDst, Args&&... aArgs)
   {
-    new(aDst) T();
-  }
-
-  /*
-   * Constructs an object in the uninitialized memory at *aDst from aSrc.
-   */
-  template<typename U>
-  MOZ_NONNULL(1)
-  static inline void new_(T* aDst, U&& aU)
-  {
-    new(aDst) T(Forward<U>(aU));
+    new(aDst) T(Forward<Args>(aArgs)...);
   }
 
   /* Destroys constructed objects in the range [aBegin, aEnd). */
@@ -168,15 +159,11 @@ struct VectorImpl
 template<typename T, size_t N, class AP>
 struct VectorImpl<T, N, AP, true>
 {
-  static inline void new_(T* aDst)
+  template<typename... Args>
+  MOZ_NONNULL(1)
+  static inline void new_(T* aDst, Args&&... aArgs)
   {
-    *aDst = T();
-  }
-
-  template<typename U>
-  static inline void new_(T* aDst, U&& aU)
-  {
-    *aDst = Forward<U>(aU);
+    *aDst = T(Forward<Args>(aArgs)...);
   }
 
   static inline void destroy(T*, T*) {}
@@ -597,7 +584,7 @@ public:
   {
     if (!growByUninitialized(1))
       return false;
-    new (&back()) T(Forward<Args>(aArgs)...);
+    Impl::new_(&back(), Forward<Args>(aArgs)...);
     return true;
   }
 
@@ -632,7 +619,7 @@ public:
   void infallibleEmplaceBack(Args&&... aArgs)
   {
     infallibleGrowByUninitialized(1);
-    new (&back()) T(Forward<Args>(aArgs)...);
+    Impl::new_(&back(), Forward<Args>(aArgs)...);
   }
 
   void popBack();
