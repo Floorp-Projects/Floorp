@@ -416,7 +416,8 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                       Float aSigma,
                                       CompositionOp aOperator)
 {
-  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA)) {
+  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA) ||
+      aSurface->GetSize().IsEmpty()) {
     return;
   }
 

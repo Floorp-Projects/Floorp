@@ -8,7 +8,7 @@
 interface nsISimpleEnumerator;
 interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
-interface nsISchedulingContext;
+interface nsIRequestContext;
 
 typedef unsigned long nsLoadFlags;
 
@@ -83,7 +83,7 @@ interface nsILoadGroup : nsIRequest
      * Context for managing things like js/css connection blocking,
      * and per-tab connection grouping.
      */
-    [noscript] readonly attribute nsID schedulingContextID;
+    [noscript] readonly attribute nsID requestContextID;
 
     /**
      * The set of load flags that will be added to all new requests added to

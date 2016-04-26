@@ -2568,6 +2568,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
     JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
     JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
+    JS_INLINABLE_FN("GetFirstDollarIndex", GetFirstDollarIndex, 1,0,
+                    GetFirstDollarIndex),
 
     JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
     JS_FN("FlatStringSearch", FlatStringSearch, 2,0),

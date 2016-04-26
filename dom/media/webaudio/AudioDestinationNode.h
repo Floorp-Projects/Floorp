@@ -86,6 +86,12 @@ public:
   void InputMuted(bool aInputMuted);
   void ResolvePromise(AudioBuffer* aRenderedBuffer);
 
+  unsigned long Length()
+  {
+    MOZ_ASSERT(mIsOffline);
+    return mFramesToProduce;
+  }
+
 protected:
   virtual ~AudioDestinationNode();
 

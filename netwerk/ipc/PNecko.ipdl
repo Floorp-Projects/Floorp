@@ -112,7 +112,7 @@ parent:
                         nsString password, nsString domain);
   async OnAuthCancelled(uint64_t callbackId, bool userCancel);
 
-  async RemoveSchedulingContext(nsCString scid);
+  async RemoveRequestContext(nsCString rcid);
 
 child:
   /*

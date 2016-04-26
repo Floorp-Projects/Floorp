@@ -145,9 +145,9 @@ namespace net {
 } // namespace net
 } // namespace mozilla
 
-#include "SchedulingContextService.h"
-typedef mozilla::net::SchedulingContextService SchedulingContextService;
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(SchedulingContextService, Init)
+#include "RequestContextService.h"
+typedef mozilla::net::RequestContextService RequestContextService;
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RequestContextService, Init)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -837,7 +837,7 @@ NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSILOADCONTEXTINFOFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
 NS_DEFINE_NAMED_CID(NS_CAPTIVEPORTAL_CID);
-NS_DEFINE_NAMED_CID(NS_SCHEDULINGCONTEXTSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_REQUESTCONTEXTSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
@@ -989,7 +989,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NSILOADCONTEXTINFOFACTORY_CID, false, nullptr, LoadContextInfoFactoryConstructor },
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
     { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::CaptivePortalServiceConstructor },
-    { &kNS_SCHEDULINGCONTEXTSERVICE_CID, false, nullptr, SchedulingContextServiceConstructor },
+    { &kNS_REQUESTCONTEXTSERVICE_CID, false, nullptr, RequestContextServiceConstructor },
     { nullptr }
 };
 
@@ -1147,7 +1147,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NSILOADCONTEXTINFOFACTORY_CONTRACTID, &kNS_NSILOADCONTEXTINFOFACTORY_CID },
     { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
     { NS_CAPTIVEPORTAL_CONTRACTID, &kNS_CAPTIVEPORTAL_CID },
-    { NS_SCHEDULINGCONTEXTSERVICE_CONTRACTID, &kNS_SCHEDULINGCONTEXTSERVICE_CID },
+    { NS_REQUESTCONTEXTSERVICE_CONTRACTID, &kNS_REQUESTCONTEXTSERVICE_CID },
     { nullptr }
 };
 

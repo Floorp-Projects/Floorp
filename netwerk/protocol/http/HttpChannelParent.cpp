@@ -130,7 +130,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.fds(),
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
-                       a.cacheKey(), a.schedulingContextID(), a.preflightArgs(),
+                       a.cacheKey(), a.requestContextID(), a.preflightArgs(),
                        a.initialRwin(), a.blockAuthPrompt(),
                        a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent(), a.contentTypeHint());
@@ -258,7 +258,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalHttpResponseHead& aSynthesizedResponseHead,
                                  const nsCString&           aSecurityInfoSerialization,
                                  const uint32_t&            aCacheKey,
-                                 const nsCString&           aSchedulingContextID,
+                                 const nsCString&           aRequestContextID,
                                  const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                  const uint32_t&            aInitialRwin,
                                  const bool&                aBlockAuthPrompt,
@@ -478,9 +478,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     }
   }
 
-  nsID schedulingContextID;
-  schedulingContextID.Parse(aSchedulingContextID.BeginReading());
-  mChannel->SetSchedulingContextID(schedulingContextID);
+  nsID requestContextID;
+  requestContextID.Parse(aRequestContextID.BeginReading());
+  mChannel->SetRequestContextID(requestContextID);
 
   mSuspendAfterSynthesizeResponse = aSuspendAfterSynthesizeResponse;
 

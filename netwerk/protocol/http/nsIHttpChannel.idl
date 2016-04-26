@@ -399,7 +399,7 @@ interface nsIHttpChannel : nsIChannel
     void redirectTo(in nsIURI aTargetURI);
 
     /**
-     * Identifies the scheduling context for this load.
+     * Identifies the request context for this load.
      */
-    [noscript] attribute nsID schedulingContextID;
+    [noscript] attribute nsID requestContextID;
 };

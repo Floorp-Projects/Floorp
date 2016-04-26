@@ -644,8 +644,10 @@ ArrayMetaTypeDescr::create(JSContext* cx,
     if (!CreateTraceList(cx, obj))
         return nullptr;
 
-    if (!cx->zone()->typeDescrObjects.put(obj))
+    if (!cx->zone()->typeDescrObjects.put(obj)) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     return obj;
 }
@@ -691,12 +693,16 @@ ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp)
 
     // Construct a canonical string `new ArrayType(<elementType>, N)`:
     StringBuffer contents(cx);
-    contents.append("new ArrayType(");
-    contents.append(&elementType->stringRepr());
-    contents.append(", ");
+    if (!contents.append("new ArrayType("))
+        return false;
+    if (!contents.append(&elementType->stringRepr()))
+        return false;
+    if (!contents.append(", "))
+        return false;
     if (!NumberValueToStringBuffer(cx, NumberValue(length), contents))
         return false;
-    contents.append(")");
+    if (!contents.append(")"))
+        return false;
     RootedAtom stringRepr(cx, contents.finishAtom());
     if (!stringRepr)
         return false;
@@ -799,10 +805,8 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!userFieldTypes)
         return nullptr;
 
-    if (!stringBuffer.append("new StructType({")) {
-        ReportOutOfMemory(cx);
+    if (!stringBuffer.append("new StructType({"))
         return nullptr;
-    }
 
     RootedValue fieldTypeVal(cx);
     RootedId id(cx);
@@ -830,14 +834,10 @@ StructMetaTypeDescr::create(JSContext* cx,
 
         // Collect field name and type object
         RootedValue fieldName(cx, IdToValue(id));
-        if (!fieldNames.append(fieldName)) {
-            ReportOutOfMemory(cx);
+        if (!fieldNames.append(fieldName))
             return nullptr;
-        }
-        if (!fieldTypeObjs.append(ObjectValue(*fieldType))) {
-            ReportOutOfMemory(cx);
+        if (!fieldTypeObjs.append(ObjectValue(*fieldType)))
             return nullptr;
-        }
 
         // userFieldTypes[id] = typeObj
         if (!DefineProperty(cx, userFieldTypes, id, fieldTypeObjs[i], nullptr, nullptr,
@@ -847,22 +847,14 @@ StructMetaTypeDescr::create(JSContext* cx,
         }
 
         // Append "f:Type" to the string repr
-        if (i > 0 && !stringBuffer.append(", ")) {
-            ReportOutOfMemory(cx);
+        if (i > 0 && !stringBuffer.append(", "))
             return nullptr;
-        }
-        if (!stringBuffer.append(JSID_TO_ATOM(id))) {
-            ReportOutOfMemory(cx);
+        if (!stringBuffer.append(JSID_TO_ATOM(id)))
             return nullptr;
-        }
-        if (!stringBuffer.append(": ")) {
-            ReportOutOfMemory(cx);
+        if (!stringBuffer.append(": "))
             return nullptr;
-        }
-        if (!stringBuffer.append(&fieldType->stringRepr())) {
-            ReportOutOfMemory(cx);
+        if (!stringBuffer.append(&fieldType->stringRepr()))
             return nullptr;
-        }
 
         // Offset of this field is the current total size adjusted for
         // the field's alignment.
@@ -873,10 +865,8 @@ StructMetaTypeDescr::create(JSContext* cx,
             return nullptr;
         }
         MOZ_ASSERT(offset.value() >= 0);
-        if (!fieldOffsets.append(Int32Value(offset.value()))) {
-            ReportOutOfMemory(cx);
+        if (!fieldOffsets.append(Int32Value(offset.value())))
             return nullptr;
-        }
 
         // userFieldOffsets[id] = offset
         RootedValue offsetValue(cx, Int32Value(offset.value()));
@@ -903,10 +893,9 @@ StructMetaTypeDescr::create(JSContext* cx,
     }
 
     // Complete string representation.
-    if (!stringBuffer.append("})")) {
-        ReportOutOfMemory(cx);
+    if (!stringBuffer.append("})"))
         return nullptr;
-    }
+
     RootedAtom stringRepr(cx, stringBuffer.finishAtom());
     if (!stringRepr)
         return nullptr;
@@ -1003,6 +992,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!cx->zone()->typeDescrObjects.put(descr) ||
         !cx->zone()->typeDescrObjects.put(fieldTypeVec))
     {
+        ReportOutOfMemory(cx);
         return nullptr;
     }
 
@@ -1172,8 +1162,10 @@ DefineSimpleTypeDescr(JSContext* cx,
     if (!CreateTraceList(cx, descr))
         return false;
 
-    if (!cx->zone()->typeDescrObjects.put(descr))
+    if (!cx->zone()->typeDescrObjects.put(descr)) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     return true;
 }

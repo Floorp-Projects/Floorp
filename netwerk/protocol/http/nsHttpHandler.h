@@ -24,7 +24,7 @@ class nsIPrefBranch;
 class nsICancelable;
 class nsICookieService;
 class nsIIOService;
-class nsISchedulingContextService;
+class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsITimer;
@@ -352,9 +352,9 @@ public:
     void SetCacheSkippedUntil(TimeStamp arg) { mCacheSkippedUntil = arg; }
     void ClearCacheSkippedUntil() { mCacheSkippedUntil = TimeStamp(); }
 
-    nsISchedulingContextService *GetSchedulingContextService()
+    nsIRequestContextService *GetRequestContextService()
     {
-        return mSchedulingContextService.get();
+        return mRequestContextService.get();
     }
 
     void ShutdownConnectionManager();
@@ -567,7 +567,7 @@ private:
     // incorrect content lengths or malformed chunked encodings
     FrameCheckLevel mEnforceH1Framing;
 
-    nsCOMPtr<nsISchedulingContextService> mSchedulingContextService;
+    nsCOMPtr<nsIRequestContextService> mRequestContextService;
 
     // True if remote newtab content-signature disabled because of the channel.
     bool mNewTabContentSignaturesDisabled;

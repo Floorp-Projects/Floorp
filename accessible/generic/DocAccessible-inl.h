@@ -160,6 +160,25 @@ DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(nsINode* aNode) const
   return acc ? acc : GetContainerAccessible(aNode);
 }
 
+inline void
+DocAccessible::CreateSubtree(Accessible* aChild)
+{
+  // If a focused node has been shown then it could mean its frame was recreated
+  // while the node stays focused and we need to fire focus event on
+  // the accessible we just created. If the queue contains a focus event for
+  // this node already then it will be suppressed by this one.
+  Accessible* focusedAcc = nullptr;
+  CacheChildrenInSubtree(aChild, &focusedAcc);
+
+  // XXX: do we really want to send focus to focused DOM node not taking into
+  // account active item?
+  if (focusedAcc) {
+    FocusMgr()->DispatchFocusEvent(this, focusedAcc);
+    SelectionMgr()->
+      SetControlSelectionListener(focusedAcc->GetNode()->AsElement());
+  }
+}
+
 } // namespace a11y
 } // namespace mozilla
 
