@@ -12,7 +12,7 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
-#include "sechash.h"	/* for HASH_GetHashObject() */
+#include "sechash.h" /* for HASH_GetHashObject() */
 #include "nss.h"
 #include "pk11func.h"
 #include "cryptohi.h"
@@ -26,43 +26,41 @@
 #include <string.h>
 
 #if (defined(XP_WIN) && !defined(WIN32)) || (defined(__sun) && !defined(SVR4))
-extern int fread(char *, size_t, size_t, FILE*);
-extern int fwrite(char *, size_t, size_t, FILE*);
+extern int fread(char *, size_t, size_t, FILE *);
+extern int fwrite(char *, size_t, size_t, FILE *);
 extern int fprintf(FILE *, char *, ...);
 #endif
 
-static secuPWData  pwdata          = { PW_NONE, 0 };
-
+static secuPWData pwdata = { PW_NONE, 0 };
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
 SEC_ASN1Template CERTSignatureDataTemplate[] =
-{
-    { SEC_ASN1_SEQUENCE,
-          0, NULL, sizeof(CERTSignedData) },
-    { SEC_ASN1_INLINE,
-          offsetof(CERTSignedData,signatureAlgorithm),
-          SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-    { SEC_ASN1_BIT_STRING,
-          offsetof(CERTSignedData,signature) },
-    { 0 }
-};
-
+    {
+      { SEC_ASN1_SEQUENCE,
+        0, NULL, sizeof(CERTSignedData) },
+      { SEC_ASN1_INLINE,
+        offsetof(CERTSignedData, signatureAlgorithm),
+        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+      { SEC_ASN1_BIT_STRING,
+        offsetof(CERTSignedData, signature) },
+      { 0 }
+    };
 
 static void
 Usage(char *progName)
 {
     fprintf(stderr,
-	    "Usage:  %s -k keyname [-d keydir] [-i input] [-o output]\n",
-	    progName);
+            "Usage:  %s -k keyname [-d keydir] [-i input] [-o output]\n",
+            progName);
     fprintf(stderr, "%-20s Nickname of key to use for signature\n",
-	    "-k keyname");
+            "-k keyname");
     fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
-	    "-d keydir");
+            "-d keydir");
     fprintf(stderr, "%-20s Define an input file to use (default is stdin)\n",
-	    "-i input");
+            "-i input");
     fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
-	    "-o output");
+            "-o output");
     fprintf(stderr, "%-20s Password to the key databse\n", "-p");
     fprintf(stderr, "%-20s password file\n", "-f");
     exit(-1);
@@ -87,7 +85,7 @@ ExportPublicKey(FILE *outFile, CERTCertificate *cert)
     if (!item)
         return -1;
 
-    data = PL_Base64Encode((const char*)item->data, item->len, NULL);
+    data = PL_Base64Encode((const char *)item->data, item->len, NULL);
     SECITEM_FreeItem(item, PR_TRUE);
     if (!data)
         return -1;
@@ -142,7 +140,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert)
 
     rv = SEC_SignData(&(sd.signature), data2sign.data, data2sign.len, privKey, algID);
     if (rv != SECSuccess) {
-        fprintf (stderr, "Could not sign.\n");
+        fprintf(stderr, "Could not sign.\n");
         returnValue = -1;
         goto loser;
     }
@@ -150,7 +148,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert)
 
     rv = SECOID_SetAlgorithmID(arena, &sd.signatureAlgorithm, algID, 0);
     if (rv != SECSuccess) {
-        fprintf (stderr, "Could not set alg id.\n");
+        fprintf(stderr, "Could not set alg id.\n");
         returnValue = -1;
         goto loser;
     }
@@ -159,13 +157,13 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert)
     SECITEM_FreeItem(&(sd.signature), PR_FALSE);
 
     if (!result) {
-        fprintf (stderr, "Could not encode.\n");
+        fprintf(stderr, "Could not encode.\n");
         returnValue = -1;
         goto loser;
     }
 
-    data = PL_Base64Encode((const char*)result->data, result->len, NULL);
-    if (!data){
+    data = PL_Base64Encode((const char *)result->data, result->len, NULL);
+    if (!data) {
         returnValue = -1;
         goto loser;
     }
@@ -201,7 +199,7 @@ main(int argc, char **argv)
     SECStatus rv;
 
     progName = strrchr(argv[0], '/');
-    progName = progName ? progName+1 : argv[0];
+    progName = progName ? progName + 1 : argv[0];
 
     inFile = NULL;
     outFile = NULL;
@@ -212,59 +210,62 @@ main(int argc, char **argv)
      */
     optstate = PL_CreateOptState(argc, argv, "ed:k:i:o:p:f:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
-	switch (optstate->option) {
-	  case '?':
-	    Usage(progName);
-	    break;
+        switch (optstate->option) {
+            case '?':
+                Usage(progName);
+                break;
 
-	  case 'd':
-	    SECU_ConfigDirectory(optstate->value);
-	    break;
+            case 'd':
+                SECU_ConfigDirectory(optstate->value);
+                break;
 
-	  case 'i':
-	    inFile = PR_Open(optstate->value, PR_RDONLY, 0);
-	    if (!inFile) {
-		fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
-			progName, optstate->value);
-		return -1;
-	    }
-	    break;
+            case 'i':
+                inFile = PR_Open(optstate->value, PR_RDONLY, 0);
+                if (!inFile) {
+                    fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
+                            progName, optstate->value);
+                    return -1;
+                }
+                break;
 
-	  case 'k':
-	    keyName = strdup(optstate->value);
-	    break;
+            case 'k':
+                keyName = strdup(optstate->value);
+                break;
 
-	  case 'o':
-	    outFile = fopen(optstate->value, "wb");
-	    if (!outFile) {
-		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
-			progName, optstate->value);
-		return -1;
-	    }
-	    break;
-	  case 'p':
-            pwdata.source = PW_PLAINTEXT;
-            pwdata.data = strdup (optstate->value);
-            break;
+            case 'o':
+                outFile = fopen(optstate->value, "wb");
+                if (!outFile) {
+                    fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
+                            progName, optstate->value);
+                    return -1;
+                }
+                break;
+            case 'p':
+                pwdata.source = PW_PLAINTEXT;
+                pwdata.data = strdup(optstate->value);
+                break;
 
-	  case 'f':
-              pwdata.source = PW_FROMFILE;
-              pwdata.data = PORT_Strdup (optstate->value);
-              break;
-	}
+            case 'f':
+                pwdata.source = PW_FROMFILE;
+                pwdata.data = PORT_Strdup(optstate->value);
+                break;
+        }
     }
 
-    if (!keyName) Usage(progName);
+    if (!keyName)
+        Usage(progName);
 
-    if (!inFile) inFile = PR_STDIN;
-    if (!outFile) outFile = stdout;
+    if (!inFile)
+        inFile = PR_STDIN;
+    if (!outFile)
+        outFile = stdout;
 
     /* Call the initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) {
-	SECU_PrintPRandOSError(progName);
-	goto loser;
+        SECU_PrintPRandOSError(progName);
+        goto loser;
     }
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
@@ -272,24 +273,24 @@ main(int argc, char **argv)
     /* open cert database */
     certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
-	rv = SECFailure;
-	goto loser;
+        rv = SECFailure;
+        goto loser;
     }
 
     /* find cert */
     cert = CERT_FindCertByNickname(certHandle, keyName);
     if (cert == NULL) {
-	SECU_PrintError(progName,
-		        "the corresponding cert for key \"%s\" does not exist",
-			keyName);
-	rv = SECFailure;
-	goto loser;
+        SECU_PrintError(progName,
+                        "the corresponding cert for key \"%s\" does not exist",
+                        keyName);
+        rv = SECFailure;
+        goto loser;
     }
 
     if (SignFile(outFile, inFile, cert)) {
-	SECU_PrintError(progName, "problem signing data");
-	rv = SECFailure;
-	goto loser;
+        SECU_PrintError(progName, "problem signing data");
+        rv = SECFailure;
+        goto loser;
     }
 
 loser:

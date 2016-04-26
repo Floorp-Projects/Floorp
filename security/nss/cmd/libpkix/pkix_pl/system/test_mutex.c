@@ -13,91 +13,90 @@
 
 static void *plContext = NULL;
 
-static
-void createMutexes(
-        PKIX_PL_Mutex **mutex,
-        PKIX_PL_Mutex **mutex2,
-        PKIX_PL_Mutex **mutex3)
+static void
+createMutexes(
+    PKIX_PL_Mutex **mutex,
+    PKIX_PL_Mutex **mutex2,
+    PKIX_PL_Mutex **mutex3)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Create(mutex, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Create(mutex2, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Create(mutex, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Create(mutex2, plContext));
 
-        *mutex3 = *mutex;
-        PKIX_TEST_EXPECT_NO_ERROR
-                (PKIX_PL_Object_IncRef((PKIX_PL_Object*)*mutex3, plContext));
+    *mutex3 = *mutex;
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_IncRef((PKIX_PL_Object *)*mutex3, plContext));
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-static
-void testLock(PKIX_PL_Mutex *mutex)
+static void
+testLock(PKIX_PL_Mutex *mutex)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Lock(mutex, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Unlock(mutex, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Lock(mutex, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Mutex_Unlock(mutex, plContext));
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-static
-void testDestroy(
-        PKIX_PL_Mutex *mutex,
-        PKIX_PL_Mutex *mutex2,
-        PKIX_PL_Mutex *mutex3)
+static void
+testDestroy(
+    PKIX_PL_Mutex *mutex,
+    PKIX_PL_Mutex *mutex2,
+    PKIX_PL_Mutex *mutex3)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_DECREF_BC(mutex);
-        PKIX_TEST_DECREF_BC(mutex2);
-        PKIX_TEST_DECREF_BC(mutex3);
+    PKIX_TEST_DECREF_BC(mutex);
+    PKIX_TEST_DECREF_BC(mutex2);
+    PKIX_TEST_DECREF_BC(mutex3);
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-int test_mutex(int argc, char *argv[]) {
+int
+test_mutex(int argc, char *argv[])
+{
 
-        PKIX_PL_Mutex *mutex, *mutex2, *mutex3;
-        PKIX_UInt32 actualMinorVersion;
-        PKIX_UInt32 j = 0;
+    PKIX_PL_Mutex *mutex, *mutex2, *mutex3;
+    PKIX_UInt32 actualMinorVersion;
+    PKIX_UInt32 j = 0;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        startTests("Mutexes");
+    startTests("Mutexes");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        subTest("PKIX_PL_Mutex_Create");
-        createMutexes(&mutex, &mutex2, &mutex3);
+    subTest("PKIX_PL_Mutex_Create");
+    createMutexes(&mutex, &mutex2, &mutex3);
 
-        PKIX_TEST_EQ_HASH_TOSTR_DUP
-                (mutex,
-                mutex3,
-                mutex2,
-                NULL,
-                Mutex,
-                PKIX_FALSE);
+    PKIX_TEST_EQ_HASH_TOSTR_DUP(mutex,
+                                mutex3,
+                                mutex2,
+                                NULL,
+                                Mutex,
+                                PKIX_FALSE);
 
-        subTest("PKIX_PL_Mutex_Lock/Unlock");
-        testLock(mutex);
+    subTest("PKIX_PL_Mutex_Lock/Unlock");
+    testLock(mutex);
 
-        subTest("PKIX_PL_Mutex_Destroy");
-        testDestroy(mutex, mutex2, mutex3);
+    subTest("PKIX_PL_Mutex_Destroy");
+    testDestroy(mutex, mutex2, mutex3);
 
 cleanup:
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("Mutexes");
+    endTests("Mutexes");
 
-        return (0);
-
+    return (0);
 }

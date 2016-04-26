@@ -288,6 +288,10 @@ prepare()
     mv ${OUTPUTDIR} ${OUTPUTDIR}.last >/dev/null 2>&1
     mkdir -p ${OUTPUTDIR}
 
+    # Remove temporary test files from previous jobs, that weren't cleaned up
+    # by move_results(), e.g. caused by unexpected interruptions.
+    rm -rf ${HGDIR}/tests_results/
+
     cd ${HGDIR}/nss
 
     if [ -z "${NSS_DISABLE_ECC}" -a -n "${NSS_ECC_MORE_THAN_SUITE_B}" ]; then
