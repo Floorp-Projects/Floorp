@@ -217,6 +217,37 @@ public class TestFileUtils {
     }
 
     @Test
+    public void testWriteStringToFileEmptyString() throws Exception {
+        final String expected = "";
+        FileUtils.writeStringToFile(testFile, expected);
+
+        assertTrue("Written file exists", testFile.exists());
+        assertEquals("Written file is empty", 0, testFile.length());
+        assertEquals("Read data equals written (empty) data", expected, readStringFromFile(testFile, expected.length()));
+    }
+
+    @Test
+    public void testWriteStringToFileCreatesNewFile() throws Exception {
+        final String expected = "some str to write";
+        assertFalse("Non existent file does not exist", nonExistentFile.exists());
+        FileUtils.writeStringToFile(nonExistentFile, expected); // expected to create file
+
+        assertTrue("Written file was created", nonExistentFile.exists());
+        assertEquals("Read data equals written data", expected, readStringFromFile(nonExistentFile, (int) nonExistentFile.length()));
+    }
+
+    @Test
+    public void testWriteStringToFileOverwritesFile() throws Exception {
+        writeStringToFile(testFile, "data");
+
+        final String expected = "some str to write";
+        FileUtils.writeStringToFile(testFile, expected);
+
+        assertTrue("Written file was created", testFile.exists());
+        assertEquals("Read data equals written data", expected, readStringFromFile(testFile, (int) testFile.length()));
+    }
+
+    @Test
     public void testWriteJSONObjectToFile() throws Exception {
         final JSONObject expected = new JSONObject()
                 .put("int", 1)
