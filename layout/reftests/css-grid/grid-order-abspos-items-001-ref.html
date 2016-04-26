@@ -22,9 +22,9 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
  height: 25px;
 }
 
-.a { z-index:4; left:74px; right:5px; background:lime; }
-.b { z-index:3; left:54px; right:5px; background:pink; }
-.c { z-index:2; left:34px; right:5px; background:yellow; }
+.a { z-index:1; left:74px; right:5px; background:lime; }
+.b { z-index:1; left:54px; right:5px; background:pink; }
+.c { z-index:1; left:34px; right:5px; background:yellow; }
 .d { z-index:1; left:14px; right:5px; background:silver; }
 .e { display:none; }
 
@@ -64,33 +64,33 @@ f { float:left; }
 </div>
 
 <div class="grid">
-<div style="order:2">
-  <span class="abs a">a</span>
-  <span class="abs b">b</span>
-</div>
-<div style="order:1">
+<div>
   <span class="abs c">c</span>
   <span class="abs e">FAIL<x>x</x></span>
   <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs a">a</span>
+  <span class="abs b">b</span>
 </div>
 </div>
 
 <div class="grid">
 <div style="display:grid; order:2">
-<div style="order:2">
-  <span class="abs a">a</span>
-</div>
-<div style="order:1">
-  <span class="abs c">c</span>
-</div>
-</div>
-<div style="display:grid; order:1">
-<div style="order:2">
-  <span class="abs b">b</span>
-</div>
-<div style="order:1">
+<div style="display:grid;">
+<div>
   <span class="abs e">FAIL<x>x</x></span>
   <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs b">b</span>
+</div>
+</div>
+<div>
+  <span class="abs c">c</span>
+</div>
+<div>
+  <span class="abs a">a</span>
 </div>
 </div>
 </div>
@@ -104,14 +104,14 @@ f { float:left; }
 </div>
 
 <div class="grid">
-<div style="order:2">
-  <span class="abs a">a</span>
-  <span class="abs z1 b">b</span>
-</div>
-<div style="order:1">
+<div>
   <span class="abs z1 c">c</span>
   <span class="abs e">FAIL<x>x</x></span>
   <span class="abs d">d<x>x</x></span>
+</div>
+<div>
+  <span class="abs a">a</span>
+  <span class="abs z1 b">b</span>
 </div>
 </div>
 

@@ -72,7 +72,7 @@ class StringBuffer
         return cb.ref<TwoByteCharBuffer>();
     }
 
-    bool inflateChars();
+    MOZ_WARN_UNUSED_RESULT bool inflateChars();
 
   public:
     explicit StringBuffer(ExclusiveContext* cx)
@@ -85,25 +85,25 @@ class StringBuffer
         cb.construct<Latin1CharBuffer>(cx);
     }
 
-    inline bool reserve(size_t len) {
+    MOZ_WARN_UNUSED_RESULT bool reserve(size_t len) {
         if (len > reserved_)
             reserved_ = len;
         return isLatin1() ? latin1Chars().reserve(len) : twoByteChars().reserve(len);
     }
-    inline bool resize(size_t len) {
+    MOZ_WARN_UNUSED_RESULT bool resize(size_t len) {
         return isLatin1() ? latin1Chars().resize(len) : twoByteChars().resize(len);
     }
-    inline bool empty() const {
+    bool empty() const {
         return isLatin1() ? latin1Chars().empty() : twoByteChars().empty();
     }
-    inline size_t length() const {
+    size_t length() const {
         return isLatin1() ? latin1Chars().length() : twoByteChars().length();
     }
-    inline char16_t getChar(size_t idx) const {
+    char16_t getChar(size_t idx) const {
         return isLatin1() ? latin1Chars()[idx] : twoByteChars()[idx];
     }
 
-    inline bool ensureTwoByteChars() {
+    MOZ_WARN_UNUSED_RESULT bool ensureTwoByteChars() {
         if (isLatin1() && !inflateChars())
             return false;
 
@@ -113,7 +113,7 @@ class StringBuffer
         return true;
     }
 
-    inline bool append(const char16_t c) {
+    MOZ_WARN_UNUSED_RESULT bool append(const char16_t c) {
         if (isLatin1()) {
             if (c <= JSString::MAX_LATIN1_CHAR)
                 return latin1Chars().append(Latin1Char(c));
@@ -122,43 +122,44 @@ class StringBuffer
         }
         return twoByteChars().append(c);
     }
-    inline bool append(Latin1Char c) {
+    MOZ_WARN_UNUSED_RESULT bool append(Latin1Char c) {
         return isLatin1() ? latin1Chars().append(c) : twoByteChars().append(c);
     }
-    inline bool append(char c) {
+    MOZ_WARN_UNUSED_RESULT bool append(char c) {
         return append(Latin1Char(c));
     }
 
-    inline bool append(const char16_t* begin, const char16_t* end);
-    inline bool append(const char16_t* chars, size_t len) {
+    inline MOZ_WARN_UNUSED_RESULT bool append(const char16_t* begin, const char16_t* end);
+
+    MOZ_WARN_UNUSED_RESULT bool append(const char16_t* chars, size_t len) {
         return append(chars, chars + len);
     }
 
-    inline bool append(const Latin1Char* begin, const Latin1Char* end) {
+    MOZ_WARN_UNUSED_RESULT bool append(const Latin1Char* begin, const Latin1Char* end) {
         return isLatin1() ? latin1Chars().append(begin, end) : twoByteChars().append(begin, end);
     }
-    inline bool append(const Latin1Char* chars, size_t len) {
+    MOZ_WARN_UNUSED_RESULT bool append(const Latin1Char* chars, size_t len) {
         return append(chars, chars + len);
     }
 
-    inline bool append(const JS::ConstCharPtr chars, size_t len) {
+    MOZ_WARN_UNUSED_RESULT bool append(const JS::ConstCharPtr chars, size_t len) {
         return append(chars.get(), chars.get() + len);
     }
-    inline bool appendN(Latin1Char c, size_t n) {
+    MOZ_WARN_UNUSED_RESULT bool appendN(Latin1Char c, size_t n) {
         return isLatin1() ? latin1Chars().appendN(c, n) : twoByteChars().appendN(c, n);
     }
 
-    inline bool append(JSString* str);
-    inline bool append(JSLinearString* str);
-    inline bool appendSubstring(JSString* base, size_t off, size_t len);
-    inline bool appendSubstring(JSLinearString* base, size_t off, size_t len);
+    inline MOZ_WARN_UNUSED_RESULT bool append(JSString* str);
+    inline MOZ_WARN_UNUSED_RESULT bool append(JSLinearString* str);
+    inline MOZ_WARN_UNUSED_RESULT bool appendSubstring(JSString* base, size_t off, size_t len);
+    inline MOZ_WARN_UNUSED_RESULT bool appendSubstring(JSLinearString* base, size_t off, size_t len);
 
-    inline bool append(const char* chars, size_t len) {
+    MOZ_WARN_UNUSED_RESULT bool append(const char* chars, size_t len) {
         return append(reinterpret_cast<const Latin1Char*>(chars), len);
     }
 
     template <size_t ArrayLength>
-    bool append(const char (&array)[ArrayLength]) {
+    MOZ_WARN_UNUSED_RESULT bool append(const char (&array)[ArrayLength]) {
         return append(array, ArrayLength - 1); /* No trailing '\0'. */
     }
 

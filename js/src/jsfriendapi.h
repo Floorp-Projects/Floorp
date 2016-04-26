@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -1295,21 +1296,27 @@ GetErrorMessage(void* userRef, const unsigned errorNumber);
  */
 class MOZ_STACK_CLASS AutoStableStringChars
 {
+    /*
+     * When copying string char, use this many bytes of inline storage.  This is
+     * chosen to allow the inline string types to be copied without allocating.
+     * This is asserted in AutoStableStringChars::allocOwnChars.
+     */
+    static const size_t InlineCapacity = 24;
+
     /* Ensure the string is kept alive while we're using its chars. */
     JS::RootedString s_;
     union {
         const char16_t* twoByteChars_;
         const JS::Latin1Char* latin1Chars_;
     };
+    mozilla::Maybe<Vector<uint8_t, InlineCapacity>> ownChars_;
     enum State { Uninitialized, Latin1, TwoByte };
     State state_;
-    bool ownsChars_;
 
   public:
     explicit AutoStableStringChars(JSContext* cx)
-      : s_(cx), state_(Uninitialized), ownsChars_(false)
+      : s_(cx), state_(Uninitialized)
     {}
-    ~AutoStableStringChars();
 
     MOZ_WARN_UNUSED_RESULT
     bool init(JSContext* cx, JSString* s);
@@ -1335,16 +1342,16 @@ class MOZ_STACK_CLASS AutoStableStringChars
     mozilla::Range<const char16_t> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
         return mozilla::Range<const char16_t>(twoByteChars_,
-                                            GetStringLength(s_));
+                                              GetStringLength(s_));
     }
 
     /* If we own the chars, transfer ownership to the caller. */
     bool maybeGiveOwnershipToCaller() {
         MOZ_ASSERT(state_ != Uninitialized);
-        if (!ownsChars_)
+        if (!ownChars_.isSome() || !ownChars_->extractRawBuffer())
             return false;
         state_ = Uninitialized;
-        ownsChars_ = false;
+        ownChars_.reset();
         return true;
     }
 
@@ -1353,8 +1360,9 @@ class MOZ_STACK_CLASS AutoStableStringChars
     void operator=(const AutoStableStringChars& other) = delete;
 
     bool baseIsInline(JS::Handle<JSLinearString*> linearString);
-    bool copyLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
-    bool copyTwoByteChars(JSContext*, JS::Handle<JSLinearString*> linearString);
+    template <typename T> T* allocOwnChars(JSContext* cx, size_t count);
+    bool copyLatin1Chars(JSContext* cx, JS::Handle<JSLinearString*> linearString);
+    bool copyTwoByteChars(JSContext* cx, JS::Handle<JSLinearString*> linearString);
     bool copyAndInflateLatin1Chars(JSContext*, JS::Handle<JSLinearString*> linearString);
 };
 

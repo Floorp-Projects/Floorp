@@ -1344,11 +1344,13 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             // redefined, it will.
             if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
                 obj->as<ArgumentsObject>().markLengthOverridden();
-        }
-        if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
+        } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
             // Do same thing as .length for [@@iterator].
             if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
                 obj->as<ArgumentsObject>().markIteratorOverridden();
+        } else if (JSID_IS_INT(id)) {
+            if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
+                obj->as<ArgumentsObject>().markElementOverridden();
         }
     }
 

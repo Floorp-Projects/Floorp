@@ -12,7 +12,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "nsHttpRequestHead.h"
-#include "nsISchedulingContext.h"
+#include "nsIRequestContext.h"
 #include "nsString.h"
 #include "PSpdyPush.h"
 #include "SpdySession31.h"
@@ -41,7 +41,7 @@ public:
   nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *);
   nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *);
 
-  nsISchedulingContext *SchedulingContext() { return mSchedulingContext; };
+  nsIRequestContext *RequestContext() { return mRequestContext; };
   void ConnectPushedStream(SpdyStream31 *consumer);
 
   bool DeferCleanupOnSuccess() { return mDeferCleanupOnSuccess; }
@@ -59,7 +59,7 @@ private:
   SpdyStream31 *mConsumerStream; // paired request stream that consumes from
   // real spdy one.. null until a match is made.
 
-  nsCOMPtr<nsISchedulingContext> mSchedulingContext;
+  nsCOMPtr<nsIRequestContext> mRequestContext;
 
   SpdyPush31TransactionBuffer *mBufferedPush;
   TimeStamp          mLastRead;

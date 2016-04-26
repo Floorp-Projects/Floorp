@@ -133,7 +133,7 @@ protected:
                    const OptionalHttpResponseHead& aSynthesizedResponseHead,
                    const nsCString&           aSecurityInfoSerialization,
                    const uint32_t&            aCacheKey,
-                   const nsCString&           aSchedulingContextID,
+                   const nsCString&           aRequestContextID,
                    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                    const uint32_t&            aInitialRwin,
                    const bool&                aBlockAuthPrompt,

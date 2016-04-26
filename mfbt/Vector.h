@@ -640,16 +640,34 @@ public:
   T popCopy();
 
   /**
-   * Transfers ownership of the internal buffer used by this vector to the
-   * caller.  (It's the caller's responsibility to properly deallocate this
-   * buffer, in accordance with this vector's AllocPolicy.)  After this call,
-   * the vector is empty.  Since the returned buffer may need to be allocated
-   * (if the elements are currently stored in-place), the call can fail,
-   * returning nullptr.
+   * If elements are stored in-place, return nullptr and leave this vector
+   * unmodified.
+   *
+   * Otherwise return this vector's elements buffer, and clear this vector as if
+   * by clearAndFree(). The caller now owns the buffer and is responsible for
+   * deallocating it consistent with this vector's AllocPolicy.
    *
    * N.B. Although a T*, only the range [0, length()) is constructed.
    */
   MOZ_WARN_UNUSED_RESULT T* extractRawBuffer();
+
+  /**
+   * If elements are stored in-place, allocate a new buffer, move this vector's
+   * elements into it, and return that buffer.
+   *
+   * Otherwise return this vector's elements buffer. The caller now owns the
+   * buffer and is responsible for deallocating it consistent with this vector's
+   * AllocPolicy.
+   *
+   * This vector is cleared, as if by clearAndFree(), when this method
+   * succeeds. This method fails and returns nullptr only if new elements buffer
+   * allocation fails.
+   *
+   * N.B. Only the range [0, length()) of the returned buffer is constructed.
+   * If any of these elements are uninitialized (as growByUninitialized
+   * enables), behavior is undefined.
+   */
+  MOZ_WARN_UNUSED_RESULT T* extractOrCopyRawBuffer();
 
   /**
    * Transfer ownership of an array of objects into the vector.  The caller
@@ -1303,26 +1321,46 @@ template<typename T, size_t N, class AP>
 inline T*
 Vector<T, N, AP>::extractRawBuffer()
 {
-  T* ret;
+  MOZ_REENTRANCY_GUARD_ET_AL;
+
   if (usingInlineStorage()) {
-    ret = this->template pod_malloc<T>(mLength);
-    if (!ret) {
-      return nullptr;
-    }
-    Impl::copyConstruct(ret, beginNoCheck(), endNoCheck());
-    Impl::destroy(beginNoCheck(), endNoCheck());
-    /* mBegin, mCapacity are unchanged. */
-    mLength = 0;
-  } else {
-    ret = mBegin;
-    mBegin = static_cast<T*>(mStorage.addr());
-    mLength = 0;
-    mCapacity = kInlineCapacity;
-#ifdef DEBUG
-    mReserved = 0;
-#endif
+    return nullptr;
   }
+
+  T* ret = mBegin;
+  mBegin = static_cast<T*>(mStorage.addr());
+  mLength = 0;
+  mCapacity = kInlineCapacity;
+#ifdef DEBUG
+  mReserved = 0;
+#endif
   return ret;
+}
+
+template<typename T, size_t N, class AP>
+inline T*
+Vector<T, N, AP>::extractOrCopyRawBuffer()
+{
+  if (T* ret = extractRawBuffer()) {
+    return ret;
+  }
+
+  MOZ_REENTRANCY_GUARD_ET_AL;
+
+  T* copy = this->template pod_malloc<T>(mLength);
+  if (!copy) {
+    return nullptr;
+  }
+
+  Impl::moveConstruct(copy, beginNoCheck(), endNoCheck());
+  Impl::destroy(beginNoCheck(), endNoCheck());
+  mBegin = static_cast<T*>(mStorage.addr());
+  mLength = 0;
+  mCapacity = kInlineCapacity;
+#ifdef DEBUG
+  mReserved = 0;
+#endif
+  return copy;
 }
 
 template<typename T, size_t N, class AP>
