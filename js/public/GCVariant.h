@@ -13,7 +13,7 @@
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 
-namespace js {
+namespace JS {
 
 // These template specializations allow Variant to be used inside GC wrappers.
 //
@@ -120,10 +120,14 @@ struct GCPolicy<mozilla::Variant<Ts...>>
     }
 };
 
+} // namespace JS
+
+namespace js {
+
 template <typename Outer, typename... Ts>
 class GCVariantOperations
 {
-    using Impl = detail::GCVariantImplementation<Ts...>;
+    using Impl = JS::detail::GCVariantImplementation<Ts...>;
     using Variant = mozilla::Variant<Ts...>;
 
     const Variant& variant() const { return static_cast<const Outer*>(this)->get(); }
@@ -150,7 +154,7 @@ template <typename Outer, typename... Ts>
 class MutableGCVariantOperations
   : public GCVariantOperations<Outer, Ts...>
 {
-    using Impl = detail::GCVariantImplementation<Ts...>;
+    using Impl = JS::detail::GCVariantImplementation<Ts...>;
     using Variant = mozilla::Variant<Ts...>;
 
     const Variant& variant() const { return static_cast<const Outer*>(this)->get(); }
