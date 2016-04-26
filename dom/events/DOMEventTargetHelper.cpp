@@ -222,7 +222,7 @@ DOMEventTargetHelper::AddEventListener(const nsAString& aType,
 void
 DOMEventTargetHelper::AddEventListener(const nsAString& aType,
                                        EventListener* aListener,
-                                       bool aUseCapture,
+                                       const AddEventListenerOptionsOrBoolean& aOptions,
                                        const Nullable<bool>& aWantsUntrusted,
                                        ErrorResult& aRv)
 {
@@ -242,7 +242,8 @@ DOMEventTargetHelper::AddEventListener(const nsAString& aType,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
-  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
+
+  elm->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
 }
 
 NS_IMETHODIMP
