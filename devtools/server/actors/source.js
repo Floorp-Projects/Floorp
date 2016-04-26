@@ -238,39 +238,43 @@ let SourceActor = ActorClass({
     }
 
     let localURI = resolveURIToLocalPath(nsuri);
+    if (!localURI) {
+      return;
+    }
 
-    let id = {};
-    if (localURI && mapURIToAddonID(localURI, id)) {
-      this._addonID = id.value;
+    let id = mapURIToAddonID(localURI);
+    if (!id) {
+      return;
+    }
+    this._addonID = id;
 
-      if (localURI instanceof Ci.nsIJARURI) {
-        // The path in the add-on is easy for jar: uris
-        this._addonPath = localURI.JAREntry;
+    if (localURI instanceof Ci.nsIJARURI) {
+      // The path in the add-on is easy for jar: uris
+      this._addonPath = localURI.JAREntry;
+    }
+    else if (localURI instanceof Ci.nsIFileURL) {
+      // For file: uris walk up to find the last directory that is part of the
+      // add-on
+      let target = localURI.file;
+      let path = target.leafName;
+
+      // We can assume that the directory containing the source file is part
+      // of the add-on
+      let root = target.parent;
+      let file = root.parent;
+      while (file && mapURIToAddonID(Services.io.newFileURI(file))) {
+        path = root.leafName + "/" + path;
+        root = file;
+        file = file.parent;
       }
-      else if (localURI instanceof Ci.nsIFileURL) {
-        // For file: uris walk up to find the last directory that is part of the
-        // add-on
-        let target = localURI.file;
-        let path = target.leafName;
 
-        // We can assume that the directory containing the source file is part
-        // of the add-on
-        let root = target.parent;
-        let file = root.parent;
-        while (file && mapURIToAddonID(Services.io.newFileURI(file), {})) {
-          path = root.leafName + "/" + path;
-          root = file;
-          file = file.parent;
-        }
-
-        if (!file) {
-          const error = new Error("Could not find the root of the add-on for " + this.url);
-          DevToolsUtils.reportException("SourceActor.prototype._mapSourceToAddon", error)
-          return;
-        }
-
-        this._addonPath = path;
+      if (!file) {
+        const error = new Error("Could not find the root of the add-on for " + this.url);
+        DevToolsUtils.reportException("SourceActor.prototype._mapSourceToAddon", error)
+        return;
       }
+
+      this._addonPath = path;
     }
   },
 

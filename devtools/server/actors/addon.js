@@ -200,11 +200,7 @@ BrowserAddonActor.prototype = {
     } catch (e) {}
 
     if (global instanceof Ci.nsIDOMWindow) {
-      let id = {};
-      if (mapURIToAddonID(global.document.documentURIObject, id)) {
-        return id.value === this.id;
-      }
-      return false;
+      return mapURIToAddonID(global.document.documentURIObject) == this.id;
     }
 
     // Check the global for a __URI__ property and then try to map that to an
@@ -223,9 +219,8 @@ BrowserAddonActor.prototype = {
         return false;
       }
 
-      let id = {};
-      if (mapURIToAddonID(uri, id)) {
-        return id.value === this.id;
+      if (mapURIToAddonID(uri) == this.id) {
+        return true;
       }
     }
 
