@@ -187,7 +187,7 @@ public:
    */
   void FireDelayedEvent(AccEvent* aEvent);
   void FireDelayedEvent(uint32_t aEventType, Accessible* aTarget);
-  void FireEventsOnInsertion(Accessible* aContainer, uint32_t aUpdateFlags);
+  void FireEventsOnInsertion(Accessible* aContainer);
 
   /**
    * Fire value change event on the given accessible if applicable.
@@ -517,17 +517,6 @@ protected:
   void UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNode);
 
   /**
-   * Helper for UpdateTreeOn methods. Go down to DOM subtree and updates
-   * accessible tree. Return one of these flags.
-   */
-  enum EUpdateTreeFlags {
-    eNoAccessible = 0,
-    eAccessible = 1,
-    eAlertAccessible = 2
-  };
-  uint32_t UpdateTreeInternal(Accessible* aChild, bool aIsInsert);
-
-  /**
    * Validates all aria-owns connections and updates the tree accordingly.
    */
   void ValidateARIAOwned();
@@ -555,6 +544,7 @@ protected:
    */
   void CacheChildrenInSubtree(Accessible* aRoot,
                               Accessible** aFocusedAcc = nullptr);
+  void CreateSubtree(Accessible* aRoot);
 
   /**
    * Remove accessibles in subtree from node to accessible map.

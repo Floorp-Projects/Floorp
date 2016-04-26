@@ -98,6 +98,20 @@ pref_GrowBuf(PrefParseState *ps)
 }
 
 /**
+ * Report an error or a warning.  If not specified, just dump to stderr.
+ */
+static void
+pref_ReportParseProblem(PrefParseState& ps, const char* aMessage, int aLine, bool aError)
+{
+    if (ps.reporter) {
+        ps.reporter(aMessage, aLine, aError);
+    } else {
+        printf_stderr("**** Preference parsing %s (line %d) = %s **\n",
+                      (aError ? "error" : "warning"), aLine, aMessage);
+    }
+}
+
+/**
  * pref_DoCallback
  *
  * this function is called when a complete pref name-value pair has
@@ -119,6 +133,7 @@ pref_DoCallback(PrefParseState *ps)
         break;
     case PrefType::Int:
         if ((ps->vb[0] == '-' || ps->vb[0] == '+') && ps->vb[1] == '\0') {
+            pref_ReportParseProblem(*ps, "invalid integer value", 0, true);
             NS_WARNING("malformed integer value");
             return false;
         }
@@ -136,11 +151,13 @@ pref_DoCallback(PrefParseState *ps)
 }
 
 void
-PREF_InitParseState(PrefParseState *ps, PrefReader reader, void *closure)
+PREF_InitParseState(PrefParseState *ps, PrefReader reader,
+                    PrefParseErrorReporter reporter, void *closure)
 {
     memset(ps, 0, sizeof(*ps));
     ps->reader = reader;
     ps->closure = closure;
+    ps->reporter = reporter;
 }
 
 void
@@ -179,9 +196,16 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
     char udigit;
     int state;
 
+    // The line number is currently only used for the error/warning reporting.
+    int lineNum = 0;
+
     state = ps->state;
     for (end = buf + bufLen; buf != end; ++buf) {
         c = *buf;
+        if (c == '\r' || c == '\n' || c == 0x1A) {
+            lineNum ++;
+        }
+
         switch (state) {
         /* initial state */
         case PREF_PARSE_INIT:
@@ -228,6 +252,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 /* else wait for next char */
             }
             else {
+                pref_ReportParseProblem(*ps, "non-matching string", lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -263,6 +288,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             }
             else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need space, comment or quote", lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -279,6 +305,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             }
             else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need space, comment or comma", lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -315,6 +342,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             }
             else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need value, comment or space", lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -336,6 +364,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 else if (isspace(c))
                     state = PREF_PARSE_UNTIL_CLOSE_PAREN;
                 else {
+                    pref_ReportParseProblem(*ps, "while parsing integer", lineNum, true);
                     NS_WARNING("malformed pref file");
                     return false;
                 }
@@ -353,12 +382,13 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 break;
             default:
                 /* pref file is malformed */
+                pref_ReportParseProblem(*ps, "while parsing comment", lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
             break;
         case PREF_PARSE_COMMENT_BLOCK:
-            if (c == '*') 
+            if (c == '*')
                 state = PREF_PARSE_COMMENT_BLOCK_MAYBE_END;
             break;
         case PREF_PARSE_COMMENT_BLOCK_MAYBE_END:
@@ -401,6 +431,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_HEX_ESCAPE;
                 continue;
             default:
+                pref_ReportParseProblem(*ps, "preserving unexpected JS escape sequence",
+                                        lineNum, false);
                 NS_WARNING("preserving unexpected JS escape sequence");
                 /* Invalid escape sequence so we do have to write more than
                  * one character. Grow line buffer if necessary... */
@@ -423,6 +455,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 udigit = (c - 'a') + 10;
             else {
                 /* bad escape sequence found, write out broken escape as-is */
+                pref_ReportParseProblem(*ps, "preserving invalid or incomplete hex escape",
+                                        lineNum, false);
                 NS_WARNING("preserving invalid or incomplete hex escape");
                 *ps->lbcur++ = '\\';  /* original escape slash */
                 if ((ps->lbcur + ps->esclen) >= ps->lbend && !pref_GrowBuf(ps))
@@ -510,6 +544,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             }
             else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need space, comment or open parentheses",
+                                        lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -522,6 +558,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 ps->nextstate = state; /* return here when done with comment */
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             } else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need space, comment or closing parentheses",
+                                        lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -540,6 +578,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 state = PREF_PARSE_COMMENT_MAYBE_START;
             }
             else if (!isspace(c)) {
+                pref_ReportParseProblem(*ps, "need space, comment or semicolon",
+                                        lineNum, true);
                 NS_WARNING("malformed pref file");
                 return false;
             }
@@ -603,7 +643,7 @@ main(int argc, char **argv)
         return -1;
     }
 
-    PREF_InitParseState(&ps, pref_reader, nullptr);
+    PREF_InitParseState(&ps, pref_reader, nullptr, nullptr);
 
     while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
         PREF_ParseBuf(&ps, buf, n);

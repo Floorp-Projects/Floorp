@@ -94,7 +94,7 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     // provide nsIIncrementalStreamLoader::request during call to OnStreamComplete
     mRequest = request;
     size_t length = mData.length();
-    uint8_t* elems = mData.extractRawBuffer();
+    uint8_t* elems = mData.extractOrCopyRawBuffer();
     nsresult rv = mObserver->OnStreamComplete(this, mContext, aStatus,
                                               length, elems);
     if (rv != NS_SUCCESS_ADOPTED_DATA) {
@@ -153,7 +153,7 @@ nsIncrementalStreamLoader::WriteSegmentFun(nsIInputStream *inStr,
     }
     size_t length = self->mData.length();
     uint32_t reportCount = length > UINT32_MAX ? UINT32_MAX : (uint32_t)length;
-    uint8_t* elems = self->mData.extractRawBuffer();
+    uint8_t* elems = self->mData.extractOrCopyRawBuffer();
 
     rv = self->mObserver->OnIncrementalData(self, self->mContext,
                                             reportCount, elems, &consumedCount);

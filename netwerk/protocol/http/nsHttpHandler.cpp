@@ -351,8 +351,8 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    mSchedulingContextService =
-        do_GetService("@mozilla.org/network/scheduling-context-service;1");
+    mRequestContextService =
+        do_GetService("@mozilla.org/network/request-context-service;1");
 
 #if defined(ANDROID) || defined(MOZ_MULET)
     mProductSub.AssignLiteral(MOZILLA_UAVERSION);

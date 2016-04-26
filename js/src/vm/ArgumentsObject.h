@@ -127,7 +127,11 @@ class ArgumentsObject : public NativeObject
   public:
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t ITERATOR_OVERRIDDEN_BIT = 0x2;
-    static const uint32_t PACKED_BITS_COUNT = 2;
+    static const uint32_t ELEMENT_OVERRIDDEN_BIT = 0x4;
+    static const uint32_t PACKED_BITS_COUNT = 3;
+
+    static_assert(ARGS_LENGTH_MAX <= (UINT32_MAX >> PACKED_BITS_COUNT),
+                  "Max arguments length must fit in available bits");
 
   protected:
     template <typename CopyArgs>
@@ -196,6 +200,18 @@ class ArgumentsObject : public NativeObject
 
     void markIteratorOverridden() {
         uint32_t v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | ITERATOR_OVERRIDDEN_BIT;
+        setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
+    }
+
+    /* True iff any element has been assigned or its attributes
+     * changed. */
+    bool hasOverriddenElement() const {
+        const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
+        return v.toInt32() & ELEMENT_OVERRIDDEN_BIT;
+    }
+
+    void markElementOverridden() {
+        uint32_t v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | ELEMENT_OVERRIDDEN_BIT;
         setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
     }
 

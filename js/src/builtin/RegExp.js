@@ -190,7 +190,7 @@ function RegExpReplace(string, replaceValue) {
         // A single character string may contain "$", but that cannot be a
         // substitution.
         if (replaceValue.length > 1)
-            firstDollarIndex = callFunction(std_String_indexOf, replaceValue, "$");
+            firstDollarIndex = GetFirstDollarIndex(replaceValue);
     }
 
     // Step 7.

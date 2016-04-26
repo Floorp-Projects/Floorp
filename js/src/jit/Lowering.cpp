@@ -2316,6 +2316,17 @@ LIRGenerator::visitRegExpInstanceOptimizable(MRegExpInstanceOptimizable* ins)
 }
 
 void
+LIRGenerator::visitGetFirstDollarIndex(MGetFirstDollarIndex* ins)
+{
+    MOZ_ASSERT(ins->str()->type() == MIRType_String);
+    MOZ_ASSERT(ins->type() == MIRType_Int32);
+    LGetFirstDollarIndex* lir = new(alloc()) LGetFirstDollarIndex(useRegister(ins->str()),
+                                                                  temp(), temp(), temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitStringReplace(MStringReplace* ins)
 {
     MOZ_ASSERT(ins->pattern()->type() == MIRType_String);

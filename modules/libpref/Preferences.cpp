@@ -219,6 +219,14 @@ AssertNotAlreadyCached(const char* aPrefType,
 }
 #endif
 
+static void
+ReportToConsole(const char* aMessage, int aLine, bool aError)
+{
+  nsPrintfCString message("** Preference parsing %s (line %d) = %s **\n",
+                          (aError ? "error" : "warning"), aLine, aMessage);
+  nsPrefBranch::ReportToConsole(NS_ConvertUTF8toUTF16(message.get()));
+}
+
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
 /* static */ int64_t
@@ -683,7 +691,7 @@ ReadExtensionPrefs(nsIFile *aFile)
     uint32_t read;
 
     PrefParseState ps;
-    PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
+    PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
     while (NS_SUCCEEDED(rv = stream->Available(&avail)) && avail) {
       rv = stream->Read(buffer, 4096, &read);
       if (NS_FAILED(rv)) {
@@ -997,7 +1005,7 @@ static nsresult openPrefFile(nsIFile* aFile)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PrefParseState ps;
-  PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
+  PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
 
   // Read is not guaranteed to return a buf the size of fileSize,
   // but usually will.
@@ -1179,7 +1187,7 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
   NS_ENSURE_TRUE(manifest.Buffer(), NS_ERROR_NOT_AVAILABLE);
 
   PrefParseState ps;
-  PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
+  PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
   PREF_ParseBuf(&ps, manifest, manifest.Length());
   PREF_FinalizeParseState(&ps);
 

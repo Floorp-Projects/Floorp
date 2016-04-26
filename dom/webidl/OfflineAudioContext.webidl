@@ -19,5 +19,6 @@ interface OfflineAudioContext : AudioContext {
     Promise<AudioBuffer> startRendering();
 
     attribute EventHandler oncomplete;
+    readonly attribute unsigned long length;
 
 };

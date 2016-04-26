@@ -196,10 +196,6 @@ config = {
     },
 
     ### project branches
-    'b2g-inbound': {
-        'repo_path': 'integration/b2g-inbound',
-        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
-    },
     'fx-team': {
         'repo_path': 'integration/fx-team',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',

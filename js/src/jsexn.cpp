@@ -1028,49 +1028,49 @@ JS::CreateError(JSContext* cx, JSExnType type, HandleObject stack, HandleString 
 const char*
 js::ValueToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& bytes)
 {
-    if (val.isUndefined()) {
+    if (val.isUndefined())
         return "undefined";
-    }
-    if (val.isNull()) {
+
+    if (val.isNull())
         return "null";
-    }
+
+    AutoClearPendingException acpe(cx);
 
     RootedString str(cx, JS_ValueToSource(cx, val));
-    if (!str) {
-        JS_ClearPendingException(cx);
+    if (!str)
         return "<<error converting value to string>>";
-    }
 
     StringBuffer sb(cx);
     if (val.isObject()) {
         RootedObject valObj(cx, val.toObjectOrNull());
         ESClassValue cls;
-        if (!GetBuiltinClass(cx, valObj, &cls)) {
-            JS_ClearPendingException(cx);
+        if (!GetBuiltinClass(cx, valObj, &cls))
             return "<<error determining class of value>>";
-        }
-        if (cls == ESClass_Array) {
-            sb.append("the array ");
-        } else if (cls == ESClass_ArrayBuffer) {
-            sb.append("the array buffer ");
-        } else if (JS_IsArrayBufferViewObject(valObj)) {
-            sb.append("the typed array ");
-        } else {
-            sb.append("the object ");
-        }
+        const char* s;
+        if (cls == ESClass_Array)
+            s = "the array ";
+        else if (cls == ESClass_ArrayBuffer)
+            s = "the array buffer ";
+        else if (JS_IsArrayBufferViewObject(valObj))
+            s = "the typed array ";
+        else
+            s = "the object ";
+        if (!sb.append(s, strlen(s)))
+            return "<<error converting value to string>>";
     } else if (val.isNumber()) {
-        sb.append("the number ");
+        if (!sb.append("the number "))
+            return "<<error converting value to string>>";
     } else if (val.isString()) {
-        sb.append("the string ");
+        if (!sb.append("the string "))
+            return "<<error converting value to string>>";
     } else {
         MOZ_ASSERT(val.isBoolean() || val.isSymbol());
         return bytes.encodeLatin1(cx, str);
     }
-    sb.append(str);
-    str = sb.finishString();
-    if (!str) {
-        JS_ClearPendingException(cx);
+    if (!sb.append(str))
         return "<<error converting value to string>>";
-    }
+    str = sb.finishString();
+    if (!str)
+        return "<<error converting value to string>>";
     return bytes.encodeLatin1(cx, str);
 }

@@ -211,6 +211,7 @@
     _(RegExpTester)                 \
     _(RegExpPrototypeOptimizable)   \
     _(RegExpInstanceOptimizable)    \
+    _(GetFirstDollarIndex)          \
     _(StringReplace)                \
     _(Substr)                       \
     _(BinarySharedStub)             \
