@@ -23,7 +23,7 @@ class WebGLQuery final
 public:
     explicit WebGLQuery(WebGLContext* webgl);
 
-    class AvailableRunnable final : public nsRunnable
+    class AvailableRunnable final : public Runnable
     {
     public:
         explicit AvailableRunnable(WebGLQuery* query) : mQuery(query) { }

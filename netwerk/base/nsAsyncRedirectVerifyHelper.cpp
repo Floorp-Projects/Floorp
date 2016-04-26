@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS(nsAsyncRedirectVerifyHelper,
                   nsIAsyncVerifyRedirectCallback,
                   nsIRunnable)
 
-class nsAsyncVerifyRedirectCallbackEvent : public nsRunnable {
+class nsAsyncVerifyRedirectCallbackEvent : public mozilla::Runnable {
 public:
     nsAsyncVerifyRedirectCallbackEvent(nsIAsyncVerifyRedirectCallback *cb,
                                        nsresult result)

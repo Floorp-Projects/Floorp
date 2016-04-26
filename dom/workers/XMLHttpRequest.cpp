@@ -186,7 +186,7 @@ private:
   }
 };
 
-class WorkerThreadProxySyncRunnable : public nsRunnable
+class WorkerThreadProxySyncRunnable : public Runnable
 {
 protected:
   WorkerPrivate* mWorkerPrivate;
@@ -240,8 +240,6 @@ public:
     MOZ_ASSERT(aProxy);
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
-
-  NS_DECL_ISUPPORTS_INHERITED
 
   void
   Dispatch()
@@ -422,7 +420,7 @@ private:
   }
 };
 
-class AsyncTeardownRunnable final : public nsRunnable
+class AsyncTeardownRunnable final : public Runnable
 {
   RefPtr<Proxy> mProxy;
 
@@ -432,8 +430,6 @@ public:
   {
     MOZ_ASSERT(aProxy);
   }
-
-  NS_DECL_ISUPPORTS_INHERITED
 
 private:
   ~AsyncTeardownRunnable()
@@ -453,7 +449,7 @@ private:
   }
 };
 
-class LoadStartDetectionRunnable final : public nsRunnable,
+class LoadStartDetectionRunnable final : public Runnable,
                                          public nsIDOMEventListener
 {
   WorkerPrivate* mWorkerPrivate;
@@ -1127,11 +1123,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadProxySyncRunnable, nsRunnable)
-
-NS_IMPL_ISUPPORTS_INHERITED0(AsyncTeardownRunnable, nsRunnable)
-
-NS_IMPL_ISUPPORTS_INHERITED(LoadStartDetectionRunnable, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(LoadStartDetectionRunnable, Runnable,
                                                         nsIDOMEventListener)
 
 NS_IMETHODIMP

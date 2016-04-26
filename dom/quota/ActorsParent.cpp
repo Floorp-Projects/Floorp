@@ -304,7 +304,7 @@ private:
 
 class QuotaManager::CreateRunnable final
   : public BackgroundThreadObject
-  , public nsRunnable
+  , public Runnable
 {
   nsTArray<nsCOMPtr<nsIRunnable>> mCallbacks;
   nsString mBaseDirPath;
@@ -362,7 +362,7 @@ private:
 };
 
 class QuotaManager::ShutdownRunnable final
-  : public nsRunnable
+  : public Runnable
 {
   // Only touched on the main thread.
   bool& mDone;
@@ -603,7 +603,7 @@ private:
 namespace {
 
 class CollectOriginsHelper final
-  : public nsRunnable
+  : public Runnable
 {
   uint64_t mMinSizeToBeFreed;
 
@@ -635,7 +635,7 @@ private:
 
 class OriginOperationBase
   : public BackgroundThreadObject
-  , public nsRunnable
+  , public Runnable
 {
 protected:
   nsresult mResultCode;
@@ -1237,7 +1237,7 @@ uint32_t gChunkSizeKB = kDefaultChunkSizeKB;
 bool gTestingEnabled = false;
 
 class StorageDirectoryHelper final
-  : public nsRunnable
+  : public Runnable
 {
   struct OriginProps;
 
@@ -5040,7 +5040,7 @@ FinalizeOriginEvictionOp::UnblockOpen()
   AdvanceState();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(NormalOriginOperationBase, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(NormalOriginOperationBase, Runnable)
 
 void
 NormalOriginOperationBase::Open()

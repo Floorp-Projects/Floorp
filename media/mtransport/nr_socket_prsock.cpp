@@ -1622,7 +1622,7 @@ void NrUdpSocketIpc::recv_callback_s(RefPtr<nr_udp_message> msg) {
 
 #if defined(MOZILLA_INTERNAL_API)
 // TCPSocket.
-class NrTcpSocketIpc::TcpSocketReadyRunner: public nsRunnable
+class NrTcpSocketIpc::TcpSocketReadyRunner: public Runnable
 {
 public:
   explicit TcpSocketReadyRunner(NrTcpSocketIpc *sck)

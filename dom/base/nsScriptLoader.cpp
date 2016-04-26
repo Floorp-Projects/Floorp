@@ -373,7 +373,7 @@ nsScriptLoader::PreloadURIComparator::Equals(const PreloadInfo &aPi,
          same;
 }
 
-class nsScriptRequestProcessor : public nsRunnable
+class nsScriptRequestProcessor : public Runnable
 {
 private:
   RefPtr<nsScriptLoader> mLoader;
@@ -728,7 +728,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
 namespace {
 
-class NotifyOffThreadScriptLoadCompletedRunnable : public nsRunnable
+class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable
 {
   RefPtr<nsScriptLoadRequest> mRequest;
   RefPtr<nsScriptLoader> mLoader;

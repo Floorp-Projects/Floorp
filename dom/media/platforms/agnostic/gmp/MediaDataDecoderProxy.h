@@ -15,7 +15,7 @@
 
 namespace mozilla {
 
-class InputTask : public nsRunnable {
+class InputTask : public Runnable {
 public:
   InputTask(MediaDataDecoder* aDecoder,
             MediaRawData* aSample)

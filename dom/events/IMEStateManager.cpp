@@ -890,7 +890,7 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
 }
 
 // Helper class, used for IME enabled state change notification
-class IMEEnabledStateChangedEvent : public nsRunnable {
+class IMEEnabledStateChangedEvent : public Runnable {
 public:
   explicit IMEEnabledStateChangedEvent(uint32_t aState)
     : mState(aState)

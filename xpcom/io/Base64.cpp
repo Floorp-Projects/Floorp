@@ -391,7 +391,7 @@ Base64Decode(const nsAString& aBinaryData, nsAString& aString)
 
 nsresult
 Base64URLDecode(const nsACString& aString,
-                const dom::Base64URLDecodeOptions& aOptions,
+                Base64URLDecodePaddingPolicy aPaddingPolicy,
                 FallibleTArray<uint8_t>& aOutput)
 {
   // Don't decode empty strings.
@@ -412,8 +412,8 @@ Base64URLDecode(const nsACString& aString,
 
   // Determine whether to check for and ignore trailing padding.
   bool maybePadded = false;
-  switch (aOptions.mPadding) {
-    case dom::Base64URLDecodePadding::Require:
+  switch (aPaddingPolicy) {
+    case Base64URLDecodePaddingPolicy::Require:
       if (sourceLength % 4) {
         // Padded input length must be a multiple of 4.
         return NS_ERROR_INVALID_ARG;
@@ -421,7 +421,7 @@ Base64URLDecode(const nsACString& aString,
       maybePadded = true;
       break;
 
-    case dom::Base64URLDecodePadding::Ignore:
+    case Base64URLDecodePaddingPolicy::Ignore:
       // Check for padding only if the length is a multiple of 4.
       maybePadded = !(sourceLength % 4);
       break;
@@ -429,8 +429,8 @@ Base64URLDecode(const nsACString& aString,
     // If we're expecting unpadded input, no need for additional checks.
     // `=` isn't in the decode table, so padded strings will fail to decode.
     default:
-      MOZ_FALLTHROUGH_ASSERT("Invalid decode padding option");
-    case dom::Base64URLDecodePadding::Reject:
+      MOZ_FALLTHROUGH_ASSERT("Invalid decode padding policy");
+    case Base64URLDecodePaddingPolicy::Reject:
       break;
   }
   if (maybePadded && source[sourceLength - 1] == '=') {
@@ -487,7 +487,7 @@ Base64URLDecode(const nsACString& aString,
 
 nsresult
 Base64URLEncode(uint32_t aLength, const uint8_t* aData,
-                const dom::Base64URLEncodeOptions& aOptions,
+                Base64URLEncodePaddingPolicy aPaddingPolicy,
                 nsACString& aString)
 {
   // Don't encode empty strings.
@@ -533,7 +533,7 @@ Base64URLEncode(uint32_t aLength, const uint8_t* aData,
   }
 
   uint32_t length = rawBuffer - aString.BeginWriting();
-  if (aOptions.mPad) {
+  if (aPaddingPolicy == Base64URLEncodePaddingPolicy::Include) {
     if (length % 4 == 2) {
       *rawBuffer++ = '=';
       *rawBuffer++ = '=';
@@ -542,6 +542,9 @@ Base64URLEncode(uint32_t aLength, const uint8_t* aData,
       *rawBuffer++ = '=';
       length += 1;
     }
+  } else {
+    MOZ_ASSERT(aPaddingPolicy == Base64URLEncodePaddingPolicy::Omit,
+               "Invalid encode padding policy");
   }
 
   // Null terminate and truncate to the actual number of characters.

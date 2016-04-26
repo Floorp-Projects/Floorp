@@ -151,7 +151,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsXHRParseEndListener, nsIDOMEventListener)
 
-class nsResumeTimeoutsEvent : public nsRunnable
+class nsResumeTimeoutsEvent : public Runnable
 {
 public:
   explicit nsResumeTimeoutsEvent(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}

@@ -57,7 +57,7 @@ bool nsMixedContentBlocker::sBlockMixedDisplay = false;
 // Fired at the document that attempted to load mixed content.  The UI could
 // handle this event, for example, by displaying an info bar that offers the
 // choice to reload the page with mixed content permitted.
-class nsMixedContentEvent : public nsRunnable
+class nsMixedContentEvent : public Runnable
 {
 public:
   nsMixedContentEvent(nsISupports *aContext, MixedContentTypes aType, bool aRootHasSecureConnection)

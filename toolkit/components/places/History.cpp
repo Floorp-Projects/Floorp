@@ -622,7 +622,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
 /**
  * Notifies observers about a visit.
  */
-class NotifyVisitObservers : public nsRunnable
+class NotifyVisitObservers : public Runnable
 {
 public:
   NotifyVisitObservers(VisitData& aPlace,
@@ -687,7 +687,7 @@ private:
 /**
  * Notifies observers about a pages title changing.
  */
-class NotifyTitleObservers : public nsRunnable
+class NotifyTitleObservers : public Runnable
 {
 public:
   /**
@@ -733,7 +733,7 @@ private:
  * Helper class for methods which notify their callers through the
  * mozIVisitInfoCallback interface.
  */
-class NotifyPlaceInfoCallback : public nsRunnable
+class NotifyPlaceInfoCallback : public Runnable
 {
 public:
   NotifyPlaceInfoCallback(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
@@ -803,7 +803,7 @@ private:
 /**
  * Notifies a callback object when the operation is complete.
  */
-class NotifyCompletion : public nsRunnable
+class NotifyCompletion : public Runnable
 {
 public:
   explicit NotifyCompletion(const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback)
@@ -871,7 +871,7 @@ CanAddURI(nsIURI* aURI,
 /**
  * Adds a visit to the database.
  */
-class InsertVisitedURIs final: public nsRunnable
+class InsertVisitedURIs final: public Runnable
 {
 public:
   /**
@@ -1320,7 +1320,7 @@ private:
   RefPtr<History> mHistory;
 };
 
-class GetPlaceInfo final : public nsRunnable {
+class GetPlaceInfo final : public Runnable {
 public:
   /**
    * Get the place info for a given place (by GUID or URI)  asynchronously.
@@ -1380,7 +1380,7 @@ private:
 /**
  * Sets the page title for a page in moz_places (if necessary).
  */
-class SetPageTitle : public nsRunnable
+class SetPageTitle : public Runnable
 {
 public:
   /**
@@ -1594,7 +1594,7 @@ NS_IMPL_ISUPPORTS(
 /**
  * Notify removed visits to observers.
  */
-class NotifyRemoveVisits : public nsRunnable
+class NotifyRemoveVisits : public Runnable
 {
 public:
 
@@ -1679,7 +1679,7 @@ private:
 /**
  * Remove visits from history.
  */
-class RemoveVisits : public nsRunnable
+class RemoveVisits : public Runnable
 {
 public:
   /**

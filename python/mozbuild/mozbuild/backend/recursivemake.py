@@ -229,8 +229,6 @@ class BackendMakeFile(object):
 
     def close(self):
         if self.xpt_name:
-            self.fh.write('XPT_NAME := %s\n' % self.xpt_name)
-
             # We just recompile all xpidls because it's easier and less error
             # prone.
             self.fh.write('NONRECURSIVE_TARGETS += export\n')

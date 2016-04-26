@@ -56,7 +56,7 @@ nsPSMBackgroundThread::postStoppedEventToMainThread(
 
   mExitState = ePSMThreadStopped;
   // requestExit is waiting for an event, so give it one.
-  return NS_DispatchToMainThread(new nsRunnable());
+  return NS_DispatchToMainThread(new Runnable());
 }
 
 void nsPSMBackgroundThread::requestExit()

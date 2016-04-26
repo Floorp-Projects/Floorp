@@ -57,7 +57,7 @@ private:
   bool                      mSinkIsValid; // False if TeeWriteEvent fails
 };
 
-class nsInputStreamTeeWriteEvent : public nsRunnable
+class nsInputStreamTeeWriteEvent : public Runnable
 {
 public:
   // aTee's lock is held across construction of this object

@@ -810,7 +810,7 @@ IsInFeedSubscribeLine(nsXULElement* aElement)
 }
 #endif
 
-class XULInContentErrorReporter : public nsRunnable
+class XULInContentErrorReporter : public Runnable
 {
 public:
   explicit XULInContentErrorReporter(nsIDocument* aDocument) : mDocument(aDocument) {}
@@ -1968,7 +1968,7 @@ nsXULElement::SetTitlebarColor(nscolor aColor, bool aActive)
     }
 }
 
-class SetDrawInTitleBarEvent : public nsRunnable
+class SetDrawInTitleBarEvent : public Runnable
 {
 public:
   SetDrawInTitleBarEvent(nsIWidget* aWidget, bool aState)
@@ -2024,7 +2024,7 @@ nsXULElement::UpdateBrightTitlebarForeground(nsIDocument* aDoc)
     }
 }
 
-class MarginSetter : public nsRunnable
+class MarginSetter : public Runnable
 {
 public:
     explicit MarginSetter(nsIWidget* aWidget) :
@@ -2715,7 +2715,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
     return rv;
 }
 
-class NotifyOffThreadScriptCompletedRunnable : public nsRunnable
+class NotifyOffThreadScriptCompletedRunnable : public Runnable
 {
     // An array of all outstanding script receivers. All reference counting of
     // these objects happens on the main thread. When we return to the main

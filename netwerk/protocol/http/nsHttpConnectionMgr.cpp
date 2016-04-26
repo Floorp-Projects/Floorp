@@ -194,7 +194,7 @@ nsHttpConnectionMgr::Shutdown()
     return NS_OK;
 }
 
-class ConnEvent : public nsRunnable
+class ConnEvent : public Runnable
 {
 public:
     ConnEvent(nsHttpConnectionMgr *mgr,
