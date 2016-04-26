@@ -184,8 +184,8 @@ public class FileUtils {
     }
 
     /**
-     * A generic solution to write to a File - the given file will be overwritten.
-     * See {@link #writeStringToOutputStreamAndCloseStream(OutputStream, String)} for more details.
+     * A generic solution to write to a File - the given file will be overwritten. If it does not exist yet, it will
+     * be created. See {@link #writeStringToOutputStreamAndCloseStream(OutputStream, String)} for more details.
      */
     public static void writeStringToFile(final File file, final String str) throws IOException {
         writeStringToOutputStreamAndCloseStream(new FileOutputStream(file, false), str);
