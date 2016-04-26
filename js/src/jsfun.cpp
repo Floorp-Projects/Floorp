@@ -504,15 +504,15 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
                 // It's impossible to have an empty named class expression. We
                 // use empty as a sentinel when creating default class
                 // constructors.
-                MOZ_ASSERT(fun->atom() != cx->names().empty);
+                MOZ_ASSERT(fun->name() != cx->names().empty);
 
                 // Unnamed class expressions should not get a .name property
                 // at all.
-                if (fun->atom() == nullptr)
+                if (fun->name() == nullptr)
                     return true;
             }
 
-            v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
+            v.setString(fun->name() == nullptr ? cx->runtime()->emptyString : fun->name());
         }
 
         if (!NativeDefineProperty(cx, fun, id, v, nullptr, nullptr,
@@ -566,7 +566,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
             return false;
         }
 
-        if (fun->atom() || fun->hasGuessedAtom())
+        if (fun->name() || fun->hasGuessedAtom())
             firstword |= HasAtom;
 
         if (fun->isStarGenerator())
@@ -976,8 +976,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
         if (!(fun->isStarGenerator() ? out.append("function* ") : out.append("function ")))
             return nullptr;
     }
-    if (fun->atom()) {
-        if (!out.append(fun->atom()))
+    if (fun->name()) {
+        if (!out.append(fun->name()))
             return nullptr;
     }
 
