@@ -157,10 +157,35 @@ ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
 { }
 
+class MediaStreamGraphShutdownThreadRunnable : public Runnable {
+public:
+  explicit MediaStreamGraphShutdownThreadRunnable(already_AddRefed<nsIThread> aThread)
+    : mThread(aThread)
+  {
+  }
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mThread);
+
+    mThread->Shutdown();
+    mThread = nullptr;
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<nsIThread> mThread;
+};
+
 ThreadedDriver::~ThreadedDriver()
 {
   if (mThread) {
-    mThread->Shutdown();
+    if (NS_IsMainThread()) {
+      mThread->Shutdown();
+    } else {
+      nsCOMPtr<nsIRunnable> event =
+        new MediaStreamGraphShutdownThreadRunnable(mThread.forget());
+      NS_DispatchToMainThread(event);
+    }
   }
 }
 class MediaStreamGraphInitThreadRunnable : public Runnable {
@@ -405,34 +430,8 @@ OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTi
 
 }
 
-class MediaStreamGraphShutdownThreadRunnable : public Runnable {
-public:
-  explicit MediaStreamGraphShutdownThreadRunnable(nsIThread* aThread)
-    : mThread(aThread)
-  {
-  }
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mThread);
-
-    mThread->Shutdown();
-    mThread = nullptr;
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIThread> mThread;
-};
-
 OfflineClockDriver::~OfflineClockDriver()
 {
-  // transfer the ownership of mThread to the event
-  // XXX should use .forget()/etc
-  if (mThread) {
-    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable(mThread);
-    mThread = nullptr;
-    NS_DispatchToMainThread(event);
-  }
 }
 
 MediaTime
