@@ -37,21 +37,9 @@ var AboutReaderListener = {
         let url = content.document.location.href;
         if (!this.isAboutReader) {
           this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
-          content.document.location = "about:reader?url=" + encodeURIComponent(url);
+          ReaderMode.enterReaderMode(docShell, content);
         } else {
-          let originalURL = ReaderMode.getOriginalUrl(url);
-          let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-          let sh = webNav.sessionHistory;
-          if (webNav.canGoBack) {
-            let prevEntry = sh.getEntryAtIndex(sh.index - 1, false);
-            let prevURL = prevEntry.URI.spec;
-            if (prevURL && (prevURL == originalURL || !originalURL)) {
-              webNav.goBack();
-              break;
-            }
-          }
-
-          content.document.location = originalURL;
+          ReaderMode.leaveReaderMode(docShell, content);
         }
         break;
 
