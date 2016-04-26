@@ -230,6 +230,16 @@ GetCombiningClass(uint32_t aCh)
 #endif
 }
 
+uint8_t
+GetLineBreakClass(uint32_t aCh)
+{
+#if ENABLE_INTL_API
+    return u_getIntPropertyValue(aCh, UCHAR_LINE_BREAK);
+#else
+    return GetCharProps2(aCh).mLineBreak;
+#endif
+}
+
 Script
 GetScriptCode(uint32_t aCh)
 {
