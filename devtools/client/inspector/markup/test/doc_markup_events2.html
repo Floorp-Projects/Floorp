@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+    #fatarrow,
+    #bound,
+    #boundhe,
+    #comment-inline,
+    #comment-streaming,
+    #anon-object-method,
+    #object-method {
+      border: 1px solid #000;
+      width: 200px;
+      min-height: 1em;
+      cursor: pointer;
+    }
+    </style>
+    <script type="application/javascript;version=1.8">
+      function init() {
+        let fatarrow = document.getElementById("fatarrow");
+
+        let he = new handleEventClick();
+        let anonObjectMethod = document.getElementById("anon-object-method");
+        anonObjectMethod.addEventListener("click", he.anonObjectMethod);
+
+        let objectMethod = document.getElementById("object-method");
+        objectMethod.addEventListener("click", he.objectMethod);
+
+        let bhe = new boundHandleEventClick();
+        let boundheNode = document.getElementById("boundhe");
+        bhe.handleEvent = bhe.handleEvent.bind(bhe);
+        boundheNode.addEventListener("click", bhe);
+
+        let boundNode = document.getElementById("bound");
+        boundClickHandler = boundClickHandler.bind(this);
+        boundNode.addEventListener("click", boundClickHandler);
+
+        fatarrow.addEventListener("click", () => {
+          alert("Fat arrow without params!");
+        });
+
+        fatarrow.addEventListener("click", event => {
+          alert("Fat arrow with 1 param!");
+        });
+
+        fatarrow.addEventListener("click", (event, foo, bar) => {
+          alert("Fat arrow with 3 params!");
+        });
+
+        fatarrow.addEventListener("click", b => b);
+
+        let inlineCommentNode = document.getElementById("comment-inline");
+        inlineCommentNode
+          .addEventListener("click", functionProceededByInlineComment);
+
+        let streamingCommentNode = document.getElementById("comment-streaming");
+        streamingCommentNode
+          .addEventListener("click", functionProceededByStreamingComment);
+      }
+
+      function boundClickHandler(event) {
+        alert("Bound event");
+      }
+
+      function handleEventClick(hehe) {
+
+      }
+
+      handleEventClick.prototype = {
+        anonObjectMethod: function() {
+          alert("obj.anonObjectMethod");
+        },
+
+        objectMethod: function kay() {
+          alert("obj.objectMethod");
+        },
+      };
+
+      function boundHandleEventClick() {
+
+      }
+
+      boundHandleEventClick.prototype = {
+        handleEvent: function() {
+          alert("boundHandleEvent");
+        }
+      };
+
+      // A function proceeded with an inline comment
+      function functionProceededByInlineComment() {
+        alert("comment-inline");
+      }
+
+      /* A function proceeded with a streaming comment */
+      function functionProceededByStreamingComment() {
+        alert("comment-streaming");
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <h1>Events test 2</h1>
+    <div id="fatarrow">Fat arrows</div>
+    <div id="boundhe">Bound handleEvent</div>
+    <div id="bound">Bound event</div>
+    <div id="comment-inline">Event proceeded by an inline comment</div>
+    <div id="comment-streaming">Event proceeded by a streaming comment</div>
+    <div id="anon-object-method">Anonymous object method</div>
+    <div id="object-method">Object method</div>
+  </body>
+</html>
