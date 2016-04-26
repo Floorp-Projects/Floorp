@@ -413,8 +413,7 @@ def split_triplet(triplet):
         canonical_cpu = 'aarch64'
         endianness = 'little'
     else:
-        canonical_cpu = cpu
-        endianness = 'unknown'
+        die('Unknown CPU type: %s' % cpu)
 
     return namespace(
         alias=triplet,
