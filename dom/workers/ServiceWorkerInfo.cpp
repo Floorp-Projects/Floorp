@@ -81,7 +81,7 @@ ServiceWorkerInfo::RemoveWorker(ServiceWorker* aWorker)
 
 namespace {
 
-class ChangeStateUpdater final : public nsRunnable
+class ChangeStateUpdater final : public Runnable
 {
 public:
   ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,

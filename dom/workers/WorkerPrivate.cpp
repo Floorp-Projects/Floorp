@@ -329,7 +329,7 @@ LogErrorToConsole(const nsAString& aMessage,
   fflush(stderr);
 }
 
-class MainThreadReleaseRunnable final : public nsRunnable
+class MainThreadReleaseRunnable final : public Runnable
 {
   nsTArray<nsCOMPtr<nsISupports>> mDoomed;
   nsCOMPtr<nsILoadGroup> mLoadGroupToCancel;
@@ -413,7 +413,7 @@ private:
   }
 };
 
-class TopLevelWorkerFinishedRunnable final : public nsRunnable
+class TopLevelWorkerFinishedRunnable final : public Runnable
 {
   WorkerPrivate* mFinishedWorker;
 
@@ -1775,9 +1775,9 @@ PRThreadFromThread(nsIThread* aThread)
 
 } /* anonymous namespace */
 
-NS_IMPL_ISUPPORTS_INHERITED0(MainThreadReleaseRunnable, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(MainThreadReleaseRunnable, Runnable)
 
-NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, Runnable)
 
 TimerThreadEventTarget::TimerThreadEventTarget(WorkerPrivate* aWorkerPrivate,
                                                WorkerRunnable* aWorkerRunnable)
@@ -3647,7 +3647,7 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
 
 #endif
 
-class PostDebuggerMessageRunnable final : public nsRunnable
+class PostDebuggerMessageRunnable final : public Runnable
 {
   WorkerDebugger *mDebugger;
   nsString mMessage;
@@ -3673,7 +3673,7 @@ private:
   }
 };
 
-class ReportDebuggerErrorRunnable final : public nsRunnable
+class ReportDebuggerErrorRunnable final : public Runnable
 {
   WorkerDebugger *mDebugger;
   nsString mFilename;

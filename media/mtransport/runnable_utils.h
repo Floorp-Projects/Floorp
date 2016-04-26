@@ -51,7 +51,7 @@ RunOnThreadInternal(nsIEventTarget *thread, nsIRunnable *runnable, uint32_t flag
 }
 
 template<RunnableResult result>
-class runnable_args_base : public nsRunnable {
+class runnable_args_base : public Runnable {
  public:
   NS_IMETHOD Run() = 0;
 };

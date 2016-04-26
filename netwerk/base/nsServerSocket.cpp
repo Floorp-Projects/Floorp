@@ -435,7 +435,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
 
-  class OnSocketAcceptedRunnable : public nsRunnable
+  class OnSocketAcceptedRunnable : public Runnable
   {
   public:
     OnSocketAcceptedRunnable(const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,
@@ -454,7 +454,7 @@ public:
     nsCOMPtr<nsISocketTransport> mTransport;
   };
 
-  class OnStopListeningRunnable : public nsRunnable
+  class OnStopListeningRunnable : public Runnable
   {
   public:
     OnStopListeningRunnable(const nsMainThreadPtrHandle<nsIServerSocketListener>& aListener,

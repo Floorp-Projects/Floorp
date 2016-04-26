@@ -318,7 +318,7 @@ void watch_for_mutex_use_on_this_thread()
  *
  * The wedger is self-dispatching, just construct it with its target.
  */
-class ThreadWedger : public nsRunnable
+class ThreadWedger : public mozilla::Runnable
 {
 public:
   explicit ThreadWedger(nsIEventTarget *aTarget)

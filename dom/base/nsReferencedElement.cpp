@@ -215,7 +215,7 @@ nsReferencedElement::Observe(Element* aOldElement,
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsReferencedElement::ChangeNotification,
-                             nsRunnable)
+                             mozilla::Runnable)
 
 NS_IMPL_ISUPPORTS(nsReferencedElement::DocumentLoadNotification,
                   nsIObserver)

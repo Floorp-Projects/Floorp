@@ -3499,7 +3499,7 @@ nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const char16_t
 //---------------------------------------------------------------
 //-- PLEvent Notification
 //---------------------------------------------------------------
-class nsPrintCompletionEvent : public nsRunnable {
+class nsPrintCompletionEvent : public Runnable {
 public:
   explicit nsPrintCompletionEvent(nsIDocumentViewerPrint *docViewerPrint)
     : mDocViewerPrint(docViewerPrint) {

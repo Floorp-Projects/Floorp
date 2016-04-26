@@ -913,7 +913,7 @@ private:
   RefPtr<ImageBitmap> mImageBitmap;
 };
 
-class FulfillImageBitmapPromiseTask final : public nsRunnable,
+class FulfillImageBitmapPromiseTask final : public Runnable,
                                             public FulfillImageBitmapPromise
 {
 public:
@@ -1103,7 +1103,7 @@ protected:
   Maybe<IntRect> mCropRect;
 };
 
-class CreateImageBitmapFromBlobTask final : public nsRunnable,
+class CreateImageBitmapFromBlobTask final : public Runnable,
                                             public CreateImageBitmapFromBlob
 {
 public:

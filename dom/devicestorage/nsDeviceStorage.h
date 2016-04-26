@@ -100,7 +100,7 @@ public:
   ~DeviceStorageUsedSpaceCache();
 
 
-  class InvalidateRunnable final : public nsRunnable
+  class InvalidateRunnable final : public mozilla::Runnable
   {
     public:
       InvalidateRunnable(DeviceStorageUsedSpaceCache* aCache, 
@@ -304,7 +304,7 @@ private:
 };
 
 class DeviceStorageRequest
-  : public nsRunnable
+  : public mozilla::Runnable
 {
 protected:
   DeviceStorageRequest();

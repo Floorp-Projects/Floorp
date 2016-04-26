@@ -76,7 +76,7 @@ class WebrtcGmpPCHandleSetter
     static std::string sCurrentHandle;
 };
 
-class GmpInitDoneRunnable : public nsRunnable
+class GmpInitDoneRunnable : public Runnable
 {
   public:
     explicit GmpInitDoneRunnable(const std::string& aPCHandle) :

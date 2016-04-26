@@ -43,7 +43,7 @@ namespace {
 bool sAudioChannelMutedByDefault = false;
 bool sXPCOMShuttingDown = false;
 
-class NotifyChannelActiveRunnable final : public nsRunnable
+class NotifyChannelActiveRunnable final : public Runnable
 {
 public:
   NotifyChannelActiveRunnable(uint64_t aWindowID, AudioChannel aAudioChannel,
@@ -98,7 +98,7 @@ void
 NotifyChannelActive(uint64_t aWindowID, AudioChannel aAudioChannel,
                     bool aActive)
 {
-  RefPtr<nsRunnable> runnable =
+  RefPtr<Runnable> runnable =
     new NotifyChannelActiveRunnable(aWindowID, aAudioChannel, aActive);
   NS_DispatchToCurrentThread(runnable);
 }
@@ -109,7 +109,7 @@ IsParentProcess()
   return XRE_GetProcessType() == GeckoProcessType_Default;
 }
 
-class MediaPlaybackRunnable : public nsRunnable
+class MediaPlaybackRunnable : public Runnable
 {
 public:
   MediaPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive)

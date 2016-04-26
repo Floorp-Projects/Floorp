@@ -138,7 +138,7 @@ private:
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
 
-class UnsubscribeRunnable final : public nsRunnable
+class UnsubscribeRunnable final : public Runnable
 {
 public:
   UnsubscribeRunnable(PromiseWorkerProxy* aProxy,

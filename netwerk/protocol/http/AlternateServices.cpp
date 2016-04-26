@@ -463,7 +463,7 @@ AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &ho
   return nullptr;
 }
 
-class ProxyClearHostMapping : public nsRunnable {
+class ProxyClearHostMapping : public Runnable {
 public:
   explicit ProxyClearHostMapping(const nsACString &host, int32_t port)
     : mHost(host)

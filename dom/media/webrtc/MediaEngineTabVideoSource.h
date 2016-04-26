@@ -52,21 +52,21 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
 
     void Draw();
 
-    class StartRunnable : public nsRunnable {
+    class StartRunnable : public Runnable {
     public:
       explicit StartRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
-    class StopRunnable : public nsRunnable {
+    class StopRunnable : public Runnable {
     public:
       explicit StopRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
-    class InitRunnable : public nsRunnable {
+    class InitRunnable : public Runnable {
     public:
       explicit InitRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();

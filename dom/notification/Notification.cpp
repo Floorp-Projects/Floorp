@@ -200,7 +200,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationStorageCallback)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-class NotificationGetRunnable final : public nsRunnable
+class NotificationGetRunnable final : public Runnable
 {
   const nsString mOrigin;
   const nsString mTag;
@@ -310,7 +310,7 @@ public:
   }
 };
 
-class FocusWindowRunnable final : public nsRunnable
+class FocusWindowRunnable final : public Runnable
 {
   nsMainThreadPtrHandle<nsPIDOMWindowInner> mWindow;
 public:
@@ -520,7 +520,7 @@ public:
   }
 };
 
-class NotificationTask : public nsRunnable
+class NotificationTask : public Runnable
 {
 public:
   enum NotificationAction {
@@ -2186,7 +2186,7 @@ private:
 
 NS_IMPL_ISUPPORTS(WorkerGetCallback, nsINotificationStorageCallback)
 
-class WorkerGetRunnable final : public nsRunnable
+class WorkerGetRunnable final : public Runnable
 {
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
   const nsString mTag;

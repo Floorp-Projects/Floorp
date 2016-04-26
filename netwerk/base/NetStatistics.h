@@ -43,7 +43,7 @@ GetActiveNetworkInfo(nsCOMPtr<nsINetworkInfo> &aNetworkInfo)
   return NS_OK;
 }
 
-class SaveNetworkStatsEvent : public nsRunnable {
+class SaveNetworkStatsEvent : public Runnable {
 public:
   SaveNetworkStatsEvent(uint32_t aAppId,
                         bool aIsInIsolatedMozBrowser,

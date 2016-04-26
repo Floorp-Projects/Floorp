@@ -12,7 +12,7 @@ using namespace mozilla;
 
 nsIThread *gThread = nullptr;
 
-class TestRunnable : public nsRunnable {
+class TestRunnable : public Runnable {
 public:
   TestRunnable() : ran_(false) {}
 

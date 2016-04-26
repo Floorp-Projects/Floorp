@@ -25,7 +25,7 @@ namespace {
 
 uint64_t sServiceWorkerManagerParentID = 0;
 
-class RegisterServiceWorkerCallback final : public nsRunnable
+class RegisterServiceWorkerCallback final : public Runnable
 {
 public:
   RegisterServiceWorkerCallback(const ServiceWorkerRegistrationData& aData,
@@ -63,7 +63,7 @@ private:
   const uint64_t mParentID;
 };
 
-class UnregisterServiceWorkerCallback final : public nsRunnable
+class UnregisterServiceWorkerCallback final : public Runnable
 {
 public:
   UnregisterServiceWorkerCallback(const PrincipalInfo& aPrincipalInfo,
@@ -106,12 +106,12 @@ private:
   uint64_t mParentID;
 };
 
-class CheckPrincipalWithCallbackRunnable final : public nsRunnable
+class CheckPrincipalWithCallbackRunnable final : public Runnable
 {
 public:
   CheckPrincipalWithCallbackRunnable(already_AddRefed<ContentParent> aParent,
                                      const PrincipalInfo& aPrincipalInfo,
-                                     nsRunnable* aCallback)
+                                     Runnable* aCallback)
     : mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mCallback(aCallback)
@@ -146,7 +146,7 @@ public:
 private:
   RefPtr<ContentParent> mContentParent;
   PrincipalInfo mPrincipalInfo;
-  RefPtr<nsRunnable> mCallback;
+  RefPtr<Runnable> mCallback;
   nsCOMPtr<nsIThread> mBackgroundThread;
 };
 

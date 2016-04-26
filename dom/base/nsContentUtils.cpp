@@ -4733,7 +4733,7 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
   return nodeAsContent->GetBindingParent() == aContent->GetBindingParent();
 }
 
-class AnonymousContentDestroyer : public nsRunnable {
+class AnonymousContentDestroyer : public Runnable {
 public:
   explicit AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
     mContent.swap(*aContent);

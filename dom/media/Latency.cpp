@@ -44,7 +44,7 @@ GetLatencyLog()
   return sLog;
 }
 
-class LogEvent : public nsRunnable
+class LogEvent : public Runnable
 {
 public:
   LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue,

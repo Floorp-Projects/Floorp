@@ -30,7 +30,7 @@ namespace mozilla {
 
 using namespace dom;
 
-class DecodeResultTask : public nsRunnable
+class DecodeResultTask : public Runnable
 {
 public:
   DecodeResultTask(const nsString& hypstring,
@@ -85,7 +85,7 @@ private:
   nsCOMPtr<nsIThread> mWorkerThread;
 };
 
-class DecodeTask : public nsRunnable
+class DecodeTask : public Runnable
 {
 public:
   DecodeTask(WeakPtr<dom::SpeechRecognition> recogntion,

@@ -48,7 +48,7 @@ const uint32_t KEA_NOT_SUPPORTED = 1;
 
 } // namespace
 
-class nsHTTPDownloadEvent : public nsRunnable {
+class nsHTTPDownloadEvent : public Runnable {
 public:
   nsHTTPDownloadEvent();
   ~nsHTTPDownloadEvent();
@@ -175,7 +175,7 @@ nsHTTPDownloadEvent::Run()
   return NS_OK;
 }
 
-struct nsCancelHTTPDownloadEvent : nsRunnable {
+struct nsCancelHTTPDownloadEvent : Runnable {
   RefPtr<nsHTTPListener> mListener;
 
   NS_IMETHOD Run() {

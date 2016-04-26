@@ -44,7 +44,7 @@ AsyncCanvasRenderer::~AsyncCanvasRenderer()
 void
 AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
 {
-  class Runnable final : public nsRunnable
+  class Runnable final : public mozilla::Runnable
   {
   public:
     explicit Runnable(AsyncCanvasRenderer* aRenderer)
@@ -69,7 +69,7 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
     RefPtr<AsyncCanvasRenderer> mRenderer;
   };
 
-  RefPtr<nsRunnable> runnable = new Runnable(this);
+  nsCOMPtr<nsIRunnable> runnable = new Runnable(this);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch a runnable to the main-thread.");
@@ -79,7 +79,7 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
 void
 AsyncCanvasRenderer::NotifyElementAboutInvalidation()
 {
-  class Runnable final : public nsRunnable
+  class Runnable final : public mozilla::Runnable
   {
   public:
     explicit Runnable(AsyncCanvasRenderer* aRenderer)
@@ -104,7 +104,7 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
     RefPtr<AsyncCanvasRenderer> mRenderer;
   };
 
-  RefPtr<nsRunnable> runnable = new Runnable(this);
+  nsCOMPtr<nsIRunnable> runnable = new Runnable(this);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch a runnable to the main-thread.");

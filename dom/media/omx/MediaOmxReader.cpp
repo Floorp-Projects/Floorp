@@ -66,7 +66,7 @@ private:
 // the IO task dispatches a runnable to the main thread for parsing the
 // data. This goes on until all of the MP3 file has been parsed.
 
-class MediaOmxReader::NotifyDataArrivedRunnable : public nsRunnable
+class MediaOmxReader::NotifyDataArrivedRunnable : public Runnable
 {
 public:
   NotifyDataArrivedRunnable(MediaOmxReader* aOmxReader,

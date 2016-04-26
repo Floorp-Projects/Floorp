@@ -121,7 +121,7 @@ nsConsoleService::~nsConsoleService()
   ClearMessages();
 }
 
-class AddConsolePrefWatchers : public nsRunnable
+class AddConsolePrefWatchers : public Runnable
 {
 public:
   explicit AddConsolePrefWatchers(nsConsoleService* aConsole) : mConsole(aConsole)
@@ -161,7 +161,7 @@ nsConsoleService::Init()
 
 namespace {
 
-class LogMessageRunnable : public nsRunnable
+class LogMessageRunnable : public Runnable
 {
 public:
   LogMessageRunnable(nsIConsoleMessage* aMessage, nsConsoleService* aService)

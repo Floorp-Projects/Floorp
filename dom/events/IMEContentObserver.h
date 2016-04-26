@@ -195,7 +195,7 @@ private:
    * Helper classes to notify IME.
    */
 
-  class AChangeEvent: public nsRunnable
+  class AChangeEvent: public Runnable
   {
   protected:
     enum ChangeEventType

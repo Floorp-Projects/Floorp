@@ -106,7 +106,7 @@ private:
   ~MainThreadFetchResolver();
 };
 
-class MainThreadFetchRunnable : public nsRunnable
+class MainThreadFetchRunnable : public Runnable
 {
   RefPtr<WorkerFetchResolver> mResolver;
   RefPtr<InternalRequest> mRequest;
@@ -696,7 +696,7 @@ NS_INTERFACE_MAP_BEGIN(ConsumeBodyDoneObserver<Derived>)
 NS_INTERFACE_MAP_END
 
 template <class Derived>
-class BeginConsumeBodyRunnable final : public nsRunnable
+class BeginConsumeBodyRunnable final : public Runnable
 {
   FetchBody<Derived>* mFetchBody;
 public:

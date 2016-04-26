@@ -300,7 +300,7 @@ nsNumberControlFrame::GetTextFieldFrame()
   return do_QueryFrame(GetAnonTextControl()->GetPrimaryFrame());
 }
 
-class FocusTextField : public nsRunnable
+class FocusTextField : public Runnable
 {
 public:
   FocusTextField(nsIContent* aNumber, nsIContent* aTextField)

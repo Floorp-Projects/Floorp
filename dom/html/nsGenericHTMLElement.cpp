@@ -118,7 +118,7 @@ using namespace mozilla::dom;
  * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
  * enabled.
  */
-class nsAutoFocusEvent : public nsRunnable
+class nsAutoFocusEvent : public Runnable
 {
 public:
   explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}

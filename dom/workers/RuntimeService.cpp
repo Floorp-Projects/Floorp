@@ -585,7 +585,7 @@ InterruptCallback(JSContext* aCx)
   return worker->InterruptCallback(aCx);
 }
 
-class LogViolationDetailsRunnable final : public nsRunnable
+class LogViolationDetailsRunnable final : public Runnable
 {
   WorkerPrivate* mWorkerPrivate;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
@@ -1035,13 +1035,13 @@ private:
   }
 };
 
-class WorkerThreadPrimaryRunnable final : public nsRunnable
+class WorkerThreadPrimaryRunnable final : public Runnable
 {
   WorkerPrivate* mWorkerPrivate;
   RefPtr<WorkerThread> mThread;
   JSRuntime* mParentRuntime;
 
-  class FinishedRunnable final : public nsRunnable
+  class FinishedRunnable final : public Runnable
   {
     RefPtr<WorkerThread> mThread;
 
@@ -2591,7 +2591,7 @@ RuntimeService::JSVersionChanged(const char* /* aPrefName */, void* /* aClosure 
   options.behaviors().setVersion(useLatest ? JSVERSION_LATEST : JSVERSION_DEFAULT);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(LogViolationDetailsRunnable, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(LogViolationDetailsRunnable, Runnable)
 
 NS_IMETHODIMP
 LogViolationDetailsRunnable::Run()
@@ -2619,7 +2619,7 @@ LogViolationDetailsRunnable::Run()
 
 NS_IMPL_ISUPPORTS(WorkerBackgroundChildCallback, nsIIPCBackgroundChildCreateCallback)
 
-NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable, nsRunnable)
+NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable, Runnable)
 
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::Run()
@@ -2772,7 +2772,7 @@ WorkerThreadPrimaryRunnable::SynchronouslyCreatePBackground()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable::FinishedRunnable,
-                             nsRunnable)
+                             Runnable)
 
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::FinishedRunnable::Run()

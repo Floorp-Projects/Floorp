@@ -782,7 +782,7 @@ FTPChannelParent::StartDiversion()
   }
 }
 
-class FTPFailDiversionEvent : public nsRunnable
+class FTPFailDiversionEvent : public Runnable
 {
 public:
   FTPFailDiversionEvent(FTPChannelParent *aChannelParent,

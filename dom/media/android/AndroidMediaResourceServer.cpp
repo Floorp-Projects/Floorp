@@ -106,7 +106,7 @@ ReadCRLF (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
 // protocol. It parses the headers and forwards data from the MediaResource
 // associated with the URL back to client. When the request is complete it will
 // shutdown the thread.
-class ServeResourceEvent : public nsRunnable {
+class ServeResourceEvent : public Runnable {
 private:
   // Reading from this reads the data sent from the client.
   nsCOMPtr<nsIInputStream> mInput;

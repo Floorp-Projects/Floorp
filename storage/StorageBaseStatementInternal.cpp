@@ -21,7 +21,7 @@ namespace storage {
 /**
  * Used to finalize an asynchronous statement on the background thread.
  */
-class AsyncStatementFinalizer : public nsRunnable
+class AsyncStatementFinalizer : public Runnable
 {
 public:
   /**
@@ -62,7 +62,7 @@ private:
  * Finalize a sqlite3_stmt on the background thread for a statement whose
  * destructor was invoked and the statement was non-null.
  */
-class LastDitchSqliteStatementFinalizer : public nsRunnable
+class LastDitchSqliteStatementFinalizer : public Runnable
 {
 public:
   /**

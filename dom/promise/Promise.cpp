@@ -54,7 +54,7 @@ using namespace workers;
 
 #ifndef SPIDERMONKEY_PROMISE
 // This class processes the promise's callbacks with promise's result.
-class PromiseReactionJob final : public nsRunnable
+class PromiseReactionJob final : public Runnable
 {
 public:
   PromiseReactionJob(Promise* aPromise,
@@ -180,7 +180,7 @@ GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 
 // Runnable to resolve thenables.
 // Equivalent to the specification's ResolvePromiseViaThenableTask.
-class PromiseResolveThenableJob final : public nsRunnable
+class PromiseResolveThenableJob final : public Runnable
 {
 public:
   PromiseResolveThenableJob(Promise* aPromise,

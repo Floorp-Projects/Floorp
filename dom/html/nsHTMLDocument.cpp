@@ -2524,7 +2524,7 @@ nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
 
 
 // Helper class, used below in ChangeContentEditableCount().
-class DeferredContentEditableCountChangeEvent : public nsRunnable
+class DeferredContentEditableCountChangeEvent : public Runnable
 {
 public:
   DeferredContentEditableCountChangeEvent(nsHTMLDocument *aDoc,

@@ -123,7 +123,7 @@ private:
     nsReferencedElement* mTarget;
   };
 
-  class ChangeNotification : public nsRunnable,
+  class ChangeNotification : public mozilla::Runnable,
                              public Notification
   {
   public:

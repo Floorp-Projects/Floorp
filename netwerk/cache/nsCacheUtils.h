@@ -17,7 +17,7 @@ class nsIThread;
 /**
  * A class with utility methods for shutting down nsIThreads easily.
   */
-class nsShutdownThread : public nsRunnable {
+class nsShutdownThread : public mozilla::Runnable {
 public:
   explicit nsShutdownThread(nsIThread *aThread);
   ~nsShutdownThread();

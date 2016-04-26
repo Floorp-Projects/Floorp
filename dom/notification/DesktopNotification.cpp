@@ -27,7 +27,7 @@ namespace dom {
  * Simple Request
  */
 class DesktopNotificationRequest : public nsIContentPermissionRequest
-                                 , public nsRunnable
+                                 , public Runnable
 {
   virtual ~DesktopNotificationRequest()
   {
@@ -274,7 +274,7 @@ DesktopNotificationCenter::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGiv
 /* DesktopNotificationRequest                                               */
 /* ------------------------------------------------------------------------ */
 
-NS_IMPL_ISUPPORTS_INHERITED(DesktopNotificationRequest, nsRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(DesktopNotificationRequest, Runnable,
                             nsIContentPermissionRequest)
 
 NS_IMETHODIMP

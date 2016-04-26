@@ -46,7 +46,7 @@ typedef nsTWeakRef<class nsPluginNativeWindowWin> PluginWindowWeakRef;
 /**
  *  PLEvent handling code
  */
-class PluginWindowEvent : public nsRunnable {
+class PluginWindowEvent : public Runnable {
 public:
   PluginWindowEvent();
   void Init(const PluginWindowWeakRef &ref, HWND hWnd, UINT msg, WPARAM wParam,
@@ -159,7 +159,7 @@ static bool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, nsNPAPIPl
   return false;
 }
 
-class nsDelayedPopupsEnabledEvent : public nsRunnable
+class nsDelayedPopupsEnabledEvent : public Runnable
 {
 public:
   nsDelayedPopupsEnabledEvent(nsNPAPIPluginInstance *inst)

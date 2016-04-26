@@ -965,7 +965,7 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
 //*****************************************************************************
 
 #if defined(XP_MACOSX)
-class nsContentTitleSettingEvent : public nsRunnable
+class nsContentTitleSettingEvent : public Runnable
 {
 public:
   nsContentTitleSettingEvent(dom::Element* dse, const nsAString& wtm)

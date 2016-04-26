@@ -38,7 +38,7 @@ protected:
     friend class nsOnStopRequestEvent;
 };
 
-class nsARequestObserverEvent : public nsRunnable
+class nsARequestObserverEvent : public mozilla::Runnable
 {
 public:
     explicit nsARequestObserverEvent(nsIRequest *);

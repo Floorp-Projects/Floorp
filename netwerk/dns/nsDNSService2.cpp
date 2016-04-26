@@ -450,7 +450,7 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
     return n;
 }
 
-class NotifyDNSResolution: public nsRunnable
+class NotifyDNSResolution: public Runnable
 {
 public:
     explicit NotifyDNSResolution(const nsACString &aHostname)

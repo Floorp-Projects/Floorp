@@ -207,7 +207,7 @@ static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
 // receive events. If we neglect to remove the self-reference then the element
 // just lives longer than it needs to.
 
-class nsMediaEvent : public nsRunnable
+class nsMediaEvent : public Runnable
 {
 public:
 

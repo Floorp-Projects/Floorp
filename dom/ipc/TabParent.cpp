@@ -110,7 +110,7 @@ using namespace mozilla::jsipc;
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
 
-class OpenFileAndSendFDRunnable : public nsRunnable
+class OpenFileAndSendFDRunnable : public mozilla::Runnable
 {
     const nsString mPath;
     RefPtr<TabParent> mTabParent;
@@ -2835,7 +2835,7 @@ TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
 }
 
 class LayerTreeUpdateRunnable final
-  : public nsRunnable
+  : public mozilla::Runnable
 {
   uint64_t mLayersId;
   bool mActive;

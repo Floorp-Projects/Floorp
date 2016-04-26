@@ -55,7 +55,7 @@ nsNativeModuleLoader::Init()
   return NS_OK;
 }
 
-class LoadModuleMainThreadRunnable : public nsRunnable
+class LoadModuleMainThreadRunnable : public Runnable
 {
 public:
   LoadModuleMainThreadRunnable(nsNativeModuleLoader* aLoader,

@@ -47,7 +47,7 @@ public:
     nsTransportStatusEvent          *mLastEvent;
 };
 
-class nsTransportStatusEvent : public nsRunnable
+class nsTransportStatusEvent : public Runnable
 {
 public:
     nsTransportStatusEvent(nsTransportEventSinkProxy *proxy,

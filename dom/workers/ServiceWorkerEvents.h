@@ -38,7 +38,7 @@ struct PushEventInit;
 
 BEGIN_WORKERS_NAMESPACE
 
-class CancelChannelRunnable final : public nsRunnable
+class CancelChannelRunnable final : public Runnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   const nsresult mStatus;
