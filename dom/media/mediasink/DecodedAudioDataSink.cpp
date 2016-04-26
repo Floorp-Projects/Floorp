@@ -223,7 +223,7 @@ DecodedAudioDataSink::PopFrames(uint32_t aFrames)
       return MakeUnique<Chunk>();
     }
 
-    AudioData* a = AudioQueue().PeekFront()->As<AudioData>();
+    RefPtr<AudioData> a = AudioQueue().PeekFront()->As<AudioData>();
 
     // Ignore the element with 0 frames and try next.
     if (a->mFrames == 0) {

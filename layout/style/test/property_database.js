@@ -5996,7 +5996,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[a] calc(1%) [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c]",
       "repeat(auto-fill,minmax(1%,auto))",
       "repeat(auto-fill,minmax(1em,min-content)) minmax(min-content,0)",
-      "repeat(auto-fill,minmax(1fr,1em)) [a] minmax(0, max-content)",
       "repeat(auto-fill,minmax(max-content,1mm))",
     ],
     invalid_values: [
@@ -6051,6 +6050,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "repeat(auto-fit,minmax(auto,auto))",
       "repeat(auto-fit,minmax(min-content,1fr))",
       "repeat(auto-fit,minmax(1fr,auto))",
+      "repeat(auto-fill,minmax(1fr,1em))",
       "repeat(auto-fill, 10px) auto",
       "auto repeat(auto-fit, 10px)",
       "minmax(min-content,max-content) repeat(auto-fit, 0)",

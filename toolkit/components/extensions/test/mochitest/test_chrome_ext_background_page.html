@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {
+  classes: Cc,
+  interfaces: Ci,
+  utils: Cu,
+} = Components;
+const Services = SpecialPowers.Services;
+
+add_task(function* testAlertNotShownInBackgroundWindow() {
+  ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(),
+     "Alerts should not be present at the start of the test.");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "new " + function() {
+      browser.test.log("background script executed");
+
+      alert("I am an alert in the background.");
+
+      browser.test.notifyPass("alertCalled");
+    },
+  });
+
+  yield extension.startup();
+
+  info("startup complete loaded");
+
+  yield extension.awaitFinish("alertCalled");
+
+  let alertWindows = Services.wm.getEnumerator("alert:alert");
+  ok(!alertWindows.hasMoreElements(), "Should not show alert");
+
+  // Make sure the message we output to the console is seen.
+  // This message is in ext-backgroundPage.js
+  let events = Cc["@mozilla.org/consoleAPI-storage;1"]
+    .getService(Ci.nsIConsoleAPIStorage).getEvents();
+  // This is the warning that is output after the first `alert()` call is made.
+  let alertWarningEvent = events[events.length - 2];
+  is(alertWarningEvent.arguments[0], "alert() is not supported in background windows; please use console.log instead.");
+  // This is the actual alert text that should be present in the console
+  // instead of as an `alert`.
+  let alertEvent = events[events.length - 1];
+  is(alertEvent.arguments[0], "I am an alert in the background.");
+
+  let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  require("devtools/client/framework/devtools-browser");
+  let hudservice = require("devtools/client/webconsole/hudservice");
+
+  while (!hudservice.getBrowserConsole()) {
+    // Setting this to 0 fails, but 200 seems to do the trick.
+    yield new Promise(resolve => setTimeout(resolve, 200));
+  }
+  let haveConsole = !!hudservice.getBrowserConsole();
+  ok(haveConsole, "Expected browser console to be open");
+
+  if (haveConsole) {
+    yield hudservice.toggleBrowserConsole();
+  }
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

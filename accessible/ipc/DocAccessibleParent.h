@@ -64,6 +64,10 @@ public:
                                    const bool& aIsInsert,
                                    const bool& aFromUser) override;
 
+  virtual bool RecvSelectionEvent(const uint64_t& aID,
+                                  const uint64_t& aWidgetID,
+                                  const uint32_t& aType) override;
+
   virtual bool RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
   void Unbind()
   {

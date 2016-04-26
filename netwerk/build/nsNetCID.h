@@ -481,10 +481,10 @@
   { 0x92, 0x05, 0xc3, 0x09, 0xce, 0xb2, 0xd6, 0x41 } \
 }
 
-// service implementing nsISchedulingContextService
-#define NS_SCHEDULINGCONTEXTSERVICE_CONTRACTID \
-    "@mozilla.org/network/scheduling-context-service;1"
-#define NS_SCHEDULINGCONTEXTSERVICE_CID \
+// service implementing nsIRequestContextService
+#define NS_REQUESTCONTEXTSERVICE_CONTRACTID \
+    "@mozilla.org/network/request-context-service;1"
+#define NS_REQUESTCONTEXTSERVICE_CID \
 { /* d5499fa7-7ba8-49ff-9e30-1858b99ace69 */ \
     0xd5499fa7, \
     0x7ba8, \

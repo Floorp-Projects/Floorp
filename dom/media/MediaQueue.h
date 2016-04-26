@@ -65,12 +65,12 @@ public:
     return rv.forget();
   }
 
-  inline T* Peek() {
+  inline RefPtr<T> Peek() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return static_cast<T*>(nsDeque::Peek());
   }
 
-  inline T* PeekFront() {
+  inline RefPtr<T> PeekFront() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return static_cast<T*>(nsDeque::PeekFront());
   }
@@ -109,8 +109,8 @@ public:
     if (GetSize() == 0) {
       return 0;
     }
-    T* last = Peek();
-    T* first = PeekFront();
+    T* last = static_cast<T*>(nsDeque::Peek());
+    T* first = static_cast<T*>(nsDeque::PeekFront());
     return last->GetEndTime() - first->mTime;
   }
 

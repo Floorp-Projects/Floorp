@@ -112,7 +112,7 @@ struct nsGridContainerFrame::TrackSize
     eMaxContentMinSizing =     0x4,
     eMinOrMaxContentMinSizing = eMinContentMinSizing | eMaxContentMinSizing,
     eIntrinsicMinSizing = eMinOrMaxContentMinSizing | eAutoMinSizing,
-    eFlexMinSizing =           0x8,
+    eFlexMinSizing =           0x8, // not really used ATM due to a spec change
     eAutoMaxSizing =          0x10,
     eMinContentMaxSizing =    0x20,
     eMaxContentMaxSizing =    0x40,
@@ -167,15 +167,13 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
   }
   // http://dev.w3.org/csswg/css-grid/#algo-init
   switch (minSizeUnit) {
+    case eStyleUnit_FlexFraction:
     case eStyleUnit_Auto:
       mState = eAutoMinSizing;
       break;
     case eStyleUnit_Enumerated:
       mState = IsMinContent(aMinCoord) ? eMinContentMinSizing
                                        : eMaxContentMinSizing;
-      break;
-    case eStyleUnit_FlexFraction:
-      mState = eFlexMinSizing;
       break;
     default:
       mBase = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
@@ -5215,15 +5213,6 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Our children are all grid-level boxes, which behave the same as
   // inline-blocks in painting, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
-  // Also, we capture positioned descendants so we can sort them by
-  // CSS 'order'.
-  nsDisplayList positionedDescendants;
-  nsDisplayListSet childLists(aLists.BlockBorderBackgrounds(),
-                              aLists.BlockBorderBackgrounds(),
-                              aLists.Floats(),
-                              aLists.Content(),
-                              &positionedDescendants,
-                              aLists.Outlines());
   typedef GridItemCSSOrderIterator::OrderState OrderState;
   OrderState order = HasAnyStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
                        ? OrderState::eKnownOrdered
@@ -5232,11 +5221,9 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 GridItemCSSOrderIterator::eIncludeAll, order);
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
-    BuildDisplayListForChild(aBuilder, child, aDirtyRect, childLists,
+    BuildDisplayListForChild(aBuilder, child, aDirtyRect, aLists,
                              ::GetDisplayFlagsForGridItem(child));
   }
-  positionedDescendants.SortByCSSOrder();
-  aLists.PositionedDescendants()->AppendToTop(&positionedDescendants);
 }
 
 bool

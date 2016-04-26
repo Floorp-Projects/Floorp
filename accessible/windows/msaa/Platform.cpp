@@ -127,3 +127,10 @@ a11y::ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible*, bool aInser
   AccessibleWrap* wrapper = WrapperFor(aTarget);
   AccessibleWrap::FireWinEvent(wrapper, event);
 }
+
+void
+a11y::ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible*, uint32_t aType)
+{
+  AccessibleWrap* wrapper = WrapperFor(aTarget);
+  AccessibleWrap::FireWinEvent(wrapper, aType);
+}

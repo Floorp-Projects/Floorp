@@ -1495,6 +1495,10 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
   case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
     g_object_notify((GObject*)wrapper, "accessible-value");
     break;
+  case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+  case nsIAccessibleEvent::EVENT_SELECTION_WITHIN:
+    g_signal_emit_by_name(wrapper, "selection_changed");
+    break;
   }
 }
 
@@ -1608,6 +1612,13 @@ MaiAtkObject::FireAtkShowHideEvent(AtkObject* aParent, bool aIsAdded,
     int32_t indexInParent = getIndexInParentCB(&this->parent);
     const char *signal_name = kMutationStrings[aFromUser][aIsAdded];
     g_signal_emit_by_name(aParent, signal_name, indexInParent, this, nullptr);
+}
+
+void
+a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible* aWidget, uint32_t)
+{
+  MaiAtkObject* obj = MAI_ATK_OBJECT(GetWrapperFor(aWidget));
+    g_signal_emit_by_name(obj, "selection_changed");
 }
 
 // static

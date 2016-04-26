@@ -2213,6 +2213,63 @@ CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOp
     masm.jump(ool->rejoin());
 }
 
+static void
+FindFirstDollarIndex(MacroAssembler& masm, Register str, Register len, Register chars,
+                     Register temp, Register output, bool isLatin1)
+{
+    masm.loadStringChars(str, chars);
+
+    masm.move32(Imm32(0), output);
+
+    Label start, done;
+    masm.bind(&start);
+    if (isLatin1)
+        masm.load8ZeroExtend(BaseIndex(chars, output, TimesOne), temp);
+    else
+        masm.load16ZeroExtend(BaseIndex(chars, output, TimesTwo), temp);
+
+    masm.branch32(Assembler::Equal, temp, Imm32('$'), &done);
+
+    masm.add32(Imm32(1), output);
+    masm.branch32(Assembler::NotEqual, output, len, &start);
+
+    masm.move32(Imm32(-1), output);
+
+    masm.bind(&done);
+}
+
+typedef bool (*GetFirstDollarIndexRawFn)(JSContext*, HandleString, int32_t*);
+static const VMFunction GetFirstDollarIndexRawInfo = FunctionInfo<GetFirstDollarIndexRawFn>(GetFirstDollarIndexRaw);
+
+void
+CodeGenerator::visitGetFirstDollarIndex(LGetFirstDollarIndex* ins)
+{
+    Register str = ToRegister(ins->str());
+    Register output = ToRegister(ins->output());
+    Register temp0 = ToRegister(ins->temp0());
+    Register temp1 = ToRegister(ins->temp1());
+    Register len = ToRegister(ins->temp2());
+
+    OutOfLineCode* ool = oolCallVM(GetFirstDollarIndexRawInfo, ins, ArgList(str),
+                                   StoreRegisterTo(output));
+
+    masm.branchIfRope(str, ool->entry());
+    masm.loadStringLength(str, len);
+
+    Label isLatin1, done;
+    masm.branchLatin1String(str, &isLatin1);
+    {
+        FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ false);
+    }
+    masm.jump(&done);
+    {
+        masm.bind(&isLatin1);
+        FindFirstDollarIndex(masm, str, len, temp0, temp1, output, /* isLatin1 = */ true);
+    }
+    masm.bind(&done);
+    masm.bind(ool->rejoin());
+}
+
 typedef JSString* (*StringReplaceFn)(JSContext*, HandleString, HandleString, HandleString);
 static const VMFunction StringFlatReplaceInfo = FunctionInfo<StringReplaceFn>(js::str_flat_replace_string);
 static const VMFunction StringReplaceInfo = FunctionInfo<StringReplaceFn>(StringReplace);

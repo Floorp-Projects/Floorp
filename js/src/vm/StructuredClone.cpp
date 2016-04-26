@@ -742,7 +742,7 @@ bool
 SCOutput::extractBuffer(uint64_t** datap, size_t* sizep)
 {
     *sizep = buf.length() * sizeof(uint64_t);
-    return (*datap = buf.extractRawBuffer()) != nullptr;
+    return (*datap = buf.extractOrCopyRawBuffer()) != nullptr;
 }
 
 } /* namespace js */

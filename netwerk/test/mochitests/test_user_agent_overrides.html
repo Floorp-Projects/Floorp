@@ -219,14 +219,14 @@ function testOverrides(callback) {
   });
 }
 
-SpecialPowers.Cu.import('resource://gre/modules/UserAgentOverrides.jsm', window);
-SpecialPowers.wrap(UserAgentOverrides).init();
+SpecialPowers.loadChromeScript(_ => {
+  Components.utils.import("resource://gre/modules/UserAgentOverrides.jsm");
+  UserAgentOverrides.init();
+});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestCompleteLog();
 SimpleTest.requestLongerTimeout(5);
-
-info(SpecialPowers.Cc["@mozilla.org/dom/site-specific-user-agent;1"].number);
 
 testOverrides(function() {
   testInactive(function() {

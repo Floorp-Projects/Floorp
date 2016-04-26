@@ -234,26 +234,21 @@ class GeckoInputConnection
     }
 
     private void showSoftInput() {
+        final View v = getView();
         final InputMethodManager imm = getInputMethodManager();
-        if (imm != null) {
-            final View v = getView();
-
-            if (v.hasFocus() && !imm.isActive(v)) {
-                // Workaround: The view has focus but it is not the active view for the input method. (Bug 1211848)
-                refocusAndShowSoftInput(imm, v);
-            } else {
-                imm.showSoftInput(v, 0);
-            }
+        if (v == null || imm == null) {
+            return;
         }
-    }
 
-    private static void refocusAndShowSoftInput(final InputMethodManager imm, final View v) {
-        ThreadUtils.postToUiThread(new Runnable() {
+        v.post(new Runnable() {
             @Override
             public void run() {
-                v.clearFocus();
-                v.requestFocus();
-
+                if (v.hasFocus() && !imm.isActive(v)) {
+                    // Marshmallow workaround: The view has focus but it is not the active
+                    // view for the input method. (Bug 1211848)
+                    v.clearFocus();
+                    v.requestFocus();
+                }
                 imm.showSoftInput(v, 0);
             }
         });
@@ -472,17 +467,17 @@ class GeckoInputConnection
         return mEditableClient.setInputConnectionHandler(getBackgroundHandler());
     }
 
-    private boolean mIsVisible = false;
-
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (mIMEState == IME_STATE_DISABLED) {
-            return null;
-        }
-
+        // Some keyboards require us to fill out outAttrs even if we return null.
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
+
+        if (mIMEState == IME_STATE_DISABLED) {
+            hideSoftInput();
+            return null;
+        }
 
         if (mIMEState == IME_STATE_PASSWORD ||
             "password".equalsIgnoreCase(mIMETypeHint))
@@ -587,12 +582,7 @@ class GeckoInputConnection
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
 
-        if (mIsVisible) {
-            // The app has been brought to the foreground and the Soft Keyboard
-            // was previously visible, so request that it be shown again.
-            showSoftInput();
-        }
-
+        showSoftInput();
         return this;
     }
 
@@ -798,16 +788,6 @@ class GeckoInputConnection
         return processKey(KeyEvent.ACTION_UP, keyCode, event);
     }
 
-    @Override
-    public void onWindowVisibilityChanged (int visibility) {
-        if (visibility == View.VISIBLE) {
-            mIsVisible = true;
-        } else {
-            mIsVisible = false;
-            hideSoftInput();
-        }
-    }
-
     /**
      * Get a key that represents a given character.
      */
@@ -936,11 +916,6 @@ class GeckoInputConnection
             return;
         }
         restartInput();
-        if (mIMEState == IME_STATE_DISABLED) {
-            hideSoftInput();
-        } else {
-            showSoftInput();
-        }
     }
 }
 

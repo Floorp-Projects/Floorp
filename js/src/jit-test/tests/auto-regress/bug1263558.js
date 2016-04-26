@@ -12,5 +12,6 @@ evalcx(`
         }\
     ');
     oomTest(() => eval('Array(..."")'));
-    Intl.NumberFormat.prototype.format(0);
+    if ('Intl' in this)
+        Intl.NumberFormat.prototype.format(0);
 `, newGlobal());

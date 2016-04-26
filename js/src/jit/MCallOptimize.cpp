@@ -188,6 +188,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineRegExpPrototypeOptimizable(callInfo);
       case InlinableNative::RegExpInstanceOptimizable:
         return inlineRegExpInstanceOptimizable(callInfo);
+      case InlinableNative::GetFirstDollarIndex:
+        return inlineGetFirstDollarIndex(callInfo);
 
       // String natives.
       case InlinableNative::String:
@@ -1447,18 +1449,16 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
     if (conversion == TemporaryTypeSet::AlwaysConvertToDoubles)
         return InliningStatus_NotInlined;
 
-    MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
-    current->add(templateConst);
+    if (!jsop_newarray(templateObject, initLength))
+        return InliningStatus_Error;
 
-    MNewArray* ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
-                                    templateObject->group()->initialHeap(constraints()), pc);
-
-    current->add(ins);
-    current->push(ins);
+    MDefinition* array = current->peek(-1);
 
     if (!initLength) {
-        if (!resumeAfter(ins))
-            return InliningStatus_Error;
+        if (!array->isResumePoint()) {
+            if (!resumeAfter(array->toNewArray()))
+                return InliningStatus_Error;
+        }
         return InliningStatus_Inlined;
     }
 
@@ -1471,11 +1471,11 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
        MConstant* value = arrayValues[i];
        current->add(value);
 
-       if (!initializeArrayElement(ins, i, value, unboxedType, /* addResumePoint = */ false))
+       if (!initializeArrayElement(array, i, value, unboxedType, /* addResumePoint = */ false))
            return InliningStatus_Error;
     }
 
-    MInstruction* setLength = setInitializedLength(ins, unboxedType, initLength);
+    MInstruction* setLength = setInitializedLength(array, unboxedType, initLength);
     if (!resumeAfter(setLength))
         return InliningStatus_Error;
 
@@ -1950,6 +1950,31 @@ IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
     MInstruction* opt = MRegExpInstanceOptimizable::New(alloc(), rxArg, protoArg);
     current->add(opt);
     current->push(opt);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineGetFirstDollarIndex(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    MDefinition* strArg = callInfo.getArg(0);
+
+    if (strArg->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction* ins = MGetFirstDollarIndex::New(alloc(), strArg);
+    current->add(ins);
+    current->push(ins);
 
     return InliningStatus_Inlined;
 }

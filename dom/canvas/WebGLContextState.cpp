@@ -119,18 +119,7 @@ WebGLContext::GetChannelBits(const char* funcName, GLenum pname, GLint* const ou
 
         case LOCAL_GL_DEPTH_BITS:
             if (mOptions.depth) {
-                const auto& glFormats = gl->GetGLFormats();
-
-                GLenum depthFormat = glFormats.depth;
-                if (mOptions.stencil && glFormats.depthStencil) {
-                    depthFormat = glFormats.depthStencil;
-                }
-
-                if (depthFormat == LOCAL_GL_DEPTH_COMPONENT16) {
-                    *out_val = 16;
-                } else {
-                    *out_val = 24;
-                }
+                *out_val = gl->Screen()->DepthBits();
             } else {
                 *out_val = 0;
             }

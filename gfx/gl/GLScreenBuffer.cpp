@@ -694,6 +694,17 @@ GLScreenBuffer::IsReadFramebufferDefault() const
     return SharedSurf()->mAttachType == AttachmentType::Screen;
 }
 
+uint32_t
+GLScreenBuffer::DepthBits() const
+{
+    const GLFormats& formats = mFactory->mFormats;
+
+    if (formats.depth == LOCAL_GL_DEPTH_COMPONENT16)
+        return 16;
+
+    return 24;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Utils
 

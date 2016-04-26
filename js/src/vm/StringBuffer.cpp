@@ -21,7 +21,7 @@ ExtractWellSized(ExclusiveContext* cx, Buffer& cb)
     size_t capacity = cb.capacity();
     size_t length = cb.length();
 
-    CharT* buf = cb.extractRawBuffer();
+    CharT* buf = cb.extractOrCopyRawBuffer();
     if (!buf)
         return nullptr;
 
