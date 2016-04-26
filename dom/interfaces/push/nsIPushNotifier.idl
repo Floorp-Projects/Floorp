@@ -23,8 +23,8 @@ interface nsIPrincipal;
 [ref] native MaybeData(const mozilla::Maybe<nsTArray<uint8_t>>);
 
 /**
- * Fires service worker events for push messages sent to content subscriptions,
- * and XPCOM observer notifications for system subscriptions.
+ * Fires XPCOM observer notifications and service worker events for
+ * messages sent to push subscriptions.
  */
 [scriptable, builtinclass, uuid(b00dfdeb-14e5-425b-adc7-b531442e3216)]
 interface nsIPushNotifier : nsISupports
@@ -73,7 +73,7 @@ interface nsIPushNotifier : nsISupports
                    in DOMString message, in uint32_t flags);
 
   /**
-   * Internal methods used to fire service worker events and XPCOM observer
+   * Internal methods used to fire service worker events and observer
    * notifications. These are not exposed to JavaScript.
    */
 
@@ -102,9 +102,8 @@ interface nsIPushNotifier : nsISupports
 };
 
 /**
- * A push message sent to a system subscription, used as the subject of a
- * `push-message` observer notification. System subscriptions are created by
- * the system principal, and do not use worker events.
+ * A push message sent to a subscription, used as the subject of a
+ * `push-message` observer notification.
  *
  * This interface resembles the `PushMessageData` WebIDL interface.
  */

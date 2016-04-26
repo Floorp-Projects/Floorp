@@ -9,8 +9,7 @@
 interface nsIPushErrorReporter : nsISupports
 {
   /**
-   * Ack status codes, reported when the Push service acknowledges an incoming
-   * message.
+   * Ack types, reported when the Push service acknowledges an incoming message.
    *
    * Acks are sent before the message is dispatched to the service worker,
    * since the server delays new messages until all outstanding ones have been
@@ -39,7 +38,7 @@ interface nsIPushErrorReporter : nsISupports
   /**
    * Reports a `push` event handler error to the Push service. |messageId| is
    * an opaque string passed to `nsIPushNotifier.notifyPush{WithData}`.
-   * |status| is a delivery error reason.
+   * |reason| is a delivery error reason.
    */
   void reportDeliveryError(in DOMString messageId,
                            [optional] in uint16_t reason);

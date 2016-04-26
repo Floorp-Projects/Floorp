@@ -17,8 +17,10 @@ namespace dom {
 /**
  * `PushNotifier` implements the `nsIPushNotifier` interface. This service
  * broadcasts XPCOM observer notifications for incoming push messages, then
- * forwards incoming push messages to service workers running in the content
- * process.
+ * forwards incoming push messages to service workers.
+ *
+ * All scriptable methods on this interface may be called from the parent or
+ * content process. Observer notifications are broadcasted to both processes.
  */
 class PushNotifier final : public nsIPushNotifier
 {
@@ -43,8 +45,7 @@ private:
 /**
  * `PushMessage` implements the `nsIPushMessage` interface, similar to
  * the `PushMessageData` WebIDL interface. Instances of this class are
- * passed as the subject of `push-message` observer notifications for
- * system subscriptions.
+ * passed as the subject of `push-message` observer notifications.
  */
 class PushMessage final : public nsIPushMessage
 {
