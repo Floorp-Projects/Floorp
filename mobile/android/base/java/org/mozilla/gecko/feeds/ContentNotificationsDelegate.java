@@ -7,10 +7,13 @@ package org.mozilla.gecko.feeds;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.BrowserAppDelegate;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 
@@ -23,9 +26,11 @@ public class ContentNotificationsDelegate extends BrowserAppDelegate {
     // The application is opened from a content notification
     public static final String ACTION_CONTENT_NOTIFICATION = AppConstants.ANDROID_PACKAGE_NAME + ".action.CONTENT_NOTIFICATION";
 
+    public static final String EXTRA_READ_BUTTON = "read_button";
     public static final String EXTRA_URLS = "urls";
 
     private static final String TELEMETRY_EXTRA_CONTENT_UPDATE = "content_update";
+    private static final String TELEMETRY_EXTRA_READ_NOW_BUTTON = TELEMETRY_EXTRA_CONTENT_UPDATE + "_read_now";
 
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
@@ -57,8 +62,18 @@ public class ContentNotificationsDelegate extends BrowserAppDelegate {
 
         Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(browserApp));
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, TELEMETRY_EXTRA_CONTENT_UPDATE);
         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, TELEMETRY_EXTRA_CONTENT_UPDATE);
+
+        if (intent.getBooleanExtra(EXTRA_READ_BUTTON, false)) {
+            // "READ NOW" button in notification was clicked
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, TELEMETRY_EXTRA_READ_NOW_BUTTON);
+
+            // Android's "auto cancel" won't remove the notification when an action button is pressed. So we do it ourselves here.
+            NotificationManagerCompat.from(browserApp).cancel(R.id.websiteContentNotification);
+        } else {
+            // Notification was clicked
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, TELEMETRY_EXTRA_CONTENT_UPDATE);
+        }
 
         Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(browserApp));
     }
