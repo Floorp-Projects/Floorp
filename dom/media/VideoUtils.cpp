@@ -31,10 +31,10 @@ namespace mozilla {
 
 using layers::PlanarYCbCrImage;
 
-static inline CheckedInt64 SaferMultDiv(int64_t aValue, uint32_t aMul, uint32_t aDiv) {
+CheckedInt64 SaferMultDiv(int64_t aValue, uint32_t aMul, uint32_t aDiv) {
   int64_t major = aValue / aDiv;
   int64_t remainder = aValue % aDiv;
-  return CheckedInt64(remainder) * aMul / aDiv + major * aMul;
+  return CheckedInt64(remainder) * aMul / aDiv + CheckedInt64(major) * aMul;
 }
 
 // Converts from number of audio frames to microseconds, given the specified
