@@ -753,7 +753,7 @@ MessageChannel::Send(Message* aMsg)
 {
     if (aMsg->capacity() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
-                              nsCString(aMsg->name()), aMsg->capacity());
+                              nsDependentCString(aMsg->name()), aMsg->capacity());
     }
 
     CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
@@ -1042,7 +1042,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 {
     if (aMsg->capacity() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE,
-                              nsCString(aMsg->name()), aMsg->capacity());
+                              nsDependentCString(aMsg->name()), aMsg->capacity());
     }
 
     nsAutoPtr<Message> msg(aMsg);
@@ -1227,6 +1227,10 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     MOZ_RELEASE_ASSERT(reply->is_sync());
 
     *aReply = Move(*reply);
+    if (aReply->capacity() >= kMinTelemetryMessageSize) {
+        Telemetry::Accumulate(Telemetry::IPC_REPLY_SIZE,
+                              nsDependentCString(aReply->name()), aReply->capacity());
+    }
     return true;
 }
 
