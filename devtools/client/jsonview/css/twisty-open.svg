@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#c3baaa"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <linearGradient id="b" x1="6.053" x2="2.888" y1="7.093" y2="1.8" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(.9 .9)"/>
+  </defs>
+  <rect width="8" height="8" x="1.5" y="1.5" fill="url(#b)" stroke="#7898b5" rx="1" ry="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M3 5h5v1H3z"/>
+</svg>
