@@ -148,6 +148,12 @@ void
 AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
 {
   MutexAutoLock lock(mMutex);
+
+  if (!aTextureClient) {
+    mSurfaceForBasic = nullptr;
+    return;
+  }
+
   TextureClientAutoLock texLock(aTextureClient, layers::OpenMode::OPEN_READ);
   if (!texLock.Succeeded()) {
     return;
