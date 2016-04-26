@@ -1834,7 +1834,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          this._removeMaxWidths();
+          if (!this.parentNode.parentNode.popupOpen) {
+            // Removing the max-width and resetting it later when overflow is
+            // handled is jarring when the item is visible, so skip this when
+            // the popup is open.
+            this._removeMaxWidths();
+          }
 
           let title = this.getAttribute("title");
 
