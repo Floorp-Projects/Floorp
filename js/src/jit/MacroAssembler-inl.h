@@ -518,17 +518,17 @@ void
 MacroAssembler::branchTestMIRType(Condition cond, const Value& val, MIRType type, Label* label)
 {
     switch (type) {
-      case MIRType_Null:      return branchTestNull(cond, val, label);
-      case MIRType_Undefined: return branchTestUndefined(cond, val, label);
-      case MIRType_Boolean:   return branchTestBoolean(cond, val, label);
-      case MIRType_Int32:     return branchTestInt32(cond, val, label);
-      case MIRType_String:    return branchTestString(cond, val, label);
-      case MIRType_Symbol:    return branchTestSymbol(cond, val, label);
-      case MIRType_Object:    return branchTestObject(cond, val, label);
-      case MIRType_Double:    return branchTestDouble(cond, val, label);
-      case MIRType_MagicOptimizedArguments: // Fall through.
-      case MIRType_MagicIsConstructing:
-      case MIRType_MagicHole: return branchTestMagic(cond, val, label);
+      case MIRType::Null:      return branchTestNull(cond, val, label);
+      case MIRType::Undefined: return branchTestUndefined(cond, val, label);
+      case MIRType::Boolean:   return branchTestBoolean(cond, val, label);
+      case MIRType::Int32:     return branchTestInt32(cond, val, label);
+      case MIRType::String:    return branchTestString(cond, val, label);
+      case MIRType::Symbol:    return branchTestSymbol(cond, val, label);
+      case MIRType::Object:    return branchTestObject(cond, val, label);
+      case MIRType::Double:    return branchTestDouble(cond, val, label);
+      case MIRType::MagicOptimizedArguments: // Fall through.
+      case MIRType::MagicIsConstructing:
+      case MIRType::MagicHole: return branchTestMagic(cond, val, label);
       default:
         MOZ_CRASH("Bad MIRType");
     }

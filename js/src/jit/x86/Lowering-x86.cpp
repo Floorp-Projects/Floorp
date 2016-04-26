@@ -17,7 +17,7 @@ using namespace js::jit;
 LBoxAllocation
 LIRGeneratorX86::useBoxFixed(MDefinition* mir, Register reg1, Register reg2, bool useAtStart)
 {
-    MOZ_ASSERT(mir->type() == MIRType_Value);
+    MOZ_ASSERT(mir->type() == MIRType::Value);
     MOZ_ASSERT(reg1 != reg2);
 
     ensureDefined(mir);
@@ -88,7 +88,7 @@ LIRGeneratorX86::visitUnbox(MUnbox* unbox)
 {
     MDefinition* inner = unbox->getOperand(0);
 
-    if (inner->type() == MIRType_ObjectOrNull) {
+    if (inner->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(inner));
         if (unbox->fallible())
             assignSnapshot(lir, unbox->bailoutKind());
@@ -99,7 +99,7 @@ LIRGeneratorX86::visitUnbox(MUnbox* unbox)
     // An unbox on x86 reads in a type tag (either in memory or a register) and
     // a payload. Unlike most instructions consuming a box, we ask for the type
     // second, so that the result can re-use the first input.
-    MOZ_ASSERT(inner->type() == MIRType_Value);
+    MOZ_ASSERT(inner->type() == MIRType::Value);
 
     ensureDefined(inner);
 
@@ -131,7 +131,7 @@ void
 LIRGeneratorX86::visitReturn(MReturn* ret)
 {
     MDefinition* opd = ret->getOperand(0);
-    MOZ_ASSERT(opd->type() == MIRType_Value);
+    MOZ_ASSERT(opd->type() == MIRType::Value);
 
     LReturn* ins = new(alloc()) LReturn;
     ins->setOperand(0, LUse(JSReturnReg_Type));
@@ -190,7 +190,7 @@ LIRGeneratorX86::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop
 void
 LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
 {
-    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LAsmJSUInt32ToDouble* lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()), temp());
     define(lir, ins);
 }
@@ -198,7 +198,7 @@ LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
 void
 LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 {
-    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LAsmJSUInt32ToFloat32* lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
     define(lir, ins);
 }
@@ -207,7 +207,7 @@ void
 LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
@@ -222,7 +222,7 @@ void
 LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
@@ -281,7 +281,7 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
 
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     bool byteArray = byteSize(ins->accessType()) == 1;
 
@@ -311,7 +311,7 @@ LIRGeneratorX86::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 void
 LIRGeneratorX86::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->base()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
@@ -332,7 +332,7 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
     MOZ_ASSERT(ins->accessType() < Scalar::Float32);
 
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     bool byteArray = byteSize(ins->accessType()) == 1;
 

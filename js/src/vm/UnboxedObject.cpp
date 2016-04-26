@@ -186,7 +186,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 
             Label notObject;
             masm.branchTestObject(Assembler::NotEqual, valueOperand,
-                                  types->mightBeMIRType(MIRType_Null) ? &notObject : &failureStoreObject);
+                                  types->mightBeMIRType(MIRType::Null) ? &notObject : &failureStoreObject);
 
             Register payloadReg = masm.extractObject(valueOperand, scratch1);
 
@@ -196,7 +196,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
             }
 
             masm.storeUnboxedProperty(targetAddress, JSVAL_TYPE_OBJECT,
-                                      TypedOrValueRegister(MIRType_Object,
+                                      TypedOrValueRegister(MIRType::Object,
                                                            AnyRegister(payloadReg)), nullptr);
 
             if (notObject.used()) {
