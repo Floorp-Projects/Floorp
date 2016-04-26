@@ -37,6 +37,12 @@ add_task(function* () {
   yield ContentTask.spawn(tab2.linkedBrowser, {}, function* () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 0);
+
+    // referrer is empty when urls are dragged to new or existing tabs.
+    // If this changes in the future, it would be okay to send the referrer
+    // in this case because we are creating a new tab with the default
+    // usercontextid as the original tab.
+    Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
   yield BrowserTestUtils.removeTab(tab);
@@ -78,6 +84,12 @@ add_task(function* () {
   yield ContentTask.spawn(tab2.linkedBrowser, {}, function* () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 1);
+
+    // referrer is empty when urls are dragged to new or existing tabs.
+    // If this changes in the future, it would be okay to send the referrer
+    // in this case because we are creating a new tab with the same
+    // usercontextid as the original tab.
+    Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
   yield BrowserTestUtils.removeTab(tab);
@@ -109,6 +121,12 @@ add_task(function* () {
   yield ContentTask.spawn(tab2.linkedBrowser, {}, function* () {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
     Assert.equal(content.document.nodePrincipal.originAttributes.userContextId, 2);
+
+    // referrer is empty when urls are dragged to new or existing tabs.
+    // If this changes in the future, we should ensure that we are not sending
+    // a referrer for this case!  When opening links across user contexts, we
+    // don't want the referrer to follow the user from one context to another.
+    Assert.equal(content.document.referrer, "", "referrer should be empty");
   });
 
   yield BrowserTestUtils.removeTab(tab);
