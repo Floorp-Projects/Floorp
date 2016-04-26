@@ -16,73 +16,71 @@ main(int argc, char **argv)
     unsigned int val;
     unsigned char buf[5];
     int count;
-    
-    if ( argc != 2 ) {
-	fprintf(stderr, "wrong number of args\n");
-	exit(-1);
+
+    if (argc != 2) {
+        fprintf(stderr, "wrong number of args\n");
+        exit(-1);
     }
-    
+
     curstr = argv[1];
-    
+
     nextstr = strchr(curstr, '.');
-    
-    if ( nextstr == NULL ) {
-	fprintf(stderr, "only one component\n");
-	exit(-1);
+
+    if (nextstr == NULL) {
+        fprintf(stderr, "only one component\n");
+        exit(-1);
     }
-    
+
     *nextstr = '\0';
     firstval = atoi(curstr);
 
     curstr = nextstr + 1;
-    
+
     nextstr = strchr(curstr, '.');
 
-    if ( nextstr ) {
-	*nextstr = '\0';
+    if (nextstr) {
+        *nextstr = '\0';
     }
 
     secondval = atoi(curstr);
-    
-    if ( firstval > 2 ) {
-	fprintf(stderr, "first component out of range\n");
-	exit(-1);
-	
+
+    if (firstval > 2) {
+        fprintf(stderr, "first component out of range\n");
+        exit(-1);
     }
-    
-    if ( secondval > 39 ) {
-	fprintf(stderr, "second component out of range\n");
-	exit(-1);
+
+    if (secondval > 39) {
+        fprintf(stderr, "second component out of range\n");
+        exit(-1);
     }
-    
-    printf("0x%x, ", ( firstval * 40 ) + secondval );
-    while ( nextstr ) {
-	curstr = nextstr + 1;
 
-	nextstr = strchr(curstr, '.');
+    printf("0x%x, ", (firstval * 40) + secondval);
+    while (nextstr) {
+        curstr = nextstr + 1;
 
-	if ( nextstr ) {
-	    *nextstr = '\0';
-	}
+        nextstr = strchr(curstr, '.');
 
-	memset(buf, 0, sizeof(buf));
-	val = atoi(curstr);
-	count = 0;
-	while ( val ) {
-	    buf[count] = ( val & 0x7f );
-	    val = val >> 7;
-	    count++;
-	}
+        if (nextstr) {
+            *nextstr = '\0';
+        }
 
-	while ( count-- ) {
-	    if ( count ) {
-		printf("0x%x, ", buf[count] | 0x80 );
-	    } else {
-		printf("0x%x, ", buf[count] );
-	    }
-	}
+        memset(buf, 0, sizeof(buf));
+        val = atoi(curstr);
+        count = 0;
+        while (val) {
+            buf[count] = (val & 0x7f);
+            val = val >> 7;
+            count++;
+        }
+
+        while (count--) {
+            if (count) {
+                printf("0x%x, ", buf[count] | 0x80);
+            } else {
+                printf("0x%x, ", buf[count]);
+            }
+        }
     }
     printf("\n");
     return 0;
 }
-

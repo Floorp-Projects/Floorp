@@ -105,8 +105,8 @@ static std::string VersionString(uint16_t version) {
 
 TlsConnectTestBase::TlsConnectTestBase(Mode mode, uint16_t version)
       : mode_(mode),
-        client_(new TlsAgent("client", TlsAgent::CLIENT, mode_, ssl_kea_rsa)),
-        server_(new TlsAgent("server", TlsAgent::SERVER, mode_, ssl_kea_rsa)),
+        client_(new TlsAgent(TlsAgent::kClient, TlsAgent::CLIENT, mode_)),
+        server_(new TlsAgent(TlsAgent::kServerRsa, TlsAgent::SERVER, mode_)),
         version_(version),
         expected_resumption_mode_(RESUME_NONE),
         session_ids_(),
@@ -164,22 +164,20 @@ void TlsConnectTestBase::Init() {
   }
 }
 
-void TlsConnectTestBase::Reset(const std::string& server_name, SSLKEAType kea) {
+void TlsConnectTestBase::Reset() {
+  // Take a copy of the name because it's about to disappear.
+  std::string name = server_->name();
+  Reset(name);
+}
+
+void TlsConnectTestBase::Reset(const std::string& server_name) {
   delete client_;
   delete server_;
 
-  client_ = new TlsAgent("client", TlsAgent::CLIENT, mode_, kea);
-  server_ = new TlsAgent(server_name, TlsAgent::SERVER, mode_, kea);
+  client_ = new TlsAgent(TlsAgent::kClient, TlsAgent::CLIENT, mode_);
+  server_ = new TlsAgent(server_name, TlsAgent::SERVER, mode_);
 
   Init();
-}
-
-void TlsConnectTestBase::ResetRsa() {
-  Reset("server", ssl_kea_rsa);
-}
-
-void TlsConnectTestBase::ResetEcdsa() {
-  Reset("ecdsa", ssl_kea_ecdh);
 }
 
 void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected) {
@@ -219,6 +217,23 @@ void TlsConnectTestBase::Connect() {
   CheckConnected();
 }
 
+void TlsConnectTestBase::ConnectWithCipherSuite(uint16_t cipher_suite)
+{
+  EnsureTlsSetup();
+  client_->EnableSingleCipher(cipher_suite);
+
+  Connect();
+  SendReceive();
+
+  // Check that we used the right cipher suite.
+  uint16_t actual;
+  EXPECT_TRUE(client_->cipher_suite(&actual));
+  EXPECT_EQ(cipher_suite, actual);
+  EXPECT_TRUE(server_->cipher_suite(&actual));
+  EXPECT_EQ(cipher_suite, actual);
+}
+
+
 void TlsConnectTestBase::CheckConnected() {
   // Check the version is as expected
   EXPECT_EQ(client_->version(), server_->version());
@@ -229,7 +244,7 @@ void TlsConnectTestBase::CheckConnected() {
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
 
-  int16_t cipher_suite1, cipher_suite2;
+  uint16_t cipher_suite1, cipher_suite2;
   bool ret = client_->cipher_suite(&cipher_suite1);
   EXPECT_TRUE(ret);
   ret = server_->cipher_suite(&cipher_suite2);
@@ -289,6 +304,13 @@ void TlsConnectTestBase::DisableEcdheCiphers() {
 void TlsConnectTestBase::DisableDheAndEcdheCiphers() {
   DisableDheCiphers();
   DisableEcdheCiphers();
+}
+
+void TlsConnectTestBase::EnableSomeEcdhCiphers() {
+  client_->EnableCiphersByAuthType(ssl_auth_ecdh_rsa);
+  client_->EnableCiphersByAuthType(ssl_auth_ecdh_ecdsa);
+  server_->EnableCiphersByAuthType(ssl_auth_ecdh_rsa);
+  server_->EnableCiphersByAuthType(ssl_auth_ecdh_ecdsa);
 }
 
 void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,

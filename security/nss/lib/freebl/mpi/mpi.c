@@ -1689,32 +1689,6 @@ int    mp_cmp_mag(const mp_int *a, const mp_int *b)
 
 /* }}} */
 
-/* {{{ mp_cmp_int(a, z) */
-
-/*
-  This just converts z to an mp_int, and uses the existing comparison
-  routines.  This is sort of inefficient, but it's not clear to me how
-  frequently this wil get used anyway.  For small positive constants,
-  you can always use mp_cmp_d(), and for zero, there is mp_cmp_z().
- */
-int    mp_cmp_int(const mp_int *a, long z)
-{
-  mp_int  tmp;
-  int     out;
-
-  ARGCHK(a != NULL, MP_EQ);
-  
-  mp_init(&tmp);
-  mp_set_int(&tmp, z);
-  out = mp_cmp(a, &tmp);
-  mp_clear(&tmp);
-
-  return out;
-
-} /* end mp_cmp_int() */
-
-/* }}} */
-
 /* {{{ mp_isodd(a) */
 
 /*
