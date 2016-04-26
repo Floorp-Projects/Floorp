@@ -593,11 +593,11 @@ BroadcastChannel::SetOnmessage(EventHandlerNonNull* aCallback)
 void
 BroadcastChannel::AddEventListener(const nsAString& aType,
                                    EventListener* aCallback,
-                                   bool aCapture,
+                                   const AddEventListenerOptionsOrBoolean& aOptions,
                                    const dom::Nullable<bool>& aWantsUntrusted,
                                    ErrorResult& aRv)
 {
-  DOMEventTargetHelper::AddEventListener(aType, aCallback, aCapture,
+  DOMEventTargetHelper::AddEventListener(aType, aCallback, aOptions,
                                          aWantsUntrusted, aRv);
 
   if (aRv.Failed()) {
@@ -610,10 +610,10 @@ BroadcastChannel::AddEventListener(const nsAString& aType,
 void
 BroadcastChannel::RemoveEventListener(const nsAString& aType,
                                       EventListener* aCallback,
-                                      bool aCapture,
+                                      const EventListenerOptionsOrBoolean& aOptions,
                                       ErrorResult& aRv)
 {
-  DOMEventTargetHelper::RemoveEventListener(aType, aCallback, aCapture, aRv);
+  DOMEventTargetHelper::RemoveEventListener(aType, aCallback, aOptions, aRv);
 
   if (aRv.Failed()) {
     return;
