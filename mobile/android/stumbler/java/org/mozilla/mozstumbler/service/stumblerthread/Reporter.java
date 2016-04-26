@@ -27,7 +27,6 @@ import org.mozilla.mozstumbler.service.stumblerthread.datahandling.StumblerBundl
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.cellscanner.CellInfo;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.cellscanner.CellScanner;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.GPSScanner;
-import org.mozilla.mozstumbler.service.stumblerthread.scanners.PressureScanner;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.WifiScanner;
 
 public final class Reporter extends BroadcastReceiver {
@@ -78,7 +77,6 @@ public final class Reporter extends BroadcastReceiver {
         intentFilter.addAction(WifiScanner.ACTION_WIFIS_SCANNED);
         intentFilter.addAction(CellScanner.ACTION_CELLS_SCANNED);
         intentFilter.addAction(GPSScanner.ACTION_GPS_UPDATED);
-        intentFilter.addAction(PressureScanner.ACTION_PRESSURE_SCANNED);
         intentFilter.addAction(ACTION_FLUSH_TO_BUNDLE);
         LocalBroadcastManager.getInstance(mContext).registerReceiver(this,
                 intentFilter);
@@ -115,18 +113,6 @@ public final class Reporter extends BroadcastReceiver {
         }
     }
 
-    private void receivedPressureMessage(Intent intent) {
-        float hPa = intent.getFloatExtra(PressureScanner.ACTION_PRESSURE_SCANNED_PRESSURE,
-                (float) 0.0);
-
-        if (mBundle == null || hPa == 0.0) {
-            return;
-        }
-
-        mBundle.addPressure(hPa);
-    }
-
-
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -144,9 +130,6 @@ public final class Reporter extends BroadcastReceiver {
             case GPSScanner.ACTION_GPS_UPDATED:
                 // Calls reportCollectedLocation, this is the ideal case
                 receivedGpsMessage(intent);
-                break;
-            case PressureScanner.ACTION_PRESSURE_SCANNED:
-                receivedPressureMessage(intent);
                 break;
         }
 
