@@ -96,7 +96,10 @@ public:
   // whenever the size of the element changes.
   NS_IMETHOD SetDimensions(int32_t width, int32_t height) = 0;
 
-  NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) = 0;
+  // Initializes with an nsIDocShell and DrawTarget. The size is taken from the
+  // DrawTarget.
+  NS_IMETHOD InitializeWithDrawTarget(nsIDocShell *aDocShell,
+                                      mozilla::gfx::DrawTarget* aTarget) = 0;
 
   // Creates an image buffer. Returns null on failure.
   virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* format) = 0;

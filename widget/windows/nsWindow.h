@@ -494,7 +494,6 @@ protected:
   static void             ActivateOtherWindowHelper(HWND aWnd);
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
-  static bool             IsRenderMode(gfxWindowsPlatform::RenderMode aMode);
   virtual bool            PreRender(LayerManagerComposite*) override;
   virtual void            PostRender(LayerManagerComposite*) override;
 

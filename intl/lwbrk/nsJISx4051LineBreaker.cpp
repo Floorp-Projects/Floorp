@@ -10,6 +10,7 @@
 #include "jisx4051class.h"
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"
+#include "nsUnicodeProperties.h"
 
 /* 
 
@@ -403,105 +404,153 @@ IS_HYPHEN(char16_t u)
 }
 
 static int8_t
-GetClass(char16_t u)
+GetClass(uint32_t u)
 {
-   uint16_t h = u & 0xFF00;
-   uint16_t l = u & 0x00ff;
-   int8_t c;
+  if (u < 0x10000) {
+    uint16_t h = u & 0xFF00;
+    uint16_t l = u & 0x00ff;
 
-   // Handle 3 range table first
-   if (0x0000 == h) {
-     c = GETCLASSFROMTABLE(gLBClass00, l);
-   } else if (0x1700 == h) {
-     c = GETCLASSFROMTABLE(gLBClass17, l);
-   } else if (NS_NeedsPlatformNativeHandling(u)) {
-     c = CLASS_COMPLEX;
-   } else if (0x0E00 == h) {
-     c = GETCLASSFROMTABLE(gLBClass0E, l);
-   } else if (0x2000 == h) {
-     c = GETCLASSFROMTABLE(gLBClass20, l);
-   } else if (0x2100 == h) {
-     c = GETCLASSFROMTABLE(gLBClass21, l);
-   } else if (0x3000 == h) {
-     c = GETCLASSFROMTABLE(gLBClass30, l);
-   } else if (((0x3200 <= u) && (u <= 0xA4CF)) || // CJK and Yi
-              ((0xAC00 <= h) && (h <= 0xD7FF)) || // Hangul
-              ((0xf900 <= h) && (h <= 0xfaff))) {
-     c = CLASS_BREAKABLE; // CJK character, Han, and Han Compatibility
-   } else if (0xff00 == h) {
-     if (l < 0x0060) { // Fullwidth ASCII variant
-       c = GETCLASSFROMTABLE(gLBClass00, (l+0x20));
-     } else if (l < 0x00a0) {
-       switch (l) {
-         case 0x61: c = GetClass(0x3002); break;
-         case 0x62: c = GetClass(0x300c); break;
-         case 0x63: c = GetClass(0x300d); break;
-         case 0x64: c = GetClass(0x3001); break;
-         case 0x65: c = GetClass(0x30fb); break;
-         case 0x9e: c = GetClass(0x309b); break;
-         case 0x9f: c = GetClass(0x309c); break;
-         default:
-           if (IS_HALFWIDTH_IN_JISx4051_CLASS3(u))
-              c = CLASS_CLOSE; // jis x4051 class 3
-           else
-              c = CLASS_BREAKABLE; // jis x4051 class 11
-           break;
-       }
-     // Halfwidth Katakana variants
-     } else if (l < 0x00e0) {
-       c = CLASS_CHARACTER; // Halfwidth Hangul variants
-     } else if (l < 0x00f0) {
-       static char16_t NarrowFFEx[16] = {
-         0x00A2, 0x00A3, 0x00AC, 0x00AF, 0x00A6, 0x00A5, 0x20A9, 0x0000,
-         0x2502, 0x2190, 0x2191, 0x2192, 0x2193, 0x25A0, 0x25CB, 0x0000
-       };
-       c = GetClass(NarrowFFEx[l - 0x00e0]);
-     } else {
-       c = CLASS_CHARACTER;
-     }
-   } else if (0x3100 == h) { 
-     if (l <= 0xbf) { // Hangul Compatibility Jamo, Bopomofo, Kanbun
-                      // XXX: This is per UAX #14, but UAX #14 may change
-                      // the line breaking rules about Kanbun and Bopomofo.
-       c = CLASS_BREAKABLE;
-     } else if (l >= 0xf0) { // Katakana small letters for Ainu
-       c = CLASS_CLOSE;
-     } else { // unassigned
-       c = CLASS_CHARACTER;
-     }
-   } else if (0x0300 == h) {
-     if (0x4F == l || (0x5C <= l && l <= 0x62))
-       c = CLASS_NON_BREAKABLE;
-     else
-       c = CLASS_CHARACTER;
-   } else if (0x0500 == h) {
-     // ARMENIAN HYPHEN (for "Breaking Hyphens" of UAX#14)
-     if (l == 0x8A)
-       c = GETCLASSFROMTABLE(gLBClass00, uint16_t(U_HYPHEN));
-     else
-       c = CLASS_CHARACTER;
-   } else if (0x0F00 == h) {
-     if (0x08 == l || 0x0C == l || 0x12 == l)
-       c = CLASS_NON_BREAKABLE;
-     else
-       c = CLASS_CHARACTER;
-   } else if (0x1800 == h) {
-     if (0x0E == l)
-       c = CLASS_NON_BREAKABLE;
-     else
-       c = CLASS_CHARACTER;
-   } else if (0x1600 == h) {
-     if (0x80 == l) { // U+1680 OGHAM SPACE MARK
-       c = CLASS_BREAKABLE;
-     } else {
-       c = CLASS_CHARACTER;
-     }
-   } else if (u == 0xfeff) {
-     c = CLASS_NON_BREAKABLE;
-   } else {
-     c = CLASS_CHARACTER; // others
-   }
-   return c;
+    // Handle 3 range table first
+    if (0x0000 == h) {
+      return GETCLASSFROMTABLE(gLBClass00, l);
+    }
+    if (0x1700 == h) {
+      return GETCLASSFROMTABLE(gLBClass17, l);
+    }
+    if (NS_NeedsPlatformNativeHandling(u)) {
+      return CLASS_COMPLEX;
+    }
+    if (0x0E00 == h) {
+      return GETCLASSFROMTABLE(gLBClass0E, l);
+    }
+    if (0x2000 == h) {
+      return GETCLASSFROMTABLE(gLBClass20, l);
+    }
+    if (0x2100 == h) {
+      return GETCLASSFROMTABLE(gLBClass21, l);
+    }
+    if (0x3000 == h) {
+      return GETCLASSFROMTABLE(gLBClass30, l);
+    }
+    if (0xff00 == h) {
+      if (l < 0x0060) { // Fullwidth ASCII variant
+        return GETCLASSFROMTABLE(gLBClass00, (l+0x20));
+      }
+      if (l < 0x00a0) { // Halfwidth Katakana variants
+        switch (l) {
+        case 0x61: return GetClass(0x3002);
+        case 0x62: return GetClass(0x300c);
+        case 0x63: return GetClass(0x300d);
+        case 0x64: return GetClass(0x3001);
+        case 0x65: return GetClass(0x30fb);
+        case 0x9e: return GetClass(0x309b);
+        case 0x9f: return GetClass(0x309c);
+        default:
+          if (IS_HALFWIDTH_IN_JISx4051_CLASS3(u)) {
+            return CLASS_CLOSE; // jis x4051 class 3
+          }
+          return CLASS_BREAKABLE; // jis x4051 class 11
+        }
+      }
+      if (l < 0x00e0) {
+        return CLASS_CHARACTER; // Halfwidth Hangul variants
+      }
+      if (l < 0x00f0) {
+        static char16_t NarrowFFEx[16] = {
+          0x00A2, 0x00A3, 0x00AC, 0x00AF, 0x00A6, 0x00A5, 0x20A9, 0x0000,
+          0x2502, 0x2190, 0x2191, 0x2192, 0x2193, 0x25A0, 0x25CB, 0x0000
+        };
+        return GetClass(NarrowFFEx[l - 0x00e0]);
+      }
+    } else if (0x3100 == h) { 
+      if (l <= 0xbf) { // Hangul Compatibility Jamo, Bopomofo, Kanbun
+                       // XXX: This is per UAX #14, but UAX #14 may change
+                       // the line breaking rules about Kanbun and Bopomofo.
+        return CLASS_BREAKABLE;
+      }
+      if (l >= 0xf0) { // Katakana small letters for Ainu
+        return CLASS_CLOSE;
+      }
+    } else if (0x0300 == h) {
+      if (0x4F == l || (0x5C <= l && l <= 0x62)) {
+        return CLASS_NON_BREAKABLE;
+      }
+    } else if (0x0500 == h) {
+      // ARMENIAN HYPHEN (for "Breaking Hyphens" of UAX#14)
+      if (l == 0x8A) {
+        return GETCLASSFROMTABLE(gLBClass00, uint16_t(U_HYPHEN));
+      }
+    } else if (0x0F00 == h) {
+      if (0x08 == l || 0x0C == l || 0x12 == l) {
+        return CLASS_NON_BREAKABLE;
+      }
+    } else if (0x1800 == h) {
+      if (0x0E == l) {
+        return CLASS_NON_BREAKABLE;
+      }
+    } else if (0x1600 == h) {
+      if (0x80 == l) { // U+1680 OGHAM SPACE MARK
+        return CLASS_BREAKABLE;
+      }
+    } else if (u == 0xfeff) {
+      return CLASS_NON_BREAKABLE;
+    }
+  }
+
+  // Mapping for Unicode LineBreak.txt classes to the (simplified) set of
+  // character classes used here.
+  // XXX The mappings here were derived by comparing the Unicode LineBreak
+  //     values of BMP characters to the classes our existing GetClass returns
+  //     for the same codepoints; in cases where characters with the same
+  //     LineBreak class mapped to various classes here, I picked what seemed
+  //     the most prevalent equivalence.
+  //     Some of these are unclear to me, but currently they are ONLY used
+  //     for characters not handled by the old code above, so all the JISx405
+  //     special cases should already be accounted for.
+  static const int8_t sUnicodeLineBreakToClass[] = {
+    /* UNKNOWN = 0,                       [XX] */ CLASS_CHARACTER,
+    /* AMBIGUOUS = 1,                     [AI] */ CLASS_CHARACTER,
+    /* ALPHABETIC = 2,                    [AL] */ CLASS_CHARACTER,
+    /* BREAK_BOTH = 3,                    [B2] */ CLASS_CHARACTER,
+    /* BREAK_AFTER = 4,                   [BA] */ CLASS_CHARACTER,
+    /* BREAK_BEFORE = 5,                  [BB] */ CLASS_OPEN_LIKE_CHARACTER,
+    /* MANDATORY_BREAK = 6,               [BK] */ CLASS_CHARACTER,
+    /* CONTINGENT_BREAK = 7,              [CB] */ CLASS_CHARACTER,
+    /* CLOSE_PUNCTUATION = 8,             [CL] */ CLASS_CHARACTER,
+    /* COMBINING_MARK = 9,                [CM] */ CLASS_CHARACTER,
+    /* CARRIAGE_RETURN = 10,              [CR] */ CLASS_BREAKABLE,
+    /* EXCLAMATION = 11,                  [EX] */ CLASS_CHARACTER,
+    /* GLUE = 12,                         [GL] */ CLASS_NON_BREAKABLE,
+    /* HYPHEN = 13,                       [HY] */ CLASS_CHARACTER,
+    /* IDEOGRAPHIC = 14,                  [ID] */ CLASS_BREAKABLE,
+    /* INSEPARABLE = 15,                  [IN] */ CLASS_CLOSE_LIKE_CHARACTER,
+    /* INFIX_NUMERIC = 16,                [IS] */ CLASS_CHARACTER,
+    /* LINE_FEED = 17,                    [LF] */ CLASS_BREAKABLE,
+    /* NONSTARTER = 18,                   [NS] */ CLASS_CLOSE_LIKE_CHARACTER,
+    /* NUMERIC = 19,                      [NU] */ CLASS_CHARACTER,
+    /* OPEN_PUNCTUATION = 20,             [OP] */ CLASS_CHARACTER,
+    /* POSTFIX_NUMERIC = 21,              [PO] */ CLASS_CHARACTER,
+    /* PREFIX_NUMERIC = 22,               [PR] */ CLASS_CHARACTER,
+    /* QUOTATION = 23,                    [QU] */ CLASS_CHARACTER,
+    /* COMPLEX_CONTEXT = 24,              [SA] */ CLASS_CHARACTER,
+    /* SURROGATE = 25,                    [SG] */ CLASS_CHARACTER,
+    /* SPACE = 26,                        [SP] */ CLASS_BREAKABLE,
+    /* BREAK_SYMBOLS = 27,                [SY] */ CLASS_CHARACTER,
+    /* ZWSPACE = 28,                      [ZW] */ CLASS_BREAKABLE,
+    /* NEXT_LINE = 29,                    [NL] */ CLASS_CHARACTER,
+    /* WORD_JOINER = 30,                  [WJ] */ CLASS_NON_BREAKABLE,
+    /* H2 = 31,                           [H2] */ CLASS_BREAKABLE,
+    /* H3 = 32,                           [H3] */ CLASS_BREAKABLE,
+    /* JL = 33,                           [JL] */ CLASS_CHARACTER,
+    /* JT = 34,                           [JT] */ CLASS_CHARACTER,
+    /* JV = 35,                           [JV] */ CLASS_CHARACTER,
+    /* CLOSE_PARENTHESIS = 36,            [CP] */ CLASS_CLOSE_LIKE_CHARACTER,
+    /* CONDITIONAL_JAPANESE_STARTER = 37, [CJ] */ CLASS_CLOSE,
+    /* HEBREW_LETTER = 38,                [HL] */ CLASS_CHARACTER,
+    /* REGIONAL_INDICATOR = 39,           [RI] */ CLASS_CHARACTER
+  };
+
+  return sUnicodeLineBreakToClass[mozilla::unicode::GetLineBreakClass(u)];
 }
 
 static bool
@@ -619,10 +668,10 @@ public:
     mHasPreviousBackslash = true;
   }
 
-  char16_t GetPreviousNonHyphenCharacter() const {
+  uint32_t GetPreviousNonHyphenCharacter() const {
     return mPreviousNonHyphenCharacter;
   }
-  void NotifyNonHyphenCharacter(char16_t ch) {
+  void NotifyNonHyphenCharacter(uint32_t ch) {
     mPreviousNonHyphenCharacter = ch;
   }
 
@@ -652,7 +701,7 @@ private:
   uint32_t mIndex;
   uint32_t mLength;         // length of text
   uint32_t mLastBreakIndex;
-  char16_t mPreviousNonHyphenCharacter; // The last character we have seen
+  uint32_t mPreviousNonHyphenCharacter; // The last character we have seen
                                          // which is not U_HYPHEN
   bool mHasCJKChar; // if the text has CJK character, this is true.
   bool mHasNonbreakableSpace; // if the text has no-breakable space,
@@ -830,7 +879,12 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
   ContextState state(aChars, aLength);
 
   for (cur = 0; cur < aLength; ++cur, state.AdvanceIndex()) {
-    char16_t ch = aChars[cur];
+    uint32_t ch = aChars[cur];
+    if (NS_IS_HIGH_SURROGATE(ch)) {
+      if (cur + 1 < aLength && NS_IS_LOW_SURROGATE(aChars[cur + 1])) {
+        ch = SURROGATE_TO_UCS4(ch, aChars[cur + 1]);
+      }
+    }
     int8_t cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
@@ -881,6 +935,14 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
       aBreakBefore[cur] = allowBreak;
 
       cur = end - 1;
+    }
+
+    if (ch > 0xffff) {
+      // Supplementary-plane character: mark that we cannot break before the
+      // trailing low surrogate, and advance past it.
+      ++cur;
+      aBreakBefore[cur] = false;
+      state.AdvanceIndex();
     }
   }
 }

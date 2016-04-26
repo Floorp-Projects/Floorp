@@ -3553,23 +3553,23 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
              "HandleDrag can only handle mouse event");
 
-  bool selectable;
-  IsSelectable(&selectable, nullptr);
-
-  // XXX Do we really need to exclude non-selectable content here?
-  // GetContentOffsetsFromPoint can handle it just fine, although some
-  // other stuff might not like it.
-  if (!selectable)
-    return NS_OK;
-  if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
-    return NS_OK;
-  }
-  nsIPresShell *presShell = aPresContext->PresShell();
-
   RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   bool mouseDown = frameselection->GetDragState();
-  if (!mouseDown)
+  if (!mouseDown) {
     return NS_OK;
+  }
+
+  nsIFrame* scrollbar =
+    nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::scrollbarFrame);
+  if (!scrollbar) {
+    // XXX Do we really need to exclude non-selectable content here?
+    // GetContentOffsetsFromPoint can handle it just fine, although some
+    // other stuff might not like it.
+    // NOTE: DisplaySelection() returns SELECTION_OFF for non-selectable frames.
+    if (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF) {
+      return NS_OK;
+    }
+  }
 
   frameselection->StopAutoScrollTimer();
 
@@ -3578,6 +3578,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   int32_t contentOffset;
   int32_t target;
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
   nsresult result;
   result = GetDataForTableSelection(frameselection, presShell, mouseEvent,
                                     getter_AddRefs(parentContent),

@@ -1783,7 +1783,7 @@ static void AddTrackAndListener(MediaStream* source,
         completed_(completed) {}
 
     virtual void Run() override {
-      StreamTime current_end = mStream->GetBufferEnd();
+      StreamTime current_end = mStream->GetTracksEnd();
       TrackTicks current_ticks =
         mStream->TimeToTicksRoundUp(track_rate_, current_end);
 

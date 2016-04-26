@@ -46,7 +46,7 @@ GfxInfo::GfxInfo()
 nsresult
 GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
-  *aEnabled = gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D;
+  *aEnabled = gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend();
   return NS_OK;
 }
 

@@ -18,7 +18,7 @@
       let meNode, msNode, mdNode;
       navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia;
 
-      navigator.getUserMedia({ audio: true }, stream => {
+      navigator.getUserMedia({ audio: true, fake: true }, stream => {
         meNode = ctx.createMediaElementSource(audio);
         msNode = ctx.createMediaStreamSource(stream);
         mdNode = ctx.createMediaStreamDestination();

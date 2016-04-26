@@ -240,8 +240,7 @@ public:
     virtual int32_t GetHeight() const override;
 
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
-    NS_IMETHOD InitializeWithSurface(nsIDocShell*, gfxASurface*, int32_t,
-                                     int32_t) override
+    NS_IMETHOD InitializeWithDrawTarget(nsIDocShell*, gfx::DrawTarget*) override
     {
         return NS_ERROR_NOT_IMPLEMENTED;
     }

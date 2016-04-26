@@ -833,7 +833,7 @@ public:
       // not a problem here, we got explicit user content.
       nsCOMPtr<nsIPrincipal> principal = window->GetExtantDoc()->NodePrincipal();
       domStream =
-        DOMMediaStream::CreateAudioCaptureStream(window, principal, msg);
+        DOMMediaStream::CreateAudioCaptureStreamAsInput(window, principal, msg);
 
       stream = msg->CreateSourceStream(nullptr); // Placeholder
       msg->RegisterCaptureStreamForWindow(
@@ -919,8 +919,8 @@ public:
       // avoid us blocking. Pass a simple TrackSourceGetter for potential
       // fake tracks. Apart from them gUM never adds tracks dynamically.
       domStream =
-        DOMLocalMediaStream::CreateSourceStream(window, msg,
-                                                new FakeTrackSourceGetter(principal));
+        DOMLocalMediaStream::CreateSourceStreamAsInput(window, msg,
+                                                       new FakeTrackSourceGetter(principal));
 
       if (mAudioDevice) {
         nsString audioDeviceName;

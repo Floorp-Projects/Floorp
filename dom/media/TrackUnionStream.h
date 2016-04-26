@@ -41,7 +41,7 @@ protected:
     // We keep track IDs instead of track pointers because
     // tracks can be removed without us being notified (e.g.
     // when a finished track is forgotten.) When we need a Track*,
-    // we call StreamBuffer::FindTrack, which will return null if
+    // we call StreamTracks::FindTrack, which will return null if
     // the track has been deleted.
     TrackID mInputTrackID;
     TrackID mOutputTrackID;
@@ -54,10 +54,10 @@ protected:
 
   // Add the track to this stream, retaining its TrackID if it has never
   // been previously used in this stream, allocating a new TrackID otherwise.
-  uint32_t AddTrack(MediaInputPort* aPort, StreamBuffer::Track* aTrack,
+  uint32_t AddTrack(MediaInputPort* aPort, StreamTracks::Track* aTrack,
                     GraphTime aFrom);
   void EndTrack(uint32_t aIndex);
-  void CopyTrackData(StreamBuffer::Track* aInputTrack,
+  void CopyTrackData(StreamTracks::Track* aInputTrack,
                      uint32_t aMapIndex, GraphTime aFrom, GraphTime aTo,
                      bool* aOutputTrackFinished);
 

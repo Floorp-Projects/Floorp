@@ -39,12 +39,9 @@ LayerTransactionChild::Destroy()
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
   for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    TextureClient* texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
 
     if (texture) {
-      // TODO: cf bug 1242448.
-      //gfxDevCrash(gfx::LogReason::TextureAliveAfterShutdown)
-      //  << "A texture is held alive after shutdown (PCompositorBridge)";
       texture->Destroy();
     }
   }
