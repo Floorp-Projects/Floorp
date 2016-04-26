@@ -16,6 +16,7 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,10 +37,35 @@ public class TestFileUtils {
     @Rule
     public TemporaryFolder tempDir = new TemporaryFolder();
     public File testFile;
+    public File nonExistentFile;
 
     @Before
     public void setUp() throws Exception {
         testFile = tempDir.newFile();
+        nonExistentFile = new File(tempDir.getRoot(), "non-existent-file");
+    }
+
+    @Test
+    public void testReadStringFromFileReadsData() throws Exception {
+        final String expected = "String to write contains hard characters: !\n \\s..\"'\u00f1";
+        writeStringToFile(testFile, expected);
+
+        final String actual = FileUtils.readStringFromFile(testFile);
+        assertEquals("Read content matches written content", expected, actual);
+    }
+
+    @Test
+    public void testReadStringFromFileEmptyFile() throws Exception {
+        assertEquals("Test file is empty", 0, testFile.length());
+
+        final String actual = FileUtils.readStringFromFile(testFile);
+        assertEquals("Read content is empty", "", actual);
+    }
+
+    @Test(expected=FileNotFoundException.class)
+    public void testReadStringFromNonExistentFile() throws Exception {
+        assertFalse("File does not exist", nonExistentFile.exists());
+        FileUtils.readStringFromFile(nonExistentFile);
     }
 
     @Test

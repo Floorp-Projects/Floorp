@@ -7,6 +7,8 @@ package org.mozilla.gecko.util;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FilenameFilter;
@@ -104,10 +106,30 @@ public class FileUtils {
     }
 
     /**
+     * A generic solution to read from a file. For more details,
+     * see {@link #readStringFromInputStreamAndCloseStream(InputStream, int)}.
+     *
+     * This method loads the entire file into memory so will have the expected performance impact.
+     * If you're trying to read a large file, you should be handling your own reading to avoid
+     * out-of-memory errors.
+     */
+    public static String readStringFromFile(final File file) throws IOException {
+        // FileInputStream will throw FileNotFoundException if the file does not exist, but
+        // File.length will return 0 if the file does not exist so we catch it sooner.
+        if (!file.exists()) {
+            throw new FileNotFoundException("Given file, " + file + ", does not exist");
+        } else if (file.length() == 0) {
+            return "";
+        }
+        final int len = (int) file.length(); // includes potential EOF character.
+        return readStringFromInputStreamAndCloseStream(new FileInputStream(file), len);
+    }
+
+    /**
      * A generic solution to read from an input stream in UTF-8. This function will read from the stream until it
      * is finished and close the stream - this is necessary to close the wrapping resources.
      *
-     * For a higher-level method, see {@link #readStringFromSmallFile(File)}.
+     * For a higher-level method, see {@link #readStringFromFile(File)}.
      *
      * Since this is generic, it may not be the most performant for your use case.
      *
