@@ -31,10 +31,6 @@ const CONNECTION_PROTOCOLS = (function() {
   }
 })();
 
-XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
-                                   "@mozilla.org/contentsecuritymanager;1",
-                                   "nsIContentSecurityManager");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
@@ -397,11 +393,6 @@ this.PushService = {
     } catch (e) {
       console.warn("findService: Error creating valid URI from",
         "dom.push.serverURL", serverURL);
-      return [];
-    }
-
-    if (!gContentSecurityManager.isURIPotentiallyTrustworthy(uri)) {
-      console.warn("findService: Untrusted server URI", uri.spec);
       return [];
     }
 
