@@ -741,8 +741,8 @@ FunctionObject(ParseNode* fn)
 static inline PropertyName*
 FunctionName(ParseNode* fn)
 {
-    if (JSAtom* atom = FunctionObject(fn)->atom())
-        return atom->asPropertyName();
+    if (JSAtom* name = FunctionObject(fn)->name())
+        return name->asPropertyName();
     return nullptr;
 }
 
@@ -7520,8 +7520,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, Handle<WasmModuleObje
 }
 
 static bool
-HandleDynamicLinkFailure(JSContext* cx, const CallArgs& args, AsmJSModule& module,
-                         HandlePropertyName name)
+HandleDynamicLinkFailure(JSContext* cx, const CallArgs& args, AsmJSModule& module, HandleAtom name)
 {
     if (cx->isExceptionPending())
         return false;
@@ -7630,7 +7629,7 @@ LinkAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     if (!DynamicallyLinkModule(cx, args, moduleObj, &exportObj)) {
         // Linking failed, so reparse the entire asm.js module from scratch to
         // get normal interpreted bytecode which we can simply Invoke. Very slow.
-        RootedPropertyName name(cx, fun->name());
+        RootedAtom name(cx, fun->name());
         return HandleDynamicLinkFailure(cx, args, *module, name);
     }
 
@@ -7641,7 +7640,7 @@ LinkAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
 static JSFunction*
 NewModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject moduleObj)
 {
-    RootedPropertyName name(cx, origFun->name());
+    RootedAtom name(cx, origFun->name());
 
     JSFunction::Flags flags = origFun->isLambda() ? JSFunction::ASMJS_LAMBDA_CTOR
                                                   : JSFunction::ASMJS_CTOR;
@@ -8431,7 +8430,7 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda
     if (!out.append("function "))
         return nullptr;
 
-    if (fun->atom() && !out.append(fun->atom()))
+    if (fun->name() && !out.append(fun->name()))
         return nullptr;
 
     bool haveSource = source->hasSourceData();
@@ -8505,8 +8504,8 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 
     if (!haveSource) {
         // asm.js functions can't be anonymous
-        MOZ_ASSERT(fun->atom());
-        if (!out.append(fun->atom()))
+        MOZ_ASSERT(fun->name());
+        if (!out.append(fun->name()))
             return nullptr;
         if (!out.append("() {\n    [sourceless code]\n}"))
             return nullptr;

@@ -767,10 +767,10 @@ GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
         return false;
     if (exists) {
         RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
-        if (fun->atom() == name)
+        if (fun->name() == name)
             return true;
 
-        if (fun->atom() == selfHostedName) {
+        if (fun->name() == selfHostedName) {
             // This function was initially cloned because it was called by
             // other self-hosted code, so the clone kept its self-hosted name,
             // instead of getting the name it's intended to have in content
