@@ -1616,18 +1616,16 @@ CanvasRenderingContext2D::ReturnTarget()
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell* aShell,
-                                                gfxASurface* aSurface,
-                                                int32_t aWidth,
-                                                int32_t aHeight)
+CanvasRenderingContext2D::InitializeWithDrawTarget(nsIDocShell* aShell,
+                                                   gfx::DrawTarget* aTarget)
 {
   RemovePostRefreshObserver();
   mDocShell = aShell;
   AddPostRefreshObserverIfNecessary();
 
-  SetDimensions(aWidth, aHeight);
-  mTarget = gfxPlatform::GetPlatform()->
-    CreateDrawTargetForSurface(aSurface, IntSize(aWidth, aHeight));
+  IntSize size = aTarget->GetSize();
+  SetDimensions(size.width, size.height);
+  mTarget = aTarget;
 
   if (!mTarget) {
     EnsureErrorTarget();

@@ -91,8 +91,9 @@ public:
  * file. It's not in the anonymous namespace because MediaStream needs to
  * be able to friend it.
  *
- * Currently we have one global instance per process, and one per each
- * OfflineAudioContext object.
+ * There can be multiple MediaStreamGraph per process: one per AudioChannel.
+ * Additionaly, each OfflineAudioContext object creates its own MediaStreamGraph
+ * object too.
  */
 class MediaStreamGraphImpl : public MediaStreamGraph,
                              public nsIMemoryReporter
@@ -104,10 +105,10 @@ public:
   /**
    * Use aGraphDriverRequested with SYSTEM_THREAD_DRIVER or AUDIO_THREAD_DRIVER
    * to create a MediaStreamGraph which provides support for real-time audio
-   * and/or video.  Set it to false in order to create a non-realtime instance
-   * which just churns through its inputs and produces output.  Those objects
-   * currently only support audio, and are used to implement
-   * OfflineAudioContext.  They do not support MediaStream inputs.
+   * and/or video.  Set it to OFFLINE_THREAD_DRIVER in order to create a
+   * non-realtime instance which just churns through its inputs and produces
+   * output.  Those objects currently only support audio, and are used to
+   * implement OfflineAudioContext.  They do not support MediaStream inputs.
    */
   explicit MediaStreamGraphImpl(GraphDriverType aGraphDriverRequested,
                                 TrackRate aSampleRate,
@@ -403,7 +404,7 @@ public:
   void PlayVideo(MediaStream* aStream);
   /**
    * No more data will be forthcoming for aStream. The stream will end
-   * at the current buffer end point. The StreamBuffer's tracks must be
+   * at the current buffer end point. The StreamTracks's tracks must be
    * explicitly set to finished by the caller.
    */
   void OpenAudioInputImpl(int aID,

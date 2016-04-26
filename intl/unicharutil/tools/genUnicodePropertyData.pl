@@ -21,6 +21,7 @@
 #       - BidiMirroring.txt
 #       - BidiBrackets.txt
 #       - HangulSyllableType.txt
+#       - LineBreak.txt
 #       - ReadMe.txt (to record version/date of the UCD)
 #       - Unihan_Variants.txt (from Unihan.zip)
 #     though this may change if we find a need for additional properties.
@@ -155,29 +156,29 @@ my %xidmodCode = (
 );
 
 my %bidicategoryCode = (
-  "L"   =>  "0", # Left-to-Right
-  "R"   =>  "1", # Right-to-Left
-  "EN"  =>  "2", # European Number
-  "ES"  =>  "3", # European Number Separator
-  "ET"  =>  "4", # European Number Terminator
-  "AN"  =>  "5", # Arabic Number
-  "CS"  =>  "6", # Common Number Separator
-  "B"   =>  "7", # Paragraph Separator
-  "S"   =>  "8", # Segment Separator
-  "WS"  =>  "9", # Whitespace
-  "ON"  => "10", # Other Neutrals
-  "LRE" => "11", # Left-to-Right Embedding
-  "LRO" => "12", # Left-to-Right Override
-  "AL"  => "13", # Right-to-Left Arabic
-  "RLE" => "14", # Right-to-Left Embedding
-  "RLO" => "15", # Right-to-Left Override
-  "PDF" => "16", # Pop Directional Format
-  "NSM" => "17", # Non-Spacing Mark
-  "BN"  => "18", # Boundary Neutral
-  "FSI" => "19", # First Strong Isolate
-  "LRI" => "20", # Left-to-Right Isolate
-  "RLI" => "21", # Right-to-left Isolate
-  "PDI" => "22"  # Pop Direcitonal Isolate
+  "L"   =>  0, # Left-to-Right
+  "R"   =>  1, # Right-to-Left
+  "EN"  =>  2, # European Number
+  "ES"  =>  3, # European Number Separator
+  "ET"  =>  4, # European Number Terminator
+  "AN"  =>  5, # Arabic Number
+  "CS"  =>  6, # Common Number Separator
+  "B"   =>  7, # Paragraph Separator
+  "S"   =>  8, # Segment Separator
+  "WS"  =>  9, # Whitespace
+  "ON"  => 10, # Other Neutrals
+  "LRE" => 11, # Left-to-Right Embedding
+  "LRO" => 12, # Left-to-Right Override
+  "AL"  => 13, # Right-to-Left Arabic
+  "RLE" => 14, # Right-to-Left Embedding
+  "RLO" => 15, # Right-to-Left Override
+  "PDF" => 16, # Pop Directional Format
+  "NSM" => 17, # Non-Spacing Mark
+  "BN"  => 18, # Boundary Neutral
+  "FSI" => 19, # First Strong Isolate
+  "LRI" => 20, # Left-to-Right Isolate
+  "RLI" => 21, # Right-to-left Isolate
+  "PDI" => 22  # Pop Direcitonal Isolate
 );
 
 my %verticalOrientationCode = (
@@ -185,6 +186,49 @@ my %verticalOrientationCode = (
   'R' => 1,  #   R - Rotated 90 degrees clockwise compared to the code charts
   'Tu' => 2, #   Tu - Transformed typographically, with fallback to Upright
   'Tr' => 3  #   Tr - Transformed typographically, with fallback to Rotated
+);
+
+my %lineBreakCode = ( # ordering matches ICU's ULineBreak enum
+  "XX" => 0,
+  "AI" => 1,
+  "AL" => 2,
+  "B2" => 3,
+  "BA" => 4,
+  "BB" => 5,
+  "BK" => 6,
+  "CB" => 7,
+  "CL" => 8,
+  "CM" => 9,
+  "CR" => 10,
+  "EX" => 11,
+  "GL" => 12,
+  "HY" => 13,
+  "ID" => 14,
+  "IN" => 15,
+  "IS" => 16,
+  "LF" => 17,
+  "NS" => 18,
+  "NU" => 19,
+  "OP" => 20,
+  "PO" => 21,
+  "PR" => 22,
+  "QU" => 23,
+  "SA" => 24,
+  "SG" => 25,
+  "SP" => 26,
+  "SY" => 27,
+  "ZW" => 28,
+  "NL" => 29,
+  "WJ" => 30,
+  "H2" => 31,
+  "H3" => 32,
+  "JL" => 33,
+  "JT" => 34,
+  "JV" => 35,
+  "CP" => 36,
+  "CJ" => 37,
+  "HL" => 38,
+  "RI" => 39
 );
 
 # initialize default properties
@@ -202,6 +246,7 @@ my @bidicategory;
 my @fullWidth;
 my @fullWidthInverse;
 my @verticalOrientation;
+my @lineBreak;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
@@ -215,6 +260,7 @@ for (my $i = 0; $i < 0x110000; ++$i) {
     $fullWidth[$i] = 0;
     $fullWidthInverse[$i] = 0;
     $verticalOrientation[$i] = 1; # default for unlisted codepoints is 'R'
+    $lineBreak[$i] = $lineBreakCode{"XX"};
 }
 
 # blocks where the default for bidi category is not L
@@ -453,6 +499,29 @@ while (<FH>) {
 }
 close FH;
 
+# read LineBreak.txt
+open FH, "< $UNICODE/LineBreak.txt" or die "can't open UCD file LineBreak.txt\n";
+push @versionInfo, "";
+while (<FH>) {
+    chomp;
+    push @versionInfo, $_;
+    last if /Date:/;
+}
+while (<FH>) {
+    s/#.*//;
+    if (m/([0-9A-F]{4,6})(?:\.\.([0-9A-F]{4,6}))*\s*;\s*([^ ]+)/) {
+        my $lb = uc($3);
+        warn "unknown LineBreak class" unless exists $lineBreakCode{$lb};
+        $lb = $lineBreakCode{$lb};
+        my $start = hex "0x$1";
+        my $end = (defined $2) ? hex "0x$2" : $start;
+        for (my $i = $start; $i <= $end; ++$i) {
+            $lineBreak[$i] = $lb;
+        }
+    }
+}
+close FH;
+
 # read xidmodifications.txt
 open FH, "< $UNICODE/security/xidmodifications.txt" or die "can't open UCD file xidmodifications.txt\n";
 push @versionInfo, "";
@@ -649,10 +718,10 @@ struct nsCharProps2 {
 sub sprintCharProps2_full
 {
   my $usv = shift;
-  return sprintf("{%d,%d,%d,%d,%d,%d,%d},",
+  return sprintf("{%d,%d,%d,%d,%d,%d,%d,%d},",
                  $script[$usv], $pairedBracketType[$usv], $category[$usv],
                  $bidicategory[$usv], $xidmod[$usv], $numericvalue[$usv],
-                 $verticalOrientation[$usv]);
+                 $verticalOrientation[$usv], $lineBreak[$usv]);
 }
 $type = q|
 struct nsCharProps2 {
@@ -663,10 +732,11 @@ struct nsCharProps2 {
   unsigned char mXidmod:4;
   signed char   mNumericValue:5;
   unsigned char mVertOrient:2;
+  unsigned char mLineBreak; // only 6 bits actually needed
 };
 |;
 &genTables("#if !ENABLE_INTL_API", "#endif",
-           "CharProp2", $type, "nsCharProps2", 11, 5, \&sprintCharProps2_full, 16, 4, 1);
+           "CharProp2", $type, "nsCharProps2", 12, 4, \&sprintCharProps2_full, 16, 5, 1);
 
 print HEADER "#pragma pack()\n\n";
 

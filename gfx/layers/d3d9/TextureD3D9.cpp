@@ -592,6 +592,17 @@ D3D9TextureData::CreateSimilar(ClientIPCAllocator*, TextureFlags aFlags, Texture
   return D3D9TextureData::Create(mSize, mFormat, aAllocFlags);
 }
 
+void
+D3D9TextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = mSize;
+  aInfo.format = mFormat;
+  aInfo.hasIntermediateBuffer = true;
+  aInfo.supportsMoz2D = true;
+  aInfo.canExposeMappedData = false;
+  aInfo.hasSynchronization = false;
+}
+
 bool
 D3D9TextureData::Lock(OpenMode aMode, FenceHandle*)
 {
@@ -668,11 +679,11 @@ D3D9TextureData::BorrowDrawTarget()
   }
 
   if (mNeedsClear) {
-    dt->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
+    dt->ClearRect(Rect(0, 0, mSize.width, mSize.height));
     mNeedsClear = false;
   }
   if (mNeedsClearWhite) {
-    dt->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    dt->FillRect(Rect(0, 0, mSize.width, mSize.height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     mNeedsClearWhite = false;
   }
 
@@ -772,6 +783,17 @@ DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   gfxWindowsPlatform::sD3D9SharedTextureUsed += aSize.width * aSize.height * 4;
   return data;
+}
+
+void
+DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = GetSize();
+  aInfo.format = mFormat;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
 }
 
 already_AddRefed<IDirect3DSurface9>

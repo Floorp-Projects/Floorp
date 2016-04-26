@@ -17,6 +17,7 @@
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
@@ -176,12 +177,28 @@ SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
         getter_AddRefs(newBaseURI), href, aDocument,
         aDocument->GetFallbackBaseURI());
 
-      // Try to set our base URI.  If that fails, try to set base URI to null
-      nsresult rv = aDocument->SetBaseURI(newBaseURI);
-      aDocument->SetChromeXHRDocBaseURI(nullptr);
+      // Check if CSP allows this base-uri
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      nsresult rv = aDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Getting CSP Failed");
+      // For all the different error cases we assign a nullptr to
+      // newBaseURI, so we basically call aDocument->SetBaseURI(nullptr);
       if (NS_FAILED(rv)) {
-        aDocument->SetBaseURI(nullptr);
+        newBaseURI = nullptr;
       }
+      if (csp && newBaseURI) {
+        // base-uri is only enforced if explicitly defined in the
+        // policy - do *not* consult default-src, see:
+        // http://www.w3.org/TR/CSP2/#directive-default-src
+        bool cspPermitsBaseURI = true;
+        rv = csp->Permits(newBaseURI, nsIContentSecurityPolicy::BASE_URI_DIRECTIVE,
+                          true, &cspPermitsBaseURI);
+        if (NS_FAILED(rv) || !cspPermitsBaseURI) {
+          newBaseURI = nullptr;
+        }
+      }
+      aDocument->SetBaseURI(newBaseURI);
+      aDocument->SetChromeXHRDocBaseURI(nullptr);
       return;
     }
   }

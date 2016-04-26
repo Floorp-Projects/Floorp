@@ -44,13 +44,7 @@ public:
 
   virtual void Unlock() override {}
 
-  virtual bool HasIntermediateBuffer() const override { return false; }
-
-  virtual gfx::SurfaceFormat GetFormat() const override {
-    return gfx::SurfaceFormat::UNKNOWN;
-  }
-
-  virtual gfx::IntSize GetSize() const override;
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 

@@ -90,22 +90,6 @@ static IconMetrics sIconMetrics[] = {
 /**************************************************************
  **************************************************************
  **
- ** BLOCK: nsWindowGfx impl.
- **
- ** Misc. graphics related utilities.
- **
- **************************************************************
- **************************************************************/
-
-/* static */ bool
-nsWindow::IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
-{
-  return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
-}
-
-/**************************************************************
- **************************************************************
- **
  ** BLOCK: nsWindow impl.
  **
  ** Paint related nsWindow methods.
@@ -327,50 +311,21 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
-          if ((IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) &&
-              eTransparencyTransparent == mTransparencyMode) {
-            if (mTransparentSurface == nullptr)
+          if (eTransparencyTransparent == mTransparencyMode) {
+            if (mTransparentSurface == nullptr) {
               SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
+            }
             targetSurface = mTransparentSurface;
           }
 #endif
 
           RefPtr<gfxWindowsSurface> targetSurfaceWin;
-          if (!targetSurface &&
-              (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)))
+          if (!targetSurface)
           {
             uint32_t flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
                 gfxWindowsSurface::FLAG_IS_TRANSPARENT;
             targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
             targetSurface = targetSurfaceWin;
-          }
-
-          RefPtr<gfxImageSurface> targetSurfaceImage;
-          if (!targetSurface &&
-              (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
-          {
-            IntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
-                                ps.rcPaint.bottom - ps.rcPaint.top);
-
-            if (!EnsureSharedSurfaceSize(surfaceSize)) {
-              NS_ERROR("Couldn't allocate a shared image surface!");
-              return false;
-            }
-
-            // don't use the shared surface directly; instead, create a new one
-            // that just reuses its buffer.
-            targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
-                                                     surfaceSize,
-                                                     surfaceSize.width * 4,
-                                                     SurfaceFormat::X8R8G8B8_UINT32);
-
-            if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
-              targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
-              targetSurface = targetSurfaceImage;
-            }
           }
 
           if (!targetSurface) {
@@ -391,27 +346,24 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
           // don't need to double buffer with anything but GDI
           BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-          if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
-              IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) {
 #ifdef MOZ_XUL
-            switch (mTransparencyMode) {
-              case eTransparencyGlass:
-              case eTransparencyBorderlessGlass:
-              default:
-                // If we're not doing translucency, then double buffer
-                doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-                break;
-              case eTransparencyTransparent:
-                // If we're rendering with translucency, we're going to be
-                // rendering the whole window; make sure we clear it first
-                dt->ClearRect(Rect(0.f, 0.f,
-                                   dt->GetSize().width, dt->GetSize().height));
-                break;
-            }
-#else
-            doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-#endif
+          switch (mTransparencyMode) {
+            case eTransparencyGlass:
+            case eTransparencyBorderlessGlass:
+            default:
+              // If we're not doing translucency, then double buffer
+              doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
+              break;
+            case eTransparencyTransparent:
+              // If we're rendering with translucency, we're going to be
+              // rendering the whole window; make sure we clear it first
+              dt->ClearRect(Rect(0.f, 0.f,
+                                 dt->GetSize().width, dt->GetSize().height));
+              break;
           }
+#else
+          doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
+#endif
 
           RefPtr<gfxContext> thebesContext = gfxContext::ForDrawTarget(dt);
           MOZ_ASSERT(thebesContext); // already checked draw target above
@@ -424,106 +376,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
 
 #ifdef MOZ_XUL
-          if ((IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))&&
-              eTransparencyTransparent == mTransparencyMode) {
+          if (eTransparencyTransparent == mTransparencyMode) {
             // Data from offscreen drawing surface was copied to memory bitmap of transparent
             // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
             // that displayed on the screen.
             UpdateTranslucentWindow();
-          } else
-#endif
-
-          if (result) {
-            if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
-                IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32))
-            {
-              IntSize surfaceSize = targetSurfaceImage->GetSize();
-
-              // Just blit this directly
-              BITMAPINFOHEADER bi;
-              memset(&bi, 0, sizeof(BITMAPINFOHEADER));
-              bi.biSize = sizeof(BITMAPINFOHEADER);
-              bi.biWidth = surfaceSize.width;
-              bi.biHeight = - surfaceSize.height;
-              bi.biPlanes = 1;
-              bi.biBitCount = 32;
-              bi.biCompression = BI_RGB;
-
-              if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
-                // On Windows CE/Windows Mobile, 24bpp packed-pixel sources
-                // seem to be far faster to blit than 32bpp (see bug 484864).
-                // So, convert the bits to 24bpp by stripping out the unused
-                // alpha byte.  24bpp DIBs also have scanlines that are 4-byte
-                // aligned though, so that must be taken into account.
-                int srcstride = surfaceSize.width*4;
-                int dststride = surfaceSize.width*3;
-                dststride = (dststride + 3) & ~3;
-
-                // Convert in place
-                for (int j = 0; j < surfaceSize.height; ++j) {
-                  unsigned int *src = (unsigned int*) (targetSurfaceImage->Data() + j*srcstride);
-                  unsigned int *dst = (unsigned int*) (targetSurfaceImage->Data() + j*dststride);
-
-                  // go 4 pixels at a time, since each 4 pixels
-                  // turns into 3 DWORDs when converted into BGR:
-                  // BGRx BGRx BGRx BGRx -> BGRB GRBG RBGR
-                  //
-                  // However, since we're dealing with little-endian ints, this is actually:
-                  // xRGB xrgb xRGB xrgb -> bRGB GBrg rgbR
-                  int width_left = surfaceSize.width;
-                  while (width_left >= 4) {
-                    unsigned int a = *src++;
-                    unsigned int b = *src++;
-                    unsigned int c = *src++;
-                    unsigned int d = *src++;
-
-                    *dst++ =  (a & 0x00ffffff)        | (b << 24);
-                    *dst++ = ((b & 0x00ffff00) >> 8)  | (c << 16);
-                    *dst++ = ((c & 0x00ff0000) >> 16) | (d << 8);
-
-                    width_left -= 4;
-                  }
-
-                  // then finish up whatever number of pixels are left,
-                  // using bytes.
-                  unsigned char *bsrc = (unsigned char*) src;
-                  unsigned char *bdst = (unsigned char*) dst;
-                  switch (width_left) {
-                    case 3:
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      bsrc++;
-                    case 2:
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      bsrc++;
-                    case 1:
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      *bdst++ = *bsrc++;
-                      bsrc++;
-                    case 0:
-                      break;
-                  }
-                }
-
-                bi.biBitCount = 24;
-              }
-
-              StretchDIBits(hDC,
-                            ps.rcPaint.left, ps.rcPaint.top,
-                            surfaceSize.width, surfaceSize.height,
-                            0, 0,
-                            surfaceSize.width, surfaceSize.height,
-                            targetSurfaceImage->Data(),
-                            (BITMAPINFO*) &bi,
-                            DIB_RGB_COLORS,
-                            SRCCOPY);
-            }
           }
+#endif
         }
         break;
       case LayersBackend::LAYERS_CLIENT:
