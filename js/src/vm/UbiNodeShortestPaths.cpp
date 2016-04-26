@@ -31,6 +31,19 @@ BackEdge::clone() const
 }
 
 #ifdef DEBUG
+
+static void
+dumpNode(const JS::ubi::Node& node)
+{
+    fprintf(stderr, "    %p ", (void*) node.identifier());
+    js_fputs(node.typeName(), stderr);
+    if (node.coarseType() == JS::ubi::CoarseType::Object) {
+        if (const char* clsName = node.jsObjectClassName())
+            fprintf(stderr, " [object %s]", clsName);
+    }
+    fputc('\n', stderr);
+}
+
 JS_PUBLIC_API(void)
 dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
 {
@@ -50,11 +63,7 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
     ok = paths->forEachPath(node, [&](Path& path) {
         fprintf(stderr, "Path %d:\n", i++);
         for (auto backEdge : path) {
-            fprintf(stderr, "    %p ", (void*) backEdge->predecessor().identifier());
-
-            js_fputs(backEdge->predecessor().typeName(), stderr);
-            fprintf(stderr, "\n");
-
+            dumpNode(backEdge->predecessor());
             fprintf(stderr, "            |\n");
             fprintf(stderr, "            |\n");
             fprintf(stderr, "        '");
@@ -69,10 +78,8 @@ dumpPaths(JSRuntime* rt, Node node, uint32_t maxNumPaths /* = 10 */)
             fprintf(stderr, "            V\n");
         }
 
-        fprintf(stderr, "    %p ", (void*) node.identifier());
-        js_fputs(node.typeName(), stderr);
-        fprintf(stderr, "\n\n");
-
+        dumpNode(node);
+        fputc('\n', stderr);
         return true;
     });
     MOZ_ASSERT(ok);
