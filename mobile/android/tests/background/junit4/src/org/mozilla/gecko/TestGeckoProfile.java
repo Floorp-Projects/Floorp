@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.helpers.FileUtil;
 import org.mozilla.gecko.util.FileUtils;
 import org.robolectric.RuntimeEnvironment;
 
@@ -238,12 +237,12 @@ public class TestGeckoProfile {
     }
 
     private static long readProfileCreationDateFromFile(final File file) throws Exception {
-        final JSONObject actualObj = FileUtil.readJSONObjectFromFile(file);
+        final JSONObject actualObj = FileUtils.readJSONObjectFromFile(file);
         return actualObj.getLong(PROFILE_CREATION_DATE_JSON_ATTR);
     }
 
     private String readClientIdFromFile(final File file) throws Exception {
-        final JSONObject obj = FileUtil.readJSONObjectFromFile(file);
+        final JSONObject obj = FileUtils.readJSONObjectFromFile(file);
         return obj.getString(CLIENT_ID_JSON_ATTR);
     }
 
