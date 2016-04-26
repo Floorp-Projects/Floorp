@@ -203,7 +203,7 @@ private:
 
   class SyncDisabledStateEvent;
   friend class SyncDisabledStateEvent;
-  class SyncDisabledStateEvent : public nsRunnable
+  class SyncDisabledStateEvent : public mozilla::Runnable
   {
   public:
     explicit SyncDisabledStateEvent(nsNumberControlFrame* aFrame)

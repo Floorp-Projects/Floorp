@@ -108,7 +108,7 @@ For more details @see bugzilla bug 76722
 */
 
 
-class nsParserContinueEvent : public nsRunnable
+class nsParserContinueEvent : public Runnable
 {
 public:
   RefPtr<nsParser> mParser;

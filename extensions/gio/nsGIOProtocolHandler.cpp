@@ -542,7 +542,7 @@ nsGIOInputStream::DoRead(char *aBuf, uint32_t aCount, uint32_t *aCountRead)
 /**
  * This class is used to implement SetContentTypeOfChannel.
  */
-class nsGIOSetContentTypeEvent : public nsRunnable
+class nsGIOSetContentTypeEvent : public mozilla::Runnable
 {
   public:
     nsGIOSetContentTypeEvent(nsIChannel *channel, const char *contentType)

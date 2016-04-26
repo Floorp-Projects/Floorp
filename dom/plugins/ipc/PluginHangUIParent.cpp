@@ -33,7 +33,7 @@ using std::string;
 using std::vector;
 
 namespace {
-class nsPluginHangUITelemetry : public nsRunnable
+class nsPluginHangUITelemetry : public mozilla::Runnable
 {
 public:
   nsPluginHangUITelemetry(int aResponseCode, int aDontAskCode,

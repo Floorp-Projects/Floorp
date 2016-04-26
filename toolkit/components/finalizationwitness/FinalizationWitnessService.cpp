@@ -32,7 +32,7 @@ namespace {
  * Important note: we maintain the invariant that these private data
  * slots are already addrefed.
  */
-class FinalizationEvent final: public nsRunnable
+class FinalizationEvent final: public Runnable
 {
 public:
   FinalizationEvent(const char* aTopic,

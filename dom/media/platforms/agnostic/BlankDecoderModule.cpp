@@ -43,7 +43,7 @@ public:
     return NS_OK;
   }
 
-  class OutputEvent : public nsRunnable {
+  class OutputEvent : public Runnable {
   public:
     OutputEvent(MediaRawData* aSample,
                 MediaDataDecoderCallback* aCallback,

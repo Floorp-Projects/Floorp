@@ -17,7 +17,7 @@ typedef nsMainThreadPtrHolder<nsIHttpActivityObserver> ObserverHolder;
 typedef nsMainThreadPtrHandle<nsIHttpActivityObserver> ObserverHandle;
 typedef nsTArray<ObserverHandle> ObserverArray;
 
-class nsHttpActivityEvent : public nsRunnable
+class nsHttpActivityEvent : public Runnable
 {
 public:
     nsHttpActivityEvent(nsISupports *aHttpChannel,

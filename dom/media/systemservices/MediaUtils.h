@@ -146,14 +146,14 @@ private:
   UniquePtr<FunctorsBase> mFunctors;
 };
 
-/* media::NewRunnableFrom() - Create an nsRunnable from a lambda.
+/* media::NewRunnableFrom() - Create a Runnable from a lambda.
  * media::NewTaskFrom()     - Create a Task from a lambda.
  *
- * Passing variables (closures) to an async function is clunky with nsRunnable:
+ * Passing variables (closures) to an async function is clunky with Runnable:
  *
  *   void Foo()
  *   {
- *     class FooRunnable : public nsRunnable
+ *     class FooRunnable : public Runnable
  *     {
  *     public:
  *       FooRunnable(const Bar &aBar) : mBar(aBar) {}
@@ -186,7 +186,7 @@ private:
  */
 
 template<typename OnRunType>
-class LambdaRunnable : public nsRunnable
+class LambdaRunnable : public Runnable
 {
 public:
   explicit LambdaRunnable(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}

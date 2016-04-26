@@ -34,7 +34,7 @@ struct NotifySoftUpdateData
   }
 };
 
-class NotifySoftUpdateIfPrincipalOkRunnable final : public nsRunnable
+class NotifySoftUpdateIfPrincipalOkRunnable final : public Runnable
 {
 public:
   NotifySoftUpdateIfPrincipalOkRunnable(

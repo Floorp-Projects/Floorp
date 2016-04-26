@@ -62,7 +62,7 @@ static int32_t gEatMouseMove = false;
 const int32_t kBlinkDelay = 67; // milliseconds
 
 // this class is used for dispatching menu activation events asynchronously.
-class nsMenuActivateEvent : public nsRunnable
+class nsMenuActivateEvent : public Runnable
 {
 public:
   nsMenuActivateEvent(nsIContent *aMenu,
@@ -107,7 +107,7 @@ private:
   bool mIsActivate;
 };
 
-class nsMenuAttributeChangedEvent : public nsRunnable
+class nsMenuAttributeChangedEvent : public Runnable
 {
 public:
   nsMenuAttributeChangedEvent(nsIFrame* aFrame, nsIAtom* aAttr)

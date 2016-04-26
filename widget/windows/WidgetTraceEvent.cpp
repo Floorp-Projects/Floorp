@@ -32,7 +32,7 @@ HANDLE sEventHandle = nullptr;
 
 // We need a runnable in order to find the hidden window on the main
 // thread.
-class HWNDGetter : public nsRunnable {
+class HWNDGetter : public mozilla::Runnable {
 public:
   HWNDGetter() : hidden_window_hwnd(nullptr) {
     MOZ_COUNT_CTOR(HWNDGetter);

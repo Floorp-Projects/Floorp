@@ -1376,7 +1376,7 @@ MediaCache::Update()
   mSuspendedStatusToNotify.Clear();
 }
 
-class UpdateEvent : public nsRunnable
+class UpdateEvent : public Runnable
 {
 public:
   NS_IMETHOD Run()

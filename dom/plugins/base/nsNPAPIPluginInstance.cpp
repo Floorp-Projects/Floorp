@@ -65,7 +65,7 @@ using namespace mozilla::gl;
 
 typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
 
-class PluginEventRunnable : public nsRunnable
+class PluginEventRunnable : public Runnable
 {
 public:
   PluginEventRunnable(nsNPAPIPluginInstance* instance, ANPEvent* event)
@@ -1639,7 +1639,7 @@ nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *c
   }
 }
 
-class CarbonEventModelFailureEvent : public nsRunnable {
+class CarbonEventModelFailureEvent : public Runnable {
 public:
   nsCOMPtr<nsIContent> mContent;
 

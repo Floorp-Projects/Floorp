@@ -419,7 +419,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   return called;
 }
 
-class ScriptErrorEvent : public nsRunnable
+class ScriptErrorEvent : public Runnable
 {
 public:
   ScriptErrorEvent(nsPIDOMWindowInner* aWindow,
@@ -2180,7 +2180,7 @@ nsJSContext::KillICCTimer()
   }
 }
 
-class NotifyGCEndRunnable : public nsRunnable
+class NotifyGCEndRunnable : public Runnable
 {
   nsString mMessage;
 

@@ -263,7 +263,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITLSSERVERSECURITYOBSERVER
 
-  class OnHandshakeDoneRunnable : public nsRunnable
+  class OnHandshakeDoneRunnable : public Runnable
   {
   public:
     OnHandshakeDoneRunnable(const nsMainThreadPtrHandle<nsITLSServerSecurityObserver>& aListener,

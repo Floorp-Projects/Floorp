@@ -300,7 +300,7 @@ nsDeque::PopFront()
  * @return  last item in container
  */
 void*
-nsDeque::Peek()
+nsDeque::Peek() const
 {
   void* result = 0;
   if (mSize > 0) {
@@ -316,7 +316,7 @@ nsDeque::Peek()
  * @return  last item in container
  */
 void*
-nsDeque::PeekFront()
+nsDeque::PeekFront() const
 {
   void* result = 0;
   if (mSize > 0) {

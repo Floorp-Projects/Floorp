@@ -283,7 +283,7 @@ private:
   const char* GetName(SpeechEvent* aId);
 };
 
-class SpeechEvent : public nsRunnable
+class SpeechEvent : public Runnable
 {
 public:
   SpeechEvent(SpeechRecognition* aRecognition, SpeechRecognition::EventType aType)

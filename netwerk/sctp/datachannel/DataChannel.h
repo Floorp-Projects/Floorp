@@ -444,7 +444,7 @@ private:
 // used to dispatch notifications of incoming data to the main thread
 // Patterned on CallOnMessageAvailable in WebSockets
 // Also used to proxy other items to MainThread
-class DataChannelOnMessageAvailable : public nsRunnable
+class DataChannelOnMessageAvailable : public Runnable
 {
 public:
   enum {
@@ -456,6 +456,7 @@ public:
     ON_DATA,
     START_DEFER,
     BUFFER_LOW_THRESHOLD,
+    NO_LONGER_BUFFERED,
   };  /* types */
 
   DataChannelOnMessageAvailable(int32_t     aType,
@@ -493,11 +494,17 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
+
+    // Note: calling the listeners can indirectly cause the listeners to be
+    // made available for GC (by removing event listeners), especially for
+    // OnChannelClosed().  We hold a ref to the Channel and the listener
+    // while calling this.
     switch (mType) {
       case ON_DATA:
       case ON_CHANNEL_OPEN:
       case ON_CHANNEL_CLOSED:
       case BUFFER_LOW_THRESHOLD:
+      case NO_LONGER_BUFFERED:
         {
           MutexAutoLock lock(mChannel->mListenerLock);
           if (!mChannel->mListener) {
@@ -521,6 +528,9 @@ public:
               break;
             case BUFFER_LOW_THRESHOLD:
               mChannel->mListener->OnBufferLow(mChannel->mContext);
+              break;
+            case NO_LONGER_BUFFERED:
+              mChannel->mListener->NotBuffered(mChannel->mContext);
               break;
           }
           break;

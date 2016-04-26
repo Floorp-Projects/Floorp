@@ -15,7 +15,7 @@ namespace mozilla { namespace psm {
 // Wait for the event to run on the target thread without spinning the event
 // loop on the calling thread. (Dispatching events to a thread using
 // NS_DISPATCH_SYNC would cause the event loop on the calling thread to spin.)
-class SyncRunnableBase : public nsRunnable
+class SyncRunnableBase : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -27,7 +27,7 @@ private:
   mozilla::Monitor monitor;
 };
 
-class NotifyObserverRunnable : public nsRunnable
+class NotifyObserverRunnable : public Runnable
 {
 public:
   NotifyObserverRunnable(nsIObserver * observer,

@@ -33,7 +33,7 @@ Tickler::Tickler()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-class TicklerThreadDestructor  : public nsRunnable
+class TicklerThreadDestructor  : public Runnable
 {
 public:
   explicit TicklerThreadDestructor(nsIThread *aThread)

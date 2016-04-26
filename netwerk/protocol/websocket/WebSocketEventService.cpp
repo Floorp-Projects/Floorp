@@ -32,7 +32,7 @@ IsChildProcess()
 
 } // anonymous namespace
 
-class WebSocketBaseRunnable : public nsRunnable
+class WebSocketBaseRunnable : public Runnable
 {
 public:
   WebSocketBaseRunnable(uint32_t aWebSocketSerialID,

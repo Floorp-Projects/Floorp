@@ -11,7 +11,7 @@
 #include "LeakRefPtr.h"
 #include "mozilla/DebugOnly.h"
 
-class nsThreadSyncDispatch : public nsRunnable
+class nsThreadSyncDispatch : public mozilla::Runnable
 {
 public:
   nsThreadSyncDispatch(nsIThread* aOrigin, already_AddRefed<nsIRunnable>&& aTask)
