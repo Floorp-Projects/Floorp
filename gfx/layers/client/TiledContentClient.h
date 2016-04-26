@@ -276,6 +276,7 @@ struct TileClient
   RefPtr<TextureClientAllocator> mAllocator;
   gfx::IntRect mUpdateRect;
   CompositableClient* mCompositableClient;
+  bool mWasPlaceholder;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
 #endif
