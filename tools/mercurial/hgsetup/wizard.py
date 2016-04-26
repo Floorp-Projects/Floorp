@@ -87,7 +87,7 @@ Your Mercurial should now be properly configured and recommended extensions
 should be up to date!
 '''.strip()
 
-REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.3')
+REVIEWBOARD_MINIMUM_VERSION = LooseVersion('3.5')
 
 REVIEWBOARD_INCOMPATIBLE = '''
 Your Mercurial is too old to use the reviewboard extension, which is necessary
@@ -129,7 +129,7 @@ if you have enabled 2 Factor Authentication in Bugzilla.
 All consumers formerly looking at these options should support API Keys.
 '''.lstrip()
 
-BZPOST_MINIMUM_VERSION = LooseVersion('3.3')
+BZPOST_MINIMUM_VERSION = LooseVersion('3.5')
 
 BZPOST_INFO = '''
 The bzpost extension automatically records the URLs of pushed commits to
@@ -140,7 +140,7 @@ referenced Bugzilla bugs after push.
 Would you like to activate bzpost
 '''.strip()
 
-FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.3')
+FIREFOXTREE_MINIMUM_VERSION = LooseVersion('3.5')
 
 FIREFOXTREE_INFO = '''
 The firefoxtree extension makes interacting with the multiple Firefox
@@ -166,7 +166,7 @@ b) perform head/bookmark-based development (as opposed to mq)
 Would you like to activate firefoxtree
 '''.strip()
 
-PUSHTOTRY_MINIMUM_VERSION = LooseVersion('3.3')
+PUSHTOTRY_MINIMUM_VERSION = LooseVersion('3.5')
 
 PUSHTOTRY_INFO = '''
 The push-to-try extension generates a temporary commit with a given
