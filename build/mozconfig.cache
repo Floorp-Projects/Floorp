@@ -27,7 +27,7 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z 
             ;;
         esac
         ;;
-    b2g-inbound|mozilla-inbound|fx-team)
+    mozilla-inbound|fx-team)
         case "${master}" in
         *use1.mozilla.com*)
             bucket=mozilla-releng-s3-cache-us-east-1-prod

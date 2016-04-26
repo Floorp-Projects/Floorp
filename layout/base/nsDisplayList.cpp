@@ -2158,14 +2158,6 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return nsLayoutUtils::CompareTreePosition(content1, content2, commonAncestor) <= 0;
 }
 
-static bool IsCSSOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2, void*) {
-  nsIFrame* frame1 = aItem1->Frame();
-  nsIFrame* frame2 = aItem2->Frame();
-  int32_t order1 = frame1 ? frame1->StylePosition()->mOrder : 0;
-  int32_t order2 = frame2 ? frame2->StylePosition()->mOrder : 0;
-  return order1 <= order2;
-}
-
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                         void* aClosure) {
   {
@@ -2187,10 +2179,6 @@ void nsDisplayList::SortByZOrder() {
 
 void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
   Sort(IsContentLEQ, aCommonAncestor);
-}
-
-void nsDisplayList::SortByCSSOrder() {
-  Sort(IsCSSOrderLEQ, nullptr);
 }
 
 void nsDisplayList::Sort(SortLEQ aCmp, void* aClosure) {

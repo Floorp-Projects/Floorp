@@ -11,7 +11,6 @@ config = {
         "ac_add_options --with-branding=mobile/android/branding/nightly",
         "ac_add_options --with-branding=mobile/android/branding/aurora")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
-                  "mobile/android/config/mozconfigs/android-api-9-10-constrained/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["debug", "nightly", "l10n-nightly"]
     ] + [
@@ -31,13 +30,11 @@ config = {
         "ac_add_options --with-l10n-base=../../l10n-central",
         "ac_add_options --with-l10n-base=..")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
-                  "mobile/android/config/mozconfigs/android-api-9-10-constrained/",
                   "mobile/android/config/mozconfigs/android-x86/"]
     ] + [
         # File, from, to
         (f, "ac_add_options --enable-profiling", "") for f in
         ["mobile/android/config/mozconfigs/android-api-15/nightly",
-         "mobile/android/config/mozconfigs/android-api-9-10-constrained/nightly",
          "mobile/android/config/mozconfigs/android-x86/nightly",
          "browser/config/mozconfigs/linux32/nightly",
          "browser/config/mozconfigs/linux64/nightly",

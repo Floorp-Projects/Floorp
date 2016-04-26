@@ -77,9 +77,9 @@ private:
   // Stores the presentation time of the first frame we'd be able to play if
   // we started playback at the current position. Returns the first video
   // frame, if we have video.
-  VideoData* FindStartTime(int64_t& aOutStartTime);
-  AudioData* SyncDecodeToFirstAudioData();
-  VideoData* SyncDecodeToFirstVideoData();
+  void FindStartTime(int64_t& aOutStartTime);
+  RefPtr<AudioData> SyncDecodeToFirstAudioData();
+  RefPtr<VideoData> SyncDecodeToFirstVideoData();
 
   // This monitor should be taken when reading or writing to mIsChained.
   ReentrantMonitor mMonitor;

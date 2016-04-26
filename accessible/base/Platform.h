@@ -77,6 +77,8 @@ void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
                           bool aFromUser);
 void ProxyShowHideEvent(ProxyAccessible* aTarget, ProxyAccessible* aParent,
                         bool aInsert, bool aFromUser);
+void ProxySelectionEvent(ProxyAccessible* aTarget, ProxyAccessible* aWidget,
+                         uint32_t aType);
 } // namespace a11y
 } // namespace mozilla
 
