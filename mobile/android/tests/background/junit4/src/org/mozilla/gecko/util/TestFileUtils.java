@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 
 import static junit.framework.Assert.*;
@@ -30,6 +31,8 @@ import static org.mockito.Mockito.*;
 @RunWith(TestRunner.class)
 public class TestFileUtils {
 
+    private static final Charset CHARSET = Charset.forName("UTF-8");
+
     @Rule
     public TemporaryFolder tempDir = new TemporaryFolder();
     public File testFile;
@@ -37,6 +40,71 @@ public class TestFileUtils {
     @Before
     public void setUp() throws Exception {
         testFile = tempDir.newFile();
+    }
+
+    @Test
+    public void testReadStringFromInputStreamAndCloseStreamBufferLenIsFileLen() throws Exception {
+        final String expected = "String to write contains hard characters: !\n \\s..\"'\u00f1";
+        writeStringToFile(testFile, expected);
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        final String actual = FileUtils.readStringFromInputStreamAndCloseStream(stream, expected.length());
+        assertEquals("Read content matches written content", expected, actual);
+    }
+
+    @Test
+    public void testReadStringFromInputStreamAndCloseStreamBufferLenIsBiggerThanFile() throws Exception {
+        final String expected = "aoeuhtns";
+        writeStringToFile(testFile, expected);
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        final String actual = FileUtils.readStringFromInputStreamAndCloseStream(stream, expected.length() + 1024);
+        assertEquals("Read content matches written content", expected, actual);
+    }
+
+    @Test
+    public void testReadStringFromInputStreamAndCloseStreamBufferLenIsSmallerThanFile() throws Exception {
+        final String expected = "aoeuhtns aoeusth aoeusth aoeusnth aoeusth aoeusnth aoesuth";
+        writeStringToFile(testFile, expected);
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        final String actual = FileUtils.readStringFromInputStreamAndCloseStream(stream, 8);
+        assertEquals("Read content matches written content", expected, actual);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testReadStringFromInputStreamAndCloseStreamBufferLenIsZero() throws Exception {
+        final String expected = "aoeuhtns aoeusth aoeusth aoeusnth aoeusth aoeusnth aoesuth";
+        writeStringToFile(testFile, expected);
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        FileUtils.readStringFromInputStreamAndCloseStream(stream, 0); // expected to throw.
+    }
+
+    @Test
+    public void testReadStringFromInputStreamAndCloseStreamIsEmptyStream() throws Exception {
+        assertTrue("Test file exists", testFile.exists());
+        assertEquals("Test file is empty", 0, testFile.length());
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        final String actual = FileUtils.readStringFromInputStreamAndCloseStream(stream, 8);
+        assertEquals("Read content from stream is empty", "", actual);
+    }
+
+    @Test(expected=IOException.class)
+    public void testReadStringFromInputStreamAndCloseStreamClosesStream() throws Exception {
+        final String expected = "String to write contains hard characters: !\n \\s..\"'\u00f1";
+        writeStringToFile(testFile, expected);
+
+        final FileInputStream stream = new FileInputStream(testFile);
+        try {
+            stream.read(); // should not throw because stream is open.
+            FileUtils.readStringFromInputStreamAndCloseStream(stream, expected.length());
+        } catch (final IOException e) {
+            fail("Did not expect method to throw when writing file: " + e);
+        }
+
+        stream.read(); // expected to throw because stream is closed.
     }
 
     @Test
@@ -56,7 +124,7 @@ public class TestFileUtils {
             fos.write('c'); // should not throw because stream is open.
             FileUtils.writeStringToOutputStreamAndCloseStream(fos, "some string with data");
         } catch (final IOException e) {
-            fail("Did not expect method to throw when writing file");
+            fail("Did not expect method to throw when writing file: " + e);
         }
 
         fos.write('c'); // expected to throw because stream is closed.
@@ -128,5 +196,13 @@ public class TestFileUtils {
             reader.read(buffer, 0, buffer.length);
         }
         return new String(buffer);
+    }
+
+    // Since the write methods may not be tested yet.
+    private static void writeStringToFile(final File file, final String str) throws IOException {
+        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file, false), CHARSET)) {
+            writer.write(str);
+        }
+        assertTrue("Written file from helper method exists", file.exists());
     }
 }
