@@ -37,7 +37,7 @@ class BufferableRef
 typedef HashSet<void*, PointerHasher<void*, 3>, SystemAllocPolicy> EdgeSet;
 
 /* The size of a single block of store buffer storage space. */
-static const size_t LifoAllocBlockSize = 1 << 16; /* 64KiB */
+static const size_t LifoAllocBlockSize = 1 << 13; /* 8KiB */
 
 /*
  * The StoreBuffer observes all writes that occur in the system and performs
@@ -48,7 +48,7 @@ class StoreBuffer
     friend class mozilla::ReentrancyGuard;
 
     /* The size at which a block is about to overflow. */
-    static const size_t LowAvailableThreshold = (size_t)(LifoAllocBlockSize * 1.0 / 16.0);
+    static const size_t LowAvailableThreshold = size_t(LifoAllocBlockSize / 2.0);
 
     /*
      * This buffer holds only a single type of edge. Using this buffer is more
@@ -156,7 +156,8 @@ class StoreBuffer
         }
 
         bool isAboutToOverflow() const {
-            return !storage_->isEmpty() && storage_->availableInCurrentChunk() < LowAvailableThreshold;
+            return !storage_->isEmpty() &&
+                   storage_->availableInCurrentChunk() < LowAvailableThreshold;
         }
 
         /* Trace all generic edges. */
