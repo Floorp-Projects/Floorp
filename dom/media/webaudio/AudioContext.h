@@ -68,6 +68,7 @@ class ScriptProcessorNode;
 class StereoPannerNode;
 class WaveShaperNode;
 class PeriodicWave;
+struct PeriodicWaveConstraints;
 class Promise;
 enum class OscillatorType : uint32_t;
 
@@ -255,6 +256,7 @@ public:
 
   already_AddRefed<PeriodicWave>
   CreatePeriodicWave(const Float32Array& aRealData, const Float32Array& aImagData,
+                     const PeriodicWaveConstraints& aConstraints,
                      ErrorResult& aRv);
 
   already_AddRefed<Promise>
