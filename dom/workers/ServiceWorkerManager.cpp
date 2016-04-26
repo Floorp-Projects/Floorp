@@ -555,7 +555,7 @@ IsFromAuthenticatedOrigin(nsIDocument* aDoc)
   }
 
   while (doc && !nsContentUtils::IsChromeDoc(doc)) {
-    bool trustworthyURI = false;
+    bool trustworthyOrigin = false;
 
     // The origin of the document may be different from the document URI
     // itself.  Check the principal, not the document URI itself.
@@ -565,15 +565,8 @@ IsFromAuthenticatedOrigin(nsIDocument* aDoc)
     // principal inside the loop.
     MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(documentPrincipal));
 
-    // Pass the principal as a URI to the security manager
-    nsCOMPtr<nsIURI> uri;
-    documentPrincipal->GetURI(getter_AddRefs(uri));
-    if (NS_WARN_IF(!uri)) {
-      return false;
-    }
-
-    csm->IsURIPotentiallyTrustworthy(uri, &trustworthyURI);
-    if (!trustworthyURI) {
+    csm->IsOriginPotentiallyTrustworthy(documentPrincipal, &trustworthyOrigin);
+    if (!trustworthyOrigin) {
       return false;
     }
 
@@ -654,7 +647,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  // The IsURIPotentiallyTrustworthy() check allows file:// and possibly other
+  // The IsOriginPotentiallyTrustworthy() check allows file:// and possibly other
   // URI schemes.  We need to explicitly only allows http and https schemes.
   // Note, we just use the aScriptURI here for the check since its already
   // been verified as same origin with the document principal.  This also

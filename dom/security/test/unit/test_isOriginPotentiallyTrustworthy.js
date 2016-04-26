@@ -11,11 +11,15 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
+                                   "@mozilla.org/scriptsecuritymanager;1",
+                                   "nsIScriptSecurityManager");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
 
-add_task(function* test_isURIPotentiallyTrustworthy() {
+add_task(function* test_isOriginPotentiallyTrustworthy() {
   for (let [uriSpec, expectedResult] of [
     ["http://example.com/", false],
     ["https://example.com/", true],
@@ -27,7 +31,8 @@ add_task(function* test_isURIPotentiallyTrustworthy() {
     ["urn:generic", false],
   ]) {
     let uri = NetUtil.newURI(uriSpec);
-    Assert.equal(gContentSecurityManager.isURIPotentiallyTrustworthy(uri),
+    let principal = gScriptSecurityManager.getCodebasePrincipal(uri);
+    Assert.equal(gContentSecurityManager.isOriginPotentiallyTrustworthy(principal),
                  expectedResult);
   }
 });
