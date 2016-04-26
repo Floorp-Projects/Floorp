@@ -20,7 +20,6 @@
 #include "montmulf.h"
 #endif
 #include <stddef.h> /* ptrdiff_t */
-#include <assert.h>
 
 #define STATIC
 
@@ -591,8 +590,6 @@ mp_err weave_to_mpi(mp_int *a,                   /* out, result */
 
   MP_SIGN(a) = MP_ZPOS;
   MP_USED(a) = nDigits;
-
-  assert(weaved != NULL);
 
   /* Fetch the proper column in constant time, indexing over the whole array */
   for (i=0; i<nDigits; ++i) {
