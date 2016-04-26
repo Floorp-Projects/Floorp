@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 
 public class FileUtils {
@@ -101,6 +102,14 @@ public class FileUtils {
     }
 
     /**
+     * A generic solution to write a JSONObject to a file.
+     * See {@link #writeStringToFile(File, String)} for more details.
+     */
+    public static void writeJSONObjectToFile(final File file, final JSONObject obj) throws IOException {
+        writeStringToFile(file, obj.toString());
+    }
+
+    /**
      * A generic solution to write to a File - the given file will be overwritten.
      * See {@link #writeStringToOutputStreamAndCloseStream(OutputStream, String)} for more details.
      */
@@ -131,5 +140,4 @@ public class FileUtils {
             outputStream.close();
         }
     }
-
 }

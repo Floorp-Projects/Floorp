@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.util;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,6 +98,27 @@ public class TestFileUtils {
 
         assertTrue("Written file exists", testFile.exists());
         assertEquals("Read data equals written data", expected, readStringFromFile(testFile, expected.length()));
+    }
+
+    @Test
+    public void testWriteJSONObjectToFile() throws Exception {
+        final JSONObject expected = new JSONObject()
+                .put("int", 1)
+                .put("str", "1")
+                .put("bool", true)
+                .put("null", JSONObject.NULL)
+                .put("raw null", null);
+        FileUtils.writeJSONObjectToFile(testFile, expected);
+
+        assertTrue("Written file exists", testFile.exists());
+
+        // JSONObject.equals compares references so we have to assert each key individually. >:(
+        final JSONObject actual = new JSONObject(readStringFromFile(testFile, (int) testFile.length()));
+        assertEquals(1, actual.getInt("int"));
+        assertEquals("1", actual.getString("str"));
+        assertEquals(true, actual.getBoolean("bool"));
+        assertEquals(JSONObject.NULL, actual.get("null"));
+        assertFalse(actual.has("raw null"));
     }
 
     // Since the read methods may not be tested yet.
