@@ -81,3 +81,16 @@ CPU_preprocessor_checks = OrderedDict((
 ))
 
 assert sorted(CPU_preprocessor_checks.keys()) == sorted(CPU.POSSIBLE_VALUES)
+
+kernel_preprocessor_checks = {
+    'Darwin': '__APPLE__',
+    'DragonFly': '__DragonFly__',
+    'FreeBSD': '__FreeBSD__',
+    'kFreeBSD': '__FreeBSD_kernel__',
+    'Linux': '__linux__',
+    'NetBSD': '__NetBSD__',
+    'OpenBSD': '__OpenBSD__',
+    'WINNT': '_WIN32 || __CYGWIN__',
+}
+
+assert sorted(kernel_preprocessor_checks.keys()) == sorted(Kernel.POSSIBLE_VALUES)

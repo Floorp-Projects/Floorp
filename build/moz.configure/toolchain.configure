@@ -197,6 +197,8 @@ def try_preprocess(compiler, language, source):
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
 @imports(_from='mozbuild.configure.constants',
          _import='CPU_preprocessor_checks')
+@imports(_from='mozbuild.configure.constants',
+         _import='kernel_preprocessor_checks')
 @imports(_from='textwrap', _import='dedent')
 def get_compiler_info(compiler, language):
     '''Returns information about the given `compiler` (command line in the
@@ -250,16 +252,21 @@ def get_compiler_info(compiler, language):
     # While we're doing some preprocessing, we might as well do some more
     # preprocessor-based tests at the same time, to check the toolchain
     # matches what we want.
-    for n, (value, condition) in enumerate(CPU_preprocessor_checks.iteritems()):
-        check += dedent('''\
-            #%(if)s %(condition)s
-            %%CPU %(value)s
-        ''' % {
-            'if': 'elif' if n else 'if',
-            'condition': condition,
-            'value': value,
-        })
-    check += '#endif\n'
+    for name, preprocessor_checks in (
+        ('CPU', CPU_preprocessor_checks),
+        ('KERNEL', kernel_preprocessor_checks),
+    ):
+        for n, (value, condition) in enumerate(preprocessor_checks.iteritems()):
+            check += dedent('''\
+                #%(if)s %(condition)s
+                %%%(name)s %(value)s
+            ''' % {
+                'if': 'elif' if n else 'if',
+                'condition': condition,
+                'name': name,
+                'value': value,
+            })
+        check += '#endif\n'
 
     result = try_preprocess(compiler, language, check)
 
@@ -300,6 +307,7 @@ def get_compiler_info(compiler, language):
         type=type,
         version=version,
         cpu=data.get('CPU'),
+        kernel=data.get('KERNEL'),
         language='C++' if cplusplus else 'C',
         language_version=cplusplus if cplusplus else stdc_version,
     )
@@ -362,10 +370,15 @@ def check_compiler(compiler, language, target):
             elif (info.cpu, target.cpu) in same_arch_different_bits:
                 append_flag('-m64')
 
+    if not info.kernel or info.kernel != target.kernel:
+        if info.type == 'clang':
+            append_flag('--target=%s' % target.toolchain)
+
     return namespace(
         type=info.type,
         version=info.version,
         target_cpu=info.cpu,
+        target_kernel=info.kernel,
         flags=flags,
     )
 
@@ -567,6 +580,14 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
                 % (host_or_target_str.capitalize(), language,
                    info.target_cpu or 'unknown', host_or_target_str,
                    host_or_target.raw_cpu))
+
+        if not info.target_kernel or (info.target_kernel !=
+                                      host_or_target.kernel):
+            raise FatalCheckError(
+                '%s %s compiler target kernel (%s) does not match --%s kernel (%s)'
+                % (host_or_target_str.capitalize(), language,
+                   info.target_kernel or 'unknown', host_or_target_str,
+                   host_or_target.kernel))
 
         if info.flags:
             raise FatalCheckError(
