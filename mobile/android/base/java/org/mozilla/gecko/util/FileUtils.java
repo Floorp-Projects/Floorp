@@ -7,8 +7,12 @@ package org.mozilla.gecko.util;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FilenameFilter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Scanner;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -95,4 +99,37 @@ public class FileUtils {
             }
         }
     }
+
+    /**
+     * A generic solution to write to a File - the given file will be overwritten.
+     * See {@link #writeStringToOutputStreamAndCloseStream(OutputStream, String)} for more details.
+     */
+    public static void writeStringToFile(final File file, final String str) throws IOException {
+        writeStringToOutputStreamAndCloseStream(new FileOutputStream(file, false), str);
+    }
+
+    /**
+     * A generic solution to write to an output stream in UTF-8. The stream will be closed at the
+     * completion of this method - it's necessary in order to close the wrapping resources.
+     *
+     * For a higher-level method, see {@link #writeStringToFile(File, String)}.
+     *
+     * Since this is generic, it may not be the most performant for your use case.
+     */
+    public static void writeStringToOutputStreamAndCloseStream(final OutputStream outputStream, final String str)
+            throws IOException {
+        try {
+            final OutputStreamWriter writer = new OutputStreamWriter(outputStream, Charset.forName("UTF-8"));
+            try {
+                writer.write(str);
+            } finally {
+                writer.close();
+            }
+        } finally {
+            // OutputStreamWriter.close can throw before closing the
+            // underlying stream. For safety, we close here too.
+            outputStream.close();
+        }
+    }
+
 }
