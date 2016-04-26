@@ -1348,7 +1348,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
 
           this.mInput = aInput;
-          this.selectedIndex = -1;
+          this.selectedIndex = this._isFirstResultHeuristic ? 0 : -1;
           this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
           this.invalidate();
 
