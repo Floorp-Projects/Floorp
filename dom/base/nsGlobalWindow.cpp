@@ -14384,6 +14384,22 @@ nsGlobalWindow::CreateImageBitmap(const ImageBitmapSource& aImage,
   return ImageBitmap::Create(this, aImage, Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aRv);
 }
 
+already_AddRefed<mozilla::dom::Promise>
+nsGlobalWindow::CreateImageBitmap(const ImageBitmapSource& aImage,
+                                  int32_t aOffset, int32_t aLength,
+                                  ImageBitmapFormat aFormat,
+                                  const Sequence<ChannelPixelLayout>& aLayout,
+                                  ErrorResult& aRv)
+{
+  if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
+    return ImageBitmap::Create(this, aImage, aOffset, aLength, aFormat, aLayout,
+                               aRv);
+  } else {
+    aRv.Throw(NS_ERROR_TYPE_ERR);
+    return nullptr;
+  }
+}
+
 // Helper called by methods that move/resize the window,
 // to ensure the presContext (if any) is aware of resolution
 // change that may happen in multi-monitor configuration.
