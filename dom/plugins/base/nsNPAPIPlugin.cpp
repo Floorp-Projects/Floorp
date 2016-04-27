@@ -107,6 +107,7 @@ using mozilla::plugins::PluginModuleContentParent;
 #endif
 
 #include "nsIAudioChannelAgent.h"
+#include "AudioChannelService.h"
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
@@ -2289,14 +2290,19 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
           return NPERR_NO_ERROR;
         }
       } else {
-        float volume = 0.0;
-        bool muted = true;
-        rv = agent->NotifyStartedPlaying(&volume, &muted);
+
+        dom::AudioPlaybackConfig config;
+        rv = agent->NotifyStartedPlaying(&config);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NPERR_NO_ERROR;
         }
 
-        rv = inst->WindowVolumeChanged(volume, muted);
+        rv = inst->WindowVolumeChanged(config.mVolume, config.mMuted);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NPERR_NO_ERROR;
+        }
+
+        rv = inst->WindowSuspendChanged(config.mSuspend);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NPERR_NO_ERROR;
         }

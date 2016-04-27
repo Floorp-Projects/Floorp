@@ -712,9 +712,15 @@ nsSpeechTask::CreateAudioChannelAgent()
   mAudioChannelAgent->InitWithWeakCallback(mUtterance->GetOwner(),
                                            static_cast<int32_t>(AudioChannelService::GetDefaultAudioChannel()),
                                            this);
-  float volume = 0.0f;
-  bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+
+  AudioPlaybackConfig config;
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  WindowVolumeChanged(config.mVolume, config.mMuted);
+  WindowSuspendChanged(config.mSuspend);
 }
 
 void
@@ -736,9 +742,11 @@ nsSpeechTask::WindowVolumeChanged(float aVolume, bool aMuted)
 NS_IMETHODIMP
 nsSpeechTask::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 {
-  if (aSuspend == nsISuspendedTypes::NONE_SUSPENDED) {
+  if (aSuspend == nsISuspendedTypes::NONE_SUSPENDED &&
+      mUtterance->mPaused) {
     Resume();
-  } else {
+  } else if (aSuspend != nsISuspendedTypes::NONE_SUSPENDED &&
+             !mUtterance->mPaused) {
     Pause();
   }
   return NS_OK;

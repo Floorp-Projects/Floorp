@@ -5061,10 +5061,14 @@ HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
   AutoNoJSAPI nojsapi;
 
   if (aPlaying) {
-    float volume = 0.0;
-    bool muted = true;
-    mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
-    WindowVolumeChanged(volume, muted);
+    AudioPlaybackConfig config;
+    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    WindowVolumeChanged(config.mVolume, config.mMuted);
+    WindowSuspendChanged(config.mSuspend);
   } else {
     mAudioChannelAgent->NotifyStoppedPlaying();
     mAudioChannelAgent = nullptr;
