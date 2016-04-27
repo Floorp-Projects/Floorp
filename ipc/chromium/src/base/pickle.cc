@@ -18,6 +18,10 @@
 
 #include "nsDebug.h"
 
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#define SENTINEL_CHECKING
+#endif
+
 //------------------------------------------------------------------------------
 
 static_assert(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
@@ -440,6 +444,26 @@ bool Pickle::ReadData(PickleIterator* iter, const char** data, int* length) cons
     return false;
 
   return ReadBytes(iter, data, *length);
+}
+
+bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
+#ifdef SENTINEL_CHECKING
+  uint32_t found;
+  if (!ReadUInt32(iter, &found)) {
+    return false;
+  }
+  return found == sentinel;
+#else
+  return true;
+#endif
+}
+
+bool Pickle::WriteSentinel(uint32_t sentinel) {
+#ifdef SENTINEL_CHECKING
+  return WriteUInt32(sentinel);
+#else
+  return true;
+#endif
 }
 
 char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {

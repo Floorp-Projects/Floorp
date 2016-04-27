@@ -122,6 +122,8 @@ class Pickle {
   // Use it for reading the object sizes.
   MOZ_MUST_USE bool ReadLength(PickleIterator* iter, int* result) const;
 
+  MOZ_WARN_UNUSED_RESULT bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const;
+
   void EndRead(PickleIterator& iter) const {
     DCHECK(iter.iter_ == end_of_payload());
   }
@@ -185,6 +187,8 @@ class Pickle {
   bool WriteData(const char* data, int length);
   bool WriteBytes(const void* data, int data_len,
                   uint32_t alignment = sizeof(memberAlignmentType));
+
+  bool WriteSentinel(uint32_t sentinel);
 
   // Same as WriteData, but allows the caller to write directly into the
   // Pickle. This saves a copy in cases where the data is not already
