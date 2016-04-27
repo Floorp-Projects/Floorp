@@ -1864,7 +1864,7 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
     } else {
         MOZ_ASSERT(resultType == ValType::I64);
         MOZ_ASSERT(f.mg().kind == ModuleKind::Wasm);
-        f.iter().setResult(f.truncate<MTruncateToInt64>(unary.op, isUnsigned));
+        f.iter().setResult(f.truncate<MWasmTruncateToInt64>(unary.op, isUnsigned));
     }
     return true;
 }

@@ -604,7 +604,7 @@ LIRGeneratorMIPSShared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayEleme
 }
 
 void
-LIRGeneratorMIPSShared::visitTruncateToInt64(MTruncateToInt64* ins)
+LIRGeneratorMIPSShared::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MOZ_CRASH("NY");
 }

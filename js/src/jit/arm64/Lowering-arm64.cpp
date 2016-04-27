@@ -343,7 +343,7 @@ LIRGeneratorARM64::visitRandom(MRandom* ins)
 }
 
 void
-LIRGeneratorARM64::visitTruncateToInt64(MTruncateToInt64* ins)
+LIRGeneratorARM64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MOZ_CRASH("NY");
 }

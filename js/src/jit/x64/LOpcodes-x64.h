@@ -13,7 +13,7 @@
     _(DivOrModConstantI)            \
     _(DivOrModI64)                  \
     _(UDivOrMod64)                  \
-    _(TruncateToInt64)              \
+    _(WasmTruncateToInt64)          \
     _(Int64ToFloatingPoint)         \
     _(SimdValueInt32x4)             \
     _(SimdValueFloat32x4)           \

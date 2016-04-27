@@ -1145,12 +1145,12 @@ CodeGeneratorX64::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
 }
 
 void
-CodeGeneratorX64::visitTruncateToInt64(LTruncateToInt64* lir)
+CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    MTruncateToInt64* mir = lir->mir();
+    MWasmTruncateToInt64* mir = lir->mir();
     MIRType inputType = mir->input()->type();
 
     auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);

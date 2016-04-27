@@ -4051,7 +4051,7 @@ CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateChe
                 masm.branchFloat(Assembler::DoubleNotEqual, input, ScratchFloat32Reg, &fail);
             }
         } else {
-            // MTruncateToInt64
+            // MWasmTruncateToInt64
             MOZ_ASSERT(toType == MIRType::Int64);
             if (fromType == MIRType::Double) {
                 // We've used vcvtsd2sq. The only legit value whose i64
