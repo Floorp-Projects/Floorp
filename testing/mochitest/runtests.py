@@ -823,6 +823,11 @@ class MochitestBase(object):
 
         # ensure the server is up, wait for at most ten seconds
         for i in range(1,100):
+            if self.websocketProcessBridge.proc.poll() is not None:
+                self.log.error("runtests.py | websocket/process bridge failed "
+                               "to launch. Are all the dependencies installed?")
+                return
+
             try:
                 sock = socket.create_connection(("127.0.0.1", 8191))
                 sock.close()
@@ -832,8 +837,6 @@ class MochitestBase(object):
         else:
             self.log.error("runtests.py | Timed out while waiting for "
                            "websocket/process bridge startup.")
-            self.stopServers()
-            sys.exit(1)
 
     def startServers(self, options, debuggerInfo, ignoreSSLTunnelExts=False):
         # start servers and set ports
@@ -852,7 +855,9 @@ class MochitestBase(object):
 
         self.startWebServer(options)
         self.startWebSocketServer(options, debuggerInfo)
-        self.startWebsocketProcessBridge(options)
+
+        if options.subsuite in ["media"]:
+            self.startWebsocketProcessBridge(options)
 
         # start SSL pipe
         self.sslTunnel = SSLTunnel(
