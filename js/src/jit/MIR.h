@@ -5350,13 +5350,13 @@ class MExtendInt32ToInt64
     }
 };
 
-class MTruncateToInt64
+class MWasmTruncateToInt64
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
     bool isUnsigned_;
 
-    MTruncateToInt64(MDefinition* def, bool isUnsigned)
+    MWasmTruncateToInt64(MDefinition* def, bool isUnsigned)
       : MUnaryInstruction(def),
         isUnsigned_(isUnsigned)
     {
@@ -5365,16 +5365,16 @@ class MTruncateToInt64
     }
 
   public:
-    INSTRUCTION_HEADER(TruncateToInt64)
-    static MTruncateToInt64* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned) {
-        return new(alloc) MTruncateToInt64(def, isUnsigned);
+    INSTRUCTION_HEADER(WasmTruncateToInt64)
+    static MWasmTruncateToInt64* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned) {
+        return new(alloc) MWasmTruncateToInt64(def, isUnsigned);
     }
 
     bool isUnsigned() const { return isUnsigned_; }
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins) &&
-               ins->toTruncateToInt64()->isUnsigned() == isUnsigned_;
+               ins->toWasmTruncateToInt64()->isUnsigned() == isUnsigned_;
     }
     AliasSet getAliasSet() const override {
         return AliasSet::None();

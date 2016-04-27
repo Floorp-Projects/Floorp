@@ -788,7 +788,7 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
         isUnsigned_(mir->isUnsigned())
     { }
 
-    OutOfLineWasmTruncateCheck(MTruncateToInt64* mir, FloatRegister input)
+    OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input)
       : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
         isUnsigned_(mir->isUnsigned())
     { }
