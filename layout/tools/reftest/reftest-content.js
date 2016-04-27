@@ -585,7 +585,10 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
 
             var willSnapshot = (gCurrentTestType != TYPE_SCRIPT) &&
                                (gCurrentTestType != TYPE_LOAD);
-            if (willSnapshot && windowUtils().flushApzRepaints()) {
+            var noFlush =
+                !(contentRootElement &&
+                  contentRootElement.classList.contains("reftest-no-flush"));
+            if (noFlush && willSnapshot && windowUtils().flushApzRepaints()) {
                 LogInfo("MakeProgress: done requesting APZ flush");
             } else {
                 LogInfo("MakeProgress: APZ flush not required");
