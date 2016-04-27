@@ -897,9 +897,9 @@ private:
   {
     mService->AssignAppUuid(mServer->mAppUuid);
 
-    RefPtr<nsRunnable> runnable = new AddServiceTaskQueue(mServer,
-                                                            mService,
-                                                            mPromise);
+    RefPtr<Runnable> runnable = new AddServiceTaskQueue(mServer,
+                                                          mService,
+                                                          mPromise);
     nsresult rv = NS_DispatchToMainThread(runnable.forget());
 
     if (NS_WARN_IF(NS_FAILED(rv))) {

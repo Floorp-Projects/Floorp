@@ -206,7 +206,7 @@ HwcComposer2D::Invalidate()
 }
 
 namespace {
-class HotplugEvent : public nsRunnable {
+class HotplugEvent : public Runnable {
 public:
     HotplugEvent(GonkDisplay::DisplayType aType, bool aConnected)
         : mType(aType)

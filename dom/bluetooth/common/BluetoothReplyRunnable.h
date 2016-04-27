@@ -25,7 +25,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReply;
 
-class BluetoothReplyRunnable : public nsRunnable
+class BluetoothReplyRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -96,7 +96,7 @@ protected:
   }
 };
 
-class BluetoothReplyTaskQueue : public nsRunnable
+class BluetoothReplyTaskQueue : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE

@@ -171,7 +171,7 @@ NfcConsumer::Send(const CommandOptions& aOptions)
 }
 
 // Runnable used dispatch the NfcEventOptions on the main thread.
-class NfcConsumer::DispatchNfcEventRunnable final : public nsRunnable
+class NfcConsumer::DispatchNfcEventRunnable final : public Runnable
 {
 public:
   DispatchNfcEventRunnable(NfcService* aNfcService, const EventOptions& aEvent)
@@ -392,7 +392,7 @@ NfcConsumer::OnConnectSuccess(int aIndex)
   }
 }
 
-class NfcConsumer::ShutdownServiceRunnable final : public nsRunnable
+class NfcConsumer::ShutdownServiceRunnable final : public Runnable
 {
 public:
   ShutdownServiceRunnable(NfcService* aNfcService)
@@ -464,7 +464,7 @@ NfcService::FactoryCreate()
 /**
  * |StartConsumerRunnable| calls |NfcConsumer::Start| on the NFC thread.
  */
-class NfcService::StartConsumerRunnable final : public nsRunnable
+class NfcService::StartConsumerRunnable final : public Runnable
 {
 public:
   StartConsumerRunnable(NfcConsumer* aNfcConsumer)
@@ -517,7 +517,7 @@ NfcService::Start(nsINfcGonkEventListener* aListener)
  * thread on the main thread. This has to be down after shutting
  * down the NFC consumer on the NFC thread.
  */
-class NfcService::CleanupRunnable final : public nsRunnable
+class NfcService::CleanupRunnable final : public Runnable
 {
 public:
   CleanupRunnable(NfcConsumer* aNfcConsumer,
@@ -551,7 +551,7 @@ private:
  * NFC thread. Optionally, it can dispatch a |CleanupRunnable| to
  * the main thread for cleaning up the NFC resources.
  */
-class NfcService::ShutdownConsumerRunnable final : public nsRunnable
+class NfcService::ShutdownConsumerRunnable final : public Runnable
 {
 public:
   ShutdownConsumerRunnable(NfcConsumer* aNfcConsumer, bool aCleanUp)
@@ -603,7 +603,7 @@ NfcService::Shutdown()
 /**
  * |SendRunnable| calls |NfcConsumer::Send| on the NFC thread.
  */
-class NfcService::SendRunnable final : public nsRunnable
+class NfcService::SendRunnable final : public Runnable
 {
 public:
   SendRunnable(NfcConsumer* aNfcConsumer, const CommandOptions& aOptions)
