@@ -224,7 +224,6 @@
       },
       {
         "name": "deleteRange",
-        "unsupported": true,
         "type": "function",
         "description": "Removes all items within the specified date range from the history.  Pages will not be removed from the history unless all visits fall within the range.",
         "async": "callback",
@@ -252,7 +251,6 @@
       },
       {
         "name": "deleteAll",
-        "unsupported": true,
         "type": "function",
         "description": "Deletes all items from the history.",
         "async": "callback",
