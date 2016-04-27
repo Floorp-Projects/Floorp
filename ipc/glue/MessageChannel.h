@@ -74,6 +74,7 @@ class MessageChannel : HasResultCodes
     static const int32_t kNoTimeout;
 
     typedef IPC::Message Message;
+    typedef IPC::MessageInfo MessageInfo;
     typedef mozilla::ipc::Transport Transport;
 
     explicit MessageChannel(MessageListener *aListener);
@@ -639,7 +640,7 @@ class MessageChannel : HasResultCodes
     // Each stack refers to a different protocol and the stacks are mutually
     // exclusive: multiple outcalls of the same kind cannot be initiated while
     // another is active.
-    std::stack<Message> mInterruptStack;
+    std::stack<MessageInfo> mInterruptStack;
 
     // This is what we think the Interrupt stack depth is on the "other side" of this
     // Interrupt channel.  We maintain this variable so that we can detect racy Interrupt
