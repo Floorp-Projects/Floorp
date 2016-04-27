@@ -16,7 +16,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.menu.QuickShareBarActionView;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
@@ -117,10 +116,6 @@ public class GeckoActionProvider {
         switch (viewType) {
             case DEFAULT:
                 view = new MenuItemSwitcherLayout(mContext, null);
-                break;
-
-            case QUICK_SHARE_ICON:
-                view = new QuickShareBarActionView(mContext, null);
                 break;
 
             case CONTEXT_MENU:
@@ -283,7 +278,6 @@ public class GeckoActionProvider {
 
     public enum ActionViewType {
         DEFAULT,
-        QUICK_SHARE_ICON,
         CONTEXT_MENU,
     }
 
