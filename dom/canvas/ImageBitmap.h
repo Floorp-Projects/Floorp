@@ -43,6 +43,7 @@ class WorkerStructuredCloneClosure;
 
 class ArrayBufferViewOrArrayBuffer;
 class CanvasRenderingContext2D;
+struct ChannelPixelLayout;
 class CreateImageBitmapFromBlob;
 class CreateImageBitmapFromBlobTask;
 class CreateImageBitmapFromBlobWorkerTask;
@@ -127,6 +128,14 @@ public:
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
          const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
+  Create(nsIGlobalObject* aGlobal,
+         const ImageBitmapSource& aBuffer,
+         int32_t aOffset, int32_t aLength,
+         mozilla::dom::ImageBitmapFormat aFormat,
+         const Sequence<mozilla::dom::ChannelPixelLayout>& aLayout,
+         ErrorResult& aRv);
 
   static JSObject*
   ReadStructuredClone(JSContext* aCx,

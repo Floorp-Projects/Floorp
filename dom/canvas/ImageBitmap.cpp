@@ -1638,5 +1638,291 @@ ImageBitmap::MapDataInto(JSContext* aCx,
   return promise.forget();
 }
 
+// ImageBitmapFactories extensions.
+static SurfaceFormat
+ImageFormatToSurfaceFromat(mozilla::dom::ImageBitmapFormat aFormat)
+{
+  switch(aFormat) {
+  case ImageBitmapFormat::RGBA32:
+    return SurfaceFormat::R8G8B8A8;
+  case ImageBitmapFormat::BGRA32:
+    return SurfaceFormat::B8G8R8A8;
+  case ImageBitmapFormat::RGB24:
+    return SurfaceFormat::R8G8B8;
+  case ImageBitmapFormat::BGR24:
+    return SurfaceFormat::B8G8R8;
+  case ImageBitmapFormat::GRAY8:
+    return SurfaceFormat::A8;
+  case ImageBitmapFormat::HSV:
+    return SurfaceFormat::HSV;
+  case ImageBitmapFormat::Lab:
+    return SurfaceFormat::Lab;
+  case ImageBitmapFormat::DEPTH:
+    return SurfaceFormat::Depth;
+  default:
+    return SurfaceFormat::UNKNOWN;
+  }
+}
+
+static already_AddRefed<layers::Image>
+CreateImageFromBufferSourceRawData(const uint8_t*aBufferData,
+                                   uint32_t aBufferLength,
+                                   mozilla::dom::ImageBitmapFormat aFormat,
+                                   const Sequence<ChannelPixelLayout>& aLayout)
+{
+  MOZ_ASSERT(aBufferData);
+  MOZ_ASSERT(aBufferLength > 0);
+
+  switch(aFormat) {
+  case ImageBitmapFormat::RGBA32:
+  case ImageBitmapFormat::BGRA32:
+  case ImageBitmapFormat::RGB24:
+  case ImageBitmapFormat::BGR24:
+  case ImageBitmapFormat::GRAY8:
+  case ImageBitmapFormat::HSV:
+  case ImageBitmapFormat::Lab:
+  case ImageBitmapFormat::DEPTH:
+  {
+    const nsTArray<ChannelPixelLayout>& channels = aLayout;
+    MOZ_ASSERT(channels.Length() != 0, "Empty Channels.");
+
+    const SurfaceFormat srcFormat = ImageFormatToSurfaceFromat(aFormat);
+    const uint32_t srcStride = channels[0].mStride;
+    const IntSize srcSize(channels[0].mWidth, channels[0].mHeight);
+
+    RefPtr<DataSourceSurface> dstDataSurface =
+      Factory::CreateDataSourceSurfaceWithStride(srcSize, srcFormat, srcStride);
+
+    if (NS_WARN_IF(!dstDataSurface)) {
+      return nullptr;
+    }
+
+    // Copy the raw data into the newly created DataSourceSurface.
+    DataSourceSurface::ScopedMap dstMap(dstDataSurface, DataSourceSurface::WRITE);
+    if (NS_WARN_IF(!dstMap.IsMapped())) {
+      return nullptr;
+    }
+
+    const uint8_t* srcBufferPtr = aBufferData;
+    uint8_t* dstBufferPtr = dstMap.GetData();
+
+    for (int i = 0; i < srcSize.height; ++i) {
+      memcpy(dstBufferPtr, srcBufferPtr, srcStride);
+      srcBufferPtr += srcStride;
+      dstBufferPtr += dstMap.GetStride();
+    }
+
+    // Create an Image from the BGRA SourceSurface.
+    RefPtr<SourceSurface> surface = dstDataSurface;
+    RefPtr<layers::Image> image = CreateImageFromSurface(surface);
+
+    if (NS_WARN_IF(!image)) {
+      return nullptr;
+    }
+
+    return image.forget();
+  }
+  case ImageBitmapFormat::YUV444P:
+  case ImageBitmapFormat::YUV422P:
+  case ImageBitmapFormat::YUV420P:
+  case ImageBitmapFormat::YUV420SP_NV12:
+  case ImageBitmapFormat::YUV420SP_NV21:
+  {
+    // Prepare the PlanarYCbCrData.
+    const ChannelPixelLayout& yLayout = aLayout[0];
+    const ChannelPixelLayout& uLayout = aFormat != ImageBitmapFormat::YUV420SP_NV21 ? aLayout[1] : aLayout[2];
+    const ChannelPixelLayout& vLayout = aFormat != ImageBitmapFormat::YUV420SP_NV21 ? aLayout[2] : aLayout[1];
+
+    layers::PlanarYCbCrData data;
+
+    // Luminance buffer
+    data.mYChannel = const_cast<uint8_t*>(aBufferData + yLayout.mOffset);
+    data.mYStride = yLayout.mStride;
+    data.mYSize = gfx::IntSize(yLayout.mWidth, yLayout.mHeight);
+    data.mYSkip = yLayout.mSkip;
+
+    // Chroma buffers
+    data.mCbChannel = const_cast<uint8_t*>(aBufferData + uLayout.mOffset);
+    data.mCrChannel = const_cast<uint8_t*>(aBufferData + vLayout.mOffset);
+    data.mCbCrStride = uLayout.mStride;
+    data.mCbCrSize = gfx::IntSize(uLayout.mWidth, uLayout.mHeight);
+    data.mCbSkip = uLayout.mSkip;
+    data.mCrSkip = vLayout.mSkip;
+
+    // Picture rectangle.
+    // We set the picture rectangle to exactly the size of the source image to
+    // keep the full original data.
+    data.mPicX = 0;
+    data.mPicY = 0;
+    data.mPicSize = data.mYSize;
+
+    // Create a layers::Image and set data.
+    if (aFormat == ImageBitmapFormat::YUV444P ||
+        aFormat == ImageBitmapFormat::YUV422P ||
+        aFormat == ImageBitmapFormat::YUV420P) {
+      RefPtr<layers::PlanarYCbCrImage> image =
+        new layers::RecyclingPlanarYCbCrImage(new layers::BufferRecycleBin());
+
+      if (NS_WARN_IF(!image)) {
+        return nullptr;
+      }
+
+      // Set Data.
+      if (NS_WARN_IF(!image->CopyData(data))) {
+        return nullptr;
+      }
+
+      return image.forget();
+    } else {
+      RefPtr<layers::NVImage>image = new layers::NVImage();
+
+      if (NS_WARN_IF(!image)) {
+        return nullptr;
+      }
+
+      // Set Data.
+      if (NS_WARN_IF(!image->SetData(data))) {
+        return nullptr;
+      }
+
+      return image.forget();
+    }
+  }
+  default:
+    return nullptr;
+  }
+}
+
+/*
+ * This is a synchronous task.
+ * This class is used to create a layers::CairoImage from raw data in the main
+ * thread. While creating an ImageBitmap from an BufferSource, we need to create
+ * a SouceSurface from the BufferSource raw data and then set the SourceSurface
+ * into a layers::CairoImage. However, the layers::CairoImage asserts the
+ * setting operation in the main thread, so if we are going to create an
+ * ImageBitmap from an BufferSource off the main thread, we post an event to the
+ * main thread to create a layers::CairoImage from an BufferSource raw data.
+ *
+ * TODO: Once the layers::CairoImage is constructible off the main thread, which
+ *       means the SouceSurface could be released anywhere, we do not need this
+ *       task anymore.
+ */
+class CreateImageFromBufferSourceRawDataInMainThreadSyncTask final :
+  public WorkerMainThreadRunnable
+{
+public:
+  CreateImageFromBufferSourceRawDataInMainThreadSyncTask(const uint8_t* aBuffer,
+                                                         uint32_t aBufferLength,
+                                                         mozilla::dom::ImageBitmapFormat aFormat,
+                                                         const Sequence<ChannelPixelLayout>& aLayout,
+                                                         /*output*/ layers::Image** aImage)
+  : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate(),
+                             NS_LITERAL_CSTRING("ImageBitmap-extensions :: Create Image from BufferSource Raw Data"))
+  , mImage(aImage)
+  , mBuffer(aBuffer)
+  , mBufferLength(aBufferLength)
+  , mFormat(aFormat)
+  , mLayout(aLayout)
+  {
+    MOZ_ASSERT(!(*aImage), "Don't pass an existing Image into CreateImageFromBufferSourceRawDataInMainThreadSyncTask.");
+  }
+
+  bool MainThreadRun() override
+  {
+    RefPtr<layers::Image> image =
+      CreateImageFromBufferSourceRawData(mBuffer, mBufferLength, mFormat, mLayout);
+
+    if (NS_WARN_IF(!image)) {
+      return true;
+    }
+
+    image.forget(mImage);
+
+    return true;
+  }
+
+private:
+  layers::Image** mImage;
+  const uint8_t* mBuffer;
+  uint32_t mBufferLength;
+  mozilla::dom::ImageBitmapFormat mFormat;
+  const Sequence<ChannelPixelLayout>& mLayout;
+};
+
+/*static*/ already_AddRefed<Promise>
+ImageBitmap::Create(nsIGlobalObject* aGlobal,
+                    const ImageBitmapSource& aBuffer,
+                    int32_t aOffset, int32_t aLength,
+                    mozilla::dom::ImageBitmapFormat aFormat,
+                    const Sequence<ChannelPixelLayout>& aLayout,
+                    ErrorResult& aRv)
+{
+  MOZ_ASSERT(aGlobal);
+
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  uint8_t* bufferData = nullptr;
+  uint32_t bufferLength = 0;
+
+  if (aBuffer.IsArrayBuffer()) {
+    const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
+    buffer.ComputeLengthAndData();
+    bufferData = buffer.Data();
+    bufferLength = buffer.Length();
+  } else if (aBuffer.IsArrayBufferView()) {
+    const ArrayBufferView& bufferView = aBuffer.GetAsArrayBufferView();
+    bufferView.ComputeLengthAndData();
+    bufferData = bufferView.Data();
+    bufferLength = bufferView.Length();
+  } else {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return promise.forget();
+  }
+
+  MOZ_ASSERT(bufferData && bufferLength > 0, "Cannot read data from BufferSource.");
+
+  // Check the buffer.
+  if (((uint32_t)(aOffset + aLength) > bufferLength)) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return promise.forget();
+  }
+
+  // Create and Crop the raw data into a layers::Image
+  RefPtr<layers::Image> data;
+  if (NS_IsMainThread()) {
+    data = CreateImageFromBufferSourceRawData(bufferData + aOffset, bufferLength,
+                                              aFormat, aLayout);
+  } else {
+    RefPtr<CreateImageFromBufferSourceRawDataInMainThreadSyncTask> task =
+      new CreateImageFromBufferSourceRawDataInMainThreadSyncTask(bufferData + aOffset,
+                                                                 bufferLength,
+                                                                 aFormat,
+                                                                 aLayout,
+                                                                 getter_AddRefs(data));
+    task->Dispatch(aRv);
+  }
+
+  if (NS_WARN_IF(!data)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return promise.forget();
+  }
+
+  // Create an ImageBimtap.
+  // Assume the data from an external buffer is not alpha-premultiplied.
+  RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aGlobal, data, false);
+
+  // We don't need to call SetPictureRect() here because there is no cropping
+  // supported and the ImageBitmap's mPictureRect is the size of the source
+  // image in default
+
+  AsyncFulfillImageBitmapPromise(promise, imageBitmap);
+
+  return promise.forget();
+}
+
 } // namespace dom
 } // namespace mozilla
