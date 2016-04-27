@@ -11,8 +11,9 @@ TEST_DIRS += ['compiledtest']
 
 MOCHITEST_MANIFESTS += [
     'test/crossorigin/mochitest.ini',
-    'test/mochitest-subsuite-webgl.ini',
     'test/mochitest.ini',
+    'test/webgl-conf/generated-mochitest.ini',
+    'test/webgl-mochitest/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']

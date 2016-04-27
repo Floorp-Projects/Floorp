@@ -340,36 +340,36 @@ TypeSet::mightBeMIRType(jit::MIRType type) const
     if (unknown())
         return true;
 
-    if (type == jit::MIRType_Object)
+    if (type == jit::MIRType::Object)
         return unknownObject() || baseObjectCount() != 0;
 
     switch (type) {
-      case jit::MIRType_Undefined:
+      case jit::MIRType::Undefined:
         return baseFlags() & TYPE_FLAG_UNDEFINED;
-      case jit::MIRType_Null:
+      case jit::MIRType::Null:
         return baseFlags() & TYPE_FLAG_NULL;
-      case jit::MIRType_Boolean:
+      case jit::MIRType::Boolean:
         return baseFlags() & TYPE_FLAG_BOOLEAN;
-      case jit::MIRType_Int32:
+      case jit::MIRType::Int32:
         return baseFlags() & TYPE_FLAG_INT32;
-      case jit::MIRType_Float32: // Fall through, there's no JSVAL for Float32.
-      case jit::MIRType_Double:
+      case jit::MIRType::Float32: // Fall through, there's no JSVAL for Float32.
+      case jit::MIRType::Double:
         return baseFlags() & TYPE_FLAG_DOUBLE;
-      case jit::MIRType_String:
+      case jit::MIRType::String:
         return baseFlags() & TYPE_FLAG_STRING;
-      case jit::MIRType_Symbol:
+      case jit::MIRType::Symbol:
         return baseFlags() & TYPE_FLAG_SYMBOL;
-      case jit::MIRType_MagicOptimizedArguments:
+      case jit::MIRType::MagicOptimizedArguments:
         return baseFlags() & TYPE_FLAG_LAZYARGS;
-      case jit::MIRType_MagicHole:
-      case jit::MIRType_MagicIsConstructing:
+      case jit::MIRType::MagicHole:
+      case jit::MIRType::MagicIsConstructing:
         // These magic constants do not escape to script and are not observed
         // in the type sets.
         //
         // The reason we can return false here is subtle: if Ion is asking the
         // type set if it has seen such a magic constant, then the MIR in
-        // question is the most generic type, MIRType_Value. A magic constant
-        // could only be emitted by a MIR of MIRType_Value if that MIR is a
+        // question is the most generic type, MIRType::Value. A magic constant
+        // could only be emitted by a MIR of MIRType::Value if that MIR is a
         // phi, and we check that different magic constants do not flow to the
         // same join point in GuessPhiType.
         return false;
@@ -1579,25 +1579,25 @@ GetMIRTypeFromTypeFlags(TypeFlags flags)
 {
     switch (flags) {
       case TYPE_FLAG_UNDEFINED:
-        return jit::MIRType_Undefined;
+        return jit::MIRType::Undefined;
       case TYPE_FLAG_NULL:
-        return jit::MIRType_Null;
+        return jit::MIRType::Null;
       case TYPE_FLAG_BOOLEAN:
-        return jit::MIRType_Boolean;
+        return jit::MIRType::Boolean;
       case TYPE_FLAG_INT32:
-        return jit::MIRType_Int32;
+        return jit::MIRType::Int32;
       case (TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE):
-        return jit::MIRType_Double;
+        return jit::MIRType::Double;
       case TYPE_FLAG_STRING:
-        return jit::MIRType_String;
+        return jit::MIRType::String;
       case TYPE_FLAG_SYMBOL:
-        return jit::MIRType_Symbol;
+        return jit::MIRType::Symbol;
       case TYPE_FLAG_LAZYARGS:
-        return jit::MIRType_MagicOptimizedArguments;
+        return jit::MIRType::MagicOptimizedArguments;
       case TYPE_FLAG_ANYOBJECT:
-        return jit::MIRType_Object;
+        return jit::MIRType::Object;
       default:
-        return jit::MIRType_Value;
+        return jit::MIRType::Value;
     }
 }
 
@@ -1608,7 +1608,7 @@ TemporaryTypeSet::getKnownMIRType()
     jit::MIRType type;
 
     if (baseObjectCount())
-        type = flags ? jit::MIRType_Value : jit::MIRType_Object;
+        type = flags ? jit::MIRType::Value : jit::MIRType::Object;
     else
         type = GetMIRTypeFromTypeFlags(flags);
 
@@ -1620,7 +1620,7 @@ TemporaryTypeSet::getKnownMIRType()
      * added to the set.
      */
     DebugOnly<bool> empty = flags == 0 && baseObjectCount() == 0;
-    MOZ_ASSERT_IF(empty, type == jit::MIRType_Value);
+    MOZ_ASSERT_IF(empty, type == jit::MIRType::Value);
 
     return type;
 }
@@ -1631,17 +1631,17 @@ HeapTypeSetKey::knownMIRType(CompilerConstraintList* constraints)
     TypeSet* types = maybeTypes();
 
     if (!types || types->unknown())
-        return jit::MIRType_Value;
+        return jit::MIRType::Value;
 
     TypeFlags flags = types->baseFlags() & ~TYPE_FLAG_ANYOBJECT;
     jit::MIRType type;
 
     if (types->unknownObject() || types->getObjectCount())
-        type = flags ? jit::MIRType_Value : jit::MIRType_Object;
+        type = flags ? jit::MIRType::Value : jit::MIRType::Object;
     else
         type = GetMIRTypeFromTypeFlags(flags);
 
-    if (type != jit::MIRType_Value)
+    if (type != jit::MIRType::Value)
         freeze(constraints);
 
     /*
@@ -1651,7 +1651,7 @@ HeapTypeSetKey::knownMIRType(CompilerConstraintList* constraints)
      * that the exact tag is unknown, as it will stay unknown as more types are
      * added to the set.
      */
-    MOZ_ASSERT_IF(types->empty(), type == jit::MIRType_Value);
+    MOZ_ASSERT_IF(types->empty(), type == jit::MIRType::Value);
 
     return type;
 }
@@ -2223,7 +2223,7 @@ TemporaryTypeSet::convertDoubleElements(CompilerConstraintList* constraints)
         // Only bother with converting known packed arrays whose possible
         // element types are int or double. Other arrays require type tests
         // when elements are accessed regardless of the conversion.
-        if (property.knownMIRType(constraints) == jit::MIRType_Double &&
+        if (property.knownMIRType(constraints) == jit::MIRType::Double &&
             !key->hasFlags(constraints, OBJECT_FLAG_NON_PACKED))
         {
             maybeConvert = true;
@@ -4462,7 +4462,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
     fprintf(stderr, " %p %s:%" PRIuSIZE " ", script.get(), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {
-        if (js::PropertyName* name = script->functionNonDelazifying()->name())
+        if (JSAtom* name = script->functionNonDelazifying()->name())
             name->dumpCharsNoNewline();
     }
 

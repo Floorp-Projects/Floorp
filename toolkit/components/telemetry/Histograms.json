@@ -10565,6 +10565,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
+  "IPC_REPLY_SIZE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1264820],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 8000000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "Measures the size of IPC messages by message name"
+  },
   "MESSAGE_MANAGER_MESSAGE_SIZE": {
     "alert_emails": ["wmccloskey@mozilla.com"],
     "bug_numbers": [1260908],

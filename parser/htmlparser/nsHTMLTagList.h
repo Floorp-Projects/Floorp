@@ -105,7 +105,7 @@ HTML_TAG(label, Label)
 HTML_TAG(legend, Legend)
 HTML_TAG(li, LI)
 HTML_TAG(link, Link)
-HTML_HTMLELEMENT_TAG(listing)
+HTML_TAG(listing, Pre)
 HTML_HTMLELEMENT_TAG(main)
 HTML_TAG(map, Map)
 HTML_HTMLELEMENT_TAG(mark)
@@ -170,7 +170,7 @@ HTML_TAG(ul, SharedList)
 HTML_HTMLELEMENT_TAG(var)
 HTML_TAG(video, Video)
 HTML_HTMLELEMENT_TAG(wbr)
-HTML_HTMLELEMENT_TAG(xmp)
+HTML_TAG(xmp, Pre)
 
 
 /* These are not for tags. But they will be included in the nsHTMLTag

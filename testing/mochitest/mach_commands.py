@@ -155,6 +155,12 @@ class MochitestRunner(MozbuildObject):
             'mochitest')
         self.bin_dir = os.path.join(self.topobjdir, 'dist', 'bin')
 
+        self._activate_virtualenv()
+        self.virtualenv_manager.install_pip_requirements_file(
+                os.path.join(self.mochitest_dir,
+                             'websocketprocessbridge',
+                             'websocketprocessbridge_requirements.txt'))
+
     def resolve_tests(self, test_paths, test_objects=None, cwd=None):
         if test_objects:
             return test_objects

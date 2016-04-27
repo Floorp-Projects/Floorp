@@ -40,6 +40,13 @@ builds:
   linux64:
     platforms:
       - Linux64
+    extra-builds:
+      - sm-plain
+      - sm-arm-sim
+      - sm-compacting
+      - sm-generational
+      - sm-rootanalysis
+      - sm-warnaserr
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -85,36 +92,60 @@ builds:
         task: tasks/builds/sm_plain.yml
       debug:
        task: tasks/builds/sm_plaindebug.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-arm-sim:
     platforms:
       - Linux64
     types:
       opt:
         task: tasks/builds/sm_arm_sim.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-arm-sim-osx:
     platforms:
       - Linux64
     types:
       opt:
         task: tasks/builds/sm_arm_sim_osx.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-compacting:
     platforms:
       - Linux64
     types:
       opt:
         task: tasks/builds/sm_compacting.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-generational:
     platforms:
       - Linux64
     types:
       opt:
         task: tasks/builds/sm_generational.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-rootanalysis:
     platforms:
       - Linux64
     types:
       opt:
         task: tasks/builds/sm_rootanalysis.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
   sm-warnaserr:
     platforms:
       - Linux64
@@ -123,6 +154,10 @@ builds:
         task: tasks/builds/sm_warnaserr.yml
       debug:
         task: tasks/builds/sm_warnaserrdebug.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
 
 post-build:
   upload-symbols:

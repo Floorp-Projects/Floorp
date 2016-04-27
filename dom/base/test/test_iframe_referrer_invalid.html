@@ -14,19 +14,24 @@
 
   <script type="application/javascript;version=1.7">
 
-  const SJS = "/tests/dom/base/test/referrer_testserver.sjs?";
-  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY"];
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "SCHEME_FROM", "SCHEME_TO"];
 
   const testCases = [
     {ACTION: ["generate-iframe-policy-test"],
       TESTS: [
         // setting invalid refer values -> we expect either full referrer (default)
         // or whatever is specified in the meta referrer policy
+
+        // Note that for those test cases which require cross-origin test, we use different
+        // scheme to result in cross-origin request.
         {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
          NAME: 'origin-when-cross-origin-with-no-meta',
          META_POLICY: '',
          DESC: "origin-when-cross-origin (iframe) with no meta",
-         RESULT: 'full'},
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
         {ATTRIBUTE_POLICY: 'default',
          NAME: 'default-with-no-meta',
          META_POLICY: '',
@@ -41,16 +46,22 @@
          NAME: 'origin-when-cross-origin-with-no-referrer-in-meta',
          META_POLICY: 'no-referrer',
          DESC: "origin-when-cross-origin (iframe) with no-referrer in meta",
-         RESULT: 'none'},
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
         {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
          NAME: 'origin-when-cross-origin-with-unsafe-url-in-meta',
          META_POLICY: 'unsafe-url',
          DESC: "origin-when-cross-origin (iframe) with unsafe-url in meta",
-         RESULT: 'full'},
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'origin'},
         {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
          NAME: 'origin-when-cross-origin-with-origin-in-meta',
          META_POLICY: 'origin',
          DESC: "origin-when-cross-origin (iframe) with origin in meta",
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
          RESULT: 'origin'},
         {NAME: 'origin-in-meta',
          META_POLICY: 'origin',

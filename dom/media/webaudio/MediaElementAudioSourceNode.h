@@ -25,6 +25,11 @@ public:
     return "MediaElementAudioSourceNode";
   }
 
+  const char* CrossOriginErrorString() const override
+  {
+    return "MediaElementAudioSourceNodeCrossOrigin";
+  }
+
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);

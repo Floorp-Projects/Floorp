@@ -313,11 +313,7 @@ class JSFunction : public js::NativeObject
         flags_ |= RESOLVED_NAME;
     }
 
-    JSAtom* atom() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
-
-    js::PropertyName* name() const {
-        return hasGuessedAtom() || !atom_ ? nullptr : atom_->asPropertyName();
-    }
+    JSAtom* name() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
 
     void initAtom(JSAtom* atom) { atom_.init(atom); }
 
