@@ -532,6 +532,13 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
+AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend)
+{
+  // TODO : implementation.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture)
 {
   MOZ_ASSERT(mAudioChannelAgent);
