@@ -505,68 +505,68 @@ class ExprIter : private Policy
     bool isInitialized_;
 #endif
 
-    MOZ_WARN_UNUSED_RESULT bool readFixedU8(uint8_t* out) {
+    MOZ_MUST_USE bool readFixedU8(uint8_t* out) {
         if (Validate)
             return d_.readFixedU8(out);
         *out = d_.uncheckedReadFixedU8();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedU32(uint32_t* out) {
+    MOZ_MUST_USE bool readFixedU32(uint32_t* out) {
         if (Validate)
             return d_.readFixedU32(out);
         *out = d_.uncheckedReadFixedU32();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarS32(int32_t* out) {
+    MOZ_MUST_USE bool readVarS32(int32_t* out) {
         if (Validate)
             return d_.readVarS32(out);
         *out = d_.uncheckedReadVarS32();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* out) {
+    MOZ_MUST_USE bool readVarU32(uint32_t* out) {
         if (Validate)
             return d_.readVarU32(out);
         *out = d_.uncheckedReadVarU32();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarS64(int64_t* out) {
+    MOZ_MUST_USE bool readVarS64(int64_t* out) {
         if (Validate)
             return d_.readVarS64(out);
         *out = d_.uncheckedReadVarS64();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarU64(uint64_t* out) {
+    MOZ_MUST_USE bool readVarU64(uint64_t* out) {
         if (Validate)
             return d_.readVarU64(out);
         *out = d_.uncheckedReadVarU64();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF32(float* out) {
+    MOZ_MUST_USE bool readFixedF32(float* out) {
         if (Validate)
             return d_.readFixedF32(out);
         *out = d_.uncheckedReadFixedF32();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF64(double* out) {
+    MOZ_MUST_USE bool readFixedF64(double* out) {
         if (Validate)
             return d_.readFixedF64(out);
         *out = d_.uncheckedReadFixedF64();
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedI32x4(I32x4* out) {
+    MOZ_MUST_USE bool readFixedI32x4(I32x4* out) {
         if (Validate)
             return d_.readFixedI32x4(out);
         d_.uncheckedReadFixedI32x4(out);
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF32x4(F32x4* out) {
+    MOZ_MUST_USE bool readFixedF32x4(F32x4* out) {
         if (Validate)
             return d_.readFixedF32x4(out);
         d_.uncheckedReadFixedF32x4(out);
         return true;
     }
 
-    MOZ_WARN_UNUSED_RESULT bool readAtomicViewType(Scalar::Type* viewType) {
+    MOZ_MUST_USE bool readAtomicViewType(Scalar::Type* viewType) {
         uint8_t x;
         if (!readFixedU8(&x))
             return false;
@@ -576,7 +576,7 @@ class ExprIter : private Policy
         return true;
     }
 
-    MOZ_WARN_UNUSED_RESULT bool readAtomicBinOpOp(jit::AtomicOp* op) {
+    MOZ_MUST_USE bool readAtomicBinOpOp(jit::AtomicOp* op) {
         uint8_t x;
         if (!readFixedU8(&x))
             return false;
@@ -822,30 +822,30 @@ class ExprIter : private Policy
     bool setInitialized() { return true; }
 #endif
 
-    MOZ_WARN_UNUSED_RESULT bool typeMismatch(ExprType actual, ExprType expected) MOZ_COLD;
-    MOZ_WARN_UNUSED_RESULT bool checkType(ExprType actual, ExprType expected);
-    MOZ_WARN_UNUSED_RESULT bool readFunctionReturnValue(ExprType ret);
-    MOZ_WARN_UNUSED_RESULT bool checkBranch(uint32_t relativeDepth, ExprType type);
-    MOZ_WARN_UNUSED_RESULT bool pushControl(LabelKind kind);
-    MOZ_WARN_UNUSED_RESULT bool popControl(LabelKind* kind, ExprType* type, Value* value);
-    MOZ_WARN_UNUSED_RESULT bool popControlAfterCheck(LabelKind* kind, ExprType* type, Value* value);
-    MOZ_WARN_UNUSED_RESULT bool push(ExprType t) { return valueStack_.emplaceBack(t); }
-    MOZ_WARN_UNUSED_RESULT bool push(TypeAndValue<Value> tv) { return valueStack_.append(tv); }
-    MOZ_WARN_UNUSED_RESULT bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
+    MOZ_MUST_USE bool typeMismatch(ExprType actual, ExprType expected) MOZ_COLD;
+    MOZ_MUST_USE bool checkType(ExprType actual, ExprType expected);
+    MOZ_MUST_USE bool readFunctionReturnValue(ExprType ret);
+    MOZ_MUST_USE bool checkBranch(uint32_t relativeDepth, ExprType type);
+    MOZ_MUST_USE bool pushControl(LabelKind kind);
+    MOZ_MUST_USE bool popControl(LabelKind* kind, ExprType* type, Value* value);
+    MOZ_MUST_USE bool popControlAfterCheck(LabelKind* kind, ExprType* type, Value* value);
+    MOZ_MUST_USE bool push(ExprType t) { return valueStack_.emplaceBack(t); }
+    MOZ_MUST_USE bool push(TypeAndValue<Value> tv) { return valueStack_.append(tv); }
+    MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
 
     void infallibleCheckSuccessor(ControlStackEntry<ControlItem>& controlItem, ExprType type);
     void infalliblePush(ExprType t) { valueStack_.infallibleEmplaceBack(t); }
     void infalliblePush(TypeAndValue<Value> tv) { valueStack_.infallibleAppend(tv); }
 
     // Test whether reading the top of the value stack is currently valid.
-    MOZ_WARN_UNUSED_RESULT bool checkTop() {
+    MOZ_MUST_USE bool checkTop() {
         if (Validate && valueStack_.length() <= controlStack_.back().valueStackStart())
             return fail("popping value from outside block");
         return true;
     }
 
     // Pop the top of the value stack.
-    MOZ_WARN_UNUSED_RESULT bool pop(TypeAndValue<Value>* tv) {
+    MOZ_MUST_USE bool pop(TypeAndValue<Value>* tv) {
         if (!checkTop())
             return false;
         *tv = valueStack_.popCopy();
@@ -853,7 +853,7 @@ class ExprIter : private Policy
     }
 
     // Pop the top of the value stack and check that it has the given type.
-    MOZ_WARN_UNUSED_RESULT bool popWithType(ExprType expectedType, Value* value) {
+    MOZ_MUST_USE bool popWithType(ExprType expectedType, Value* value) {
         if (!checkTop())
             return false;
         TypeAndValue<Value> tv = valueStack_.popCopy();
@@ -864,7 +864,7 @@ class ExprIter : private Policy
     }
 
     // Read the top of the value stack (without popping it).
-    MOZ_WARN_UNUSED_RESULT bool top(TypeAndValue<Value>* tv) {
+    MOZ_MUST_USE bool top(TypeAndValue<Value>* tv) {
         if (!checkTop())
             return false;
         *tv = valueStack_.back();
@@ -873,7 +873,7 @@ class ExprIter : private Policy
 
     // Read the top of the value stack (without popping it) and check that it
     // has the given type.
-    MOZ_WARN_UNUSED_RESULT bool topWithType(ExprType expectedType, Value* value) {
+    MOZ_MUST_USE bool topWithType(ExprType expectedType, Value* value) {
         if (!checkTop())
             return false;
         TypeAndValue<Value>& tv = valueStack_.back();
@@ -908,77 +908,75 @@ class ExprIter : private Policy
     bool done() const { return d_.done(); }
 
     // Report a general failure.
-    MOZ_WARN_UNUSED_RESULT bool fail(const char* msg) MOZ_COLD;
+    MOZ_MUST_USE bool fail(const char* msg) MOZ_COLD;
 
     // Report an unimplemented feature.
-    MOZ_WARN_UNUSED_RESULT
-    bool notYetImplemented(const char* what) MOZ_COLD;
+    MOZ_MUST_USE bool notYetImplemented(const char* what) MOZ_COLD;
 
     // Report an unrecognized opcode.
-    MOZ_WARN_UNUSED_RESULT
-    bool unrecognizedOpcode(Expr expr) MOZ_COLD;
+    MOZ_MUST_USE bool unrecognizedOpcode(Expr expr) MOZ_COLD;
 
     // ------------------------------------------------------------------------
     // Decoding and validation interface.
 
-    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr);
-    MOZ_WARN_UNUSED_RESULT bool readFunctionStart();
-    MOZ_WARN_UNUSED_RESULT bool readFunctionEnd(ExprType ret);
-    MOZ_WARN_UNUSED_RESULT bool readReturn();
-    MOZ_WARN_UNUSED_RESULT bool readBlock();
-    MOZ_WARN_UNUSED_RESULT bool readLoop();
-    MOZ_WARN_UNUSED_RESULT bool readIf();
-    MOZ_WARN_UNUSED_RESULT bool readElse();
-    MOZ_WARN_UNUSED_RESULT bool readEnd();
-    MOZ_WARN_UNUSED_RESULT bool readBr();
-    MOZ_WARN_UNUSED_RESULT bool readBrIf();
-    MOZ_WARN_UNUSED_RESULT bool readBrTable();
-    MOZ_WARN_UNUSED_RESULT bool readBrTableEntry(ExprType type, uint32_t* depth);
-    MOZ_WARN_UNUSED_RESULT bool readUnreachable();
-    MOZ_WARN_UNUSED_RESULT bool readUnary(ValType operandType);
-    MOZ_WARN_UNUSED_RESULT bool readConversion(ValType operandType, ValType resultType);
-    MOZ_WARN_UNUSED_RESULT bool readBinary(ValType operandType);
-    MOZ_WARN_UNUSED_RESULT bool readComparison(ValType operandType);
-    MOZ_WARN_UNUSED_RESULT bool readLoad(ValType resultType, uint32_t byteSize);
-    MOZ_WARN_UNUSED_RESULT bool readStore(ValType resultType, uint32_t byteSize);
-    MOZ_WARN_UNUSED_RESULT bool readTrivial();
-    MOZ_WARN_UNUSED_RESULT bool readSelect();
-    MOZ_WARN_UNUSED_RESULT bool readGetLocal(const ValTypeVector& locals);
-    MOZ_WARN_UNUSED_RESULT bool readSetLocal(const ValTypeVector& locals);
-    MOZ_WARN_UNUSED_RESULT bool readGetGlobal(const GlobalDescVector& globals);
-    MOZ_WARN_UNUSED_RESULT bool readSetGlobal(const GlobalDescVector& globals);
-    MOZ_WARN_UNUSED_RESULT bool readI32Const();
-    MOZ_WARN_UNUSED_RESULT bool readI64Const();
-    MOZ_WARN_UNUSED_RESULT bool readF32Const();
-    MOZ_WARN_UNUSED_RESULT bool readF64Const();
-    MOZ_WARN_UNUSED_RESULT bool readI32x4Const();
-    MOZ_WARN_UNUSED_RESULT bool readF32x4Const();
-    MOZ_WARN_UNUSED_RESULT bool readB32x4Const();
-    MOZ_WARN_UNUSED_RESULT bool readCall();
-    MOZ_WARN_UNUSED_RESULT bool readCallIndirect();
-    MOZ_WARN_UNUSED_RESULT bool readCallImport();
-    MOZ_WARN_UNUSED_RESULT bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
-    MOZ_WARN_UNUSED_RESULT bool readCallArgsEnd(uint32_t numArgs);
-    MOZ_WARN_UNUSED_RESULT bool readCallIndirectCallee(Value* callee);
-    MOZ_WARN_UNUSED_RESULT bool readCallReturn(ExprType ret);
-    MOZ_WARN_UNUSED_RESULT bool readAtomicLoad();
-    MOZ_WARN_UNUSED_RESULT bool readAtomicStore();
-    MOZ_WARN_UNUSED_RESULT bool readAtomicBinOp();
-    MOZ_WARN_UNUSED_RESULT bool readAtomicCompareExchange();
-    MOZ_WARN_UNUSED_RESULT bool readAtomicExchange();
-    MOZ_WARN_UNUSED_RESULT bool readSimdComparison(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSimdShiftByScalar(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSimdBooleanReduction(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readExtractLane(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readReplaceLane(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSplat(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSwizzle(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readShuffle(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSimdSelect(ValType simdType);
-    MOZ_WARN_UNUSED_RESULT bool readSimdCtor();
-    MOZ_WARN_UNUSED_RESULT bool readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t argIndex, Value* arg);
-    MOZ_WARN_UNUSED_RESULT bool readSimdCtorArgsEnd(uint32_t numElements);
-    MOZ_WARN_UNUSED_RESULT bool readSimdCtorReturn(ValType simdType);
+    MOZ_MUST_USE bool readExpr(Expr* expr);
+    MOZ_MUST_USE bool readFunctionStart();
+    MOZ_MUST_USE bool readFunctionEnd(ExprType ret);
+    MOZ_MUST_USE bool readReturn();
+    MOZ_MUST_USE bool readBlock();
+    MOZ_MUST_USE bool readLoop();
+    MOZ_MUST_USE bool readIf();
+    MOZ_MUST_USE bool readElse();
+    MOZ_MUST_USE bool readEnd();
+    MOZ_MUST_USE bool readBr();
+    MOZ_MUST_USE bool readBrIf();
+    MOZ_MUST_USE bool readBrTable();
+    MOZ_MUST_USE bool readBrTableEntry(ExprType type, uint32_t* depth);
+    MOZ_MUST_USE bool readUnreachable();
+    MOZ_MUST_USE bool readUnary(ValType operandType);
+    MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType);
+    MOZ_MUST_USE bool readBinary(ValType operandType);
+    MOZ_MUST_USE bool readComparison(ValType operandType);
+    MOZ_MUST_USE bool readLoad(ValType resultType, uint32_t byteSize);
+    MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize);
+    MOZ_MUST_USE bool readTrivial();
+    MOZ_MUST_USE bool readSelect();
+    MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals);
+    MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals);
+    MOZ_MUST_USE bool readGetGlobal(const GlobalDescVector& globals);
+    MOZ_MUST_USE bool readSetGlobal(const GlobalDescVector& globals);
+    MOZ_MUST_USE bool readI32Const();
+    MOZ_MUST_USE bool readI64Const();
+    MOZ_MUST_USE bool readF32Const();
+    MOZ_MUST_USE bool readF64Const();
+    MOZ_MUST_USE bool readI32x4Const();
+    MOZ_MUST_USE bool readF32x4Const();
+    MOZ_MUST_USE bool readB32x4Const();
+    MOZ_MUST_USE bool readCall();
+    MOZ_MUST_USE bool readCallIndirect();
+    MOZ_MUST_USE bool readCallImport();
+    MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
+    MOZ_MUST_USE bool readCallArgsEnd(uint32_t numArgs);
+    MOZ_MUST_USE bool readCallIndirectCallee(Value* callee);
+    MOZ_MUST_USE bool readCallReturn(ExprType ret);
+    MOZ_MUST_USE bool readAtomicLoad();
+    MOZ_MUST_USE bool readAtomicStore();
+    MOZ_MUST_USE bool readAtomicBinOp();
+    MOZ_MUST_USE bool readAtomicCompareExchange();
+    MOZ_MUST_USE bool readAtomicExchange();
+    MOZ_MUST_USE bool readSimdComparison(ValType simdType);
+    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType);
+    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType);
+    MOZ_MUST_USE bool readExtractLane(ValType simdType);
+    MOZ_MUST_USE bool readReplaceLane(ValType simdType);
+    MOZ_MUST_USE bool readSplat(ValType simdType);
+    MOZ_MUST_USE bool readSwizzle(ValType simdType);
+    MOZ_MUST_USE bool readShuffle(ValType simdType);
+    MOZ_MUST_USE bool readSimdSelect(ValType simdType);
+    MOZ_MUST_USE bool readSimdCtor();
+    MOZ_MUST_USE bool readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t argIndex, Value* arg);
+    MOZ_MUST_USE bool readSimdCtorArgsEnd(uint32_t numElements);
+    MOZ_MUST_USE bool readSimdCtorReturn(ValType simdType);
 
     // ------------------------------------------------------------------------
     // Translation interface. These methods provide the information obtained
@@ -1062,7 +1060,7 @@ ExprIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::checkType(ExprType actual, ExprType expected)
 {
     if (!Validate) {
@@ -1698,7 +1696,7 @@ ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals)
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readI32Const()
 {
     return readVarS32(&u_.i32) &&
@@ -1707,7 +1705,7 @@ ExprIter<Policy>::readI32Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readI64Const()
 {
     return readVarS64(&u_.i64) &&
@@ -1716,7 +1714,7 @@ ExprIter<Policy>::readI64Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readF32Const()
 {
     if (!readFixedF32(&u_.f32))
@@ -1733,7 +1731,7 @@ ExprIter<Policy>::readF32Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readF64Const()
 {
     if (!readFixedF64(&u_.f64))
@@ -1750,7 +1748,7 @@ ExprIter<Policy>::readF64Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readI32x4Const()
 {
     return readFixedI32x4(&u_.i32x4) &&
@@ -1759,7 +1757,7 @@ ExprIter<Policy>::readI32x4Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readF32x4Const()
 {
     return readFixedF32x4(&u_.f32x4) &&
@@ -1768,7 +1766,7 @@ ExprIter<Policy>::readF32x4Const()
 }
 
 template <typename Policy>
-inline MOZ_WARN_UNUSED_RESULT bool
+inline MOZ_MUST_USE bool
 ExprIter<Policy>::readB32x4Const()
 {
     return readFixedI32x4(&u_.i32x4) &&

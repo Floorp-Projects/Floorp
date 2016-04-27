@@ -22,7 +22,7 @@ public:
   virtual ~CookieServiceParent();
 
 protected:
-  MOZ_WARN_UNUSED_RESULT bool
+  MOZ_MUST_USE bool
   GetOriginAttributesFromParams(const IPC::SerializedLoadContext &aLoadContext,
                                 NeckoOriginAttributes& aAttrs,
                                 bool& aIsPrivate);

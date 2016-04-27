@@ -740,17 +740,17 @@ class OrderedHashMap
     typedef typename Impl::Range Range;
 
     explicit OrderedHashMap(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
-    MOZ_WARN_UNUSED_RESULT bool init()              { return impl.init(); }
+    MOZ_MUST_USE bool init()                        { return impl.init(); }
     uint32_t count() const                          { return impl.count(); }
     bool has(const Key& key) const                  { return impl.has(key); }
     Range all()                                     { return impl.all(); }
     const Entry* get(const Key& key) const          { return impl.get(key); }
     Entry* get(const Key& key)                      { return impl.get(key); }
     bool remove(const Key& key, bool* foundp)       { return impl.remove(key, foundp); }
-    MOZ_WARN_UNUSED_RESULT bool clear()             { return impl.clear(); }
+    MOZ_MUST_USE bool clear()                       { return impl.clear(); }
 
     template <typename V>
-    MOZ_WARN_UNUSED_RESULT bool put(const Key& key, V&& value) {
+    MOZ_MUST_USE bool put(const Key& key, V&& value) {
         return impl.put(Entry(key, Forward<V>(value)));
     }
 
@@ -792,13 +792,13 @@ class OrderedHashSet
     typedef typename Impl::Range Range;
 
     explicit OrderedHashSet(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
-    MOZ_WARN_UNUSED_RESULT bool init()              { return impl.init(); }
+    MOZ_MUST_USE bool init()                        { return impl.init(); }
     uint32_t count() const                          { return impl.count(); }
     bool has(const T& value) const                  { return impl.has(value); }
     Range all()                                     { return impl.all(); }
-    MOZ_WARN_UNUSED_RESULT bool put(const T& value) { return impl.put(value); }
+    MOZ_MUST_USE bool put(const T& value)           { return impl.put(value); }
     bool remove(const T& value, bool* foundp)       { return impl.remove(value, foundp); }
-    MOZ_WARN_UNUSED_RESULT bool clear()             { return impl.clear(); }
+    MOZ_MUST_USE bool clear()                       { return impl.clear(); }
 
     void rekeyOneEntry(const T& current, const T& newKey) {
         return impl.rekeyOneEntry(current, newKey, newKey);

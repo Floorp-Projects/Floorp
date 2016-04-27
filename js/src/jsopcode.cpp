@@ -1672,7 +1672,7 @@ js::GetPCCountScriptCount(JSContext* cx)
 
 enum MaybeComma {NO_COMMA, COMMA};
 
-static MOZ_WARN_UNUSED_RESULT bool
+static MOZ_MUST_USE bool
 AppendJSONProperty(StringBuffer& buf, const char* name, MaybeComma comma = COMMA)
 {
     if (comma && !buf.append(','))

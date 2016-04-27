@@ -1318,11 +1318,11 @@ class MOZ_STACK_CLASS AutoStableStringChars
       : s_(cx), state_(Uninitialized)
     {}
 
-    MOZ_WARN_UNUSED_RESULT
+    MOZ_MUST_USE
     bool init(JSContext* cx, JSString* s);
 
     /* Like init(), but Latin1 chars are inflated to TwoByte. */
-    MOZ_WARN_UNUSED_RESULT
+    MOZ_MUST_USE
     bool initTwoByte(JSContext* cx, JSString* s);
 
     bool isLatin1() const { return state_ == Latin1; }

@@ -142,7 +142,7 @@ public:
   virtual bool TextIsOnlyWhitespace() override;
   virtual bool HasTextForTranslation() override;
   virtual void AppendTextTo(nsAString& aResult) override;
-  MOZ_WARN_UNUSED_RESULT
+  MOZ_MUST_USE
   virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
   virtual nsIContent *GetBindingParent() const override;
   virtual nsXBLBinding *GetXBLBinding() const override;

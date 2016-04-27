@@ -866,11 +866,11 @@ class FullParseHandler
         MOZ_ASSERT(pn->isArity(PN_LIST));
         pn->pn_xflags |= flag;
     }
-    MOZ_WARN_UNUSED_RESULT ParseNode* parenthesize(ParseNode* pn) {
+    MOZ_MUST_USE ParseNode* parenthesize(ParseNode* pn) {
         pn->setInParens(true);
         return pn;
     }
-    MOZ_WARN_UNUSED_RESULT ParseNode* setLikelyIIFE(ParseNode* pn) {
+    MOZ_MUST_USE ParseNode* setLikelyIIFE(ParseNode* pn) {
         return parenthesize(pn);
     }
     void setPrologue(ParseNode* pn) {
