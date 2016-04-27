@@ -20,6 +20,26 @@ const Services = SpecialPowers.Services;
 const notifier = Cc["@mozilla.org/alerts-service;1"]
                    .getService(Ci.nsIAlertsService);
 
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  addMessageListener("anyXULAlertsVisible", function() {
+    var windows = Services.wm.getEnumerator("alert:alert");
+    return windows.hasMoreElements();
+  });
+
+  addMessageListener("getAlertSource", function() {
+    var alertWindows = Services.wm.getEnumerator("alert:alert");
+    if (!alertWindows) {
+      return null;
+    }
+    var alertWindow = alertWindows.getNext();
+    return alertWindow.document.getElementById("alertSourceLabel").getAttribute("value");
+  });
+});
+
 function notify(alertName, principal) {
   return new Promise((resolve, reject) => {
     var source;
@@ -27,10 +47,8 @@ function notify(alertName, principal) {
       if (topic == "alertclickcallback") {
         reject(new Error("Alerts should not be clicked during test"));
       } else if (topic == "alertshow") {
-        var alertWindows = Services.wm.getEnumerator("alert:alert");
-        ok(alertWindows.hasMoreElements(), "Should show alert");
-        var alertWindow = alertWindows.getNext();
-        source = alertWindow.document.getElementById("alertSourceLabel").getAttribute("value");
+        source = chromeScript.sendSyncMessage("getAlertSource")[0][0];
+        notifier.closeAlert(alertName);
       } else {
         is(topic, "alertfinished", "Should hide alert");
         resolve(source);
@@ -55,12 +73,6 @@ function* testSystemPrincipal() {
   var principal = Services.scriptSecurityManager.getSystemPrincipal();
   var source = yield notify("systemPrincipal", principal);
   ok(!source, "Should omit source for system principal");
-}
-
-function* testExpandedPrincipal() {
-  var principal = Services.scriptSecurityManager.createExpandedPrincipal([], 0);
-  var source = yield notify("expandedPrincipal", principal);
-  ok(!source, "Should omit source for expanded principal");
 }
 
 function* testNullPrincipal() {
@@ -94,12 +106,13 @@ function runTest() {
 
   ok(true, "Alerts service exists in this application");
 
-  ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(),
-     "Alerts should not be present at the start of the test.");
+  // sendSyncMessage returns an array of arrays. See the comments in
+  // test_alerts_noobserve.html and test_SpecialPowersLoadChromeScript.html.
+  var [[alertsVisible]] = chromeScript.sendSyncMessage("anyXULAlertsVisible");
+  ok(!alertsVisible, "Alerts should not be present at the start of the test.");
 
   add_task(testNoPrincipal);
   add_task(testSystemPrincipal);
-  add_task(testExpandedPrincipal);
   add_task(testNullPrincipal);
   add_task(testNodePrincipal);
 }

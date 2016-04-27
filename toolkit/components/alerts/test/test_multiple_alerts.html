@@ -3,6 +3,7 @@
 <head>
   <title>Test for multiple alerts</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -12,94 +13,65 @@
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
-const ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-             .getService(Ci.nsIWindowWatcher);
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-function showSimpleAlert(alertService) {
-  try {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Timer.jsm");
+
+  const alertService = Cc["@mozilla.org/alerts-service;1"]
+                         .getService(Ci.nsIAlertsService);
+
+  addMessageListener("waitForPosition", function() {
+    var timer = setTimeout(function() {
+      Services.ww.unregisterNotification(windowObserver);
+      sendAsyncMessage("waitedForPosition", null);
+    }, 2000);
+
+    var windowObserver = function(aSubject, aTopic, aData) {
+      if (aTopic != "domwindowopened") {
+        return;
+      }
+
+      // Alerts are implemented using XUL.
+      clearTimeout(timer);
+
+      Services.ww.unregisterNotification(windowObserver);
+
+      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      win.addEventListener("pageshow", function onPageShow() {
+        win.removeEventListener("pageshow", onPageShow, false);
+
+        var x = win.screenX;
+        var y = win.screenY;
+
+        win.addEventListener("pagehide", function onPageHide() {
+          win.removeEventListener("pagehide", onPageHide, false);
+          sendAsyncMessage("waitedForPosition", { x, y });
+        }, false);
+
+        alertService.closeAlert();
+      }, false);
+    };
+
+    Services.ww.registerNotification(windowObserver);
+  });
+});
+
+function promiseAlertPosition(alertService) {
+  return new Promise(resolve => {
+    chromeScript.addMessageListener("waitedForPosition", function waitedForPosition(result) {
+      chromeScript.removeMessageListener("waitedForPosition", waitedForPosition);
+      resolve(result);
+    });
+    chromeScript.sendAsyncMessage("waitForPosition");
+
     alertService.showAlertNotification(null, "title", "body");
     ok(true, "Alert shown.");
-  } catch (ex) {
-    ok(false, "Failed to show alert.", ex);
-    SimpleTest.finish();
-  }
+  });
 }
 
-var firstAlertXPosition = 0;
-var firstAlertYPosition = 0;
-
-function showFirstAlert(alertService) {
-  // Set a timeout to finish the test in case we are on a platform
-  // that doesn't use XUL alert windows. This timeout is cleared
-  // when a XUL alert window does get created.
-  var timer = setTimeout(function() {
-    ok(true, "Platform does not use XUL alerts.");
-    ww.unregisterNotification(windowObserver);
-    SimpleTest.finish();
-  }, 2000);
-
-  var windowObserver = function(aSubject, aTopic, aData) {
-    if (aTopic != "domwindowopened") {
-      return;
-    }
-
-    // Alerts are implemented using XUL, clear the timeout
-    // that finishes the test.
-    clearTimeout(timer);
-
-    ww.unregisterNotification(windowObserver);
-
-    var win = SpecialPowers.wrap(aSubject);
-    win.addEventListener("pageshow", function() {
-      win.removeEventListener("pageshow", arguments.callee, false);
-      firstAlertXPosition = win.screenX;
-      firstAlertYPosition = win.screenY;
-
-      // Wait for alert window to close then open a second alert.
-      win.addEventListener("pagehide", function() {
-        win.removeEventListener("pagehide", arguments.callee, false);
-        // Wait for alert to close before creating a new one.
-        showSecondAlert(alertService);
-      }, false);
-
-      alertService.closeAlert();
-    }, false);
-  };
-
-  ww.registerNotification(windowObserver);
-  showSimpleAlert(alertService);
-}
-
-function showSecondAlert(alertService) {
-  var windowObserver = function(aSubject, aTopic, aData) {
-    if (aTopic != "domwindowopened") {
-      return;
-    }
-
-    ww.unregisterNotification(windowObserver);
-
-    var win = SpecialPowers.wrap(aSubject);
-    win.addEventListener("pageshow", function() {
-      win.removeEventListener("pageshow", arguments.callee, false);
-      is(win.screenX, firstAlertXPosition, "Second alert should be opened in the same position.");
-      is(win.screenY, firstAlertYPosition, "Second alert should be opened in the same position.");
-
-      // Wait for alert window to close then finish the test.
-      win.addEventListener("pagehide", function() {
-        win.removeEventListener("pagehide", arguments.callee, false);
-        // Wait for alert to close before finishing the test.
-        SimpleTest.finish();
-      }, false);
-
-      alertService.closeAlert();
-    }, false);
-  };
-
-  ww.registerNotification(windowObserver);
-  showSimpleAlert(alertService);
-}
-
-function runTest() {
+add_task(function* test_multiple_alerts() {
   if (!("@mozilla.org/alerts-service;1" in Cc)) {
     todo(false, "Alerts service does not exist in this application.");
     return;
@@ -116,12 +88,16 @@ function runTest() {
     return;
   }
 
-  SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestFlakyTimeout("untriaged");
-  showFirstAlert(alertService);
-}
+  var firstAlertPosition = yield promiseAlertPosition(alertService);
+  if (!firstAlertPosition) {
+    ok(true, "Platform does not use XUL alerts.");
+    return;
+  }
 
-runTest();
+  var secondAlertPosition = yield promiseAlertPosition(alertService);
+  is(secondAlertPosition.x, firstAlertPosition.x, "Second alert should be opened in the same position.");
+  is(secondAlertPosition.y, firstAlertPosition.y, "Second alert should be opened in the same position.");
+});
 
 </script>
 </pre>
