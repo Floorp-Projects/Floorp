@@ -4,10 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'e10srollout',
-    'loop',
-    'pdfjs',
-    'pocket',
-    'webcompat',
+FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
+  'bootstrap.js'
 ]
+
+FINAL_TARGET_PP_FILES.features['webcompat@mozilla.org'] += [
+  'install.rdf.in'
+]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
