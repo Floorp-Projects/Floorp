@@ -237,7 +237,6 @@
 .theme-firebug .theme-toolbar button,
 .theme-firebug .devtools-button {
   border-width: 1px !important;
-  min-height: 21px;
   min-width: 24px;
 }
 
