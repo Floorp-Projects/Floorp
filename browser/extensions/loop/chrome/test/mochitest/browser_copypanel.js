@@ -8,10 +8,11 @@ LoopAPI.inspect()[1].GetAllConstants({}, constants => { return (gConstants = con
 
 let { goDoCommand, gURLBar } = window;
 
-registerCleanupFunction(() => {
-  document.getElementById("loop-notification-panel").hidePopup();
+function cleanUp() {
+  cleanupPanel();
   LoopUI.removeCopyPanel();
-});
+}
+registerCleanupFunction(cleanUp);
 
 /**
  * Cleanup function to allow the loop panel to finish opening then close it.
@@ -32,7 +33,7 @@ function waitForLoopPanelShowHide() {
 
 // Even with max threshold, no panel if already shown.
 add_task(function* test_init_copy_panel_already_shown() {
-  LoopUI.removeCopyPanel();
+  cleanUp();
   Services.prefs.setIntPref("loop.copy.ticket", -1);
   Services.prefs.setBoolPref("loop.copy.shown", true);
 
@@ -44,7 +45,7 @@ add_task(function* test_init_copy_panel_already_shown() {
 
 // Even with max threshold, no panel if private browsing.
 add_task(function* test_init_copy_panel_private() {
-  LoopUI.removeCopyPanel();
+  cleanUp();
   Services.prefs.setIntPref("loop.copy.ticket", -1);
 
   let win = OpenBrowserWindow({ private: true });
@@ -65,7 +66,7 @@ add_task(function* test_init_copy_panel_private() {
 function testClick(domain, onIframe) {
   let histogram = Services.telemetry.getHistogramById("LOOP_COPY_PANEL_ACTIONS");
   histogram.clear();
-  LoopUI.removeCopyPanel();
+  cleanUp();
   gURLBar.value = "http://" + domain + "/";
 
   return new Promise(resolve => {
