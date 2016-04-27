@@ -226,9 +226,6 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
     if (ev) {
       *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
     }
-    if (mCertUserOverridden) {
-      *aState |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
-    }
   }
   // * If so, the state should be broken or insecure; overriding the previous
   // state set by the lock parameter.
@@ -249,6 +246,10 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
   } else if (docShell->GetHasMixedDisplayContentLoaded()) {
       *aState = tempState |
                 nsIWebProgressListener::STATE_LOADED_MIXED_DISPLAY_CONTENT;
+  }
+
+  if (mCertUserOverridden) {
+    *aState |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
   }
 
   // Has Mixed Content Been Blocked in nsMixedContentBlocker?
