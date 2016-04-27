@@ -60,7 +60,7 @@ protected:
 
   void DisableApzOn(Layer* aLayer) {
     ScrollMetadata m = aLayer->GetScrollMetadata(0);
-    m.GetMetrics().SetForceDisableApz(true);
+    m.SetForceDisableApz(true);
     aLayer->SetScrollMetadata(m);
   }
 
