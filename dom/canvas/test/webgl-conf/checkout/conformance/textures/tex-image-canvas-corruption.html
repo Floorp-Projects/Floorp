@@ -56,6 +56,11 @@ var image = wtu.makeImage('../resources/blue-1x1.jpg', function() {
   finishTest();
 });
 
+image.onerror = function() {
+  testFailed("Loading image failed. src: " + image.src);
+  finishTest();
+};
+
 function renderToCanvas() {
   // Clear the 2d canvas then draw the image to it (a blue pixel)
   ctx.clearRect(0, 0, canvas.width, canvas.height);
