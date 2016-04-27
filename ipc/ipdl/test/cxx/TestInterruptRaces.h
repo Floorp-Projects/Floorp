@@ -10,8 +10,8 @@ namespace mozilla {
 namespace _ipdltest {
 
 mozilla::ipc::RacyInterruptPolicy
-MediateRace(const mozilla::ipc::MessageChannel::Message& parent,
-            const mozilla::ipc::MessageChannel::Message& child);
+MediateRace(const mozilla::ipc::MessageChannel::MessageInfo& parent,
+            const mozilla::ipc::MessageChannel::MessageInfo& child);
 
 class TestInterruptRacesParent :
     public PTestInterruptRacesParent
@@ -48,7 +48,8 @@ protected:
     RecvGetAnsweredParent(bool* answeredParent) override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) override
+    MediateInterruptRace(const MessageInfo& parent,
+                         const MessageInfo& child) override
     {
         return MediateRace(parent, child);
     }
@@ -105,7 +106,8 @@ protected:
     AnswerChild() override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) override
+    MediateInterruptRace(const MessageInfo& parent,
+                         const MessageInfo& child) override
     {
         return MediateRace(parent, child);
     }
