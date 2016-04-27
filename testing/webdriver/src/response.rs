@@ -97,21 +97,19 @@ pub struct Cookie {
     pub path: Nullable<String>,
     pub domain: Nullable<String>,
     pub expiry: Nullable<Date>,
-    pub maxAge: Nullable<Date>,
     pub secure: bool,
     pub httpOnly: bool
 }
 
 impl Cookie {
     pub fn new(name: String, value: String, path: Nullable<String>, domain: Nullable<String>,
-               expiry: Nullable<Date>, max_age: Nullable<Date>, secure: bool, http_only: bool) -> Cookie {
+               expiry: Nullable<Date>, secure: bool, http_only: bool) -> Cookie {
         Cookie {
             name: name,
             value: value,
             path: path,
             domain: domain,
             expiry: expiry,
-            maxAge: max_age,
             secure: secure,
             httpOnly: http_only
         }
