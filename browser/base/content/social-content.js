@@ -65,6 +65,7 @@ const SocialErrorListener = {
     addMessageListener("Social:ListenForEvents", this);
     addMessageListener("Social:SetDocumentTitle", this);
     addMessageListener("Social:SetErrorURL", this);
+    addMessageListener("Social:DisableDialogs", this);
     addMessageListener("Social:WaitForDocumentVisible", this);
     addMessageListener("WaitForDOMContentLoaded", this);
     let webProgress = docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -174,6 +175,11 @@ const SocialErrorListener = {
           document.removeEventListener("visibilitychange", onVisibilityChanged);
           sendAsyncMessage("Social:DocumentVisible");
         });
+        break;
+      case "Social:DisableDialogs":
+        let windowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsIDOMWindowUtils);
+        windowUtils.disableDialogs();
         break;
       case "WaitForDOMContentLoaded":
         if (gDOMContentLoaded) {

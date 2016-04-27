@@ -1,16 +1,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <script>
-      addEventListener("OpenGraphData", function(e) {
-        // frame scripts handle test data
-        // share windows self-close
-        history.back(); // bug 1042991, ensure history is available
-        window.close();
-      })
-    </script>
   </head>
-  <body>
+  <body onload="document.getElementById('testclose').focus()">
     <p>This is a test social share window.</p>
+    <input id="testclose"/>
   </body>
 </html>
