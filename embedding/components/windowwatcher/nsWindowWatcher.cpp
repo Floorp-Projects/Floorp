@@ -837,9 +837,8 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
 
         bool cancel = false;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                                                 contextFlags, uriToLoad,
-                                                 aOpeningTab, &cancel,
-                                                 getter_AddRefs(newChrome));
+                                                 contextFlags, aOpeningTab,
+                                                 &cancel, getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
