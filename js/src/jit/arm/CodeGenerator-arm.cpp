@@ -2837,3 +2837,136 @@ CodeGeneratorARM::setReturnDoubleRegs(LiveRegisterSet* regs)
     regs->add(s1);
     regs->add(ReturnDoubleReg);
 }
+
+void
+CodeGeneratorARM::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    auto input = ToFloatRegister(lir->input());
+    auto output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    // vcvt* converts NaN into 0, so check for NaNs here.
+    {
+        if (fromType == MIRType::Double)
+            masm.compareDouble(input, input);
+        else if (fromType == MIRType::Float32)
+            masm.compareFloat(input, input);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        masm.ma_b(ool->entry(), Assembler::VFP_Unordered);
+    }
+
+    ScratchDoubleScope scratchScope(masm);
+    FloatRegister scratch = scratchScope.uintOverlay();
+
+    // ARM conversion instructions clamp the value to ensure it fits within the
+    // target's type bounds, so every time we see those, we need to check the
+    // input.
+    if (mir->isUnsigned()) {
+        if (fromType == MIRType::Double)
+            masm.ma_vcvt_F64_U32(input, scratch);
+        else if (fromType == MIRType::Float32)
+            masm.ma_vcvt_F32_U32(input, scratch);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        masm.ma_vxfer(scratch, output);
+
+        // int32_t(UINT32_MAX) == -1.
+        masm.ma_cmp(output, Imm32(-1));
+        masm.ma_cmp(output, Imm32(0), Assembler::NotEqual);
+        masm.ma_b(ool->entry(), Assembler::Equal);
+
+        masm.bind(ool->rejoin());
+        return;
+    }
+
+    scratch = scratchScope.sintOverlay();
+
+    if (fromType == MIRType::Double)
+        masm.ma_vcvt_F64_I32(input, scratch);
+    else if (fromType == MIRType::Float32)
+        masm.ma_vcvt_F32_I32(input, scratch);
+    else
+        MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+    masm.ma_vxfer(scratch, output);
+    masm.ma_cmp(output, Imm32(INT32_MAX));
+    masm.ma_cmp(output, Imm32(INT32_MIN), Assembler::NotEqual);
+    masm.ma_b(ool->entry(), Assembler::Equal);
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool)
+{
+    MIRType fromType = ool->fromType();
+    FloatRegister input = ool->input();
+
+    ScratchDoubleScope scratchScope(masm);
+    FloatRegister scratch;
+
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        masm.branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+
+    // Handle special values.
+    Label fail;
+
+    double minValue, maxValue;
+    if (ool->isUnsigned()) {
+        minValue = -1;
+        maxValue = double(UINT32_MAX) + 1.0;
+    } else {
+        minValue = double(INT32_MIN) - 1.0;
+        maxValue = double(INT32_MAX) + 1.0;
+    }
+
+    if (fromType == MIRType::Double) {
+        scratch = scratchScope.doubleOverlay();
+        masm.loadConstantDouble(minValue, scratch);
+        masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, scratch, &fail);
+
+        masm.loadConstantDouble(maxValue, scratch);
+        masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, scratch, &fail);
+    } else {
+        MOZ_ASSERT(fromType == MIRType::Float32);
+        scratch = scratchScope.singleOverlay();
+
+        // For int32, float(minValue) rounds to INT32_MIN, we want to fail when
+        // input < float(minValue).
+        // For uint32, float(minValue) == -1, we want to fail when input <= -1.
+        auto condition = minValue == -1.0
+                         ? Assembler::DoubleLessThanOrEqual
+                         : Assembler::DoubleLessThan;
+
+        masm.loadConstantFloat32(float(minValue), scratch);
+        masm.branchFloat(condition, input, scratch, &fail);
+
+        // maxValue is exactly represented in both cases.
+        masm.loadConstantFloat32(float(maxValue), scratch);
+        masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, input, scratch, &fail);
+    }
+
+    // We had an actual correct value, get back to where we were.
+    masm.ma_b(ool->rejoin());
+
+    // Handle errors.
+    masm.bind(&fail);
+    masm.jump(wasm::JumpTarget::IntegerOverflowTrap);
+
+    masm.bind(&inputIsNaN);
+    masm.jump(wasm::JumpTarget::InvalidConversionToIntegerTrap);
+}

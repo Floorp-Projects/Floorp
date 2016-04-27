@@ -33,6 +33,7 @@ template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
 
 class OutOfLineTruncateSlow;
+class OutOfLineWasmTruncateCheck;
 
 struct PatchableBackedgeInfo
 {
@@ -484,6 +485,10 @@ class CodeGeneratorShared : public LElementVisitor
 
     void visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool);
 
+    virtual void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool) {
+        MOZ_CRASH("NYI");
+    }
+
     bool omitOverRecursedCheck() const;
 
 #ifdef JS_TRACE_LOGGING
@@ -769,6 +774,34 @@ CodeGeneratorShared::visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>
     restoreLiveIgnore(lir, ool->out().clobbered());
     masm.jump(ool->rejoin());
 }
+
+class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
+{
+    MIRType fromType_;
+    MIRType toType_;
+    FloatRegister input_;
+    bool isUnsigned_;
+
+  public:
+    OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input)
+      : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input),
+        isUnsigned_(mir->isUnsigned())
+    { }
+
+    OutOfLineWasmTruncateCheck(MTruncateToInt64* mir, FloatRegister input)
+      : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
+        isUnsigned_(mir->isUnsigned())
+    { }
+
+    void accept(CodeGeneratorShared* codegen) {
+        codegen->visitOutOfLineWasmTruncateCheck(this);
+    }
+
+    FloatRegister input() const { return input_; }
+    MIRType toType() const { return toType_; }
+    MIRType fromType() const { return fromType_; }
+    bool isUnsigned() const { return isUnsigned_; }
+};
 
 } // namespace jit
 } // namespace js

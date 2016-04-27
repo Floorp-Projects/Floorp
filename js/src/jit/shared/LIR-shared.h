@@ -4013,6 +4013,20 @@ class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LWasmTruncateToInt32 : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(WasmTruncateToInt32)
+
+    explicit LWasmTruncateToInt32(const LAllocation& in) {
+        setOperand(0, in);
+    }
+
+    MWasmTruncateToInt32* mir() const {
+        return mir_->toWasmTruncateToInt32();
+    }
+};
+
 class LWrapInt64ToInt32 : public LInstructionHelper<1, INT64_PIECES, 0>
 {
   public:

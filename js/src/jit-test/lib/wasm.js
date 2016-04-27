@@ -16,6 +16,18 @@ function hasI64() {
     return getBuildConfiguration().x64;
 }
 
+function jsify(wasmVal) {
+    if (wasmVal === 'nan')
+        return NaN;
+    if (wasmVal === 'infinity')
+        return Infinity;
+    if (wasmVal === '-infinity')
+        return Infinity;
+    if (wasmVal === '-0')
+        return -0;
+    return wasmVal;
+}
+
 // Assert that the expected value is equal to the int64 value, as passed by
 // Baldr with --wasm-extra-tests {low: int32, high: int32}.
 // - if the expected value is in the int32 range, it can be just a number.

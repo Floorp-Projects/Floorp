@@ -266,6 +266,7 @@ namespace jit {
     _(IsCallable)                                                           \
     _(IsObject)                                                             \
     _(HasClass)                                                             \
+    _(WasmTruncateToInt32)                                                  \
     _(AsmJSNeg)                                                             \
     _(AsmJSUnsignedToDouble)                                                \
     _(AsmJSUnsignedToFloat32)                                               \

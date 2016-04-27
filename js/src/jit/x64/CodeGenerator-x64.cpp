@@ -1150,15 +1150,13 @@ CodeGeneratorX64::visitTruncateToInt64(LTruncateToInt64* lir)
     FloatRegister input = ToFloatRegister(lir->input());
     Register output = ToRegister(lir->output());
 
-    MIRType inputType = lir->mir()->input()->type();
+    MTruncateToInt64* mir = lir->mir();
+    MIRType inputType = mir->input()->type();
 
-    // We should trap on invalid inputs, but for now we just return
-    // 0x8000000000000000. Note that we can remove some unnecessary jumps
-    // once we get rid of this trap Label.
-    Label trap;
+    auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
 
-    Label done;
-    if (lir->mir()->isUnsigned()) {
+    if (mir->isUnsigned()) {
         FloatRegister tempDouble = ToFloatRegister(lir->temp());
 
         // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
@@ -1169,16 +1167,15 @@ CodeGeneratorX64::visitTruncateToInt64(LTruncateToInt64* lir)
             masm.loadConstantDouble(double(0x8000000000000000), ScratchDoubleReg);
             masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
             masm.vcvttsd2sq(input, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
-            masm.jump(&done);
+            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
+            masm.jump(ool->rejoin());
 
             masm.bind(&isLarge);
             masm.moveDouble(input, tempDouble);
             masm.subDouble(ScratchDoubleReg, tempDouble);
             masm.vcvttsd2sq(tempDouble, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
             masm.or64(Imm64(0x8000000000000000), Register64(output));
-            masm.jump(&done);
         } else {
             MOZ_ASSERT(inputType == MIRType::Float32);
 
@@ -1186,36 +1183,63 @@ CodeGeneratorX64::visitTruncateToInt64(LTruncateToInt64* lir)
             masm.loadConstantFloat32(float(0x8000000000000000), ScratchDoubleReg);
             masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
             masm.vcvttss2sq(input, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
-            masm.jump(&done);
+            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
+            masm.jump(ool->rejoin());
 
             masm.bind(&isLarge);
             masm.moveFloat32(input, tempDouble);
             masm.vsubss(ScratchDoubleReg, tempDouble, tempDouble);
             masm.vcvttss2sq(tempDouble, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, &trap);
+            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
             masm.or64(Imm64(0x8000000000000000), Register64(output));
-            masm.jump(&done);
         }
     } else {
         if (inputType == MIRType::Double) {
             masm.vcvttsd2sq(input, output);
             masm.cmpq(Imm32(1), output);
-            masm.j(Assembler::Overflow, &trap);
-            masm.jump(&done);
+            masm.j(Assembler::Overflow, ool->entry());
         } else {
             MOZ_ASSERT(inputType == MIRType::Float32);
             masm.vcvttss2sq(input, output);
             masm.cmpq(Imm32(1), output);
-            masm.j(Assembler::Overflow, &trap);
-            masm.jump(&done);
+            masm.j(Assembler::Overflow, ool->entry());
         }
     }
 
-    masm.bind(&trap);
-    masm.movePtr(ImmWord(0x8000000000000000), output);
+    masm.bind(ool->rejoin());
+}
 
-    masm.bind(&done);
+void
+CodeGeneratorX64::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    auto input = ToFloatRegister(lir->input());
+    auto output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        if (fromType == MIRType::Double)
+            masm.vcvttsd2sq(input, output);
+        else if (fromType == MIRType::Float32)
+            masm.vcvttss2sq(input, output);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        // Check that the result is in the uint32_t range.
+        ScratchRegisterScope scratch(masm);
+        masm.move32(Imm32(0xffffffff), scratch);
+        masm.cmpq(scratch, output);
+        masm.j(Assembler::Above, ool->entry());
+        return;
+    }
+
+    emitWasmSignedTruncateToInt32(ool, output);
+
+    masm.bind(ool->rejoin());
 }
 
 void
