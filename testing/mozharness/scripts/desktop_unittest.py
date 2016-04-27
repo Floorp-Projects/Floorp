@@ -260,20 +260,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.register_virtualenv_module(name='mock')
         self.register_virtualenv_module(name='simplejson')
 
-        requirements_files = [
-                os.path.join(dirs['abs_test_install_dir'],
-                    'config',
-                    'marionette_requirements.txt')]
-
-        if os.path.isdir(dirs['abs_mochitest_dir']):
-            # mochitest is the only thing that needs this
-            requirements_files.append(
-                os.path.join(dirs['abs_mochitest_dir'],
-                             'websocketprocessbridge',
-                             'websocketprocessbridge_requirements.txt'))
-
-        for requirements_file in requirements_files:
-            self.register_virtualenv_module(requirements=[requirements_file],
+        requirements = os.path.join(dirs['abs_test_install_dir'],
+                                    'config',
+                                    'marionette_requirements.txt')
+        if os.path.isfile(requirements):
+            self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
 
     def _query_symbols_url(self):
