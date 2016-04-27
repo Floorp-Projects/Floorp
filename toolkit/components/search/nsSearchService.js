@@ -1138,11 +1138,12 @@ EngineURL.prototype = {
 
   getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aEngine, aPurpose) {
     var url = ParamSubstitution(this.template, aSearchTerms, aEngine);
-    // Default to searchbar if the purpose is not provided
-    var purpose = aPurpose || "searchbar";
+    // Default to an empty string if the purpose is not provided so that default purpose params
+    // (purpose="") work consistently rather than having to define "null" and "" purposes.
+    var purpose = aPurpose || "";
 
-    // If a particular purpose isn't defined in the plugin, fallback to 'searchbar'.
-    if (!this.params.some(p => p.purpose !== undefined && p.purpose == purpose))
+    // If the 'system' purpose isn't defined in the plugin, fallback to 'searchbar'.
+    if (purpose == "system" && !this.params.some(p => p.purpose == "system"))
       purpose = "searchbar";
 
     // Create an application/x-www-form-urlencoded representation of our params
