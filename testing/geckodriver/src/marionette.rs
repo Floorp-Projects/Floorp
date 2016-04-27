@@ -200,8 +200,8 @@ impl Parameters for GeckoContextParameters {
             "chrome" => Ok(GeckoContext::Chrome),
             "content" => Ok(GeckoContext::Content),
             _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                         &format!("{} is not a valid context",
-                                                  value)))
+                                         format!("{} is not a valid context",
+                                                 value)))
         });
         Ok(GeckoContextParameters {
             context: context
@@ -271,7 +271,7 @@ impl MarionetteHandler {
         match self.start_browser(profile) {
             Err(e) => {
                 return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                               e.description()));
+                                               e.description().to_owned()));
             },
             Ok(_) => {}
         }
@@ -503,14 +503,14 @@ impl MarionetteSession {
 
         if resp.id != self.command_id {
             return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                           &*format!("Marionette responses arrived out of sequence, expected {}, got {}",
-                                                     self.command_id, resp.id)));
+                                           format!("Marionette responses arrived out of sequence, expected {}, got {}",
+                                                   self.command_id, resp.id)));
         }
 
         if let Some(error) = resp.error {
             let status = self.error_from_string(&error.status);
 
-            return Err(WebDriverError::new(status, &*error.message));
+            return Err(WebDriverError::new(status, error.message));
         }
 
         try!(self.update(message, &resp));
@@ -1027,7 +1027,7 @@ impl MarionetteConnection {
                         sleep(Duration::from_millis(poll_interval));
                     } else {
                         return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                                       e.description()));
+                                                       e.description().to_owned()));
                     }
                 }
             }
@@ -1059,8 +1059,8 @@ impl MarionetteConnection {
         if self.session.protocol != Some("3".into()) {
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                &*format!("Unsupported marionette protocol version {}, required 3",
-                          self.session.protocol.as_ref().unwrap_or(&"<unknown>".into()))));
+                format!("Unsupported marionette protocol version {}, required 3",
+                        self.session.protocol.as_ref().unwrap_or(&"<unknown>".into()))));
         }
 
         Ok(())
