@@ -233,15 +233,13 @@ nsImageBoxFrame::UpdateImage()
                                               src,
                                               doc,
                                               baseURI);
+    if (uri) {
+      nsresult rv = nsContentUtils::LoadImage(uri, mContent, doc, mContent->NodePrincipal(),
+                                              doc->GetDocumentURI(), doc->GetReferrerPolicy(),
+                                              mListener, mLoadFlags,
+                                              EmptyString(), getter_AddRefs(mImageRequest));
 
-    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc,
-                                            mContent->NodePrincipal())) {
-      nsContentUtils::LoadImage(uri, mContent, doc, mContent->NodePrincipal(),
-                                doc->GetDocumentURI(), doc->GetReferrerPolicy(),
-                                mListener, mLoadFlags,
-                                EmptyString(), getter_AddRefs(mImageRequest));
-
-      if (mImageRequest) {
+      if (NS_SUCCEEDED(rv) && mImageRequest) {
         nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
                                                       mImageRequest,
                                                       &mRequestRegistered);
