@@ -3677,22 +3677,22 @@ nsDOMWindowUtils::PostRestyleSelfEvent(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetMediaSuspended(bool* aSuspended)
+nsDOMWindowUtils::GetMediaSuspend(uint32_t* aSuspend)
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  *aSuspended = window->GetMediaSuspended();
+  *aSuspend = window->GetMediaSuspend();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetMediaSuspended(bool aSuspended)
+nsDOMWindowUtils::SetMediaSuspend(uint32_t aSuspend)
 {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  window->SetMediaSuspended(aSuspended);
+  window->SetMediaSuspend(aSuspend);
   return NS_OK;
 }
 
