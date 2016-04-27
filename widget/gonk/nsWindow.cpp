@@ -161,7 +161,7 @@ nsWindow::DispatchTouchInput(MultiTouchInput& aInput)
     gFocusedWindow->DispatchTouchInputViaAPZ(aInput);
 }
 
-class DispatchTouchInputOnMainThread : public nsRunnable
+class DispatchTouchInputOnMainThread : public mozilla::Runnable
 {
 public:
     DispatchTouchInputOnMainThread(const MultiTouchInput& aInput,

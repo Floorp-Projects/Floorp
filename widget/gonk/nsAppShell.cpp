@@ -354,7 +354,7 @@ KeyEventDispatcher::DispatchKeyUpEvent()
     DispatchKeyEventInternal(eKeyUp);
 }
 
-class SwitchEventRunnable : public nsRunnable {
+class SwitchEventRunnable : public mozilla::Runnable {
 public:
     SwitchEventRunnable(hal::SwitchEvent& aEvent) : mEvent(aEvent)
     {}
