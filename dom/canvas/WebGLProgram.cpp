@@ -955,19 +955,7 @@ WebGLProgram::LinkProgram()
     }
 
     LinkAndUpdate();
-    if (IsLinked()) {
-        // Check if the attrib name conflicting to uniform name
-        for (const auto& uniform : mMostRecentLinkInfo->uniformMap) {
-            if (mMostRecentLinkInfo->attribMap.find(uniform.first) != mMostRecentLinkInfo->attribMap.end()) {
-                mLinkLog = nsPrintfCString("The uniform name (%s) conflicts with attribute name.",
-                                           uniform.first.get());
-                mMostRecentLinkInfo = nullptr;
-                break;
-            }
-        }
-    }
-
-    if (mMostRecentLinkInfo)
+    if (IsLinked())
         return;
 
     // Failed link.
