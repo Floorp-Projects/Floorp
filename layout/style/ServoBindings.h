@@ -8,6 +8,7 @@
 #define mozilla_ServoBindings_h
 
 #include "stdint.h"
+#include "mozilla/css/SheetParsingMode.h"
 
 /*
  * API for Servo to access Gecko data structures. This file must compile as valid
@@ -65,7 +66,8 @@ void Servo_DropNodeData(ServoNodeData* data);
 //
 // TODO: Make these return already_AddRefed and UniquePtr when the binding
 // generator is smart enough to handle them.
-RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length);
+RawServoStyleSheet* Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length,
+                                                  mozilla::css::SheetParsingMode parsing_mode);
 void Servo_AddRefStyleSheet(RawServoStyleSheet* sheet);
 void Servo_ReleaseStyleSheet(RawServoStyleSheet* sheet);
 void Servo_AppendStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
