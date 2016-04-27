@@ -734,14 +734,14 @@ AudioDestinationNode::InputMuted(bool aMuted)
     return;
   }
 
-  float volume = 0.0;
-  bool muted = true;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+  AudioPlaybackConfig config;
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  WindowVolumeChanged(volume, muted);
+  WindowVolumeChanged(config.mVolume, config.mMuted);
+  WindowSuspendChanged(config.mSuspend);
 }
 
 } // namespace dom
