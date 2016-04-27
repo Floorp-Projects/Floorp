@@ -1,5 +1,5 @@
 /*
- * SSL v2 handshake functions, and functions common to SSL2 and SSL3.
+ * Basic SSL handshake functions.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

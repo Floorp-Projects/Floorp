@@ -31,11 +31,10 @@
 #define PK12UERR_ENCODE 29
 #define PK12UERR_INVALIDALGORITHM 30
 
-
 /* additions for importing and exporting PKCS 12 files */
 typedef struct p12uContextStr {
-    char        *filename;    /* name of file */
-	PRFileDesc  *file;        /* pointer to file */
-	PRBool       error;       /* error occurred? */
-	int          errorValue;  /* which error occurred? */
+    char *filename;   /* name of file */
+    PRFileDesc *file; /* pointer to file */
+    PRBool error;     /* error occurred? */
+    int errorValue;   /* which error occurred? */
 } p12uContext;
