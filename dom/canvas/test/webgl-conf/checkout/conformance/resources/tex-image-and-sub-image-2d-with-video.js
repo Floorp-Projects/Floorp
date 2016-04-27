@@ -79,6 +79,12 @@ function generateTest(pixelFormat, pixelType, prologue) {
         document.body.appendChild(video);
         video.type = info.type;
         video.src = info.src;
+
+        video.onerror = function(e) {
+          testFailed("Loading video failed. src: " + video.src);
+          finishTest();
+        };
+
         wtu.startPlayingAndWaitForVideo(video, runTest);
     }
 
