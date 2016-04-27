@@ -40,4 +40,7 @@ EXTRA_PP_COMPONENTS += [
     'MobileComponents.manifest',
 ]
 
-DIRS += ['build']
+DIRS += [
+    'extensions',
+    'build',
+]
