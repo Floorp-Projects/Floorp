@@ -10,27 +10,17 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPrincipal.h"
 #include "nsString.h"
-#include "nsTArray.h"
-
-#include "mozilla/Maybe.h"
-
-#define PUSHNOTIFIER_CONTRACTID \
-  "@mozilla.org/push/Notifier;1"
-
-// These constants are duplicated in `PushComponents.js`.
-#define OBSERVER_TOPIC_PUSH "push-message"
-#define OBSERVER_TOPIC_SUBSCRIPTION_CHANGE "push-subscription-change"
 
 namespace mozilla {
 namespace dom {
 
 /**
  * `PushNotifier` implements the `nsIPushNotifier` interface. This service
- * forwards incoming push messages to service workers running in the content
- * process, and emits XPCOM observer notifications for system subscriptions.
+ * broadcasts XPCOM observer notifications for incoming push messages, then
+ * forwards incoming push messages to service workers.
  *
- * This service exists solely to support `PushService.jsm`. Other callers
- * should use `ServiceWorkerManager` directly.
+ * All scriptable methods on this interface may be called from the parent or
+ * content process. Observer notifications are broadcasted to both processes.
  */
 class PushNotifier final : public nsIPushNotifier
 {
@@ -41,36 +31,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushNotifier, nsIPushNotifier)
   NS_DECL_NSIPUSHNOTIFIER
 
+private:
+  virtual ~PushNotifier();
+
   nsresult NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                       const nsAString& aMessageId,
                       const Maybe<nsTArray<uint8_t>>& aData);
-  nsresult NotifyPushWorkers(const nsACString& aScope,
-                             nsIPrincipal* aPrincipal,
-                             const nsAString& aMessageId,
-                             const Maybe<nsTArray<uint8_t>>& aData);
-  nsresult NotifySubscriptionChangeWorkers(const nsACString& aScope,
-                                           nsIPrincipal* aPrincipal);
-  void NotifyErrorWorkers(const nsACString& aScope, const nsAString& aMessage,
-                          uint32_t aFlags);
-
-protected:
-  virtual ~PushNotifier();
-
-private:
-  nsresult NotifyPushObservers(const nsACString& aScope,
-                               const Maybe<nsTArray<uint8_t>>& aData);
-  nsresult NotifySubscriptionChangeObservers(const nsACString& aScope);
   nsresult DoNotifyObservers(nsISupports *aSubject, const char *aTopic,
                              const nsACString& aScope);
-  bool ShouldNotifyObservers(nsIPrincipal* aPrincipal);
   bool ShouldNotifyWorkers(nsIPrincipal* aPrincipal);
 };
 
 /**
  * `PushMessage` implements the `nsIPushMessage` interface, similar to
  * the `PushMessageData` WebIDL interface. Instances of this class are
- * passed as the subject of `push-message` observer notifications for
- * system subscriptions.
+ * passed as the subject of `push-message` observer notifications.
  */
 class PushMessage final : public nsIPushMessage
 {
@@ -82,10 +57,9 @@ public:
                                            nsIPushMessage)
   NS_DECL_NSIPUSHMESSAGE
 
-protected:
+private:
   virtual ~PushMessage();
 
-private:
   nsresult EnsureDecodedText();
 
   nsTArray<uint8_t> mData;

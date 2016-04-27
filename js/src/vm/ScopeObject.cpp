@@ -683,7 +683,7 @@ DeclEnvObject::createTemplateObject(JSContext* cx, HandleFunction fun, NewObject
         return nullptr;
 
     // Assign a fixed slot to a property with the same name as the lambda.
-    Rooted<jsid> id(cx, AtomToId(fun->atom()));
+    Rooted<jsid> id(cx, AtomToId(fun->name()));
     const Class* clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
 
@@ -1381,7 +1381,7 @@ const Class RuntimeLexicalErrorObject::class_ = {
 static inline JSAtom*
 CallObjectLambdaName(JSFunction& fun)
 {
-    return fun.isNamedLambda() ? fun.atom() : nullptr;
+    return fun.isNamedLambda() ? fun.name() : nullptr;
 }
 
 ScopeIter::ScopeIter(JSContext* cx, const ScopeIter& si

@@ -1111,6 +1111,18 @@ private:
   virtual bool RecvNotifyBenchmarkResult(const nsString& aCodecName,
                                          const uint32_t& aDecodeFPS) override;
 
+  virtual bool RecvNotifyPushObservers(const nsCString& aScope,
+                                   const nsString& aMessageId) override;
+
+  virtual bool RecvNotifyPushObserversWithData(const nsCString& aScope,
+                                           const nsString& aMessageId,
+                                           InfallibleTArray<uint8_t>&& aData) override;
+
+  virtual bool RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope) override;
+
+  virtual bool RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
+                                                       const uint16_t& aReason) override;
+
   // If you add strong pointers to cycle collected objects here, be sure to
   // release these objects in ShutDownProcess.  See the comment there for more
   // details.

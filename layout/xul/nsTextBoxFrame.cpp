@@ -428,7 +428,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           bool isForeground;
           styleText->GetDecorationColor(color, isForeground);
           if (isForeground) {
-            color = nsLayoutUtils::GetColor(f, context->GetTextFillColorProp());
+            color = nsLayoutUtils::GetColor(f, eCSSProperty_color);
           }
         }
         uint8_t style = styleText->GetDecorationStyle();

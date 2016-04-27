@@ -58,6 +58,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PendingAnimationTracker.h"
+#include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
@@ -2143,7 +2144,7 @@ static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   {
     // TEMPORARY debugging code for bug 1265280
     nsIFrame* f2 = aItem2->Frame();
-    if (!f2 || !f2->StyleContext()) {
+    if (uintptr_t(f2->StyleContext()) == mozPoisonValue()) {
       NS_RUNTIMEABORT(nsPrintfCString("bad display item %p type %s frame %p",
                                       aItem2, aItem2->Name(), f2).get());
     }

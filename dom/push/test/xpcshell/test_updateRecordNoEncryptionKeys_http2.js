@@ -29,6 +29,7 @@ function run_test() {
 
   do_get_profile();
   setPrefs({
+    'testing.allowInsecureServerURL': true,
     'http2.retryInterval': 1000,
     'http2.maxRetries': 2
   });

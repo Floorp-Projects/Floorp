@@ -1,0 +1,36 @@
+html {
+  height: 100%;
+
+  border: none;
+  /*
+  border-left-style: solid;
+  border-left-color: blue;
+  border-left-width: 4px;
+  */
+}
+
+body {
+  margin: 0px;
+  min-height: 100%;
+
+  display: flex;
+  flex-flow: column;
+
+  border: none;
+  /*
+  border-left-style: solid;
+  border-left-color: green;
+  border-left-width: 4px;
+  */
+}
+
+iframe {
+  flex: auto;
+
+  border: none;
+  /*
+  border-left-style: solid;
+  border-left-color: red;
+  border-left-width: 4px;
+  */
+}

@@ -73,9 +73,17 @@ struct NonOwningStyleContextSource
   bool MatchesNoRules() const {
     if (IsGeckoRuleNodeOrNull()) {
       return AsGeckoRuleNode()->IsRoot();
-    } else {
-      MOZ_CRASH("stylo: not implemented");
     }
+
+    // Just assume a Servo-backed StyleContextSource always matches some rules.
+    //
+    // MatchesNoRules is used to ensure style contexts that match no rules
+    // go into a separate mEmptyChild list on their parent.  This is only used
+    // as an optimization so that calling FindChildWithRules for style context
+    // sharing is faster for text nodes (which match no rules, and are common).
+    // Since Servo will handle sharing for us, there's no need to split children
+    // into two lists.
+    return false;
   }
 
 private:

@@ -1189,6 +1189,27 @@ parent:
      */
     async NotifyBenchmarkResult(nsString aCodecName, uint32_t aDecodeFPS);
 
+    /**
+     * Notify `push-message` observers without data in the parent.
+     */
+    async NotifyPushObservers(nsCString scope, nsString messageId);
+
+    /**
+     * Notify `push-message` observers with data in the parent.
+     */
+    async NotifyPushObserversWithData(nsCString scope, nsString messageId,
+                                      uint8_t[] data);
+
+    /**
+     * Notify `push-subscription-change` observers in the parent.
+     */
+    async NotifyPushSubscriptionChangeObservers(nsCString scope);
+
+    /**
+     * Notify `push-subscription-lost` observers in the parent.
+     */
+    async NotifyPushSubscriptionLostObservers(nsCString scope, uint16_t reason);
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);

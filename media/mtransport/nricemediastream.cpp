@@ -534,6 +534,31 @@ nsresult NrIceMediaStream::DisableComponent(int component_id) {
   return NS_OK;
 }
 
+nsresult NrIceMediaStream::GetConsentStatus(int component_id, bool *can_send, struct timeval *ts) {
+  if (!stream_)
+    return NS_ERROR_FAILURE;
+
+  nr_ice_media_stream* peer_stream;
+  int r = nr_ice_peer_ctx_find_pstream(ctx_peer_, stream_, &peer_stream);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Failed to find peer stream for '" << name_ << "':" <<
+              component_id);
+    return NS_ERROR_FAILURE;
+  }
+
+  int send = 0;
+  r = nr_ice_media_stream_get_consent_status(peer_stream, component_id,
+                                             &send, ts);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Failed to get consent status for '" << name_ << "':" <<
+              component_id);
+    return NS_ERROR_FAILURE;
+  }
+  *can_send = !!send;
+
+  return NS_OK;
+}
+
 nsresult NrIceMediaStream::SendPacket(int component_id,
                                       const unsigned char *data,
                                       size_t len) {

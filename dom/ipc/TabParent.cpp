@@ -3275,8 +3275,8 @@ TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
       break;
     }
 
-    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParent();
-    if (window == win) {
+    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParentOrNull();
+    if (!win) {
       break;
     }
 

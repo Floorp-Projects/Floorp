@@ -23,8 +23,8 @@ ABIArg
 ABIArgGenerator::next(MIRType type)
 {
     switch (type) {
-      case MIRType_Int32:
-      case MIRType_Pointer: {
+      case MIRType::Int32:
+      case MIRType::Pointer: {
         Register destReg;
         if (GetIntArgReg(usedArgSlots_, &destReg))
             current_ = ABIArg(destReg);
@@ -33,13 +33,13 @@ ABIArgGenerator::next(MIRType type)
         usedArgSlots_++;
         break;
       }
-      case MIRType_Float32:
-      case MIRType_Double: {
+      case MIRType::Float32:
+      case MIRType::Double: {
         FloatRegister destFReg;
         FloatRegister::ContentType contentType;
         if (!usedArgSlots_)
             firstArgFloat = true;
-        contentType = (type == MIRType_Double) ?
+        contentType = (type == MIRType::Double) ?
             FloatRegisters::Double : FloatRegisters::Single;
         if (GetFloatArgReg(usedArgSlots_, &destFReg))
             current_ = ABIArg(FloatRegister(destFReg.id(), contentType));

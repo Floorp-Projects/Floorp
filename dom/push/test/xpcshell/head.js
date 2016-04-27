@@ -151,7 +151,6 @@ function setPrefs(prefs = {}) {
     maxQuotaPerSubscription: 16,
     quotaUpdateDelay: 3000,
     'testing.notifyWorkers': false,
-    'testing.notifyAllObservers': true,
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);

@@ -181,7 +181,7 @@ CodeGeneratorMIPS::visitBoxFloatingPoint(LBoxFloatingPoint* box)
     const LAllocation* in = box->getOperand(0);
 
     FloatRegister reg = ToFloatRegister(in);
-    if (box->type() == MIRType_Float32) {
+    if (box->type() == MIRType::Float32) {
         masm.convertFloat32ToDouble(reg, ScratchDoubleReg);
         reg = ScratchDoubleReg;
     }

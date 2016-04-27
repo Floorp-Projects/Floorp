@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that PeriodicWave handles fundamental fequency of zero</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// This is the smallest value that the test framework will accept
+const testLength = 256;
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  runTest();
+});
+
+var gTest = {
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var osc = context.createOscillator();
+    osc.setPeriodicWave(context.
+                        createPeriodicWave(new Float32Array([0.0, 1.0]),
+                                           new Float32Array(2)));
+    osc.frequency.value = 0.0;
+    osc.start();
+    return osc;
+  },
+  createExpectedBuffers: function(context) {
+    var buffer = context.createBuffer(1, testLength, context.sampleRate);
+
+    for (var i = 0; i < buffer.length; ++i) {
+      buffer.getChannelData(0)[i] = 1.0;
+    }
+    return buffer;
+  },
+};
+
+</script>
+</pre>
+</body>
+</html>

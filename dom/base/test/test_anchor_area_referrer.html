@@ -14,8 +14,8 @@
 
   <script type="application/javascript;version=1.8">
 
-  const SJS = "/tests/dom/base/test/referrer_testserver.sjs?";
-  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "REL"];
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "REL", "SCHEME_FROM", "SCHEME_TO"];
 
   const testCases = [
     {ACTION: ["generate-anchor-policy-test", "generate-area-policy-test"],
@@ -39,6 +39,28 @@
          META_POLICY: 'no-referrer',
          DESC: "no-referrer in meta",
          RESULT: 'none'},
+
+         // Test if element attr would override meta referr policy.
+
+         // 1. Downgrade.
+        {ATTRIBUTE_POLICY: 'no-referrer-when-downgrade',
+         NAME: 'origin-in-meta-downgrade-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta downgrade in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+
+         // 2. No downgrade.
+        {ATTRIBUTE_POLICY: 'no-referrer-when-downgrade',
+         NAME: 'origin-in-meta-downgrade-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'origin in meta downgrade in attr',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'https',
+         RESULT: 'full'},
+         // End of element attr overriding test..
+
         {ATTRIBUTE_POLICY: 'origin',
          NAME: 'origin-with-no-meta',
          META_POLICY: '',

@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'/>
+  <title>
+    WebGL Conformance Test Suite Single Test Wrapper
+  </title>
+  <link rel='stylesheet' type='text/css' href='iframe-passthrough.css'/>
+</head>
+<body>
+<iframe id='test-frame'></iframe>
+<script>
+'use strict';
+
+var frameElem = document.getElementById('test-frame');
+
+////////////////////////////////////////////////////////////////////////
+
+window.webglTestHarness = {
+  reportResults: function(pathname, success, message) {
+    if (parent) {
+      parent.ok(success, message);
+    } else {
+      console.log('ok(' + success + ', \'' + message + '\')');
+    }
+  },
+
+  notifyFinished: function(testPath) {
+    if (parent) {
+      parent.SimpleTest.finish();
+    } else {
+      console.log('SimpleTest.finish()');
+    }
+  },
+};
+
+if (parent) {
+  parent.SimpleTest.waitForExplicitFinish();
+  parent.SimpleTest.requestFlakyTimeout('untriaged');
+
+  try {
+    if (navigator.appVersion.indexOf('Android') != -1) {
+      // From layout/tools/reftest/reftest.js:
+      var version = SpecialPowers.Services.sysinfo.getProperty('version');
+      var kAndroidVersion2_3 = 9;
+      if (version == kAndroidVersion2_3) {
+        var timeoutLengthMultiplier = 2.0;
+        parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
+      }
+    }
+  } catch (e) {
+    console.log('Warning: No SpecialPowers.');
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+var testPath = location.search.substr(1);
+console.log('testPath: ' + testPath);
+frameElem.src = testPath;
+
+</script>
+</body>
+</html>

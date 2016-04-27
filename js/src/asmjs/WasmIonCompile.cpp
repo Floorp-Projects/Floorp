@@ -127,26 +127,26 @@ class FunctionCompiler
             MInstruction* ins = nullptr;
             switch (locals_[i]) {
               case ValType::I32:
-                ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType_Int32);
+                ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType::Int32);
                 break;
               case ValType::I64:
                 ins = MConstant::NewInt64(alloc(), 0);
                 break;
               case ValType::F32:
-                ins = MConstant::NewAsmJS(alloc(), Float32Value(0.f), MIRType_Float32);
+                ins = MConstant::NewAsmJS(alloc(), Float32Value(0.f), MIRType::Float32);
                 break;
               case ValType::F64:
-                ins = MConstant::NewAsmJS(alloc(), DoubleValue(0.0), MIRType_Double);
+                ins = MConstant::NewAsmJS(alloc(), DoubleValue(0.0), MIRType::Double);
                 break;
               case ValType::I32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType_Int32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Int32x4);
                 break;
               case ValType::F32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0.f), MIRType_Float32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0.f), MIRType::Float32x4);
                 break;
               case ValType::B32x4:
                 // Bool32x4 uses the same data layout as Int32x4.
-                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType_Bool32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType::Bool32x4);
                 break;
               case ValType::Limit:
                 MOZ_CRASH("Limit");
@@ -376,7 +376,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MSimdAllTrue* ins = MSimdAllTrue::New(alloc(), boolVector, MIRType_Int32);
+        MSimdAllTrue* ins = MSimdAllTrue::New(alloc(), boolVector, MIRType::Int32);
         curBlock_->add(ins);
         return ins;
     }
@@ -386,7 +386,7 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MSimdAnyTrue* ins = MSimdAnyTrue::New(alloc(), boolVector, MIRType_Int32);
+        MSimdAnyTrue* ins = MSimdAnyTrue::New(alloc(), boolVector, MIRType::Int32);
         curBlock_->add(ins);
         return ins;
     }
@@ -851,7 +851,7 @@ class FunctionCompiler
             MOZ_ASSERT(IsPowerOfTwo(length));
             MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
             curBlock_->add(mask);
-            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType_Int32);
+            MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType::Int32);
             curBlock_->add(maskedIndex);
             ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
             curBlock_->add(ptrFun);
@@ -970,7 +970,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
         MOZ_ASSERT(!hasPushed(curBlock_));
-        if (def && def->type() != MIRType_None)
+        if (def && def->type() != MIRType::None)
             curBlock_->push(def);
     }
 
@@ -979,7 +979,7 @@ class FunctionCompiler
         if (!hasPushed(curBlock_))
             return nullptr;
         MDefinition* def = curBlock_->pop();
-        MOZ_ASSERT(def->type() != MIRType_Value);
+        MOZ_ASSERT(def->type() != MIRType::Value);
         return def;
     }
 
@@ -1434,7 +1434,7 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition** def)
     switch (type) {
       case ValType::I32: {
         int32_t val = f.readVarS32();
-        *def = f.constant(Int32Value(val), MIRType_Int32);
+        *def = f.constant(Int32Value(val), MIRType::Int32);
         return true;
       }
       case ValType::I64: {
@@ -1444,28 +1444,28 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition** def)
       }
       case ValType::F32: {
         float val = f.readF32();
-        *def = f.constant(Float32Value(val), MIRType_Float32);
+        *def = f.constant(Float32Value(val), MIRType::Float32);
         return true;
       }
       case ValType::F64: {
         double val = f.readF64();
-        *def = f.constant(DoubleValue(val), MIRType_Double);
+        *def = f.constant(DoubleValue(val), MIRType::Double);
         return true;
       }
       case ValType::I32x4: {
         SimdConstant lit(f.readI32X4());
-        *def = f.constant(lit, MIRType_Int32x4);
+        *def = f.constant(lit, MIRType::Int32x4);
         return true;
       }
       case ValType::F32x4: {
         SimdConstant lit(f.readF32X4());
-        *def = f.constant(lit, MIRType_Float32x4);
+        *def = f.constant(lit, MIRType::Float32x4);
         return true;
       }
       case ValType::B32x4: {
         // Boolean vectors are stored as an Int vector with -1 / 0 lanes.
         SimdConstant lit(f.readI32X4());
-        *def = f.constant(lit, MIRType_Bool32x4);
+        *def = f.constant(lit, MIRType::Bool32x4);
         return true;
       }
       case ValType::Limit:
@@ -1518,8 +1518,8 @@ EmitHeapAddress(FunctionCompiler& f, MDefinition** base, MAsmJSHeapAccess* acces
     // Assume worst case.
     bool atomicAccess = true;
     if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck, atomicAccess)) {
-        MDefinition* rhs = f.constant(Int32Value(offset), MIRType_Int32);
-        *base = f.binary<MAdd>(*base, rhs, MIRType_Int32);
+        MDefinition* rhs = f.constant(Int32Value(offset), MIRType::Int32);
+        *base = f.binary<MAdd>(*base, rhs, MIRType::Int32);
         offset = 0;
         access->setOffset(offset);
     }
@@ -1979,7 +1979,7 @@ EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition** def)
         return false;
     // Now compute !i32 - 1 to force the value range into {0, -1}.
     MDefinition* noti32 = f.unary<MNot>(i32);
-    *def = f.binary<MSub>(noti32, f.constant(Int32Value(1), MIRType_Int32), MIRType_Int32);
+    *def = f.binary<MSub>(noti32, f.constant(Int32Value(1), MIRType::Int32), MIRType::Int32);
     return true;
 }
 
@@ -2184,7 +2184,7 @@ EmitSimdCtor(FunctionCompiler& f, ValType type, MDefinition** def)
             if (!EmitExpr(f, &args[i]))
                 return false;
         }
-        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType_Int32x4);
+        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType::Int32x4);
         return true;
       }
       case ValType::F32x4: {
@@ -2193,7 +2193,7 @@ EmitSimdCtor(FunctionCompiler& f, ValType type, MDefinition** def)
             if (!EmitExpr(f, &args[i]))
                 return false;
         }
-        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType_Float32x4);
+        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType::Float32x4);
         return true;
       }
       case ValType::B32x4: {
@@ -2202,7 +2202,7 @@ EmitSimdCtor(FunctionCompiler& f, ValType type, MDefinition** def)
             if (!EmitSimdBooleanLaneExpr(f, &args[i]))
                 return false;
         }
-        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType_Bool32x4);
+        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType::Bool32x4);
         return true;
       }
       case ValType::I32:
@@ -2247,7 +2247,7 @@ EmitMultiply(FunctionCompiler& f, ValType type, MDefinition** def)
     if (!EmitExpr(f, &rhs))
         return false;
     MIRType mirType = ToMIRType(type);
-    *def = f.mul(lhs, rhs, mirType, mirType == MIRType_Int32 ? MMul::Integer : MMul::Normal);
+    *def = f.mul(lhs, rhs, mirType, mirType == MIRType::Int32 ? MMul::Integer : MMul::Normal);
     return true;
 }
 
@@ -2268,7 +2268,7 @@ EmitSelect(FunctionCompiler& f, MDefinition** def)
 
     if (trueExpr && falseExpr &&
         trueExpr->type() == falseExpr->type() &&
-        trueExpr->type() != MIRType_None)
+        trueExpr->type() != MIRType::None)
     {
         *def = f.select(trueExpr, falseExpr, condExpr);
     } else {

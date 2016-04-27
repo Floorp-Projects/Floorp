@@ -28,256 +28,17 @@ var uris = [
   "http://example.com/5",
 ];
 
-// Add tests here.  Each is an object with these properties:
-//   desc:       description printed before test is run
-//   currTopic:  the next expected topic that should be observed for the test;
-//               set to NSIOBSERVER_TOPIC_BEGIN to begin
-//   finalTopic: the last expected topic that should be observed for the test,
-//               which then causes the next test to be run
-//   data:       the data passed to nsIObserver.observe() corresponding to the
-//               test
-//   file:       the nsILocalFile that the test creates
-//   folderId:   for HTML restore into a folder, the folder ID to restore into;
-//               otherwise, set it to null
-//   run:        a method that actually runs the test
-var tests = [
-  {
-    desc:       "JSON restore: normal restore should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.json");
-      addBookmarks();
-
-      yield BookmarkJSONUtils.exportToFile(this.file);
-      yield PlacesUtils.bookmarks.eraseEverything();
-      try {
-        yield BookmarkJSONUtils.importFromFile(this.file, true);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
-    })
-  },
-
-  {
-    desc:       "JSON restore: empty file should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.json");
-      try {
-        yield BookmarkJSONUtils.importFromFile(this.file, true);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed" + e);
-      }
-    })
-  },
-
-  {
-    desc:       "JSON restore: nonexistent file should fail",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_FAILED,
-    data:       NSIOBSERVER_DATA_JSON,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it 1");
-      try {
-        yield BookmarkJSONUtils.importFromFile(this.file, true);
-        do_throw("  Restore should have failed");
-      }
-      catch (e) {
-      }
-    })
-  },
-
-  {
-    desc:       "HTML restore: normal restore should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.html");
-      addBookmarks();
-      yield BookmarkHTMLUtils.exportToFile(this.file);
-      yield PlacesUtils.bookmarks.eraseEverything();
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, false)
-                         .then(null, do_report_unexpected_exception);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
-    })
-  },
-
-  {
-    desc:       "HTML restore: empty file should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, false)
-                         .then(null, do_report_unexpected_exception);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
-    })
-  },
-
-  {
-    desc:       "HTML restore: nonexistent file should fail",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_FAILED,
-    data:       NSIOBSERVER_DATA_HTML,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it 2");
-      try {
-        yield BookmarkHTMLUtils.importFromFile(this.file, false);
-        do_throw("Should fail!");
-      }
-      catch (e) {}
-    })
-  },
-
-  {
-    desc:       "HTML initial restore: normal restore should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
-      addBookmarks();
-      yield BookmarkHTMLUtils.exportToFile(this.file);
-      yield PlacesUtils.bookmarks.eraseEverything();
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, true)
-                         .then(null, do_report_unexpected_exception);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
-    })
-  },
-
-  {
-    desc:       "HTML initial restore: empty file should succeed",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_SUCCESS,
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
-      try {
-        BookmarkHTMLUtils.importFromFile(this.file, true)
-                         .then(null, do_report_unexpected_exception);
-      }
-      catch (e) {
-        do_throw("  Restore should not have failed");
-      }
-    })
-  },
-
-  {
-    desc:       "HTML initial restore: nonexistent file should fail",
-    currTopic:  NSIOBSERVER_TOPIC_BEGIN,
-    finalTopic: NSIOBSERVER_TOPIC_FAILED,
-    data:       NSIOBSERVER_DATA_HTML_INIT,
-    folderId:   null,
-    run: Task.async(function* () {
-      this.file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-      this.file.append("this file doesn't exist because nobody created it 3");
-      try {
-        yield BookmarkHTMLUtils.importFromFile(this.file, true);
-        do_throw("Should fail!");
-      }
-      catch (e) {}
-    })
-  }
-];
-
-// nsIObserver that observes bookmarks-restore-begin.
-var beginObserver = {
-  observe: function _beginObserver(aSubject, aTopic, aData) {
-    var test = tests[currTestIndex];
-
-    print("  Observed " + aTopic);
-    print("  Topic for current test should be what is expected");
-    do_check_eq(aTopic, test.currTopic);
-
-    print("  Data for current test should be what is expected");
-    do_check_eq(aData, test.data);
-
-    // Update current expected topic to the next expected one.
-    test.currTopic = test.finalTopic;
-  }
-};
-
-// nsIObserver that observes bookmarks-restore-success/failed.  This starts
-// the next test.
-var successAndFailedObserver = {
-  observe: function _successAndFailedObserver(aSubject, aTopic, aData) {
-    var test = tests[currTestIndex];
-
-    print("  Observed " + aTopic);
-    print("  Topic for current test should be what is expected");
-    do_check_eq(aTopic, test.currTopic);
-
-    print("  Data for current test should be what is expected");
-    do_check_eq(aData, test.data);
-
-    // On restore failed, file may not exist, so wrap in try-catch.
-    try {
-      test.file.remove(false);
-    }
-    catch (exc) {}
-
-    // Make sure folder ID is what is expected.  For importing HTML into a
-    // folder, this will be an integer, otherwise null.
-    if (aSubject) {
-      do_check_eq(aSubject.QueryInterface(Ci.nsISupportsPRInt64).data,
-                  test.folderId);
-    }
-    else
-      do_check_eq(test.folderId, null);
-
-    PlacesUtils.bookmarks.eraseEverything().then(doNextTest);
-  }
-};
-
-// Index of the currently running test.  See doNextTest().
-var currTestIndex = -1;
-
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-            getService(Ci.nsINavBookmarksService);
-
-var obssvc = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Adds some bookmarks for the URIs in |uris|.
  */
-function addBookmarks() {
-  uris.forEach(u => bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder,
-                                         uri(u),
-                                         bmsvc.DEFAULT_INDEX,
-                                         u));
+function* addBookmarks() {
+  for (let url of uris) {
+    yield PlacesUtils.bookmarks.insert({
+      url: url, parentGuid: PlacesUtils.bookmarks.menuGuid
+    })
+  }
   checkBookmarksExist();
 }
 
@@ -287,18 +48,17 @@ function addBookmarks() {
  * results returned should be uris.length.
  */
 function checkBookmarksExist() {
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-  var queries = uris.map(function (u) {
-    var q = hs.getNewQuery();
+  let hs = PlacesUtils.history;
+  let queries = uris.map(function (u) {
+    let q = hs.getNewQuery();
     q.uri = uri(u);
     return q;
   });
-  var options = hs.getNewQueryOptions();
+  let options = hs.getNewQueryOptions();
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
-  var root = hs.executeQueries(queries, uris.length, options).root;
+  let root = hs.executeQueries(queries, uris.length, options).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, uris.length);
+  Assert.equal(root.childCount, uris.length);
   root.containerOpen = false;
 }
 
@@ -312,34 +72,257 @@ function checkBookmarksExist() {
  */
 function promiseFile(aBasename) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, aBasename);
-  dump("\n\nopening " + path + "\n\n");
-  return OS.File.open(path, { truncate: true }).then(aFile => { aFile.close(); return path; });
+  do_print("opening " + path);
+  return OS.File.open(path, { truncate: true })
+                .then(aFile => {
+                  aFile.close();
+                  return path;
+                });
 }
 
 /**
- * Runs the next test or if all tests have been run, finishes.
+ * Register observers via promiseTopicObserved helper.
+ *
+ * @param  {boolean} expectSuccess pass true when expect a success notification
+ * @return {Promise[]}
  */
-function doNextTest() {
-  currTestIndex++;
-  if (currTestIndex >= tests.length) {
-    obssvc.removeObserver(beginObserver, NSIOBSERVER_TOPIC_BEGIN);
-    obssvc.removeObserver(successAndFailedObserver, NSIOBSERVER_TOPIC_SUCCESS);
-    obssvc.removeObserver(successAndFailedObserver, NSIOBSERVER_TOPIC_FAILED);
-    do_test_finished();
+function registerObservers(expectSuccess) {
+  let promiseBegin = promiseTopicObserved(NSIOBSERVER_TOPIC_BEGIN);
+  let promiseResult;
+  if (expectSuccess) {
+    promiseResult = promiseTopicObserved(NSIOBSERVER_TOPIC_SUCCESS);
+  } else {
+    promiseResult = promiseTopicObserved(NSIOBSERVER_TOPIC_FAILED);
   }
-  else {
-    var test = tests[currTestIndex];
-    print("Running test: " + test.desc);
-    test.run();
+
+  return [promiseBegin, promiseResult];
+}
+
+/**
+ * Check notification results.
+ *
+ * @param  {Promise[]} expectPromises array contain promiseBegin and promiseResult
+ * @param  {object} expectedData contain data and folderId
+ */
+function* checkObservers(expectPromises, expectedData) {
+  let [promiseBegin, promiseResult] = expectPromises;
+
+  let beginData = (yield promiseBegin)[1];
+  Assert.equal(beginData, expectedData.data,
+    "Data for current test should be what is expected");
+
+  let [resultSubject, resultData] = yield promiseResult;
+  Assert.equal(resultData, expectedData.data,
+    "Data for current test should be what is expected");
+
+  // Make sure folder ID is what is expected.  For importing HTML into a
+  // folder, this will be an integer, otherwise null.
+  if (resultSubject) {
+    Assert.equal(aSubject.QueryInterface(Ci.nsISupportsPRInt64).data,
+                expectedData.folderId);
+  } else {
+    Assert.equal(expectedData.folderId, null);
   }
+}
+
+/**
+ * Run after every test cases.
+ */
+function* teardown(file, begin, success, fail) {
+  // On restore failed, file may not exist, so wrap in try-catch.
+  try {
+    yield OS.File.remove(file, {ignoreAbsent: true});
+  } catch (e) {}
+
+  // clean up bookmarks
+  yield PlacesUtils.bookmarks.eraseEverything();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+add_task(function* test_json_restore_normal() {
+  // data: the data passed to nsIObserver.observe() corresponding to the test
+  // folderId: for HTML restore into a folder, the folder ID to restore into;
+  //           otherwise, set it to null
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_JSON,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
 
-function run_test() {
-  do_test_pending();
-  obssvc.addObserver(beginObserver, NSIOBSERVER_TOPIC_BEGIN, false);
-  obssvc.addObserver(successAndFailedObserver, NSIOBSERVER_TOPIC_SUCCESS, false);
-  obssvc.addObserver(successAndFailedObserver, NSIOBSERVER_TOPIC_FAILED, false);
-  doNextTest();
-}
+  do_print("JSON restore: normal restore should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.json");
+  yield addBookmarks();
+
+  yield BookmarkJSONUtils.exportToFile(file);
+  yield PlacesUtils.bookmarks.eraseEverything();
+  try {
+    yield BookmarkJSONUtils.importFromFile(file, true);
+  } catch (e) {
+    do_throw("  Restore should not have failed" + e);
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_json_restore_empty() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_JSON,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
+
+  do_print("JSON restore: empty file should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.json");
+  try {
+    yield BookmarkJSONUtils.importFromFile(file, true);
+  } catch (e) {
+    do_throw("  Restore should not have failed" + e);
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_json_restore_nonexist() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_JSON,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(false);
+
+  do_print("JSON restore: nonexistent file should fail");
+  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  file.append("this file doesn't exist because nobody created it 1");
+  try {
+    yield BookmarkJSONUtils.importFromFile(file, true);
+    do_throw("  Restore should have failed");
+  } catch (e) {}
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_restore_normal() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
+
+  do_print("HTML restore: normal restore should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.html");
+  yield addBookmarks();
+  yield BookmarkHTMLUtils.exportToFile(file);
+  yield PlacesUtils.bookmarks.eraseEverything();
+  try {
+    BookmarkHTMLUtils.importFromFile(file, false)
+                     .then(null, do_report_unexpected_exception);
+  } catch (e) {
+    do_throw("  Restore should not have failed");
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_restore_empty() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
+
+  do_print("HTML restore: empty file should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
+  try {
+    BookmarkHTMLUtils.importFromFile(file, false)
+                     .then(null, do_report_unexpected_exception);
+  } catch (e) {
+    do_throw("  Restore should not have failed");
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_restore_nonexist() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(false);
+
+  do_print("HTML restore: nonexistent file should fail");
+  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  file.append("this file doesn't exist because nobody created it 2");
+  try {
+    yield BookmarkHTMLUtils.importFromFile(file, false);
+    do_throw("Should fail!");
+  } catch (e) {}
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_init_restore_normal() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML_INIT,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
+
+  do_print("HTML initial restore: normal restore should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
+  yield addBookmarks();
+  yield BookmarkHTMLUtils.exportToFile(file);
+  yield PlacesUtils.bookmarks.eraseEverything();
+  try {
+    BookmarkHTMLUtils.importFromFile(file, true)
+                     .then(null, do_report_unexpected_exception);
+  } catch (e) {
+    do_throw("  Restore should not have failed");
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_init_restore_empty() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML_INIT,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(true);
+
+  do_print("HTML initial restore: empty file should succeed");
+  let file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
+  try {
+    BookmarkHTMLUtils.importFromFile(file, true)
+                     .then(null, do_report_unexpected_exception);
+  } catch (e) {
+    do_throw("  Restore should not have failed");
+  }
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
+
+add_task(function* test_html_init_restore_nonexist() {
+  let expectedData = {
+    data:       NSIOBSERVER_DATA_HTML_INIT,
+    folderId:   null
+  }
+  let expectPromises = registerObservers(false);
+
+  do_print("HTML initial restore: nonexistent file should fail");
+  let file = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+  file.append("this file doesn't exist because nobody created it 3");
+  try {
+    yield BookmarkHTMLUtils.importFromFile(file, true);
+    do_throw("Should fail!");
+  } catch (e) {}
+
+  yield checkObservers(expectPromises, expectedData);
+  yield teardown(file);
+});
