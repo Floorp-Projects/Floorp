@@ -1716,7 +1716,9 @@ js::GetPCCountScriptSummary(JSContext* cx, size_t index)
 
     if (!AppendJSONProperty(buf, "line"))
         return nullptr;
-    NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf);
+    if (!NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf)) {
+        return nullptr;
+    }
 
     if (script->functionNonDelazifying()) {
         JSAtom* atom = script->functionNonDelazifying()->displayAtom();
