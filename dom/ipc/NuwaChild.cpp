@@ -35,7 +35,7 @@ namespace dom {
 
 namespace {
 
-class CallNuwaSpawn: public nsRunnable
+class CallNuwaSpawn: public Runnable
 {
 public:
   NS_IMETHOD Run()
@@ -185,7 +185,7 @@ GetProtoFdInfos(NuwaProtoFdInfo* aInfoList,
   *aInfoSize = i;
 }
 
-class RunAddNewIPCProcess : public nsRunnable
+class RunAddNewIPCProcess : public mozilla::Runnable
 {
 public:
   RunAddNewIPCProcess(pid_t aPid,

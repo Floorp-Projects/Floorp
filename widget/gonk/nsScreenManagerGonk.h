@@ -31,7 +31,6 @@
 
 #include <android/native_window.h>
 
-class nsRunnable;
 class nsWindow;
 
 namespace android {
@@ -40,6 +39,7 @@ namespace android {
 };
 
 namespace mozilla {
+    class Runnable;
 namespace gl {
     class GLContext;
 }
@@ -216,8 +216,8 @@ protected:
 
     bool mInitialized;
     nsTArray<RefPtr<nsScreenGonk>> mScreens;
-    RefPtr<nsRunnable> mScreenOnEvent;
-    RefPtr<nsRunnable> mScreenOffEvent;
+    RefPtr<mozilla::Runnable> mScreenOnEvent;
+    RefPtr<mozilla::Runnable> mScreenOffEvent;
 
 #if ANDROID_VERSION >= 19
     bool mDisplayEnabled;

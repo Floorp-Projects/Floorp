@@ -161,7 +161,7 @@ AutoMounterSetting::StatusStr(int32_t aStatus)
   return "??? Unknown ???";
 }
 
-class CheckVolumeSettingsRunnable : public nsRunnable
+class CheckVolumeSettingsRunnable : public Runnable
 {
 public:
   CheckVolumeSettingsRunnable(const nsACString& aVolumeName)
@@ -194,7 +194,7 @@ AutoMounterSetting::CheckVolumeSettings(const nsACString& aVolumeName)
   NS_DispatchToMainThread(new CheckVolumeSettingsRunnable(aVolumeName));
 }
 
-class SetStatusRunnable : public nsRunnable
+class SetStatusRunnable : public Runnable
 {
 public:
   SetStatusRunnable(int32_t aStatus) : mStatus(aStatus) {}
