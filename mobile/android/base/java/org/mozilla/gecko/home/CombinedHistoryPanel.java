@@ -190,22 +190,19 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final int loaderId = loader.getId();
-            boolean showEmptyView = false;
             switch (loaderId) {
                 case LOADER_ID_HISTORY:
                     mHistoryAdapter.setHistory(c);
-                    showEmptyView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS;
                     break;
 
                 case LOADER_ID_REMOTE:
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     mHistoryAdapter.getDeviceUpdateHandler().onDeviceCountUpdated(clients.size());
                     mClientsAdapter.setClients(clients);
-                    showEmptyView = mClientsAdapter.getItemCount() == 1;
                     break;
             }
 
-            updateEmptyView(showEmptyView, mPanelLevel);
+            updateEmptyView();
             updateButtonFromLevel();
         }
 
@@ -232,6 +229,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     mRecyclerView.swapAdapter(mClientsAdapter, false);
                     break;
             }
+
+            updateEmptyView();
             updateButtonFromLevel();
             return true;
         }
@@ -288,40 +287,50 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         }
     }
 
-    private void updateEmptyView(boolean showEmptyState, OnPanelLevelChangeListener.PanelLevel level) {
-        // TODO: Add Sync empty state.
-        if (showEmptyState) {
-            if (mEmptyView == null) {
-                // Set empty panel view if it needs to be shown and hasn't been inflated.
-                final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
-                mEmptyView = emptyViewStub.inflate();
+    private void updateEmptyView() {
+        switch (mPanelLevel) {
+            case PARENT:
+                final boolean showEmptyHistoryView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS && mClientsAdapter.getItemCount() == 1;
+                if (showEmptyHistoryView) {
+                    if (mEmptyView == null) {
+                        // Set empty panel view if it needs to be shown and hasn't been inflated.
+                        final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
+                        mEmptyView = emptyViewStub.inflate();
 
-                final boolean isParentLevel = level == OnPanelLevelChangeListener.PanelLevel.PARENT;
-                final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-                emptyIcon.setImageResource(isParentLevel ? R.drawable.icon_most_recent_empty : R.drawable.icon_remote_tabs_empty);
+                        final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
+                        emptyIcon.setImageResource(R.drawable.icon_most_recent_empty);
 
-                final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-                emptyText.setText(R.string.home_most_recent_empty);
+                        final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
+                        emptyText.setText(R.string.home_most_recent_empty);
 
-                final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
+                        final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
 
-                if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING) || !isParentLevel) {
-                    emptyHint.setVisibility(View.GONE);
+                        if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
+                            emptyHint.setVisibility(View.GONE);
+                        } else {
+                            final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
+                            final SpannableStringBuilder hintBuilder = formatHintText(hintText);
+                            if (hintBuilder != null) {
+                                emptyHint.setText(hintBuilder);
+                                emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
+                                emptyHint.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }
+                    mEmptyView.setVisibility(View.VISIBLE);
                 } else {
-                    final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
-                    final SpannableStringBuilder hintBuilder = formatHintText(hintText);
-                    if (hintBuilder != null) {
-                        emptyHint.setText(hintBuilder);
-                        emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
-                        emptyHint.setVisibility(View.VISIBLE);
+                    if (mEmptyView != null) {
+                        mEmptyView.setVisibility(View.GONE);
                     }
                 }
-            }
-            mEmptyView.setVisibility(View.VISIBLE);
-        } else {
-            if (mEmptyView != null) {
-                mEmptyView.setVisibility(View.GONE);
-            }
+                break;
+
+            case CHILD:
+                // TODO: Bug 1262285
+                if (mEmptyView != null) {
+                    mEmptyView.setVisibility(View.GONE);
+                }
+                break;
         }
     }
     /**
