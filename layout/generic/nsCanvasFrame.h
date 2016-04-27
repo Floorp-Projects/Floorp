@@ -199,7 +199,7 @@ class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
 public:
   nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                  uint32_t aLayer, const nsStyleBackground* aBg)
-    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aBg)
+    : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aFrame->GetRectRelativeToSelf(), aBg)
   {
     if (ShouldFixToViewport(aBuilder)) {
       mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(this);
@@ -239,7 +239,7 @@ public:
 class nsDisplayCanvasThemedBackground : public nsDisplayThemedBackground {
 public:
   nsDisplayCanvasThemedBackground(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayThemedBackground(aBuilder, aFrame)
+    : nsDisplayThemedBackground(aBuilder, aFrame, aFrame->GetRectRelativeToSelf())
   {}
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
