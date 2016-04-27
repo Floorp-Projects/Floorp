@@ -9,6 +9,7 @@
 #include "AudioSink.h"
 #include "AudioStream.h"
 #include "MediaEventSource.h"
+#include "MediaQueue.h"
 #include "MediaInfo.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
