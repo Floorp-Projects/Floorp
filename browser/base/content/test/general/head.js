@@ -1100,3 +1100,62 @@ function promiseErrorPageLoaded(browser) {
     }, false, true);
   });
 }
+
+function* loadBadCertPage(url) {
+  const EXCEPTION_DIALOG_URI = "chrome://pippki/content/exceptionDialog.xul";
+  let exceptionDialogResolved = new Promise(function(resolve) {
+    // When the certificate exception dialog has opened, click the button to add
+    // an exception.
+    let certExceptionDialogObserver = {
+      observe: function(aSubject, aTopic, aData) {
+        if (aTopic == "cert-exception-ui-ready") {
+          Services.obs.removeObserver(this, "cert-exception-ui-ready");
+          let certExceptionDialog = getCertExceptionDialog(EXCEPTION_DIALOG_URI);
+          ok(certExceptionDialog, "found exception dialog");
+          executeSoon(function() {
+            certExceptionDialog.documentElement.getButton("extra1").click();
+            resolve();
+          });
+        }
+      }
+    };
+
+    Services.obs.addObserver(certExceptionDialogObserver,
+                             "cert-exception-ui-ready", false);
+  });
+
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  yield promiseErrorPageLoaded(gBrowser.selectedBrowser);
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    content.document.getElementById("exceptionDialogButton").click();
+  });
+  yield exceptionDialogResolved;
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+}
+
+// Utility function to get a handle on the certificate exception dialog.
+// Modified from toolkit/components/passwordmgr/test/prompt_common.js
+function getCertExceptionDialog(aLocation) {
+  let enumerator = Services.wm.getXULWindowEnumerator(null);
+
+  while (enumerator.hasMoreElements()) {
+    let win = enumerator.getNext();
+    let windowDocShell = win.QueryInterface(Ci.nsIXULWindow).docShell;
+
+    let containedDocShells = windowDocShell.getDocShellEnumerator(
+                                      Ci.nsIDocShellTreeItem.typeChrome,
+                                      Ci.nsIDocShell.ENUMERATE_FORWARDS);
+    while (containedDocShells.hasMoreElements()) {
+      // Get the corresponding document for this docshell
+      let childDocShell = containedDocShells.getNext();
+      let childDoc = childDocShell.QueryInterface(Ci.nsIDocShell)
+                                  .contentViewer
+                                  .DOMDocument;
+
+      if (childDoc.location.href == aLocation) {
+        return childDoc;
+      }
+    }
+  }
+}
+
