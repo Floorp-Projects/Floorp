@@ -48,11 +48,4 @@
                android:visibility="gone"
                android:src="@drawable/star_blue"/>
 
-    <ImageView android:id="@+id/is_reader_cached"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:layout_gravity="center_vertical"
-               android:visibility="invisible"
-               android:src="@drawable/status_icon_readercache"/>
-
 </merge>
