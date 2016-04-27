@@ -1751,10 +1751,10 @@ interface nsIDOMWindowUtils : nsISupports {
   void postRestyleSelfEvent(in nsIDOMElement aElement);
 
   /**
-   * Used to pause or resume all MediaElements in this window. Use-cases are
-   * audio competing and remote media control.
+   * Used to pause or resume all media in this window. Use-cases are audio
+   * competing, remote media control and to prevent auto-playing media.
    */
-  attribute boolean mediaSuspended;
+  attribute uint32_t mediaSuspend;
 
   /**
    * With this it's possible to mute all the MediaElements in this window.

@@ -614,7 +614,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMayHavePointerEnterLeaveEventListener(false),
   mInnerObjectsFreed(false),
   mIsModalContentWindow(false),
-  mIsActive(false), mIsBackground(false), mMediaSuspended(false),
+  mIsActive(false), mIsBackground(false),
+  mMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED),
   mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
   mDesktopModeViewport(false), mInnerWindow(nullptr),
   mOuterWindow(aOuterWindow),
@@ -3700,30 +3701,29 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
   }
 }
 
-bool
-nsPIDOMWindowOuter::GetMediaSuspended() const
+SuspendTypes
+nsPIDOMWindowOuter::GetMediaSuspend() const
 {
   if (IsInnerWindow()) {
-    return mOuterWindow->GetMediaSuspended();
+    return mOuterWindow->GetMediaSuspend();
   }
 
-  return mMediaSuspended;
+  return mMediaSuspend;
 }
 
 void
-nsPIDOMWindowOuter::SetMediaSuspended(bool aSuspended)
+nsPIDOMWindowOuter::SetMediaSuspend(SuspendTypes aSuspend)
 {
   if (IsInnerWindow()) {
-    mOuterWindow->SetMediaSuspended(aSuspended);
+    mOuterWindow->SetMediaSuspend(aSuspend);
     return;
   }
 
-  if (mMediaSuspended == aSuspended) {
-    return;
+  if (!IsDisposableSuspend(aSuspend)) {
+    mMediaSuspend = aSuspend;
   }
 
-  mMediaSuspended = aSuspended;
-  RefreshMediaElements();
+  RefreshMediaElementsSuspend(aSuspend);
 }
 
 bool
@@ -3749,7 +3749,7 @@ nsPIDOMWindowOuter::SetAudioMuted(bool aMuted)
   }
 
   mAudioMuted = aMuted;
-  RefreshMediaElements();
+  RefreshMediaElementsVolume();
 }
 
 float
@@ -3778,17 +3778,33 @@ nsPIDOMWindowOuter::SetAudioVolume(float aVolume)
   }
 
   mAudioVolume = aVolume;
-  RefreshMediaElements();
+  RefreshMediaElementsVolume();
   return NS_OK;
 }
 
 void
-nsPIDOMWindowOuter::RefreshMediaElements()
+nsPIDOMWindowOuter::RefreshMediaElementsVolume()
 {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
     service->RefreshAgentsVolume(GetOuterWindow());
   }
+}
+
+void
+nsPIDOMWindowOuter::RefreshMediaElementsSuspend(SuspendTypes aSuspend)
+{
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  if (service) {
+    // TODO : Impelement in next patch.
+  }
+}
+
+bool
+nsPIDOMWindowOuter::IsDisposableSuspend(SuspendTypes aSuspend) const
+{
+  return (aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE ||
+          aSuspend == nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
 }
 
 void
