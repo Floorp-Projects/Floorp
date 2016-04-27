@@ -35,7 +35,7 @@ public:
   NeckoParent();
   virtual ~NeckoParent();
 
-  MOZ_WARN_UNUSED_RESULT
+  MOZ_MUST_USE
   static const char *
   GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                       PContentParent* aBrowser,
@@ -48,7 +48,7 @@ public:
    *
    * Returns null if successful, or an error string if failed.
    */
-  MOZ_WARN_UNUSED_RESULT
+  MOZ_MUST_USE
   static const char*
   CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                            PContentParent* aContent,
