@@ -996,11 +996,13 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
   uint32_t parsed = 0;
   bool found = false;
   RefPtr<MediaRawData> sample;
+  int64_t sampleTime;
 
   WEBM_DEBUG("TimeThreshold: %f", aTimeThreshold.ToSeconds());
   while (!found && (sample = NextSample())) {
     parsed++;
-    if (sample->mKeyframe && sample->mTime >= aTimeThreshold.ToMicroseconds()) {
+    sampleTime = sample->mTime;
+    if (sample->mKeyframe && sampleTime >= aTimeThreshold.ToMicroseconds()) {
       found = true;
       mSamples.Reset();
       mSamples.PushFront(sample.forget());
@@ -1009,7 +1011,7 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
   SetNextKeyFrameTime();
   if (found) {
     WEBM_DEBUG("next sample: %f (parsed: %d)",
-               media::TimeUnit::FromMicroseconds(sample->mTime).ToSeconds(),
+               media::TimeUnit::FromMicroseconds(sampleTime).ToSeconds(),
                parsed);
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
