@@ -62,4 +62,8 @@ public class RemoteClient implements Parcelable {
             return new RemoteClient[size];
         }
     };
+
+    public boolean isDesktop() {
+        return "desktop".equals(deviceType);
+    }
 }
