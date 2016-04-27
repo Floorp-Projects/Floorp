@@ -51,10 +51,14 @@ a:visited {
   max-width: 780px;
 }
 
-section.section-main {
+.section-main {
   margin-bottom: 48px;
   -moz-margin-start: var(--icon-margin);
   -moz-padding-start: 24px;
+}
+
+.section-main:last-child {
+  margin-bottom: 0;
 }
 
 p {
