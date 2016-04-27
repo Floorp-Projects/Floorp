@@ -48,7 +48,15 @@ function generateTest(pixelFormat, pixelType, pathToTestRoot, prologue) {
 
         textureLoc = gl.getUniformLocation(program, "tex");
 
-        wtu.loadTexture(gl, pathToTestRoot + "/resources/red-green.svg", runTest);
+        var image = new Image();
+        image.onload = function() {
+            runTest(image);
+        };
+        image.onerror = function() {
+            testFailed("Creating image from canvas failed. Image src: " + this.src);
+            finishTest();
+        };
+        image.src = pathToTestRoot + "/resources/red-green.svg";
     }
 
     function runOneIteration(image, useTexSubImage2D, flipY, topColor, bottomColor)
