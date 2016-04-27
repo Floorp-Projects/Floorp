@@ -59,6 +59,11 @@ interface nsIHttpChannel : nsIChannel
      * Referrer policies. See ReferrerPolicy.h for more details.
      */
 
+
+    /*   The undefined state, usually used to check the need of
+         overruling document-wide referrer policy. */
+    const unsigned long REFERRER_POLICY_UNSET                      = 4294967295; // UINT32_MAX
+
     /*   default state, a shorter name for no-referrer-when-downgrade   */
     const unsigned long REFERRER_POLICY_DEFAULT                    = 0;
     /*   default state, doesn't send referrer from https->http          */
