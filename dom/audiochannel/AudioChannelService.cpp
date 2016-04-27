@@ -353,23 +353,21 @@ AudioChannelService::UnregisterTabParent(TabParent* aTabParent)
   mTabParents.RemoveElement(aTabParent);
 }
 
-void
-AudioChannelService::GetState(nsPIDOMWindowOuter* aWindow, uint32_t aAudioChannel,
-                              float* aVolume, bool* aMuted)
+AudioPlaybackConfig
+AudioChannelService::GetMediaConfig(nsPIDOMWindowOuter* aWindow,
+                                    uint32_t aAudioChannel) const
 {
   MOZ_ASSERT(!aWindow || aWindow->IsOuterWindow());
-  MOZ_ASSERT(aVolume && aMuted);
   MOZ_ASSERT(aAudioChannel < NUMBER_OF_AUDIO_CHANNELS);
 
+  AudioPlaybackConfig config(1.0, false,
+                             nsISuspendedTypes::NONE_SUSPENDED);
 
   if (!aWindow || !aWindow->IsOuterWindow()) {
-    *aVolume = 0.0;
-    *aMuted = true;
-    return;
+    config.SetConfig(0.0, true,
+                     nsISuspendedTypes::SUSPENDED_BLOCK);
+    return config;
   }
-
-  *aVolume = 1.0;
-  *aMuted = false;
 
   AudioChannelWindow* winData = nullptr;
   nsCOMPtr<nsPIDOMWindowOuter> window = aWindow;
@@ -379,13 +377,16 @@ AudioChannelService::GetState(nsPIDOMWindowOuter* aWindow, uint32_t aAudioChanne
   do {
     winData = GetWindowData(window->WindowID());
     if (winData) {
-      *aVolume *= winData->mChannels[aAudioChannel].mVolume;
-      *aMuted = *aMuted || winData->mChannels[aAudioChannel].mMuted;
+      config.mVolume *= winData->mChannels[aAudioChannel].mVolume;
+      config.mMuted = config.mMuted || winData->mChannels[aAudioChannel].mMuted;
     }
 
-    *aVolume *= window->GetAudioVolume();
-    // TODO : distiguish between suspend and mute, it would be done in bug1242874.
-    *aMuted = *aMuted || window->GetMediaSuspended() || window->GetAudioMuted();
+    config.mVolume *= window->GetAudioVolume();
+    config.mMuted = config.mMuted || window->GetAudioMuted();
+
+    // If the mSuspend is already suspended, we don't need to set it again.
+    config.mSuspend = (config.mSuspend == nsISuspendedTypes::NONE_SUSPENDED) ?
+      window->GetMediaSuspend() : config.mSuspend;
 
     nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParentOrNull();
     if (!win) {
@@ -396,6 +397,8 @@ AudioChannelService::GetState(nsPIDOMWindowOuter* aWindow, uint32_t aAudioChanne
 
     // If there is no parent, or we are the toplevel we don't continue.
   } while (window && window != aWindow);
+
+  return config;
 }
 
 bool
@@ -600,7 +603,8 @@ AudioChannelService::RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
 }
 
 void
-AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow)
+AudioChannelService::RefreshAgents(nsPIDOMWindowOuter* aWindow,
+                                   mozilla::function<void(AudioChannelAgent*)> aFunc)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
@@ -618,8 +622,25 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow)
   nsTObserverArray<AudioChannelAgent*>::ForwardIterator
     iter(winData->mAgents);
   while (iter.HasMore()) {
-    iter.GetNext()->WindowVolumeChanged();
+    aFunc(iter.GetNext());
   }
+}
+
+void
+AudioChannelService::RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow)
+{
+  RefreshAgents(aWindow, [] (AudioChannelAgent* agent) {
+    agent->WindowVolumeChanged();
+  });
+}
+
+void
+AudioChannelService::RefreshAgentsSuspend(nsPIDOMWindowOuter* aWindow,
+                                          nsSuspendedTypes aSuspend)
+{
+  RefreshAgents(aWindow, [aSuspend] (AudioChannelAgent* agent) {
+    agent->WindowSuspendChanged(aSuspend);
+  });
 }
 
 void

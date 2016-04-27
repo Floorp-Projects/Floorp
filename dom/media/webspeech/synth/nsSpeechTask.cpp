@@ -736,7 +736,11 @@ nsSpeechTask::WindowVolumeChanged(float aVolume, bool aMuted)
 NS_IMETHODIMP
 nsSpeechTask::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 {
-  // TODO : implementation.
+  if (aSuspend == nsISuspendedTypes::NONE_SUSPENDED) {
+    Resume();
+  } else {
+    Pause();
+  }
   return NS_OK;
 }
 
