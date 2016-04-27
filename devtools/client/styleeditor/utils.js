@@ -28,13 +28,13 @@ function PrefObserver(branchName) {
 exports.PrefObserver = PrefObserver;
 
 PrefObserver.prototype = {
-  observe: function(subject, topic, data) {
+  observe: function (subject, topic, data) {
     if (topic == "nsPref:changed") {
       this.emit(this.branchName + data);
     }
   },
 
-  destroy: function() {
+  destroy: function () {
     if (this.branch) {
       this.branch.removeObserver("", this);
     }

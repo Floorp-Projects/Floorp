@@ -37,9 +37,9 @@ add_task(function* () {
   let swTab = yield addTab(TAB_URL);
 
   info("Make the test page notify us when the service worker sends a message.");
-  let frameScript = function() {
+  let frameScript = function () {
     let win = content.wrappedJSObject;
-    win.navigator.serviceWorker.addEventListener("message", function(event) {
+    win.navigator.serviceWorker.addEventListener("message", function (event) {
       sendAsyncMessage(event.data);
     }, false);
   };

@@ -34,7 +34,7 @@ ToolboxOverlay.prototype = {
   /**
    * Executed when the toolbox is ready.
    */
-  onInit: function() {
+  onInit: function () {
     let autoExport = Services.prefs.getBoolPref(
       "devtools.netmonitor.har.enableAutoExportToFile");
 
@@ -48,17 +48,17 @@ ToolboxOverlay.prototype = {
   /**
    * Executed when the toolbox is destroyed.
    */
-  onDestroy: function(eventId, toolbox) {
+  onDestroy: function (eventId, toolbox) {
     this.destroyAutomation();
   },
 
   // Automation
 
-  initAutomation: function() {
+  initAutomation: function () {
     this.automation = new HarAutomation(this.toolbox);
   },
 
-  destroyAutomation: function() {
+  destroyAutomation: function () {
     if (this.automation) {
       this.automation.destroy();
     }

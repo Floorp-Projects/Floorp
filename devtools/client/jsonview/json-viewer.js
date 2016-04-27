@@ -7,7 +7,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
@@ -41,25 +41,25 @@ define(function(require, exports, module) {
    * available for the JSON viewer.
    */
   input.actions = {
-    onCopyJson: function() {
+    onCopyJson: function () {
       let value = input.prettified ? input.jsonPretty : input.jsonText;
       postChromeMessage("copy", value);
     },
 
-    onSaveJson: function() {
+    onSaveJson: function () {
       let value = input.prettified ? input.jsonPretty : input.jsonText;
       postChromeMessage("save", value);
     },
 
-    onCopyHeaders: function() {
+    onCopyHeaders: function () {
       postChromeMessage("copy-headers", input.headers);
     },
 
-    onSearch: function(value) {
+    onSearch: function (value) {
       theApp.setState({searchFilter: value});
     },
 
-    onPrettify: function(data) {
+    onPrettify: function (data) {
       if (input.prettified) {
         theApp.setState({jsonText: input.jsonText});
       } else {

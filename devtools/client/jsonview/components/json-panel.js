@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
@@ -37,23 +37,23 @@ define(function(require, exports, module) {
 
     displayName: "JsonPanel",
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {};
     },
 
-    componentDidMount: function() {
+    componentDidMount: function () {
       document.addEventListener("keypress", this.onKeyPress, true);
     },
 
-    componentWillUnmount: function() {
+    componentWillUnmount: function () {
       document.removeEventListener("keypress", this.onKeyPress, true);
     },
 
-    onKeyPress: function(e) {
+    onKeyPress: function (e) {
       // XXX shortcut for focusing the Filter field (see Bug 1178771).
     },
 
-    onFilter: function(object) {
+    onFilter: function (object) {
       if (!this.props.searchFilter) {
         return true;
       }
@@ -62,7 +62,7 @@ define(function(require, exports, module) {
       return json.indexOf(this.props.searchFilter) >= 0;
     },
 
-    getExpandedNodes: function(object, path = "", level = 0) {
+    getExpandedNodes: function (object, path = "", level = 0) {
       if (typeof object != "object") {
         return null;
       }
@@ -96,7 +96,7 @@ define(function(require, exports, module) {
       return Rep(props);
     },
 
-    renderTree: function() {
+    renderTree: function () {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
       let columns = [{
@@ -121,7 +121,7 @@ define(function(require, exports, module) {
       });
     },
 
-    render: function() {
+    render: function () {
       let content;
       let data = this.props.data;
 
@@ -162,15 +162,15 @@ define(function(require, exports, module) {
 
     // Commands
 
-    onSave: function(event) {
+    onSave: function (event) {
       this.props.actions.onSaveJson();
     },
 
-    onCopy: function(event) {
+    onCopy: function (event) {
       this.props.actions.onCopyJson();
     },
 
-    render: function() {
+    render: function () {
       return (
         Toolbar({},
           ToolbarButton({className: "btn save", onClick: this.onSave},

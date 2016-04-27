@@ -17,7 +17,7 @@ loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return domUtils.getCSSPseudoElementNames();
 });
 
-XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+XPCOMUtils.defineLazyGetter(this, "domUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
@@ -64,7 +64,7 @@ ElementStyle.prototype = {
   // The element we're looking at.
   element: null,
 
-  destroy: function() {
+  destroy: function () {
     if (this.destroyed) {
       return;
     }
@@ -81,7 +81,7 @@ ElementStyle.prototype = {
    * Called by the Rule object when it has been changed through the
    * setProperty* methods.
    */
-  _changed: function() {
+  _changed: function () {
     if (this.onChanged) {
       this.onChanged();
     }
@@ -94,7 +94,7 @@ ElementStyle.prototype = {
    * Returns a promise that will be resolved when the elementStyle is
    * ready.
    */
-  populate: function() {
+  populate: function () {
     let populated = this.pageStyle.getApplied(this.element, {
       inherited: true,
       matchedSelectors: true,
@@ -147,7 +147,7 @@ ElementStyle.prototype = {
   /**
    * Put pseudo elements in front of others.
    */
-  _sortRulesForPseudoElement: function() {
+  _sortRulesForPseudoElement: function () {
     this.rules = this.rules.sort((a, b) => {
       return (a.pseudoElement || "z") > (b.pseudoElement || "z");
     });
@@ -164,7 +164,7 @@ ElementStyle.prototype = {
    *        it will be deleted from this array.
    * @return {Boolean} true if we added the rule.
    */
-  _maybeAddRule: function(options, existingRules) {
+  _maybeAddRule: function (options, existingRules) {
     // If we've already included this domRule (for example, when a
     // common selector is inherited), ignore it.
     if (options.rule &&
@@ -206,7 +206,7 @@ ElementStyle.prototype = {
   /**
    * Calls markOverridden with all supported pseudo elements
    */
-  markOverriddenAll: function() {
+  markOverriddenAll: function () {
     this.markOverridden();
     for (let pseudo of PSEUDO_ELEMENTS) {
       this.markOverridden(pseudo);
@@ -221,7 +221,7 @@ ElementStyle.prototype = {
    *        Which pseudo element to flag as overridden.
    *        Empty string or undefined will default to no pseudo element.
    */
-  markOverridden: function(pseudo = "") {
+  markOverridden: function (pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
     // from more- to less-specific. Text properties from keyframes rule are
     // excluded from being marked as overridden since a number of criteria such
@@ -320,7 +320,7 @@ ElementStyle.prototype = {
    * @return {Boolean} true if the TextProperty's overridden state (or any of
    *         its computed properties overridden state) changed.
    */
-  _updatePropertyOverridden: function(prop) {
+  _updatePropertyOverridden: function (prop) {
     let overridden = true;
     let dirty = false;
     for (let computedProp of prop.computed) {
@@ -359,7 +359,7 @@ UserProperties.prototype = {
    *        The property value if it has previously been set by the user, null
    *        otherwise.
    */
-  getProperty: function(style, name, value) {
+  getProperty: function (style, name, value) {
     let key = this.getKey(style);
     let entry = this.map.get(key, null);
 
@@ -379,7 +379,7 @@ UserProperties.prototype = {
    * @param {String} userValue
    *        The value of the property to set.
    */
-  setProperty: function(style, bame, userValue) {
+  setProperty: function (style, bame, userValue) {
     let key = this.getKey(style, bame);
     let entry = this.map.get(key, null);
 
@@ -400,17 +400,17 @@ UserProperties.prototype = {
    * @param {String} name
    *        The name of the property to check.
    */
-  contains: function(style, name) {
+  contains: function (style, name) {
     let key = this.getKey(style, name);
     let entry = this.map.get(key, null);
     return !!entry && name in entry;
   },
 
-  getKey: function(style, name) {
+  getKey: function (style, name) {
     return style.actorID + ":" + name;
   },
 
-  clear: function() {
+  clear: function () {
     this.map.clear();
   }
 };

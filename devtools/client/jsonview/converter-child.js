@@ -67,15 +67,15 @@ let Converter = Class({
    * 5. convert does nothing, it's just the synchronous version
    *    of asyncConvertData
    */
-  convert: function(fromStream, fromType, toType, ctx) {
+  convert: function (fromStream, fromType, toType, ctx) {
     return fromStream;
   },
 
-  asyncConvertData: function(fromType, toType, listener, ctx) {
+  asyncConvertData: function (fromType, toType, listener, ctx) {
     this.listener = listener;
   },
 
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function (request, context, inputStream, offset, count) {
     // From https://developer.mozilla.org/en/Reading_textual_data
     let is = Cc["@mozilla.org/intl/converter-input-stream;1"]
       .createInstance(Ci.nsIConverterInputStream);
@@ -94,7 +94,7 @@ let Converter = Class({
     }
   },
 
-  onStartRequest: function(request, context) {
+  onStartRequest: function (request, context) {
     this.data = "";
     this.uri = request.QueryInterface(Ci.nsIChannel).URI.spec;
 
@@ -118,7 +118,7 @@ let Converter = Class({
    * 3. Convert that to HTML? Or XUL?
    * 4. Spit it back out at the listener
    */
-  onStopRequest: function(request, context, statusCode) {
+  onStopRequest: function (request, context, statusCode) {
     let headers = {
       response: [],
       request: []
@@ -149,13 +149,13 @@ let Converter = Class({
     // (e.g. in case of data: URLs)
     if (request instanceof Ci.nsIHttpChannel) {
       request.visitResponseHeaders({
-        visitHeader: function(name, value) {
+        visitHeader: function (name, value) {
           headers.response.push({name: name, value: value});
         }
       });
 
       request.visitRequestHeaders({
-        visitHeader: function(name, value) {
+        visitHeader: function (name, value) {
           headers.request.push({name: name, value: value});
         }
       });
@@ -197,7 +197,7 @@ let Converter = Class({
     this.listener = null;
   },
 
-  htmlEncode: function(t) {
+  htmlEncode: function (t) {
     return t !== null ? t.toString()
       .replace(/&/g, "&amp;")
       .replace(/"/g, "&quot;")
@@ -205,7 +205,7 @@ let Converter = Class({
       .replace(/>/g, "&gt;") : "";
   },
 
-  toHTML: function(json, headers, title) {
+  toHTML: function (json, headers, title) {
     let themeClassName = "theme-" + JsonViewUtils.getCurrentTheme();
     let clientBaseUrl = "resource://devtools/client/";
     let baseUrl = clientBaseUrl + "jsonview/";
@@ -229,7 +229,7 @@ let Converter = Class({
       "</body></html>";
   },
 
-  toErrorPage: function(error, data, uri) {
+  toErrorPage: function (error, data, uri) {
     // Escape unicode nulls
     data = data.replace("\u0000", "\uFFFD");
 
@@ -253,7 +253,7 @@ let Converter = Class({
 
   // Chrome <-> Content communication
 
-  postChromeMessage: function(type, args, objects) {
+  postChromeMessage: function (type, args, objects) {
     let value = args;
 
     switch (type) {
@@ -271,7 +271,7 @@ let Converter = Class({
     }
   },
 
-  copyHeaders: function(headers) {
+  copyHeaders: function (headers) {
     let value = "";
     let eol = (Services.appinfo.OS !== "WINNT") ? "\n" : "\r\n";
 

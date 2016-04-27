@@ -27,25 +27,25 @@ function AnimationTimeBlock() {
 exports.AnimationTimeBlock = AnimationTimeBlock;
 
 AnimationTimeBlock.prototype = {
-  init: function(containerEl) {
+  init: function (containerEl) {
     this.containerEl = containerEl;
     this.containerEl.addEventListener("click", this.onClick);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.containerEl.removeEventListener("click", this.onClick);
     this.unrender();
     this.containerEl = null;
     this.animation = null;
   },
 
-  unrender: function() {
+  unrender: function () {
     while (this.containerEl.firstChild) {
       this.containerEl.firstChild.remove();
     }
   },
 
-  render: function(animation) {
+  render: function (animation) {
     this.unrender();
 
     this.animation = animation;
@@ -120,7 +120,7 @@ AnimationTimeBlock.prototype = {
     }
   },
 
-  getTooltipText: function(state) {
+  getTooltipText: function (state) {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                             L10N.numberWithDecimals(time / 1000, 2));
 
@@ -182,7 +182,7 @@ AnimationTimeBlock.prototype = {
     return text;
   },
 
-  onClick: function(e) {
+  onClick: function (e) {
     e.stopPropagation();
     this.emit("selected", this.animation);
   }
