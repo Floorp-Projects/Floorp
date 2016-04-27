@@ -325,7 +325,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             return;
         }
 
-        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
+        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(false, true);
         final long toRemove = rows - retain;
         debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
 
@@ -356,7 +356,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      */
     private void expireThumbnails(final SQLiteDatabase db) {
         Log.d(LOGTAG, "Expiring thumbnails.");
-        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
+        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(true, false);
         final String sql = "DELETE FROM " + TABLE_THUMBNAILS +
                            " WHERE " + Thumbnails.URL + " NOT IN ( " +
                              " SELECT " + Combined.URL +
@@ -902,7 +902,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
                        " FROM " + Combined.VIEW_NAME +
                        " WHERE " + ignoreForTopSitesWhereClause +
-                       " ORDER BY " + BrowserContract.getFrecencySortOrder(true, false) +
+                       " ORDER BY " + BrowserContract.getCombinedFrecencySortOrder(true, false) +
                        " LIMIT " + totalLimit,
 
                        ignoreForTopSitesArgs);
