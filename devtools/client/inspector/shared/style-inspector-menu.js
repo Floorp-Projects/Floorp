@@ -64,7 +64,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Display the style inspector context menu
    */
-  show: function(event) {
+  show: function (event) {
     try {
       // In the sidebar we do not have this.styleDocument.popupNode
       // so we need to save the node ourselves.
@@ -76,7 +76,7 @@ StyleInspectorMenu.prototype = {
     }
   },
 
-  _createContextMenu: function() {
+  _createContextMenu: function () {
     this._menupopup = this.styleDocument.createElementNS(XUL_NS, "menupopup");
     this._menupopup.addEventListener("popupshowing", this._updateMenuItems);
     this._menupopup.id = "computed-view-context-menu";
@@ -94,7 +94,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Create all context menu items
    */
-  _createContextMenuItems: function() {
+  _createContextMenuItems: function () {
     this.menuitemCopy = this._createContextMenuItem({
       label: "styleinspector.contextmenu.copy",
       accesskey: "styleinspector.contextmenu.copy.accessKey",
@@ -187,7 +187,7 @@ StyleInspectorMenu.prototype = {
    * Create a single context menu item based on the provided configuration
    * Returns the created menu item element
    */
-  _createContextMenuItem: function(attributes) {
+  _createContextMenuItem: function (attributes) {
     let ownerDocument = this._menupopup.ownerDocument;
     let item = ownerDocument.createElementNS(XUL_NS, "menuitem");
 
@@ -206,7 +206,7 @@ StyleInspectorMenu.prototype = {
     return item;
   },
 
-  _createMenuSeparator: function() {
+  _createMenuSeparator: function () {
     let ownerDocument = this._menupopup.ownerDocument;
     let separator = ownerDocument.createElementNS(XUL_NS, "menuseparator");
     this._menupopup.appendChild(separator);
@@ -216,7 +216,7 @@ StyleInspectorMenu.prototype = {
    * Update the context menu. This means enabling or disabling menuitems as
    * appropriate.
    */
-  _updateMenuItems: function() {
+  _updateMenuItems: function () {
     this._updateCopyMenuItems();
 
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
@@ -236,7 +236,7 @@ StyleInspectorMenu.prototype = {
    * Display the necessary copy context menu items depending on the clicked
    * node and selection in the rule view.
    */
-  _updateCopyMenuItems: function() {
+  _updateCopyMenuItems: function () {
     this.menuitemCopy.disabled = !this._hasTextSelected();
 
     this.menuitemCopyColor.hidden = !this._isColorPopup();
@@ -271,7 +271,7 @@ StyleInspectorMenu.prototype = {
     }
   },
 
-  _hasTextSelected: function() {
+  _hasTextSelected: function () {
     let hasTextSelected;
     let selection = this.styleWindow.getSelection();
 
@@ -290,7 +290,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Get the type of the currently clicked node
    */
-  _getClickedNodeInfo: function() {
+  _getClickedNodeInfo: function () {
     let node = this._getClickedNode();
     return this.view.getNodeInfo(node);
   },
@@ -302,7 +302,7 @@ StyleInspectorMenu.prototype = {
    * @return {Boolean}
    *         true if click on color opened the popup, false otherwise.
    */
-  _isColorPopup: function() {
+  _isColorPopup: function () {
     this._colorToCopy = "";
 
     let container = this._getClickedNode();
@@ -323,7 +323,7 @@ StyleInspectorMenu.prototype = {
     return true;
   },
 
-  _isPropertyName: function() {
+  _isPropertyName: function () {
     let nodeInfo = this._getClickedNodeInfo();
     if (!nodeInfo) {
       return false;
@@ -336,7 +336,7 @@ StyleInspectorMenu.prototype = {
    *
    * @return {Boolean} true if the node is an image url
    */
-  _isImageUrl: function() {
+  _isImageUrl: function () {
     let nodeInfo = this._getClickedNodeInfo();
     if (!nodeInfo) {
       return false;
@@ -351,7 +351,7 @@ StyleInspectorMenu.prototype = {
    *
    * @return {DOMNode}
    */
-  _getClickedNode: function() {
+  _getClickedNode: function () {
     let container = null;
     let node = this.styleDocument.popupNode;
 
@@ -366,7 +366,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Select all text.
    */
-  _onSelectAll: function() {
+  _onSelectAll: function () {
     let selection = this.styleWindow.getSelection();
     selection.selectAllChildren(this.view.element);
   },
@@ -374,21 +374,21 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the most recently selected color value to clipboard.
    */
-  _onCopy: function() {
+  _onCopy: function () {
     this.view.copySelection(this.styleDocument.popupNode);
   },
 
   /**
    * Copy the most recently selected color value to clipboard.
    */
-  _onCopyColor: function() {
+  _onCopyColor: function () {
     clipboardHelper.copyString(this._colorToCopy);
   },
 
   /*
    * Retrieve the url for the selected image and copy it to the clipboard
    */
-  _onCopyUrl: function() {
+  _onCopyUrl: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -422,7 +422,7 @@ StyleInspectorMenu.prototype = {
   /**
    *  Show docs from MDN for a CSS property.
    */
-  _onShowMdnDocs: function() {
+  _onShowMdnDocs: function () {
     let cssPropertyName = this.styleDocument.popupNode.textContent;
     let anchor = this.styleDocument.popupNode.parentNode;
     let cssDocsTooltip = this.view.tooltips.cssDocs;
@@ -432,14 +432,14 @@ StyleInspectorMenu.prototype = {
   /**
    * Add a new rule to the current element.
    */
-  _onAddNewRule: function() {
+  _onAddNewRule: function () {
     this.view._onAddRule();
   },
 
   /**
    * Copy the rule source location of the current clicked node.
    */
-  _onCopyLocation: function() {
+  _onCopyLocation: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -450,7 +450,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property declaration of the current clicked node.
    */
-  _onCopyPropertyDeclaration: function() {
+  _onCopyPropertyDeclaration: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -462,7 +462,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property name of the current clicked node.
    */
-  _onCopyPropertyName: function() {
+  _onCopyPropertyName: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -473,7 +473,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property value of the current clicked node.
    */
-  _onCopyPropertyValue: function() {
+  _onCopyPropertyValue: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -484,7 +484,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule of the current clicked node.
    */
-  _onCopyRule: function() {
+  _onCopyRule: function () {
     let ruleEditor =
       this.styleDocument.popupNode.parentNode.offsetParent._ruleEditor;
     let rule = ruleEditor.rule;
@@ -494,7 +494,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule selector of the current clicked node.
    */
-  _onCopySelector: function() {
+  _onCopySelector: function () {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -505,12 +505,12 @@ StyleInspectorMenu.prototype = {
   /**
    *  Toggle the original sources pref.
    */
-  _onToggleOrigSources: function() {
+  _onToggleOrigSources: function () {
     let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
-  destroy: function() {
+  destroy: function () {
     this._removeContextMenuItems();
 
     // Destroy the context menu.
@@ -526,7 +526,7 @@ StyleInspectorMenu.prototype = {
     this.styleWindow = null;
   },
 
-  _removeContextMenuItems: function() {
+  _removeContextMenuItems: function () {
     this._removeContextMenuItem("menuitemAddRule", this._onAddNewRule);
     this._removeContextMenuItem("menuitemCopy", this._onCopy);
     this._removeContextMenuItem("menuitemCopyColor", this._onCopyColor);
@@ -547,7 +547,7 @@ StyleInspectorMenu.prototype = {
     this._removeContextMenuItem("menuitemSources", this._onToggleOrigSources);
   },
 
-  _removeContextMenuItem: function(itemName, callback) {
+  _removeContextMenuItem: function (itemName, callback) {
     if (this[itemName]) {
       this[itemName].removeEventListener("command", callback);
       this[itemName] = null;

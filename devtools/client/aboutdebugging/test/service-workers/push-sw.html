@@ -9,10 +9,10 @@
 "use strict";
 var sw = navigator.serviceWorker.register("push-sw.js");
 sw.then(
-  function(registration) {
+  function (registration) {
     dump("SW registered\n");
   },
-  function(error) {
+  function (error) {
     dump("SW not registered: " + error + "\n");
   }
 );

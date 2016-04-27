@@ -34,20 +34,20 @@ content.addEventListener("JSONViewInitialized", () => {
   sendAsyncMessage("Test:JsonView:JSONViewInitialized");
 }, false);
 
-addMessageListener("Test:JsonView:GetElementCount", function(msg) {
+addMessageListener("Test:JsonView:GetElementCount", function (msg) {
   let {selector} = msg.data;
   let nodeList = content.document.querySelectorAll(selector);
   sendAsyncMessage(msg.name, {count: nodeList.length});
 });
 
-addMessageListener("Test:JsonView:GetElementText", function(msg) {
+addMessageListener("Test:JsonView:GetElementText", function (msg) {
   let {selector} = msg.data;
   let element = content.document.querySelector(selector);
   let text = element ? element.textContent : null;
   sendAsyncMessage(msg.name, {text: text});
 });
 
-addMessageListener("Test:JsonView:FocusElement", function(msg) {
+addMessageListener("Test:JsonView:FocusElement", function (msg) {
   let {selector} = msg.data;
   let element = content.document.querySelector(selector);
   if (element) {
@@ -56,7 +56,7 @@ addMessageListener("Test:JsonView:FocusElement", function(msg) {
   sendAsyncMessage(msg.name);
 });
 
-addMessageListener("Test:JsonView:SendString", function(msg) {
+addMessageListener("Test:JsonView:SendString", function (msg) {
   let {selector, str} = msg.data;
   if (selector) {
     let element = content.document.querySelector(selector);
@@ -70,7 +70,7 @@ addMessageListener("Test:JsonView:SendString", function(msg) {
   sendAsyncMessage(msg.name);
 });
 
-addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
+addMessageListener("Test:JsonView:WaitForFilter", function (msg) {
   let firstRow = content.document.querySelector(
     ".jsonPanelBox .treeTable .treeRow");
 
@@ -81,7 +81,7 @@ addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   }
 
   // Wait till the first row has 'hidden' class set.
-  let observer = new content.MutationObserver(function(mutations) {
+  let observer = new content.MutationObserver(function (mutations) {
     for (let i = 0; i < mutations.length; i++) {
       let mutation = mutations[i];
       if (mutation.attributeName == "class") {

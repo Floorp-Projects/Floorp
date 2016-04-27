@@ -48,7 +48,7 @@ add_task(function* () {
 
   // Click on it and wait for the toolbox to be ready
   let onToolboxReady = new Promise(done => {
-    gDevTools.once("toolbox-ready", function(e, toolbox) {
+    gDevTools.once("toolbox-ready", function (e, toolbox) {
       done(toolbox);
     });
   });

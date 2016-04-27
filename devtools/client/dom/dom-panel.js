@@ -60,7 +60,7 @@ DomPanel.prototype = {
 
   // Initialization
 
-  initialize: function() {
+  initialize: function () {
     this.panelWin.addEventListener("devtools/content/message",
       this.onContentMessage, true);
 
@@ -95,7 +95,7 @@ DomPanel.prototype = {
 
   // Events
 
-  refresh: function() {
+  refresh: function () {
     // Do not refresh if the panel isn't visible.
     if (!this.isPanelVisible()) {
       return;
@@ -119,7 +119,7 @@ DomPanel.prototype = {
    * The panel is refreshed immediatelly if it's currently selected
    * or lazily  when the user actually selects it.
    */
-  onTabNavigated: function() {
+  onTabNavigated: function () {
     this.shouldRefresh = true;
     this.refresh();
   },
@@ -127,7 +127,7 @@ DomPanel.prototype = {
   /**
    * Make sure the panel is refreshed (if needed) when it's selected.
    */
-  onPanelVisibilityChange: function() {
+  onPanelVisibilityChange: function () {
     this.refresh();
   },
 
@@ -136,11 +136,11 @@ DomPanel.prototype = {
   /**
    * Return true if the DOM panel is currently selected.
    */
-  isPanelVisible: function() {
+  isPanelVisible: function () {
     return this._toolbox.currentToolId === "dom";
   },
 
-  getPrototypeAndProperties: function(grip) {
+  getPrototypeAndProperties: function (grip) {
     let deferred = defer();
 
     if (!grip.actor) {
@@ -177,7 +177,7 @@ DomPanel.prototype = {
     return deferred.promise;
   },
 
-  getRootGrip: function() {
+  getRootGrip: function () {
     let deferred = defer();
 
     // Attach Console. It might involve RDP communication, so wait
@@ -189,7 +189,7 @@ DomPanel.prototype = {
     return deferred.promise;
   },
 
-  postContentMessage: function(type, args) {
+  postContentMessage: function (type, args) {
     let data = {
       type: type,
       args: args,
@@ -204,7 +204,7 @@ DomPanel.prototype = {
     this.panelWin.dispatchEvent(event);
   },
 
-  onContentMessage: function(event) {
+  onContentMessage: function (event) {
     let data = event.data;
     let method = data.type;
     if (typeof this[method] == "function") {

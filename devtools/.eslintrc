@@ -329,8 +329,9 @@
     "space-before-blocks": [2, "always"],
     // Deprecated, will be removed in 1.0.
     "space-before-function-parentheses": 0,
-    // Disallow space before function opening parenthesis.
-    "space-before-function-paren": [2, "never"],
+    // Require space after keyword for anonymous functions, but disallow space
+    // after name of named functions.
+    "space-before-function-paren": [2, {"anonymous": "always", "named": "never"}],
     // Disable the rule that checks if spaces inside {} and [] are there or not.
     // Our code is split on conventions, and it'd be nice to have 2 rules
     // instead, one for [] and one for {}. So, disabling until we write them.
