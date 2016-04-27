@@ -39,9 +39,10 @@ public:
 
   virtual bool HonorPrintBackgroundSettings() override { return false; }
 
-  DrawResult PaintBorderBackground(nsRenderingContext& aRenderingContext,
+  DrawResult PaintBorder(nsRenderingContext& aRenderingContext,
                                    nsPoint aPt,
                                    const nsRect& aDirtyRect);
+  nsRect GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset = nullptr, nsRect* aOutGroupRect = nullptr);
 
   // make sure we our kids get our orient and align instead of us.
   // our child box has no content node so it will search for a parent with one.
@@ -82,16 +83,16 @@ NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
-class nsDisplayXULGroupBackground : public nsDisplayItem {
+class nsDisplayXULGroupBorder : public nsDisplayItem {
 public:
-  nsDisplayXULGroupBackground(nsDisplayListBuilder* aBuilder,
+  nsDisplayXULGroupBorder(nsDisplayListBuilder* aBuilder,
                               nsGroupBoxFrame* aFrame) :
     nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayXULGroupBackground);
+    MOZ_COUNT_CTOR(nsDisplayXULGroupBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayXULGroupBackground() {
-    MOZ_COUNT_DTOR(nsDisplayXULGroupBackground);
+  virtual ~nsDisplayXULGroupBorder() {
+    MOZ_COUNT_DTOR(nsDisplayXULGroupBorder);
   }
 #endif
 
@@ -109,13 +110,13 @@ public:
 };
 
 nsDisplayItemGeometry*
-nsDisplayXULGroupBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+nsDisplayXULGroupBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
   return new nsDisplayItemGenericImageGeometry(this, aBuilder);
 }
 
 void
-nsDisplayXULGroupBackground::ComputeInvalidationRegion(
+nsDisplayXULGroupBorder::ComputeInvalidationRegion(
   nsDisplayListBuilder* aBuilder,
   const nsDisplayItemGeometry* aGeometry,
   nsRegion* aInvalidRegion)
@@ -133,11 +134,11 @@ nsDisplayXULGroupBackground::ComputeInvalidationRegion(
 }
 
 void
-nsDisplayXULGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
+nsDisplayXULGroupBorder::Paint(nsDisplayListBuilder* aBuilder,
                                    nsRenderingContext* aCtx)
 {
   DrawResult result = static_cast<nsGroupBoxFrame*>(mFrame)
-    ->PaintBorderBackground(*aCtx, ToReferenceFrame(), mVisibleRect);
+    ->PaintBorder(*aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -149,8 +150,11 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   // Paint our background and border
   if (IsVisibleForPainting(aBuilder)) {
+    nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+      aBuilder, this, GetBackgroundRectRelativeToSelf(),
+      aLists.BorderBackground());
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayXULGroupBackground(aBuilder, this));
+      nsDisplayXULGroupBorder(aBuilder, this));
     
     DisplayOutline(aBuilder, aLists);
   }
@@ -158,8 +162,39 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
+nsRect
+nsGroupBoxFrame::GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset, nsRect* aOutGroupRect)
+{
+  const nsMargin& border = StyleBorder()->GetComputedBorder();
+
+  nsRect groupRect;
+  nsIFrame* groupBox = GetCaptionBox(groupRect);
+
+  nscoord yoff = 0;
+  if (groupBox) {
+    // If the border is smaller than the legend, move the border down
+    // to be centered on the legend.
+    nsMargin groupMargin;
+    groupBox->StyleMargin()->GetMargin(groupMargin);
+    groupRect.Inflate(groupMargin);
+
+    if (border.top < groupRect.height) {
+      yoff = (groupRect.height - border.top) / 2 + groupRect.y;
+    }
+  }
+
+  if (aOutYOffset) {
+    *aOutYOffset = yoff;
+  }
+  if (aOutGroupRect) {
+    *aOutGroupRect = groupRect;
+  }
+
+  return nsRect(0, yoff, mRect.width, mRect.height - yoff);
+}
+
 DrawResult
-nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
+nsGroupBoxFrame::PaintBorder(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
@@ -168,32 +203,16 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
   Sides skipSides;
   const nsStyleBorder* borderStyleData = StyleBorder();
   const nsMargin& border = borderStyleData->GetComputedBorder();
-  nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
 
   nsRect groupRect;
   nsIFrame* groupBox = GetCaptionBox(groupRect);
 
-  if (groupBox) {        
-    // if the border is smaller than the legend. Move the border down
-    // to be centered on the legend. 
-    nsMargin groupMargin;
-    groupBox->StyleMargin()->GetMargin(groupMargin);
-    groupRect.Inflate(groupMargin);
- 
-    if (border.top < groupRect.height)
-        yoff = (groupRect.height - border.top)/2 + groupRect.y;
-  }
-
-  nsRect rect(aPt.x, aPt.y + yoff, mRect.width, mRect.height - yoff);
-
+  nscoord yoff = 0;
+  nsRect rect = GetBackgroundRectRelativeToSelf(&yoff, &groupRect) + aPt;
   groupRect += aPt;
 
-  DrawResult result =
-    nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
-                                    aDirtyRect, rect,
-                                    nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES);
-
+  DrawResult result = DrawResult::SUCCESS;
   if (groupBox) {
     int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
