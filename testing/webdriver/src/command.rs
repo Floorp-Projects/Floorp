@@ -696,7 +696,6 @@ pub struct AddCookieParameters {
     pub path: Nullable<String>,
     pub domain: Nullable<String>,
     pub expiry: Nullable<Date>,
-    pub maxAge: Nullable<Date>,
     pub secure: bool,
     pub httpOnly: bool
 }
@@ -752,24 +751,10 @@ impl Parameters for AddCookieParameters {
             None => Nullable::Null
         };
 
-        //TODO: This is supposed to support some text format
         let expiry = match data.get("expiry") {
             Some(expiry_json) => {
                 try!(Nullable::from_json(
                     expiry_json,
-                    |x| {
-                        Ok(Date::new(try_opt!(x.as_u64(),
-                                              ErrorStatus::InvalidArgument,
-                                              "Failed to convert expiry to Date")))
-                    }))
-            },
-            None => Nullable::Null
-        };
-
-        let max_age = match data.get("maxAge") {
-            Some(max_age_json) => {
-                try!(Nullable::from_json(
-                    max_age_json,
                     |x| {
                         Ok(Date::new(try_opt!(x.as_u64(),
                                               ErrorStatus::InvalidArgument,
@@ -799,7 +784,6 @@ impl Parameters for AddCookieParameters {
             path: path,
             domain: domain,
             expiry: expiry,
-            maxAge: max_age,
             secure: secure,
             httpOnly: http_only
         })
@@ -814,7 +798,6 @@ impl ToJson for AddCookieParameters {
         data.insert("path".to_string(), self.path.to_json());
         data.insert("domain".to_string(), self.domain.to_json());
         data.insert("expiry".to_string(), self.expiry.to_json());
-        data.insert("maxAge".to_string(), self.maxAge.to_json());
         data.insert("secure".to_string(), self.secure.to_json());
         data.insert("httpOnly".to_string(), self.httpOnly.to_json());
         Json::Object(data)
