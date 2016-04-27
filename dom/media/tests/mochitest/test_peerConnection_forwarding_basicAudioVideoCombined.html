@@ -25,7 +25,7 @@ runNetworkTest(function() {
       var streams = gumTest.pcRemote._pc.getRemoteStreams();
       is(streams.length, 1, "One stream to forward");
       is(streams[0].getTracks().length, 2, "Forwarded stream has 2 tracks");
-      forwardingTest.pcLocal.attachMedia(streams[0], 'audiovideo', 'local');
+      forwardingTest.pcLocal.attachLocalStream(streams[0]);
       return Promise.resolve();
     }
   ]);
