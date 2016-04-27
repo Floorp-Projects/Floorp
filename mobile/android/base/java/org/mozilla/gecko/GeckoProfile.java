@@ -5,6 +5,30 @@
 
 package org.mozilla.gecko;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.support.annotation.WorkerThread;
+import android.text.TextUtils;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
+import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.db.StubBrowserDB;
+import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
+import org.mozilla.gecko.mozglue.ContextUtils;
+import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
+import org.mozilla.gecko.util.INIParser;
+import org.mozilla.gecko.util.INISection;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,31 +43,6 @@ import java.util.Hashtable;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.json.JSONException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
-import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.LocalBrowserDB;
-import org.mozilla.gecko.db.StubBrowserDB;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.mozglue.ContextUtils;
-import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
-import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
-import org.mozilla.gecko.util.INIParser;
-import org.mozilla.gecko.util.INISection;
-
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.SharedPreferences;
-import android.support.annotation.WorkerThread;
-import android.text.TextUtils;
-import android.util.Log;
 
 public final class GeckoProfile {
     private static final String LOGTAG = "GeckoProfile";
@@ -719,7 +718,7 @@ public final class GeckoProfile {
             return getProfileCreationDateFromTimesFile();
         } catch (final IOException e) {
             Log.d(LOGTAG, "Unable to retrieve profile creation date from times.json. Getting from system...");
-            final long packageInstallMillis = org.mozilla.gecko.util.ContextUtils.getPackageInstallTime(context);
+            final long packageInstallMillis = org.mozilla.gecko.util.ContextUtils.getCurrentPackageInfo(context).firstInstallTime;
             try {
                 persistProfileCreationDateToTimesFile(packageInstallMillis);
             } catch (final IOException ioEx) {
