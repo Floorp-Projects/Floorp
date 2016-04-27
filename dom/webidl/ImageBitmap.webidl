@@ -56,6 +56,18 @@ interface ImageBitmapFactories {
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage);
   [Throws]
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage, long aSx, long aSy, long aSw, long aSh);
+
+  // Extensions
+  // Bug 1141979 - [FoxEye] Extend ImageBitmap with interfaces to access its
+  // underlying image data
+  //
+  // Note:
+  // Overloaded functions cannot have different "extended attributes",
+  // so I cannot add preference on the extended version of createImageBitmap().
+  // To work around, I will then check the preference at run time and throw if
+  // the preference is set to be false.
+  [Throws]
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage, long aOffset, long aLength, ImageBitmapFormat aFormat, ImagePixelLayout aLayout);
 };
 
 // ImageBitmap-extensions
@@ -409,3 +421,12 @@ dictionary ChannelPixelLayout {
 };
 
 typedef sequence<ChannelPixelLayout> ImagePixelLayout;
+
+partial interface ImageBitmap {
+    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    ImageBitmapFormat               findOptimalFormat (optional sequence<ImageBitmapFormat> aPossibleFormats);
+    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    long                            mappedDataLength (ImageBitmapFormat aFormat);
+    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    Promise<ImagePixelLayout> mapDataInto (ImageBitmapFormat aFormat, BufferSource aBuffer, long aOffset);
+};
