@@ -1851,7 +1851,9 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
 NS_IMETHODIMP
 nsNPAPIPluginInstance::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 {
-  // TODO : implementation.
+  // It doesn't support suspended, so we just do something like mute/unmute.
+  WindowVolumeChanged(1.0, /* useless */
+                      aSuspend != nsISuspendedTypes::NONE_SUSPENDED);
   return NS_OK;
 }
 

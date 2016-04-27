@@ -99,8 +99,6 @@ private:
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
   bool CheckAudioChannelPermissions(AudioChannel aValue);
 
-  void SetCanPlay(float aVolume, bool aMuted);
-
   void NotifyStableState();
   void ScheduleStableStateNotification();
 
@@ -115,7 +113,7 @@ private:
   // Audio Channel Type.
   AudioChannel mAudioChannel;
   bool mIsOffline;
-  bool mAudioChannelAgentPlaying;
+  bool mAudioChannelSuspended;
 
   TimeStamp mStartedBlockingDueToBeingOnlyNode;
   StreamTime mExtraCurrentTimeSinceLastStartedBlocking;
