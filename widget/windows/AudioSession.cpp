@@ -296,10 +296,11 @@ AudioSession::Start()
 void
 AudioSession::StopInternal()
 {
-  if (mAudioSessionControl) {
+  if (mAudioSessionControl &&
+      (mState == STARTED || mState == STOPPED)) {
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
-    mAudioSessionControl = nullptr;
   }
+  mAudioSessionControl = nullptr;
 }
 
 nsresult
