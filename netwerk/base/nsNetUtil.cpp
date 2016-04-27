@@ -12,7 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Telemetry.h"
 #include "nsNetUtil.h"
-#include "nsNetUtil.inl"
+#include "nsNetUtilInlines.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsCategoryCache.h"
 #include "nsContentUtils.h"
