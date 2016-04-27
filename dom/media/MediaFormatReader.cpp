@@ -303,14 +303,21 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
       return;
     }
-    mInfo.mAudio = *mAudio.mTrackDemuxer->GetInfo()->GetAsAudioInfo();
-    UniquePtr<TrackInfo> info(mAudio.mTrackDemuxer->GetInfo());
-    for (const MetadataTag& tag : info->mTags) {
-      tags->Put(tag.mKey, tag.mValue);
+    UniquePtr<TrackInfo> audioInfo = mAudio.mTrackDemuxer->GetInfo();
+    // We actively ignore audio tracks that we know we can't play.
+    audioActive = audioInfo && audioInfo->IsValid();
+    if (audioActive) {
+      mInfo.mAudio = *audioInfo->GetAsAudioInfo();
+      for (const MetadataTag& tag : audioInfo->mTags) {
+        tags->Put(tag.mKey, tag.mValue);
+      }
+      mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
+      mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
+      mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
+    } else {
+      mAudio.mTrackDemuxer->BreakCycles();
+      mAudio.mTrackDemuxer = nullptr;
     }
-    mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
-    mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
-    mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
   }
 
   UniquePtr<EncryptionInfo> crypto = mDemuxer->GetCrypto();
