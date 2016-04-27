@@ -3171,12 +3171,10 @@ public class BrowserApp extends GeckoApp
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
             GeckoMenuItem share = (GeckoMenuItem) mMenu.findItem(R.id.share);
-            final GeckoMenuItem quickShare = (GeckoMenuItem) mMenu.findItem(R.id.quickshare);
 
             GeckoActionProvider provider = GeckoActionProvider.getForType(GeckoActionProvider.DEFAULT_MIME_TYPE, this);
 
             share.setActionProvider(provider);
-            quickShare.setActionProvider(provider);
         }
 
         return true;
@@ -3273,7 +3271,6 @@ public class BrowserApp extends GeckoApp
         final MenuItem back = aMenu.findItem(R.id.back);
         final MenuItem forward = aMenu.findItem(R.id.forward);
         final MenuItem share = aMenu.findItem(R.id.share);
-        final MenuItem quickShare = aMenu.findItem(R.id.quickshare);
         final MenuItem bookmarksList = aMenu.findItem(R.id.bookmarks_list);
         final MenuItem historyList = aMenu.findItem(R.id.history_list);
         final MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
@@ -3301,7 +3298,6 @@ public class BrowserApp extends GeckoApp
             back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
-            quickShare.setEnabled(false);
             saveAsPDF.setEnabled(false);
             print.setEnabled(false);
             findInPage.setEnabled(false);
@@ -3401,9 +3397,6 @@ public class BrowserApp extends GeckoApp
 
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
-            quickShare.setVisible(shareVisible);
-            quickShare.setEnabled(shareEnabled);
-
             // This provider also applies to the quick share menu item.
             final GeckoActionProvider provider = ((GeckoMenuItem) share).getGeckoActionProvider();
             if (provider != null) {
