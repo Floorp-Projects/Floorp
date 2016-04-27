@@ -1147,6 +1147,9 @@ var loadTexture = function(gl, url, callback) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
         callback(image);
     };
+    image.onerror = function() {
+      throw new Error('Failed to load image at: ' + image.src);
+    };
     image.src = url;
     return texture;
 };
@@ -1388,7 +1391,7 @@ var glErrorShouldBe = function(gl, glErrors, opt_msg) {
  * Links a WebGL program, throws if there are errors.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {!WebGLProgram} program The WebGLProgram to link.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  */
 var linkProgram = function(gl, program, opt_errorCallback) {
   var errFn = opt_errorCallback || testFailed;
@@ -1601,8 +1604,8 @@ var readFileList = function(url) {
  * Loads a shader.
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {string} shaderSource The shader source.
- * @param {number} shaderType The type of shader. 
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {number} shaderType The type of shader.
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @param {boolean} opt_logShaders Whether to log shader source.
  * @param {string} opt_shaderLabel Label that identifies the shader source in
  *     the log.
@@ -1660,7 +1663,7 @@ var loadShader = function(
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {file} file The URL of the shader source.
  * @param {number} type The type of shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @param {boolean} opt_logShaders Whether to log shader source.
  * @return {!WebGLShader} The created shader.
  */
@@ -1690,7 +1693,7 @@ var getScript = function(scriptId) {
  * @param {string} scriptId The id of the script tag.
  * @param {number} opt_shaderType The type of shader. If not passed in it will
  *     be derived from the type of the script tag.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @param {boolean} opt_logShaders Whether to log shader source.
  * @return {!WebGLShader} The created shader.
  */
@@ -1733,7 +1736,7 @@ var loadStandardProgram = function(gl) {
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {string} vertexShaderPath The URL of the vertex shader.
  * @param {string} fragmentShaderPath The URL of the fragment shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLProgram} The created program.
  */
 var loadProgramFromFile = function(
@@ -1765,7 +1768,7 @@ var loadProgramFromFile = function(
  *        vertex shader.
  * @param {string} fragmentScriptId The id of the script tag that contains the
  *        fragment shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLProgram} The created program.
  */
 var loadProgramFromScript = function loadProgramFromScript(
@@ -1806,7 +1809,7 @@ var createProgram = function(gl, vertexShader, fragmentShader, opt_errorCallback
  * @param {!WebGLRenderingContext} gl The WebGLRenderingContext to use.
  * @param {string} vertexShader The vertex shader source.
  * @param {string} fragmentShader The fragment shader source.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @param {boolean} opt_logShaders Whether to log shader source.
  * @return {!WebGLProgram} The created program.
  */
@@ -2358,7 +2361,7 @@ var _requestAnimFrame;
  */
 var requestAnimFrame = function(callback) {
   if (!_requestAnimFrame) {
-    _requestAnimFrame = getPrefixedProperty(window, "requestAnimationFrame") || 
+    _requestAnimFrame = getPrefixedProperty(window, "requestAnimationFrame") ||
       function(callback, element) {
         return window.setTimeout(callback, 1000 / 70);
       };
