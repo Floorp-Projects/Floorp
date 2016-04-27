@@ -2828,11 +2828,11 @@ class MOZ_STACK_CLASS FunctionValidator
 
     Encoder& encoder() { return *encoder_; }
 
-    MOZ_WARN_UNUSED_RESULT bool writeInt32Lit(int32_t i32) {
+    MOZ_MUST_USE bool writeInt32Lit(int32_t i32) {
         return encoder().writeExpr(Expr::I32Const) &&
                encoder().writeVarS32(i32);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeConstExpr(NumLit lit) {
+    MOZ_MUST_USE bool writeConstExpr(NumLit lit) {
         switch (lit.which()) {
           case NumLit::Fixnum:
           case NumLit::NegativeInt:
@@ -2860,14 +2860,14 @@ class MOZ_STACK_CLASS FunctionValidator
         }
         MOZ_CRASH("unexpected literal type");
     }
-    MOZ_WARN_UNUSED_RESULT bool writeCall(ParseNode* pn, Expr op) {
+    MOZ_MUST_USE bool writeCall(ParseNode* pn, Expr op) {
         return encoder().writeExpr(op) &&
                fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
-    MOZ_WARN_UNUSED_RESULT bool prepareCall(ParseNode* pn) {
+    MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
         return fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
-    MOZ_WARN_UNUSED_RESULT bool writeSimdOp(SimdType simdType, SimdOperation op) {
+    MOZ_MUST_USE bool writeSimdOp(SimdType simdType, SimdOperation op) {
         Expr expr = SimdToExpr(simdType, op);
         if (expr == Expr::Limit)
             return true;
