@@ -1,6 +1,6 @@
 [package]
 name = "wires"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 repository = "https://github.com/jgraham/wires"
