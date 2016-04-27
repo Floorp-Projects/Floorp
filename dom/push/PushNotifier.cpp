@@ -428,10 +428,7 @@ PushMessage::Json(JSContext* aCx,
   }
   ErrorResult error;
   BodyUtil::ConsumeJson(aCx, aResult, mDecodedText, error);
-  if (error.Failed()) {
-    return error.StealNSResult();
-  }
-  return NS_OK;
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP
