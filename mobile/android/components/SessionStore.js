@@ -193,10 +193,12 @@ SessionStore.prototype = {
         break;
       case "ClosedTabs:StartNotifications":
         this._notifyClosedTabs = true;
+        log("ClosedTabs:StartNotifications");
         this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
         break;
       case "ClosedTabs:StopNotifications":
         this._notifyClosedTabs = false;
+        log("ClosedTabs:StopNotifications");
         break;
       case "last-pb-context-exited":
         // Clear private closed tab data when we leave private browsing.
@@ -1226,6 +1228,7 @@ SessionStore.prototype = {
     // Restore the closed tabs array on the current window.
     if (state.windows[0].closedTabs) {
       this._windows[window.__SSID].closedTabs = state.windows[0].closedTabs;
+      log("_restoreWindow() loaded " + state.windows[0].closedTabs.length + " closed tabs");
     }
   },
 
@@ -1329,6 +1332,7 @@ SessionStore.prototype = {
         };
       });
 
+    log("sending " + tabs.length + " closed tabs to Java");
     Messaging.sendRequest({
       type: "ClosedTabs:Data",
       tabs: tabs
