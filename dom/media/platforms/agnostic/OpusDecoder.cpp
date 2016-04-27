@@ -103,10 +103,10 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
     return NS_ERROR_FAILURE;
   }
   int channels = mOpusParser->mChannels;
-  // No channel mapping for more than 8 channels.
-  if (channels > 8) {
-    OPUS_DEBUG("No channel mapping for more than 8 channels. Source is %d channels",
-               channels);
+
+  AudioConfig::ChannelLayout layout(channels);
+  if (!layout.IsValid()) {
+    OPUS_DEBUG("Invalid channel mapping. Source is %d channels", channels);
     return NS_ERROR_FAILURE;
   }
 
