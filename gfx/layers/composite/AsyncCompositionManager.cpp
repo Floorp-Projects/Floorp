@@ -899,7 +899,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // Transform the current local clip by this APZC's async transform. If we're
     // using containerful scrolling, then the clip is not part of the scrolled
     // frame and should not be transformed.
-    if (asyncClip && !metrics.UsesContainerScrolling()) {
+    if (asyncClip && !scrollMetadata.UsesContainerScrolling()) {
       MOZ_ASSERT(asyncTransform.Is2D());
       asyncClip = Some(TransformBy(asyncTransform, *asyncClip));
     }

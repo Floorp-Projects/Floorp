@@ -62,7 +62,7 @@ LayerHasCheckerboardingAPZC(Layer* aLayer, Color* aOutColor)
     }
     if (i.GetApzc() && i.GetApzc()->IsCurrentlyCheckerboarding()) {
       if (aOutColor) {
-        *aOutColor = i.Metrics().GetBackgroundColor();
+        *aOutColor = i.Metadata().GetBackgroundColor();
       }
       return true;
     }

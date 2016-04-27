@@ -224,6 +224,11 @@ public:
     return mFrameMetrics;
   }
 
+  ScrollMetadata& GetScrollMetadata() {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    return mScrollMetadata;
+  }
+
   const FrameMetrics& GetFrameMetrics() const {
     ReentrantMonitorAutoEnter lock(mMonitor);
     return mFrameMetrics;
