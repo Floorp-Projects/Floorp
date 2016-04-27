@@ -2095,6 +2095,22 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate)
 }
 
 void
+LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins)
+{
+    MDefinition* input = ins->input();
+    switch (input->type()) {
+      case MIRType::Double:
+      case MIRType::Float32: {
+        auto* lir = new(alloc()) LWasmTruncateToInt32(useRegisterAtStart(input));
+        define(lir, ins);
+        break;
+      }
+      default:
+        MOZ_CRASH("unexpected type in WasmTruncateToInt32");
+    }
+}
+
+void
 LIRGenerator::visitWrapInt64ToInt32(MWrapInt64ToInt32* ins)
 {
     define(new(alloc()) LWrapInt64ToInt32(useInt64AtStart(ins->input())), ins);

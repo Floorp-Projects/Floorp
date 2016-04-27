@@ -1848,14 +1848,24 @@ EmitConversionWithType(FunctionCompiler& f,
 }
 
 static bool
-EmitTruncateToI64(FunctionCompiler& f, ValType operandType, bool isUnsigned)
+EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
+             bool isUnsigned)
 {
-    if (!f.iter().readConversion(operandType, ValType::I64))
+    if (!f.iter().readConversion(operandType, resultType))
         return false;
 
     const UnaryRecord<MDefinition*>& unary = f.iter().unary();
 
-    f.iter().setResult(f.truncate<MTruncateToInt64>(unary.op, isUnsigned));
+    if (resultType == ValType::I32) {
+        if (f.mg().kind == ModuleKind::AsmJS)
+            f.iter().setResult(f.truncate<MTruncateToInt32>(unary.op, isUnsigned));
+        else
+            f.iter().setResult(f.truncate<MWasmTruncateToInt32>(unary.op, isUnsigned));
+    } else {
+        MOZ_ASSERT(resultType == ValType::I64);
+        MOZ_ASSERT(f.mg().kind == ModuleKind::Wasm);
+        f.iter().setResult(f.truncate<MTruncateToInt64>(unary.op, isUnsigned));
+    }
     return true;
 }
 
@@ -2770,10 +2780,10 @@ EmitExpr(FunctionCompiler& f)
         return EmitConversion<MNot>(f, ValType::I32, ValType::I32);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
-        return EmitConversion<MTruncateToInt32>(f, ValType::F32, ValType::I32);
+        return EmitTruncate(f, ValType::F32, ValType::I32, expr == Expr::I32TruncUF32);
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
-        return EmitConversion<MTruncateToInt32>(f, ValType::F64, ValType::I32);
+        return EmitTruncate(f, ValType::F64, ValType::I32, expr == Expr::I32TruncUF64);
       case Expr::I32WrapI64:
         return EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32);
       case Expr::I32ReinterpretF32:
@@ -2840,10 +2850,10 @@ EmitExpr(FunctionCompiler& f)
         return EmitRem(f, ValType::I64, MIRType::Int64, expr == Expr::I64RemU);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return EmitTruncateToI64(f, ValType::F32, expr == Expr::I64TruncUF32);
+        return EmitTruncate(f, ValType::F32, ValType::I64, expr == Expr::I64TruncUF32);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
-        return EmitTruncateToI64(f, ValType::F64, expr == Expr::I64TruncUF64);
+        return EmitTruncate(f, ValType::F64, ValType::I64, expr == Expr::I64TruncUF64);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
         return EmitExtendI32(f, expr == Expr::I64ExtendUI32);
