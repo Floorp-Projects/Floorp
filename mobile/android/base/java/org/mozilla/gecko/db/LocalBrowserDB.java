@@ -569,14 +569,10 @@ public class LocalBrowserDB implements BrowserDB {
             selectionArgs = DBUtils.appendSelectionArgs(selectionArgs, new String[] { urlFilter.toString() });
         }
 
-        // Our version of frecency is computed by scaling the number of visits by a multiplier
-        // that approximates Gaussian decay, based on how long ago the entry was last visited.
-        // Since we're limited by the math we can do with sqlite, we're calculating this
-        // approximation using the Cauchy distribution: multiplier = 15^2 / (age^2 + 15^2).
-        // Using 15 as our scale parameter, we get a constant 15^2 = 225. Following this math,
-        // frecencyScore = numVisits * max(1, 100 * 225 / (age*age + 225)). (See bug 704977)
-        // We also give bookmarks an extra bonus boost by adding 100 points to their frecency score.
-        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
+        // Order by combined remote+local frecency score.
+        // Local visits are preferred, so they will by far outweigh remote visits.
+        // Bookmarked history items get extra frecency points.
+        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(true, false);
 
         return cr.query(combinedUriWithLimit(limit),
                         projection,
