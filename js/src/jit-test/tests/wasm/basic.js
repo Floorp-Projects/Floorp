@@ -572,17 +572,8 @@ assertEq(numF, 6);
 
 function testSelect(type, trueVal, falseVal) {
 
-    function toJS(val) {
-        switch (val) {
-            case "infinity": return Infinity;
-            case "nan": return NaN;
-            case "-0": return -0;
-            default: return val;
-        }
-    }
-
-    var trueJS = toJS(trueVal);
-    var falseJS = toJS(falseVal);
+    var trueJS = jsify(trueVal);
+    var falseJS = jsify(falseVal);
 
     // Always true condition
     var alwaysTrue = wasmEvalText(`

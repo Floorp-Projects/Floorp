@@ -5373,12 +5373,47 @@ class MTruncateToInt64
     bool isUnsigned() const { return isUnsigned_; }
 
     bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isTruncateToInt64())
-            return false;
-        if (ins->toTruncateToInt64()->isUnsigned_ != isUnsigned_)
-            return false;
-        return congruentIfOperandsEqual(ins);
+        return congruentIfOperandsEqual(ins) &&
+               ins->toTruncateToInt64()->isUnsigned() == isUnsigned_;
     }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
+// Truncate a value to an int32, with wasm semantics: this will trap when the
+// value is out of range.
+class MWasmTruncateToInt32
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    bool isUnsigned_;
+
+    explicit MWasmTruncateToInt32(MDefinition* def, bool isUnsigned)
+      : MUnaryInstruction(def), isUnsigned_(isUnsigned)
+    {
+        setResultType(MIRType::Int32);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(WasmTruncateToInt32)
+
+    static MWasmTruncateToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool isUnsigned) {
+        return new(alloc) MWasmTruncateToInt32(def, isUnsigned);
+    }
+
+    bool isUnsigned() const {
+        return isUnsigned_;
+    }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins) &&
+               ins->toWasmTruncateToInt32()->isUnsigned() == isUnsigned_;
+    }
+
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -5512,7 +5547,7 @@ class MTruncateToInt32
     static MTruncateToInt32* New(TempAllocator& alloc, MDefinition* def) {
         return new(alloc) MTruncateToInt32(def);
     }
-    static MTruncateToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
+    static MTruncateToInt32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool _) {
         return new(alloc) MTruncateToInt32(def);
     }
 

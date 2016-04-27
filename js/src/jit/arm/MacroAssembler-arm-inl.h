@@ -682,7 +682,7 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
     ma_b(label, ConditionFromDoubleCondition(cond));
 }
 
-// There are two options for implementing emitTruncateDouble:
+// There are two options for implementing branchTruncateDouble:
 //
 // 1. Convert the floating point value to an integer, if it did not fit, then it
 // was clamped to INT_MIN/INT_MAX, and we can test it. NOTE: if the value

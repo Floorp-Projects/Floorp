@@ -32,6 +32,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void bailout(const T& t, LSnapshot* snapshot);
 
   protected:
+    void emitWasmSignedTruncateToInt32(OutOfLineWasmTruncateCheck* ool, Register output);
+
     // Load a NaN or zero into a register for an out of bounds AsmJS or static
     // typed array load.
     class OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86Shared>
@@ -279,6 +281,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitNegI(LNegI* lir);
     void visitNegD(LNegD* lir);
     void visitNegF(LNegF* lir);
+
+    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
 
     // SIMD operators
     void visitSimdValueInt32x4(LSimdValueInt32x4* lir);
