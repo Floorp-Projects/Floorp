@@ -9,24 +9,26 @@
 import os
 import re
 
-WRAPPER_TEMPLATE_FILEPATH = 'mochi-wrapper.html.template'
-WRAPPERS_DIR = '_wrappers'
-MANIFEST_TEMPLATE_FILEPATH = 'mochitest.ini.template'
-MANIFEST_OUTPUT_FILEPATH = '../_webgl-conformance.ini'
-ERRATA_FILEPATH = 'mochitest-errata.ini'
-BASE_TEST_LIST_FILENAME = '00_test_list.txt'
-FILE_PATH_PREFIX = os.path.basename(os.getcwd()) # 'webgl-conformance'
+CURRENT_VERSION = '1.0.3'
+
+# All paths in this file are based where this file is run.
+WRAPPER_TEMPLATE_FILE = 'mochi-wrapper.html.template'
+MANIFEST_TEMPLATE_FILE = 'mochitest.ini.template'
+ERRATA_FILE = 'mochitest-errata.ini'
+DEST_MANIFEST_PATHSTR = 'generated-mochitest.ini'
+
+BASE_TEST_LIST_PATHSTR = 'checkout/00_test_list.txt'
+GENERATED_PATHSTR = 'generated'
 
 SUPPORT_DIRS = [
-    'conformance',
-    'resources',
+    'checkout/conformance',
+    'checkout/resources',
 ]
 
 EXTRA_SUPPORT_FILES = [
     'always-fail.html',
-    'iframe-autoresize.js',
+    'iframe-passthrough.css',
     'mochi-single.html',
-    '../webgl-mochitest/driver-info.js',
 ]
 
 ACCEPTABLE_ERRATA_KEYS = set([
@@ -35,62 +37,112 @@ ACCEPTABLE_ERRATA_KEYS = set([
   'subsuite',
 ])
 
-GENERATED_HEADER = '''
-# This is a GENERATED FILE. Do not edit it directly.
-# Regenerated it by using `python generate-wrappers-and-manifest.py`.
-# Mark skipped tests in mochitest-errata.ini.
-# Mark failing tests in mochi-single.html.
-'''.strip()
-
 ########################################################################
 # GetTestList
 
 def GetTestList():
-    testList = []
-    AccumTests('', BASE_TEST_LIST_FILENAME, testList)
+    split = BASE_TEST_LIST_PATHSTR.rsplit('/', 1)
+    basePath = '.'
+    testListFile = split[-1]
+    if len(split) == 2:
+        basePath = split[0]
+
+    curVersion = CURRENT_VERSION
+    testList = ['always-fail.html']
+    AccumTests(basePath, testListFile, curVersion, testList)
+
+    testList = [os.path.relpath(x, basePath).replace(os.sep, '/') for x in testList]
     return testList
 
 ##############################
 # Internals
 
-def AccumTests(path, listFile, out_testList):
-    listFilePath = os.path.join(path, listFile)
-    assert os.path.exists(listFilePath), 'Bad `listFilePath`: ' + listFilePath
+def IsVersionLess(a, b):
+    aSplit = [int(x) for x in a.split('.')]
+    bSplit = [int(x) for x in b.split('.')]
 
-    with open(listFilePath, 'rb') as fIn:
+    while len(aSplit) < len(bSplit):
+        aSplit.append(0)
+
+    while len(aSplit) > len(bSplit):
+        bSplit.append(0)
+
+    for i in range(len(aSplit)):
+        aVal = aSplit[i]
+        bVal = bSplit[i]
+
+        if aVal == bVal:
+            continue
+
+        return aVal < bVal
+
+    return False
+
+
+def AccumTests(pathStr, listFile, curVersion, out_testList):
+    listPathStr = pathStr + '/' + listFile
+
+    listPath = listPathStr.replace('/', os.sep)
+    assert os.path.exists(listPath), 'Bad `listPath`: ' + listPath
+
+    with open(listPath, 'rb') as fIn:
+        lineNum = 0
         for line in fIn:
+            lineNum += 1
+
             line = line.rstrip()
             if not line:
                 continue
 
-            strippedLine = line.lstrip()
-            if strippedLine.startswith('//'):
+            curLine = line.lstrip()
+            if curLine.startswith('//'):
                 continue
-            if strippedLine.startswith('#'):
-                continue
-            if strippedLine.startswith('--'):
+            if curLine.startswith('#'):
                 continue
 
-            split = line.rsplit('.', 1)
+            shouldSkip = False
+            while curLine.startswith('--'): # '--min-version 1.0.2 foo.html'
+                (flag, curLine) = curLine.split(' ', 1)
+                if flag == '--min-version':
+                    (refVersion, curLine) = curLine.split(' ', 1)
+                    if IsVersionLess(curVersion, refVersion):
+                        shouldSkip = True
+                        break
+                elif flag == '--max-version':
+                    (refVersion, curLine) = curLine.split(' ', 1)
+                    if IsVersionLess(refVersion, curVersion):
+                        shouldSkip = True
+                        break
+                elif flag == '--slow':
+                    continue # TODO
+                else:
+                    text = 'Unknown flag \'{}\': {}:{}: {}'.format(flag, listPath,
+                                                                   lineNum, line)
+                    assert False, text
+                continue
+
+            if shouldSkip:
+                continue
+
+            split = curLine.rsplit('.', 1)
             assert len(split) == 2, 'Bad split for `line`: ' + line
             (name, ext) = split
 
             if ext == 'html':
-                newTestFilePath = os.path.join(path, line)
-                newTestFilePath = newTestFilePath.replace(os.sep, '/')
-                out_testList.append(newTestFilePath)
+                newTestFilePathStr = pathStr + '/' + curLine
+                out_testList.append(newTestFilePathStr)
                 continue
 
             assert ext == 'txt', 'Bad `ext` on `line`: ' + line
 
-            split = line.rsplit('/', 1)
+            split = curLine.rsplit('/', 1)
             nextListFile = split[-1]
-            nextPath = ''
+            nextPathStr = ''
             if len(split) != 1:
-                nextPath = split[0]
+                nextPathStr = split[0]
 
-            nextPath = os.path.join(path, nextPath)
-            AccumTests(nextPath, nextListFile, out_testList)
+            nextPathStr = pathStr + '/' + nextPathStr
+            AccumTests(nextPathStr, nextListFile, curVersion, out_testList)
             continue
 
     return
@@ -152,8 +204,7 @@ class TemplateShellSpan:
         if self.isLiteralSpan:
             return self.span
 
-        assert (self.span in templateDict,
-                '\'' + self.span + '\' not in dict!')
+        assert self.span in templateDict, '\'' + self.span + '\' not in dict!'
 
         filling = templateDict[self.span]
 
@@ -220,143 +271,185 @@ class TemplateShell:
 ########################################################################
 # Output
 
-def WriteWrappers(testWebPathList):
-    templateShell = ImportTemplate(WRAPPER_TEMPLATE_FILEPATH)
+def WriteWrappers(testWebPathStrList):
+    templateShell = ImportTemplate(WRAPPER_TEMPLATE_FILE)
 
-    if not os.path.exists(WRAPPERS_DIR):
-        os.mkdir(WRAPPERS_DIR)
-    assert os.path.isdir(WRAPPERS_DIR)
+    generatedDirPath = GENERATED_PATHSTR.replace('/', os.sep)
+    if not os.path.exists(generatedDirPath):
+        os.mkdir(generatedDirPath)
+    assert os.path.isdir(generatedDirPath)
 
-    wrapperManifestPathList = []
-    for testWebPath in testWebPathList:
+    wrapperManifestPathStrList = []
+    for testWebPathStr in testWebPathStrList:
         # Mochitests must start with 'test_' or similar, or the test
         # runner will ignore our tests.
         # The error text is "is not a valid test".
-        wrapperFilePath = 'test_' + testWebPath.replace('/', '__')
-        wrapperFilePath = os.path.join(WRAPPERS_DIR, wrapperFilePath)
+        wrapperFilePathStr = 'test_' + testWebPathStr.replace('/', '__')
+        wrapperFilePathStr = GENERATED_PATHSTR + '/' + wrapperFilePathStr
+        wrapperManifestPathStrList.append(wrapperFilePathStr)
 
         templateDict = {
-            'TEST_PATH': testWebPath,
+            'HEADER': '<!-- GENERATED FILE, DO NOT EDIT -->',
+            'TEST_PATH': testWebPathStr,
         }
 
-        print('Writing \'' + wrapperFilePath + '\'')
-        OutputFilledTemplate(templateShell, templateDict,
-                             wrapperFilePath)
-
-        wrapperManifestPath = wrapperFilePath.replace(os.sep, '/')
-        wrapperManifestPathList.append(wrapperManifestPath)
+        print 'Adding wrapper: ' + wrapperFilePathStr
+        OutputFilledTemplate(templateShell, templateDict, wrapperFilePathStr)
         continue
 
-    return wrapperManifestPathList
+    return wrapperManifestPathStrList
 
 
-def PathFromManifestDir(path):
-    print('path: ' + path)
-    ret = os.path.join(FILE_PATH_PREFIX, path)
-    return ret.replace(os.sep, '/')
+kManifestRelPathStr = os.path.relpath('.', os.path.dirname(DEST_MANIFEST_PATHSTR))
+kManifestRelPathStr = kManifestRelPathStr.replace(os.sep, '/')
+
+def ManifestPathStr(pathStr):
+    pathStr = kManifestRelPathStr + '/' + pathStr
+    return os.path.normpath(pathStr).replace(os.sep, '/')
 
 
-def WriteManifest(wrapperManifestPathList, supportFilePathList):
+def WriteManifest(wrapperPathStrList, supportPathStrList):
+    destPathStr = DEST_MANIFEST_PATHSTR
+    print 'Generating manifest: ' + destPathStr
+
     errataMap = LoadErrata()
 
     # DEFAULT_ERRATA
-    defaultHeader = '[DEFAULT]'
-    defaultErrataStr = ''
-    if defaultHeader in errataMap:
-        defaultErrataStr = '\n'.join(errataMap[defaultHeader])
-        del errataMap[defaultHeader]
+    defaultSectionName = 'DEFAULT'
+
+    defaultSectionLines = []
+    if defaultSectionName in errataMap:
+        defaultSectionLines = errataMap[defaultSectionName]
+        del errataMap[defaultSectionName]
+
+    defaultSectionStr = '\n'.join(defaultSectionLines)
 
     # SUPPORT_FILES
-    supportFilePathList = sorted(supportFilePathList)
-    supportFilePathList = [PathFromManifestDir(x) for x in supportFilePathList]
-    supportFilesStr = '\n'.join(supportFilePathList)
+    supportPathStrList = [ManifestPathStr(x) for x in supportPathStrList]
+    supportPathStrList = sorted(supportPathStrList)
+    supportFilesStr = '\n'.join(supportPathStrList)
 
     # MANIFEST_TESTS
     manifestTestLineList = []
-    for wrapperManifestPath in wrapperManifestPathList:
-        header = '[' + wrapperManifestPath + ']'
-        transformedHeader = '[' + PathFromManifestDir(wrapperManifestPath) + ']'
-        # header: '[foo.html]'
-        # transformedHeader: '[webgl-conformance/foo.html]'
+    wrapperPathStrList = sorted(wrapperPathStrList)
+    for wrapperPathStr in wrapperPathStrList:
+        #print 'wrapperPathStr: ' + wrapperPathStr
 
-        manifestTestLineList.append(transformedHeader)
+        wrapperManifestPathStr = ManifestPathStr(wrapperPathStr)
+        sectionName = '[' + wrapperManifestPathStr + ']'
+        manifestTestLineList.append(sectionName)
 
-        if not header in errataMap:
-            continue
+        if wrapperPathStr in errataMap:
+            manifestTestLineList += errataMap[wrapperPathStr]
+            del errataMap[wrapperPathStr]
 
-        errataLineList = errataMap[header]
-        del errataMap[header]
-        manifestTestLineList += errataLineList
         continue
 
-    assert not errataMap, 'Errata left in map: {}'.format(str(errataMap))
+    if errataMap:
+        print 'Errata left in map:'
+        for x in errataMap.keys():
+            print ' '*4 + x
+        assert False
 
     manifestTestsStr = '\n'.join(manifestTestLineList)
 
     # Fill the template.
     templateDict = {
-        'HEADER': GENERATED_HEADER,
-        'DEFAULT_ERRATA': defaultErrataStr,
+        'DEFAULT_ERRATA': defaultSectionStr,
         'SUPPORT_FILES': supportFilesStr,
         'MANIFEST_TESTS': manifestTestsStr,
     }
 
-    FillTemplate(MANIFEST_TEMPLATE_FILEPATH, templateDict,
-                 MANIFEST_OUTPUT_FILEPATH)
+    destPath = destPathStr.replace('/', os.sep)
+    FillTemplate(MANIFEST_TEMPLATE_FILE, templateDict, destPath)
     return
 
 ##############################
 # Internals
 
-kManifestHeaderRegex = re.compile(r'\[[^\]]*?\]')
+kManifestHeaderRegex = re.compile(r'[[]([^]]*)[]]')
+
+def LoadINI(path):
+    curSectionName = None
+    curSectionMap = {}
+
+    lineNum = 0
+
+    ret = {}
+    ret[curSectionName] = (lineNum, curSectionMap)
+
+    with open(path, 'rb') as f:
+        for line in f:
+            lineNum += 1
+
+            line = line.strip()
+            if not line:
+                continue
+
+            if line[0] in [';', '#']:
+                continue
+
+            if line[0] == '[':
+                assert line[-1] == ']', '{}:{}'.format(path, lineNum)
+
+                curSectionName = line[1:-1]
+                assert curSectionName not in ret, 'Line {}: Duplicate section: {}'.format(lineNum, line)
+
+                curSectionMap = {}
+                ret[curSectionName] = (lineNum, curSectionMap)
+                continue
+
+            split = line.split('=', 1)
+            key = split[0].strip()
+            val = ''
+            if len(split) == 2:
+                val = split[1].strip()
+
+            curSectionMap[key] = (lineNum, val)
+            continue
+
+    return ret
 
 
 def LoadErrata():
-    nodeMap = {}
+    iniMap = LoadINI(ERRATA_FILE)
 
-    nodeHeader = None
-    nodeLineList = []
-    lineNum = 0
-    with open(ERRATA_FILEPATH, 'rb') as f:
-        for line in f:
-            lineNum += 1
-            line = line.rstrip()
-            cur = line.lstrip()
-            if cur.startswith('#'):
-                continue
+    ret = {}
 
-            if not cur:
-                continue
+    for (sectionName, (sectionLineNum, sectionMap)) in iniMap.iteritems():
+        curLines = []
 
-            if not cur.startswith('['):
-                split = cur.split('=')
-                key = split[0].strip()
-                if not key in ACCEPTABLE_ERRATA_KEYS:
-                    text = 'Unacceptable errata key on line {}: {}'
-                    text = text.format(str(lineNum), key)
-                    raise Exception(text)
-                nodeLineList.append(line)
-                continue
+        if sectionName == None:
+            continue
+        elif sectionName != 'DEFAULT':
+            path = sectionName.replace('/', os.sep)
+            assert os.path.exists(path), 'Line {}: {}'.format(sectionLineNum, sectionName)
 
-            match = kManifestHeaderRegex.search(cur)
-            assert match, line
+        for (key, (lineNum, val)) in sectionMap.iteritems():
+            assert key in ACCEPTABLE_ERRATA_KEYS, 'Line {}: {}'.format(lineNum, key)
 
-            nodeHeader = match.group()
-            assert not nodeHeader in nodeMap, 'Duplicate header: ' + nodeHeader
-            nodeLineList = []
-            nodeMap[nodeHeader] = nodeLineList
+            curLine = '{} = {}'.format(key, val)
+            curLines.append(curLine)
             continue
 
-    return nodeMap
+        ret[sectionName] = curLines
+        continue
+
+    return ret
 
 ########################################################################
 
 def GetSupportFileList():
-    ret = []
-    for supportDir in SUPPORT_DIRS:
-        ret += GetFilePathListForDir(supportDir)
+    ret = EXTRA_SUPPORT_FILES[:]
 
-    ret += EXTRA_SUPPORT_FILES
+    for pathStr in SUPPORT_DIRS:
+        ret += GetFilePathListForDir(pathStr)
+        continue
+
+    for pathStr in ret:
+        path = pathStr.replace('/', os.sep)
+        assert os.path.exists(path), path + '\n\n\n' + 'pathStr: ' + str(pathStr)
+        continue
 
     return ret
 
@@ -376,11 +469,10 @@ if __name__ == '__main__':
     fileDir = os.path.dirname(__file__)
     assert not fileDir, 'Run this file from its directory, not ' + fileDir
 
-    testWebPathList = GetTestList()
+    testPathStrList = GetTestList()
+    wrapperPathStrList = WriteWrappers(testPathStrList)
 
-    wrapperFilePathList = WriteWrappers(testWebPathList)
-
-    supportFilePathList = GetSupportFileList()
-    WriteManifest(wrapperFilePathList, supportFilePathList)
+    supportPathStrList = GetSupportFileList()
+    WriteManifest(wrapperPathStrList, supportPathStrList)
 
     print('Done!')
