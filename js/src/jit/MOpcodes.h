@@ -119,7 +119,7 @@ namespace jit {
     _(ToFloat32)                                                            \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
-    _(TruncateToInt64)                                                      \
+    _(WasmTruncateToInt64)                                                  \
     _(WrapInt64ToInt32)                                                     \
     _(ExtendInt32ToInt64)                                                   \
     _(Int64ToFloatingPoint)                                                 \
