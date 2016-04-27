@@ -45,8 +45,8 @@ enum ScriptableObjectType
 };
 
 mozilla::ipc::RacyInterruptPolicy
-MediateRace(const mozilla::ipc::MessageChannel::Message& parent,
-            const mozilla::ipc::MessageChannel::Message& child);
+MediateRace(const mozilla::ipc::MessageChannel::MessageInfo& parent,
+            const mozilla::ipc::MessageChannel::MessageInfo& child);
 
 std::string
 MungePluginDsoPath(const std::string& path);

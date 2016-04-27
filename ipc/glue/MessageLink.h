@@ -62,6 +62,7 @@ class MessageListener
   public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MessageListener)
     typedef IPC::Message Message;
+    typedef IPC::MessageInfo MessageInfo;
 
     virtual ~MessageListener() { }
 
@@ -120,8 +121,8 @@ class MessageListener
     virtual void OnExitedCall() {
         NS_RUNTIMEABORT("default impl shouldn't be invoked");
     }
-    virtual RacyInterruptPolicy MediateInterruptRace(const Message& parent,
-                                                     const Message& child)
+    virtual RacyInterruptPolicy MediateInterruptRace(const MessageInfo& parent,
+                                                     const MessageInfo& child)
     {
         return RIPChildWins;
     }
