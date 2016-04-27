@@ -20,6 +20,7 @@ this.Feeds = {
   init() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("WCCR:registerProtocolHandler", this);
+    mm.addMessageListener("WCCR:registerContentHandler", this);
 
     Services.ppmm.addMessageListener("WCCR:setAutoHandler", this);
     Services.ppmm.addMessageListener("FeedConverter:addLiveBookmark", this);
