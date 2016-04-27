@@ -8,7 +8,6 @@ package org.mozilla.gecko.menu;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 
 import android.annotation.TargetApi;
@@ -156,9 +155,9 @@ public class MenuItemSwitcherLayout extends LinearLayout
             params.weight = 1.0f;
             button.setLayoutParams(params);
 
-            // Fill in the action-buttons to the left of the actual menu button.
+            // Place action buttons to the right of the actual menu item
             mActionButtons.add(button);
-            addView(button, count);
+            addView(button, count + 1);
         }
     }
 
