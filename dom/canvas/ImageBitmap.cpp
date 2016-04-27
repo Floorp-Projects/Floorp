@@ -12,9 +12,10 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
+#include "ImageBitmapUtils.h"
+#include "ImageUtils.h"
 #include "imgTools.h"
 #include "libyuv.h"
-#include "nsLayoutUtils.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -395,6 +396,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
   : mParent(aGlobal)
   , mData(aData)
   , mSurface(nullptr)
+  , mDataWrapper(new ImageUtils(mData))
   , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
   , mIsPremultipliedAlpha(aIsPremultipliedAlpha)
 {
@@ -481,7 +483,12 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 
   // Pre-multiply alpha here.
   // Apply pre-multiply alpha only if mIsPremultipliedAlpha is false.
-  if (!mIsPremultipliedAlpha) {
+  // Ignore this step if the source surface does not have alpha channel; this
+  // kind of source surfaces might come form layers::PlanarYCbCrImage.
+  if (!mIsPremultipliedAlpha &&
+      mSurface->GetFormat() != SurfaceFormat::B8G8R8X8 &&
+      mSurface->GetFormat() != SurfaceFormat::R8G8B8X8 &&
+      mSurface->GetFormat() != SurfaceFormat::X8R8G8B8) {
     MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
@@ -1405,6 +1412,230 @@ ImageBitmap::ExtensionsEnabled(JSContext* aCx, JSObject*)
     MOZ_ASSERT(workerPrivate);
     return workerPrivate->ImageBitmapExtensionsEnabled();
   }
+}
+
+// ImageBitmap extensions.
+ImageBitmapFormat
+ImageBitmap::FindOptimalFormat(const Optional<Sequence<ImageBitmapFormat>>& aPossibleFormats,
+                               ErrorResult& aRv)
+{
+  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
+
+  ImageBitmapFormat platformFormat = mDataWrapper->GetFormat();
+
+  if (!aPossibleFormats.WasPassed() ||
+      aPossibleFormats.Value().Contains(platformFormat)) {
+    return platformFormat;
+  } else {
+    // If no matching is found, FindBestMatchingFromat() returns
+    // ImageBitmapFormat::EndGuard_ and we throw an exception.
+    ImageBitmapFormat optimalFormat =
+      FindBestMatchingFromat(platformFormat, aPossibleFormats.Value());
+
+    if (optimalFormat == ImageBitmapFormat::EndGuard_) {
+      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    }
+
+    return optimalFormat;
+  }
+}
+
+int32_t
+ImageBitmap::MappedDataLength(ImageBitmapFormat aFormat, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
+
+  if (aFormat == mDataWrapper->GetFormat()) {
+    return mDataWrapper->GetBufferLength();
+  } else {
+    return CalculateImageBufferSize(aFormat, Width(), Height());
+  }
+}
+
+template<typename T>
+class MapDataIntoBufferSource
+{
+protected:
+  MapDataIntoBufferSource(JSContext* aCx,
+                          Promise *aPromise,
+                          ImageBitmap *aImageBitmap,
+                          const T& aBuffer,
+                          int32_t aOffset,
+                          ImageBitmapFormat aFormat)
+  : mPromise(aPromise)
+  , mImageBitmap(aImageBitmap)
+  , mBuffer(aCx, aBuffer.Obj())
+  , mOffset(aOffset)
+  , mFormat(aFormat)
+  {
+    MOZ_ASSERT(mPromise);
+    MOZ_ASSERT(JS_IsArrayBufferObject(mBuffer) ||
+               JS_IsArrayBufferViewObject(mBuffer));
+  }
+
+  virtual ~MapDataIntoBufferSource() = default;
+
+  void DoMapDataIntoBufferSource()
+  {
+    ErrorResult error;
+
+    // Prepare destination buffer.
+    uint8_t* bufferData = nullptr;
+    uint32_t bufferLength = 0;
+    bool isSharedMemory = false;
+    if (JS_IsArrayBufferObject(mBuffer)) {
+      js::GetArrayBufferLengthAndData(mBuffer, &bufferLength, &isSharedMemory, &bufferData);
+    } else if (JS_IsArrayBufferViewObject(mBuffer)) {
+      js::GetArrayBufferViewLengthAndData(mBuffer, &bufferLength, &isSharedMemory, &bufferData);
+    } else {
+      error.Throw(NS_ERROR_NOT_IMPLEMENTED);
+      mPromise->MaybeReject(error);
+      return;
+    }
+
+    if (NS_WARN_IF(!bufferData) || NS_WARN_IF(!bufferLength)) {
+      error.Throw(NS_ERROR_NOT_AVAILABLE);
+      mPromise->MaybeReject(error);
+      return;
+    }
+
+    // Check length.
+    const int32_t neededBufferLength =
+      mImageBitmap->MappedDataLength(mFormat, error);
+
+    if (((int32_t)bufferLength - mOffset) < neededBufferLength) {
+      error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      mPromise->MaybeReject(error);
+      return;
+    }
+
+    // Call ImageBitmapFormatUtils.
+    UniquePtr<ImagePixelLayout> layout =
+      mImageBitmap->mDataWrapper->MapDataInto(bufferData,
+                                              mOffset,
+                                              bufferLength,
+                                              mFormat,
+                                              error);
+
+    if (NS_WARN_IF(!layout)) {
+      mPromise->MaybeReject(error);
+      return;
+    }
+
+    mPromise->MaybeResolve(*layout);
+  }
+
+  RefPtr<Promise> mPromise;
+  RefPtr<ImageBitmap> mImageBitmap;
+  JS::PersistentRooted<JSObject*> mBuffer;
+  int32_t mOffset;
+  ImageBitmapFormat mFormat;
+};
+
+template<typename T>
+class MapDataIntoBufferSourceTask final : public Runnable,
+                                          public MapDataIntoBufferSource<T>
+{
+public:
+  MapDataIntoBufferSourceTask(JSContext* aCx,
+                              Promise *aPromise,
+                              ImageBitmap *aImageBitmap,
+                              const T& aBuffer,
+                              int32_t aOffset,
+                              ImageBitmapFormat aFormat)
+  : MapDataIntoBufferSource<T>(aCx, aPromise, aImageBitmap, aBuffer, aOffset, aFormat)
+  {
+  }
+
+  virtual ~MapDataIntoBufferSourceTask() = default;
+
+  NS_IMETHOD Run() override
+  {
+    MapDataIntoBufferSource<T>::DoMapDataIntoBufferSource();
+    return NS_OK;
+  }
+};
+
+template<typename T>
+class MapDataIntoBufferSourceWorkerTask final : public WorkerSameThreadRunnable,
+                                                public MapDataIntoBufferSource<T>
+{
+public:
+  MapDataIntoBufferSourceWorkerTask(JSContext* aCx,
+                                    Promise *aPromise,
+                                    ImageBitmap *aImageBitmap,
+                                    const T& aBuffer,
+                                    int32_t aOffset,
+                                    ImageBitmapFormat aFormat)
+  : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate()),
+    MapDataIntoBufferSource<T>(aCx, aPromise, aImageBitmap, aBuffer, aOffset, aFormat)
+  {
+  }
+
+  virtual ~MapDataIntoBufferSourceWorkerTask() = default;
+
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MapDataIntoBufferSource<T>::DoMapDataIntoBufferSource();
+    return true;
+  }
+};
+
+void AsyncMapDataIntoBufferSource(JSContext* aCx,
+                                  Promise *aPromise,
+                                  ImageBitmap *aImageBitmap,
+                                  const ArrayBufferViewOrArrayBuffer& aBuffer,
+                                  int32_t aOffset,
+                                  ImageBitmapFormat aFormat)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(aImageBitmap);
+
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> task;
+
+    if (aBuffer.IsArrayBuffer()) {
+      const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
+      task = new MapDataIntoBufferSourceTask<ArrayBuffer>(aCx, aPromise, aImageBitmap, buffer, aOffset, aFormat);
+    } else if (aBuffer.IsArrayBufferView()) {
+      const ArrayBufferView& bufferView = aBuffer.GetAsArrayBufferView();
+      task = new MapDataIntoBufferSourceTask<ArrayBufferView>(aCx, aPromise, aImageBitmap, bufferView, aOffset, aFormat);
+    }
+
+    NS_DispatchToCurrentThread(task); // Actually, to the main-thread.
+  } else {
+    RefPtr<WorkerSameThreadRunnable> task;
+
+    if (aBuffer.IsArrayBuffer()) {
+      const ArrayBuffer& buffer = aBuffer.GetAsArrayBuffer();
+      task = new MapDataIntoBufferSourceWorkerTask<ArrayBuffer>(aCx, aPromise, aImageBitmap, buffer, aOffset, aFormat);
+    } else if (aBuffer.IsArrayBufferView()) {
+      const ArrayBufferView& bufferView = aBuffer.GetAsArrayBufferView();
+      task = new MapDataIntoBufferSourceWorkerTask<ArrayBufferView>(aCx, aPromise, aImageBitmap, bufferView, aOffset, aFormat);
+    }
+
+    task->Dispatch(); // Actually, to the current worker-thread.
+  }
+}
+
+already_AddRefed<Promise>
+ImageBitmap::MapDataInto(JSContext* aCx,
+                         ImageBitmapFormat aFormat,
+                         const ArrayBufferViewOrArrayBuffer& aBuffer,
+                         int32_t aOffset, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mDataWrapper, "No ImageBitmapFormatUtils functionalities.");
+  MOZ_ASSERT(aCx, "No JSContext while calling ImageBitmap::MapDataInto().");
+
+  RefPtr<Promise> promise = Promise::Create(mParent, aRv);
+
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  AsyncMapDataIntoBufferSource(aCx, promise, this, aBuffer, aOffset, aFormat);
+  return promise.forget();
 }
 
 } // namespace dom
