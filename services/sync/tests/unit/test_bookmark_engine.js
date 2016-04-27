@@ -12,6 +12,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+initTestLogging("Trace");
+
 Service.engineManager.register(BookmarksEngine);
 
 add_test(function bad_record_allIDs() {
@@ -204,8 +206,7 @@ add_task(function* test_restorePromptsReupload() {
     backupFile.append("t_b_e_" + Date.now() + ".json");
 
     _("Backing up to file " + backupFile.path);
-    backupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0o600);
-    yield BookmarkJSONUtils.exportToFile(backupFile);
+    yield BookmarkJSONUtils.exportToFile(backupFile.path);
 
     _("Create a different record and sync.");
     let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
