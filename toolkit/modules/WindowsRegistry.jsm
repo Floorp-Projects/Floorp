@@ -64,10 +64,12 @@ var WindowsRegistry = {
    * @param [aRegistryNode=0]
    *        Optionally set to nsIWindowsRegKey.WOW64_64 (or nsIWindowsRegKey.WOW64_32)
    *        to access a 64-bit (32-bit) key from either a 32-bit or 64-bit application.
+   * @return True if the key was removed or never existed, false otherwise.
    */
   removeRegKey: function(aRoot, aPath, aKey, aRegistryNode=0) {
     let registry = Cc["@mozilla.org/windows-registry-key;1"].
                    createInstance(Ci.nsIWindowsRegKey);
+    let result = false;
     try {
       let mode = Ci.nsIWindowsRegKey.ACCESS_QUERY_VALUE |
                  Ci.nsIWindowsRegKey.ACCESS_SET_VALUE |
@@ -75,10 +77,14 @@ var WindowsRegistry = {
       registry.open(aRoot, aPath, mode);
       if (registry.hasValue(aKey)) {
         registry.removeValue(aKey);
+        result = !registry.hasValue(aKey);
+      } else {
+        result = true;
       }
     } catch (ex) {
     } finally {
       registry.close();
+      return result;
     }
   }
 };
