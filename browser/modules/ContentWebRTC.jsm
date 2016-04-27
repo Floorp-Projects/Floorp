@@ -284,36 +284,28 @@ function updateIndicators() {
   }
 
   for (let contentWindow of contentWindows) {
-    let camera = {}, microphone = {}, screen = {}, window = {}, app = {}, browser = {};
-    MediaManagerService.mediaCaptureWindowState(contentWindow, camera, microphone,
-                                                screen, window, app, browser);
-    let tabState = {camera: camera.value, microphone: microphone.value};
-    if (camera.value)
+    let tabState = getTabStateForContentWindow(contentWindow);
+    if (tabState.camera)
       state.showCameraIndicator = true;
-    if (microphone.value)
+    if (tabState.microphone)
       state.showMicrophoneIndicator = true;
-    if (screen.value) {
-      state.showScreenSharingIndicator = "Screen";
-      tabState.screen = "Screen";
+    if (tabState.screen) {
+      if (tabState.screen == "Screen") {
+        state.showScreenSharingIndicator = "Screen";
+      }
+      else if (tabState.screen == "Window") {
+        if (state.showScreenSharingIndicator != "Screen")
+          state.showScreenSharingIndicator = "Window";
+      }
+      else if (tabState.screen == "Application") {
+        if (!state.showScreenSharingIndicator)
+          state.showScreenSharingIndicator = "Application";
+      }
+      else if (tabState.screen == "Browser") {
+        if (!state.showScreenSharingIndicator)
+          state.showScreenSharingIndicator = "Browser";
+      }
     }
-    else if (window.value) {
-      if (state.showScreenSharingIndicator != "Screen")
-        state.showScreenSharingIndicator = "Window";
-      tabState.screen = "Window";
-    }
-    else if (app.value) {
-      if (!state.showScreenSharingIndicator)
-        state.showScreenSharingIndicator = "Application";
-      tabState.screen = "Application";
-    }
-    else if (browser.value) {
-      if (!state.showScreenSharingIndicator)
-        state.showScreenSharingIndicator = "Browser";
-      tabState.screen = "Browser";
-    }
-
-    tabState.windowId = getInnerWindowIDForWindow(contentWindow);
-    tabState.documentURI = contentWindow.document.documentURI;
     let mm = getMessageManagerForWindow(contentWindow);
     mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
   }
@@ -322,11 +314,34 @@ function updateIndicators() {
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
-  let contentWindow = Services.wm.getOuterWindowWithId(aData);
+  let contentWindow = Services.wm.getOuterWindowWithId(aData).top;
+  let tabState = getTabStateForContentWindow(contentWindow);
+  if (!tabState.camera && !tabState.microphone && !tabState.screen)
+    tabState = {windowId: tabState.windowId};
+
   let mm = getMessageManagerForWindow(contentWindow);
   if (mm)
-    mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators",
-                        {windowId: getInnerWindowIDForWindow(contentWindow)});
+    mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
+}
+
+function getTabStateForContentWindow(aContentWindow) {
+  let camera = {}, microphone = {}, screen = {}, window = {}, app = {}, browser = {};
+  MediaManagerService.mediaCaptureWindowState(aContentWindow, camera, microphone,
+                                              screen, window, app, browser);
+  let tabState = {camera: camera.value, microphone: microphone.value};
+  if (screen.value)
+    tabState.screen = "Screen";
+  else if (window.value)
+    tabState.screen = "Window";
+  else if (app.value)
+    tabState.screen = "Application";
+  else if (browser.value)
+    tabState.screen = "Browser";
+
+  tabState.windowId = getInnerWindowIDForWindow(aContentWindow);
+  tabState.documentURI = aContentWindow.document.documentURI;
+
+  return tabState;
 }
 
 function getInnerWindowIDForWindow(aContentWindow) {

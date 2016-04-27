@@ -13,6 +13,7 @@ var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");
 var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
+const {executeSoon} = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
@@ -511,13 +512,13 @@ InspectorPanel.prototype = {
     }
 
     let selfUpdate = this.updating("inspector-panel");
-    Services.tm.mainThread.dispatch(() => {
+    executeSoon(() => {
       try {
         selfUpdate(selection);
-      } catch(ex) {
+      } catch (ex) {
         console.error(ex);
       }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   },
 
   /**
