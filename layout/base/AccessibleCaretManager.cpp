@@ -867,10 +867,14 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
   Selection* selection = GetSelection();
 
   while (selection) {
+    const nsRange* anchorFocusRange = selection->GetAnchorFocusRange();
+    if (!anchorFocusRange) {
+      return;
+    }
+
     // Backup the anchor focus range since both anchor node and focus node might
     // be changed after calling Selection::Modify().
-    RefPtr<nsRange> oldAnchorFocusRange =
-      selection->GetAnchorFocusRange()->CloneRange();
+    RefPtr<nsRange> oldAnchorFocusRange = anchorFocusRange->CloneRange();
 
     // Save current Focus position, and extend the selection one char.
     nsINode* focusNode = selection->GetFocusNode();
