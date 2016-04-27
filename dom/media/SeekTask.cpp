@@ -86,6 +86,9 @@ SeekTask::SeekTask(const void* aDecoderID,
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
   mDropVideoUntilNextDiscontinuity = HasVideo();
+
+  // Configure MediaDecoderReaderWrapper.
+  SetMediaDecoderReaderWrapperCallback();
 }
 
 SeekTask::~SeekTask()
@@ -152,12 +155,11 @@ SeekTask::Discard()
   // Disconnect MDSM.
   RejectIfExist(__func__);
 
-  // Disconnect MediaDecoderReader.
+  // Disconnect MediaDecoderReaderWrapper.
   mSeekRequest.DisconnectIfExists();
-  mAudioDataRequest.DisconnectIfExists();
-  mVideoDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
   mVideoWaitRequest.DisconnectIfExists();
+  CancelMediaDecoderReaderWrapperCallback();
 
   mIsDiscarded = true;
 }
@@ -216,7 +218,7 @@ SeekTask::EnsureAudioDecodeTaskQueued()
               IsAudioDecoding(), AudioRequestStatus());
 
   if (!IsAudioDecoding() ||
-      mAudioDataRequest.Exists() ||
+      mReader->IsRequestingAudioData() ||
       mAudioWaitRequest.Exists() ||
       mSeekRequest.Exists()) {
     return NS_OK;
@@ -235,7 +237,7 @@ SeekTask::EnsureVideoDecodeTaskQueued()
              IsVideoDecoding(), VideoRequestStatus());
 
   if (!IsVideoDecoding() ||
-      mVideoDataRequest.Exists() ||
+      mReader->IsRequestingVidoeData() ||
       mVideoWaitRequest.Exists() ||
       mSeekRequest.Exists()) {
     return NS_OK;
@@ -249,7 +251,7 @@ const char*
 SeekTask::AudioRequestStatus()
 {
   AssertOwnerThread();
-  if (mAudioDataRequest.Exists()) {
+  if (mReader->IsRequestingAudioData()) {
     MOZ_DIAGNOSTIC_ASSERT(!mAudioWaitRequest.Exists());
     return "pending";
   } else if (mAudioWaitRequest.Exists()) {
@@ -262,7 +264,7 @@ const char*
 SeekTask::VideoRequestStatus()
 {
   AssertOwnerThread();
-  if (mVideoDataRequest.Exists()) {
+  if (mReader->IsRequestingVidoeData()) {
     MOZ_DIAGNOSTIC_ASSERT(!mVideoWaitRequest.Exists());
     return "pending";
   } else if (mVideoWaitRequest.Exists()) {
@@ -279,9 +281,7 @@ SeekTask::RequestAudioData()
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
              !!mSeekedAudioData, mReader->SizeOfAudioQueueInFrames());
 
-  mAudioDataRequest.Begin(mReader->RequestAudioData()
-    ->Then(OwnerThread(), __func__, this,
-           &SeekTask::OnAudioDecoded, &SeekTask::OnAudioNotDecoded));
+  mReader->RequestAudioData();
 }
 
 void
@@ -296,10 +296,7 @@ SeekTask::RequestVideoData()
                !!mSeekedVideoData, mReader->SizeOfVideoQueueInFrames(), skipToNextKeyFrame,
                currentTime.ToMicroseconds());
 
-  mVideoDataRequest.Begin(
-    mReader->RequestVideoData(skipToNextKeyFrame, currentTime)
-    ->Then(OwnerThread(), __func__, this,
-           &SeekTask::OnVideoDecoded, &SeekTask::OnVideoNotDecoded));
+  mReader->RequestVideoData(skipToNextKeyFrame, currentTime);
 }
 
 nsresult
@@ -500,7 +497,6 @@ SeekTask::OnAudioDecoded(MediaData* aAudioSample)
   AssertOwnerThread();
   RefPtr<MediaData> audio(aAudioSample);
   MOZ_ASSERT(audio);
-  mAudioDataRequest.Complete();
 
   // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
   // resolved.
@@ -553,7 +549,6 @@ SeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
 {
   AssertOwnerThread();
   SAMPLE_LOG("OnAduioNotDecoded (aReason=%u)", aReason);
-  mAudioDataRequest.Complete();
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
     // If this is a decode error, delegate to the generic error path.
@@ -602,7 +597,6 @@ SeekTask::OnVideoDecoded(MediaData* aVideoSample)
   AssertOwnerThread();
   RefPtr<MediaData> video(aVideoSample);
   MOZ_ASSERT(video);
-  mVideoDataRequest.Complete();
 
   // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
   // resolved.
@@ -657,7 +651,6 @@ SeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
 {
   AssertOwnerThread();
   SAMPLE_LOG("OnVideoNotDecoded (aReason=%u)", aReason);
-  mVideoDataRequest.Complete();
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
     // If this is a decode error, delegate to the generic error path.
@@ -710,4 +703,28 @@ SeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   }
 }
 
+void
+SeekTask::SetMediaDecoderReaderWrapperCallback()
+{
+  mAudioCallbackID =
+    mReader->SetAudioCallback(this, &SeekTask::OnAudioDecoded,
+                                    &SeekTask::OnAudioNotDecoded);
+
+  mVideoCallbackID =
+    mReader->SetVideoCallback(this, &SeekTask::OnVideoDecoded,
+                                    &SeekTask::OnVideoNotDecoded);
+
+  DECODER_LOG("SeekTask set audio callbacks: mAudioCallbackID = %d\n", (int)mAudioCallbackID);
+  DECODER_LOG("SeekTask set video callbacks: mVideoCallbackID = %d\n", (int)mAudioCallbackID);
+}
+
+void
+SeekTask::CancelMediaDecoderReaderWrapperCallback()
+{
+    DECODER_LOG("SeekTask cancel audio callbacks: mVideoCallbackID = %d\n", (int)mAudioCallbackID);
+    mReader->CancelAudioCallback(mAudioCallbackID);
+
+    DECODER_LOG("SeekTask cancel video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
+    mReader->CancelVideoCallback(mVideoCallbackID);
+}
 } // namespace mozilla
