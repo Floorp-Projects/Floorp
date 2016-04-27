@@ -36,22 +36,6 @@ builds:
         task: tasks/builds/b2g_emulator_l_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_l_debug.yml
-  emulator-jb:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_jb_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_jb_debug.yml
-  emulator:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_ics_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_ics_debug.yml
   linux:
     platforms:
       - Linux
