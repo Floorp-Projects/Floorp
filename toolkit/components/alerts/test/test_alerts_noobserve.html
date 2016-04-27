@@ -22,21 +22,35 @@
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
-const wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-             .getService(Ci.nsIWindowMediator);
+const chromeScript = SpecialPowers.loadChromeScript(_ => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-function anyXULAlertsVisible() {
-  var windows = wm.getEnumerator('alert:alert');
-  return windows.hasMoreElements();
-}
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Timer.jsm");
+
+  function anyXULAlertsVisible() {
+    var windows = Services.wm.getEnumerator("alert:alert");
+    return windows.hasMoreElements();
+  }
+
+  addMessageListener("anyXULAlertsVisible", anyXULAlertsVisible);
+
+  addMessageListener("waitForAlerts", function waitForAlerts() {
+    if (anyXULAlertsVisible()) {
+      setTimeout(waitForAlerts, 1000);
+    } else {
+      sendAsyncMessage("waitedForAlerts");
+    }
+  });
+});
 
 function waitForAlertsThenFinish() {
-  if (anyXULAlertsVisible()) {
-    setTimeout(waitForAlertsThenFinish, 1000);
-  } else {
+  chromeScript.addMessageListener("waitedForAlerts", function waitedForAlerts() {
+    chromeScript.removeMessageListener("waitedForAlerts", waitedForAlerts);
     ok(true, "Alert disappeared.");
     SimpleTest.finish();
-  }
+  });
+  chromeScript.sendAsyncMessage("waitForAlerts");
 }
 
 function runTest() {
@@ -68,7 +82,12 @@ function runTest() {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
-ok(!anyXULAlertsVisible(), "Alerts should not be present at the start of the test.");
+
+// sendSyncMessage returns an array of arrays: the outer array is from the
+// message manager, and the inner array is from the chrome script's listeners.
+// See the comment in test_SpecialPowersLoadChromeScript.html.
+var [[alertsVisible]] = chromeScript.sendSyncMessage("anyXULAlertsVisible");
+ok(!alertsVisible, "Alerts should not be present at the start of the test.");
 runTest();
 setTimeout(waitForAlertsThenFinish, 1000);
 </script>
