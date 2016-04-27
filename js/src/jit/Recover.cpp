@@ -337,7 +337,7 @@ MAdd::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Add));
-    writer.writeByte(specialization_ == MIRType_Float32);
+    writer.writeByte(specialization_ == MIRType::Float32);
     return true;
 }
 
@@ -357,7 +357,7 @@ RAdd::recover(JSContext* cx, SnapshotIterator& iter) const
     if (!js::AddValues(cx, &lhs, &rhs, &result))
         return false;
 
-    // MIRType_Float32 is a specialization embedding the fact that the result is
+    // MIRType::Float32 is a specialization embedding the fact that the result is
     // rounded to a Float32.
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;
@@ -371,7 +371,7 @@ MSub::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Sub));
-    writer.writeByte(specialization_ == MIRType_Float32);
+    writer.writeByte(specialization_ == MIRType::Float32);
     return true;
 }
 
@@ -391,7 +391,7 @@ RSub::recover(JSContext* cx, SnapshotIterator& iter) const
     if (!js::SubValues(cx, &lhs, &rhs, &result))
         return false;
 
-    // MIRType_Float32 is a specialization embedding the fact that the result is
+    // MIRType::Float32 is a specialization embedding the fact that the result is
     // rounded to a Float32.
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;
@@ -405,7 +405,7 @@ MMul::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Mul));
-    writer.writeByte(specialization_ == MIRType_Float32);
+    writer.writeByte(specialization_ == MIRType::Float32);
     MOZ_ASSERT(Mode(uint8_t(mode_)) == mode_);
     writer.writeByte(uint8_t(mode_));
     return true;
@@ -428,7 +428,7 @@ RMul::recover(JSContext* cx, SnapshotIterator& iter) const
         if (!js::MulValues(cx, &lhs, &rhs, &result))
             return false;
 
-        // MIRType_Float32 is a specialization embedding the fact that the
+        // MIRType::Float32 is a specialization embedding the fact that the
         // result is rounded to a Float32.
         if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
             return false;
@@ -447,7 +447,7 @@ MDiv::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Div));
-    writer.writeByte(specialization_ == MIRType_Float32);
+    writer.writeByte(specialization_ == MIRType::Float32);
     return true;
 }
 
@@ -466,7 +466,7 @@ RDiv::recover(JSContext* cx, SnapshotIterator& iter) const
     if (!js::DivValues(cx, &lhs, &rhs, &result))
         return false;
 
-    // MIRType_Float32 is a specialization embedding the fact that the result is
+    // MIRType::Float32 is a specialization embedding the fact that the result is
     // rounded to a Float32.
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;
@@ -830,7 +830,7 @@ MSqrt::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_Sqrt));
-    writer.writeByte(type() == MIRType_Float32);
+    writer.writeByte(type() == MIRType::Float32);
     return true;
 }
 
@@ -849,7 +849,7 @@ RSqrt::recover(JSContext* cx, SnapshotIterator& iter) const
     if (!math_sqrt_handle(cx, num, &result))
         return false;
 
-    // MIRType_Float32 is a specialization embedding the fact that the result is
+    // MIRType::Float32 is a specialization embedding the fact that the result is
     // rounded to a Float32.
     if (isFloatOperation_ && !RoundFloat32(cx, result, &result))
         return false;

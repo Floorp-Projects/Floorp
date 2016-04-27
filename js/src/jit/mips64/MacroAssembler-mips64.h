@@ -426,9 +426,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadUnboxedValue(const T& address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(address, dest.fpu());
-        else if (type == MIRType_Int32)
+        else if (type == MIRType::Int32)
             unboxInt32(address, dest.gpr());
-        else if (type == MIRType_Boolean)
+        else if (type == MIRType::Boolean)
             unboxBoolean(address, dest.gpr());
         else
             unboxNonDouble(address, dest.gpr());

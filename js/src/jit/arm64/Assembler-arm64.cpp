@@ -32,8 +32,8 @@ ABIArg
 ABIArgGenerator::next(MIRType type)
 {
     switch (type) {
-      case MIRType_Int32:
-      case MIRType_Pointer:
+      case MIRType::Int32:
+      case MIRType::Pointer:
         if (intRegIndex_ == NumIntArgRegs) {
             current_ = ABIArg(stackOffset_);
             stackOffset_ += sizeof(uintptr_t);
@@ -43,15 +43,15 @@ ABIArgGenerator::next(MIRType type)
         intRegIndex_++;
         break;
 
-      case MIRType_Float32:
-      case MIRType_Double:
+      case MIRType::Float32:
+      case MIRType::Double:
         if (floatRegIndex_ == NumFloatArgRegs) {
             current_ = ABIArg(stackOffset_);
             stackOffset_ += sizeof(double);
             break;
         }
         current_ = ABIArg(FloatRegister(floatRegIndex_,
-                                        type == MIRType_Double ? FloatRegisters::Double
+                                        type == MIRType::Double ? FloatRegisters::Double
                                                                : FloatRegisters::Single));
         floatRegIndex_++;
         break;

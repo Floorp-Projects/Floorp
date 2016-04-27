@@ -386,14 +386,14 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         mir = mir->toBox()->getOperand(0);
 
     MIRType type =
-        mir->isRecoveredOnBailout() ? MIRType_None :
-        mir->isUnused() ? MIRType_MagicOptimizedOut :
+        mir->isRecoveredOnBailout() ? MIRType::None :
+        mir->isUnused() ? MIRType::MagicOptimizedOut :
         mir->type();
 
     RValueAllocation alloc;
 
     switch (type) {
-      case MIRType_None:
+      case MIRType::None:
       {
         MOZ_ASSERT(mir->isRecoveredOnBailout());
         uint32_t index = 0;
@@ -422,19 +422,19 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         alloc = RValueAllocation::RecoverInstruction(index);
         break;
       }
-      case MIRType_Undefined:
+      case MIRType::Undefined:
         alloc = RValueAllocation::Undefined();
         break;
-      case MIRType_Null:
+      case MIRType::Null:
         alloc = RValueAllocation::Null();
         break;
-      case MIRType_Int32:
-      case MIRType_String:
-      case MIRType_Symbol:
-      case MIRType_Object:
-      case MIRType_ObjectOrNull:
-      case MIRType_Boolean:
-      case MIRType_Double:
+      case MIRType::Int32:
+      case MIRType::String:
+      case MIRType::Symbol:
+      case MIRType::Object:
+      case MIRType::ObjectOrNull:
+      case MIRType::Boolean:
+      case MIRType::Double:
       {
         LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);
         if (payload->isConstant()) {
@@ -446,7 +446,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         }
 
         JSValueType valueType =
-            (type == MIRType_ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
+            (type == MIRType::ObjectOrNull) ? JSVAL_TYPE_OBJECT : ValueTypeFromMIRType(type);
 
         MOZ_ASSERT(payload->isMemory() || payload->isRegister());
         if (payload->isMemory())
@@ -457,10 +457,10 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
             alloc = RValueAllocation::Double(ToFloatRegister(payload));
         break;
       }
-      case MIRType_Float32:
-      case MIRType_Bool32x4:
-      case MIRType_Int32x4:
-      case MIRType_Float32x4:
+      case MIRType::Float32:
+      case MIRType::Bool32x4:
+      case MIRType::Int32x4:
+      case MIRType::Float32x4:
       {
         LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);
         if (payload->isConstant()) {
@@ -478,14 +478,14 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
             alloc = RValueAllocation::AnyFloat(ToStackIndex(payload));
         break;
       }
-      case MIRType_MagicOptimizedArguments:
-      case MIRType_MagicOptimizedOut:
-      case MIRType_MagicUninitializedLexical:
+      case MIRType::MagicOptimizedArguments:
+      case MIRType::MagicOptimizedOut:
+      case MIRType::MagicUninitializedLexical:
       {
         uint32_t index;
-        Value v = MagicValue(type == MIRType_MagicOptimizedArguments
+        Value v = MagicValue(type == MIRType::MagicOptimizedArguments
                              ? JS_OPTIMIZED_ARGUMENTS
-                             : (type == MIRType_MagicOptimizedOut
+                             : (type == MIRType::MagicOptimizedOut
                                 ? JS_OPTIMIZED_OUT
                                 : JS_UNINITIALIZED_LEXICAL));
         masm.propagateOOM(graph.addConstantToPool(v, &index));
@@ -494,7 +494,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
       }
       default:
       {
-        MOZ_ASSERT(mir->type() == MIRType_Value);
+        MOZ_ASSERT(mir->type() == MIRType::Value);
         LAllocation* payload = snapshot->payloadOfSlot(*allocIndex);
 #ifdef JS_NUNBOX32
         LAllocation* type = snapshot->typeOfSlot(*allocIndex);
@@ -1535,17 +1535,17 @@ CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index, int
 {
     if (index->isConstant()) {
         Address address(base, ToInt32(index) * sizeof(Value) + offsetAdjustment);
-        masm.patchableCallPreBarrier(address, MIRType_Value);
+        masm.patchableCallPreBarrier(address, MIRType::Value);
     } else {
         BaseIndex address(base, ToRegister(index), TimesEight, offsetAdjustment);
-        masm.patchableCallPreBarrier(address, MIRType_Value);
+        masm.patchableCallPreBarrier(address, MIRType::Value);
     }
 }
 
 void
 CodeGeneratorShared::emitPreBarrier(Address address)
 {
-    masm.patchableCallPreBarrier(address, MIRType_Value);
+    masm.patchableCallPreBarrier(address, MIRType::Value);
 }
 
 Label*

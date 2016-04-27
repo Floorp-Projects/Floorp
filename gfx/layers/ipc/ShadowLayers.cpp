@@ -217,8 +217,6 @@ FixedSizeSmallShmemSectionAllocator::FixedSizeSmallShmemSectionAllocator(ShmemAl
 FixedSizeSmallShmemSectionAllocator::~FixedSizeSmallShmemSectionAllocator()
 {
   ShrinkShmemSectionHeap();
-  // Check if we're not leaking..
-  MOZ_ASSERT(mUsedShmems.empty());
 }
 
 bool

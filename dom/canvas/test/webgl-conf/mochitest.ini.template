@@ -1,0 +1,10 @@
+# This is a GENERATED FILE. Do not edit it directly.
+# Regenerated it by using `python generate-wrappers-and-manifest.py`.
+# Mark failing (fail-if) and crashing (skip-if) tests in mochitest-errata.ini.
+
+[DEFAULT]
+%%DEFAULT_ERRATA%%
+
+support-files = %%SUPPORT_FILES%%
+
+%%MANIFEST_TESTS%%

@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY window.title                 "Block Lists">
-<!ENTITY window.width                 "50em">
+<!ENTITY window.width                 "55em">
 
 <!ENTITY treehead.list.label          "List">
 <!ENTITY windowClose.key              "w">

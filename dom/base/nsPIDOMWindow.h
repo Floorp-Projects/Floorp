@@ -118,6 +118,12 @@ public:
   virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
+  /**
+   * Behavies identically to GetScriptableParent extept that it returns null
+   * if GetScriptableParent would return this window.
+   */
+  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
+
   // Inner windows only.
   virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
   virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;

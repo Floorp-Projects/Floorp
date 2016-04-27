@@ -43,18 +43,6 @@ TouchList::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
-Touch*
-TouchList::IdentifiedTouch(int32_t aIdentifier) const
-{
-  for (uint32_t i = 0; i < mPoints.Length(); ++i) {
-    Touch* point = mPoints[i];
-    if (point && point->Identifier() == aIdentifier) {
-      return point;
-    }
-  }
-  return nullptr;
-}
-
 /******************************************************************************
  * TouchEvent
  *****************************************************************************/

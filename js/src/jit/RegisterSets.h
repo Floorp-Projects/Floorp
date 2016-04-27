@@ -196,7 +196,7 @@ class TypedOrValueRegister
   public:
 
     TypedOrValueRegister()
-      : type_(MIRType_None)
+      : type_(MIRType::None)
     {}
 
     TypedOrValueRegister(MIRType type, AnyRegister reg)
@@ -206,7 +206,7 @@ class TypedOrValueRegister
     }
 
     MOZ_IMPLICIT TypedOrValueRegister(ValueOperand value)
-      : type_(MIRType_Value)
+      : type_(MIRType::Value)
     {
         dataValue() = value;
     }
@@ -216,11 +216,11 @@ class TypedOrValueRegister
     }
 
     bool hasTyped() const {
-        return type() != MIRType_None && type() != MIRType_Value;
+        return type() != MIRType::None && type() != MIRType::Value;
     }
 
     bool hasValue() const {
-        return type() == MIRType_Value;
+        return type() == MIRType::Value;
     }
 
     AnyRegister typedReg() const {

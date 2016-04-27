@@ -327,7 +327,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegi
 
             // Bail out if the value doesn't fit into a signed int32 value. This
             // is what allows MLoadUnboxedScalar to have a type() of
-            // MIRType_Int32 for UInt32 array loads.
+            // MIRType::Int32 for UInt32 array loads.
             branchTest32(Assembler::Signed, dest.gpr(), dest.gpr(), fail);
         }
         break;
@@ -453,7 +453,7 @@ MacroAssembler::loadUnboxedProperty(T address, JSValueType type, TypedOrValueReg
     switch (type) {
       case JSVAL_TYPE_INT32: {
           // Handle loading an int32 into a double reg.
-          if (output.type() == MIRType_Double) {
+          if (output.type() == MIRType::Double) {
               convertInt32ToDouble(address, output.typedReg().fpu());
               break;
           }
@@ -568,7 +568,7 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
             else
                 StoreUnboxedFailure(*this, failure);
         } else if (value.reg().hasTyped()) {
-            if (value.reg().type() == MIRType_Boolean)
+            if (value.reg().type() == MIRType::Boolean)
                 store8(value.reg().typedReg().gpr(), address);
             else
                 StoreUnboxedFailure(*this, failure);
@@ -586,7 +586,7 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
             else
                 StoreUnboxedFailure(*this, failure);
         } else if (value.reg().hasTyped()) {
-            if (value.reg().type() == MIRType_Int32)
+            if (value.reg().type() == MIRType::Int32)
                 store32(value.reg().typedReg().gpr(), address);
             else
                 StoreUnboxedFailure(*this, failure);
@@ -606,10 +606,10 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
                 StoreUnboxedFailure(*this, failure);
             }
         } else if (value.reg().hasTyped()) {
-            if (value.reg().type() == MIRType_Int32) {
+            if (value.reg().type() == MIRType::Int32) {
                 convertInt32ToDouble(value.reg().typedReg().gpr(), ScratchDoubleReg);
                 storeDouble(ScratchDoubleReg, address);
-            } else if (value.reg().type() == MIRType_Double) {
+            } else if (value.reg().type() == MIRType::Double) {
                 storeDouble(value.reg().typedReg().fpu(), address);
             } else {
                 StoreUnboxedFailure(*this, failure);
@@ -636,8 +636,8 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
             else
                 StoreUnboxedFailure(*this, failure);
         } else if (value.reg().hasTyped()) {
-            MOZ_ASSERT(value.reg().type() != MIRType_Null);
-            if (value.reg().type() == MIRType_Object)
+            MOZ_ASSERT(value.reg().type() != MIRType::Null);
+            if (value.reg().type() == MIRType::Object)
                 storePtr(value.reg().typedReg().gpr(), address);
             else
                 StoreUnboxedFailure(*this, failure);
@@ -659,7 +659,7 @@ MacroAssembler::storeUnboxedProperty(T address, JSValueType type,
             else
                 StoreUnboxedFailure(*this, failure);
         } else if (value.reg().hasTyped()) {
-            if (value.reg().type() == MIRType_String)
+            if (value.reg().type() == MIRType::String)
                 storePtr(value.reg().typedReg().gpr(), address);
             else
                 StoreUnboxedFailure(*this, failure);
@@ -1690,11 +1690,11 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
 
     bind(&isDouble);
     FloatRegister tmp = output;
-    if (outputType == MIRType_Float32 && hasMultiAlias())
+    if (outputType == MIRType::Float32 && hasMultiAlias())
         tmp = ScratchDoubleReg;
 
     unboxDouble(value, tmp);
-    if (outputType == MIRType_Float32)
+    if (outputType == MIRType::Float32)
         convertDoubleToFloat32(tmp, output);
 
     bind(&done);
@@ -1761,16 +1761,16 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
         return;
     }
 
-    bool outputIsDouble = outputType == MIRType_Double;
+    bool outputIsDouble = outputType == MIRType::Double;
     switch (src.type()) {
-      case MIRType_Null:
+      case MIRType::Null:
         loadConstantFloatingPoint(0.0, 0.0f, output, outputType);
         break;
-      case MIRType_Boolean:
-      case MIRType_Int32:
+      case MIRType::Boolean:
+      case MIRType::Int32:
         convertInt32ToFloatingPoint(src.typedReg().gpr(), output, outputType);
         break;
-      case MIRType_Float32:
+      case MIRType::Float32:
         if (outputIsDouble) {
             convertFloat32ToDouble(src.typedReg().fpu(), output);
         } else {
@@ -1778,7 +1778,7 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
                 moveFloat32(src.typedReg().fpu(), output);
         }
         break;
-      case MIRType_Double:
+      case MIRType::Double:
         if (outputIsDouble) {
             if (src.typedReg().fpu() != output)
                 moveDouble(src.typedReg().fpu(), output);
@@ -1786,12 +1786,12 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
             convertDoubleToFloat32(src.typedReg().fpu(), output);
         }
         break;
-      case MIRType_Object:
-      case MIRType_String:
-      case MIRType_Symbol:
+      case MIRType::Object:
+      case MIRType::String:
+      case MIRType::Symbol:
         jump(fail);
         break;
-      case MIRType_Undefined:
+      case MIRType::Undefined:
         loadConstantFloatingPoint(GenericNaN(), float(GenericNaN()), output, outputType);
         break;
       default:
@@ -1838,10 +1838,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
-    maybeBranchTestType(MIRType_Int32, maybeInput, tag, &isInt32);
+    maybeBranchTestType(MIRType::Int32, maybeInput, tag, &isInt32);
     if (conversion == IntConversion_Any || conversion == IntConversion_NumbersOrBoolsOnly)
-        maybeBranchTestType(MIRType_Boolean, maybeInput, tag, &isBool);
-    maybeBranchTestType(MIRType_Double, maybeInput, tag, &isDouble);
+        maybeBranchTestType(MIRType::Boolean, maybeInput, tag, &isBool);
+    maybeBranchTestType(MIRType::Double, maybeInput, tag, &isDouble);
 
     if (conversion == IntConversion_Any) {
         // If we are not truncating, we fail for anything that's not
@@ -1854,10 +1854,10 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition* maybeInput,
 
           case IntConversion_Truncate:
           case IntConversion_ClampToUint8:
-            maybeBranchTestType(MIRType_Null, maybeInput, tag, &isNull);
+            maybeBranchTestType(MIRType::Null, maybeInput, tag, &isNull);
             if (handleStrings)
-                maybeBranchTestType(MIRType_String, maybeInput, tag, &isString);
-            maybeBranchTestType(MIRType_Object, maybeInput, tag, fail);
+                maybeBranchTestType(MIRType::String, maybeInput, tag, &isString);
+            maybeBranchTestType(MIRType::Object, maybeInput, tag, fail);
             branchTestUndefined(Assembler::NotEqual, tag, fail);
             break;
         }
@@ -1985,28 +1985,28 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
     }
 
     switch (src.type()) {
-      case MIRType_Undefined:
-      case MIRType_Null:
+      case MIRType::Undefined:
+      case MIRType::Null:
         move32(Imm32(0), output);
         break;
-      case MIRType_Boolean:
-      case MIRType_Int32:
+      case MIRType::Boolean:
+      case MIRType::Int32:
         if (src.typedReg().gpr() != output)
             move32(src.typedReg().gpr(), output);
-        if (src.type() == MIRType_Int32 && behavior == IntConversion_ClampToUint8)
+        if (src.type() == MIRType::Int32 && behavior == IntConversion_ClampToUint8)
             clampIntToUint8(output);
         break;
-      case MIRType_Double:
+      case MIRType::Double:
         convertDoubleToInt(src.typedReg().fpu(), output, temp, nullptr, fail, behavior);
         break;
-      case MIRType_Float32:
+      case MIRType::Float32:
         // Conversion to Double simplifies implementation at the expense of performance.
         convertFloat32ToDouble(src.typedReg().fpu(), temp);
         convertDoubleToInt(temp, output, temp, nullptr, fail, behavior);
         break;
-      case MIRType_String:
-      case MIRType_Symbol:
-      case MIRType_Object:
+      case MIRType::String:
+      case MIRType::Symbol:
+      case MIRType::Object:
         jump(fail);
         break;
       default:
@@ -2256,7 +2256,7 @@ MacroAssembler::Push(TypedOrValueRegister v)
         Push(v.valueReg());
     } else if (IsFloatingPointType(v.type())) {
         FloatRegister reg = v.typedReg().fpu();
-        if (v.type() == MIRType_Float32) {
+        if (v.type() == MIRType::Float32) {
             convertFloat32ToDouble(reg, ScratchDoubleReg);
             reg = ScratchDoubleReg;
         }
@@ -2427,13 +2427,13 @@ MacroAssembler::passABIArg(const MoveOperand& from, MoveOp::Type type)
     ABIArg arg;
     switch (type) {
       case MoveOp::FLOAT32:
-        arg = abiArgs_.next(MIRType_Float32);
+        arg = abiArgs_.next(MIRType::Float32);
         break;
       case MoveOp::DOUBLE:
-        arg = abiArgs_.next(MIRType_Double);
+        arg = abiArgs_.next(MIRType::Double);
         break;
       case MoveOp::GENERAL:
-        arg = abiArgs_.next(MIRType_Pointer);
+        arg = abiArgs_.next(MIRType::Pointer);
         break;
       default:
         MOZ_CRASH("Unexpected argument type");
@@ -2520,25 +2520,25 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
 {
     if (!maybeDef || maybeDef->mightBeType(type)) {
         switch (type) {
-          case MIRType_Null:
+          case MIRType::Null:
             branchTestNull(Equal, tag, label);
             break;
-          case MIRType_Boolean:
+          case MIRType::Boolean:
             branchTestBoolean(Equal, tag, label);
             break;
-          case MIRType_Int32:
+          case MIRType::Int32:
             branchTestInt32(Equal, tag, label);
             break;
-          case MIRType_Double:
+          case MIRType::Double:
             branchTestDouble(Equal, tag, label);
             break;
-          case MIRType_String:
+          case MIRType::String:
             branchTestString(Equal, tag, label);
             break;
-          case MIRType_Symbol:
+          case MIRType::Symbol:
             branchTestSymbol(Equal, tag, label);
             break;
-          case MIRType_Object:
+          case MIRType::Object:
             branchTestObject(Equal, tag, label);
             break;
           default:
@@ -2553,20 +2553,20 @@ void
 MacroAssembler::BranchType::emit(MacroAssembler& masm)
 {
     MOZ_ASSERT(isInitialized());
-    MIRType mirType = MIRType_None;
+    MIRType mirType = MIRType::None;
 
     if (type_.isPrimitive()) {
         if (type_.isMagicArguments())
-            mirType = MIRType_MagicOptimizedArguments;
+            mirType = MIRType::MagicOptimizedArguments;
         else
             mirType = MIRTypeFromValueType(type_.primitive());
     } else if (type_.isAnyObject()) {
-        mirType = MIRType_Object;
+        mirType = MIRType::Object;
     } else {
         MOZ_CRASH("Unknown conversion to mirtype");
     }
 
-    if (mirType == MIRType_Double)
+    if (mirType == MIRType::Double)
         masm.branchTestNumber(cond(), reg(), jump());
     else
         masm.branchTestMIRType(cond(), reg(), mirType, jump());

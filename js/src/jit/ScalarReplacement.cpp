@@ -142,7 +142,7 @@ IsLambdaEscaped(MLambda* lambda, JSObject* obj)
 static bool
 IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
 {
-    MOZ_ASSERT(ins->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType::Object);
     MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate() ||
                ins->isNewCallObject() || ins->isFunctionEnvironment());
 
@@ -781,7 +781,7 @@ IndexOf(MDefinition* ins, int32_t* res)
     if (indexDef->isToInt32())
         indexDef = indexDef->toToInt32()->getOperand(0);
     MConstant* indexDefConst = indexDef->maybeConstantValue();
-    if (!indexDefConst || indexDefConst->type() != MIRType_Int32)
+    if (!indexDefConst || indexDefConst->type() != MIRType::Int32)
         return false;
     *res = indexDefConst->toInt32();
     return true;
@@ -796,7 +796,7 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
     JitSpewIndent spewIndent(JitSpew_Escape);
 
     for (MUseIterator i(def->usesBegin()); i != def->usesEnd(); i++) {
-        // The MIRType_Elements cannot be captured in a resume point as
+        // The MIRType::Elements cannot be captured in a resume point as
         // it does not represent a value allocation.
         MDefinition* access = (*i)->consumer()->toDefinition();
 
@@ -858,7 +858,7 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
             }
 
             // We are not yet encoding magic hole constants in resume points.
-            if (access->toStoreElement()->value()->type() == MIRType_MagicHole) {
+            if (access->toStoreElement()->value()->type() == MIRType::MagicHole) {
                 JitSpewDef(JitSpew_Escape, "has a store element with an magic-hole constant\n", access);
                 return true;
             }
@@ -894,7 +894,7 @@ IsElementEscaped(MElements* def, uint32_t arraySize)
 static bool
 IsArrayEscaped(MInstruction* ins)
 {
-    MOZ_ASSERT(ins->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType::Object);
     MOZ_ASSERT(ins->isNewArray());
     uint32_t length = ins->toNewArray()->length();
 

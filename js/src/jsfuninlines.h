@@ -16,9 +16,8 @@ namespace js {
 inline const char*
 GetFunctionNameBytes(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
 {
-    JSAtom* atom = fun->atom();
-    if (atom)
-        return bytes->encodeLatin1(cx, atom);
+    if (JSAtom* name = fun->name())
+        return bytes->encodeLatin1(cx, name);
     return js_anonymous_str;
 }
 

@@ -73,6 +73,8 @@ public:
     Mutated();
   }
 
+  const virtual gfx::TiledIntRegion& GetInvalidRegion() override;
+
   MOZ_LAYER_DECL_NAME("PaintedLayerComposite", TYPE_PAINTED)
 
 protected:

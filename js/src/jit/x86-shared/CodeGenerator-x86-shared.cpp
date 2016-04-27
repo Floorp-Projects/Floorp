@@ -281,17 +281,17 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
             masm.storePtr(ToRegister(ins->arg()), dst);
         } else {
             switch (mir->input()->type()) {
-              case MIRType_Double:
-              case MIRType_Float32:
+              case MIRType::Double:
+              case MIRType::Float32:
                 masm.storeDouble(ToFloatRegister(ins->arg()), dst);
                 return;
               // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
               // stack offsets are SIMD-aligned.
-              case MIRType_Int32x4:
-              case MIRType_Bool32x4:
+              case MIRType::Int32x4:
+              case MIRType::Bool32x4:
                 masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
                 return;
-              case MIRType_Float32x4:
+              case MIRType::Float32x4:
                 masm.storeAlignedFloat32x4(ToFloatRegister(ins->arg()), dst);
                 return;
               default: break;
@@ -311,7 +311,7 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
 
     masm.test32(cond, cond);
 
-    if (mirType == MIRType_Int32) {
+    if (mirType == MIRType::Int32) {
         Register out = ToRegister(ins->output());
         MOZ_ASSERT(ToRegister(ins->trueExpr()) == out, "true expr input is reused for output");
         masm.cmovz(falseExpr, out);
@@ -324,12 +324,12 @@ CodeGeneratorX86Shared::visitAsmSelect(LAsmSelect* ins)
     Label done;
     masm.j(Assembler::NonZero, &done);
 
-    if (mirType == MIRType_Float32) {
+    if (mirType == MIRType::Float32) {
         if (falseExpr.kind() == Operand::FPREG)
             masm.moveFloat32(ToFloatRegister(ins->falseExpr()), out);
         else
             masm.loadFloat32(falseExpr, out);
-    } else if (mirType == MIRType_Double) {
+    } else if (mirType == MIRType::Double) {
         if (falseExpr.kind() == Operand::FPREG)
             masm.moveDouble(ToFloatRegister(ins->falseExpr()), out);
         else
@@ -349,19 +349,21 @@ CodeGeneratorX86Shared::visitAsmReinterpret(LAsmReinterpret* lir)
     MAsmReinterpret* ins = lir->mir();
 
     MIRType to = ins->type();
-    DebugOnly<MIRType> from = ins->input()->type();
+#ifdef DEBUG
+    MIRType from = ins->input()->type();
+#endif
 
     switch (to) {
-      case MIRType_Int32:
-        MOZ_ASSERT(from == MIRType_Float32);
+      case MIRType::Int32:
+        MOZ_ASSERT(from == MIRType::Float32);
         masm.vmovd(ToFloatRegister(lir->input()), ToRegister(lir->output()));
         break;
-      case MIRType_Float32:
-        MOZ_ASSERT(from == MIRType_Int32);
+      case MIRType::Float32:
+        MOZ_ASSERT(from == MIRType::Int32);
         masm.vmovd(ToRegister(lir->input()), ToFloatRegister(lir->output()));
         break;
-      case MIRType_Double:
-      case MIRType_Int64:
+      case MIRType::Double:
+      case MIRType::Int64:
         MOZ_CRASH("not handled by this LIR opcode");
       default:
         MOZ_CRASH("unexpected AsmReinterpret");
@@ -2583,7 +2585,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
 void
 CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4* ins)
 {
-    MOZ_ASSERT(ins->mir()->type() == MIRType_Int32x4 || ins->mir()->type() == MIRType_Bool32x4);
+    MOZ_ASSERT(ins->mir()->type() == MIRType::Int32x4 || ins->mir()->type() == MIRType::Bool32x4);
 
     FloatRegister output = ToFloatRegister(ins->output());
     if (AssemblerX86Shared::HasSSE41()) {
@@ -2607,7 +2609,7 @@ CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4* ins)
 void
 CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4* ins)
 {
-    MOZ_ASSERT(ins->mir()->type() == MIRType_Float32x4);
+    MOZ_ASSERT(ins->mir()->type() == MIRType::Float32x4);
 
     FloatRegister r0 = ToFloatRegister(ins->getOperand(0));
     FloatRegister r1 = ToFloatRegister(ins->getOperand(1));
@@ -2634,14 +2636,14 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4* ins)
     JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
 
     switch (mir->type()) {
-      case MIRType_Int32x4:
-      case MIRType_Bool32x4: {
+      case MIRType::Int32x4:
+      case MIRType::Bool32x4: {
         Register r = ToRegister(ins->getOperand(0));
         masm.vmovd(r, output);
         masm.vpshufd(0, output, output);
         break;
       }
-      case MIRType_Float32x4: {
+      case MIRType::Float32x4: {
         FloatRegister r = ToFloatRegister(ins->getOperand(0));
         FloatRegister rCopy = masm.reusedInputFloat32x4(r, output);
         masm.vshufps(0, rCopy, rCopy, output);
@@ -2662,10 +2664,10 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
         return;
 
     switch (ins->mir()->type()) {
-      case MIRType_Int32x4:
+      case MIRType::Int32x4:
         masm.vmovdqa(input, output);
         break;
-      case MIRType_Float32x4:
+      case MIRType::Float32x4:
         masm.vmovaps(input, output);
         break;
       default:
@@ -3532,19 +3534,19 @@ CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4* ins)
     MSimdBinaryBitwise::Operation op = ins->operation();
     switch (op) {
       case MSimdBinaryBitwise::and_:
-        if (ins->type() == MIRType_Float32x4)
+        if (ins->type() == MIRType::Float32x4)
             masm.vandps(rhs, lhs, output);
         else
             masm.vpand(rhs, lhs, output);
         return;
       case MSimdBinaryBitwise::or_:
-        if (ins->type() == MIRType_Float32x4)
+        if (ins->type() == MIRType::Float32x4)
             masm.vorps(rhs, lhs, output);
         else
             masm.vpor(rhs, lhs, output);
         return;
       case MSimdBinaryBitwise::xor_:
-        if (ins->type() == MIRType_Float32x4)
+        if (ins->type() == MIRType::Float32x4)
             masm.vxorps(rhs, lhs, output);
         else
             masm.vpxor(rhs, lhs, output);

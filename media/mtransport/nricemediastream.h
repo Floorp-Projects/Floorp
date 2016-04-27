@@ -164,6 +164,10 @@ class NrIceMediaStream {
                          UniquePtr<NrIceCandidate>* local,
                          UniquePtr<NrIceCandidate>* remote);
 
+  // Get the current ICE consent send status plus the timeval of the last
+  // consent update time.
+  nsresult GetConsentStatus(int component, bool *can_send, struct timeval *ts);
+
   // The number of components
   size_t components() const { return components_; }
 
