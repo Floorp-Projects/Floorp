@@ -441,15 +441,13 @@ var commandsPeerConnectionOfferAnswer = [
 
   function PC_LOCAL_CHECK_ICE_CONNECTION_TYPE(test) {
     return test.pcLocal.getStats().then(stats => {
-      test.pcLocal.checkStatsIceConnectionType(stats,
-          test.testOptions.expectedLocalCandidateType);
+      test.pcLocal.checkStatsIceConnectionType(stats);
     });
   },
 
   function PC_REMOTE_CHECK_ICE_CONNECTION_TYPE(test) {
     return test.pcRemote.getStats().then(stats => {
-      test.pcRemote.checkStatsIceConnectionType(stats,
-          test.testOptions.expectedRemoteCandidateType);
+      test.pcRemote.checkStatsIceConnectionType(stats);
     });
   },
 
