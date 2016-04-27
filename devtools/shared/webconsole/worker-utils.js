@@ -12,9 +12,9 @@
 // is stubbed out to prevent errors, and will need to implemented
 // for Bug 1209353.
 
-exports.Utils = { L10n: function() {} };
-exports.ConsoleServiceListener = function() {};
-exports.ConsoleAPIListener = function() {};
-exports.addWebConsoleCommands = function() {};
-exports.ConsoleReflowListener = function() {};
+exports.Utils = { L10n: function () {} };
+exports.ConsoleServiceListener = function () {};
+exports.ConsoleAPIListener = function () {};
+exports.addWebConsoleCommands = function () {};
+exports.ConsoleReflowListener = function () {};
 exports.CONSOLE_WORKER_IDS = [];

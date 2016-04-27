@@ -71,7 +71,7 @@ let reducers = {
 
 };
 
-module.exports = function(viewports = INITIAL_VIEWPORTS, action) {
+module.exports = function (viewports = INITIAL_VIEWPORTS, action) {
   let reducer = reducers[action.type];
   if (!reducer) {
     return viewports;

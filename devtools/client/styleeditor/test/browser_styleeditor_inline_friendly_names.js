@@ -51,7 +51,7 @@ function saveFirstInlineStyleSheet(ui) {
 
   let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
 
-  editor.saveToFile(destFile, function(file) {
+  editor.saveToFile(destFile, function (file) {
     ok(file, "File was correctly saved.");
     deferred.resolve();
   });

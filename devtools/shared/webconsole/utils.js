@@ -46,7 +46,7 @@ var WebConsoleUtils = {
    * @param string string
    * @return nsISupportsString
    */
-  supportsString: function(string) {
+  supportsString: function (string) {
     let str = Cc["@mozilla.org/supports-string;1"]
               .createInstance(Ci.nsISupportsString);
     str.data = string;
@@ -59,7 +59,7 @@ var WebConsoleUtils = {
    *
    * @return string
    */
-  getWorkerType: function(message) {
+  getWorkerType: function (message) {
     let id = message ? message.innerID : null;
     return CONSOLE_WORKER_IDS[CONSOLE_WORKER_IDS.indexOf(id)] || null;
   },
@@ -80,7 +80,7 @@ var WebConsoleUtils = {
    * @return object
    *         The cloned object.
    */
-  cloneObject: function(object, recursive, filter) {
+  cloneObject: function (object, recursive, filter) {
     if (typeof object != "object") {
       return object;
     }
@@ -89,7 +89,7 @@ var WebConsoleUtils = {
 
     if (Array.isArray(object)) {
       temp = [];
-      Array.forEach(object, function(value, index) {
+      Array.forEach(object, function (value, index) {
         if (!filter || filter(index, value, object)) {
           temp.push(recursive ? WebConsoleUtils.cloneObject(value) : value);
         }
@@ -116,7 +116,7 @@ var WebConsoleUtils = {
    * @param nsIDOMNode to
    *        The destination node.
    */
-  copyTextStyles: function(from, to) {
+  copyTextStyles: function (from, to) {
     let win = from.ownerDocument.defaultView;
     let style = win.getComputedStyle(from);
     to.style.fontFamily = style.getPropertyCSSValue("font-family").cssText;
@@ -132,7 +132,7 @@ var WebConsoleUtils = {
    * @return integer
    *         Inner ID for the given window.
    */
-  getInnerWindowId: function(window) {
+  getInnerWindowId: function (window) {
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
              .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
   },
@@ -145,7 +145,7 @@ var WebConsoleUtils = {
    * @return Array
    *         list of inner window ids.
    */
-  getInnerWindowIDsForFrames: function(window) {
+  getInnerWindowIDsForFrames: function (window) {
     let innerWindowID = this.getInnerWindowId(window);
     let ids = [innerWindowID];
 
@@ -166,7 +166,7 @@ var WebConsoleUtils = {
    * @return integer
    *         Outer ID for the given window.
    */
-  getOuterWindowId: function(window) {
+  getOuterWindowId: function (window) {
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
            .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   },
@@ -179,7 +179,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the given function is native, false otherwise.
    */
-  isNativeFunction: function(func) {
+  isNativeFunction: function (func) {
     return typeof func == "function" && !("prototype" in func);
   },
 
@@ -194,7 +194,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the given property is a getter, false otherwise.
    */
-  isNonNativeGetter: function(object, prop) {
+  isNonNativeGetter: function (object, prop) {
     if (typeof object != "object") {
       return false;
     }
@@ -212,7 +212,7 @@ var WebConsoleUtils = {
    * @return object
    *         Property descriptor.
    */
-  getPropertyDescriptor: function(object, prop) {
+  getPropertyDescriptor: function (object, prop) {
     let desc = null;
     while (object) {
       try {
@@ -253,7 +253,7 @@ var WebConsoleUtils = {
    *         1 if a.name > b.name,
    *         0 otherwise.
    */
-  propertiesSort: function(a, b) {
+  propertiesSort: function (a, b) {
     // Convert the pair.name to a number for later sorting.
     let number = parseFloat(a.name);
     let bNumber = parseFloat(b.name);
@@ -286,7 +286,7 @@ var WebConsoleUtils = {
    * @return mixed
    *         The value grip.
    */
-  createValueGrip: function(value, objectWrapper) {
+  createValueGrip: function (value, objectWrapper) {
     switch (typeof value) {
       case "boolean":
         return value;
@@ -328,7 +328,7 @@ var WebConsoleUtils = {
    *         True if the given object is an iterator or a generator, otherwise
    *         false is returned.
    */
-  isIteratorOrGenerator: function(object) {
+  isIteratorOrGenerator: function (object) {
     if (object === null) {
       return false;
     }
@@ -364,7 +364,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the content is mixed, false if not.
    */
-  isMixedHTTPSRequest: function(request, location) {
+  isMixedHTTPSRequest: function (request, location) {
     try {
       let requestURI = Services.io.newURI(request, null, null);
       let contentURI = Services.io.newURI(location, null, null);
@@ -382,7 +382,7 @@ var WebConsoleUtils = {
    * @return string
    *         Function name.
    */
-  getFunctionName: function(func) {
+  getFunctionName: function (func) {
     let name = null;
     if (func.name) {
       name = func.name;
@@ -417,7 +417,7 @@ var WebConsoleUtils = {
    * @return string
    *         The object class name.
    */
-  getObjectClassName: function(object) {
+  getObjectClassName: function (object) {
     if (object === null) {
       return "null";
     }
@@ -457,7 +457,7 @@ var WebConsoleUtils = {
    * @return boolean
    *         True if the given value is a grip with an actor.
    */
-  isActorGrip: function(grip) {
+  isActorGrip: function (grip) {
     return grip && typeof (grip) == "object" && grip.actor;
   },
 
@@ -493,8 +493,8 @@ var WebConsoleUtils = {
    * @returns A function to be added as a handler to 'paste' and
    *'drop' events on the input field
    */
-  pasteHandlerGen: function(inputField, notificationBox, msg, okstring) {
-    let handler = function(event) {
+  pasteHandlerGen: function (inputField, notificationBox, msg, okstring) {
+    let handler = function (event) {
       if (WebConsoleUtils.usageCount >= CONSOLE_ENTRY_THRESHOLD) {
         inputField.removeEventListener("paste", handler);
         inputField.removeEventListener("drop", handler);
@@ -509,7 +509,7 @@ var WebConsoleUtils = {
       let notification = notificationBox.appendNotification(msg,
         "selfxss-notification", null,
         notificationBox.PRIORITY_WARNING_HIGH, null,
-        function(eventType) {
+        function (eventType) {
           // Cleanup function if notification is dismissed
           if (eventType == "removed") {
             inputField.removeEventListener("keyup", pasteKeyUpHandler);
@@ -540,7 +540,7 @@ exports.Utils = WebConsoleUtils;
 // Localization
 // ////////////////////////////////////////////////////////////////////////
 
-WebConsoleUtils.L10n = function(bundleURI) {
+WebConsoleUtils.L10n = function (bundleURI) {
   this._bundleUri = bundleURI;
 };
 
@@ -563,7 +563,7 @@ WebConsoleUtils.L10n.prototype = {
    * @return string
    *         The timestamp formatted for display.
    */
-  timestampString: function(milliseconds) {
+  timestampString: function (milliseconds) {
     let d = new Date(milliseconds ? milliseconds : null);
     let hours = d.getHours(), minutes = d.getMinutes();
     let seconds = d.getSeconds();
@@ -580,7 +580,7 @@ WebConsoleUtils.L10n.prototype = {
    * @return string
    *         The localized string.
    */
-  getStr: function(name) {
+  getStr: function (name) {
     let result;
     try {
       result = this.stringBundle.GetStringFromName(name);
@@ -602,7 +602,7 @@ WebConsoleUtils.L10n.prototype = {
    * @return string
    *         The formatted local string.
    */
-  getFormatStr: function(name, array) {
+  getFormatStr: function (name, array) {
     let result;
     try {
       result = this.stringBundle.formatStringFromName(name, array,
@@ -657,7 +657,7 @@ ConsoleServiceListener.prototype =
   /**
    * Initialize the nsIConsoleService listener.
    */
-  init: function() {
+  init: function () {
     Services.console.registerListener(this);
   },
 
@@ -669,7 +669,7 @@ ConsoleServiceListener.prototype =
    * @param nsIConsoleMessage message
    *        The message object coming from the nsIConsoleService.
    */
-  observe: function(message) {
+  observe: function (message) {
     if (!this.listener) {
       return;
     }
@@ -699,7 +699,7 @@ ConsoleServiceListener.prototype =
    * @return boolean
    *         True if the category is allowed to be logged, false otherwise.
    */
-  isCategoryAllowed: function(category) {
+  isCategoryAllowed: function (category) {
     if (!category) {
       return false;
     }
@@ -729,7 +729,7 @@ ConsoleServiceListener.prototype =
    *         The array of cached messages. Each element is an nsIScriptError or
    *         an nsIConsoleMessage
    */
-  getCachedMessages: function(includePrivate = false) {
+  getCachedMessages: function (includePrivate = false) {
     let errors = Services.console.getMessageArray() || [];
 
     // if !this.window, we're in a browser console. Still need to filter
@@ -771,7 +771,7 @@ ConsoleServiceListener.prototype =
   /**
    * Remove the nsIConsoleService listener.
    */
-  destroy: function() {
+  destroy: function () {
     Services.console.unregisterListener(this);
     this.listener = this.window = null;
   },
@@ -834,7 +834,7 @@ ConsoleAPIListener.prototype =
   /**
    * Initialize the window.console API observer.
    */
-  init: function() {
+  init: function () {
     // Note that the observer is process-wide. We will filter the messages as
     // needed, see CAL_observe().
     Services.obs.addObserver(this, "console-api-log-event", false);
@@ -849,7 +849,7 @@ ConsoleAPIListener.prototype =
    * @param string topic
    *        The message topic received from the observer service.
    */
-  observe: function(message, topic) {
+  observe: function (message, topic) {
     if (!this.owner) {
       return;
     }
@@ -875,7 +875,7 @@ ConsoleAPIListener.prototype =
    * @return bool
    *         Do we care about this message?
    */
-  isMessageRelevant: function(message) {
+  isMessageRelevant: function (message) {
     let workerType = WebConsoleUtils.getWorkerType(message);
 
     if (this.window && workerType === "ServiceWorker") {
@@ -931,7 +931,7 @@ ConsoleAPIListener.prototype =
    * @return array
    *         The array of cached messages.
    */
-  getCachedMessages: function(includePrivate = false) {
+  getCachedMessages: function (includePrivate = false) {
     let messages = [];
     let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                               .getService(Ci.nsIConsoleAPIStorage);
@@ -965,7 +965,7 @@ ConsoleAPIListener.prototype =
   /**
    * Destroy the console API listener.
    */
-  destroy: function() {
+  destroy: function () {
     Services.obs.removeObserver(this, "console-api-log-event");
     this.window = this.owner = null;
   },
@@ -989,7 +989,7 @@ var WebConsoleCommands = {
    *
    * @see WebConsoleCommands.register
    */
-  _registerOriginal: function(name, command) {
+  _registerOriginal: function (name, command) {
     this.register(name, command);
     this._originalCommands.set(name, this.getCommand(name));
   },
@@ -1021,7 +1021,7 @@ var WebConsoleCommands = {
    *     }
    *   });
    */
-  register: function(name, command) {
+  register: function (name, command) {
     this._registeredCommands.set(name, command);
   },
 
@@ -1033,7 +1033,7 @@ var WebConsoleCommands = {
    *
    * @param {string} name The name of the command
    */
-  unregister: function(name) {
+  unregister: function (name) {
     this._registeredCommands.delete(name);
     if (this._originalCommands.has(name)) {
       this.register(name, this._originalCommands.get(name));
@@ -1047,7 +1047,7 @@ var WebConsoleCommands = {
    *
    * @return {(function|object)} The command.
    */
-  getCommand: function(name) {
+  getCommand: function (name) {
     return this._registeredCommands.get(name);
   },
 
@@ -1058,7 +1058,7 @@ var WebConsoleCommands = {
    *
    * @return {boolean} True if the command is registered.
    */
-  hasCommand: function(name) {
+  hasCommand: function (name) {
     return this._registeredCommands.has(name);
   },
 };
@@ -1080,7 +1080,7 @@ exports.WebConsoleCommands = WebConsoleCommands;
  * @return nsIDOMNode or null
  *         The result of calling document.querySelector(selector).
  */
-WebConsoleCommands._registerOriginal("$", function(owner, selector) {
+WebConsoleCommands._registerOriginal("$", function (owner, selector) {
   return owner.window.document.querySelector(selector);
 });
 
@@ -1092,7 +1092,7 @@ WebConsoleCommands._registerOriginal("$", function(owner, selector) {
  * @return nsIDOMNodeList
  *         Returns the result of document.querySelectorAll(selector).
  */
-WebConsoleCommands._registerOriginal("$$", function(owner, selector) {
+WebConsoleCommands._registerOriginal("$$", function (owner, selector) {
   let nodes = owner.window.document.querySelectorAll(selector);
 
   // Calling owner.window.Array.from() doesn't work without accessing the
@@ -1111,7 +1111,7 @@ WebConsoleCommands._registerOriginal("$$", function(owner, selector) {
  * Returns last console evaluation or undefined
  */
 WebConsoleCommands._registerOriginal("$_", {
-  get: function(owner) {
+  get: function (owner) {
     return owner.consoleActor.getLastConsoleInputEvaluation();
   }
 });
@@ -1125,7 +1125,7 @@ WebConsoleCommands._registerOriginal("$_", {
  *        Context to run the xPath query on. Uses window.document if not set.
  * @return array of nsIDOMNode
  */
-WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
+WebConsoleCommands._registerOriginal("$x", function (owner, xPath, context) {
   let nodes = new owner.window.Array();
 
   // Not waiving Xrays, since we want the original Document.evaluate function,
@@ -1150,7 +1150,7 @@ WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
  *         Inspector, or null if no selection exists.
  */
 WebConsoleCommands._registerOriginal("$0", {
-  get: function(owner) {
+  get: function (owner) {
     return owner.makeDebuggeeValue(owner.selectedNode);
   }
 });
@@ -1158,7 +1158,7 @@ WebConsoleCommands._registerOriginal("$0", {
 /**
  * Clears the output of the WebConsole.
  */
-WebConsoleCommands._registerOriginal("clear", function(owner) {
+WebConsoleCommands._registerOriginal("clear", function (owner) {
   owner.helperResult = {
     type: "clearOutput",
   };
@@ -1167,7 +1167,7 @@ WebConsoleCommands._registerOriginal("clear", function(owner) {
 /**
  * Clears the input history of the WebConsole.
  */
-WebConsoleCommands._registerOriginal("clearHistory", function(owner) {
+WebConsoleCommands._registerOriginal("clearHistory", function (owner) {
   owner.helperResult = {
     type: "clearHistory",
   };
@@ -1180,7 +1180,7 @@ WebConsoleCommands._registerOriginal("clearHistory", function(owner) {
  *        Object to return the property names from.
  * @return array of strings
  */
-WebConsoleCommands._registerOriginal("keys", function(owner, object) {
+WebConsoleCommands._registerOriginal("keys", function (owner, object) {
   // Need to waive Xrays so we can iterate functions and accessor properties
   return Cu.cloneInto(Object.keys(Cu.waiveXrays(object)), owner.window);
 });
@@ -1192,7 +1192,7 @@ WebConsoleCommands._registerOriginal("keys", function(owner, object) {
  *        Object to display the values from.
  * @return array of string
  */
-WebConsoleCommands._registerOriginal("values", function(owner, object) {
+WebConsoleCommands._registerOriginal("values", function (owner, object) {
   let values = [];
   // Need to waive Xrays so we can iterate functions and accessor properties
   let waived = Cu.waiveXrays(object);
@@ -1208,7 +1208,7 @@ WebConsoleCommands._registerOriginal("values", function(owner, object) {
 /**
  * Opens a help window in MDN.
  */
-WebConsoleCommands._registerOriginal("help", function(owner) {
+WebConsoleCommands._registerOriginal("help", function (owner) {
   owner.helperResult = { type: "help" };
 });
 
@@ -1223,7 +1223,7 @@ WebConsoleCommands._registerOriginal("help", function(owner) {
  *        a window object. If you call cd() with no arguments, the current
  *        eval scope is cleared back to its default (the top window).
  */
-WebConsoleCommands._registerOriginal("cd", function(owner, window) {
+WebConsoleCommands._registerOriginal("cd", function (owner, window) {
   if (!window) {
     owner.consoleActor.evalWindow = null;
     owner.helperResult = { type: "cd" };
@@ -1254,7 +1254,7 @@ WebConsoleCommands._registerOriginal("cd", function(owner, window) {
  * @param object object
  *        Object to inspect.
  */
-WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
+WebConsoleCommands._registerOriginal("inspect", function (owner, object) {
   let dbgObj = owner.makeDebuggeeValue(object);
   let grip = owner.createValueGrip(dbgObj);
   owner.helperResult = {
@@ -1271,7 +1271,7 @@ WebConsoleCommands._registerOriginal("inspect", function(owner, object) {
  *        Object to print to the output.
  * @return string
  */
-WebConsoleCommands._registerOriginal("pprint", function(owner, object) {
+WebConsoleCommands._registerOriginal("pprint", function (owner, object) {
   if (object === null || object === undefined || object === true ||
       object === false) {
     owner.helperResult = {
@@ -1316,7 +1316,7 @@ WebConsoleCommands._registerOriginal("pprint", function(owner, object) {
  *        A value you want to output as a string.
  * @return void
  */
-WebConsoleCommands._registerOriginal("print", function(owner, value) {
+WebConsoleCommands._registerOriginal("print", function (owner, value) {
   owner.helperResult = { rawOutput: true };
   if (typeof value === "symbol") {
     return Symbol.prototype.toString.call(value);
@@ -1335,7 +1335,7 @@ WebConsoleCommands._registerOriginal("print", function(owner, value) {
  *        A value you want to copy as a string.
  * @return void
  */
-WebConsoleCommands._registerOriginal("copy", function(owner, value) {
+WebConsoleCommands._registerOriginal("copy", function (owner, value) {
   let payload;
   try {
     if (value instanceof Ci.nsIDOMElement) {
@@ -1426,7 +1426,7 @@ ConsoleReflowListener.prototype =
    * @param DOMHighResTimeStamp end
    * @param boolean interruptible
    */
-  sendReflow: function(start, end, interruptible) {
+  sendReflow: function (start, end, interruptible) {
     let frame = components.stack.caller.caller;
 
     let filename = frame ? frame.filename : null;
@@ -1453,7 +1453,7 @@ ConsoleReflowListener.prototype =
    * @param DOMHighResTimeStamp start
    * @param DOMHighResTimeStamp end
    */
-  reflow: function(start, end) {
+  reflow: function (start, end) {
     this.sendReflow(start, end, false);
   },
 
@@ -1463,14 +1463,14 @@ ConsoleReflowListener.prototype =
    * @param DOMHighResTimeStamp start
    * @param DOMHighResTimeStamp end
    */
-  reflowInterruptible: function(start, end) {
+  reflowInterruptible: function (start, end) {
     this.sendReflow(start, end, true);
   },
 
   /**
    * Unregister listener.
    */
-  destroy: function() {
+  destroy: function () {
     this.docshell.removeWeakReflowObserver(this);
     this.listener = this.docshell = null;
   },

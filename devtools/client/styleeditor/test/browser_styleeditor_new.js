@@ -33,7 +33,7 @@ function createNew(ui, panelWindow) {
     editor.getSourceEditor().then(deferred.resolve);
   });
 
-  waitForFocus(function() {
+  waitForFocus(function () {
     // create a new style sheet
     let newButton = panelWindow.document
       .querySelector(".style-editor-newButton");
@@ -85,7 +85,7 @@ function* testInitialState(editor) {
 function typeInEditor(editor, panelWindow) {
   let deferred = promise.defer();
 
-  waitForFocus(function() {
+  waitForFocus(function () {
     for (let c of TESTCASE_CSS_SOURCE) {
       EventUtils.synthesizeKey(c, {}, panelWindow);
     }

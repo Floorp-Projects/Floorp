@@ -35,17 +35,17 @@ AnimationDetails.prototype = {
   // array is used to skip them.
   NON_PROPERTIES: ["easing", "composite", "computedOffset", "offset"],
 
-  init: function(containerEl) {
+  init: function (containerEl) {
     this.containerEl = containerEl;
   },
 
-  destroy: function() {
+  destroy: function () {
     this.unrender();
     this.containerEl = null;
     this.serverTraits = null;
   },
 
-  unrender: function() {
+  unrender: function () {
     for (let component of this.keyframeComponents) {
       component.off("frame-selected", this.onFrameSelected);
       component.destroy();
@@ -178,7 +178,7 @@ AnimationDetails.prototype = {
     }
   }),
 
-  onFrameSelected: function(e, args) {
+  onFrameSelected: function (e, args) {
     // Relay the event up, it's needed in parents too.
     this.emit(e, args);
   }

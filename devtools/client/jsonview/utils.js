@@ -22,7 +22,7 @@ const OPEN_FLAGS = {
 /**
  * Open File Save As dialog and let the user to pick proper file location.
  */
-exports.getTargetFile = function() {
+exports.getTargetFile = function () {
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
   let win = getMostRecentBrowserWindow();
@@ -43,7 +43,7 @@ exports.getTargetFile = function() {
 /**
  * Save JSON to a file
  */
-exports.saveToFile = function(file, jsonString) {
+exports.saveToFile = function (file, jsonString) {
   let foStream = Cc["@mozilla.org/network/file-output-stream;1"]
     .createInstance(Ci.nsIFileOutputStream);
 
@@ -76,14 +76,14 @@ exports.saveToFile = function(file, jsonString) {
 /**
  * Get the current theme from preferences.
  */
-exports.getCurrentTheme = function() {
+exports.getCurrentTheme = function () {
   return Services.prefs.getCharPref("devtools.theme");
 };
 
 /**
  * Export given object into the target window scope.
  */
-exports.exportIntoContentScope = function(win, obj, defineAs) {
+exports.exportIntoContentScope = function (win, obj, defineAs) {
   let clone = Cu.createObjectIn(win, {
     defineAs: defineAs
   });

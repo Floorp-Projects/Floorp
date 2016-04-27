@@ -11,11 +11,11 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-XPCOMUtils.defineLazyGetter(this, "HarExporter", function() {
+XPCOMUtils.defineLazyGetter(this, "HarExporter", function () {
   return require("devtools/client/netmonitor/har/har-exporter").HarExporter;
 });
 
-XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
+XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {
   return require("devtools/shared/webconsole/network-helper");
 });
 
@@ -133,7 +133,7 @@ var NetMonitorView = {
   /**
    * Initializes the network monitor view.
    */
-  initialize: function() {
+  initialize: function () {
     this._initializePanes();
 
     this.Toolbar.initialize();
@@ -145,7 +145,7 @@ var NetMonitorView = {
   /**
    * Destroys the network monitor view.
    */
-  destroy: function() {
+  destroy: function () {
     this._isDestroyed = true;
     this.Toolbar.destroy();
     this.RequestsMenu.destroy();
@@ -158,7 +158,7 @@ var NetMonitorView = {
   /**
    * Initializes the UI for all the displayed panes.
    */
-  _initializePanes: function() {
+  _initializePanes: function () {
     dumpn("Initializing the NetMonitorView panes");
 
     this._body = $("#body");
@@ -218,7 +218,7 @@ var NetMonitorView = {
    * @param number tabIndex [optional]
    *        The index of the intended selected tab in the details pane.
    */
-  toggleDetailsPane: function(flags, tabIndex) {
+  toggleDetailsPane: function (flags, tabIndex) {
     let pane = this._detailsPane;
     let button = this._detailsPaneToggleButton;
 
@@ -254,7 +254,7 @@ var NetMonitorView = {
   /**
    * Toggles between the frontend view modes ("Inspector" vs. "Statistics").
    */
-  toggleFrontendMode: function() {
+  toggleFrontendMode: function () {
     if (this.currentFrontendMode != "network-inspector-view") {
       this.showNetworkInspectorView();
     } else {
@@ -265,7 +265,7 @@ var NetMonitorView = {
   /**
    * Switches to the "Inspector" frontend view mode.
    */
-  showNetworkInspectorView: function() {
+  showNetworkInspectorView: function () {
     this._body.selectedPanel = $("#network-inspector-view");
     this.RequestsMenu._flushWaterfallViews(true);
   },
@@ -273,7 +273,7 @@ var NetMonitorView = {
   /**
    * Switches to the "Statistics" frontend view mode.
    */
-  showNetworkStatisticsView: function() {
+  showNetworkStatisticsView: function () {
     this._body.selectedPanel = $("#network-statistics-view");
 
     let controller = NetMonitorController;
@@ -303,7 +303,7 @@ var NetMonitorView = {
     });
   },
 
-  reloadPage: function() {
+  reloadPage: function () {
     NetMonitorController.triggerActivity(
       ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT);
   },
@@ -316,7 +316,7 @@ var NetMonitorView = {
    * @return object
    *         A promise that is resolved when the editor is available.
    */
-  editor: function(id) {
+  editor: function (id) {
     dumpn("Getting a NetMonitorView editor: " + id);
 
     if (this._editorPromises.has(id)) {
@@ -355,7 +355,7 @@ ToolbarView.prototype = {
   /**
    * Initialization function, called when the debugger is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the ToolbarView");
 
     this._detailsPaneToggleButton = $("#details-pane-toggle");
@@ -366,7 +366,7 @@ ToolbarView.prototype = {
   /**
    * Destruction function, called when the debugger is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the ToolbarView");
 
     this._detailsPaneToggleButton.removeEventListener("mousedown",
@@ -376,7 +376,7 @@ ToolbarView.prototype = {
   /**
    * Listener handling the toggle button click event.
    */
-  _onTogglePanesPressed: function() {
+  _onTogglePanesPressed: function () {
     let requestsMenu = NetMonitorView.RequestsMenu;
     let selectedIndex = requestsMenu.selectedIndex;
 
@@ -415,7 +415,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the RequestsMenuView");
 
     this.widget = new SideMenuWidget($("#requests-menu-contents"));
@@ -489,7 +489,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     window.once("connected", this._onConnect.bind(this));
   },
 
-  _onConnect: function() {
+  _onConnect: function () {
     $("#requests-menu-reload-notice-button").addEventListener("command",
       this._onReloadCommand, false);
 
@@ -532,7 +532,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the SourcesView");
 
     Prefs.filters = this._activeFilters;
@@ -593,7 +593,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Resets this container (removes all the networking information).
    */
-  reset: function() {
+  reset: function () {
     this.empty();
     this._addQueue = [];
     this._updateQueue = [];
@@ -636,7 +636,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param boolean fromServiceWorker
    *        Indicates if the request has been intercepted by a Service Worker
    */
-  addRequest: function(id, startedDateTime, method, url, isXHR, fromCache,
+  addRequest: function (id, startedDateTime, method, url, isXHR, fromCache,
     fromServiceWorker) {
     this._addQueue.push([id, startedDateTime, method, url, isXHR, fromCache,
       fromServiceWorker]);
@@ -653,7 +653,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Opens selected item in a new tab.
    */
-  openRequestInTab: function() {
+  openRequestInTab: function () {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let selected = this.selectedItem.attachment;
     win.openUILinkIn(selected.url, "tab", { relatedToCurrent: true });
@@ -662,7 +662,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy the request url from the currently selected item.
    */
-  copyUrl: function() {
+  copyUrl: function () {
     let selected = this.selectedItem.attachment;
     clipboardHelper.copyString(selected.url);
   },
@@ -671,7 +671,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Copy the request url query string parameters from the currently
    * selected item.
    */
-  copyUrlParams: function() {
+  copyUrlParams: function () {
     let selected = this.selectedItem.attachment;
     let params = NetworkHelper.nsIURL(selected.url).query.split("&");
     let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
@@ -765,7 +765,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy a cURL command from the currently selected item.
    */
-  copyAsCurl: function() {
+  copyAsCurl: function () {
     let selected = this.selectedItem.attachment;
 
     Task.spawn(function* () {
@@ -797,7 +797,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy HAR from the network panel content to the clipboard.
    */
-  copyAllAsHar: function() {
+  copyAllAsHar: function () {
     let options = this.getDefaultHarOptions();
     return HarExporter.copy(options);
   },
@@ -805,12 +805,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Save HAR from the network panel content to a file.
    */
-  saveAllAsHar: function() {
+  saveAllAsHar: function () {
     let options = this.getDefaultHarOptions();
     return HarExporter.save(options);
   },
 
-  getDefaultHarOptions: function() {
+  getDefaultHarOptions: function () {
     let form = NetMonitorController._target.form;
     let title = form.title || form.url;
 
@@ -825,7 +825,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy the raw request headers from the currently selected item.
    */
-  copyRequestHeaders: function() {
+  copyRequestHeaders: function () {
     let selected = this.selectedItem.attachment;
     let rawHeaders = selected.requestHeaders.rawHeaders.trim();
     if (Services.appinfo.OS !== "WINNT") {
@@ -837,7 +837,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy the raw response headers from the currently selected item.
    */
-  copyResponseHeaders: function() {
+  copyResponseHeaders: function () {
     let selected = this.selectedItem.attachment;
     let rawHeaders = selected.responseHeaders.rawHeaders.trim();
     if (Services.appinfo.OS !== "WINNT") {
@@ -849,7 +849,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy image as data uri.
    */
-  copyImageAsDataUri: function() {
+  copyImageAsDataUri: function () {
     let selected = this.selectedItem.attachment;
     let { mimeType, text, encoding } = selected.responseContent.content;
 
@@ -862,7 +862,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Copy response data as a string.
    */
-  copyResponse: function() {
+  copyResponse: function () {
     let selected = this.selectedItem.attachment;
     let text = selected.responseContent.content.text;
 
@@ -875,7 +875,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Create a new custom request form populated with the data from
    * the currently selected request.
    */
-  cloneSelectedRequest: function() {
+  cloneSelectedRequest: function () {
     let selected = this.selectedItem.attachment;
 
     // Create the element node for the network request item.
@@ -895,7 +895,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Send a new HTTP request using the data in the custom request form.
    */
-  sendCustomRequest: function() {
+  sendCustomRequest: function () {
     let selected = this.selectedItem.attachment;
 
     let data = {
@@ -921,7 +921,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Remove the currently selected custom request.
    */
-  closeCustomRequest: function() {
+  closeCustomRequest: function () {
     this.remove(this.selectedItem);
     NetMonitorView.Sidebar.toggle(false);
   },
@@ -929,7 +929,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Shows raw request/response headers in textboxes.
    */
-  toggleRawHeaders: function() {
+  toggleRawHeaders: function () {
     let requestTextarea = $("#raw-request-headers-textarea");
     let responseTextare = $("#raw-response-headers-textarea");
     let rawHeadersHidden = $("#raw-headers").getAttribute("hidden");
@@ -951,7 +951,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Handles the timeout on the freetext filter textbox
    */
-  requestsFreetextFilterEvent: function() {
+  requestsFreetextFilterEvent: function () {
     this.userInputTimer.cancel();
     this._currentFreetextFilter = this.freetextFilterBox.value || "";
 
@@ -968,7 +968,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Refreshes the view contents with the newly selected filters
    */
-  reFilterRequests: function() {
+  reFilterRequests: function () {
     this.filterContents(this._filterPredicate);
     this.refreshSummary();
     this.refreshZebra();
@@ -981,7 +981,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
    *        "flash", "ws" or "other".
    */
-  filterOn: function(type = "all") {
+  filterOn: function (type = "all") {
     if (type === "all") {
       // The filter "all" is special as it doesn't toggle.
       // - If some filters are selected and 'all' is clicked, the previously
@@ -1011,7 +1011,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param string type
    *        @see RequestsMenuView.prototype.fitlerOn
    */
-  filterOnlyOn: function(type = "all") {
+  filterOnlyOn: function (type = "all") {
     this._activeFilters.slice().forEach(this._disableFilter, this);
     this.filterOn(type);
   },
@@ -1024,7 +1024,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
    *        "flash", "ws" or "other".
    */
-  _disableFilter: function(type) {
+  _disableFilter: function (type) {
     // Remove the filter from list of active filters.
     this._activeFilters.splice(this._activeFilters.indexOf(type), 1);
 
@@ -1046,7 +1046,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
    *        "flash", "ws" or "other".
    */
-  _enableFilter: function(type) {
+  _enableFilter: function (type) {
     // Make sure this is a valid filter type.
     if (Object.keys(this._allFilterPredicates).indexOf(type) == -1) {
       return;
@@ -1109,7 +1109,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        Either "status", "method", "file", "domain", "type", "transferred",
    *        "size" or "waterfall".
    */
-  sortBy: function(type = "waterfall") {
+  sortBy: function (type = "waterfall") {
     let target = $("#requests-menu-" + type + "-button");
     let headers = document.querySelectorAll(".requests-menu-header-button");
 
@@ -1203,7 +1203,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Removes all network requests and closes the sidebar if open.
    */
-  clear: function() {
+  clear: function () {
     NetMonitorController.NetworkEventsHandler.clearMarkers();
     NetMonitorView.Sidebar.toggle(false);
 
@@ -1222,28 +1222,28 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @return boolean
    *         True if the item should be visible, false otherwise.
    */
-  isHtml: function({ attachment: { mimeType } }) {
+  isHtml: function ({ attachment: { mimeType } }) {
     return mimeType && mimeType.includes("/html");
   },
 
-  isCss: function({ attachment: { mimeType } }) {
+  isCss: function ({ attachment: { mimeType } }) {
     return mimeType && mimeType.includes("/css");
   },
 
-  isJs: function({ attachment: { mimeType } }) {
+  isJs: function ({ attachment: { mimeType } }) {
     return mimeType && (
       mimeType.includes("/ecmascript") ||
       mimeType.includes("/javascript") ||
       mimeType.includes("/x-javascript"));
   },
 
-  isXHR: function(item) {
+  isXHR: function (item) {
     // Show the request it is XHR, except
     // if the request is a WS upgrade
     return item.attachment.isXHR && !this.isWS(item);
   },
 
-  isFont: function({ attachment: { url, mimeType } }) {
+  isFont: function ({ attachment: { url, mimeType } }) {
     // Fonts are a mess.
     return (mimeType && (
         mimeType.includes("font/") ||
@@ -1254,11 +1254,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       url.includes(".woff");
   },
 
-  isImage: function({ attachment: { mimeType } }) {
+  isImage: function ({ attachment: { mimeType } }) {
     return mimeType && mimeType.includes("image/");
   },
 
-  isMedia: function({ attachment: { mimeType } }) {
+  isMedia: function ({ attachment: { mimeType } }) {
     // Not including images.
     return mimeType && (
       mimeType.includes("audio/") ||
@@ -1266,7 +1266,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       mimeType.includes("model/"));
   },
 
-  isFlash: function({ attachment: { url, mimeType } }) {
+  isFlash: function ({ attachment: { url, mimeType } }) {
     // Flash is a mess.
     return (mimeType && (
         mimeType.includes("/x-flv") ||
@@ -1275,7 +1275,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       url.includes(".flv");
   },
 
-  isWS: function({ attachment: { requestHeaders, responseHeaders } }) {
+  isWS: function ({ attachment: { requestHeaders, responseHeaders } }) {
     // Detect a websocket upgrade if request has an Upgrade header
     // with value 'websocket'
 
@@ -1307,7 +1307,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     return true;
   },
 
-  isOther: function(e) {
+  isOther: function (e) {
     return !this.isHtml(e) &&
            !this.isCss(e) &&
            !this.isJs(e) &&
@@ -1319,7 +1319,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
            !this.isWS(e);
   },
 
-  isFreetextMatch: function({ attachment: { url } }, text) {
+  isFreetextMatch: function ({ attachment: { url } }, text) {
     let lowerCaseUrl = url.toLowerCase();
     let lowerCaseText = text.toLowerCase();
     let textLength = text.length;
@@ -1345,23 +1345,23 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *          0 to leave aFirst and aSecond unchanged with respect to each other
    *          1 to sort aSecond to a lower index than aFirst
    */
-  _byTiming: function({ attachment: first }, { attachment: second }) {
+  _byTiming: function ({ attachment: first }, { attachment: second }) {
     return first.startedMillis > second.startedMillis;
   },
 
-  _byStatus: function({ attachment: first }, { attachment: second }) {
+  _byStatus: function ({ attachment: first }, { attachment: second }) {
     return first.status == second.status
            ? first.startedMillis > second.startedMillis
            : first.status > second.status;
   },
 
-  _byMethod: function({ attachment: first }, { attachment: second }) {
+  _byMethod: function ({ attachment: first }, { attachment: second }) {
     return first.method == second.method
            ? first.startedMillis > second.startedMillis
            : first.method > second.method;
   },
 
-  _byFile: function({ attachment: first }, { attachment: second }) {
+  _byFile: function ({ attachment: first }, { attachment: second }) {
     let firstUrl = this._getUriNameWithQuery(first.url).toLowerCase();
     let secondUrl = this._getUriNameWithQuery(second.url).toLowerCase();
     return firstUrl == secondUrl
@@ -1369,7 +1369,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       : firstUrl > secondUrl;
   },
 
-  _byDomain: function({ attachment: first }, { attachment: second }) {
+  _byDomain: function ({ attachment: first }, { attachment: second }) {
     let firstDomain = this._getUriHostPort(first.url).toLowerCase();
     let secondDomain = this._getUriHostPort(second.url).toLowerCase();
     return firstDomain == secondDomain
@@ -1377,7 +1377,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       : firstDomain > secondDomain;
   },
 
-  _byType: function({ attachment: first }, { attachment: second }) {
+  _byType: function ({ attachment: first }, { attachment: second }) {
     let firstType = this._getAbbreviatedMimeType(first.mimeType).toLowerCase();
     let secondType = this._getAbbreviatedMimeType(second.mimeType)
       .toLowerCase();
@@ -1387,11 +1387,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       : firstType > secondType;
   },
 
-  _byTransferred: function({ attachment: first }, { attachment: second }) {
+  _byTransferred: function ({ attachment: first }, { attachment: second }) {
     return first.transferredSize > second.transferredSize;
   },
 
-  _bySize: function({ attachment: first }, { attachment: second }) {
+  _bySize: function ({ attachment: first }, { attachment: second }) {
     return first.contentSize > second.contentSize;
   },
 
@@ -1399,7 +1399,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Refreshes the status displayed in this container's footer, providing
    * concise information about all requests.
    */
-  refreshSummary: function() {
+  refreshSummary: function () {
     let visibleItems = this.visibleItems;
     let visibleRequestsCount = visibleItems.length;
     if (!visibleRequestsCount) {
@@ -1428,7 +1428,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Adds odd/even attributes to all the visible items in this container.
    */
-  refreshZebra: function() {
+  refreshZebra: function () {
     let visibleItems = this.visibleItems;
 
     for (let i = 0, len = visibleItems.length; i < len; i++) {
@@ -1451,7 +1451,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param object item
    *        The network request item in this container.
    */
-  refreshTooltip: function(item) {
+  refreshTooltip: function (item) {
     let tooltip = item.attachment.tooltip;
     tooltip.hide();
     tooltip.startTogglingOnHover(item.target, this._onHover);
@@ -1464,7 +1464,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param object item
    *        The network request item to attach the listener to.
    */
-  attachSecurityIconClickListener: function({ target }) {
+  attachSecurityIconClickListener: function ({ target }) {
     let icon = $(".requests-security-state-icon", target);
     icon.addEventListener("click", this._onSecurityIconClick);
   },
@@ -1480,7 +1480,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param function callback
    *        A function to call once the request has been updated in the view.
    */
-  updateRequest: function(id, data, callback) {
+  updateRequest: function (id, data, callback) {
     this._updateQueue.push([id, data, callback]);
 
     // Lazy updating is disabled in some tests.
@@ -1495,7 +1495,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Starts adding all queued additional information about network requests.
    */
-  _flushRequests: function() {
+  _flushRequests: function () {
     // Prevent displaying any updates received after the target closed.
     if (NetMonitorView._isDestroyed) {
       return;
@@ -1751,7 +1751,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @return nsIDOMNode
    *         The network request view.
    */
-  _createMenuView: function(method, url) {
+  _createMenuView: function (method, url) {
     let template = $("#requests-menu-item-template");
     let fragment = document.createDocumentFragment();
 
@@ -1949,7 +1949,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        Indicates if the result came from the browser cache or
    *        a service worker
    */
-  _createWaterfallView: function(item, timings, fromCache) {
+  _createWaterfallView: function (item, timings, fromCache) {
     let { target } = item;
     let sections = ["dns", "connect", "send", "wait", "receive"];
     // Skipping "blocked" because it doesn't work yet.
@@ -1983,7 +1983,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param boolean reset
    *        True if this container's width was changed.
    */
-  _flushWaterfallViews: function(reset) {
+  _flushWaterfallViews: function (reset) {
     // Don't paint things while the waterfall view isn't even visible,
     // or there are no items added to this container.
     if (NetMonitorView.currentFrontendMode !=
@@ -2041,7 +2041,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param number scale
    *        The current waterfall scale.
    */
-  _showWaterfallDivisionLabels: function(scale) {
+  _showWaterfallDivisionLabels: function (scale) {
     let container = $("#requests-menu-waterfall-label-wrapper");
     let availableWidth = this._waterfallWidth - REQUESTS_WATERFALL_SAFE_BOUNDS;
 
@@ -2114,7 +2114,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param number scale
    *        The current waterfall scale.
    */
-  _drawWaterfallBackground: function(scale) {
+  _drawWaterfallBackground: function (scale) {
     if (!this._canvas || !this._ctx) {
       this._canvas = document.createElementNS(HTML_NS, "canvas");
       this._ctx = this._canvas.getContext("2d");
@@ -2189,7 +2189,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The selection listener for this container.
    */
-  _onSelect: function({ detail: item }) {
+  _onSelect: function ({ detail: item }) {
     if (item) {
       NetMonitorView.Sidebar.populate(item.attachment);
       NetMonitorView.Sidebar.toggle(true);
@@ -2202,7 +2202,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * The swap listener for this container.
    * Called when two items switch places, when the contents are sorted.
    */
-  _onSwap: function({ detail: [firstItem, secondItem] }) {
+  _onSwap: function ({ detail: [firstItem, secondItem] }) {
     // Sorting will create new anchor nodes for all the swapped request items
     // in this container, so it's necessary to refresh the Tooltip instances.
     this.refreshTooltip(firstItem);
@@ -2222,7 +2222,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param object tooltip
    *        The current tooltip instance.
    */
-  _onHover: function(target, tooltip) {
+  _onHover: function (target, tooltip) {
     let requestItem = this.getItemForElement(target);
     if (!requestItem || !requestItem.attachment.responseContent) {
       return null;
@@ -2252,7 +2252,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * A handler that opens the security tab in the details view if secure or
    * broken security indicator is clicked.
    */
-  _onSecurityIconClick: function(e) {
+  _onSecurityIconClick: function (e) {
     let state = this.selectedItem.attachment.securityState;
     if (state !== "insecure") {
       // Choose the security tab.
@@ -2263,7 +2263,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The resize listener for this container's window.
    */
-  _onResize: function(e) {
+  _onResize: function (e) {
     // Allow requests to settle down first.
     setNamedTimeout("resize-events",
       RESIZE_REFRESH_RATE, () => this._flushWaterfallViews(true));
@@ -2272,7 +2272,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Handle the context menu opening. Hide items if no request is selected.
    */
-  _onContextShowing: function() {
+  _onContextShowing: function () {
     let selectedItem = this.selectedItem;
 
     let resendElement = $("#request-menu-context-resend");
@@ -2338,7 +2338,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param number unixTime
    *        The milliseconds to check and save.
    */
-  _registerFirstRequestStart: function(unixTime) {
+  _registerFirstRequestStart: function (unixTime) {
     if (this._firstRequestStartedMillis == -1) {
       this._firstRequestStartedMillis = unixTime;
     }
@@ -2351,7 +2351,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param number unixTime
    *        The milliseconds to check and save.
    */
-  _registerLastRequestEnd: function(unixTime) {
+  _registerLastRequestEnd: function (unixTime) {
     if (this._lastRequestEndedMillis < unixTime) {
       this._lastRequestEndedMillis = unixTime;
     }
@@ -2363,7 +2363,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param nsIURL | string url
    * @return string
    */
-  _getUriNameWithQuery: function(url) {
+  _getUriNameWithQuery: function (url) {
     if (!(url instanceof Ci.nsIURL)) {
       url = NetworkHelper.nsIURL(url);
     }
@@ -2375,14 +2375,14 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     return name + (query ? "?" + query : "");
   },
 
-  _getUriHostPort: function(url) {
+  _getUriHostPort: function (url) {
     if (!(url instanceof Ci.nsIURL)) {
       url = NetworkHelper.nsIURL(url);
     }
     return NetworkHelper.convertToUnicode(unescape(url.hostPort));
   },
 
-  _getUriHost: function(url) {
+  _getUriHost: function (url) {
     return this._getUriHostPort(url).replace(/:\d+$/, "");
   },
 
@@ -2392,7 +2392,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param string mimeType
    * @return string
    */
-  _getAbbreviatedMimeType: function(mimeType) {
+  _getAbbreviatedMimeType: function (mimeType) {
     if (!mimeType) {
       return "";
     }
@@ -2406,7 +2406,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param array itemsArray
    * @return number
    */
-  _getTotalBytesOfRequests: function(itemsArray) {
+  _getTotalBytesOfRequests: function (itemsArray) {
     if (!itemsArray.length) {
       return 0;
     }
@@ -2427,7 +2427,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param array itemsArray
    * @return object
    */
-  _getOldestRequest: function(itemsArray) {
+  _getOldestRequest: function (itemsArray) {
     if (!itemsArray.length) {
       return null;
     }
@@ -2443,7 +2443,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @param array itemsArray
    * @return object
    */
-  _getNewestRequest: function(itemsArray) {
+  _getNewestRequest: function (itemsArray) {
     if (!itemsArray.length) {
       return null;
     }
@@ -2501,7 +2501,7 @@ SidebarView.prototype = {
    * @param boolean visibleFlag
    *        Specifies the intended visibility.
    */
-  toggle: function(visibleFlag) {
+  toggle: function (visibleFlag) {
     NetMonitorView.toggleDetailsPane({ visible: visibleFlag });
     NetMonitorView.RequestsMenu._flushWaterfallViews(true);
   },
@@ -2538,7 +2538,7 @@ CustomRequestView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the CustomRequestView");
 
     this.updateCustomRequestEvent = getKeyWithEvent(this.onUpdate.bind(this));
@@ -2549,7 +2549,7 @@ CustomRequestView.prototype = {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the CustomRequestView");
 
     $("#custom-pane").removeEventListener("input",
@@ -2587,7 +2587,7 @@ CustomRequestView.prototype = {
    * @param object field
    *        the field that the user updated.
    */
-  onUpdate: function(field) {
+  onUpdate: function (field) {
     let selectedItem = NetMonitorView.RequestsMenu.selectedItem;
     let value;
 
@@ -2628,7 +2628,7 @@ CustomRequestView.prototype = {
    * @param object url
    *        The URL to extract query string from.
    */
-  updateCustomQuery: function(url) {
+  updateCustomQuery: function (url) {
     let paramsArray = NetworkHelper.parseQueryString(
       NetworkHelper.nsIURL(url).query);
 
@@ -2647,7 +2647,7 @@ CustomRequestView.prototype = {
    * @param object queryText
    *        The contents of the query string field.
    */
-  updateCustomUrl: function(queryText) {
+  updateCustomUrl: function (queryText) {
     let params = parseQueryText(queryText);
     let queryString = writeQueryString(params);
 
@@ -2688,7 +2688,7 @@ NetworkDetailsView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function() {
+  initialize: function () {
     dumpn("Initializing the NetworkDetailsView");
 
     this.widget = $("#event-details-pane");
@@ -2734,7 +2734,7 @@ NetworkDetailsView.prototype = {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy: function() {
+  destroy: function () {
     dumpn("Destroying the NetworkDetailsView");
     this.sidebar.destroy();
     $("tabpanels", this.widget).removeEventListener("select",
@@ -2749,7 +2749,7 @@ NetworkDetailsView.prototype = {
    * @return object
    *        Returns a promise that resolves upon population the view.
    */
-  populate: function(data) {
+  populate: function (data) {
     $("#request-params-box").setAttribute("flex", "1");
     $("#request-params-box").hidden = false;
     $("#request-post-data-textarea-box").hidden = true;
@@ -2796,7 +2796,7 @@ NetworkDetailsView.prototype = {
   /**
    * Listener handling the tab selection event.
    */
-  _onTabSelect: function() {
+  _onTabSelect: function () {
     let { src, populated } = this._dataSrc || {};
     let tab = this.widget.selectedIndex;
     let view = this;
@@ -2888,7 +2888,7 @@ NetworkDetailsView.prototype = {
    * @param object data
    *        The data source (this should be the attachment of a request item).
    */
-  _setSummary: function(data) {
+  _setSummary: function (data) {
     if (data.url) {
       let unicodeUrl = NetworkHelper.convertToUnicode(unescape(data.url));
       $("#headers-summary-url-value").setAttribute("value", unicodeUrl);
@@ -3080,7 +3080,7 @@ NetworkDetailsView.prototype = {
    * @param string url
    *        The request's url.
    */
-  _setRequestGetParams: function(url) {
+  _setRequestGetParams: function (url) {
     let query = NetworkHelper.nsIURL(url).query;
     if (query) {
       this._addParams(this._paramsQueryString, query);
@@ -3159,7 +3159,7 @@ NetworkDetailsView.prototype = {
    * @param string queryString
    *        A query string of params (e.g. "?foo=bar&baz=42").
    */
-  _addParams: function(name, queryString) {
+  _addParams: function (name, queryString) {
     let paramsArray = NetworkHelper.parseQueryString(queryString);
     if (!paramsArray) {
       return;
@@ -3295,7 +3295,7 @@ NetworkDetailsView.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _setTimingsInformation: function(response) {
+  _setTimingsInformation: function (response) {
     if (!response) {
       return;
     }
@@ -3524,7 +3524,7 @@ PerformanceStatisticsView.prototype = {
   /**
    * Initializes and displays empty charts in this container.
    */
-  displayPlaceholderCharts: function() {
+  displayPlaceholderCharts: function () {
     this._createChart({
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled"
@@ -3542,7 +3542,7 @@ PerformanceStatisticsView.prototype = {
    * @param array items
    *        @see this._sanitizeChartDataSource
    */
-  createPrimedCacheChart: function(items) {
+  createPrimedCacheChart: function (items) {
     this._createChart({
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled",
@@ -3560,7 +3560,7 @@ PerformanceStatisticsView.prototype = {
    * @param array items
    *        @see this._sanitizeChartDataSource
    */
-  createEmptyCacheChart: function(items) {
+  createEmptyCacheChart: function (items) {
     this._createChart({
       id: "#empty-cache-chart",
       title: "charts.cacheDisabled",
@@ -3613,7 +3613,7 @@ PerformanceStatisticsView.prototype = {
    *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
    *          - title/data/strings/totals/sorted: @see Chart.jsm for details
    */
-  _createChart: function({ id, title, data, strings, totals, sorted }) {
+  _createChart: function ({ id, title, data, strings, totals, sorted }) {
     let container = $(id);
 
     // Nuke all existing charts of the specified type.
@@ -3648,7 +3648,7 @@ PerformanceStatisticsView.prototype = {
    * @param boolean emptyCache
    *        True if the cache is considered enabled, false for disabled.
    */
-  _sanitizeChartDataSource: function(items, emptyCache) {
+  _sanitizeChartDataSource: function (items, emptyCache) {
     let data = [
       "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws",
       "other"
@@ -3852,7 +3852,7 @@ function responseIsFresh({ responseHeaders, status }) {
  *          Wrapped function with the target data-key as the first argument.
  */
 function getKeyWithEvent(callback) {
-  return function(event) {
+  return function (event) {
     let key = event.target.getAttribute("data-key");
     if (key) {
       callback.call(null, key);

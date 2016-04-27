@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
   const DOM = React.DOM;
 
@@ -49,32 +49,32 @@ define(function(require, exports, module) {
 
     displayName: "Tabs",
 
-    getDefaultProps: function() {
+    getDefaultProps: function () {
       return {
         tabActive: 1
       };
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         tabActive: this.props.tabActive
       };
     },
 
-    componentDidMount: function() {
+    componentDidMount: function () {
       let index = this.state.tabActive;
       if (this.props.onMount) {
         this.props.onMount(index);
       }
     },
 
-    componentWillReceiveProps: function(newProps) {
+    componentWillReceiveProps: function (newProps) {
       if (newProps.tabActive) {
         this.setState({tabActive: newProps.tabActive});
       }
     },
 
-    setActive: function(index, e) {
+    setActive: function (index, e) {
       let onAfterChange = this.props.onAfterChange;
       let onBeforeChange = this.props.onBeforeChange;
 
@@ -98,7 +98,7 @@ define(function(require, exports, module) {
       e.preventDefault();
     },
 
-    getMenuItems: function() {
+    getMenuItems: function () {
       if (!this.props.children) {
         throw new Error("Tabs must contain at least one Panel");
       }
@@ -108,11 +108,11 @@ define(function(require, exports, module) {
       }
 
       let menuItems = this.props.children
-        .map(function(panel) {
+        .map(function (panel) {
           return typeof panel === "function" ? panel() : panel;
-        }).filter(function(panel) {
+        }).filter(function (panel) {
           return panel;
-        }).map(function(panel, index) {
+        }).map(function (panel, index) {
           let ref = ("tab-menu-" + (index + 1));
           let title = panel.props.title;
           let tabClassName = panel.props.className;
@@ -141,7 +141,7 @@ define(function(require, exports, module) {
       );
     },
 
-    getSelectedPanel: function() {
+    getSelectedPanel: function () {
       let index = this.state.tabActive - 1;
       let panel = this.props.children[index];
 
@@ -152,7 +152,7 @@ define(function(require, exports, module) {
       );
     },
 
-    render: function() {
+    render: function () {
       let classNames = ["tabs", this.props.className].join(" ");
 
       return (
@@ -178,7 +178,7 @@ define(function(require, exports, module) {
 
     displayName: "Panel",
 
-    render: function() {
+    render: function () {
       return DOM.div({},
         this.props.children
       );

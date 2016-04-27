@@ -35,15 +35,15 @@ var MainToolbar = React.createClass({
 
   displayName: "MainToolbar",
 
-  onRefresh: function() {
+  onRefresh: function () {
     this.props.dispatch(fetchProperties(this.props.object));
   },
 
-  onSearch: function(value) {
+  onSearch: function (value) {
     this.props.dispatch(setVisibilityFilter(value));
   },
 
-  render: function() {
+  render: function () {
     return (
       Toolbar({},
         ToolbarButton({

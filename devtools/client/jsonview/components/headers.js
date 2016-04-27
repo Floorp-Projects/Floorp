@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
   const { div, span, table, tbody, tr, td, code } = dom;
@@ -23,11 +23,11 @@ define(function(require, exports, module) {
 
     displayName: "Headers",
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {};
     },
 
-    render: function() {
+    render: function () {
       let data = this.props.data;
 
       return (
@@ -71,16 +71,16 @@ define(function(require, exports, module) {
 
     displayName: "HeaderList",
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         headers: []
       };
     },
 
-    render: function() {
+    render: function () {
       let headers = this.props.headers;
 
-      headers.sort(function(a, b) {
+      headers.sort(function (a, b) {
         return a.name > b.name ? 1 : -1;
       });
 
