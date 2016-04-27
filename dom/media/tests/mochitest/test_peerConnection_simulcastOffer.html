@@ -66,7 +66,7 @@
       test.chain.replace("PC_LOCAL_GUM", [
         function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
           stream = canvas.captureStream(10);
-          test.pcLocal.attachMedia(stream, 'video', 'local');
+          test.pcLocal.attachLocalStream(stream);
         },
         function PC_LOCAL_CANVAS_ALTERNATE_COLOR(test) {
           alternateRedAndGreen(helper, canvas, stream);
@@ -107,13 +107,13 @@
 
       test.chain.append([
         function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_1() {
-          var vremote = document.getElementById('pcRemote_remote1_video');
+          var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           return waitForColorChange(helper, vremote);
         },
         function PC_REMOTE_CHECK_SIZE_1() {
-          var vlocal = document.getElementById('pcLocal_local1_video');
-          var vremote = document.getElementById('pcRemote_remote1_video');
+          var vlocal = test.pcLocal.localMediaElements[0];
+          var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcLocal");
           ok(vremote, "Should have remote video element for pcRemote");
           ok(vlocal.videoWidth > 0, "source width is positive");
@@ -130,13 +130,13 @@
           return test.pcRemote.waitForMediaFlow();
         },
         function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_2() {
-          var vremote = document.getElementById('pcRemote_remote1_video');
+          var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           return waitForColorChange(helper, vremote);
         },
         function PC_REMOTE_CHECK_SIZE_2() {
-          var vlocal = document.getElementById('pcLocal_local1_video');
-          var vremote = document.getElementById('pcRemote_remote1_video');
+          var vlocal = test.pcLocal.localMediaElements[0];
+          var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vlocal, "Should have local video element for pcLocal");
           ok(vremote, "Should have remote video element for pcRemote");
           ok(vlocal.videoWidth > 0, "source width is positive");
@@ -150,7 +150,7 @@
           selectRecvSsrc(test.pcRemote, 2);
         },
         function PC_REMOTE_ENSURE_NO_COLOR_CHANGE() {
-          var vremote = document.getElementById('pcRemote_remote1_video');
+          var vremote = test.pcRemote.remoteMediaElements[0];
           ok(vremote, "Should have remote video element for pcRemote");
           return ensureNoColorChange(helper, vremote);
         },

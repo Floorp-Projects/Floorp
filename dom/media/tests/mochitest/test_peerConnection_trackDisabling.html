@@ -20,19 +20,19 @@ runNetworkTest(() => {
   test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
   test.chain.append([
     function CHECK_ASSUMPTIONS() {
-      is(test.pcLocal.mediaElements.length, 1,
-         "pcLocal should only have one media element");
-      is(test.pcRemote.mediaElements.length, 1,
-         "pcRemote should only have one media element");
-      is(test.pcLocal.streams.length, 1,
-         "pcLocal should only have one stream (the local one)");
-      is(test.pcRemote.streams.length, 1,
-         "pcRemote should only have one stream (the remote one)");
+      is(test.pcLocal.localMediaElements.length, 1,
+         "pcLocal should have one media element");
+      is(test.pcRemote.remoteMediaElements.length, 1,
+         "pcRemote should have one media element");
+      is(test.pcLocal._pc.getLocalStreams().length, 1,
+         "pcLocal should have one stream");
+      is(test.pcRemote._pc.getRemoteStreams().length, 1,
+         "pcRemote should have one stream");
     },
     function CHECK_VIDEO() {
       var h = new CaptureStreamTestHelper2D();
-      var localVideo = test.pcLocal.mediaElements[0];
-      var remoteVideo = test.pcRemote.mediaElements[0];
+      var localVideo = test.pcLocal.localMediaElements[0];
+      var remoteVideo = test.pcRemote.remoteMediaElements[0];
       // We check a pixel somewhere away from the top left corner since
       // MediaEngineDefault puts semi-transparent time indicators there.
       const offsetX = 50;
@@ -54,7 +54,7 @@ runNetworkTest(() => {
         .then(() => checkVideoEnabled(remoteVideo))
 
         .then(() => info("Disabling original"))
-        .then(() => test.pcLocal.streams[0].getVideoTracks()[0].enabled = false)
+        .then(() => test.pcLocal._pc.getLocalStreams()[0].getVideoTracks()[0].enabled = false)
 
         .then(() => info("Checking local video disabled"))
         .then(() => checkVideoDisabled(localVideo))
@@ -63,8 +63,8 @@ runNetworkTest(() => {
     },
     function CHECK_AUDIO() {
       var ac = new AudioContext();
-      var localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
-      var remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
+      var localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[0]);
+      var remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
 
       var checkAudio = (analyser, fun) => analyser.waitForAnalysisSuccess(fun);
 
@@ -80,7 +80,7 @@ runNetworkTest(() => {
         .then(() => info("Checking remote audio enabled"))
         .then(() => checkAudioEnabled(remoteAnalyser))
 
-        .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = false)
+        .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false)
 
         .then(() => info("Checking local audio disabled"))
         .then(() => checkAudioDisabled(localAnalyser))
