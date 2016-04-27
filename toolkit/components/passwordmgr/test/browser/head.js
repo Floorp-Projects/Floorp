@@ -5,6 +5,7 @@ Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
   Services.logins.removeAllLogins();
+
   let recipeParent = LoginTestUtils.recipes.getRecipeParent();
   if (!recipeParent) {
     // No need to reset the recipes if the recipe module wasn't even loaded.
@@ -76,11 +77,12 @@ const DONT_CHANGE_BUTTON = 1;
  * of the right type and with the right label.
  *
  * @param {String} aKind The desired `passwordNotificationType`
+ * @param {Object} [popupNotifications = PopupNotifications]
  * @return the found password popup notification.
  */
-function getCaptureDoorhanger(aKind) {
+function getCaptureDoorhanger(aKind, popupNotifications = PopupNotifications) {
   ok(true, "Looking for " + aKind + " popup notification");
-  let notification = PopupNotifications.getNotification("password");
+  let notification = popupNotifications.getNotification("password");
   if (notification) {
     is(notification.options.passwordNotificationType, aKind, "Notification type matches.");
     if (aKind == "password-change") {

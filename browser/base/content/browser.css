@@ -465,16 +465,16 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
    text. */
 .ac-url[actiontype],
 .ac-action:not([actiontype]) {
-  visibility: collapse;
+  display: none;
 }
 
 /* For action items in a noactions popup, show the URL text and hide the action
    text and type icon. */
 #PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-url {
-  visibility: visible;
+  display: -moz-box;
 }
 #PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-action {
-  visibility: collapse;
+  display: none;
 }
 #PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-type-icon {
   list-style-image: none;
