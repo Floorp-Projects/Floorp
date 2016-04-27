@@ -614,7 +614,7 @@ nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome *aParent,
                                  nsIWebBrowserChrome **_retval)
 {
   bool cancel;
-  return CreateChromeWindow2(aParent, aChromeFlags, 0, 0, nullptr, &cancel, _retval);
+  return CreateChromeWindow2(aParent, aChromeFlags, 0, nullptr, &cancel, _retval);
 }
 
 
@@ -637,7 +637,6 @@ NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                   uint32_t aChromeFlags,
                                   uint32_t aContextFlags,
-                                  nsIURI *aURI,
                                   nsITabParent *aOpeningTab,
                                   bool *aCancel,
                                   nsIWebBrowserChrome **_retval)
