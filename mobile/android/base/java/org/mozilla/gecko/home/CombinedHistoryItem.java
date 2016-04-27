@@ -16,7 +16,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
-import org.w3c.dom.Text;
 
 public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
     private static final String LOGTAG = "CombinedHistoryItem";
@@ -101,14 +100,21 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
             deviceExpanded = (ImageView) view.findViewById(R.id.device_expanded);
         }
 
-        public void bind(RemoteClient client, Context context) {
+        public void bind(Context context, RemoteClient client, boolean isCollapsed) {
             this.nameView.setText(client.name);
-            this.nameView.setTextColor(ContextCompat.getColor(context, R.color.placeholder_active_grey));
-            this.deviceTypeView.setImageResource("desktop".equals(client.deviceType) ? R.drawable.sync_desktop : R.drawable.sync_mobile);
-            this.deviceExpanded.setImageResource(client.tabs.isEmpty() ? 0 : R.drawable.home_group_collapsed);
-
             final long now = System.currentTimeMillis();
             this.lastModifiedView.setText(RemoteTabsExpandableListAdapter.getLastSyncedString(context, now, client.lastModified));
+
+            if (client.isDesktop()) {
+                deviceTypeView.setImageResource(isCollapsed ? R.drawable.sync_desktop_inactive : R.drawable.sync_desktop);
+            } else {
+                deviceTypeView.setImageResource(isCollapsed ? R.drawable.sync_mobile_inactive : R.drawable.sync_mobile);
+            }
+
+            nameView.setTextColor(ContextCompat.getColor(context, isCollapsed ? R.color.tabs_tray_icon_grey : R.color.placeholder_active_grey));
+            if (client.tabs.size() > 0) {
+                deviceExpanded.setImageResource(isCollapsed ? R.drawable.home_group_collapsed : R.drawable.arrow_down);
+            }
         }
     }
 }

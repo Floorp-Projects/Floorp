@@ -90,7 +90,7 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
                 final CombinedHistoryItem.ClientItem clientItem = (CombinedHistoryItem.ClientItem) holder;
                 final String clientGuid = adapterList.get(position).first;
                 final RemoteClient client = visibleClients.get(clientGuid);
-                clientItem.bind(client, context);
+                clientItem.bind(context, client, sState.isClientCollapsed(clientGuid));
                 break;
 
             case CHILD:
@@ -183,6 +183,10 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         final RemoteClient client = visibleClients.get(clientGuid);
 
         final boolean isCollapsed = sState.isClientCollapsed(clientGuid);
+
+        sState.setClientCollapsed(clientGuid, !isCollapsed);
+        notifyItemChanged(position);
+
         if (isCollapsed) {
             for (int i = client.tabs.size() - 1; i > -1; i--) {
                 // Insert child tabs at the index right after the client item that was clicked.
@@ -197,8 +201,6 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
             }
             notifyItemRangeRemoved(position + 1, client.tabs.size());
         }
-        // TODO: Update arrow direction of expanded state.
-        sState.setClientCollapsed(clientGuid, !isCollapsed);
     }
 
     public void unhideClients(List<RemoteClient> selectedClients) {
