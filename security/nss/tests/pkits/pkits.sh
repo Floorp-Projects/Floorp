@@ -310,15 +310,16 @@ pkits_SignatureVerification()
   pkits $certs/ValidDSASignaturesTest4EE.crt $certs/DSACACert.crt
   restore_db
 
-  VFY_ACTION="Valid DSA Parameter Inheritance Test5"; log_banner
-  certImport DSACACert
-  crlImport DSACACRL.crl
-  certImport DSAParametersInheritedCACert
-  crlImport DSAParametersInheritedCACRL.crl
-  pkits $certs/ValidDSAParameterInheritanceTest5EE.crt \
-      $certs/DSAParametersInheritedCACert.crt \
-      $certs/DSACACert.crt
-  restore_db
+  # NSS doesn't support DSA parameter inheritance anymore (see bug 671097)
+  # VFY_ACTION="Valid DSA Parameter Inheritance Test5"; log_banner
+  # certImport DSACACert
+  # crlImport DSACACRL.crl
+  # certImport DSAParametersInheritedCACert
+  # crlImport DSAParametersInheritedCACRL.crl
+  # pkits $certs/ValidDSAParameterInheritanceTest5EE.crt \
+  #     $certs/DSAParametersInheritedCACert.crt \
+  #     $certs/DSACACert.crt
+  # restore_db
 
   VFY_ACTION="Invalid DSA Signature Test6"; log_banner
   certImport DSACACert
