@@ -704,7 +704,7 @@ nsThreadShutdownContext*
 nsThread::ShutdownInternal(bool aSync)
 {
   MOZ_ASSERT(mThread);
-
+  MOZ_ASSERT(mThread != PR_GetCurrentThread());
   if (NS_WARN_IF(mThread == PR_GetCurrentThread())) {
     return nullptr;
   }
