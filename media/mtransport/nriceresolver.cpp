@@ -199,7 +199,7 @@ nsresult NrIceResolver::PendingResolution::OnLookupComplete(
   ASSERT_ON_THREAD(thread_);
   // First check if we've been canceled. This is single-threaded on the STS
   // thread, but cancel() cannot guarantee this event isn't on the queue.
-  if (request_) {
+  if (!canceled_) {
     nr_transport_addr *cb_addr = nullptr;
     nr_transport_addr ta;
     // TODO(jib@mozilla.com): Revisit when we do TURN.
@@ -212,7 +212,6 @@ nsresult NrIceResolver::PendingResolution::OnLookupComplete(
       }
     }
     cb_(cb_arg_, cb_addr);
-    request_ = nullptr;
     Release();
   }
   return NS_OK;
@@ -227,7 +226,7 @@ int NrIceResolver::cancel(void *obj, void *handle) {
 
 int NrIceResolver::PendingResolution::cancel() {
   request_->Cancel (NS_ERROR_ABORT);
-  request_ = nullptr;
+  canceled_ = true; // in case OnLookupComplete is already on event queue.
   Release();
   return 0;
 }

@@ -738,8 +738,7 @@ int NrSocket::create(nr_transport_addr *addr) {
   // Finally, register with the STS
   rv = stservice->AttachSocket(fd_, this);
   if (!NS_SUCCEEDED(rv)) {
-    r_log(LOG_GENERIC, LOG_CRIT, "Couldn't attach socket to STS, rv=%u",
-          static_cast<unsigned>(rv));
+    r_log(LOG_GENERIC, LOG_CRIT, "Couldn't attach socket to STS");
     ABORT(R_INTERNAL);
   }
 
