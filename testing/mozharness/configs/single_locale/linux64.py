@@ -14,6 +14,8 @@ config = {
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "L10NBASEDIR": "../../l10n",
         "MOZ_MAKE_COMPLETE_MAR": "1",
+        'TOOLTOOL_CACHE': '/builds/tooltool_cache',
+        'TOOLTOOL_HOME': '/builds',
     },
     "ssh_key_dir": "/home/mock_mozilla/.ssh",
     "log_name": "single_locale",
