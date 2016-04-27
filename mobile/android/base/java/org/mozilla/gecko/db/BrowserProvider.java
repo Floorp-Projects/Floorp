@@ -248,10 +248,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Combined.FAVICON, Combined.FAVICON);
         map.put(Combined.FAVICON_ID, Combined.FAVICON_ID);
         map.put(Combined.FAVICON_URL, Combined.FAVICON_URL);
-        map.put(Combined.LOCAL_DATE_LAST_VISITED, Combined.LOCAL_DATE_LAST_VISITED);
-        map.put(Combined.REMOTE_DATE_LAST_VISITED, Combined.REMOTE_DATE_LAST_VISITED);
-        map.put(Combined.LOCAL_VISITS_COUNT, Combined.LOCAL_VISITS_COUNT);
-        map.put(Combined.REMOTE_VISITS_COUNT, Combined.REMOTE_VISITS_COUNT);
         COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
@@ -325,7 +321,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             return;
         }
 
-        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(false, true);
+        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
         final long toRemove = rows - retain;
         debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
 
@@ -356,7 +352,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      */
     private void expireThumbnails(final SQLiteDatabase db) {
         Log.d(LOGTAG, "Expiring thumbnails.");
-        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(true, false);
+        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
         final String sql = "DELETE FROM " + TABLE_THUMBNAILS +
                            " WHERE " + Thumbnails.URL + " NOT IN ( " +
                              " SELECT " + Combined.URL +
@@ -902,7 +898,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
                        " FROM " + Combined.VIEW_NAME +
                        " WHERE " + ignoreForTopSitesWhereClause +
-                       " ORDER BY " + BrowserContract.getCombinedFrecencySortOrder(true, false) +
+                       " ORDER BY " + BrowserContract.getFrecencySortOrder(true, false) +
                        " LIMIT " + totalLimit,
 
                        ignoreForTopSitesArgs);
