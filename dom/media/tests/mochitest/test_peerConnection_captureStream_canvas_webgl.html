@@ -80,12 +80,12 @@ runNetworkTest(() => {
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
       test.pcLocal.canvasStream = canvas.captureStream(0.0);
       is(test.pcLocal.canvasStream.canvas, canvas, "Canvas attribute is correct");
-      test.pcLocal.attachMedia(test.pcLocal.canvasStream, 'video', 'local');
+      test.pcLocal.attachLocalStream(test.pcLocal.canvasStream);
     }
   ]);
   test.chain.append([
     function FIND_REMOTE_VIDEO() {
-      vremote = document.getElementById('pcRemote_remote1_video');
+      vremote = test.pcRemote.remoteMediaElements[0];
       ok(!!vremote, "Should have remote video element for pcRemote");
     },
     function WAIT_FOR_REMOTE_GREEN() {

@@ -31,18 +31,18 @@
 
     test.chain.append([
       function CHECK_ASSUMPTIONS() {
-        is(test.pcLocal.mediaElements.length, 1,
-           "pcLocal should only have one media element");
-        is(test.pcRemote.mediaElements.length, 1,
-           "pcRemote should only have one media element");
-        is(test.pcLocal.streams.length, 1,
-           "pcLocal should only have one stream (the local one)");
-        is(test.pcRemote.streams.length, 1,
-           "pcRemote should only have one stream (the remote one)");
+        is(test.pcLocal.localMediaElements.length, 1,
+           "pcLocal should have one media element");
+        is(test.pcRemote.remoteMediaElements.length, 1,
+           "pcRemote should have one media element");
+        is(test.pcLocal._pc.getLocalStreams().length, 1,
+           "pcLocal should have one stream");
+        is(test.pcRemote._pc.getRemoteStreams().length, 1,
+           "pcRemote should have one stream");
       },
       function CHECK_AUDIO() {
-        local1Analyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
-        remote1Analyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
+        local1Analyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[0]);
+        remote1Analyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[0]);
 
         freq = local1Analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
 
@@ -52,7 +52,7 @@
           .then(() => info("Checking remote audio enabled"))
           .then(() => checkAudioEnabled(remote1Analyser, freq))
 
-          .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = false)
+          .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = false)
 
           .then(() => info("Checking local audio disabled"))
           .then(() => checkAudioDisabled(local1Analyser, freq))
@@ -73,18 +73,18 @@
 
     test.chain.append([
       function CHECK_ASSUMPTIONS2() {
-        is(test.pcLocal.mediaElements.length, 2,
+        is(test.pcLocal.localMediaElements.length, 2,
            "pcLocal should have two media elements");
-        is(test.pcRemote.mediaElements.length, 2,
+        is(test.pcRemote.remoteMediaElements.length, 2,
            "pcRemote should have two media elements");
-        is(test.pcLocal.streams.length, 2,
+        is(test.pcLocal._pc.getLocalStreams().length, 2,
            "pcLocal should have two streams");
-        is(test.pcRemote.streams.length, 2,
+        is(test.pcRemote._pc.getRemoteStreams().length, 2,
            "pcRemote should have two streams");
       },
       function RE_CHECK_AUDIO() {
-        local2Analyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[1]);
-        remote2Analyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[1]);
+        local2Analyser = new AudioStreamAnalyser(ac, test.pcLocal._pc.getLocalStreams()[1]);
+        remote2Analyser = new AudioStreamAnalyser(ac, test.pcRemote._pc.getRemoteStreams()[1]);
 
         freq = local2Analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
 
@@ -99,8 +99,8 @@
           .then(() => info("Checking remote2 audio enabled"))
           .then(() => checkAudioEnabled(remote2Analyser, freq))
 
-          .then(() => test.pcLocal.streams[1].getAudioTracks()[0].enabled = false)
-          .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = true)
+          .then(() => test.pcLocal._pc.getLocalStreams()[1].getAudioTracks()[0].enabled = false)
+          .then(() => test.pcLocal._pc.getLocalStreams()[0].getAudioTracks()[0].enabled = true)
 
           .then(() => info("Checking local2 audio disabled"))
           .then(() => checkAudioDisabled(local2Analyser, freq))

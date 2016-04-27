@@ -32,13 +32,13 @@ runNetworkTest(() => {
     },
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
       stream1 = canvas1.captureStream(0);
-      test.pcLocal.attachMedia(stream1, 'video', 'local');
+      test.pcLocal.attachLocalStream(stream1);
     }
   ]);
 
   test.chain.append([
     function FIND_REMOTE_VIDEO() {
-      vremote1 = document.getElementById('pcRemote_remote1_video');
+      vremote1 = test.pcRemote.remoteMediaElements[0];
       ok(!!vremote1, "Should have remote video element for pcRemote");
     },
     function WAIT_FOR_REMOTE_GREEN() {
@@ -67,14 +67,14 @@ runNetworkTest(() => {
 
         // can't use test.pcLocal.getAllUserMedia([{video: true}]);
         // because it doesn't let us substitute the capture stream
-        return test.pcLocal.attachMedia(stream2, 'video', 'local');
+        test.pcLocal.attachLocalStream(stream2);
       }
     ]
   );
 
   test.chain.append([
     function FIND_REMOTE2_VIDEO() {
-      vremote2 = document.getElementById('pcRemote_remote2_video');
+      vremote2 = test.pcRemote.remoteMediaElements[1];
       ok(!!vremote2, "Should have remote2 video element for pcRemote");
     },
     function WAIT_FOR_REMOTE2_BLUE() {
