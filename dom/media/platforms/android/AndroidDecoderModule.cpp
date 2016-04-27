@@ -201,6 +201,10 @@ public:
     int32_t numChannels;
     NS_ENSURE_SUCCESS(rv =
         aFormat->GetInteger(NS_LITERAL_STRING("channel-count"), &numChannels), rv);
+    AudioConfig::ChannelLayout layout(numChannels);
+    if (!layout.IsValid()) {
+      return NS_ERROR_FAILURE;
+    }
 
     int32_t sampleRate;
     NS_ENSURE_SUCCESS(rv =
