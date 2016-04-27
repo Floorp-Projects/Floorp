@@ -128,6 +128,12 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 
     if (decoded) {
       uint32_t numChannels = mCodecContext->channels;
+      AudioConfig::ChannelLayout layout(numChannels);
+      if (!layout.IsValid()) {
+        mCallback->Error();
+        return;
+      }
+
       uint32_t samplingRate = mCodecContext->sample_rate;
 
       AlignedAudioBuffer audio =
