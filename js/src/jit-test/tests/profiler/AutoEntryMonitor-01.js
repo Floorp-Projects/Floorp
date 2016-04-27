@@ -20,11 +20,11 @@ cold_and_warm(entry1, { function: entry1 }, [ "entry1" ]);
 
 var getx = { get x() { } };
 cold_and_warm(Object.getOwnPropertyDescriptor(getx, 'x').get,
-              { object: getx, property: 'x' }, [ "getx.x" ]);
+              { object: getx, property: 'x' }, [ "get x" ]);
 
 var sety = { set y(v) { } };
 cold_and_warm(Object.getOwnPropertyDescriptor(sety, 'y').set,
-              { object: sety, property: 'y', value: 'glerk' }, [ "sety.y" ]);
+              { object: sety, property: 'y', value: 'glerk' }, [ "set y" ]);
 
 cold_and_warm(Object.prototype.toString, { ToString: {} }, []);
 

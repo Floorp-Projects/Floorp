@@ -172,7 +172,8 @@ UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                      uint16_t aPort,
                      bool aAddressReuse,
                      bool aLoopback,
-                     uint32_t recvBufferSize)
+                     uint32_t recvBufferSize,
+                     uint32_t sendBufferSize)
 {
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, PromiseFlatCString(aHost).get(), aPort));
 
@@ -191,7 +192,8 @@ UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                                            mFilterName);
   }
 
-  SendBind(UDPAddressInfo(nsCString(aHost), aPort), aAddressReuse, aLoopback, recvBufferSize);
+  SendBind(UDPAddressInfo(nsCString(aHost), aPort), aAddressReuse, aLoopback,
+           recvBufferSize, sendBufferSize);
   return NS_OK;
 }
 

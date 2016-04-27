@@ -197,7 +197,7 @@ CodeGenerator::visitValueToInt32(LValueToInt32* lir)
         Label* stringEntry;
         Label* stringRejoin;
         Register stringReg;
-        if (input->mightBeType(MIRType_String)) {
+        if (input->mightBeType(MIRType::String)) {
             stringReg = ToRegister(lir->temp());
             OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, ArgList(stringReg),
                                                  StoreFloatRegisterTo(temp));
@@ -516,14 +516,14 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand& value,
     // last one.  In particular, whenever tagCount is 1 that means we've tried
     // all but one of them already so we know exactly what's left based on the
     // mightBe* booleans.
-    bool mightBeUndefined = valueMIR->mightBeType(MIRType_Undefined);
-    bool mightBeNull = valueMIR->mightBeType(MIRType_Null);
-    bool mightBeBoolean = valueMIR->mightBeType(MIRType_Boolean);
-    bool mightBeInt32 = valueMIR->mightBeType(MIRType_Int32);
-    bool mightBeObject = valueMIR->mightBeType(MIRType_Object);
-    bool mightBeString = valueMIR->mightBeType(MIRType_String);
-    bool mightBeSymbol = valueMIR->mightBeType(MIRType_Symbol);
-    bool mightBeDouble = valueMIR->mightBeType(MIRType_Double);
+    bool mightBeUndefined = valueMIR->mightBeType(MIRType::Undefined);
+    bool mightBeNull = valueMIR->mightBeType(MIRType::Null);
+    bool mightBeBoolean = valueMIR->mightBeType(MIRType::Boolean);
+    bool mightBeInt32 = valueMIR->mightBeType(MIRType::Int32);
+    bool mightBeObject = valueMIR->mightBeType(MIRType::Object);
+    bool mightBeString = valueMIR->mightBeType(MIRType::String);
+    bool mightBeSymbol = valueMIR->mightBeType(MIRType::Symbol);
+    bool mightBeDouble = valueMIR->mightBeType(MIRType::Double);
     int tagCount = int(mightBeUndefined) + int(mightBeNull) +
         int(mightBeBoolean) + int(mightBeInt32) + int(mightBeObject) +
         int(mightBeString) + int(mightBeSymbol) + int(mightBeDouble);
@@ -677,7 +677,7 @@ void
 CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir)
 {
     MIRType inputType = lir->mir()->input()->type();
-    MOZ_ASSERT(inputType == MIRType_ObjectOrNull || lir->mir()->operandMightEmulateUndefined(),
+    MOZ_ASSERT(inputType == MIRType::ObjectOrNull || lir->mir()->operandMightEmulateUndefined(),
                "If the object couldn't emulate undefined, this should have been folded.");
 
     Label* truthy = getJumpLabelForBranch(lir->ifTruthy());
@@ -685,7 +685,7 @@ CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir)
     Register input = ToRegister(lir->input());
 
     if (lir->mir()->operandMightEmulateUndefined()) {
-        if (inputType == MIRType_ObjectOrNull)
+        if (inputType == MIRType::ObjectOrNull)
             masm.branchTestPtr(Assembler::Zero, input, input, falsy);
 
         OutOfLineTestObject* ool = new(alloc()) OutOfLineTestObject();
@@ -693,7 +693,7 @@ CodeGenerator::visitTestOAndBranch(LTestOAndBranch* lir)
 
         testObjectEmulatesUndefined(input, falsy, truthy, ToRegister(lir->temp()), ool);
     } else {
-        MOZ_ASSERT(inputType == MIRType_ObjectOrNull);
+        MOZ_ASSERT(inputType == MIRType::ObjectOrNull);
         testZeroEmitBranch(Assembler::NotEqual, input, lir->ifTruthy(), lir->ifFalsy());
     }
 }
@@ -707,7 +707,7 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch* lir)
     // out our input after we did cacheOperandMightEmulateUndefined.  So we
     // might think it can emulate undefined _and_ know that it can't be an
     // object.
-    if (lir->mir()->operandMightEmulateUndefined() && input->mightBeType(MIRType_Object)) {
+    if (lir->mir()->operandMightEmulateUndefined() && input->mightBeType(MIRType::Object)) {
         ool = new(alloc()) OutOfLineTestObject();
         addOutOfLineCode(ool, lir->mir());
     }
@@ -905,7 +905,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     const JSAtomState& names = GetJitContext()->runtime->names();
 
     // String
-    if (lir->mir()->input()->mightBeType(MIRType_String)) {
+    if (lir->mir()->input()->mightBeType(MIRType::String)) {
         Label notString;
         masm.branchTestString(Assembler::NotEqual, tag, &notString);
         masm.unboxString(input, output);
@@ -914,7 +914,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Integer
-    if (lir->mir()->input()->mightBeType(MIRType_Int32)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Int32)) {
         Label notInteger;
         masm.branchTestInt32(Assembler::NotEqual, tag, &notInteger);
         Register unboxed = ToTempUnboxRegister(lir->tempToUnbox());
@@ -925,14 +925,14 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Double
-    if (lir->mir()->input()->mightBeType(MIRType_Double)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Double)) {
         // Note: no fastpath. Need two extra registers and can only convert doubles
         // that fit integers and are smaller than StaticStrings::INT_STATIC_LIMIT.
         masm.branchTestDouble(Assembler::Equal, tag, ool->entry());
     }
 
     // Undefined
-    if (lir->mir()->input()->mightBeType(MIRType_Undefined)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Undefined)) {
         Label notUndefined;
         masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
         masm.movePtr(ImmGCPtr(names.undefined), output);
@@ -941,7 +941,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Null
-    if (lir->mir()->input()->mightBeType(MIRType_Null)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Null)) {
         Label notNull;
         masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
         masm.movePtr(ImmGCPtr(names.null), output);
@@ -950,7 +950,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Boolean
-    if (lir->mir()->input()->mightBeType(MIRType_Boolean)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Boolean)) {
         Label notBoolean, true_;
         masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
         masm.branchTestBooleanTruthy(true, input, &true_);
@@ -963,7 +963,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Object
-    if (lir->mir()->input()->mightBeType(MIRType_Object)) {
+    if (lir->mir()->input()->mightBeType(MIRType::Object)) {
         // Bail.
         MOZ_ASSERT(lir->mir()->fallible());
         Label bail;
@@ -972,7 +972,7 @@ CodeGenerator::visitValueToString(LValueToString* lir)
     }
 
     // Symbol
-    if (lir->mir()->input()->mightBeType(MIRType_Symbol))
+    if (lir->mir()->input()->mightBeType(MIRType::Symbol))
         masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
 
 #ifdef DEBUG
@@ -1218,9 +1218,9 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     Address lazySourceAddress(temp1, RegExpStatics::offsetOfLazySource());
     Address lazyIndexAddress(temp1, RegExpStatics::offsetOfLazyIndex());
 
-    masm.patchableCallPreBarrier(pendingInputAddress, MIRType_String);
-    masm.patchableCallPreBarrier(matchesInputAddress, MIRType_String);
-    masm.patchableCallPreBarrier(lazySourceAddress, MIRType_String);
+    masm.patchableCallPreBarrier(pendingInputAddress, MIRType::String);
+    masm.patchableCallPreBarrier(matchesInputAddress, MIRType::String);
+    masm.patchableCallPreBarrier(lazySourceAddress, MIRType::String);
 
     masm.storePtr(input, pendingInputAddress);
     masm.storePtr(input, matchesInputAddress);
@@ -2669,7 +2669,7 @@ CodeGenerator::visitTableSwitch(LTableSwitch* ins)
     Label* defaultcase = skipTrivialBlocks(mir->getDefault())->lir()->label();
     const LAllocation* temp;
 
-    if (mir->getOperand(0)->type() != MIRType_Int32) {
+    if (mir->getOperand(0)->type() != MIRType::Int32) {
         temp = ins->tempInt()->output();
 
         // The input is a double, so try and convert it to an integer.
@@ -3009,7 +3009,7 @@ CodeGenerator::visitStoreSlotT(LStoreSlotT* lir)
 
     MIRType valueType = lir->mir()->value()->type();
 
-    if (valueType == MIRType_ObjectOrNull) {
+    if (valueType == MIRType::ObjectOrNull) {
         masm.storeObjectOrNull(ToRegister(lir->value()), dest);
     } else {
         ConstantOrRegister value;
@@ -3117,7 +3117,7 @@ CodeGenerator::visitGetPropertyPolymorphicT(LGetPropertyPolymorphicT* ins)
 {
     Register obj = ToRegister(ins->obj());
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
-    Register temp = (output.type() == MIRType_Double)
+    Register temp = (output.type() == MIRType::Double)
                     ? ToRegister(ins->temp())
                     : output.typedReg().gpr();
     emitGetPropertyPolymorphic(ins, obj, temp, output);
@@ -3128,9 +3128,9 @@ static void
 EmitUnboxedPreBarrier(MacroAssembler &masm, T address, JSValueType type)
 {
     if (type == JSVAL_TYPE_OBJECT)
-        masm.patchableCallPreBarrier(address, MIRType_Object);
+        masm.patchableCallPreBarrier(address, MIRType::Object);
     else if (type == JSVAL_TYPE_STRING)
-        masm.patchableCallPreBarrier(address, MIRType_String);
+        masm.patchableCallPreBarrier(address, MIRType::String);
     else
         MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(type));
 }
@@ -3376,11 +3376,11 @@ CodeGenerator::visitTypeBarrierO(LTypeBarrierO* lir)
     Register scratch = ToTempRegisterOrInvalid(lir->temp());
     Label miss, ok;
 
-    if (lir->mir()->type() == MIRType_ObjectOrNull) {
-        Label* nullTarget = lir->mir()->resultTypeSet()->mightBeMIRType(MIRType_Null) ? &ok : &miss;
+    if (lir->mir()->type() == MIRType::ObjectOrNull) {
+        Label* nullTarget = lir->mir()->resultTypeSet()->mightBeMIRType(MIRType::Null) ? &ok : &miss;
         masm.branchTestPtr(Assembler::Zero, obj, obj, nullTarget);
     } else {
-        MOZ_ASSERT(lir->mir()->type() == MIRType_Object);
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Object);
         MOZ_ASSERT(lir->mir()->barrierKind() != BarrierKind::TypeTagOnly);
     }
 
@@ -4765,8 +4765,8 @@ CodeGenerator::branchIfInvalidated(Register temp, Label* invalidated)
 void
 CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, const TemporaryTypeSet* typeset)
 {
-    MOZ_ASSERT(type == MIRType_Object || type == MIRType_ObjectOrNull ||
-               type == MIRType_String || type == MIRType_Symbol);
+    MOZ_ASSERT(type == MIRType::Object || type == MIRType::ObjectOrNull ||
+               type == MIRType::String || type == MIRType::Symbol);
 
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(input);
@@ -4779,12 +4779,12 @@ CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, cons
     Label done;
     branchIfInvalidated(temp, &done);
 
-    if ((type == MIRType_Object || type == MIRType_ObjectOrNull) &&
+    if ((type == MIRType::Object || type == MIRType::ObjectOrNull) &&
         typeset && !typeset->unknownObject())
     {
         // We have a result TypeSet, assert this object is in it.
         Label miss, ok;
-        if (type == MIRType_ObjectOrNull)
+        if (type == MIRType::ObjectOrNull)
             masm.branchPtr(Assembler::Equal, input, ImmWord(0), &ok);
         if (typeset->getObjectCount() > 0)
             masm.guardObjectType(input, typeset, temp, &miss);
@@ -4809,16 +4809,16 @@ CodeGenerator::emitAssertObjectOrStringResult(Register input, MIRType type, cons
 
     void* callee;
     switch (type) {
-      case MIRType_Object:
+      case MIRType::Object:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectPtr);
         break;
-      case MIRType_ObjectOrNull:
+      case MIRType::ObjectOrNull:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidObjectOrNullPtr);
         break;
-      case MIRType_String:
+      case MIRType::String:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidStringPtr);
         break;
-      case MIRType_Symbol:
+      case MIRType::Symbol:
         callee = JS_FUNC_TO_DATA_PTR(void*, AssertValidSymbolPtr);
         break;
       default:
@@ -4926,13 +4926,13 @@ CodeGenerator::emitDebugResultChecks(LInstruction* ins)
         return;
 
     switch (mir->type()) {
-      case MIRType_Object:
-      case MIRType_ObjectOrNull:
-      case MIRType_String:
-      case MIRType_Symbol:
+      case MIRType::Object:
+      case MIRType::ObjectOrNull:
+      case MIRType::String:
+      case MIRType::Symbol:
         emitObjectOrStringResultChecks(ins, mir);
         break;
-      case MIRType_Value:
+      case MIRType::Value:
         emitValueResultChecks(ins, mir);
         break;
       default:
@@ -5508,11 +5508,11 @@ CodeGenerator::visitSimdBox(LSimdBox* lir)
 
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
     switch (type) {
-      case MIRType_Bool32x4:
-      case MIRType_Int32x4:
+      case MIRType::Bool32x4:
+      case MIRType::Int32x4:
         masm.storeUnalignedInt32x4(in, objectData);
         break;
-      case MIRType_Float32x4:
+      case MIRType::Float32x4:
         masm.storeUnalignedFloat32x4(in, objectData);
         break;
       default:
@@ -5586,11 +5586,11 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     // Load the value from the data of the InlineTypedObject.
     Address objectData(object, InlineTypedObject::offsetOfDataStart());
     switch (lir->mir()->type()) {
-      case MIRType_Bool32x4:
-      case MIRType_Int32x4:
+      case MIRType::Bool32x4:
+      case MIRType::Int32x4:
         masm.loadUnalignedInt32x4(objectData, simd);
         break;
-      case MIRType_Float32x4:
+      case MIRType::Float32x4:
         masm.loadUnalignedFloat32x4(objectData, simd);
         break;
       default:
@@ -6086,8 +6086,8 @@ CodeGenerator::visitGetNextMapEntryForIterator(LGetNextMapEntryForIterator* lir)
         Address valueAddress(front, ValueMap::Entry::offsetOfValue());
         Address keyElemAddress(result, elementsOffset);
         Address valueElemAddress(result, elementsOffset + sizeof(Value));
-        masm.patchableCallPreBarrier(keyElemAddress, MIRType_Value);
-        masm.patchableCallPreBarrier(valueElemAddress, MIRType_Value);
+        masm.patchableCallPreBarrier(keyElemAddress, MIRType::Value);
+        masm.patchableCallPreBarrier(valueElemAddress, MIRType::Value);
         masm.storeValue(keyAddress, keyElemAddress, temp);
         masm.storeValue(valueAddress, valueElemAddress, temp);
 
@@ -6621,7 +6621,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir)
     Register output = ToRegister(lir->output());
 
     if (op == JSOP_EQ || op == JSOP_NE) {
-        MOZ_ASSERT(lir->mir()->lhs()->type() != MIRType_Object ||
+        MOZ_ASSERT(lir->mir()->lhs()->type() != MIRType::Object ||
                    lir->mir()->operandMightEmulateUndefined(),
                    "Operands which can't emulate undefined should have been folded");
 
@@ -6643,9 +6643,9 @@ CodeGenerator::visitIsNullOrLikeUndefinedV(LIsNullOrLikeUndefinedV* lir)
 
         Register tag = masm.splitTagForTest(value);
         MDefinition* input = lir->mir()->lhs();
-        if (input->mightBeType(MIRType_Null))
+        if (input->mightBeType(MIRType::Null))
             masm.branchTestNull(Assembler::Equal, tag, nullOrLikeUndefined);
-        if (input->mightBeType(MIRType_Undefined))
+        if (input->mightBeType(MIRType::Undefined))
             masm.branchTestUndefined(Assembler::Equal, tag, nullOrLikeUndefined);
 
         if (ool) {
@@ -6707,7 +6707,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(LIsNullOrLikeUndefinedAndBra
             op = JSOP_EQ;
         }
 
-        MOZ_ASSERT(lir->cmpMir()->lhs()->type() != MIRType_Object ||
+        MOZ_ASSERT(lir->cmpMir()->lhs()->type() != MIRType::Object ||
                    lir->cmpMir()->operandMightEmulateUndefined(),
                    "Operands which can't emulate undefined should have been folded");
 
@@ -6723,9 +6723,9 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(LIsNullOrLikeUndefinedAndBra
         Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
         MDefinition* input = lir->cmpMir()->lhs();
-        if (input->mightBeType(MIRType_Null))
+        if (input->mightBeType(MIRType::Null))
             masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
-        if (input->mightBeType(MIRType_Undefined))
+        if (input->mightBeType(MIRType::Undefined))
             masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
 
         if (ool) {
@@ -6757,13 +6757,13 @@ CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT * lir)
                lir->mir()->compareType() == MCompare::Compare_Null);
 
     MIRType lhsType = lir->mir()->lhs()->type();
-    MOZ_ASSERT(lhsType == MIRType_Object || lhsType == MIRType_ObjectOrNull);
+    MOZ_ASSERT(lhsType == MIRType::Object || lhsType == MIRType::ObjectOrNull);
 
     JSOp op = lir->mir()->jsop();
-    MOZ_ASSERT(lhsType == MIRType_ObjectOrNull || op == JSOP_EQ || op == JSOP_NE,
+    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull || op == JSOP_EQ || op == JSOP_NE,
                "Strict equality should have been folded");
 
-    MOZ_ASSERT(lhsType == MIRType_ObjectOrNull || lir->mir()->operandMightEmulateUndefined(),
+    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull || lir->mir()->operandMightEmulateUndefined(),
                "If the object couldn't emulate undefined, this should have been folded.");
 
     Register objreg = ToRegister(lir->input());
@@ -6776,7 +6776,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT * lir)
         Label* emulatesUndefined = ool->label1();
         Label* doesntEmulateUndefined = ool->label2();
 
-        if (lhsType == MIRType_ObjectOrNull)
+        if (lhsType == MIRType::ObjectOrNull)
             masm.branchTestPtr(Assembler::Zero, objreg, objreg, emulatesUndefined);
 
         branchTestObjectEmulatesUndefined(objreg, emulatesUndefined, doesntEmulateUndefined,
@@ -6791,7 +6791,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedT(LIsNullOrLikeUndefinedT * lir)
         masm.move32(Imm32(op == JSOP_EQ), output);
         masm.bind(&done);
     } else {
-        MOZ_ASSERT(lhsType == MIRType_ObjectOrNull);
+        MOZ_ASSERT(lhsType == MIRType::ObjectOrNull);
 
         Label isNull, done;
 
@@ -6815,13 +6815,13 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(LIsNullOrLikeUndefinedAndBra
                compareType == MCompare::Compare_Null);
 
     MIRType lhsType = lir->cmpMir()->lhs()->type();
-    MOZ_ASSERT(lhsType == MIRType_Object || lhsType == MIRType_ObjectOrNull);
+    MOZ_ASSERT(lhsType == MIRType::Object || lhsType == MIRType::ObjectOrNull);
 
     JSOp op = lir->cmpMir()->jsop();
-    MOZ_ASSERT(lhsType == MIRType_ObjectOrNull || op == JSOP_EQ || op == JSOP_NE,
+    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull || op == JSOP_EQ || op == JSOP_NE,
                "Strict equality should have been folded");
 
-    MOZ_ASSERT(lhsType == MIRType_ObjectOrNull || lir->cmpMir()->operandMightEmulateUndefined(),
+    MOZ_ASSERT(lhsType == MIRType::ObjectOrNull || lir->cmpMir()->operandMightEmulateUndefined(),
                "If the object couldn't emulate undefined, this should have been folded.");
 
     MBasicBlock* ifTrue;
@@ -6845,14 +6845,14 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranchT(LIsNullOrLikeUndefinedAndBra
         Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
         Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
-        if (lhsType == MIRType_ObjectOrNull)
+        if (lhsType == MIRType::ObjectOrNull)
             masm.branchTestPtr(Assembler::Zero, input, input, ifTrueLabel);
 
         // Objects that emulate undefined are loosely equal to null/undefined.
         Register scratch = ToRegister(lir->temp());
         testObjectEmulatesUndefined(input, ifTrueLabel, ifFalseLabel, scratch, ool);
     } else {
-        MOZ_ASSERT(lhsType == MIRType_ObjectOrNull);
+        MOZ_ASSERT(lhsType == MIRType::ObjectOrNull);
         testZeroEmitBranch(Assembler::Equal, input, ifTrue, ifFalse);
     }
 }
@@ -7554,7 +7554,7 @@ CodeGenerator::visitNotV(LNotV* lir)
     // out our operand after we did cacheOperandMightEmulateUndefined.  So we
     // might think it can emulate undefined _and_ know that it can't be an
     // object.
-    if (lir->mir()->operandMightEmulateUndefined() && operand->mightBeType(MIRType_Object)) {
+    if (lir->mir()->operandMightEmulateUndefined() && operand->mightBeType(MIRType::Object)) {
         ool = new(alloc()) OutOfLineTestObjectWithLabels();
         addOutOfLineCode(ool, lir->mir());
         ifTruthy = ool->label1();
@@ -7992,11 +7992,11 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         masm.bind(&dontUpdate);
     }
 
-    if (ins->isStoreElementHoleT() && unboxedType == JSVAL_TYPE_MAGIC && valueType != MIRType_Double) {
+    if (ins->isStoreElementHoleT() && unboxedType == JSVAL_TYPE_MAGIC && valueType != MIRType::Double) {
         // The inline path for StoreElementHoleT does not always store the type tag,
-        // so we do the store on the OOL path. We use MIRType_None for the element type
+        // so we do the store on the OOL path. We use MIRType::None for the element type
         // so that storeElementTyped will always store the type tag.
-        emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType, MIRType_None,
+        emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType, MIRType::None,
                               elements, index, 0);
         masm.jump(ool->rejoin());
     } else {
@@ -8047,11 +8047,11 @@ CodeGenerator::visitStoreUnboxedPointer(LStoreUnboxedPointer* lir)
     int32_t offsetAdjustment;
     bool preBarrier;
     if (lir->mir()->isStoreUnboxedObjectOrNull()) {
-        type = MIRType_Object;
+        type = MIRType::Object;
         offsetAdjustment = lir->mir()->toStoreUnboxedObjectOrNull()->offsetAdjustment();
         preBarrier = lir->mir()->toStoreUnboxedObjectOrNull()->preBarrier();
     } else if (lir->mir()->isStoreUnboxedString()) {
-        type = MIRType_String;
+        type = MIRType::String;
         offsetAdjustment = lir->mir()->toStoreUnboxedString()->offsetAdjustment();
         preBarrier = lir->mir()->toStoreUnboxedString()->preBarrier();
     } else {
@@ -8635,7 +8635,7 @@ CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT* lir)
 
     MIRType type = lir->mir()->value()->type();
 
-    if (type == MIRType_Double) {
+    if (type == MIRType::Double) {
         // Store doubles directly.
         FloatRegister input = ToFloatRegister(lir->input());
         masm.storeDouble(input, Address(masm.getStackPointer(), argOffset));
@@ -9269,7 +9269,7 @@ CodeGenerator::visitUnboxFloatingPoint(LUnboxFloatingPoint* lir)
     FloatRegister resultReg = ToFloatRegister(result);
     masm.branchTestDouble(Assembler::NotEqual, box, ool->entry());
     masm.unboxDouble(box, resultReg);
-    if (lir->type() == MIRType_Float32)
+    if (lir->type() == MIRType::Float32)
         masm.convertDoubleToFloat32(resultReg, resultReg);
     masm.bind(ool->rejoin());
 }
@@ -9390,7 +9390,7 @@ CodeGenerator::visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* ins)
 
     Address address(input, NativeObject::getFixedSlotOffset(slot));
     Label bail;
-    if (type == MIRType_Double) {
+    if (type == MIRType::Double) {
         MOZ_ASSERT(result.isFloat());
         masm.ensureDouble(address, result.fpu(), &bail);
         if (mir->fallible())
@@ -9399,10 +9399,10 @@ CodeGenerator::visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* ins)
     }
     if (mir->fallible()) {
         switch (type) {
-          case MIRType_Int32:
+          case MIRType::Int32:
             masm.branchTestInt32(Assembler::NotEqual, address, &bail);
             break;
-          case MIRType_Boolean:
+          case MIRType::Boolean:
             masm.branchTestBoolean(Assembler::NotEqual, address, &bail);
             break;
           default:
@@ -9441,7 +9441,7 @@ CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT* ins)
     if (ins->mir()->needsBarrier())
         emitPreBarrier(address);
 
-    if (valueType == MIRType_ObjectOrNull) {
+    if (valueType == MIRType::ObjectOrNull) {
         Register nvalue = ToRegister(value);
         masm.storeObjectOrNull(nvalue, address);
     } else {
@@ -9511,7 +9511,7 @@ CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
 ConstantOrRegister
 CodeGenerator::toConstantOrRegister(LInstruction* lir, size_t n, MIRType type)
 {
-    if (type == MIRType_Value)
+    if (type == MIRType::Value)
         return TypedOrValueRegister(ToValue(lir, n));
 
     const LAllocation* value = lir->getOperand(n);
@@ -9789,13 +9789,13 @@ CodeGenerator::visitTypeOfV(LTypeOfV* lir)
 
     MDefinition* input = lir->mir()->input();
 
-    bool testObject = input->mightBeType(MIRType_Object);
-    bool testNumber = input->mightBeType(MIRType_Int32) || input->mightBeType(MIRType_Double);
-    bool testBoolean = input->mightBeType(MIRType_Boolean);
-    bool testUndefined = input->mightBeType(MIRType_Undefined);
-    bool testNull = input->mightBeType(MIRType_Null);
-    bool testString = input->mightBeType(MIRType_String);
-    bool testSymbol = input->mightBeType(MIRType_Symbol);
+    bool testObject = input->mightBeType(MIRType::Object);
+    bool testNumber = input->mightBeType(MIRType::Int32) || input->mightBeType(MIRType::Double);
+    bool testBoolean = input->mightBeType(MIRType::Boolean);
+    bool testUndefined = input->mightBeType(MIRType::Undefined);
+    bool testNull = input->mightBeType(MIRType::Null);
+    bool testString = input->mightBeType(MIRType::String);
+    bool testSymbol = input->mightBeType(MIRType::Symbol);
 
     unsigned numTests = unsigned(testObject) + unsigned(testNumber) + unsigned(testBoolean) +
         unsigned(testUndefined) + unsigned(testNull) + unsigned(testString) + unsigned(testSymbol);
@@ -10365,7 +10365,7 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8* lir)
 
     Label* stringEntry;
     Label* stringRejoin;
-    if (input->mightBeType(MIRType_String)) {
+    if (input->mightBeType(MIRType::String)) {
         OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, ArgList(output),
                                              StoreFloatRegisterTo(tempFloat));
         stringEntry = oolString->entry();

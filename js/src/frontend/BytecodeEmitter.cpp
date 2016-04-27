@@ -1584,7 +1584,7 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
             // Look up for name in function and block scopes.
             if (ssi.type() == StaticScopeIter<NoGC>::Function) {
                 RootedScript funScript(cx, ssi.funScript());
-                if (funScript->funHasExtensibleScope() || ssi.fun().atom() == pn->pn_atom)
+                if (funScript->funHasExtensibleScope() || ssi.fun().name() == pn->pn_atom)
                     return false;
 
                 // Skip the current function, since we're trying to convert a
@@ -1853,7 +1853,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
             return true;
 
         MOZ_ASSERT(fun->isLambda());
-        MOZ_ASSERT(pn->pn_atom == fun->atom());
+        MOZ_ASSERT(pn->pn_atom == fun->name());
 
         /*
          * Leave pn->isOp(JSOP_GETNAME) if this->fun needs a CallObject to
@@ -6539,7 +6539,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
     } else if (sc->isFunctionBox()) {
 #ifdef DEBUG
         BindingIter bi(script);
-        while (bi->name() != fun->atom())
+        while (bi->name() != fun->name())
             bi++;
         MOZ_ASSERT(bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT ||
                    bi->kind() == Binding::ARGUMENT);
@@ -6555,7 +6555,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             return false;
     } else {
         RootedModuleObject module(cx, sc->asModuleBox()->module());
-        RootedAtom name(cx, fun->atom());
+        RootedAtom name(cx, fun->name());
         if (!module->noteFunctionDeclaration(cx, name, fun))
             return false;
     }

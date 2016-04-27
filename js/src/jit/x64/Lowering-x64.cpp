@@ -17,7 +17,7 @@ using namespace js::jit;
 LBoxAllocation
 LIRGeneratorX64::useBoxFixed(MDefinition* mir, Register reg1, Register, bool useAtStart)
 {
-    MOZ_ASSERT(mir->type() == MIRType_Value);
+    MOZ_ASSERT(mir->type() == MIRType::Value);
 
     ensureDefined(mir);
     return LBoxAllocation(LUse(reg1, mir->virtualRegister(), useAtStart));
@@ -71,7 +71,7 @@ LIRGeneratorX64::visitUnbox(MUnbox* unbox)
 {
     MDefinition* box = unbox->getOperand(0);
 
-    if (box->type() == MIRType_ObjectOrNull) {
+    if (box->type() == MIRType::ObjectOrNull) {
         LUnboxObjectOrNull* lir = new(alloc()) LUnboxObjectOrNull(useRegisterAtStart(box));
         if (unbox->fallible())
             assignSnapshot(lir, unbox->bailoutKind());
@@ -79,7 +79,7 @@ LIRGeneratorX64::visitUnbox(MUnbox* unbox)
         return;
     }
 
-    MOZ_ASSERT(box->type() == MIRType_Value);
+    MOZ_ASSERT(box->type() == MIRType::Value);
 
     LUnboxBase* lir;
     if (IsFloatingPointType(unbox->type())) {
@@ -102,7 +102,7 @@ void
 LIRGeneratorX64::visitReturn(MReturn* ret)
 {
     MDefinition* opd = ret->getOperand(0);
-    MOZ_ASSERT(opd->type() == MIRType_Value);
+    MOZ_ASSERT(opd->type() == MIRType::Value);
 
     LReturn* ins = new(alloc()) LReturn;
     ins->setOperand(0, useFixed(opd, JSReturnReg));
@@ -142,7 +142,7 @@ LIRGeneratorX64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop
 void
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
 {
-    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LAsmJSUInt32ToDouble* lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
     define(lir, ins);
 }
@@ -150,7 +150,7 @@ LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins)
 void
 LIRGeneratorX64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins)
 {
-    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType::Int32);
     LAsmJSUInt32ToFloat32* lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
     define(lir, ins);
 }
@@ -159,7 +159,7 @@ void
 LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
@@ -174,7 +174,7 @@ void
 LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // For simplicity, require a register if we're going to emit a bounds-check
     // branch, so that we don't have special cases for constants.
@@ -209,7 +209,7 @@ void
 LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // The output may not be used but will be clobbered regardless, so
     // pin the output to eax.
@@ -228,7 +228,7 @@ LIRGeneratorX64::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 void
 LIRGeneratorX64::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_ASSERT(ins->base()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
 
     const LAllocation base = useRegister(ins->base());
     const LAllocation value = useRegister(ins->value());
@@ -246,7 +246,7 @@ void
 LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
     MDefinition* base = ins->base();
-    MOZ_ASSERT(base->type() == MIRType_Int32);
+    MOZ_ASSERT(base->type() == MIRType::Int32);
 
     // Case 1: the result of the operation is not used.
     //
@@ -390,7 +390,7 @@ void
 LIRGeneratorX64::visitTruncateToInt64(MTruncateToInt64* ins)
 {
     MDefinition* opd = ins->input();
-    MOZ_ASSERT(opd->type() == MIRType_Double || opd->type() == MIRType_Float32);
+    MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
 
     LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
     defineInt64(new(alloc()) LTruncateToInt64(useRegister(opd), maybeTemp), ins);
@@ -400,7 +400,7 @@ void
 LIRGeneratorX64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MDefinition* opd = ins->input();
-    MOZ_ASSERT(opd->type() == MIRType_Int64);
+    MOZ_ASSERT(opd->type() == MIRType::Int64);
     MOZ_ASSERT(IsFloatingPointType(ins->type()));
 
     define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);

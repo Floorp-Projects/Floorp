@@ -90,7 +90,8 @@ void Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set);
 struct nsStyle##name; \
 void Gecko_Construct_nsStyle##name(nsStyle##name* ptr); \
 void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr, const nsStyle##name* other); \
-void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);
+void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr); \
+const nsStyle##name* Servo_GetStyle##name(ServoComputedValues* computedValues);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 

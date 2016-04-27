@@ -1167,7 +1167,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeValue(src.valueReg(), dest);
         } else if (IsFloatingPointType(src.type())) {
             FloatRegister reg = src.typedReg().fpu();
-            if (src.type() == MIRType_Float32) {
+            if (src.type() == MIRType::Float32) {
                 convertFloat32ToDouble(reg, ScratchDoubleReg);
                 reg = ScratchDoubleReg;
             }
@@ -1247,7 +1247,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void callPreBarrier(const T& address, MIRType type) {
         Label done;
 
-        if (type == MIRType_Value)
+        if (type == MIRType::Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
 
         Push(PreBarrierReg);
@@ -1349,7 +1349,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     Register extractObject(const TypedOrValueRegister& reg, Register scratch) {
         if (reg.hasValue())
             return extractObject(reg.valueReg(), scratch);
-        MOZ_ASSERT(reg.type() == MIRType_Object);
+        MOZ_ASSERT(reg.type() == MIRType::Object);
         return reg.typedReg().gpr();
     }
 
@@ -1540,7 +1540,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
 #define DISPATCH_FLOATING_POINT_OP(method, type, arg1d, arg1f, arg2)    \
     MOZ_ASSERT(IsFloatingPointType(type));                              \
-    if (type == MIRType_Double)                                         \
+    if (type == MIRType::Double)                                         \
         method##Double(arg1d, arg2);                                    \
     else                                                                \
         method##Float32(arg1f, arg2);                                   \
@@ -1572,33 +1572,33 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void convertInt32ValueToDouble(const Address& address, Register scratch, Label* done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label* fail) {
-        convertValueToFloatingPoint(value, output, fail, MIRType_Double);
+        convertValueToFloatingPoint(value, output, fail, MIRType::Double);
     }
     bool convertValueToDouble(JSContext* cx, const Value& v, FloatRegister output, Label* fail) {
-        return convertValueToFloatingPoint(cx, v, output, fail, MIRType_Double);
+        return convertValueToFloatingPoint(cx, v, output, fail, MIRType::Double);
     }
     bool convertConstantOrRegisterToDouble(JSContext* cx, ConstantOrRegister src,
                                            FloatRegister output, Label* fail)
     {
-        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType_Double);
+        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType::Double);
     }
     void convertTypedOrValueToDouble(TypedOrValueRegister src, FloatRegister output, Label* fail) {
-        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType_Double);
+        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType::Double);
     }
 
     void convertValueToFloat(ValueOperand value, FloatRegister output, Label* fail) {
-        convertValueToFloatingPoint(value, output, fail, MIRType_Float32);
+        convertValueToFloatingPoint(value, output, fail, MIRType::Float32);
     }
     bool convertValueToFloat(JSContext* cx, const Value& v, FloatRegister output, Label* fail) {
-        return convertValueToFloatingPoint(cx, v, output, fail, MIRType_Float32);
+        return convertValueToFloatingPoint(cx, v, output, fail, MIRType::Float32);
     }
     bool convertConstantOrRegisterToFloat(JSContext* cx, ConstantOrRegister src,
                                           FloatRegister output, Label* fail)
     {
-        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType_Float32);
+        return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail, MIRType::Float32);
     }
     void convertTypedOrValueToFloat(TypedOrValueRegister src, FloatRegister output, Label* fail) {
-        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType_Float32);
+        convertTypedOrValueToFloatingPoint(src, output, fail, MIRType::Float32);
     }
 
     enum IntConversionBehavior {

@@ -286,17 +286,17 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     template <typename T>
     void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest, MIRType slotType) {
-        if (valueType == MIRType_Double) {
+        if (valueType == MIRType::Double) {
             storeDouble(value.reg().typedReg().fpu(), dest);
             return;
         }
 
         // For known integers and booleans, we can just store the unboxed value if
         // the slot has the same type.
-        if ((valueType == MIRType_Int32 || valueType == MIRType_Boolean) && slotType == valueType) {
+        if ((valueType == MIRType::Int32 || valueType == MIRType::Boolean) && slotType == valueType) {
             if (value.constant()) {
                 Value val = value.value();
-                if (valueType == MIRType_Int32)
+                if (valueType == MIRType::Int32)
                     store32(Imm32(val.toInt32()), dest);
                 else
                     store32(Imm32(val.toBoolean() ? 1 : 0), dest);
@@ -1842,7 +1842,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             MOZ_ASSERT(scratch64.asUnsized() != address.base);
             Ldr(scratch64, toMemOperand(address));
             int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-        } else if (type == MIRType_Int32 || type == MIRType_Boolean) {
+        } else if (type == MIRType::Int32 || type == MIRType::Boolean) {
             load32(address, dest.gpr());
         } else {
             loadPtr(address, dest.gpr());
@@ -1858,7 +1858,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             MOZ_ASSERT(scratch64.asUnsized() != address.index);
             doBaseIndex(scratch64, address, vixl::LDR_x);
             int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-        }  else if (type == MIRType_Int32 || type == MIRType_Boolean) {
+        }  else if (type == MIRType::Int32 || type == MIRType::Boolean) {
             load32(address, dest.gpr());
         } else {
             loadPtr(address, dest.gpr());

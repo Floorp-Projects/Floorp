@@ -92,7 +92,10 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
                                nsStyleContext* aParentContext,
                                TreeMatchContext& aTreeMatchContext)
 {
-  MOZ_CRASH("stylo: not implemented");
+  // aTreeMatchContext is used to speed up selector matching,
+  // but if the element already has a ServoComputedValues computed in
+  // advance, then we shouldn't need to use it.
+  return ResolveStyleFor(aElement, aParentContext);
 }
 
 already_AddRefed<nsStyleContext>

@@ -51,14 +51,7 @@ def escape_whitespace_in_brackets(input_str):
 def normalize_platform_list(alias, all_builds, build_list):
     if build_list == 'all':
         return all_builds
-
-    results = []
-    for build in build_list.split(','):
-        if build in alias:
-            build = alias[build]
-        results.append(build)
-
-    return results
+    return [alias.get(build, build) for build in build_list.split(',')]
 
 def normalize_test_list(aliases, all_tests, job_list):
     '''
@@ -279,17 +272,20 @@ def parse_commit(message, jobs):
 
     aliases = jobs['flags'].get('aliases', {})
 
-    platforms = normalize_platform_list(aliases, jobs['flags']['builds'], args.platforms)
+    platforms = set()
+    for base in normalize_platform_list(aliases, jobs['flags']['builds'], args.platforms):
+        # Silently skip unknown platforms.
+        if base not in jobs['builds']:
+            continue
+        platforms.add(base)
+        platforms.update(jobs['builds'][base].get('extra-builds', []))
+
     tests = normalize_test_list(aliases, jobs['flags']['tests'], args.tests)
 
     result = []
 
     # Expand the matrix of things!
     for platform in platforms:
-        # Silently skip unknown platforms.
-        if platform not in jobs['builds']:
-            continue
-
         platform_builds = jobs['builds'][platform]
 
         for build_type in build_types:
@@ -300,10 +296,7 @@ def parse_commit(message, jobs):
             platform_build = platform_builds['types'][build_type]
             build_task = platform_build['task']
 
-            if 'additional-parameters' in platform_build:
-                additional_parameters = platform_build['additional-parameters']
-            else:
-                additional_parameters = {}
+            additional_parameters = platform_build.get('additional-parameters', {})
 
             # Generate list of post build tasks that run on this build
             post_build_jobs = []
@@ -325,6 +318,7 @@ def parse_commit(message, jobs):
                 'build_name': platform,
                 'build_type': build_type,
                 'interactive': args.interactive,
+                'when': platform_builds.get('when', {}),
             })
 
     # Process miscellaneous tasks.

@@ -266,6 +266,13 @@ interface nsIUDPSocket : nsISupports
      * The size of the receive buffer. Default depends on the OS.
      */
     [noscript] attribute long recvBufferSize;
+
+    /**
+     * sendBufferSize
+     *
+     * The size of the send buffer. Default depends on the OS.
+     */
+    [noscript] attribute long sendBufferSize;
 };
 
 /**

@@ -97,6 +97,7 @@ int nr_transport_addr_copy_keep_ifname(nr_transport_addr *to, nr_transport_addr 
 int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr);
 int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len);
 int nr_transport_addr_set_port(nr_transport_addr *addr, int port);
+int nr_transport_addr_is_reliable_transport(nr_transport_addr *addr);
 
 #endif
 

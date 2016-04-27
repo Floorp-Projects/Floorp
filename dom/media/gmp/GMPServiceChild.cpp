@@ -72,10 +72,11 @@ public:
     base::ProcessId otherProcess;
     nsCString displayName;
     uint32_t pluginId;
+    nsresult rv;
     bool ok = aGMPServiceChild->SendLoadGMP(mNodeId, mAPI, mTags,
                                             alreadyBridgedTo, &otherProcess,
-                                            &displayName, &pluginId);
-    if (!ok) {
+                                            &displayName, &pluginId, &rv);
+    if (!ok && rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
       mCallback->Done(nullptr);
       return;
     }

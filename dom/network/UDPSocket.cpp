@@ -504,6 +504,7 @@ UDPSocket::InitRemote(const nsAString& aLocalAddress,
                   aLocalPort,
                   mAddressReuse,
                   mLoopback,
+                  0,
                   0);
 
   if (NS_FAILED(rv)) {

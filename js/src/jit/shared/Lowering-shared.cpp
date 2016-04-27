@@ -80,28 +80,28 @@ LIRGeneratorShared::visitConstant(MConstant* ins)
     }
 
     switch (ins->type()) {
-      case MIRType_Double:
+      case MIRType::Double:
         define(new(alloc()) LDouble(ins->toDouble()), ins);
         break;
-      case MIRType_Float32:
+      case MIRType::Float32:
         define(new(alloc()) LFloat32(ins->toFloat32()), ins);
         break;
-      case MIRType_Boolean:
+      case MIRType::Boolean:
         define(new(alloc()) LInteger(ins->toBoolean()), ins);
         break;
-      case MIRType_Int32:
+      case MIRType::Int32:
         define(new(alloc()) LInteger(ins->toInt32()), ins);
         break;
-      case MIRType_Int64:
+      case MIRType::Int64:
         defineInt64(new(alloc()) LInteger64(ins->toInt64()), ins);
         break;
-      case MIRType_String:
+      case MIRType::String:
         define(new(alloc()) LPointer(ins->toString()), ins);
         break;
-      case MIRType_Symbol:
+      case MIRType::Symbol:
         define(new(alloc()) LPointer(ins->toSymbol()), ins);
         break;
-      case MIRType_Object:
+      case MIRType::Object:
         define(new(alloc()) LPointer(&ins->toObject()), ins);
         break;
       default:
@@ -154,7 +154,7 @@ LRecoverInfo::OperandIter::canOptimizeOutIfUnused()
     // We check ins->type() in addition to ins->isUnused() because
     // EliminateDeadResumePointOperands may replace nodes with the constant
     // MagicValue(JS_OPTIMIZED_OUT).
-    if ((ins->isUnused() || ins->type() == MIRType_MagicOptimizedOut) &&
+    if ((ins->isUnused() || ins->type() == MIRType::MagicOptimizedOut) &&
         (*it_)->isResumePoint())
     {
         return !(*it_)->toResumePoint()->isObservableOperand(op_);
@@ -209,7 +209,7 @@ LIRGeneratorShared::buildSnapshot(LInstruction* ins, MResumePoint* rp, BailoutKi
         if (ins->isConstant() || ins->isUnused()) {
             *type = LAllocation();
             *payload = LAllocation();
-        } else if (ins->type() != MIRType_Value) {
+        } else if (ins->type() != MIRType::Value) {
             *type = LAllocation();
             *payload = use(ins, LUse(LUse::KEEPALIVE));
         } else {

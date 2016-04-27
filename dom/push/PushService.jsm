@@ -31,10 +31,6 @@ const CONNECTION_PROTOCOLS = (function() {
   }
 })();
 
-XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
-                                   "@mozilla.org/contentsecuritymanager;1",
-                                   "nsIContentSecurityManager");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
                                    "@mozilla.org/push/Notifier;1",
                                    "nsIPushNotifier");
@@ -360,7 +356,10 @@ this.PushService = {
     }
 
     console.debug("backgroundUnregister: Notifying server", record);
-    this._sendUnregister(record, reason).catch(e => {
+    this._sendUnregister(record, reason).then(() => {
+      gPushNotifier.notifySubscriptionLost(record.scope, record.principal,
+                                           reason);
+    }).catch(e => {
       console.error("backgroundUnregister: Error notifying server", e);
     });
   },
@@ -394,11 +393,6 @@ this.PushService = {
     } catch (e) {
       console.warn("findService: Error creating valid URI from",
         "dom.push.serverURL", serverURL);
-      return [];
-    }
-
-    if (!gContentSecurityManager.isURIPotentiallyTrustworthy(uri)) {
-      console.warn("findService: Untrusted server URI", uri.spec);
       return [];
     }
 
@@ -1180,11 +1174,15 @@ this.PushService = {
           return false;
         }
 
+        let reason = Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL;
         return Promise.all([
-          this._sendUnregister(record,
-                               Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL),
+          this._sendUnregister(record, reason),
           this._db.delete(record.keyID),
-        ]).then(() => true);
+        ]).then(() => {
+          gPushNotifier.notifySubscriptionLost(record.scope, record.principal,
+                                               reason);
+          return true;
+        });
       });
   },
 
