@@ -11,7 +11,6 @@
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDocument.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/AnimationPerformanceWarning.h"
