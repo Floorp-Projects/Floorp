@@ -34,6 +34,9 @@ public:
   nsCString mValue;
 };
 
+  // Maximum channel number we can currently handle (7.1)
+#define MAX_AUDIO_CHANNELS 8
+
 class TrackInfo {
 public:
   enum TrackType {
@@ -304,7 +307,7 @@ public:
 
   bool IsValid() const override
   {
-    return mChannels > 0 && mRate > 0;
+    return mChannels > 0 && mChannels <= MAX_AUDIO_CHANNELS && mRate > 0;
   }
 
   AudioInfo* GetAsAudioInfo() override
@@ -516,9 +519,6 @@ public:
   const nsCString& mMimeType;
 };
 
-// Maximum channel number we can currently handle (7.1)
-#define MAX_AUDIO_CHANNELS 8
-
 class AudioConfig {
 public:
   enum Channel {
@@ -656,6 +656,11 @@ public:
   bool operator!=(const AudioConfig& aOther) const
   {
     return !(*this == aOther);
+  }
+
+  bool IsValid() const
+  {
+    return mChannelLayout.IsValid() && Format() != FORMAT_NONE && Rate() > 0;
   }
 
   static const char* FormatToString(SampleFormat aFormat);
