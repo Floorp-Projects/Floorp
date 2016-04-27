@@ -165,8 +165,9 @@ MediaStreamAudioSourceNode::PrincipalChanged(MediaStreamTrack* aMediaStreamTrack
   MOZ_ASSERT(aMediaStreamTrack == mInputTrack);
 
   bool subsumes = false;
+  nsIDocument* doc = nullptr;
   if (nsPIDOMWindowInner* parent = Context()->GetParentObject()) {
-    nsIDocument* doc = parent->GetExtantDoc();
+    doc = parent->GetExtantDoc();
     if (doc) {
       nsIPrincipal* docPrincipal = doc->NodePrincipal();
       nsIPrincipal* trackPrincipal = aMediaStreamTrack->GetPrincipal();
@@ -176,8 +177,16 @@ MediaStreamAudioSourceNode::PrincipalChanged(MediaStreamTrack* aMediaStreamTrack
     }
   }
   auto stream = static_cast<AudioNodeExternalInputStream*>(mStream.get());
-  stream->SetInt32Parameter(MediaStreamAudioSourceNodeEngine::ENABLE,
-                            subsumes || aMediaStreamTrack->GetCORSMode() != CORS_NONE);
+  bool enabled = subsumes || aMediaStreamTrack->GetCORSMode() != CORS_NONE;
+  stream->SetInt32Parameter(MediaStreamAudioSourceNodeEngine::ENABLE, enabled);
+
+  if (!enabled && doc) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Web Audio"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    CrossOriginErrorString());
+  }
 }
 
 size_t

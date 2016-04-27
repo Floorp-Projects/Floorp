@@ -109,6 +109,7 @@
 #include "nsComputedDOMStyle.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "ReferrerPolicy.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1275,9 +1276,11 @@ nsGenericHTMLElement::ParseReferrerAttribute(const nsAString& aString,
                                              nsAttrValue& aResult)
 {
   static const nsAttrValue::EnumTable kReferrerTable[] = {
-    { "no-referrer", net::RP_No_Referrer },
-    { "origin", net::RP_Origin },
-    { "unsafe-url", net::RP_Unsafe_URL },
+    { net::kRPS_No_Referrer, net::RP_No_Referrer },
+    { net::kRPS_Origin, net::RP_Origin },
+    { net::kRPS_Origin_When_Cross_Origin, net::RP_Origin_When_Crossorigin },
+    { net::kRPS_No_Referrer_When_Downgrade, net::RP_No_Referrer_When_Downgrade },
+    { net::kRPS_Unsafe_URL, net::RP_Unsafe_URL },
     { 0 }
   };
   return aResult.ParseEnumValue(aString, kReferrerTable, false);

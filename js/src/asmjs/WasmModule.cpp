@@ -588,7 +588,7 @@ ModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
-           prettyFuncNames.sizeOfExcludingThis(mallocSizeOf) +
+           SizeOfVectorExcludingThis(prettyFuncNames, mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf);
 }
 

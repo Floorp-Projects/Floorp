@@ -416,9 +416,9 @@ class IonBuilder
                   BarrierKind barrier, TemporaryTypeSet* types);
     bool storeSlot(MDefinition* obj, size_t slot, size_t nfixed,
                    MDefinition* value, bool needsBarrier,
-                   MIRType slotType = MIRType_None);
+                   MIRType slotType = MIRType::None);
     bool storeSlot(MDefinition* obj, Shape* shape, MDefinition* value, bool needsBarrier,
-                   MIRType slotType = MIRType_None);
+                   MIRType slotType = MIRType::None);
     bool shouldAbortOnPreliminaryGroups(MDefinition *obj);
 
     MDefinition* tryInnerizeWindow(MDefinition* obj);

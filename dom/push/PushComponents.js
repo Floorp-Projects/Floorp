@@ -24,11 +24,12 @@ XPCOMUtils.defineLazyGetter(this, "PushService", function() {
   return PushService;
 });
 
-// Observer notification topics for system subscriptions. These are duplicated
-// and used in `PushNotifier.cpp`. They're exposed on `nsIPushService` instead
-// of `nsIPushNotifier` so that JS callers only need to import this service.
+// Observer notification topics for push messages and subscription status
+// changes. These are duplicated and used in `nsIPushNotifier`. They're exposed
+// on `nsIPushService` so that JS callers only need to import this service.
 const OBSERVER_TOPIC_PUSH = "push-message";
 const OBSERVER_TOPIC_SUBSCRIPTION_CHANGE = "push-subscription-change";
+const OBSERVER_TOPIC_SUBSCRIPTION_LOST = "push-subscription-lost";
 
 /**
  * `PushServiceBase`, `PushServiceParent`, and `PushServiceContent` collectively
@@ -60,6 +61,7 @@ PushServiceBase.prototype = {
 
   pushTopic: OBSERVER_TOPIC_PUSH,
   subscriptionChangeTopic: OBSERVER_TOPIC_SUBSCRIPTION_CHANGE,
+  subscriptionLostTopic: OBSERVER_TOPIC_SUBSCRIPTION_LOST,
 
   _handleReady() {},
 
@@ -246,7 +248,7 @@ Object.assign(PushServiceParent.prototype, {
 
     // System subscriptions can only be created by chrome callers, and are
     // exempt from the background message quota and permission checks. They
-    // also use XPCOM observer notifications instead of service worker events.
+    // also do not fire service worker events.
     data.systemRecord = principal.isSystemPrincipal;
 
     data.originAttributes =
@@ -485,6 +487,15 @@ PushSubscription.prototype = {
    */
   get quota() {
     return this._props.quota;
+  },
+
+  /**
+   * Indicates whether this subscription was created with the system principal.
+   * System subscriptions are exempt from the background message quota and
+   * permission checks.
+   */
+  get isSystemSubscription() {
+    return !!this._props.systemRecord;
   },
 
   /**

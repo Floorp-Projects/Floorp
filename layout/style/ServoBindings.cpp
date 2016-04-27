@@ -280,4 +280,26 @@ Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set)
   MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleDocument in a "
             "non-MOZ_STYLO build");
 }
+
+#define STYLE_STRUCT(name_, checkdata_cb_)                                     \
+const nsStyle##name_*                                                          \
+Servo_GetStyle##name_(ServoComputedValues*)                                    \
+{                                                                              \
+  MOZ_CRASH("stylo: shouldn't be calling Servo_GetStyle" #name_ " in a "       \
+            "non-MOZ_STYLO build");                                            \
+}
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#endif
+
+#ifdef MOZ_STYLO
+const nsStyleVariables*
+Servo_GetStyleVariables(ServoComputedValues* aComputedValues)
+{
+  // Servo can't provide us with Variables structs yet, so instead of linking
+  // to a Servo_GetStyleVariables defined in Servo we define one here that
+  // always returns the same, empty struct.
+  static nsStyleVariables variables(StyleStructContext::ServoContext());
+  return &variables;
+}
 #endif

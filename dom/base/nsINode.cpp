@@ -1657,6 +1657,167 @@ nsINode::GetNextElementSibling() const
   return nullptr;
 }
 
+static already_AddRefed<nsINode>
+GetNodeFromNodeOrString(const OwningNodeOrString& aNode,
+                        nsIDocument* aDocument)
+{
+  if (aNode.IsNode()) {
+    nsCOMPtr<nsINode> node = aNode.GetAsNode();
+    return node.forget();
+  }
+
+  if (aNode.IsString()){
+    RefPtr<nsTextNode> textNode =
+      aDocument->CreateTextNode(aNode.GetAsString());
+    return textNode.forget();
+  }
+
+  MOZ_CRASH("Impossible type");
+}
+
+/**
+ * Implement the algorithm specified at
+ * https://dom.spec.whatwg.org/#converting-nodes-into-a-node for |prepend()|,
+ * |append()|, |before()|, |after()|, and |replaceWith()| APIs.
+ */
+static already_AddRefed<nsINode>
+ConvertNodesOrStringsIntoNode(const Sequence<OwningNodeOrString>& aNodes,
+                              nsIDocument* aDocument,
+                              ErrorResult& aRv)
+{
+  if (aNodes.Length() == 1) {
+    return GetNodeFromNodeOrString(aNodes[0], aDocument);
+  }
+
+  nsCOMPtr<nsINode> fragment = aDocument->CreateDocumentFragment();
+
+  for (const auto& node : aNodes) {
+    nsCOMPtr<nsINode> childNode = GetNodeFromNodeOrString(node, aDocument);
+    fragment->AppendChild(*childNode, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  return fragment.forget();
+}
+
+static void
+InsertNodesIntoHashset(const Sequence<OwningNodeOrString>& aNodes,
+                       nsTHashtable<nsPtrHashKey<nsINode>>& aHashset)
+{
+  for (const auto& node : aNodes) {
+    if (node.IsNode()) {
+      aHashset.PutEntry(node.GetAsNode());
+    }
+  }
+}
+
+static nsINode*
+FindViablePreviousSibling(const nsINode& aNode,
+                          const Sequence<OwningNodeOrString>& aNodes)
+{
+  nsTHashtable<nsPtrHashKey<nsINode>> nodeSet(16);
+  InsertNodesIntoHashset(aNodes, nodeSet);
+
+  nsINode* viablePreviousSibling = nullptr;
+  for (nsINode* sibling = aNode.GetPreviousSibling(); sibling;
+       sibling = sibling->GetPreviousSibling()) {
+    if (!nodeSet.Contains(sibling)) {
+      viablePreviousSibling = sibling;
+      break;
+    }
+  }
+
+  return viablePreviousSibling;
+}
+
+static nsINode*
+FindViableNextSibling(const nsINode& aNode,
+                      const Sequence<OwningNodeOrString>& aNodes)
+{
+  nsTHashtable<nsPtrHashKey<nsINode>> nodeSet(16);
+  InsertNodesIntoHashset(aNodes, nodeSet);
+
+  nsINode* viableNextSibling = nullptr;
+  for (nsINode* sibling = aNode.GetNextSibling(); sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (!nodeSet.Contains(sibling)) {
+      viableNextSibling = sibling;
+      break;
+    }
+  }
+
+  return viableNextSibling;
+}
+
+void
+nsINode::Before(const Sequence<OwningNodeOrString>& aNodes,
+                ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> parent = GetParentNode();
+  if (!parent) {
+    return;
+  }
+
+  nsINode* viablePreviousSibling = FindViablePreviousSibling(*this, aNodes);
+
+  nsCOMPtr<nsINode> node =
+    ConvertNodesOrStringsIntoNode(aNodes, OwnerDoc(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  viablePreviousSibling = viablePreviousSibling ?
+    viablePreviousSibling->GetNextSibling() : parent->GetFirstChild();
+
+  parent->InsertBefore(*node, viablePreviousSibling, aRv);
+}
+
+void
+nsINode::After(const Sequence<OwningNodeOrString>& aNodes,
+               ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> parent = GetParentNode();
+  if (!parent) {
+    return;
+  }
+
+  nsINode* viableNextSibling = FindViableNextSibling(*this, aNodes);
+
+  nsCOMPtr<nsINode> node =
+    ConvertNodesOrStringsIntoNode(aNodes, OwnerDoc(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  parent->InsertBefore(*node, viableNextSibling, aRv);
+}
+
+void
+nsINode::ReplaceWith(const Sequence<OwningNodeOrString>& aNodes,
+                     ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> parent = GetParentNode();
+  if (!parent) {
+    return;
+  }
+
+  nsINode* viableNextSibling = FindViableNextSibling(*this, aNodes);
+
+  nsCOMPtr<nsINode> node =
+    ConvertNodesOrStringsIntoNode(aNodes, OwnerDoc(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (parent == GetParentNode()) {
+    parent->ReplaceChild(*node, *this, aRv);
+  } else {
+    parent->InsertBefore(*node, viableNextSibling, aRv);
+  }
+}
+
 void
 nsINode::Remove()
 {
@@ -1698,6 +1859,32 @@ nsINode::GetLastElementChild() const
   }
 
   return nullptr;
+}
+
+void
+nsINode::Prepend(const Sequence<OwningNodeOrString>& aNodes,
+                 ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> node =
+    ConvertNodesOrStringsIntoNode(aNodes, OwnerDoc(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  InsertBefore(*node, mFirstChild, aRv);
+}
+
+void
+nsINode::Append(const Sequence<OwningNodeOrString>& aNodes,
+                 ErrorResult& aRv)
+{
+  nsCOMPtr<nsINode> node =
+    ConvertNodesOrStringsIntoNode(aNodes, OwnerDoc(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  AppendChild(*node, aRv);
 }
 
 void

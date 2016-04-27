@@ -59,6 +59,10 @@ public:
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
   bool PaintWillResample() { return mPaintWillResample; }
 
+  // We use this to allow TiledContentHost to invalidate regions where
+  // tiles are fading in.
+  virtual void AddAnimationInvalidation(nsIntRegion& aRegion) { }
+
 protected:
   explicit ContentHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo)

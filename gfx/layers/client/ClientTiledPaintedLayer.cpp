@@ -175,7 +175,8 @@ ClientTiledPaintedLayer::BeginPaint()
   // on this layer. If there is an OMT animation then we need to draw the whole
   // visible region of this layer as determined by layout, because we don't know
   // what parts of it might move into view in the compositor.
-  if (!hasTransformAnimation &&
+  mPaintData.mHasTransformAnimation = hasTransformAnimation;
+  if (!mPaintData.mHasTransformAnimation &&
       mContentClient->GetLowPrecisionTiledBuffer()) {
     ParentLayerRect criticalDisplayPort =
       (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
@@ -263,15 +264,6 @@ ClientTiledPaintedLayer::UseProgressiveDraw() {
     return false;
   }
 
-  if (!mPaintData.mCriticalDisplayPort) {
-    // This catches three scenarios:
-    // 1) This layer doesn't have a scrolling ancestor
-    // 2) This layer is subject to OMTA transforms
-    // 3) Low-precision painting is disabled
-    // In all of these cases, we don't want to draw this layer progressively.
-    return false;
-  }
-
   if (GetIsFixedPosition() || GetParent()->GetIsFixedPosition()) {
     // This layer is fixed-position and so even if it does have a scrolling
     // ancestor it will likely be entirely on-screen all the time, so we
@@ -279,10 +271,19 @@ ClientTiledPaintedLayer::UseProgressiveDraw() {
     return false;
   }
 
+  if (mPaintData.mHasTransformAnimation) {
+    // The compositor is going to animate this somehow, so we want it all
+    // on the screen at once.
+    return false;
+  }
+
   if (ClientManager()->AsyncPanZoomEnabled()) {
     LayerMetricsWrapper scrollAncestor;
     GetAncestorLayers(&scrollAncestor, nullptr, nullptr);
     MOZ_ASSERT(scrollAncestor); // because mPaintData.mCriticalDisplayPort is set
+    if (!scrollAncestor) {
+      return false;
+    }
     const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
     if (!IsScrollingOnCompositor(parentMetrics)) {
       return false;

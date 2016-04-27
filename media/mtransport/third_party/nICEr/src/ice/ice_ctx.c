@@ -413,6 +413,8 @@ int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char *ufrag, ch
 
     ctx->Ta = 20;
 
+    ctx->test_timer_divider = 0;
+
     if (r=nr_socket_factory_create_int(NULL, &default_socket_factory_vtbl, &ctx->socket_factory))
       ABORT(r);
 
@@ -515,6 +517,7 @@ void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg)
     ctx = cand->ctx;
 
     ctx->uninitialized_candidates--;
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): initialized, %d remaining",ctx->label,cand->codeword,ctx->uninitialized_candidates);
 
     /* Avoid the need for yet another initialization function */
     if (cand->state == NR_ICE_CAND_STATE_INITIALIZING && cand->type == HOST)

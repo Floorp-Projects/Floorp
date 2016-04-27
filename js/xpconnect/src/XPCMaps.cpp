@@ -164,21 +164,16 @@ Native2WrappedNativeMap::newMap(int length)
 }
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int length)
-  : mTable(new PLDHashTable(PLDHashTable::StubOps(), sizeof(Entry), length))
+  : mTable(PLDHashTable::StubOps(), sizeof(Entry), length)
 {
-}
-
-Native2WrappedNativeMap::~Native2WrappedNativeMap()
-{
-    delete mTable;
 }
 
 size_t
 Native2WrappedNativeMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+    n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<Native2WrappedNativeMap::Entry*>(iter.Get());
         n += mallocSizeOf(entry->value);
     }
@@ -204,13 +199,8 @@ IID2WrappedJSClassMap::newMap(int length)
 }
 
 IID2WrappedJSClassMap::IID2WrappedJSClassMap(int length)
-  : mTable(new PLDHashTable(&Entry::sOps, sizeof(Entry), length))
+  : mTable(&Entry::sOps, sizeof(Entry), length)
 {
-}
-
-IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
-{
-    delete mTable;
 }
 
 /***************************************************************************/
@@ -232,21 +222,16 @@ IID2NativeInterfaceMap::newMap(int length)
 }
 
 IID2NativeInterfaceMap::IID2NativeInterfaceMap(int length)
-  : mTable(new PLDHashTable(&Entry::sOps, sizeof(Entry), length))
+  : mTable(&Entry::sOps, sizeof(Entry), length)
 {
-}
-
-IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
-{
-    delete mTable;
 }
 
 size_t
 IID2NativeInterfaceMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+    n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(iter.Get());
         n += entry->value->SizeOfIncludingThis(mallocSizeOf);
     }
@@ -264,20 +249,15 @@ ClassInfo2NativeSetMap::newMap(int length)
 }
 
 ClassInfo2NativeSetMap::ClassInfo2NativeSetMap(int length)
-  : mTable(new PLDHashTable(PLDHashTable::StubOps(), sizeof(Entry), length))
+  : mTable(PLDHashTable::StubOps(), sizeof(Entry), length)
 {
-}
-
-ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
-{
-    delete mTable;
 }
 
 size_t
 ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
 {
     size_t n = mallocSizeOf(this);
-    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
+    n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
     return n;
 }
 
@@ -292,21 +272,16 @@ ClassInfo2WrappedNativeProtoMap::newMap(int length)
 }
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int length)
-  : mTable(new PLDHashTable(PLDHashTable::StubOps(), sizeof(Entry), length))
+  : mTable(PLDHashTable::StubOps(), sizeof(Entry), length)
 {
-}
-
-ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
-{
-    delete mTable;
 }
 
 size_t
 ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+    n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(iter.Get());
         n += mallocSizeOf(entry->value);
     }
@@ -402,21 +377,16 @@ NativeSetMap::newMap(int length)
 }
 
 NativeSetMap::NativeSetMap(int length)
-  : mTable(new PLDHashTable(&Entry::sOps, sizeof(Entry), length))
+  : mTable(&Entry::sOps, sizeof(Entry), length)
 {
-}
-
-NativeSetMap::~NativeSetMap()
-{
-    delete mTable;
 }
 
 size_t
 NativeSetMap::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
-    n += mTable->ShallowSizeOfIncludingThis(mallocSizeOf);
-    for (auto iter = mTable->Iter(); !iter.Done(); iter.Next()) {
+    n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<NativeSetMap::Entry*>(iter.Get());
         n += entry->key_value->SizeOfIncludingThis(mallocSizeOf);
     }
@@ -456,13 +426,8 @@ IID2ThisTranslatorMap::newMap(int length)
 }
 
 IID2ThisTranslatorMap::IID2ThisTranslatorMap(int length)
-  : mTable(new PLDHashTable(&Entry::sOps, sizeof(Entry), length))
+  : mTable(&Entry::sOps, sizeof(Entry), length)
 {
-}
-
-IID2ThisTranslatorMap::~IID2ThisTranslatorMap()
-{
-    delete mTable;
 }
 
 /***************************************************************************/
@@ -526,13 +491,8 @@ XPCNativeScriptableSharedMap::newMap(int length)
 }
 
 XPCNativeScriptableSharedMap::XPCNativeScriptableSharedMap(int length)
-  : mTable(new PLDHashTable(&Entry::sOps, sizeof(Entry), length))
+  : mTable(&Entry::sOps, sizeof(Entry), length)
 {
-}
-
-XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
-{
-    delete mTable;
 }
 
 bool
@@ -544,7 +504,7 @@ XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
     NS_PRECONDITION(si,"bad param");
 
     XPCNativeScriptableShared key(flags, name, /* populate = */ false);
-    auto entry = static_cast<Entry*>(mTable->Add(&key, fallible));
+    auto entry = static_cast<Entry*>(mTable.Add(&key, fallible));
     if (!entry)
         return false;
 
@@ -579,14 +539,8 @@ XPCWrappedNativeProtoMap::newMap(int length)
 }
 
 XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap(int length)
-  : mTable(new PLDHashTable(PLDHashTable::StubOps(), sizeof(PLDHashEntryStub),
-                            length))
+  : mTable(PLDHashTable::StubOps(), sizeof(PLDHashEntryStub), length)
 {
-}
-
-XPCWrappedNativeProtoMap::~XPCWrappedNativeProtoMap()
-{
-    delete mTable;
 }
 
 /***************************************************************************/

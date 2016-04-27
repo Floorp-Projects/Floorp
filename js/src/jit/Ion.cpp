@@ -275,27 +275,27 @@ JitRuntime::initialize(JSContext* cx)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Value");
-    valuePreBarrier_ = generatePreBarrier(cx, MIRType_Value);
+    valuePreBarrier_ = generatePreBarrier(cx, MIRType::Value);
     if (!valuePreBarrier_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for String");
-    stringPreBarrier_ = generatePreBarrier(cx, MIRType_String);
+    stringPreBarrier_ = generatePreBarrier(cx, MIRType::String);
     if (!stringPreBarrier_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Object");
-    objectPreBarrier_ = generatePreBarrier(cx, MIRType_Object);
+    objectPreBarrier_ = generatePreBarrier(cx, MIRType::Object);
     if (!objectPreBarrier_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Shape");
-    shapePreBarrier_ = generatePreBarrier(cx, MIRType_Shape);
+    shapePreBarrier_ = generatePreBarrier(cx, MIRType::Shape);
     if (!shapePreBarrier_)
         return false;
 
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for ObjectGroup");
-    objectGroupPreBarrier_ = generatePreBarrier(cx, MIRType_ObjectGroup);
+    objectGroupPreBarrier_ = generatePreBarrier(cx, MIRType::ObjectGroup);
     if (!objectGroupPreBarrier_)
         return false;
 
@@ -1376,7 +1376,7 @@ OptimizeSinCos(MIRGenerator *mir, MIRGraph &graph)
                 continue;
 
             // Check if sin/cos is already optimized.
-            if (insFunc->getOperand(0)->type() == MIRType_SinCosDouble)
+            if (insFunc->getOperand(0)->type() == MIRType::SinCosDouble)
                 continue;
 
             // insFunc is either a |sin(x)| or |cos(x)| instruction. The

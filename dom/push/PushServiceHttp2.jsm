@@ -439,7 +439,10 @@ this.PushServiceHttp2 = {
   },
 
   validServerURI: function(serverURI) {
-    return serverURI.scheme == "http" || serverURI.scheme == "https";
+    if (serverURI.scheme == "http") {
+      return !!prefs.get("testing.allowInsecureServerURL");
+    }
+    return serverURI.scheme == "https";
   },
 
   connect: function(subscriptions) {

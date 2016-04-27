@@ -35240,6 +35240,78 @@
         ]
       },
       "testharness": {
+        "DOM-parsing/createContextualFragment.html": [
+          {
+            "path": "DOM-parsing/createContextualFragment.html",
+            "url": "/DOM-parsing/createContextualFragment.html"
+          }
+        ],
+        "DOM-parsing/innerhtml-01.xhtml": [
+          {
+            "path": "DOM-parsing/innerhtml-01.xhtml",
+            "url": "/DOM-parsing/innerhtml-01.xhtml"
+          }
+        ],
+        "DOM-parsing/innerhtml-03.xhtml": [
+          {
+            "path": "DOM-parsing/innerhtml-03.xhtml",
+            "url": "/DOM-parsing/innerhtml-03.xhtml"
+          }
+        ],
+        "DOM-parsing/innerhtml-04.html": [
+          {
+            "path": "DOM-parsing/innerhtml-04.html",
+            "url": "/DOM-parsing/innerhtml-04.html"
+          }
+        ],
+        "DOM-parsing/innerhtml-05.xhtml": [
+          {
+            "path": "DOM-parsing/innerhtml-05.xhtml",
+            "url": "/DOM-parsing/innerhtml-05.xhtml"
+          }
+        ],
+        "DOM-parsing/innerhtml-06.html": [
+          {
+            "path": "DOM-parsing/innerhtml-06.html",
+            "url": "/DOM-parsing/innerhtml-06.html"
+          }
+        ],
+        "DOM-parsing/innerhtml-07.html": [
+          {
+            "path": "DOM-parsing/innerhtml-07.html",
+            "url": "/DOM-parsing/innerhtml-07.html"
+          }
+        ],
+        "DOM-parsing/insert_adjacent_html.html": [
+          {
+            "path": "DOM-parsing/insert_adjacent_html.html",
+            "url": "/DOM-parsing/insert_adjacent_html.html"
+          }
+        ],
+        "DOM-parsing/insert_adjacent_html.xhtml": [
+          {
+            "path": "DOM-parsing/insert_adjacent_html.xhtml",
+            "url": "/DOM-parsing/insert_adjacent_html.xhtml"
+          }
+        ],
+        "DOM-parsing/outerhtml-01.html": [
+          {
+            "path": "DOM-parsing/outerhtml-01.html",
+            "url": "/DOM-parsing/outerhtml-01.html"
+          }
+        ],
+        "DOM-parsing/outerhtml-02.html": [
+          {
+            "path": "DOM-parsing/outerhtml-02.html",
+            "url": "/DOM-parsing/outerhtml-02.html"
+          }
+        ],
+        "DOM-parsing/xml-serialization.xhtml": [
+          {
+            "path": "DOM-parsing/xml-serialization.xhtml",
+            "url": "/DOM-parsing/xml-serialization.xhtml"
+          }
+        ],
         "XMLHttpRequest/open-url-multi-window-6.htm": [
           {
             "path": "XMLHttpRequest/open-url-multi-window-6.htm",
@@ -35268,6 +35340,12 @@
           {
             "path": "html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html",
             "url": "/html/semantics/embedded-content/the-embed-element/embed-ignored-in-media-element.html"
+          }
+        ],
+        "html/syntax/serializing-html-fragments/serializing.html": [
+          {
+            "path": "html/syntax/serializing-html-fragments/serializing.html",
+            "url": "/html/syntax/serializing-html-fragments/serializing.html"
           }
         ],
         "html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-1.html": [

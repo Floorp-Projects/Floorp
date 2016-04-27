@@ -21,9 +21,11 @@ from .common import CommonBackend
 from ..frontend.data import (
     Defines,
     GeneratedSources,
+    HostProgram,
     HostSources,
     Library,
     LocalInclude,
+    Program,
     Sources,
     UnifiedSources,
 )
@@ -101,6 +103,7 @@ class VisualStudioBackend(CommonBackend):
         self._paths_to_defines = {}
         self._paths_to_configs = {}
         self._libs_to_paths = {}
+        self._progs_to_paths = {}
 
     def summary(self):
         return ExecutionSummary(
@@ -131,6 +134,9 @@ class VisualStudioBackend(CommonBackend):
 
         elif isinstance(obj, Library):
             self._libs_to_paths[obj.basename] = reldir
+
+        elif isinstance(obj, Program) or isinstance(obj, HostProgram):
+            self._progs_to_paths[obj.program] = reldir
 
         elif isinstance(obj, Defines):
             self._paths_to_defines.setdefault(reldir, {}).update(obj.defines)
@@ -166,9 +172,55 @@ class VisualStudioBackend(CommonBackend):
             if e.errno != errno.EEXIST:
                 raise
 
-        projects = {}
+        projects = self._write_projects_for_sources(self._libs_to_paths,
+            "library", out_proj_dir)
+        projects.update(self._write_projects_for_sources(self._progs_to_paths,
+            "binary", out_proj_dir))
 
-        for lib, path in sorted(self._libs_to_paths.items()):
+        # Generate projects that can be used to build common targets.
+        for target in ('export', 'binaries', 'tools', 'full'):
+            basename = 'target_%s' % target
+            command = '$(SolutionDir)\\mach.bat build'
+            if target != 'full':
+                command += ' %s' % target
+
+            project_id = self._write_vs_project(out_proj_dir, basename, target,
+                build_command=command,
+                clean_command='$(SolutionDir)\\mach.bat build clean')
+
+            projects[basename] = (project_id, basename, target)
+
+        # A project that can be used to regenerate the visual studio projects.
+        basename = 'target_vs'
+        project_id = self._write_vs_project(out_proj_dir, basename, 'visual-studio',
+            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
+        projects[basename] = (project_id, basename, 'visual-studio')
+
+        # Write out a shared property file with common variables.
+        props_path = os.path.join(out_proj_dir, 'mozilla.props')
+        with open(props_path, 'wb') as fh:
+            self._write_props(fh)
+
+        # Generate some wrapper scripts that allow us to invoke mach inside
+        # a MozillaBuild-like environment. We currently only use the batch
+        # script. We'd like to use the PowerShell script. However, it seems
+        # to buffer output from within Visual Studio (surely this is
+        # configurable) and the default execution policy of PowerShell doesn't
+        # allow custom scripts to be executed.
+        with open(os.path.join(out_dir, 'mach.bat'), 'wb') as fh:
+            self._write_mach_batch(fh)
+
+        with open(os.path.join(out_dir, 'mach.ps1'), 'wb') as fh:
+            self._write_mach_powershell(fh)
+
+        # Write out a solution file to tie it all together.
+        solution_path = os.path.join(out_dir, 'mozilla.sln')
+        with open(solution_path, 'wb') as fh:
+            self._write_solution(fh, projects)
+
+    def _write_projects_for_sources(self, sources, prefix, out_dir):
+        projects = {}
+        for item, path in sorted(sources.items()):
             config = self._paths_to_configs.get(path, None)
             sources = self._paths_to_sources.get(path, set())
             sources = set(os.path.join('$(TopSrcDir)', path, s) for s in sources)
@@ -212,71 +264,26 @@ class VisualStudioBackend(CommonBackend):
                 else:
                     defines.append('%s=%s' % (k, v))
 
-            basename = 'library_%s' % lib
-            project_id = self._write_vs_project(out_proj_dir, basename, lib,
+            debugger=None
+            if prefix == 'binary':
+                if item.startswith(self.environment.substs['MOZ_APP_NAME']):
+                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, '-no-remote')
+                else:
+                    debugger = ('$(TopObjDir)\\dist\\bin\\%s' % item, '')
+
+            basename = '%s_%s' % (prefix, item)
+
+            project_id = self._write_vs_project(out_dir, basename, item,
                 includes=includes,
                 forced_includes=['$(TopObjDir)\\dist\\include\\mozilla-config.h'],
                 defines=defines,
                 headers=headers,
-                sources=sources)
+                sources=sources,
+                debugger=debugger)
 
-            projects[basename] = (project_id, basename, lib)
+            projects[basename] = (project_id, basename, item)
 
-        # Generate projects that can be used to build common targets.
-        for target in ('export', 'binaries', 'tools', 'full'):
-            basename = 'target_%s' % target
-            command = '$(SolutionDir)\\mach.bat build'
-            if target != 'full':
-                command += ' %s' % target
-
-            project_id = self._write_vs_project(out_proj_dir, basename, target,
-                build_command=command,
-                clean_command='$(SolutionDir)\\mach.bat build clean')
-
-            projects[basename] = (project_id, basename, target)
-
-        # A project that can be used to regenerate the visual studio projects.
-        basename = 'target_vs'
-        project_id = self._write_vs_project(out_proj_dir, basename, 'visual-studio',
-            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
-        projects[basename] = (project_id, basename, 'visual-studio')
-
-        # A project to run the main application binary.
-        app_name = self.environment.substs['MOZ_APP_NAME']
-        basename = 'binary_%s' % app_name
-        project_id = self._write_vs_project(out_proj_dir, basename, app_name,
-            debugger=('$(TopObjDir)\\dist\\bin\\%s.exe' % app_name,
-                '-no-remote'))
-        projects[basename] = (project_id, basename, app_name)
-
-        # Projects to run other common binaries.
-        for app in ['js', 'xpcshell']:
-            basename = 'binary_%s' % app
-            project_id = self._write_vs_project(out_proj_dir, basename, app,
-                debugger=('$(TopObjDir)\\dist\\bin\\%s.exe' % app, ''))
-            projects[basename] = (project_id, basename, app)
-
-        # Write out a shared property file with common variables.
-        props_path = os.path.join(out_proj_dir, 'mozilla.props')
-        with open(props_path, 'wb') as fh:
-            self._write_props(fh)
-
-        # Generate some wrapper scripts that allow us to invoke mach inside
-        # a MozillaBuild-like environment. We currently only use the batch
-        # script. We'd like to use the PowerShell script. However, it seems
-        # to buffer output from within Visual Studio (surely this is
-        # configurable) and the default execution policy of PowerShell doesn't
-        # allow custom scripts to be executed.
-        with open(os.path.join(out_dir, 'mach.bat'), 'wb') as fh:
-            self._write_mach_batch(fh)
-
-        with open(os.path.join(out_dir, 'mach.ps1'), 'wb') as fh:
-            self._write_mach_powershell(fh)
-
-        # Write out a solution file to tie it all together.
-        solution_path = os.path.join(out_dir, 'mozilla.sln')
-        with open(solution_path, 'wb') as fh:
-            self._write_solution(fh, projects)
+        return projects
 
     def _write_solution(self, fh, projects):
         version = visual_studio_product_to_internal_version(self._version, True)
