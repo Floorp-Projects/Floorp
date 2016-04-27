@@ -51,9 +51,11 @@ function run_test() {
 
   do_get_profile();
 
-  servicePrefs.set('testing.notifyWorkers', false);
-  servicePrefs.set('testing.notifyAllObservers', true);
-  setPrefs();
+  setPrefs({
+    'testing.allowInsecureServerURL': true,
+    'testing.notifyWorkers': false,
+    'testing.notifyAllObservers': true,
+  });
 
   run_next_test();
 }

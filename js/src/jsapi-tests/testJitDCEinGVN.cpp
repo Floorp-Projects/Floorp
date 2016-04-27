@@ -26,11 +26,11 @@ BEGIN_TEST(testJitDCEinGVN_ins)
     // return p
     MParameter* p = func.createParameter();
     block->add(p);
-    MMul* mul0 = MMul::New(func.alloc, p, p, MIRType_Double);
+    MMul* mul0 = MMul::New(func.alloc, p, p, MIRType::Double);
     block->add(mul0);
     if (!mul0->typePolicy()->adjustInputs(func.alloc, mul0))
         return false;
-    MMul* mul1 = MMul::New(func.alloc, mul0, mul0, MIRType_Double);
+    MMul* mul1 = MMul::New(func.alloc, mul0, mul0, MIRType::Double);
     block->add(mul1);
     if (!mul1->typePolicy()->adjustInputs(func.alloc, mul1))
         return false;
@@ -126,7 +126,7 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     // return y
     joinBlock->addPhi(x);
     joinBlock->addPhi(y);
-    MMul* z = MMul::New(func.alloc, x, y, MIRType_Double);
+    MMul* z = MMul::New(func.alloc, x, y, MIRType::Double);
     joinBlock->add(z);
     MReturn* ret = MReturn::New(func.alloc, y);
     joinBlock->end(ret);

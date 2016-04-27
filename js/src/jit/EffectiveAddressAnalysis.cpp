@@ -14,20 +14,20 @@ using namespace jit;
 static void
 AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 {
-    if (lsh->specialization() != MIRType_Int32)
+    if (lsh->specialization() != MIRType::Int32)
         return;
 
     if (lsh->isRecoveredOnBailout())
         return;
 
     MDefinition* index = lsh->lhs();
-    MOZ_ASSERT(index->type() == MIRType_Int32);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
 
     MConstant* shiftValue = lsh->rhs()->maybeConstantValue();
     if (!shiftValue)
         return;
 
-    if (shiftValue->type() != MIRType_Int32 || !IsShiftInScaleRange(shiftValue->toInt32()))
+    if (shiftValue->type() != MIRType::Int32 || !IsShiftInScaleRange(shiftValue->toInt32()))
         return;
 
     Scale scale = ShiftToScale(shiftValue->toInt32());
@@ -44,7 +44,7 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
             break;
 
         MAdd* add = use->consumer()->toDefinition()->toAdd();
-        if (add->specialization() != MIRType_Int32 || !add->isTruncated())
+        if (add->specialization() != MIRType::Int32 || !add->isTruncated())
             break;
 
         MDefinition* other = add->getOperand(1 - add->indexOf(*use));
@@ -80,7 +80,7 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 
         MDefinition* other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
         MConstant* otherConst = other->maybeConstantValue();
-        if (!otherConst || otherConst->type() != MIRType_Int32)
+        if (!otherConst || otherConst->type() != MIRType::Int32)
             return;
 
         uint32_t bitsClearedByShift = elemSize - 1;

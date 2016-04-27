@@ -55,7 +55,7 @@ static char *RCSSTRING __UNUSED__="$Id: transport_addr.c,v 1.2 2008/04/28 17:59:
 int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
   {
     int _status;
-    /* Max length for normalized IPv6 address string represntation is 39 */
+    /* Max length for normalized IPv6 address string representation is 39 */
     char buffer[40];
     const char *protocol;
 
@@ -469,4 +469,7 @@ int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
     return(0);
   }
 
-
+int nr_transport_addr_is_reliable_transport(nr_transport_addr *addr)
+  {
+    return addr->protocol == IPPROTO_TCP;
+  }

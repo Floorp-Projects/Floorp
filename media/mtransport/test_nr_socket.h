@@ -137,6 +137,8 @@ class TestNat {
       allow_hairpinning_(false),
       refresh_on_ingress_(false),
       block_udp_(false),
+      block_stun_(false),
+      delay_stun_resp_ms_(0),
       sockets_() {}
 
     bool has_port_mappings() const;
@@ -166,6 +168,9 @@ class TestNat {
     bool allow_hairpinning_;
     bool refresh_on_ingress_;
     bool block_udp_;
+    bool block_stun_;
+    /* Note: this can only delay a single response so far (bug 1253657) */
+    uint32_t delay_stun_resp_ms_;
 
   private:
     std::set<TestNrSocket*> sockets_;
@@ -248,12 +253,34 @@ class TestNrSocket : public NrSocketBase {
         nr_transport_addr remote_address_;
 
       private:
-        ~PortMapping(){}
+        ~PortMapping() {
+          external_socket_->close();
+        }
 
         // If external_socket_ returns E_WOULDBLOCK, we don't want to propagate
         // that to the code using the TestNrSocket. We can also perhaps use this
         // to help simulate things like latency.
         std::list<RefPtr<UdpPacket>> send_queue_;
+    };
+
+    struct DeferredPacket {
+      DeferredPacket(TestNrSocket *sock,
+                     const void *data, size_t len,
+                     int flags,
+                     nr_transport_addr *addr,
+                     RefPtr<NrSocketBase> internal_socket) :
+          socket_(sock),
+          buffer_(reinterpret_cast<const uint8_t *>(data), len),
+          flags_(flags),
+          internal_socket_(internal_socket) {
+        nr_transport_addr_copy(&to_, addr);
+      }
+
+      TestNrSocket *socket_;
+      DataBuffer buffer_;
+      int flags_;
+      nr_transport_addr to_;
+      RefPtr<NrSocketBase> internal_socket_;
     };
 
     bool is_port_mapping_stale(const PortMapping &port_mapping) const;
@@ -286,6 +313,8 @@ class TestNrSocket : public NrSocketBase {
     RefPtr<NrSocketBase> create_external_socket(
         const nr_transport_addr &remote_addr) const;
 
+    static void process_delayed_cb(NR_SOCKET s, int how, void *cb_arg);
+
     RefPtr<NrSocketBase> readable_socket_;
     // The socket for the "internal" address; used to talk to stuff behind the
     // same nat.
@@ -296,6 +325,8 @@ class TestNrSocket : public NrSocketBase {
     // comparison function at runtime, and these lists are going to be very
     // small anyway, we just brute-force it.
     std::list<RefPtr<PortMapping>> port_mappings_;
+
+    void *timer_handle_;
 };
 
 } // namespace mozilla

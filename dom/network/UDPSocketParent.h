@@ -36,7 +36,8 @@ public:
 
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
                         const bool& aAddressReuse, const bool& aLoopback,
-                        const uint32_t& recvBufferSize) override;
+                        const uint32_t& recvBufferSize,
+                        const uint32_t& sendBufferSize) override;
   virtual bool RecvConnect(const UDPAddressInfo& aAddressInfo) override;
   void DoSendConnectResponse(const UDPAddressInfo& aAddressInfo);
   void SendConnectResponse(nsIEventTarget *aThread,
@@ -64,7 +65,8 @@ private:
   void Send(const InputStreamParams& aStream, const UDPSocketAddr& aAddr);
   nsresult BindInternal(const nsCString& aHost, const uint16_t& aPort,
                         const bool& aAddressReuse, const bool& aLoopback,
-                        const uint32_t& recvBufferSize);
+                        const uint32_t& recvBufferSize,
+                        const uint32_t& sendBufferSize);
   nsresult ConnectInternal(const nsCString& aHost, const uint16_t& aPort);
   void FireInternalError(uint32_t aLineNo);
   void SendInternalError(nsIEventTarget *aThread,

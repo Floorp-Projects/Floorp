@@ -434,7 +434,7 @@ MBasicBlock::NewAsmJS(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pre
             for (size_t i = 0; i < nphis; i++) {
                 MDefinition* predSlot = pred->getSlot(i);
 
-                MOZ_ASSERT(predSlot->type() != MIRType_Value);
+                MOZ_ASSERT(predSlot->type() != MIRType::Value);
 
                 MPhi* phi;
                 if (i < nfree)
@@ -686,7 +686,7 @@ MBasicBlock::linkOsrValues(MStart* start)
                 cloneRp = def->toOsrReturnValue();
         } else if (info().hasArguments() && i == info().argsObjSlot()) {
             MOZ_ASSERT(def->isConstant() || def->isOsrArgumentsObject());
-            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->type() == MIRType_Undefined);
+            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->type() == MIRType::Undefined);
             if (def->isOsrArgumentsObject())
                 cloneRp = def->toOsrArgumentsObject();
         } else {
@@ -696,7 +696,7 @@ MBasicBlock::linkOsrValues(MStart* start)
             // A constant Undefined can show up here for an argument slot when
             // the function has an arguments object, but the argument in
             // question is stored on the scope chain.
-            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->type() == MIRType_Undefined);
+            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->type() == MIRType::Undefined);
 
             if (def->isOsrValue())
                 cloneRp = def->toOsrValue();
@@ -875,7 +875,7 @@ MBasicBlock::optimizedOutConstant(TempAllocator& alloc)
     // If the first instruction is a MConstant(MagicValue(JS_OPTIMIZED_OUT))
     // then reuse it.
     MInstruction* ins = *begin();
-    if (ins->type() == MIRType_MagicOptimizedOut)
+    if (ins->type() == MIRType::MagicOptimizedOut)
         return ins->toConstant();
 
     MConstant* constant = MConstant::New(alloc, MagicValue(JS_OPTIMIZED_OUT));
@@ -1338,7 +1338,7 @@ MBasicBlock::setBackedgeAsmJS(MBasicBlock* pred)
 
         // Assert that the phi already has the correct type.
         MOZ_ASSERT(entryDef->type() == exitDef->type());
-        MOZ_ASSERT(entryDef->type() != MIRType_Value);
+        MOZ_ASSERT(entryDef->type() != MIRType::Value);
 
         if (entryDef == exitDef) {
             // If the exit def is the same as the entry def, make a redundant

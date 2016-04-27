@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIChannel;
+interface nsIPrincipal;
 interface nsIStreamListener;
 interface nsIURI;
 
@@ -13,7 +14,7 @@ interface nsIURI;
  * Describes an XPCOM component used to perform security checks.
  */
 
-[scriptable, uuid(ec955006-747d-4151-aeec-70bd0edc3341)]
+[scriptable, uuid(3a9a1818-2ae8-4ec5-a340-8b29d31fca3b)]
 interface nsIContentSecurityManager : nsISupports
 {
   /**
@@ -45,10 +46,11 @@ interface nsIContentSecurityManager : nsISupports
    * Implementation of
    * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
    *
-   * This method should only be used when the context of the URI isn't available
-   * since isSecureContext is preferred as it handles parent contexts.
+   * The value returned by this method feeds into the the Secure Context
+   * algorithm that determins the value of Window.isSecureContext and
+   * WorkerGlobalScope.isSecureContext.
    *
    * This method returns false instead of throwing upon errors.
    */
-  boolean isURIPotentiallyTrustworthy(in nsIURI aURI);
+  boolean isOriginPotentiallyTrustworthy(in nsIPrincipal aPrincipal);
 };

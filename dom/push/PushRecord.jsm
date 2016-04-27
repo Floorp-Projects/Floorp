@@ -252,6 +252,7 @@ PushRecord.prototype = {
       authenticationSecret: this.authenticationSecret,
       appServerKey: this.appServerKey,
       quota: this.quotaApplies() ? this.quota : -1,
+      systemRecord: this.systemRecord,
     };
   },
 };

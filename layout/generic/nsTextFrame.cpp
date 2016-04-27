@@ -430,18 +430,6 @@ DestroyUserData(void* aUserData)
   }
 }
 
-static nsCSSProperty
-GetTextDecorationColorProp(nsStyleContext* aCtx)
-{
-  nscolor textColor;
-  bool foreground;
-  aCtx->StyleTextReset()->GetDecorationColor(textColor, foreground);
-
-  return (foreground && !aCtx->StyleText()->mWebkitTextFillColorForeground)
-         ? eCSSProperty__webkit_text_fill_color
-         : eCSSProperty_text_decoration_color;
-}
-
 /**
  * Remove |aTextRun| from the frame continuation chain starting at
  * |aStartContinuation| if non-null, otherwise starting at |aFrame|.
@@ -5009,7 +4997,7 @@ nsTextFrame::GetTextDecorations(
       // la la</font></a> case. The link underline should be green.
       useOverride = true;
       overrideColor =
-        nsLayoutUtils::GetColor(f, GetTextDecorationColorProp(context));
+        nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
     }
 
     nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
@@ -5066,7 +5054,7 @@ nsTextFrame::GetTextDecorations(
                   nsLayoutUtils::GetColor(f, eCSSProperty_fill) :
                   NS_SAME_AS_FOREGROUND_COLOR;
       } else {
-        color = nsLayoutUtils::GetColor(f, GetTextDecorationColorProp(context));
+        color = nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
       }
 
       bool swapUnderlineAndOverline = vertical && IsUnderlineRight(f);

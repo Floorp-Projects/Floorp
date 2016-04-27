@@ -20,19 +20,19 @@ ABIArg
 ABIArgGenerator::next(MIRType type)
 {
     switch (type) {
-      case MIRType_Int32:
-      case MIRType_Pointer:
+      case MIRType::Int32:
+      case MIRType::Pointer:
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint32_t);
         break;
-      case MIRType_Float32: // Float32 moves are actually double moves
-      case MIRType_Double:
+      case MIRType::Float32: // Float32 moves are actually double moves
+      case MIRType::Double:
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint64_t);
         break;
-      case MIRType_Int32x4:
-      case MIRType_Float32x4:
-      case MIRType_Bool32x4:
+      case MIRType::Int32x4:
+      case MIRType::Float32x4:
+      case MIRType::Bool32x4:
         // SIMD values aren't passed in or out of C++, so we can make up
         // whatever internal ABI we like. visitAsmJSPassArg assumes
         // SimdMemoryAlignment.
