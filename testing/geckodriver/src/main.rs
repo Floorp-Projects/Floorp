@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate lazy_static;
 extern crate argparse;
 extern crate env_logger;
 extern crate hyper;
@@ -9,6 +11,7 @@ extern crate regex;
 extern crate rustc_serialize;
 #[macro_use]
 extern crate webdriver;
+extern crate zip;
 
 use std::borrow::ToOwned;
 use std::process::exit;
@@ -109,4 +112,54 @@ fn main() {
 
     //TODO: what if binary isn't a valid path?
     start(addr, MarionetteHandler::new(settings), extension_routes());
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+    use marionette::{MarionetteSettings, MarionetteHandler, BrowserLauncher};
+    use webdriver::command::CapabilitiesParameters;
+    use rustc_serialize::json::Json;
+    use std::fs::File;
+    use rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
+    use mozprofile::preferences::Pref;
+    use std::io::Read;
+
+    #[test]
+    fn test_profile() {
+        let mut profile_data = Vec::with_capacity(1024);
+        let mut profile = File::open("src/tests/profile.zip").unwrap();
+        profile.read_to_end(&mut profile_data).unwrap();
+        let base64_config = Config {
+            char_set: CharacterSet::Standard,
+            newline: Newline::LF,
+            pad: true,
+            line_length: None
+        };
+        let encoded_profile = Json::String(profile_data.to_base64(base64_config));
+
+        let desired: BTreeMap<String, Json> = BTreeMap::new();
+        let mut required: BTreeMap<String, Json> = BTreeMap::new();
+        required.insert("firefox_profile".into(), encoded_profile);
+        let capabilities = CapabilitiesParameters {
+            desired: desired,
+            required: required
+        };
+
+        let handler = MarionetteHandler::new(
+            MarionetteSettings::new(2828u16, BrowserLauncher::None, false));
+
+        let mut gecko_profile = handler.load_profile(&capabilities).unwrap().unwrap();
+        handler.set_prefs(&mut gecko_profile, true).unwrap();
+
+        let prefs = gecko_profile.user_prefs().unwrap();
+
+        println!("{:?}",prefs.prefs);
+
+        assert_eq!(prefs.get("startup.homepage_welcome_url"),
+                   Some(&Pref::new("data:text/html,PASS")));
+        assert_eq!(prefs.get("marionette.defaultPrefs.enabled"),
+                   Some(&Pref::new(true)));
+    }
+
 }
