@@ -39,6 +39,13 @@ CSRCS	+= unix_err.c
 endif
 endif
 
+# Enable key logging by default in debug builds, but not opt builds.
+# Logging still needs to be enabled at runtime through env vars.
+NSS_ALLOW_SSLKEYLOGFILE ?= $(if $(BUILD_OPT),0,1)
+ifeq (1,$(NSS_ALLOW_SSLKEYLOGFILE))
+DEFINES += -DNSS_ALLOW_SSLKEYLOGFILE=1
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

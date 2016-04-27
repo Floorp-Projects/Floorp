@@ -21,13 +21,15 @@
 #include "pk11pub.h"
 #include "plgetopt.h"
 
-void Usage(char *progName)
+void
+Usage(char *progName)
 {
     fprintf(stderr, "Usage: %s -d dbDir\n", progName);
     exit(1);
 }
 
-SECStatus TestOpenCloseUserDB(char *progName, char *configDir, char *tokenName)
+SECStatus
+TestOpenCloseUserDB(char *progName, char *configDir, char *tokenName)
 {
     char *modspec = NULL;
     SECStatus rv = SECSuccess;
@@ -62,7 +64,8 @@ loser:
     return rv;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     PLOptState *optstate;
     PLOptStatus optstatus;
@@ -74,14 +77,14 @@ int main(int argc, char **argv)
     if (!progName) {
         progName = strrchr(argv[0], '\\');
     }
-    progName = progName ? progName+1 : argv[0];
+    progName = progName ? progName + 1 : argv[0];
 
     optstate = PL_CreateOptState(argc, argv, "d:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
-          case 'd':
-            dbDir = strdup(optstate->value);
-            break;
+            case 'd':
+                dbDir = strdup(optstate->value);
+                break;
         }
     }
     if (optstatus == PL_OPT_BAD || dbDir == NULL) {
@@ -107,7 +110,8 @@ int main(int argc, char **argv)
     }
 
 loser:
-    if (dbDir) free(dbDir);
+    if (dbDir)
+        free(dbDir);
 
     if (NSS_Shutdown() != SECSuccess) {
         exit(1);

@@ -596,6 +596,8 @@ SSL_IMPORT const SECItem *SSL_PeerSignedCertTimestamps(PRFileDesc *fd);
  * handshake message. Parameter |responses| is for the server certificate of
  * the key exchange type |kea|.
  * The function will duplicate the responses array.
+ *
+ * Deprecated: see SSL_ConfigSecureServer for details.
  */
 SSL_IMPORT SECStatus
 SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
@@ -608,6 +610,8 @@ SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
  * is for the server certificate of the key exchange type |kea|.
  * The function will duplicate the provided data item. To clear previously
  * set data for a given key exchange type |kea|, pass NULL to |scts|.
+ *
+ * Deprecated: see SSL_ConfigSecureServer for details.
  */
 SSL_IMPORT SECStatus
 SSL_SetSignedCertTimestamps(PRFileDesc *fd, const SECItem *scts,
@@ -764,14 +768,72 @@ SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f,
 ** Configure SSL socket for running a secure server. Needs the
 ** certificate for the server and the servers private key. The arguments
 ** are copied.
+**
+** This method should be used in preference to SSL_ConfigSecureServer,
+** SSL_ConfigSecureServerWithCertChain, SSL_SetStapledOCSPResponses, and
+** SSL_SetSignedCertTimestamps.
+**
+** The authentication method is determined from the certificate and private key
+** based on how libssl authenticates peers. Primarily, this uses the value of
+** the SSLAuthType enum and is derived from the type of public key in the
+** certificate.  For example, different RSA certificates might be saved for
+** signing (ssl_auth_rsa_sign) and key encipherment
+** (ssl_auth_rsa_decrypt). Unique to RSA, the same certificate can be used for
+** both usages. Additional information about the authentication method is also
+** used: EC keys with different curves are separately stored.
+**
+** Only one certificate is stored for each authentication method.
+**
+** The optional |data| argument contains additional information about the
+** certificate:
+**
+** - |authType| (with a value other than ssl_auth_null) limits the
+**   authentication method; this is primarily useful in limiting the use of an
+**   RSA certificate to one particular key usage (either signing or key
+**   encipherment) when its key usages indicate support for both.
+**
+** - |certChain| provides an explicit certificate chain, rather than relying on
+**   NSS functions for finding a certificate chain.
+**
+** - |stapledOCSPResponses| provides a response for OCSP stapling.
+**
+** - |signedCertTimestamps| provides a value for the
+**   signed_certificate_timestamp extension used in certificate transparency.
+**
+** The |data_len| argument provides the length of the data.  This should be set
+** to |sizeof(data)|.
+**
+** This function allows an application to provide certificates with narrow key
+** usages attached to them.  For instance, RSA keys can be provided that are
+** limited to signing or decryption only.  Multiple EC certificates with keys on
+** different named curves can be provided.
+**
+** Unlike SSL_ConfigSecureServer(WithCertChain), this function does not accept
+** NULL for the |cert| and |key| arguments.  It will replace certificates that
+** have the same type, but it cannot be used to remove certificates that have
+** already been configured.
+*/
+SSL_IMPORT SECStatus SSL_ConfigServerCert(
+    PRFileDesc *fd, CERTCertificate *cert, SECKEYPrivateKey *key,
+    const SSLExtraServerCertData *data, unsigned int data_len);
+
+/*
+** Deprecated variant of SSL_ConfigServerCert.
+**
+** This uses values from the SSLKEAType to identify the type of |key| that the
+** |cert| contains.  This is incorrect, since key exchange and authentication
+** are separated in some cipher suites (in particular, ECDHE_RSA_* suites).
+**
+** Providing a |kea| parameter of ssl_kea_ecdh (or kt_ecdh) is interpreted as
+** providing both ECDH and ECDSA certificates.
 */
 SSL_IMPORT SECStatus SSL_ConfigSecureServer(
     PRFileDesc *fd, CERTCertificate *cert,
     SECKEYPrivateKey *key, SSLKEAType kea);
 
 /*
-** Allows SSL socket configuration with caller-supplied certificate chain.
-** If certChainOpt is NULL, tries to find one.
+** Deprecated variant of SSL_ConfigSecureServerCert.  The |data| argument to
+** SSL_ConfigSecureServerCert can be used to pass a certificate chain.
 */
 SSL_IMPORT SECStatus
 SSL_ConfigSecureServerWithCertChain(PRFileDesc *fd, CERTCertificate *cert,
@@ -1003,7 +1065,8 @@ SSL_IMPORT SECStatus SSL_GetSRTPCipher(PRFileDesc *fd,
 SSL_IMPORT SECStatus NSS_CmpCertChainWCANames(CERTCertificate *cert,
                                               CERTDistNames *caNames);
 
-/*
+/* Deprecated.  This reports a misleading value for certificates that might
+ * be used for signing rather than key exchange.
  * Returns key exchange type of the keys in an SSL server certificate.
  */
 SSL_IMPORT SSLKEAType NSS_FindCertKEAType(CERTCertificate *cert);
