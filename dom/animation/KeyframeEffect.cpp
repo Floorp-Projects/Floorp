@@ -9,7 +9,6 @@
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/AnimationUtils.h"
-#include "mozilla/EffectCompositor.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
@@ -189,12 +188,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
       CanThrottle() ?
       EffectCompositor::RestyleType::Throttled :
       EffectCompositor::RestyleType::Standard;
-    nsPresContext* presContext = GetPresContext();
-    if (presContext && mTarget) {
-      presContext->EffectCompositor()->
-        RequestRestyle(mTarget->mElement, mTarget->mPseudoType, restyleType,
-                       mAnimation->CascadeLevel());
-    }
+    RequestRestyle(restyleType);
 
     // If we're not relevant, we will have been removed from the EffectSet.
     // As a result, when the restyle we requested above is fulfilled, our
@@ -567,15 +561,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       effectSet->MarkCascadeNeedsUpdate();
     }
 
-    if (mAnimation) {
-      nsPresContext* presContext = GetPresContext();
-      if (presContext) {
-        presContext->EffectCompositor()->
-          RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
-                         EffectCompositor::RestyleType::Layer,
-                         mAnimation->CascadeLevel());
-      }
-    }
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
   }
 }
 
@@ -808,14 +794,32 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
       EffectSet::GetOrCreateEffectSet(mTarget->mElement, mTarget->mPseudoType);
     effectSet->AddEffect(*this);
   } else {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    if (effectSet) {
-      effectSet->RemoveEffect(*this);
-      if (effectSet->IsEmpty()) {
-        EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
-      }
+    UnregisterTarget();
+  }
+}
+
+void
+KeyframeEffectReadOnly::UnregisterTarget()
+{
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+  if (effectSet) {
+    effectSet->RemoveEffect(*this);
+    if (effectSet->IsEmpty()) {
+      EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
+  }
+}
+
+void
+KeyframeEffectReadOnly::RequestRestyle(
+  EffectCompositor::RestyleType aRestyleType)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (presContext && mTarget && mAnimation) {
+    presContext->EffectCompositor()->
+      RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
+                     aRestyleType, mAnimation->CascadeLevel());
   }
 }
 
@@ -1372,7 +1376,8 @@ KeyframeEffect::Constructor(
                                                  aOptions, aRv);
 }
 
-void KeyframeEffect::NotifySpecifiedTimingUpdated()
+void
+KeyframeEffect::NotifySpecifiedTimingUpdated()
 {
   // Use the same document for a pseudo element and its parent element.
   // Use nullptr if we don't have mTarget, so disable the mutation batch.
@@ -1386,13 +1391,7 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
       nsNodeUtils::AnimationChanged(mAnimation);
     }
 
-    nsPresContext* presContext = GetPresContext();
-    if (presContext && mTarget) {
-      presContext->EffectCompositor()->
-        RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
-                       EffectCompositor::RestyleType::Layer,
-                       mAnimation->CascadeLevel());
-    }
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
   }
 }
 
