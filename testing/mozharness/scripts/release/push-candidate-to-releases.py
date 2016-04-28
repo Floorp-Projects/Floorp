@@ -106,7 +106,8 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
                 r"^.*/mar-tools/.*$",
                 r"^.*gecko-unsigned-unaligned.apk$",
                 r"^.*robocop.apk$",
-                r"^.*contrib.*"
+                r"^.*contrib.*",
+                r"^.*/beetmover-checksums/.*$",
             ]
 
     def _get_candidates_prefix(self):
