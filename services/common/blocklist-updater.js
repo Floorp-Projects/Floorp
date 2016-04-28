@@ -9,7 +9,7 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.importGlobalProperties(['fetch']);
-const BlocklistClients = Cu.import("resource://services-common/KintoBlocklist.js", {});
+const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const PREF_KINTO_CHANGES_PATH       = "services.kinto.changes.path";
 const PREF_KINTO_BASE               = "services.kinto.base";
