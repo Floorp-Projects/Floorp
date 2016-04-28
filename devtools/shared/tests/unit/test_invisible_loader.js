@@ -16,7 +16,7 @@ function run_test() {
 function visible_loader() {
   let loader = new DevToolsLoader();
   loader.invisibleToDebugger = false;
-  loader.require("devtools/shared/css-color");
+  loader.require("devtools/shared/indentation");
 
   let dbg = new Debugger();
   let sandbox = loader._provider.loader.sharedGlobalSandbox;
@@ -37,7 +37,7 @@ function visible_loader() {
 function invisible_loader() {
   let loader = new DevToolsLoader();
   loader.invisibleToDebugger = true;
-  loader.require("devtools/shared/css-color");
+  loader.require("devtools/shared/indentation");
 
   let dbg = new Debugger();
   let sandbox = loader._provider.loader.sharedGlobalSandbox;
