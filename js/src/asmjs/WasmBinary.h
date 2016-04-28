@@ -27,14 +27,14 @@ namespace wasm {
 static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
 static const uint32_t EncodingVersion    = 0x0b;
 
-static const char SignaturesId[]         = "signatures";
-static const char ImportTableId[]        = "import_table";
-static const char FunctionSignaturesId[] = "function_signatures";
-static const char FunctionTableId[]      = "function_table";
-static const char MemoryId[]             = "memory";
-static const char ExportTableId[]        = "export_table";
-static const char FunctionBodiesId[]     = "function_bodies";
-static const char DataSegmentsId[]       = "data_segments";
+static const char TypeSectionId[]        = "type";
+static const char ImportSectionId[]      = "import";
+static const char FunctionSectionId[]    = "function";
+static const char TableSectionId[]       = "table";
+static const char MemorySectionId[]      = "memory";
+static const char ExportSectionId[]      = "export";
+static const char CodeSectionId[]        = "code";
+static const char DataSectionId[]        = "data";
 
 enum class ValType : uint8_t
 {

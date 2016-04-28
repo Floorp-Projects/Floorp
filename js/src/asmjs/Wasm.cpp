@@ -519,10 +519,10 @@ DecodeExpr(FunctionDecoder& f)
 typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
 
 static bool
-DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeTypeSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SignaturesId, &sectionStart, &sectionSize))
+    if (!d.startSection(TypeSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -602,10 +602,10 @@ DecodeSignatureIndex(JSContext* cx, Decoder& d, const ModuleGeneratorData& init,
 }
 
 static bool
-DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeFunctionSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(FunctionSignaturesId, &sectionStart, &sectionSize))
+    if (!d.startSection(FunctionSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -632,10 +632,10 @@ DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeFunctionTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
+DecodeTableSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(FunctionTableId, &sectionStart, &sectionSize))
+    if (!d.startSection(TableSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -753,10 +753,10 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
 }
 
 static bool
-DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
+DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(ImportTableId, &sectionStart, &sectionSize))
+    if (!d.startSection(ImportSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -780,10 +780,10 @@ DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNa
 }
 
 static bool
-DecodeMemory(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<ArrayBufferObject*> heap)
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<ArrayBufferObject*> heap)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(MemoryId, &sectionStart, &sectionSize))
+    if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -884,10 +884,10 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
 }
 
 static bool
-DecodeExportTable(JSContext* cx, Decoder& d, ModuleGenerator& mg)
+DecodeExportSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(ExportTableId, &sectionStart, &sectionSize))
+    if (!d.startSection(ExportSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -973,13 +973,13 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
 }
 
 static bool
-DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
+DecodeCodeSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
         return false;
 
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(FunctionBodiesId, &sectionStart, &sectionSize))
+    if (!d.startSection(CodeSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
 
     if (sectionStart == Decoder::NotStarted) {
@@ -1008,10 +1008,10 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSegments(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
+DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(DataSegmentsId, &sectionStart, &sectionSize))
+    if (!d.startSection(DataSectionId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1074,32 +1074,32 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     if (!init)
         return false;
 
-    if (!DecodeSignatures(cx, d, init.get()))
+    if (!DecodeTypeSection(cx, d, init.get()))
         return false;
 
-    if (!DecodeImportTable(cx, d, init.get(), importNames))
+    if (!DecodeImportSection(cx, d, init.get(), importNames))
         return false;
 
-    if (!DecodeFunctionSignatures(cx, d, init.get()))
+    if (!DecodeFunctionSection(cx, d, init.get()))
         return false;
 
-    if (!DecodeFunctionTable(cx, d, init.get()))
+    if (!DecodeTableSection(cx, d, init.get()))
         return false;
 
     ModuleGenerator mg(cx);
     if (!mg.init(Move(init), Move(file)))
         return false;
 
-    if (!DecodeMemory(cx, d, mg, heap))
+    if (!DecodeMemorySection(cx, d, mg, heap))
         return false;
 
-    if (!DecodeExportTable(cx, d, mg))
+    if (!DecodeExportSection(cx, d, mg))
         return false;
 
-    if (!DecodeFunctionBodies(cx, d, mg))
+    if (!DecodeCodeSection(cx, d, mg))
         return false;
 
-    if (!DecodeDataSegments(cx, d, heap))
+    if (!DecodeDataSection(cx, d, heap))
         return false;
 
     CacheableCharsVector funcNames;
