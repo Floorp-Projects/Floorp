@@ -561,8 +561,9 @@ Telephony::HandleAudioAgentState()
     }
   } else if (!activeCall.IsNull() && !mIsAudioStartPlaying) {
     mIsAudioStartPlaying = true;
-    AudioPlaybackConfig config;
-    rv = mAudioAgent->NotifyStartedPlaying(&config);
+    float volume;
+    bool muted;
+    rv = mAudioAgent->NotifyStartedPlaying(&volume, &muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -576,12 +577,9 @@ Telephony::HandleAudioAgentState()
     // because the modem have not changed the call state yet. It causes that
     // the telephony can't be resumed. Therefore, we don't mute the telephony
     // at the beginning.
-    rv = WindowVolumeChanged(1.0, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = WindowSuspendChanged(config.mSuspend);
+    volume = 1.0;
+    muted = false;
+    rv = WindowVolumeChanged(volume, muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

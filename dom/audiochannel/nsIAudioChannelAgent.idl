@@ -55,16 +55,6 @@ interface nsISuspendedTypes : nsISupports
   const uint32_t SUSPENDED_STOP_DISPOSABLE  = 4;
 };
 
-%{C++
-namespace mozilla {
-namespace dom {
-// It's defined in dom/audiochannel/AudioChannelService.h.
-class AudioPlaybackConfig;
-}
-}
-%}
-[ptr] native AudioPlaybackConfig(mozilla::dom::AudioPlaybackConfig);
-
 [uuid(15c05894-408e-4798-b527-a8c32d9c5f8c)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
@@ -162,10 +152,15 @@ interface nsIAudioChannelAgent : nsISupports
    * Note: Gecko component SHOULD call this function first then start to
    *          play audio stream only when return value is true.
    *
-   * @param config
-   *    It contains the playback related states (volume/mute/suspend)
+   * @return
+   *    normal state: the agent has registered with audio channel service and
+   *          the component should start playback.
+   *    muted state: the agent has registered with audio channel service but
+   *          the component should not start playback.
+   *    faded state: the agent has registered with audio channel service the
+   *          component should start playback as well as reducing the volume.
    */
-  void notifyStartedPlaying(in AudioPlaybackConfig config);
+  void notifyStartedPlaying(out float volume, out bool muted);
 
   /**
    * Notify the agent we no longer want to play.
