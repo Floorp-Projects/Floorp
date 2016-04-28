@@ -25,7 +25,7 @@
 namespace js {
 namespace wasm {
 
-class ModuleGeneratorThreadView;
+struct ModuleGeneratorData;
 
 typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
@@ -108,7 +108,7 @@ class FuncCompileResults
 class IonCompileTask
 {
     JSRuntime* const           runtime_;
-    ModuleGeneratorThreadView& mg_;
+    const ModuleGeneratorData& mg_;
     LifoAlloc                  lifo_;
     UniqueFuncBytes            func_;
     Maybe<FuncCompileResults>  results_;
@@ -117,7 +117,7 @@ class IonCompileTask
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* rt, ModuleGeneratorThreadView& mg, size_t defaultChunkSize)
+    IonCompileTask(JSRuntime* rt, const ModuleGeneratorData& mg, size_t defaultChunkSize)
       : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr)
     {}
     JSRuntime* runtime() const {
@@ -126,7 +126,7 @@ class IonCompileTask
     LifoAlloc& lifo() {
         return lifo_;
     }
-    ModuleGeneratorThreadView& mg() const {
+    const ModuleGeneratorData& mg() const {
         return mg_;
     }
     void init(UniqueFuncBytes func) {

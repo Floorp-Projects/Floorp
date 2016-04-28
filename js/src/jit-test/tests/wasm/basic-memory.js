@@ -94,7 +94,7 @@ testLoad('i32', '16_u', 16, 0, 0, 0xf1f0);
 
 // When these tests fail, uncomment the load/store tests below.
 function testLoadNYI(ext) {
-    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.load${ext} (i32.const 0))))`), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.load${ext} (i32.const 0))))`), TypeError, /not yet implemented: i64/);
 }
 testLoadNYI('');
 testLoadNYI('8_s');
@@ -116,7 +116,7 @@ testStore('i32', '', 0, 1, 0, -0x3f3e2c2c);
 testStore('i32', '', 1, 1, 4, -0x3f3e2c2c);
 
 function testStoreNYI(ext) {
-    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.store${ext} (i32.const 0) (i32.const 0))))`), TypeError, /NYI/);
+    assertErrorMessage(() => wasmEvalText(`(module (memory 1) (func (i64.store${ext} (i32.const 0) (i32.const 0))))`), TypeError, /not yet implemented: i64/);
 }
 testStoreNYI('');
 testStoreNYI('8');

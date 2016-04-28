@@ -20,7 +20,6 @@
 #define wasm_generator_h
 
 #include "asmjs/WasmBinary.h"
-#include "asmjs/WasmIonCompile.h"
 #include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
@@ -47,12 +46,11 @@ struct SlowFunction
 typedef Vector<SlowFunction> SlowFunctionVector;
 
 // The ModuleGeneratorData holds all the state shared between the
-// ModuleGenerator and ModuleGeneratorThreadView. The ModuleGeneratorData
-// is encapsulated by ModuleGenerator/ModuleGeneratorThreadView classes which
-// present a race-free interface to the code in each thread assuming any given
-// element is initialized by the ModuleGenerator thread before an index to that
-// element is written to Bytes sent to a ModuleGeneratorThreadView thread.
-// Once created, the Vectors are never resized.
+// ModuleGenerator thread and background compile threads. The background
+// threads are given a read-only view of the ModuleGeneratorData and the
+// ModuleGenerator is careful to initialize, and never subsequently mutate,
+// any given datum before being read by a background thread. In particular,
+// once created, the Vectors are never resized.
 
 struct TableModuleGeneratorData
 {
@@ -82,18 +80,6 @@ struct ImportModuleGeneratorData
 
 typedef Vector<ImportModuleGeneratorData, 0, SystemAllocPolicy> ImportModuleGeneratorDataVector;
 
-struct AsmJSGlobalVariable
-{
-    ExprType type;
-    unsigned globalDataOffset;
-    bool isConst;
-    AsmJSGlobalVariable(ExprType type, unsigned offset, bool isConst)
-      : type(type), globalDataOffset(offset), isConst(isConst)
-    {}
-};
-
-typedef Vector<AsmJSGlobalVariable, 0, SystemAllocPolicy> AsmJSGlobalVariableVector;
-
 struct ModuleGeneratorData
 {
     CompileArgs                     args;
@@ -105,7 +91,7 @@ struct ModuleGeneratorData
     TableModuleGeneratorDataVector  sigToTable;
     DeclaredSigPtrVector            funcSigs;
     ImportModuleGeneratorDataVector imports;
-    AsmJSGlobalVariableVector       globals;
+    GlobalDescVector                globals;
 
     uint32_t funcSigIndex(uint32_t funcIndex) const {
         return funcSigs[funcIndex] - sigs.begin();
@@ -118,51 +104,6 @@ struct ModuleGeneratorData
 
 typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
 
-// The ModuleGeneratorThreadView class presents a restricted, read-only view of
-// the shared state needed by helper threads. There is only one
-// ModuleGeneratorThreadView object owned by ModuleGenerator and referenced by
-// all compile tasks.
-
-class ModuleGeneratorThreadView
-{
-    const ModuleGeneratorData& shared_;
-
-  public:
-    explicit ModuleGeneratorThreadView(const ModuleGeneratorData& shared)
-      : shared_(shared)
-    {}
-    CompileArgs args() const {
-        return shared_.args;
-    }
-    bool isAsmJS() const {
-        return shared_.kind == ModuleKind::AsmJS;
-    }
-    uint32_t numTableElems() const {
-        MOZ_ASSERT(!isAsmJS());
-        return shared_.numTableElems;
-    }
-    uint32_t minHeapLength() const {
-        return shared_.minHeapLength;
-    }
-    const DeclaredSig& sig(uint32_t sigIndex) const {
-        return shared_.sigs[sigIndex];
-    }
-    const TableModuleGeneratorData& sigToTable(uint32_t sigIndex) const {
-        return shared_.sigToTable[sigIndex];
-    }
-    const DeclaredSig& funcSig(uint32_t funcIndex) const {
-        MOZ_ASSERT(shared_.funcSigs[funcIndex]);
-        return *shared_.funcSigs[funcIndex];
-    }
-    const ImportModuleGeneratorData& import(uint32_t importIndex) const {
-        MOZ_ASSERT(shared_.imports[importIndex].sig);
-        return shared_.imports[importIndex];
-    }
-    const AsmJSGlobalVariable& globalVar(uint32_t globalIndex) const {
-        return shared_.globals[globalIndex];
-    }
-};
-
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
 // and destroyed to compile the individual function bodies. After generating all
@@ -171,7 +112,6 @@ class ModuleGeneratorThreadView
 
 class MOZ_STACK_CLASS ModuleGenerator
 {
-    typedef UniquePtr<ModuleGeneratorThreadView> UniqueModuleGeneratorThreadView;
     typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
 
     ExclusiveContext*               cx_;
@@ -197,13 +137,13 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Parallel compilation
     bool                            parallel_;
     uint32_t                        outstanding_;
-    UniqueModuleGeneratorThreadView threadView_;
     Vector<IonCompileTask>          tasks_;
     Vector<IonCompileTask*>         freeTasks_;
 
     // Assertions
-    FunctionGenerator*              activeFunc_;
-    bool                            finishedFuncs_;
+    DebugOnly<FunctionGenerator*>   activeFunc_;
+    DebugOnly<bool>                 startedFuncDefs_;
+    DebugOnly<bool>                 finishedFuncDefs_;
 
     bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
@@ -213,7 +153,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool finishCodegen(StaticLinkData* link);
     bool finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link);
     bool addImport(const Sig& sig, uint32_t globalDataOffset);
-    bool startedFuncDefs() const { return !!threadView_; }
     bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
 
   public:
@@ -237,6 +176,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Function declarations:
     uint32_t numFuncSigs() const { return module_->numFuncs; }
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
+
+    // Globals:
+    bool allocateGlobal(ValType type, bool isConst, uint32_t* index);
+    const GlobalDesc& global(unsigned index) const { return shared_->globals[index]; }
 
     // Imports:
     uint32_t numImports() const;
@@ -263,10 +206,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool initSigTableLength(uint32_t sigIndex, uint32_t numElems);
     void initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices);
     void bumpMinHeapLength(uint32_t newMinHeapLength);
-
-    // asm.js global variables:
-    bool allocateGlobalVar(ValType type, bool isConst, uint32_t* index);
-    const AsmJSGlobalVariable& globalVar(unsigned index) const { return shared_->globals[index]; }
 
     // Return a ModuleData object which may be used to construct a Module, the
     // StaticLinkData required to call Module::staticallyLink, and the list of
