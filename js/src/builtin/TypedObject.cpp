@@ -1610,11 +1610,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
     if (!typedObj.owner_)
         return;
 
-    // When this is called for compacting GC, the related objects we touch here
-    // may not have had their slots updated yet. Note that this does not apply
-    // to generational GC because these objects (type descriptors and
-    // prototypes) are never allocated in the nursery.
-    TypeDescr& descr = *MaybeForwarded(&typedObj.typeDescr());
+    TypeDescr& descr = typedObj.typeDescr();
 
     // Mark the owner, watching in case it is moved by the tracer.
     JSObject* oldOwner = typedObj.owner_;
@@ -2130,11 +2126,7 @@ InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
     if (typedObj.is<InlineTransparentTypedObject>())
         return;
 
-    // When this is called for compacting GC, the related objects we touch here
-    // may not have had their slots updated yet.
-    TypeDescr& descr = *MaybeForwarded(&typedObj.typeDescr());
-
-    descr.traceInstances(trc, typedObj.inlineTypedMem(), 1);
+    typedObj.typeDescr().traceInstances(trc, typedObj.inlineTypedMem(), 1);
 }
 
 /* static */ void
