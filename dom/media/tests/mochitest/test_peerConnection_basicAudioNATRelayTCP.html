@@ -24,6 +24,8 @@
         options = options || {};
         options.expectedLocalCandidateType = "relayed-tcp";
         options.expectedRemoteCandidateType = "relayed-tcp";
+        // No reason to wait for gathering to complete like the other NAT tests,
+        // since relayed-tcp is the only thing that can work.
         test = new PeerConnectionTest(options);
         test.setMediaConstraints([{audio: true}], [{audio: true}]);
         test.run();

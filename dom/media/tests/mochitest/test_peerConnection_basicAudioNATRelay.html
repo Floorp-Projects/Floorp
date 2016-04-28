@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE HTML>
 <html>
 <head>
+  <script type="application/javascript" src="nonTrickleIce.js"></script>
   <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
@@ -27,6 +28,12 @@
         // relay.
         options.turn_disabled_local = true;
         test = new PeerConnectionTest(options);
+        // Make sure we don't end up choosing the wrong thing due to delays in
+        // trickle. Once we are willing to accept trickle after ICE success, we
+        // can maybe wait a bit to allow things to stabilize.
+        // TODO(bug 1238249)
+        makeOffererNonTrickle(test.chain);
+        makeAnswererNonTrickle(test.chain);
         test.setMediaConstraints([{audio: true}], [{audio: true}]);
         test.run();
       })
