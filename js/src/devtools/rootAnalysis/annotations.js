@@ -324,10 +324,31 @@ function isUnsafeStorage(typeName)
     return typeName.startsWith('UniquePtr<');
 }
 
-function isSuppressConstructor(varName)
+function isSuppressConstructor(edgeType, varName)
 {
-    // varName[1] contains the unqualified name
-    return GCSuppressionTypes.indexOf(varName[1]) != -1;
+    // Check whether this could be a constructor
+    if (edgeType.Kind != 'Function')
+        return false;
+    if (!('TypeFunctionCSU' in edgeType))
+        return false;
+    if (edgeType.Type.Kind != 'Void')
+        return false;
+
+    // Check whether the type is a known suppression type.
+    var type = edgeType.TypeFunctionCSU.Type.Name;
+    if (GCSuppressionTypes.indexOf(type) == -1)
+        return false;
+
+    // And now make sure this is the constructor, not some other method on a
+    // suppression type. varName[0] contains the qualified name.
+    var [ mangled, unmangled ] = splitFunction(varName[0]);
+    if (mangled.search(/C\dE/) == -1)
+        return false; // Mangled names of constructors have C<num>E
+    var m = unmangled.match(/([~\w]+)(?:<.*>)?\(/);
+    if (!m)
+        return false;
+    var type_stem = type.replace(/\w+::/g, '').replace(/\<.*\>/g, '');
+    return m[1] == type_stem;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden

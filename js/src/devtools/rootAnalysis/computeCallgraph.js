@@ -346,6 +346,7 @@ function process(functionName, functionBodies)
 {
     for (var body of functionBodies)
         body.suppressed = [];
+
     for (var body of functionBodies) {
         for (var [pbody, id] of allRAIIGuardedCallPoints(functionBodies, body, isSuppressConstructor))
             pbody.suppressed[id] = true;
