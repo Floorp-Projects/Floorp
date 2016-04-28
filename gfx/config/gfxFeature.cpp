@@ -9,9 +9,17 @@
 namespace mozilla {
 namespace gfx {
 
+bool
+FeatureState::IsEnabled() const
+{
+  return IsFeatureStatusSuccess(GetValue());
+}
+
 FeatureStatus
 FeatureState::GetValue() const
 {
+  AssertInitialized();
+
   if (mRuntime.mStatus != FeatureStatus::Unused) {
     return mRuntime.mStatus;
   }
@@ -28,14 +36,101 @@ FeatureState::GetValue() const
 }
 
 bool
+FeatureState::SetDefault(bool aEnable,
+                         FeatureStatus aDisableStatus,
+                         const char* aDisableMessage)
+{
+  if (!aEnable) {
+    DisableByDefault(aDisableStatus, aDisableMessage);
+    return false;
+  }
+  EnableByDefault();
+  return true;
+}
+
+bool
+FeatureState::InitOrUpdate(bool aEnable,
+                           FeatureStatus aDisableStatus,
+                           const char* aDisableMessage)
+{
+  if (!IsInitialized()) {
+    return SetDefault(aEnable, aDisableStatus, aDisableMessage);
+  }
+  return MaybeSetFailed(aEnable, aDisableStatus, aDisableMessage);
+}
+
+void
+FeatureState::UserEnable(const char* aMessage)
+{
+  AssertInitialized();
+  SetUser(FeatureStatus::Available, aMessage);
+}
+
+void
+FeatureState::UserForceEnable(const char* aMessage)
+{
+  AssertInitialized();
+  SetUser(FeatureStatus::ForceEnabled, aMessage);
+}
+
+void
+FeatureState::UserDisable(const char* aMessage)
+{
+  AssertInitialized();
+  SetUser(FeatureStatus::Disabled, aMessage);
+}
+
+void
+FeatureState::Disable(FeatureStatus aStatus, const char* aMessage)
+{
+  AssertInitialized();
+
+  // We should never bother setting an environment status to "enabled," since
+  // it could override an explicit user decision to disable it.
+  MOZ_ASSERT(IsFeatureStatusFailure(aStatus));
+
+  SetEnvironment(aStatus, aMessage);
+}
+
+void
+FeatureState::SetFailed(FeatureStatus aStatus, const char* aMessage)
+{
+  AssertInitialized();
+
+  // We should never bother setting a runtime status to "enabled," since it could
+  // override an explicit user decision to disable it.
+  MOZ_ASSERT(IsFeatureStatusFailure(aStatus));
+
+  SetRuntime(aStatus, aMessage);
+}
+
+bool
+FeatureState::MaybeSetFailed(bool aEnable, FeatureStatus aStatus, const char* aMessage)
+{
+  if (!aEnable) {
+    SetFailed(aStatus, aMessage);
+    return false;
+  }
+  return true;
+}
+
+bool
+FeatureState::MaybeSetFailed(FeatureStatus aStatus, const char* aMessage)
+{
+  return MaybeSetFailed(IsFeatureStatusSuccess(aStatus), aStatus, aMessage);
+}
+
+bool
 FeatureState::DisabledByDefault() const
 {
+  AssertInitialized();
   return mDefault.mStatus != FeatureStatus::Available;
 }
 
 bool
 FeatureState::IsForcedOnByUser() const
 {
+  AssertInitialized();
   return mUser.mStatus == FeatureStatus::ForceEnabled;
 }
 

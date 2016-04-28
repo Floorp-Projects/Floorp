@@ -27,11 +27,31 @@ enum class Feature : uint32_t {
 
 class FeatureState
 {
+  friend class gfxConfig;
+
  public:
+  bool IsEnabled() const;
   FeatureStatus GetValue() const;
 
   void EnableByDefault();
   void DisableByDefault(FeatureStatus aStatus, const char* aMessage);
+  bool SetDefault(bool aEnable, FeatureStatus aDisableStatus, const char* aDisableMessage);
+
+  bool InitOrUpdate(bool aEnable,
+                    FeatureStatus aDisableStatus,
+                    const char* aMessage);
+  void UserEnable(const char* aMessage);
+  void UserForceEnable(const char* aMessage);
+  void UserDisable(const char* aMessage);
+  void Disable(FeatureStatus aStatus, const char* aMessage);
+  void ForceDisable(FeatureStatus aStatus, const char* aMessage) {
+    SetFailed(aStatus, aMessage);
+  }
+  void SetFailed(FeatureStatus aStatus, const char* aMessage);
+  bool MaybeSetFailed(bool aEnable, FeatureStatus aStatus, const char* aMessage);
+  bool MaybeSetFailed(FeatureStatus aStatus, const char* aMessage);
+
+ private:
   void SetUser(FeatureStatus aStatus, const char* aMessage);
   void SetEnvironment(FeatureStatus aStatus, const char* aMessage);
   void SetRuntime(FeatureStatus aStatus, const char* aMessage);
