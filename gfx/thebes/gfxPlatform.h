@@ -450,7 +450,6 @@ public:
     static bool OffMainThreadCompositingEnabled();
 
     static bool CanUseDirect3D9();
-    static bool CanUseDirect3D11();
     virtual bool CanUseHardwareVideoDecoding();
     static bool CanUseDirect3D11ANGLE();
 
@@ -684,9 +683,10 @@ protected:
                           uint32_t aContentBitmask, mozilla::gfx::BackendType aContentDefault);
 
     /**
-     * If in a child process, triggers a refresh of device preferences.
+     * If in a child process, triggers a refresh of device preferences, then returns true.
+     * In a parent process, nothing happens and false is returned.
      */
-    void UpdateDeviceInitData();
+    virtual bool UpdateDeviceInitData();
 
     /**
      * Increase the global device counter after a device has been removed/reset.

@@ -16,6 +16,7 @@ namespace gfx {
 #define GFX_FEATURE_MAP(_)                                                        \
   /* Name,                        Type,         Description */                    \
   _(HW_COMPOSITING,               Feature,      "Compositing")                    \
+  _(D3D11_COMPOSITING,            Feature,      "Direct3D11 Compositing")         \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
@@ -57,6 +58,7 @@ class FeatureState
   void SetRuntime(FeatureStatus aStatus, const char* aMessage);
   bool IsForcedOnByUser() const;
   bool DisabledByDefault() const;
+  const char* GetRuntimeMessage() const;
   bool IsInitialized() const {
     return mDefault.mStatus != FeatureStatus::Unused;
   }
