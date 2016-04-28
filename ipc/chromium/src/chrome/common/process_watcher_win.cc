@@ -14,7 +14,8 @@ static const int kWaitInterval = 2000;
 
 namespace {
 
-class TimerExpiredTask : public Task, public base::ObjectWatcher::Delegate {
+class TimerExpiredTask : public mozilla::Runnable,
+                         public base::ObjectWatcher::Delegate {
  public:
   explicit TimerExpiredTask(base::ProcessHandle process) : process_(process) {
     watcher_.StartWatching(process_, this);
@@ -29,9 +30,10 @@ class TimerExpiredTask : public Task, public base::ObjectWatcher::Delegate {
 
   // Task ---------------------------------------------------------------------
 
-  virtual void Run() {
+  NS_IMETHOD Run() override {
     if (process_)
       KillProcess();
+    return NS_OK;
   }
 
   // MessageLoop::Watcher -----------------------------------------------------
@@ -85,7 +87,8 @@ void ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process
     return;
   }
 
-  MessageLoop::current()->PostDelayedTask(FROM_HERE,
-                                          new TimerExpiredTask(process),
+  RefPtr<mozilla::Runnable> task = new TimerExpiredTask(process);
+
+  MessageLoop::current()->PostDelayedTask(task.forget(),
                                           kWaitInterval);
 }

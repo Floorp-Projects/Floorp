@@ -255,15 +255,14 @@ DeallocateTextureClient(TextureDeallocParams params)
       bool done = false;
       ReentrantMonitor barrier("DeallocateTextureClient");
       ReentrantMonitorAutoEnter autoMon(barrier);
-      ipdlMsgLoop->PostTask(FROM_HERE,
-        NewRunnableFunction(DeallocateTextureClientSyncProxy,
-                            params, &barrier, &done));
+      ipdlMsgLoop->PostTask(NewRunnableFunction(DeallocateTextureClientSyncProxy,
+                                                params, &barrier, &done));
       while (!done) {
         barrier.Wait();
       }
     } else {
-      ipdlMsgLoop->PostTask(FROM_HERE,
-        NewRunnableFunction(DeallocateTextureClient, params));
+      ipdlMsgLoop->PostTask(NewRunnableFunction(DeallocateTextureClient,
+                                                params));
     }
     // The work has been forwarded to the IPDL thread, we are done.
     return;

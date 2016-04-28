@@ -69,7 +69,7 @@ class BaseTimer_Helper {
 
   // Returns true if the timer is running (i.e., not stopped).
   bool IsRunning() const {
-    return delayed_task_ != NULL;
+    return !!delayed_task_;
   }
 
   // Returns the current delay for this timer.  May only call this method when
@@ -80,10 +80,10 @@ class BaseTimer_Helper {
   }
 
  protected:
-  BaseTimer_Helper() : delayed_task_(NULL) {}
+  BaseTimer_Helper() {}
 
   // We have access to the timer_ member so we can orphan this task.
-  class TimerTask : public Task {
+  class TimerTask : public mozilla::Runnable {
    public:
     explicit TimerTask(TimeDelta delay) : delay_(delay) {
       // timer_ is set in InitiateDelayedTask.
@@ -100,7 +100,7 @@ class BaseTimer_Helper {
   // orphaning delayed_task_ if it is non-null.
   void InitiateDelayedTask(TimerTask* timer_task);
 
-  TimerTask* delayed_task_;
+  RefPtr<TimerTask> delayed_task_;
 
   DISALLOW_COPY_AND_ASSIGN(BaseTimer_Helper);
 };
@@ -129,7 +129,7 @@ class BaseTimer : public BaseTimer_Helper {
   // Call this method to reset the timer delay of an already running timer.
   void Reset() {
     DCHECK(IsRunning());
-    InitiateDelayedTask(static_cast<TimerTask*>(delayed_task_)->Clone());
+    InitiateDelayedTask(static_cast<TimerTask*>(delayed_task_.get())->Clone());
   }
 
  private:
@@ -150,14 +150,15 @@ class BaseTimer : public BaseTimer_Helper {
       ClearBaseTimer();
     }
 
-    virtual void Run() {
+    NS_IMETHOD Run() override {
       if (!timer_)  // timer_ is null if we were orphaned.
-        return;
+        return NS_OK;
       if (kIsRepeating)
         ResetBaseTimer();
       else
         ClearBaseTimer();
       DispatchToMethod(receiver_, method_, Tuple0());
+      return NS_OK;
     }
 
     TimerTask* Clone() const {

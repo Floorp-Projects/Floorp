@@ -2670,9 +2670,8 @@ public:
           mVsyncEnabled = true;
         }
 
-        CancelableTask* vsyncStart = NewRunnableMethod(this,
-            &D3DVsyncDisplay::VBlankLoop);
-        mVsyncThread->message_loop()->PostTask(FROM_HERE, vsyncStart);
+        mVsyncThread->message_loop()->PostTask(
+            NewRunnableMethod(this, &D3DVsyncDisplay::VBlankLoop));
       }
 
       virtual void DisableVsync() override
@@ -2709,7 +2708,7 @@ public:
           delay = mozilla::TimeDuration::FromMilliseconds(0);
         }
 
-        mVsyncThread->message_loop()->PostDelayedTask(FROM_HERE,
+        mVsyncThread->message_loop()->PostDelayedTask(
             NewRunnableMethod(this, &D3DVsyncDisplay::VBlankLoop),
             delay.ToMilliseconds());
       }

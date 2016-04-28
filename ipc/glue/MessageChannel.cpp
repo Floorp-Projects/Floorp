@@ -694,7 +694,6 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
     aTargetLoop->PostTask(
-        FROM_HERE,
         NewRunnableMethod(aTargetChan, &MessageChannel::OnOpenAsSlave, this, oppSide));
 
     while (ChannelOpening == mChannelState)
@@ -983,7 +982,8 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
         if (!compress) {
             // If we compressed away the previous message, we'll re-use
             // its pending task.
-            mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+            RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
+            mWorkerLoop->PostTask(task.forget());
         }
     }
 }
@@ -1805,14 +1805,16 @@ MessageChannel::EnqueuePendingMessages()
     MaybeUndeferIncall();
 
     for (size_t i = 0; i < mDeferred.size(); ++i) {
-        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
+        mWorkerLoop->PostTask(task.forget());
     }
 
     // XXX performance tuning knob: could process all or k pending
     // messages here, rather than enqueuing for later processing
 
     for (size_t i = 0; i < mPending.size(); ++i) {
-        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
+        mWorkerLoop->PostTask(task.forget());
     }
 }
 
@@ -1920,7 +1922,8 @@ MessageChannel::OnChannelConnected(int32_t peer_id)
     MOZ_RELEASE_ASSERT(!mPeerPidSet);
     mPeerPidSet = true;
     mPeerPid = peer_id;
-    mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mOnChannelConnectedTask));
+    RefPtr<DequeueTask> task = new DequeueTask(mOnChannelConnectedTask);
+    mWorkerLoop->PostTask(task.forget());
 }
 
 void
@@ -2089,8 +2092,9 @@ MessageChannel::OnNotifyMaybeChannelError()
     if (IsOnCxxStack()) {
         mChannelErrorTask =
             NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+        RefPtr<Runnable> task = mChannelErrorTask;
         // 10 ms delay is completely arbitrary
-        mWorkerLoop->PostDelayedTask(FROM_HERE, mChannelErrorTask, 10);
+        mWorkerLoop->PostDelayedTask(task.forget(), 10);
         return;
     }
 
@@ -2108,7 +2112,8 @@ MessageChannel::PostErrorNotifyTask()
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
         NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
-    mWorkerLoop->PostTask(FROM_HERE, mChannelErrorTask);
+    RefPtr<Runnable> task = mChannelErrorTask;
+    mWorkerLoop->PostTask(task.forget());
 }
 
 // Special async message.
@@ -2303,7 +2308,8 @@ MessageChannel::EndTimeout()
         // OnMaybeDequeueOne. But during the timeout, that function will skip
         // some messages. Now they're ready to be processed, so we enqueue more
         // tasks.
-        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+        RefPtr<DequeueTask> task = new DequeueTask(mDequeueOneTask);
+        mWorkerLoop->PostTask(task.forget());
     }
 }
 

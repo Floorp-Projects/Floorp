@@ -10,9 +10,10 @@
 #include "mozilla/TimeStamp.h"  // for TimeDuration
 #include "nsITimer.h"
 
-class Task;
-
 namespace mozilla {
+
+class Runnable;
+
 namespace layers {
 
 class APZThreadUtils
@@ -50,12 +51,12 @@ public:
    * this function is called from the controller thread itself then the task is
    * run immediately without getting queued.
    */
-  static void RunOnControllerThread(Task* aTask);
+  static void RunOnControllerThread(already_AddRefed<Runnable> aTask);
 
   /**
    * Runs the given task on the current thread after a delay of |aDelay|.
    */
-  static void RunDelayedTaskOnCurrentThread(Task* aTask,
+  static void RunDelayedTaskOnCurrentThread(already_AddRefed<Runnable> aTask,
                                             const TimeDuration& aDelay);
 
   /**

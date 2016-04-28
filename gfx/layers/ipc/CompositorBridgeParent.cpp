@@ -15,7 +15,6 @@
 #include "base/process.h"               // for ProcessId
 #include "base/task.h"                  // for CancelableTask, etc
 #include "base/thread.h"                // for Thread
-#include "base/tracked.h"               // for FROM_HERE
 #include "gfxContext.h"                 // for gfxContext
 #include "gfxPlatform.h"                // for gfxPlatform
 #ifdef MOZ_WIDGET_GTK
@@ -362,10 +361,10 @@ CompositorVsyncScheduler::SetDisplay(bool aDisplayEnable)
   if (!CompositorBridgeParent::IsInCompositorThread()) {
     MOZ_ASSERT(NS_IsMainThread());
     MonitorAutoLock lock(mSetDisplayMonitor);
-    mSetDisplayTask = NewRunnableMethod(this,
-                                        &CompositorVsyncScheduler::SetDisplay,
-                                        aDisplayEnable);
-    ScheduleTask(mSetDisplayTask, 0);
+    RefPtr<CancelableRunnable> task =
+      NewRunnableMethod(this, &CompositorVsyncScheduler::SetDisplay, aDisplayEnable);
+    mSetDisplayTask = task;
+    ScheduleTask(task.forget(), 0);
     return;
   } else {
     MonitorAutoLock lock(mSetDisplayMonitor);
@@ -427,10 +426,11 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
   // can be called from the compositor or vsync thread
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
   if (mCurrentCompositeTask == nullptr) {
-    mCurrentCompositeTask = NewRunnableMethod(this,
-                                              &CompositorVsyncScheduler::Composite,
-                                              aCompositeTimestamp);
-    ScheduleTask(mCurrentCompositeTask, 0);
+    RefPtr<CancelableRunnable> task =
+      NewRunnableMethod(this, &CompositorVsyncScheduler::Composite,
+                        aCompositeTimestamp);
+    mCurrentCompositeTask = task;
+    ScheduleTask(task.forget(), 0);
   }
 }
 
@@ -480,9 +480,10 @@ CompositorVsyncScheduler::SetNeedsComposite()
 {
   if (!CompositorBridgeParent::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
-    mSetNeedsCompositeTask = NewRunnableMethod(this,
-                                              &CompositorVsyncScheduler::SetNeedsComposite);
-    ScheduleTask(mSetNeedsCompositeTask, 0);
+    RefPtr<CancelableRunnable> task =
+      NewRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
+    mSetNeedsCompositeTask = task;
+    ScheduleTask(task.forget(), 0);
     return;
   } else {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
@@ -659,11 +660,12 @@ MessageLoop* CompositorBridgeParent::CompositorLoop()
 }
 
 void
-CompositorVsyncScheduler::ScheduleTask(CancelableTask* aTask, int aTime)
+CompositorVsyncScheduler::ScheduleTask(already_AddRefed<CancelableRunnable> aTask,
+                                       int aTime)
 {
   MOZ_ASSERT(CompositorBridgeParent::CompositorLoop());
   MOZ_ASSERT(aTime >= 0);
-  CompositorBridgeParent::CompositorLoop()->PostDelayedTask(FROM_HERE, aTask, aTime);
+  CompositorBridgeParent::CompositorLoop()->PostDelayedTask(Move(aTask), aTime);
 }
 
 void
@@ -714,10 +716,10 @@ CompositorBridgeParent::CompositorBridgeParent(nsIWidget* aWidget,
   // can destroy this instance is initialized on the compositor thread after
   // this task has been processed.
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor,
-                                                          this, &mCompositorID));
+  CompositorLoop()->PostTask(NewRunnableFunction(&AddCompositor,
+                                                 this, &mCompositorID));
 
-  CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(SetThreadPriority));
+  CompositorLoop()->PostTask(NewRunnableFunction(SetThreadPriority));
 
 
   { // scope lock
@@ -980,25 +982,22 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   // We must keep the compositor parent alive untill the code handling message
   // reception is finished on this thread.
   mSelfRef = this;
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableMethod(this,&CompositorBridgeParent::DeferredDestroy));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this,&CompositorBridgeParent::DeferredDestroy));
 }
 
 
 void
 CompositorBridgeParent::ScheduleRenderOnCompositorThread()
 {
-  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorBridgeParent::ScheduleComposition);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, renderTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ScheduleComposition));
 }
 
 void
 CompositorBridgeParent::InvalidateOnCompositorThread()
 {
-  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorBridgeParent::Invalidate);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, renderTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::Invalidate));
 }
 
 void
@@ -1088,10 +1087,8 @@ CompositorBridgeParent::SchedulePauseOnCompositorThread()
 {
   MonitorAutoLock lock(mPauseCompositionMonitor);
 
-  CancelableTask *pauseTask = NewRunnableMethod(this,
-                                                &CompositorBridgeParent::PauseComposition);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, pauseTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::PauseComposition));
 
   // Wait until the pause has actually been processed by the compositor thread
   lock.Wait();
@@ -1102,10 +1099,8 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread()
 {
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  CancelableTask *resumeTask =
-    NewRunnableMethod(this, &CompositorBridgeParent::ResumeComposition);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, resumeTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ResumeComposition));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -1118,10 +1113,8 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  CancelableTask *resumeTask =
-    NewRunnableMethod(this, &CompositorBridgeParent::ResumeCompositionAndResize, width, height);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, resumeTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ResumeCompositionAndResize, width, height));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -1130,12 +1123,12 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread(int width, int height)
 }
 
 void
-CompositorBridgeParent::ScheduleTask(CancelableTask* task, int time)
+CompositorBridgeParent::ScheduleTask(already_AddRefed<CancelableRunnable> task, int time)
 {
   if (time == 0) {
-    MessageLoop::current()->PostTask(FROM_HERE, task);
+    MessageLoop::current()->PostTask(Move(task));
   } else {
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, task, time);
+    MessageLoop::current()->PostDelayedTask(Move(task), time);
   }
 }
 
@@ -1372,8 +1365,9 @@ CompositorBridgeParent::ScheduleRotationOnCompositorThread(const TargetConfig& a
     if (mForceCompositionTask != nullptr) {
       mForceCompositionTask->Cancel();
     }
-    mForceCompositionTask = NewRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
-    ScheduleTask(mForceCompositionTask, gfxPrefs::OrientationSyncMillis());
+    RefPtr<CancelableRunnable> task = NewRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
+    mForceCompositionTask = task;
+    ScheduleTask(task.forget(), gfxPrefs::OrientationSyncMillis());
   }
 }
 
@@ -1528,7 +1522,7 @@ CompositorBridgeParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
   *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
 }
 
-class NotifyAPZConfirmedTargetTask : public Task
+class NotifyAPZConfirmedTargetTask : public Runnable
 {
 public:
   explicit NotifyAPZConfirmedTargetTask(const RefPtr<APZCTreeManager>& aAPZCTM,
@@ -1540,8 +1534,9 @@ public:
   {
   }
 
-  virtual void Run() override {
+  NS_IMETHOD Run() override {
     mAPZCTM->SetTargetAPZC(mInputBlockId, mTargets);
+    return NS_OK;
   }
 
 private:
@@ -1558,8 +1553,10 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const LayerTransactionParent* aLa
   if (!mApzcTreeManager) {
     return;
   }
-  APZThreadUtils::RunOnControllerThread(new NotifyAPZConfirmedTargetTask(
-    mApzcTreeManager, aInputBlockId, aTargets));
+  RefPtr<Runnable> task =
+    new NotifyAPZConfirmedTargetTask(mApzcTreeManager, aInputBlockId, aTargets);
+  APZThreadUtils::RunOnControllerThread(task.forget());
+
 }
 
 void
@@ -1776,8 +1773,7 @@ CompositorBridgeParent::DeallocateLayerTreeId(uint64_t aId)
     gfxCriticalError() << "Attempting to post to a invalid Compositor Loop";
     return;
   }
-  CompositorLoop()->PostTask(FROM_HERE,
-                             NewRunnableFunction(&EraseLayerState, aId));
+  CompositorLoop()->PostTask(NewRunnableFunction(&EraseLayerState, aId));
 }
 
 /* static */ void
@@ -1827,8 +1823,7 @@ CompositorBridgeParent::SetControllerForLayerTree(uint64_t aLayersId,
 {
   // This ref is adopted by UpdateControllerForLayersId().
   aController->AddRef();
-  CompositorLoop()->PostTask(FROM_HERE,
-                             NewRunnableFunction(&UpdateControllerForLayersId,
+  CompositorLoop()->PostTask(NewRunnableFunction(&UpdateControllerForLayersId,
                                                  aLayersId,
                                                  aController));
 }
@@ -1871,7 +1866,7 @@ CompositorBridgeParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
   // Called in the vsync thread
   if (profiler_is_active() && sCompositorThreadHolder) {
-    CompositorLoop()->PostTask(FROM_HERE,
+    CompositorLoop()->PostTask(
       NewRunnableFunction(InsertVsyncProfilerMarker, aVsyncTimestamp));
   }
 }
@@ -2111,7 +2106,7 @@ CompositorBridgeParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendH
   {
     MonitorAutoLock lock(mResetCompositorMonitor);
 
-    CompositorLoop()->PostTask(FROM_HERE,
+    CompositorLoop()->PostTask(
       NewRunnableMethod(this,
                         &CompositorBridgeParent::ResetCompositorTask,
                         aBackendHints,
@@ -2221,7 +2216,6 @@ CompositorBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid, Gecko
 
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
-    FROM_HERE,
     NewRunnableFunction(OpenCompositor, cpcp.get(),
                         aTransport, aOtherPid, XRE_GetIOMessageLoop()));
   // The return value is just compared to null for success checking,
@@ -2284,7 +2278,7 @@ CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
-  MessageLoop::current()->PostTask(FROM_HERE,
+  MessageLoop::current()->PostTask(
       NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
 }
 
@@ -2529,10 +2523,8 @@ CompositorBridgeParent::UpdatePluginWindowState(uint64_t aId)
 void
 CompositorBridgeParent::ScheduleShowAllPluginWindows()
 {
-  CancelableTask *pluginTask =
-    NewRunnableMethod(this, &CompositorBridgeParent::ShowAllPluginWindows);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, pluginTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ShowAllPluginWindows));
 }
 
 void
@@ -2546,10 +2538,8 @@ CompositorBridgeParent::ShowAllPluginWindows()
 void
 CompositorBridgeParent::ScheduleHideAllPluginWindows()
 {
-  CancelableTask *pluginTask =
-    NewRunnableMethod(this, &CompositorBridgeParent::HideAllPluginWindows);
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(FROM_HERE, pluginTask);
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::HideAllPluginWindows));
 }
 
 void
@@ -2742,8 +2732,8 @@ CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_GetIOMessageLoop());
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new DeleteTask<Transport>(mTransport));
+  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
+  XRE_GetIOMessageLoop()->PostTask(task.forget());
 }
 
 IToplevelProtocol*

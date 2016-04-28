@@ -26,8 +26,6 @@ UNIFIED_SOURCES += [
     'src/base/thread.cc',
     'src/base/time.cc',
     'src/base/timer.cc',
-    'src/base/tracked.cc',
-    'src/base/tracked_objects.cc',
     'src/chrome/common/child_process.cc',
     'src/chrome/common/child_process_host.cc',
     'src/chrome/common/child_process_info.cc',

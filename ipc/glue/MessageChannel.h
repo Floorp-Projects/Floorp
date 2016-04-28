@@ -462,16 +462,17 @@ class MessageChannel : HasResultCodes
     typedef std::deque<Message> MessageQueue;
     typedef std::map<size_t, Message> MessageMap;
 
+    // XXXkhuey this can almost certainly die.
     // All dequeuing tasks require a single point of cancellation,
     // which is handled via a reference-counted task.
     class RefCountedTask
     {
       public:
-        explicit RefCountedTask(CancelableTask* aTask)
+        explicit RefCountedTask(already_AddRefed<CancelableRunnable> aTask)
           : mTask(aTask)
         { }
       private:
-        ~RefCountedTask() { delete mTask; }
+        ~RefCountedTask() { }
       public:
         void Run() { mTask->Run(); }
         void Cancel() { mTask->Cancel(); }
@@ -479,18 +480,21 @@ class MessageChannel : HasResultCodes
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedTask)
 
       private:
-        CancelableTask* mTask;
+        RefPtr<CancelableRunnable> mTask;
     };
 
     // Wrap an existing task which can be cancelled at any time
     // without the wrapper's knowledge.
-    class DequeueTask : public Task
+    class DequeueTask : public Runnable
     {
       public:
         explicit DequeueTask(RefCountedTask* aTask)
           : mTask(aTask)
         { }
-        void Run() override { mTask->Run(); }
+        NS_IMETHOD Run() override {
+          mTask->Run();
+          return NS_OK;
+        }
 
       private:
         RefPtr<RefCountedTask> mTask;
@@ -503,7 +507,7 @@ class MessageChannel : HasResultCodes
     Side mSide;
     MessageLink* mLink;
     MessageLoop* mWorkerLoop;           // thread where work is done
-    CancelableTask* mChannelErrorTask;  // NotifyMaybeChannelError runnable
+    RefPtr<CancelableRunnable> mChannelErrorTask;  // NotifyMaybeChannelError runnable
 
     // id() of mWorkerLoop.  This persists even after mWorkerLoop is cleared
     // during channel shutdown.

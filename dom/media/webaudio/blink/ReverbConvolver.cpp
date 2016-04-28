@@ -158,8 +158,8 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
           NS_WARNING("Cannot start convolver thread.");
           return;
         }
-        CancelableTask* task = NewRunnableMethod(this, &ReverbConvolver::backgroundThreadEntry);
-        m_backgroundThread.message_loop()->PostTask(FROM_HERE, task);
+        m_backgroundThread.message_loop()->PostTask(
+	  NewRunnableMethod(this, &ReverbConvolver::backgroundThreadEntry));
     }
 }
 

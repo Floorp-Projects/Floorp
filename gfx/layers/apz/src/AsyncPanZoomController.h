@@ -146,7 +146,7 @@ public:
    * Schedules a runnable to run on the controller/UI thread at some time
    * in the future.
    */
-  void PostDelayedTask(Task* aTask, int aDelayMs);
+  void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs);
 
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
@@ -162,7 +162,7 @@ public:
   bool AdvanceAnimations(const TimeStamp& aSampleTime);
 
   bool UpdateAnimation(const TimeStamp& aSampleTime,
-                       nsTArray<Task*>* aOutDeferredTasks);
+                       nsTArray<RefPtr<Runnable>>* aOutDeferredTasks);
 
   /**
    * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
