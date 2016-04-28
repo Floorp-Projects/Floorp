@@ -35,3 +35,5 @@ interface nsIPresentationDevice : nsISupports
   // Do something when presentation session is disconnected.
   void disconnect();
 };
+
+
