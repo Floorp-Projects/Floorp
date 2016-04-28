@@ -114,6 +114,7 @@ UNIFIED_SOURCES += [
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
     'InputStreamUtils.cpp',
+    'IPCMessageUtils.cpp',
     'MessageChannel.cpp',
     'MessageLink.cpp',
     'MessagePump.cpp',
