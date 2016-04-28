@@ -5048,4 +5048,3 @@ NameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, Handl
 
     return true;
 }
-
