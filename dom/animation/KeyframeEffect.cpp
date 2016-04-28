@@ -719,6 +719,29 @@ KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
 }
 
+static Maybe<OwningAnimationTarget>
+ConvertTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
+{
+  // Return value optimization.
+  Maybe<OwningAnimationTarget> result;
+
+  if (aTarget.IsNull()) {
+    return result;
+  }
+
+  const ElementOrCSSPseudoElement& target = aTarget.Value();
+  MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
+             "Uninitialized target");
+
+  if (target.IsElement()) {
+    result.emplace(&target.GetAsElement());
+  } else {
+    RefPtr<Element> elem = target.GetAsCSSPseudoElement().ParentElement();
+    result.emplace(elem, target.GetAsCSSPseudoElement().GetType());
+  }
+  return result;
+}
+
 template <class KeyframeEffectType, class OptionsType>
 /* static */ already_AddRefed<KeyframeEffectType>
 KeyframeEffectReadOnly::ConstructKeyframeEffect(
@@ -740,22 +763,14 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
-  RefPtr<Element> targetElement;
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
-  if (!aTarget.IsNull()) {
-    const ElementOrCSSPseudoElement& target = aTarget.Value();
-    MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
-               "Uninitialized target");
-    if (target.IsElement()) {
-      targetElement = &target.GetAsElement();
-    } else {
-      targetElement = target.GetAsCSSPseudoElement().ParentElement();
-      pseudoType = target.GetAsCSSPseudoElement().GetType();
-    }
-  }
-
+  Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
   RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(doc, targetElement, pseudoType, timingParams);
+    new KeyframeEffectType(doc,
+                           target ? target->mElement.get() : nullptr,
+                           target ? target->mPseudoType
+                                  : CSSPseudoElementType::NotPseudo,
+                           timingParams);
+
   effect->SetFrames(aGlobal.Context(), aFrames, aRv);
   if (aRv.Failed()) {
     return nullptr;
