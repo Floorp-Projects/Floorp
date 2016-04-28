@@ -402,7 +402,6 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   mObservingState = eRefreshProcessing;
 
   mEventTree.Process();
-  mEventTree.Clear();
 
   ProcessEventQueue();
 
