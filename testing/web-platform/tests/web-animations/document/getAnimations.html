@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>document.getAnimations tests</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#dom-document-getanimations">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<body>
+<div id="log"></div>
+<div id="target"></div>
+<script>
+"use strict";
+
+test(function(t) {
+  var effect = new KeyframeEffectReadOnly(null,
+                                          { left: ['10px', '20px'] },
+                                          100 * MS_PER_SEC);
+  var anim = new Animation(effect, document.timeline);
+  anim.play();
+
+  assert_equals(document.getAnimations().length, 0,
+                'document.getAnimations() only returns animations targeting ' +
+                'elements in this document');
+}, 'Test document.getAnimations with null target');
+
+</script>
+</body>
