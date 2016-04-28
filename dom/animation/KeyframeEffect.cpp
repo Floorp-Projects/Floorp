@@ -1372,6 +1372,12 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
   }
 }
 
+void
+KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
+{
+  // TODO: fix in next patch
+}
+
 KeyframeEffect::~KeyframeEffect()
 {
   // mTiming is cycle collected, so we have to do null check first even though
