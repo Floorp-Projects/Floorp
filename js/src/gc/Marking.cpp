@@ -2091,6 +2091,9 @@ js::gc::StoreBuffer::WholeCellEdges::trace(TenuringTracer& mover) const
     JS::TraceKind kind = edge->getTraceKind();
     if (kind == JS::TraceKind::Object) {
         JSObject *object = static_cast<JSObject*>(edge);
+        if (object->is<NativeObject>())
+            object->as<NativeObject>().clearInWholeCellBuffer();
+
         mover.traceObject(object);
 
         // Additionally trace the expando object attached to any unboxed plain
