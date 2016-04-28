@@ -12,7 +12,7 @@ let { MockFilePicker } = SpecialPowers;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   MockFilePicker.cleanup();
 });
 
