@@ -51,6 +51,11 @@ public abstract class BrowserAppDelegate {
     public void onDestroy(BrowserApp browserApp) {}
 
     /**
+     * Called when BrowserApp already exists and a new Intent to re-launch it was fired.
+     */
+    public void onNewIntent(BrowserApp browserApp, Intent intent) {}
+
+    /**
      * Called when the tabs tray is opened.
      */
     public void onTabsTrayShown(BrowserApp browserApp, TabsPanel tabsPanel) {}
