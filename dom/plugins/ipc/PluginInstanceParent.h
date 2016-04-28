@@ -474,7 +474,7 @@ private:
     void CancelScheduledScrollCapture();
 
     RefPtr<gfxASurface> mScrollCapture;
-    CancelableTask* mCaptureRefreshTask;
+    RefPtr<CancelableRunnable> mCaptureRefreshTask;
     bool mValidFirstCapture;
     bool mIsScrolling;
 #endif

@@ -46,7 +46,7 @@ public:
    * Get the deferred tasks in |mDeferredTasks| and place them in |aTasks|. See
    * |mDeferredTasks| for more information.  Clears |mDeferredTasks|.
    */
-  nsTArray<Task*> TakeDeferredTasks() {
+  nsTArray<RefPtr<Runnable>> TakeDeferredTasks() {
     return Move(mDeferredTasks);
   }
 
@@ -71,7 +71,7 @@ protected:
    * Derived classes can add tasks here in Sample(), and the APZC can call
    * ExecuteDeferredTasks() to execute them.
    */
-  nsTArray<Task*> mDeferredTasks;
+  nsTArray<RefPtr<Runnable>> mDeferredTasks;
 };
 
 } // namespace layers

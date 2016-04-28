@@ -39,21 +39,6 @@ private:
   nsCOMPtr<nsIThread> mThread;
 };
 
-class RunnableTask : public Task
-{
-public:
-  explicit RunnableTask(Runnable* aRunnable)
-    : mRunnable(aRunnable) {}
-
-  void Run() override {
-    mRunnable->Run();
-  }
-
-private:
-  ~RunnableTask() {}
-  RefPtr<Runnable> mRunnable;
-};
-
 }
 }
 

@@ -205,7 +205,6 @@ PreallocatedProcessManagerImpl::AllocateAfterDelay()
   }
 
   MessageLoop::current()->PostDelayedTask(
-    FROM_HERE,
     NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateOnIdle),
     Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
                          DEFAULT_ALLOCATE_DELAY));
@@ -219,7 +218,6 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
   }
 
   MessageLoop::current()->PostIdleTask(
-    FROM_HERE,
     NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow));
 }
 
@@ -245,10 +243,10 @@ PreallocatedProcessManagerImpl::ScheduleDelayedNuwaFork()
     return;
   }
 
-  mPreallocateAppProcessTask = NewRunnableMethod(
+  RefPtr<CancelableTask> task = NewRunnableMethod(
     this, &PreallocatedProcessManagerImpl::DelayedNuwaFork);
-  MessageLoop::current()->PostDelayedTask(
-    FROM_HERE, mPreallocateAppProcessTask,
+  mPreallocateAppProcessTask = task;
+  MessageLoop::current()->PostDelayedTask(task.forget(),
     Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
                          DEFAULT_ALLOCATE_DELAY));
 }

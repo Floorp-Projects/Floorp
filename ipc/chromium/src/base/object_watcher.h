@@ -83,8 +83,8 @@ class ObjectWatcher : public MessageLoop::DestructionObserver {
   virtual void WillDestroyCurrentMessageLoop();
 
   // Internal state.
-  struct Watch;
-  Watch* watch_;
+  class Watch;
+  RefPtr<Watch> watch_;
 
   DISALLOW_COPY_AND_ASSIGN(ObjectWatcher);
 };

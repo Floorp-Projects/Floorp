@@ -351,8 +351,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
-  ioLoop->PostTask(FROM_HERE,
-                   NewRunnableMethod(this,
+  ioLoop->PostTask(NewRunnableMethod(this,
                                      &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, arch));
 
@@ -366,8 +365,7 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts,
   PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(FROM_HERE,
-                   NewRunnableMethod(this,
+  ioLoop->PostTask(NewRunnableMethod(this,
                                      &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, arch));
 
@@ -425,8 +423,7 @@ GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
   PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(FROM_HERE,
-                   NewRunnableMethod(this,
+  ioLoop->PostTask(NewRunnableMethod(this,
                                      &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, base::GetCurrentProcessArchitecture()));
 
@@ -480,8 +477,7 @@ void
 DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
 {
   XRE_GetIOMessageLoop()
-    ->PostTask(FROM_HERE,
-       new DeleteTask<GeckoChildProcessHost>(aSubprocess));
+    ->PostTask(mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
 }
 
 }
@@ -491,8 +487,7 @@ GeckoChildProcessHost::DissociateActor()
 {
   if (!--mAssociatedActors) {
     MessageLoop::current()->
-      PostTask(FROM_HERE,
-        NewRunnableFunction(DelayedDeleteSubprocess, this));
+      PostTask(NewRunnableFunction(DelayedDeleteSubprocess, this));
   }
 }
 

@@ -9,7 +9,7 @@
 #define mozilla_plugins_ChildAsyncCall_h
 
 #include "PluginMessageUtils.h"
-#include "base/task.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace plugins {
@@ -18,14 +18,14 @@ typedef void (*PluginThreadCallback)(void*);
 
 class PluginInstanceChild;
 
-class ChildAsyncCall : public CancelableTask
+class ChildAsyncCall : public CancelableRunnable
 {
 public:
   ChildAsyncCall(PluginInstanceChild* instance,
                  PluginThreadCallback aFunc, void* aUserData);
 
-  void Run() override;
-  void Cancel() override;
+  NS_IMETHOD Run() override;
+  nsresult Cancel() override;
   
 protected:
   PluginInstanceChild* mInstance;

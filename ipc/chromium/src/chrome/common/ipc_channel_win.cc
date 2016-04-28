@@ -265,7 +265,7 @@ bool Channel::ChannelImpl::Connect() {
     // Complete setup asynchronously. By not setting input_state_.is_pending
     // to true, we indicate to OnIOCompleted that this is the special
     // initialization signal.
-    MessageLoopForIO::current()->PostTask(FROM_HERE, factory_.NewRunnableMethod(
+    MessageLoopForIO::current()->PostTask(factory_.NewRunnableMethod(
         &Channel::ChannelImpl::OnIOCompleted, &input_state_.context, 0, 0));
   }
 

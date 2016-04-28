@@ -144,7 +144,7 @@ class WaitableEventWatcher
   MessageLoop* message_loop_;
   RefPtr<Flag> cancel_flag_;
   AsyncWaiter* waiter_;
-  AsyncCallbackTask* callback_task_;
+  RefPtr<AsyncCallbackTask> callback_task_;
   RefPtr<WaitableEvent::WaitableEventKernel> kernel_;
 #endif
 };
