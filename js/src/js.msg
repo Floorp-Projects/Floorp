@@ -347,7 +347,7 @@ MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR, "wasm text error: {0}
 MSG_DEF(JSMSG_WASM_BAD_IND_CALL,       0, JSEXN_ERR,     "wasm indirect call signature mismatch")
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR, "first argument must be a typed array")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR, "second argument, if present, must be an object")
-MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,     "reached unreachable trap")
+MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,     "unreachable executed")
 MSG_DEF(JSMSG_WASM_INTEGER_OVERFLOW,   0, JSEXN_ERR,     "integer overflow")
 MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,     "invalid conversion to integer")
 MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_ERR,     "integer divide by zero")
