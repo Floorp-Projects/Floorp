@@ -13,13 +13,13 @@ const ver2 = 0x00;
 const ver3 = 0x00;
 
 // Section names
-const sigId                = "signatures";
-const importId             = "import_table";
-const functionSignaturesId = "function_signatures";
-const functionTableId      = "function_table";
-const exportTableId        = "export_table";
-const functionBodiesId     = "function_bodies";
-const dataSegmentsId       = "data_segments";
+const sigId                = "type";
+const importId             = "import";
+const functionSignaturesId = "function";
+const functionTableId      = "table";
+const exportTableId        = "export";
+const functionBodiesId     = "code";
+const dataSegmentsId       = "data";
 
 const magicError = /failed to match magic number/;
 const versionError = /failed to match binary version/;
