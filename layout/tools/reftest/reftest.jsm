@@ -1825,7 +1825,7 @@ function DoAssertionCheck(numAsserts)
         if (numAsserts < minAsserts) {
             ++gTestResults.AssertionUnexpectedFixed;
             gDumpFn("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
-                    " | assertion count" + numAsserts + " is less than " +
+                    " | assertion count " + numAsserts + " is less than " +
                        expectedAssertions + "\n");
         } else if (numAsserts > maxAsserts) {
             ++gTestResults.AssertionUnexpected;
