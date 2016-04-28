@@ -184,6 +184,13 @@ FeatureState::SetRuntime(FeatureStatus aStatus, const char* aMessage)
   mRuntime.Set(aStatus, aMessage);
 }
 
+const char*
+FeatureState::GetRuntimeMessage() const
+{
+  MOZ_ASSERT(IsFeatureStatusFailure(mRuntime.mStatus));
+  return mRuntime.mMessage;
+}
+
 void
 FeatureState::Instance::Set(FeatureStatus aStatus, const char* aMessage /* = nullptr */)
 {
