@@ -2670,10 +2670,14 @@ public:
 
   // This will create and append new items for all the layers of the
   // background. Returns whether we appended a themed background.
+  // aAllowWillPaintBorderOptimization should usually be left at true, unless
+  // aFrame has special border drawing that causes opaque borders to not
+  // actually be opaque.
   static bool AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame,
                                          const nsRect& aBackgroundRect,
-                                         nsDisplayList* aList);
+                                         nsDisplayList* aList,
+                                         bool aAllowWillPaintBorderOptimization = true);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
