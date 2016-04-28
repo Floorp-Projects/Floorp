@@ -14,12 +14,12 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/AnimationPerformanceWarning.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/Maybe.h"
-#include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/OwningNonNull.h"      // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
