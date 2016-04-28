@@ -81,13 +81,6 @@ ShouldHaveDirectoryService()
   return GeckoProcessType_Default == XRE_GetProcessType();
 }
 
-template<>
-struct RunnableMethodTraits<GeckoChildProcessHost>
-{
-    static void RetainCallee(GeckoChildProcessHost* obj) { }
-    static void ReleaseCallee(GeckoChildProcessHost* obj) { }
-};
-
 /*static*/
 base::ChildPrivileges
 GeckoChildProcessHost::DefaultChildPrivileges()
@@ -351,9 +344,12 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
-  ioLoop->PostTask(NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
-                                     aExtraOpts, arch));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<std::vector<std::string>,
+                                          base::ProcessArchitecture>(this,
+                                                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                                                                     aExtraOpts, arch);
+  ioLoop->PostTask(runnable.forget());
 
   return WaitUntilConnected(aTimeoutMs);
 }
@@ -365,9 +361,13 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts,
   PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
-                                     aExtraOpts, arch));
+
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<std::vector<std::string>,
+                                          base::ProcessArchitecture>(this,
+                                                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                                                                     aExtraOpts, arch);
+  ioLoop->PostTask(runnable.forget());
 
   // This may look like the sync launch wait, but we only delay as
   // long as it takes to create the channel.
@@ -423,9 +423,13 @@ GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
   PrepareLaunch();
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  ioLoop->PostTask(NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
-                                     aExtraOpts, base::GetCurrentProcessArchitecture()));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<std::vector<std::string>,
+                                          base::ProcessArchitecture>(this,
+                                                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
+                                                                     aExtraOpts,
+                                                                     base::GetCurrentProcessArchitecture());
+  ioLoop->PostTask(runnable.forget());
 
   MonitorAutoLock lock(mMonitor);
   while (mProcessState < PROCESS_CREATED) {
