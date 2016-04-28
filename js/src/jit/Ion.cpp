@@ -815,8 +815,11 @@ JitCode::finalize(FreeOp* fop)
     // With W^X JIT code, reprotecting memory for each JitCode instance is
     // slow, so we record the ranges and poison them later all at once. It's
     // safe to ignore OOM here, it just means we won't poison the code.
-    if (fop->appendJitPoisonRange(JitPoisonRange(pool_, code_, bufferSize_)))
+    if (fop->appendJitPoisonRange(JitPoisonRange(pool_, code_ - headerSize_,
+                                                 headerSize_ + bufferSize_)))
+    {
         pool_->addRef();
+    }
     code_ = nullptr;
 
     // Code buffers are stored inside ExecutablePools. Pools are refcounted.
