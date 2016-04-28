@@ -142,6 +142,10 @@ public class GLController extends JNIObject {
     void updateCompositor() {
         ThreadUtils.assertOnUiThread();
 
+        if (mView == null) {
+            return;
+        }
+
         if (mCompositorCreated) {
             // If the compositor has already been created, just resume it instead. We don't need
             // to block here because if the surface is destroyed before the compositor grabs it,
