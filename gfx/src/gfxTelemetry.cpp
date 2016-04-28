@@ -28,6 +28,8 @@ FeatureStatusToString(FeatureStatus aStatus)
       return "disabled";
     case FeatureStatus::Available:
       return "available";
+    case FeatureStatus::ForceEnabled:
+      return "force_enabled";
     default:
       MOZ_ASSERT_UNREACHABLE("missing status case");
       return "unknown";
@@ -37,8 +39,9 @@ FeatureStatusToString(FeatureStatus aStatus)
 bool
 IsFeatureStatusFailure(FeatureStatus aStatus)
 {
-  return aStatus != FeatureStatus::Unused &&
-         aStatus != FeatureStatus::Available;
+  return !(aStatus == FeatureStatus::Unused ||
+           aStatus == FeatureStatus::Available ||
+           aStatus == FeatureStatus::ForceEnabled);
 }
 
 } // namespace gfx

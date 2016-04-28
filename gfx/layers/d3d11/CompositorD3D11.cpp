@@ -196,9 +196,7 @@ CompositorD3D11::~CompositorD3D11()
 bool
 CompositorD3D11::Initialize()
 {
-  bool force = gfxPrefs::LayersAccelerationForceEnabled();
-
-  ScopedGfxFeatureReporter reporter("D3D11 Layers", force);
+  ScopedGfxFeatureReporter reporter("D3D11 Layers");
 
   MOZ_ASSERT(gfxPlatform::CanUseDirect3D11());
 
