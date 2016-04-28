@@ -31,10 +31,11 @@ class Test(object):
     def binpath(self, prog):
         return os.path.join(self.cfg.sixgill_bin, prog)
 
-    def compile(self, source):
-        cmd = "{CXX} -c {source} -O3 -std=c++11 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1".format(
+    def compile(self, source, options = ''):
+        cmd = "{CXX} -c {source} -O3 -std=c++11 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1 {options}".format(
             source=self.infile(source),
-            CXX=self.cfg.cxx, sixgill=self.cfg.sixgill_plugin)
+            CXX=self.cfg.cxx, sixgill=self.cfg.sixgill_plugin,
+            options=options)
         if self.cfg.verbose:
             print("Running %s" % cmd)
         subprocess.check_call(["sh", "-c", cmd])
@@ -75,7 +76,7 @@ sixgill_bin = '{bindir}'
         self.run_analysis_script("gcTypes", upto="gcTypes")
 
     def computeHazards(self):
-        self.run_analysis_script("callgraph")
+        self.run_analysis_script("gcTypes")
 
     def load_text_file(self, filename, extract=lambda l: l):
         fullpath = os.path.join(self.outdir, filename)
