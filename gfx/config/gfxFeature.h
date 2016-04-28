@@ -36,9 +36,12 @@ class FeatureState
   void SetRuntime(FeatureStatus aStatus, const char* aMessage);
   bool IsForcedOnByUser() const;
   bool DisabledByDefault() const;
+  bool IsInitialized() const {
+    return mDefault.mStatus != FeatureStatus::Unused;
+  }
 
   void AssertInitialized() const {
-    MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
+    MOZ_ASSERT(IsInitialized());
   }
 
  private:
