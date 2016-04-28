@@ -379,50 +379,50 @@ gfxWindowsPlatform::gfxWindowsPlatform()
   , mD2D1Status(FeatureStatus::Unused)
   , mHasD3D9DeviceReset(false)
 {
-    mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
-    mUseClearTypeAlways = UNINITIALIZED_VALUE;
+  mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
+  mUseClearTypeAlways = UNINITIALIZED_VALUE;
 
-    /* 
-     * Initialize COM 
-     */ 
-    CoInitialize(nullptr); 
+  /* 
+   * Initialize COM 
+   */ 
+  CoInitialize(nullptr); 
 
-    RegisterStrongMemoryReporter(new GfxD2DVramReporter());
+  RegisterStrongMemoryReporter(new GfxD2DVramReporter());
 
-    // Set up the D3D11 feature levels we can ask for.
-    if (IsWin8OrLater()) {
-      mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
-    }
-    mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
-    mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
-    mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
-    mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
+  // Set up the D3D11 feature levels we can ask for.
+  if (IsWin8OrLater()) {
+    mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
+  }
+  mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
+  mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
+  mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
+  mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
 
-    UpdateDeviceInitData();
-    InitializeDevices();
-    UpdateRenderMode();
+  UpdateDeviceInitData();
+  InitializeDevices();
+  UpdateRenderMode();
 
-    RegisterStrongMemoryReporter(new GPUAdapterReporter());
-    RegisterStrongMemoryReporter(new D3D11TextureReporter());
-    RegisterStrongMemoryReporter(new D3D9TextureReporter());
-    RegisterStrongMemoryReporter(new D3D9SharedTextureReporter());
+  RegisterStrongMemoryReporter(new GPUAdapterReporter());
+  RegisterStrongMemoryReporter(new D3D11TextureReporter());
+  RegisterStrongMemoryReporter(new D3D9TextureReporter());
+  RegisterStrongMemoryReporter(new D3D9SharedTextureReporter());
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    mDeviceManager = nullptr;
-    mD3D11Device = nullptr;
-    mD3D11ContentDevice = nullptr;
-    mD3D11ImageBridgeDevice = nullptr;
+  mDeviceManager = nullptr;
+  mD3D11Device = nullptr;
+  mD3D11ContentDevice = nullptr;
+  mD3D11ImageBridgeDevice = nullptr;
 
-    mozilla::gfx::Factory::D2DCleanup();
+  mozilla::gfx::Factory::D2DCleanup();
 
-    mAdapter = nullptr;
+  mAdapter = nullptr;
 
-    /* 
-     * Uninitialize COM 
-     */ 
-    CoUninitialize();
+  /* 
+   * Uninitialize COM 
+   */ 
+  CoUninitialize();
 }
 
 bool
