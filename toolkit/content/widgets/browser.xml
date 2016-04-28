@@ -39,6 +39,25 @@
                 onget="return this.webNavigation.canGoForward;"
                 readonly="true"/>
 
+      <method name="_wrapURIChangeCall">
+        <parameter name="fn"/>
+        <body>
+          <![CDATA[
+            if (!this.isRemoteBrowser) {
+              this.inLoadURI = true;
+              try {
+                fn();
+              } finally {
+                this.inLoadURI = false;
+              }
+            } else {
+              fn();
+            }
+          ]]>
+        </body>
+      </method>
+
+
       <method name="goBack">
         <body>
           <![CDATA[
@@ -46,7 +65,7 @@
             if (webNavigation.canGoBack) {
               try {
                 this.userTypedClear++;
-                webNavigation.goBack();
+                this._wrapURIChangeCall(() => webNavigation.goBack());
               } finally {
                 if (this.userTypedClear)
                   this.userTypedClear--;
@@ -63,7 +82,7 @@
             if (webNavigation.canGoForward) {
               try {
                 this.userTypedClear++;
-                webNavigation.goForward();
+                this._wrapURIChangeCall(() => webNavigation.goForward());
               } finally {
                 if (this.userTypedClear)
                   this.userTypedClear--;
@@ -111,7 +130,8 @@
           <![CDATA[
             const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
             const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-            this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset);
+            this._wrapURIChangeCall(() =>
+              this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset));
           ]]>
         </body>
       </method>
@@ -146,9 +166,10 @@
               this.userTypedClear++;
 
             try {
+            this._wrapURIChangeCall(() =>
               this.webNavigation.loadURIWithOptions(
                   aURI, aFlags, aReferrerURI, aReferrerPolicy,
-                  aPostData, null, null);
+                  aPostData, null, null));
             } finally {
               if (this.userTypedClear)
                 this.userTypedClear--;
@@ -196,7 +217,7 @@
           <![CDATA[
             try {
               this.userTypedClear++;
-              this.webNavigation.gotoIndex(aIndex);
+              this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(aIndex));
             } finally {
               if (this.userTypedClear)
                 this.userTypedClear--;
