@@ -367,10 +367,6 @@ this.FxAccountsClient.prototype = {
    *         Extra device options
    * @param  [options.pushCallback]
    *         `pushCallback` push endpoint callback
-   * @param  [options.pushPublicKey]
-   *         `pushPublicKey` push public key (URLSafe Base64 string)
-   * @param  [options.pushAuthKey]
-   *         `pushAuthKey` push auth secret (URLSafe Base64 string)
    * @return Promise
    *         Resolves to an object:
    *         {
@@ -388,10 +384,6 @@ this.FxAccountsClient.prototype = {
 
     if (options.pushCallback) {
       body.pushCallback = options.pushCallback;
-    }
-    if (options.pushPublicKey && options.pushAuthKey) {
-      body.pushPublicKey = options.pushPublicKey;
-      body.pushAuthKey = options.pushAuthKey;
     }
 
     return this._request(path, "POST", creds, body);
@@ -411,10 +403,6 @@ this.FxAccountsClient.prototype = {
    *         Extra device options
    * @param  [options.pushCallback]
    *         `pushCallback` push endpoint callback
-   * @param  [options.pushPublicKey]
-   *         `pushPublicKey` push public key (URLSafe Base64 string)
-   * @param  [options.pushAuthKey]
-   *         `pushAuthKey` push auth secret (URLSafe Base64 string)
    * @return Promise
    *         Resolves to an object:
    *         {
@@ -429,10 +417,6 @@ this.FxAccountsClient.prototype = {
     let body = { id, name };
     if (options.pushCallback) {
       body.pushCallback = options.pushCallback;
-    }
-    if (options.pushPublicKey && options.pushAuthKey) {
-      body.pushPublicKey = options.pushPublicKey;
-      body.pushAuthKey = options.pushAuthKey;
     }
 
     return this._request(path, "POST", creds, body);
