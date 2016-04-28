@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+loader.lazyRequireGetter(this, "timers",
+  "resource://gre/modules/Timer.jsm");
 loader.lazyRequireGetter(this, "defer",
   "promise", true);
 
@@ -65,7 +67,7 @@ Poller.prototype.on = function pollerOn () {
 Poller.prototype.off = function pollerOff () {
   let { resolve, promise } = defer();
   if (this._timer) {
-    clearTimeout(this._timer);
+    timers.clearTimeout(this._timer);
     this._timer = null;
   }
 
@@ -91,7 +93,7 @@ Poller.prototype.destroy = function pollerDestroy () {
 };
 
 Poller.prototype._preparePoll = function pollerPrepare () {
-  this._timer = setTimeout(this._poll, this._wait);
+  this._timer = timers.setTimeout(this._poll, this._wait);
 };
 
 Poller.prototype._poll = function pollerPoll () {

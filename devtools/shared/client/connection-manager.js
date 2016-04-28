@@ -7,6 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
+const {setTimeout, clearTimeout} = require('sdk/timers');
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
