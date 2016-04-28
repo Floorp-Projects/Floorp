@@ -109,6 +109,7 @@ Resolve(const std::string& fqdn, int address_family)
     default:
       std::cerr << "Got unexpected address family in DNS lookup: "
                 << res->ai_family << std::endl;
+      freeaddrinfo(res);
       return "";
   }
 
@@ -116,6 +117,7 @@ Resolve(const std::string& fqdn, int address_family)
     std::cerr << "inet_ntop failed" << std::endl;
   }
 
+  freeaddrinfo(res);
   return str_addr;
 }
 
