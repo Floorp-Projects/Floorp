@@ -295,6 +295,10 @@ function copyObjectProperties(from, to, opts = {}) {
   }
 }
 
+function urlsafeBase64Encode(key) {
+  return ChromeUtils.base64URLEncode(new Uint8Array(key), { pad: false });
+}
+
 /**
  * The public API's constructor.
  */
@@ -1497,6 +1501,12 @@ FxAccountsInternal.prototype = {
       // if we were able to obtain a subscription
       if (subscription && subscription.endpoint) {
         deviceOptions.pushCallback = subscription.endpoint;
+        let publicKey = subscription.getKey('p256dh');
+        let authKey = subscription.getKey('auth');
+        if (publicKey && authKey) {
+          deviceOptions.pushPublicKey = urlsafeBase64Encode(publicKey);
+          deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
+        }
       }
 
       if (signedInUser.deviceId) {
