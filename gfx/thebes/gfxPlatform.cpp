@@ -2159,12 +2159,13 @@ gfxPlatform::InitCompositorAccelerationPrefs()
     gfxConfig::UserForceEnable(Feature::HW_COMPOSITING, "Force-enabled by pref");
   }
 
-  // Safe mode trumps everything, so we update it as a runtime status.
-  gfxConfig::UpdateIfFailed(
-    Feature::HW_COMPOSITING,
-    !InSafeMode(),
-    FeatureStatus::Blocked,
-    "Acceleration blocked by safe-mode");
+  // Safe mode trumps everything.
+  if (InSafeMode()) {
+    gfxConfig::ForceDisable(
+      Feature::HW_COMPOSITING,
+      FeatureStatus::Blocked,
+      "Acceleration blocked by safe-mode");
+  }
 }
 
 bool
