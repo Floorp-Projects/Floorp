@@ -94,8 +94,10 @@ ActiveElementManager::TriggerElementActivation()
                     // bug properly should make this unnecessary.
     MOZ_ASSERT(mSetActiveTask == nullptr);
 
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
-        this, &ActiveElementManager::SetActiveTask, mTarget);
+    RefPtr<CancelableRunnable> task =
+      NS_NewCancelableRunnableMethodWithArgs<nsCOMPtr<dom::Element>>(this,
+                                                                     &ActiveElementManager::SetActiveTask,
+                                                                     mTarget);
     mSetActiveTask = task;
     MessageLoop::current()->PostDelayedTask(task.forget(), sActivationDelayMs);
     AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask);

@@ -427,8 +427,8 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
   if (mCurrentCompositeTask == nullptr) {
     RefPtr<CancelableRunnable> task =
-      NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::Composite,
-                                  aCompositeTimestamp);
+      NS_NewCancelableRunnableMethodWithArgs<TimeStamp>(this, &CompositorVsyncScheduler::Composite,
+                                                        aCompositeTimestamp);
     mCurrentCompositeTask = task;
     ScheduleTask(task.forget(), 0);
   }
@@ -481,7 +481,7 @@ CompositorVsyncScheduler::SetNeedsComposite()
   if (!CompositorBridgeParent::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
     RefPtr<CancelableRunnable> task =
-      NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
+      NS_NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
     mSetNeedsCompositeTask = task;
     ScheduleTask(task.forget(), 0);
     return;
@@ -1365,7 +1365,8 @@ CompositorBridgeParent::ScheduleRotationOnCompositorThread(const TargetConfig& a
     if (mForceCompositionTask != nullptr) {
       mForceCompositionTask->Cancel();
     }
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
+    RefPtr<CancelableRunnable> task =
+      NS_NewCancelableRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
     mForceCompositionTask = task;
     ScheduleTask(task.forget(), gfxPrefs::OrientationSyncMillis());
   }
