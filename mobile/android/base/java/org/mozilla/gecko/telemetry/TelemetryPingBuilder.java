@@ -24,11 +24,11 @@ public abstract class TelemetryPingBuilder {
     // In the server url, the initial path directly after the "scheme://host:port/"
     private static final String SERVER_INITIAL_PATH = "submit/telemetry";
 
-    private final String serverUrl;
+    private final String serverPath;
     protected final ExtendedJSONObject payload;
 
-    public TelemetryPingBuilder(final String serverURLSchemeHostPort) {
-        serverUrl = getTelemetryServerURL(getDocType(), serverURLSchemeHostPort);
+    public TelemetryPingBuilder() {
+        serverPath = getTelemetryServerPath(getDocType());
         payload = new ExtendedJSONObject();
     }
 
@@ -45,7 +45,7 @@ public abstract class TelemetryPingBuilder {
 
     public TelemetryPing build() {
         validatePayload();
-        return new TelemetryPing(serverUrl, payload);
+        return new TelemetryPing(serverPath, payload);
     }
 
     private void validatePayload() {
@@ -62,12 +62,10 @@ public abstract class TelemetryPingBuilder {
      * Returns a url of the format:
      *   http://hostname/submit/telemetry/docId/docType/appName/appVersion/appUpdateChannel/appBuildID
      *
-     * @param serverURLSchemeHostPort The server url with the scheme, host, and port (e.g. "http://mozilla.org:80")
      * @param docType The name of the ping (e.g. "main")
      * @return a url at which to POST the telemetry data to
      */
-    private static String getTelemetryServerURL(final String docType,
-            final String serverURLSchemeHostPort) {
+    private static String getTelemetryServerPath(final String docType) {
         final String docId = UUID.randomUUID().toString();
         final String appName = AppConstants.MOZ_APP_BASENAME;
         final String appVersion = AppConstants.MOZ_APP_VERSION;
@@ -76,8 +74,7 @@ public abstract class TelemetryPingBuilder {
 
         // The compiler will optimize a single String concatenation into a StringBuilder statement.
         // If you change this `return`, be sure to keep it as a single statement to keep it optimized!
-        return serverURLSchemeHostPort + '/' +
-                SERVER_INITIAL_PATH + '/' +
+        return SERVER_INITIAL_PATH + '/' +
                 docId + '/' +
                 docType + '/' +
                 appName + '/' +

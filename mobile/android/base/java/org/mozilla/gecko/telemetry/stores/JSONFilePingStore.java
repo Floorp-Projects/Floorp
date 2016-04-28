@@ -62,7 +62,7 @@ public class JSONFilePingStore implements TelemetryPingStore {
 
     // We keep the key names short to reduce storage size impact.
     @VisibleForTesting static final String KEY_PAYLOAD = "p";
-    @VisibleForTesting static final String KEY_URL = "u";
+    @VisibleForTesting static final String KEY_URL_PATH = "u";
 
     private final File storeDir;
 
@@ -93,7 +93,7 @@ public class JSONFilePingStore implements TelemetryPingStore {
         try {
             output = new JSONObject()
                     .put(KEY_PAYLOAD, ping.getPayload())
-                    .put(KEY_URL, ping.getURL())
+                    .put(KEY_URL_PATH, ping.getURLPath())
                     .toString();
         } catch (final JSONException e) {
             // Do not log the exception to avoid leaking personal data.
@@ -168,7 +168,7 @@ public class JSONFilePingStore implements TelemetryPingStore {
             }
 
             try {
-                final String url = obj.getString(KEY_URL);
+                final String url = obj.getString(KEY_URL_PATH);
                 final ExtendedJSONObject payload = new ExtendedJSONObject(obj.getString(KEY_PAYLOAD));
                 final int id = getIDFromFilename(file.getName());
                 if (id < 0) {
