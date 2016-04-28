@@ -70,7 +70,7 @@ function allRAIIGuardedCallPoints(bodies, body, isConstructor)
             continue;
         var variable = callee.Variable;
         assert(variable.Kind == "Func");
-        if (!isConstructor(variable.Name))
+        if (!isConstructor(edge.Type, variable.Name))
             continue;
         if (!("PEdgeCallInstance" in edge))
             continue;
