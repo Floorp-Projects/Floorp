@@ -660,16 +660,6 @@ SECKEY_ExtractPublicKey(const CERTSubjectPublicKeyInfo *spki)
 SECKEYPublicKey *
 CERT_ExtractPublicKey(CERTCertificate *cert)
 {
-    SECStatus rv;
-
-    if (!cert) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-    rv = SECKEY_UpdateCertPQG(cert);
-    if (rv != SECSuccess)
-        return NULL;
-
     return seckey_ExtractPublicKey(&cert->subjectPublicKeyInfo);
 }
 

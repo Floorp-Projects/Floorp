@@ -1781,8 +1781,8 @@ GeckoMediaPluginServiceParent::ClearStorage()
 
 GMPServiceParent::~GMPServiceParent()
 {
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new DeleteTask<Transport>(GetTransport()));
+  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(GetTransport());
+  XRE_GetIOMessageLoop()->PostTask(task.forget());
 }
 
 bool

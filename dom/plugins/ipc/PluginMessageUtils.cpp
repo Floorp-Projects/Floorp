@@ -65,8 +65,8 @@ NPRemoteWindow::NPRemoteWindow() :
 }
 
 ipc::RacyInterruptPolicy
-MediateRace(const MessageChannel::Message& parent,
-            const MessageChannel::Message& child)
+MediateRace(const MessageChannel::MessageInfo& parent,
+            const MessageChannel::MessageInfo& child)
 {
   switch (parent.type()) {
   case PPluginInstance::Msg_Paint__ID:

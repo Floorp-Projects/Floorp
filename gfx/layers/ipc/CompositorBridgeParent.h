@@ -39,11 +39,13 @@
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/VsyncDispatcher.h"
 
-class CancelableTask;
 class MessageLoop;
 class nsIWidget;
 
 namespace mozilla {
+
+class CancelableRunnable;
+
 namespace gfx {
 class DrawTarget;
 } // namespace gfx
@@ -126,7 +128,7 @@ public:
   void SetNeedsComposite();
   void OnForceComposeToTarget();
 
-  void ScheduleTask(CancelableTask*, int);
+  void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
   void ResumeComposition();
   void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
   void PostCompositeTask(TimeStamp aCompositeTimestamp);
@@ -193,16 +195,16 @@ private:
   RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
-  CancelableTask* mCurrentCompositeTask;
+  RefPtr<CancelableRunnable> mCurrentCompositeTask;
 
   mozilla::Monitor mSetNeedsCompositeMonitor;
-  CancelableTask* mSetNeedsCompositeTask;
+  RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
 
 #ifdef MOZ_WIDGET_GONK
 #if ANDROID_VERSION >= 19
   bool mDisplayEnabled;
   mozilla::Monitor mSetDisplayMonitor;
-  CancelableTask* mSetDisplayTask;
+  RefPtr<CancelableRunnable> mSetDisplayTask;
 #endif
 #endif
 };
@@ -524,7 +526,7 @@ protected:
                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                  bool* aSuccess) override;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
-  virtual void ScheduleTask(CancelableTask*, int);
+  virtual void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
   void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
   void SetEGLSurfaceSize(int width, int height);
@@ -586,7 +588,7 @@ protected:
   const uint64_t mRootLayerTreeID;
 
   bool mOverrideComposeReadiness;
-  CancelableTask* mForceCompositionTask;
+  RefPtr<CancelableRunnable> mForceCompositionTask;
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
 

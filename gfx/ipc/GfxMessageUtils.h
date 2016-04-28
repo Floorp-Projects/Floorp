@@ -682,15 +682,35 @@ struct ParamTraits<mozilla::layers::FrameMetrics::ScrollOffsetUpdateType>
              mozilla::layers::FrameMetrics::ScrollOffsetUpdateType::eSentinel>
 {};
 
+// Helper class for reading bitfields.
+// If T has bitfields members, derive ParamTraits<T> from BitfieldHelper<T>.
+template <typename ParamType>
+struct BitfieldHelper
+{
+  // We need this helper because we can't get the address of a bitfield to
+  // pass directly to ReadParam. So instead we read it into a temporary bool
+  // and set the bitfield using a setter function
+  static bool ReadBoolForBitfield(const Message* aMsg, void** aIter,
+        ParamType* aResult, void (ParamType::*aSetter)(bool))
+  {
+    bool value;
+    if (ReadParam(aMsg, aIter, &value)) {
+      (aResult->*aSetter)(value);
+      return true;
+    }
+    return false;
+  }
+};
+
 template <>
 struct ParamTraits<mozilla::layers::FrameMetrics>
+    : BitfieldHelper<mozilla::layers::FrameMetrics>
 {
   typedef mozilla::layers::FrameMetrics paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mScrollId);
-    WriteParam(aMsg, aParam.mScrollParentId);
     WriteParam(aMsg, aParam.mPresShellResolution);
     WriteParam(aMsg, aParam.mCompositionBounds);
     WriteParam(aMsg, aParam.mDisplayPort);
@@ -707,51 +727,17 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mPresShellId);
     WriteParam(aMsg, aParam.mViewport);
     WriteParam(aMsg, aParam.mExtraResolution);
-    WriteParam(aMsg, aParam.mBackgroundColor);
-    WriteParam(aMsg, aParam.GetContentDescription());
-    WriteParam(aMsg, aParam.mLineScrollAmount);
-    WriteParam(aMsg, aParam.mPageScrollAmount);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
     WriteParam(aMsg, aParam.mIsRootContent);
-    WriteParam(aMsg, aParam.mHasScrollgrab);
     WriteParam(aMsg, aParam.mDoSmoothScroll);
     WriteParam(aMsg, aParam.mUseDisplayPortMargins);
-    WriteParam(aMsg, aParam.mAllowVerticalScrollWithWheel);
-    WriteParam(aMsg, aParam.mIsLayersIdRoot);
-    WriteParam(aMsg, aParam.mUsesContainerScrolling);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
-    WriteParam(aMsg, aParam.mForceDisableApz);
-  }
-
-  static bool ReadContentDescription(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    nsCString str;
-    if (!ReadParam(aMsg, aIter, &str)) {
-      return false;
-    }
-    aResult->SetContentDescription(str);
-    return true;
-  }
-
-  // We need this helper because we can't get the address of a bitfield to
-  // pass directly to ReadParam. So instead we read it into a temporary bool
-  // and set the bitfield using a setter function
-  static bool ReadBoolForBitfield(const Message* aMsg, void** aIter,
-        paramType* aResult, void (paramType::*aSetter)(bool))
-  {
-    bool value;
-    if (ReadParam(aMsg, aIter, &value)) {
-      (aResult->*aSetter)(value);
-      return true;
-    }
-    return false;
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mScrollId) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollParentId) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellResolution) &&
             ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
@@ -768,21 +754,12 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
             ReadParam(aMsg, aIter, &aResult->mViewport) &&
             ReadParam(aMsg, aIter, &aResult->mExtraResolution) &&
-            ReadParam(aMsg, aIter, &aResult->mBackgroundColor) &&
-            ReadContentDescription(aMsg, aIter, aResult) &&
-            ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
-            ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
             ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetHasScrollgrab) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetDoSmoothScroll) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUseDisplayPortMargins) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetAllowVerticalScrollWithWheel) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsLayersIdRoot) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUsesContainerScrolling) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetForceDisableApz));
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsScrollInfoLayer));
   }
 };
 
@@ -814,6 +791,7 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo>
 
 template <>
 struct ParamTraits<mozilla::layers::ScrollMetadata>
+    : BitfieldHelper<mozilla::layers::ScrollMetadata>
 {
   typedef mozilla::layers::ScrollMetadata paramType;
 
@@ -821,16 +799,46 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
   {
     WriteParam(aMsg, aParam.mMetrics);
     WriteParam(aMsg, aParam.mSnapInfo);
+    WriteParam(aMsg, aParam.mScrollParentId);
+    WriteParam(aMsg, aParam.mBackgroundColor);
+    WriteParam(aMsg, aParam.GetContentDescription());
+    WriteParam(aMsg, aParam.mLineScrollAmount);
+    WriteParam(aMsg, aParam.mPageScrollAmount);
     WriteParam(aMsg, aParam.mMaskLayerIndex);
     WriteParam(aMsg, aParam.mClipRect);
+    WriteParam(aMsg, aParam.mHasScrollgrab);
+    WriteParam(aMsg, aParam.mAllowVerticalScrollWithWheel);
+    WriteParam(aMsg, aParam.mIsLayersIdRoot);
+    WriteParam(aMsg, aParam.mUsesContainerScrolling);
+    WriteParam(aMsg, aParam.mForceDisableApz);
+  }
+
+  static bool ReadContentDescription(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    nsCString str;
+    if (!ReadParam(aMsg, aIter, &str)) {
+      return false;
+    }
+    aResult->SetContentDescription(str);
+    return true;
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mMetrics) &&
             ReadParam(aMsg, aIter, &aResult->mSnapInfo) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollParentId) &&
+            ReadParam(aMsg, aIter, &aResult->mBackgroundColor) &&
+            ReadContentDescription(aMsg, aIter, aResult) &&
+            ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
+            ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
-            ReadParam(aMsg, aIter, &aResult->mClipRect));
+            ReadParam(aMsg, aIter, &aResult->mClipRect) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetHasScrollgrab) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetAllowVerticalScrollWithWheel) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsLayersIdRoot) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUsesContainerScrolling) &&
+            ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetForceDisableApz));
   }
 };
 

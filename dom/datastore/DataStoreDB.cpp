@@ -105,9 +105,6 @@ DataStoreDB::CreateFactoryIfNeeded()
   if (!mFactory) {
     nsresult rv;
     nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
-    if (!principal) {
-      return NS_ERROR_FAILURE;
-    }
 
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
     MOZ_ASSERT(xpc);

@@ -15,7 +15,8 @@
 #include "CPOWTimer.h"
 #include "WrapperFactory.h"
 
-#include "nsIRemoteTagService.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDOMDocument.h"
 
 using namespace js;
 using namespace JS;
@@ -136,6 +137,8 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool isCallable(JSObject* obj) const override;
     virtual bool isConstructor(JSObject* obj) const override;
     virtual bool getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const override;
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                        MutableHandleObject protop) const override;
 
     static const char family;
     static const CPOWProxyHandler singleton;
@@ -828,6 +831,34 @@ WrapperOwner::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObjec
 }
 
 bool
+CPOWProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                         MutableHandleObject objp) const
+{
+    FORWARD(getPrototypeIfOrdinary, (cx, proxy, isOrdinary, objp));
+}
+
+bool
+WrapperOwner::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                     MutableHandleObject objp)
+{
+    ObjectId objId = idOf(proxy);
+
+    ObjectOrNullVariant val;
+    ReturnStatus status;
+    if (!SendGetPrototypeIfOrdinary(objId, &status, isOrdinary, &val))
+        return ipcfail(cx);
+
+    LOG_STACK();
+
+    if (!ok(cx, status))
+        return false;
+
+    objp.set(fromObjectOrNullVariant(cx, val));
+
+    return true;
+}
+
+bool
 CPOWProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const
 {
     FORWARD(regexp_toShared, (cx, proxy, g));
@@ -1066,23 +1097,33 @@ WrapperOwner::ok(JSContext* cx, const ReturnStatus& status, ObjectOpResult& resu
     return result.succeed();
 }
 
+// CPOWs can have a tag string attached to them, originating in the local
+// process from this function.  It's sent with the CPOW to the remote process,
+// where it can be fetched with Components.utils.getCrossProcessWrapperTag.
+static nsCString
+GetRemoteObjectTag(JS::Handle<JSObject*> obj)
+{
+    if (nsCOMPtr<nsISupports> supports = xpc::UnwrapReflectorToISupports(obj)) {
+        nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(supports));
+        if (treeItem)
+            return NS_LITERAL_CSTRING("ContentDocShellTreeItem");
+
+        nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
+        if (doc)
+            return NS_LITERAL_CSTRING("ContentDocument");
+    }
+
+    return NS_LITERAL_CSTRING("generic");
+}
+
 static RemoteObject
 MakeRemoteObject(JSContext* cx, ObjectId id, HandleObject obj)
 {
-    nsCString objectTag;
-
-    nsCOMPtr<nsIRemoteTagService> service =
-        do_GetService("@mozilla.org/addons/remote-tag-service;1");
-    if (service) {
-        RootedValue objVal(cx, ObjectValue(*obj));
-        service->GetRemoteObjectTag(objVal, objectTag);
-    }
-
     return RemoteObject(id.serialize(),
                         JS::IsCallable(obj),
                         JS::IsConstructor(obj),
                         dom::IsDOMObject(obj),
-                        objectTag);
+                        GetRemoteObjectTag(obj));
 }
 
 bool
@@ -1146,7 +1187,8 @@ WrapperOwner::fromRemoteObjectVariant(JSContext* cx, RemoteObject objVar)
         RootedObject junkScope(cx, xpc::PrivilegedJunkScope());
         JSAutoCompartment ac(cx, junkScope);
         RootedValue v(cx, UndefinedValue());
-        // We need to setLazyProto for the getPrototype hook.
+        // We need to setLazyProto for the getPrototype/getPrototypeIfOrdinary
+        // hooks.
         ProxyOptions options;
         options.setLazyProto(true);
         obj = NewProxyObject(cx,

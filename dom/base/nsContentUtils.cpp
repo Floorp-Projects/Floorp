@@ -4506,8 +4506,7 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
 {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
-  nsCOMPtr<nsIPrincipal> principal =
-    do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
+  nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
                                   EmptyString(),

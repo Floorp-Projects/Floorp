@@ -24,6 +24,7 @@ public:
                const float* aRealData,
                const float* aImagData,
                const uint32_t aLength,
+               const bool aDisableNormalization,
                ErrorResult& aRv);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PeriodicWave)
@@ -41,6 +42,11 @@ public:
     return mLength;
   }
 
+  bool DisableNormalization() const
+  {
+    return mDisableNormalization;
+  }
+
   ThreadSharedFloatArrayBufferList* GetThreadSharedBuffer() const
   {
     return mCoefficients;
@@ -55,6 +61,7 @@ private:
   RefPtr<AudioContext> mContext;
   RefPtr<ThreadSharedFloatArrayBufferList> mCoefficients;
   uint32_t mLength;
+  bool mDisableNormalization;
 };
 
 } // namespace dom

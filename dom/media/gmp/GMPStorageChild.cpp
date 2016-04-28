@@ -15,7 +15,7 @@
       _func(__VA_ARGS__); \
     } else { \
       mPlugin->GMPMessageLoop()->PostTask( \
-        FROM_HERE, NewRunnableMethod(this, &GMPStorageChild::_func, ##__VA_ARGS__) \
+        NewRunnableMethod(this, &GMPStorageChild::_func, ##__VA_ARGS__) \
       ); \
     } \
   } while(false)

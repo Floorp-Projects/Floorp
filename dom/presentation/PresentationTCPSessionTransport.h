@@ -85,7 +85,7 @@ private:
   nsresult mCloseStatus;
   bool mDataNotificationEnabled;
 
-  uint8_t mType = 0;
+  uint8_t mRole = 0;
 
   // Raw socket streams
   nsCOMPtr<nsISocketTransport> mTransport;

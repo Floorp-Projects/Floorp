@@ -424,7 +424,7 @@ public:
   static MediaManager* Get();
   static MediaManager* GetIfExists();
   static void StartupInit();
-  static void PostTask(const tracked_objects::Location& from_here, Task* task);
+  static void PostTask(already_AddRefed<Runnable> task);
 #ifdef DEBUG
   static bool IsInMediaThread();
 #endif
@@ -536,7 +536,7 @@ private:
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
-  nsClassHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
+  nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
 
   // Always exists

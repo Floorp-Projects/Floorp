@@ -448,8 +448,10 @@ private:
   // This class is reference counted.
   ~ChildImpl()
   {
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(GetTransport()));
+    RefPtr<DeleteTask<Transport>> task =
+      new DeleteTask<Transport>(GetTransport());
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
+
     AssertActorDestroyed();
   }
 
@@ -1287,8 +1289,8 @@ ParentImpl::MainThreadActorDestroy()
   MOZ_ASSERT_IF(!mIsOtherProcessActor, !mTransport);
 
   if (mTransport) {
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(mTransport));
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
     mTransport = nullptr;
   }
 

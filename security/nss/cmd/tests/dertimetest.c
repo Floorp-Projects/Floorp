@@ -8,7 +8,8 @@
 #include "secder.h"
 #include "secerr.h"
 
-int main()
+int
+main()
 {
     SECItem badTime;
     PRTime prtime;
@@ -23,13 +24,14 @@ int main()
     rv = DER_UTCTimeToTime(&prtime, &badTime);
     if (rv == SECSuccess) {
         fprintf(stderr, "DER_UTCTimeToTime should have failed but "
-                "succeeded\n");
+                        "succeeded\n");
         failed = PR_TRUE;
     } else {
         error = PORT_GetError();
         if (error != SEC_ERROR_INVALID_TIME) {
             fprintf(stderr, "DER_UTCTimeToTime failed with error %d, "
-                    "expected error %d\n", error, SEC_ERROR_INVALID_TIME);
+                            "expected error %d\n",
+                    error, SEC_ERROR_INVALID_TIME);
             failed = PR_TRUE;
         }
     }
@@ -41,13 +43,14 @@ int main()
     rv = DER_UTCTimeToTime(&prtime, &badTime);
     if (rv == SECSuccess) {
         fprintf(stderr, "DER_UTCTimeToTime should have failed but "
-                "succeeded\n");
+                        "succeeded\n");
         failed = PR_TRUE;
     } else {
         error = PORT_GetError();
         if (error != SEC_ERROR_INVALID_TIME) {
             fprintf(stderr, "DER_UTCTimeToTime failed with error %d, "
-                    "expected error %d\n", error, SEC_ERROR_INVALID_TIME);
+                            "expected error %d\n",
+                    error, SEC_ERROR_INVALID_TIME);
             failed = PR_TRUE;
         }
     }
@@ -59,13 +62,14 @@ int main()
     rv = DER_GeneralizedTimeToTime(&prtime, &badTime);
     if (rv == SECSuccess) {
         fprintf(stderr, "DER_GeneralizedTimeToTime should have failed but "
-                "succeeded\n");
+                        "succeeded\n");
         failed = PR_TRUE;
     } else {
         error = PORT_GetError();
         if (error != SEC_ERROR_INVALID_TIME) {
             fprintf(stderr, "DER_GeneralizedTimeToTime failed with error %d, "
-                    "expected error %d\n", error, SEC_ERROR_INVALID_TIME);
+                            "expected error %d\n",
+                    error, SEC_ERROR_INVALID_TIME);
             failed = PR_TRUE;
         }
     }
@@ -77,13 +81,14 @@ int main()
     rv = DER_GeneralizedTimeToTime(&prtime, &badTime);
     if (rv == SECSuccess) {
         fprintf(stderr, "DER_GeneralizedTimeToTime should have failed but "
-                "succeeded\n");
+                        "succeeded\n");
         failed = PR_TRUE;
     } else {
         error = PORT_GetError();
         if (error != SEC_ERROR_INVALID_TIME) {
             fprintf(stderr, "DER_GeneralizedTimeToTime failed with error %d, "
-                    "expected error %d\n", error, SEC_ERROR_INVALID_TIME);
+                            "expected error %d\n",
+                    error, SEC_ERROR_INVALID_TIME);
             failed = PR_TRUE;
         }
     }

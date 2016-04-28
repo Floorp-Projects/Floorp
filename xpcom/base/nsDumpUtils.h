@@ -90,7 +90,6 @@ public:
     MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
 
     XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &FdWatcher::StopWatching));
 
     return NS_OK;

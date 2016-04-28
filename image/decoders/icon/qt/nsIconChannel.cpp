@@ -85,7 +85,6 @@ moz_qicon_to_channel(QImage* image, nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
 
   return NS_NewInputStreamChannel(aChannel,
                                   aURI,

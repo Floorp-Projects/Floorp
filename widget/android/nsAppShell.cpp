@@ -685,7 +685,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         const nsTArray<nsIntPoint>& points = curEvent->Points();
         RefCountedJavaObject* buffer = curEvent->ByteBuffer();
         RefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::Get()->mBrowserApp, tabId, points, buffer);
-        MessageLoop::current()->PostIdleTask(FROM_HERE, NewRunnableMethod(sr.get(), &ThumbnailRunnable::Run));
+        MessageLoop::current()->PostIdleTask(NewRunnableMethod(sr.get(), &ThumbnailRunnable::Run));
         break;
     }
 

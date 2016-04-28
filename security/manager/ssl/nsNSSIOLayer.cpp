@@ -2249,7 +2249,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
     if (!hasRemembered) {
       // user selects a cert to present
-      nsIClientAuthDialogs* dialogs = nullptr;
+      nsCOMPtr<nsIClientAuthDialogs> dialogs;
       int32_t selectedIndex = -1;
       char16_t** certNicknameList = nullptr;
       char16_t** certDetailsList = nullptr;
@@ -2363,9 +2363,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
       }
 
       // Throw up the client auth dialog and get back the index of the selected cert
-      nsresult rv = getNSSDialogs((void**)&dialogs,
-        NS_GET_IID(nsIClientAuthDialogs),
-        NS_CLIENTAUTHDIALOGS_CONTRACTID);
+      nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
+                                  NS_GET_IID(nsIClientAuthDialogs),
+                                  NS_CLIENTAUTHDIALOGS_CONTRACTID);
 
       if (NS_FAILED(rv)) {
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
@@ -2379,7 +2379,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
                                       (const char16_t**)certDetailsList,
                                       CertsToUse, &selectedIndex, &canceled);
 
-      NS_RELEASE(dialogs);
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certDetailsList);
 

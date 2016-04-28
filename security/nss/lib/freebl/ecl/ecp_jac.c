@@ -232,7 +232,9 @@ ec_GFp_pt_dbl_jac(const mp_int *px, const mp_int *py, const mp_int *pz,
 		MP_CHECKOK(group->meth->field_add(&t0, &M, &t0, group->meth));
 		MP_CHECKOK(group->meth->
 				   field_add(&t0, &group->curvea, &M, group->meth));
-	} else if (mp_cmp_int(&group->curvea, -3) == 0) {
+	} else if (MP_SIGN(&group->curvea) == MP_NEG &&
+		   MP_USED(&group->curvea) == 1 &&
+		   MP_DIGIT(&group->curvea, 0) == 3) {
 		/* M = 3 * (px + pz^2) * (px - pz^2) */
 		MP_CHECKOK(group->meth->field_sqr(pz, &M, group->meth));
 		MP_CHECKOK(group->meth->field_add(px, &M, &t0, group->meth));

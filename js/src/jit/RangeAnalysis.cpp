@@ -2940,7 +2940,7 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
         // instruction to encode the recover instruction.  Otherwise, we should
         // keep the original result and bailout if the value is not in the int32
         // range.
-        if (isRecoverableResult && candidate->canRecoverOnBailout())
+        if (!JitOptions.disableRecoverIns && isRecoverableResult && candidate->canRecoverOnBailout())
             *shouldClone = true;
         else
             kind = Min(kind, MDefinition::TruncateAfterBailouts);

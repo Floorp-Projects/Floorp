@@ -358,7 +358,8 @@ gfxMemorySharedReadLock::gfxMemorySharedReadLock()
 
 gfxMemorySharedReadLock::~gfxMemorySharedReadLock()
 {
-  MOZ_ASSERT(mReadCount == 0);
+  // One read count that is added in constructor.
+  MOZ_ASSERT(mReadCount == 1);
   MOZ_COUNT_DTOR(gfxMemorySharedReadLock);
 }
 
@@ -405,6 +406,12 @@ gfxShmSharedReadLock::gfxShmSharedReadLock(ClientIPCAllocator* aAllocator)
 
 gfxShmSharedReadLock::~gfxShmSharedReadLock()
 {
+  auto fwd = mAllocator->AsLayerForwarder();
+  if (fwd) {
+    // Release one read count that is added in constructor.
+    // The count is kept for calling GetReadCount() by TextureClientPool.
+    ReadUnlock();
+  }
   MOZ_COUNT_DTOR(gfxShmSharedReadLock);
 }
 
@@ -673,12 +680,11 @@ TileClient::DiscardFrontBuffer()
       mFrontBuffer->RemoveFromCompositable(mCompositableClient);
     }
 
-    mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
+    mAllocator->ReturnTextureClientDeferred(mFrontBuffer, mFrontLock);
     if (mFrontBufferOnWhite) {
       mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
-      mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
+      mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite, mFrontLock);
     }
-    mFrontLock->ReadUnlock();
     if (mFrontBuffer->IsLocked()) {
       mFrontBuffer->Unlock();
     }
@@ -705,12 +711,11 @@ TileClient::DiscardBackBuffer()
        mAllocator->ReportClientLost();
      }
     } else {
-      mAllocator->ReturnTextureClientDeferred(mBackBuffer);
+      mAllocator->ReturnTextureClientDeferred(mBackBuffer, mBackLock);
       if (mBackBufferOnWhite) {
-        mAllocator->ReturnTextureClientDeferred(mBackBufferOnWhite);
+        mAllocator->ReturnTextureClientDeferred(mBackBufferOnWhite, mBackLock);
       }
     }
-    mBackLock->ReadUnlock();
     if (mBackBuffer->IsLocked()) {
       mBackBuffer->Unlock();
     }
@@ -743,11 +748,6 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
   } else {
     if (!mBackBuffer ||
         mBackLock->GetReadCount() > 1) {
-
-      if (mBackLock) {
-        // Before we Replacing the lock by another one we need to unlock it!
-        mBackLock->ReadUnlock();
-      }
 
       if (mBackBuffer) {
         // Our current back-buffer is still locked by the compositor. This can occur

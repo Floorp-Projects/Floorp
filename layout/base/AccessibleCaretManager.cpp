@@ -861,16 +861,24 @@ AccessibleCaretManager::SelectMoreIfPhoneNumber() const
 void
 AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) const
 {
-  nsIDocument* doc = mPresShell->GetDocument();
+  if (!mPresShell) {
+    return;
+  }
+
+  RefPtr<nsIDocument> doc = mPresShell->GetDocument();
 
   // Extend the phone number selection until we find a boundary.
-  Selection* selection = GetSelection();
+  RefPtr<Selection> selection = GetSelection();
 
   while (selection) {
+    const nsRange* anchorFocusRange = selection->GetAnchorFocusRange();
+    if (!anchorFocusRange) {
+      return;
+    }
+
     // Backup the anchor focus range since both anchor node and focus node might
     // be changed after calling Selection::Modify().
-    RefPtr<nsRange> oldAnchorFocusRange =
-      selection->GetAnchorFocusRange()->CloneRange();
+    RefPtr<nsRange> oldAnchorFocusRange = anchorFocusRange->CloneRange();
 
     // Save current Focus position, and extend the selection one char.
     nsINode* focusNode = selection->GetFocusNode();
@@ -878,6 +886,9 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     selection->Modify(NS_LITERAL_STRING("extend"),
                       aDirection,
                       NS_LITERAL_STRING("character"));
+    if (IsTerminated()) {
+      return;
+    }
 
     // If the selection didn't change, (can't extend further), we're done.
     if (selection->GetFocusNode() == focusNode &&

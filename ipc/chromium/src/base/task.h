@@ -7,11 +7,11 @@
 #define BASE_TASK_H_
 
 #include "base/revocable_store.h"
-#include "base/tracked.h"
 #include "base/tuple.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Tuple.h"
 #include "nsISupportsImpl.h"
+#include "nsThreadUtils.h"
 
 // Helper functions so that we can call a function a pass it arguments that come
 // from a Tuple.
@@ -55,26 +55,6 @@ void DispatchTupleToFunction(Function function, mozilla::Tuple<Args...>& arg)
                         function, arg);
 }
 
-// Task ------------------------------------------------------------------------
-//
-// A task is a generic runnable thingy, usually used for running code on a
-// different thread or for scheduling future tasks off of the message loop.
-
-class Task : public tracked_objects::Tracked {
- public:
-  Task() {}
-  virtual ~Task() {}
-
-  // Tasks are automatically deleted after Run is called.
-  virtual void Run() = 0;
-};
-
-class CancelableTask : public Task {
- public:
-  // Not all tasks support cancellation.
-  virtual void Cancel() = 0;
-};
-
 // Scoped Factories ------------------------------------------------------------
 //
 // These scoped factory objects can be used by non-refcounted objects to safely
@@ -110,7 +90,7 @@ class CancelableTask : public Task {
 //
 //     // The factories are not thread safe, so always invoke on
 //     // |MessageLoop::current()|.
-//     MessageLoop::current()->PostDelayedTask(FROM_HERE,
+//     MessageLoop::current()->PostDelayedTask(
 //         some_method_factory_.NewRunnableMethod(&MyClass::SomeMethod),
 //         kSomeMethodDelayMS);
 //   }
@@ -132,9 +112,10 @@ class ScopedTaskFactory : public RevocableStore {
    public:
     explicit TaskWrapper(RevocableStore* store) : revocable_(store) { }
 
-    virtual void Run() {
+    NS_IMETHOD Run() override {
       if (!revocable_.revoked())
         TaskType::Run();
+      return NS_OK;
     }
 
     ~TaskWrapper() {
@@ -162,19 +143,20 @@ class ScopedRunnableMethodFactory : public RevocableStore {
   explicit ScopedRunnableMethodFactory(T* object) : object_(object) { }
 
   template <class Method, typename... Elements>
-  inline Task* NewRunnableMethod(Method method, Elements&&... elements) {
+  inline already_AddRefed<mozilla::Runnable>
+  NewRunnableMethod(Method method, Elements&&... elements) {
     typedef mozilla::Tuple<typename mozilla::Decay<Elements>::Type...> ArgsTuple;
     typedef RunnableMethod<Method, ArgsTuple> Runnable;
     typedef typename ScopedTaskFactory<Runnable>::TaskWrapper TaskWrapper;
 
-    TaskWrapper* task = new TaskWrapper(this);
+    RefPtr<TaskWrapper> task = new TaskWrapper(this);
     task->Init(object_, method, mozilla::MakeTuple(mozilla::Forward<Elements>(elements)...));
-    return task;
+    return task.forget();
   }
 
  protected:
   template <class Method, class Params>
-  class RunnableMethod : public Task {
+  class RunnableMethod : public mozilla::Runnable {
    public:
     RunnableMethod() { }
 
@@ -184,7 +166,10 @@ class ScopedRunnableMethodFactory : public RevocableStore {
       params_ = mozilla::Forward<Params>(params);
     }
 
-    virtual void Run() { DispatchTupleToMethod(obj_, meth_, params_); }
+    NS_IMETHOD Run() override {
+      DispatchTupleToMethod(obj_, meth_, params_);
+      return NS_OK;
+    }
 
    private:
     T* MOZ_UNSAFE_REF("The validity of this pointer must be enforced by "
@@ -205,15 +190,17 @@ class ScopedRunnableMethodFactory : public RevocableStore {
 
 // Task to delete an object
 template<class T>
-class DeleteTask : public CancelableTask {
+class DeleteTask : public mozilla::CancelableRunnable {
  public:
   explicit DeleteTask(T* obj) : obj_(obj) {
   }
-  virtual void Run() {
+  NS_IMETHOD Run() override {
     delete obj_;
+    return NS_OK;
   }
-  virtual void Cancel() {
+  virtual nsresult Cancel() override {
     obj_ = NULL;
+    return NS_OK;
   }
  private:
   T* MOZ_UNSAFE_REF("The validity of this pointer must be enforced by "
@@ -273,13 +260,13 @@ struct RunnableMethodTraits<const T> {
 //   R T::MyFunction([A[, B]])
 //
 // Usage:
-// PostTask(FROM_HERE, NewRunnableMethod(object, &Object::method[, a[, b]])
-// PostTask(FROM_HERE, NewRunnableFunction(&function[, a[, b]])
+// PostTask(NewRunnableMethod(object, &Object::method[, a[, b]])
+// PostTask(NewRunnableFunction(&function[, a[, b]])
 
 // RunnableMethod and NewRunnableMethod implementation -------------------------
 
 template <class T, class Method, class Params>
-class RunnableMethod : public CancelableTask,
+class RunnableMethod : public mozilla::CancelableRunnable,
                        public RunnableMethodTraits<T> {
  public:
   RunnableMethod(T* obj, Method meth, Params&& params)
@@ -290,13 +277,15 @@ class RunnableMethod : public CancelableTask,
     ReleaseCallee();
   }
 
-  virtual void Run() {
+  NS_IMETHOD Run() override {
     if (obj_)
       DispatchTupleToMethod(obj_, meth_, params_);
+    return NS_OK;
   }
 
-  virtual void Cancel() {
+  virtual nsresult Cancel() override {
     ReleaseCallee();
+    return NS_OK;
   }
 
  private:
@@ -315,16 +304,19 @@ class RunnableMethod : public CancelableTask,
 };
 
 template <class T, class Method, typename... Args>
-inline CancelableTask* NewRunnableMethod(T* object, Method method, Args&&... args) {
+inline already_AddRefed<mozilla::CancelableRunnable>
+NewRunnableMethod(T* object, Method method, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  return new RunnableMethod<T, Method, ArgsTuple>(
-      object, method, mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  RefPtr<mozilla::CancelableRunnable> t =
+    new RunnableMethod<T, Method, ArgsTuple>(object, method,
+                                             mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  return t.forget();
 }
 
 // RunnableFunction and NewRunnableFunction implementation ---------------------
 
 template <class Function, class Params>
-class RunnableFunction : public CancelableTask {
+class RunnableFunction : public mozilla::CancelableRunnable {
  public:
   RunnableFunction(Function function, Params&& params)
       : function_(function), params_(mozilla::Forward<Params>(params)) {
@@ -333,13 +325,15 @@ class RunnableFunction : public CancelableTask {
   ~RunnableFunction() {
   }
 
-  virtual void Run() {
+  NS_IMETHOD Run() override {
     if (function_)
       DispatchTupleToFunction(function_, params_);
+    return NS_OK;
   }
 
-  virtual void Cancel() {
+  virtual nsresult Cancel() override {
     function_ = nullptr;
+    return NS_OK;
   }
 
   Function function_;
@@ -347,10 +341,13 @@ class RunnableFunction : public CancelableTask {
 };
 
 template <class Function, typename... Args>
-inline CancelableTask* NewRunnableFunction(Function function, Args&&... args) {
+inline already_AddRefed<mozilla::CancelableRunnable>
+NewRunnableFunction(Function function, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  return new RunnableFunction<Function, ArgsTuple>(
-      function, mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  RefPtr<mozilla::CancelableRunnable> t =
+    new RunnableFunction<Function, ArgsTuple>(function,
+                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  return t.forget();
 }
 
 #endif  // BASE_TASK_H_

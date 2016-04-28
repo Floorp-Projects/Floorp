@@ -8,7 +8,7 @@
 <!-- LOCALIZATION NOTE: aboutWarningTitle.label should be attention grabbing and playful -->
 <!ENTITY aboutWarningTitle.label "This might void your warranty!">
 <!ENTITY aboutWarningText.label "Changing these advanced settings can be harmful to the stability, security, and performance of this application. You should only continue if you are sure of what you are doing.">
-<!ENTITY aboutWarningButton.label "I'll be careful, I promise!">
+<!ENTITY aboutWarningButton2.label "I accept the risk!">
 <!ENTITY aboutWarningCheckbox.label "Show this warning next time">
 
 <!ENTITY searchPrefs.label "Search:">

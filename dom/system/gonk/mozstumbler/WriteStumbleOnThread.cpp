@@ -25,7 +25,7 @@ WriteStumbleOnThread::UploadFreqGuard WriteStumbleOnThread::sUploadFreqGuard = {
 #define FILENAME_COMPLETED NS_LITERAL_CSTRING("stumbles.done.json.gz")
 #define OUTPUT_DIR NS_LITERAL_CSTRING("mozstumbler")
 
-class DeleteRunnable : public nsRunnable
+class DeleteRunnable : public Runnable
 {
   public:
     DeleteRunnable() {}

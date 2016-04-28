@@ -31,7 +31,7 @@ namespace mozilla {
 extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
-class MediaOmxReader::ProcessCachedDataTask : public Task
+class MediaOmxReader::ProcessCachedDataTask : public Runnable
 {
 public:
   ProcessCachedDataTask(MediaOmxReader* aOmxReader, int64_t aOffset)
@@ -39,11 +39,12 @@ public:
     mOffset(aOffset)
   { }
 
-  void Run()
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mOmxReader.get());
     mOmxReader->ProcessCachedData(mOffset);
+    return NS_OK;
   }
 
 private:
@@ -105,8 +106,8 @@ private:
       // We cannot read data in the main thread because it
       // might block for too long. Instead we post an IO task
       // to the IO thread if there is more data available.
-      XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-          new ProcessCachedDataTask(mOmxReader.get(), mOffset));
+      RefPtr<Runnable> task = new ProcessCachedDataTask(mOmxReader.get(), mOffset);
+      XRE_GetIOMessageLoop()->PostTask(task.forget());
     }
   }
 

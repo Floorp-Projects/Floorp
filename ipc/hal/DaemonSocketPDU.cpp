@@ -150,7 +150,7 @@ DaemonSocketPDU::Receive(int aFd)
     size_t fdCount = (chdr->cmsg_len - CMSG_ALIGN(sizeof(struct cmsghdr))) / sizeof(int);
     for (size_t i = 0; i < fdCount; i++) {
       int* receivedFd = static_cast<int*>(CMSG_DATA(chdr)) + i;
-      mReceivedFds.AppendElement(ScopedClose(*receivedFd));
+      mReceivedFds.AppendElement(*receivedFd);
     }
   }
 

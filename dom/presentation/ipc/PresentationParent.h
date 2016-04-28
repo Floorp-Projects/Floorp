@@ -48,9 +48,11 @@ public:
 
   virtual bool RecvUnregisterAvailabilityHandler() override;
 
-  virtual bool RecvRegisterSessionHandler(const nsString& aSessionId) override;
+  virtual bool RecvRegisterSessionHandler(const nsString& aSessionId,
+                                          const uint8_t& aRole) override;
 
-  virtual bool RecvUnregisterSessionHandler(const nsString& aSessionId) override;
+  virtual bool RecvUnregisterSessionHandler(const nsString& aSessionId,
+                                            const uint8_t& aRole) override;
 
   virtual bool RecvRegisterRespondingHandler(const uint64_t& aWindowId) override;
 
@@ -63,7 +65,8 @@ private:
 
   bool mActorDestroyed;
   nsCOMPtr<nsIPresentationService> mService;
-  nsTArray<nsString> mSessionIds;
+  nsTArray<nsString> mSessionIdsAtController;
+  nsTArray<nsString> mSessionIdsAtReceiver;
   nsTArray<uint64_t> mWindowIds;
 };
 

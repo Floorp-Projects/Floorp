@@ -99,9 +99,6 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
   nsCOMPtr<nsIPrincipal> principal;
   if (NS_IsMainThread()) {
     principal = nsNullPrincipal::Create();
-    if (!principal) {
-      return nullptr;
-    }
   }
 
   JS::Rooted<JSObject*> global(cx,

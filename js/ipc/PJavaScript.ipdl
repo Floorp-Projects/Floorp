@@ -42,6 +42,7 @@ both:
     prio(high) sync IsArray(uint64_t objId) returns (ReturnStatus rs, uint32_t ans);
     prio(high) sync ClassName(uint64_t objId) returns (nsCString name);
     prio(high) sync GetPrototype(uint64_t objId) returns (ReturnStatus rs, ObjectOrNullVariant result);
+    prio(high) sync GetPrototypeIfOrdinary(uint64_t objId) returns (ReturnStatus rs, bool isOrdinary, ObjectOrNullVariant result);
     prio(high) sync RegExpToShared(uint64_t objId) returns (ReturnStatus rs, nsString source, uint32_t flags);
 
     prio(high) sync GetPropertyKeys(uint64_t objId, uint32_t flags) returns (ReturnStatus rs, JSIDVariant[] ids);

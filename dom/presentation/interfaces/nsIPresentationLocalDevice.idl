@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIPresentationDevice.idl"
+
+/*
+ * Local device.
+ * This device is used for 1-UA use case. The result for display is rendered by
+ * this host device.
+ */
+[scriptable, uuid(dd239720-cab6-4fb5-9025-cba23f1bbc2d)]
+interface nsIPresentationLocalDevice : nsIPresentationDevice
+{
+  // (1-UA only) The property is used to get the window ID of 1-UA device.
+  readonly attribute AUTF8String windowId;
+};
