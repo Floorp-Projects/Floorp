@@ -182,6 +182,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -371,77 +372,72 @@ const uint32_t Arena::ThingsPerArena[] = {
 
 #undef COUNT
 
+using AllocKinds = mozilla::EnumSet<AllocKind>;
+
 struct js::gc::FinalizePhase
 {
-    size_t length;
-    const AllocKind* kinds;
     gcstats::Phase statsPhase;
+    AllocKinds kinds;
 };
-
-#define PHASE(x, p) { ArrayLength(x), x, p }
 
 /*
- * Finalization order for incrementally swept things.
+ * Finalization order for GC things swept incrementally on the main thrad.
  */
-
-static const AllocKind IncrementalPhaseStrings[] = {
-    AllocKind::EXTERNAL_STRING
-};
-
-static const AllocKind IncrementalPhaseScripts[] = {
-    AllocKind::SCRIPT
-};
-
-static const AllocKind IncrementalPhaseJitCode[] = {
-    AllocKind::JITCODE
-};
-
 static const FinalizePhase IncrementalFinalizePhases[] = {
-    PHASE(IncrementalPhaseStrings, gcstats::PHASE_SWEEP_STRING),
-    PHASE(IncrementalPhaseScripts, gcstats::PHASE_SWEEP_SCRIPT),
-    PHASE(IncrementalPhaseJitCode, gcstats::PHASE_SWEEP_JITCODE)
+    {
+        gcstats::PHASE_SWEEP_STRING, {
+            AllocKind::EXTERNAL_STRING
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_SCRIPT, {
+            AllocKind::SCRIPT
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_JITCODE, {
+            AllocKind::JITCODE
+        }
+    }
 };
 
 /*
- * Finalization order for things swept in the background.
+ * Finalization order for GC things swept on the background thread.
  */
-
-static const AllocKind BackgroundPhaseObjects[] = {
-    AllocKind::FUNCTION,
-    AllocKind::FUNCTION_EXTENDED,
-    AllocKind::OBJECT0_BACKGROUND,
-    AllocKind::OBJECT2_BACKGROUND,
-    AllocKind::OBJECT4_BACKGROUND,
-    AllocKind::OBJECT8_BACKGROUND,
-    AllocKind::OBJECT12_BACKGROUND,
-    AllocKind::OBJECT16_BACKGROUND
-};
-
-static const AllocKind BackgroundPhaseScripts[] = {
-    AllocKind::LAZY_SCRIPT
-};
-
-static const AllocKind BackgroundPhaseStringsAndSymbols[] = {
-    AllocKind::FAT_INLINE_STRING,
-    AllocKind::STRING,
-    AllocKind::SYMBOL
-};
-
-static const AllocKind BackgroundPhaseShapes[] = {
-    AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE,
-    AllocKind::BASE_SHAPE,
-    AllocKind::OBJECT_GROUP
-};
-
 static const FinalizePhase BackgroundFinalizePhases[] = {
-    PHASE(BackgroundPhaseScripts, gcstats::PHASE_SWEEP_SCRIPT),
-    PHASE(BackgroundPhaseObjects, gcstats::PHASE_SWEEP_OBJECT),
-    PHASE(BackgroundPhaseStringsAndSymbols, gcstats::PHASE_SWEEP_STRING),
-    PHASE(BackgroundPhaseShapes, gcstats::PHASE_SWEEP_SHAPE)
+    {
+        gcstats::PHASE_SWEEP_SCRIPT, {
+            AllocKind::LAZY_SCRIPT
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_OBJECT, {
+            AllocKind::FUNCTION,
+            AllocKind::FUNCTION_EXTENDED,
+            AllocKind::OBJECT0_BACKGROUND,
+            AllocKind::OBJECT2_BACKGROUND,
+            AllocKind::OBJECT4_BACKGROUND,
+            AllocKind::OBJECT8_BACKGROUND,
+            AllocKind::OBJECT12_BACKGROUND,
+            AllocKind::OBJECT16_BACKGROUND
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_STRING, {
+            AllocKind::FAT_INLINE_STRING,
+            AllocKind::STRING,
+            AllocKind::SYMBOL
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_SHAPE, {
+            AllocKind::SHAPE,
+            AllocKind::ACCESSOR_SHAPE,
+            AllocKind::BASE_SHAPE,
+            AllocKind::OBJECT_GROUP
+        }
+    }
 };
-
-#undef PHASE
 
 template<>
 JSObject*
@@ -1145,7 +1141,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     zoneGroups(nullptr),
     currentZoneGroup(nullptr),
     sweepZone(nullptr),
-    sweepKindIndex(0),
+    sweepKind(AllocKind::FIRST),
     abortSweepAfterCurrentGroup(false),
     arenasAllocatedDuringSweep(nullptr),
     startedCompacting(false),
@@ -2955,8 +2951,8 @@ void
 ArenaLists::finalizeNow(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        finalizeNow(fop, phase.kinds[i], RELEASE_ARENAS, nullptr);
+    for (auto kind : phase.kinds)
+        finalizeNow(fop, kind, RELEASE_ARENAS, nullptr);
 }
 
 void
@@ -2996,8 +2992,8 @@ void
 ArenaLists::queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        queueForForegroundSweep(fop, phase.kinds[i]);
+    for (auto kind : phase.kinds)
+        queueForForegroundSweep(fop, kind);
 }
 
 void
@@ -3015,8 +3011,8 @@ void
 ArenaLists::queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        queueForBackgroundSweep(fop, phase.kinds[i]);
+    for (auto kind : phase.kinds)
+        queueForBackgroundSweep(fop, kind);
 }
 
 inline void
@@ -3470,8 +3466,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
     FreeOp fop(rt, threadType);
     for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
         for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
-            for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
-                AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
+            for (auto kind : BackgroundFinalizePhases[phase].kinds) {
                 Arena* arenas = zone->arenas.arenaListsToSweep[kind];
                 MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(-1));
                 if (arenas)
@@ -5361,7 +5356,7 @@ GCRuntime::beginSweepingZoneGroup()
 
     finalizePhase = 0;
     sweepZone = currentZoneGroup;
-    sweepKindIndex = 0;
+    sweepKind = AllocKind::FIRST;
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
@@ -5572,8 +5567,9 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget)
             for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
                 Zone* zone = sweepZone;
 
-                while (sweepKindIndex < IncrementalFinalizePhases[finalizePhase].length) {
-                    AllocKind kind = IncrementalFinalizePhases[finalizePhase].kinds[sweepKindIndex];
+                for (auto kind : SomeAllocKinds(sweepKind, AllocKind::LIMIT)) {
+                    if (!IncrementalFinalizePhases[finalizePhase].kinds.contains(kind))
+                        continue;
 
                     /* Set the number of things per arena for this AllocKind. */
                     size_t thingsPerArena = Arena::thingsPerArena(kind);
@@ -5581,14 +5577,15 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget)
 
                     if (!zone->arenas.foregroundFinalize(&fop, kind, sliceBudget,
                                                          incrementalSweepList))
+                    {
+                        sweepKind = kind;
                         return NotFinished;
+                    }
 
                     /* Reset the slots of the sweep list that we used. */
                     incrementalSweepList.reset(thingsPerArena);
-
-                    ++sweepKindIndex;
                 }
-                sweepKindIndex = 0;
+                sweepKind = AllocKind::FIRST;
             }
             sweepZone = currentZoneGroup;
         }
