@@ -6705,7 +6705,7 @@ nsHttpChannel::ForceCacheEntryValidFor(uint32_t aSecondsToTheFuture)
         mCacheEntry->GetKey(key);
 
         LOG(("nsHttpChannel::ForceCacheEntryValidFor successfully forced valid "
-             "entry with key %s for %d seconds. [this=%p]", ToNewCString(key),
+             "entry with key %s for %d seconds. [this=%p]", key.get(),
              aSecondsToTheFuture, this));
     }
 
