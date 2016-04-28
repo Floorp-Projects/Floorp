@@ -23,6 +23,9 @@ struct OwningAnimationTarget
   OwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
     : mElement(aElement), mPseudoType(aType) { }
 
+  explicit OwningAnimationTarget(dom::Element* aElement)
+    : mElement(aElement) { }
+
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
   RefPtr<dom::Element> mElement;
