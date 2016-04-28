@@ -7,6 +7,8 @@
 const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 
+const {cssColors} = require("devtools/client/shared/css-color-db");
+
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
 const SPECIALVALUES = new Set([
@@ -58,7 +60,10 @@ module.exports.colorUtils = {
   CssColor: CssColor,
   rgbToHsl: rgbToHsl,
   setAlpha: setAlpha,
-  classifyColor: classifyColor
+  classifyColor: classifyColor,
+  rgbToColorName: rgbToColorName,
+  colorToRGBA: colorToRGBA,
+  isValidCSSColor: isValidCSSColor,
 };
 
 /**
@@ -118,7 +123,7 @@ CssColor.prototype = {
   },
 
   get valid() {
-    return DOMUtils.isValidCSSColor(this.authored);
+    return isValidCSSColor(this.authored);
   },
 
   /**
@@ -150,7 +155,7 @@ CssColor.prototype = {
         return this.rgb;
       }
       let {r, g, b} = tuple;
-      return DOMUtils.rgbToColorName(r, g, b);
+      return rgbToColorName(r, g, b);
     } catch (e) {
       return this.hex;
     }
@@ -467,6 +472,315 @@ function classifyColor(value) {
     return CssColor.COLORUNIT.hex;
   }
   return CssColor.COLORUNIT.name;
+}
+
+// This holds a map from colors back to color names for use by
+// rgbToColorName.
+var cssRGBMap;
+
+/**
+ * Given a color, return its name, if it has one.  Throws an exception
+ * if the color does not have a name.
+ *
+ * @param {Number} r, g, b  The color components.
+ * @return {String} the name of the color
+ */
+function rgbToColorName(r, g, b) {
+  if (!cssRGBMap) {
+    cssRGBMap = {};
+    for (let name in cssColors) {
+      let key = JSON.stringify(cssColors[name]);
+      if (!(key in cssRGBMap)) {
+        cssRGBMap[key] = name;
+      }
+    }
+  }
+  let value = cssRGBMap[JSON.stringify([r, g, b, 1])];
+  if (!value) {
+    throw new Error("no such color");
+  }
+  return value;
+}
+
+// Originally from dom/tests/mochitest/ajax/mochikit/MochiKit/Color.js.
+function _hslValue(n1, n2, hue) {
+  if (hue > 6.0) {
+    hue -= 6.0;
+  } else if (hue < 0.0) {
+    hue += 6.0;
+  }
+  let val;
+  if (hue < 1.0) {
+    val = n1 + (n2 - n1) * hue;
+  } else if (hue < 3.0) {
+    val = n2;
+  } else if (hue < 4.0) {
+    val = n1 + (n2 - n1) * (4.0 - hue);
+  } else {
+    val = n1;
+  }
+  return val;
+}
+
+// Originally from dom/tests/mochitest/ajax/mochikit/MochiKit/Color.js.
+function hslToRGB([hue, saturation, lightness]) {
+  let red;
+  let green;
+  let blue;
+  if (saturation === 0) {
+    red = lightness;
+    green = lightness;
+    blue = lightness;
+  } else {
+    let m2;
+    if (lightness <= 0.5) {
+      m2 = lightness * (1.0 + saturation);
+    } else {
+      m2 = lightness + saturation - (lightness * saturation);
+    }
+    let m1 = (2.0 * lightness) - m2;
+    let f = _hslValue;
+    let h6 = hue * 6.0;
+    red = f(m1, m2, h6 + 2);
+    green = f(m1, m2, h6);
+    blue = f(m1, m2, h6 - 2);
+  }
+  return [red, green, blue];
+}
+
+/**
+ * A helper function to convert a hex string like "F0C" to a color.
+ *
+ * @param {String} name the color string
+ * @return {Object} an object of the form {r, g, b, a}; or null if the
+ *         name was not a valid color
+ */
+function hexToRGBA(name) {
+  let r, g, b;
+
+  if (name.length === 3) {
+    let val = parseInt(name, 16);
+    b = ((val & 15) << 4) + (val & 15);
+    val >>= 4;
+    g = ((val & 15) << 4) + (val & 15);
+    val >>= 4;
+    r = ((val & 15) << 4) + (val & 15);
+  } else if (name.length === 6) {
+    let val = parseInt(name, 16);
+    b = val & 255;
+    val >>= 8;
+    g = val & 255;
+    val >>= 8;
+    r = val & 255;
+  } else {
+    return null;
+  }
+
+  return {r, g, b, a: 1};
+}
+
+/**
+ * A helper function to clamp a value.
+ *
+ * @param {Number} value The value to clamp
+ * @param {Number} min The minimum value
+ * @param {Number} max The maximum value
+ * @return {Number} A value between min and max
+ */
+function clamp(value, min, max) {
+  if (value < min) {
+    value = min;
+  }
+  if (value > max) {
+    value = max;
+  }
+  return value;
+}
+
+/**
+ * A helper function to get a token from a lexer, skipping comments
+ * and whitespace.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {CSSToken} The next non-whitespace, non-comment token; or
+ * null at EOF.
+ */
+function getToken(lexer) {
+  while (true) {
+    let token = lexer.nextToken();
+    if (!token || (token.tokenType !== "comment" &&
+                   token.tokenType !== "whitespace")) {
+      return token;
+    }
+  }
+}
+
+/**
+ * A helper function to examine a token and ensure it is a comma.
+ * Then fetch and return the next token.  Returns null if the
+ * token was not a comma, or at EOF.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @param {CSSToken} token A token to be examined
+ * @return {CSSToken} The next non-whitespace, non-comment token; or
+ * null if token was not a comma, or at EOF.
+ */
+function requireComma(lexer, token) {
+  if (!token || token.tokenType !== "symbol" || token.text !== ",") {
+    return null;
+  }
+  return getToken(lexer);
+}
+
+/**
+ * A helper function to parse the first three arguments to hsl()
+ * or hsla().
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {Array} An array of the form [r,g,b]; or null on error.
+ */
+function parseHsl(lexer) {
+  let vals = [];
+
+  let token = getToken(lexer);
+  if (!token || token.tokenType !== "number") {
+    return null;
+  }
+  let val = token.number % 60;
+  if (val < 0) {
+    val += 60;
+  }
+  vals.push(val / 60.0);
+
+  for (let i = 0; i < 2; ++i) {
+    token = requireComma(lexer, getToken(lexer));
+    if (!token || token.tokenType !== "percentage") {
+      return null;
+    }
+    vals.push(clamp(token.number, 0, 100));
+  }
+
+  return hslToRGB(vals).map((elt) => Math.trunc(elt * 255));
+}
+
+/**
+ * A helper function to parse the first three arguments to rgb()
+ * or rgba().
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {Array} An array of the form [r,g,b]; or null on error.
+ */
+function parseRgb(lexer) {
+  let isPercentage = false;
+  let vals = [];
+  for (let i = 0; i < 3; ++i) {
+    let token = getToken(lexer);
+    if (i > 0) {
+      token = requireComma(lexer, token);
+    }
+    if (!token) {
+      return null;
+    }
+
+    /* Either all parameters are integers, or all are percentages, so
+       check the first one to see.  */
+    if (i === 0 && token.tokenType === "percentage") {
+      isPercentage = true;
+    }
+
+    if (isPercentage) {
+      if (token.tokenType !== "percentage") {
+        return null;
+      }
+      vals.push(Math.round(255 * clamp(token.number, 0, 100)));
+    } else {
+      if (token.tokenType !== "number" || !token.isInteger) {
+        return null;
+      }
+      vals.push(clamp(token.number, 0, 255));
+    }
+  }
+  return vals;
+}
+
+/**
+ * Convert a string representing a color to an object holding the
+ * color's components.  Any valid CSS color form can be passed in.
+ *
+ * @param {String} name the color
+ * @return {Object} an object of the form {r, g, b, a}; or null if the
+ *         name was not a valid color
+ */
+function colorToRGBA(name) {
+  name = name.trim().toLowerCase();
+
+  if (name in cssColors) {
+    let result = cssColors[name];
+    return {r: result[0], g: result[1], b: result[2], a: result[3]};
+  } else if (name === "transparent") {
+    return {r: 0, g: 0, b: 0, a: 0};
+  } else if (name === "currentcolor") {
+    return {r: 0, g: 0, b: 0, a: 1};
+  }
+
+  let lexer = DOMUtils.getCSSLexer(name);
+
+  let func = getToken(lexer);
+  if (!func) {
+    return null;
+  }
+
+  if (func.tokenType === "id" || func.tokenType === "hash") {
+    if (getToken(lexer) !== null) {
+      return null;
+    }
+    return hexToRGBA(func.text);
+  }
+
+  const expectedFunctions = ["rgba", "rgb", "hsla", "hsl"];
+  if (!func || func.tokenType !== "function" ||
+      !expectedFunctions.includes(func.text)) {
+    return null;
+  }
+
+  let hsl = func.text === "hsl" || func.text === "hsla";
+  let alpha = func.text === "rgba" || func.text === "hsla";
+
+  let vals = hsl ? parseHsl(lexer) : parseRgb(lexer);
+  if (!vals) {
+    return null;
+  }
+
+  if (alpha) {
+    let token = requireComma(lexer, getToken(lexer));
+    if (!token || token.tokenType !== "number") {
+      return null;
+    }
+    vals.push(clamp(token.number, 0, 1));
+  } else {
+    vals.push(1);
+  }
+
+  let parenToken = getToken(lexer);
+  if (!parenToken || parenToken.tokenType !== "symbol" ||
+      parenToken.text !== ")") {
+    return null;
+  }
+  if (getToken(lexer) !== null) {
+    return null;
+  }
+
+  return {r: vals[0], g: vals[1], b: vals[2], a: vals[3]};
+}
+
+/**
+ * Check whether a string names a valid CSS color.
+ *
+ * @param {String} name The string to check
+ * @return {Boolean} True if the string is a CSS color name.
+ */
+function isValidCSSColor(name) {
+  return colorToRGBA(name) !== null;
 }
 
 loader.lazyGetter(this, "DOMUtils", function () {
