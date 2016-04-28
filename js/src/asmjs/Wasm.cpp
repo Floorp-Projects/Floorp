@@ -144,8 +144,11 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
 }
 
 static bool
-DecodeCallArgs(FunctionDecoder& f, const Sig& sig)
+DecodeCallArgs(FunctionDecoder& f, uint32_t arity, const Sig& sig)
 {
+    if (arity != sig.args().length())
+        return f.iter().fail("call arity out of range");
+
     Nothing arg;
     const ValTypeVector& args = sig.args();
     uint32_t numArgs = args.length();
@@ -175,7 +178,7 @@ DecodeCall(FunctionDecoder& f)
         return f.iter().fail("callee index out of range");
 
     const Sig& sig = f.mg().funcSig(call.callee);
-    return DecodeCallArgs(f, sig) &&
+    return DecodeCallArgs(f, call.arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
@@ -190,7 +193,7 @@ DecodeCallIndirect(FunctionDecoder& f)
         return f.iter().fail("signature index out of range");
 
     const Sig& sig = f.mg().sig(callIndirect.sigIndex);
-    if (!DecodeCallArgs(f, sig))
+    if (!DecodeCallArgs(f, callIndirect.arity, sig))
         return false;
 
     Nothing callee;
@@ -211,7 +214,7 @@ DecodeCallImport(FunctionDecoder& f)
         return f.iter().fail("import index out of range");
 
     const Sig& sig = *f.mg().import(callImport.callee).sig;
-    return DecodeCallArgs(f, sig) &&
+    return DecodeCallArgs(f, callImport.arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
