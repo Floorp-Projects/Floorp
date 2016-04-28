@@ -1055,6 +1055,7 @@ MulticastDNSDeviceProvider::Device::EstablishControlChannel(const nsAString& aUr
 NS_IMETHODIMP
 MulticastDNSDeviceProvider::Device::Disconnect()
 {
+  // No need to do anything when disconnect.
   return NS_OK;
 }
 
