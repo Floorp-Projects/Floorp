@@ -110,8 +110,8 @@ DOMStorageCache::Release(void)
   }
 
   RefPtr<nsRunnableMethod<DOMStorageCacheBridge, void, false> > event =
-    NS_NewNonOwningRunnableMethod(static_cast<DOMStorageCacheBridge*>(this),
-                                  &DOMStorageCacheBridge::Release);
+    NewNonOwningRunnableMethod(static_cast<DOMStorageCacheBridge*>(this),
+                               &DOMStorageCacheBridge::Release);
 
   nsresult rv = NS_DispatchToMainThread(event);
   if (NS_FAILED(rv)) {
@@ -281,10 +281,7 @@ DOMStorageCache::KeepAlive()
 
   if (!NS_IsMainThread()) {
     // Timer and the holder must be initialized on the main thread.
-    RefPtr<nsRunnableMethod<DOMStorageCache> > event =
-      NS_NewRunnableMethod(this, &DOMStorageCache::KeepAlive);
-
-    NS_DispatchToMainThread(event);
+    NS_DispatchToMainThread(NewRunnableMethod(this, &DOMStorageCache::KeepAlive));
     return;
   }
 

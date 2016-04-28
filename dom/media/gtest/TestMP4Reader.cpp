@@ -43,8 +43,8 @@ public:
 
   void Init() {
     nsCOMPtr<nsIThread> thread;
-    nsresult rv = NS_NewThread(getter_AddRefs(thread),
-                               NS_NewRunnableMethod(this, &TestBinding::ReadMetadata));
+    nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &TestBinding::ReadMetadata);
+    nsresult rv = NS_NewThread(getter_AddRefs(thread), r);
     EXPECT_EQ(NS_OK, rv);
     thread->Shutdown();
   }
@@ -54,7 +54,7 @@ private:
   {
     {
       RefPtr<TaskQueue> queue = reader->OwnerThread();
-      nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(reader, &MP4Reader::Shutdown);
+      nsCOMPtr<nsIRunnable> task = NewRunnableMethod(reader, &MP4Reader::Shutdown);
       // Hackily bypass the tail dispatcher so that we can AwaitShutdownAndIdle.
       // In production code we'd use BeginShutdown + promises.
       queue->Dispatch(task.forget(), AbstractThread::AssertDispatchSuccess,

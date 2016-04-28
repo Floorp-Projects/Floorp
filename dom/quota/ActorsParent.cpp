@@ -3084,13 +3084,15 @@ QuotaManager::Shutdown()
     NS_WARNING("Failed to cancel shutdown timer!");
   }
 
-  // Give clients a chance to cleanup IO thread only objects.
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
-  if (!runnable) {
-    NS_WARNING("Failed to create runnable!");
-  }
+  // NB: It's very important that runnable is destroyed on this thread
+  // (i.e. after we join the IO thread) because we can't release the
+  // QuotaManager on the IO thread. This should probably use
+  // NewNonOwningRunnableMethod ...
+  RefPtr<Runnable> runnable =
+    NewRunnableMethod(this, &QuotaManager::ReleaseIOThreadObjects);
+  MOZ_ASSERT(runnable);
 
+  // Give clients a chance to cleanup IO thread only objects.
   if (NS_FAILED(mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Failed to dispatch runnable!");
   }
@@ -5313,7 +5315,7 @@ Quota::RecvStartIdleMaintenance()
   QuotaManager* quotaManager = QuotaManager::Get();
   if (!quotaManager) {
     nsCOMPtr<nsIRunnable> callback =
-      NS_NewRunnableMethod(this, &Quota::StartIdleMaintenance);
+      NewRunnableMethod(this, &Quota::StartIdleMaintenance);
 
     QuotaManager::GetOrCreate(callback);
     return true;

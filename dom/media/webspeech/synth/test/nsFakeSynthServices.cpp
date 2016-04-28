@@ -356,7 +356,7 @@ nsFakeSynthServices::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (Preferences::GetBool("media.webspeech.synth.test")) {
-    NS_DispatchToMainThread(NS_NewRunnableMethod(this, &nsFakeSynthServices::Init));
+    NS_DispatchToMainThread(NewRunnableMethod(this, &nsFakeSynthServices::Init));
   }
 
   return NS_OK;

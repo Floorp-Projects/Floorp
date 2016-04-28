@@ -146,9 +146,8 @@ nsThreadPool::ShutdownThread(nsIThread* aThread)
   // shutdown requires this thread have an event loop (and it may not, see bug
   // 10204784).  The simplest way to cover all cases is to asynchronously
   // shutdown aThread from the main thread.
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread,
-                                                 &nsIThread::AsyncShutdown);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(NewRunnableMethod(aThread,
+                                            &nsIThread::AsyncShutdown));
 }
 
 NS_IMETHODIMP

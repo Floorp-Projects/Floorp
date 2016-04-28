@@ -716,11 +716,9 @@ private:
     if (aStatus >= Terminating && !mCanceled) {
       mCanceled = true;
 
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this,
-          &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted);
-      NS_ASSERTION(runnable, "This should never fail!");
-      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+      MOZ_ALWAYS_SUCCEEDS(
+        NS_DispatchToMainThread(NewRunnableMethod(this,
+                                                  &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted)));
     }
 
     return true;
