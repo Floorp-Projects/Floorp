@@ -182,7 +182,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -371,8 +370,6 @@ const uint32_t Arena::ThingsPerArena[] = {
 };
 
 #undef COUNT
-
-using AllocKinds = mozilla::EnumSet<AllocKind>;
 
 struct js::gc::FinalizePhase
 {
@@ -2553,65 +2550,25 @@ struct ArenaListSegment
 
 struct ArenasToUpdate
 {
-    enum UpdateKind {
-        NONE = 0,
-        FOREGROUND = 1,
-        BACKGROUND = 2,
-        ALL = FOREGROUND | BACKGROUND
-    };
-    ArenasToUpdate(Zone* zone, UpdateKind kind);
+    ArenasToUpdate(Zone* zone, AllocKinds kinds);
     bool done() { return kind == AllocKind::LIMIT; }
     ArenaListSegment getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned maxLength);
 
   private:
-    UpdateKind kinds; // Selects which thing kinds to iterate
-    Zone* zone;          // Zone to process
-    AllocKind kind;      // Current alloc kind to process
-    Arena* arena;  // Next arena to process
+    AllocKinds kinds;  // Selects which thing kinds to update
+    Zone* zone;        // Zone to process
+    AllocKind kind;    // Current alloc kind to process
+    Arena* arena;      // Next arena to process
 
     AllocKind nextAllocKind(AllocKind i) { return AllocKind(uint8_t(i) + 1); }
-    UpdateKind updateKind(AllocKind kind);
     bool shouldProcessKind(AllocKind kind);
     Arena* next(AutoLockHelperThreadState& lock);
 };
 
-ArenasToUpdate::UpdateKind
-ArenasToUpdate::updateKind(AllocKind kind)
-{
-    MOZ_ASSERT(IsValidAllocKind(kind));
-
-    // GC things that do not contain pointers to cells we relocate don't need
-    // updating. Note that AllocKind::STRING is the only string kind which can
-    // be a rope and hence contain relocatable pointers.
-    if (kind == AllocKind::FAT_INLINE_STRING ||
-        kind == AllocKind::EXTERNAL_STRING ||
-        kind == AllocKind::SYMBOL)
-    {
-        return NONE;
-    }
-
-    // We try to update as many GC things in parallel as we can, but there are
-    // kinds for which this might not be safe:
-    //  - we assume JSObjects that are foreground finalized are not safe to
-    //    update in parallel
-    //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
-    if (!js::gc::IsBackgroundFinalized(kind) || IsShapeAllocKind(kind))
-        return FOREGROUND;
-
-    return BACKGROUND;
-}
-
-bool
-ArenasToUpdate::shouldProcessKind(AllocKind kind)
-{
-    return (updateKind(kind) & kinds) != 0;
-}
-
-ArenasToUpdate::ArenasToUpdate(Zone* zone, UpdateKind kinds)
+ArenasToUpdate::ArenasToUpdate(Zone* zone, AllocKinds kinds)
   : kinds(kinds), zone(zone), kind(AllocKind::FIRST), arena(nullptr)
 {
     MOZ_ASSERT(zone->isGCCompacting());
-    MOZ_ASSERT(!(kinds & ~ALL));
 }
 
 Arena*
@@ -2624,7 +2581,7 @@ ArenasToUpdate::next(AutoLockHelperThreadState& lock)
     // object and we just return when we find an arena.
 
     for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
-        if (shouldProcessKind(kind)) {
+        if (kinds.contains(kind)) {
             if (!arena)
                 arena = zone->arenas.getFirstArena(kind);
             else
@@ -2721,18 +2678,46 @@ CellUpdateBackgroundTaskCount()
     return Min(Max(targetTaskCount, MinCellUpdateBackgroundTasks), MaxCellUpdateBackgroundTasks);
 }
 
-void
-GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
+static bool
+CanUpdateKindInBackground(AllocKind kind) {
+    // We try to update as many GC things in parallel as we can, but there are
+    // kinds for which this might not be safe:
+    //  - we assume JSObjects that are foreground finalized are not safe to
+    //    update in parallel
+    //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
+    if (!js::gc::IsBackgroundFinalized(kind) || IsShapeAllocKind(kind))
+        return false;
+
+    return true;
+}
+
+static AllocKinds
+ForegroundUpdateKinds(AllocKinds kinds)
 {
-    AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
+    AllocKinds result;
+    for (AllocKind kind : kinds) {
+        if (!CanUpdateKindInBackground(kind))
+            result += kind;
+    }
+    return result;
+}
 
-    size_t bgTaskCount = CellUpdateBackgroundTaskCount();
+void
+GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
+{
+    zone->typeDescrObjects.sweep();
+    for (auto r = zone->typeDescrObjects.all(); !r.empty(); r.popFront())
+        UpdateCellPointers(trc, r.front().get());
+}
 
-    ArenasToUpdate
-        fgArenas(zone, bgTaskCount == 0 ? ArenasToUpdate::ALL : ArenasToUpdate::FOREGROUND);
-    ArenasToUpdate
-        bgArenas(zone, bgTaskCount == 0 ? ArenasToUpdate::NONE : ArenasToUpdate::BACKGROUND);
+void
+GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount)
+{
+    AllocKinds fgKinds = bgTaskCount == 0 ? kinds : ForegroundUpdateKinds(kinds);
+    AllocKinds bgKinds = kinds - fgKinds;
 
+    ArenasToUpdate fgArenas(zone, fgKinds);
+    ArenasToUpdate bgArenas(zone, bgKinds);
     Maybe<UpdatePointersTask> fgTask;
     Maybe<UpdatePointersTask> bgTasks[MaxCellUpdateBackgroundTasks];
 
@@ -2760,12 +2745,48 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
     }
 }
 
+static const AllocKinds UpdatePhaseMisc {
+    AllocKind::SCRIPT,
+    AllocKind::LAZY_SCRIPT,
+    AllocKind::SHAPE,
+    AllocKind::BASE_SHAPE,
+    AllocKind::ACCESSOR_SHAPE,
+    AllocKind::OBJECT_GROUP,
+    AllocKind::STRING,
+    AllocKind::JITCODE
+};
+
+static const AllocKinds UpdatePhaseObjects {
+    AllocKind::FUNCTION,
+    AllocKind::FUNCTION_EXTENDED,
+    AllocKind::OBJECT0,
+    AllocKind::OBJECT0_BACKGROUND,
+    AllocKind::OBJECT2,
+    AllocKind::OBJECT2_BACKGROUND,
+    AllocKind::OBJECT4,
+    AllocKind::OBJECT4_BACKGROUND,
+    AllocKind::OBJECT8,
+    AllocKind::OBJECT8_BACKGROUND,
+    AllocKind::OBJECT12,
+    AllocKind::OBJECT12_BACKGROUND,
+    AllocKind::OBJECT16,
+    AllocKind::OBJECT16_BACKGROUND
+};
+
 void
-GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
+GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 {
-    zone->typeDescrObjects.sweep();
-    for (auto r = zone->typeDescrObjects.all(); !r.empty(); r.popFront())
-        UpdateCellPointers(trc, r.front().get());
+    AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
+
+    size_t bgTaskCount = CellUpdateBackgroundTaskCount();
+
+    updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
+
+    // Update TypeDescrs before all other objects as typed objects access these
+    // objects when we trace them.
+    updateTypeDescrObjects(trc, zone);
+
+    updateCellPointers(trc, zone, UpdatePhaseObjects, bgTaskCount);
 }
 
 /*
@@ -2788,10 +2809,6 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
         comp->fixupAfterMovingGC();
     JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
     rt->spsProfiler.fixupStringsMapAfterMovingGC();
-
-    // Update TypeDescrs before all other objects as typed objects access these
-    // objects when we trace them.
-    updateTypeDescrObjects(&trc, zone);
 
     // Iterate through all cells that can contain relocatable pointers to update
     // them. Since updating each cell is independent we try to parallelize this
