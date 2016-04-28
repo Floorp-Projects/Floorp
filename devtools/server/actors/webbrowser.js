@@ -1185,13 +1185,13 @@ TabActor.prototype = {
   },
 
   _isRootDocShell: function (docShell) {
-    // Root docshells like top level xul windows don't have chromeEventHandler.
-    // Root docshells in child processes have one, it is TabChildGlobal,
-    // which isn't a DOM Element.
-    // Non-root docshell have a chromeEventHandler that is either
-    // xul:iframe, xul:browser or html:iframe.
-    return !docShell.chromeEventHandler ||
-           !(docShell.chromeEventHandler instanceof Ci.nsIDOMElement);
+    // Should report as root docshell:
+    //  - New top level window's docshells, when using ChromeActor against a
+    // process. It allows tracking iframes of the newly opened windows
+    // like Browser console or new browser windows.
+    //  - MozActivities or window.open frames on B2G, where a new root docshell
+    // is spawn in the child process of the app.
+    return !docShell.parent;
   },
 
   // Convert docShell list to windows objects list being sent to the client
@@ -1247,12 +1247,10 @@ TabActor.prototype = {
                      }]
                    });
 
-    // Stop watching this docshell if it's a root one.
-    // (child processes spawn new root docshells)
+    // Stop watching this docshell (the unwatch() method will check if we
+    // started watching it before).
     webProgress.QueryInterface(Ci.nsIDocShell);
-    if (this._isRootDocShell(webProgress)) {
-      this._progressListener.unwatch(webProgress);
-    }
+    this._progressListener.unwatch(webProgress);
 
     if (webProgress.DOMWindow == this._originalWindow) {
       // If the original top level document we connected to is removed,
@@ -2199,6 +2197,8 @@ function DebuggerProgressListener(aTabActor) {
   // so that we can discriminate windows we care about when observing
   // inner-window-destroyed events. Bug 1016952 would remove the need for this.
   this._knownWindowIDs = new Map();
+
+  this._watchedDocShells = new WeakSet();
 }
 
 DebuggerProgressListener.prototype = {
@@ -2215,6 +2215,13 @@ DebuggerProgressListener.prototype = {
   },
 
   watch: function(docShell) {
+    // Add the docshell to the watched set. We're actually adding the window,
+    // because docShell objects are not wrappercached and would be rejected
+    // by the WeakSet.
+    let docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
+    this._watchedDocShells.add(docShellWindow);
+
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATUS |
@@ -2234,6 +2241,12 @@ DebuggerProgressListener.prototype = {
   },
 
   unwatch: function(docShell) {
+    let docShellWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindow);
+    if (!this._watchedDocShells.has(docShellWindow)) {
+      return;
+    }
+
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     // During process shutdown, the docshell may already be cleaned up and throw
