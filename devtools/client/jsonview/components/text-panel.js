@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
@@ -24,11 +24,11 @@ define(function(require, exports, module) {
 
     displayName: "TextPanel",
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {};
     },
 
-    render: function() {
+    render: function () {
       return (
         div({className: "textPanelBox"},
           TextToolbar({actions: this.props.actions}),
@@ -55,19 +55,19 @@ define(function(require, exports, module) {
 
     // Commands
 
-    onPrettify: function(event) {
+    onPrettify: function (event) {
       this.props.actions.onPrettify();
     },
 
-    onSave: function(event) {
+    onSave: function (event) {
       this.props.actions.onSaveJson();
     },
 
-    onCopy: function(event) {
+    onCopy: function (event) {
       this.props.actions.onCopyJson();
     },
 
-    render: function() {
+    render: function () {
       return (
         Toolbar({},
           ToolbarButton({

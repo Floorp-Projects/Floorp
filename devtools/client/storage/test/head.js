@@ -70,7 +70,7 @@ function* openTabAndSetupStorage(url) {
     function getAllWindows(baseWindow) {
       let windows = new Set();
 
-      let _getAllWindows = function(win) {
+      let _getAllWindows = function (win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -200,7 +200,7 @@ function* finishTests() {
     function getAllWindows(baseWindow) {
       let windows = new Set();
 
-      let _getAllWindows = function(win) {
+      let _getAllWindows = function (win) {
         windows.add(win.wrappedJSObject);
 
         for (let i = 0; i < win.length; i++) {
@@ -385,12 +385,12 @@ function findVariableViewProperties(ruleArray, parsed) {
       rule.name = lastName;
 
       let matched = matchVariablesViewProperty(prop, rule);
-      return matched.then(onMatch.bind(null, prop, rule)).then(function() {
+      return matched.then(onMatch.bind(null, prop, rule)).then(function () {
         rule.name = name;
       });
     }, function onFailure() {
       return promise.resolve(null);
-    }).then(processExpandRules.bind(null, rules)).then(function() {
+    }).then(processExpandRules.bind(null, rules)).then(function () {
       deferred.resolve(null);
     });
 

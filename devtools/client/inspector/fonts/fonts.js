@@ -18,8 +18,6 @@ const PREVIEW_UPDATE_DELAY = 150;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/Console.jsm");
 
 function FontInspector(inspector, window) {
   this.inspector = inspector;

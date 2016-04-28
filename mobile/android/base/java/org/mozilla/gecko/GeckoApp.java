@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.db.UrlAnnotations;
@@ -19,6 +20,7 @@ import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
@@ -153,7 +155,7 @@ public abstract class GeckoApp
     public static final String PREFS_OOM_EXCEPTION         = "OOMException";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
-    public static final String PREFS_CRASHED               = "crashed";
+    public static final String PREFS_CRASHED_COUNT         = "crashedCount";
     public static final String PREFS_CLEANUP_TEMP_FILES    = "cleanupTempFiles";
 
     public static final String SAVED_STATE_IN_BACKGROUND   = "inBackground";
@@ -192,6 +194,7 @@ public abstract class GeckoApp
 
     private final HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
+    protected boolean mLastSessionCrashed;
     protected boolean mShouldRestore;
     protected boolean mInitialized;
     protected boolean mWindowFocusInitialized;
@@ -478,7 +481,7 @@ public abstract class GeckoApp
             // If the user has opted out of session restore, and does want to clear history
             // we also want to prevent the current session info from being saved.
             if (clearObj.has("private.data.history")) {
-                final String sessionRestore = getSessionRestorePreference();
+                final String sessionRestore = getSessionRestorePreference(getSharedPreferences());
                 try {
                     res.put("dontSaveSession", "quit".equals(sessionRestore));
                 } catch (JSONException ex) {
@@ -1257,6 +1260,7 @@ public abstract class GeckoApp
         mTextSelection.create();
 
         // Determine whether we should restore tabs.
+        mLastSessionCrashed = updateCrashedState();
         mShouldRestore = getSessionRestoreState(savedInstanceState);
         if (mShouldRestore && savedInstanceState != null) {
             boolean wasInBackground =
@@ -1389,13 +1393,19 @@ public abstract class GeckoApp
 
     /**
      * Loads the initial tab at Fennec startup. If we don't restore tabs, this
-     * tab will be about:home, or the homepage if the use has set one.
+     * tab will be about:home, or the homepage if the user has set one.
+     * If we've temporarily disabled restoring to break out of a crash loop, we'll
+     * show the recent tabs panel so the user can manually restore tabs as needed.
      * If we restore tabs, we don't need to create a new tab.
      */
     protected void loadStartupTab(final int flags) {
         if (!mShouldRestore) {
-            final String homepage = getHomepage();
-            Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
+            if (mLastSessionCrashed) {
+                Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.RECENT_TABS), flags);
+            } else {
+                final String homepage = getHomepage();
+                Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
+            }
         }
     }
 
@@ -1675,6 +1685,27 @@ public abstract class GeckoApp
     }
 
     /**
+     * Check whether we've crashed during the last browsing session.
+     *
+     * @return True if the crash reporter ran after the last session.
+     */
+    protected boolean updateCrashedState() {
+        try {
+            File crashFlag = new File(GeckoProfileDirectories.getMozillaDirectory(this), "CRASHED");
+            if (crashFlag.exists() && crashFlag.delete()) {
+                // Set the flag that indicates we were stopped as expected, as
+                // the crash reporter has run, so it is not a silent OOM crash.
+                getSharedPreferences().edit().putBoolean(PREFS_WAS_STOPPED, true).apply();
+                return true;
+            }
+        } catch (NoMozillaDirectoryException e) {
+            // If we can't access the Mozilla directory, we're in trouble anyway.
+            Log.e(LOGTAG, "Cannot read crash flag: ", e);
+        }
+        return false;
+    }
+
+    /**
      * Determine whether the session should be restored.
      *
      * @param savedInstanceState Saved instance state given to the activity
@@ -1685,27 +1716,49 @@ public abstract class GeckoApp
         boolean shouldRestore = false;
 
         final int versionCode = getVersionCode();
-        if (prefs.getInt(PREFS_VERSION_CODE, 0) != versionCode) {
+        if (mLastSessionCrashed) {
+            if (incrementCrashCount(prefs) <= getSessionStoreMaxCrashResumes(prefs) &&
+                    getSessionRestoreAfterCrashPreference(prefs)) {
+                shouldRestore = true;
+            } else {
+                shouldRestore = false;
+            }
+        } else if (prefs.getInt(PREFS_VERSION_CODE, 0) != versionCode) {
             // If the version has changed, the user has done an upgrade, so restore
             // previous tabs.
             prefs.edit().putInt(PREFS_VERSION_CODE, versionCode).apply();
             shouldRestore = true;
         } else if (savedInstanceState != null ||
-                   getSessionRestorePreference().equals("always") ||
+                   getSessionRestorePreference(prefs).equals("always") ||
                    getRestartFromIntent()) {
             // We're coming back from a background kill by the OS, the user
             // has chosen to always restore, or we restarted.
-            shouldRestore = true;
-        } else if (prefs.getBoolean(GeckoApp.PREFS_CRASHED, false)) {
-            prefs.edit().putBoolean(PREFS_CRASHED, false).apply();
             shouldRestore = true;
         }
 
         return shouldRestore;
     }
 
-    private String getSessionRestorePreference() {
-        return getSharedPreferences().getString(GeckoPreferences.PREFS_RESTORE_SESSION, "always");
+    private int incrementCrashCount(SharedPreferences prefs) {
+        final int crashCount = getSuccessiveCrashesCount(prefs) + 1;
+        prefs.edit().putInt(PREFS_CRASHED_COUNT, crashCount).apply();
+        return crashCount;
+    }
+
+    private int getSuccessiveCrashesCount(SharedPreferences prefs) {
+        return prefs.getInt(PREFS_CRASHED_COUNT, 0);
+    }
+
+    private int getSessionStoreMaxCrashResumes(SharedPreferences prefs) {
+        return prefs.getInt(GeckoPreferences.PREFS_RESTORE_SESSION_MAX_CRASH_RESUMES, 1);
+    }
+
+    private boolean getSessionRestoreAfterCrashPreference(SharedPreferences prefs) {
+        return prefs.getBoolean(GeckoPreferences.PREFS_RESTORE_SESSION_FROM_CRASH, true);
+    }
+
+    private String getSessionRestorePreference(SharedPreferences prefs) {
+        return prefs.getString(GeckoPreferences.PREFS_RESTORE_SESSION, "always");
     }
 
     private boolean getRestartFromIntent() {
@@ -1939,6 +1992,13 @@ public abstract class GeckoApp
                 SharedPreferences prefs = GeckoApp.this.getSharedPreferences();
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, false);
+
+                if (!mLastSessionCrashed) {
+                    // The last session terminated normally,
+                    // so we can reset the count of successive crashes.
+                    editor.putInt(GeckoApp.PREFS_CRASHED_COUNT, 0);
+                }
+
                 currentSession.recordBegin(editor);
                 editor.apply();
 
@@ -1989,6 +2049,10 @@ public abstract class GeckoApp
                 if (rec != null) {
                     rec.recordSessionEnd("P", editor);
                 }
+
+                // onPause might in fact be called even after a crash, but in that case the
+                // crash reporter will record this fact for us and we'll pick it up in onCreate.
+                mLastSessionCrashed = false;
 
                 // If we haven't done it before, cleanup any old files in our old temp dir
                 if (prefs.getBoolean(GeckoApp.PREFS_CLEANUP_TEMP_FILES, true)) {

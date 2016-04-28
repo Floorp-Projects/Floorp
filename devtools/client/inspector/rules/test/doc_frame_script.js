@@ -31,7 +31,7 @@ var promise = require("promise");
  * - {String} name
  * @return {String} The value, if found, null otherwise
  */
-addMessageListener("Test:GetRulePropertyValue", function(msg) {
+addMessageListener("Test:GetRulePropertyValue", function (msg) {
   let {name, styleSheetIndex, ruleIndex} = msg.data;
   let value = null;
 
@@ -56,7 +56,7 @@ addMessageListener("Test:GetRulePropertyValue", function(msg) {
  * @param {Object} objects Expects a 'target' CPOW object
  * @return {Array} A list of stylesheet info objects
  */
-addMessageListener("Test:GetStyleSheetsInfoForNode", function(msg) {
+addMessageListener("Test:GetStyleSheetsInfoForNode", function (msg) {
   let target = msg.objects.target;
   let sheets = [];
 
@@ -83,7 +83,7 @@ addMessageListener("Test:GetStyleSheetsInfoForNode", function(msg) {
  * - {String} name: name of the property
  * @return {String} The value, if found, null otherwise
  */
-addMessageListener("Test:GetComputedStylePropertyValue", function(msg) {
+addMessageListener("Test:GetComputedStylePropertyValue", function (msg) {
   let {selector, pseudo, name} = msg.data;
   let element = content.document.querySelector(selector);
   let value = content.document.defaultView.getComputedStyle(element, pseudo)
@@ -100,7 +100,7 @@ addMessageListener("Test:GetComputedStylePropertyValue", function(msg) {
  * - {String} name: name of the property
  * - {String} expected: the expected value for property
  */
-addMessageListener("Test:WaitForComputedStylePropertyValue", function(msg) {
+addMessageListener("Test:WaitForComputedStylePropertyValue", function (msg) {
   let {selector, pseudo, name, expected} = msg.data;
   let element = content.document.querySelector(selector);
   waitForSuccess(() => {

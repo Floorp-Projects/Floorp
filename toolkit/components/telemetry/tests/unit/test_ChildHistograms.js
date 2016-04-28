@@ -57,8 +57,7 @@ function check_histogram_values(payload) {
 
 add_task(function*() {
   if (!runningInParent) {
-    TelemetryController.setupContent();
-    TelemetrySession.setupContent();
+    TelemetryController.testSetupContent();
     run_child_test();
     dump("... done with child test\n");
     do_send_remote_message(MESSAGE_CHILD_TEST_DONE);
@@ -71,8 +70,7 @@ add_task(function*() {
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  yield TelemetryController.setup();
-  yield TelemetrySession.setup();
+  yield TelemetryController.testSetup();
 
   // Run test in child, don't wait for it to finish.
   let childPromise = run_test_in_child("test_ChildHistograms.js");

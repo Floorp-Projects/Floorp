@@ -16,7 +16,7 @@ add_task(function* () {
 
   // Overriding the editTagName walkerActor method here to check that it isn't
   // called when blurring the tagname field.
-  inspector.walker.editTagName = function() {
+  inspector.walker.editTagName = function () {
     isEditTagNameCalled = true;
   };
 

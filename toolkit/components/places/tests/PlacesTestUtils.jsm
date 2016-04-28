@@ -54,13 +54,13 @@ this.PlacesTestUtils = Object.freeze({
     // Create mozIVisitInfo for each entry.
     let now = Date.now();
     for (let place of places) {
-      if (typeof place.title != "string") {
-        place.title = "test visit for " + place.uri.spec;
-      }
       if (typeof place.uri == "string") {
         place.uri = NetUtil.newURI(place.uri);
       } else if (place.uri instanceof URL) {
         place.uri = NetUtil.newURI(place.href);
+      }
+      if (typeof place.title != "string") {
+        place.title = "test visit for " + place.uri.spec;
       }
       place.visits = [{
         transitionType: place.transition === undefined ? Ci.nsINavHistoryService.TRANSITION_LINK

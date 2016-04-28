@@ -9,7 +9,7 @@ const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("./reducers");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-module.exports = function() {
+module.exports = function () {
   let shouldLog = false;
   let history;
 

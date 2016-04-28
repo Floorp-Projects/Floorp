@@ -62,7 +62,7 @@ public class TestJarReader extends InstrumentationTestCase {
         assertNotNull(file);
         try {
             assertTrue(file.getName().endsWith("test"));
-            final String contents = FileUtils.getFileContents(file);
+            final String contents = FileUtils.readStringFromFile(file);
             assertNotNull(contents);
             assertTrue(contents.length() > 0);
         } finally {

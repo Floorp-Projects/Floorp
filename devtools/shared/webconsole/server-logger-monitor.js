@@ -16,7 +16,7 @@ loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconso
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function(...args) {
+  log: function (...args) {
   }
 };
 
@@ -39,7 +39,7 @@ const acceptableHeaders = ["x-chromelogger-data"];
 var ServerLoggerMonitor = {
   // Initialization
 
-  initialize: function() {
+  initialize: function () {
     this.onChildMessage = this.onChildMessage.bind(this);
     this.onDisconnectChild = this.onDisconnectChild.bind(this);
     this.onExamineResponse = this.onExamineResponse.bind(this);
@@ -53,7 +53,7 @@ var ServerLoggerMonitor = {
 
   // Parent Child Relationship
 
-  attach: makeInfallible(function({mm, prefix}) {
+  attach: makeInfallible(function ({mm, prefix}) {
     let size = this.messageManagers.size;
 
     trace.log("ServerLoggerMonitor.attach; ", size, arguments);
@@ -73,7 +73,7 @@ var ServerLoggerMonitor = {
       this.onDisconnectChild);
   }),
 
-  detach: function(mm) {
+  detach: function (mm) {
     let size = this.messageManagers.size;
 
     trace.log("ServerLoggerMonitor.detach; ", size);
@@ -82,7 +82,7 @@ var ServerLoggerMonitor = {
     mm.removeMessageListener("debug:server-logger", this.onChildMessage);
   },
 
-  onDisconnectChild: function(event, mm) {
+  onDisconnectChild: function (event, mm) {
     let size = this.messageManagers.size;
 
     trace.log("ServerLoggerMonitor.onDisconnectChild; ",
@@ -99,7 +99,7 @@ var ServerLoggerMonitor = {
 
   // Child Message Handling
 
-  onChildMessage: function(msg) {
+  onChildMessage: function (msg) {
     let method = msg.data.method;
 
     trace.log("ServerLoggerMonitor.onChildMessage; ", method, msg);
@@ -115,7 +115,7 @@ var ServerLoggerMonitor = {
     }
   },
 
-  onAttachChild: function(event) {
+  onAttachChild: function (event) {
     let target = event.target;
     let size = this.targets.size;
 
@@ -133,7 +133,7 @@ var ServerLoggerMonitor = {
     this.targets.add(target);
   },
 
-  onDetachChild: function(event) {
+  onDetachChild: function (event) {
     let target = event.target;
     this.targets.delete(target);
 
@@ -151,7 +151,7 @@ var ServerLoggerMonitor = {
 
   // HTTP Observer
 
-  onExamineResponse: makeInfallible(function(subject, topic) {
+  onExamineResponse: makeInfallible(function (subject, topic) {
     let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
 
     trace.log("ServerLoggerMonitor.onExamineResponse; ", httpChannel.name,

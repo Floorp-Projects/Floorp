@@ -8,7 +8,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/Console.jsm");
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");

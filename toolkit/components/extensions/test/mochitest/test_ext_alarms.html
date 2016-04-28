@@ -36,14 +36,22 @@ add_task(function* test_alarm_without_permissions() {
 add_task(function* test_alarm_fires() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
+    let timer;
 
     browser.alarms.onAlarm.addListener(alarm => {
       browser.test.assertEq(ALARM_NAME, alarm.name, "alarm has the correct name");
-      browser.test.notifyPass("alarms");
+      clearTimeout(timer);
+      browser.test.notifyPass("alarm-fires");
     });
+
     browser.alarms.create(ALARM_NAME, {delayInMinutes: 0.02});
-    setTimeout(() => {
+
+    timer = setTimeout(() => {
       browser.test.fail("alarm fired within expected time");
+      browser.alarms.clear(ALARM_NAME).then(wasCleared => {
+        browser.test.assertTrue(wasCleared, "alarm was cleared");
+      });
+      browser.test.notifyFail("alarm-fires");
     }, 10000);
   }
 
@@ -55,7 +63,7 @@ add_task(function* test_alarm_fires() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-fires");
   yield extension.unload();
 });
 
@@ -66,13 +74,14 @@ add_task(function* test_cleared_alarm_does_not_fire() {
 
     browser.alarms.onAlarm.addListener(alarm => {
       browser.test.fail("cleared alarm does not fire");
+      browser.test.notifyFail("alarm-cleared");
     });
     browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
 
     browser.alarms.clear(ALARM_NAME).then(wasCleared => {
       browser.test.assertTrue(wasCleared, "alarm was cleared");
       setTimeout(() => {
-        browser.test.notifyPass("alarms");
+        browser.test.notifyPass("alarm-cleared");
       }, 2000);
     });
   }
@@ -85,7 +94,7 @@ add_task(function* test_cleared_alarm_does_not_fire() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-cleared");
   yield extension.unload();
 });
 
@@ -93,17 +102,22 @@ add_task(function* test_cleared_alarm_does_not_fire() {
 add_task(function* test_alarm_fires_with_when() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";
+    let timer;
 
     browser.alarms.onAlarm.addListener(alarm => {
       browser.test.assertEq(ALARM_NAME, alarm.name, "alarm has the expected name");
-      browser.test.notifyPass("alarms");
+      clearTimeout(timer);
+      browser.test.notifyPass("alarm-when");
     });
+
     browser.alarms.create(ALARM_NAME, {when: Date.now() + 1000});
-    setTimeout(() => {
+
+    timer = setTimeout(() => {
       browser.test.fail("alarm fired within expected time");
       browser.alarms.clear(ALARM_NAME).then(wasCleared => {
         browser.test.assertTrue(wasCleared, "alarm was cleared");
       });
+      browser.test.notifyFail("alarm-when");
     }, 10000);
   }
 
@@ -115,7 +129,7 @@ add_task(function* test_alarm_fires_with_when() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-when");
   yield extension.unload();
 });
 
@@ -131,7 +145,7 @@ add_task(function* test_alarm_clear_non_matching_name() {
       return browser.alarms.getAll();
     }).then(alarms => {
       browser.test.assertEq(1, alarms.length, "alarm was not removed");
-      browser.test.notifyPass("alarms");
+      browser.test.notifyPass("alarm-clear");
     });
   }
 
@@ -143,7 +157,7 @@ add_task(function* test_alarm_clear_non_matching_name() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-clear");
   yield extension.unload();
 });
 
@@ -160,7 +174,7 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
       return browser.alarms.getAll();
     }).then(alarms => {
       browser.test.assertEq(0, alarms.length, "alarm was removed");
-      browser.test.notifyPass("alarms");
+      browser.test.notifyPass("alarm-single-arg");
     });
   }
 
@@ -172,7 +186,7 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-single-arg");
   yield extension.unload();
 });
 
@@ -180,23 +194,28 @@ add_task(function* test_alarm_get_and_clear_single_argument() {
 add_task(function* test_periodic_alarm_fires() {
   function backgroundScript() {
     const ALARM_NAME = "test_ext_alarms";
-
     let count = 0;
+    let timer;
+
     browser.alarms.onAlarm.addListener(alarm => {
       browser.test.assertEq(alarm.name, ALARM_NAME, "alarm has the expected name");
       if (count++ === 3) {
+        clearTimeout(timer);
         browser.alarms.clear(ALARM_NAME).then(wasCleared => {
           browser.test.assertTrue(wasCleared, "alarm was cleared");
-          browser.test.notifyPass("alarms");
+          browser.test.notifyPass("alarm-periodic");
         });
       }
     });
+
     browser.alarms.create(ALARM_NAME, {periodInMinutes: 0.02});
-    setTimeout(() => {
-      browser.test.notify("alarm fired within expected time");
+
+    timer = setTimeout(() => {
+      browser.test.fail("alarm fired expected number of times");
       browser.alarms.clear(ALARM_NAME).then(wasCleared => {
         browser.test.assertTrue(wasCleared, "alarm was cleared");
       });
+      browser.test.notifyFail("alarm-periodic");
     }, 30000);
   }
 
@@ -208,7 +227,7 @@ add_task(function* test_periodic_alarm_fires() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-periodic");
   yield extension.unload();
 });
 
@@ -300,13 +319,13 @@ add_task(function* test_duplicate_alarm_name_replaces_alarm() {
             browser.alarms.clear("master alarm").then(wasCleared => {
               return browser.alarms.clear("child alarm");
             }).then(wasCleared => {
-              browser.test.notifyPass("alarms");
+              browser.test.notifyPass("alarm-duplicate");
             });
           }
         });
       } else {
         browser.test.fail("duplicate named alarm replaced existing alarm");
-        browser.test.notifyFail("alarms");
+        browser.test.notifyFail("alarm-duplicate");
       }
     });
 
@@ -321,7 +340,7 @@ add_task(function* test_duplicate_alarm_name_replaces_alarm() {
   });
 
   yield extension.startup();
-  yield extension.awaitFinish("alarms");
+  yield extension.awaitFinish("alarm-duplicate");
   yield extension.unload();
 });
 

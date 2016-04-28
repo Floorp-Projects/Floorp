@@ -32,13 +32,13 @@ function getSimpleMeasurementsFromTelemetryController() {
 }
 
 function initialiseTelemetry() {
-  return TelemetryController.setup().then(TelemetrySession.setup);
+  return TelemetryController.testSetup();
 }
 
 function run_test() {
   // Telemetry needs the AddonManager.
   loadAddonManager();
-  // Make profile available for |TelemetrySession.shutdown()|.
+  // Make profile available for |TelemetryController.testShutdown()|.
   do_get_profile();
 
   do_test_pending();
@@ -85,7 +85,7 @@ add_task(function* actualTest() {
   do_check_true(simpleMeasurements.bar > 1); // bar was included
   do_check_eq(undefined, simpleMeasurements.baz); // baz wasn't included since it wasn't added
 
-  yield TelemetrySession.shutdown(false);
+  yield TelemetryController.testShutdown();
 
   do_test_finished();
 });

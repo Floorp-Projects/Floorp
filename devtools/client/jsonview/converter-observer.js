@@ -12,18 +12,18 @@ const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // Load devtools module lazily.
-XPCOMUtils.defineLazyGetter(this, "devtools", function() {
+XPCOMUtils.defineLazyGetter(this, "devtools", function () {
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   return devtools;
 });
 
 // Load JsonView services lazily.
-XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
+XPCOMUtils.defineLazyGetter(this, "JsonViewService", function () {
   const {JsonViewService} = devtools.require("devtools/client/jsonview/converter-child");
   return JsonViewService;
 });
 
-XPCOMUtils.defineLazyGetter(this, "JsonViewSniffer", function() {
+XPCOMUtils.defineLazyGetter(this, "JsonViewSniffer", function () {
   const {JsonViewSniffer} = devtools.require("devtools/client/jsonview/converter-sniffer");
   return JsonViewSniffer;
 });
@@ -39,7 +39,7 @@ function ConverterObserver() {
 }
 
 ConverterObserver.prototype = {
-  initialize: function() {
+  initialize: function () {
     // Only the DevEdition has this feature available by default.
     // Users need to manually flip 'devtools.jsonview.enabled' preference
     // to have it available in other distributions.
@@ -51,7 +51,7 @@ ConverterObserver.prototype = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
-  observe: function(subject, topic, data) {
+  observe: function (subject, topic, data) {
     switch (topic) {
       case "xpcom-shutdown":
         this.onShutdown();
@@ -62,12 +62,12 @@ ConverterObserver.prototype = {
     }
   },
 
-  onShutdown: function() {
+  onShutdown: function () {
     Services.prefs.removeObserver(JSON_VIEW_PREF, observer);
     Services.obs.removeObserver(observer, "xpcom-shutdown");
   },
 
-  onPrefChanged: function() {
+  onPrefChanged: function () {
     if (this.isEnabled()) {
       this.register();
     } else {
@@ -75,17 +75,17 @@ ConverterObserver.prototype = {
     }
   },
 
-  register: function() {
+  register: function () {
     JsonViewSniffer.register();
     JsonViewService.register();
   },
 
-  unregister: function() {
+  unregister: function () {
     JsonViewSniffer.unregister();
     JsonViewService.unregister();
   },
 
-  isEnabled: function() {
+  isEnabled: function () {
     return Services.prefs.getBoolPref(JSON_VIEW_PREF);
   },
 };

@@ -16,25 +16,25 @@ const {NodeActor} = require("devtools/server/actors/inspector");
 var EventsFormActor = ActorClass({
   typeName: "eventsFormActor",
 
-  initialize: function() {
+  initialize: function () {
     Actor.prototype.initialize.apply(this, arguments);
   },
 
-  attach: method(function() {
+  attach: method(function () {
     Events.on(NodeActor, "form", this.onNodeActorForm);
   }, {
     request: {},
     response: {}
   }),
 
-  detach: method(function() {
+  detach: method(function () {
     Events.off(NodeActor, "form", this.onNodeActorForm);
   }, {
     request: {},
     response: {}
   }),
 
-  onNodeActorForm: function(event) {
+  onNodeActorForm: function (event) {
     let nodeActor = event.target;
     if (nodeActor.rawNode.id == "container") {
       let form = event.data;
@@ -44,7 +44,7 @@ var EventsFormActor = ActorClass({
 });
 
 var EventsFormFront = FrontClass(EventsFormActor, {
-  initialize: function(client, form) {
+  initialize: function (client, form) {
     Front.prototype.initialize.apply(this, arguments);
 
     this.actorID = form[EventsFormActor.prototype.typeName];
