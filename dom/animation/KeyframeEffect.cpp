@@ -1418,6 +1418,11 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     ResetWinsInCascade();
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
+
+    nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
+    if (mAnimation) {
+      nsNodeUtils::AnimationRemoved(mAnimation);
+    }
   }
 
   mTarget = newTarget;
@@ -1427,6 +1432,11 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     MaybeUpdateProperties();
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
+
+    nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
+    if (mAnimation) {
+      nsNodeUtils::AnimationAdded(mAnimation);
+    }
   }
 }
 
