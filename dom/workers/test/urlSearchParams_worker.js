@@ -83,6 +83,9 @@ onmessage = function() {
       { input: '%a_=a', data: { '%a_' : ['a'] } },
       { input: '%61=a', data: { 'a' : ['a'] } },
       { input: '%61+%4d%4D=', data: { 'a MM' : [''] } },
+      { input: '?a=1', data: { 'a' : ['1'] } },
+      { input: '?', data: {} },
+      { input: '?=b', data: { '' : ['b'] } },
     ];
 
     for (var i = 0; i < checks.length; ++i) {
