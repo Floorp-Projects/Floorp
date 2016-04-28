@@ -419,8 +419,8 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
         NS_LITERAL_CSTRING("Dispatching UnloadPlugins"));
 #endif
       gmpThread->Dispatch(
-        NS_NewRunnableMethod(this,
-                             &GeckoMediaPluginServiceParent::UnloadPlugins),
+        NewRunnableMethod(this,
+                          &GeckoMediaPluginServiceParent::UnloadPlugins),
         NS_DISPATCH_NORMAL);
 
 #ifdef MOZ_CRASHREPORTER
@@ -493,7 +493,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
   } else if (!strcmp("browser:purge-session-history", aTopic)) {
     // Clear everything!
     if (!aSomeData || nsDependentString(aSomeData).IsEmpty()) {
-      return GMPDispatch(NS_NewRunnableMethod(
+      return GMPDispatch(NewRunnableMethod(
           this, &GeckoMediaPluginServiceParent::ClearStorage));
     }
 
@@ -503,7 +503,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    return GMPDispatch(NS_NewRunnableMethodWithArg<PRTime>(
+    return GMPDispatch(NewRunnableMethod<PRTime>(
         this, &GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread,
         t));
   }
@@ -605,7 +605,7 @@ GeckoMediaPluginServiceParent::AsyncShutdownComplete(GMPParent* aParent)
   if (mShuttingDownOnGMPThread) {
     // The main thread may be waiting for async shutdown of plugins,
     // one of which has completed. Wake up the main thread by sending a task.
-    nsCOMPtr<nsIRunnable> task(NS_NewRunnableMethod(
+    nsCOMPtr<nsIRunnable> task(NewRunnableMethod(
       this, &GeckoMediaPluginServiceParent::NotifyAsyncShutdownComplete));
     NS_DispatchToMainThread(task);
   }
@@ -737,7 +737,7 @@ GeckoMediaPluginServiceParent::UnloadPlugins()
       SetAsyncShutdownPluginState(nullptr, '3',
         NS_LITERAL_CSTRING("Dispatching sync-shutdown-complete"));
 #endif
-  nsCOMPtr<nsIRunnable> task(NS_NewRunnableMethod(
+  nsCOMPtr<nsIRunnable> task(NewRunnableMethod(
     this, &GeckoMediaPluginServiceParent::NotifySyncShutdownComplete));
   NS_DispatchToMainThread(task);
 }
@@ -1749,7 +1749,7 @@ NS_IMETHODIMP
 GeckoMediaPluginServiceParent::ForgetThisSite(const nsAString& aSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return GMPDispatch(NS_NewRunnableMethodWithArg<nsCString>(
+  return GMPDispatch(NewRunnableMethod<nsCString>(
       this, &GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread,
       NS_ConvertUTF16toUTF8(aSite)));
 }

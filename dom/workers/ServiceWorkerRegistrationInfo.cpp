@@ -168,10 +168,9 @@ ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId)
 void
 ServiceWorkerRegistrationInfo::TryToActivateAsync()
 {
-  nsCOMPtr<nsIRunnable> r =
-  NS_NewRunnableMethod(this,
-                       &ServiceWorkerRegistrationInfo::TryToActivate);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
+  MOZ_ALWAYS_SUCCEEDS(
+    NS_DispatchToMainThread(NewRunnableMethod(this,
+                                              &ServiceWorkerRegistrationInfo::TryToActivate)));
 }
 
 /*
@@ -203,14 +202,14 @@ ServiceWorkerRegistrationInfo::Activate()
 
   // "Queue a task to fire a simple event named controllerchange..."
   nsCOMPtr<nsIRunnable> controllerChangeRunnable =
-    NS_NewRunnableMethodWithArg<RefPtr<ServiceWorkerRegistrationInfo>>(
+    NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
       swm, &ServiceWorkerManager::FireControllerChange, this);
   NS_DispatchToMainThread(controllerChangeRunnable);
 
   nsCOMPtr<nsIRunnable> failRunnable =
-    NS_NewRunnableMethodWithArg<bool>(this,
-                                      &ServiceWorkerRegistrationInfo::FinishActivate,
-                                      false /* success */);
+    NewRunnableMethod<bool>(this,
+                            &ServiceWorkerRegistrationInfo::FinishActivate,
+                            false /* success */);
 
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> handle(
     new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(this));

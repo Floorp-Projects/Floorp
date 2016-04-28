@@ -34,8 +34,7 @@ ContentBridgeChild::~ContentBridgeChild()
 void
 ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &ContentBridgeChild::DeferredDestroy);
-  MessageLoop::current()->PostTask(runnable.forget());
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &ContentBridgeChild::DeferredDestroy));
 }
 
 /*static*/ ContentBridgeChild*

@@ -354,7 +354,7 @@ status_t AudioOffloadPlayer::DoSeek()
 
   if (!mSeekPromise.IsEmpty()) {
     nsCOMPtr<nsIRunnable> nsEvent =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
+      NewRunnableMethod<MediaDecoderEventVisibility>(
         mObserver,
         &MediaDecoder::SeekingStarted,
         mSeekTarget.mEventVisibility);
@@ -425,16 +425,14 @@ void AudioOffloadPlayer::NotifyAudioEOS()
     MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
     mSeekPromise.Resolve(val, __func__);
   }
-  nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-      &MediaDecoder::PlaybackEnded);
-  NS_DispatchToMainThread(nsEvent);
+  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
+                                            &MediaDecoder::PlaybackEnded));
 }
 
 void AudioOffloadPlayer::NotifyPositionChanged()
 {
-  nsCOMPtr<nsIRunnable> nsEvent =
-    NS_NewRunnableMethod(mObserver, &MediaOmxCommonDecoder::NotifyOffloadPlayerPositionChanged);
-  NS_DispatchToMainThread(nsEvent);
+  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
+                                            &MediaOmxCommonDecoder::NotifyOffloadPlayerPositionChanged));
 }
 
 void AudioOffloadPlayer::NotifyAudioTearDown()
@@ -448,9 +446,8 @@ void AudioOffloadPlayer::NotifyAudioTearDown()
     MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
     mSeekPromise.Resolve(val, __func__);
   }
-  nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
-      &MediaOmxCommonDecoder::AudioOffloadTearDown);
-  NS_DispatchToMainThread(nsEvent);
+  NS_DispatchToMainThread(NewRunnableMethod(mObserver,
+                                            &MediaOmxCommonDecoder::AudioOffloadTearDown));
 }
 
 // static

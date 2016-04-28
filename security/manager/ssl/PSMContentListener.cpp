@@ -152,7 +152,7 @@ PSMContentStreamListener::OnStopRequest(nsIRequest* request,
   // Because importing the cert can spin the event loop (via alerts), we can't
   // do it here. Do it off the event loop instead.
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableMethod(this, &PSMContentStreamListener::ImportCertificate);
+    NewRunnableMethod(this, &PSMContentStreamListener::ImportCertificate);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r));
 
   return NS_OK;

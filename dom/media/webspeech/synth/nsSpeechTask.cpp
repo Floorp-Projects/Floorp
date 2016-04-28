@@ -61,12 +61,12 @@ public:
           if (!mStarted) {
             mStarted = true;
             nsCOMPtr<nsIRunnable> startRunnable =
-              NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
+              NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
             aGraph->DispatchToMainThreadAfterStreamStateUpdate(startRunnable.forget());
           }
 
           nsCOMPtr<nsIRunnable> endRunnable =
-            NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyFinished);
+            NewRunnableMethod(this, &SynthStreamListener::DoNotifyFinished);
           aGraph->DispatchToMainThreadAfterStreamStateUpdate(endRunnable.forget());
         }
         break;
@@ -85,7 +85,7 @@ public:
     if (aBlocked == MediaStreamListener::UNBLOCKED && !mStarted) {
       mStarted = true;
       nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
+        NewRunnableMethod(this, &SynthStreamListener::DoNotifyStarted);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
     }
   }

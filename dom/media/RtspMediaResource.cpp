@@ -525,8 +525,8 @@ void RtspMediaResource::SetSuspend(bool aIsSuspend)
   RTSPMLOG("SetSuspend %d",aIsSuspend);
 
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<bool>(this, &RtspMediaResource::NotifySuspend,
-                                      aIsSuspend);
+    NewRunnableMethod<bool>(this, &RtspMediaResource::NotifySuspend,
+                            aIsSuspend);
   NS_DispatchToMainThread(runnable);
 }
 

@@ -1015,7 +1015,7 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
     if (ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
         // XXXldb This should check that it's a token, not just a substring.
         persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
-        nsContentUtils::AddScriptRunner(NS_NewRunnableMethodWithArgs
+        nsContentUtils::AddScriptRunner(NewRunnableMethod
             <nsIContent*, int32_t, nsIAtom*>
             (this, &XULDocument::DoPersist, aElement, kNameSpaceID_None,
             aAttribute));
@@ -3135,7 +3135,7 @@ XULDocument::MaybeBroadcast()
         if (!nsContentUtils::IsSafeToRunScript()) {
             if (!mInDestructor) {
                 nsContentUtils::AddScriptRunner(
-                    NS_NewRunnableMethod(this, &XULDocument::MaybeBroadcast));
+                    NewRunnableMethod(this, &XULDocument::MaybeBroadcast));
             }
             return;
         }

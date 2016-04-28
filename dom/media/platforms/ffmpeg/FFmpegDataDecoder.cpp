@@ -104,7 +104,7 @@ FFmpegDataDecoder<LIBAV_VER>::Shutdown()
 {
   if (mTaskQueue) {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown);
+      NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown);
     mTaskQueue->Dispatch(runnable.forget());
   } else {
     ProcessShutdown();
@@ -119,7 +119,7 @@ FFmpegDataDecoder<LIBAV_VER>::Flush()
   mIsFlushing = true;
   mTaskQueue->Flush();
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
+    NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
   MonitorAutoLock mon(mMonitor);
   mTaskQueue->Dispatch(runnable.forget());
   while (mIsFlushing) {
@@ -133,7 +133,7 @@ FFmpegDataDecoder<LIBAV_VER>::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
+    NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessDrain);
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }

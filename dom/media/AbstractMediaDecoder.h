@@ -74,10 +74,9 @@ protected:
 public:
   void DispatchUpdateEstimatedMediaDuration(int64_t aDuration)
   {
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableMethodWithArg<int64_t>(this, &AbstractMediaDecoder::UpdateEstimatedMediaDuration,
-                                           aDuration);
-    NS_DispatchToMainThread(r);
+    NS_DispatchToMainThread(NewRunnableMethod<int64_t>(this,
+                                                       &AbstractMediaDecoder::UpdateEstimatedMediaDuration,
+                                                       aDuration));
   }
 
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;

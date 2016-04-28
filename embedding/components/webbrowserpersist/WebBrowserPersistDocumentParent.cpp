@@ -43,7 +43,7 @@ WebBrowserPersistDocumentParent::ActorDestroy(ActorDestroyReason aWhy)
         // dropping the last reference to another document's
         // WebBrowserPersistRemoteDocument.  To avoid that, defer the
         // callback until after the entire subtree is destroyed.
-        nsCOMPtr<nsIRunnable> errorLater = NS_NewRunnableMethodWithArg
+        nsCOMPtr<nsIRunnable> errorLater = NewRunnableMethod
             <nsresult>(mOnReady, &nsIWebBrowserPersistDocumentReceiver::OnError,
                        NS_ERROR_FAILURE);
         NS_DispatchToCurrentThread(errorLater);

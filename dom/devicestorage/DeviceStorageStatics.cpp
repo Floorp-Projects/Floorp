@@ -488,7 +488,7 @@ DeviceStorageStatics::AddListener(nsDOMDeviceStorage* aListener)
   MOZ_ASSERT(sInstance->mInitialized);
   if (sInstance->mListeners.IsEmpty()) {
     NS_DispatchToMainThread(
-      NS_NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Register));
+      NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Register));
   }
 
   RefPtr<ListenerWrapper> wrapper =
@@ -519,7 +519,7 @@ DeviceStorageStatics::RemoveListener(nsDOMDeviceStorage* aListener)
 
   if (removed && sInstance->mListeners.IsEmpty()) {
     NS_DispatchToMainThread(
-      NS_NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Deregister));
+      NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Deregister));
   }
 }
 

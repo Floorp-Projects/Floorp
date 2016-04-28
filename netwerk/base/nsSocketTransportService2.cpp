@@ -919,7 +919,7 @@ nsSocketTransportService::Run()
             mRawThread->HasPendingEvents(&pendingEvents);
             if (pendingEvents) {
                 if (!mServingPendingQueue) {
-                    nsresult rv = Dispatch(NS_NewRunnableMethod(this,
+                    nsresult rv = Dispatch(NewRunnableMethod(this,
                         &nsSocketTransportService::MarkTheLastElementOfPendingQueue),
                         nsIEventTarget::DISPATCH_NORMAL);
                     if (NS_FAILED(rv)) {
@@ -1261,7 +1261,7 @@ nsSocketTransportService::OnKeepaliveEnabledPrefChange()
     // Dispatch to socket thread if we're not executing there.
     if (PR_GetCurrentThread() != gSocketThread) {
         gSocketTransportService->Dispatch(
-            NS_NewRunnableMethod(
+            NewRunnableMethod(
                 this, &nsSocketTransportService::OnKeepaliveEnabledPrefChange),
             NS_DISPATCH_NORMAL);
         return;
@@ -1313,8 +1313,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
 
     if (!strcmp(topic, "last-pb-context-exited")) {
         nsCOMPtr<nsIRunnable> ev =
-          NS_NewRunnableMethod(this,
-                               &nsSocketTransportService::ClosePrivateConnections);
+          NewRunnableMethod(this,
+			    &nsSocketTransportService::ClosePrivateConnections);
         nsresult rv = Dispatch(ev, nsIEventTarget::DISPATCH_NORMAL);
         NS_ENSURE_SUCCESS(rv, rv);
     }
