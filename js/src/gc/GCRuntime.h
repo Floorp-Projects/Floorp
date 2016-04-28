@@ -8,6 +8,7 @@
 #define gc_GCRuntime_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/EnumSet.h"
 
 #include "jsfriendapi.h"
 #include "jsgc.h"
@@ -577,6 +578,8 @@ class ChainedIter
 
 typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy> RootedValueMap;
 
+using AllocKinds = mozilla::EnumSet<AllocKind>;
+
 class GCRuntime
 {
   public:
@@ -970,6 +973,7 @@ class GCRuntime
     bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                         SliceBudget& sliceBudget);
     void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
+    void updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount);
     void updateAllCellPointers(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
     void protectAndHoldArenas(Arena* arenaList);
