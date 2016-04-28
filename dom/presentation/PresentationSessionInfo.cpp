@@ -789,6 +789,10 @@ PresentationPresentingInfo::Shutdown(nsresult aReason)
     mTimer->Cancel();
   }
 
+  if (mDevice) {
+    mDevice->Disconnect();
+  }
+  mDevice = nullptr;
   mLoadingCallback = nullptr;
   mRequesterDescription = nullptr;
   mPromise = nullptr;
