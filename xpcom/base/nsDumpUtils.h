@@ -89,8 +89,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
 
-    XRE_GetIOMessageLoop()->PostTask(
-      NewRunnableMethod(this, &FdWatcher::StopWatching));
+    RefPtr<mozilla::Runnable> runnable =
+      NS_NewRunnableMethod(this, &FdWatcher::StopWatching);
+    XRE_GetIOMessageLoop()->PostTask(runnable.forget());
 
     return NS_OK;
   }
