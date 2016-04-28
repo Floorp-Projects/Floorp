@@ -136,6 +136,7 @@ PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
 _DEBUG_ASFLAGS :=
 _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=
+_DEBUG_RUSTFLAGS :=
 
 ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   ifeq ($(AS),$(YASM))
@@ -151,12 +152,14 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   endif
   _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
   _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
+  _DEBUG_RUSTFLAGS += -g
 endif
 
 ASFLAGS += $(_DEBUG_ASFLAGS)
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
+RUSTFLAGS += $(_DEBUG_RUSTFLAGS)
 
 # XXX: What does this? Bug 482434 filed for better explanation.
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
