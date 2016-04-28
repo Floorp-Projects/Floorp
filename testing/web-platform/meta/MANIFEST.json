@@ -35394,6 +35394,12 @@
             "url": "/web-animations/animation/startTime.html"
           }
         ],
+        "web-animations/keyframe-effect/setTarget.html": [
+          {
+            "path": "web-animations/keyframe-effect/setTarget.html",
+            "url": "/web-animations/keyframe-effect/setTarget.html"
+          }
+        ],
         "web-animations/timing-model/animation-effects/active-time.html": [
           {
             "path": "web-animations/timing-model/animation-effects/active-time.html",
