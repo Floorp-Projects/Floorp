@@ -147,7 +147,7 @@ HTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   void (HTMLStyleElement::*update)() = &HTMLStyleElement::UpdateStyleSheetInternal;
-  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(this, update));
 
   return rv;  
 }

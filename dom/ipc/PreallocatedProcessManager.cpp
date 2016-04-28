@@ -204,9 +204,8 @@ PreallocatedProcessManagerImpl::AllocateAfterDelay()
     return;
   }
 
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateOnIdle);
   MessageLoop::current()->PostDelayedTask(
-    runnable.forget(),
+    NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateOnIdle),
     Preferences::GetUint("dom.ipc.processPrelaunch.delayMs",
                          DEFAULT_ALLOCATE_DELAY));
 }
@@ -218,8 +217,7 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
     return;
   }
 
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow);
-  MessageLoop::current()->PostIdleTask(runnable.forget());
+  MessageLoop::current()->PostIdleTask(NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow));
 }
 
 void

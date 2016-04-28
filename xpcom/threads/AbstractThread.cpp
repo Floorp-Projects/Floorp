@@ -88,7 +88,7 @@ public:
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
 
-      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &XPCOMThreadWrapper::FireTailDispatcher);
+      nsCOMPtr<nsIRunnable> event = NewRunnableMethod(this, &XPCOMThreadWrapper::FireTailDispatcher);
       nsContentUtils::RunInStableState(event.forget());
     }
 

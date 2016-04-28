@@ -1471,7 +1471,7 @@ FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
     if (!mDelayedLoadCheck) {
       mDelayedLoadCheck = true;
       nsCOMPtr<nsIRunnable> checkTask =
-        NS_NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
+        NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
       NS_DispatchToMainThread(checkTask);
     }
   }

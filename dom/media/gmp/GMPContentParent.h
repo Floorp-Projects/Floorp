@@ -79,7 +79,7 @@ private:
   bool DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor) override;
 
   void CloseIfUnused();
-  // Needed because NS_NewRunnableMethod tried to use the class that the method
+  // Needed because NewRunnableMethod tried to use the class that the method
   // lives on to store the receiver, but PGMPContentParent isn't refcounted.
   void Close()
   {

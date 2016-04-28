@@ -54,9 +54,7 @@ CacheFileChunk::DispatchRelease()
     return false;
   }
 
-  RefPtr<nsRunnableMethod<CacheFileChunk, MozExternalRefCountType, false> > event =
-    NS_NewNonOwningRunnableMethod(this, &CacheFileChunk::Release);
-  NS_DispatchToMainThread(event);
+  NS_DispatchToMainThread(NewNonOwningRunnableMethod(this, &CacheFileChunk::Release));
 
   return true;
 }
