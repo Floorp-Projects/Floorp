@@ -1,6 +1,9 @@
 if (!wasmIsSupported())
      quit();
 
+// FIXME: Enable this test once binary-to-text is implemented again.
+quit();
+
 load(libdir + "asserts.js");
 
 var caught = false;

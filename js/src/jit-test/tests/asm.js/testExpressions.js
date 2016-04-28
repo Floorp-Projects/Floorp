@@ -56,6 +56,14 @@ assertEq(f(-1), (1048575*-1)|0);
 assertEq(f(INT32_MIN), (1048575*INT32_MIN)|0);
 assertEq(f(INT32_MAX), (1048575*INT32_MAX)|0);
 
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; var j=0; j=~i; return j|0 } return f"));
+assertEq(f(0), ~0);
+assertEq(f(3), ~3);
+assertEq(f(-3), ~-3);
+assertEq(f(INT32_MAX), ~INT32_MAX);
+assertEq(f(INT32_MIN), ~INT32_MIN);
+assertEq(f(UINT32_MAX), ~UINT32_MAX);
+
 var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=+i; var j=0; j=~~i; return j|0 } return f"));
 assertEq(f(0), 0);
 assertEq(f(3.5), 3);
