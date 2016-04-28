@@ -97,7 +97,6 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
   MOZ_ASSERT(aTiming);
-  MOZ_ASSERT(aTarget, "null animation target is not yet supported");
 }
 
 JSObject*
@@ -737,28 +736,22 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
-  if (aTarget.IsNull()) {
-    // We don't support null targets yet.
-    aRv.Throw(NS_ERROR_DOM_ANIM_NO_TARGET_ERR);
-    return nullptr;
-  }
-
-  const ElementOrCSSPseudoElement& target = aTarget.Value();
-  MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
-             "Uninitialized target");
-
   RefPtr<Element> targetElement;
   CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
-  if (target.IsElement()) {
-    targetElement = &target.GetAsElement();
-  } else {
-    targetElement = target.GetAsCSSPseudoElement().ParentElement();
-    pseudoType = target.GetAsCSSPseudoElement().GetType();
+  if (!aTarget.IsNull()) {
+    const ElementOrCSSPseudoElement& target = aTarget.Value();
+    MOZ_ASSERT(target.IsElement() || target.IsCSSPseudoElement(),
+               "Uninitialized target");
+    if (target.IsElement()) {
+      targetElement = &target.GetAsElement();
+    } else {
+      targetElement = target.GetAsCSSPseudoElement().ParentElement();
+      pseudoType = target.GetAsCSSPseudoElement().GetType();
+    }
   }
 
   RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(targetElement->OwnerDoc(), targetElement,
-                           pseudoType, timingParams);
+    new KeyframeEffectType(doc, targetElement, pseudoType, timingParams);
   effect->SetFrames(aGlobal.Context(), aFrames, aRv);
   if (aRv.Failed()) {
     return nullptr;
