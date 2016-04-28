@@ -742,6 +742,13 @@ NS_NewRunnableMethod(PtrType aPtr, Method aMethod)
 }
 
 template<typename PtrType, typename Method>
+typename nsRunnableMethodTraits<Method, true, true>::base_type*
+NS_NewCancelableRunnableMethod(PtrType aPtr, Method aMethod)
+{
+  return new nsRunnableMethodImpl<Method, true, true>(aPtr, aMethod);
+}
+
+template<typename PtrType, typename Method>
 typename nsRunnableMethodTraits<Method, false, false>::base_type*
 NS_NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
@@ -789,6 +796,16 @@ NS_NewNonOwningRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod,
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
   return new nsRunnableMethodImpl<Method, false, false, Storages...>(
+      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...);
+}
+
+template<typename... Storages, typename Method, typename PtrType, typename... Args>
+typename nsRunnableMethodTraits<Method, true, true>::base_type*
+NS_NewCancelableRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
+{
+  static_assert(sizeof...(Storages) == sizeof...(Args),
+                "<Storages...> size should be equal to number of arguments");
+  return new nsRunnableMethodImpl<Method, true, true, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...);
 }
 
