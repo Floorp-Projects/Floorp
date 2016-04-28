@@ -2404,7 +2404,8 @@ SetBackgroundClipRegion(DisplayListClipState::AutoSaveRestore& aClipState,
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
                                                      const nsRect& aBackgroundRect,
-                                                     nsDisplayList* aList)
+                                                     nsDisplayList* aList,
+                                                     bool aAllowWillPaintBorderOptimization)
 {
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
@@ -2433,7 +2434,8 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   const nsStyleEffects* effectsStyle = aFrame->StyleEffects();
   bool hasInsetShadow = effectsStyle->mBoxShadow &&
                         effectsStyle->mBoxShadow->HasShadowWithInset(true);
-  bool willPaintBorder = !isThemed && !hasInsetShadow &&
+  bool willPaintBorder = aAllowWillPaintBorderOptimization &&
+                         !isThemed && !hasInsetShadow &&
                          borderStyle->HasBorder();
 
   nsPoint toRef = aBuilder->ToReferenceFrame(aFrame);
