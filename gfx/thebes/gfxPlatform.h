@@ -665,6 +665,8 @@ protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
+    virtual void InitAcceleration();
+
     /**
      * Initialized hardware vsync based on each platform.
      */
