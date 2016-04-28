@@ -22,6 +22,7 @@
 #include "gfxPrefs.h"
 #include "gfxEnv.h"
 #include "gfxTextRun.h"
+#include "gfxConfig.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -151,6 +152,7 @@ void ShutdownTileCache();
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
+using namespace mozilla::gfx;
 
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
@@ -599,8 +601,8 @@ gfxPlatform::Init()
       // Layers prefs
       forcedPrefs.AppendPrintf("-L%d%d%d%d%d",
                                gfxPrefs::LayersAMDSwitchableGfxEnabled(),
-                               gfxPrefs::LayersAccelerationDisabled(),
-                               gfxPrefs::LayersAccelerationForceEnabled(),
+                               gfxPrefs::LayersAccelerationDisabledDoNotUseDirectly(),
+                               gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly(),
                                gfxPrefs::LayersD3D11DisableWARP(),
                                gfxPrefs::LayersD3D11ForceWARP());
       // WebGL prefs
@@ -2066,6 +2068,8 @@ gfxPlatform::InitAcceleration()
     return;
   }
 
+  InitCompositorAccelerationPrefs();
+
   // If this is called for the first time on a non-main thread, we're screwed.
   // At the moment there's no explicit guarantee that the main thread calls
   // this before the compositor thread, but let's at least make the assumption
@@ -2079,14 +2083,14 @@ gfxPlatform::InitAcceleration()
   nsCString discardFailureId;
   int32_t status;
 #ifdef XP_WIN
-  if (gfxPrefs::LayersAccelerationForceEnabled()) {
+  if (gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     sLayersSupportsD3D9 = true;
     sLayersSupportsD3D11 = true;
-  } else if (!gfxPrefs::LayersAccelerationDisabled() && gfxInfo) {
+  } else if (!gfxPrefs::LayersAccelerationDisabledDoNotUseDirectly() && gfxInfo) {
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, discardFailureId, &status))) {
       if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
-          MOZ_ASSERT(!sPrefBrowserTabsRemoteAutostart || IsVistaOrLater());
-          sLayersSupportsD3D9 = true;
+        MOZ_ASSERT(!sPrefBrowserTabsRemoteAutostart || IsVistaOrLater());
+        sLayersSupportsD3D9 = true;
       }
     }
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, discardFailureId, &status))) {
@@ -2124,6 +2128,41 @@ gfxPlatform::InitAcceleration()
   sLayersAccelerationPrefsInitialized = true;
 }
 
+void
+gfxPlatform::InitCompositorAccelerationPrefs()
+{
+  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+
+  // Base value - does the platform allow acceleration?
+  if (gfxConfig::SetDefault(Feature::HW_COMPOSITING,
+                            AccelerateLayersByDefault(),
+                            FeatureStatus::Blocked,
+                            "Acceleration blocked by platform"))
+  {
+    if (gfxPrefs::LayersAccelerationDisabledDoNotUseDirectly()) {
+      gfxConfig::UserDisable(Feature::HW_COMPOSITING, "Disabled by pref");
+    } else if (acceleratedEnv && *acceleratedEnv == '0') {
+      gfxConfig::UserDisable(Feature::HW_COMPOSITING, "Disabled by envvar");
+    }
+  } else {
+    if (acceleratedEnv && *acceleratedEnv == '1') {
+      gfxConfig::UserEnable(Feature::HW_COMPOSITING, "Enabled by envvar");
+    }
+  }
+
+  // This has specific meaning elsewhere, so we always record it.
+  if (gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly()) {
+    gfxConfig::UserForceEnable(Feature::HW_COMPOSITING, "Force-enabled by pref");
+  }
+
+  // Safe mode trumps everything, so we update it as a runtime status.
+  gfxConfig::UpdateIfFailed(
+    Feature::HW_COMPOSITING,
+    !InSafeMode(),
+    FeatureStatus::Blocked,
+    "Acceleration blocked by safe-mode");
+}
+
 bool
 gfxPlatform::CanUseDirect3D9()
 {
@@ -2156,28 +2195,6 @@ gfxPlatform::CanUseDirect3D11ANGLE()
 {
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return gANGLESupportsD3D11;
-}
-
-bool
-gfxPlatform::ShouldUseLayersAcceleration()
-{
-  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-  if (gfxPrefs::LayersAccelerationDisabled() ||
-      InSafeMode() ||
-      (acceleratedEnv && *acceleratedEnv == '0'))
-  {
-    return false;
-  }
-  if (gfxPrefs::LayersAccelerationForceEnabled()) {
-    return true;
-  }
-  if (AccelerateLayersByDefault()) {
-    return true;
-  }
-  if (acceleratedEnv && *acceleratedEnv != '0') {
-    return true;
-  }
-  return false;
 }
 
 bool
@@ -2232,7 +2249,7 @@ gfxPlatform::UsesOffMainThreadCompositing()
       !gfxPrefs::LayersOffMainThreadCompositionForceDisabled();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
-    result |= gfxPrefs::LayersAccelerationForceEnabled();
+    result |= gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly();
 
 #endif
     firstTime = false;
@@ -2362,7 +2379,7 @@ AllowOpenGL(bool* aWhitelisted)
     }
   }
 
-  return gfxPrefs::LayersAccelerationForceEnabled();
+  return gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING);
 }
 
 void
@@ -2425,7 +2442,7 @@ void
 gfxPlatform::GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
-  aOut->useAcceleration() = ShouldUseLayersAcceleration();
+  aOut->useAcceleration() = gfxConfig::IsEnabled(Feature::HW_COMPOSITING);
 }
 
 void
