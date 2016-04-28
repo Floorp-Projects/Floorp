@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Ci, Cu} = require("chrome");
-const {rgbToHsl} = require("devtools/client/shared/css-color").colorUtils;
+const {rgbToHsl, rgbToColorName} =
+      require("devtools/client/shared/css-color").colorUtils;
 const Telemetry = require("devtools/client/shared/telemetry");
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
 const promise = require("promise");
@@ -806,7 +807,7 @@ function toColorString(rgb, format) {
     case "name":
       let str;
       try {
-        str = DOMUtils.rgbToColorName(r, g, b);
+        str = rgbToColorName(r, g, b);
       } catch(e) {
         str = hexString(rgb);
       }
