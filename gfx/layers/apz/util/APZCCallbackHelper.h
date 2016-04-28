@@ -141,9 +141,9 @@ public:
     /* Figure out the allowed touch behaviors of each touch point in |aEvent|
      * and send that information to the provided callback. */
     static void SendSetAllowedTouchBehaviorNotification(nsIWidget* aWidget,
-                                                         const WidgetTouchEvent& aEvent,
-                                                         uint64_t aInputBlockId,
-                                                         const SetAllowedTouchBehaviorCallback& aCallback);
+                                                        const WidgetTouchEvent& aEvent,
+                                                        uint64_t aInputBlockId,
+                                                        const SetAllowedTouchBehaviorCallback& aCallback);
 
     /* Notify content of a mouse scroll testing event. */
     static void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent);
