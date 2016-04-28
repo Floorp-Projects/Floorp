@@ -62,15 +62,8 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoBack) {
-              try {
-                this.userTypedClear++;
-                this._wrapURIChangeCall(() => webNavigation.goBack());
-              } finally {
-                if (this.userTypedClear)
-                  this.userTypedClear--;
-              }
-            }
+            if (webNavigation.canGoBack)
+              this._wrapURIChangeCall(() => webNavigation.goBack());
           ]]>
         </body>
       </method>
@@ -79,15 +72,8 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoForward) {
-              try {
-                this.userTypedClear++;
-                this._wrapURIChangeCall(() => webNavigation.goForward());
-              } finally {
-                if (this.userTypedClear)
-                  this.userTypedClear--;
-              }
-            }
+            if (webNavigation.canGoForward)
+              this._wrapURIChangeCall(() => webNavigation.goForward());
           ]]>
         </body>
       </method>
@@ -162,18 +148,10 @@
               aPostData = params.postData;
             }
 
-            if (!(aFlags & this.webNavigation.LOAD_FLAGS_FROM_EXTERNAL))
-              this.userTypedClear++;
-
-            try {
             this._wrapURIChangeCall(() =>
               this.webNavigation.loadURIWithOptions(
                   aURI, aFlags, aReferrerURI, aReferrerPolicy,
                   aPostData, null, null));
-            } finally {
-              if (this.userTypedClear)
-                this.userTypedClear--;
-            }
           ]]>
         </body>
       </method>
@@ -215,13 +193,7 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
-            try {
-              this.userTypedClear++;
-              this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(aIndex));
-            } finally {
-              if (this.userTypedClear)
-                this.userTypedClear--;
-            }
+            this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(aIndex));
           ]]>
         </body>
       </method>
@@ -838,48 +810,28 @@
         ]]></body>
       </method>
 
-      <!--
-        This field tracks the location bar state. The value that the user typed
-        in to the location bar may not be changed while this field is zero.
-        However invoking a load will temporarily increase this field to allow
-        the location bar to be updated to the new URL.
+      <field name="urlbarChangeTracker">
+        ({
+          _startedLoadSinceLastUserTyping: false,
 
-        Case 1: Anchor scroll
-          The user appends the anchor to the URL. This sets the location bar
-          into typed state, and disables changes to the location bar. The user
-          then requests the scroll. loadURIWithFlags temporarily increases the
-          flag by 1 so that the anchor scroll's location change resets the
-          location bar state.
-
-        Case 2: Interrupted load
-          The user types in and submits the URL. This triggers an asynchronous
-          network load which increases the flag by 2. (The temporary increase
-          from loadURIWithFlags is not noticeable in this case.) When the load
-          is interrupted the flag returns to zero, and the location bar stays
-          in typed state.
-
-        Case 3: New load
-          This works like case 2, but as the load is not interrupted the
-          location changes while the flag is still 2 thus resetting the
-          location bar state.
-
-        Case 4: Corrected load
-          This is a combination of case 2 and case 3, except that the original
-          load is interrupted by the new load. Normally cancelling and starting
-          a new load would reset the flag to 0 and then increase it to 2 again.
-          However both actions occur as a consequence of the loadURIWithFlags
-          invocation, which adds its temporary increase in to the mix. Since
-          the new URL would have been typed in the flag would have been reset
-          before loadURIWithFlags incremented it. The interruption resets the
-          flag to 0 and increases it to 2. Although loadURIWithFlags will
-          decrement the flag it remains at 1 thus allowing the location bar
-          state to be reset when the new load changes the location.
-          This case also applies when loading into a new browser, as this
-          interrupts the default load of about:blank.
-      -->
-      <field name="userTypedClear">
-        1
+          startedLoad() {
+            this._startedLoadSinceLastUserTyping = true;
+          },
+          finishedLoad() {
+            this._startedLoadSinceLastUserTyping = false;
+          },
+          userTyped() {
+            this._startedLoadSinceLastUserTyping = false;
+          },
+        })
       </field>
+
+      <method name="didStartLoadSinceLastUserTyping">
+        <body><![CDATA[
+          return !this.inLoadURI &&
+                 this.urlbarChangeTracker._startedLoadSinceLastUserTyping;
+        ]]></body>
+      </method>
 
       <field name="_userTypedValue">
         null
@@ -888,7 +840,7 @@
       <property name="userTypedValue"
                 onget="return this._userTypedValue;">
         <setter><![CDATA[
-          this.userTypedClear = 0;
+          this.urlbarChangeTracker.userTyped();
           this._userTypedValue = val;
           return val;
         ]]></setter>
