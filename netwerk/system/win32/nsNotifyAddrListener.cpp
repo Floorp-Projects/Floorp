@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We define this to make our use of inet_ntoa() pass. The "proper" function
+// inet_ntop() doesn't exist on Windows XP.
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
@@ -29,6 +33,8 @@
 #include "mozilla/Services.h"
 #include "nsCRT.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SHA1.h"
+#include "mozilla/Base64.h"
 
 #include <iptypes.h>
 #include <iphlpapi.h>
@@ -141,11 +147,133 @@ nsNotifyAddrListener::GetLinkStatusKnown(bool *aIsUp)
 NS_IMETHODIMP
 nsNotifyAddrListener::GetLinkType(uint32_t *aLinkType)
 {
-  NS_ENSURE_ARG_POINTER(aLinkType);
+    NS_ENSURE_ARG_POINTER(aLinkType);
 
-  // XXX This function has not yet been implemented for this platform
-  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
-  return NS_OK;
+    // XXX This function has not yet been implemented for this platform
+    *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+    return NS_OK;
+}
+
+static bool macAddr(BYTE addr[], DWORD len, char *buf, size_t buflen)
+{
+    buf[0] = '\0';
+    if (!addr || !len || (len * 3 > buflen)) {
+        return false;
+    }
+
+    for (DWORD i = 0; i < len; ++i) {
+        sprintf_s(buf + (i * 3), sizeof(buf + (i * 3)),
+                  "%02x%s", addr[i], (i == len-1) ? "" : ":");
+    }
+    return true;
+}
+
+void nsNotifyAddrListener::findMac(char *gateway)
+{
+    // query for buffer size needed
+    DWORD dwActualSize = 0;
+
+    // GetIpNetTable gets the IPv4 to physical address mapping table
+    DWORD status = GetIpNetTable(NULL, &dwActualSize, FALSE);
+    if (status == ERROR_INSUFFICIENT_BUFFER) {
+        // the expected route, now with a known buffer size
+        UniquePtr <char[]>buf(new char[dwActualSize]);
+        PMIB_IPNETTABLE pIpNetTable =
+            reinterpret_cast<PMIB_IPNETTABLE>(&buf[0]);
+
+        status = GetIpNetTable(pIpNetTable, &dwActualSize, FALSE);
+
+        if (status == NO_ERROR) {
+            for (DWORD i = 0; i < pIpNetTable->dwNumEntries; ++i) {
+                DWORD dwCurrIndex = pIpNetTable->table[i].dwIndex;
+                char hw[256];
+
+                if (!macAddr(pIpNetTable->table[i].bPhysAddr,
+                             pIpNetTable->table[i].dwPhysAddrLen,
+                             hw, sizeof(hw))) {
+                    // failed to get the MAC
+                    continue;
+                }
+
+                struct in_addr addr;
+                addr.s_addr = pIpNetTable->table[i].dwAddr;
+
+                if (!strcmp(gateway, inet_ntoa(addr))) {
+                    LOG(("networkid: MAC %s\n", hw));
+                    nsAutoCString mac(hw);
+                    // This 'addition' could potentially be a
+                    // fixed number from the profile or something.
+                    nsAutoCString addition("local-rubbish");
+                    nsAutoCString output;
+                    SHA1Sum sha1;
+                    nsCString combined(mac + addition);
+                    sha1.update(combined.get(), combined.Length());
+                    uint8_t digest[SHA1Sum::kHashSize];
+                    sha1.finish(digest);
+                    nsCString newString(reinterpret_cast<char*>(digest),
+                                        SHA1Sum::kHashSize);
+                    Base64Encode(newString, output);
+                    LOG(("networkid: id %s\n", output.get()));
+                    mNetworkId = output;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// returns 'true' when the gw is found and stored
+static bool defaultgw(char *gateway) // at least 128 bytes buffer
+{
+    PMIB_IPFORWARDTABLE pIpForwardTable = NULL;
+
+    DWORD dwSize = 0;
+    if (GetIpForwardTable(NULL, &dwSize, 0) != ERROR_INSUFFICIENT_BUFFER) {
+        return false;
+    }
+
+    UniquePtr <char[]>buf(new char[dwSize]);
+    pIpForwardTable = reinterpret_cast<PMIB_IPFORWARDTABLE>(&buf[0]);
+
+    // Note that the IPv4 addresses returned in GetIpForwardTable entries are
+    // in network byte order
+
+    DWORD retVal = GetIpForwardTable(pIpForwardTable, &dwSize, 0);
+    if (retVal == NO_ERROR) {
+        for (unsigned int i = 0; i < pIpForwardTable->dwNumEntries; ++i) {
+            // Convert IPv4 addresses to strings
+            struct in_addr IpAddr;
+            IpAddr.S_un.S_addr = static_cast<u_long>
+                (pIpForwardTable->table[i].dwForwardDest);
+            char szDestIp[128];
+            strcpy_s(szDestIp, sizeof (szDestIp), inet_ntoa(IpAddr));
+
+            if (!strcmp("0.0.0.0", szDestIp)) {
+                // Default gateway!
+                IpAddr.S_un.S_addr = static_cast<u_long>
+                    (pIpForwardTable->table[i].dwForwardNextHop);
+                strcpy_s(gateway, 128, inet_ntoa(IpAddr));
+                return true;
+            }
+        } // for loop
+    }
+
+    return false;
+}
+
+//
+// Figure out the current "network identification" string.
+//
+// It detects the IP of the default gateway in the routing table, then the MAC
+// address of that IP in the ARP table before it hashes that string (to avoid
+// information leakage).
+//
+void nsNotifyAddrListener::calculateNetworkId(void)
+{
+    char gateway[128];
+    if (defaultgw(gateway)) {
+        findMac(gateway);
+    }
 }
 
 // Static Callback function for NotifyIpInterfaceChange API.
@@ -179,6 +307,8 @@ nsNotifyAddrListener::Run()
     PR_SetCurrentThreadName("Link Monitor");
 
     mStartTime = TimeStamp::Now();
+
+    calculateNetworkId();
 
     DWORD waitTime = INFINITE;
 
@@ -591,4 +721,5 @@ nsNotifyAddrListener::CheckLinkStatus(void)
                       NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
         }
     }
+    calculateNetworkId();
 }
