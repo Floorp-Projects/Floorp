@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import android.accounts.Account;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -13,6 +14,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
@@ -37,6 +39,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteClientsDialogFragment;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -51,6 +55,8 @@ import java.util.List;
 
 public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsDialogFragment.RemoteClientsListener {
     private static final String LOGTAG = "GeckoCombinedHistoryPnl";
+
+    private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
     private final int LOADER_ID_HISTORY = 0;
     private final int LOADER_ID_REMOTE = 1;
 
@@ -68,6 +74,12 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
     private OnPanelLevelChangeListener.PanelLevel mPanelLevel;
     private Button mPanelFooterButton;
+
+    // Child refresh layout view.
+    protected SwipeRefreshLayout mRefreshLayout;
+
+    // Sync listener that stops refreshing when a sync is completed.
+    protected RemoteTabsSyncListener mSyncStatusListener;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
@@ -91,6 +103,9 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mHistoryAdapter = new CombinedHistoryAdapter(getResources());
         mClientsAdapter = new ClientsAdapter(getContext());
+
+        mSyncStatusListener = new RemoteTabsSyncListener();
+        FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
     }
 
     @Override
@@ -104,6 +119,9 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mRecyclerView = (CombinedHistoryRecyclerView) view.findViewById(R.id.combined_recycler_view);
         setUpRecyclerView();
+
+        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_layout);
+        setUpRefreshLayout();
 
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
@@ -122,6 +140,11 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
         mRecyclerView.setHiddenClientsDialogBuilder(new HiddenClientsHelper());
         registerForContextMenu(mRecyclerView);
+    }
+
+    private void setUpRefreshLayout() {
+        mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
+        mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
     }
 
     @Override
@@ -199,6 +222,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     final List<RemoteClient> clients = mDB.getTabsAccessor().getClientsFromCursor(c);
                     mHistoryAdapter.getDeviceUpdateHandler().onDeviceCountUpdated(clients.size());
                     mClientsAdapter.setClients(clients);
+                    mRefreshLayout.setEnabled(clients.size() > 0);
                     break;
             }
 
@@ -226,7 +250,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
                     mRecyclerView.swapAdapter(mHistoryAdapter, false);
                     break;
                 case CHILD:
-                    mRecyclerView.swapAdapter(mClientsAdapter, false);
+                    mRecyclerView.swapAdapter(mClientsAdapter, true);
                     break;
             }
 
@@ -460,6 +484,49 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         public RemoteTabsClientContextMenuInfo(View targetView, int position, long id, RemoteClient client) {
             super(targetView, position, id);
             this.client = client;
+        }
+    }
+
+    protected class RemoteTabsRefreshListener implements SwipeRefreshLayout.OnRefreshListener {
+        @Override
+        public void onRefresh() {
+            if (FirefoxAccounts.firefoxAccountsExist(getActivity())) {
+                final Account account = FirefoxAccounts.getFirefoxAccount(getActivity());
+                FirefoxAccounts.requestImmediateSync(account, STAGES_TO_SYNC_ON_REFRESH, null);
+            } else {
+                Log.wtf(LOGTAG, "No Firefox Account found; this should never happen. Ignoring.");
+                mRefreshLayout.setRefreshing(false);
+            }
+        }
+    }
+
+    protected class RemoteTabsSyncListener implements SyncStatusListener {
+        @Override
+        public Context getContext() {
+            return getActivity();
+        }
+
+        @Override
+        public Account getAccount() {
+            return FirefoxAccounts.getFirefoxAccount(getContext());
+        }
+
+        @Override
+        public void onSyncStarted() {
+        }
+
+        @Override
+        public void onSyncFinished() {
+            mRefreshLayout.setRefreshing(false);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mSyncStatusListener != null) {
+            FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
+            mSyncStatusListener = null;
         }
     }
 }
