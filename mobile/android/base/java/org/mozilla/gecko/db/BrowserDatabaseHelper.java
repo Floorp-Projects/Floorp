@@ -58,7 +58,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     // Replace the Bug number below with your Bug that is conducting a DB upgrade, as to force a merge conflict with any
     // other patches that require a DB upgrade.
-    public static final int DATABASE_VERSION = 32; // Bug 1046709
+    public static final int DATABASE_VERSION = 33; // Bug 1265525
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -386,6 +386,133 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     }
 
+    private void createCombinedViewOn33(final SQLiteDatabase db) {
+        /*
+        Builds on top of v19 combined view, and adds the following aggregates:
+        - Combined.LOCAL_DATE_LAST_VISITED - last date visited for all local visits
+        - Combined.REMOTE_DATE_LAST_VISITED - last date visited for all remote visits
+        - Combined.LOCAL_VISITS_COUNT - total number of local visits
+        - Combined.REMOTE_VISITS_COUNT - total number of remote visits
+
+        Any code written prior to v33 referencing columns by index directly remains intact
+        (yet must die a fiery death), as new columns were added to the end of the list.
+
+        The rows in the ensuing view are, in order:
+            Combined.BOOKMARK_ID
+            Combined.HISTORY_ID
+            Combined._ID (always 0)
+            Combined.URL
+            Combined.TITLE
+            Combined.VISITS
+            Combined.DISPLAY
+            Combined.DATE_LAST_VISITED
+            Combined.FAVICON_ID
+            Combined.LOCAL_DATE_LAST_VISITED
+            Combined.REMOTE_DATE_LAST_VISITED
+            Combined.LOCAL_VISITS_COUNT
+            Combined.REMOTE_VISITS_COUNT
+         */
+        db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED + " AS" +
+
+                // Bookmarks without history.
+                " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + "," +
+                "-1 AS " + Combined.HISTORY_ID + "," +
+                "0 AS " + Combined._ID + "," +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " AS " + Combined.URL + ", " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + " AS " + Combined.TITLE + ", " +
+                "-1 AS " + Combined.VISITS + ", " +
+                "-1 AS " + Combined.DATE_LAST_VISITED + "," +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.FAVICON_ID) + " AS " + Combined.FAVICON_ID + "," +
+                "0 AS " + Combined.LOCAL_DATE_LAST_VISITED + ", " +
+                "0 AS " + Combined.REMOTE_DATE_LAST_VISITED + ", " +
+                "0 AS " + Combined.LOCAL_VISITS_COUNT + ", " +
+                "0 AS " + Combined.REMOTE_VISITS_COUNT +
+                " FROM " + TABLE_BOOKMARKS +
+                " WHERE " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + " AND " +
+                // Ignore pinned bookmarks.
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT)  + " <> " + Bookmarks.FIXED_PINNED_LIST_ID + " AND " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED)  + " = 0 AND " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) +
+                " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY + ")" +
+                " UNION ALL" +
+
+                // History with and without bookmark.
+                " SELECT " +
+                "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) +
+
+                // Give pinned bookmarks a NULL ID so that they're not treated as bookmarks. We can't
+                // completely ignore them here because they're joined with history entries we care about.
+                " WHEN 0 THEN " +
+                "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) +
+                " WHEN " + Bookmarks.FIXED_PINNED_LIST_ID + " THEN " +
+                "NULL " +
+                "ELSE " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) +
+                " END " +
+                "ELSE " +
+                "NULL " +
+                "END AS " + Combined.BOOKMARK_ID + "," +
+                qualifyColumn(TABLE_HISTORY, History._ID) + " AS " + Combined.HISTORY_ID + "," +
+                "0 AS " + Combined._ID + "," +
+                qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + "," +
+
+                // Prioritize bookmark titles over history titles, since the user may have
+                // customized the title for a bookmark.
+                "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
+                qualifyColumn(TABLE_HISTORY, History.TITLE) +
+                ") AS " + Combined.TITLE + "," +
+                qualifyColumn(TABLE_HISTORY, History.VISITS) + " AS " + Combined.VISITS + "," +
+                qualifyColumn(TABLE_HISTORY, History.DATE_LAST_VISITED) + " AS " + Combined.DATE_LAST_VISITED + "," +
+                qualifyColumn(TABLE_HISTORY, History.FAVICON_ID) + " AS " + Combined.FAVICON_ID + "," +
+
+                // Figure out "last visited" days using MAX values for visit timestamps.
+                // We use CASE statements here to separate local from remote visits.
+                "COALESCE(MAX(CASE " + qualifyColumn(TABLE_VISITS, Visits.IS_LOCAL) + " " +
+                    "WHEN 1 THEN " + qualifyColumn(TABLE_VISITS, Visits.DATE_VISITED) + " " +
+                    "ELSE 0 END" +
+                "), 0) AS " + Combined.LOCAL_DATE_LAST_VISITED + ", " +
+
+                "COALESCE(MAX(CASE " + qualifyColumn(TABLE_VISITS, Visits.IS_LOCAL) + " " +
+                    "WHEN 0 THEN " + qualifyColumn(TABLE_VISITS, Visits.DATE_VISITED) + " " +
+                    "ELSE 0 END" +
+                "), 0) AS " + Combined.REMOTE_DATE_LAST_VISITED + ", " +
+
+                // Sum up visit counts for local and remote visit types. Again, use CASE to separate the two.
+                "COALESCE(SUM(" + qualifyColumn(TABLE_VISITS, Visits.IS_LOCAL) + "), 0) AS " + Combined.LOCAL_VISITS_COUNT + ", " +
+                "COALESCE(SUM(CASE " + qualifyColumn(TABLE_VISITS, Visits.IS_LOCAL) + " WHEN 0 THEN 1 ELSE 0 END), 0) AS " + Combined.REMOTE_VISITS_COUNT +
+
+                // We need to JOIN on Visits in order to compute visit counts
+                " FROM " + TABLE_HISTORY + " " +
+                "LEFT OUTER JOIN " + TABLE_VISITS +
+                " ON " + qualifyColumn(TABLE_HISTORY, History.GUID) + " = " + qualifyColumn(TABLE_VISITS, Visits.HISTORY_GUID) + " " +
+
+                // We really shouldn't be selecting deleted bookmarks, but oh well.
+                "LEFT OUTER JOIN " + TABLE_BOOKMARKS +
+                " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " + qualifyColumn(TABLE_HISTORY, History.URL) +
+                " WHERE " +
+                qualifyColumn(TABLE_HISTORY, History.IS_DELETED) + " = 0 AND " +
+                "(" +
+                // The left outer join didn't match...
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
+
+                // ... or it's a bookmark. This is less efficient than filtering prior
+                // to the join if you have lots of folders.
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " = " + Bookmarks.TYPE_BOOKMARK +
+
+                ") GROUP BY " + qualifyColumn(TABLE_HISTORY, History.GUID)
+        );
+
+        debug("Creating " + VIEW_COMBINED_WITH_FAVICONS + " view");
+
+        db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_FAVICONS + " AS" +
+                " SELECT " + qualifyColumn(VIEW_COMBINED, "*") + ", " +
+                qualifyColumn(TABLE_FAVICONS, Favicons.URL) + " AS " + Combined.FAVICON_URL + ", " +
+                qualifyColumn(TABLE_FAVICONS, Favicons.DATA) + " AS " + Combined.FAVICON +
+                " FROM " + VIEW_COMBINED + " LEFT OUTER JOIN " + TABLE_FAVICONS +
+                " ON " + Combined.FAVICON_ID + " = " + qualifyColumn(TABLE_FAVICONS, Favicons._ID));
+    }
+
     private void createLoginsTable(SQLiteDatabase db, final String tableName) {
         debug("Creating logins.db: " + db.getPath());
         debug("Creating " + tableName + " table");
@@ -462,7 +589,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
         createBookmarksWithFaviconsView(db);
         createHistoryWithFaviconsView(db);
-        createCombinedViewOn19(db);
 
         createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
             R.string.bookmarks_folder_places, 0);
@@ -480,6 +606,7 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createBookmarksWithAnnotationsView(db);
 
         createVisitsTable(db);
+        createCombinedViewOn33(db);
     }
 
     /**
@@ -1630,6 +1757,17 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    private void upgradeDatabaseFrom32to33(final SQLiteDatabase db) {
+        createV33CombinedView(db);
+    }
+
+    private void createV33CombinedView(final SQLiteDatabase db) {
+        db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
+        db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
+
+        createCombinedViewOn33(db);
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1734,6 +1872,10 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 32:
                     upgradeDatabaseFrom31to32(db);
+                    break;
+
+                case 33:
+                    upgradeDatabaseFrom32to33(db);
                     break;
             }
         }
