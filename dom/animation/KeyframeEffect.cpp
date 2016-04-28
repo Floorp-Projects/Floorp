@@ -75,10 +75,9 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
-  Element* aTarget,
-  CSSPseudoElementType aPseudoType,
+  const Maybe<OwningAnimationTarget>& aTarget,
   const TimingParams& aTiming)
-  : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
+  : KeyframeEffectReadOnly(aDocument, aTarget,
                            new AnimationEffectTimingReadOnly(aDocument,
                                                              aTiming))
 {
@@ -86,17 +85,14 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
 
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
-  Element* aTarget,
-  CSSPseudoElementType aPseudoType,
+  const Maybe<OwningAnimationTarget>& aTarget,
   AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
+  , mTarget(aTarget)
   , mTiming(aTiming)
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
   MOZ_ASSERT(aTiming);
-  if (aTarget) {
-    mTarget.emplace(aTarget, aPseudoType);
-  }
 }
 
 JSObject*
@@ -751,11 +747,7 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
 
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
   RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(doc,
-                           target ? target->mElement.get() : nullptr,
-                           target ? target->mPseudoType
-                                  : CSSPseudoElementType::NotPseudo,
-                           timingParams);
+    new KeyframeEffectType(doc, target, timingParams);
 
   effect->SetFrames(aGlobal.Context(), aFrames, aRv);
   if (aRv.Failed()) {
@@ -1345,10 +1337,9 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
 //---------------------------------------------------------------------
 
 KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
-                               Element* aTarget,
-                               CSSPseudoElementType aPseudoType,
+                               const Maybe<OwningAnimationTarget>& aTarget,
                                const TimingParams& aTiming)
-  : KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
+  : KeyframeEffectReadOnly(aDocument, aTarget,
                            new AnimationEffectTiming(aDocument, aTiming, this))
 {
 }
