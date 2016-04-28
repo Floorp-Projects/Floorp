@@ -15,10 +15,10 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES['services-common'] += [
     'async.js',
+    'blocklist-clients.js',
     'blocklist-updater.js',
     'kinto-http-client.js',
     'kinto-offline-client.js',
-    'KintoBlocklist.js',
     'logmanager.js',
     'observers.js',
     'rest.js',
