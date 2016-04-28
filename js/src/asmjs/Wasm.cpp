@@ -1354,6 +1354,10 @@ js::InitWasmClass(JSContext* cx, HandleObject global)
     if (!JS_DefineProperty(cx, global, js_Wasm_str, Wasm, JSPROP_RESOLVING))
         return nullptr;
 
+    RootedValue version(cx, Int32Value(EncodingVersion));
+    if (!JS_DefineProperty(cx, Wasm, "experimentalVersion", version, JSPROP_RESOLVING))
+        return nullptr;
+
     if (!JS_DefineFunctions(cx, Wasm, wasm_static_methods))
         return nullptr;
 
