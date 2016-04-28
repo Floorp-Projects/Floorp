@@ -774,6 +774,14 @@ KeyframeEffectReadOnly::ResetIsRunningOnCompositor()
 }
 
 void
+KeyframeEffectReadOnly::ResetWinsInCascade()
+{
+  for (AnimationProperty& property : mProperties) {
+    property.mWinsInCascade = false;
+  }
+}
+
+void
 KeyframeEffectReadOnly::UpdateTargetRegistration()
 {
   if (!mTarget) {
@@ -1398,7 +1406,28 @@ KeyframeEffect::NotifySpecifiedTimingUpdated()
 void
 KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 {
-  // TODO: fix in next patch
+  Maybe<OwningAnimationTarget> newTarget = ConvertTarget(aTarget);
+  if (mTarget == newTarget) {
+    // Assign the same target, skip it.
+    return;
+  }
+
+  if (mTarget) {
+    UnregisterTarget();
+    ResetIsRunningOnCompositor();
+    ResetWinsInCascade();
+
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
+  }
+
+  mTarget = newTarget;
+
+  if (mTarget) {
+    UpdateTargetRegistration();
+    MaybeUpdateProperties();
+
+    RequestRestyle(EffectCompositor::RestyleType::Layer);
+  }
 }
 
 KeyframeEffect::~KeyframeEffect()
@@ -1408,6 +1437,31 @@ KeyframeEffect::~KeyframeEffect()
   if (mTiming) {
     mTiming->Unlink();
   }
+}
+
+void
+KeyframeEffect::MaybeUpdateProperties()
+{
+  if (!mTarget) {
+    return;
+  }
+
+  nsIDocument* doc = mTarget->mElement->OwnerDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count ?
+                    nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) :
+                    nullptr;
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement, pseudo,
+                                                  doc->GetShell());
+  if (!styleContext) {
+    return;
+  }
+
+  UpdateProperties(styleContext);
 }
 
 } // namespace dom
