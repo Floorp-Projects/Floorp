@@ -3545,6 +3545,9 @@ ResolveBranchTable(Resolver& r, WasmAstBranchTable& bt)
             return false;
     }
 
+    if (bt.maybeValue() && !ResolveExpr(r, *bt.maybeValue()))
+        return false;
+
     return ResolveExpr(r, bt.index());
 }
 
