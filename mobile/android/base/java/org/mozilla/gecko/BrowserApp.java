@@ -3710,6 +3710,10 @@ public class BrowserApp extends GeckoApp
             openMultipleTabsFromIntent(intent);
         }
 
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onNewIntent(this, intent);
+        }
+
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
             return;
         }
