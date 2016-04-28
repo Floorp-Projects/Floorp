@@ -34,6 +34,12 @@ private:
   static StaticRefPtr<nsZipArchive> sReader[2];
 
   /**
+   * Cached nsZipArchives for the outer jar, when using nested jars.
+   * Otherwise nullptr.
+   */
+  static StaticRefPtr<nsZipArchive> sOuterReader[2];
+
+  /**
    * Has Omnijar::Init() been called?
    */
   static bool sInitialized;
@@ -43,8 +49,6 @@ private:
    */
   static bool sIsUnified;
 
-  static bool sIsNested[2];
-
 public:
   enum Type
   {
@@ -52,6 +56,29 @@ public:
     APP = 1
   };
 
+private:
+  /**
+   * Returns whether we are using nested jars.
+   */
+  static inline bool IsNested(Type aType)
+  {
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
+    return !!sOuterReader[aType];
+  }
+
+  /**
+   * Returns a nsZipArchive pointer for the outer jar file when using nested
+   * jars. Returns nullptr in the same cases GetPath() would, or if not using
+   * nested jars.
+   */
+  static inline already_AddRefed<nsZipArchive> GetOuterReader(Type aType)
+  {
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
+    RefPtr<nsZipArchive> reader = sOuterReader[aType].get();
+    return reader.forget();
+  }
+
+public:
   /**
    * Returns whether SetBase has been called at least once with
    * a valid nsIFile
