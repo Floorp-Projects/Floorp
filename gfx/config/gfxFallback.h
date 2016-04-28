@@ -14,6 +14,7 @@ namespace gfx {
 
 #define GFX_FALLBACK_MAP(_)                                                       \
   /* Name */                                                                      \
+  _(USE_D3D11_WARP_COMPOSITOR)                                                    \
   /* Add new entries above this comment */
 
 enum class Fallback : uint32_t {

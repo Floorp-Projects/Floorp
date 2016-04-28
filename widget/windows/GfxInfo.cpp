@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include <setupapi.h>
+#include "gfxConfig.h"
 #include "gfxWindowsPlatform.h"
 #include "GfxInfo.h"
 #include "GfxInfoWebGL.h"
@@ -26,6 +27,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
 #ifdef DEBUG
@@ -1260,7 +1262,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
 
   gfxWindowsPlatform* platform = gfxWindowsPlatform::GetPlatform();
 
-  gfx::FeatureStatus d3d11 = platform->GetD3D11Status();
+  gfx::FeatureStatus d3d11 = gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
   if (!InitFeatureObject(aCx, aObj, "d3d11", d3d11, &obj)) {
     return;
   }
@@ -1274,7 +1276,16 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
     val = JS::BooleanValue(platform->CompositorD3D11TextureSharingWorks());
     JS_SetProperty(aCx, obj, "textureSharing", val);
 
-    val = JS::BooleanValue(!platform->CanUseDirect3D11());
+    bool blacklisted = false;
+    if (nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo()) {
+      int32_t status;
+      nsCString discardFailureId;
+      if (SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, discardFailureId, &status))) {
+        blacklisted = (status != nsIGfxInfo::FEATURE_STATUS_OK);
+      }
+    }
+
+    val = JS::BooleanValue(blacklisted);
     JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
