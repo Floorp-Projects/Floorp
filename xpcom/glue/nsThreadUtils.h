@@ -283,8 +283,11 @@ nsRunnableFunction<Function>* NS_NewRunnableFunction(const Function& aFunction)
 // with nsRevocableEventPtr.
 template<class ClassType,
          typename ReturnType = void,
-         bool Owning = true>
-class nsRunnableMethod : public mozilla::Runnable
+         bool Owning = true,
+         bool Cancelable = false>
+class nsRunnableMethod : public mozilla::Conditional<!Cancelable,
+                                                     mozilla::Runnable,
+                                                     mozilla::CancelableRunnable>::Type
 {
 public:
   virtual void Revoke() = 0;
@@ -328,31 +331,34 @@ struct nsRunnableMethodReceiver<ClassType, false>
   void Revoke() { mObj = nullptr; }
 };
 
-template<typename Method, bool Owning> struct nsRunnableMethodTraits;
+template<typename Method, bool Owning, bool Cancelable> struct nsRunnableMethodTraits;
 
-template<class C, typename R, bool Owning, typename... As>
-struct nsRunnableMethodTraits<R(C::*)(As...), Owning>
+template<class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<R(C::*)(As...), Owning, Cancelable>
 {
   typedef C class_type;
   typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning> base_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
 };
 
 #ifdef NS_HAVE_STDCALL
-template<class C, typename R, bool Owning, typename... As>
-struct nsRunnableMethodTraits<R(__stdcall C::*)(As...), Owning>
+template<class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<R(__stdcall C::*)(As...), Owning, Cancelable>
 {
   typedef C class_type;
   typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning> base_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
 };
 
-template<class C, typename R, bool Owning>
-struct nsRunnableMethodTraits<R(NS_STDCALL C::*)(), Owning>
+template<class C, typename R, bool Owning, bool Cancelable>
+struct nsRunnableMethodTraits<R(NS_STDCALL C::*)(), Owning, Cancelable>
 {
   typedef C class_type;
   typedef R return_type;
-  typedef nsRunnableMethod<C, R, Owning> base_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
 };
 #endif
 
@@ -683,11 +689,11 @@ struct nsRunnableMethodArguments
   }
 };
 
-template<typename Method, bool Owning, typename... Storages>
+template<typename Method, bool Owning, bool Cancelable, typename... Storages>
 class nsRunnableMethodImpl
-  : public nsRunnableMethodTraits<Method, Owning>::base_type
+  : public nsRunnableMethodTraits<Method, Owning, Cancelable>::base_type
 {
-  typedef typename nsRunnableMethodTraits<Method, Owning>::class_type
+  typedef typename nsRunnableMethodTraits<Method, Owning, Cancelable>::class_type
       ClassType;
   nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
@@ -710,6 +716,11 @@ public:
     }
     return NS_OK;
   }
+  nsresult Cancel() {
+    static_assert(Cancelable, "Don't use me!");
+    Revoke();
+    return NS_OK;
+  }
   void Revoke() { mReceiver.Revoke(); }
 };
 
@@ -724,17 +735,24 @@ public:
 //  - MyClass must defined AddRef and Release methods
 //
 template<typename PtrType, typename Method>
-typename nsRunnableMethodTraits<Method, true>::base_type*
+typename nsRunnableMethodTraits<Method, true, false>::base_type*
 NS_NewRunnableMethod(PtrType aPtr, Method aMethod)
 {
-  return new nsRunnableMethodImpl<Method, true>(aPtr, aMethod);
+  return new nsRunnableMethodImpl<Method, true, false>(aPtr, aMethod);
 }
 
 template<typename PtrType, typename Method>
-typename nsRunnableMethodTraits<Method, false>::base_type*
+typename nsRunnableMethodTraits<Method, false, false>::base_type*
 NS_NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return new nsRunnableMethodImpl<Method, false>(aPtr, aMethod);
+  return new nsRunnableMethodImpl<Method, false, false>(aPtr, aMethod);
+}
+
+template<typename PtrType, typename Method>
+typename nsRunnableMethodTraits<Method, false, true>::base_type*
+NS_NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
+{
+  return new nsRunnableMethodImpl<Method, false, true>(aPtr, aMethod);
 }
 
 // Similar to NS_NewRunnableMethod. Call like so:
@@ -742,10 +760,10 @@ NS_NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 //   NS_NewRunnableMethodWithArg<Type>(myObject, &MyClass::HandleEvent, myArg);
 // 'Type' is the stored type for the argument, see ParameterStorage for details.
 template<typename Storage, typename Method, typename PtrType, typename Arg>
-typename nsRunnableMethodTraits<Method, true>::base_type*
+typename nsRunnableMethodTraits<Method, true, false>::base_type*
 NS_NewRunnableMethodWithArg(PtrType&& aPtr, Method aMethod, Arg&& aArg)
 {
-  return new nsRunnableMethodImpl<Method, true, Storage>(
+  return new nsRunnableMethodImpl<Method, true, false, Storage>(
       aPtr, aMethod, mozilla::Forward<Arg>(aArg));
 }
 
@@ -754,23 +772,34 @@ NS_NewRunnableMethodWithArg(PtrType&& aPtr, Method aMethod, Arg&& aArg)
 //   NS_NewRunnableMethodWithArg<Types,...>(myObject, &MyClass::HandleEvent, myArg1,...);
 // 'Types' are the stored type for each argument, see ParameterStorage for details.
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-typename nsRunnableMethodTraits<Method, true>::base_type*
+typename nsRunnableMethodTraits<Method, true, false>::base_type*
 NS_NewRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return new nsRunnableMethodImpl<Method, true, Storages...>(
+  return new nsRunnableMethodImpl<Method, true, false, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...);
 }
 
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-typename nsRunnableMethodTraits<Method, false>::base_type*
+typename nsRunnableMethodTraits<Method, false, false>::base_type*
 NS_NewNonOwningRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod,
                                       Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return new nsRunnableMethodImpl<Method, false, Storages...>(
+  return new nsRunnableMethodImpl<Method, false, false, Storages...>(
+      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...);
+}
+
+template<typename... Storages, typename Method, typename PtrType, typename... Args>
+typename nsRunnableMethodTraits<Method, false, true>::base_type*
+NS_NewNonOwningCancelableRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod,
+                                                Args&&... aArgs)
+{
+  static_assert(sizeof...(Storages) == sizeof...(Args),
+                "<Storages...> size should be equal to number of arguments");
+  return new nsRunnableMethodImpl<Method, false, true, Storages...>(
       aPtr, aMethod, mozilla::Forward<Args>(aArgs)...);
 }
 
