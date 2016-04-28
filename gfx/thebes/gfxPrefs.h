@@ -71,6 +71,8 @@ class PreferenceAccessImpl;
 class gfxPrefs;
 class gfxPrefs final
 {
+  friend class gfxWindowsPlatform;
+
 private:
   /// See Logging.h.  This lets Moz2D access preference values it owns.
   PreferenceAccessImpl* mMoz2DPrefAccess;

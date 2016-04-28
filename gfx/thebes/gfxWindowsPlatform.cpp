@@ -365,7 +365,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
   , mHasDeviceReset(false)
   , mHasFakeDeviceReset(false)
   , mCompositorD3D11TextureSharingWorks(false)
-  , mD2D1Status(FeatureStatus::Unused)
   , mHasD3D9DeviceReset(false)
 {
   mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
@@ -500,7 +499,7 @@ gfxWindowsPlatform::UpdateBackendPrefs()
   uint32_t canvasMask = BackendTypeBit(SOFTWARE_BACKEND);
   uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
   BackendType defaultBackend = SOFTWARE_BACKEND;
-  if (GetD2D1Status() == FeatureStatus::Available) {
+  if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
     contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
     defaultBackend = BackendType::DIRECT2D1_1;
@@ -532,7 +531,7 @@ gfxWindowsPlatform::UpdateRenderMode()
                       << ", D3D11 device:" << hexa(Factory::GetDirect3D11Device())
                       << ", D3D11 status:" << FeatureStatusToString(gfxConfig::GetValue(Feature::D3D11_COMPOSITING))
                       << ", D2D1 device:" << hexa(Factory::GetD2D1Device())
-                      << ", D2D1 status:" << FeatureStatusToString(GetD2D1Status())
+                      << ", D2D1 status:" << FeatureStatusToString(gfxConfig::GetValue(Feature::DIRECT2D))
                       << ", content:" << int(GetDefaultContentBackend())
                       << ", compositor:" << int(GetCompositorBackend());
       MOZ_CRASH("GFX: Failed to update reference draw target after device reset");
@@ -576,7 +575,7 @@ gfxWindowsPlatform::CreatePlatformFontList()
         // but apparently it can - see bug 594865.
         // So we're going to fall back to GDI fonts & rendering.
         gfxPlatformFontList::Shutdown();
-        DisableD2D();
+        DisableD2D(FeatureStatus::Failed, "Failed to initialize fonts");
     }
 
     pfl = new gfxGDIFontList();
@@ -596,9 +595,9 @@ gfxWindowsPlatform::CreatePlatformFontList()
 // This is called during gfxPlatform::Init() so at this point there should be no
 // DrawTargetD2D/1 instances.
 void
-gfxWindowsPlatform::DisableD2D()
+gfxWindowsPlatform::DisableD2D(FeatureStatus aStatus, const char* aMessage)
 {
-  mD2D1Status = FeatureStatus::Failed;
+  gfxConfig::SetFailed(Feature::DIRECT2D, aStatus, aMessage);
   Factory::SetDirect3D11Device(nullptr);
   UpdateBackendPrefs();
 }
@@ -1943,10 +1942,12 @@ void
 gfxWindowsPlatform::InitializeConfig()
 {
   if (!XRE_IsParentProcess()) {
+    // Child processes init their configuration via UpdateDeviceInitData().
     return;
   }
 
   InitializeD3D11Config();
+  InitializeD2DConfig();
 }
 
 void
@@ -2003,6 +2004,12 @@ gfxWindowsPlatform::UpdateDeviceInitData()
       gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, "Requested by parent process");
     }
   }
+
+  gfxConfig::InitOrUpdate(
+    Feature::DIRECT2D,
+    GetParentDevicePrefs().useD2D1(),
+    FeatureStatus::Disabled,
+    "Disabled by parent process");
 
   return true;
 }
@@ -2293,6 +2300,7 @@ gfxWindowsPlatform::InitializeDevices()
   FeatureStatus compositing = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   if (IsFeatureStatusFailure(compositing)) {
     gfxConfig::DisableByDefault(Feature::D3D11_COMPOSITING, compositing, "Hardware compositing is disabled");
+    gfxConfig::DisableByDefault(Feature::DIRECT2D, compositing, "Hardware compositing is disabled");
     return;
   }
 
@@ -2307,24 +2315,27 @@ gfxWindowsPlatform::InitializeDevices()
     gfxConfig::SetFailed(Feature::D3D11_COMPOSITING,
                          FeatureStatus::CrashedOnStartup,
                          "Harware acceleration crashed during startup in a previous session");
+    gfxConfig::SetFailed(Feature::DIRECT2D,
+                         FeatureStatus::CrashedOnStartup,
+                         "Harware acceleration crashed during startup in a previous session");
     return;
   }
 
   // First, initialize D3D11. If this succeeds we attempt to use Direct2D.
   InitializeD3D11();
+  InitializeD2D();
 
-  // Initialize Direct2D.
-  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    InitializeD2D();
-  }
+  if (!gfxConfig::IsEnabled(Feature::DIRECT2D)) {
+    if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {
+      RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
+    }
 
-  // Usually we want D2D in order to use DWrite, but if the users have it
-  // forced, we'll let them have it, as unsupported configuration.
-  if (gfxPrefs::DirectWriteFontRenderingForceEnabled() &&
-      IsFeatureStatusFailure(mD2D1Status) &&
-      !mDWriteFactory) {
-    gfxCriticalNote << "Attempting DWrite without D2D support";
-    InitDWriteSupport();
+    // Usually we want D2D in order to use DWrite, but if the users have it
+    // forced, we'll let them have it, as unsupported configuration.
+    if (gfxPrefs::DirectWriteFontRenderingForceEnabled() && !mDWriteFactory) {
+      gfxCriticalNote << "Attempting DWrite without D2D support";
+      InitDWriteSupport();
+    }
   }
 }
 
@@ -2467,50 +2478,29 @@ IsD2DBlacklisted()
   return false;
 }
 
-// Check whether we can support Direct2D. Although some of these checks will
-// not change after a TDR (like the OS version), we could find a driver change
-// that runs us into the blacklist.
-FeatureStatus
-gfxWindowsPlatform::CheckD2D1Support()
+void
+gfxWindowsPlatform::InitializeD2DConfig()
 {
-  // Don't revive D2D1 support after a failure.
-  if (IsFeatureStatusFailure(mD2D1Status)) {
-    return mD2D1Status;
+  FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
+
+  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D requires Direct3D 11 compositing");
+  } else if (!IsVistaOrLater()) {
+    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP");
+  } else {
+    d2d1.SetDefaultFromPref(
+      gfxPrefs::GetDirect2DDisabledPrefName(),
+      false,
+      gfxPrefs::GetDirect2DDisabledPrefDefault());
+  }
+  
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D)) {
+    d2d1.Disable(FeatureStatus::Blacklisted, "Direct2D is blacklisted on this hardware");
   }
 
-  if (!gfxPrefs::Direct2DForceEnabled() && IsD2DBlacklisted()) {
-    return FeatureStatus::Blacklisted;
+  if (!d2d1.IsEnabled() && gfxPrefs::Direct2DForceEnabled()) {
+    d2d1.UserForceEnable("Force-enabled via user-preference");
   }
-
-  // Do not ever try to use D2D if it's explicitly disabled.
-  if (gfxPrefs::Direct2DDisabled()) {
-    return FeatureStatus::Disabled;
-  }
-
-  // Direct2D is only Vista or higher, but we require a D3D11 compositor to
-  // use it. (This check may be implied by the fact that we do not get here
-  // without a D3D11 compositor device.)
-  if (!IsVistaOrLater()) {
-    return FeatureStatus::Unavailable;
-  }
-
-  // Normally we don't use D2D content drawing when using WARP. However if
-  // WARP is force-enabled, we will let Direct2D use WARP as well.
-  if (mIsWARP && !gfxPrefs::LayersD3D11ForceWARP()) {
-    return FeatureStatus::Blocked;
-  }
-
-  if (!Factory::SupportsD2D1()) {
-    return FeatureStatus::Unavailable;
-  }
-
-  if (XRE_IsContentProcess()) {
-    return GetParentDevicePrefs().useD2D1()
-           ? FeatureStatus::Available
-           : FeatureStatus::Blocked;
-  }
-
-  return FeatureStatus::Available;
 }
 
 void
@@ -2518,41 +2508,48 @@ gfxWindowsPlatform::InitializeD2D()
 {
   ScopedGfxFeatureReporter d2d1_1("D2D1.1");
 
-  mD2D1Status = CheckD2D1Support();
-  if (IsFeatureStatusFailure(mD2D1Status)) {
-    if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {
-      RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
-    }
+  FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
+
+  // We don't know this value ahead of time, but the user can force-override
+  // it, so we use Disable instead of SetFailed.
+  if (mIsWARP) {
+    d2d1.Disable(FeatureStatus::Blocked, "Direct2D is not compatible with Direct3D11 WARP");
+  }
+
+  // If we pass all the initial checks, we can proceed to runtime decisions.
+  if (!d2d1.IsEnabled()) {
     return;
   }
 
-  // If we don't have a content device, don't init
-  // anything else below such as dwrite
+  if (!Factory::SupportsD2D1()) {
+    d2d1.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a Direct2D 1.1 factory");
+    return;
+  }
+
   if (!mD3D11ContentDevice) {
-    mD2D1Status = FeatureStatus::Failed;
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to acquire a Direct3D 11 content device");
     return;
   }
 
   if (!mCompositorD3D11TextureSharingWorks) {
-    mD2D1Status = FeatureStatus::Failed;
+    d2d1.SetFailed(FeatureStatus::Failed, "Direct3D11 device does not support texture sharing");
     return;
   }
 
   // Using Direct2D depends on DWrite support.
   if (!mDWriteFactory && !InitDWriteSupport()) {
-    mD2D1Status = FeatureStatus::Failed;
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to initialize DirectWrite support");
     return;
   }
 
   // Verify that Direct2D device creation succeeded.
   if (!Factory::SetDirect3D11Device(mD3D11ContentDevice)) {
-    mD2D1Status = FeatureStatus::Failed;
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to create a Direct2D device");
     return;
   }
 
+  MOZ_ASSERT(d2d1.IsEnabled());
   d2d1_1.SetSuccessful();
-
-  mD2D1Status = FeatureStatus::Available;
 }
 
 bool
@@ -2916,17 +2913,6 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
   }
 }
 
-// Some features are dependent on other features. If this is the case, we
-// try to propagate the status of the parent feature if it wasn't available.
-FeatureStatus
-gfxWindowsPlatform::GetD2D1Status() const
-{
-  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    return FeatureStatus::Unavailable;
-  }
-  return mD2D1Status;
-}
-
 unsigned
 gfxWindowsPlatform::GetD3D11Version()
 {
@@ -2954,7 +2940,7 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
   aOut->useD3D11ImageBridge() = !!mD3D11ImageBridgeDevice;
   aOut->d3d11TextureSharingWorks() = mCompositorD3D11TextureSharingWorks;
   aOut->useD3D11WARP() = mIsWARP;
-  aOut->useD2D1() = (GetD2D1Status() == FeatureStatus::Available);
+  aOut->useD2D1() = gfxConfig::IsEnabled(Feature::DIRECT2D);
 
   if (mD3D11Device) {
     DXGI_ADAPTER_DESC desc;

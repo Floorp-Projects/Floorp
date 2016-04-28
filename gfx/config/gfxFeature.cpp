@@ -3,8 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "gfxFeature.h"
+#include "mozilla/Preferences.h"
 #include "prprf.h"
+#include "gfxFeature.h"
 
 namespace mozilla {
 namespace gfx {
@@ -46,6 +47,24 @@ FeatureState::SetDefault(bool aEnable,
   }
   EnableByDefault();
   return true;
+}
+
+void
+FeatureState::SetDefaultFromPref(const char* aPrefName,
+                                 bool aIsEnablePref,
+                                 bool aDefaultValue)
+{
+  bool baseValue = Preferences::GetDefaultBool(aPrefName, aDefaultValue);
+  SetDefault(baseValue == aIsEnablePref, FeatureStatus::Disabled, "Disabled by default");
+
+  if (Preferences::HasUserValue(aPrefName)) {
+    bool userValue = Preferences::GetBool(aPrefName, aDefaultValue);
+    if (userValue == aIsEnablePref) {
+      UserEnable("Enabled by user preference");
+    } else {
+      UserDisable("Disabled by user preference");
+    }
+  }
 }
 
 bool

@@ -70,6 +70,16 @@ gfxConfig::EnableByDefault(Feature aFeature)
   state.EnableByDefault();
 }
 
+/* static */ void
+gfxConfig::SetDefaultFromPref(Feature aFeature,
+                              const char* aPrefName,
+                              bool aIsEnablePref,
+                              bool aDefaultValue)
+{
+  FeatureState& state = sConfig.GetState(aFeature);
+  return state.SetDefaultFromPref(aPrefName, aIsEnablePref, aDefaultValue);
+}
+
 /* static */ bool
 gfxConfig::InitOrUpdate(Feature aFeature,
                         bool aEnable,
