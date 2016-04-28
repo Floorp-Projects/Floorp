@@ -41,6 +41,7 @@
 
 #include "jsatominlines.h"
 
+#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"

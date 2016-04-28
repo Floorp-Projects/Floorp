@@ -611,17 +611,19 @@ PostWriteElementBarrier(JSRuntime* rt, JSObject* obj, int32_t index)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
     if (obj->is<NativeObject>() &&
+        !obj->as<NativeObject>().isInWholeCellBuffer() &&
         uint32_t(index) < obj->as<NativeObject>().getDenseInitializedLength() &&
         (obj->as<NativeObject>().getDenseInitializedLength() > MAX_WHOLE_CELL_BUFFER_SIZE
 #ifdef JS_GC_ZEAL
          || rt->hasZealMode(gc::ZealMode::ElementsBarrier)
 #endif
-            ))
+        ))
     {
         rt->gc.storeBuffer.putSlot(&obj->as<NativeObject>(), HeapSlot::Element, index, 1);
-    } else {
-        rt->gc.storeBuffer.putWholeCell(obj);
+        return;
     }
+
+    rt->gc.storeBuffer.putWholeCell(obj);
 }
 
 void

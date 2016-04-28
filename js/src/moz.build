@@ -246,6 +246,7 @@ UNIFIED_SOURCES += [
     'jit/JitSpewer.cpp',
     'jit/JSONSpewer.cpp',
     'jit/LICM.cpp',
+    'jit/Linker.cpp',
     'jit/LIR.cpp',
     'jit/LoopUnroller.cpp',
     'jit/Lowering.cpp',
