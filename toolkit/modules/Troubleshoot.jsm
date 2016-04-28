@@ -474,6 +474,8 @@ var dataProviders = {
       }
     }
 
+    data.featureLog = gfxInfo.getFeatureLog();
+
     completed();
   },
 
