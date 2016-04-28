@@ -8,6 +8,8 @@
 #define mozilla_AnimationTarget_h
 
 #include "mozilla/Attributes.h"   // For MOZ_NON_OWNING_REF
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "nsCSSPseudoElements.h"
 
 namespace mozilla {
@@ -16,16 +18,51 @@ namespace dom {
 class Element;
 } // namespace dom
 
+struct OwningAnimationTarget
+{
+  OwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
+    : mElement(aElement), mPseudoType(aType) { }
+
+  // mElement represents the parent element of a pseudo-element, not the
+  // generated content element.
+  RefPtr<dom::Element> mElement;
+  CSSPseudoElementType mPseudoType = CSSPseudoElementType::NotPseudo;
+};
+
 struct NonOwningAnimationTarget
 {
   NonOwningAnimationTarget(dom::Element* aElement, CSSPseudoElementType aType)
     : mElement(aElement), mPseudoType(aType) { }
+
+  explicit NonOwningAnimationTarget(const OwningAnimationTarget& aOther)
+    : mElement(aOther.mElement), mPseudoType(aOther.mPseudoType) { }
 
   // mElement represents the parent element of a pseudo-element, not the
   // generated content element.
   dom::Element* MOZ_NON_OWNING_REF mElement = nullptr;
   CSSPseudoElementType mPseudoType = CSSPseudoElementType::NotPseudo;
 };
+
+
+// Helper functions for cycle-collecting Maybe<OwningAnimationTarget>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            Maybe<OwningAnimationTarget>& aTarget,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  if (aTarget) {
+    ImplCycleCollectionTraverse(aCallback, aTarget->mElement, aName, aFlags);
+  }
+}
+
+inline void
+ImplCycleCollectionUnlink(Maybe<OwningAnimationTarget>& aTarget)
+{
+  if (aTarget) {
+    ImplCycleCollectionUnlink(aTarget->mElement);
+  }
+}
 
 } // namespace mozilla
 
