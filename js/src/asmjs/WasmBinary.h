@@ -36,11 +36,8 @@ static const char ExportSectionId[]      = "export";
 static const char CodeSectionId[]        = "code";
 static const char DataSectionId[]        = "data";
 
-enum class ValType : uint8_t
+enum class ValType
 {
-    // 0x00 is reserved for ExprType::Void in the binary encoding. See comment
-    // below about ExprType going away.
-
     I32                                  = 0x01,
     I64                                  = 0x02,
     F32                                  = 0x03,
@@ -55,6 +52,11 @@ enum class ValType : uint8_t
     B32x4,
 
     Limit
+};
+
+enum class TypeConstructor
+{
+    Function                             = 0x40
 };
 
 enum class Expr
@@ -316,7 +318,7 @@ enum class Expr
 // generalized to a list of ValType and this enum will go away, replaced,
 // wherever it is used, by a varU32 + list of ValType.
 
-enum class ExprType : uint8_t
+enum class ExprType
 {
     Void  = 0x00,
     I32   = uint8_t(ValType::I32),
@@ -449,10 +451,6 @@ class Encoder
     MOZ_WARN_UNUSED_RESULT bool writeValType(ValType type) {
         static_assert(size_t(ValType::Limit) <= INT8_MAX, "fits");
         return writeFixedU8(size_t(type));
-    }
-    MOZ_WARN_UNUSED_RESULT bool writeExprType(ExprType type) {
-        static_assert(size_t(ExprType::Limit) <= INT8_MAX, "fits");
-        return writeFixedU8(uint8_t(type));
     }
     MOZ_WARN_UNUSED_RESULT bool writeExpr(Expr expr) {
         static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
@@ -654,14 +652,6 @@ class Decoder
         if (!readFixedU8(&u8))
             return false;
         *type = (ValType)u8;
-        return true;
-    }
-    MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type) {
-        static_assert(uint8_t(ExprType::Limit) <= INT8_MAX, "fits");
-        uint8_t u8;
-        if (!readFixedU8(&u8))
-            return false;
-        *type = (ExprType)u8;
         return true;
     }
     MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {

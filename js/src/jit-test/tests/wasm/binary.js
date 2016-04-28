@@ -32,6 +32,8 @@ const I64Code = 2;
 const F32Code = 3;
 const F64Code = 4;
 
+const FunctionConstructorCode = 0x40;
+
 const Block = 0x01;
 const End = 0x0f;
 
@@ -112,10 +114,13 @@ function sigSection(sigs) {
     var body = [];
     body.push(...varU32(sigs.length));
     for (let sig of sigs) {
+        body.push(...varU32(FunctionConstructorCode));
         body.push(...varU32(sig.args.length));
-        body.push(...varU32(sig.ret));
         for (let arg of sig.args)
             body.push(...varU32(arg));
+        body.push(...varU32(sig.ret == VoidCode ? 0 : 1));
+        if (sig.ret != VoidCode)
+            body.push(...varU32(sig.ret));
     }
     return { name: sigId, body };
 }
@@ -166,8 +171,8 @@ const i2vSig = {args:[I32Code], ret:VoidCode};
 const v2vBody = funcBody({locals:[], body:[]});
 
 assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: U32MAX_LEB } ])), TypeError, /too many signatures/);
-assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, ...U32MAX_LEB], } ])), TypeError, /too many arguments in signature/);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:VoidCode}, {args:[], ret:VoidCode}])])), TypeError, /duplicate signature/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, 0], } ])), TypeError, /expected function form/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, FunctionConstructorCode, ...U32MAX_LEB], } ])), TypeError, /too many arguments in signature/);
 
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: sigId, body: [1]}])), TypeError);
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: sigId, body: [1, 1, 0]}])), TypeError);
