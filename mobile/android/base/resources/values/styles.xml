@@ -114,12 +114,25 @@
         <item name="android:textSize">@dimen/menu_item_textsize</item>
     </style>
 
+    <style name="Widget.FolderTitle">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+    </style>
+
+    <style name="Widget.FolderTitle.OneLine">
+        <item name="android:textSize">@dimen/home_folder_title_oneline_textsize</item>
+    </style>
+
+    <style name="Widget.FolderTitle.TwoLine">
+        <item name="android:textSize">@dimen/home_folder_title_twoline_textsize</item>
+    </style>
+
     <style name="Widget.TwoLinePageRow" >
         <item name="android:background">@color/pressed_about_page_header_grey</item>
     </style>
 
     <style name="Widget.TwoLinePageRow.Title">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
+        <item name="android:textSize">@dimen/home_twolinepagerow_title_textsize</item>
     </style>
 
     <style name="Widget.TwoLinePageRow.Url">
@@ -128,7 +141,7 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <style name="Widget.FolderView" parent="Widget.TwoLinePageRow.Title">
+    <style name="Widget.FolderView" parent="Widget.FolderTitle.OneLine">
         <item name="android:layout_height">@dimen/page_group_height</item>
         <item name="android:minHeight">@dimen/page_group_height</item>
         <item name="android:singleLine">true</item>
@@ -160,10 +173,10 @@
     </style>
 
     <style name="Widget.TopSitesGridItemView">
-      <item name="android:layout_width">match_parent</item>
-      <item name="android:layout_height">match_parent</item>
-      <item name="android:padding">5dip</item>
-      <item name="android:orientation">vertical</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:padding">5dip</item>
+        <item name="android:orientation">vertical</item>
     </style>
 
     <style name="Widget.TabsGridLayout" parent="Widget.GridView">

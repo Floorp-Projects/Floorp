@@ -55,9 +55,8 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
             context = view.getContext();
 
             icon = (ImageView) view.findViewById(R.id.device_type);
-            title = (TextView) view.findViewById(R.id.client);
-            subtext = (TextView) view.findViewById(R.id.last_synced);
-            view.findViewById(R.id.device_expanded).setVisibility(View.GONE);
+            title = (TextView) view.findViewById(R.id.title);
+            subtext = (TextView) view.findViewById(R.id.subtext);
         }
 
         public void bind(int drawableRes, int titleRes, int subtitleRes, int numDevices) {
