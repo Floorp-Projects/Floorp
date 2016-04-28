@@ -122,6 +122,8 @@ public class DoorHangerPopup extends AnchoredPopup
             doorhangerType = DoorHanger.Type.DESKTOPNOTIFICATION2;
         } else if (DoorHanger.Type.WEBRTC.toString().equals(typeString)) {
             doorhangerType = DoorHanger.Type.WEBRTC;
+        } else if (DoorHanger.Type.VIBRATION.toString().equals(typeString)) {
+            doorhangerType = DoorHanger.Type.VIBRATION;
         }
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
