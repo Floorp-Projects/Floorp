@@ -5,3 +5,6 @@ task:
   payload:
     command:
       - --download-symbols=ondemand
+  extra:
+    treeherder:
+      tier: 2
