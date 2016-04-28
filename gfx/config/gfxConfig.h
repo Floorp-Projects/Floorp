@@ -45,8 +45,8 @@ public:
   static bool IsForcedOnByUser(Feature aFeature);
   static bool IsDisabledByDefault(Feature aFeature);
 
-  // Query the raw computed status value of a parameter. This is computed
-  // similar to IsEnabled:
+  // Query the status value of a parameter. This is computed similar to
+  // IsEnabled:
   //
   //  1. If a runtime failure was set, return it.
   //  2. If the user force-enabled the feature, return ForceEnabled.
@@ -73,6 +73,14 @@ public:
   static void Disable(Feature aFeature,
                       FeatureStatus aStatus,
                       const char* aMessage);
+
+  // Given a preference name, infer the default value and whether or not the
+  // user has changed it. |aIsEnablePref| specifies whether or not the pref
+  // is intended to enable a feature (true), or disable it (false).
+  static void SetDefaultFromPref(Feature aFeature,
+                                 const char* aPrefName,
+                                 bool aIsEnablePref,
+                                 bool aDefaultValue);
 
   // Disable a parameter based on a runtime decision. This permanently
   // disables the feature, since runtime decisions override all other

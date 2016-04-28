@@ -17,6 +17,7 @@ namespace gfx {
   /* Name,                        Type,         Description */                    \
   _(HW_COMPOSITING,               Feature,      "Compositing")                    \
   _(D3D11_COMPOSITING,            Feature,      "Direct3D11 Compositing")         \
+  _(DIRECT2D,                     Feature,      "Direct2D")                       \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
@@ -37,10 +38,12 @@ class FeatureState
   void EnableByDefault();
   void DisableByDefault(FeatureStatus aStatus, const char* aMessage);
   bool SetDefault(bool aEnable, FeatureStatus aDisableStatus, const char* aDisableMessage);
-
   bool InitOrUpdate(bool aEnable,
                     FeatureStatus aDisableStatus,
                     const char* aMessage);
+  void SetDefaultFromPref(const char* aPrefName,
+                          bool aIsEnablePref,
+                          bool aDefaultValue);
   void UserEnable(const char* aMessage);
   void UserForceEnable(const char* aMessage);
   void UserDisable(const char* aMessage);
