@@ -117,7 +117,7 @@ JSObject::setSingleton(js::ExclusiveContext* cx, js::HandleObject obj)
     MOZ_ASSERT_IF(cx->isJSContext(), !IsInsideNursery(obj));
 
     js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(cx, obj->getClass(),
-                                                                 obj->taggedProto());
+                                                                 obj->getTaggedProto());
     if (!group)
         return false;
 
@@ -152,13 +152,13 @@ JSObject::setGroup(js::ObjectGroup* group)
 inline bool
 js::GetPrototype(JSContext* cx, js::HandleObject obj, js::MutableHandleObject protop)
 {
-    if (obj->hasDynamicPrototype()) {
+    if (obj->getTaggedProto().isLazy()) {
         MOZ_ASSERT(obj->is<js::ProxyObject>());
         return js::Proxy::getPrototype(cx, obj, protop);
+    } else {
+        protop.set(obj->getTaggedProto().toObjectOrNull());
+        return true;
     }
-
-    protop.set(obj->taggedProto().toObjectOrNull());
-    return true;
 }
 
 inline bool
@@ -487,9 +487,9 @@ JSObject::isIndexed() const
 }
 
 inline bool
-JSObject::staticPrototypeIsImmutable() const
+JSObject::nonLazyPrototypeIsImmutable() const
 {
-    MOZ_ASSERT(hasStaticPrototype());
+    MOZ_ASSERT(!hasLazyPrototype());
     return hasAllFlags(js::BaseShape::IMMUTABLE_PROTOTYPE);
 }
 
@@ -564,7 +564,7 @@ ClassMethodIsNative(JSContext* cx, NativeObject* obj, const Class* clasp, jsid m
 
     Value v;
     if (!HasDataProperty(cx, obj, methodid, &v)) {
-        JSObject* proto = obj->staticPrototype();
+        JSObject* proto = obj->getProto();
         if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, &proto->as<NativeObject>(), methodid, &v))
             return false;
     }
@@ -585,7 +585,7 @@ HasObjectValueOf(JSObject* obj, JSContext* cx)
 
     Value v;
     while (!HasDataProperty(cx, &obj->as<NativeObject>(), valueOf, &v)) {
-        obj = obj->staticPrototype();
+        obj = obj->getProto();
         if (!obj || obj->is<ProxyObject>() || !obj->isNative())
             return false;
     }

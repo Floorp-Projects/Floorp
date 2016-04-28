@@ -501,7 +501,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
         // generic path below then any non-empty object will be converted to
         // dictionary mode.
         RootedShape last(cx, EmptyShape::getInitialShape(cx, nobj->getClass(),
-                                                         nobj->taggedProto(),
+                                                         nobj->getTaggedProto(),
                                                          nobj->numFixedSlots(),
                                                          nobj->lastProperty()->getObjectFlags()));
         if (!last)
@@ -689,7 +689,7 @@ NewObjectCache::fillProto(EntryIndex entry, const Class* clasp, js::TaggedProto 
                           gc::AllocKind kind, NativeObject* obj)
 {
     MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->is<GlobalObject>());
-    MOZ_ASSERT(obj->taggedProto() == proto);
+    MOZ_ASSERT(obj->getTaggedProto() == proto);
     return fill(entry, clasp, proto.raw(), kind, obj);
 }
 
@@ -914,7 +914,7 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
                 return nullptr;
 
             if (newKind == SingletonObject) {
-                Rooted<TaggedProto> proto(cx, TaggedProto(templateObject->staticPrototype()));
+                Rooted<TaggedProto> proto(cx, TaggedProto(templateObject->getProto()));
                 if (!res->splicePrototype(cx, &PlainObject::class_, proto))
                     return nullptr;
             } else {
@@ -1341,13 +1341,13 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
 
     MOZ_ASSERT(!src->hasPrivate());
     RootedShape shape(cx);
-    if (src->staticPrototype() == dst->staticPrototype()) {
+    if (src->getProto() == dst->getProto()) {
         shape = src->lastProperty();
     } else {
         // We need to generate a new shape for dst that has dst's proto but all
         // the property information from src.  Note that we asserted above that
         // dst's object flags are 0.
-        shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->taggedProto(),
+        shape = EmptyShape::getInitialShape(cx, dst->getClass(), dst->getTaggedProto(),
                                             dst->numFixedSlots(), 0);
         if (!shape)
             return false;
@@ -1943,7 +1943,7 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
             MOZ_ASSERT(obj == oldproto);
             break;
         }
-        oldproto = oldproto->staticPrototype();
+        oldproto = oldproto->getProto();
     }
 
     if (proto.isObject() && !proto.toObject()->setDelegate(cx))
@@ -1993,7 +1993,7 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
     MarkObjectGroupUnknownProperties(cx, obj->group());
 
     ObjectGroup* group = ObjectGroup::lazySingletonGroup(cx, obj->getClass(),
-                                                         obj->taggedProto());
+                                                         obj->getTaggedProto());
     if (!group)
         return false;
 
@@ -2295,7 +2295,7 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
             return true;
         }
 
-        obj = obj->staticPrototype();
+        obj = obj->getProto();
     } while (obj);
 
     *objp = nullptr;
@@ -2498,13 +2498,13 @@ bool
 js::GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
                            MutableHandleObject protop)
 {
-    if (obj->hasDynamicPrototype()) {
+    if (obj->getTaggedProto().isLazy()) {
         MOZ_ASSERT(obj->is<js::ProxyObject>());
         return js::Proxy::getPrototypeIfOrdinary(cx, obj, isOrdinary, protop);
     }
 
     *isOrdinary = true;
-    protop.set(obj->staticPrototype());
+    protop.set(obj->getTaggedProto().toObjectOrNull());
     return true;
 }
 
@@ -2527,15 +2527,19 @@ JS_ImmutablePrototypesEnabled()
 bool
 js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::ObjectOpResult& result)
 {
-    // The proxy trap subsystem fully handles prototype-setting for proxies
-    // with dynamic [[Prototype]]s.
-    if (obj->hasDynamicPrototype()) {
+    /*
+     * If |obj| has a "lazy" [[Prototype]], it is 1) a proxy 2) whose handler's
+     * {get,set}Prototype and setImmutablePrototype methods mediate access to
+     * |obj.[[Prototype]]|.  The Proxy subsystem is responsible for responding
+     * to such attempts.
+     */
+    if (obj->hasLazyPrototype()) {
         MOZ_ASSERT(obj->is<ProxyObject>());
         return Proxy::setPrototype(cx, obj, proto, result);
     }
 
     /* Disallow mutation of immutable [[Prototype]]s. */
-    if (obj->staticPrototypeIsImmutable() && ImmutablePrototypesEnabled)
+    if (obj->nonLazyPrototypeIsImmutable() && ImmutablePrototypesEnabled)
         return result.fail(JSMSG_CANT_SET_PROTO);
 
     /*
@@ -2572,7 +2576,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * ES6 9.1.2 step 3-4 if |obj.[[Prototype]]| has SameValue as |proto| return true.
      * Since the values in question are objects, we can just compare pointers.
      */
-    if (proto == obj->staticPrototype())
+    if (proto == obj->getProto())
         return result.succeed();
 
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
@@ -2782,7 +2786,7 @@ js::DefineElement(ExclusiveContext* cx, HandleObject obj, uint32_t index, Handle
 bool
 js::SetImmutablePrototype(ExclusiveContext* cx, HandleObject obj, bool* succeeded)
 {
-    if (obj->hasDynamicPrototype()) {
+    if (obj->hasLazyPrototype()) {
         if (!cx->shouldBeJSContext())
             return false;
         return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
@@ -3467,8 +3471,7 @@ JSObject::dump()
     if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
     if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
     if (obj->wasNewScriptCleared()) fprintf(stderr, " new_script_cleared");
-    if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable())
-        fprintf(stderr, " immutable_prototype");
+    if (!obj->hasLazyPrototype() && obj->nonLazyPrototypeIsImmutable()) fprintf(stderr, " immutable_prototype");
 
     if (obj->isNative()) {
         NativeObject* nobj = &obj->as<NativeObject>();
@@ -3494,9 +3497,9 @@ JSObject::dump()
     }
 
     fprintf(stderr, "proto ");
-    TaggedProto proto = obj->taggedProto();
-    if (proto.isDynamic())
-        fprintf(stderr, "<dynamic>");
+    TaggedProto proto = obj->getTaggedProto();
+    if (proto.isLazy())
+        fprintf(stderr, "<lazy>");
     else
         dumpValue(ObjectOrNullValue(proto.toObjectOrNull()));
     fputc('\n', stderr);

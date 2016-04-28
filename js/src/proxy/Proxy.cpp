@@ -183,7 +183,7 @@ js::AppendUnique(JSContext* cx, AutoIdVector& base, AutoIdVector& others)
 /* static */ bool
 Proxy::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject proto)
 {
-    MOZ_ASSERT(proxy->hasDynamicPrototype());
+    MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->getPrototype(cx, proxy, proto);
 }
@@ -191,7 +191,7 @@ Proxy::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject proto
 /* static */ bool
 Proxy::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto, ObjectOpResult& result)
 {
-    MOZ_ASSERT(proxy->hasDynamicPrototype());
+    MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->setPrototype(cx, proxy, proto, result);
 }
@@ -200,7 +200,7 @@ Proxy::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto, Objec
 Proxy::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
                               MutableHandleObject proto)
 {
-    MOZ_ASSERT(proxy->hasDynamicPrototype());
+    MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->getPrototypeIfOrdinary(cx, proxy, isOrdinary,
                                                                       proto);
@@ -782,7 +782,7 @@ ProxyObject::renew(JSContext* cx, const BaseProxyHandler* handler, Value priv)
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     MOZ_ASSERT(getClass() == &ProxyObject::proxyClass);
     MOZ_ASSERT(!IsWindowProxy(this));
-    MOZ_ASSERT(hasDynamicPrototype());
+    MOZ_ASSERT(hasLazyPrototype());
 
     setHandler(handler);
     setCrossCompartmentPrivate(priv);

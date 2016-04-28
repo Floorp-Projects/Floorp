@@ -1133,7 +1133,7 @@ JS_MayResolveStandardClass(const JSAtomState& names, jsid id, JSObject* maybeObj
     // The global object's resolve hook is special: JS_ResolveStandardClass
     // initializes the prototype chain lazily. Only attempt to optimize here
     // if we know the prototype chain has been initialized.
-    if (!maybeObj || !maybeObj->staticPrototype())
+    if (!maybeObj || !maybeObj->getProto())
         return true;
 
     if (!JSID_IS_ATOM(id))

@@ -2007,7 +2007,7 @@ js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun, HandleObject par
      * Clone the function, reusing its script. We can use the same group as
      * the original function provided that its prototype is correct.
      */
-    if (fun->staticPrototype() == clone->staticPrototype())
+    if (fun->getProto() == clone->getProto())
         clone->setGroup(fun->group());
     return clone;
 }
@@ -2160,8 +2160,8 @@ js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clas
     if (thisv.isObject()) {
         MOZ_ASSERT(thisv.toObject().getClass() != clasp ||
                    !thisv.toObject().isNative() ||
-                   !thisv.toObject().staticPrototype() ||
-                   thisv.toObject().staticPrototype()->getClass() != clasp);
+                   !thisv.toObject().getProto() ||
+                   thisv.toObject().getProto()->getClass() != clasp);
     } else if (thisv.isString()) {
         MOZ_ASSERT(clasp != &StringObject::class_);
     } else if (thisv.isNumber()) {
