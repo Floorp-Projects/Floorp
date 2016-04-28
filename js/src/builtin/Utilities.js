@@ -29,7 +29,7 @@
 #ifdef DEBUG
 #define assert(b, info) if (!(b)) AssertionFailed(__FILE__ + ":" + __LINE__ + ": " + info)
 #define dbg(msg) DumpMessage(callFunction(std_Array_pop, \
-                                          callFunction(std_String_split, __FILE__, '/')) \
+                                          StringSplitString(__FILE__, '/')) \
                              + '#' + __LINE__ + ': ' + msg)
 #else
 #define assert(b, info) // Elided assertion.
