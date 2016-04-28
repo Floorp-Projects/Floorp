@@ -11,10 +11,12 @@
 #include "mozilla/unused.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsITCPPresentationServer.h"
 #include "nsIWindowWatcher.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsSimpleURI.h"
+#include "nsTCPDeviceInfo.h"
 #include "nsThreadUtils.h"
 
 static mozilla::LazyLogModule gDisplayDeviceProviderLog("DisplayDeviceProvider");
@@ -28,6 +30,33 @@ static mozilla::LazyLogModule gDisplayDeviceProviderLog("DisplayDeviceProvider")
 namespace mozilla {
 namespace dom {
 namespace presentation {
+
+/**
+ * This wrapper is used to break circular-reference problem.
+ */
+class DisplayDeviceProviderWrappedListener final
+  : public nsITCPPresentationServerListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_SAFE_NSITCPPRESENTATIONSERVERLISTENER(mListener)
+
+  explicit DisplayDeviceProviderWrappedListener() = default;
+
+  nsresult SetListener(DisplayDeviceProvider* aListener)
+  {
+    mListener = aListener;
+    return NS_OK;
+  }
+
+private:
+  virtual ~DisplayDeviceProviderWrappedListener() = default;
+
+  DisplayDeviceProvider* mListener = nullptr;
+};
+
+NS_IMPL_ISUPPORTS(DisplayDeviceProviderWrappedListener,
+                  nsITCPPresentationServerListener)
 
 NS_IMPL_ISUPPORTS(DisplayDeviceProvider::HDMIDisplayDevice,
                   nsIPresentationDevice,
@@ -151,7 +180,8 @@ DisplayDeviceProvider::HDMIDisplayDevice::CloseTopLevelWindow()
 
 NS_IMPL_ISUPPORTS(DisplayDeviceProvider,
                   nsIObserver,
-                  nsIPresentationDeviceProvider)
+                  nsIPresentationDeviceProvider,
+                  nsITCPPresentationServerListener)
 
 DisplayDeviceProvider::~DisplayDeviceProvider()
 {
@@ -166,12 +196,31 @@ DisplayDeviceProvider::Init()
     return NS_OK;
   }
 
+  nsresult rv;
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   MOZ_ASSERT(obs);
 
   obs->AddObserver(this, DISPLAY_CHANGED_NOTIFICATION, false);
 
   mDevice = new HDMIDisplayDevice(this);
+
+  mWrappedListener = new DisplayDeviceProviderWrappedListener();
+  rv = mWrappedListener->SetListener(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mPresentationServer = do_CreateInstance(TCP_PRESENTATION_SERVER_CONTACT_ID,
+                                          &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = StartTCPService();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   mInitialized = true;
   return NS_OK;
@@ -194,6 +243,50 @@ DisplayDeviceProvider::Uninit()
   RemoveExternalScreen();
 
   mInitialized = false;
+  mWrappedListener->SetListener(nullptr);
+  return NS_OK;
+}
+
+nsresult
+DisplayDeviceProvider::StartTCPService()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+  rv =  mPresentationServer->SetId(NS_LITERAL_CSTRING("DisplayDeviceProvider"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint16_t servicePort;
+  rv = mPresentationServer->GetPort(&servicePort);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  /*
+   * If |servicePort| is non-zero, it means PresentationServer is running.
+   * Otherwise, we should make it start serving.
+   */
+  if (!servicePort) {
+    rv = mPresentationServer->SetListener(mWrappedListener);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mPresentationServer->StartService(0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = mPresentationServer->GetPort(&servicePort);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  mPort = servicePort;
+
   return NS_OK;
 }
 
@@ -275,6 +368,46 @@ DisplayDeviceProvider::ForceDiscovery()
   return NS_OK;
 }
 
+// nsITCPPresentationServerListener
+NS_IMETHODIMP
+DisplayDeviceProvider::OnPortChange(uint16_t aPort)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mPort = aPort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DisplayDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
+                                      const nsAString& aUrl,
+                                      const nsAString& aPresentationId,
+                                      nsIPresentationControlChannel* aControlChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aDeviceInfo);
+  MOZ_ASSERT(aControlChannel);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPresentationDeviceListener> listener;
+  rv = GetListener(getter_AddRefs(listener));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!listener);
+
+  rv = listener->OnSessionRequest(mDevice,
+                                  aUrl,
+                                  aPresentationId,
+                                  aControlChannel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 // nsIObserver
 NS_IMETHODIMP
 DisplayDeviceProvider::Observe(nsISupports* aSubject,
@@ -305,12 +438,23 @@ DisplayDeviceProvider::Observe(nsISupports* aSubject,
 
 nsresult
 DisplayDeviceProvider::RequestSession(HDMIDisplayDevice* aDevice,
-                                    const nsAString& aUrl,
-                                    const nsAString& aPresentationId,
-                                    nsIPresentationControlChannel** aControlChannel)
+                                      const nsAString& aUrl,
+                                      const nsAString& aPresentationId,
+                                      nsIPresentationControlChannel** aControlChannel)
 {
-  // Implement in part 3
-  return NS_OK;
+  MOZ_ASSERT(aDevice);
+  MOZ_ASSERT(mPresentationServer);
+  NS_ENSURE_ARG_POINTER(aControlChannel);
+  *aControlChannel = nullptr;
+
+  nsCOMPtr<nsITCPDeviceInfo> deviceInfo = new TCPDeviceInfo(aDevice->Id(),
+                                                            aDevice->Address(),
+                                                            mPort);
+
+  return mPresentationServer->RequestSession(deviceInfo,
+                                             aUrl,
+                                             aPresentationId,
+                                             aControlChannel);
 }
 
 } // namespace presentation
