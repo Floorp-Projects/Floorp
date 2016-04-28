@@ -490,9 +490,9 @@ class Encoder
     MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], size_t* offset) {
         static const size_t IdSize = IdSizeWith0 - 1;
         MOZ_ASSERT(id[IdSize] == '\0');
-        return writePatchableVarU32(offset) &&
-               writeVarU32(IdSize) &&
-               bytes_.append(reinterpret_cast<const uint8_t*>(id), IdSize);
+        return writeVarU32(IdSize) &&
+               bytes_.append(reinterpret_cast<const uint8_t*>(id), IdSize) &&
+               writePatchableVarU32(offset);
     }
     void finishSection(size_t offset) {
         return patchVarU32(offset, bytes_.length() - offset - varU32ByteLength(offset));
@@ -709,15 +709,11 @@ class Decoder
     static const uint32_t NotStarted = UINT32_MAX;
 
     template <size_t IdSizeWith0>
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset) {
+    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset,
+                                             uint32_t* size) {
         static const size_t IdSize = IdSizeWith0 - 1;
         MOZ_ASSERT(id[IdSize] == '\0');
         const uint8_t* before = cur_;
-        uint32_t size;
-        if (!readVarU32(&size))
-            goto backup;
-        if (bytesRemain() < size)
-            return false;
         uint32_t idSize;
         if (!readVarU32(&idSize))
             goto backup;
@@ -726,32 +722,29 @@ class Decoder
         if (idSize != IdSize || !!memcmp(cur_, id, IdSize))
             goto backup;
         cur_ += IdSize;
-        *startOffset = before - beg_;
+        if (!readVarU32(size))
+            goto backup;
+        if (bytesRemain() < *size)
+            return false;
+        *startOffset = cur_ - beg_;
         return true;
       backup:
         cur_ = before;
         *startOffset = NotStarted;
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t startOffset) {
-        uint32_t currentOffset = cur_ - beg_;
-        cur_ = beg_ + startOffset;
-        uint32_t size = uncheckedReadVarU32();
-        uint32_t afterSize = cur_ - beg_;
-        cur_ = beg_ + currentOffset;
-        return size == (currentOffset - afterSize);
+    MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t startOffset, uint32_t size) {
+        return size == (cur_ - beg_) - startOffset;
     }
     MOZ_WARN_UNUSED_RESULT bool skipSection() {
-        uint32_t size;
-        if (!readVarU32(&size) || bytesRemain() < size)
-            return false;
-        const uint8_t* begin = cur_;
         uint32_t idSize;
         if (!readVarU32(&idSize) || bytesRemain() < idSize)
             return false;
-        if (uint32_t(cur_ - begin) > size)
+        cur_ += idSize;
+        uint32_t size;
+        if (!readVarU32(&size) || bytesRemain() < size)
             return false;
-        cur_ = begin + size;
+        cur_ += size;
         return true;
     }
 
