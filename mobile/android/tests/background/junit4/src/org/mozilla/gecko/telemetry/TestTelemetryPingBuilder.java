@@ -40,10 +40,6 @@ public class TestTelemetryPingBuilder {
     }
 
     private static class NoMandatoryFieldsBuilder extends TelemetryPingBuilder {
-        public NoMandatoryFieldsBuilder() {
-            super("");
-        }
-
         @Override
         public String getDocType() {
             return "";
@@ -62,10 +58,6 @@ public class TestTelemetryPingBuilder {
 
     private static class MandatoryFieldsBuilder extends TelemetryPingBuilder {
         private static final String MANDATORY_FIELD = "mandatory-field";
-
-        public MandatoryFieldsBuilder() {
-            super("");
-        }
 
         @Override
         public String getDocType() {

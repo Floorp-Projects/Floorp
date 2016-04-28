@@ -84,7 +84,7 @@ public class TestJSONFilePingStore {
         final String filename = testDir.list()[0];
         assertTrue("Filename contains expected ID", filename.contains(Integer.toString(expectedID)));
         final JSONObject actual = FileUtils.readJSONObjectFromFile(new File(testDir, filename));
-        assertEquals("Ping urls are equal", expectedPing.getURL(), actual.getString(JSONFilePingStore.KEY_URL));
+        assertEquals("Ping url paths are equal", expectedPing.getURLPath(), actual.getString(JSONFilePingStore.KEY_URL_PATH));
         assertIsGeneratedPayload(new ExtendedJSONObject(actual.getString(JSONFilePingStore.KEY_PAYLOAD)));
     }
 
@@ -119,7 +119,7 @@ public class TestJSONFilePingStore {
         final ArrayList<TelemetryPingFromStore> pings = testStore.getAllPings();
         for (final TelemetryPingFromStore ping : pings) {
             final int id = ping.getUniqueID(); // we use ID as a key for specific pings and check against the url values.
-            assertEquals("Expected url value received", urlPrefix + id, ping.getURL());
+            assertEquals("Expected url path value received", urlPrefix + id, ping.getURLPath());
             assertIsGeneratedPayload(ping.getPayload());
         }
     }
@@ -195,7 +195,7 @@ public class TestJSONFilePingStore {
     private void writeTestPingsToStore(final int count, final String urlPrefix) throws Exception {
         for (int i = 1; i <= count; ++i) {
             final JSONObject obj = new JSONObject()
-                    .put(JSONFilePingStore.KEY_URL, urlPrefix + i)
+                    .put(JSONFilePingStore.KEY_URL_PATH, urlPrefix + i)
                     .put(JSONFilePingStore.KEY_PAYLOAD, generateTelemetryPayload());
             FileUtils.writeJSONObjectToFile(testStore.getPingFile(i), obj);
         }
