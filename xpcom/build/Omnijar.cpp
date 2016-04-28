@@ -14,11 +14,11 @@
 
 namespace mozilla {
 
-nsIFile* Omnijar::sPath[2] = { nullptr, nullptr };
-nsZipArchive* Omnijar::sReader[2] = { nullptr, nullptr };
+StaticRefPtr<nsIFile> Omnijar::sPath[2];
+StaticRefPtr<nsZipArchive> Omnijar::sReader[2];
 bool Omnijar::sInitialized = false;
-static bool sIsUnified = false;
-static bool sIsNested[2] = { false, false };
+bool Omnijar::sIsUnified = false;
+bool Omnijar::sIsNested[2] = { false, false };
 
 static const char* sProp[2] = {
   NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR
@@ -31,10 +31,9 @@ Omnijar::CleanUpOne(Type aType)
 {
   if (sReader[aType]) {
     sReader[aType]->CloseArchive();
-    NS_IF_RELEASE(sReader[aType]);
+    sReader[aType] = nullptr;
   }
-  sReader[aType] = nullptr;
-  NS_IF_RELEASE(sPath[aType]);
+  sPath[aType] = nullptr;
 }
 
 void
@@ -97,9 +96,7 @@ Omnijar::InitOne(nsIFile* aPath, Type aType)
 
   CleanUpOne(aType);
   sReader[aType] = zipReader;
-  NS_IF_ADDREF(sReader[aType]);
   sPath[aType] = file;
-  NS_IF_ADDREF(sPath[aType]);
 }
 
 void
