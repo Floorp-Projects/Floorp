@@ -78,8 +78,9 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
-import org.mozilla.gecko.telemetry.TelemetryConstants;
+import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.TelemetryUploadService;
+import org.mozilla.gecko.telemetry.core.TelemetryCorePingBuilder;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -318,6 +319,8 @@ public class BrowserApp extends GeckoApp
 
     @NonNull
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
+
+    private TelemetryDispatcher mTelemetryDispatcher;
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -688,23 +691,26 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch");
 
+        final GeckoProfile profile = getProfile();
+
         // We want to upload the telemetry core ping as soon after startup as possible. It relies on the
         // Distribution being initialized. If you move this initialization, ensure it plays well with telemetry.
         final Distribution distribution = Distribution.init(this);
-        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, getProfile().getName()));
+        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
 
         searchEngineManager = new SearchEngineManager(this, distribution);
+        mTelemetryDispatcher = new TelemetryDispatcher(profile.getDir().getAbsolutePath());
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
-        final BrowserDB db = getProfile().getDB();
+        final BrowserDB db = profile.getDB();
         db.setSuggestedSites(suggestedSites);
 
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
-        mReadingListHelper = new ReadingListHelper(appContext, getProfile());
-        mAccountsHelper = new AccountsHelper(appContext, getProfile());
+        mReadingListHelper = new ReadingListHelper(appContext, profile);
+        mAccountsHelper = new AccountsHelper(appContext, profile);
 
         final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
         adjustHelper.onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
@@ -1073,7 +1079,7 @@ public class BrowserApp extends GeckoApp
         // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
         //
         // So we're left with onStart/onStop.
-        searchEngineManager.getEngine(new UploadTelemetryCallback(BrowserApp.this));
+        searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(BrowserApp.this));
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onStart(this);
@@ -3939,33 +3945,10 @@ public class BrowserApp extends GeckoApp
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
     }
 
-    @WorkerThread // synchronous SharedPrefs write.
-    private static void uploadTelemetry(final Context context, final GeckoProfile profile,
-            final org.mozilla.gecko.search.SearchEngine defaultEngine) {
-        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(context, profile)) {
-            return;
-        }
-
-        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(context, profile.getName());
-        final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
-
-        // We store synchronously before sending the Intent to ensure this sequence number will not be re-used.
-        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
-
-        final Intent i = new Intent(TelemetryUploadService.ACTION_UPLOAD_CORE);
-        i.setClass(context, TelemetryUploadService.class);
-        i.putExtra(TelemetryUploadService.EXTRA_DEFAULT_SEARCH_ENGINE, (defaultEngine == null) ? null : defaultEngine.getIdentifier());
-        i.putExtra(TelemetryUploadService.EXTRA_DOC_ID, UUID.randomUUID().toString());
-        i.putExtra(TelemetryUploadService.EXTRA_PROFILE_NAME, profile.getName());
-        i.putExtra(TelemetryUploadService.EXTRA_PROFILE_PATH, profile.getDir().getAbsolutePath());
-        i.putExtra(TelemetryUploadService.EXTRA_SEQ, seq);
-        context.startService(i);
-    }
-
-    private static class UploadTelemetryCallback implements SearchEngineManager.SearchEngineCallback {
+    private static class UploadTelemetryCorePingCallback implements SearchEngineManager.SearchEngineCallback {
         private final WeakReference<BrowserApp> activityWeakReference;
 
-        public UploadTelemetryCallback(final BrowserApp activity) {
+        public UploadTelemetryCorePingCallback(final BrowserApp activity) {
             this.activityWeakReference = new WeakReference<>(activity);
         }
 
@@ -3980,7 +3963,7 @@ public class BrowserApp extends GeckoApp
             // The containing method can be called from onStart: queue this work so that
             // the first launch of the activity doesn't trigger profile init too early.
             //
-            // Additionally, uploadTelemetry must be called from a worker thread.
+            // Additionally, getAndIncrementSequenceNumberSync must be called from a worker thread.
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @WorkerThread
                 @Override
@@ -3989,7 +3972,34 @@ public class BrowserApp extends GeckoApp
                     if (activity == null) {
                         return;
                     }
-                    uploadTelemetry(activity, activity.getProfile(), engine);
+
+                    final GeckoProfile profile = activity.getProfile();
+                    if (!TelemetryUploadService.isUploadEnabledByProfileConfig(activity, profile)) {
+                        Log.d(LOGTAG, "Core ping upload disabled by profile config. Returning.");
+                        return;
+                    }
+
+                    final String clientID;
+                    try {
+                        clientID = profile.getClientId();
+                    } catch (final IOException e) {
+                        Log.w(LOGTAG, "Unable to get client ID to generate core ping: " + e);
+                        return;
+                    }
+
+                    // Each profile can have different telemetry data so we intentionally grab the shared prefs for the profile.
+                    final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(activity, profile.getName());
+                    final TelemetryCorePingBuilder pingBuilder = new TelemetryCorePingBuilder(activity, TelemetryCorePingBuilder.getServer(sharedPrefs))
+                            .setClientID(clientID)
+                            .setDefaultSearchEngine(TelemetryCorePingBuilder.getEngineIdentifier(engine))
+                            .setProfileCreationDate(TelemetryCorePingBuilder.getProfileCreationDate(activity, profile))
+                            .setSequenceNumber(TelemetryCorePingBuilder.getAndIncrementSequenceNumberSync(sharedPrefs));
+                    final String distributionId = sharedPrefs.getString(DistributionStoreCallback.PREF_DISTRIBUTION_ID, null);
+                    if (distributionId != null) {
+                        pingBuilder.setOptDistributionID(distributionId);
+                    }
+
+                    activity.mTelemetryDispatcher.queuePingForUpload(activity, pingBuilder);
                 }
             });
         }
