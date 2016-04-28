@@ -113,6 +113,7 @@ class nsJAR final : public nsIZipReader
     int64_t                  mMtime;
     int32_t                  mTotalItemsInManifest;
     bool                     mOpened;
+    bool                     mIsOmnijar;
 
     nsresult ParseManifest();
     void     ReportError(const nsACString &aFilename, int16_t errorCode);
