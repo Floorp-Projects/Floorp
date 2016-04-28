@@ -15,6 +15,12 @@ FeatureState::GetValue() const
   if (mRuntime.mStatus != FeatureStatus::Unused) {
     return mRuntime.mStatus;
   }
+  if (mUser.mStatus == FeatureStatus::ForceEnabled) {
+    return FeatureStatus::ForceEnabled;
+  }
+  if (mEnvironment.mStatus != FeatureStatus::Unused) {
+    return mEnvironment.mStatus;
+  }
   if (mUser.mStatus != FeatureStatus::Unused) {
     return mUser.mStatus;
   }
@@ -56,11 +62,22 @@ FeatureState::DisableByDefault(FeatureStatus aStatus, const char* aMessage)
 void
 FeatureState::SetUser(FeatureStatus aStatus, const char* aMessage)
 {
+  // Default decision must have been made, but not runtime or environment.
+  MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
+  MOZ_ASSERT(mEnvironment.mStatus == FeatureStatus::Unused);
+  MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
+
+  mUser.Set(aStatus, aMessage);
+}
+
+void
+FeatureState::SetEnvironment(FeatureStatus aStatus, const char* aMessage)
+{
   // Default decision must have been made, but not runtime.
   MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
   MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
 
-  mUser.Set(aStatus, aMessage);
+  mEnvironment.Set(aStatus, aMessage);
 }
 
 void
