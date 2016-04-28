@@ -16,7 +16,7 @@ FeatureStatusToString(FeatureStatus aStatus)
       return "unused";
     case FeatureStatus::Unavailable:
       return "unavailable";
-    case FeatureStatus::Crashed:
+    case FeatureStatus::CrashedInHandler:
       return "crashed";
     case FeatureStatus::Blocked:
       return "blocked";
