@@ -446,8 +446,7 @@ struct ParamTraits<FallibleTArray<E> >
 
     if (sUseWriteBytes) {
       int pickledLength = 0;
-      mozilla::DebugOnly<bool> valid = ByteLengthIsValid(length, sizeof(E), &pickledLength);
-      MOZ_ASSERT(valid);
+      MOZ_RELEASE_ASSERT(ByteLengthIsValid(length, sizeof(E), &pickledLength));
       aMsg->WriteBytes(aParam.Elements(), pickledLength);
     } else {
       for (uint32_t index = 0; index < length; index++) {
