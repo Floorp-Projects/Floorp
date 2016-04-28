@@ -33,7 +33,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "gfxPrefs.h"
 #include "gfxPlatform.h"
-#include "gfxConfig.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -1277,30 +1276,6 @@ GetLayersBackendName(layers::LayersBackend aBackend)
   }
 }
 
-static inline bool
-SetJSPropertyString(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                    const char* aProp, const char* aString)
-{
-  JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, aString));
-  if (!str) {
-    return false;
-  }
-
-  JS::Rooted<JS::Value> val(aCx, JS::StringValue(str));
-  return JS_SetProperty(aCx, aObj, aProp, val);
-}
-
-template <typename T>
-static inline bool
-AppendJSElement(JSContext* aCx, JS::Handle<JSObject*> aObj, const T& aValue)
-{
-  uint32_t index;
-  if (!JS_GetArrayLength(aCx, aObj, &index)) {
-    return false;
-  }
-  return JS_SetElement(aCx, aObj, index, aValue);
-}
-
 nsresult
 GfxInfoBase::GetFeatures(JSContext* aCx, JS::MutableHandle<JS::Value> aOut)
 {
@@ -1314,7 +1289,11 @@ GfxInfoBase::GetFeatures(JSContext* aCx, JS::MutableHandle<JS::Value> aOut)
                                   ? gfxPlatform::GetPlatform()->GetCompositorBackend()
                                   : layers::LayersBackend::LAYERS_NONE;
   const char* backendName = GetLayersBackendName(backend);
-  SetJSPropertyString(aCx, obj, "compositor", backendName);
+  {
+    JS::Rooted<JSString*> str(aCx, JS_NewStringCopyZ(aCx, backendName));
+    JS::Rooted<JS::Value> val(aCx, StringValue(str));
+    JS_SetProperty(aCx, obj, "compositor", val);
+  }
 
   // If graphics isn't initialized yet, just stop now.
   if (!gfxPlatform::Initialized()) {
@@ -1323,114 +1302,6 @@ GfxInfoBase::GetFeatures(JSContext* aCx, JS::MutableHandle<JS::Value> aOut)
 
   DescribeFeatures(aCx, obj);
   return NS_OK;
-}
-
-nsresult GfxInfoBase::GetFeatureLog(JSContext* aCx, JS::MutableHandle<JS::Value> aOut)
-{
-  JS::Rooted<JSObject*> containerObj(aCx, JS_NewPlainObject(aCx));
-  if (!containerObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aOut.setObject(*containerObj);
-
-  JS::Rooted<JSObject*> featureArray(aCx, JS_NewArrayObject(aCx, 0));
-  if (!featureArray) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Collect features.
-  gfxConfig::ForEachFeature([&](const char* aName,
-                                const char* aDescription,
-                                FeatureState& aFeature) -> void {
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (!obj) {
-      return;
-    }
-    if (!SetJSPropertyString(aCx, obj, "name", aName) ||
-        !SetJSPropertyString(aCx, obj, "description", aDescription) ||
-        !SetJSPropertyString(aCx, obj, "status", FeatureStatusToString(aFeature.GetValue())))
-    {
-      return;
-    }
-
-    JS::Rooted<JS::Value> log(aCx);
-    if (!BuildFeatureStateLog(aCx, aFeature, &log)) {
-      return;
-    }
-    if (!JS_SetProperty(aCx, obj, "log", log)) {
-      return;
-    }
-
-    if (!AppendJSElement(aCx, featureArray, obj)) {
-      return;
-    }
-  });
-
-  JS::Rooted<JSObject*> fallbackArray(aCx, JS_NewArrayObject(aCx, 0));
-  if (!fallbackArray) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Collect fallbacks.
-  gfxConfig::ForEachFallback([&](const char* aName, const char* aMessage) -> void {
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (!obj) {
-      return;
-    }
-
-    if (!SetJSPropertyString(aCx, obj, "name", aName) ||
-        !SetJSPropertyString(aCx, obj, "message", aMessage))
-    {
-      return;
-    }
-
-    if (!AppendJSElement(aCx, fallbackArray, obj)) {
-      return;
-    }
-  });
-
-  JS::Rooted<JS::Value> val(aCx);
-
-  val = JS::ObjectValue(*featureArray);
-  JS_SetProperty(aCx, containerObj, "features", val);
-
-  val = JS::ObjectValue(*fallbackArray);
-  JS_SetProperty(aCx, containerObj, "fallbacks", val);
-
-  return NS_OK;
-}
-
-bool
-GfxInfoBase::BuildFeatureStateLog(JSContext* aCx, const FeatureState& aFeature,
-                                  JS::MutableHandle<JS::Value> aOut)
-{
-  JS::Rooted<JSObject*> log(aCx, JS_NewArrayObject(aCx, 0));
-  if (!log) {
-    return false;
-  }
-  aOut.setObject(*log);
-
-  aFeature.ForEachStatusChange([&](const char* aType,
-                                   FeatureStatus aStatus,
-                                   const char* aMessage) -> void {
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (!obj) {
-      return;
-    }
-
-    if (!SetJSPropertyString(aCx, obj, "type", aType) ||
-        !SetJSPropertyString(aCx, obj, "status", FeatureStatusToString(aStatus)) ||
-        (aMessage && !SetJSPropertyString(aCx, obj, "message", aMessage)))
-    {
-      return;
-    }
-
-    if (!AppendJSElement(aCx, log, obj)) {
-      return;
-    }
-  });
-
-  return true;
 }
 
 void

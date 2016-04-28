@@ -21,7 +21,6 @@ DIRS += [
     'thebes',
     'ipc',
     'vr',
-    'config',
 ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:

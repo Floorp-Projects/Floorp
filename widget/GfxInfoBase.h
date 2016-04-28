@@ -17,7 +17,6 @@
 #include "nsString.h"
 #include "GfxInfoCollector.h"
 #include "gfxTelemetry.h"
-#include "gfxFeature.h"
 #include "nsIGfxInfoDebug.h"
 #include "mozilla/Mutex.h"
 #include "js/Value.h"
@@ -55,7 +54,6 @@ public:
   NS_IMETHOD_(void) LogFailure(const nsACString &failure) override;
   NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD GetFeatures(JSContext*, JS::MutableHandle<JS::Value>) override;
-  NS_IMETHOD GetFeatureLog(JSContext*, JS::MutableHandle<JS::Value>) override;
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
@@ -118,9 +116,6 @@ private:
                                               OperatingSystem os);
 
   void EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo);
-
-  bool BuildFeatureStateLog(JSContext* aCx, const gfx::FeatureState& aFeature,
-                            JS::MutableHandle<JS::Value> aOut);
 
   Mutex mMutex;
 

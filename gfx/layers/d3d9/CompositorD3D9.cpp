@@ -40,7 +40,9 @@ CompositorD3D9::~CompositorD3D9()
 bool
 CompositorD3D9::Initialize()
 {
-  ScopedGfxFeatureReporter reporter("D3D9 Layers");
+  bool force = gfxPrefs::LayersAccelerationForceEnabled();
+
+  ScopedGfxFeatureReporter reporter("D3D9 Layers", force);
 
   MOZ_ASSERT(gfxPlatform::CanUseDirect3D9());
 

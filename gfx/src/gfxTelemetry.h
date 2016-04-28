@@ -21,9 +21,8 @@ enum class FeatureStatus
   // the operating system.
   Unavailable,
 
-  // This feature crashed immediately when we tried to initialize it, but we
-  // were able to recover via SEH (or something similar).
-  CrashedInHandler,
+  // This feature crashed immediately when we tried to initialize it.
+  Crashed,
 
   // This feature was blocked for reasons outside the blacklist, such as a
   // runtime test failing.
@@ -39,21 +38,11 @@ enum class FeatureStatus
   Disabled,
 
   // This feature is available for use.
-  Available,
-
-  // This feature was explicitly force-enabled by the user.
-  ForceEnabled,
-
-  // This feature was disabled due to the startup crash guard.
-  CrashedOnStartup,
-
-  // This feature was attempted but later determined to be broken.
-  Broken
+  Available
 };
 
 const char* FeatureStatusToString(FeatureStatus aStatus);
 bool IsFeatureStatusFailure(FeatureStatus aStatus);
-bool IsFeatureStatusSuccess(FeatureStatus aStatus);
 
 } // namespace gfx
 } // namespace mozilla
