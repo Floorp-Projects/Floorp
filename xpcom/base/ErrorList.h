@@ -953,9 +953,8 @@
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_DOM_ANIM
   ERROR(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR,              FAILURE(1)),
-  ERROR(NS_ERROR_DOM_ANIM_NO_TARGET_ERR,                  FAILURE(2)),
-  ERROR(NS_ERROR_DOM_ANIM_NO_TIMELINE_ERR,                FAILURE(3)),
-  ERROR(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR,                  FAILURE(4)),
+  ERROR(NS_ERROR_DOM_ANIM_NO_TIMELINE_ERR,                FAILURE(2)),
+  ERROR(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR,                  FAILURE(3)),
 #undef MODULE
 
   /* ======================================================================= */
