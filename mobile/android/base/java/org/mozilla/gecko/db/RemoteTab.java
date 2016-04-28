@@ -4,17 +4,13 @@
 
 package org.mozilla.gecko.db;
 
-import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
  * A thin representation of a remote tab.
  * <p>
- * We use the hash of the tab as the ID in
- * {@link RemoteTabsExpandableListAdapter#getClientId(int)}, and therefore we
- * must implement equality as well. These are generated functions.
+ * These are generated functions.
  */
 public class RemoteTab implements Parcelable {
     public final String title;
