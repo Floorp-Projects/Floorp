@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/InitializerList.h"
 
 #include <stdint.h>
 
@@ -56,6 +57,15 @@ public:
                 bitFor(aEnum3) |
                 bitFor(aEnum4))
   {
+    initVersion();
+  }
+
+  MOZ_IMPLICIT EnumSet(std::initializer_list<T> list)
+    : mBitField(0)
+  {
+    for (auto value : list) {
+      (*this) += value;
+    }
     initVersion();
   }
 
