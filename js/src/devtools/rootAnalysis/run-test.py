@@ -39,6 +39,9 @@ parser.add_argument(
 parser.add_argument(
     '--verbose', '-v', action='store_true',
     help='Display verbose output, including commands executed')
+parser.add_argument(
+    'tests', nargs='*', default=['sixgill-tree', 'suppression', 'hazards'],
+    help='tests to run')
 
 cfg = parser.parse_args()
 
@@ -69,8 +72,8 @@ try:
 except OSError:
     pass
 
-tests = ['sixgill-tree', 'suppression', 'hazards']
-for name in tests:
+for name in cfg.tests:
+    name = os.path.basename(name)
     indir = os.path.join(testdir, name)
     outdir = os.path.join(testdir, 'out', name)
     try:
