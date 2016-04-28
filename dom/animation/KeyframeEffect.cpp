@@ -91,12 +91,13 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   CSSPseudoElementType aPseudoType,
   AnimationEffectTimingReadOnly* aTiming)
   : AnimationEffectReadOnly(aDocument)
-  , mTarget(aTarget)
   , mTiming(aTiming)
-  , mPseudoType(aPseudoType)
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
   MOZ_ASSERT(aTiming);
+  if (aTarget) {
+    mTarget.emplace(aTarget, aPseudoType);
+  }
 }
 
 JSObject*
@@ -161,7 +162,8 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   bool inEffect = IsInEffect();
   if (inEffect != mInEffectOnLastAnimationTimingUpdate) {
     if (mTarget) {
-      EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+      EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                     mTarget->mPseudoType);
       if (effectSet) {
         effectSet->MarkCascadeNeedsUpdate();
       }
@@ -190,7 +192,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
     nsPresContext* presContext = GetPresContext();
     if (presContext && mTarget) {
       presContext->EffectCompositor()->
-        RequestRestyle(mTarget, mPseudoType, restyleType,
+        RequestRestyle(mTarget->mElement, mTarget->mPseudoType, restyleType,
                        mAnimation->CascadeLevel());
     }
 
@@ -459,10 +461,11 @@ KeyframeEffectReadOnly::SetFrames(JSContext* aContext,
   nsIPresShell* shell = doc->GetShell();
   if (shell && mTarget) {
     nsIAtom* pseudo =
-      mPseudoType < CSSPseudoElementType::Count ?
-      nsCSSPseudoElements::GetPseudoAtom(mPseudoType) : nullptr;
+      mTarget->mPseudoType < CSSPseudoElementType::Count ?
+      nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) : nullptr;
     styleContext =
-      nsComputedDOMStyle::GetStyleContextForElement(mTarget, pseudo, shell);
+      nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
+                                                    pseudo, shell);
   }
 
   SetFrames(Move(keyframes), styleContext);
@@ -526,8 +529,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   if (mTarget) {
     properties =
       KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
-                                                         mTarget,
-                                                         mPseudoType,
+                                                         mTarget->mElement,
+                                                         mTarget->mPseudoType,
                                                          mFrames);
   }
 
@@ -558,7 +561,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   }
 
   if (mTarget) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                   mTarget->mPseudoType);
     if (effectSet) {
       effectSet->MarkCascadeNeedsUpdate();
     }
@@ -567,7 +571,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       nsPresContext* presContext = GetPresContext();
       if (presContext) {
         presContext->EffectCompositor()->
-          RequestRestyle(mTarget, mPseudoType,
+          RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
                          EffectCompositor::RestyleType::Layer,
                          mAnimation->CascadeLevel());
       }
@@ -785,15 +789,16 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
              "Out of date Animation::IsRelevant value");
 
   if (isRelevant) {
-    EffectSet* effectSet = EffectSet::GetOrCreateEffectSet(mTarget,
-                                                           mPseudoType);
+    EffectSet* effectSet =
+      EffectSet::GetOrCreateEffectSet(mTarget->mElement, mTarget->mPseudoType);
     effectSet->AddEffect(*this);
   } else {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                   mTarget->mPseudoType);
     if (effectSet) {
       effectSet->RemoveEffect(*this);
       if (effectSet->IsEmpty()) {
-        EffectSet::DestroyEffectSet(mTarget, mPseudoType);
+        EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
       }
     }
   }
@@ -852,15 +857,16 @@ KeyframeEffectReadOnly::GetTarget(
     return;
   }
 
-  switch (mPseudoType) {
+  switch (mTarget->mPseudoType) {
     case CSSPseudoElementType::before:
     case CSSPseudoElementType::after:
       aRv.SetValue().SetAsCSSPseudoElement() =
-        CSSPseudoElement::GetCSSPseudoElement(mTarget, mPseudoType);
+        CSSPseudoElement::GetCSSPseudoElement(mTarget->mElement,
+                                              mTarget->mPseudoType);
       break;
 
     case CSSPseudoElementType::NotPseudo:
-      aRv.SetValue().SetAsElement() = mTarget;
+      aRv.SetValue().SetAsElement() = mTarget->mElement;
       break;
 
     default:
@@ -1066,7 +1072,8 @@ KeyframeEffectReadOnly::CanThrottle() const
       continue;
     }
 
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                   mTarget->mPseudoType);
     MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
                           "associated with a target element");
     layers::Layer* layer =
@@ -1114,7 +1121,8 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
   TimeStamp now =
     presContext->RefreshDriver()->MostRecentRefresh();
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                 mTarget->mPseudoType);
   MOZ_ASSERT(effectSet, "CanThrottleTransformChanges is expected to be called"
                         " on an effect in an effect set");
   MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
@@ -1152,18 +1160,18 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
     return nullptr;
   }
 
-  nsIFrame* frame = mTarget->GetPrimaryFrame();
+  nsIFrame* frame = mTarget->mElement->GetPrimaryFrame();
   if (!frame) {
     return nullptr;
   }
 
-  if (mPseudoType == CSSPseudoElementType::before) {
+  if (mTarget->mPseudoType == CSSPseudoElementType::before) {
     frame = nsLayoutUtils::GetBeforeFrame(frame);
-  } else if (mPseudoType == CSSPseudoElementType::after) {
+  } else if (mTarget->mPseudoType == CSSPseudoElementType::after) {
     frame = nsLayoutUtils::GetAfterFrame(frame);
   } else {
-    MOZ_ASSERT(mPseudoType == CSSPseudoElementType::NotPseudo,
-               "unknown mPseudoType");
+    MOZ_ASSERT(mTarget->mPseudoType == CSSPseudoElementType::NotPseudo,
+               "unknown mTarget->mPseudoType");
   }
   if (!frame) {
     return nullptr;
@@ -1178,7 +1186,7 @@ KeyframeEffectReadOnly::GetRenderedDocument() const
   if (!mTarget) {
     return nullptr;
   }
-  return mTarget->GetComposedDoc();
+  return mTarget->mElement->GetComposedDoc();
 }
 
 nsPresContext*
@@ -1296,7 +1304,7 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
       if (nsLayoutUtils::IsAnimationLoggingEnabled() &&
           property.mPerformanceWarning->ToLocalizedString(localizedString)) {
         nsAutoCString logMessage = NS_ConvertUTF16toUTF8(localizedString);
-        AnimationUtils::LogAsyncAnimationFailure(logMessage, mTarget);
+        AnimationUtils::LogAsyncAnimationFailure(logMessage, mTarget->mElement);
       }
       return;
     }
@@ -1353,7 +1361,8 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
 {
   // Use the same document for a pseudo element and its parent element.
   // Use nullptr if we don't have mTarget, so disable the mutation batch.
-  nsAutoAnimationMutationBatch mb(mTarget ? mTarget->OwnerDoc() : nullptr);
+  nsAutoAnimationMutationBatch mb(mTarget ? mTarget->mElement->OwnerDoc()
+                                          : nullptr);
 
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
@@ -1365,7 +1374,7 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
     nsPresContext* presContext = GetPresContext();
     if (presContext && mTarget) {
       presContext->EffectCompositor()->
-        RequestRestyle(mTarget, mPseudoType,
+        RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
                        EffectCompositor::RestyleType::Layer,
                        mAnimation->CascadeLevel());
     }
