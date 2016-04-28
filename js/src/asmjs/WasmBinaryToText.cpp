@@ -1267,6 +1267,10 @@ RenderTypeSection(WasmRenderContext& c)
         return false;
 
     for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
+        uint32_t form;
+        if (!c.d.readVarU32(&form) || form != uint32_t(TypeConstructor::Function))
+            return RenderFail(c, "expected function form");
+
         uint32_t numArgs;
         if (!c.d.readVarU32(&numArgs))
             return RenderFail(c, "bad number of signature args");
@@ -1275,15 +1279,28 @@ RenderTypeSection(WasmRenderContext& c)
         if (!args.resize(numArgs))
             return false;
 
-        ExprType result;
-        if (!c.d.readExprType(&result))
-            return RenderFail(c, "bad expression type");
-
         for (uint32_t i = 0; i < numArgs; i++) {
             ValType arg;
             if (!c.d.readValType(&arg))
                 return RenderFail(c, "bad value type");
             args[i] = arg;
+        }
+
+        uint32_t numRets;
+        if (!c.d.readVarU32(&numRets))
+            return RenderFail(c, "bad number of function returns");
+
+        if (numRets > 1)
+            return RenderFail(c, "too many returns in signature");
+
+        ExprType result = ExprType::Void;
+
+        if (numRets == 1) {
+            ValType type;
+            if (!c.d.readValType(&type))
+                return RenderFail(c, "bad expression type");
+
+            result = ToExprType(type);
         }
 
         c.signatures[sigIndex] = Sig(Move(args), result);

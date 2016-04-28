@@ -3964,14 +3964,22 @@ EncodeTypeSection(Encoder& e, WasmAstModule& module)
         return false;
 
     for (WasmAstSig* sig : module.sigs()) {
-        if (!e.writeVarU32(sig->args().length()))
+        if (!e.writeVarU32(uint32_t(TypeConstructor::Function)))
             return false;
 
-        if (!e.writeExprType(sig->ret()))
+        if (!e.writeVarU32(sig->args().length()))
             return false;
 
         for (ValType t : sig->args()) {
             if (!e.writeValType(t))
+                return false;
+        }
+
+        if (!e.writeVarU32(!IsVoid(sig->ret())))
+            return false;
+
+        if (!IsVoid(sig->ret())) {
+            if (!e.writeValType(NonVoidToValType(sig->ret())))
                 return false;
         }
     }
