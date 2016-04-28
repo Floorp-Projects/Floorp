@@ -13,6 +13,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsTCPDeviceInfo.h"
 #include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -58,54 +59,6 @@ GetAndroidDeviceName(nsACString& aRetVal)
                                    NS_LITERAL_STRING("device"), aRetVal)));
 }
 #endif // MOZ_WIDGET_ANDROID
-
-class TCPDeviceInfo final : public nsITCPDeviceInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITCPDEVICEINFO
-
-  explicit TCPDeviceInfo(const nsACString& aId,
-                         const nsACString& aAddress,
-                         const uint16_t aPort)
-    : mId(aId)
-    , mAddress(aAddress)
-    , mPort(aPort)
-  {
-  }
-
-private:
-  virtual ~TCPDeviceInfo() {}
-
-  nsCString mId;
-  nsCString mAddress;
-  uint16_t mPort;
-};
-
-NS_IMPL_ISUPPORTS(TCPDeviceInfo,
-                  nsITCPDeviceInfo)
-
-// nsITCPDeviceInfo
-NS_IMETHODIMP
-TCPDeviceInfo::GetId(nsACString& aId)
-{
-  aId = mId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TCPDeviceInfo::GetAddress(nsACString& aAddress)
-{
-  aAddress = mAddress;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TCPDeviceInfo::GetPort(uint16_t* aPort)
-{
-  *aPort = mPort;
-  return NS_OK;
-}
 
 } //anonymous namespace
 
