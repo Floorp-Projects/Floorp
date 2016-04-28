@@ -190,7 +190,7 @@ BrowserStreamChild::NPN_DestroyStream(NPReason reason)
 void
 BrowserStreamChild::EnsureDeliveryPending()
 {
-  MessageLoop::current()->PostTask(FROM_HERE,
+  MessageLoop::current()->PostTask(
     mDeliveryTracker.NewRunnableMethod(&BrowserStreamChild::Deliver));
 }
 

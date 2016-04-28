@@ -151,7 +151,6 @@ private:
             delete derived;
           } else {
             mMessageLoopToPostDestructionTo->PostTask(
-              FROM_HERE,
               NewRunnableFunction(&DestroyToBeCalledOnMainThread, derived));
           }
         }

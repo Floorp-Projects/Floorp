@@ -9,6 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsBoundingMetrics.h"
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
@@ -1021,7 +1022,7 @@ public:
                                         const nscoord aRadii[8],
                                         const nsRect& aTestRect);
 
-  enum {
+  enum class PaintFrameFlags : uint32_t {
     PAINT_IN_TRANSFORM = 0x01,
     PAINT_SYNC_DECODE_IMAGES = 0x02,
     PAINT_WIDGET_LAYERS = 0x04,
@@ -1084,8 +1085,7 @@ public:
   static nsresult PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                              const nsRegion& aDirtyRegion, nscolor aBackstop,
                              nsDisplayListBuilderMode aBuilderMode,
-                             uint32_t aFlags = 0
-                             );
+                             PaintFrameFlags aFlags = PaintFrameFlags(0));
 
   /**
    * Uses a binary search for find where the cursor falls in the line of text
@@ -2852,6 +2852,8 @@ private:
 
   static bool IsAPZTestLoggingEnabled();
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsLayoutUtils::PaintFrameFlags)
 
 template<typename PointType, typename RectType, typename CoordType>
 /* static */ bool

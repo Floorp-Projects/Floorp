@@ -465,7 +465,7 @@ private:
 };
 
 class BluetoothGattManager::InitProfileResultHandlerRunnable final
-  : public nsRunnable
+  : public Runnable
 {
 public:
   InitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
@@ -501,7 +501,7 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
 
   if (sBluetoothGattInterface) {
     BT_LOGR("Bluetooth GATT interface is already initalized.");
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT Init runnable");
@@ -514,7 +514,7 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!btInf)) {
     // If there's no Bluetooth interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT OnError runnable");
@@ -527,7 +527,7 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!setupInterface)) {
     // If there's no Setup interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT OnError runnable");
@@ -540,7 +540,7 @@ BluetoothGattManager::InitGattInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!gattInterface)) {
     // If there's no GATT interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT OnError runnable");
@@ -615,7 +615,7 @@ private:
 };
 
 class BluetoothGattManager::DeinitProfileResultHandlerRunnable final
-  : public nsRunnable
+  : public Runnable
 {
 public:
   DeinitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
@@ -651,7 +651,7 @@ BluetoothGattManager::DeinitGattInterface(BluetoothProfileResultHandler* aRes)
 
   if (!sBluetoothGattInterface) {
     BT_LOGR("Bluetooth GATT interface has not been initalized.");
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT Deinit runnable");
@@ -664,7 +664,7 @@ BluetoothGattManager::DeinitGattInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!btInf)) {
     // If there's no backend interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT OnError runnable");
@@ -677,7 +677,7 @@ BluetoothGattManager::DeinitGattInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!setupInterface)) {
     // If there's no Setup interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch GATT OnError runnable");

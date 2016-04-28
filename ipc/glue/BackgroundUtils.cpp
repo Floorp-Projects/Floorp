@@ -58,10 +58,9 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
     }
 
     case PrincipalInfo::TNullPrincipalInfo: {
-      principal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID, &rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return nullptr;
-      }
+      const NullPrincipalInfo& info =
+        aPrincipalInfo.get_NullPrincipalInfo();
+      principal = nsNullPrincipal::Create(info.attrs());
 
       return principal.forget();
     }
@@ -129,14 +128,14 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aPrincipalInfo);
 
-  bool isNullPointer;
-  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPointer);
+  bool isNullPrin;
+  nsresult rv = aPrincipal->GetIsNullPrincipal(&isNullPrin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (isNullPointer) {
-    *aPrincipalInfo = NullPrincipalInfo();
+  if (isNullPrin) {
+    *aPrincipalInfo = NullPrincipalInfo(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef());
     return NS_OK;
   }
 

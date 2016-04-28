@@ -79,7 +79,7 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
 
   NS_ConvertUTF16toUTF8 input(aInput);
   mSheet = already_AddRefed<RawServoStyleSheet>(Servo_StylesheetFromUTF8Bytes(
-      reinterpret_cast<const uint8_t*>(input.get()), input.Length()));
+      reinterpret_cast<const uint8_t*>(input.get()), input.Length(), aParsingMode));
 }
 
 void

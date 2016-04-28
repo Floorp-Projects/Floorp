@@ -185,7 +185,8 @@ Servo_DropNodeData(ServoNodeData* data)
 }
 
 RawServoStyleSheet*
-Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length)
+Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length,
+                              mozilla::css::SheetParsingMode mode)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_StylesheetFromUTF8Bytes in a "
             "non-MOZ_STYLO build");
@@ -254,7 +255,8 @@ Servo_GetComputedValues(RawGeckoElement* element)
 
 ServoComputedValues*
 Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
-                                       nsIAtom* pseudoTag)
+                                       nsIAtom* pseudoTag,
+                                       RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValuesForAnonymousBox in a "
             "non-MOZ_STYLO build");

@@ -259,7 +259,7 @@ public:
 
     void AsyncCall(PluginThreadCallback aFunc, void* aUserData);
     // This function is a more general version of AsyncCall
-    void PostChildAsyncCall(ChildAsyncCall* aTask);
+    void PostChildAsyncCall(already_AddRefed<ChildAsyncCall> aTask);
 
     int GetQuirks();
 
@@ -384,7 +384,7 @@ private:
           mWindowed(isWindowed)
         {}
 
-        void Run() override;
+        NS_IMETHOD Run() override;
 
         WNDPROC GetProc();
         HWND GetWnd() { return mWnd; }
@@ -446,7 +446,7 @@ private:
 #endif
 
     mozilla::Mutex mAsyncInvalidateMutex;
-    CancelableTask *mAsyncInvalidateTask;
+    CancelableRunnable *mAsyncInvalidateTask;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -637,10 +637,10 @@ private:
     gfxSurfaceType mSurfaceType;
 
     // Keep InvalidateRect task pointer to be able Cancel it on Destroy
-    CancelableTask *mCurrentInvalidateTask;
+    RefPtr<CancelableRunnable> mCurrentInvalidateTask;
 
     // Keep AsyncSetWindow task pointer to be able to Cancel it on Destroy
-    CancelableTask *mCurrentAsyncSetWindowTask;
+    RefPtr<CancelableRunnable> mCurrentAsyncSetWindowTask;
 
     // True while plugin-child in plugin call
     // Use to prevent plugin paint re-enter

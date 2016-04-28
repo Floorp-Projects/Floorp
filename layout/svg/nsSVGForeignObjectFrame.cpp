@@ -270,9 +270,10 @@ nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
   aContext.Multiply(canvasTMForChildren);
 
-  uint32_t flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
+  using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
+  PaintFrameFlags flags = PaintFrameFlags::PAINT_IN_TRANSFORM;
   if (SVGAutoRenderState::IsPaintingToWindow(aContext.GetDrawTarget())) {
-    flags |= nsLayoutUtils::PAINT_TO_WINDOW;
+    flags |= PaintFrameFlags::PAINT_TO_WINDOW;
   }
   nsRenderingContext rendCtx(&aContext);
   nsresult rv = nsLayoutUtils::PaintFrame(&rendCtx, kid, nsRegion(kidDirtyRect),

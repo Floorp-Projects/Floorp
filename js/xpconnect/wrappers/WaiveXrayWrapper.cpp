@@ -94,4 +94,12 @@ WaiveXrayWrapper::getPrototype(JSContext* cx, HandleObject wrapper, MutableHandl
            (!protop || WrapperFactory::WaiveXrayAndWrap(cx, protop));
 }
 
+bool
+WaiveXrayWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrapper, bool* isOrdinary,
+                                         MutableHandleObject protop) const
+{
+    return CrossCompartmentWrapper::getPrototypeIfOrdinary(cx, wrapper, isOrdinary, protop) &&
+           (!protop || WrapperFactory::WaiveXrayAndWrap(cx, protop));
+}
+
 } // namespace xpc

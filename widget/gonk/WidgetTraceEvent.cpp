@@ -13,7 +13,7 @@ using mozilla::Mutex;
 using mozilla::MutexAutoLock;
 
 namespace mozilla {
-  class TracerRunnable : public nsRunnable {
+  class TracerRunnable : public Runnable {
     public:
       TracerRunnable() {
         mTracerLock = new Mutex("TracerRunnable");

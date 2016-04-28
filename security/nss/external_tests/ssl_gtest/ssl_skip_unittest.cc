@@ -120,7 +120,7 @@ TEST_P(TlsSkipTest, SkipCertificateEcdhe) {
 }
 
 TEST_P(TlsSkipTest, SkipCertificateEcdsa) {
-  ResetEcdsa();
+  Reset(TlsAgent::kServerEcdsa);
   ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH);
 }
@@ -131,7 +131,7 @@ TEST_P(TlsSkipTest, SkipServerKeyExchange) {
 }
 
 TEST_P(TlsSkipTest, SkipServerKeyExchangeEcdsa) {
-  ResetEcdsa();
+  Reset(TlsAgent::kServerEcdsa);
   ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeServerKeyExchange));
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_HELLO_DONE);
 }
@@ -145,7 +145,7 @@ TEST_P(TlsSkipTest, SkipCertAndKeyExch) {
 }
 
 TEST_P(TlsSkipTest, SkipCertAndKeyExchEcdsa) {
-  ResetEcdsa();
+  Reset(TlsAgent::kServerEcdsa);
   auto chain = new ChainedPacketFilter();
   chain->Add(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
   chain->Add(new TlsHandshakeSkipFilter(kTlsHandshakeServerKeyExchange));

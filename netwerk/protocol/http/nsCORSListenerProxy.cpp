@@ -695,14 +695,10 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
       if (NS_SUCCEEDED(rv)) {
         bool equal;
         rv = oldChannelPrincipal->Equals(newChannelPrincipal, &equal);
-        if (NS_SUCCEEDED(rv)) {
-          if (!equal) {
-            // Spec says to set our source origin to a unique origin.
-            mOriginHeaderPrincipal = nsNullPrincipal::Create();
-            if (!mOriginHeaderPrincipal) {
-              rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-          }
+        if (NS_SUCCEEDED(rv) && !equal) {
+          // Spec says to set our source origin to a unique origin.
+          mOriginHeaderPrincipal =
+            nsNullPrincipal::CreateWithInheritedAttributes(oldChannelPrincipal);
         }
       }
 

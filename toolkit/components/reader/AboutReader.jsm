@@ -222,7 +222,7 @@ AboutReader.prototype = {
         }
         break;
       case "scroll":
-        this._closeDropdowns();
+        this._closeDropdowns(true);
         let isScrollingUp = this._scrollOffset > aEvent.pageY;
         this._setSystemUIVisibility(isScrollingUp);
         this._scrollOffset = aEvent.pageY;
@@ -771,10 +771,17 @@ AboutReader.prototype = {
   },
 
   /*
-   * If the ReaderView has open dropdowns, close them.
+   * If the ReaderView has open dropdowns, close them. If we are closing the
+   * dropdowns because the page is scrolling, allow popups to stay open with
+   * the keep-open class.
    */
-  _closeDropdowns: function() {
-    let openDropdowns = this._doc.querySelectorAll(".dropdown.open:not(.keep-open)");
+  _closeDropdowns: function(scrolling) {
+    let selector = ".dropdown.open";
+    if (scrolling) {
+      selector += ":not(.keep-open)";
+    }
+
+    let openDropdowns = this._doc.querySelectorAll(selector);
     for (let dropdown of openDropdowns) {
       dropdown.classList.remove("open");
     }

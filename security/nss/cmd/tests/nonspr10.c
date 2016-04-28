@@ -83,7 +83,8 @@
 #include "sslproto.h"
 #include "sslt.h"
 
-int main()
+int
+main()
 {
     return 0;
 }

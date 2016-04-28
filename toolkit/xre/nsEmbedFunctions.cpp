@@ -792,7 +792,8 @@ XRE_RunAppShell()
       bool couldNest = loop->NestableTasksAllowed();
 
       loop->SetNestableTasksAllowed(true);
-      loop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+      RefPtr<Runnable> task = new MessageLoop::QuitTask();
+      loop->PostTask(task.forget());
       loop->Run();
 
       loop->SetNestableTasksAllowed(couldNest);

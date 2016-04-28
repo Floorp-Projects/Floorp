@@ -8,7 +8,8 @@
 #include "blapi.h"
 #include "secutil.h"
 
-static int Usage()
+static int
+Usage()
 {
     fprintf(stderr, "Usage:  chktest <full-path-to-shared-library>\n");
     fprintf(stderr, "        Will test for valid chk file.\n");
@@ -16,14 +17,15 @@ static int Usage()
     exit(1);
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     SECStatus rv = SECFailure;
     PRBool good_result = PR_FALSE;
 
     if (argc != 2)
-      return Usage();
-    
+        return Usage();
+
     rv = RNG_RNGInit();
     if (rv != SECSuccess) {
         SECU_PrintPRandOSError("");
@@ -37,7 +39,7 @@ int main(int argc, char **argv)
     RNG_SystemInfoForRNG();
 
     good_result = BLAPI_SHVerifyFile(argv[1]);
-    printf("%s\n", 
-      (good_result ? "SUCCESS" : "FAILURE"));
+    printf("%s\n",
+           (good_result ? "SUCCESS" : "FAILURE"));
     return (good_result) ? SECSuccess : SECFailure;
 }

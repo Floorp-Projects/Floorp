@@ -157,7 +157,7 @@ VolumeTestObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-class InitVolumeServiceTestIO : public nsRunnable
+class InitVolumeServiceTestIO : public Runnable
 {
 public:
   NS_IMETHOD Run()

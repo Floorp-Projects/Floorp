@@ -257,26 +257,21 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
     return;
   }
 
-  if (!nsContentUtils::CanLoadImage(aURI, mDocument, mDocument,
-                                    aOriginPrincipal)) {
-    return;
-  }
-
   RefPtr<imgRequestProxy> request;
-  nsContentUtils::LoadImage(aURI, mDocument, mDocument,
-                            aOriginPrincipal, aReferrer,
-                            mDocument->GetReferrerPolicy(),
-                            nullptr, nsIRequest::LOAD_NORMAL,
-                            NS_LITERAL_STRING("css"),
-                            getter_AddRefs(request));
+  nsresult rv = nsContentUtils::LoadImage(aURI, mDocument, mDocument,
+                                          aOriginPrincipal, aReferrer,
+                                          mDocument->GetReferrerPolicy(),
+                                          nullptr, nsIRequest::LOAD_NORMAL,
+                                          NS_LITERAL_STRING("css"),
+                                          getter_AddRefs(request));
 
-  if (!request) {
+  if (NS_FAILED(rv) || !request) {
     return;
   }
 
   RefPtr<imgRequestProxy> clonedRequest;
   mInClone = true;
-  nsresult rv = request->Clone(this, getter_AddRefs(clonedRequest));
+  rv = request->Clone(this, getter_AddRefs(clonedRequest));
   mInClone = false;
 
   if (NS_FAILED(rv)) {

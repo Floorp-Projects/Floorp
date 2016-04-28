@@ -1189,9 +1189,14 @@ done_div();
 // in the fourth iteration
 new_div("animation: anim2 1s -3.6s ease-in 5 alternate forwards");
 listen(); // rely on no flush having happened yet
+cs.animationName; // flush styles so animation is created
+advance_clock(0); // complete pending animation start
 is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.4), 0.01,
           "large negative delay test at 0ms");
 check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 3.6,
+                pseudoElement: "" },
+              { type: 'animationiteration', target: div,
                 animationName: 'anim2', elapsedTime: 3.6,
                 pseudoElement: "" }],
              "right after start in large negative delay test");
@@ -1568,7 +1573,8 @@ done_div();
 
 new_div("animation: anim2 1s -2s");
 listen();
-advance_clock(0);
+cs.animationName; // build animation
+advance_clock(0); // finish pending
 check_events([{ type: 'animationstart', target: div,
                 animationName: 'anim2', elapsedTime: 1,
                 pseudoElement: "" },
@@ -1733,7 +1739,8 @@ done_div();
 new_div("margin-right: 200px;"
         + " animation: anim2 0s -1s both reverse 12.7 linear");
 listen();
-advance_clock(0);
+cs.animationName; // build animation
+advance_clock(0); // finish pending
 is(cs.getPropertyValue("margin-right"), "30px",
    "margin-right during forwards fill of reversed and repeated " +
    "zero-duration animation with negative delay");

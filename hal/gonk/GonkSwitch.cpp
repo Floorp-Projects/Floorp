@@ -212,7 +212,7 @@ protected:
 
 typedef nsTArray<RefPtr<SwitchHandler> > SwitchHandlerArray;
 
-class SwitchEventRunnable : public nsRunnable
+class SwitchEventRunnable : public Runnable
 {
 public:
   SwitchEventRunnable(SwitchEvent& aEvent) : mEvent(aEvent)
