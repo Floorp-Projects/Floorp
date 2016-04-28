@@ -39,7 +39,7 @@ public abstract class DoorHanger extends LinearLayout {
     }
 
     // Doorhanger types created from Gecko are checked against enum strings to determine type.
-    public static enum Type { DEFAULT, LOGIN, TRACKING, GEOLOCATION, DESKTOPNOTIFICATION2, WEBRTC }
+    public static enum Type { DEFAULT, LOGIN, TRACKING, GEOLOCATION, DESKTOPNOTIFICATION2, WEBRTC, VIBRATION }
 
     public interface OnButtonClickListener {
         public void onButtonClick(JSONObject response, DoorHanger doorhanger);
