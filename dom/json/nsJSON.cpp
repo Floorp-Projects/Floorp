@@ -412,7 +412,6 @@ nsJSON::DecodeInternal(JSContext* cx,
 
   nsresult rv;
   nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
 
   // The ::Decode function is deprecated [Bug 675797] and the following
   // channel is never openend, so it does not matter what securityFlags

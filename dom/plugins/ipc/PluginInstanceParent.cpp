@@ -151,7 +151,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mShColorSpace(nullptr)
 #endif
 #if defined(XP_WIN)
-    , mCaptureRefreshTask(nullptr)
     , mValidFirstCapture(false)
     , mIsScrolling(false)
 #endif
@@ -1225,7 +1224,8 @@ PluginInstanceParent::ScheduleScrollCapture(int aTimeout)
     CAPTURE_LOG("delayed scroll capture requested.");
     mCaptureRefreshTask =
         NewRunnableMethod(this, &PluginInstanceParent::ScheduledUpdateScrollCaptureCallback);
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCaptureRefreshTask,
+    RefPtr<Runnable> addrefedTask = mCaptureRefreshTask;
+    MessageLoop::current()->PostDelayedTask(addrefedTask.forget(),
                                             kScrollCaptureDelayMs);
 }
 

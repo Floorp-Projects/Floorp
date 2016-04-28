@@ -82,7 +82,7 @@ RtspChannelChild::GetContentType(nsACString& aContentType)
   return NS_OK;
 }
 
-class CallListenerOnStartRequestEvent : public nsRunnable
+class CallListenerOnStartRequestEvent : public Runnable
 {
 public:
   CallListenerOnStartRequestEvent(nsIStreamListener *aListener,
@@ -185,7 +185,7 @@ RtspChannelChild::OnDataAvailable(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIChannel::nsIRequest
 //-----------------------------------------------------------------------------
-class CallListenerOnStopRequestEvent : public nsRunnable
+class CallListenerOnStopRequestEvent : public Runnable
 {
 public:
   CallListenerOnStopRequestEvent(nsIStreamListener *aListener,

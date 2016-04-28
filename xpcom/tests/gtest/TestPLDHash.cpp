@@ -327,9 +327,13 @@ TEST(PLDHashTableTest, Iterator)
   ASSERT_EQ(t.Capacity(), unsigned(PLDHashTable::kMinCapacity));
 }
 
-// See bug 931062, we skip this test on Android due to OOM. Also, it's slow,
-// and so should always be last.
-#ifndef MOZ_WIDGET_ANDROID
+// This test involves resizing a table repeatedly up to 512 MiB in size. On
+// 32-bit platforms (Win32, Android) it sometimes OOMs, causing the test to
+// fail. (See bug 931062 and bug 1267227.) Therefore, we only run it on 64-bit
+// platforms where OOM is much less likely.
+//
+// Also, it's slow, and so should always be last.
+#ifdef HAVE_64BIT_BUILD
 TEST(PLDHashTableTest, GrowToMaxCapacity)
 {
   // This is infallible.

@@ -52,7 +52,7 @@ a:visited {
 }
 
 .about-content-container {
-  width: 780px;
+  max-width: 780px;
 }
 
 section.section-main {

@@ -130,7 +130,8 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    dont_AddRef(Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag));
+    dont_AddRef(Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
+                                                       mRawSet.get()));
   MOZ_ASSERT(computedValues);
 
   return NS_NewStyleContext(aParentContext, mPresContext, nullptr,

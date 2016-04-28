@@ -16,158 +16,153 @@ static void *plContext = NULL;
 static void
 testGetMatchCallback(PKIX_CRLSelector *goodObject)
 {
-        PKIX_CRLSelector_MatchCallback mCallback = NULL;
+    PKIX_CRLSelector_MatchCallback mCallback = NULL;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("testGetMatchCallback");
+    subTest("testGetMatchCallback");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetMatchCallback
-                                    (goodObject, &mCallback, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetMatchCallback(goodObject, &mCallback, plContext));
 
-        if (mCallback == NULL) {
-                pkixTestErrorMsg = "MatchCallback is NULL";
-        }
+    if (mCallback == NULL) {
+        pkixTestErrorMsg = "MatchCallback is NULL";
+    }
 
 cleanup:
 
-        PKIX_TEST_RETURN();
-
+    PKIX_TEST_RETURN();
 }
 
-static
-void testGetCRLSelectorContext(PKIX_CRLSelector *goodObject)
+static void
+testGetCRLSelectorContext(PKIX_CRLSelector *goodObject)
 {
-        PKIX_PL_Object *context = NULL;
+    PKIX_PL_Object *context = NULL;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("testGetCRLSelectorContext");
+    subTest("testGetCRLSelectorContext");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetCRLSelectorContext
-                                    (goodObject, (void *)&context, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetCRLSelectorContext(goodObject, (void *)&context, plContext));
 
-        if (context == NULL) {
-                pkixTestErrorMsg = "CRLSelectorContext is NULL";
-        }
+    if (context == NULL) {
+        pkixTestErrorMsg = "CRLSelectorContext is NULL";
+    }
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(context);
-        PKIX_TEST_RETURN();
+    PKIX_TEST_DECREF_AC(context);
+    PKIX_TEST_RETURN();
 }
 
-static
-void testCommonCRLSelectorParams(PKIX_CRLSelector *goodObject){
-        PKIX_ComCRLSelParams *setParams = NULL;
-        PKIX_ComCRLSelParams *getParams = NULL;
-        PKIX_PL_Date *setDate = NULL;
-        char *asciiDate = "040329134847Z";
+static void
+testCommonCRLSelectorParams(PKIX_CRLSelector *goodObject)
+{
+    PKIX_ComCRLSelParams *setParams = NULL;
+    PKIX_ComCRLSelParams *getParams = NULL;
+    PKIX_PL_Date *setDate = NULL;
+    char *asciiDate = "040329134847Z";
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("PKIX_ComCRLSelParams_Create");
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ComCRLSelParams_Create
-                                    (&setParams,
-                                    plContext));
+    subTest("PKIX_ComCRLSelParams_Create");
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ComCRLSelParams_Create(&setParams,
+                                                          plContext));
 
-        subTest("PKIX_ComCRLSelParams_Date Create");
+    subTest("PKIX_ComCRLSelParams_Date Create");
 
-        setDate = createDate(asciiDate, plContext);
+    setDate = createDate(asciiDate, plContext);
 
-        subTest("PKIX_ComCRLSelParams_SetDateAndTime");
+    subTest("PKIX_ComCRLSelParams_SetDateAndTime");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ComCRLSelParams_SetDateAndTime
-                (setParams, setDate, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ComCRLSelParams_SetDateAndTime(setParams, setDate, plContext));
 
-        subTest("PKIX_CRLSelector_SetCommonCRLSelectorParams");
+    subTest("PKIX_CRLSelector_SetCommonCRLSelectorParams");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_SetCommonCRLSelectorParams(
-                goodObject, setParams, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_SetCommonCRLSelectorParams(
+        goodObject, setParams, plContext));
 
-        subTest("PKIX_CRLSelector_GetCommonCRLSelectorParams");
+    subTest("PKIX_CRLSelector_GetCommonCRLSelectorParams");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetCommonCRLSelectorParams(
-                goodObject, &getParams, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_GetCommonCRLSelectorParams(
+        goodObject, &getParams, plContext));
 
-        testEqualsHelper((PKIX_PL_Object *)setParams,
-                        (PKIX_PL_Object *)getParams,
-                        PKIX_TRUE,
-                        plContext);
+    testEqualsHelper((PKIX_PL_Object *)setParams,
+                     (PKIX_PL_Object *)getParams,
+                     PKIX_TRUE,
+                     plContext);
 
-        testHashcodeHelper((PKIX_PL_Object *)setParams,
-                        (PKIX_PL_Object *)getParams,
-                        PKIX_TRUE,
-                        plContext);
+    testHashcodeHelper((PKIX_PL_Object *)setParams,
+                       (PKIX_PL_Object *)getParams,
+                       PKIX_TRUE,
+                       plContext);
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(setDate);
-        PKIX_TEST_DECREF_AC(setParams);
-        PKIX_TEST_DECREF_AC(getParams);
+    PKIX_TEST_DECREF_AC(setDate);
+    PKIX_TEST_DECREF_AC(setParams);
+    PKIX_TEST_DECREF_AC(getParams);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
 /* Functional tests for CRLSelector public functions */
 
-int test_crlselector(int argc, char *argv[]){
+int
+test_crlselector(int argc, char *argv[])
+{
 
-        PKIX_PL_Date *context = NULL;
-        PKIX_CRLSelector *goodObject = NULL;
-        PKIX_CRLSelector *diffObject = NULL;
-        PKIX_UInt32 actualMinorVersion;
-        PKIX_UInt32 j = 0;
-        char *asciiDate = "040329134847Z";
+    PKIX_PL_Date *context = NULL;
+    PKIX_CRLSelector *goodObject = NULL;
+    PKIX_CRLSelector *diffObject = NULL;
+    PKIX_UInt32 actualMinorVersion;
+    PKIX_UInt32 j = 0;
+    char *asciiDate = "040329134847Z";
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        startTests("CRLSelector");
+    startTests("CRLSelector");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        context = createDate(asciiDate, plContext);
+    context = createDate(asciiDate, plContext);
 
-        subTest("PKIX_CRLSelector_Create");
+    subTest("PKIX_CRLSelector_Create");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_Create
-                                    (NULL,
-                                    (PKIX_PL_Object *)context,
-                                    &goodObject,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_Create(NULL,
+                                                      (PKIX_PL_Object *)context,
+                                                      &goodObject,
+                                                      plContext));
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_Create
-                                    (NULL,
-                                    (PKIX_PL_Object *)context,
-                                    &diffObject,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_CRLSelector_Create(NULL,
+                                                      (PKIX_PL_Object *)context,
+                                                      &diffObject,
+                                                      plContext));
 
-        testGetMatchCallback(goodObject);
+    testGetMatchCallback(goodObject);
 
-        testGetCRLSelectorContext(goodObject);
+    testGetCRLSelectorContext(goodObject);
 
-        testCommonCRLSelectorParams(goodObject);
+    testCommonCRLSelectorParams(goodObject);
 
-        PKIX_TEST_EQ_HASH_TOSTR_DUP
-                (goodObject,
-                goodObject,
-                diffObject,
-                NULL,
-                CRLSelector,
-                PKIX_TRUE);
+    PKIX_TEST_EQ_HASH_TOSTR_DUP(goodObject,
+                                goodObject,
+                                diffObject,
+                                NULL,
+                                CRLSelector,
+                                PKIX_TRUE);
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(goodObject);
-        PKIX_TEST_DECREF_AC(diffObject);
-        PKIX_TEST_DECREF_AC(context);
+    PKIX_TEST_DECREF_AC(goodObject);
+    PKIX_TEST_DECREF_AC(diffObject);
+    PKIX_TEST_DECREF_AC(context);
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("CRLSelector");
+    endTests("CRLSelector");
 
-        return (0);
+    return (0);
 }

@@ -4052,7 +4052,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       } else {
         bool useChildrenVisible =
           itemType == nsDisplayItem::TYPE_TRANSFORM &&
-          item->Frame()->IsPreserve3DLeaf();
+          (item->Frame()->IsPreserve3DLeaf() ||
+           item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
           item->GetVisibleRectForChildren().ToOutsidePixels(mAppUnitsPerDevPixel):
           itemVisibleRect;

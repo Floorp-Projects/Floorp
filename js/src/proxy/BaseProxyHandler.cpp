@@ -396,7 +396,7 @@ BaseProxyHandler::weakmapKeyDelegate(JSObject* proxy) const
 bool
 BaseProxyHandler::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const
 {
-    MOZ_CRASH("Must override getPrototype with lazy prototype.");
+    MOZ_CRASH("must override getPrototype with lazy prototype");
 }
 
 bool
@@ -409,6 +409,13 @@ BaseProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject p
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
                          "incompatible Proxy");
     return false;
+}
+
+bool
+BaseProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                         MutableHandleObject protop) const
+{
+    MOZ_CRASH("must override getPrototypeIfOrdinary with lazy prototype");
 }
 
 bool

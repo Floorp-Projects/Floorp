@@ -467,9 +467,6 @@ protected:
   // Notification method invoked when mPlayState changes.
   void PlayStateChanged();
 
-  // Notification method invoked when mLogicallySeeking changes.
-  void LogicallySeekingChanged();
-
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -980,7 +977,6 @@ private:
   // The current play state and next play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
   Mirror<MediaDecoder::PlayState> mNextPlayState;
-  Mirror<bool> mLogicallySeeking;
 
   // Volume of playback. 0.0 = muted. 1.0 = full volume.
   Mirror<double> mVolume;

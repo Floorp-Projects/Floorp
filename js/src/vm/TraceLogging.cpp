@@ -378,13 +378,13 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
         return nullptr;
     }
 
-    if (!pointerMap.add(p, text, payload))
-        return nullptr;
-
     if (graph.get())
         graph->addTextId(textId, str);
 
     nextTextId++;
+
+    if (!pointerMap.add(p, text, payload))
+        return nullptr;
 
     return payload;
 }
@@ -440,13 +440,13 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
         return nullptr;
     }
 
-    if (!pointerMap.add(p, ptr, payload))
-        return nullptr;
-
     if (graph.get())
         graph->addTextId(textId, str);
 
     nextTextId++;
+
+    if (!pointerMap.add(p, ptr, payload))
+        return nullptr;
 
     return payload;
 }

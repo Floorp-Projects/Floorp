@@ -8,7 +8,6 @@
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/process.h"               // for ProcessId
 #include "base/task.h"                  // for CancelableTask, DeleteTask, etc
-#include "base/tracked.h"               // for FROM_HERE
 #include "base/thread.h"
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -115,13 +114,13 @@ void InitGralloc() {
 /**
  * Task that deletes SharedBufferManagerParent on a specified thread.
  */
-class DeleteSharedBufferManagerParentTask : public Task
+class DeleteSharedBufferManagerParentTask : public Runnable
 {
 public:
     explicit DeleteSharedBufferManagerParentTask(UniquePtr<SharedBufferManagerParent> aSharedBufferManager)
         : mSharedBufferManager(Move(aSharedBufferManager)) {
     }
-    virtual void Run() override {}
+    NS_IMETHOD Run() override { return NS_OK; }
 private:
     UniquePtr<SharedBufferManagerParent> mSharedBufferManager;
 };
@@ -155,8 +154,8 @@ SharedBufferManagerParent::~SharedBufferManagerParent()
 {
   MonitorAutoLock lock(*sManagerMonitor.get());
   if (mTransport) {
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(mTransport));
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
   }
   sManagers.erase(mOwner);
   delete mThread;
@@ -170,9 +169,9 @@ SharedBufferManagerParent::ActorDestroy(ActorDestroyReason aWhy)
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   mBuffers.clear();
 #endif
-  DeleteSharedBufferManagerParentTask* task =
+  RefPtr<DeleteSharedBufferManagerParentTask> task =
     new DeleteSharedBufferManagerParentTask(UniquePtr<SharedBufferManagerParent>(this));
-  mMainMessageLoop->PostTask(FROM_HERE, task);
+  mMainMessageLoop->PostTask(task.forget());
 }
 
 static void
@@ -195,8 +194,7 @@ PSharedBufferManagerParent* SharedBufferManagerParent::Create(Transport* aTransp
   if (!thread->IsRunning()) {
     thread->Start();
   }
-  thread->message_loop()->PostTask(FROM_HERE,
-                                   NewRunnableFunction(ConnectSharedBufferManagerInParentProcess,
+  thread->message_loop()->PostTask(NewRunnableFunction(ConnectSharedBufferManagerInParentProcess,
                                                        manager, aTransport, aOtherPid));
   return manager;
 }
@@ -297,7 +295,7 @@ void SharedBufferManagerParent::DropGrallocBuffer(ProcessId id, mozilla::layers:
   if (PlatformThread::CurrentId() == mgr->mThread->thread_id()) {
     MOZ_CRASH("GFX: SharedBufferManagerParent::DropGrallocBuffer should not be called on SharedBufferManagerParent thread");
   } else {
-    mgr->mThread->message_loop()->PostTask(FROM_HERE,
+    mgr->mThread->message_loop()->PostTask(
                                       NewRunnableFunction(&DropGrallocBufferSync, mgr, aDesc));
   }
   return;

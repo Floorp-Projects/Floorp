@@ -13,112 +13,115 @@
 
 static void *plContext = NULL;
 
-static char *catDirName(char *platform, char *dir, void *plContext)
+static char *
+catDirName(char *platform, char *dir, void *plContext)
 {
-        char *pathName = NULL;
-        PKIX_UInt32 dirLen;
-        PKIX_UInt32 platformLen;
+    char *pathName = NULL;
+    PKIX_UInt32 dirLen;
+    PKIX_UInt32 platformLen;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        dirLen = PL_strlen(dir);
-        platformLen = PL_strlen(platform);
+    dirLen = PL_strlen(dir);
+    platformLen = PL_strlen(platform);
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Malloc
-                (platformLen + dirLen + 2, (void **)&pathName, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Malloc(platformLen +
+                                                 dirLen +
+                                                 2,
+                                             (void **)&pathName, plContext));
 
-        PL_strcpy(pathName, platform);
-        PL_strcat(pathName, "/");
-        PL_strcat(pathName, dir);
+    PL_strcpy(pathName, platform);
+    PL_strcat(pathName, "/");
+    PL_strcat(pathName, dir);
 
 cleanup:
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        return (pathName);
+    return (pathName);
 }
 
 static void
 testNameConstraints(char *dataDir)
 {
-        char *goodPname = "nameConstraintsDN5CACert.crt";
-        PKIX_PL_Cert *goodCert = NULL;
-        PKIX_PL_CertNameConstraints *goodNC = NULL;
-        char *expectedAscii =
-                "[\n"
-                "\t\tPermitted Name:  (OU=permittedSubtree1,"
-                "O=Test Certificates,C=US)\n"
-                "\t\tExcluded Name:   (OU=excludedSubtree1,"
-                "OU=permittedSubtree1,O=Test Certificates,C=US)\n"
-                "\t]\n";
+    char *goodPname = "nameConstraintsDN5CACert.crt";
+    PKIX_PL_Cert *goodCert = NULL;
+    PKIX_PL_CertNameConstraints *goodNC = NULL;
+    char *expectedAscii =
+        "[\n"
+        "\t\tPermitted Name:  (OU=permittedSubtree1,"
+        "O=Test Certificates,C=US)\n"
+        "\t\tExcluded Name:   (OU=excludedSubtree1,"
+        "OU=permittedSubtree1,O=Test Certificates,C=US)\n"
+        "\t]\n";
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("PKIX_PL_CertNameConstraints");
+    subTest("PKIX_PL_CertNameConstraints");
 
-        goodCert = createCert(dataDir, goodPname, plContext);
+    goodCert = createCert(dataDir, goodPname, plContext);
 
-        subTest("PKIX_PL_Cert_GetNameConstraints");
+    subTest("PKIX_PL_Cert_GetNameConstraints");
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Cert_GetNameConstraints
-                (goodCert, &goodNC, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Cert_GetNameConstraints(goodCert, &goodNC, plContext));
 
-        testToStringHelper
-                ((PKIX_PL_Object *)goodNC, expectedAscii, plContext);
+    testToStringHelper((PKIX_PL_Object *)goodNC, expectedAscii, plContext);
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(goodNC);
-        PKIX_TEST_DECREF_AC(goodCert);
+    PKIX_TEST_DECREF_AC(goodNC);
+    PKIX_TEST_DECREF_AC(goodCert);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-static
-void printUsage(void) {
-        (void) printf
-		("\nUSAGE:\ttest_nameconstraints <test-purpose>"
+static void
+printUsage(void)
+{
+    (void)printf("\nUSAGE:\ttest_nameconstraints <test-purpose>"
                  " <data-dir> <platform-prefix>\n\n");
 }
 
 /* Functional tests for CRL public functions */
 
-int test_nameconstraints(int argc, char *argv[]) {
-        PKIX_UInt32 actualMinorVersion;
-        PKIX_UInt32 j = 0;
-        char *platformDir = NULL;
-        char *dataDir = NULL;
-        char *combinedDir = NULL;
+int
+test_nameconstraints(int argc, char *argv[])
+{
+    PKIX_UInt32 actualMinorVersion;
+    PKIX_UInt32 j = 0;
+    char *platformDir = NULL;
+    char *dataDir = NULL;
+    char *combinedDir = NULL;
 
-        /* Note XXX serialnumber and reasoncode need debug */
+    /* Note XXX serialnumber and reasoncode need debug */
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        startTests("NameConstraints");
+    startTests("NameConstraints");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        if (argc < 3 + j) {
-                printUsage();
-                return (0);
-        }
+    if (argc < 3 + j) {
+        printUsage();
+        return (0);
+    }
 
-        dataDir = argv[2 + j];
-        platformDir = argv[3 + j];
-	combinedDir = catDirName(platformDir, dataDir, plContext);
+    dataDir = argv[2 + j];
+    platformDir = argv[3 + j];
+    combinedDir = catDirName(platformDir, dataDir, plContext);
 
-        testNameConstraints(combinedDir);
+    testNameConstraints(combinedDir);
 
 cleanup:
 
-        pkixTestErrorResult = PKIX_PL_Free(combinedDir, plContext);
+    pkixTestErrorResult = PKIX_PL_Free(combinedDir, plContext);
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("NameConstraints");
+    endTests("NameConstraints");
 
-        return (0);
+    return (0);
 }

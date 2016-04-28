@@ -61,6 +61,14 @@ DeadObjectProxy::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleOb
 }
 
 bool
+DeadObjectProxy::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                        MutableHandleObject protop) const
+{
+    *isOrdinary = false;
+    return true;
+}
+
+bool
 DeadObjectProxy::preventExtensions(JSContext* cx, HandleObject proxy, ObjectOpResult& result) const
 {
     ReportDead(cx);

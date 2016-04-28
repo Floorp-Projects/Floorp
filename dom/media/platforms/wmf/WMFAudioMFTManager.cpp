@@ -195,6 +195,11 @@ WMFAudioMFTManager::UpdateOutputType()
   hr = type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &mAudioChannels);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
+  AudioConfig::ChannelLayout layout(mAudioChannels);
+  if (!layout.IsValid()) {
+    return E_FAIL;
+  }
+
   return S_OK;
 }
 

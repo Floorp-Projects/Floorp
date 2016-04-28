@@ -280,6 +280,8 @@ PR_Open_stub(const char *name, PRIntn flags, PRIntn mode)
 	lfd = PORT_New_stub(int);
 	if (lfd != NULL) {
 	    *lfd = fd;
+	} else {
+	    close(fd);
 	}
     }
     return (PRFileDesc *)lfd;

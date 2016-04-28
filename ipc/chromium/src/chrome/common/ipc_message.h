@@ -358,6 +358,21 @@ class Message : public Pickle {
 
 };
 
+class MessageInfo {
+public:
+    typedef uint32_t msgid_t;
+
+    explicit MessageInfo(const Message& aMsg)
+        : mSeqno(aMsg.seqno()), mType(aMsg.type()) {}
+
+    int32_t seqno() const { return mSeqno; }
+    msgid_t type() const { return mType; }
+
+private:
+    int32_t mSeqno;
+    msgid_t mType;
+};
+
 //------------------------------------------------------------------------------
 
 }  // namespace IPC

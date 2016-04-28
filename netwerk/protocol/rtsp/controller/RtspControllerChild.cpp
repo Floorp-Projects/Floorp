@@ -254,7 +254,7 @@ enum IPCEvent
   SendPlaybackEndedEvent
 };
 
-class SendIPCEvent : public nsRunnable
+class SendIPCEvent : public Runnable
 {
 public:
   SendIPCEvent(RtspControllerChild *aController, IPCEvent aEvent)

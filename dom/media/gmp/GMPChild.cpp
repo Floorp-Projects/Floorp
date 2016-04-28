@@ -625,8 +625,9 @@ GMPChild::GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild)
     UniquePtr<GMPContentChild>& toDestroy = mGMPContentChildren[i - 1];
     if (toDestroy.get() == aGMPContentChild) {
       SendPGMPContentChildDestroyed();
-      MessageLoop::current()->PostTask(FROM_HERE,
-                                       new DeleteTask<GMPContentChild>(toDestroy.release()));
+      RefPtr<DeleteTask<GMPContentChild>> task =
+        new DeleteTask<GMPContentChild>(toDestroy.release());
+      MessageLoop::current()->PostTask(task.forget());
       mGMPContentChildren.RemoveElementAt(i - 1);
       break;
     }

@@ -105,6 +105,11 @@ VorbisDataDecoder::Init()
         ("Invalid Vorbis header: container and codec channels do not match!"));
   }
 
+  AudioConfig::ChannelLayout layout(mVorbisDsp.vi->channels);
+  if (!layout.IsValid()) {
+    return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  }
+
   return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
 }
 
@@ -223,6 +228,9 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
       AudioConfig in(AudioConfig::ChannelLayout(channels, VorbisLayout(channels)),
                      rate);
       AudioConfig out(channels, rate);
+      if (!in.IsValid() || !out.IsValid()) {
+       return -1;
+      }
       mAudioConverter = MakeUnique<AudioConverter>(in, out);
     }
     MOZ_ASSERT(mAudioConverter->CanWorkInPlace());

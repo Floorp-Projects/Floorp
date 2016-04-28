@@ -38,8 +38,8 @@ VRManagerChild::~VRManagerChild()
   Transport* trans = GetTransport();
   if (trans) {
     MOZ_ASSERT(XRE_GetIOMessageLoop());
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(trans));
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(trans);
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
   }
 }
 
@@ -109,7 +109,7 @@ VRManagerChild::Destroy()
 
   // The DeferredDestroyVRManager task takes ownership of
   // the VRManagerChild and will release it when it runs.
-  MessageLoop::current()->PostTask(FROM_HERE,
+  MessageLoop::current()->PostTask(
              NewRunnableFunction(DeferredDestroy, selfRef));
 }
 

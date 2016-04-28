@@ -254,7 +254,7 @@ APZCTreeManager::PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                << "\tsr=" << metrics.GetScrollableRect()
                << (aLayer.IsScrollInfoLayer() ? "\tscrollinfo" : "")
                << (apzc->HasScrollgrab() ? "\tscrollgrab" : "") << "\t"
-               << metrics.GetContentDescription().get();
+               << aLayer.Metadata().GetContentDescription().get();
 }
 
 void

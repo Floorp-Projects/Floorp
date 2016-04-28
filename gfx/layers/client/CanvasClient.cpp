@@ -390,6 +390,9 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     }
   } else {
     mShSurfClient = gl->Screen()->Front();
+    if (mShSurfClient && mShSurfClient->GetAllocator() != GetForwarder()) {
+      mShSurfClient = CloneSurface(mShSurfClient->Surf(), gl->Screen()->Factory());
+    }
     if (!mShSurfClient) {
       return;
     }

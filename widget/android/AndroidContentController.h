@@ -37,7 +37,7 @@ public:
     void HandleSingleTap(const CSSPoint& aPoint,
                          Modifiers aModifiers,
                          const ScrollableLayerGuid& aGuid) override;
-    void PostDelayedTask(Task* aTask, int aDelayMs) override;
+    void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
     void UpdateOverscrollVelocity(const float aX, const float aY) override;
     void UpdateOverscrollOffset(const float aX, const float aY) override;
     void SetScrollingRootContent(const bool isRootContent) override;

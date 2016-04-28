@@ -1,4 +1,5 @@
 config = {
+    "upload_environment": "prod",
     "upload_env": {
         "UPLOAD_USER": "ffxbld",
         # ssh_key_dir is defined per platform: it is "~/.ssh" for every platform

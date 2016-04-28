@@ -16,7 +16,7 @@ namespace ipc {
 
 namespace details {
 
-class DaemonRunnable : public nsRunnable
+class DaemonRunnable : public Runnable
 {
 protected:
   DaemonRunnable() = default;

@@ -38,12 +38,16 @@ struct PushEventInit;
 
 BEGIN_WORKERS_NAMESPACE
 
+class ServiceWorkerRegistrationInfo;
+
 class CancelChannelRunnable final : public Runnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   const nsresult mStatus;
 public:
   CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                        nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                         nsresult aStatus);
 
   NS_IMETHOD Run() override;
@@ -104,6 +108,7 @@ public:
 class FetchEvent final : public ExtendableEvent
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<Request> mRequest;
   nsCString mScriptSpec;
   nsCString mPreventDefaultScriptSpec;
@@ -130,6 +135,7 @@ public:
   }
 
   void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                 const nsACString& aScriptSpec);
 
   static already_AddRefed<FetchEvent>

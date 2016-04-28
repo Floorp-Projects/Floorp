@@ -39,7 +39,7 @@ using namespace mozilla;
 // Checking permissions needs to happen on the main thread, but the
 // binder callback is called on a special binder thread, so we use
 // this runnable for that.
-class GonkPermissionChecker : public nsRunnable {
+class GonkPermissionChecker : public Runnable {
   int32_t mPid;
   bool mCanUseCamera;
 

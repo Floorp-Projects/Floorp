@@ -14,9 +14,10 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"                   // for nsTArray
 
-class CancelableTask;
-
 namespace mozilla {
+
+class CancelableRunnable;
+
 namespace layers {
 
 class AsyncPanZoomController;
@@ -214,7 +215,7 @@ private:
    * CancelLongTapTimeoutTask: Cancel the mLongTapTimeoutTask and also set
    * it to null.
    */
-  CancelableTask *mLongTapTimeoutTask;
+  RefPtr<CancelableRunnable> mLongTapTimeoutTask;
   void CancelLongTapTimeoutTask();
   void CreateLongTapTimeoutTask();
 
@@ -227,7 +228,7 @@ private:
    * CancelMaxTapTimeoutTask: Cancel the mMaxTapTimeoutTask and also set
    * it to null.
    */
-  CancelableTask *mMaxTapTimeoutTask;
+  RefPtr<CancelableRunnable> mMaxTapTimeoutTask;
   void CancelMaxTapTimeoutTask();
   void CreateMaxTapTimeoutTask();
 };

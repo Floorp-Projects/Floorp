@@ -14,9 +14,10 @@
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
-class Task;
-
 namespace mozilla {
+
+class Runnable;
+
 namespace layers {
 
 class GeckoContentController
@@ -69,7 +70,7 @@ public:
    * in the future.
    * This method must always be called on the controller thread.
    */
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
+  virtual void PostDelayedTask(already_AddRefed<Runnable> aRunnable, int aDelayMs) = 0;
 
   /**
    * APZ uses |FrameMetrics::mCompositionBounds| for hit testing. Sometimes,

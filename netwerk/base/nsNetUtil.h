@@ -1023,7 +1023,7 @@ bool InScriptableRange(uint64_t val);
 
 // Include some function bodies for callers with external linkage
 #ifndef MOZILLA_INTERNAL_API
-#include "nsNetUtil.inl"
+#include "nsNetUtilInlines.h"
 #endif
 
 #endif // !nsNetUtil_h__

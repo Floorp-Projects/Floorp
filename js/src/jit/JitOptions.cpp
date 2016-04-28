@@ -108,6 +108,9 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggles whether Range Analysis is globally disabled.
     SET_DEFAULT(disableRangeAnalysis, false);
 
+    // Toggles wheter Recover instructions is globally disabled.
+    SET_DEFAULT(disableRecoverIns, false);
+
     // Toggle whether eager scalar replacement is globally disabled.
     SET_DEFAULT(disableScalarReplacement, false);
 

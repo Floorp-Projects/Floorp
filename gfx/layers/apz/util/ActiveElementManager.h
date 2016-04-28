@@ -9,9 +9,10 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 
-class CancelableTask;
-
 namespace mozilla {
+
+class CancelableRunnable;
+
 namespace dom {
 class Element;
 class EventTarget;
@@ -82,7 +83,7 @@ private:
   /**
    * A task for calling SetActive() after a timeout.
    */
-  CancelableTask* mSetActiveTask;
+  RefPtr<CancelableRunnable> mSetActiveTask;
   /**
    * See ActiveElementUsesStyle() documentation.
    */

@@ -431,6 +431,8 @@ class XrayWrapper : public Base {
                               JS::MutableHandleObject protop) const override;
     virtual bool setPrototype(JSContext* cx, JS::HandleObject wrapper,
                               JS::HandleObject proto, JS::ObjectOpResult& result) const override;
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, JS::HandleObject wrapper, bool* isOrdinary,
+                                        JS::MutableHandleObject protop) const override;
     virtual bool setImmutablePrototype(JSContext* cx, JS::HandleObject wrapper,
                                        bool* succeeded) const override;
     virtual bool preventExtensions(JSContext* cx, JS::Handle<JSObject*> wrapper,

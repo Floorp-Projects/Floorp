@@ -132,14 +132,12 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
             // we start polling our pipe and processing outgoing
             // messages.
             mIOLoop->PostTask(
-                FROM_HERE,
                 NewRunnableMethod(this, &ProcessLink::OnChannelOpened));
         } else {
             // Transport::Connect() has already been called.  Take
             // over the channel from the previous listener and process
             // any queued messages.
             mIOLoop->PostTask(
-                FROM_HERE,
                 NewRunnableMethod(this, &ProcessLink::OnTakeConnectedChannel));
         }
 
@@ -168,7 +166,6 @@ ProcessLink::EchoMessage(Message *msg)
     mChan->mMonitor->AssertCurrentThreadOwns();
 
     mIOLoop->PostTask(
-        FROM_HERE,
         NewRunnableMethod(this, &ProcessLink::OnEchoMessage, msg));
     // OnEchoMessage takes ownership of |msg|
 }
@@ -216,7 +213,6 @@ ProcessLink::SendMessage(Message *msg)
 #endif
 
     mIOLoop->PostTask(
-        FROM_HERE,
         NewRunnableMethod(mTransport, &Transport::Send, msg));
 }
 
@@ -226,8 +222,7 @@ ProcessLink::SendClose()
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    mIOLoop->PostTask(
-        FROM_HERE, NewRunnableMethod(this, &ProcessLink::OnCloseChannel));
+    mIOLoop->PostTask(NewRunnableMethod(this, &ProcessLink::OnCloseChannel));
 }
 
 ThreadLink::ThreadLink(MessageChannel *aChan, MessageChannel *aTargetChan)
