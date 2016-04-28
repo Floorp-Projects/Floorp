@@ -25,7 +25,7 @@ namespace js {
 namespace wasm {
 
 static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
-static const uint32_t EncodingVersion    = 0xa;
+static const uint32_t EncodingVersion    = 0x0b;
 
 static const char SignaturesId[]         = "signatures";
 static const char ImportTableId[]        = "import_table";
@@ -36,7 +36,7 @@ static const char ExportTableId[]        = "export_table";
 static const char FunctionBodiesId[]     = "function_bodies";
 static const char DataSegmentsId[]       = "data_segments";
 
-enum class ValType
+enum class ValType : uint8_t
 {
     // 0x00 is reserved for ExprType::Void in the binary encoding. See comment
     // below about ExprType going away.
@@ -64,24 +64,25 @@ enum class Expr
     Block                                = 0x01,
     Loop                                 = 0x02,
     If                                   = 0x03,
-    IfElse                               = 0x04,
+    Else                                 = 0x04,
     Select                               = 0x05,
     Br                                   = 0x06,
     BrIf                                 = 0x07,
     BrTable                              = 0x08,
-    Return                               = 0x14,
-    Unreachable                          = 0x15,
+    Return                               = 0x09,
+    Unreachable                          = 0x0a,
+    End                                  = 0x0f,
 
     // Basic operators
-    I32Const                             = 0x0a,
-    I64Const                             = 0x0b,
-    F64Const                             = 0x0c,
-    F32Const                             = 0x0d,
-    GetLocal                             = 0x0e,
-    SetLocal                             = 0x0f,
-    Call                                 = 0x12,
-    CallIndirect                         = 0x13,
-    CallImport                           = 0x1f,
+    I32Const                             = 0x10,
+    I64Const                             = 0x11,
+    F64Const                             = 0x12,
+    F32Const                             = 0x13,
+    GetLocal                             = 0x14,
+    SetLocal                             = 0x15,
+    Call                                 = 0x16,
+    CallIndirect                         = 0x17,
+    CallImport                           = 0x18,
 
     // Memory-related operators
     I32Load8S                            = 0x20,
@@ -107,7 +108,7 @@ enum class Expr
     I64Store                             = 0x34,
     F32Store                             = 0x35,
     F64Store                             = 0x36,
-    MemorySize                           = 0x3b,
+    CurrentMemory                        = 0x3b,
     GrowMemory                           = 0x39,
 
     // i32 operators
@@ -252,8 +253,7 @@ enum class Expr
     // compiling asm.js and are rejected by wasm validation.
 
     // asm.js-specific operators
-    Id                                   = 0xc0,
-    LoadGlobal,
+    LoadGlobal                           = 0xc0,
     StoreGlobal,
     I32Min,
     I32Max,
@@ -316,7 +316,7 @@ enum class Expr
 // generalized to a list of ValType and this enum will go away, replaced,
 // wherever it is used, by a varU32 + list of ValType.
 
-enum class ExprType
+enum class ExprType : uint8_t
 {
     Void  = 0x00,
     I32   = uint8_t(ValType::I32),
@@ -464,31 +464,12 @@ class Encoder
 
     // Variable-length encodings that allow back-patching.
 
-    MOZ_WARN_UNUSED_RESULT bool writePatchableFixedU8(size_t* offset) {
-        *offset = bytes_.length();
-        return bytes_.append(0xff);
-    }
-    void patchFixedU8(size_t offset, uint8_t i) {
-        MOZ_ASSERT(bytes_[offset] == 0xff);
-        bytes_[offset] = i;
-    }
-
     MOZ_WARN_UNUSED_RESULT bool writePatchableVarU32(size_t* offset) {
         *offset = bytes_.length();
         return writeVarU32(UINT32_MAX);
     }
     void patchVarU32(size_t offset, uint32_t patchBits) {
         return patchVarU32(offset, patchBits, UINT32_MAX);
-    }
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableOneByteExpr(size_t* offset) {
-        *offset = bytes_.length();
-        return writeFixedU8(0xff);
-    }
-    void patchOneByteExpr(size_t offset, Expr expr) {
-        MOZ_ASSERT(size_t(expr) < UINT8_MAX);
-        MOZ_ASSERT(bytes_[offset] == 0xff);
-        bytes_[offset] = uint8_t(expr);
     }
 
     // Byte ranges start with an LEB128 length followed by an arbitrary sequence
@@ -834,12 +815,15 @@ class Decoder
                ? Expr(u8)
                : Expr(uncheckedReadFixedU8() + UINT8_MAX);
     }
-    Expr uncheckedPeekExpr() {
-        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
-        uint8_t u8 = cur_[0];
-        return u8 != UINT8_MAX
-               ? Expr(u8)
-               : Expr(cur_[1] + UINT8_MAX);
+    void uncheckedReadFixedI32x4(I32x4* i32x4) {
+        struct T { I32x4 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i32x4, &t, sizeof(t));
+    }
+    void uncheckedReadFixedF32x4(F32x4* f32x4) {
+        struct T { F32x4 v; };
+        T t = uncheckedRead<T>();
+        memcpy(f32x4, &t, sizeof(t));
     }
 };
 

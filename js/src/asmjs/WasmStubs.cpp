@@ -20,6 +20,8 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "asmjs/WasmIonCompile.h"
+
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;

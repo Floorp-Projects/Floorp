@@ -1000,7 +1000,7 @@ RenderExpr(WasmRenderContext& c)
         return RenderLoop(c);
       case Expr::If:
         return RenderIfElse(c, false);
-      case Expr::IfElse:
+      case Expr::Else:
         return RenderIfElse(c, true);
       case Expr::I32Clz:
       case Expr::I32Ctz:
@@ -1791,7 +1791,11 @@ wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuf
 
     WasmRenderContext c(cx, d, buffer);
 
-    if (!RenderModule(c)) {
+    if (!c.buffer.append("Binary-to-text is temporarily unavailable\n"))
+        return false;
+
+    // FIXME: Implement binary-to-text and re-enable this.
+    if (0 && !RenderModule(c)) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
