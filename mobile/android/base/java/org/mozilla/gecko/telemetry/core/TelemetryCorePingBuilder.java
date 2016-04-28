@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry.pings;
+package org.mozilla.gecko.telemetry.core;
 
 import android.content.Context;
 import android.os.Build;
@@ -13,6 +13,8 @@ import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.telemetry.TelemetryPing;
+import org.mozilla.gecko.telemetry.TelemetryPingBuilder;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.StringUtils;
 
@@ -66,12 +68,12 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     }
 
     @Override
-    String getDocType() {
+    public String getDocType() {
         return NAME;
     }
 
     @Override
-    String[] getMandatoryFields() {
+    public String[] getMandatoryFields() {
         return new String[] {
                 ARCHITECTURE,
                 CLIENT_ID,
