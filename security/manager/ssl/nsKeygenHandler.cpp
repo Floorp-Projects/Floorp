@@ -299,7 +299,7 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
 {
     PK11SlotList * slotList = nullptr;
     char16_t** tokenNameList = nullptr;
-    nsITokenDialogs * dialogs;
+    nsCOMPtr<nsITokenDialogs> dialogs;
     char16_t *unicodeTokenChosen;
     PK11SlotListElement *slotElement, *tmpSlot;
     uint32_t numSlots = 0, i = 0;
@@ -350,12 +350,13 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
             }
         }
 
-		/* Throw up the token list dialog and get back the token */
-		rv = getNSSDialogs((void**)&dialogs,
-			               NS_GET_IID(nsITokenDialogs),
-                     NS_TOKENDIALOGS_CONTRACTID);
+        // Throw up the token list dialog and get back the token.
+        rv = getNSSDialogs(getter_AddRefs(dialogs), NS_GET_IID(nsITokenDialogs),
+                           NS_TOKENDIALOGS_CONTRACTID);
 
-		if (NS_FAILED(rv)) goto loser;
+        if (NS_FAILED(rv)) {
+            goto loser;
+        }
 
     if (!tokenNameList || !*tokenNameList) {
         rv = NS_ERROR_OUT_OF_MEMORY;
@@ -363,7 +364,6 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
         rv = dialogs->ChooseToken(m_ctx, (const char16_t**)tokenNameList,
                                   numSlots, &unicodeTokenChosen, &canceled);
     }
-		NS_RELEASE(dialogs);
 		if (NS_FAILED(rv)) goto loser;
 
 		if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
@@ -476,7 +476,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
     SECItem signedItem;
     CERTPublicKeyAndChallenge pkac;
     pkac.challenge.data = nullptr;
-    nsIGeneratingKeypairInfoDialogs * dialogs;
+    nsCOMPtr<nsIGeneratingKeypairInfoDialogs> dialogs;
     nsKeygenThread *KeygenRunnable = 0;
     nsCOMPtr<nsIKeygenThread> runnable;
 
@@ -583,7 +583,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
         goto loser;
     }
 
-    rv = getNSSDialogs((void**)&dialogs,
+    rv = getNSSDialogs(getter_AddRefs(dialogs),
                        NS_GET_IID(nsIGeneratingKeypairInfoDialogs),
                        NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID);
 
@@ -601,14 +601,12 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                    keyGenMechanism, params, m_ctx );
 
         runnable = do_QueryInterface(KeygenRunnable);
-        
         if (runnable) {
             rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
             // We call join on the thread so we can be sure that no
             // simultaneous access to the passed parameters will happen.
             KeygenRunnable->Join();
 
-            NS_RELEASE(dialogs);
             if (NS_SUCCEEDED(rv)) {
                 PK11SlotInfo *used_slot = nullptr;
                 rv = KeygenRunnable->ConsumeResult(&used_slot, &privateKey, &publicKey);
