@@ -1467,8 +1467,7 @@ public:
 
   bool PopupWhitelisted();
   PopupControlState RevisePopupAbuseLevel(PopupControlState);
-  void     FireAbuseEvents(bool aBlocked, bool aWindow,
-                           const nsAString &aPopupURL,
+  void     FireAbuseEvents(const nsAString &aPopupURL,
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
   void FireOfflineStatusEventIfChanged();
