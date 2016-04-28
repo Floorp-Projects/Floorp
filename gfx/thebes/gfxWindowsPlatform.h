@@ -46,7 +46,6 @@
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
-class FeatureState;
 }
 namespace layers {
 class DeviceManagerD3D9;
@@ -244,6 +243,11 @@ public:
     bool HandleDeviceReset();
     void UpdateBackendPrefs();
 
+    // Return the diagnostic status of DirectX initialization. If
+    // initialization has not been attempted, this returns
+    // FeatureStatus::Unused.
+    mozilla::gfx::FeatureStatus GetD3D11Status() const;
+    mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
     void TestDeviceReset(DeviceResetReason aReason);
@@ -266,7 +270,7 @@ protected:
     }
     void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) override;
-    bool UpdateDeviceInitData() override;
+    void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData) override;
 
 protected:
     RenderMode mRenderMode;
@@ -276,26 +280,25 @@ protected:
 
 private:
     void Init();
-    void InitAcceleration() override;
 
     void InitializeDevices();
     void InitializeD3D11();
     void InitializeD2D();
     bool InitDWriteSupport();
 
-    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage);
+    void DisableD2D();
 
-    void InitializeConfig();
-    void InitializeD3D11Config();
-    void InitializeD2DConfig();
+    mozilla::gfx::FeatureStatus CheckAccelerationSupport();
+    mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
+    mozilla::gfx::FeatureStatus CheckD2D1Support();
 
-    void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
+    mozilla::gfx::FeatureStatus AttemptD3D11DeviceCreation();
     bool AttemptD3D11DeviceCreationHelper(
         IDXGIAdapter1* aAdapter,
         RefPtr<ID3D11Device>& aOutDevice,
         HRESULT& aResOut);
 
-    void AttemptWARPDeviceCreation();
+    mozilla::gfx::FeatureStatus AttemptWARPDeviceCreation();
     bool AttemptWARPDeviceCreationHelper(
         mozilla::ScopedGfxFeatureReporter& aReporterWARP,
         RefPtr<ID3D11Device>& aOutDevice,
@@ -309,7 +312,6 @@ private:
     bool AttemptD3D11ContentDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
 
-    bool CanUseWARP();
     bool CanUseD3D11ImageBridge();
     bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
@@ -337,6 +339,12 @@ private:
     DeviceResetReason mDeviceResetReason;
 
     RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+
+    // These should not be accessed directly. Use the Get[Feature]Status
+    // accessors instead.
+    mozilla::gfx::FeatureStatus mAcceleration;
+    mozilla::gfx::FeatureStatus mD3D11Status;
+    mozilla::gfx::FeatureStatus mD2D1Status;
 
     nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
 };

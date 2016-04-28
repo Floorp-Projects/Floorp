@@ -12,7 +12,7 @@ namespace gfx {
 
 struct DeviceInitData
 {
-  bool useHwCompositing;
+  bool useAcceleration;
 
   // Windows only.
   bool useD3D11;
