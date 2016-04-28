@@ -160,6 +160,17 @@ protected:
                      const DocShellOriginAttributes& aOriginAttributes,
                      const nsACString& aSignedPkgOriginNoSuffix);
 
+  /**
+   * Modify this TabContext to match the given TabContext.  This is a special
+   * case triggered by nsFrameLoader::SwapWithOtherRemoteLoader which may have
+   * caused the owner content to change.
+   *
+   * This special case only allows the field `mIsMozBrowserElement` to be
+   * changed.  If any other fields have changed, the update is ignored and
+   * returns false.
+   */
+  bool UpdateTabContextAfterSwap(const TabContext& aContext);
+
 private:
   /**
    * Has this TabContext been initialized?  If so, mutator methods will fail.
