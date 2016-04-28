@@ -1251,10 +1251,10 @@ RenderSignature(WasmRenderContext& c, const DeclaredSig& sig, bool varAssignment
 }
 
 static bool
-RenderSignatures(WasmRenderContext& c)
+RenderTypeSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SignaturesId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(TypeSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1309,10 +1309,10 @@ RenderSignatures(WasmRenderContext& c)
 }
 
 static bool
-RenderFunctionSignatures(WasmRenderContext& c)
+RenderFunctionSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(FunctionSignaturesId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(FunctionSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1338,10 +1338,10 @@ RenderFunctionSignatures(WasmRenderContext& c)
 }
 
 static bool
-RenderFunctionTable(WasmRenderContext& c)
+RenderTableSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(FunctionTableId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(TableSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1423,10 +1423,10 @@ RenderImport(WasmRenderContext& c, uint32_t importIndex)
 
 
 static bool
-RenderImportTable(WasmRenderContext& c)
+RenderImportSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(ImportTableId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(ImportSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1450,13 +1450,13 @@ RenderImportTable(WasmRenderContext& c)
 }
 
 static bool
-RenderMemory(WasmRenderContext& c, uint32_t* memInitial, uint32_t* memMax)
+RenderMemorySection(WasmRenderContext& c, uint32_t* memInitial, uint32_t* memMax)
 {
     *memInitial = 0;
     *memMax = 0;
 
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(MemoryId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(MemorySectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1528,10 +1528,10 @@ RenderFunctionExport(WasmRenderContext& c)
 }
 
 static bool
-RenderExportTable(WasmRenderContext& c)
+RenderExportSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(ExportTableId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(ExportSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1612,10 +1612,10 @@ RenderFunctionBody(WasmRenderContext& c, uint32_t funcIndex, uint32_t paramsNum)
 }
 
 static bool
-RenderFunctionBodies(WasmRenderContext& c)
+RenderCodeSection(WasmRenderContext& c)
 {
     uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(FunctionBodiesId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(CodeSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
 
     if (sectionStart == Decoder::NotStarted)
@@ -1664,7 +1664,7 @@ RenderFunctionBodies(WasmRenderContext& c)
 
 
 static bool
-RenderDataSegments(WasmRenderContext& c, uint32_t memInitial, uint32_t memMax)
+RenderDataSection(WasmRenderContext& c, uint32_t memInitial, uint32_t memMax)
 {
     if (!RenderIndent(c))
         return false;
@@ -1682,7 +1682,7 @@ RenderDataSegments(WasmRenderContext& c, uint32_t memInitial, uint32_t memMax)
     c.indent++;
     uint32_t sectionStart;
     uint32_t sectionSize;
-    if (!c.d.startSection(DataSegmentsId, &sectionStart, &sectionSize))
+    if (!c.d.startSection(DataSectionId, &sectionStart, &sectionSize))
         return RenderFail(c, "failed to start section");
     if (sectionStart == Decoder::NotStarted) {
       if (!c.buffer.append(")\n"))
@@ -1749,29 +1749,29 @@ RenderModule(WasmRenderContext& c)
 
     c.indent++;
 
-    if (!RenderSignatures(c))
+    if (!RenderTypeSection(c))
         return false;
 
-    if (!RenderImportTable(c))
+    if (!RenderImportSection(c))
         return false;
 
-    if (!RenderFunctionSignatures(c))
+    if (!RenderFunctionSection(c))
         return false;
 
-    if (!RenderFunctionTable(c))
+    if (!RenderTableSection(c))
         return false;
 
     uint32_t memInitial, memMax;
-    if (!RenderMemory(c, &memInitial, &memMax))
+    if (!RenderMemorySection(c, &memInitial, &memMax))
         return false;
 
-    if (!RenderExportTable(c))
+    if (!RenderExportSection(c))
         return false;
 
-    if (!RenderFunctionBodies(c))
+    if (!RenderCodeSection(c))
         return false;
 
-    if (!RenderDataSegments(c, memInitial, memMax))
+    if (!RenderDataSection(c, memInitial, memMax))
         return false;
 
     c.indent--;
