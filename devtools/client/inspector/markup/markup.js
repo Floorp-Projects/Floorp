@@ -23,6 +23,11 @@ const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 const ATTR_COLLAPSE_ENABLED_PREF = "devtools.markup.collapseAttributes";
 const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
 
+// Contains only void (without end tag) HTML elements
+const HTML_VOID_ELEMENTS = [ "area", "base", "br", "col", "command", "embed",
+  "hr", "img", "input", "keygen", "link", "meta", "param", "source",
+  "track", "wbr" ];
+
 const {UndoStack} = require("devtools/client/shared/undo");
 const {editableField, InplaceEditor} =
       require("devtools/client/shared/inplace-editor");
@@ -2678,6 +2683,11 @@ function ElementEditor(container, node) {
   let tagName = this.getTagName(this.node);
   this.tag.textContent = tagName;
   this.closeTag.textContent = tagName;
+
+  let isVoidElement = HTML_VOID_ELEMENTS.includes(tagName);
+  if (node.isInHTMLDocument && isVoidElement) {
+    this.elt.classList.add("void-element");
+  }
 
   this.update();
   this.initialized = true;
