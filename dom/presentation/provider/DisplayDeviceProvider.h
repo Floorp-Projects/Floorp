@@ -15,6 +15,7 @@
 #include "nsIObserver.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsIPresentationLocalDevice.h"
+#include "nsITCPPresentationServer.h"
 #include "nsIWindowWatcher.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -33,8 +34,11 @@ enum DisplayType {
     NUM_DISPLAY_TYPES
 };
 
+class DisplayDeviceProviderWrappedListener;
+
 class DisplayDeviceProvider final : public nsIObserver
                                   , public nsIPresentationDeviceProvider
+                                  , public nsITCPPresentationServerListener
                                   , public SupportsWeakPtr<DisplayDeviceProvider>
 {
 private:
@@ -51,6 +55,7 @@ private:
       , mName("HDMI")
       , mType("external")
       , mWindowId("hdmi")
+      , mAddress("127.0.0.1")
       , mProvider(aProvider)
     {}
 
@@ -58,6 +63,7 @@ private:
     nsresult CloseTopLevelWindow();
 
     const nsCString& Id() const { return mWindowId; }
+    const nsCString& Address() const { return mAddress; }
 
   private:
     virtual ~HDMIDisplayDevice() = default;
@@ -70,6 +76,7 @@ private:
     nsCString mName;
     nsCString mType;
     nsCString mWindowId;
+    nsCString mAddress;
 
     nsCOMPtr<mozIDOMWindowProxy> mWindow;
     // weak pointer
@@ -82,6 +89,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIPRESENTATIONDEVICEPROVIDER
+  NS_DECL_NSITCPPRESENTATIONSERVERLISTENER
   // For using WeakPtr when MOZ_REFCOUNTED_LEAK_CHECKING defined
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(DisplayDeviceProvider)
 
@@ -98,13 +106,21 @@ private:
   nsresult AddExternalScreen();
   nsresult RemoveExternalScreen();
 
+  nsresult StartTCPService();
+
   // Now support HDMI display only and there should be only one HDMI display.
   nsCOMPtr<nsIPresentationLocalDevice> mDevice = nullptr;
   // weak pointer
   // PresentationDeviceManager (mDeviceListener) hold strong pointer to
   // DisplayDeviceProvider. Use nsWeakPtr to avoid reference cycle.
   nsWeakPtr mDeviceListener = nullptr;
+  nsCOMPtr<nsITCPPresentationServer> mPresentationServer;
+  // Used to prevent reference cycle between DisplayDeviceProvider and
+  // TCPPresentationServer.
+  RefPtr<DisplayDeviceProviderWrappedListener> mWrappedListener;
+
   bool mInitialized = false;
+  uint16_t mPort;
 };
 
 } // mozilla
