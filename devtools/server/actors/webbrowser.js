@@ -1406,13 +1406,6 @@ TabActor.prototype = {
       this._workerActorPool = null;
     }
 
-    // Make sure that no more serviceWorkerRegistrationChanged notifications are
-    // sent.
-    if (this._mustNotifyServiceWorkerRegistrationChanged) {
-      swm.removeListener(this);
-      this._mustNotifyServiceWorkerRegistrationChanged = false;
-    }
-
     this._attached = false;
 
     return true;
