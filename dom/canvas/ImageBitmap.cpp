@@ -471,28 +471,8 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
       return surface.forget();
     }
 
-    // We need to fall back to generic copying and cropping for the Windows8.1,
-    // D2D1 backend.
-    // In the Windows8.1 D2D1 backend, it might trigger "partial upload" from a
-    // non-SourceSurfaceD2D1 surface to a D2D1Image in the following
-    // CopySurface() step. However, the "partial upload" only supports uploading
-    // a rectangle starts from the upper-left point, which means it cannot
-    // upload an arbitrary part of the source surface and this causes problems
-    // if the mPictureRect is not starts from the upper-left point.
-    if (target->GetBackendType() == BackendType::DIRECT2D1_1 &&
-        mSurface->GetType() != SurfaceType::D2D1_1_IMAGE) {
-      RefPtr<DataSourceSurface> dataSurface = mSurface->GetDataSurface();
-      if (NS_WARN_IF(!dataSurface)) {
-        mSurface = nullptr;
-        RefPtr<gfx::SourceSurface> surface(mSurface);
-        return surface.forget();
-      }
-
-      mSurface = CropAndCopyDataSourceSurface(dataSurface, mPictureRect);
-    } else {
-      target->CopySurface(mSurface, surfPortion, dest);
-      mSurface = target->Snapshot();
-    }
+    target->CopySurface(mSurface, surfPortion, dest);
+    mSurface = target->Snapshot();
 
     // Make mCropRect match new surface we've cropped to
     mPictureRect.MoveTo(0, 0);
