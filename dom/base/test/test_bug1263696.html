@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta><charset="utf-8"/>
+    <title>Test Embed/Object Node Conflicts</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="plugin-utils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     var index = 0;
+     function startTest() {
+       is(index, 12, "Should have loaded all passing frames.");
+       SimpleTest.finish();
+     }
+    </script>
+  </head>
+  <body onload="startTest()">
+    <object data="file_bug1263696_frame_pass.html" style="width: 100px; height: 100px">
+      <embed type="text/html" src="file_bug1263696_frame_fail.html" />
+    </object>
+    <object style="width: 100px; height: 100px" data="data:application/x-does-not-exist,test">
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+    </object>
+    <object style="width: 100px; height: 100px" data="data:application/x-does-not-exist,test">
+      <div></div>
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+    </object>
+    <object style="width: 100px; height: 100px" data="data:application/x-does-not-exist,test">
+      <div>
+        <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+      </div>
+    </object>
+    <object style="width: 100px; height: 100px" data="data:application/x-does-not-exist,test">
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+      <object data="file_bug1263696_frame_pass.html">
+        <embed type="text/html" src="file_bug1263696_frame_fail.html" />
+      </object>
+      <object data="data:application/x-does-not-exist,test">
+        <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+      </object>
+    </object>
+    <div>
+      <object data="file_bug1263696_frame_pass.html" style="width: 100px; height: 100px"></object>
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+    </div>
+    <div>
+      <embed type="text/html" src="file_bug1263696_frame_pass.html" />
+      <object data="file_bug1263696_frame_pass.html" style="width: 100px; height: 100px"></object>
+    </div>
+  </body>
+</html>

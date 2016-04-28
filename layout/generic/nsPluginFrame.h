@@ -26,6 +26,7 @@
 #undef GetBinaryType
 #undef RemoveDirectory
 #undef LoadIcon
+#undef GetObject
 #endif
 
 class nsPresContext;
