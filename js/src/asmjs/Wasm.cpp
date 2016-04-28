@@ -521,8 +521,8 @@ typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
 static bool
 DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(SignaturesId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SignaturesId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -580,7 +580,7 @@ DecodeSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "decls section byte size mismatch");
 
     return true;
@@ -604,8 +604,8 @@ DecodeSignatureIndex(JSContext* cx, Decoder& d, const ModuleGeneratorData& init,
 static bool
 DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(FunctionSignaturesId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(FunctionSignaturesId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -625,7 +625,7 @@ DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "decls section byte size mismatch");
 
     return true;
@@ -634,8 +634,8 @@ DecodeFunctionSignatures(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 static bool
 DecodeFunctionTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(FunctionTableId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(FunctionTableId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -661,7 +661,7 @@ DecodeFunctionTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
         elems[i] = funcIndex;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "table section byte size mismatch");
 
     // Convert the single (heterogeneous) indirect function table into an
@@ -755,8 +755,8 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
 static bool
 DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(ImportTableId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(ImportTableId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -773,7 +773,7 @@ DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNa
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "import section byte size mismatch");
 
     return true;
@@ -782,8 +782,8 @@ DecodeImportTable(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNa
 static bool
 DecodeMemory(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<ArrayBufferObject*> heap)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(MemoryId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(MemoryId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -816,7 +816,7 @@ DecodeMemory(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<Array
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "memory section byte size mismatch");
 
     bool signalsForOOB = CompileArgs(cx).useSignalHandlersForOOB;
@@ -886,8 +886,8 @@ DecodeFunctionExport(JSContext* cx, Decoder& d, ModuleGenerator& mg, CStringSet*
 static bool
 DecodeExportTable(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(ExportTableId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(ExportTableId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -908,7 +908,7 @@ DecodeExportTable(JSContext* cx, Decoder& d, ModuleGenerator& mg)
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "export section byte size mismatch");
 
     return true;
@@ -978,8 +978,8 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
     if (!mg.startFuncDefs())
         return false;
 
-    uint32_t sectionStart;
-    if (!d.startSection(FunctionBodiesId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(FunctionBodiesId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
 
     if (sectionStart == Decoder::NotStarted) {
@@ -1001,7 +1001,7 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
             return false;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "function section byte size mismatch");
 
     return mg.finishFuncDefs();
@@ -1010,8 +1010,8 @@ DecodeFunctionBodies(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 static bool
 DecodeDataSegments(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 {
-    uint32_t sectionStart;
-    if (!d.startSection(DataSegmentsId, &sectionStart))
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(DataSegmentsId, &sectionStart, &sectionSize))
         return Fail(cx, d, "failed to start section");
     if (sectionStart == Decoder::NotStarted)
         return true;
@@ -1050,7 +1050,7 @@ DecodeDataSegments(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
         prevEnd = dstOffset + numBytes;
     }
 
-    if (!d.finishSection(sectionStart))
+    if (!d.finishSection(sectionStart, sectionSize))
         return Fail(cx, d, "data section byte size mismatch");
 
     return true;
