@@ -12,6 +12,7 @@ var promise = require("promise");
 
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
+loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 
 // Re-export the thread-safe utils.
 const ThreadSafeDevToolsUtils = require("./ThreadSafeDevToolsUtils.js");
