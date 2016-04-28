@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Ci, Cu} = require("chrome");
-const {rgbToHsl} = require("devtools/shared/css-color").colorUtils;
+const {rgbToHsl} = require("devtools/client/shared/css-color").colorUtils;
 const Telemetry = require("devtools/client/shared/telemetry");
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
 const promise = require("promise");

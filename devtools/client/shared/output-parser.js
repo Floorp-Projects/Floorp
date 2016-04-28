@@ -6,7 +6,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const {angleUtils} = require("devtools/shared/css-angle");
-const {colorUtils} = require("devtools/shared/css-color");
+const {colorUtils} = require("devtools/client/shared/css-color");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 

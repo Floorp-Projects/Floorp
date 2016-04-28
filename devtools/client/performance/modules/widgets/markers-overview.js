@@ -13,7 +13,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
-const { colorUtils } = require("devtools/shared/css-color");
+const { colorUtils } = require("devtools/client/shared/css-color");
 const { getColor } = require("devtools/client/shared/theme");
 const ProfilerGlobal = require("devtools/client/performance/modules/global");
 const { MarkerBlueprintUtils } = require("devtools/client/performance/modules/marker-blueprint-utils");

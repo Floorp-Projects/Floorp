@@ -101,6 +101,7 @@ devtools/client/responsivedesign/**
 devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/**
+!devtools/client/shared/css-color.js
 devtools/client/sourceeditor/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
@@ -110,7 +111,6 @@ devtools/client/webide/**
 devtools/server/**
 !devtools/server/actors/webbrowser.js
 devtools/shared/*.js
-!devtools/shared/css-color.js
 devtools/shared/*.jsm
 devtools/shared/apps/**
 devtools/shared/client/**
