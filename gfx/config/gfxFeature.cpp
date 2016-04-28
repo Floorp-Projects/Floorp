@@ -157,8 +157,9 @@ void
 FeatureState::EnableByDefault()
 {
   // User/runtime decisions should not have been made yet.
-  MOZ_ASSERT(mUser.mStatus == FeatureStatus::Unused);
-  MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
+  MOZ_ASSERT(!mUser.IsInitialized());
+  MOZ_ASSERT(!mEnvironment.IsInitialized());
+  MOZ_ASSERT(!mRuntime.IsInitialized());
 
   mDefault.Set(FeatureStatus::Available);
 }
@@ -167,8 +168,9 @@ void
 FeatureState::DisableByDefault(FeatureStatus aStatus, const char* aMessage)
 {
   // User/runtime decisions should not have been made yet.
-  MOZ_ASSERT(mUser.mStatus == FeatureStatus::Unused);
-  MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
+  MOZ_ASSERT(!mUser.IsInitialized());
+  MOZ_ASSERT(!mEnvironment.IsInitialized());
+  MOZ_ASSERT(!mRuntime.IsInitialized());
 
   mDefault.Set(aStatus, aMessage);
 }
@@ -177,9 +179,9 @@ void
 FeatureState::SetUser(FeatureStatus aStatus, const char* aMessage)
 {
   // Default decision must have been made, but not runtime or environment.
-  MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
-  MOZ_ASSERT(mEnvironment.mStatus == FeatureStatus::Unused);
-  MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
+  MOZ_ASSERT(mDefault.IsInitialized());
+  MOZ_ASSERT(!mEnvironment.IsInitialized());
+  MOZ_ASSERT(!mRuntime.IsInitialized());
 
   mUser.Set(aStatus, aMessage);
 }
@@ -188,8 +190,8 @@ void
 FeatureState::SetEnvironment(FeatureStatus aStatus, const char* aMessage)
 {
   // Default decision must have been made, but not runtime.
-  MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
-  MOZ_ASSERT(mRuntime.mStatus == FeatureStatus::Unused);
+  MOZ_ASSERT(mDefault.IsInitialized());
+  MOZ_ASSERT(!mRuntime.IsInitialized());
 
   mEnvironment.Set(aStatus, aMessage);
 }
@@ -197,8 +199,7 @@ FeatureState::SetEnvironment(FeatureStatus aStatus, const char* aMessage)
 void
 FeatureState::SetRuntime(FeatureStatus aStatus, const char* aMessage)
 {
-  // Default decision must have been made.
-  MOZ_ASSERT(mDefault.mStatus != FeatureStatus::Unused);
+  AssertInitialized();
 
   mRuntime.Set(aStatus, aMessage);
 }
@@ -208,6 +209,23 @@ FeatureState::GetRuntimeMessage() const
 {
   MOZ_ASSERT(IsFeatureStatusFailure(mRuntime.mStatus));
   return mRuntime.mMessage;
+}
+
+void
+FeatureState::ForEachStatusChange(const StatusIterCallback& aCallback) const
+{
+  AssertInitialized();
+
+  aCallback("default", mDefault.mStatus, mDefault.MessageOrNull());
+  if (mUser.IsInitialized()) {
+    aCallback("user", mUser.mStatus, mUser.Message());
+  }
+  if (mEnvironment.IsInitialized()) {
+    aCallback("env", mEnvironment.mStatus, mEnvironment.Message());
+  }
+  if (mRuntime.IsInitialized()) {
+    aCallback("runtime", mRuntime.mStatus, mRuntime.Message());
+  }
 }
 
 void
