@@ -883,7 +883,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   }
 
   RefPtr<layers::Image> data = aImageBitmap.mData;
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aImageBitmap.mIsPremultipliedAlpha);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
