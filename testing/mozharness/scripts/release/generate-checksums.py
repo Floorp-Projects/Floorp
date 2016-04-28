@@ -123,13 +123,13 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
 
         if not self.config.get("includes"):
             self.config["includes"] = [
-                "^.*\.tar\.bz2$",
-                "^.*\.tar\.xz$",
-                "^.*\.dmg$",
-                "^.*\.bundle$",
-                "^.*\.mar$",
-                "^.*Setup.*\.exe$",
-                "^.*\.xpi$",
+                r"^.*\.tar\.bz2$",
+                r"^.*\.tar\.xz$",
+                r"^.*\.dmg$",
+                r"^.*\.bundle$",
+                r"^.*\.mar$",
+                r"^.*Setup.*\.exe$",
+                r"^.*\.xpi$",
             ]
 
     def _get_bucket_name(self):
@@ -144,7 +144,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
         return "{}-{}".format(self.config["bucket_name_prefix"], suffix)
 
     def _get_file_prefix(self):
-        return "pub/{}/candidates/{}-candidates/build{}".format(
+        return "pub/{}/candidates/{}-candidates/build{}/".format(
             self.config["stage_product"], self.config["version"], self.config["build_number"]
         )
 
@@ -181,12 +181,22 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin, Bu
 
         def find_checksums_files():
             self.info("Getting key names from bucket")
+            checksum_files = {"beets": [], "checksums": []}
             for key in bucket.list(prefix=self.file_prefix):
                 if key.key.endswith(".checksums"):
                     self.debug("Found checksums file: {}".format(key.key))
-                    yield key.key
+                    checksum_files["checksums"].append(key.key)
+                elif key.key.endswith(".beet"):
+                    self.debug("Found beet file: {}".format(key.key))
+                    checksum_files["beets"].append(key.key)
                 else:
                     self.debug("Ignoring non-checksums file: {}".format(key.key))
+            if checksum_files["beets"]:
+                self.log("Using beet format")
+                return checksum_files["beets"]
+            else:
+                self.log("Using checksums format")
+                return checksum_files["checksums"]
 
         pool = ThreadPool(self.config["parallelization"])
         pool.map(worker, find_checksums_files())
