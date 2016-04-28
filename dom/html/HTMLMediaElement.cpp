@@ -5134,13 +5134,6 @@ NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged(float aVolume, bool aMuted)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLMediaElement::WindowSuspendChanged(nsSuspendedTypes aSuspend)
-{
-  // TODO : implementation.
-  return NS_OK;
-}
-
 #ifdef MOZ_EME
 MediaKeys*
 HTMLMediaElement::GetMediaKeys() const
