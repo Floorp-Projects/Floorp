@@ -721,7 +721,7 @@ var AudioPlaybackListener = {
     Services.obs.addObserver(this, "audio-playback", false);
     Services.obs.addObserver(this, "AudioFocusChanged", false);
 
-    addMessageListener("AudioPlayback", this);
+    addMessageListener("AudioPlaybackMute", this);
     addEventListener("unload", () => {
       AudioPlaybackListener.uninit();
     });
@@ -731,45 +731,7 @@ var AudioPlaybackListener = {
     Services.obs.removeObserver(this, "audio-playback");
     Services.obs.removeObserver(this, "AudioFocusChanged");
 
-    removeMessageListener("AudioPlayback", this);
-  },
-
-  handleMediaControlMessage(msg) {
-    let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils);
-    let suspendTypes = Ci.nsISuspendedTypes;
-    switch (msg) {
-      case "mute":
-        utils.audioMuted = true;
-        break;
-      case "unmute":
-        utils.audioMuted = false;
-        break;
-      case "lostAudioFocus":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
-        break;
-      case "lostAudioFocusTransiently":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE;
-        break;
-      case "gainAudioFocus":
-        utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
-        break;
-      case "mediaControlPaused":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_PAUSE_DISPOSABLE;
-        break;
-      case "mediaControlStopped":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_STOP_DISPOSABLE;
-        break;
-      case "blockInactivePageMedia":
-        utils.mediaSuspend = suspendTypes.SUSPENDED_BLOCK;
-        break;
-      case "resumeMedia":
-        utils.mediaSuspend = suspendTypes.NONE_SUSPENDED;
-        break;
-      default:
-        dump("Error : wrong media control msg!\n");
-        break;
-    }
+    removeMessageListener("AudioPlaybackMute", this);
   },
 
   observe(subject, topic, data) {
@@ -780,13 +742,28 @@ var AudioPlaybackListener = {
         sendAsyncMessage(name);
       }
     } else if (topic == "AudioFocusChanged") {
-      this.handleMediaControlMessage(data);
+      let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
+      switch (data) {
+        // The AudioFocus:LossTransient means the media would be resumed after
+        // the interruption ended, but AudioFocus:Loss doesn't.
+        // TODO : distinguish these types, it would be done in bug1242874.
+        case "Loss":
+        case "LossTransient":
+          utils.mediaSuspended = true;
+          break;
+        case "Gain":
+          utils.mediaSuspended = false;
+          break;
+      }
     }
   },
 
   receiveMessage(msg) {
-    if (msg.name == "AudioPlayback") {
-      this.handleMediaControlMessage(msg.data.type);
+    if (msg.name == "AudioPlaybackMute") {
+      let utils = global.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
+      utils.audioMuted = msg.data.type === "mute";
     }
   },
 };
