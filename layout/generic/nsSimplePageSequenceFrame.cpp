@@ -772,7 +772,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
       nsLayoutUtils::PaintFrame(&renderingContext, currentPage,
                                 drawingRegion, NS_RGBA(0,0,0,0),
                                 nsDisplayListBuilderMode::PAINTING,
-                                nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);
+                                nsLayoutUtils::PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES);
 
       if (mSelectionHeight >= 0 && selectionY < mSelectionHeight) {
         selectionY += height;

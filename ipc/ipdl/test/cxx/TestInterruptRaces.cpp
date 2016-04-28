@@ -16,11 +16,11 @@ namespace mozilla {
 namespace _ipdltest {
 
 ipc::RacyInterruptPolicy
-MediateRace(const MessageChannel::Message& parent,
-            const MessageChannel::Message& child)
+MediateRace(const MessageChannel::MessageInfo& parent,
+            const MessageChannel::MessageInfo& child)
 {
     return (PTestInterruptRaces::Msg_Child__ID == parent.type()) ?
-        ipc::RIPParentWins : ipc::RIPChildWins;
+                ipc::RIPParentWins : ipc::RIPChildWins;
 }
 
 //-----------------------------------------------------------------------------

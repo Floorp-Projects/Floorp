@@ -140,7 +140,7 @@ memleak_init()
 	NSS_DISABLE_UNLOAD="1"
 	export NSS_DISABLE_UNLOAD
 
-	SELFSERV_ATTR="-D -p ${PORT} -d ${SERVER_DB} -n ${HOSTADDR} -e ${HOSTADDR}-ec -w nss -c ABCDEF:C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz -t 5"
+	SELFSERV_ATTR="-D -p ${PORT} -d ${SERVER_DB} -n ${HOSTADDR} -e ${HOSTADDR}-ec -w nss -c :C001:C002:C003:C004:C005:C006:C007:C008:C009:C00A:C00B:C00C:C00D:C00E:C00F:C010:C011:C012:C013:C014cdefgijklmnvyz -t 5"
 	TSTCLNT_ATTR="-p ${PORT} -h ${HOSTADDR} -c j -f -d ${CLIENT_DB} -w nss -o"
 	STRSCLNT_ATTR="-q -p ${PORT} -d ${CLIENT_DB} -w nss -c 1000 -n TestUser ${HOSTADDR}"
 
@@ -207,7 +207,7 @@ set_test_mode()
 		
 		echo "${SCRIPTNAME}: FIPS is OFF"
 		# ciphers l and m removed, see bug 1136095
-		cipher_list="A B C D E F :C001 :C002 :C003 :C004 :C005 :C006 :C007 :C008 :C009 :C00A :C010 :C011 :C012 :C013 :C014 c d e f g i j k n v y z"
+		cipher_list=":C001 :C002 :C003 :C004 :C005 :C006 :C007 :C008 :C009 :C00A :C010 :C011 :C012 :C013 :C014 c d e f g i j k n v y z"
 	fi
 }
 
@@ -370,10 +370,6 @@ run_strsclnt()
 		VMIN="ssl3"
 		VMAX=
 		case "${cipher}" in
-		A|B|C|D|E|F)
-			# Enable SSL 2 only for SSL 2 cipher suites.
-			VMIN="ssl2"
-			;;
 		f|g)
 			# TLS 1.1 disallows export cipher suites.
 			VMAX="tls1.0"
@@ -415,10 +411,6 @@ run_strsclnt_dbg()
 		VMIN="ssl3"
 		VMAX=
 		case "${cipher}" in
-		A|B|C|D|E|F)
-			# Enable SSL 2 only for SSL 2 cipher suites.
-			VMIN="ssl2"
-			;;
 		f|g)
 			# TLS 1.1 disallows export cipher suites.
 			VMAX="tls1.0"

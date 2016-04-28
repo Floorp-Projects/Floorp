@@ -111,15 +111,12 @@ public:
   // NOTE: These methods may be called on any thread.  The Task will be invoked
   // on the thread that executes MessageLoop::Run().
 
-  void PostTask(
-      const tracked_objects::Location& from_here, Task* task);
+  void PostTask(already_AddRefed<mozilla::Runnable> task);
 
-  void PostDelayedTask(
-      const tracked_objects::Location& from_here, Task* task, int delay_ms);
+  void PostDelayedTask(already_AddRefed<mozilla::Runnable> task, int delay_ms);
 
   // PostIdleTask is not thread safe and should be called on this thread
-  void PostIdleTask(
-      const tracked_objects::Location& from_here, Task* task);
+  void PostIdleTask(already_AddRefed<mozilla::Runnable> task);
 
   // Run the message loop.
   void Run();
@@ -137,10 +134,11 @@ public:
 
   // Invokes Quit on the current MessageLoop when run.  Useful to schedule an
   // arbitrary MessageLoop to Quit.
-  class QuitTask : public Task {
+  class QuitTask : public mozilla::Runnable {
    public:
-    virtual void Run() override {
+    NS_IMETHOD Run() override {
       MessageLoop::current()->Quit();
+      return NS_OK;
     }
   };
 
@@ -282,13 +280,36 @@ public:
 
   // This structure is copied around by value.
   struct PendingTask {
-    Task* task;                        // The task to run.
+    RefPtr<mozilla::Runnable> task;    // The task to run.
     base::TimeTicks delayed_run_time;  // The time when the task should be run.
     int sequence_num;                  // Secondary sort key for run time.
     bool nestable;                     // OK to dispatch from a nested loop.
 
-    PendingTask(Task* aTask, bool aNestable)
+    PendingTask(already_AddRefed<mozilla::Runnable> aTask, bool aNestable)
         : task(aTask), sequence_num(0), nestable(aNestable) {
+    }
+
+    PendingTask(PendingTask&& aOther)
+        : task(aOther.task.forget()),
+          delayed_run_time(aOther.delayed_run_time),
+          sequence_num(aOther.sequence_num),
+          nestable(aOther.nestable) {
+    }
+
+    // std::priority_queue<T>::top is dumb, so we have to have this.
+    PendingTask(const PendingTask& aOther)
+        : task(aOther.task),
+          delayed_run_time(aOther.delayed_run_time),
+          sequence_num(aOther.sequence_num),
+          nestable(aOther.nestable) {
+    }
+    PendingTask& operator=(const PendingTask& aOther)
+    {
+      task = aOther.task;
+      delayed_run_time = aOther.delayed_run_time;
+      sequence_num = aOther.sequence_num;
+      nestable = aOther.nestable;
+      return *this;
     }
 
     // Used to support sorting.
@@ -332,14 +353,14 @@ public:
   // appended to the list work_queue_.  Such re-entrancy generally happens when
   // an unrequested message pump (typical of a native dialog) is executing in
   // the context of a task.
-  bool QueueOrRunTask(Task* new_task);
+  bool QueueOrRunTask(already_AddRefed<mozilla::Runnable> new_task);
 
   // Runs the specified task and deletes it.
-  void RunTask(Task* task);
+  void RunTask(already_AddRefed<mozilla::Runnable> task);
 
   // Calls RunTask or queues the pending_task on the deferred task list if it
   // cannot be run right now.  Returns true if the task was run.
-  bool DeferOrRunPendingTask(const PendingTask& pending_task);
+  bool DeferOrRunPendingTask(PendingTask&& pending_task);
 
   // Adds the pending task to delayed_work_queue_.
   void AddToDelayedWorkQueue(const PendingTask& pending_task);
@@ -355,8 +376,7 @@ public:
   bool DeletePendingTasks();
 
   // Post a task to our incomming queue.
-  void PostTask_Helper(const tracked_objects::Location& from_here, Task* task,
-                       int delay_ms);
+  void PostTask_Helper(already_AddRefed<mozilla::Runnable> task, int delay_ms);
 
   // base::MessagePump::Delegate methods:
   virtual bool DoWork() override;

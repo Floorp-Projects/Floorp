@@ -20,7 +20,6 @@
 #include "nsCounterManager.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
-#include "nsIDocument.h"
 #include "ScrollbarStyles.h"
 
 struct nsFrameItems;
@@ -31,6 +30,7 @@ struct nsGenConInitializer;
 class nsContainerFrame;
 class nsFirstLineFrame;
 class nsICSSAnonBoxPseudo;
+class nsIDocument;
 class nsPageContentFrame;
 struct PendingBinding;
 class nsGenericDOMDataNode;

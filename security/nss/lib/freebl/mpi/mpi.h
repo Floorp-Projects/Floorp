@@ -220,7 +220,6 @@ int    mp_cmp_z(const mp_int *a);
 int    mp_cmp_d(const mp_int *a, mp_digit d);
 int    mp_cmp(const mp_int *a, const mp_int *b);
 int    mp_cmp_mag(const mp_int *a, const mp_int *b);
-int    mp_cmp_int(const mp_int *a, long z);
 int    mp_isodd(const mp_int *a);
 int    mp_iseven(const mp_int *a);
 

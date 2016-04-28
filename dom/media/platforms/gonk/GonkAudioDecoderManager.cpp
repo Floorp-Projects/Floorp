@@ -197,6 +197,10 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
       }
 
       // Update AudioInfo
+      AudioConfig::ChannelLayout layout(codec_channel_count);
+      if (!layout.IsValid()) {
+        return NS_ERROR_FAILURE;
+      }
       mAudioChannels = codec_channel_count;
       mAudioRate = codec_sample_rate;
 

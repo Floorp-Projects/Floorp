@@ -497,11 +497,12 @@ void GestureEventListener::CancelLongTapTimeoutTask()
 
 void GestureEventListener::CreateLongTapTimeoutTask()
 {
-  mLongTapTimeoutTask =
+  RefPtr<CancelableRunnable> task =
     NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutLongTap);
 
+  mLongTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(
-    mLongTapTimeoutTask,
+    task.forget(),
     gfxPrefs::UiClickHoldContextMenusDelay());
 }
 
@@ -523,12 +524,13 @@ void GestureEventListener::CreateMaxTapTimeoutTask()
   mLastTapInput = mLastTouchInput;
 
   TouchBlockState* block = mAsyncPanZoomController->GetInputQueue()->CurrentTouchBlock();
-  mMaxTapTimeoutTask =
+  RefPtr<CancelableRunnable> task =
     NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutMaxTap,
                       block->IsDuringFastFling());
 
+  mMaxTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(
-    mMaxTapTimeoutTask,
+    task.forget(),
     MAX_TAP_TIME);
 }
 

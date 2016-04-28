@@ -283,6 +283,9 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
   if (mChannelLayout && !mAudioConverter) {
     AudioConfig in(*mChannelLayout.get(), rate);
     AudioConfig out(channels, rate);
+    if (!in.IsValid() || !out.IsValid()) {
+      return NS_ERROR_FAILURE;
+    }
     mAudioConverter = MakeUnique<AudioConverter>(in, out);
   }
   if (mAudioConverter) {

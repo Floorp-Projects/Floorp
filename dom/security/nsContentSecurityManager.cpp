@@ -39,6 +39,44 @@ static bool SchemeIs(nsIURI* aURI, const char* aScheme)
   return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
 }
 
+
+static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo)
+{
+  // Editor apps get special treatment here, editors can load images
+  // from anywhere.  This allows editor to insert images from file://
+  // into documents that are being edited.
+  nsContentPolicyType type = aLoadInfo->InternalContentPolicyType();
+  if (type != nsIContentPolicy::TYPE_INTERNAL_IMAGE  &&
+      type != nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD &&
+      type != nsIContentPolicy::TYPE_IMAGESET) {
+    return false;
+  }
+
+  uint32_t appType = nsIDocShell::APP_TYPE_UNKNOWN;
+  nsINode* node = aLoadInfo->LoadingNode();
+  if (!node) {
+    return false;
+  }
+  nsIDocument* doc = node->OwnerDoc();
+  if (!doc) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
+  if (!docShellTreeItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
+  if (!docShell || NS_FAILED(docShell->GetAppType(&appType))) {
+    appType = nsIDocShell::APP_TYPE_UNKNOWN;
+  }
+
+  return appType == nsIDocShell::APP_TYPE_EDITOR;
+}
+
 static nsresult
 DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
@@ -55,8 +93,11 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     flags |= nsIScriptSecurityManager::ALLOW_CHROME;
   }
 
+  bool isImageInEditorType = IsImageLoadInEditorAppType(aLoadInfo);
+
   // We don't have a loadingPrincipal for TYPE_DOCUMENT
-  if (aLoadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT) {
+  if (aLoadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT &&
+      !isImageInEditorType) {
     rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(loadingPrincipal,
                                 aURI,
@@ -67,7 +108,7 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   // If the loadingPrincipal and the triggeringPrincipal are different, then make
   // sure the triggeringPrincipal is allowed to access that URI.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
-  if (loadingPrincipal != triggeringPrincipal) {
+  if (loadingPrincipal != triggeringPrincipal && !isImageInEditorType) {
     rv = nsContentUtils::GetSecurityManager()->
            CheckLoadURIWithPrincipal(triggeringPrincipal,
                                      aURI,
@@ -155,7 +196,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_IMAGE: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 
@@ -295,7 +337,8 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_IMAGESET: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 

@@ -2494,6 +2494,20 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
                                  nullptr, nullptr);
 }
 
+bool
+js::GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
+                           MutableHandleObject protop)
+{
+    if (obj->getTaggedProto().isLazy()) {
+        MOZ_ASSERT(obj->is<js::ProxyObject>());
+        return js::Proxy::getPrototypeIfOrdinary(cx, obj, isOrdinary, protop);
+    }
+
+    *isOrdinary = true;
+    protop.set(obj->getTaggedProto().toObjectOrNull());
+    return true;
+}
+
 // Our immutable-prototype behavior is non-standard, and it's unclear whether
 // it's shippable.  (Or at least it's unclear whether it's shippable with any
 // provided-by-default uses exposed to script.)  If this bool is true,
@@ -2587,14 +2601,17 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
      * possibly-Window object we're setting the proto on.
      */
     RootedObject objMaybeWindowProxy(cx, ToWindowProxyIfWindow(obj));
-    RootedObject obj2(cx);
-    for (obj2 = proto; obj2; ) {
+    RootedObject obj2(cx, proto);
+    while (obj2) {
         MOZ_ASSERT(!IsWindow(obj2));
         if (obj2 == objMaybeWindowProxy)
             return result.fail(JSMSG_CANT_SET_PROTO_CYCLE);
 
-        if (!GetPrototype(cx, obj2, &obj2))
+        bool isOrdinary;
+        if (!GetPrototypeIfOrdinary(cx, obj2, &isOrdinary, &obj2))
             return false;
+        if (!isOrdinary)
+            break;
     }
 
     // Convert unboxed objects to their native representations before changing

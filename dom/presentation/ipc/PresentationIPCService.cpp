@@ -66,29 +66,33 @@ PresentationIPCService::StartSession(const nsAString& aUrl,
 
 NS_IMETHODIMP
 PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
+                                           uint8_t aRole,
                                            const nsAString& aData)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
   MOZ_ASSERT(!aData.IsEmpty());
 
   return SendRequest(nullptr, SendSessionMessageRequest(nsString(aSessionId),
+                                                        aRole,
                                                         nsString(aData)));
 }
 
 NS_IMETHODIMP
-PresentationIPCService::CloseSession(const nsAString& aSessionId)
+PresentationIPCService::CloseSession(const nsAString& aSessionId,
+                                     uint8_t aRole)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  return SendRequest(nullptr, CloseSessionRequest(nsString(aSessionId)));
+  return SendRequest(nullptr, CloseSessionRequest(nsString(aSessionId), aRole));
 }
 
 NS_IMETHODIMP
-PresentationIPCService::TerminateSession(const nsAString& aSessionId)
+PresentationIPCService::TerminateSession(const nsAString& aSessionId,
+                                         uint8_t aRole)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  return SendRequest(nullptr, TerminateSessionRequest(nsString(aSessionId)));
+  return SendRequest(nullptr, TerminateSessionRequest(nsString(aSessionId), aRole));
 }
 
 nsresult
@@ -130,6 +134,7 @@ PresentationIPCService::UnregisterAvailabilityListener(nsIPresentationAvailabili
 
 NS_IMETHODIMP
 PresentationIPCService::RegisterSessionListener(const nsAString& aSessionId,
+                                                uint8_t aRole,
                                                 nsIPresentationSessionListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -137,21 +142,22 @@ PresentationIPCService::RegisterSessionListener(const nsAString& aSessionId,
 
   mSessionListeners.Put(aSessionId, aListener);
   if (sPresentationChild) {
-    NS_WARN_IF(!sPresentationChild->SendRegisterSessionHandler(nsString(aSessionId)));
+    NS_WARN_IF(!sPresentationChild->SendRegisterSessionHandler(nsString(aSessionId), aRole));
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresentationIPCService::UnregisterSessionListener(const nsAString& aSessionId)
+PresentationIPCService::UnregisterSessionListener(const nsAString& aSessionId,
+                                                  uint8_t aRole)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  UntrackSessionInfo(aSessionId);
+  UntrackSessionInfo(aSessionId, aRole);
 
   mSessionListeners.Remove(aSessionId);
   if (sPresentationChild) {
-    NS_WARN_IF(!sPresentationChild->SendUnregisterSessionHandler(nsString(aSessionId)));
+    NS_WARN_IF(!sPresentationChild->SendUnregisterSessionHandler(nsString(aSessionId), aRole));
   }
   return NS_OK;
 }
@@ -278,7 +284,8 @@ PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId)
+PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
+                                           uint8_t aRole)
 {
   // Remove the OOP responding info (if it has never been used).
   uint64_t windowId = 0;

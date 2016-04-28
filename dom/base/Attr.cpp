@@ -218,7 +218,6 @@ Attr::GetSpecified(bool* aSpecified)
 Element*
 Attr::GetOwnerElement(ErrorResult& aRv)
 {
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
   return GetElement();
 }
 
@@ -226,7 +225,6 @@ NS_IMETHODIMP
 Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
 {
   NS_ENSURE_ARG_POINTER(aOwnerElement);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
 
   Element* element = GetElement();
   if (element) {

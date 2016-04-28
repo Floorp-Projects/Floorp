@@ -258,8 +258,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
              "MediaDecoderStateMachine::mPlayState (Mirror)"),
   mNextPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_PAUSED,
                  "MediaDecoderStateMachine::mNextPlayState (Mirror)"),
-  mLogicallySeeking(mTaskQueue, false,
-                    "MediaDecoderStateMachine::mLogicallySeeking (Mirror)"),
   mVolume(mTaskQueue, 1.0, "MediaDecoderStateMachine::mVolume (Mirror)"),
   mLogicalPlaybackRate(mTaskQueue, 1.0,
                        "MediaDecoderStateMachine::mLogicalPlaybackRate (Mirror)"),
@@ -331,7 +329,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mExplicitDuration.Connect(aDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(aDecoder->CanonicalPlayState());
   mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
-  mLogicallySeeking.Connect(aDecoder->CanonicalLogicallySeeking());
   mVolume.Connect(aDecoder->CanonicalVolume());
   mLogicalPlaybackRate.Connect(aDecoder->CanonicalPlaybackRate());
   mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
@@ -355,7 +352,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mExplicitDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
-  mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
 }
 
 media::MediaSink*
@@ -1309,12 +1305,6 @@ void MediaDecoderStateMachine::PlayStateChanged()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::LogicallySeekingChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ScheduleStateMachine();
-}
-
 void MediaDecoderStateMachine::BufferedRangeUpdated()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2074,7 +2064,6 @@ MediaDecoderStateMachine::FinishShutdown()
   mExplicitDuration.DisconnectIfConnected();
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();
-  mLogicallySeeking.DisconnectIfConnected();
   mVolume.DisconnectIfConnected();
   mLogicalPlaybackRate.DisconnectIfConnected();
   mPreservesPitch.DisconnectIfConnected();
@@ -2138,7 +2127,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
       UpdatePlaybackPositionPeriodically();
       NS_ASSERTION(!IsPlaying() ||
-                   mLogicallySeeking ||
                    IsStateMachineScheduled(),
                    "Must have timer scheduled");
       return NS_OK;
@@ -2204,7 +2192,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         MaybeStartPlayback();
         UpdatePlaybackPositionPeriodically();
         NS_ASSERTION(!IsPlaying() ||
-                     mLogicallySeeking ||
                      IsStateMachineScheduled(),
                      "Must have timer scheduled");
         return NS_OK;
@@ -2291,7 +2278,7 @@ MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (!IsPlaying() || mLogicallySeeking) {
+  if (!IsPlaying()) {
     return;
   }
 

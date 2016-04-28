@@ -290,7 +290,7 @@ ER3(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE, (SSL_ERROR_BASE + 87),
     "Received incorrect handshakes hash values from peer.")
 
 ER3(SSL_ERROR_CERT_KEA_MISMATCH, (SSL_ERROR_BASE + 88),
-    "The certificate provided cannot be used with the selected key exchange algorithm.")
+    "The certificate provided cannot be used with the selected authentication type.")
 
 ER3(SSL_ERROR_NO_TRUSTED_SSL_CLIENT_CA, (SSL_ERROR_BASE + 89),
     "No certificate authority is trusted for SSL client authentication.")

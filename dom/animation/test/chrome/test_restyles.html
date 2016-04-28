@@ -369,6 +369,79 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task(function* script_animation_on_display_none_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
+                                100 * MS_PER_SEC);
+
+    yield animation.ready;
+
+    div.style.display = 'none';
+
+    // We need to wait a frame to apply display:none style.
+    yield waitForFrame();
+
+    is(animation.playState, 'running',
+       'Script animations keep running even when the target element has ' +
+       '"display: none" style');
+
+    ok(!animation.isRunningOnCompositor,
+       'Script animations on "display:none" element should not run on the ' +
+       'compositor');
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Script animations on "display: none" element should not update styles');
+
+    div.style.display = '';
+
+    // We need to wait a frame to unapply display:none style.
+    yield waitForFrame();
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'Script animations restored from "display: none" state should update ' +
+       'styles');
+
+    yield ensureElementRemoval(div);
+  });
+
+  add_task_if_omta_enabled(function* compositable_script_animation_on_display_none_element() {
+    var div = addDiv(null);
+    var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+    yield animation.ready;
+
+    div.style.display = 'none';
+
+    // We need to wait a frame to apply display:none style.
+    yield waitForFrame();
+
+    is(animation.playState, 'running',
+       'Opacity script animations keep running even when the target element ' +
+       'has "display: none" style');
+
+    todo(!animation.isRunningOnCompositor,
+         'Opacity script animations on "display:none" element should not ' +
+         'run on the compositor');
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Opacity script animations on "display: none" element should not ' +
+       'update styles');
+
+    div.style.display = '';
+
+    // We need to wait a frame to unapply display:none style.
+    yield waitForFrame();
+
+    ok(animation.isRunningOnCompositor,
+       'Opacity script animations restored from "display: none" should be ' +
+       'run on the compositor');
+
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>

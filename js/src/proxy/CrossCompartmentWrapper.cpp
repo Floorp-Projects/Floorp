@@ -109,6 +109,24 @@ CrossCompartmentWrapper::setPrototype(JSContext* cx, HandleObject wrapper,
 }
 
 bool
+CrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrapper,
+                                                bool* isOrdinary, MutableHandleObject protop) const
+{
+    {
+        RootedObject wrapped(cx, wrappedObject(wrapper));
+        AutoCompartment call(cx, wrapped);
+        if (!GetPrototypeIfOrdinary(cx, wrapped, isOrdinary, protop))
+            return false;
+        if (protop) {
+            if (!protop->setDelegate(cx))
+                return false;
+        }
+    }
+
+    return cx->compartment()->wrap(cx, protop);
+}
+
+bool
 CrossCompartmentWrapper::setImmutablePrototype(JSContext* cx, HandleObject wrapper, bool* succeeded) const
 {
     PIERCE(cx, wrapper,

@@ -30,6 +30,8 @@ class DeadObjectProxy : public BaseProxyHandler
                          ObjectOpResult& result) const override;
     virtual bool getPrototype(JSContext* cx, HandleObject proxy,
                               MutableHandleObject protop) const override;
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                        MutableHandleObject protop) const override;
     virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
                                    ObjectOpResult& result) const override;
     virtual bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;

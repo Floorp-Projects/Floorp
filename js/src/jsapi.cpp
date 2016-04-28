@@ -2015,6 +2015,13 @@ JS_SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto)
 }
 
 JS_PUBLIC_API(bool)
+JS_GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
+                          MutableHandleObject result)
+{
+    return GetPrototypeIfOrdinary(cx, obj, isOrdinary, result);
+}
+
+JS_PUBLIC_API(bool)
 JS_IsExtensible(JSContext* cx, HandleObject obj, bool* extensible)
 {
     return IsExtensible(cx, obj, extensible);

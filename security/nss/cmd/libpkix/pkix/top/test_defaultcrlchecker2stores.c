@@ -11,106 +11,99 @@
 #include "testutil.h"
 #include "testutil_nss.h"
 
-#define PKIX_TEST_MAX_CERTS     10
+#define PKIX_TEST_MAX_CERTS 10
 
 static void *plContext = NULL;
 
-static
-void printUsage1(char *pName){
-        printf("\nUSAGE: %s test-purpose [ENE|EE] ", pName);
-        printf("crl-directory cert [certs].\n");
+static void
+printUsage1(char *pName)
+{
+    printf("\nUSAGE: %s test-purpose [ENE|EE] ", pName);
+    printf("crl-directory cert [certs].\n");
 }
 
-static
-void printUsageMax(PKIX_UInt32 numCerts){
-        printf("\nUSAGE ERROR: number of certs %d exceed maximum %d\n",
-                numCerts, PKIX_TEST_MAX_CERTS);
+static void
+printUsageMax(PKIX_UInt32 numCerts)
+{
+    printf("\nUSAGE ERROR: number of certs %d exceed maximum %d\n",
+           numCerts, PKIX_TEST_MAX_CERTS);
 }
 
 static PKIX_Error *
 getCertCallback(
-        PKIX_CertStore *store,
-        PKIX_CertSelector *certSelector,
-        PKIX_List **pCerts,
-        void *plContext)
+    PKIX_CertStore *store,
+    PKIX_CertSelector *certSelector,
+    PKIX_List **pCerts,
+    void *plContext)
 {
-        return (NULL);
+    return (NULL);
 }
 
 static PKIX_Error *
 testDefaultMultipleCertStores(PKIX_ValidateParams *valParams,
-                        char *crlDir1,
-                        char *crlDir2)
+                              char *crlDir1,
+                              char *crlDir2)
 {
-        PKIX_PL_String *dirString1 = NULL;
-        PKIX_PL_String *dirString2 = NULL;
-        PKIX_CertStore *certStore1 = NULL;
-        PKIX_CertStore *certStore2 = NULL;
-        PKIX_List *certStoreList = NULL;
-        PKIX_ProcessingParams *procParams = NULL;
+    PKIX_PL_String *dirString1 = NULL;
+    PKIX_PL_String *dirString2 = NULL;
+    PKIX_CertStore *certStore1 = NULL;
+    PKIX_CertStore *certStore2 = NULL;
+    PKIX_List *certStoreList = NULL;
+    PKIX_ProcessingParams *procParams = NULL;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        subTest("PKIX_PL_CollectionCertStore_Create");
+    subTest("PKIX_PL_CollectionCertStore_Create");
 
-        /* Create CollectionCertStore */
+    /* Create CollectionCertStore */
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_String_Create
-                                    (PKIX_ESCASCII,
-                                    crlDir1,
-                                    0,
-                                    &dirString1,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_String_Create(PKIX_ESCASCII,
+                                                    crlDir1,
+                                                    0,
+                                                    &dirString1,
+                                                    plContext));
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_CollectionCertStore_Create
-                                    (dirString1,
-                                    &certStore1,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_CollectionCertStore_Create(dirString1,
+                                                                 &certStore1,
+                                                                 plContext));
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_String_Create
-                                    (PKIX_ESCASCII,
-                                    crlDir2,
-                                    0,
-                                    &dirString2,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_String_Create(PKIX_ESCASCII,
+                                                    crlDir2,
+                                                    0,
+                                                    &dirString2,
+                                                    plContext));
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_CollectionCertStore_Create
-                                    (dirString2,
-                                    &certStore2,
-                                    plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_CollectionCertStore_Create(dirString2,
+                                                                 &certStore2,
+                                                                 plContext));
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ValidateParams_GetProcessingParams
-                                    (valParams, &procParams, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ValidateParams_GetProcessingParams(valParams, &procParams, plContext));
 
-        /* Add multiple CollectionCertStores */
+    /* Add multiple CollectionCertStores */
 
-        subTest("PKIX_ProcessingParams_SetCertStores");
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_Create(&certStoreList, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_AppendItem
-                    (certStoreList, (PKIX_PL_Object *)certStore1, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_SetCertStores
-                    (procParams, certStoreList, plContext));
+    subTest("PKIX_ProcessingParams_SetCertStores");
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_Create(&certStoreList, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_List_AppendItem(certStoreList, (PKIX_PL_Object *)certStore1, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_SetCertStores(procParams, certStoreList, plContext));
 
-        subTest("PKIX_ProcessingParams_AddCertStore");
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_AddCertStore
-                    (procParams, certStore2, plContext));
+    subTest("PKIX_ProcessingParams_AddCertStore");
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_AddCertStore(procParams, certStore2, plContext));
 
-        subTest("PKIX_ProcessingParams_SetRevocationEnabled");
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_SetRevocationEnabled
-                                    (procParams, PKIX_TRUE, plContext));
+    subTest("PKIX_ProcessingParams_SetRevocationEnabled");
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_ProcessingParams_SetRevocationEnabled(procParams, PKIX_TRUE, plContext));
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(dirString1);
-        PKIX_TEST_DECREF_AC(dirString2);
-        PKIX_TEST_DECREF_AC(certStore1);
-        PKIX_TEST_DECREF_AC(certStore2);
-        PKIX_TEST_DECREF_AC(certStoreList);
-        PKIX_TEST_DECREF_AC(procParams);
+    PKIX_TEST_DECREF_AC(dirString1);
+    PKIX_TEST_DECREF_AC(dirString2);
+    PKIX_TEST_DECREF_AC(certStore1);
+    PKIX_TEST_DECREF_AC(certStore2);
+    PKIX_TEST_DECREF_AC(certStoreList);
+    PKIX_TEST_DECREF_AC(procParams);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        return (0);
+    return (0);
 }
 
 /*
@@ -125,117 +118,113 @@ cleanup:
  *      required for revocation check to pass.
  */
 
-int test_defaultcrlchecker2stores(int argc, char *argv[]){
+int
+test_defaultcrlchecker2stores(int argc, char *argv[])
+{
 
-        PKIX_List *chain = NULL;
-        PKIX_ValidateParams *valParams = NULL;
-        PKIX_ValidateResult *valResult = NULL;
-        PKIX_UInt32 actualMinorVersion;
-        char *certNames[PKIX_TEST_MAX_CERTS];
-        PKIX_PL_Cert *certs[PKIX_TEST_MAX_CERTS];
-	PKIX_VerifyNode *verifyTree = NULL;
-	PKIX_PL_String *verifyString = NULL;
-        PKIX_UInt32 chainLength = 0;
-        PKIX_UInt32 i = 0;
-        PKIX_UInt32 j = 0;
-        PKIX_Boolean testValid = PKIX_TRUE;
-        char *dirName = NULL;
-        char *anchorName = NULL;
+    PKIX_List *chain = NULL;
+    PKIX_ValidateParams *valParams = NULL;
+    PKIX_ValidateResult *valResult = NULL;
+    PKIX_UInt32 actualMinorVersion;
+    char *certNames[PKIX_TEST_MAX_CERTS];
+    PKIX_PL_Cert *certs[PKIX_TEST_MAX_CERTS];
+    PKIX_VerifyNode *verifyTree = NULL;
+    PKIX_PL_String *verifyString = NULL;
+    PKIX_UInt32 chainLength = 0;
+    PKIX_UInt32 i = 0;
+    PKIX_UInt32 j = 0;
+    PKIX_Boolean testValid = PKIX_TRUE;
+    char *dirName = NULL;
+    char *anchorName = NULL;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        if (argc < 6) {
-                printUsage1(argv[0]);
-                return (0);
-        }
+    if (argc < 6) {
+        printUsage1(argv[0]);
+        return (0);
+    }
 
-        startTests("CRL Checker");
+    startTests("CRL Checker");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        /* ENE = expect no error; EE = expect error */
-        if (PORT_Strcmp(argv[2+j], "ENE") == 0) {
-                testValid = PKIX_TRUE;
-        } else if (PORT_Strcmp(argv[2+j], "EE") == 0) {
-                testValid = PKIX_FALSE;
-        } else {
-                printUsage1(argv[0]);
-                return (0);
-        }
+    /* ENE = expect no error; EE = expect error */
+    if (PORT_Strcmp(argv[2 + j], "ENE") == 0) {
+        testValid = PKIX_TRUE;
+    } else if (PORT_Strcmp(argv[2 + j], "EE") == 0) {
+        testValid = PKIX_FALSE;
+    } else {
+        printUsage1(argv[0]);
+        return (0);
+    }
 
-        chainLength = (argc - j) - 7;
-        if (chainLength > PKIX_TEST_MAX_CERTS) {
-                printUsageMax(chainLength);
-        }
+    chainLength = (argc - j) - 7;
+    if (chainLength > PKIX_TEST_MAX_CERTS) {
+        printUsageMax(chainLength);
+    }
 
-        for (i = 0; i < chainLength; i++) {
+    for (i = 0; i < chainLength; i++) {
 
-                certNames[i] = argv[(7+j)+i];
-                certs[i] = NULL;
-        }
+        certNames[i] = argv[(7 + j) + i];
+        certs[i] = NULL;
+    }
 
+    subTest(argv[1 + j]);
 
-        subTest(argv[1+j]);
+    subTest("Default-CRL-Checker");
 
-        subTest("Default-CRL-Checker");
+    subTest("Default-CRL-Checker - Create Cert Chain");
 
-        subTest("Default-CRL-Checker - Create Cert Chain");
+    dirName = argv[3 + j];
 
-        dirName = argv[3+j];
+    chain = createCertChainPlus(dirName, certNames, certs, chainLength, plContext);
 
-        chain = createCertChainPlus
-                (dirName, certNames, certs, chainLength, plContext);
+    subTest("Default-CRL-Checker - Create Params");
 
-        subTest("Default-CRL-Checker - Create Params");
+    anchorName = argv[6 + j];
 
-        anchorName = argv[6+j];
+    valParams = createValidateParams(dirName,
+                                     anchorName,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     PKIX_FALSE,
+                                     PKIX_FALSE,
+                                     PKIX_FALSE,
+                                     PKIX_FALSE,
+                                     chain,
+                                     plContext);
 
-        valParams = createValidateParams
-                (dirName,
-                anchorName,
-                NULL,
-                NULL,
-                NULL,
-                PKIX_FALSE,
-                PKIX_FALSE,
-                PKIX_FALSE,
-                PKIX_FALSE,
-                chain,
-                plContext);
+    subTest("Multiple-CertStores");
 
-        subTest("Multiple-CertStores");
+    testDefaultMultipleCertStores(valParams, argv[4 + j], argv[5 + j]);
 
-        testDefaultMultipleCertStores(valParams, argv[4+j], argv[5+j]);
+    subTest("Default-CRL-Checker - Validate Chain");
 
-        subTest("Default-CRL-Checker - Validate Chain");
+    if (testValid == PKIX_TRUE) {
+        PKIX_TEST_EXPECT_NO_ERROR(PKIX_ValidateChain(valParams, &valResult, &verifyTree, plContext));
+    } else {
+        PKIX_TEST_EXPECT_ERROR(PKIX_ValidateChain(valParams, &valResult, &verifyTree, plContext));
+    }
 
-        if (testValid == PKIX_TRUE) {
-                PKIX_TEST_EXPECT_NO_ERROR(PKIX_ValidateChain
-                        (valParams, &valResult, &verifyTree, plContext));
-        } else {
-                PKIX_TEST_EXPECT_ERROR(PKIX_ValidateChain
-                        (valParams, &valResult, &verifyTree, plContext));
-        }
-
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_ToString
-                ((PKIX_PL_Object*)verifyTree, &verifyString, plContext));
-        (void) printf("verifyTree is\n%s\n", verifyString->escAsciiString);
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_ToString((PKIX_PL_Object *)verifyTree, &verifyString, plContext));
+    (void)printf("verifyTree is\n%s\n", verifyString->escAsciiString);
 
 cleanup:
 
-        PKIX_TEST_DECREF_AC(verifyString);
-        PKIX_TEST_DECREF_AC(verifyTree);
+    PKIX_TEST_DECREF_AC(verifyString);
+    PKIX_TEST_DECREF_AC(verifyTree);
 
-        PKIX_TEST_DECREF_AC(valParams);
-        PKIX_TEST_DECREF_AC(valResult);
-        PKIX_TEST_DECREF_AC(chain);
+    PKIX_TEST_DECREF_AC(valParams);
+    PKIX_TEST_DECREF_AC(valResult);
+    PKIX_TEST_DECREF_AC(chain);
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("CRL Checker");
+    endTests("CRL Checker");
 
-        return (0);
+    return (0);
 }

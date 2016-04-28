@@ -46,8 +46,15 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData,
     return true;
   }
 
-  DebugOnly<uint32_t> consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
+  uint32_t consumed = AddSubtree(parent, aData.NewTree(), 0, newChildIdx);
   MOZ_ASSERT(consumed == aData.NewTree().Length());
+
+  // XXX This shouldn't happen, but if we failed to add children then the below
+  // is pointless and can crash.
+  if (!consumed) {
+    return true;
+  }
+
 #ifdef DEBUG
   for (uint32_t i = 0; i < consumed; i++) {
     uint64_t id = aData.NewTree()[i].ID();

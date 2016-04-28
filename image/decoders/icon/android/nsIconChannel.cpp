@@ -113,7 +113,6 @@ moz_icon_to_channel(nsIURI* aURI, const nsACString& aFileExt,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
 
   return NS_NewInputStreamChannel(aChannel,
                                   aURI,

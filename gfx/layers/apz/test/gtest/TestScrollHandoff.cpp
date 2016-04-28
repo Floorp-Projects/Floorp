@@ -83,7 +83,7 @@ protected:
     registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
     manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
     rootApzc = ApzcOf(root);
-    rootApzc->GetFrameMetrics().SetHasScrollgrab(true);
+    rootApzc->GetScrollMetadata().SetHasScrollgrab(true);
   }
 
   void TestFlingAcceleration() {

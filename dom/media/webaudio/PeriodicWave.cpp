@@ -20,8 +20,10 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
                            const float* aRealData,
                            const float* aImagData,
                            const uint32_t aLength,
+                           const bool aDisableNormalization,
                            ErrorResult& aRv)
   : mContext(aContext)
+  , mDisableNormalization(aDisableNormalization)
 {
   MOZ_ASSERT(aContext);
 

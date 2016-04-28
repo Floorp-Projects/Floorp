@@ -217,6 +217,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
 using namespace mozilla::layout;
+using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
 
 CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
@@ -4059,12 +4060,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
       }
     }
 
-    // Dispatch any 'animationstart' events those (or earlier) restyles
-    // queued up.
-    if (!mIsDestroying) {
-      mPresContext->AnimationManager()->DispatchEvents();
-    }
-
     // Process whatever XBL constructors those restyles queued up.  This
     // ensures that onload doesn't fire too early and that we won't do extra
     // reflows after those constructors run.
@@ -4684,12 +4679,12 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   nsRenderingContext rc(aThebesContext);
 
   bool wouldFlushRetainedLayers = false;
-  uint32_t flags = nsLayoutUtils::PAINT_IGNORE_SUPPRESSION;
+  PaintFrameFlags flags = PaintFrameFlags::PAINT_IGNORE_SUPPRESSION;
   if (aThebesContext->CurrentMatrix().HasNonIntegerTranslation()) {
-    flags |= nsLayoutUtils::PAINT_IN_TRANSFORM;
+    flags |= PaintFrameFlags::PAINT_IN_TRANSFORM;
   }
   if (!(aFlags & RENDER_ASYNC_DECODE_IMAGES)) {
-    flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
+    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
   if (aFlags & RENDER_USE_WIDGET_LAYERS) {
     // We only support using widget layers on display root's with widgets.
@@ -4702,13 +4697,13 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
       if (layerManager &&
           (!layerManager->AsClientLayerManager() ||
            XRE_IsParentProcess())) {
-        flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
+        flags |= PaintFrameFlags::PAINT_WIDGET_LAYERS;
       }
     }
   }
   if (!(aFlags & RENDER_CARET)) {
     wouldFlushRetainedLayers = true;
-    flags |= nsLayoutUtils::PAINT_HIDE_CARET;
+    flags |= PaintFrameFlags::PAINT_HIDE_CARET;
   }
   if (aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) {
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
@@ -4723,12 +4718,12 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     // In that case, it wouldn't disturb normal rendering too much,
     // and we should allow it.
     wouldFlushRetainedLayers = true;
-    flags |= nsLayoutUtils::PAINT_DOCUMENT_RELATIVE;
+    flags |= PaintFrameFlags::PAINT_DOCUMENT_RELATIVE;
   }
 
   // Don't let drawWindow blow away our retained layer tree
-  if ((flags & nsLayoutUtils::PAINT_WIDGET_LAYERS) && wouldFlushRetainedLayers) {
-    flags &= ~nsLayoutUtils::PAINT_WIDGET_LAYERS;
+  if ((flags & PaintFrameFlags::PAINT_WIDGET_LAYERS) && wouldFlushRetainedLayers) {
+    flags &= ~PaintFrameFlags::PAINT_WIDGET_LAYERS;
   }
 
   nsLayoutUtils::PaintFrame(&rc, rootFrame, nsRegion(aRect),
@@ -6340,15 +6335,16 @@ PresShell::Paint(nsView*        aViewToPaint,
   }
 
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
-  uint32_t flags = nsLayoutUtils::PAINT_WIDGET_LAYERS | nsLayoutUtils::PAINT_EXISTING_TRANSACTION;
+  PaintFrameFlags flags = PaintFrameFlags::PAINT_WIDGET_LAYERS |
+                          PaintFrameFlags::PAINT_EXISTING_TRANSACTION;
   if (!(aFlags & PAINT_COMPOSITE)) {
-    flags |= nsLayoutUtils::PAINT_NO_COMPOSITE;
+    flags |= PaintFrameFlags::PAINT_NO_COMPOSITE;
   }
   if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
-    flags |= nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES;
+    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
   if (mNextPaintCompressed) {
-    flags |= nsLayoutUtils::PAINT_COMPRESSED;
+    flags |= PaintFrameFlags::PAINT_COMPRESSED;
     mNextPaintCompressed = false;
   }
 

@@ -84,7 +84,7 @@ setControl(uint32_t id, int32_t value)
   return ioctl(sRadioFD, VIDIOC_S_CTRL, &control);
 }
 
-class RadioUpdate : public nsRunnable {
+class RadioUpdate : public Runnable {
   hal::FMRadioOperation mOp;
   hal::FMRadioOperationStatus mStatus;
 public:

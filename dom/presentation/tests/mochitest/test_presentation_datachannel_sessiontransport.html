@@ -20,7 +20,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-
 const loadingTimeoutPref = "presentation.receiver.loading.timeout";
 
 var clientBuilder;
@@ -123,7 +122,6 @@ const serverCallback = {
   },
 };
 
-
 const clientListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationSessionTransportBuilderListener]),
   onSessionTransport: function(aTransport) {
@@ -149,7 +147,6 @@ const serverListener = {
   }
 }
 
-
 function testBuilder() {
   return new Promise(function(aResolve, aReject) {
     gResolve = aResolve;
@@ -166,13 +163,13 @@ function testBuilder() {
                       .createInstance(Ci.nsIPresentationDataChannelSessionTransportBuilder);
 
     clientBuilder
-      .buildDataChannelTransport(Ci.nsIPresentationSessionTransportBuilder.TYPE_SENDER,
+      .buildDataChannelTransport(Ci.nsIPresentationService.ROLE_CONTROLLER,
                                  window,
                                  clientControlChannel,
                                  clientListener);
 
     serverBuilder
-      .buildDataChannelTransport(Ci.nsIPresentationSessionTransportBuilder.TYPE_RECEIVER,
+      .buildDataChannelTransport(Ci.nsIPresentationService.ROLE_RECEIVER,
                                  window,
                                  serverControlChannel,
                                  serverListener);
@@ -230,7 +227,6 @@ function runTests() {
   .then(testCloseSessionTransport)
   .then(finish)
   .catch(error);
-
 
 }
 

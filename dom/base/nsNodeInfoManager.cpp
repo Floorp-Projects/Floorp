@@ -182,7 +182,6 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
                   "Being inited when we already have a principal?");
 
   mPrincipal = nsNullPrincipal::Create();
-  NS_ENSURE_TRUE(mPrincipal, NS_ERROR_FAILURE);
 
   if (aDocument) {
     mBindingManager = new nsBindingManager(aDocument);

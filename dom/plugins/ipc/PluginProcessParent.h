@@ -25,7 +25,7 @@
 namespace mozilla {
 namespace plugins {
 
-class LaunchCompleteTask : public Task
+class LaunchCompleteTask : public Runnable
 {
 public:
     LaunchCompleteTask()

@@ -10,8 +10,6 @@
 
 #include <string>
 
-#include "base/tracked.h"
-
 namespace win_util {
 
 // Uses the last Win32 error to generate a human readable message string.

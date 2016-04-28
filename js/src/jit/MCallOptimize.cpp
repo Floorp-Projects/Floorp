@@ -436,6 +436,10 @@ IonBuilder::inlineArray(CallInfo& callInfo)
     uint32_t initLength = 0;
 
     JSObject* templateObject = inspector->getTemplateObjectForNative(pc, ArrayConstructor);
+    // This is shared by ArrayConstructor and array_construct (std_Array).
+    if (!templateObject)
+        templateObject = inspector->getTemplateObjectForNative(pc, array_construct);
+
     if (!templateObject) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoTemplateObj);
         return InliningStatus_NotInlined;
@@ -2795,6 +2799,10 @@ IonBuilder::InliningStatus
 IonBuilder::inlineAssertRecoveredOnBailout(CallInfo& callInfo)
 {
     if (callInfo.argc() != 2)
+        return InliningStatus_NotInlined;
+
+    // Don't assert for recovered instructions when recovering is disabled.
+    if (JitOptions.disableRecoverIns)
         return InliningStatus_NotInlined;
 
     if (JitOptions.checkRangeAnalysis) {

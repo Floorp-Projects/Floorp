@@ -73,7 +73,7 @@ public:
     //    main thread tries to do a sync call back to the calling thread.
     MOZ_ASSERT(!IsOnChildMainThread());
 
-    mMessageLoop->PostTask(FROM_HERE, NewRunnableMethod(this, &SyncRunnable::Run));
+    mMessageLoop->PostTask(NewRunnableMethod(this, &SyncRunnable::Run));
     MonitorAutoLock lock(mMonitor);
     while (!mDone) {
       lock.Wait();
@@ -121,7 +121,7 @@ RunOnMainThread(GMPTask* aTask)
   }
 
   RefPtr<Runnable> r = new Runnable(aTask);
-  sMainLoop->PostTask(FROM_HERE, NewRunnableMethod(r.get(), &Runnable::Run));
+  sMainLoop->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
 
   return GMPNoErr;
 }
@@ -254,7 +254,7 @@ GMPThreadImpl::Post(GMPTask* aTask)
 
   RefPtr<Runnable> r = new Runnable(aTask);
 
-  mThread.message_loop()->PostTask(FROM_HERE, NewRunnableMethod(r.get(), &Runnable::Run));
+  mThread.message_loop()->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
 }
 
 void

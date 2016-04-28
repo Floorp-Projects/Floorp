@@ -28,7 +28,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(StumblerInfo, nsICellInfoListCallback, nsIWifiScanResultsReady)
 
-class RequestCellInfoEvent : public nsRunnable {
+class RequestCellInfoEvent : public Runnable {
 public:
   RequestCellInfoEvent(StumblerInfo *callback)
   : mRequestCallback(callback)
