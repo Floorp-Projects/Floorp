@@ -38,8 +38,6 @@ class nsPIWindowRoot;
 class nsXBLPrototypeHandler;
 struct nsTimeout;
 
-typedef uint32_t SuspendTypes;
-
 namespace mozilla {
 namespace dom {
 class AudioContext;
@@ -657,19 +655,7 @@ protected:
   // "active".  Only used on outer windows.
   bool                   mIsBackground;
 
-  /**
-   * The suspended types can be "disposable" or "permanent". This varable only
-   * stores the value about permanent suspend.
-   * - disposable
-   * To pause all playing media in that window, but doesn't affect the media
-   * which starts after that.
-   *
-   * - permanent
-   * To pause all media in that window, and also affect the media which starts
-   * after that.
-   */
-  SuspendTypes       mMediaSuspend;
-
+  bool                   mMediaSuspended;
   bool                   mAudioMuted;
   float                  mAudioVolume;
 
@@ -825,9 +811,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
 class nsPIDOMWindowOuter : public nsPIDOMWindow<mozIDOMWindowProxy>
 {
 protected:
-  void RefreshMediaElementsVolume();
-  void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
-  bool IsDisposableSuspend(SuspendTypes aSuspend) const;
+  void RefreshMediaElements();
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)
@@ -878,8 +862,8 @@ public:
   }
 
   // Audio API
-  SuspendTypes GetMediaSuspend() const;
-  void SetMediaSuspend(SuspendTypes aSuspend);
+  bool GetMediaSuspended() const;
+  void SetMediaSuspended(bool aSuspended);
 
   bool GetAudioMuted() const;
   void SetAudioMuted(bool aMuted);
