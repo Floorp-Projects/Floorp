@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1263589
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1263589</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+    <script type="application/javascript" src="head.js"></script>
+    <script type="application/javascript;version=1.7">
+    "use strict";
+
+    const VISIBLE_OPTION_COUNT = 5;
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let SelectHelper = win.SelectHelper;
+
+    // Wait until the page has loaded so that we can access the DOM.
+    SimpleTest.waitForExplicitFinish();
+    window.onload = function () {
+      // test options are not incorrectly disabled...
+      let isEnabled1 = document.getElementById("is_enabled_1");
+      let isEnabled2 = document.getElementById("is_enabled_2");
+      ok(!SelectHelper._isDisabledElement(isEnabled1),"input with name=\"disabled\" should not disable options (bug 1263589)");
+      ok(!SelectHelper._isDisabledElement(isEnabled2),"<form disabled> is not valid and will have no effect.");
+
+      // test options are disabled when expected...
+      let isNotEnabled1 = document.getElementById("is_not_enabled_1");
+      let isNotEnabled2 = document.getElementById("is_not_enabled_2");
+      let isNotEnabled3 = document.getElementById("is_not_enabled_2");
+      ok(SelectHelper._isDisabledElement(isNotEnabled1),"<option disabled> is disabled.");
+      ok(SelectHelper._isDisabledElement(isNotEnabled2),"<optelement disabled> will have disabled children.");
+      ok(SelectHelper._isDisabledElement(isNotEnabled3),"<fieldset disabled> will have disabled children.");
+
+      SimpleTest.finish();
+    }
+
+    </script>
+</head>
+<body>
+
+<p id="display">
+
+<form>
+    <!-- This input field is to confused SelectHelper._isDisabledElement(e). See bug 1263589 for details.-->
+    <input type="text" id="disabled" name="disabled" value="disabled" disabled="disabled">
+
+    <select>
+        <option id="is_enabled_1">A</option>
+        <option disabled id="is_not_enabled_1">C</option>
+        <optgroup disabled>
+            <option id="is_not_enabled_2">B</option>
+            <option>C</option>
+        </optgroup>
+    </select>
+
+    <fieldset disabled>
+        <select>
+            <option>F</option>
+            <option id="is_not_enabled_3">G</option>
+        </select>
+    </fieldset>
+</form>
+
+
+<form disabled>
+    <!-- "Disabled" is not a valid attribute for <form> and so fields should not be disabled -->
+    <select>
+        <option id="is_enabled_2">D</option>
+        <option>E</option>
+    </select>
+</form>
+
+
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
