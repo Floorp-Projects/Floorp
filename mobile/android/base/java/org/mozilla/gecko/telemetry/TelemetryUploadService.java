@@ -22,8 +22,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
 import org.mozilla.gecko.sync.net.Resource;
-import org.mozilla.gecko.telemetry.pings.TelemetryCorePingBuilder;
-import org.mozilla.gecko.telemetry.pings.TelemetryPing;
+import org.mozilla.gecko.telemetry.core.TelemetryCorePingBuilder;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.io.IOException;

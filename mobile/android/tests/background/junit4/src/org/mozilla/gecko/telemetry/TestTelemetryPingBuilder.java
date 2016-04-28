@@ -4,7 +4,7 @@
  * file, you can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry.pings;
+package org.mozilla.gecko.telemetry;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,12 +45,12 @@ public class TestTelemetryPingBuilder {
         }
 
         @Override
-        String getDocType() {
+        public String getDocType() {
             return "";
         }
 
         @Override
-        String[] getMandatoryFields() {
+        public String[] getMandatoryFields() {
             return new String[0];
         }
 
@@ -68,12 +68,12 @@ public class TestTelemetryPingBuilder {
         }
 
         @Override
-        String getDocType() {
+        public String getDocType() {
             return "";
         }
 
         @Override
-        String[] getMandatoryFields() {
+        public String[] getMandatoryFields() {
             return new String[] {
                     MANDATORY_FIELD,
             };

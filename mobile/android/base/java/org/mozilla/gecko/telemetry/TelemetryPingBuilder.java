@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry.pings;
+package org.mozilla.gecko.telemetry;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -20,7 +20,7 @@ import java.util.UUID;
  *   * Validating mandatory fields
  *   * Forming the server url
  */
-abstract class TelemetryPingBuilder {
+public abstract class TelemetryPingBuilder {
     // In the server url, the initial path directly after the "scheme://host:port/"
     private static final String SERVER_INITIAL_PATH = "submit/telemetry";
 
@@ -35,13 +35,13 @@ abstract class TelemetryPingBuilder {
     /**
      * @return the name of the ping (e.g. "core")
      */
-    abstract String getDocType();
+    public abstract String getDocType();
 
     /**
      * @return the fields that are mandatory for the resultant ping to be uploaded to
      *         the server. These will be validated before the ping is built.
      */
-    abstract String[] getMandatoryFields();
+    public abstract String[] getMandatoryFields();
 
     public TelemetryPing build() {
         validatePayload();
