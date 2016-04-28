@@ -8,7 +8,6 @@
 #define nsNodeUtils_h___
 
 #include "mozilla/Maybe.h"
-#include "mozilla/NonOwningAnimationTarget.h"
 #include "nsIContent.h"          // for use in inline function (ParentChainChanged)
 #include "nsIMutationObserver.h" // for use in inline function (ParentChainChanged)
 #include "js/TypeDecls.h"
@@ -18,6 +17,7 @@ struct CharacterDataChangeInfo;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
 namespace mozilla {
+struct NonOwningAnimationTarget;
 namespace dom {
 class Animation;
 } // namespace dom
