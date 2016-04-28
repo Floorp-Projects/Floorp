@@ -6,7 +6,7 @@
 
 // Tests that properties can be selected and copied from the rule view
 
-XPCOMUtils.defineLazyGetter(this, "osString", function() {
+XPCOMUtils.defineLazyGetter(this, "osString", function () {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 

@@ -22,6 +22,7 @@
   overflow-y: auto;
   font-size: 11px;
   font-family: var(--monospace-font-family);
+  padding-right: 5px;
 }
 
 /* The tree takes the entire horizontal space within the panel content. */

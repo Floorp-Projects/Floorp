@@ -169,6 +169,25 @@ const ACTION = {
 // The queries we use to expire.
 const EXPIRATION_QUERIES = {
 
+  // Some visits can be expired more often than others, cause they are less
+  // useful to the user and can pollute awesomebar results:
+  // 1. urls over 255 chars
+  // 2. redirect sources and downloads
+  // Note: due to the REPLACE option, this should be executed before
+  // QUERY_FIND_VISITS_TO_EXPIRE, that has a more complete result.
+  QUERY_FIND_EXOTIC_VISITS_TO_EXPIRE: {
+    sql: `INSERT INTO expiration_notify (v_id, url, guid, visit_date)
+          SELECT v.id, h.url, h.guid, v.visit_date
+          FROM moz_historyvisits v
+          JOIN moz_places h ON h.id = v.place_id
+          WHERE visit_date < strftime('%s','now','localtime','start of day','-60 days','utc') * 1000000
+          AND ( LENGTH(h.url) > 255 OR v.visit_type = 7 )
+          ORDER BY v.visit_date ASC
+          LIMIT :limit_visits`,
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY |
+             ACTION.DEBUG
+  },
+
   // Finds visits to be expired when history is over the unique pages limit,
   // otherwise will return nothing.
   // This explicitly excludes any visits added in the last 7 days, to protect
@@ -204,9 +223,8 @@ const EXPIRATION_QUERIES = {
   // before it actually gets the new visit or bookmark.
   // Thus, since new pages get frecency -1, we filter on that.
   QUERY_FIND_URIS_TO_EXPIRE: {
-    sql: `INSERT INTO expiration_notify
-            (p_id, url, guid, visit_date, expected_results)
-          SELECT h.id, h.url, h.guid, h.last_visit_date, :limit_uris
+    sql: `INSERT INTO expiration_notify (p_id, url, guid, visit_date)
+          SELECT h.id, h.url, h.guid, h.last_visit_date
           FROM moz_places h
           LEFT JOIN moz_historyvisits v ON h.id = v.place_id
           WHERE h.last_visit_date IS NULL
@@ -371,7 +389,7 @@ const EXPIRATION_QUERIES = {
   QUERY_SELECT_NOTIFICATIONS: {
     sql: `SELECT url, guid, MAX(visit_date) AS visit_date,
                  MAX(IFNULL(MIN(p_id, 1), MIN(v_id, 0))) AS whole_entry,
-                 expected_results,
+                 MAX(expected_results) AS expected_results,
                  (SELECT MAX(visit_date) FROM expiration_notify
                   WHERE url = n.url AND p_id ISNULL) AS most_recent_expired_visit
           FROM expiration_notify n
@@ -454,7 +472,7 @@ function nsPlacesExpiration()
        , url TEXT NOT NULL
        , guid TEXT NOT NULL
        , visit_date INTEGER
-       , expected_results INTEGER NOT NULL
+       , expected_results INTEGER NOT NULL DEFAULT 0
        )`);
     stmt.executeAsync();
     stmt.finalize();
@@ -646,10 +664,20 @@ nsPlacesExpiration.prototype = {
 
     let row;
     while ((row = aResultSet.getNextRow())) {
-      if (!("_expectedResultsCount" in this))
-        this._expectedResultsCount = row.getResultByName("expected_results");
-      if (this._expectedResultsCount > 0)
-        this._expectedResultsCount--;
+      // expected_results is set to the number of expected visits by
+      // QUERY_FIND_VISITS_TO_EXPIRE.  We decrease that counter for each found
+      // visit and if it reaches zero we mark the database as dirty, since all
+      // the expected visits were expired, so it's likely the next run will
+      // find more.
+      let expectedResults = row.getResultByName("expected_results");
+      if (expectedResults > 0) {
+        if (!("_expectedResultsCount" in this)) {
+          this._expectedResultsCount = expectedResults;
+        }
+        if (this._expectedResultsCount > 0) {
+          this._expectedResultsCount--;
+        }
+      }
 
       let uri = Services.io.newURI(row.getResultByName("url"), null, null);
       let guid = row.getResultByName("guid");
@@ -955,6 +983,12 @@ nsPlacesExpiration.prototype = {
     // Bind the appropriate parameters.
     let params = stmt.params;
     switch (aQueryType) {
+      case "QUERY_FIND_EXOTIC_VISITS_TO_EXPIRE":
+        // Avoid expiring all visits in case of an unlimited debug expiration,
+        // just remove orphans instead.
+        params.limit_visits =
+          aLimit == LIMIT.DEBUG && baseLimit == -1 ? 0 : baseLimit;
+        break;
       case "QUERY_FIND_VISITS_TO_EXPIRE":
         params.max_uris = this._urisLimit;
         // Avoid expiring all visits in case of an unlimited debug expiration,

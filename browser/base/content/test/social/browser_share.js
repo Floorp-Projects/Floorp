@@ -21,18 +21,6 @@ function sendActivationEvent(subframe) {
   EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
 }
 
-function promiseShareFrameEvent(iframe, eventName) {
-  let deferred = Promise.defer();
-  iframe.addEventListener(eventName, function load(event) {
-    info("page load is " + iframe.contentDocument.location.href);
-    if (iframe.contentDocument.location.href != "data:text/plain;charset=utf8,") {
-      iframe.removeEventListener(eventName, load, true);
-      deferred.resolve(event);
-    }
-  }, true);
-  return deferred.promise;
-}
-
 function test() {
   waitForExplicitFinish();
   Services.prefs.setCharPref("social.shareDirectory", activationPage);
@@ -41,11 +29,24 @@ function test() {
     addEventListener("OpenGraphData", function (aEvent) {
       sendAsyncMessage("sharedata", aEvent.detail);
     }, true, true);
+    /* bug 1042991, ensure history is available by calling history.back on close */
+    addMessageListener("closeself", function(e) {
+      content.history.back();
+      content.close();
+    }, true);
+    /* if text is entered into field, onbeforeunload will cause a modal dialog
+       unless dialogs have been disabled for the iframe. */
+    content.onbeforeunload = function(e) {
+      return 'FAIL.';
+    };
   }.toString() + ")();";
   let mm = getGroupMessageManager("social");
   mm.loadFrameScript(frameScript, true);
 
+  // Animation on the panel can cause intermittent failures such as bug 1115131.
+  SocialShare.panel.setAttribute("animate", "false");
   registerCleanupFunction(function () {
+    SocialShare.panel.removeAttribute("animate");
     mm.removeDelayedFrameScript(frameScript);
     Services.prefs.clearUserPref("social.directories");
     Services.prefs.clearUserPref("social.shareDirectory");
@@ -188,28 +189,48 @@ var tests = {
     let testIndex = 0;
     let testData = corpus[testIndex++];
 
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+
     let mm = getGroupMessageManager("social");
     mm.addMessageListener("sharedata", function handler(msg) {
       gBrowser.removeTab(testTab);
       hasoptions(testData.options, JSON.parse(msg.data));
       testData = corpus[testIndex++];
-      if (testData) {
-        executeSoon(runOneTest);
-      } else {
-        mm.removeMessageListener("sharedata", handler);
-        SocialService.disableProvider(manifest.origin, next);
-      }
+      BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; },"share panel closed").then(() => {
+        if (testData) {
+          runOneTest();
+        } else {
+          mm.removeMessageListener("sharedata", handler);
+          SocialService.disableProvider(manifest.origin, next);
+        }
+      });
+      SocialShare.iframe.messageManager.sendAsyncMessage("closeself", {});
     });
 
     function runOneTest() {
       addTab(testData.url, function(tab) {
         testTab = tab;
+
+        let shareButton = SocialShare.shareButton;
+        // verify the attribute for proper css
+        ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
+        // button should be visible
+        is(shareButton.hidden, false, "share button is visible");
+
         SocialShare.sharePage(manifest.origin);
       });
     }
     executeSoon(runOneTest);
   },
   testShareMicroformats: function(next) {
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+
     SocialService.addProvider(manifest, function(provider) {
       let target, testTab;
 
@@ -261,14 +282,25 @@ var tests = {
       let mm = getGroupMessageManager("social");
       mm.addMessageListener("sharedata", function handler(msg) {
         is(msg.data, expecting, "microformats data ok");
-        gBrowser.removeTab(testTab);
-        mm.removeMessageListener("sharedata", handler);
-        SocialService.disableProvider(manifest.origin, next);
+        BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; },
+                                          "share panel closed").then(() => {
+          gBrowser.removeTab(testTab);
+          mm.removeMessageListener("sharedata", handler);
+          SocialService.disableProvider(manifest.origin, next);
+        });
+        SocialShare.iframe.messageManager.sendAsyncMessage("closeself", {});
       });
 
       let url = "https://example.com/browser/browser/base/content/test/social/microformats.html"
       addTab(url, function(tab) {
         testTab = tab;
+
+        let shareButton = SocialShare.shareButton;
+        // verify the attribute for proper css
+        ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
+        // button should be visible
+        is(shareButton.hidden, false, "share button is visible");
+
         let doc = tab.linkedBrowser.contentDocument;
         target = doc.getElementById("simple-hcard");
         SocialShare.sharePage(manifest.origin, null, target);
@@ -284,31 +316,83 @@ var tests = {
     SocialShare._createFrame();
     let iframe = SocialShare.iframe;
 
-    promiseShareFrameEvent(iframe, "load").then(() => {
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+
+    ensureEventFired(iframe, "load").then(() => {
       let subframe = iframe.contentDocument.getElementById("activation-frame");
-      waitForCondition(() => {
-          // sometimes the iframe is ready before the panel is open, we need to
-          // wait for both conditions
-          return SocialShare.panel.state == "open"
-                 && subframe.contentDocument
-                 && subframe.contentDocument.readyState == "complete";
-        }, () => {
+      ensureFrameLoaded(subframe, activationPage).then(() => {
         is(subframe.contentDocument.location.href, activationPage, "activation page loaded");
         promiseObserverNotified("social:provider-enabled").then(() => {
           let mm = getGroupMessageManager("social");
           mm.addMessageListener("sharedata", function handler(msg) {
             ok(true, "share completed");
-            gBrowser.removeTab(testTab);
-            mm.removeMessageListener("sharedata", handler);
-            SocialService.uninstallProvider(manifest.origin, next);
+
+            BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; },
+                                              "share panel closed").then(() => {
+              ensureBrowserTabClosed(testTab).then(() => {
+                mm.removeMessageListener("sharedata", handler);
+                SocialService.uninstallProvider(manifest.origin, next);
+              });
+            });
+            SocialShare.iframe.messageManager.sendAsyncMessage("closeself", {});
           });
         });
         sendActivationEvent(subframe);
-      }, "share panel did not open and load share page");
+      });
     });
     addTab(activationPage, function(tab) {
+      let shareButton = SocialShare.shareButton;
+      // verify the attribute for proper css
+      ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
+      // button should be visible
+      is(shareButton.hidden, false, "share button is visible");
+
       testTab = tab;
       SocialShare.sharePage();
+    });
+  },
+  testSharePanelDialog: function(next) {
+    let testTab;
+    // initialize the button into the navbar
+    CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+    // ensure correct state
+    SocialUI.onCustomizeEnd(window);
+    SocialShare._createFrame();
+
+    SocialService.addProvider(manifest, () => {
+      addTab(activationPage, (tab) => {
+        ensureEventFired(SocialShare.iframe, "load").then(() => {
+          // send keys to the input field.  An unexpected failure will happen
+          // if the onbeforeunload handler is fired.
+          EventUtils.sendKey("f");
+          EventUtils.sendKey("a");
+          EventUtils.sendKey("i");
+          EventUtils.sendKey("l");
+  
+          SocialShare.panel.addEventListener("popuphidden", function hidden(evt) {
+            SocialShare.panel.removeEventListener("popuphidden", hidden);
+            let topwin = Services.wm.getMostRecentWindow(null);
+            is(topwin, window, "no dialog is open");
+
+            ensureBrowserTabClosed(testTab).then(() => {
+              SocialService.disableProvider(manifest.origin, next);
+            });
+          });
+          SocialShare.iframe.messageManager.sendAsyncMessage("closeself", {});
+        });
+
+        let shareButton = SocialShare.shareButton;
+        // verify the attribute for proper css
+        ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
+        // button should be visible
+        is(shareButton.hidden, false, "share button is visible");
+
+        testTab = tab;
+        SocialShare.sharePage();
+      });
     });
   }
 }

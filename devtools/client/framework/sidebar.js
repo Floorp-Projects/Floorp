@@ -572,7 +572,7 @@ XPCOMUtils.defineLazyGetter(this, "l10n", function() {
         return bundle.formatStringFromName(aName, aArgs, aArgs.length);
       }
     } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + aName + "'");
+      console.log("Error reading '" + aName + "'");
     }
   };
   return l10n;

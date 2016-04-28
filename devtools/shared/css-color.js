@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
@@ -35,8 +35,8 @@ const SPECIALVALUES = new Set([
  *                                  return this.rgba.
  *   color.longHex === "#ff0000" // If alpha channel is present then we return
  *                                  this.rgba.
- *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present then we return
- *                                     this.rgba.
+ *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present
+ *                                  // then we return this.rgba.
  *   color.rgba === "rgba(255, 0, 0, 1)"
  *   color.hsl === "hsl(0, 100%, 50%)"
  *   color.hsla === "hsla(0, 100%, 50%, 1)" // If alpha channel is present
@@ -102,7 +102,7 @@ CssColor.prototype = {
    *
    * @param {String} color The color to use
    */
-  setAuthoredUnitFromColor: function(color) {
+  setAuthoredUnitFromColor: function (color) {
     if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
         CssColor.COLORUNIT.authored) {
       this._colorUnit = classifyColor(color);
@@ -128,7 +128,7 @@ CssColor.prototype = {
     try {
       let tuple = this._getRGBATuple();
       return !(tuple.r || tuple.g || tuple.b || tuple.a);
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   },
@@ -151,7 +151,7 @@ CssColor.prototype = {
       }
       let {r, g, b} = tuple;
       return DOMUtils.rgbToColorName(r, g, b);
-    } catch(e) {
+    } catch (e) {
       return this.hex;
     }
   },
@@ -184,7 +184,8 @@ CssColor.prototype = {
     }
 
     let tuple = this._getRGBATuple();
-    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6);
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) +
+                  (tuple.b << 0)).toString(16).substr(-6);
   },
 
   get rgb() {
@@ -210,7 +211,7 @@ CssColor.prototype = {
     }
     if (this.lowerCased.startsWith("rgba(")) {
       // The color is valid and begins with rgba(.
-        return this.authored;
+      return this.authored;
     }
     let components = this._getRGBATuple();
     return "rgba(" + components.r + ", " +
@@ -261,7 +262,7 @@ CssColor.prototype = {
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
-  _getInvalidOrSpecialValue: function() {
+  _getInvalidOrSpecialValue: function () {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -277,7 +278,7 @@ CssColor.prototype = {
    * @param  {String} color
    *         Any valid color string
    */
-  newColor: function(color) {
+  newColor: function (color) {
     // Store a lower-cased version of the color to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
@@ -286,7 +287,7 @@ CssColor.prototype = {
     return this;
   },
 
-  nextColorUnit: function() {
+  nextColorUnit: function () {
     // Reorder the formats array to have the current format at the
     // front so we can cycle through.
     let formats = ["hex", "hsl", "rgb", "name"];
@@ -308,10 +309,10 @@ CssColor.prototype = {
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
-  toString: function() {
+  toString: function () {
     let color;
 
-    switch(this.colorUnit) {
+    switch (this.colorUnit) {
       case CssColor.COLORUNIT.authored:
         color = this.authored;
         break;
@@ -343,7 +344,7 @@ CssColor.prototype = {
    * Returns a RGBA 4-Tuple representation of a color or transparent as
    * appropriate.
    */
-  _getRGBATuple: function() {
+  _getRGBATuple: function () {
     let tuple = DOMUtils.colorToRGBA(this.authored);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
@@ -351,25 +352,24 @@ CssColor.prototype = {
     return tuple;
   },
 
-  _hsl: function(maybeAlpha) {
+  _hsl: function (maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
     }
 
     let {r, g, b} = this._getRGBATuple();
-    let [h,s,l] = rgbToHsl([r,g,b]);
+    let [h, s, l] = rgbToHsl([r, g, b]);
     if (maybeAlpha !== undefined) {
       return "hsla(" + h + ", " + s + "%, " + l + "%, " + maybeAlpha + ")";
-    } else {
-      return "hsl(" + h + ", " + s + "%, " + l + "%)";
     }
+    return "hsl(" + h + ", " + s + "%, " + l + "%)";
   },
 
   /**
    * This method allows comparison of CssColor objects using ===.
    */
-  valueOf: function() {
+  valueOf: function () {
     return this.rgba;
   },
 };
@@ -382,7 +382,7 @@ CssColor.prototype = {
  * @return {array}
  *         Array of hsl values.
  */
-function rgbToHsl([r,g,b]) {
+function rgbToHsl([r, g, b]) {
   r = r / 255;
   g = g / 255;
   b = b / 255;
@@ -393,13 +393,13 @@ function rgbToHsl([r,g,b]) {
   let s;
   let l = (max + min) / 2;
 
-  if (max == min){
+  if (max == min) {
     h = s = 0;
   } else {
     let d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-    switch(max) {
+    switch (max) {
       case r:
         h = ((g - b) / d) % 6;
         break;

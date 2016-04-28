@@ -59,7 +59,9 @@ module.exports = createClass({
   },
 
   onHashChange() {
-    let tabId = window.location.hash.substr(1);
+    let hash = window.location.hash;
+    // Default to defaultTabId if no hash is provided.
+    let tabId = hash ? hash.substr(1) : defaultTabId;
 
     let isValid = tabs.some(t => t.id == tabId);
     if (isValid) {

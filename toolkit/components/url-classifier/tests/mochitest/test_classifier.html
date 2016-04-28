@@ -3,6 +3,7 @@
 <head>
   <title>Test the URI Classifier</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
@@ -16,44 +17,39 @@
 var firstLoad = true;
 
 // Add some URLs to the malware database.
-var testData = "malware.example.com/";
-var testUpdate =
-  "n:1000\ni:test-malware-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
-  testData;
-
-testData = "unwanted.example.com/";
-testUpdate +=
-  "n:1000\ni:test-unwanted-simple\nad:1\n" +
-  "a:524:32:" + testData.length + "\n" +
-  testData;
+var testData = [
+  { url: "malware.example.com/",
+    db: "test-malware-simple"
+  },
+  { url: "unwanted.example.com/",
+    db: "test-unwanted-simple"
+  }
+];
 
 function loadTestFrame() {
   document.getElementById("testFrame").src = "classifierFrame.html";
 }
 
-const CLASSIFIER_COMMON_URL = SimpleTest.getTestFileURL("classifierCommon.js");
-let classifierCommonScript = SpecialPowers.loadChromeScript(CLASSIFIER_COMMON_URL);
-
 // Expected finish() call is in "classifierFrame.html".
 SimpleTest.waitForExplicitFinish();
 
-classifierCommonScript.addMessageListener("loadTestFrame", () => {
+function updateSuccess() {
   SpecialPowers.pushPrefEnv(
     {"set" : [["browser.safebrowsing.malware.enabled", true]]},
     loadTestFrame);
-});
-classifierCommonScript.addMessageListener("updateError", ({ errorCode }) => {
+}
+
+function updateError(errorCode) {
   ok(false, "Couldn't update classifier. Error code: " + errorCode);
   // Abort test.
   SimpleTest.finish();
-});
+}
 
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() {
-    classifierCommonScript.sendAsyncMessage("doUpdate", { testUpdate });
+    classifierHelper.addUrlToDB(testData, updateSuccess, updateError);
   });
 
 </script>

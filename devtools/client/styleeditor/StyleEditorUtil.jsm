@@ -157,7 +157,7 @@ function wire(root, selectorOrElement, descriptor) {
 
   for (let i = 0; i < matches.length; i++) {
     let element = matches[i];
-    forEach(descriptor.events, function(name, handler) {
+    forEach(descriptor.events, function (name, handler) {
       element.addEventListener(name, handler, false);
     });
     forEach(descriptor.attributes, element.setAttribute);
@@ -214,7 +214,7 @@ function showFilePicker(path, toSave, parentWindow, callback,
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   let mode = toSave ? fp.modeSave : fp.modeOpen;
   let key = toSave ? "saveStyleSheet" : "importStyleSheet";
-  let fpCallback = function(result) {
+  let fpCallback = function (result) {
     if (result == Ci.nsIFilePicker.returnCancel) {
       callback(null);
     } else {

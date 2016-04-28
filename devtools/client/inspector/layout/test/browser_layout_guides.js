@@ -23,7 +23,7 @@ add_task(function* () {
   yield selectNode("div", inspector);
 
   // Mock the highlighter by replacing the showBoxModel method.
-  toolbox.highlighter.showBoxModel = function(nodeFront, options) {
+  toolbox.highlighter.showBoxModel = function (nodeFront, options) {
     highlightedNodeFront = nodeFront;
     highlighterOptions = options;
   };

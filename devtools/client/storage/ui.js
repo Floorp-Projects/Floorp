@@ -169,7 +169,7 @@ StorageUI.prototype = {
     this._panelDoc.documentElement.classList.toggle("no-animate", !value);
   },
 
-  destroy: function() {
+  destroy: function () {
     this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.displayObjectSidebar);
     this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
@@ -201,13 +201,13 @@ StorageUI.prototype = {
   /**
    * Empties and hides the object viewer sidebar
    */
-  hideSidebar: function() {
+  hideSidebar: function () {
     this.view.empty();
     this.sidebar.hidden = true;
     this.table.clearSelection();
   },
 
-  getCurrentActor: function() {
+  getCurrentActor: function () {
     let type = this.table.datatype;
 
     return this.storageTypes[type];
@@ -224,7 +224,7 @@ StorageUI.prototype = {
     }
   },
 
-  editItem: function(eventType, data) {
+  editItem: function (eventType, data) {
     let actor = this.getCurrentActor();
 
     actor.editItem(data);
@@ -235,7 +235,7 @@ StorageUI.prototype = {
    * the table and repopulates the sidebar with that item's data if the item
    * being removed was selected.
    */
-  removeItemFromTable: function(name) {
+  removeItemFromTable: function (name) {
     if (this.table.isSelected(name)) {
       if (this.table.selectedIndex == 0) {
         this.table.selectNextRow();
@@ -255,7 +255,7 @@ StorageUI.prototype = {
    * @param {object} argument0
    *        An object containing which storage types were cleared
    */
-  onCleared: function(response) {
+  onCleared: function (response) {
     let [type, host] = this.tree.selectedItem;
     if (response.hasOwnProperty(type) && response[type].indexOf(host) > -1) {
       this.table.clear();
@@ -287,7 +287,7 @@ StorageUI.prototype = {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  onUpdate: function({ changed, added, deleted }) {
+  onUpdate: function ({ changed, added, deleted }) {
     if (deleted) {
       this.handleDeletedItems(deleted);
     }
@@ -310,7 +310,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleAddedItems: function(added) {
+  handleAddedItems: function (added) {
     for (let type in added) {
       for (let host in added[type]) {
         this.tree.add([type, {id: host, type: "url"}]);
@@ -344,7 +344,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleDeletedItems: function(deleted) {
+  handleDeletedItems: function (deleted) {
     for (let type in deleted) {
       for (let host in deleted[type]) {
         if (!deleted[type][host].length) {
@@ -396,7 +396,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleChangedItems: function(changed) {
+  handleChangedItems: function (changed) {
     let [type, host, db, objectStore] = this.tree.selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
@@ -463,7 +463,7 @@ StorageUI.prototype = {
    *        List of storages and their corresponding hosts returned by the
    *        StorageFront.listStores call.
    */
-  populateStorageTree: function(storageTypes) {
+  populateStorageTree: function (storageTypes) {
     this.storageTypes = {};
     for (let type in storageTypes) {
       // Ignore `from` field, which is just a protocol.js implementation
@@ -572,7 +572,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object
    */
-  parseItemValue: function(name, value) {
+  parseItemValue: function (name, value) {
     let json = null;
     try {
       json = JSON.parse(value);
@@ -615,7 +615,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object or array
    */
-  _extractKeyValPairs: function(value) {
+  _extractKeyValPairs: function (value) {
     let makeObject = (keySep, pairSep) => {
       let object = {};
       for (let pair of value.split(pairSep)) {
@@ -667,7 +667,7 @@ StorageUI.prototype = {
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
    */
-  onHostSelect: function(event, item) {
+  onHostSelect: function (event, item) {
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -727,7 +727,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  populateTable: function(data, reason) {
+  populateTable: function (data, reason) {
     for (let item of data) {
       if (item.value) {
         item.valueActor = item.value;
@@ -773,7 +773,7 @@ StorageUI.prototype = {
    * @param {DOMEvent} event
    *        The event passed by the keypress event.
    */
-  handleKeypress: function(event) {
+  handleKeypress: function (event) {
     if (event.keyCode == event.DOM_VK_ESCAPE && !this.sidebar.hidden) {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
@@ -794,7 +794,7 @@ StorageUI.prototype = {
   /**
    * Handles endless scrolling for the table
    */
-  handleScrollEnd: function() {
+  handleScrollEnd: function () {
     if (!this.shouldLoadMoreItems) {
       return;
     }
@@ -815,7 +815,7 @@ StorageUI.prototype = {
    * If the current storage actor doesn't support removing items, prevent
    * showing the menu.
    */
-  onTablePopupShowing: function(event) {
+  onTablePopupShowing: function (event) {
     if (!this.getCurrentActor().removeItem) {
       event.preventDefault();
       return;
@@ -840,7 +840,7 @@ StorageUI.prototype = {
     }
   },
 
-  onTreePopupShowing: function(event) {
+  onTreePopupShowing: function (event) {
     let showMenu = false;
     let selectedItem = this.tree.selectedItem;
 
@@ -870,7 +870,7 @@ StorageUI.prototype = {
   /**
    * Handles removing an item from the storage
    */
-  onRemoveItem: function() {
+  onRemoveItem: function () {
     let [, host] = this.tree.selectedItem;
     let actor = this.getCurrentActor();
     let rowId = this.table.contextMenuRowId;
@@ -882,7 +882,7 @@ StorageUI.prototype = {
   /**
    * Handles removing all items from the storage
    */
-  onRemoveAll: function() {
+  onRemoveAll: function () {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns correct value only after the table
     // data from server are successfully fetched (and that's async).
@@ -896,7 +896,7 @@ StorageUI.prototype = {
    * Handles removing all cookies with exactly the same domain as the
    * cookie in the selected row.
    */
-  onRemoveAllFrom: function() {
+  onRemoveAllFrom: function () {
     let [, host] = this.tree.selectedItem;
     let actor = this.getCurrentActor();
     let rowId = this.table.contextMenuRowId;
@@ -905,7 +905,7 @@ StorageUI.prototype = {
     actor.removeAll(host, data.host);
   },
 
-  onRemoveDatabase: function() {
+  onRemoveDatabase: function () {
     let [type, host, name] = this.tree.selectedItem;
     let actor = this.storageTypes[type];
 

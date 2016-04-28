@@ -23,7 +23,7 @@ GripProvider.prototype = {
    * Fetches properties from the backend. These properties might be
    * displayed as child objects in e.g. a tree UI widget.
    */
-  getChildren: function(object) {
+  getChildren: function (object) {
     let grip = object;
     if (object instanceof Property) {
       grip = this.getValue(object);
@@ -43,7 +43,7 @@ GripProvider.prototype = {
     return props;
   },
 
-  hasChildren: function(object) {
+  hasChildren: function (object) {
     if (object instanceof Property) {
       let value = this.getValue(object);
       if (!value) {
@@ -70,7 +70,7 @@ GripProvider.prototype = {
     return null;
   },
 
-  getValue: function(object) {
+  getValue: function (object) {
     if (object instanceof Property) {
       let value = object.value;
       return (typeof value.value != "undefined") ? value.value :
@@ -80,15 +80,15 @@ GripProvider.prototype = {
     return object;
   },
 
-  getLabel: function(object) {
+  getLabel: function (object) {
     return (object instanceof Property) ? object.name : null;
   },
 
-  getKey: function(object) {
+  getKey: function (object) {
     return (object instanceof Property) ? object.key : null;
   },
 
-  getType: function(object) {
+  getType: function (object) {
     return object.class ? object.class : "";
   },
 };

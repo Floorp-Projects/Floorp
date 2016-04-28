@@ -85,7 +85,7 @@ public class TabHistoryItemRow extends RelativeLayout {
             }
 
             if (favicon == null) {
-                v.showDefaultFavicon();
+                v.showDefaultFavicon(url);
                 return;
             }
 

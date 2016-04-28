@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.helpers.FileUtil;
+import org.mozilla.gecko.util.FileUtils;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
@@ -127,7 +127,7 @@ public class TestGeckoProfile {
         final JSONObject objMissingClientId = new JSONObject();
         objMissingClientId.put("irrelevantKey", validClientId);
         assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
-        FileUtil.writeJSONObjectToFile(clientIdFile, objMissingClientId);
+        FileUtils.writeJSONObjectToFile(clientIdFile, objMissingClientId);
 
         final String clientIdForMissingAttr = profile.getClientId();
         assertValidClientId(clientIdForMissingAttr);
@@ -138,7 +138,7 @@ public class TestGeckoProfile {
     public void testGetClientIdInvalidIdFileFormat() throws Exception {
         final String validClientId = "905de1c0-0ea6-4a43-95f9-6170035f5a82";
         assertTrue("Created the parent dirs of the client ID file", clientIdFile.getParentFile().mkdirs());
-        FileUtil.writeStringToFile(clientIdFile, "clientID: \"" + validClientId + "\"");
+        FileUtils.writeStringToFile(clientIdFile, "clientID: \"" + validClientId + "\"");
 
         final String clientIdForInvalidFormat = profile.getClientId();
         assertValidClientId(clientIdForInvalidFormat);
@@ -209,7 +209,7 @@ public class TestGeckoProfile {
         final long expectedDate = System.currentTimeMillis();
         final JSONObject expectedObj = new JSONObject();
         expectedObj.put(PROFILE_CREATION_DATE_JSON_ATTR, expectedDate);
-        FileUtil.writeJSONObjectToFile(timesFile, expectedObj);
+        FileUtils.writeJSONObjectToFile(timesFile, expectedObj);
 
         final Context context = RuntimeEnvironment.application;
         final long actualDate = profile.getAndPersistProfileCreationDate(context);
@@ -237,18 +237,18 @@ public class TestGeckoProfile {
     }
 
     private static long readProfileCreationDateFromFile(final File file) throws Exception {
-        final JSONObject actualObj = FileUtil.readJSONObjectFromFile(file);
+        final JSONObject actualObj = FileUtils.readJSONObjectFromFile(file);
         return actualObj.getLong(PROFILE_CREATION_DATE_JSON_ATTR);
     }
 
     private String readClientIdFromFile(final File file) throws Exception {
-        final JSONObject obj = FileUtil.readJSONObjectFromFile(file);
+        final JSONObject obj = FileUtils.readJSONObjectFromFile(file);
         return obj.getString(CLIENT_ID_JSON_ATTR);
     }
 
     private void writeClientIdToFile(final File file, final String clientId) throws Exception {
         final JSONObject obj = new JSONObject();
         obj.put(CLIENT_ID_JSON_ATTR, clientId);
-        FileUtil.writeJSONObjectToFile(file, obj);
+        FileUtils.writeJSONObjectToFile(file, obj);
     }
 }

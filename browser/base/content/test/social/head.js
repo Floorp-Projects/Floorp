@@ -415,16 +415,19 @@ function loadIntoTab(tab, url, callback) {
 
 function ensureBrowserTabClosed(tab) {
   let promise = ensureEventFired(gBrowser.tabContainer, "TabClose");
-  gBrowser.removeTab(tab, {skipPermitUnload: true});
+  gBrowser.removeTab(tab);
   return promise;
 }
 
-function ensureFrameLoaded(frame) {
+function ensureFrameLoaded(frame, uri) {
   let deferred = Promise.defer();
-  if (frame.contentDocument && frame.contentDocument.readyState == "complete") {
+  if (frame.contentDocument && frame.contentDocument.readyState == "complete" &&
+      (!uri || frame.contentDocument.location.href == uri)) {
     deferred.resolve();
   } else {
     frame.addEventListener("load", function handler() {
+      if (uri && frame.contentDocument.location.href != uri)
+        return;
       frame.removeEventListener("load", handler, true);
       deferred.resolve()
     }, true);

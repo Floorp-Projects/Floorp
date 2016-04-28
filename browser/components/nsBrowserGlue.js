@@ -156,6 +156,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
 XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
                                   "resource:///modules/ShellService.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 
@@ -905,9 +908,13 @@ BrowserGlue.prototype = {
   },
 
   /**
-   * Show a notification bar offering a reset if the profile has been unused for some time.
+   * Show a notification bar offering a reset.
+   *
+   * @param reason
+   *        String of either "unused" or "uninstall", specifying the reason
+   *        why a profile reset is offered.
    */
-  _resetUnusedProfileNotification: function () {
+  _resetProfileNotification: function (reason) {
     let win = RecentWindow.getMostRecentBrowserWindow();
     if (!win)
       return;
@@ -920,7 +927,14 @@ BrowserGlue.prototype = {
     let resetBundle = Services.strings
                               .createBundle("chrome://global/locale/resetProfile.properties");
 
-    let message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName], 1);
+    let message;
+    if (reason == "unused") {
+      message = resetBundle.formatStringFromName("resetUnusedProfile.message", [productName], 1);
+    } else if (reason == "uninstall") {
+      message = resetBundle.formatStringFromName("resetUninstalled.message", [productName], 1);
+    } else {
+      throw new Error(`Unknown reason (${reason}) given to _resetProfileNotification.`);
+    }
     let buttons = [
       {
         label:     resetBundle.formatStringFromName("refreshProfile.resetButton.label", [productName], 1),
@@ -932,7 +946,7 @@ BrowserGlue.prototype = {
     ];
 
     let nb = win.document.getElementById("global-notificationbox");
-    nb.appendNotification(message, "reset-unused-profile",
+    nb.appendNotification(message, "reset-profile-notification",
                           "chrome://global/skin/icons/question-16.png",
                           nb.PRIORITY_INFO_LOW, buttons);
   },
@@ -1030,9 +1044,29 @@ BrowserGlue.prototype = {
     try {
       disableResetPrompt = Services.prefs.getBoolPref("browser.disableResetPrompt");
     } catch(e) {}
+
     if (!disableResetPrompt && lastUse &&
         Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
-      this._resetUnusedProfileNotification();
+      this._resetProfileNotification("unused");
+    } else if (AppConstants.platform == "win" && !disableResetPrompt) {
+      // Check if we were just re-installed and offer Firefox Reset
+      let updateChannel;
+      try {
+        updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
+      } catch (ex) {}
+      if (updateChannel) {
+        let uninstalledValue =
+          WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                     "Software\\Mozilla\\Firefox",
+                                     `Uninstalled-${updateChannel}`);
+        let removalSuccessful =
+          WindowsRegistry.removeRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                       "Software\\Mozilla\\Firefox",
+                                       `Uninstalled-${updateChannel}`);
+        if (removalSuccessful && uninstalledValue == "True") {
+          this._resetProfileNotification("uninstall");
+        }
+      }
     }
 
     this._checkForOldBuildUpdates();

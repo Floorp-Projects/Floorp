@@ -281,7 +281,8 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
-
+      isInHTMLDocument: this.rawNode.ownerDocument &&
+        this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
     };
 
@@ -916,7 +917,9 @@ var NodeFront = protocol.FrontClass(NodeActor, {
   get isAnonymous() {
     return this._form.isAnonymous;
   },
-
+  get isInHTMLDocument() {
+    return this._form.isInHTMLDocument;
+  },
   get tagName() {
     return this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null;
   },

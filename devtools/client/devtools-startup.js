@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Serv
 function DevToolsStartup() {}
 
 DevToolsStartup.prototype = {
-  handle: function(cmdLine) {
+  handle: function (cmdLine) {
     let consoleFlag = cmdLine.handleFlag("jsconsole", false);
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
     let devtoolsFlag = cmdLine.handleFlag("devtools", false);
@@ -52,7 +52,7 @@ DevToolsStartup.prototype = {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
 
-    let onStartup = function(window) {
+    let onStartup = function (window) {
       Services.obs.removeObserver(onStartup,
                                   "browser-delayed-startup-finished");
       // Ensure loading core module once firefox is ready
@@ -66,14 +66,14 @@ DevToolsStartup.prototype = {
                              false);
   },
 
-  initDevTools: function() {
+  initDevTools: function () {
     let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
     loader.require("devtools/client/framework/devtools-browser");
   },
 
-  handleConsoleFlag: function(cmdLine) {
+  handleConsoleFlag: function (cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
       this.initDevTools();
@@ -93,7 +93,7 @@ DevToolsStartup.prototype = {
   },
 
   // Open the toolbox on the selected tab once the browser starts up.
-  handleDevToolsFlag: function(window) {
+  handleDevToolsFlag: function (window) {
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
@@ -122,7 +122,7 @@ DevToolsStartup.prototype = {
     return remoteDebuggingEnabled;
   },
 
-  handleDebuggerFlag: function(cmdLine) {
+  handleDebuggerFlag: function (cmdLine) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
@@ -134,7 +134,7 @@ DevToolsStartup.prototype = {
     }
   },
 
-  handleDebuggerServerFlag: function(cmdLine, portOrPath) {
+  handleDebuggerServerFlag: function (cmdLine, portOrPath) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }

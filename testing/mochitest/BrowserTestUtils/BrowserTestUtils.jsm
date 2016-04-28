@@ -528,6 +528,8 @@ this.BrowserTestUtils = {
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise.
+   * @param {bool} wantsUntrusted [optional]
+   *        Whether to accept untrusted events
    *
    * @note Because this function is intended for testing, any error in checkFn
    *       will cause the returned promise to be rejected instead of waiting for
@@ -535,12 +537,15 @@ this.BrowserTestUtils = {
    *
    * @returns {Promise}
    */
-  waitForContentEvent(browser, eventName, capture, checkFn) {
-    let parameters = { eventName,
-                       capture,
-                       checkFnSource: checkFn ? checkFn.toSource() : null };
+  waitForContentEvent(browser, eventName, capture = false, checkFn, wantsUntrusted = false) {
+    let parameters = {
+      eventName,
+      capture,
+      checkFnSource: checkFn ? checkFn.toSource() : null,
+      wantsUntrusted,
+    };
     return ContentTask.spawn(browser, parameters,
-        function({ eventName, capture, checkFnSource }) {
+        function({ eventName, capture, checkFnSource, wantsUntrusted }) {
           let checkFn;
           if (checkFnSource) {
             checkFn = eval(`(() => (${checkFnSource}))()`);
@@ -557,9 +562,42 @@ this.BrowserTestUtils = {
               }
               removeEventListener(eventName, listener, capture);
               completion();
-            }, capture);
+            }, capture, wantsUntrusted);
           });
         });
+  },
+
+  /**
+   * Like browserLoaded, but waits for an error page to appear.
+   * This explicitly deals with cases where the browser is not currently remote and a
+   * remoteness switch will occur before the error page is loaded, which is tricky
+   * because error pages don't fire 'regular' load events that we can rely on.
+   *
+   * @param {xul:browser} browser
+   *        A xul:browser.
+   *
+   * @return {Promise}
+   * @resolves When an error page has been loaded in the browser.
+   */
+  waitForErrorPage(browser) {
+    let waitForLoad = () =>
+      this.waitForContentEvent(browser, "AboutNetErrorLoad", false, null, true);
+
+    let win = browser.ownerDocument.defaultView;
+    let tab = win.gBrowser.getTabForBrowser(browser);
+    if (!tab || browser.isRemoteBrowser || !win.gMultiProcessBrowser) {
+      return waitForLoad();
+    }
+
+    // We're going to switch remoteness when loading an error page. We need to be
+    // quite careful in order to make sure we're adding the listener in time to
+    // get this event:
+    return new Promise((resolve, reject) => {
+      tab.addEventListener("TabRemotenessChange", function onTRC() {
+        tab.removeEventListener("TabRemotenessChange", onTRC);
+        waitForLoad().then(resolve, reject);
+      });
+    });
   },
 
   /**

@@ -525,14 +525,10 @@ html, body, #app, #memory-tool {
 .heap-tree-item-individuals > button {
   height: 10px;
   width: 32px;
-  margin: 0 auto;
-  padding: 0;
-}
 
-/* Override Firebug styles for toolbar buttons to fix entire row height. */
-.theme-firebug .heap-tree-item-individuals > button {
-  margin: 0 auto;
-  min-height: inherit;
+  /* Override default styles for toolbar buttons to fix entire row height. */
+  margin: 0 auto !important;
+  padding: 0;
 }
 
 /**

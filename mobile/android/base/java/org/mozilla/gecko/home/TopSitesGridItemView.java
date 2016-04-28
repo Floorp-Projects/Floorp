@@ -6,8 +6,11 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.db.BrowserContract.TopSites;
+import org.mozilla.gecko.favicons.FaviconGenerator;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -34,8 +37,6 @@ public class TopSitesGridItemView extends RelativeLayout {
     private static final ScaleType SCALE_TYPE_RESOURCE  = ScaleType.CENTER;
     private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
     private static final ScaleType SCALE_TYPE_URL       = ScaleType.CENTER_INSIDE;
-
-    private static final int THUMBNAIL_DEFAULT_FAVICON_ID = R.drawable.favicon_globe;
 
     // Child views.
     private final TextView mTitleView;
@@ -210,6 +211,23 @@ public class TopSitesGridItemView extends RelativeLayout {
         mThumbnailSet = false;
     }
 
+    private void generateDefaultIcon() {
+        ThreadUtils.assertOnBackgroundThread();
+
+        final Bitmap bitmap = FaviconGenerator.generate(getContext(), mUrl);
+        final int dominantColor = BitmapUtils.getDominantColor(bitmap);
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mThumbnailView.setScaleType(SCALE_TYPE_FAVICON);
+                mThumbnailView.setImageBitmap(bitmap);
+                mThumbnailView.setBackgroundColor(0x7FFFFFFF & dominantColor); // 50% dominant color
+                mThumbnailSet = false;
+            }
+        });
+    }
+
     /**
      * Display the thumbnail from a bitmap.
      *
@@ -217,10 +235,15 @@ public class TopSitesGridItemView extends RelativeLayout {
      */
     public void displayThumbnail(Bitmap thumbnail) {
         if (thumbnail == null) {
-            // Show a favicon based view instead.
-            displayThumbnail(THUMBNAIL_DEFAULT_FAVICON_ID);
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    generateDefaultIcon();
+                }
+            });
             return;
         }
+
         mThumbnailSet = true;
         Favicons.cancelFaviconLoad(mLoadId);
         ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
@@ -244,7 +267,6 @@ public class TopSitesGridItemView extends RelativeLayout {
         ImageLoader.with(getContext())
                    .load(imageUrl)
                    .noFade()
-                   .error(THUMBNAIL_DEFAULT_FAVICON_ID)
                    .into(mThumbnailView);
     }
 
@@ -271,8 +293,12 @@ public class TopSitesGridItemView extends RelativeLayout {
         }
 
         if (favicon == null) {
-            // Should show default favicon.
-            displayThumbnail(THUMBNAIL_DEFAULT_FAVICON_ID);
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    generateDefaultIcon();
+                }
+            });
             return;
         }
 

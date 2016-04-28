@@ -17,6 +17,9 @@ public final class DataStorageContract {
         public static final String WIFI = "wifi";
         public static final String CELL_COUNT = "cell_count";
         public static final String WIFI_COUNT = "wifi_count";
+        public static final String HEADING = "heading";
+        public static final String SPEED = "speed";
+        public static final String PRESSURE = "pressure";
     }
 
     public static class Stats {

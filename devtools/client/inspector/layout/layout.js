@@ -13,7 +13,6 @@ const {ReflowFront} = require("devtools/server/actors/layout");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Console.jsm");
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const STRINGS_URI = "chrome://devtools/locale/shared.properties";
@@ -43,7 +42,7 @@ EditingSession.prototype = {
    * @param rule      The CSS rule
    * @param property  The name of the property
    */
-  getPropertyFromRule: function(rule, property) {
+  getPropertyFromRule: function (rule, property) {
     let dummyStyle = this._element.style;
 
     dummyStyle.cssText = rule.cssText;
@@ -56,7 +55,7 @@ EditingSession.prototype = {
    *
    * @param property  The name of the property as a string
    */
-  getProperty: function(property) {
+  getProperty: function (property) {
     // Create a hidden element for getPropertyFromRule to use
     let div = this._doc.createElement("div");
     div.setAttribute("style", "display: none");
@@ -85,7 +84,7 @@ EditingSession.prototype = {
    *                    value properties. If the value is "" then the property
    *                    is removed.
    */
-  setProperties: function(properties) {
+  setProperties: function (properties) {
     let modifications = this._rules[0].startModifyingProperties();
 
     for (let property of properties) {
@@ -108,7 +107,7 @@ EditingSession.prototype = {
    * Reverts all of the property changes made by this instance. Returns a
    * promise that will be resolved when complete.
    */
-  revert: function() {
+  revert: function () {
     let modifications = this._rules[0].startModifyingProperties();
 
     for (let [property, value] of this._modifications) {
@@ -122,7 +121,7 @@ EditingSession.prototype = {
     return modifications.apply().then(null, console.error);
   },
 
-  destroy: function() {
+  destroy: function () {
     this._doc = null;
     this._rules = null;
     this._modifications.clear();
@@ -146,7 +145,7 @@ function LayoutView(inspector, win) {
 }
 
 LayoutView.prototype = {
-  init: function() {
+  init: function () {
     this.update = this.update.bind(this);
 
     this.onNewSelection = this.onNewSelection.bind(this);
@@ -266,7 +265,7 @@ LayoutView.prototype = {
     nodeGeometry.addEventListener("click", this.onGeometryButtonClick);
   },
 
-  initBoxModelHighlighter: function() {
+  initBoxModelHighlighter: function () {
     let highlightElts = this.doc.querySelectorAll("#layout-container *[title]");
     this.onHighlightMouseOver = this.onHighlightMouseOver.bind(this);
     this.onHighlightMouseOut = this.onHighlightMouseOut.bind(this);
@@ -280,7 +279,7 @@ LayoutView.prototype = {
   /**
    * Start listening to reflows in the current tab.
    */
-  trackReflows: function() {
+  trackReflows: function () {
     if (!this.reflowFront) {
       let toolbox = this.inspector.toolbox;
       if (toolbox.target.form.reflowActor) {
@@ -298,7 +297,7 @@ LayoutView.prototype = {
   /**
    * Stop listening to reflows in the current tab.
    */
-  untrackReflows: function() {
+  untrackReflows: function () {
     if (!this.reflowFront) {
       return;
     }
@@ -310,7 +309,7 @@ LayoutView.prototype = {
   /**
    * Called when the user clicks on one of the editable values in the layoutview
    */
-  initEditor: function(element, event, dimension) {
+  initEditor: function (element, event, dimension) {
     let { property } = dimension;
     let session = new EditingSession(this.doc, this.elementRules);
     let initialValue = session.getProperty(property);
@@ -360,7 +359,7 @@ LayoutView.prototype = {
    * Is the layoutview visible in the sidebar.
    * @return {Boolean}
    */
-  isViewVisible: function() {
+  isViewVisible: function () {
     return this.inspector &&
            this.inspector.sidebar.getCurrentTabID() == "layoutview";
   },
@@ -370,7 +369,7 @@ LayoutView.prototype = {
    * be displayed in the view.
    * @return {Boolean}
    */
-  isViewVisibleAndNodeValid: function() {
+  isViewVisibleAndNodeValid: function () {
     return this.isViewVisible() &&
            this.inspector.selection.isConnected() &&
            this.inspector.selection.isElementNode();
@@ -379,7 +378,7 @@ LayoutView.prototype = {
   /**
    * Destroy the nodes. Remove listeners.
    */
-  destroy: function() {
+  destroy: function () {
     let highlightElts = this.doc.querySelectorAll("#layout-container *[title]");
 
     for (let element of highlightElts) {
@@ -417,14 +416,14 @@ LayoutView.prototype = {
     }
   },
 
-  onSidebarSelect: function(e, sidebar) {
+  onSidebarSelect: function (e, sidebar) {
     this.setActive(sidebar === "layoutview");
   },
 
   /**
    * Selection 'new-node-front' event handler.
    */
-  onNewSelection: function() {
+  onNewSelection: function () {
     let done = this.inspector.updating("layoutview");
     this.onNewNode()
       .then(() => this.hideGeometryEditor())
@@ -437,12 +436,12 @@ LayoutView.prototype = {
   /**
    * @return a promise that resolves when the view has been updated
    */
-  onNewNode: function() {
+  onNewNode: function () {
     this.setActive(this.isViewVisibleAndNodeValid());
     return this.update();
   },
 
-  onHighlightMouseOver: function(e) {
+  onHighlightMouseOver: function (e) {
     let region = e.target.getAttribute("data-box");
     if (!region) {
       return;
@@ -455,11 +454,11 @@ LayoutView.prototype = {
     });
   },
 
-  onHighlightMouseOut: function() {
+  onHighlightMouseOut: function () {
     this.hideBoxModel();
   },
 
-  onGeometryButtonClick: function({target}) {
+  onGeometryButtonClick: function ({target}) {
     if (target.hasAttribute("checked")) {
       target.removeAttribute("checked");
       this.hideGeometryEditor();
@@ -469,19 +468,19 @@ LayoutView.prototype = {
     }
   },
 
-  onPickerStarted: function() {
+  onPickerStarted: function () {
     this.hideGeometryEditor();
   },
 
-  onMarkupViewLeave: function() {
+  onMarkupViewLeave: function () {
     this.showGeometryEditor(true);
   },
 
-  onMarkupViewNodeHover: function() {
+  onMarkupViewNodeHover: function () {
     this.hideGeometryEditor(false);
   },
 
-  onWillNavigate: function() {
+  onWillNavigate: function () {
     this._geometryEditorHighlighter.release().catch(console.error);
     this._geometryEditorHighlighter = null;
   },
@@ -491,7 +490,7 @@ LayoutView.prototype = {
    * layout-view is hidden, otherwise track reflows and show values.
    * @param {Boolean} isActive
    */
-  setActive: function(isActive) {
+  setActive: function (isActive) {
     if (isActive === this.isActive) {
       return;
     }
@@ -512,7 +511,7 @@ LayoutView.prototype = {
    * the layoutview/view.xhtml document.
    * @return a promise that will be resolved when complete.
    */
-  update: function() {
+  update: function () {
     let lastRequest = Task.spawn((function* () {
       if (!this.isViewVisibleAndNodeValid()) {
         return null;
@@ -619,7 +618,7 @@ LayoutView.prototype = {
    * @param {Array} rules An array of applied rules retrieved by
    * styleActor.getApplied.
    */
-  updateSourceRuleTooltip: function(el, property, rules) {
+  updateSourceRuleTooltip: function (el, property, rules) {
     // Dummy element used to parse the cssText of applied rules.
     let dummyEl = this.doc.createElement("div");
 
@@ -649,7 +648,7 @@ LayoutView.prototype = {
    * Show the box-model highlighter on the currently selected element
    * @param {Object} options Options passed to the highlighter actor
    */
-  showBoxModel: function(options = {}) {
+  showBoxModel: function (options = {}) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
 
@@ -659,7 +658,7 @@ LayoutView.prototype = {
   /**
    * Hide the box-model highlighter on the currently selected element
    */
-  hideBoxModel: function() {
+  hideBoxModel: function () {
     let toolbox = this.inspector.toolbox;
 
     toolbox.highlighterUtils.unhighlight();
@@ -671,7 +670,7 @@ LayoutView.prototype = {
    *   Indicates if the Geometry Editor should be shown only if it's active but
    *   hidden.
    */
-  showGeometryEditor: function(showOnlyIfActive = false) {
+  showGeometryEditor: function (showOnlyIfActive = false) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
     let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
@@ -709,7 +708,7 @@ LayoutView.prototype = {
    * @param {Boolean} [updateButton=true]
    *   Indicates if the Geometry Editor's button needs to be unchecked too
    */
-  hideGeometryEditor: function(updateButton = true) {
+  hideGeometryEditor: function (updateButton = true) {
     if (this._geometryEditorHighlighter) {
       this._geometryEditorHighlighter.hide().catch(console.error);
     }
@@ -736,7 +735,7 @@ LayoutView.prototype = {
     nodeGeometry.style.visibility = isEditable ? "visible" : "hidden";
   }),
 
-  manageOverflowingText: function(span) {
+  manageOverflowingText: function (span) {
     let classList = span.parentNode.classList;
 
     if (classList.contains("layout-left") ||

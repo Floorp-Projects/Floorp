@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
   const { JsonPanel } = createFactories(require("./json-panel"));
@@ -34,7 +34,7 @@ define(function(require, exports, module) {
 
     displayName: "MainTabbedArea",
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         json: {},
         headers: {},
@@ -43,11 +43,11 @@ define(function(require, exports, module) {
       };
     },
 
-    onTabChanged: function(index) {
+    onTabChanged: function (index) {
       this.setState({tabActive: index});
     },
 
-    render: function() {
+    render: function () {
       return (
         Tabs({
           tabActive: this.state.tabActive,
