@@ -317,7 +317,7 @@ PodSet(T* aDst, T aSrc, size_t aNElem)
 /*
  * Patterns used by SpiderMonkey to overwrite unused memory. If you are
  * accessing an object with one of these pattern, you probably have a dangling
- * pointer.
+ * pointer. These values should be odd, see the comment in IsThingPoisoned.
  *
  * Note: new patterns should also be added to the array in IsThingPoisoned!
  */
@@ -328,7 +328,19 @@ PodSet(T* aDst, T aSrc, size_t aNElem)
 #define JS_MOVED_TENURED_PATTERN 0x49
 #define JS_SWEPT_TENURED_PATTERN 0x4B
 #define JS_ALLOCATED_TENURED_PATTERN 0x4D
-#define JS_SWEPT_CODE_PATTERN 0x3B
+
+/*
+ * Ensure JS_SWEPT_CODE_PATTERN is a byte pattern that will crash immediately
+ * when executed, so either an undefined instruction or an instruction that's
+ * illegal in user mode.
+ */
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_NONE)
+# define JS_SWEPT_CODE_PATTERN 0xED // IN instruction, crashes in user mode.
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+# define JS_SWEPT_CODE_PATTERN 0xA3 // undefined instruction
+#else
+# error "JS_SWEPT_CODE_PATTERN not defined for this platform"
+#endif
 
 static inline void*
 Poison(void* ptr, uint8_t value, size_t num)
