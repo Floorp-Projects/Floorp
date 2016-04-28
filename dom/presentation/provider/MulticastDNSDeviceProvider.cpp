@@ -1052,6 +1052,12 @@ MulticastDNSDeviceProvider::Device::EstablishControlChannel(const nsAString& aUr
   return mProvider->RequestSession(this, aUrl, aPresentationId, aRetVal);
 }
 
+NS_IMETHODIMP
+MulticastDNSDeviceProvider::Device::Disconnect()
+{
+  return NS_OK;
+}
+
 } // namespace presentation
 } // namespace dom
 } // namespace mozilla
