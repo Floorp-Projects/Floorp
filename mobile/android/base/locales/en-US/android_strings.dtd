@@ -538,7 +538,7 @@ size. -->
 <!ENTITY home_history_title "History">
 <!ENTITY home_synced_devices_smartfolder "Synced devices">
 <!ENTITY home_synced_devices_number "&formatD; devices">
-<!ENTITY home_history_back_to "Go back to all history">
+<!ENTITY home_history_back_to2 "Back to full History">
 <!ENTITY home_clear_history_button "Clear browsing history">
 <!ENTITY home_clear_history_confirm "Are you sure you want to clear your history?">
 <!ENTITY home_bookmarks_empty "Bookmarks you save show up here.">
