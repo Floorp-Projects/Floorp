@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EnumSet.h"
+#include "mozilla/Vector.h"
 
 using namespace mozilla;
 
@@ -59,6 +60,7 @@ public:
     testInsersection();
     testEquality();
     testDuplicates();
+    testIteration();
   }
 
 private:
@@ -231,6 +233,31 @@ private:
     likes += STORM_PETREL;
     MOZ_RELEASE_ASSERT(likes.size() == 4);
     MOZ_RELEASE_ASSERT(likes == mPetrels);
+  }
+
+  void testIteration()
+  {
+    EnumSet<SeaBird> birds;
+    Vector<SeaBird> vec;
+
+    for (auto bird : birds) {
+      MOZ_RELEASE_ASSERT(vec.append(bird));
+    }
+    MOZ_RELEASE_ASSERT(vec.length() == 0);
+
+    birds += DIVING_PETREL;
+    birds += GADFLY_PETREL;
+    birds += STORM_PETREL;
+    birds += TRUE_PETREL;
+    for (auto bird : birds) {
+      MOZ_RELEASE_ASSERT(vec.append(bird));
+    }
+
+    MOZ_RELEASE_ASSERT(vec.length() == 4);
+    MOZ_RELEASE_ASSERT(vec[0] == GADFLY_PETREL);
+    MOZ_RELEASE_ASSERT(vec[1] == TRUE_PETREL);
+    MOZ_RELEASE_ASSERT(vec[2] == DIVING_PETREL);
+    MOZ_RELEASE_ASSERT(vec[3] == STORM_PETREL);
   }
 
   EnumSet<SeaBird> mAlcidae;
