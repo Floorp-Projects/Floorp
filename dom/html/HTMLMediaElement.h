@@ -719,10 +719,9 @@ public:
   IMPL_EVENT_HANDLER(mozinterruptbegin)
   IMPL_EVENT_HANDLER(mozinterruptend)
 
-  // These are used for testing only
+  // This is for testing only
   float ComputedVolume() const;
   bool ComputedMuted() const;
-  nsSuspendedTypes ComputedSuspended() const;
 
 protected:
   virtual ~HTMLMediaElement();

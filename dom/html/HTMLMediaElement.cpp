@@ -5586,12 +5586,6 @@ HTMLMediaElement::ComputedMuted() const
   return (mMuted & MUTED_BY_AUDIO_CHANNEL);
 }
 
-nsSuspendedTypes
-HTMLMediaElement::ComputedSuspended() const
-{
-  return mAudioChannelSuspended;
-}
-
 bool
 HTMLMediaElement::IsCurrentlyPlaying() const
 {
