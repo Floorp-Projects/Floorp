@@ -42,7 +42,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String OS_ATTR = "os";
     private static final String OS_VERSION = "osversion";
     private static final String PROFILE_CREATION_DATE = "profileDate";
-    private static final String SEQ = "seq";
+    public static final String SEQ = "seq";
     private static final String VERSION_ATTR = "v";
 
     public TelemetryCorePingBuilder(final Context context, final String serverURLSchemeHostPort) {
