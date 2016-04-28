@@ -274,6 +274,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'favicons/decoders/ICODecoder.java',
     'favicons/decoders/IconDirectoryEntry.java',
     'favicons/decoders/LoadFaviconResult.java',
+    'favicons/FaviconGenerator.java',
     'favicons/Favicons.java',
     'favicons/LoadFaviconTask.java',
     'favicons/OnFaviconLoadedListener.java',

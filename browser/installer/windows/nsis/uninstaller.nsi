@@ -450,6 +450,13 @@ Section "Uninstall"
   ; clients registry key by the OS under some conditions.
   System::Call "shell32::SHChangeNotify(i ${SHCNE_ASSOCCHANGED}, i 0, i 0, i 0)"
 
+  ; Users who uninstall then reinstall expecting Firefox to use a clean profile
+  ; may be surprised during first-run. This key is checked during startup of Firefox and
+  ; subsequently deleted after checking. If the value is found during startup
+  ; the browser will offer to Reset Firefox. We use the UpdateChannel to match
+  ; uninstalls of Firefox-release with reinstalls of Firefox-release, for example.
+  WriteRegStr HKCU "Software\Mozilla\Firefox" "Uninstalled-${UpdateChannel}" "True"
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   ; Get the path the allowed cert is at and remove it
   ; Keep this block of code last since it modfies the reg view

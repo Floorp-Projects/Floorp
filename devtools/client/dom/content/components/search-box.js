@@ -27,14 +27,14 @@ var SearchBox = React.createClass({
 
   displayName: "SearchBox",
 
-  componentWillUnmount: function() {
+  componentWillUnmount: function () {
     // Clean up an existing timeout.
     if (this.searchTimeout) {
       window.clearTimeout(this.searchTimeout);
     }
   },
 
-  onSearch: function(event) {
+  onSearch: function (event) {
     let searchBox = event.target;
 
     // Clean up an existing timeout before creating a new one.
@@ -50,7 +50,7 @@ var SearchBox = React.createClass({
     }, searchDelay);
   },
 
-  render: function() {
+  render: function () {
     return (
       input({
         className: "searchBox",

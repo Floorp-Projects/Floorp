@@ -6,7 +6,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
   const { input } = dom;
@@ -25,7 +25,7 @@ define(function(require, exports, module) {
 
     displayName: "SearchBox",
 
-    onSearch: function(event) {
+    onSearch: function (event) {
       let searchBox = event.target;
       let win = searchBox.ownerDocument.defaultView;
 
@@ -37,11 +37,11 @@ define(function(require, exports, module) {
       this.searchTimeout = win.setTimeout(callback, searchDelay);
     },
 
-    doSearch: function(searchBox) {
+    doSearch: function (searchBox) {
       this.props.actions.onSearch(searchBox.value);
     },
 
-    render: function() {
+    render: function () {
       return (
         input({className: "searchBox",
           placeholder: Locale.$STR("jsonViewer.filterJSON"),

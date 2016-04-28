@@ -133,13 +133,13 @@ public class CrashReporter extends AppCompatActivity
         mExtrasStringMap = new HashMap<String, String>();
         readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
 
-        // Set the flag that indicates we were stopped as expected, as
-        // we will send a crash report, so it is not a silent OOM crash.
-        SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(GeckoApp.PREFS_WAS_STOPPED, true);
-        editor.putBoolean(GeckoApp.PREFS_CRASHED, true);
-        editor.apply();
+        // Notify GeckoApp that we've crashed, so it can react appropriately during the next start.
+        try {
+            File crashFlag = new File(GeckoProfileDirectories.getMozillaDirectory(this), "CRASHED");
+            crashFlag.createNewFile();
+        } catch (GeckoProfileDirectories.NoMozillaDirectoryException | IOException e) {
+            Log.e(LOGTAG, "Cannot set crash flag: ", e);
+        }
 
         final CheckBox allowContactCheckBox = (CheckBox) findViewById(R.id.allow_contact);
         final CheckBox includeUrlCheckBox = (CheckBox) findViewById(R.id.include_url);
@@ -148,6 +148,7 @@ public class CrashReporter extends AppCompatActivity
         final EditText emailEditText = (EditText) findViewById(R.id.email);
 
         // Load CrashReporter preferences to avoid redundant user input.
+        SharedPreferences prefs = GeckoSharedPrefs.forCrashReporter(this);
         final boolean sendReport   = prefs.getBoolean(PREFS_SEND_REPORT, true);
         final boolean includeUrl   = prefs.getBoolean(PREFS_INCLUDE_URL, false);
         final boolean allowContact = prefs.getBoolean(PREFS_ALLOW_CONTACT, false);
@@ -233,7 +234,7 @@ public class CrashReporter extends AppCompatActivity
     }
 
     private void savePrefs() {
-        SharedPreferences.Editor editor = GeckoSharedPrefs.forApp(this).edit();
+        SharedPreferences.Editor editor = GeckoSharedPrefs.forCrashReporter(this).edit();
 
         final boolean allowContact = ((CheckBox) findViewById(R.id.allow_contact)).isChecked();
         final boolean includeUrl   = ((CheckBox) findViewById(R.id.include_url)).isChecked();

@@ -610,7 +610,7 @@ CssLogic.prototype = {
             CssLogic.getBindingElementAndPseudo(element);
         domRules = domUtils.getCSSStyleRules(bindingElement, pseudo);
       } catch (ex) {
-        Services.console.logStringMessage("CL__buildMatchedRules error: " + ex);
+        console.log("CL__buildMatchedRules error: " + ex);
         continue;
       }
 
@@ -1676,9 +1676,8 @@ CssPropertyInfo.prototype = {
         this._value =
           this._cssLogic.computedStyle.getPropertyValue(this.property);
       } catch (ex) {
-        Services.console.logStringMessage("Error reading computed style for " +
-                                          this.property);
-        Services.console.logStringMessage(ex);
+        console.log("Error reading computed style for " + this.property);
+        console.log(ex);
       }
     }
     return this._value;

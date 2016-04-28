@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "l10n", function() {
       }
       return bundle.formatStringFromName(name, aArgs, aArgs.length);
     } catch (ex) {
-      Services.console.logStringMessage("Error reading '" + name + "'");
+      console.log("Error reading '" + name + "'");
     }
   };
   return l10n;

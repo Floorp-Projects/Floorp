@@ -17,7 +17,7 @@
 <!ENTITY aboutPrivateBrowsing.info.temporaryFiles        "temporary files">
 <!ENTITY aboutPrivateBrowsing.info.saved.before          "Firefox ">
 <!ENTITY aboutPrivateBrowsing.info.saved.emphasize       "will save">
-<!ENTITY aboutPrivateBrowsing.info.saved.after           "your:">
+<!ENTITY aboutPrivateBrowsing.info.saved.after2          " your:">
 <!ENTITY aboutPrivateBrowsing.info.downloads             "downloads">
 <!ENTITY aboutPrivateBrowsing.info.bookmarks             "bookmarks">
 <!ENTITY aboutPrivateBrowsing.note.before                "Private Browsing ">

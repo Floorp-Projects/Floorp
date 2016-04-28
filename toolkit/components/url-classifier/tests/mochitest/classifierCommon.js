@@ -19,7 +19,7 @@ function doUpdate(update) {
       sendAsyncMessage("updateError", { errorCode });
     },
     updateSuccess: function(requestedTimeout) {
-      sendAsyncMessage("loadTestFrame");
+      sendAsyncMessage("updateSuccess");
     }
   };
 

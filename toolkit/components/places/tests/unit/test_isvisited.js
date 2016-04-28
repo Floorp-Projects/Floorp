@@ -50,6 +50,7 @@ add_task(function* test_execute()
     "data:,Hello%2C%20World!",
     "wyciwyg:/0/http://mozilla.org",
     "javascript:alert('hello wolrd!');",
+    "http://localhost/" + "a".repeat(1984),
   ];
   for (let currentURL of URLS) {
     try {

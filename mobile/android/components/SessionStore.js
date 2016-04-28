@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/
 XPCOMUtils.defineLazyModuleGetter(this, "FormData", "resource://gre/modules/FormData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log", "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
+XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences", "resource://gre/modules/SharedPreferences.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -41,6 +42,9 @@ const STATE_RUNNING = 1;
 const PRIVACY_NONE = 0;
 const PRIVACY_ENCRYPTED = 1;
 const PRIVACY_FULL = 2;
+
+const PREFS_RESTORE_FROM_CRASH = "browser.sessionstore.resume_from_crash";
+const PREFS_MAX_CRASH_RESUMES = "browser.sessionstore.max_resumed_crashes";
 
 function SessionStore() { }
 
@@ -78,6 +82,17 @@ SessionStore.prototype = {
 
     this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
     this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
+
+    // Copy changes in Gecko settings to their Java counterparts,
+    // so the startup code can access them
+    Services.prefs.addObserver(PREFS_RESTORE_FROM_CRASH, function() {
+      SharedPreferences.forApp().setBoolPref(PREFS_RESTORE_FROM_CRASH,
+        Services.prefs.getBoolPref(PREFS_RESTORE_FROM_CRASH));
+    }, false);
+    Services.prefs.addObserver(PREFS_MAX_CRASH_RESUMES, function() {
+      SharedPreferences.forApp().setIntPref(PREFS_MAX_CRASH_RESUMES,
+        Services.prefs.getIntPref(PREFS_MAX_CRASH_RESUMES));
+    }, false);
   },
 
   _clearDisk: function ss_clearDisk() {
@@ -193,10 +208,12 @@ SessionStore.prototype = {
         break;
       case "ClosedTabs:StartNotifications":
         this._notifyClosedTabs = true;
+        log("ClosedTabs:StartNotifications");
         this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
         break;
       case "ClosedTabs:StopNotifications":
         this._notifyClosedTabs = false;
+        log("ClosedTabs:StopNotifications");
         break;
       case "last-pb-context-exited":
         // Clear private closed tab data when we leave private browsing.
@@ -1226,6 +1243,7 @@ SessionStore.prototype = {
     // Restore the closed tabs array on the current window.
     if (state.windows[0].closedTabs) {
       this._windows[window.__SSID].closedTabs = state.windows[0].closedTabs;
+      log("_restoreWindow() loaded " + state.windows[0].closedTabs.length + " closed tabs");
     }
   },
 
@@ -1329,6 +1347,7 @@ SessionStore.prototype = {
         };
       });
 
+    log("sending " + tabs.length + " closed tabs to Java");
     Messaging.sendRequest({
       type: "ClosedTabs:Data",
       tabs: tabs

@@ -1337,6 +1337,9 @@ widgets.css is overwritten. */
   font-weight: bold !important;
   background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05));
   background-color: #C8D2DC !important;
+
+  /* Vertically center header label */
+  padding-top: 2px !important;
 }
 
 .theme-firebug .devtools-toolbar.table-widget-column-header[sorted] {
@@ -1354,24 +1357,6 @@ widgets.css is overwritten. */
 
 .theme-firebug .devtools-toolbar.table-widget-column-header[sorted=ascending]:not(:active) {
   background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
-}
-
-.theme-firebug .table-widget-body .devtools-side-splitter {
-  background: linear-gradient(#CBD4DE,#656A6E,#CBD4DE 18px, transparent 18px),
-              linear-gradient(rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05) 10px, transparent 18px),
-              linear-gradient(transparent, rgba(0, 0, 0, 0.5) 10px, transparent 18px)
-              repeat-x transparent !important;
-  min-width: 1px;
-  width: 1px;
-  position: absolute;
-}
-
-.theme-firebug .table-widget-column .table-widget-cell:not(.even) {
-  background: #EFEFEF;
-}
-
-.theme-firebug .table-widget-column .table-widget-cell.even {
-  background: #FFFFFF;
 }
 
 /* Cells */
