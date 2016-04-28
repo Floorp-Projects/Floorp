@@ -144,13 +144,6 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
 }
 
 static bool
-CheckExprType(JSContext* cx, Decoder& d, ExprType type)
-{
-    return type == ExprType::Void ||
-           CheckValType(cx, d, NonVoidToValType(type));
-}
-
-static bool
 DecodeCallArgs(FunctionDecoder& f, const Sig& sig)
 {
     Nothing arg;
@@ -516,8 +509,6 @@ DecodeExpr(FunctionDecoder& f)
 /*****************************************************************************/
 // wasm decoding and generation
 
-typedef HashSet<const DeclaredSig*, SigHashPolicy> SigSet;
-
 static bool
 DecodeTypeSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
@@ -539,24 +530,17 @@ DecodeTypeSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
     if (!init->sigToTable.resize(numSigs))
         return false;
 
-    SigSet dupSet(cx);
-    if (!dupSet.init())
-        return false;
-
     for (uint32_t sigIndex = 0; sigIndex < numSigs; sigIndex++) {
+        uint32_t form;
+        if (!d.readVarU32(&form) || form != uint32_t(TypeConstructor::Function))
+            return Fail(cx, d, "expected function form");
+
         uint32_t numArgs;
         if (!d.readVarU32(&numArgs))
-            return Fail(cx, d, "bad number of signature args");
+            return Fail(cx, d, "bad number of function args");
 
         if (numArgs > MaxArgsPerFunc)
             return Fail(cx, d, "too many arguments in signature");
-
-        ExprType result;
-        if (!d.readExprType(&result))
-            return Fail(cx, d, "bad expression type");
-
-        if (!CheckExprType(cx, d, result))
-            return false;
 
         ValTypeVector args;
         if (!args.resize(numArgs))
@@ -570,14 +554,27 @@ DecodeTypeSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
                 return false;
         }
 
+        uint32_t numRets;
+        if (!d.readVarU32(&numRets))
+            return Fail(cx, d, "bad number of function returns");
+
+        if (numRets > 1)
+            return Fail(cx, d, "too many returns in signature");
+
+        ExprType result = ExprType::Void;
+
+        if (numRets == 1) {
+            ValType type;
+            if (!d.readValType(&type))
+                return Fail(cx, d, "bad expression type");
+
+            if (!CheckValType(cx, d, type))
+                return false;
+
+            result = ToExprType(type);
+        }
+
         init->sigs[sigIndex] = Sig(Move(args), result);
-
-        SigSet::AddPtr p = dupSet.lookupForAdd(init->sigs[sigIndex]);
-        if (p)
-            return Fail(cx, d, "duplicate signature");
-
-        if (!dupSet.add(p, &init->sigs[sigIndex]))
-            return false;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
