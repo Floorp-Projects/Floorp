@@ -639,8 +639,20 @@
               if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 if (aWebProgress.isTopLevel) {
-                  this.mBrowser.urlbarChangeTracker.startedLoad();
-
+                  // Need to use originalLocation rather than location because things
+                  // like about:home and about:privatebrowsing arrive with nsIRequest
+                  // pointing to their resolved jar: or file: URIs.
+                  if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
+                        originalLocation != "about:blank" &&
+                        this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
+                    // This will trigger clearing the location bar. Don't do it if
+                    // we loaded off a blank browser and this is an initial page load
+                    // (e.g. about:privatebrowsing, about:newtab, etc.) so we avoid
+                    // clearing the location bar in case the user is typing in it.
+                    // loading about:blank shouldn't trigger this, either, because its
+                    // loads are "special".
+                    this.mBrowser.urlbarChangeTracker.startedLoad();
+                  }
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
                 }
@@ -1566,6 +1578,9 @@
             // We'll be creating a new listener, so destroy the old one.
             listener.destroy();
 
+            let oldUserTypedValue = aBrowser.userTypedValue;
+            let hadStartedLoad = aBrowser.didStartLoadSinceLastUserTyping();
+
             // Make sure the browser is destroyed so it unregisters from observer notifications
             aBrowser.destroy();
 
@@ -1577,6 +1592,11 @@
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
             parent.appendChild(aBrowser);
+
+            aBrowser.userTypedValue = oldUserTypedValue;
+            if (hadStartedLoad) {
+              aBrowser.urlbarChangeTracker.startedLoad();
+            }
 
             aBrowser.droppedLinkHandler = droppedLinkHandler;
 
