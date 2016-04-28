@@ -1849,13 +1849,6 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
-nsNPAPIPluginInstance::WindowSuspendChanged(nsSuspendedTypes aSuspend)
-{
-  // TODO : implementation.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNPAPIPluginInstance::WindowAudioCaptureChanged(bool aCapture)
 {
   return NS_OK;
