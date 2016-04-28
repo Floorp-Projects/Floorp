@@ -143,11 +143,10 @@ function testCompositor(win, ctx) {
 }
 
 var listener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
   win: null,
   utils: null,
   canvas: null,
+  ctx: null,
   mm: null,
 
   messages: [
@@ -219,6 +218,7 @@ var listener = {
     this.win = null;
     this.utils = null;
     this.canvas = null;
+    this.ctx = null;
 
     if (this.mm) {
       // We don't have a MessageManager if onWindowLoaded never fired.
@@ -290,6 +290,12 @@ SanityTest.prototype = {
 
   observe: function(subject, topic, data) {
     if (topic != "profile-after-change") return;
+
+    // profile-after-change fires only at startup, so we won't need
+    // to use the listener again.
+    let tester = listener;
+    listener = null;
+
     if (!this.shouldRunTest()) return;
 
     annotateCrashReport(true);
@@ -304,7 +310,7 @@ SanityTest.prototype = {
     // There's no clean way to have an invisible window and ensure it's always painted.
     // Instead, move the window far offscreen so it doesn't show up during launch.
     sanityTest.moveTo(100000000,1000000000);
-    listener.scheduleTest(sanityTest);
+    tester.scheduleTest(sanityTest);
   },
 };
 
