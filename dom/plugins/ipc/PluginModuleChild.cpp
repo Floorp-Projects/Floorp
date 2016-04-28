@@ -104,13 +104,6 @@ static GetWindowInfoPtr sGetWindowInfoPtrStub = nullptr;
 static HWND sBrowserHwnd = nullptr;
 #endif
 
-template<>
-struct RunnableMethodTraits<PluginModuleChild>
-{
-    static void RetainCallee(PluginModuleChild* obj) { }
-    static void ReleaseCallee(PluginModuleChild* obj) { }
-};
-
 /* static */
 PluginModuleChild*
 PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,

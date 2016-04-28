@@ -230,22 +230,6 @@ public:
 
 } // namespace
 
-template<>
-struct RunnableMethodTraits<HangMonitorChild>
-{
-  typedef HangMonitorChild Class;
-  static void RetainCallee(Class* obj) { }
-  static void ReleaseCallee(Class* obj) { }
-};
-
-template<>
-struct RunnableMethodTraits<HangMonitorParent>
-{
-  typedef HangMonitorParent Class;
-  static void RetainCallee(Class* obj) { }
-  static void ReleaseCallee(Class* obj) { }
-};
-
 /* HangMonitorChild implementation */
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
@@ -303,8 +287,8 @@ HangMonitorChild::ActorDestroy(ActorDestroyReason aWhy)
 
   // We use a task here to ensure that IPDL is finished with this
   // HangMonitorChild before it gets deleted on the main thread.
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorChild::ShutdownOnThread));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &HangMonitorChild::ShutdownOnThread);
+  MonitorLoop()->PostTask(runnable.forget());
 }
 
 bool
@@ -390,9 +374,14 @@ HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
   }
   nsAutoCString filename(aFileName);
 
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorChild::NotifySlowScriptAsync,
-                      id, filename, aLineNo));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<TabId,
+                                          nsCString,
+                                          unsigned>(this,
+                                                    &HangMonitorChild::NotifySlowScriptAsync,
+                                                    id, filename, aLineNo);
+  MonitorLoop()->PostTask(runnable.forget());
+
   return SlowScriptAction::Continue;
 }
 
@@ -420,10 +409,11 @@ HangMonitorChild::NotifyPluginHang(uint32_t aPluginId)
   mSentReport = true;
 
   // bounce to background thread
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this,
-                      &HangMonitorChild::NotifyPluginHangAsync,
-                      aPluginId));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<uint32_t>(this,
+                                                    &HangMonitorChild::NotifyPluginHangAsync,
+                                                    aPluginId);
+  MonitorLoop()->PostTask(runnable.forget());
 }
 
 void
@@ -445,8 +435,8 @@ HangMonitorChild::ClearHang()
 
   if (mSentReport) {
     // bounce to background thread
-    MonitorLoop()->PostTask(
-      NewRunnableMethod(this, &HangMonitorChild::ClearHangAsync));
+    RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &HangMonitorChild::ClearHangAsync);
+    MonitorLoop()->PostTask(runnable.forget());
 
     MonitorAutoLock lock(mMonitor);
     mSentReport = false;
@@ -511,8 +501,8 @@ HangMonitorParent::Shutdown()
     mProcess = nullptr;
   }
 
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorParent::ShutdownOnThread));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &HangMonitorParent::ShutdownOnThread);
+  MonitorLoop()->PostTask(runnable.forget());
 
   while (!mShutdownDone) {
     mMonitor.Wait();
@@ -832,8 +822,8 @@ HangMonitoredProcess::TerminateScript()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::TerminateScript));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(mActor, &HangMonitorParent::TerminateScript);
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(runnable.forget());
   return NS_OK;
 }
 
@@ -849,8 +839,8 @@ HangMonitoredProcess::BeginStartingDebugger()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::BeginStartingDebugger));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(mActor, &HangMonitorParent::BeginStartingDebugger);
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(runnable.forget());
   return NS_OK;
 }
 
@@ -866,8 +856,8 @@ HangMonitoredProcess::EndStartingDebugger()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::EndStartingDebugger));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(mActor, &HangMonitorParent::EndStartingDebugger);
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(runnable.forget());
   return NS_OK;
 }
 
@@ -1045,9 +1035,14 @@ mozilla::CreateHangMonitorParent(ContentParent* aContentParent,
   HangMonitoredProcess* process = new HangMonitoredProcess(parent, aContentParent);
   parent->SetProcess(process);
 
-  monitor->MonitorLoop()->PostTask(
-    NewRunnableMethod(parent, &HangMonitorParent::Open,
-                      aTransport, aOtherPid, XRE_GetIOMessageLoop()));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<mozilla::ipc::Transport*,
+                                          base::ProcessId,
+                                          MessageLoop*>(parent,
+                                                        &HangMonitorParent::Open,
+                                                        aTransport, aOtherPid,
+                                                        XRE_GetIOMessageLoop());
+  monitor->MonitorLoop()->PostTask(runnable.forget());
 
   return parent;
 }
@@ -1061,9 +1056,14 @@ mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
   HangMonitorChild* child = new HangMonitorChild(monitor);
 
-  monitor->MonitorLoop()->PostTask(
-    NewRunnableMethod(child, &HangMonitorChild::Open,
-                      aTransport, aOtherPid, XRE_GetIOMessageLoop()));
+  RefPtr<Runnable> runnable =
+    NS_NewNonOwningRunnableMethodWithArgs<mozilla::ipc::Transport*,
+                                          base::ProcessId,
+                                          MessageLoop*>(child,
+                                                        &HangMonitorChild::Open,
+                                                        aTransport, aOtherPid,
+                                                        XRE_GetIOMessageLoop());
+  monitor->MonitorLoop()->PostTask(runnable.forget());
 
   return child;
 }
