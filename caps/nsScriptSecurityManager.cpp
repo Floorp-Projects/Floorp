@@ -348,14 +348,12 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
             if (loadInfo->LoadingPrincipal()) {
               prin =
                 nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
-              NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
             } else {
               NeckoOriginAttributes nAttrs;
               loadInfo->GetOriginAttributes(&nAttrs);
               PrincipalOriginAttributes pAttrs;
               pAttrs.InheritFromNecko(nAttrs);
               prin = nsNullPrincipal::Create(pAttrs);
-              NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
             }
             prin.forget(aPrincipal);
             return NS_OK;
@@ -1174,7 +1172,6 @@ nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttrib
       return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<nsIPrincipal> prin = nsNullPrincipal::Create(attrs);
-  NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
   prin.forget(aPrincipal);
   return NS_OK;
 }

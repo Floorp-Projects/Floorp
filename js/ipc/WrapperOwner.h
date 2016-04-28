@@ -58,6 +58,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool isArray(JSContext* cx, JS::HandleObject proxy, JS::IsArrayAnswer* answer);
     const char* className(JSContext* cx, JS::HandleObject proxy);
     bool getPrototype(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleObject protop);
+    bool getPrototypeIfOrdinary(JSContext* cx, JS::HandleObject proxy, bool* isOrdinary,
+                                JS::MutableHandleObject protop);
 
     bool regexp_toShared(JSContext* cx, JS::HandleObject proxy, js::RegExpGuard* g);
 
@@ -147,6 +149,8 @@ class WrapperOwner : public virtual JavaScriptShared
                              uint32_t* answer) = 0;
     virtual bool SendClassName(const ObjectId& objId, nsCString* result) = 0;
     virtual bool SendGetPrototype(const ObjectId& objId, ReturnStatus* rs, ObjectOrNullVariant* result) = 0;
+    virtual bool SendGetPrototypeIfOrdinary(const ObjectId& objId, ReturnStatus* rs, bool* isOrdinary,
+                                            ObjectOrNullVariant* result) = 0;
     virtual bool SendRegExpToShared(const ObjectId& objId, ReturnStatus* rs, nsString* source,
                                     uint32_t* flags) = 0;
 

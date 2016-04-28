@@ -85,7 +85,7 @@ void
 GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback)
 {
   mDeletedCallback = aCallback;
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, NewRunnableMethod(this, &GMPProcessParent::DoDelete));
+  XRE_GetIOMessageLoop()->PostTask(NewRunnableMethod(this, &GMPProcessParent::DoDelete));
 }
 
 void

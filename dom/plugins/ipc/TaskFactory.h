@@ -36,9 +36,10 @@ private:
     {
     }
 
-    virtual void Run() {
+    NS_IMETHOD Run() override {
       if (!revocable_.revoked())
         TaskType::Run();
+      return NS_OK;
     }
 
   private:
@@ -49,34 +50,35 @@ public:
   explicit TaskFactory(T* object) : object_(object) { }
 
   template <typename TaskParamType, typename... Args>
-  inline TaskParamType* NewTask(Args&&... args)
+  inline already_AddRefed<TaskParamType> NewTask(Args&&... args)
   {
     typedef TaskWrapper<TaskParamType> TaskWrapper;
-    TaskWrapper* task = new TaskWrapper(this, mozilla::Forward<Args>(args)...);
-    return task;
+    RefPtr<TaskWrapper> task =
+      new TaskWrapper(this, mozilla::Forward<Args>(args)...);
+    return task.forget();
   }
 
   template <class Method>
-  inline Task* NewRunnableMethod(Method method) {
+  inline already_AddRefed<Runnable> NewRunnableMethod(Method method) {
     typedef TaskWrapper<RunnableMethod<Method, Tuple0> > TaskWrapper;
 
-    TaskWrapper* task = new TaskWrapper(this);
+    RefPtr<TaskWrapper> task = new TaskWrapper(this);
     task->Init(object_, method, base::MakeTuple());
-    return task;
+    return task.forget();
   }
 
   template <class Method, class A>
-  inline Task* NewRunnableMethod(Method method, const A& a) {
+  inline already_AddRefed<Runnable> NewRunnableMethod(Method method, const A& a) {
     typedef TaskWrapper<RunnableMethod<Method, Tuple1<A> > > TaskWrapper;
 
-    TaskWrapper* task = new TaskWrapper(this);
+    RefPtr<TaskWrapper> task = new TaskWrapper(this);
     task->Init(object_, method, base::MakeTuple(a));
-    return task;
+    return task.forget();
   }
 
 protected:
   template <class Method, class Params>
-  class RunnableMethod : public Task {
+  class RunnableMethod : public Runnable {
    public:
     RunnableMethod() { }
 
@@ -86,7 +88,10 @@ protected:
       params_ = params;
     }
 
-    virtual void Run() { DispatchToMethod(obj_, meth_, params_); }
+    NS_IMETHOD Run() override {
+      DispatchToMethod(obj_, meth_, params_);
+      return NS_OK;
+    }
 
    private:
     T* obj_;

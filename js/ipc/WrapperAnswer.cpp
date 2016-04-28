@@ -586,6 +586,34 @@ WrapperAnswer::RecvGetPrototype(const ObjectId& objId, ReturnStatus* rs, ObjectO
 }
 
 bool
+WrapperAnswer::RecvGetPrototypeIfOrdinary(const ObjectId& objId, ReturnStatus* rs, bool* isOrdinary,
+                                          ObjectOrNullVariant* result)
+{
+    *result = NullVariant();
+    *isOrdinary = false;
+
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext* cx = jsapi.cx();
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj)
+        return fail(jsapi, rs);
+
+    JS::RootedObject proto(cx);
+    if (!JS_GetPrototypeIfOrdinary(cx, obj, isOrdinary, &proto))
+        return fail(jsapi, rs);
+
+    if (!toObjectOrNullVariant(cx, proto, result))
+        return fail(jsapi, rs);
+
+    LOG("getPrototypeIfOrdinary(%s)", ReceiverObj(objId));
+
+    return ok(rs);
+}
+
+bool
 WrapperAnswer::RecvRegExpToShared(const ObjectId& objId, ReturnStatus* rs,
                                   nsString* source, uint32_t* flags)
 {

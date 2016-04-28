@@ -4,6 +4,7 @@ var Cr = Components.results;
 var Cc = Components.classes;
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LoadContextInfo.jsm");
 
@@ -460,14 +461,13 @@ function test_prefetch_prime() {
     }
 
     // This runs in the parent or only process
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    var channel = ios.newChannel2(prefetch_sruri.asciiSpec, null, null, null,
-        Services.scriptSecurityManager.getSystemPrincipal(), null,
-        Ci.nsILoadInfo.SEC_NORMAL,
-        Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
+    var channel = NetUtil.newChannel({
+      uri: prefetch_sruri.asciiSpec,
+      loadUsingSystemPrincipal: true
+    }).QueryInterface(Ci.nsIHttpChannel);
     channel.requestMethod = "GET";
     channel.referrer = prefetch_tluri;
-    channel.asyncOpen(prefetchListener, channel);
+    channel.asyncOpen2(prefetchListener);
   });
 }
 

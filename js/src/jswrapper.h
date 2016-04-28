@@ -124,6 +124,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                               ObjectOpResult& result) const override;
 
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                        MutableHandleObject protop) const override;
     virtual bool setImmutablePrototype(JSContext* cx, HandleObject proxy,
                                        bool* succeeded) const override;
     virtual bool preventExtensions(JSContext* cx, HandleObject wrapper,
@@ -179,6 +181,8 @@ class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrap
                               MutableHandleObject protop) const override;
     virtual bool setPrototype(JSContext* cx, HandleObject wrapper, HandleObject proto,
                               ObjectOpResult& result) const override;
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject wrapper, bool* isOrdinary,
+                                        MutableHandleObject protop) const override;
     virtual bool setImmutablePrototype(JSContext* cx, HandleObject wrapper,
                                        bool* succeeded) const override;
     virtual bool preventExtensions(JSContext* cx, HandleObject wrapper,

@@ -1033,7 +1033,6 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
             principal = sop->GetPrincipal();
         } else {
             RefPtr<nsNullPrincipal> nullPrin = nsNullPrincipal::Create();
-            NS_ENSURE_TRUE(nullPrin, NS_ERROR_FAILURE);
             principal = nullPrin;
         }
     }

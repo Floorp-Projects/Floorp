@@ -513,7 +513,7 @@ GetPairedDevicesFilter(const BluetoothValue& aValue)
   return false;
 }
 
-class DistributeBluetoothSignalTask : public nsRunnable
+class DistributeBluetoothSignalTask : public Runnable
 {
 public:
   DistributeBluetoothSignalTask(const BluetoothSignal& aSignal)
@@ -536,7 +536,7 @@ private:
   BluetoothSignal mSignal;
 };
 
-class ControlPropertyChangedHandler : public nsRunnable
+class ControlPropertyChangedHandler : public Runnable
 {
 public:
   ControlPropertyChangedHandler(const BluetoothSignal& aSignal)
@@ -568,7 +568,7 @@ private:
   BluetoothSignal mSignal;
 };
 
-class SinkPropertyChangedHandler : public nsRunnable
+class SinkPropertyChangedHandler : public Runnable
 {
 public:
   SinkPropertyChangedHandler(const BluetoothSignal& aSignal)
@@ -598,7 +598,7 @@ private:
   BluetoothSignal mSignal;
 };
 
-class InputPropertyChangedHandler : public nsRunnable
+class InputPropertyChangedHandler : public Runnable
 {
 public:
   InputPropertyChangedHandler(const BluetoothSignal& aSignal)
@@ -637,7 +637,7 @@ public:
   }
 };
 
-class TryFiringAdapterAddedRunnable : public nsRunnable
+class TryFiringAdapterAddedRunnable : public Runnable
 {
 public:
   TryFiringAdapterAddedRunnable(bool aDelay)
@@ -719,7 +719,7 @@ UnpackObjectPathMessage(DBusMessage* aMsg, DBusError* aErr,
   }
 }
 
-class PrepareProfileManagersRunnable : public nsRunnable
+class PrepareProfileManagersRunnable : public Runnable
 {
 public:
   nsresult Run()
@@ -808,7 +808,7 @@ GetVoidCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
                   UnpackVoidMessage);
 }
 
-class ReplyErrorToProfileManager : public nsRunnable
+class ReplyErrorToProfileManager : public Runnable
 {
 public:
   ReplyErrorToProfileManager(BluetoothServiceClass aServiceClass,
@@ -1726,7 +1726,7 @@ public:
   }
 };
 
-class PrepareAdapterRunnable : public nsRunnable
+class PrepareAdapterRunnable : public Runnable
 {
 public:
   PrepareAdapterRunnable()
@@ -1743,7 +1743,7 @@ public:
   }
 };
 
-class RequestPlayStatusTask : public nsRunnable
+class RequestPlayStatusTask : public Runnable
 {
 public:
   RequestPlayStatusTask()
@@ -2016,7 +2016,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   }
 
   BluetoothSignal signal(signalName, signalPath, v);
-  RefPtr<nsRunnable> task;
+  RefPtr<Runnable> task;
   if (signalInterface.EqualsLiteral(DBUS_SINK_IFACE)) {
     task = new SinkPropertyChangedHandler(signal);
   } else if (signalInterface.EqualsLiteral(DBUS_CTL_IFACE)) {
@@ -2086,7 +2086,7 @@ public:
 
     if (sDBusConnection) {
       BT_WARNING("DBus connection has already been established.");
-      RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
+      RefPtr<Runnable> runnable = new BluetoothService::ToggleBtAck(true);
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
@@ -2097,7 +2097,7 @@ public:
     if (!dbus_connection_add_filter(mConnection->GetConnection(),
                                     EventFilter, nullptr, nullptr)) {
       BT_WARNING("Cannot create DBus Event Filter for DBus Thread!");
-      RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      RefPtr<Runnable> runnable = new BluetoothService::ToggleBtAck(false);
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
@@ -2112,7 +2112,7 @@ public:
 
     sDBusConnection = mConnection.release();
 
-    RefPtr<nsRunnable> runnable =
+    RefPtr<Runnable> runnable =
       new BluetoothService::ToggleBtAck(true);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
@@ -2142,7 +2142,7 @@ private:
   UniquePtr<RawDBusConnection> mConnection;
 };
 
-class StartBluetoothRunnable final : public nsRunnable
+class StartBluetoothRunnable final : public Runnable
 {
 public:
   NS_IMETHOD Run()
@@ -2153,7 +2153,7 @@ public:
 #ifdef MOZ_WIDGET_GONK
     if (!sBluedroid.Enable()) {
       BT_WARNING("Bluetooth not available.");
-      RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      RefPtr<Runnable> runnable = new BluetoothService::ToggleBtAck(false);
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
@@ -2165,7 +2165,7 @@ public:
     nsresult rv = connection->EstablishDBusConnection();
     if (NS_FAILED(rv)) {
       BT_WARNING("Failed to establish connection to BlueZ daemon");
-      RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      RefPtr<Runnable> runnable = new BluetoothService::ToggleBtAck(false);
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
@@ -2202,7 +2202,7 @@ BluetoothDBusService::StartInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(!aRunnable);
 
-  RefPtr<nsRunnable> runnable = new StartBluetoothRunnable();
+  RefPtr<Runnable> runnable = new StartBluetoothRunnable();
   nsresult rv = DispatchToBtThread(runnable);
   if (NS_FAILED(rv)) {
     BT_WARNING("Failed to dispatch to BT thread!");
@@ -2210,7 +2210,7 @@ BluetoothDBusService::StartInternal(BluetoothReplyRunnable* aRunnable)
   return rv;
 }
 
-class DisableBluetoothRunnable final : public nsRunnable
+class DisableBluetoothRunnable final : public Runnable
 {
 public:
   NS_IMETHOD Run()
@@ -2230,7 +2230,7 @@ public:
     bool isEnabled = false;
 #endif
 
-    RefPtr<nsRunnable> runnable =
+    RefPtr<Runnable> runnable =
       new BluetoothService::ToggleBtAck(isEnabled);
     nsresult rv = NS_DispatchToMainThread(runnable);
     if (NS_FAILED(rv)) {
@@ -2252,7 +2252,7 @@ public:
 
     if (!sDBusConnection) {
       BT_WARNING("DBus connection has not been established.");
-      RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      RefPtr<Runnable> runnable = new BluetoothService::ToggleBtAck(false);
       if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
@@ -2295,14 +2295,14 @@ public:
     // We can only dispatch to the BT thread if we're on the main
     // thread. Thus we dispatch our runnable to the main thread
     // from where it will forward itself to the BT thread.
-    RefPtr<nsRunnable> runnable = new DisableBluetoothRunnable();
+    RefPtr<Runnable> runnable = new DisableBluetoothRunnable();
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to BT thread!");
     }
   }
 };
 
-class StopBluetoothRunnable final : public nsRunnable
+class StopBluetoothRunnable final : public Runnable
 {
 public:
   NS_IMETHOD Run()
@@ -2326,7 +2326,7 @@ BluetoothDBusService::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(!aRunnable);
 
-  RefPtr<nsRunnable> runnable = new StopBluetoothRunnable();
+  RefPtr<Runnable> runnable = new StopBluetoothRunnable();
   nsresult rv = DispatchToBtThread(runnable);
   if (NS_FAILED(rv)) {
     BT_WARNING("Failed to dispatch to BT thread!");
@@ -3514,7 +3514,7 @@ BluetoothDBusService::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 }
 #endif // MOZ_B2G_RIL
 
-class OnUpdateSdpRecordsRunnable : public nsRunnable
+class OnUpdateSdpRecordsRunnable : public Runnable
 {
 public:
   OnUpdateSdpRecordsRunnable(const BluetoothAddress& aDeviceAddress,
@@ -3541,7 +3541,7 @@ private:
   BluetoothProfileManagerBase* mManager;
 };
 
-class OnGetServiceChannelRunnable : public nsRunnable
+class OnGetServiceChannelRunnable : public Runnable
 {
 public:
   OnGetServiceChannelRunnable(const BluetoothAddress& aDeviceAddress,
@@ -3603,7 +3603,7 @@ public:
       channel = dbus_returns_int32(aReply);
     }
 
-    RefPtr<nsRunnable> r =
+    RefPtr<Runnable> r =
       new OnGetServiceChannelRunnable(mDeviceAddress, mServiceUUID, channel,
                                       mBluetoothProfileManager);
     nsresult rv = NS_DispatchToMainThread(r);
@@ -3696,10 +3696,10 @@ BluetoothDBusService::GetServiceChannel(const BluetoothAddress& aDeviceAddress,
   // Even though we are on the main thread already, we need to dispatch a
   // runnable here. OnGetServiceChannel needs mRunnable to be set, which
   // happens after GetServiceChannel returns.
-  RefPtr<nsRunnable> r = new OnGetServiceChannelRunnable(aDeviceAddress,
-                                                           aServiceUUID,
-                                                           1,
-                                                           aManager);
+  RefPtr<Runnable> r = new OnGetServiceChannelRunnable(aDeviceAddress,
+                                                         aServiceUUID,
+                                                         1,
+                                                         aManager);
   NS_DispatchToMainThread(r);
 #endif
 

@@ -61,8 +61,8 @@ GMPDecryptorChild::CallOnGMPThread(MethodType aMethod, ParamType&&... aParams)
     // Use const reference when we have to.
     auto m = &GMPDecryptorChild::CallMethod<
         decltype(aMethod), typename AddConstReference<ParamType>::Type...>;
-    auto t = NewRunnableMethod(this, m, aMethod, Forward<ParamType>(aParams)...);
-    mPlugin->GMPMessageLoop()->PostTask(FROM_HERE, t);
+    RefPtr<mozilla::Runnable> t = NewRunnableMethod(this, m, aMethod, Forward<ParamType>(aParams)...);
+    mPlugin->GMPMessageLoop()->PostTask(t.forget());
   }
 }
 
@@ -170,8 +170,8 @@ GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
   if (!ON_GMP_THREAD()) {
     // We should run this whole method on the GMP thread since the buffer needs
     // to be deleted after the SendDecrypted call.
-    auto t = NewRunnableMethod(this, &GMPDecryptorChild::Decrypted, aBuffer, aResult);
-    mPlugin->GMPMessageLoop()->PostTask(FROM_HERE, t);
+    RefPtr<Runnable> t = NewRunnableMethod(this, &GMPDecryptorChild::Decrypted, aBuffer, aResult);
+    mPlugin->GMPMessageLoop()->PostTask(t.forget());
     return;
   }
 

@@ -23,8 +23,7 @@ SoftwareVsyncSource::~SoftwareVsyncSource()
 }
 
 SoftwareDisplay::SoftwareDisplay()
-  : mCurrentVsyncTask(nullptr)
-  , mVsyncEnabled(false)
+  : mVsyncEnabled(false)
 {
   // Mimic 60 fps
   MOZ_ASSERT(NS_IsMainThread());
@@ -46,7 +45,7 @@ SoftwareDisplay::EnableVsync()
     }
     mVsyncEnabled = true;
 
-    mVsyncThread->message_loop()->PostTask(FROM_HERE,
+    mVsyncThread->message_loop()->PostTask(
       NewRunnableMethod(this, &SoftwareDisplay::EnableVsync));
     return;
   }
@@ -65,7 +64,7 @@ SoftwareDisplay::DisableVsync()
     }
     mVsyncEnabled = false;
 
-    mVsyncThread->message_loop()->PostTask(FROM_HERE,
+    mVsyncThread->message_loop()->PostTask(
       NewRunnableMethod(this, &SoftwareDisplay::DisableVsync));
     return;
   }
@@ -133,8 +132,9 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
       &SoftwareDisplay::NotifyVsync,
       nextVsync);
 
-  mVsyncThread->message_loop()->PostDelayedTask(FROM_HERE,
-      mCurrentVsyncTask,
+  RefPtr<mozilla::CancelableRunnable> addrefedTask = mCurrentVsyncTask;
+  mVsyncThread->message_loop()->PostDelayedTask(
+      addrefedTask.forget(),
       delay.ToMilliseconds());
 }
 

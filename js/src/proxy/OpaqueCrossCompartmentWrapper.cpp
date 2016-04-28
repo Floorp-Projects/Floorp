@@ -65,6 +65,15 @@ OpaqueCrossCompartmentWrapper::setPrototype(JSContext* cx, HandleObject proxy, H
 }
 
 bool
+OpaqueCrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy,
+                                                      bool* isOrdinary,
+                                                      MutableHandleObject protop) const
+{
+    *isOrdinary = false;
+    return true;
+}
+
+bool
 OpaqueCrossCompartmentWrapper::setImmutablePrototype(JSContext* cx, HandleObject proxy,
                                                      bool* succeeded) const
 {

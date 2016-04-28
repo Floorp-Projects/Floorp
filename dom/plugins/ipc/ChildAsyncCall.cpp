@@ -19,12 +19,13 @@ ChildAsyncCall::ChildAsyncCall(PluginInstanceChild* instance,
 {
 }
 
-void
+nsresult
 ChildAsyncCall::Cancel()
 {
   mInstance = nullptr;
   mFunc = nullptr;
   mData = nullptr;
+  return NS_OK;
 }
 
 void
@@ -36,13 +37,15 @@ ChildAsyncCall::RemoveFromAsyncList()
   }
 }
 
-void
+NS_IMETHODIMP
 ChildAsyncCall::Run()
 {
   RemoveFromAsyncList();
 
   if (mFunc)
     mFunc(mData);
+
+  return NS_OK;
 }
 
 } // namespace plugins

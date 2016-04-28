@@ -6,7 +6,7 @@
 char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 #endif
 #line 37 "installparse.y"
- 
+
 #define yyparse Pk11Install_yyparse
 #define yylex Pk11Install_yylex
 #define yyerror Pk11Install_yyerror
@@ -38,13 +38,14 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 
 #define YYSTYPE Pk11Install_Pointer
 extern char *Pk11Install_yytext;
-char *Pk11Install_yyerrstr=NULL;
+char *Pk11Install_yyerrstr = NULL;
 
 #line 40 "ytab.c"
 #define OPENBRACE 257
 #define CLOSEBRACE 258
 #define STRING 259
 #define YYERRCODE 256
+/* clang-format on */
 short yylhs[] = {                                        -1,
     0,    1,    1,    2,    2,    3,    4,
 };
@@ -125,6 +126,7 @@ short yycheck[] = {                                       4,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,  257,  258,  259,
   258,
 };
+/* clang-format on */
 #define YYFINAL 2
 #ifndef YYDEBUG
 #define YYDEBUG 0
@@ -132,30 +134,30 @@ short yycheck[] = {                                       4,
 #define YYMAXTOKEN 259
 #if YYDEBUG
 char *yyname[] = {
-"end-of-file",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"OPENBRACE","CLOSEBRACE","STRING",
+    "end-of-file", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "OPENBRACE", "CLOSEBRACE", "STRING",
 };
 char *yyrule[] = {
-"$accept : toplist",
-"toplist : valuelist",
-"valuelist : value valuelist",
-"valuelist :",
-"value : key_value_pair",
-"value : STRING",
-"key_value_pair : key OPENBRACE valuelist CLOSEBRACE",
-"key : STRING",
+    "$accept : toplist",
+    "toplist : valuelist",
+    "valuelist : value valuelist",
+    "valuelist :",
+    "value : key_value_pair",
+    "value : STRING",
+    "key_value_pair : key OPENBRACE valuelist CLOSEBRACE",
+    "key : STRING",
 };
 #endif
 #ifndef YYSTYPE
 typedef int YYSTYPE;
 #endif
-#define yyclearin (yychar=(-1))
-#define yyerrok (yyerrflag=0)
+#define yyclearin (yychar = (-1))
+#define yyerrok (yyerrflag = 0)
 #ifndef YYSTACKSIZE
 #ifdef YYMAXDEPTH
 #define YYSTACKSIZE YYMAXDEPTH
@@ -181,15 +183,15 @@ YYSTYPE yyvs[YYSTACKSIZE];
 void
 Pk11Install_yyerror(char *message)
 {
-	char *tmp;
-	if(Pk11Install_yyerrstr) {
-		tmp=PR_smprintf("%sline %d: %s\n", Pk11Install_yyerrstr,
-			Pk11Install_yylinenum, message);
-		PR_smprintf_free(Pk11Install_yyerrstr);
-	} else {
-		tmp = PR_smprintf("line %d: %s\n", Pk11Install_yylinenum, message);
-	}
-	Pk11Install_yyerrstr=tmp;
+    char *tmp;
+    if (Pk11Install_yyerrstr) {
+        tmp = PR_smprintf("%sline %d: %s\n", Pk11Install_yyerrstr,
+                          Pk11Install_yylinenum, message);
+        PR_smprintf_free(Pk11Install_yyerrstr);
+    } else {
+        tmp = PR_smprintf("line %d: %s\n", Pk11Install_yylinenum, message);
+    }
+    Pk11Install_yyerrstr = tmp;
 }
 #line 191 "ytab.c"
 #define YYABORT goto yyabort
@@ -203,8 +205,7 @@ yyparse()
     register char *yys;
     extern char *PR_GetEnvSecure();
 
-    if ((yys = PR_GetEnvSecure("YYDEBUG")) != NULL)
-    {
+    if ((yys = PR_GetEnvSecure("YYDEBUG")) != NULL) {
         yyn = *yys;
         if (yyn >= '0' && yyn <= '9')
             yydebug = yyn - '0';
@@ -220,46 +221,47 @@ yyparse()
     *yyssp = yystate = 0;
 
 yyloop:
-    if ((yyn = yydefred[yystate]) != 0) goto yyreduce;
-    if (yychar < 0)
-    {
-        if ((yychar = yylex()) < 0) yychar = 0;
+    if ((yyn = yydefred[yystate]) != 0)
+        goto yyreduce;
+    if (yychar < 0) {
+        if ((yychar = yylex()) < 0)
+            yychar = 0;
 #if YYDEBUG
-        if (yydebug)
-        {
+        if (yydebug) {
             yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-            if (!yys) yys = "illegal-symbol";
+            if (yychar <= YYMAXTOKEN)
+                yys = yyname[yychar];
+            if (!yys)
+                yys = "illegal-symbol";
             printf("yydebug: state %d, reading %d (%s)\n", yystate,
-                    yychar, yys);
+                   yychar, yys);
         }
 #endif
     }
     if ((yyn = yysindex[yystate]) && (yyn += yychar) >= 0 &&
-            yyn <= YYTABLESIZE && yycheck[yyn] == yychar)
-    {
+        yyn <= YYTABLESIZE && yycheck[yyn] == yychar) {
 #if YYDEBUG
         if (yydebug)
             printf("yydebug: state %d, shifting to state %d\n",
-                    yystate, yytable[yyn]);
+                   yystate, yytable[yyn]);
 #endif
-        if (yyssp >= yyss + yystacksize - 1)
-        {
+        if (yyssp >= yyss + yystacksize - 1) {
             goto yyoverflow;
         }
         *++yyssp = yystate = yytable[yyn];
         *++yyvsp = yylval;
         yychar = (-1);
-        if (yyerrflag > 0)  --yyerrflag;
+        if (yyerrflag > 0)
+            --yyerrflag;
         goto yyloop;
     }
     if ((yyn = yyrindex[yystate]) && (yyn += yychar) >= 0 &&
-            yyn <= YYTABLESIZE && yycheck[yyn] == yychar)
-    {
+        yyn <= YYTABLESIZE && yycheck[yyn] == yychar) {
         yyn = yytable[yyn];
         goto yyreduce;
     }
-    if (yyerrflag) goto yyinrecovery;
+    if (yyerrflag)
+        goto yyinrecovery;
 #ifdef lint
     goto yynewerror;
 yynewerror:
@@ -271,51 +273,47 @@ yyerrlab:
 #endif
     ++yynerrs;
 yyinrecovery:
-    if (yyerrflag < 3)
-    {
+    if (yyerrflag < 3) {
         yyerrflag = 3;
-        for (;;)
-        {
+        for (;;) {
             if ((yyn = yysindex[*yyssp]) && (yyn += YYERRCODE) >= 0 &&
-                    yyn <= YYTABLESIZE && yycheck[yyn] == YYERRCODE)
-            {
+                yyn <= YYTABLESIZE && yycheck[yyn] == YYERRCODE) {
 #if YYDEBUG
                 if (yydebug)
                     printf("yydebug: state %d, error recovery shifting\
- to state %d\n", *yyssp, yytable[yyn]);
+ to state %d\n",
+                           *yyssp, yytable[yyn]);
 #endif
-                if (yyssp >= yyss + yystacksize - 1)
-                {
+                if (yyssp >= yyss + yystacksize - 1) {
                     goto yyoverflow;
                 }
                 *++yyssp = yystate = yytable[yyn];
                 *++yyvsp = yylval;
                 goto yyloop;
-            }
-            else
-            {
+            } else {
 #if YYDEBUG
                 if (yydebug)
                     printf("yydebug: error recovery discarding state %d\n",
-                            *yyssp);
+                           *yyssp);
 #endif
-                if (yyssp <= yyss) goto yyabort;
+                if (yyssp <= yyss)
+                    goto yyabort;
                 --yyssp;
                 --yyvsp;
             }
         }
-    }
-    else
-    {
-        if (yychar == 0) goto yyabort;
+    } else {
+        if (yychar == 0)
+            goto yyabort;
 #if YYDEBUG
-        if (yydebug)
-        {
+        if (yydebug) {
             yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-            if (!yys) yys = "illegal-symbol";
+            if (yychar <= YYMAXTOKEN)
+                yys = yyname[yychar];
+            if (!yys)
+                yys = "illegal-symbol";
             printf("yydebug: state %d, error recovery discards token %d (%s)\n",
-                    yystate, yychar, yys);
+                   yystate, yychar, yys);
         }
 #endif
         yychar = (-1);
@@ -325,100 +323,94 @@ yyreduce:
 #if YYDEBUG
     if (yydebug)
         printf("yydebug: state %d, reducing by rule %d (%s)\n",
-                yystate, yyn, yyrule[yyn]);
+               yystate, yyn, yyrule[yyn]);
 #endif
     yym = yylen[yyn];
-    yyval = yyvsp[1-yym];
-    switch (yyn)
-    {
-case 1:
+    yyval = yyvsp[1 - yym];
+    switch (yyn) {
+        case 1:
 #line 84 "installparse.y"
-{
-	Pk11Install_valueList = yyvsp[0].list;
-}
-break;
-case 2:
+        {
+            Pk11Install_valueList = yyvsp[0].list;
+        } break;
+        case 2:
 #line 89 "installparse.y"
-{ 
-	Pk11Install_ValueList_AddItem(yyvsp[0].list,yyvsp[-1].value);
-	yyval .list = yyvsp[0].list; 
-}
-break;
-case 3:
+        {
+            Pk11Install_ValueList_AddItem(yyvsp[0].list, yyvsp[-1].value);
+            yyval.list = yyvsp[0].list;
+        } break;
+        case 3:
 #line 94 "installparse.y"
-{ 
-	yyval .list = Pk11Install_ValueList_new(); 
-}
-break;
-case 4:
+        {
+            yyval.list = Pk11Install_ValueList_new();
+        } break;
+        case 4:
 #line 99 "installparse.y"
-{
-	yyval .value= Pk11Install_Value_new(PAIR_VALUE,yyvsp[0]);
-}
-break;
-case 5:
+        {
+            yyval.value = Pk11Install_Value_new(PAIR_VALUE, yyvsp[0]);
+        } break;
+        case 5:
 #line 103 "installparse.y"
-{
-	yyval .value= Pk11Install_Value_new(STRING_VALUE, yyvsp[0]);
-}
-break;
-case 6:
+        {
+            yyval.value = Pk11Install_Value_new(STRING_VALUE, yyvsp[0]);
+        } break;
+        case 6:
 #line 108 "installparse.y"
-{
-	yyval .pair = Pk11Install_Pair_new(yyvsp[-3].string,yyvsp[-1].list);
-}
-break;
-case 7:
+        {
+            yyval.pair = Pk11Install_Pair_new(yyvsp[-3].string, yyvsp[-1].list);
+        } break;
+        case 7:
 #line 113 "installparse.y"
-{
-	yyval .string = yyvsp[0].string;
-}
-break;
+        {
+            yyval.string = yyvsp[0].string;
+        } break;
 #line 374 "ytab.c"
     }
     yyssp -= yym;
     yystate = *yyssp;
     yyvsp -= yym;
     yym = yylhs[yyn];
-    if (yystate == 0 && yym == 0)
-    {
+    if (yystate == 0 && yym == 0) {
 #ifdef YYDEBUG
         if (yydebug)
             printf("yydebug: after reduction, shifting from state 0 to\
- state %d\n", YYFINAL);
+ state %d\n",
+                   YYFINAL);
 #endif
         yystate = YYFINAL;
         *++yyssp = YYFINAL;
         *++yyvsp = yyval;
-        if (yychar < 0)
-        {
-            if ((yychar = yylex()) < 0) yychar = 0;
+        if (yychar < 0) {
+            if ((yychar = yylex()) < 0)
+                yychar = 0;
 #if YYDEBUG
-            if (yydebug)
-            {
+            if (yydebug) {
                 yys = 0;
-                if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-                if (!yys) yys = "illegal-symbol";
+                if (yychar <= YYMAXTOKEN)
+                    yys = yyname[yychar];
+                if (!yys)
+                    yys = "illegal-symbol";
                 printf("yydebug: state %d, reading %d (%s)\n",
-                        YYFINAL, yychar, yys);
+                       YYFINAL, yychar, yys);
             }
 #endif
         }
-        if (yychar == 0) goto yyaccept;
+        if (yychar == 0)
+            goto yyaccept;
         goto yyloop;
     }
     if ((yyn = yygindex[yym]) && (yyn += yystate) >= 0 &&
-            yyn <= YYTABLESIZE && yycheck[yyn] == yystate)
+        yyn <= YYTABLESIZE && yycheck[yyn] == yystate)
         yystate = yytable[yyn];
     else
         yystate = yydgoto[yym];
 #ifdef YYDEBUG
     if (yydebug)
         printf("yydebug: after reduction, shifting from state %d \
-to state %d\n", *yyssp, yystate);
+to state %d\n",
+               *yyssp, yystate);
 #endif
-    if (yyssp >= yyss + yystacksize - 1)
-    {
+    if (yyssp >= yyss + yystacksize - 1) {
         goto yyoverflow;
     }
     *++yyssp = yystate;

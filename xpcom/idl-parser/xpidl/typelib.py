@@ -242,10 +242,10 @@ def build_interface(iface, ifaces):
 def write_typelib(idl, fd, filename):
     """ Generate the typelib. """
 
-    # We only care about interfaces
+    # We only care about interfaces that are scriptable.
     ifaces = []
     for p in idl.productions:
-        if p.kind == 'interface':
+        if p.kind == 'interface' and p.attributes.scriptable:
             ifaces.append(build_interface(p, ifaces))
 
     typelib = xpt.Typelib(interfaces=ifaces)

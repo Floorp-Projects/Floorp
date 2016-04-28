@@ -19,6 +19,10 @@ enum AudioContextState {
     "closed"
 };
 
+dictionary PeriodicWaveConstraints {
+  boolean disableNormalization = false;
+};
+
 [Constructor,
  Constructor(AudioChannel audioChannelType)]
 interface AudioContext : EventTarget {
@@ -88,7 +92,7 @@ interface AudioContext : EventTarget {
     [NewObject, Throws]
     OscillatorNode createOscillator();
     [NewObject, Throws]
-    PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag);
+    PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag, optional PeriodicWaveConstraints constraints);
 
 };
 

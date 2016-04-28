@@ -17,7 +17,7 @@ class nsIInputStream;
  This runnable is managed by WriteStumbleOnThread only, see that class
  for how this is scheduled.
  */
-class UploadStumbleRunnable final : public nsRunnable
+class UploadStumbleRunnable final : public Runnable
 {
 public:
   explicit UploadStumbleRunnable(nsIInputStream* aUploadInputStream);

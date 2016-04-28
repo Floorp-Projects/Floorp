@@ -75,7 +75,6 @@ FdWatcher::Init()
   os->AddObserver(this, "xpcom-shutdown", /* ownsWeak = */ false);
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE,
     NewRunnableMethod(this, &FdWatcher::StartWatching));
 }
 

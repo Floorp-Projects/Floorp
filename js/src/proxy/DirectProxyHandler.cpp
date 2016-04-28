@@ -143,6 +143,14 @@ DirectProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject
 }
 
 bool
+DirectProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy,
+                                           bool* isOrdinary, MutableHandleObject protop) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return GetPrototypeIfOrdinary(cx, target, isOrdinary, protop);
+}
+
+bool
 DirectProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());

@@ -165,6 +165,8 @@ class ModuleNamespaceObject : public ProxyObject
                           MutableHandleObject protop) const override;
         bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                           ObjectOpResult& result) const override;
+        bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                    MutableHandleObject protop) const override;
         bool setImmutablePrototype(JSContext* cx, HandleObject proxy,
                                    bool* succeeded) const override;
 

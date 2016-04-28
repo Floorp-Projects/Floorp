@@ -39,7 +39,6 @@
 // #define DEBUG_ANDROID_WIDGET
 
 class nsIObserver;
-class Task;
 
 namespace base {
 class Thread;
@@ -48,6 +47,8 @@ class Thread;
 typedef void* EGLSurface;
 
 namespace mozilla {
+
+class Runnable;
 
 namespace hal {
 class BatteryInformation;
@@ -418,7 +419,7 @@ private:
     mozilla::Mutex mUiTaskQueueLock;
 
 public:
-    void PostTaskToUiThread(Task* aTask, int aDelayMs);
+    void PostTaskToUiThread(already_AddRefed<Runnable> aTask, int aDelayMs);
     int64_t RunDelayedUiThreadTasks();
 
     void* GetPresentationWindow();
