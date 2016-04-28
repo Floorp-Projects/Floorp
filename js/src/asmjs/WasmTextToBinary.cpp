@@ -3694,11 +3694,10 @@ EncodeBranch(Encoder& e, WasmAstBranch& br)
 {
     MOZ_ASSERT(br.expr() == Expr::Br || br.expr() == Expr::BrIf);
 
+    uint32_t arity = 0;
     if (br.maybeValue()) {
+        arity = 1;
         if (!EncodeExpr(e, *br.maybeValue()))
-            return false;
-    } else {
-        if (!e.writeExpr(Expr::Nop))
             return false;
     }
 
@@ -3708,6 +3707,9 @@ EncodeBranch(Encoder& e, WasmAstBranch& br)
     }
 
     if (!e.writeExpr(br.expr()))
+        return false;
+
+    if (!e.writeVarU32(arity))
         return false;
 
     if (!e.writeVarU32(br.target().index()))
@@ -3736,6 +3738,9 @@ EncodeCall(Encoder& e, WasmAstCall& c)
     if (!e.writeExpr(c.expr()))
         return false;
 
+    if (!e.writeVarU32(c.args().length()))
+        return false;
+
     if (!e.writeVarU32(c.func().index()))
         return false;
 
@@ -3752,6 +3757,9 @@ EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
         return false;
 
     if (!e.writeExpr(Expr::CallIndirect))
+        return false;
+
+    if (!e.writeVarU32(c.args().length()))
         return false;
 
     if (!e.writeVarU32(c.sig().index()))
@@ -3881,27 +3889,39 @@ EncodeStore(Encoder& e, WasmAstStore& s)
 static bool
 EncodeReturn(Encoder& e, WasmAstReturn& r)
 {
+    uint32_t arity = 0;
     if (r.maybeExpr()) {
-       if (!EncodeExpr(e, *r.maybeExpr()))
-           return false;
-    } else {
-       if (!e.writeExpr(Expr::Nop))
+        arity = 1;
+        if (!EncodeExpr(e, *r.maybeExpr()))
            return false;
     }
 
-    return e.writeExpr(Expr::Return);
+    if (!e.writeExpr(Expr::Return))
+        return false;
+
+    if (!e.writeVarU32(arity))
+        return false;
+
+    return true;
 }
 
 static bool
 EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
 {
-    if (bt.maybeValue() ? !EncodeExpr(e, *bt.maybeValue()) : !e.writeExpr(Expr::Nop))
-        return false;
+    uint32_t arity = 0;
+    if (bt.maybeValue()) {
+        arity = 1;
+        if (!EncodeExpr(e, *bt.maybeValue()))
+            return false;
+    }
 
     if (!EncodeExpr(e, bt.index()))
         return false;
 
     if (!e.writeExpr(Expr::BrTable))
+        return false;
+
+    if (!e.writeVarU32(arity))
         return false;
 
     if (!e.writeVarU32(bt.table().length()))

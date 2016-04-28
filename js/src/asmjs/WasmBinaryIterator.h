@@ -194,10 +194,11 @@ struct SetVarRecord
 // A description of a call operator's parameters, not counting the call arguments.
 struct CallRecord
 {
+    uint32_t arity;
     uint32_t callee;
 
-    explicit CallRecord(uint32_t callee)
-      : callee(callee)
+    CallRecord(uint32_t arity, uint32_t callee)
+      : arity(arity), callee(callee)
     {}
 };
 
@@ -205,20 +206,22 @@ struct CallRecord
 template <typename Value>
 struct CallIndirectRecord
 {
+    uint32_t arity;
     uint32_t sigIndex;
 
-    explicit CallIndirectRecord(uint32_t sigIndex)
-      : sigIndex(sigIndex)
+    CallIndirectRecord(uint32_t arity, uint32_t sigIndex)
+      : arity(arity), sigIndex(sigIndex)
     {}
 };
 
 // A description of a call_import operator's parameters, not counting the call arguments.
 struct CallImportRecord
 {
+    uint32_t arity;
     uint32_t callee;
 
-    explicit CallImportRecord(uint32_t callee)
-      : callee(callee)
+    CallImportRecord(uint32_t arity, uint32_t callee)
+      : arity(arity), callee(callee)
     {}
 };
 
@@ -1174,13 +1177,24 @@ ExprIter<Policy>::readReturn()
     ControlStackEntry<ControlItem>& controlItem = controlStack_[0];
     MOZ_ASSERT(controlItem.kind() == LabelKind::Block);
 
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("failed to read return arity");
+    if (arity > 1)
+        return fail("return arity too big");
+
     TypeAndValue<Value> tv;
-    if (!pop(&tv))
-        return false;
+    if (arity) {
+        if (!pop(&tv))
+            return false;
+    } else {
+        tv = TypeAndValue<Value>(ExprType::Void);
+    }
 
     infallibleCheckSuccessor(controlItem, tv.type());
 
-    infalliblePush(AnyType);
+    if (!push(AnyType))
+        return false;
 
     u_.return_ = ReturnRecord<Value>(tv.value());
     return setInitialized();
@@ -1359,13 +1373,23 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readBr()
 {
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read br arity");
+    if (arity > 1)
+        return fail("br arity too big");
+
     uint32_t relativeDepth;
     if (!readVarU32(&relativeDepth))
         return fail("unable to read br depth");
 
     TypeAndValue<Value> tv;
-    if (!pop(&tv))
-        return false;
+    if (arity) {
+        if (!pop(&tv))
+            return false;
+    } else {
+        tv = TypeAndValue<Value>(ExprType::Void);
+    }
 
     if (!checkBranch(relativeDepth, tv.type()))
         return false;
@@ -1381,6 +1405,12 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readBrIf()
 {
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read br_if arity");
+    if (arity > 1)
+        return fail("br_if arity too big");
+
     uint32_t relativeDepth;
     if (!readVarU32(&relativeDepth))
         return fail("unable to read br_if depth");
@@ -1389,10 +1419,15 @@ ExprIter<Policy>::readBrIf()
     if (!popWithType(ExprType::I32, &condition))
         return false;
 
-    // Leave the operand(s) in place; they become our result(s).
     TypeAndValue<Value> tv;
-    if (!top(&tv))
-        return false;
+    if (arity) {
+        if (!top(&tv))
+            return false;
+    } else {
+        tv = TypeAndValue<Value>(ExprType::Void);
+        if (!push(tv))
+            return false;
+    }
 
     if (!checkBranch(relativeDepth, tv.type()))
         return false;
@@ -1409,10 +1444,21 @@ ExprIter<Policy>::readBrTable()
     if (!popWithType(ExprType::I32, &index))
         return false;
 
-    // Leave the operand(s) in place; they become our result(s).
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read br_table arity");
+    if (arity > 1)
+        return fail("br_table arity too big");
+
     TypeAndValue<Value> tv;
-    if (!top(&tv))
-        return false;
+    if (arity) {
+        if (!top(&tv))
+            return false;
+    } else {
+        tv = TypeAndValue<Value>(ExprType::Void);
+        if (!push(tv))
+            return false;
+    }
 
     uint32_t tableLength;
     if (!readVarU32(&tableLength))
@@ -1734,11 +1780,15 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readCall()
 {
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read call arity");
+
     uint32_t funcIndex;
     if (!readVarU32(&funcIndex))
         return fail("unable to read call function index");
 
-    u_.call = CallRecord(funcIndex);
+    u_.call = CallRecord(arity, funcIndex);
     return setInitialized();
 }
 
@@ -1746,11 +1796,15 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readCallIndirect()
 {
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read call_indirect arity");
+
     uint32_t sigIndex;
     if (!readVarU32(&sigIndex))
         return fail("unable to read call_indirect signature index");
 
-    u_.callIndirect = CallIndirectRecord<Value>(sigIndex);
+    u_.callIndirect = CallIndirectRecord<Value>(arity, sigIndex);
     return setInitialized();
 }
 
@@ -1758,11 +1812,15 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readCallImport()
 {
+    uint32_t arity;
+    if (!readVarU32(&arity))
+        return fail("unable to read call_import arity");
+
     uint32_t importIndex;
     if (!readVarU32(&importIndex))
         return fail("unable to read call_import import index");
 
-    u_.callImport = CallImportRecord(importIndex);
+    u_.callImport = CallImportRecord(arity, importIndex);
     return setInitialized();
 }
 
