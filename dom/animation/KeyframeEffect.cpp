@@ -189,7 +189,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
       EffectCompositor::RestyleType::Throttled :
       EffectCompositor::RestyleType::Standard;
     nsPresContext* presContext = GetPresContext();
-    if (presContext) {
+    if (presContext && mTarget) {
       presContext->EffectCompositor()->
         RequestRestyle(mTarget, mPseudoType, restyleType,
                        mAnimation->CascadeLevel());
@@ -563,15 +563,15 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     if (effectSet) {
       effectSet->MarkCascadeNeedsUpdate();
     }
-  }
 
-  if (mAnimation) {
-    nsPresContext* presContext = GetPresContext();
-    if (presContext) {
-      presContext->EffectCompositor()->
-        RequestRestyle(mTarget, mPseudoType,
-                       EffectCompositor::RestyleType::Layer,
-                       mAnimation->CascadeLevel());
+    if (mAnimation) {
+      nsPresContext* presContext = GetPresContext();
+      if (presContext) {
+        presContext->EffectCompositor()->
+          RequestRestyle(mTarget, mPseudoType,
+                         EffectCompositor::RestyleType::Layer,
+                         mAnimation->CascadeLevel());
+      }
     }
   }
 }
@@ -1359,7 +1359,8 @@ KeyframeEffect::Constructor(
 void KeyframeEffect::NotifySpecifiedTimingUpdated()
 {
   // Use the same document for a pseudo element and its parent element.
-  nsAutoAnimationMutationBatch mb(mTarget->OwnerDoc());
+  // Use nullptr if we don't have mTarget, so disable the mutation batch.
+  nsAutoAnimationMutationBatch mb(mTarget ? mTarget->OwnerDoc() : nullptr);
 
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
@@ -1369,7 +1370,7 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated()
     }
 
     nsPresContext* presContext = GetPresContext();
-    if (presContext) {
+    if (presContext && mTarget) {
       presContext->EffectCompositor()->
         RequestRestyle(mTarget, mPseudoType,
                        EffectCompositor::RestyleType::Layer,
