@@ -101,7 +101,6 @@ public:
     MOZ_COUNT_DTOR(nsDisplayFieldSetBorderBackground);
   }
 #endif
-
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override;
@@ -128,7 +127,7 @@ nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                          nsRenderingContext* aCtx)
 {
   DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
-    PaintBorderBackground(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
+    PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
@@ -171,8 +170,11 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayBoxShadowOuter(aBuilder, this));
     }
 
-    // don't bother checking to see if we really have a border or background.
-    // we usually will have a border.
+    nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+      aBuilder, this, VisualBorderRectRelativeToSelf(),
+      aLists.BorderBackground(),
+      /* aAllowWillPaintBorderOptimization = */ false);
+
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
       nsDisplayFieldSetBorderBackground(aBuilder, this));
   
@@ -209,7 +211,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 DrawResult
-nsFieldSetFrame::PaintBorderBackground(
+nsFieldSetFrame::PaintBorder(
   nsDisplayListBuilder* aBuilder,
   nsRenderingContext& aRenderingContext,
   nsPoint aPt,
@@ -225,14 +227,11 @@ nsFieldSetFrame::PaintBorderBackground(
   rect += aPt;
   nsPresContext* presContext = PresContext();
 
-  uint32_t bgFlags = aBuilder->GetBackgroundPaintFlags();
   PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
                                ? PaintBorderFlags::SYNC_DECODE_IMAGES
                                : PaintBorderFlags();
 
-  DrawResult result =
-    nsCSSRendering::PaintBackground(presContext, aRenderingContext, this,
-                                    aDirtyRect, rect, bgFlags);
+  DrawResult result = DrawResult::SUCCESS;
 
   nsCSSRendering::PaintBoxShadowInner(presContext, aRenderingContext,
                                       this, rect);
