@@ -176,6 +176,24 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         }
         self.log("activated virtualenv with the modules: {}".format(str(self.virtualenv_imports)))
 
+    def _get_template_vars(self):
+        return {
+            "platform": self.config['platform'],
+            "locales": self.config.get('locales'),
+            "version": self.config['version'],
+            "app_version": self.config.get('app_version', ''),
+            "partial_version": self.config.get('partial_version', ''),
+            "build_num": self.config['build_num'],
+            # keep the trailing slash
+            "s3_prefix": 'pub/{prod}/candidates/{ver}-candidates/{n}/'.format(
+                prod=self.config['product'], ver=self.config['version'],
+                n=self.config['build_num']
+            ),
+            "artifact_base_url": self.config['artifact_base_url'].format(
+                    taskid=self.config['taskid'], subdir=self.config['artifact_subdir']
+            )
+        }
+
     def generate_candidates_manifest(self):
         """
         generates and outputs a manifest that maps expected Taskcluster artifact names
@@ -189,20 +207,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                        undefined=jinja2.StrictUndefined)
         template = jinja_env.get_template(template_file)
-        template_vars = {
-            "platform": self.config['platform'],
-            "locales": self.config.get('locales'),
-            "version": self.config['version'],
-            "app_version": self.config.get('app_version', ''),
-            "partial_version": self.config.get('partial_version', ''),
-            "build_num": self.config['build_num'],
-            # mirror current release folder structure
-            "s3_prefix": 'pub/{}/candidates'.format(self.config['product']),
-            "artifact_base_url": self.config['artifact_base_url'].format(
-                    taskid=self.config['taskid'], subdir=self.config['artifact_subdir']
-            )
-        }
-        self.manifest = yaml.safe_load(template.render(**template_vars))
+        self.manifest = yaml.safe_load(template.render(**self._get_template_vars()))
 
         self.log("manifest generated:")
         self.log(pprint.pformat(self.manifest['mapping']))
@@ -215,33 +220,37 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         self.log('skipping verification. unimplemented...')
 
     def refresh_antivirus(self):
-       self.info("Refreshing clamav db...")
-       try:
-           redo.retry(lambda:
-                      sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
-           self.info("Done.")
-       except sh.ErrorReturnCode:
-           self.warning("Freshclam failed, skipping DB update")
+        self.info("Refreshing clamav db...")
+        try:
+            redo.retry(lambda:
+                       sh.freshclam("--stdout", "--verbose", _timeout=300,
+                                    _err_to_out=True))
+            self.info("Done.")
+        except sh.ErrorReturnCode:
+            self.warning("Freshclam failed, skipping DB update")
 
     def download_bits(self):
         """
         downloads list of artifacts to self.dest_dir dir based on a given manifest
         """
         self.log('downloading and uploading artifacts to self_dest_dir...')
-
-        # TODO - do we want to mirror/upload to more than one region?
         dirs = self.query_abs_dirs()
 
         for locale in self.manifest['mapping']:
             for deliverable in self.manifest['mapping'][locale]:
                 self.log("downloading '{}' deliverable for '{}' locale".format(deliverable, locale))
-                # download locally to working dir
-                source=self.manifest['mapping'][locale][deliverable]['artifact']
-                file_name = self.retry(self.download_file,
+                source = self.manifest['mapping'][locale][deliverable]['artifact']
+                self.retry(
+                    self.download_file,
                     args=[source],
                     kwargs={'parent_dir': dirs['abs_work_dir']},
                     error_level=FATAL)
         self.log('Success!')
+
+    def _strip_prefix(self, s3_key):
+        """Return file name relative to prefix"""
+        # "abc/def/hfg".split("abc/de")[-1] == "f/hfg"
+        return s3_key.split(self._get_template_vars()["s3_prefix"])[-1]
 
     def upload_bits(self):
         """
@@ -255,29 +264,34 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
         conn = boto.connect_s3(self.aws_key_id, self.aws_secret_key)
         bucket = conn.get_bucket(self.bucket)
 
-        #todo change so this is not every entry in manifest - should exclude those that don't pass virus sign
-        #not sure how to determine this
         for locale in self.manifest['mapping']:
             for deliverable in self.manifest['mapping'][locale]:
                 self.log("uploading '{}' deliverable for '{}' locale".format(deliverable, locale))
-                #we have already downloaded the files locally so we can use that version
+                # we have already downloaded the files locally so we can use that version
                 source = self.manifest['mapping'][locale][deliverable]['artifact']
+                s3_key = self.manifest['mapping'][locale][deliverable]['s3_key']
                 downloaded_file = os.path.join(dirs['abs_work_dir'], self.get_filename_from_url(source))
-                self.upload_bit(
-                    source=downloaded_file,
-                    s3_key=self.manifest['mapping'][locale][deliverable]['s3_key'],
-                    bucket=bucket,
+                # generate checksums for every uploaded file
+                beet_file_name = '{}.beet'.format(downloaded_file)
+                # upload checksums to a separate subdirectory
+                beet_dest = '{prefix}beetmover-checksums/{f}.beet'.format(
+                    prefix=self._get_template_vars()["s3_prefix"],
+                    f=self._strip_prefix(s3_key)
                 )
+                beet_contents = '{hash} sha512 {size} {name}\n'.format(
+                    hash=self.file_sha512sum(downloaded_file),
+                    size=os.path.getsize(downloaded_file),
+                    name=self._strip_prefix(s3_key))
+                self.write_to_file(beet_file_name, beet_contents)
+                self.upload_bit(source=downloaded_file, s3_key=s3_key,
+                                bucket=bucket)
+                self.upload_bit(source=beet_file_name, s3_key=beet_dest,
+                                bucket=bucket)
         self.log('Success!')
 
 
     def upload_bit(self, source, s3_key, bucket):
-        # TODO - do we want to mirror/upload to more than one region?
-        dirs = self.query_abs_dirs()
         boto = self.virtualenv_imports['boto']
-
-        #todo need to copy from dir to s3
-
         self.info('uploading to s3 with key: {}'.format(s3_key))
         key = boto.s3.key.Key(bucket)  # create new key
         key.key = s3_key  # set key name
