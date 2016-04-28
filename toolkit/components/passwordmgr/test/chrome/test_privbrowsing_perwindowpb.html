@@ -27,7 +27,7 @@ const Cr = SpecialPowers.Cr;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-var testpath = "/tests/toolkit/components/passwordmgr/test/";
+var testpath = "/chrome/toolkit/components/passwordmgr/test/chrome/";
 var prefix = "http://test2.example.com" + testpath;
 var subtests = [
                    "subtst_privbrowsing_1.html", // 1
@@ -200,7 +200,7 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .rootTreeItem
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
-var contentPage = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/privbrowsing_perwindowpb_iframe.html";
+var contentPage = "http://mochi.test:8888/chrome/toolkit/components/passwordmgr/test/chrome/privbrowsing_perwindowpb_iframe.html";
 var testWindows = [];
 
 function whenDelayedStartupFinished(aWindow, aCallback) {
