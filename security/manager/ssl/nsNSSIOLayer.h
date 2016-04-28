@@ -4,17 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NSNSSIOLAYER_H
-#define _NSNSSIOLAYER_H
+#ifndef nsNSSIOLayer_h
+#define nsNSSIOLayer_h
 
 #include "TransportSecurityInfo.h"
-#include "nsISSLSocketControl.h"
+#include "mozilla/TimeStamp.h"
+#include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsIProxyInfo.h"
+#include "nsISSLSocketControl.h"
 #include "nsNSSCertificate.h"
-#include "nsDataHashtable.h"
 #include "nsTHashtable.h"
-#include "mozilla/TimeStamp.h"
 #include "sslt.h"
 
 namespace mozilla {
@@ -262,4 +263,4 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family,
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo* infoObject, int error);
 
-#endif /* _NSNSSIOLAYER_H */
+#endif // nsNSSIOLayer_h

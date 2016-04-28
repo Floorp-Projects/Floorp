@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ssl.h"
+#include "sslerr.h"
 #include "sslproto.h"
 
 #include <memory>
@@ -14,6 +15,21 @@
 #include "tls_connect.h"
 
 namespace nss_test {
+
+class TlsExtensionDropper : public TlsExtensionFilter {
+ public:
+  TlsExtensionDropper(uint16_t extension)
+      : extension_(extension) {}
+  virtual PacketFilter::Action FilterExtension(
+      uint16_t extension_type, const DataBuffer&, DataBuffer*) {
+    if (extension_type == extension_) {
+      return DROP;
+    }
+    return KEEP;
+  }
+ private:
+    uint16_t extension_;
+};
 
 class TlsExtensionTruncator : public TlsExtensionFilter {
  public:
@@ -539,7 +555,7 @@ TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsHandshake) {
   server_->StartConnect();
   ASSERT_EQ(SECSuccess,
     SSL_SetSignedCertTimestamps(server_->ssl_fd(),
-      &si_timestamps, server_->kea()));
+      &si_timestamps, ssl_kea_rsa));
 
   client_->StartConnect();
   ASSERT_EQ(SECSuccess,
@@ -561,7 +577,7 @@ TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsInactiveClient) {
   server_->StartConnect();
   ASSERT_EQ(SECSuccess,
     SSL_SetSignedCertTimestamps(server_->ssl_fd(),
-      &si_timestamps, server_->kea()));
+      &si_timestamps, ssl_kea_rsa));
 
   client_->StartConnect();
 
@@ -601,6 +617,42 @@ TEST_P(TlsExtensionTestPre13, SignedCertificateTimestampsInactiveBoth) {
 TEST_P(TlsExtensionTest13, EmptyClientKeyShare) {
   ClientHelloErrorTest(new TlsExtensionTruncator(ssl_tls13_key_share_xtn, 2),
                        kTlsAlertHandshakeFailure);
+}
+
+TEST_P(TlsExtensionTest13, DropDraftVersion) {
+  EnsureTlsSetup();
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  client_->SetPacketFilter(
+      new TlsExtensionDropper(ssl_tls13_draft_version_xtn));
+  ConnectExpectFail();
+  // This will still fail (we can't just modify ClientHello without consequence)
+  // but the error is discovered later.
+  EXPECT_EQ(SSL_ERROR_DECRYPT_ERROR_ALERT, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE, server_->error_code());
+}
+
+TEST_P(TlsExtensionTest13, DropDraftVersionAndFail) {
+  EnsureTlsSetup();
+  // Since this is setup as TLS 1.3 only, expect the handshake to fail rather
+  // than just falling back to TLS 1.2.
+  client_->SetPacketFilter(
+      new TlsExtensionDropper(ssl_tls13_draft_version_xtn));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_PROTOCOL_VERSION_ALERT, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
+}
+
+TEST_P(TlsExtensionTest13, ModifyDraftVersionAndFail) {
+  EnsureTlsSetup();
+  // As above, dropping back to 1.2 fails.
+  client_->SetPacketFilter(
+      new TlsExtensionDamager(ssl_tls13_draft_version_xtn, 1));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_PROTOCOL_VERSION_ALERT, client_->error_code());
+  EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
 }
 
 INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,

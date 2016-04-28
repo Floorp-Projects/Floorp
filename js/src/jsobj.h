@@ -949,6 +949,17 @@ DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResult& r
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
+/**
+ * If |obj| (underneath any functionally-transparent wrapper proxies) has as
+ * its [[GetPrototypeOf]] trap the ordinary [[GetPrototypeOf]] behavior defined
+ * for ordinary objects, set |*isOrdinary = true| and store |obj|'s prototype
+ * in |result|.  Otherwise set |*isOrdinary = false|.  In case of error, both
+ * outparams have unspecified value.
+ */
+extern bool
+GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
+                       MutableHandleObject protop);
+
 /*
  * Attempt to make |obj|'s [[Prototype]] immutable, such that subsequently
  * trying to change it will not work.  If an internal error occurred,

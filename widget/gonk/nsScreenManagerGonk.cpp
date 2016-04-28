@@ -56,7 +56,7 @@ using namespace mozilla::dom;
 
 namespace {
 
-class ScreenOnOffEvent : public nsRunnable {
+class ScreenOnOffEvent : public mozilla::Runnable {
 public:
     ScreenOnOffEvent(bool on)
         : mIsOn(on)
@@ -974,7 +974,7 @@ private:
 
 NS_IMPL_ISUPPORTS(DisplayInfo, nsIDisplayInfo, nsISupports)
 
-class NotifyTask : public nsRunnable {
+class NotifyTask : public mozilla::Runnable {
 public:
     NotifyTask(uint32_t aId, bool aConnected)
         : mDisplayInfo(new DisplayInfo(aId, aConnected))

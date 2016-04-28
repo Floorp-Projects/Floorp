@@ -1370,8 +1370,8 @@ moz_gtk_scale_thumb_paint(cairo_t *cr, GdkRectangle* rect,
   gtk_widget_set_direction(widget, direction);
 
   style = gtk_widget_get_style_context(widget);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_SLIDER);
   gtk_style_context_save(style);
+  gtk_style_context_add_class(style, GTK_STYLE_CLASS_SLIDER);
   gtk_style_context_set_state(style, state_flags);
   /* determine the thumb size, and position the thumb in the center in the opposite axis 
   */

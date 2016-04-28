@@ -353,6 +353,11 @@ MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,     "reached unreachable tr
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
+MSG_DEF(JSMSG_BAD_GETPROTOTYPEOF_TRAP_RETURN,0,JSEXN_TYPEERR,"proxy getPrototypeOf handler returned a non-object, non-null value")
+MSG_DEF(JSMSG_INCONSISTENT_GETPROTOTYPEOF_TRAP,0,JSEXN_TYPEERR,"proxy getPrototypeOf handler didn't return the target object's prototype")
+MSG_DEF(JSMSG_PROXY_SETPROTOTYPEOF_RETURNED_FALSE, 0, JSEXN_TYPEERR, "proxy setPrototypeOf handler returned false")
+MSG_DEF(JSMSG_PROXY_ISEXTENSIBLE_RETURNED_FALSE,0,JSEXN_TYPEERR,"proxy isExtensible handler must return the same extensibility as target")
+MSG_DEF(JSMSG_INCONSISTENT_SETPROTOTYPEOF_TRAP,0,JSEXN_TYPEERR,"proxy setPrototypeOf handler returned true, even though the target's prototype is immutable because the target is non-extensible")
 MSG_DEF(JSMSG_CANT_CHANGE_EXTENSIBILITY, 0, JSEXN_TYPEERR, "can't change object's extensibility")
 MSG_DEF(JSMSG_CANT_DEFINE_INVALID,     0, JSEXN_TYPEERR, "proxy can't define an incompatible property descriptor")
 MSG_DEF(JSMSG_CANT_DEFINE_NEW,         0, JSEXN_TYPEERR, "proxy can't define a new property on a non-extensible object")

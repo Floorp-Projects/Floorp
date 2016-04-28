@@ -311,6 +311,9 @@ pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx)
  */
 SECStatus
 PK11_Authenticate(PK11SlotInfo *slot, PRBool loadCerts, void *wincx) {
+    if (!slot) {
+	return SECFailure;
+    }
     if (pk11_LoginStillRequired(slot,wincx)) {
 	return PK11_DoPassword(slot, slot->session, loadCerts, wincx,
 				PR_FALSE, PR_FALSE);

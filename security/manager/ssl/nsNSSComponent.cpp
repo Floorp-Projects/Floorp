@@ -2067,28 +2067,33 @@ nsresult
 setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx,
             nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  nsresult rv = NS_OK;
+  MOZ_ASSERT(slot);
+  MOZ_ASSERT(ctx);
+  NS_ENSURE_ARG_POINTER(slot);
+  NS_ENSURE_ARG_POINTER(ctx);
 
   if (PK11_NeedUserInit(slot)) {
-    nsITokenPasswordDialogs* dialogs;
+    nsCOMPtr<nsITokenPasswordDialogs> dialogs;
+    nsresult rv = getNSSDialogs(getter_AddRefs(dialogs),
+                                NS_GET_IID(nsITokenPasswordDialogs),
+                                NS_TOKENPASSWORDSDIALOG_CONTRACTID);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     bool canceled;
     NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(slot));
-
-    rv = getNSSDialogs((void**)&dialogs,
-                       NS_GET_IID(nsITokenPasswordDialogs),
-                       NS_TOKENPASSWORDSDIALOG_CONTRACTID);
-
-    if (NS_FAILED(rv)) goto loser;
-
     rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-    NS_RELEASE(dialogs);
-    if (NS_FAILED(rv)) goto loser;
-
-    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+    if (canceled) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
- loser:
-  return rv;
+
+  return NS_OK;
 }
 
 namespace mozilla {

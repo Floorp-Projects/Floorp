@@ -513,7 +513,7 @@ ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
 
   nsLayoutUtils::PaintFrame(aContext, aFrame, aFrame->GetRect(),
                             NS_RGB(255, 255, 255),
-                            nsDisplayListBuilderMode::GENERATE_GLYPH, 0);
+                            nsDisplayListBuilderMode::GENERATE_GLYPH);
 
   ctx->Clip();
 }

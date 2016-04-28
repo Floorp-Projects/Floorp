@@ -260,8 +260,7 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
   const uint64_t kSecondsPerDay = 86400;
   const uint64_t now = PR_IntervalNow() / PR_MSEC_PER_SEC;
 
-  if ((mLastUpdateCheckTime != 0) &&
-      (now - mLastUpdateCheckTime > kSecondsPerDay)) {
+  if ((now - mLastUpdateCheckTime) > kSecondsPerDay) {
     return true;
   }
   return false;

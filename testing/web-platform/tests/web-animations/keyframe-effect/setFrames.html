@@ -44,7 +44,7 @@ gInvalidKeyframesTests.forEach(function(subtest) {
     assert_throws(subtest.expected, function() {
       effect.setFrames(subtest.input);
     });
-  }, "Invalid KeyframeEffect option by " + subtest.desc);
+  }, 'KeyframeEffect constructor throws with ' + subtest.desc);
 });
 </script>
 </body>

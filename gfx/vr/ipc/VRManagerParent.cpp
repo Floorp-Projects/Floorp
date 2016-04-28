@@ -44,8 +44,8 @@ VRManagerParent::~VRManagerParent()
   Transport* trans = GetTransport();
   if (trans) {
     MOZ_ASSERT(XRE_GetIOMessageLoop());
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(trans));
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(trans);
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
   }
   MOZ_COUNT_DTOR(VRManagerParent);
 }
@@ -79,8 +79,7 @@ VRManagerParent::CreateCrossProcess(Transport* aTransport, ProcessId aChildProce
   MessageLoop* loop = mozilla::layers::CompositorBridgeParent::CompositorLoop();
   RefPtr<VRManagerParent> vmp = new VRManagerParent(loop, aTransport, aChildProcessId);
   vmp->mSelfRef = vmp;
-  loop->PostTask(FROM_HERE,
-                 NewRunnableFunction(ConnectVRManagerInParentProcess,
+  loop->PostTask(NewRunnableFunction(ConnectVRManagerInParentProcess,
                                      vmp.get(), aTransport, aChildProcessId));
   return vmp.get();
 }
@@ -98,8 +97,7 @@ VRManagerParent::CreateSameProcess()
   RefPtr<VRManagerParent> vmp = new VRManagerParent(loop, nullptr, base::GetCurrentProcId());
   vmp->mCompositorThreadHolder = layers::GetCompositorThreadHolder();
   vmp->mSelfRef = vmp;
-  loop->PostTask(FROM_HERE,
-                 NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
+  loop->PostTask(NewRunnableFunction(RegisterVRManagerInCompositorThread, vmp.get()));
   return vmp.get();
 }
 
@@ -115,7 +113,6 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
 {
   UnregisterFromManager();
   MessageLoop::current()->PostTask(
-    FROM_HERE,
     NewRunnableMethod(this, &VRManagerParent::DeferredDestroy));
 }
 

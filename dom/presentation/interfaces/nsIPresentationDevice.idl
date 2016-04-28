@@ -18,7 +18,7 @@ interface nsIPresentationDevice : nsISupports
   // The human-readable name of this device.
   readonly attribute AUTF8String name;
 
-  //TODO expose more info in order to fulfill UX spec
+  // TODO expose more info in order to fulfill UX spec
   // The category of this device, could be "wifi", "bluetooth", "hdmi", etc.
   readonly attribute AUTF8String type;
 
@@ -31,4 +31,9 @@ interface nsIPresentationDevice : nsISupports
    */
   nsIPresentationControlChannel establishControlChannel(in DOMString url,
                                                         in DOMString presentationId);
+
+  // Do something when presentation session is disconnected.
+  void disconnect();
 };
+
+

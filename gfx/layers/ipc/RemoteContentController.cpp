@@ -59,7 +59,6 @@ RemoteContentController::HandleDoubleTap(const CSSPoint& aPoint,
     // We have to send this message from the "UI thread" (main
     // thread).
     mUILoop->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &RemoteContentController::HandleDoubleTap,
                         aPoint, aModifiers, aGuid));
     return;
@@ -79,7 +78,6 @@ RemoteContentController::HandleSingleTap(const CSSPoint& aPoint,
     // We have to send this message from the "UI thread" (main
     // thread).
     mUILoop->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &RemoteContentController::HandleSingleTap,
                         aPoint, aModifiers, aGuid));
     return;
@@ -113,7 +111,6 @@ RemoteContentController::HandleLongTap(const CSSPoint& aPoint,
     // We have to send this message from the "UI thread" (main
     // thread).
     mUILoop->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &RemoteContentController::HandleLongTap,
                         aPoint, aModifiers, aGuid, aInputBlockId));
     return;
@@ -125,13 +122,13 @@ RemoteContentController::HandleLongTap(const CSSPoint& aPoint,
 }
 
 void
-RemoteContentController::PostDelayedTask(Task* aTask, int aDelayMs)
+RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
 #ifdef MOZ_ANDROID_APZ
-  AndroidBridge::Bridge()->PostTaskToUiThread(aTask, aDelayMs);
+  AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
 #else
   (MessageLoop::current() ? MessageLoop::current() : mUILoop)->
-     PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+    PostDelayedTask(Move(aTask), aDelayMs);
 #endif
 }
 
@@ -154,7 +151,6 @@ RemoteContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
 {
   if (MessageLoop::current() != mUILoop) {
     mUILoop->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &RemoteContentController::NotifyAPZStateChange,
                         aGuid, aChange, aArg));
     return;
@@ -170,7 +166,6 @@ RemoteContentController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& a
 {
   if (MessageLoop::current() != mUILoop) {
     mUILoop->PostTask(
-      FROM_HERE,
       NewRunnableMethod(this, &RemoteContentController::NotifyMozMouseScrollEvent,
                         aScrollId, aEvent));
     return;

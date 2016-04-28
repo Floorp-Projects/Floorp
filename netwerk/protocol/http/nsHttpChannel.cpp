@@ -6092,9 +6092,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // We no longer need the dns prefetch object
         if (mDNSPrefetch && mDNSPrefetch->TimingsValid()
             && !mTransactionTimings.requestStart.IsNull()
-            && mDNSPrefetch->EndTimestamp() <= mTransactionTimings.requestStart) {
+            && !mTransactionTimings.connectStart.IsNull()
+            && mDNSPrefetch->EndTimestamp() <= mTransactionTimings.connectStart) {
             // We only need the domainLookup timestamps when not using a
-            // persistent connection, meaning if the endTimestamp < requestStart
+            // persistent connection, meaning if the endTimestamp < connectStart
             mTransactionTimings.domainLookupStart =
                 mDNSPrefetch->StartTimestamp();
             mTransactionTimings.domainLookupEnd =
@@ -6704,7 +6705,7 @@ nsHttpChannel::ForceCacheEntryValidFor(uint32_t aSecondsToTheFuture)
         mCacheEntry->GetKey(key);
 
         LOG(("nsHttpChannel::ForceCacheEntryValidFor successfully forced valid "
-             "entry with key %s for %d seconds. [this=%p]", ToNewCString(key),
+             "entry with key %s for %d seconds. [this=%p]", key.get(),
              aSecondsToTheFuture, this));
     }
 
@@ -7023,10 +7024,11 @@ nsHttpChannel::OnLookupComplete(nsICancelable *request,
     // validly null if OnStopRequest has already been called.
     // We only need the domainLookup timestamps when not loading from cache
     if (mDNSPrefetch && mDNSPrefetch->TimingsValid() && mTransaction) {
+        TimeStamp connectStart = mTransaction->GetConnectStart();
         TimeStamp requestStart = mTransaction->GetRequestStart();
         // We only set the domainLookup timestamps if we're not using a
         // persistent connection.
-        if (requestStart.IsNull() || (mDNSPrefetch->EndTimestamp() < requestStart)) {
+        if (requestStart.IsNull() && connectStart.IsNull()) {
             mTransaction->SetDomainLookupStart(mDNSPrefetch->StartTimestamp());
             mTransaction->SetDomainLookupEnd(mDNSPrefetch->EndTimestamp());
         }

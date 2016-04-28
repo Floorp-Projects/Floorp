@@ -1490,7 +1490,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
   }
   mCurrentCallArray[aCallIndex].mNumber = aNumber;
 
-  RefPtr<nsRunnable> sendRingTask;
+  RefPtr<Runnable> sendRingTask;
   nsString address;
 
   switch (aCallState) {

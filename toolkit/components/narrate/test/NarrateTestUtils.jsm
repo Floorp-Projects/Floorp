@@ -18,8 +18,8 @@ this.NarrateTestUtils = {
   VOICE_SELECTED: "#narrate-voices .options .option.selected",
   VOICE_SELECT_LABEL: "#narrate-voices .select-toggle .current-voice",
   RATE: "#narrate-rate-input",
-  START: "#narrate-start-stop:not(.speaking)",
-  STOP: "#narrate-start-stop.speaking",
+  START: "#narrate-dropdown:not(.speaking) #narrate-start-stop",
+  STOP: "#narrate-dropdown.speaking #narrate-start-stop",
   BACK: "#narrate-skip-previous",
   FORWARD: "#narrate-skip-next",
 

@@ -101,7 +101,7 @@ sp<IGraphicBufferAlloc> FakeSurfaceComposer::createGraphicBufferAlloc()
     return gba;
 }
 
-class DestroyDisplayRunnable : public nsRunnable {
+class DestroyDisplayRunnable : public Runnable {
 public:
     DestroyDisplayRunnable(FakeSurfaceComposer* aComposer, ssize_t aIndex)
         : mComposer(aComposer), mIndex(aIndex) { }

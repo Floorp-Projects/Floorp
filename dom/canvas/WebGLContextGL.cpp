@@ -746,6 +746,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         MOZ_CRASH("Bad target.");
     }
 
+    MakeContextCurrent();
+
     if (fb)
         return fb->GetAttachmentParameter(funcName, cx, target, attachment, pname, &rv);
 

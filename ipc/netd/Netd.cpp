@@ -31,7 +31,7 @@ namespace {
 RefPtr<mozilla::ipc::NetdClient> gNetdClient;
 RefPtr<mozilla::ipc::NetdConsumer> gNetdConsumer;
 
-class StopNetdConsumer : public nsRunnable {
+class StopNetdConsumer : public mozilla::Runnable {
 public:
   NS_IMETHOD Run()
   {

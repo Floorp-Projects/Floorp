@@ -1104,7 +1104,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
   return status;
 }
 
-class DispatchWheelEventOnMainThread : public Task
+class DispatchWheelEventOnMainThread : public Runnable
 {
 public:
   DispatchWheelEventOnMainThread(const ScrollWheelInput& aWheelInput,
@@ -1120,11 +1120,11 @@ public:
   {
   }
 
-  void Run()
+  NS_IMETHOD Run() override
   {
     WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetWheelEvent(mWidget);
     mWidget->ProcessUntransformedAPZEvent(&wheelEvent, mGuid, mInputBlockId, mAPZResult);
-    return;
+    return NS_OK;
   }
 
 private:
@@ -1135,7 +1135,7 @@ private:
   ScrollableLayerGuid mGuid;
 };
 
-class DispatchWheelInputOnControllerThread : public Task
+class DispatchWheelInputOnControllerThread : public Runnable
 {
 public:
   DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
@@ -1149,15 +1149,15 @@ public:
   {
   }
 
-  void Run()
+  NS_IMETHOD Run() override
   {
     mAPZResult = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
     if (mAPZResult == nsEventStatus_eConsumeNoDefault) {
-      return;
+      return NS_OK;
     }
-    mMainMessageLoop->PostTask(FROM_HERE,
-                               new DispatchWheelEventOnMainThread(mWheelInput, mWidget, mAPZResult, mInputBlockId, mGuid));
-    return;
+    RefPtr<Runnable> r = new DispatchWheelEventOnMainThread(mWheelInput, mWidget, mAPZResult, mInputBlockId, mGuid);
+    mMainMessageLoop->PostTask(r.forget());
+    return NS_OK;
   }
 
 private:
@@ -1187,7 +1187,8 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
     } else {
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       if (wheelEvent) {
-        APZThreadUtils::RunOnControllerThread(new DispatchWheelInputOnControllerThread(*wheelEvent, mAPZC, this));
+        RefPtr<Runnable> r = new DispatchWheelInputOnControllerThread(*wheelEvent, mAPZC, this);
+        APZThreadUtils::RunOnControllerThread(r.forget());
         return nsEventStatus_eConsumeDoDefault;
       }
       MOZ_CRASH();

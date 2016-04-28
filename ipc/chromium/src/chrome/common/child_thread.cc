@@ -33,15 +33,15 @@ bool ChildThread::Run() {
   bool r = StartWithOptions(options_);
 #ifdef MOZ_NUWA_PROCESS
   if (IsNuwaProcess()) {
-      message_loop()->PostTask(FROM_HERE,
-                               NewRunnableFunction(&ChildThread::MarkThread));
+      message_loop()->PostTask(NewRunnableFunction(&ChildThread::MarkThread));
   }
 #endif
   return r;
 }
 
 void ChildThread::OnChannelError() {
-  owner_loop_->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+  RefPtr<mozilla::Runnable> task = new MessageLoop::QuitTask();
+  owner_loop_->PostTask(task.forget());
 }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -87,7 +87,8 @@ void ChildThread::CleanUp() {
 
 void ChildThread::OnProcessFinalRelease() {
   if (!check_with_browser_before_shutdown_) {
-    owner_loop_->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+    RefPtr<mozilla::Runnable> task = new MessageLoop::QuitTask();
+    owner_loop_->PostTask(task.forget());
     return;
   }
 }

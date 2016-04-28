@@ -979,22 +979,22 @@ CodeGeneratorMIPSShared::toMoveOperand(LAllocation a) const
 void
 CodeGeneratorMIPSShared::visitMathD(LMathD* math)
 {
-    const LAllocation* src1 = math->getOperand(0);
-    const LAllocation* src2 = math->getOperand(1);
-    const LDefinition* output = math->getDef(0);
+    FloatRegister src1 = ToFloatRegister(math->getOperand(0));
+    FloatRegister src2 = ToFloatRegister(math->getOperand(1));
+    FloatRegister output = ToFloatRegister(math->getDef(0));
 
     switch (math->jsop()) {
       case JSOP_ADD:
-        masm.as_addd(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_addd(output, src1, src2);
         break;
       case JSOP_SUB:
-        masm.as_subd(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_subd(output, src1, src2);
         break;
       case JSOP_MUL:
-        masm.as_muld(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_muld(output, src1, src2);
         break;
       case JSOP_DIV:
-        masm.as_divd(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_divd(output, src1, src2);
         break;
       default:
         MOZ_CRASH("unexpected opcode");
@@ -1004,22 +1004,22 @@ CodeGeneratorMIPSShared::visitMathD(LMathD* math)
 void
 CodeGeneratorMIPSShared::visitMathF(LMathF* math)
 {
-    const LAllocation* src1 = math->getOperand(0);
-    const LAllocation* src2 = math->getOperand(1);
-    const LDefinition* output = math->getDef(0);
+    FloatRegister src1 = ToFloatRegister(math->getOperand(0));
+    FloatRegister src2 = ToFloatRegister(math->getOperand(1));
+    FloatRegister output = ToFloatRegister(math->getDef(0));
 
     switch (math->jsop()) {
       case JSOP_ADD:
-        masm.as_adds(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_adds(output, src1, src2);
         break;
       case JSOP_SUB:
-        masm.as_subs(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_subs(output, src1, src2);
         break;
       case JSOP_MUL:
-        masm.as_muls(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_muls(output, src1, src2);
         break;
       case JSOP_DIV:
-        masm.as_divs(ToFloatRegister(output), ToFloatRegister(src1), ToFloatRegister(src2));
+        masm.as_divs(output, src1, src2);
         break;
       default:
         MOZ_CRASH("unexpected opcode");
@@ -1703,11 +1703,12 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         MOZ_ASSERT(ptrImm >= 0);
 
         if (isFloat) {
-            if (size == 32) {
-                masm.storeFloat32(ToFloatRegister(value), Address(HeapReg, ptrImm));
-            } else {
-                masm.storeDouble(ToFloatRegister(value), Address(HeapReg, ptrImm));
-            }
+            FloatRegister freg = ToFloatRegister(value);
+            Address addr(HeapReg, ptrImm);
+            if (size == 32)
+                masm.storeFloat32(freg, addr);
+            else
+                masm.storeDouble(freg, addr);
         }  else {
             masm.ma_store(ToRegister(value), Address(HeapReg, ptrImm),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
@@ -1721,10 +1722,12 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 
     if (!mir->needsBoundsCheck()) {
         if (isFloat) {
-            if (size == 32) {
-                masm.storeFloat32(ToFloatRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne));
-            } else
-                masm.storeDouble(ToFloatRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne));
+            FloatRegister freg = ToFloatRegister(value);
+            BaseIndex bi(HeapReg, ptrReg, TimesOne);
+            if (size == 32)
+                masm.storeFloat32(freg, bi);
+            else
+                masm.storeDouble(freg, bi);
         } else {
             masm.ma_store(ToRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);

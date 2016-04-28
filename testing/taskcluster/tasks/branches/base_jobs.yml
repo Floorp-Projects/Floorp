@@ -36,22 +36,6 @@ builds:
         task: tasks/builds/b2g_emulator_l_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_l_debug.yml
-  emulator-jb:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_jb_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_jb_debug.yml
-  emulator:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_emulator_ics_opt.yml
-      debug:
-        task: tasks/builds/b2g_emulator_ics_debug.yml
   linux:
     platforms:
       - Linux
@@ -63,6 +47,13 @@ builds:
   linux64:
     platforms:
       - Linux64
+    extra-builds:
+      - sm-plain
+      - sm-arm-sim
+      - sm-compacting
+      - sm-generational
+      - sm-rootanalysis
+      - sm-warnaserr
     types:
       opt:
         task: tasks/builds/opt_linux64.yml
@@ -106,6 +97,80 @@ builds:
     types:
       debug:
         task: tasks/builds/mulet_haz_linux.yml
+  sm-plain:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_plain.yml
+      debug:
+       task: tasks/builds/sm_plaindebug.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-arm-sim:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_arm_sim.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-arm-sim-osx:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_arm_sim_osx.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-compacting:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_compacting.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-generational:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_generational.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-rootanalysis:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_rootanalysis.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+  sm-warnaserr:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_warnaserr.yml
+      debug:
+        task: tasks/builds/sm_warnaserrdebug.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
 
 tests:
   cppunit:
@@ -138,30 +203,6 @@ tests:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:
         task: tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml
-  gaia-build:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_build_test.yml
-  gaia-build-unit:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_build_unit.yml
-  gaia-js-integration:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_gaia_js_integration_tests.yml
-  gaia-linter:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_linter.yml
-  gaia-unit:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_gaia_unit.yml
-  gaia-unit-oop:
-    allowed_build_tasks:
-      tasks/builds/mulet_linux.yml:
-        task: tasks/tests/mulet_gaia_unit_oop.yml
   gtest:
     allowed_build_tasks:
       tasks/builds/dbg_linux64.yml:

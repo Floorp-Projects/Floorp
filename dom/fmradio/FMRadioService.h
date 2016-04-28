@@ -20,7 +20,7 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioReplyRunnable : public nsRunnable
+class FMRadioReplyRunnable : public Runnable
 {
 public:
   FMRadioReplyRunnable() : mResponseType(SuccessResponse()) {}

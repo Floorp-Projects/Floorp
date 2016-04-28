@@ -2347,6 +2347,22 @@ XrayWrapper<Base, Traits>::setPrototype(JSContext* cx, JS::HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool
+XrayWrapper<Base, Traits>::getPrototypeIfOrdinary(JSContext* cx, JS::HandleObject wrapper,
+                                                  bool* isOrdinary,
+                                                  JS::MutableHandleObject protop) const
+{
+    // We want to keep the Xray's prototype distinct from that of content, but
+    // only if there's been a set.  This different-prototype-over-time behavior
+    // means that the [[GetPrototypeOf]] trap *can't* be ECMAScript's ordinary
+    // [[GetPrototypeOf]].  This also covers cross-origin Window behavior that
+    // per <https://html.spec.whatwg.org/multipage/browsers.html#windowproxy-getprototypeof>
+    // must be non-ordinary.
+    *isOrdinary = false;
+    return true;
+}
+
+template <typename Base, typename Traits>
+bool
 XrayWrapper<Base, Traits>::setImmutablePrototype(JSContext* cx, JS::HandleObject wrapper,
                                                  bool* succeeded) const
 {

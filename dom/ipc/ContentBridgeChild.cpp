@@ -27,14 +27,14 @@ ContentBridgeChild::ContentBridgeChild(Transport* aTransport)
 
 ContentBridgeChild::~ContentBridgeChild()
 {
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(mTransport));
+  RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTransport);
+  XRE_GetIOMessageLoop()->PostTask(task.forget());
 }
 
 void
 ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   MessageLoop::current()->PostTask(
-    FROM_HERE,
     NewRunnableMethod(this, &ContentBridgeChild::DeferredDestroy));
 }
 

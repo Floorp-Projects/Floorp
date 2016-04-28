@@ -1141,22 +1141,22 @@ CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch* mir, Register index, Reg
 void
 CodeGeneratorARM::visitMathD(LMathD* math)
 {
-    const LAllocation* src1 = math->getOperand(0);
-    const LAllocation* src2 = math->getOperand(1);
-    const LDefinition* output = math->getDef(0);
+    FloatRegister src1 = ToFloatRegister(math->getOperand(0));
+    FloatRegister src2 = ToFloatRegister(math->getOperand(1));
+    FloatRegister output = ToFloatRegister(math->getDef(0));
 
     switch (math->jsop()) {
       case JSOP_ADD:
-        masm.ma_vadd(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vadd(src1, src2, output);
         break;
       case JSOP_SUB:
-        masm.ma_vsub(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vsub(src1, src2, output);
         break;
       case JSOP_MUL:
-        masm.ma_vmul(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vmul(src1, src2, output);
         break;
       case JSOP_DIV:
-        masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vdiv(src1, src2, output);
         break;
       default:
         MOZ_CRASH("unexpected opcode");
@@ -1166,22 +1166,22 @@ CodeGeneratorARM::visitMathD(LMathD* math)
 void
 CodeGeneratorARM::visitMathF(LMathF* math)
 {
-    const LAllocation* src1 = math->getOperand(0);
-    const LAllocation* src2 = math->getOperand(1);
-    const LDefinition* output = math->getDef(0);
+    FloatRegister src1 = ToFloatRegister(math->getOperand(0));
+    FloatRegister src2 = ToFloatRegister(math->getOperand(1));
+    FloatRegister output = ToFloatRegister(math->getDef(0));
 
     switch (math->jsop()) {
       case JSOP_ADD:
-        masm.ma_vadd_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vadd_f32(src1, src2, output);
         break;
       case JSOP_SUB:
-        masm.ma_vsub_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vsub_f32(src1, src2, output);
         break;
       case JSOP_MUL:
-        masm.ma_vmul_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vmul_f32(src1, src2, output);
         break;
       case JSOP_DIV:
-        masm.ma_vdiv_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        masm.ma_vdiv_f32(src1, src2, output);
         break;
       default:
         MOZ_CRASH("unexpected opcode");
@@ -2318,10 +2318,11 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         MOZ_ASSERT(ptrImm >= 0);
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
+            Address addr(HeapReg, ptrImm);
             if (size == 32)
-                masm.ma_vstr(vd.singleOverlay(), Address(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd.singleOverlay(), addr, Assembler::Always);
             else
-                masm.ma_vstr(vd, Address(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd, addr, Assembler::Always);
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);

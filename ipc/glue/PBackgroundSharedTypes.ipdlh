@@ -18,7 +18,9 @@ struct SystemPrincipalInfo
 { };
 
 struct NullPrincipalInfo
-{ };
+{
+  PrincipalOriginAttributes attrs;
+};
 
 struct ExpandedPrincipalInfo
 {

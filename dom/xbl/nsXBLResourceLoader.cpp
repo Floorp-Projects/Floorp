@@ -113,11 +113,6 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
       continue;
 
     if (curr->mType == nsGkAtoms::image) {
-      if (!nsContentUtils::CanLoadImage(url, doc, doc, docPrincipal)) {
-        // We're not permitted to load this image, move on...
-        continue;
-      }
-
       // Now kick off the image load...
       // Passing nullptr for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is nullptr! 

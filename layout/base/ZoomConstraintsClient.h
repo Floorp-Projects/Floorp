@@ -9,7 +9,6 @@
 #include "FrameMetrics.h"
 #include "mozilla/Maybe.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDocument.h"
 #include "nsIObserver.h"
 #include "nsWeakPtr.h"
 

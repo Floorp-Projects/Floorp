@@ -528,6 +528,7 @@ AudioContext::CreateOscillator(ErrorResult& aRv)
 already_AddRefed<PeriodicWave>
 AudioContext::CreatePeriodicWave(const Float32Array& aRealData,
                                  const Float32Array& aImagData,
+                                 const PeriodicWaveConstraints& aConstraints,
                                  ErrorResult& aRv)
 {
   aRealData.ComputeLengthAndData();
@@ -541,7 +542,8 @@ AudioContext::CreatePeriodicWave(const Float32Array& aRealData,
 
   RefPtr<PeriodicWave> periodicWave =
     new PeriodicWave(this, aRealData.Data(), aImagData.Data(),
-                     aImagData.Length(), aRv);
+                     aImagData.Length(), aConstraints.mDisableNormalization,
+                     aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
