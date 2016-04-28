@@ -38,6 +38,9 @@ class nsIDocShellTreeOwner;
 class mozIApplication;
 
 namespace mozilla {
+
+class DocShellOriginAttributes;
+
 namespace dom {
 class ContentParent;
 class PBrowserParent;
@@ -338,6 +341,9 @@ private:
     eTabParentChanged
   };
   void MaybeUpdatePrimaryTabParent(TabParentChange aChange);
+
+  nsresult
+  PopulateUserContextIdFromAttribute(mozilla::DocShellOriginAttributes& aAttr);
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
