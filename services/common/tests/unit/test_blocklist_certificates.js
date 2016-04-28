@@ -2,7 +2,7 @@ const { Constructor: CC } = Components;
 
 Cu.import("resource://testing-common/httpd.js");
 
-const { OneCRLBlocklistClient } = Cu.import("resource://services-common/KintoBlocklist.js");
+const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js");
 const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
