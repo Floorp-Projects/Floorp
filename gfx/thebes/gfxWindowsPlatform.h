@@ -244,10 +244,6 @@ public:
     bool HandleDeviceReset();
     void UpdateBackendPrefs();
 
-    // Return the diagnostic status of DirectX initialization. If
-    // initialization has not been attempted, this returns
-    // FeatureStatus::Unused.
-    mozilla::gfx::FeatureStatus GetD2D1Status() const;
     unsigned GetD3D11Version();
 
     void TestDeviceReset(DeviceResetReason aReason);
@@ -287,11 +283,11 @@ private:
     void InitializeD2D();
     bool InitDWriteSupport();
 
-    void DisableD2D();
+    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage);
 
     void InitializeConfig();
     void InitializeD3D11Config();
-    mozilla::gfx::FeatureStatus CheckD2D1Support();
+    void InitializeD2DConfig();
 
     void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
     bool AttemptD3D11DeviceCreationHelper(
@@ -341,10 +337,6 @@ private:
     DeviceResetReason mDeviceResetReason;
 
     RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
-
-    // These should not be accessed directly. Use the Get[Feature]Status
-    // accessors instead.
-    mozilla::gfx::FeatureStatus mD2D1Status;
 
     nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
 };
