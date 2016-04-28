@@ -80,7 +80,7 @@ public:
 
   nsresult CopyInnerTo(Element* aDest);
 
-  void StartObjectLoad() { StartObjectLoad(true); }
+  void StartObjectLoad() { StartObjectLoad(true, false); }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLSharedObjectElement,
                                                      nsGenericHTMLElement)
@@ -192,13 +192,12 @@ public:
     return GetContentDocument();
   }
 
-private:
-  virtual ~HTMLSharedObjectElement();
-
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
-  void StartObjectLoad(bool aNotify);
+  void StartObjectLoad(bool aNotify, bool aForceLoad);
+private:
+  virtual ~HTMLSharedObjectElement();
 
   nsIAtom *URIAttrName() const
   {
@@ -228,6 +227,8 @@ private:
    * the content:
    *
    * - If the embed node is the child of a media element
+   * - If the embed node is the child of an object node that already has
+   *   content being loaded.
    *
    * In these cases, this function will return false, which will cause
    * us to skip calling LoadObject.
