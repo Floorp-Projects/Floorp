@@ -2267,9 +2267,9 @@ gfxWindowsPlatform::InitializeDevices()
   // If we previously crashed initializing devices, bail out now.
   D3D11LayersCrashGuard detectCrashes;
   if (detectCrashes.Crashed()) {
-    gfxConfig::Disable(Feature::HW_COMPOSITING,
-                       FeatureStatus::CrashedOnStartup,
-                       "Crashed during startup in a previous session");
+    gfxConfig::SetFailed(Feature::HW_COMPOSITING,
+                         FeatureStatus::CrashedOnStartup,
+                         "Crashed during startup in a previous session");
     return;
   }
 
