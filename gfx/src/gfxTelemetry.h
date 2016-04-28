@@ -50,6 +50,7 @@ enum class FeatureStatus
 
 const char* FeatureStatusToString(FeatureStatus aStatus);
 bool IsFeatureStatusFailure(FeatureStatus aStatus);
+bool IsFeatureStatusSuccess(FeatureStatus aStatus);
 
 } // namespace gfx
 } // namespace mozilla
