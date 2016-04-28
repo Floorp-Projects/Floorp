@@ -1001,6 +1001,9 @@ pref("layout.accessiblecaret.enabled", true);
 // by the spec in bug 921965.
 pref("layout.accessiblecaret.bar.enabled", true);
 
+// Hide the caret in cursor mode after 3 seconds.
+pref("layout.accessiblecaret.timeout_ms", 3000);
+
 // APZ on real devices supports long tap events.
 #ifdef MOZ_WIDGET_GONK
 pref("layout.accessiblecaret.use_long_tap_injector", false);
