@@ -80,6 +80,10 @@
     <dimen name="site_security_unknown_inset_top">1dp</dimen>
     <dimen name="site_security_unknown_inset_bottom">-1dp</dimen>
 
+    <dimen name="home_folder_title_oneline_textsize">16sp</dimen>
+    <dimen name="home_folder_title_twoline_textsize">14sp</dimen>
+    <dimen name="home_twolinepagerow_title_textsize">16sp</dimen>
+
     <dimen name="page_row_edge_padding">16dp</dimen>
 
     <!-- Regular page row on about:home -->

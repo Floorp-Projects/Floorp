@@ -82,7 +82,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
         switch (itemType) {
             case SYNCED_DEVICES:
-                view = inflater.inflate(R.layout.home_remote_tabs_group, viewGroup, false);
+                view = inflater.inflate(R.layout.home_smartfolder, viewGroup, false);
                 return new CombinedHistoryItem.SmartFolder(view);
 
             case SECTION_HEADER:
