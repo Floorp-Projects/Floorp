@@ -102,7 +102,7 @@ CssColor.prototype = {
    *
    * @param {String} color The color to use
    */
-  setAuthoredUnitFromColor: function(color) {
+  setAuthoredUnitFromColor: function (color) {
     if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
         CssColor.COLORUNIT.authored) {
       this._colorUnit = classifyColor(color);
@@ -262,7 +262,7 @@ CssColor.prototype = {
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
-  _getInvalidOrSpecialValue: function() {
+  _getInvalidOrSpecialValue: function () {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -278,7 +278,7 @@ CssColor.prototype = {
    * @param  {String} color
    *         Any valid color string
    */
-  newColor: function(color) {
+  newColor: function (color) {
     // Store a lower-cased version of the color to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
@@ -287,7 +287,7 @@ CssColor.prototype = {
     return this;
   },
 
-  nextColorUnit: function() {
+  nextColorUnit: function () {
     // Reorder the formats array to have the current format at the
     // front so we can cycle through.
     let formats = ["hex", "hsl", "rgb", "name"];
@@ -309,7 +309,7 @@ CssColor.prototype = {
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
-  toString: function() {
+  toString: function () {
     let color;
 
     switch (this.colorUnit) {
@@ -344,7 +344,7 @@ CssColor.prototype = {
    * Returns a RGBA 4-Tuple representation of a color or transparent as
    * appropriate.
    */
-  _getRGBATuple: function() {
+  _getRGBATuple: function () {
     let tuple = DOMUtils.colorToRGBA(this.authored);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
@@ -352,7 +352,7 @@ CssColor.prototype = {
     return tuple;
   },
 
-  _hsl: function(maybeAlpha) {
+  _hsl: function (maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
@@ -369,7 +369,7 @@ CssColor.prototype = {
   /**
    * This method allows comparison of CssColor objects using ===.
    */
-  valueOf: function() {
+  valueOf: function () {
     return this.rgba;
   },
 };
@@ -469,6 +469,6 @@ function classifyColor(value) {
   return CssColor.COLORUNIT.name;
 }
 
-loader.lazyGetter(this, "DOMUtils", function() {
+loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
