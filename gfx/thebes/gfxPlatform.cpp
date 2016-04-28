@@ -2137,34 +2137,32 @@ gfxPlatform::InitCompositorAccelerationPrefs()
 {
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
 
+  FeatureState& feature = gfxConfig::GetFeature(Feature::HW_COMPOSITING);
+
   // Base value - does the platform allow acceleration?
-  if (gfxConfig::SetDefault(Feature::HW_COMPOSITING,
-                            AccelerateLayersByDefault(),
-                            FeatureStatus::Blocked,
-                            "Acceleration blocked by platform"))
+  if (feature.SetDefault(AccelerateLayersByDefault(),
+                         FeatureStatus::Blocked,
+                         "Acceleration blocked by platform"))
   {
     if (gfxPrefs::LayersAccelerationDisabledDoNotUseDirectly()) {
-      gfxConfig::UserDisable(Feature::HW_COMPOSITING, "Disabled by pref");
+      feature.UserDisable("Disabled by pref");
     } else if (acceleratedEnv && *acceleratedEnv == '0') {
-      gfxConfig::UserDisable(Feature::HW_COMPOSITING, "Disabled by envvar");
+      feature.UserDisable("Disabled by envvar");
     }
   } else {
     if (acceleratedEnv && *acceleratedEnv == '1') {
-      gfxConfig::UserEnable(Feature::HW_COMPOSITING, "Enabled by envvar");
+      feature.UserEnable("Enabled by envvar");
     }
   }
 
   // This has specific meaning elsewhere, so we always record it.
   if (gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly()) {
-    gfxConfig::UserForceEnable(Feature::HW_COMPOSITING, "Force-enabled by pref");
+    feature.UserForceEnable("Force-enabled by pref");
   }
 
   // Safe mode trumps everything.
   if (InSafeMode()) {
-    gfxConfig::ForceDisable(
-      Feature::HW_COMPOSITING,
-      FeatureStatus::Blocked,
-      "Acceleration blocked by safe-mode");
+    feature.ForceDisable(FeatureStatus::Blocked, "Acceleration blocked by safe-mode");
   }
 }
 
