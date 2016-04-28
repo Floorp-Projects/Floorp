@@ -340,7 +340,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
   nsCOMPtr<nsISupports> promise;
-  rv = glue->SendRequest(url, sessionId, getter_AddRefs(promise));
+  rv = glue->SendRequest(url, sessionId, device, getter_AddRefs(promise));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ctrlChannel->Close(rv);
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);

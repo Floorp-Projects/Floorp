@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIPresentationDevice;
+
 %{C++
 #define PRESENTATION_REQUEST_UI_GLUE_CONTRACTID \
   "@mozilla.org/presentation/requestuiglue;1"
@@ -13,13 +15,15 @@
 interface nsIPresentationRequestUIGlue : nsISupports
 {
   /*
-   * This method is called to open the responding app/page when a presentation
-   * request comes in at receiver side.
+   * This method is called to open the responding app/page when
+   * a presentation request comes in at receiver side.
    *
    * @param url       The url of the request.
    * @param sessionId The session ID of the request.
    *
    * @return A promise that resolves to the opening frame.
    */
-  nsISupports sendRequest(in DOMString url, in DOMString sessionId);
+  nsISupports sendRequest(in DOMString url,
+                          in DOMString sessionId,
+                          in nsIPresentationDevice device);
 };
