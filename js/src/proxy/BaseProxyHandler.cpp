@@ -396,14 +396,14 @@ BaseProxyHandler::weakmapKeyDelegate(JSObject* proxy) const
 bool
 BaseProxyHandler::getPrototype(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const
 {
-    MOZ_CRASH("must override getPrototype with dynamic prototype");
+    MOZ_CRASH("must override getPrototype with lazy prototype");
 }
 
 bool
 BaseProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                                ObjectOpResult& result) const
 {
-    // Disallow sets of protos on proxies with dynamic prototypes but no hook.
+    // Disallow sets of protos on proxies with lazy protos, but no hook.
     // This keeps us away from the footgun of having the first proto set opt
     // you out of having dynamic protos altogether.
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
@@ -415,7 +415,7 @@ bool
 BaseProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
                                          MutableHandleObject protop) const
 {
-    MOZ_CRASH("must override getPrototypeIfOrdinary with dynamic prototype");
+    MOZ_CRASH("must override getPrototypeIfOrdinary with lazy prototype");
 }
 
 bool

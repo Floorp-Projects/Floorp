@@ -479,7 +479,7 @@ intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc, Value* vp)
     if (!GetPrototype(cx, targetObj, &proto))
         return false;
 
-    if (bound->staticPrototype() != proto) {
+    if (bound->getProto() != proto) {
         if (!SetPrototype(cx, bound, proto))
             return false;
     }

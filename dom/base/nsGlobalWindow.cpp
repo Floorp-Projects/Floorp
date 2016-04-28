@@ -924,14 +924,13 @@ nsOuterWindowProxy::getPrototypeIfOrdinary(JSContext* cx,
   //
   //   https://html.spec.whatwg.org/multipage/browsers.html#windowproxy-getprototypeof
   //
-  // We nonetheless can implement it with a static [[Prototype]], because
-  // wrapper-class handlers (particularly, XOW in FilteringWrapper.cpp) supply
-  // all non-ordinary behavior.
+  // We nonetheless can implement it here using a non-"lazy" [[Prototype]],
+  // because wrapper-class handlers (particularly, XOW in FilteringWrapper.cpp)
+  // supply all the non-ordinary behavior.
   //
   // But from a spec point of view, it's the exact same object in both cases --
-  // only the observer's changed.  So this getPrototypeIfOrdinary trap on the
-  // non-wrapper object *must* report non-ordinary, even if static [[Prototype]]
-  // usually means ordinary.
+  // only the observer's changed.  So both cases *must* report non-ordinary,
+  // even if non-"lazy" [[Prototype]] usually means ordinary.
   *isOrdinary = false;
   return true;
 }

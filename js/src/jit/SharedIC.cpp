@@ -2182,7 +2182,7 @@ JSObject*
 GetDOMProxyProto(JSObject* obj)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
-    return obj->staticPrototype();
+    return obj->getTaggedProto().toObjectOrNull();
 }
 
 // Look up a property's shape on an object, being careful never to do any effectful
@@ -2253,25 +2253,30 @@ IsCacheableProtoChain(JSObject* obj, JSObject* holder, bool isDOMProxy)
         }
     }
 
+    // Don't handle objects which require a prototype guard. This should
+    // be uncommon so handling it is likely not worth the complexity.
+    if (obj->hasUncacheableProto())
+        return false;
+
     JSObject* cur = obj;
     while (cur != holder) {
         // We cannot assume that we find the holder object on the prototype
         // chain and must check for null proto. The prototype chain can be
         // altered during the lookupProperty call.
-        MOZ_ASSERT(!cur->hasDynamicPrototype());
+        JSObject* proto;
+        if (isDOMProxy && cur == obj)
+            proto = cur->getTaggedProto().toObjectOrNull();
+        else
+            proto = cur->getProto();
 
-        // Don't handle objects which require a prototype guard. This should
-        // be uncommon so handling it is likely not worth the complexity.
-        if (cur->hasUncacheableProto())
+        if (!proto || !proto->isNative())
             return false;
 
-        JSObject* proto = cur->staticPrototype();
-        if (!proto || !proto->isNative())
+        if (proto->hasUncacheableProto())
             return false;
 
         cur = proto;
     }
-
     return true;
 }
 
@@ -2709,7 +2714,7 @@ CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, PropertyName* name,
             return false;
         }
 
-        JSObject* proto = curObj->staticPrototype();
+        JSObject* proto = curObj->getTaggedProto().toObjectOrNull();
         if (!proto)
             break;
 
@@ -3138,15 +3143,13 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler& masm)
 bool
 GetProtoShapes(JSObject* obj, size_t protoChainDepth, MutableHandle<ShapeVector> shapes)
 {
-    JSObject* curProto = obj->staticPrototype();
+    JSObject* curProto = obj->getProto();
     for (size_t i = 0; i < protoChainDepth; i++) {
         if (!shapes.append(curProto->as<NativeObject>().lastProperty()))
             return false;
-        curProto = curProto->staticPrototype();
+        curProto = curProto->getProto();
     }
-
-    MOZ_ASSERT(!curProto,
-               "longer prototype chain encountered than this stub permits!");
+    MOZ_ASSERT(!curProto);
     return true;
 }
 

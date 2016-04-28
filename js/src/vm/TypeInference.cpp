@@ -1215,7 +1215,7 @@ TypeSet::ObjectKey::clasp()
 TaggedProto
 TypeSet::ObjectKey::proto()
 {
-    return isGroup() ? group()->proto() : singleton()->taggedProto();
+    return isGroup() ? group()->proto() : singleton()->getTaggedProto();
 }
 
 TypeNewScript*
@@ -2420,7 +2420,7 @@ TemporaryTypeSet::getCommonPrototype(CompilerConstraintList* constraints, JSObje
 
         TaggedProto nproto = key->proto();
         if (isFirst) {
-            if (nproto.isDynamic())
+            if (nproto.isLazy())
                 return false;
             *proto = nproto.toObjectOrNull();
             isFirst = false;
@@ -3007,11 +3007,8 @@ ObjectGroup::print()
     TaggedProto tagged(proto());
     fprintf(stderr, "%s : %s",
             TypeSet::ObjectGroupString(this),
-            tagged.isObject()
-            ? TypeSet::TypeString(TypeSet::ObjectType(tagged.toObject()))
-            : tagged.isDynamic()
-            ? "(dynamic)"
-            : "(null)");
+            tagged.isObject() ? TypeSet::TypeString(TypeSet::ObjectType(tagged.toObject()))
+                              : (tagged.isLazy() ? "(lazy)" : "(null)"));
 
     if (unknownProperties()) {
         fprintf(stderr, " unknown");
@@ -3122,7 +3119,7 @@ js::AddClearDefiniteGetterSetterForPrototypeChain(JSContext* cx, ObjectGroup* gr
             return false;
         if (!protoTypes->addConstraint(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteGetterSetter>(group)))
             return false;
-        proto = proto->staticPrototype();
+        proto = proto->getProto();
     }
     return true;
 }
@@ -3322,7 +3319,7 @@ JSFunction::setTypeForScriptedFunction(ExclusiveContext* cx, HandleFunction fun,
         if (!setSingleton(cx, fun))
             return false;
     } else {
-        RootedObject funProto(cx, fun->staticPrototype());
+        RootedObject funProto(cx, fun->getProto());
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(funProto));
         ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, &JSFunction::class_,
                                                                taggedProto);
@@ -3615,7 +3612,9 @@ ChangeObjectFixedSlotCount(JSContext* cx, PlainObject* obj, gc::AllocKind allocK
 {
     MOZ_ASSERT(OnlyHasDataProperties(obj->lastProperty()));
 
-    Shape* newShape = ReshapeForAllocKind(cx, obj->lastProperty(), obj->taggedProto(), allocKind);
+    Shape* newShape = ReshapeForAllocKind(cx, obj->lastProperty(),
+                                          obj->getTaggedProto(),
+                                          allocKind);
     if (!newShape)
         return false;
 

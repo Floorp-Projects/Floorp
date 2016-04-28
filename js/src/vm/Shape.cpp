@@ -1194,7 +1194,7 @@ JSObject::setFlags(ExclusiveContext* cx, BaseShape::Flag flags, GenerateShape ge
     if (!existingShape)
         return false;
 
-    Shape* newShape = Shape::setObjectFlags(cx, flags, self->taggedProto(), existingShape);
+    Shape* newShape = Shape::setObjectFlags(cx, flags, self->getTaggedProto(), existingShape);
     if (!newShape)
         return false;
 

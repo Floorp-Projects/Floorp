@@ -785,13 +785,11 @@ IsCacheableSetPropAddSlot(JSContext* cx, JSObject* obj, Shape* oldShape,
     size_t chainDepth = 0;
     // Walk up the object prototype chain and ensure that all prototypes are
     // native, and that all prototypes have no setter defined on the property.
-    for (JSObject* proto = obj->staticPrototype(); proto; proto = proto->staticPrototype()) {
+    for (JSObject* proto = obj->getProto(); proto; proto = proto->getProto()) {
         chainDepth++;
         // if prototype is non-native, don't optimize
         if (!proto->isNative())
             return false;
-
-        MOZ_ASSERT(proto->hasStaticPrototype());
 
         // if prototype defines this property in a non-plain way, don't optimize
         Shape* protoShape = proto->as<NativeObject>().lookup(cx, id);
@@ -2354,13 +2352,13 @@ SetElemAddHasSameShapes(ICSetElem_DenseOrUnboxedArrayAdd* stub, JSObject* obj)
     if (obj->maybeShape() != nstub->shape(0))
         return false;
 
-    JSObject* proto = obj->staticPrototype();
+    JSObject* proto = obj->getProto();
     for (size_t i = 0; i < stub->protoChainDepth(); i++) {
         if (!proto->isNative())
             return false;
         if (proto->as<NativeObject>().lastProperty() != nstub->shape(i + 1))
             return false;
-        proto = obj->staticPrototype();
+        proto = obj->getProto();
         if (!proto) {
             if (i != stub->protoChainDepth() - 1)
                 return false;
@@ -2481,12 +2479,12 @@ CanOptimizeDenseOrUnboxedArraySetElem(JSObject* obj, uint32_t index,
     // Scan the prototype and shape chain to make sure that this is not the case.
     if (obj->isIndexed())
         return false;
-    JSObject* curObj = obj->staticPrototype();
+    JSObject* curObj = obj->getProto();
     while (curObj) {
         ++*protoDepthOut;
         if (!curObj->isNative() || curObj->isIndexed())
             return false;
-        curObj = curObj->staticPrototype();
+        curObj = curObj->getProto();
     }
 
     if (*protoDepthOut > ICSetElem_DenseOrUnboxedArrayAdd::MAX_PROTO_CHAIN_DEPTH)
@@ -3700,7 +3698,7 @@ TryAttachGlobalNameValueStub(JSContext* cx, HandleScript script, jsbytecode* pc,
         if (current == globalLexical) {
             current = &globalLexical->global();
         } else {
-            JSObject* proto = current->staticPrototype();
+            JSObject* proto = current->getProto();
             if (!proto || !proto->is<NativeObject>())
                 return true;
             current = &proto->as<NativeObject>();
@@ -3775,7 +3773,7 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
         shape = current->lookup(cx, id);
         if (shape)
             break;
-        JSObject* proto = current->staticPrototype();
+        JSObject* proto = current->getProto();
         if (!proto || !proto->is<NativeObject>())
             return true;
         current = &proto->as<NativeObject>();

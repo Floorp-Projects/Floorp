@@ -49,7 +49,7 @@ js::TaggedProto::hashCode() const
 uint64_t
 js::TaggedProto::uniqueId() const
 {
-    if (isDynamic())
+    if (isLazy())
         return uint64_t(1);
     JSObject* obj = toObjectOrNull();
     if (!obj)
