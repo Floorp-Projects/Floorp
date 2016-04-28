@@ -183,6 +183,7 @@ public class PushService implements BundleEventListener {
             final JSONObject data = new JSONObject();
             try {
                 data.put("channelID", chid);
+                data.put("con", bundle.getString("con"));
                 data.put("enc", bundle.getString("enc"));
                 // Only one of cryptokey (newer) and enckey (deprecated) should be set, but the
                 // Gecko handler will verify this.
