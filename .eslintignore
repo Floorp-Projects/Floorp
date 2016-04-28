@@ -102,6 +102,7 @@ devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/**
 !devtools/client/shared/css-color.js
+!devtools/client/shared/css-color-db.js
 devtools/client/sourceeditor/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
