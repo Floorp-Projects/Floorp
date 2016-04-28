@@ -186,7 +186,7 @@ Servo_DropNodeData(ServoNodeData* data)
 
 RawServoStyleSheet*
 Servo_StylesheetFromUTF8Bytes(const uint8_t* bytes, uint32_t length,
-                              mozilla::css::SheetParsingMode mode);
+                              mozilla::css::SheetParsingMode mode)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_StylesheetFromUTF8Bytes in a "
             "non-MOZ_STYLO build");
