@@ -7212,7 +7212,7 @@ var Tabs = {
         if (["down", "unknown", "up"].indexOf(aData) == -1) {
           return;
         }
-        this.useCache = (aData != "up");
+        this.useCache = (aData === "down");
         break;
     }
   },
