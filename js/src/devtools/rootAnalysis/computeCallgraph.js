@@ -308,7 +308,7 @@ function processBody(functionName, body)
     }
 }
 
-GCSuppressionTypes = loadTypeInfo(typeInfo_filename)["Suppress GC"];
+GCSuppressionTypes = loadTypeInfo(typeInfo_filename)["Suppress GC"] || [];
 
 var xdb = xdbLibrary();
 xdb.open("src_comp.xdb");

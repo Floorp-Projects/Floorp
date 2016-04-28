@@ -29,7 +29,7 @@ var batch = (scriptArgs[5]|0) || 1;
 var numBatches = (scriptArgs[6]|0) || 1;
 var tmpfile = scriptArgs[7] || "tmp.txt";
 
-GCSuppressionTypes = loadTypeInfo(typeInfoFile)["Suppress GC"];
+GCSuppressionTypes = loadTypeInfo(typeInfoFile)["Suppress GC"] || [];
 
 var gcFunctions = {};
 var text = snarf("gcFunctions.lst").split("\n");

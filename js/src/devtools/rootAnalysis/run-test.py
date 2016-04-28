@@ -40,7 +40,7 @@ parser.add_argument(
     '--verbose', '-v', action='store_true',
     help='Display verbose output, including commands executed')
 parser.add_argument(
-    'tests', nargs='*', default=['sixgill-tree', 'suppression', 'hazards'],
+    'tests', nargs='*', default=['sixgill-tree', 'suppression', 'hazards', 'exceptions'],
     help='tests to run')
 
 cfg = parser.parse_args()
