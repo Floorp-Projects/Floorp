@@ -18,7 +18,6 @@ Test swapFrameLoaders with different frame types and remoteness
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(100);
 
   window.open("window_swapFrameLoaders.xul", "bug1242644",
               "chrome,width=600,height=600");
