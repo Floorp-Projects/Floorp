@@ -75,15 +75,15 @@ function moduleHeaderThen(...rest) {
 var o = wasmEval(toU8(moduleHeaderThen()));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
-wasmEval(toU8(moduleHeaderThen(1, 0)));        // unknown section containing 0-length string
-wasmEval(toU8(moduleHeaderThen(2, 1, 0)));     // unknown section containing 1-length string ("\0")
-wasmEval(toU8(moduleHeaderThen(1, 0,  1, 0)));
-wasmEval(toU8(moduleHeaderThen(1, 0,  2, 1, 0)));
-wasmEval(toU8(moduleHeaderThen(1, 0,  2, 1, 0)));
+wasmEval(toU8(moduleHeaderThen(0, 0)));        // unknown section containing 0-length string
+wasmEval(toU8(moduleHeaderThen(1, 0, 0)));     // unknown section containing 1-length string ("\0")
+wasmEval(toU8(moduleHeaderThen(0, 0,  0, 0)));
+wasmEval(toU8(moduleHeaderThen(0, 0,  1, 0, 0)));
+wasmEval(toU8(moduleHeaderThen(1, 0, 0,  1, 0, 0)));
+wasmEval(toU8(moduleHeaderThen(1, 0, 0,  0, 0)));
 
 assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0))), TypeError, unknownSectionError);
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1))), TypeError, unknownSectionError);
 
 function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
@@ -101,9 +101,8 @@ function string(name) {
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
-        var sectionName = string(section.name);
-        bytes.push(...varU32(sectionName.length + section.body.length));
-        bytes.push(...sectionName);
+        bytes.push(...string(section.name));
+        bytes.push(...varU32(section.body.length));
         bytes.push(...section.body);
     }
     return toU8(bytes);
