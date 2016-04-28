@@ -1173,7 +1173,7 @@ class GCRuntime
     bool sweepingTypes;
     unsigned finalizePhase;
     JS::Zone* sweepZone;
-    unsigned sweepKindIndex;
+    AllocKind sweepKind;
     bool abortSweepAfterCurrentGroup;
 
     /*
