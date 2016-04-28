@@ -9,6 +9,7 @@ import android.content.Context;
 import android.support.annotation.UiThread;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,9 @@ import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +32,16 @@ import static org.mozilla.gecko.home.CombinedHistoryItem.ItemType.*;
 
 public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> implements CombinedHistoryRecyclerView.AdapterContextMenuBuilder {
     public static final String LOGTAG = "GeckoClientsAdapter";
+
+    /**
+     * If a device claims to have synced before this date, we will assume it has never synced.
+     */
+    public static final Date EARLIEST_VALID_SYNCED_DATE;
+    static {
+        final Calendar c = GregorianCalendar.getInstance();
+        c.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+        EARLIEST_VALID_SYNCED_DATE = c.getTime();
+    }
 
     List<Pair<String, Integer>> adapterList = new LinkedList<>();
 
@@ -292,4 +306,18 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
         return info;
     }
 
+    /**
+     * Return a relative "Last synced" time span for the given tab record.
+     *
+     * @param now local time.
+     * @param time to format string for.
+     * @return string describing time span
+     */
+    public static String getLastSyncedString(Context context, long now, long time) {
+        if (new Date(time).before(EARLIEST_VALID_SYNCED_DATE)) {
+            return context.getString(R.string.remote_tabs_never_synced);
+        }
+        final CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS);
+        return context.getResources().getString(R.string.remote_tabs_last_synced, relativeTimeSpanString);
+    }
 }
