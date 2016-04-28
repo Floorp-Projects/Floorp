@@ -31,7 +31,7 @@ var gClicking = null;
 var gDoPreventDefault1 = null;
 var gDoPreventDefault2 = null;
 
-function clickEventHnalder(aEvent)
+function clickEventHandler(aEvent)
 {
   if (aEvent.button == 1 && aEvent.target == gClicking) {
     gClicked = true;
@@ -55,9 +55,9 @@ function startTest() {
   frameWindow = iframe.contentWindow;
   frameDocument = iframe.contentDocument;
 
-  frameDocument.getElementById("input").addEventListener("click", clickEventHnalder, false);
-  frameDocument.getElementById("editor1").addEventListener("click", clickEventHnalder, false);
-  frameDocument.getElementById("editor2").addEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("input").addEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("editor1").addEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("editor2").addEventListener("click", clickEventHandler, false);
 
   var text = frameDocument.getElementById("text");
 
@@ -332,9 +332,9 @@ function runContentEditableTests5()
 
 function initForBodyEditableDocumentTests()
 {
-  frameDocument.getElementById("input").removeEventListener("click", clickEventHnalder, false);
-  frameDocument.getElementById("editor1").removeEventListener("click", clickEventHnalder, false);
-  frameDocument.getElementById("editor2").removeEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("input").removeEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("editor1").removeEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("editor2").removeEventListener("click", clickEventHandler, false);
 
   iframe.onload =
     function (aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
