@@ -33,6 +33,14 @@ using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffectReadOnly;
 using mozilla::dom::CSSAnimation;
 
+namespace {
+
+// Pair of an event message and elapsed time used when determining the set of
+// events to queue.
+typedef Pair<EventMessage, StickyTimeDuration> EventPair;
+
+} // anonymous namespace
+
 ////////////////////////// CSSAnimation ////////////////////////////
 
 JSObject*
@@ -152,6 +160,12 @@ CSSAnimation::QueueEvents()
     return;
   }
 
+  // If the animation is pending, we ignore animation events until we finish
+  // pending.
+  if (mPendingState != PendingState::NotPending) {
+    return;
+  }
+
   // CSS animations dispatch events at their owning element. This allows
   // script to repurpose a CSS animation to target a different element,
   // to use a group effect (which has no obvious "target element"), or
@@ -196,7 +210,7 @@ CSSAnimation::QueueEvents()
   bool wasActive = mPreviousPhaseOrIteration != PREVIOUS_PHASE_BEFORE &&
                    mPreviousPhaseOrIteration != PREVIOUS_PHASE_AFTER;
   bool isActive =
-         computedTiming.mPhase == ComputedTiming::AnimationPhase::Active;
+    computedTiming.mPhase == ComputedTiming::AnimationPhase::Active;
   bool isSameIteration =
          computedTiming.mCurrentIteration == mPreviousPhaseOrIteration;
   bool skippedActivePhase =
@@ -204,6 +218,10 @@ CSSAnimation::QueueEvents()
      computedTiming.mPhase == ComputedTiming::AnimationPhase::After) ||
     (mPreviousPhaseOrIteration == PREVIOUS_PHASE_AFTER &&
      computedTiming.mPhase == ComputedTiming::AnimationPhase::Before);
+  bool skippedFirstIteration =
+    isActive &&
+    mPreviousPhaseOrIteration == PREVIOUS_PHASE_BEFORE &&
+    computedTiming.mCurrentIteration > 0;
 
   MOZ_ASSERT(!skippedActivePhase || (!isActive && !wasActive),
              "skippedActivePhase only makes sense if we were & are inactive");
@@ -216,46 +234,39 @@ CSSAnimation::QueueEvents()
     mPreviousPhaseOrIteration = PREVIOUS_PHASE_AFTER;
   }
 
-  EventMessage message;
+  AutoTArray<EventPair, 2> events;
+  StickyTimeDuration initialAdvance = StickyTimeDuration(InitialAdvance());
+  StickyTimeDuration iterationStart = computedTiming.mDuration *
+                                      computedTiming.mCurrentIteration;
+  const StickyTimeDuration& activeDuration = computedTiming.mActiveDuration;
 
-  if (!wasActive && isActive) {
-    message = eAnimationStart;
+  if (skippedFirstIteration) {
+    // Notify animationstart and animationiteration in same tick.
+    events.AppendElement(EventPair(eAnimationStart, initialAdvance));
+    events.AppendElement(EventPair(eAnimationIteration,
+                                   std::max(iterationStart, initialAdvance)));
+  } else if (!wasActive && isActive) {
+    events.AppendElement(EventPair(eAnimationStart, initialAdvance));
   } else if (wasActive && !isActive) {
-    message = eAnimationEnd;
+    events.AppendElement(EventPair(eAnimationEnd, activeDuration));
   } else if (wasActive && isActive && !isSameIteration) {
-    message = eAnimationIteration;
+    events.AppendElement(EventPair(eAnimationIteration, iterationStart));
   } else if (skippedActivePhase) {
-    // First notifying for start of 0th iteration by appending an
-    // 'animationstart':
-    StickyTimeDuration elapsedTime =
-      std::min(StickyTimeDuration(InitialAdvance()),
-               computedTiming.mActiveDuration);
-    manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
-                                           eAnimationStart, mAnimationName,
-                                           elapsedTime,
-                                           ElapsedTimeToTimeStamp(elapsedTime),
-                                           this));
-    // Then have the shared code below append an 'animationend':
-    message = eAnimationEnd;
+    events.AppendElement(EventPair(eAnimationStart,
+                                   std::min(initialAdvance, activeDuration)));
+    events.AppendElement(EventPair(eAnimationEnd, activeDuration));
   } else {
     return; // No events need to be sent
   }
 
-  StickyTimeDuration elapsedTime;
-
-  if (message == eAnimationStart || message == eAnimationIteration) {
-    StickyTimeDuration iterationStart = computedTiming.mDuration *
-                                          computedTiming.mCurrentIteration;
-    elapsedTime = std::max(iterationStart, StickyTimeDuration(InitialAdvance()));
-  } else {
-    MOZ_ASSERT(message == eAnimationEnd);
-    elapsedTime = computedTiming.mActiveDuration;
+  for (const EventPair& pair : events){
+    manager->QueueEvent(
+               AnimationEventInfo(owningElement, owningPseudoType,
+                                  pair.first(), mAnimationName,
+                                  pair.second(),
+                                  ElapsedTimeToTimeStamp(pair.second()),
+                                  this));
   }
-
-  manager->QueueEvent(AnimationEventInfo(owningElement, owningPseudoType,
-                                         message, mAnimationName, elapsedTime,
-                                         ElapsedTimeToTimeStamp(elapsedTime),
-                                         this));
 }
 
 void
@@ -274,25 +285,8 @@ TimeStamp
 CSSAnimation::ElapsedTimeToTimeStamp(const StickyTimeDuration&
                                        aElapsedTime) const
 {
-  // Initializes to null. We always return this object to benefit from
-  // return-value-optimization.
-  TimeStamp result;
-
-  // Currently we may dispatch animationstart events before resolving
-  // mStartTime if we have a delay <= 0. This will change in bug 1134163
-  // but until then we should just use the latest refresh driver time as
-  // the event timestamp in that case.
-  if (!mEffect || mStartTime.IsNull()) {
-    nsPresContext* presContext = GetPresContext();
-    if (presContext) {
-      result = presContext->RefreshDriver()->MostRecentRefresh();
-    }
-    return result;
-  }
-
-  result = AnimationTimeToTimeStamp(aElapsedTime +
-                                    mEffect->SpecifiedTiming().mDelay);
-  return result;
+  return AnimationTimeToTimeStamp(aElapsedTime +
+                                  mEffect->SpecifiedTiming().mDelay);
 }
 
 ////////////////////////// nsAnimationManager ////////////////////////////
@@ -663,13 +657,6 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   } else {
     animation->PlayFromStyle();
   }
-  // FIXME: Bug 1134163 - We shouldn't queue animationstart events
-  // until the animation is actually ready to run. However, we
-  // currently have some tests that assume that these events are
-  // dispatched within the same tick as the animation is added
-  // so we need to queue up any animationstart events from newly-created
-  // animations.
-  animation->QueueEvents();
 
   return animation.forget();
 }
