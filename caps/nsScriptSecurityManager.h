@@ -120,6 +120,10 @@ private:
     // If aURI is a moz-extension:// URI, set mAddonId to the associated addon.
     nsresult MaybeSetAddonIdFromURI(mozilla::PrincipalOriginAttributes& aAttrs, nsIURI* aURI);
 
+    nsresult GetChannelResultPrincipal(nsIChannel* aChannel,
+                                       nsIPrincipal** aPrincipal,
+                                       bool aIgnoreSandboxing);
+
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
