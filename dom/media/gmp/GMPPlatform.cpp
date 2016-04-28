@@ -73,7 +73,8 @@ public:
     //    main thread tries to do a sync call back to the calling thread.
     MOZ_ASSERT(!IsOnChildMainThread());
 
-    mMessageLoop->PostTask(NewRunnableMethod(this, &SyncRunnable::Run));
+    RefPtr<mozilla::Runnable> runnable = NS_NewRunnableMethod(this, &SyncRunnable::Run);
+    mMessageLoop->PostTask(runnable.forget());
     MonitorAutoLock lock(mMonitor);
     while (!mDone) {
       lock.Wait();
@@ -121,7 +122,8 @@ RunOnMainThread(GMPTask* aTask)
   }
 
   RefPtr<Runnable> r = new Runnable(aTask);
-  sMainLoop->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
+  RefPtr<mozilla::Runnable> runnable = NS_NewRunnableMethod(r, &Runnable::Run);
+  sMainLoop->PostTask(runnable.forget());
 
   return GMPNoErr;
 }
@@ -253,8 +255,8 @@ GMPThreadImpl::Post(GMPTask* aTask)
   }
 
   RefPtr<Runnable> r = new Runnable(aTask);
-
-  mThread.message_loop()->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
+  RefPtr<mozilla::Runnable> runnable = NS_NewRunnableMethod(r, &Runnable::Run);
+  mThread.message_loop()->PostTask(runnable.forget());
 }
 
 void
