@@ -30,6 +30,8 @@ FeatureStatusToString(FeatureStatus aStatus)
       return "available";
     case FeatureStatus::ForceEnabled:
       return "force_enabled";
+    case FeatureStatus::CrashedOnStartup:
+      return "crashed_on_startup";
     default:
       MOZ_ASSERT_UNREACHABLE("missing status case");
       return "unknown";
