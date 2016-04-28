@@ -2064,7 +2064,7 @@ IonBuilder::inlineObjectCreate(CallInfo& callInfo)
 
     // Ensure the argument matches the template object's prototype.
     MDefinition* arg = callInfo.getArg(0);
-    if (JSObject* proto = templateObject->staticPrototype()) {
+    if (JSObject* proto = templateObject->getProto()) {
         if (IsInsideNursery(proto))
             return InliningStatus_NotInlined;
 

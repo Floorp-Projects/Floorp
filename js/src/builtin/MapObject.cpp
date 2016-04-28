@@ -232,7 +232,7 @@ MapIteratorObject::createResultPair(JSContext* cx)
     if (!resultPairObj)
         return nullptr;
 
-    Rooted<TaggedProto> proto(cx, resultPairObj->taggedProto());
+    Rooted<TaggedProto> proto(cx, resultPairObj->getTaggedProto());
     ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, resultPairObj->getClass(), proto);
     if (!group)
         return nullptr;

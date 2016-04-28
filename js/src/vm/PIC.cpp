@@ -181,7 +181,14 @@ bool
 js::ForOfPIC::Chain::isOptimizableArray(JSObject* obj)
 {
     MOZ_ASSERT(obj->is<ArrayObject>());
-    return obj->staticPrototype() == arrayProto_;
+
+    // Ensure object's prototype is the actual Array.prototype
+    if (!obj->getTaggedProto().isObject())
+        return false;
+    if (obj->getTaggedProto().toObject() != arrayProto_)
+        return false;
+
+    return true;
 }
 
 bool

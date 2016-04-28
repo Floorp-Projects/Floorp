@@ -721,7 +721,7 @@ UnboxedPlainObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         objp.set(nullptr);
         propp.set(nullptr);
@@ -772,7 +772,7 @@ UnboxedPlainObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         *foundp = false;
         return true;
@@ -799,7 +799,7 @@ UnboxedPlainObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue
         }
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         vp.setUndefined();
         return true;
@@ -1421,7 +1421,7 @@ UnboxedArrayObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         objp.set(nullptr);
         propp.set(nullptr);
@@ -1472,7 +1472,7 @@ UnboxedArrayObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         *foundp = false;
         return true;
@@ -1493,7 +1493,7 @@ UnboxedArrayObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         vp.setUndefined();
         return true;

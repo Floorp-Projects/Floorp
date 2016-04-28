@@ -347,7 +347,8 @@ JS_FRIEND_API(JSObject*)
 js::GetPrototypeNoProxy(JSObject* obj)
 {
     MOZ_ASSERT(!obj->is<js::ProxyObject>());
-    return obj->staticPrototype();
+    MOZ_ASSERT(!obj->getTaggedProto().isLazy());
+    return obj->getTaggedProto().toObjectOrNull();
 }
 
 JS_FRIEND_API(void)

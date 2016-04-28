@@ -1682,7 +1682,7 @@ TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
         return true;
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         objp.set(nullptr);
         propp.set(nullptr);
@@ -1754,7 +1754,7 @@ TypedObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool*
         }
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         *foundp = false;
         return true;
@@ -1811,7 +1811,7 @@ TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiv
       }
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         vp.setUndefined();
         return true;
@@ -1839,7 +1839,7 @@ TypedObject::obj_getElement(JSContext* cx, HandleObject obj, HandleValue receive
         return obj_getArrayElement(cx, typedObj, descr, index, vp);
     }
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto) {
         vp.setUndefined();
         return true;
@@ -2022,7 +2022,7 @@ TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id, Ob
     if (IsOwnId(cx, obj, id))
         return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
 
-    RootedObject proto(cx, obj->staticPrototype());
+    RootedObject proto(cx, obj->getProto());
     if (!proto)
         return result.succeed();
 

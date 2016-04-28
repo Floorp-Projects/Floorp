@@ -24,7 +24,7 @@ class TaggedProto
 
     uintptr_t toWord() const { return uintptr_t(proto); }
 
-    bool isDynamic() const {
+    bool isLazy() const {
         return proto == LazyProto;
     }
     bool isObject() const {
@@ -83,7 +83,7 @@ class TaggedProtoOperations
 
   public:
     uintptr_t toWord() const { return value().toWord(); }
-    inline bool isDynamic() const { return value().isDynamic(); }
+    inline bool isLazy() const { return value().isLazy(); }
     inline bool isObject() const { return value().isObject(); }
     inline JSObject* toObject() const { return value().toObject(); }
     inline JSObject* toObjectOrNull() const { return value().toObjectOrNull(); }

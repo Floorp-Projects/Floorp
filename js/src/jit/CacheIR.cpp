@@ -133,14 +133,12 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
 
     if (obj->hasUncacheableProto()) {
         // If the shape does not imply the proto, emit an explicit proto guard.
-        writer.guardProto(objId, obj->staticPrototype());
+        writer.guardProto(objId, obj->getProto());
     }
 
-    MOZ_ASSERT(obj->isNative() != IsCacheableDOMProxy(obj),
-               "only regular objects, or DOM proxies with static prototype, "
-               "should be observed here");
-
-    JSObject* pobj = obj->staticPrototype();
+    JSObject* pobj = IsCacheableDOMProxy(obj)
+                     ? obj->getTaggedProto().toObjectOrNull()
+                     : obj->getProto();
     if (!pobj)
         return;
 
@@ -149,12 +147,12 @@ GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder, 
             ObjOperandId protoId = writer.loadObject(pobj);
             if (pobj->isSingleton()) {
                 // Singletons can have their group's |proto| mutated directly.
-                writer.guardProto(protoId, pobj->staticPrototype());
+                writer.guardProto(protoId, pobj->getProto());
             } else {
                 writer.guardGroup(protoId, pobj->group());
             }
         }
-        pobj = pobj->staticPrototype();
+        pobj = pobj->getProto();
     }
 }
 
@@ -197,12 +195,12 @@ EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
             // The property does not exist. Guard on everything in the prototype
             // chain. This is guaranteed to see only Native objects because of
             // CanAttachNativeGetProp().
-            JSObject* proto = obj->taggedProto().toObjectOrNull();
+            JSObject* proto = obj->getTaggedProto().toObjectOrNull();
             ObjOperandId lastObjId = objId;
             while (proto) {
                 ObjOperandId protoId = writer.loadProto(lastObjId);
                 writer.guardShape(protoId, proto->as<NativeObject>().lastProperty());
-                proto = proto->staticPrototype();
+                proto = proto->getProto();
                 lastObjId = protoId;
             }
         }
