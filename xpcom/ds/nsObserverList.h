@@ -56,13 +56,13 @@ public:
     MOZ_COUNT_DTOR(nsObserverList);
   }
 
-  nsresult AddObserver(nsIObserver* aObserver, bool aOwnsWeak);
-  nsresult RemoveObserver(nsIObserver* aObserver);
+  MOZ_MUST_USE nsresult AddObserver(nsIObserver* aObserver, bool aOwnsWeak);
+  MOZ_MUST_USE nsresult RemoveObserver(nsIObserver* aObserver);
 
   void NotifyObservers(nsISupports* aSubject,
                        const char* aTopic,
                        const char16_t* aSomeData);
-  nsresult GetObserverList(nsISimpleEnumerator** aEnumerator);
+  void GetObserverList(nsISimpleEnumerator** aEnumerator);
 
   // Fill an array with the observers of this category.
   // The array is filled in last-added-first order.
