@@ -463,16 +463,15 @@ FMRadio::EnableAudioChannelAgent()
 NS_IMETHODIMP
 FMRadio::WindowVolumeChanged(float aVolume, bool aMuted)
 {
-  // TODO : Not support to change volume now, so we just close it.
   IFMRadioService::Singleton()->EnableAudio(!aMuted);
+  // TODO: what about the volume?
   return NS_OK;
 }
 
 NS_IMETHODIMP
 FMRadio::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 {
-  bool enable = (aSuspend == nsISuspendedTypes::NONE_SUSPENDED);
-  IFMRadioService::Singleton()->EnableAudio(enable);
+  // TODO : implementation.
   return NS_OK;
 }
 

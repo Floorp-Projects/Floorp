@@ -305,6 +305,11 @@ private:
   bool mSuspended;
 };
 
+static bool UseAudioChannelAPI()
+{
+  return Preferences::GetBool("media.useAudioChannelAPI");
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
                                    mAudioChannelAgent,
                                    mOfflineRenderingPromise)
@@ -326,7 +331,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mFramesToProduce(aLength)
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
-  , mAudioChannelSuspended(false)
+  , mAudioChannelAgentPlaying(false)
   , mExtraCurrentTimeSinceLastStartedBlocking(0)
   , mExtraCurrentTimeUpdatedSinceLastStableState(false)
   , mCaptured(false)
@@ -498,36 +503,38 @@ AudioDestinationNode::StartRendering(Promise* aPromise)
   mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
 }
 
+void
+AudioDestinationNode::SetCanPlay(float aVolume, bool aMuted)
+{
+  if (!mStream) {
+    return;
+  }
+
+  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, !aMuted);
+  mStream->SetAudioOutputVolume(&gWebAudioOutputKey, aVolume);
+}
+
 NS_IMETHODIMP
 AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
 {
-  if (!mStream) {
-    return NS_OK;
+  if (aMuted != mAudioChannelAgentPlaying) {
+    mAudioChannelAgentPlaying = aMuted;
+
+    if (UseAudioChannelAPI()) {
+      Context()->DispatchTrustedEvent(
+        !aMuted ? NS_LITERAL_STRING("mozinterruptend")
+                : NS_LITERAL_STRING("mozinterruptbegin"));
+    }
   }
 
-  float volume = aMuted ? 0.0 : aVolume;
-  mStream->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
+  SetCanPlay(aVolume, aMuted);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 {
-  if (!mStream) {
-    return NS_OK;
-  }
-
-  bool suspended = (aSuspend != nsISuspendedTypes::NONE_SUSPENDED);
-  if (mAudioChannelSuspended == suspended) {
-    return NS_OK;
-  }
-
-  mAudioChannelSuspended = suspended;
-  Context()->DispatchTrustedEvent(!suspended ?
-    NS_LITERAL_STRING("mozinterruptend") :
-    NS_LITERAL_STRING("mozinterruptbegin"));
-
-  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, !suspended);
+  // TODO : implementation.
   return NS_OK;
 }
 
