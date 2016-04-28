@@ -6,11 +6,11 @@ const magic1 = 0x61;  // 'a'
 const magic2 = 0x73;  // 's'
 const magic3 = 0x6d;  // 'm'
 
-// EncodingVersion = 11 (unofficial; to be reset at some point in the future)
-const ver0 = 0x0b;
-const ver1 = 0x00;
-const ver2 = 0x00;
-const ver3 = 0x00;
+// EncodingVersion (temporary; to be set to 1 at some point before release)
+const ver0 = (Wasm.experimentalVersion >>>  0) & 0xff;
+const ver1 = (Wasm.experimentalVersion >>>  8) & 0xff;
+const ver2 = (Wasm.experimentalVersion >>> 16) & 0xff;
+const ver3 = (Wasm.experimentalVersion >>> 24) & 0xff;
 
 // Section names
 const sigId                = "type";
