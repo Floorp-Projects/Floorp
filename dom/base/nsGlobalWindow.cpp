@@ -7720,14 +7720,6 @@ nsGlobalWindow::FirePopupBlockedEvent(nsIDocument* aDoc,
   aDoc->DispatchEvent(event, &defaultActionEnabled);
 }
 
-static void FirePopupWindowEvent(nsIDocument* aDoc)
-{
-  // Fire a "PopupWindow" event
-  nsContentUtils::DispatchTrustedEvent(aDoc, aDoc,
-                                       NS_LITERAL_STRING("PopupWindow"),
-                                       true, true);
-}
-
 // static
 bool
 nsGlobalWindow::CanSetProperty(const char *aPrefName)
@@ -7797,13 +7789,9 @@ nsGlobalWindow::RevisePopupAbuseLevel(PopupControlState aControl)
   return abuse;
 }
 
-/* If a window open is blocked, fire the appropriate DOM events.
-   aBlocked signifies we just blocked a popup.
-   aWindow signifies we just opened what is probably a popup.
-*/
+/* If a window open is blocked, fire the appropriate DOM events. */
 void
-nsGlobalWindow::FireAbuseEvents(bool aBlocked, bool aWindow,
-                                const nsAString &aPopupURL,
+nsGlobalWindow::FireAbuseEvents(const nsAString &aPopupURL,
                                 const nsAString &aPopupWindowName,
                                 const nsAString &aPopupWindowFeatures)
 {
@@ -7835,12 +7823,8 @@ nsGlobalWindow::FireAbuseEvents(bool aBlocked, bool aWindow,
                 getter_AddRefs(popupURI));
 
   // fire an event chock full of informative URIs
-  if (aBlocked) {
-    FirePopupBlockedEvent(topDoc, popupURI, aPopupWindowName,
-                          aPopupWindowFeatures);
-  }
-  if (aWindow)
-    FirePopupWindowEvent(topDoc);
+  FirePopupBlockedEvent(topDoc, popupURI, aPopupWindowName,
+                        aPopupWindowFeatures);
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
@@ -11591,7 +11575,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         }
       }
 
-      FireAbuseEvents(true, false, aUrl, aName, aOptions);
+      FireAbuseEvents(aUrl, aName, aOptions);
       return aDoJSFixups ? NS_OK : NS_ERROR_FAILURE;
     }
   }
@@ -11673,6 +11657,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   }
 
   if (checkForPopup) {
+    MOZ_ASSERT(abuseLevel < openAbused, "Why didn't we take the early return?");
+
     if (abuseLevel >= openControlled) {
       nsGlobalWindow *opened = nsGlobalWindow::Cast(*aReturn);
       if (!opened->IsPopupSpamWindow()) {
@@ -11680,8 +11666,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         ++gOpenPopupSpamCount;
       }
     }
-    if (abuseLevel >= openAbused)
-      FireAbuseEvents(false, true, aUrl, aName, aOptions);
   }
 
   return rv;
