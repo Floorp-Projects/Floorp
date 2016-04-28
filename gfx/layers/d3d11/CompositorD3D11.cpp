@@ -17,7 +17,6 @@
 #include "mozilla/layers/Effects.h"
 #include "nsWindowsHelpers.h"
 #include "gfxPrefs.h"
-#include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxVR.h"
 #include "mozilla/gfx/StackArray.h"
@@ -197,9 +196,11 @@ CompositorD3D11::~CompositorD3D11()
 bool
 CompositorD3D11::Initialize()
 {
-  ScopedGfxFeatureReporter reporter("D3D11 Layers");
+  bool force = gfxPrefs::LayersAccelerationForceEnabled();
 
-  MOZ_ASSERT(gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING));
+  ScopedGfxFeatureReporter reporter("D3D11 Layers", force);
+
+  MOZ_ASSERT(gfxPlatform::CanUseDirect3D11());
 
   HRESULT hr;
 
