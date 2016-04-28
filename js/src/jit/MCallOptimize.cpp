@@ -2801,6 +2801,10 @@ IonBuilder::inlineAssertRecoveredOnBailout(CallInfo& callInfo)
     if (callInfo.argc() != 2)
         return InliningStatus_NotInlined;
 
+    // Don't assert for recovered instructions when recovering is disabled.
+    if (JitOptions.disableRecoverIns)
+        return InliningStatus_NotInlined;
+
     if (JitOptions.checkRangeAnalysis) {
         // If we are checking the range of all instructions, then the guards
         // inserted by Range Analysis prevent the use of recover

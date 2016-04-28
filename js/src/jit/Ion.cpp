@@ -1556,7 +1556,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    if (mir->optimizationInfo().scalarReplacementEnabled()) {
+    if (!JitOptions.disableRecoverIns && mir->optimizationInfo().scalarReplacementEnabled()) {
         AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
         if (!ScalarReplacement(mir, graph))
             return false;
@@ -1578,7 +1578,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    if (mir->optimizationInfo().eagerSimdUnboxEnabled()) {
+    if (!JitOptions.disableRecoverIns && mir->optimizationInfo().eagerSimdUnboxEnabled()) {
         AutoTraceLog log(logger, TraceLogger_EagerSimdUnbox);
         if (!EagerSimdUnbox(mir, graph))
             return false;
@@ -1729,7 +1729,7 @@ OptimizeMIR(MIRGenerator* mir)
         }
     }
 
-    {
+    if (!JitOptions.disableRecoverIns) {
         AutoTraceLog log(logger, TraceLogger_Sink);
         if (!Sink(mir, graph))
             return false;
@@ -1740,7 +1740,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    if (mir->optimizationInfo().rangeAnalysisEnabled()) {
+    if (!JitOptions.disableRecoverIns && mir->optimizationInfo().rangeAnalysisEnabled()) {
         AutoTraceLog log(logger, TraceLogger_RemoveUnnecessaryBitops);
         if (!r.removeUnnecessaryBitops())
             return false;
