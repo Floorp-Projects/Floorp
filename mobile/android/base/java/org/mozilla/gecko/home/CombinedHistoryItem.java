@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
 
@@ -103,7 +102,7 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
         public void bind(Context context, RemoteClient client, boolean isCollapsed) {
             this.nameView.setText(client.name);
             final long now = System.currentTimeMillis();
-            this.lastModifiedView.setText(RemoteTabsExpandableListAdapter.getLastSyncedString(context, now, client.lastModified));
+            this.lastModifiedView.setText(ClientsAdapter.getLastSyncedString(context, now, client.lastModified));
 
             if (client.isDesktop()) {
                 deviceTypeView.setImageResource(isCollapsed ? R.drawable.sync_desktop_inactive : R.drawable.sync_desktop);
