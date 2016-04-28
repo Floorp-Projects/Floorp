@@ -18,6 +18,10 @@
 #include "mozilla/Likely.h"
 #include "nsVariant.h"
 
+// Maximum number of chars to search through.
+// MatchAutoCompleteFunction won't look for matches over this threshold.
+#define MAX_CHARS_TO_SEARCH_THROUGH 255
+
 using namespace mozilla::storage;
 
 // Keep the GUID-related parts of this file in sync with toolkit/downloads/SQLFunctions.cpp!
@@ -388,11 +392,17 @@ namespace places {
     searchFunctionPtr searchFunction = getSearchFunction(matchBehavior);
 
     // Clean up our URI spec and prepare it for searching.
-    nsCString fixedURI;
-    fixupURISpec(url, matchBehavior, fixedURI);
+    nsCString fixedUrl;
+    fixupURISpec(url, matchBehavior, fixedUrl);
+    // Limit the number of chars we search through.
+    const nsDependentCSubstring& trimmedUrl =
+      Substring(fixedUrl, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
     nsAutoCString title;
     (void)aArguments->GetUTF8String(kArgIndexTitle, title);
+    // Limit the number of chars we search through.
+    const nsDependentCSubstring& trimmedTitle =
+      Substring(title, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
     // Determine if every token matches either the bookmark title, tags, page
     // title, or page URL.
@@ -401,19 +411,21 @@ namespace places {
       const nsDependentCSubstring &token = tokenizer.nextToken();
 
       if (HAS_BEHAVIOR(TITLE) && HAS_BEHAVIOR(URL)) {
-        matches = (searchFunction(token, title) || searchFunction(token, tags)) &&
-                  searchFunction(token, fixedURI);
+        matches = (searchFunction(token, trimmedTitle) ||
+                   searchFunction(token, tags)) &&
+                  searchFunction(token, trimmedUrl);
       }
       else if (HAS_BEHAVIOR(TITLE)) {
-        matches = searchFunction(token, title) || searchFunction(token, tags);
+        matches = searchFunction(token, trimmedTitle) ||
+                  searchFunction(token, tags);
       }
       else if (HAS_BEHAVIOR(URL)) {
-        matches = searchFunction(token, fixedURI);
+        matches = searchFunction(token, trimmedUrl);
       }
       else {
-        matches = searchFunction(token, title) ||
+        matches = searchFunction(token, trimmedTitle) ||
                   searchFunction(token, tags) ||
-                  searchFunction(token, fixedURI);
+                  searchFunction(token, trimmedUrl);
       }
     }
 
