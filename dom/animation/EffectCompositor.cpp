@@ -9,8 +9,9 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeEffect.h" // For KeyframeEffectReadOnly
-#include "mozilla/AnimationUtils.h"
 #include "mozilla/AnimationPerformanceWarning.h"
+#include "mozilla/AnimationTarget.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/InitializerList.h"
 #include "mozilla/LayerAnimationInfo.h"

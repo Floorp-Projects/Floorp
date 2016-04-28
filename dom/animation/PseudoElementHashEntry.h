@@ -8,8 +8,8 @@
 #define mozilla_PseudoElementHashEntry_h
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/NonOwningAnimationTarget.h"
 #include "PLDHashTable.h"
 
 namespace mozilla {

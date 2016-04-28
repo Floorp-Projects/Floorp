@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_NonOwningAnimationTarget_h
-#define mozilla_NonOwningAnimationTarget_h
+#ifndef mozilla_AnimationTarget_h
+#define mozilla_AnimationTarget_h
 
 #include "mozilla/Attributes.h"   // For MOZ_NON_OWNING_REF
 #include "nsCSSPseudoElements.h"
@@ -29,4 +29,4 @@ struct NonOwningAnimationTarget
 
 } // namespace mozilla
 
-#endif // mozilla_NonOwningAnimationTarget_h
+#endif // mozilla_AnimationTarget_h
