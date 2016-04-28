@@ -55,7 +55,7 @@ public:
                              const ScrollableLayerGuid& aGuid,
                              uint64_t aInputBlockId) override;
 
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) override;
+  virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
 
   virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override;
 

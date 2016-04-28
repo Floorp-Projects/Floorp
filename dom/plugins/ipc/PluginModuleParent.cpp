@@ -150,7 +150,7 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
 /**
  * Use for executing CreateToolhelp32Snapshot off main thread
  */
-class mozilla::plugins::FinishInjectorInitTask : public CancelableTask
+class mozilla::plugins::FinishInjectorInitTask : public mozilla::CancelableRunnable
 {
 public:
     FinishInjectorInitTask()
@@ -169,34 +169,31 @@ public:
 
     void PostToMainThread()
     {
+        RefPtr<Runnable> self = this;
         mSnapshot.own(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-        bool deleteThis = false;
         {   // Scope for lock
             mozilla::MutexAutoLock lock(mMutex);
             if (mMainThreadMsgLoop) {
-                mMainThreadMsgLoop->PostTask(FROM_HERE, this);
-            } else {
-                deleteThis = true;
+                mMainThreadMsgLoop->PostTask(self.forget());
             }
-        }
-        if (deleteThis) {
-            delete this;
         }
     }
 
-    void Run() override
+    NS_IMETHOD Run() override
     {
         mParent->DoInjection(mSnapshot);
         // We don't need to hold this lock during DoInjection, but we do need
         // to obtain it before returning from Run() to ensure that
         // PostToMainThread has completed before we return.
         mozilla::MutexAutoLock lock(mMutex);
+        return NS_OK;
     }
 
-    void Cancel() override
+    nsresult Cancel() override
     {
         mozilla::MutexAutoLock lock(mMutex);
         mMainThreadMsgLoop = nullptr;
+        return NS_OK;
     }
 
 private:
@@ -710,8 +707,9 @@ PluginModuleContentParent::PluginModuleContentParent(bool aAllowAsyncInit)
 
 PluginModuleContentParent::~PluginModuleContentParent()
 {
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new DeleteTask<Transport>(GetTransport()));
+    RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(GetTransport());
+    XRE_GetIOMessageLoop()->PostTask(task.forget());
+                                     
 
     Preferences::UnregisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
@@ -906,7 +904,6 @@ PluginModuleChromeParent::CleanupFromTimeout(const bool aFromHangUI)
     if (!OkToCleanup()) {
         // there's still plugin code on the C++ stack, try again
         MessageLoop::current()->PostDelayedTask(
-            FROM_HERE,
             mChromeTaskFactory.NewRunnableMethod(
                 &PluginModuleChromeParent::CleanupFromTimeout, aFromHangUI), 10);
         return;
@@ -1171,7 +1168,6 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
 {
     if (mIsFlashPlugin) {
         MessageLoop::current()->PostTask(
-            FROM_HERE,
             mTaskFactory.NewRunnableMethod(
                 &PluginModuleChromeParent::NotifyFlashHang));
     }
@@ -1349,7 +1345,6 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
     // or not at all
     bool isFromHangUI = aMsgLoop != MessageLoop::current();
     aMsgLoop->PostTask(
-        FROM_HERE,
         mChromeTaskFactory.NewRunnableMethod(
             &PluginModuleChromeParent::CleanupFromTimeout, isFromHangUI));
 
@@ -1599,7 +1594,6 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
         // and potentially modify the actor child list while enumerating it.
         if (mPlugin)
             MessageLoop::current()->PostTask(
-                FROM_HERE,
                 mTaskFactory.NewRunnableMethod(
                     &PluginModuleParent::NotifyPluginCrashed));
         break;
@@ -1655,7 +1649,6 @@ PluginModuleParent::NotifyPluginCrashed()
     if (!OkToCleanup()) {
         // there's still plugin code on the C++ stack.  try again
         MessageLoop::current()->PostDelayedTask(
-            FROM_HERE,
             mTaskFactory.NewRunnableMethod(
                 &PluginModuleParent::NotifyPluginCrashed), 10);
         return;
@@ -3156,7 +3149,6 @@ PluginModuleChromeParent::InitializeInjector()
     mFinishInitTask->Init(this);
     if (!::QueueUserWorkItem(&PluginModuleChromeParent::GetToolhelpSnapshot,
                              mFinishInitTask, WT_EXECUTEDEFAULT)) {
-        delete mFinishInitTask;
         mFinishInitTask = nullptr;
         return;
     }

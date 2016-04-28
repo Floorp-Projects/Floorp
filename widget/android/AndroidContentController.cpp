@@ -87,9 +87,9 @@ AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
 }
 
 void
-AndroidContentController::PostDelayedTask(Task* aTask, int aDelayMs)
+AndroidContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
-    AndroidBridge::Bridge()->PostTaskToUiThread(aTask, aDelayMs);
+    AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
 }
 void
 AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY)

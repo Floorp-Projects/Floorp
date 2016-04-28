@@ -20,8 +20,9 @@ void BaseTimer_Helper::InitiateDelayedTask(TimerTask* timer_task) {
 
   delayed_task_ = timer_task;
   delayed_task_->timer_ = this;
+  RefPtr<TimerTask> addrefedTask = timer_task;
   MessageLoop::current()->PostDelayedTask(
-      FROM_HERE, timer_task,
+      addrefedTask.forget(),
       static_cast<int>(timer_task->delay_.InMilliseconds()));
 }
 
