@@ -30,6 +30,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
@@ -311,7 +312,8 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new AddToHomeScreenPromotion(),
             (BrowserAppDelegate) new ScreenshotDelegate(),
             (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
-            (BrowserAppDelegate) new ReaderViewBookmarkPromotion()
+            (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
+            (BrowserAppDelegate) new ContentNotificationsDelegate()
     ));
 
     @NonNull
@@ -982,16 +984,6 @@ public class BrowserApp extends GeckoApp
         final List<String> urls = intent.getStringArrayListExtra("urls");
         if (urls != null) {
             openUrls(urls);
-        }
-
-        // Launched from a "content notification"
-        if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
-
-            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
         }
     }
 
@@ -3741,7 +3733,7 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void openUrls(List<String> urls) {
+    public void openUrls(List<String> urls) {
         try {
             JSONArray array = new JSONArray();
             for (String url : urls) {

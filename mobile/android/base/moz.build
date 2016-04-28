@@ -285,6 +285,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'feeds/action/SetupAlarmsAction.java',
     'feeds/action/SubscribeToFeedAction.java',
     'feeds/action/WithdrawSubscriptionsAction.java',
+    'feeds/ContentNotificationsDelegate.java',
     'feeds/FeedAlarmReceiver.java',
     'feeds/FeedFetcher.java',
     'feeds/FeedService.java',
