@@ -201,11 +201,17 @@ AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig)
+NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(float *aVolume,
+                                                      bool* aMuted)
 {
-  if (NS_WARN_IF(!aConfig)) {
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aVolume);
+  MOZ_ASSERT(aMuted);
+
+  // Window-less AudioChannelAgents are muted by default.
+  if (!mWindow) {
+    *aVolume = 0;
+    *aMuted = true;
+    return NS_OK;
   }
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
@@ -225,13 +231,14 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig)
           "mute = %d, volume = %f, suspend = %d\n", this,
           config.mMuted, config.mVolume, config.mSuspend));
 
-  aConfig->SetConfig(config.mVolume, config.mMuted, config.mSuspend);
+  *aVolume = config.mVolume;
+  *aMuted = config.mMuted;
+
   mIsRegToService = true;
   return NS_OK;
 }
 
-NS_IMETHODIMP
-AudioChannelAgent::NotifyStoppedPlaying()
+NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying()
 {
   if (mAudioChannelType == AUDIO_AGENT_CHANNEL_ERROR ||
       !mIsRegToService) {
