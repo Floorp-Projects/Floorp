@@ -1718,6 +1718,21 @@ addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
                  "records after animation is finished");
 });
 
+addAsyncAnimTest("create_animation_without_target",
+                 { observe: document, subtree: true }, function*() {
+  var effect = new KeyframeEffectReadOnly(null,
+                                          { opacity: [ 0, 1 ] },
+                                          { duration: 10000 });
+  var anim = new Animation(effect, document.timeline);
+  anim.play();
+  yield await_frame();
+  assert_records([], "no records after animation is added");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([], "no records after animation is removed");
+});
+
 // Run the tests.
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();

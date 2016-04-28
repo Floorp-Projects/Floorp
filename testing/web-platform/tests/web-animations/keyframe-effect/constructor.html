@@ -247,6 +247,15 @@ gInvalidKeyframeEffectOptionTests.forEach(function(stest) {
 });
 
 test(function(t) {
+  var effect = new KeyframeEffectReadOnly(null,
+                                          { left: ["10px", "20px"] },
+                                          { duration: 100 * MS_PER_SEC,
+                                            fill: "forwards" });
+  assert_equals(effect.target, null,
+                "Effect created with null target has correct target");
+}, "a KeyframeEffectReadOnly constructed with null target");
+
+test(function(t) {
   var effect = new KeyframeEffect(target, null);
   assert_class_string(effect, "KeyframeEffect");
   assert_class_string(effect.timing, "AnimationEffectTiming");

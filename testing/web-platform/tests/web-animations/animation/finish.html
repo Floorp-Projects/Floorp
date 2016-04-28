@@ -203,5 +203,45 @@ promise_test(function(t) {
       'Animation.finish()');
   });
 }, 'Test finish() resolves finished promise synchronously');
+
+promise_test(function(t) {
+  var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
+  var animation = new Animation(effect, document.timeline);
+  var resolvedFinished = false;
+  animation.finished.then(function() {
+    resolvedFinished = true;
+  });
+
+  return animation.ready.then(function() {
+    animation.finish();
+  }).then(function() {
+    assert_true(resolvedFinished,
+                'Animation.finished should be resolved soon after ' +
+                'Animation.finish()');
+  });
+}, 'Test finish() resolves finished promise synchronously with an animation ' +
+   'without a target');
+
+promise_test(function(t) {
+  var effect = new KeyframeEffectReadOnly(null, gKeyFrames, 100 * MS_PER_SEC);
+  var animation = new Animation(effect, document.timeline);
+  animation.play();
+
+  var resolvedFinished = false;
+  animation.finished.then(function() {
+    resolvedFinished = true;
+  });
+
+  return animation.ready.then(function() {
+    animation.currentTime = animation.effect.getComputedTiming().endTime - 1;
+    return waitForAnimationFrames(2);
+  }).then(function() {
+    assert_true(resolvedFinished,
+                'Animation.finished should be resolved soon after ' +
+                'Animation finishes normally');
+  });
+}, 'Test normally finished animation resolves finished promise synchronously ' +
+   'with an animation without a target');
+
 </script>
 </body>
