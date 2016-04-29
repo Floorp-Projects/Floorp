@@ -4,17 +4,28 @@
 "use strict";
 
 const React = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const DOM = React.DOM;
 
 var DummyChildComponent = React.createClass({
   displayName: "DummyChildComponent",
 
   render() {
+    let messageNodes = this.props.messages.map(function(message) {
+      return (
+        DOM.div({}, message.arguments.join(" "))
+      );
+    });
     return (
-      DOM.div({}, "DummyChildComponent foobar")
+      DOM.div({}, messageNodes)
     );
   }
 });
 
-// Exports from this module
-module.exports = DummyChildComponent;
+const mapStateToProps = (state) => {
+  return {
+    messages: state.messages
+  };
+};
+
+module.exports = connect(mapStateToProps)(DummyChildComponent);
