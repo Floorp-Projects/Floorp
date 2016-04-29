@@ -9,8 +9,13 @@
 #define SkRefCnt_DEFINED
 
 #include "../private/SkAtomics.h"
-#include "../private/SkUniquePtr.h"
+#include "../private/SkTLogic.h"
 #include "SkTypes.h"
+#include <functional>
+#include <memory>
+#include <utility>
+
+#define SK_SUPPORT_TRANSITION_TO_SP_INTERFACES
 
 /** \class SkRefCntBase
 
@@ -183,12 +188,16 @@ template <typename T> struct SkTUnref {
 /**
  *  Utility class that simply unref's its argument in the destructor.
  */
-template <typename T> class SkAutoTUnref : public skstd::unique_ptr<T, SkTUnref<T>> {
+template <typename T> class SkAutoTUnref : public std::unique_ptr<T, SkTUnref<T>> {
 public:
-    explicit SkAutoTUnref(T* obj = nullptr) : skstd::unique_ptr<T, SkTUnref<T>>(obj) {}
+    explicit SkAutoTUnref(T* obj = nullptr) : std::unique_ptr<T, SkTUnref<T>>(obj) {}
 
-    T* detach() { return this->release(); }
     operator T*() const { return this->get(); }
+
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
+    // Need to update graphics/Shader.cpp.
+    T* detach() { return this->release(); }
+#endif
 };
 // Can't use the #define trick below to guard a bare SkAutoTUnref(...) because it's templated. :(
 
@@ -224,5 +233,222 @@ public:
 private:
     mutable int32_t fRefCnt;
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ *  Shared pointer class to wrap classes that support a ref()/unref() interface.
+ *
+ *  This can be used for classes inheriting from SkRefCnt, but it also works for other
+ *  classes that match the interface, but have different internal choices: e.g. the hosted class
+ *  may have its ref/unref be thread-safe, but that is not assumed/imposed by sk_sp.
+ */
+template <typename T> class sk_sp {
+    /** Supports safe bool idiom. Obsolete with explicit operator bool. */
+    using unspecified_bool_type = T* sk_sp::*;
+public:
+    using element_type = T;
+
+    sk_sp() : fPtr(nullptr) {}
+    sk_sp(std::nullptr_t) : fPtr(nullptr) {}
+
+    /**
+     *  Shares the underlying object by calling ref(), so that both the argument and the newly
+     *  created sk_sp both have a reference to it.
+     */
+    sk_sp(const sk_sp<T>& that) : fPtr(SkSafeRef(that.get())) {}
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
+    sk_sp(const sk_sp<U>& that) : fPtr(SkSafeRef(that.get())) {}
+
+    /**
+     *  Move the underlying object from the argument to the newly created sk_sp. Afterwards only
+     *  the new sk_sp will have a reference to the object, and the argument will point to null.
+     *  No call to ref() or unref() will be made.
+     */
+    sk_sp(sk_sp<T>&& that) : fPtr(that.release()) {}
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
+    sk_sp(sk_sp<U>&& that) : fPtr(that.release()) {}
+
+    /**
+     *  Adopt the bare pointer into the newly created sk_sp.
+     *  No call to ref() or unref() will be made.
+     */
+    explicit sk_sp(T* obj) : fPtr(obj) {}
+
+    /**
+     *  Calls unref() on the underlying object pointer.
+     */
+    ~sk_sp() {
+        SkSafeUnref(fPtr);
+        SkDEBUGCODE(fPtr = nullptr);
+    }
+
+    sk_sp<T>& operator=(std::nullptr_t) { this->reset(); return *this; }
+
+    /**
+     *  Shares the underlying object referenced by the argument by calling ref() on it. If this
+     *  sk_sp previously had a reference to an object (i.e. not null) it will call unref() on that
+     *  object.
+     */
+    sk_sp<T>& operator=(const sk_sp<T>& that) {
+        this->reset(SkSafeRef(that.get()));
+        return *this;
+    }
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
+    sk_sp<T>& operator=(const sk_sp<U>& that) {
+        this->reset(SkSafeRef(that.get()));
+        return *this;
+    }
+
+    /**
+     *  Move the underlying object from the argument to the sk_sp. If the sk_sp previously held
+     *  a reference to another object, unref() will be called on that object. No call to ref()
+     *  will be made.
+     */
+    sk_sp<T>& operator=(sk_sp<T>&& that) {
+        this->reset(that.release());
+        return *this;
+    }
+    template <typename U, typename = skstd::enable_if_t<skstd::is_convertible<U*, T*>::value>>
+    sk_sp<T>& operator=(sk_sp<U>&& that) {
+        this->reset(that.release());
+        return *this;
+    }
+
+    T& operator*() const {
+        SkASSERT(this->get() != nullptr);
+        return *this->get();
+    }
+
+    // MSVC 2013 does not work correctly with explicit operator bool.
+    // https://chromium-cpp.appspot.com/#core-blacklist
+    // When explicit operator bool can be used, remove operator! and operator unspecified_bool_type.
+    //explicit operator bool() const { return this->get() != nullptr; }
+    operator unspecified_bool_type() const { return this->get() ? &sk_sp::fPtr : nullptr; }
+    bool operator!() const { return this->get() == nullptr; }
+
+    T* get() const { return fPtr; }
+    T* operator->() const { return fPtr; }
+
+    /**
+     *  Adopt the new bare pointer, and call unref() on any previously held object (if not null).
+     *  No call to ref() will be made.
+     */
+    void reset(T* ptr = nullptr) {
+        // Calling fPtr->unref() may call this->~() or this->reset(T*).
+        // http://wg21.cmeerw.net/lwg/issue998
+        // http://wg21.cmeerw.net/lwg/issue2262
+        T* oldPtr = fPtr;
+        fPtr = ptr;
+        SkSafeUnref(oldPtr);
+    }
+
+    /**
+     *  Return the bare pointer, and set the internal object pointer to nullptr.
+     *  The caller must assume ownership of the object, and manage its reference count directly.
+     *  No call to unref() will be made.
+     */
+    T* SK_WARN_UNUSED_RESULT release() {
+        T* ptr = fPtr;
+        fPtr = nullptr;
+        return ptr;
+    }
+
+    void swap(sk_sp<T>& that) /*noexcept*/ {
+        using std::swap;
+        swap(fPtr, that.fPtr);
+    }
+
+private:
+    T*  fPtr;
+};
+
+template <typename T> inline void swap(sk_sp<T>& a, sk_sp<T>& b) /*noexcept*/ {
+    a.swap(b);
+}
+
+template <typename T, typename U> inline bool operator==(const sk_sp<T>& a, const sk_sp<U>& b) {
+    return a.get() == b.get();
+}
+template <typename T> inline bool operator==(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+    return !a;
+}
+template <typename T> inline bool operator==(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+    return !b;
+}
+
+template <typename T, typename U> inline bool operator!=(const sk_sp<T>& a, const sk_sp<U>& b) {
+    return a.get() != b.get();
+}
+template <typename T> inline bool operator!=(const sk_sp<T>& a, std::nullptr_t) /*noexcept*/ {
+    return static_cast<bool>(a);
+}
+template <typename T> inline bool operator!=(std::nullptr_t, const sk_sp<T>& b) /*noexcept*/ {
+    return static_cast<bool>(b);
+}
+
+template <typename T, typename U> inline bool operator<(const sk_sp<T>& a, const sk_sp<U>& b) {
+    // Provide defined total order on sk_sp.
+    // http://wg21.cmeerw.net/lwg/issue1297
+    // http://wg21.cmeerw.net/lwg/issue1401 .
+    return std::less<void*>()((void*)a.get(), (void*)b.get());
+}
+template <typename T> inline bool operator<(const sk_sp<T>& a, std::nullptr_t) {
+    return std::less<T*>()(a.get(), nullptr);
+}
+template <typename T> inline bool operator<(std::nullptr_t, const sk_sp<T>& b) {
+    return std::less<T*>()(nullptr, b.get());
+}
+
+template <typename T, typename U> inline bool operator<=(const sk_sp<T>& a, const sk_sp<U>& b) {
+    return !(b < a);
+}
+template <typename T> inline bool operator<=(const sk_sp<T>& a, std::nullptr_t) {
+    return !(nullptr < a);
+}
+template <typename T> inline bool operator<=(std::nullptr_t, const sk_sp<T>& b) {
+    return !(b < nullptr);
+}
+
+template <typename T, typename U> inline bool operator>(const sk_sp<T>& a, const sk_sp<U>& b) {
+    return b < a;
+}
+template <typename T> inline bool operator>(const sk_sp<T>& a, std::nullptr_t) {
+    return nullptr < a;
+}
+template <typename T> inline bool operator>(std::nullptr_t, const sk_sp<T>& b) {
+    return b < nullptr;
+}
+
+template <typename T, typename U> inline bool operator>=(const sk_sp<T>& a, const sk_sp<U>& b) {
+    return !(a < b);
+}
+template <typename T> inline bool operator>=(const sk_sp<T>& a, std::nullptr_t) {
+    return !(a < nullptr);
+}
+template <typename T> inline bool operator>=(std::nullptr_t, const sk_sp<T>& b) {
+    return !(nullptr < b);
+}
+
+template <typename T, typename... Args>
+sk_sp<T> sk_make_sp(Args&&... args) {
+    return sk_sp<T>(new T(std::forward<Args>(args)...));
+}
+
+#ifdef SK_SUPPORT_TRANSITION_TO_SP_INTERFACES
+
+/*
+ *  Returns a sk_sp wrapping the provided ptr AND calls ref on it (if not null).
+ *
+ *  This is different than the semantics of the constructor for sk_sp, which just wraps the ptr,
+ *  effectively "adopting" it.
+ *
+ *  This function may be helpful while we convert callers from ptr-based to sk_sp-based parameters.
+ */
+template <typename T> sk_sp<T> sk_ref_sp(T* obj) {
+    return sk_sp<T>(SkSafeRef(obj));
+}
+
+#endif
 
 #endif

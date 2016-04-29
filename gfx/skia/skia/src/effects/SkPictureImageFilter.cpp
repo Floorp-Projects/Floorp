@@ -13,37 +13,33 @@
 #include "SkWriteBuffer.h"
 #include "SkValidationUtils.h"
 
-SkPictureImageFilter::SkPictureImageFilter(const SkPicture* picture)
-    : INHERITED(0, 0, nullptr)
-    , fPicture(SkSafeRef(picture))
-    , fCropRect(picture ? picture->cullRect() : SkRect::MakeEmpty())
-    , fPictureResolution(kDeviceSpace_PictureResolution) 
+SkPictureImageFilter::SkPictureImageFilter(sk_sp<SkPicture> picture)
+    : INHERITED(nullptr, 0, nullptr)
+    , fPicture(std::move(picture))
+    , fCropRect(fPicture ? fPicture->cullRect() : SkRect::MakeEmpty())
+    , fPictureResolution(kDeviceSpace_PictureResolution)
     , fFilterQuality(kLow_SkFilterQuality) {
 }
 
-SkPictureImageFilter::SkPictureImageFilter(const SkPicture* picture, const SkRect& cropRect,
+SkPictureImageFilter::SkPictureImageFilter(sk_sp<SkPicture> picture, const SkRect& cropRect,
                                            PictureResolution pictureResolution,
                                            SkFilterQuality filterQuality)
-    : INHERITED(0, 0, nullptr)
-    , fPicture(SkSafeRef(picture))
+    : INHERITED(nullptr, 0, nullptr)
+    , fPicture(std::move(picture))
     , fCropRect(cropRect)
     , fPictureResolution(pictureResolution)
     , fFilterQuality(filterQuality) {
 }
 
-SkPictureImageFilter::~SkPictureImageFilter() {
-    SkSafeUnref(fPicture);
-}
-
-SkFlattenable* SkPictureImageFilter::CreateProc(SkReadBuffer& buffer) {
-    SkAutoTUnref<SkPicture> picture;
+sk_sp<SkFlattenable> SkPictureImageFilter::CreateProc(SkReadBuffer& buffer) {
+    sk_sp<SkPicture> picture;
     SkRect cropRect;
 
     if (buffer.isCrossProcess() && SkPicture::PictureIOSecurityPrecautionsEnabled()) {
         buffer.validate(!buffer.readBool());
     } else {
         if (buffer.readBool()) {
-            picture.reset(SkPicture::CreateFromBuffer(buffer));
+            picture = SkPicture::MakeFromBuffer(buffer);
         }
     }
     buffer.readRect(&cropRect);
@@ -52,7 +48,7 @@ SkFlattenable* SkPictureImageFilter::CreateProc(SkReadBuffer& buffer) {
         pictureResolution = kDeviceSpace_PictureResolution;
     } else {
         pictureResolution = (PictureResolution)buffer.readInt();
-    }  
+    }
 
     if (kLocalSpace_PictureResolution == pictureResolution) {
         //filterLevel is only serialized if pictureResolution is LocalSpace
@@ -62,9 +58,9 @@ SkFlattenable* SkPictureImageFilter::CreateProc(SkReadBuffer& buffer) {
         } else {
             filterQuality = (SkFilterQuality)buffer.readInt();
         }
-        return CreateForLocalSpace(picture, cropRect, filterQuality);
+        return MakeForLocalSpace(picture, cropRect, filterQuality);
     }
-    return Create(picture, cropRect);
+    return Make(picture, cropRect);
 }
 
 void SkPictureImageFilter::flatten(SkWriteBuffer& buffer) const {
@@ -84,8 +80,9 @@ void SkPictureImageFilter::flatten(SkWriteBuffer& buffer) const {
     }
 }
 
-bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Context& ctx,
-                                         SkBitmap* result, SkIPoint* offset) const {
+bool SkPictureImageFilter::onFilterImageDeprecated(Proxy* proxy, const SkBitmap&,
+                                                   const Context& ctx,
+                                                   SkBitmap* result, SkIPoint* offset) const {
     if (!fPicture) {
         offset->fX = offset->fY = 0;
         return true;
@@ -108,9 +105,9 @@ bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Co
         return false;
     }
 
-    if (kDeviceSpace_PictureResolution == fPictureResolution || 
+    if (kDeviceSpace_PictureResolution == fPictureResolution ||
         0 == (ctx.ctm().getType() & ~SkMatrix::kTranslate_Mask)) {
-        this->drawPictureAtDeviceResolution(device.get(), bounds, ctx);        
+        this->drawPictureAtDeviceResolution(device.get(), bounds, ctx);
     } else {
         this->drawPictureAtLocalResolution(proxy, device.get(), bounds, ctx);
     }
@@ -164,7 +161,7 @@ void SkPictureImageFilter::drawPictureAtLocalResolution(Proxy* proxy, SkBaseDevi
 #ifndef SK_IGNORE_TO_STRING
 void SkPictureImageFilter::toString(SkString* str) const {
     str->appendf("SkPictureImageFilter: (");
-    str->appendf("crop: (%f,%f,%f,%f) ", 
+    str->appendf("crop: (%f,%f,%f,%f) ",
                  fCropRect.fLeft, fCropRect.fTop, fCropRect.fRight, fCropRect.fBottom);
     if (fPicture) {
         str->appendf("picture: (%f,%f,%f,%f)",

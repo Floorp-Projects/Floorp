@@ -23,7 +23,9 @@ public:
         GrGLenum fMagFilter;
         GrGLenum fWrapS;
         GrGLenum fWrapT;
+        GrGLenum fMaxMipMapLevel;
         GrGLenum fSwizzleRGBA[4];
+        GrGLenum fSRGBDecode;
         void invalidate() { memset(this, 0xff, sizeof(TexParams)); }
     };
 
@@ -33,6 +35,7 @@ public:
     };
 
     GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&);
+    GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, bool wasMipMapDataProvided);
 
     GrBackendObject getTextureHandle() const override;
 

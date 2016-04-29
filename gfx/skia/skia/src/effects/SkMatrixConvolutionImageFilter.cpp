@@ -74,7 +74,7 @@ SkImageFilter* SkMatrixConvolutionImageFilter::Create(
                                               tileMode, convolveAlpha, input, cropRect);
 }
 
-SkFlattenable* SkMatrixConvolutionImageFilter::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkMatrixConvolutionImageFilter::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
     SkISize kernelSize;
     kernelSize.fWidth = buffer.readInt();
@@ -96,8 +96,8 @@ SkFlattenable* SkMatrixConvolutionImageFilter::CreateProc(SkReadBuffer& buffer) 
     kernelOffset.fY = buffer.readInt();
     TileMode tileMode = (TileMode)buffer.readInt();
     bool convolveAlpha = buffer.readBool();
-    return Create(kernelSize, kernel.get(), gain, bias, kernelOffset, tileMode, convolveAlpha,
-                  common.getInput(0), &common.cropRect());
+    return sk_sp<SkFlattenable>(Create(kernelSize, kernel.get(), gain, bias, kernelOffset, tileMode,
+                                   convolveAlpha, common.getInput(0).get(), &common.cropRect()));
 }
 
 void SkMatrixConvolutionImageFilter::flatten(SkWriteBuffer& buffer) const {
@@ -264,14 +264,14 @@ static SkBitmap unpremultiplyBitmap(SkImageFilter::Proxy* proxy, const SkBitmap&
     return result;
 }
 
-bool SkMatrixConvolutionImageFilter::onFilterImage(Proxy* proxy,
-                                                   const SkBitmap& source,
-                                                   const Context& ctx,
-                                                   SkBitmap* result,
-                                                   SkIPoint* offset) const {
+bool SkMatrixConvolutionImageFilter::onFilterImageDeprecated(Proxy* proxy,
+                                                             const SkBitmap& source,
+                                                             const Context& ctx,
+                                                             SkBitmap* result,
+                                                             SkIPoint* offset) const {
     SkBitmap src = source;
     SkIPoint srcOffset = SkIPoint::Make(0, 0);
-    if (!this->filterInput(0, proxy, source, ctx, &src, &srcOffset)) {
+    if (!this->filterInputDeprecated(0, proxy, source, ctx, &src, &srcOffset)) {
         return false;
     }
 
@@ -280,7 +280,8 @@ bool SkMatrixConvolutionImageFilter::onFilterImage(Proxy* proxy,
     }
 
     SkIRect bounds;
-    if (!this->applyCropRect(this->mapContext(ctx), proxy, src, &srcOffset, &bounds, &src)) {
+    if (!this->applyCropRectDeprecated(this->mapContext(ctx), proxy, src, &srcOffset,
+                                       &bounds, &src)) {
         return false;
     }
 
@@ -322,23 +323,24 @@ bool SkMatrixConvolutionImageFilter::onFilterImage(Proxy* proxy,
     return true;
 }
 
-void SkMatrixConvolutionImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
-                                                    SkIRect* dst, MapDirection direction) const {
-    *dst = src;
+SkIRect SkMatrixConvolutionImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
+                                                           MapDirection direction) const {
+    SkIRect dst = src;
     int w = fKernelSize.width() - 1, h = fKernelSize.height() - 1;
-    dst->fRight += w;
-    dst->fBottom += h;
+    dst.fRight += w;
+    dst.fBottom += h;
     if (kReverse_MapDirection == direction) {
-        dst->offset(-fKernelOffset);
+        dst.offset(-fKernelOffset);
     } else {
-        dst->offset(fKernelOffset - SkIPoint::Make(w, h));
+        dst.offset(fKernelOffset - SkIPoint::Make(w, h));
     }
+    return dst;
 }
 
-bool SkMatrixConvolutionImageFilter::canComputeFastBounds() const {
+bool SkMatrixConvolutionImageFilter::affectsTransparentBlack() const {
     // Because the kernel is applied in device-space, we have no idea what
     // pixels it will affect in object-space.
-    return false;
+    return true;
 }
 
 #if SK_SUPPORT_GPU

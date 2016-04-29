@@ -19,12 +19,11 @@
 
 class GrDrawPathBatchBase : public GrDrawBatch {
 public:
-    void computePipelineOptimizations(GrInitInvariantOutput* color, 
+    void computePipelineOptimizations(GrInitInvariantOutput* color,
                                       GrInitInvariantOutput* coverage,
                                       GrBatchToXPOverrides* overrides) const override {
         color->setKnownFourComponents(fColor);
         coverage->setKnownSingleComponent(0xff);
-        overrides->fUsePLSDstRead = false;
     }
 
     GrPathRendering::FillType fillType() const { return fFillType; }

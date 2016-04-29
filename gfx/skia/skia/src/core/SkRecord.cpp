@@ -6,11 +6,12 @@
  */
 
 #include "SkRecord.h"
+#include <algorithm>
 
 SkRecord::~SkRecord() {
     Destroyer destroyer;
     for (int i = 0; i < this->count(); i++) {
-        this->mutate<void>(i, destroyer);
+        this->mutate(i, destroyer);
     }
 }
 
