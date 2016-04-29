@@ -8,6 +8,7 @@ package org.mozilla.gecko.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.Nullable;
 
 public class NetworkUtils {
 
@@ -15,14 +16,24 @@ public class NetworkUtils {
      * Indicates whether network connectivity exists and it is possible to establish connections and pass data.
      */
     public static boolean isConnected(Context context) {
+        final NetworkInfo networkInfo = getActiveNetworkInfo(context);
+        return networkInfo != null &&
+                networkInfo.isConnected();
+    }
+
+    public static boolean isBackgroundDataEnabled(final Context context) {
+        final NetworkInfo networkInfo = getActiveNetworkInfo(context);
+        return networkInfo != null &&
+                networkInfo.isAvailable() &&
+                networkInfo.isConnectedOrConnecting();
+    }
+
+    @Nullable
+    private static NetworkInfo getActiveNetworkInfo(final Context context) {
         final ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivity == null) {
-            return false;
+            return null;
         }
-        final NetworkInfo networkInfo = connectivity.getActiveNetworkInfo();
-        if (networkInfo == null) {
-            return false;
-        }
-        return networkInfo.isConnected();
+        return connectivity.getActiveNetworkInfo(); // can return null.
     }
 }
