@@ -332,7 +332,7 @@ add_task(function* runTests() {
     buttonClick : "ok",
     textField   : "xyz",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
   yield promptDone;
@@ -359,7 +359,7 @@ add_task(function* runTests() {
   action = {
     buttonClick : "cancel",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
   yield promptDone;
@@ -387,7 +387,7 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = "inputpw";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
   yield promptDone;
@@ -415,7 +415,7 @@ add_task(function* runTests() {
     buttonClick : "cancel",
   };
   pword.value = "inputpw";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
   yield promptDone;
@@ -443,7 +443,7 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
   yield promptDone;
@@ -481,7 +481,7 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
   yield promptDone;
@@ -552,7 +552,7 @@ add_task(function* runTests() {
     passField   : "fill2pass",
   };
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
   yield promptDone;
@@ -581,7 +581,7 @@ add_task(function* runTests() {
     passField   : "fill2pass",
   };
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
   yield promptDone;
@@ -611,7 +611,7 @@ add_task(function* runTests() {
   };
   uname.value = "inuser";
   pword.value = "inpass";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
@@ -640,7 +640,7 @@ add_task(function* runTests() {
   };
   uname.value = "inuser";
   pword.value = "inpass";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
@@ -668,7 +668,7 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -699,7 +699,7 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -729,7 +729,7 @@ add_task(function* runTests() {
   };
   uname.value = "user1name";
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -759,7 +759,7 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -790,7 +790,7 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -821,7 +821,7 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -853,7 +853,7 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
@@ -885,7 +885,7 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
@@ -939,7 +939,7 @@ add_task(function* runTests() {
   authinfo.password = "inpass";
   authinfo.realm    = "some realm";
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
   yield promptDone;
 
@@ -966,7 +966,7 @@ add_task(function* runTests() {
   action = {
     buttonClick : "cancel",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
   yield promptDone;
 
@@ -996,7 +996,7 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example.com";
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
   yield promptDone;
 
@@ -1029,7 +1029,7 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
   yield promptDone;
 
@@ -1065,7 +1065,7 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
   yield promptDone;
 
@@ -1102,7 +1102,7 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
   yield promptDone;
 
@@ -1139,7 +1139,7 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
   yield promptDone;
 
@@ -1176,7 +1176,7 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
   yield promptDone;
 
@@ -1211,7 +1211,7 @@ add_task(function* runTests() {
 
   dumpNotifications();
   var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
   yield promptDone;
   var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
@@ -1268,7 +1268,7 @@ add_task(function* runTests() {
   proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
 
   time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
   yield promptDone;
   time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
@@ -1326,7 +1326,7 @@ add_task(function* runTests() {
   action = {
     buttonClick : "ok",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   // The following tests are driven by iframe loads
 
@@ -1365,7 +1365,7 @@ add_task(function* runTests() {
   action = {
     buttonClick : "ok",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   // We've already authenticated to this host:port. For this next
   // request, the existing auth should be sent, we'll get a 401 reply,
   // and we should prompt for new auth.
@@ -1405,7 +1405,7 @@ add_task(function* runTests() {
     buttonClick : "ok",
     passField   : "mochipass1-new",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
   yield promptDone;
@@ -1454,7 +1454,7 @@ add_task(function* runTests() {
     buttonClick : "ok",
     passField   : "mochipass3-new",
   };
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
   yield promptDone;
@@ -1512,7 +1512,7 @@ add_task(function* runTests() {
     passField   : "mochipass3-old",
   };
   // Trigger a new prompt, so we can test adding a new login.
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
