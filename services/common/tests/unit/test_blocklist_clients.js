@@ -77,7 +77,7 @@ function run_test() {
   server.start(-1);
 
   // Point the blocklist clients to use this local HTTP server.
-  Services.prefs.setCharPref("services.kinto.base",
+  Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
 
   // Setup server fake responses.
