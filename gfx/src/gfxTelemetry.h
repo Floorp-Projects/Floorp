@@ -42,7 +42,10 @@ enum class FeatureStatus
   Available,
 
   // This feature was explicitly force-enabled by the user.
-  ForceEnabled
+  ForceEnabled,
+
+  // This feature was disabled due to the startup crash guard.
+  CrashedOnStartup
 };
 
 const char* FeatureStatusToString(FeatureStatus aStatus);

@@ -365,7 +365,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
   , mHasDeviceReset(false)
   , mHasFakeDeviceReset(false)
   , mCompositorD3D11TextureSharingWorks(false)
-  , mAcceleration(FeatureStatus::Unused)
   , mD3D11Status(FeatureStatus::Unused)
   , mD2D1Status(FeatureStatus::Unused)
   , mHasD3D9DeviceReset(false)
@@ -417,7 +416,6 @@ gfxWindowsPlatform::InitAcceleration()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
 
-  UpdateDeviceInitData();
   InitializeDevices();
   UpdateRenderMode();
 }
@@ -489,9 +487,6 @@ gfxWindowsPlatform::HandleDeviceReset()
   imgLoader::Singleton()->ClearCache(false);
   gfxAlphaBoxBlur::ShutdownBlurCache();
 
-  // Since we got a device reset, we must ask the parent process for an updated
-  // list of which devices to create.
-  UpdateDeviceInitData();
   InitializeDevices();
   BumpDeviceCounter();
   return true;
@@ -2258,20 +2253,23 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
 void
 gfxWindowsPlatform::InitializeDevices()
 {
+  // Ask the parent process for an updated list of which devices to create.
+  UpdateDeviceInitData();
+
   // If acceleration is disabled, we refuse to initialize anything.
-  mAcceleration = CheckAccelerationSupport();
-  if (IsFeatureStatusFailure(mAcceleration)) {
+  FeatureStatus compositing = gfxConfig::GetValue(Feature::HW_COMPOSITING);
+  if (IsFeatureStatusFailure(compositing)) {
     return;
   }
 
   MOZ_ASSERT(!InSafeMode());
 
-  // If we previously crashed initializing devices, bail out now. This is
-  // effectively a parent-process only check, since the content process
-  // cannot create a lock file.
+  // If we previously crashed initializing devices, bail out now.
   D3D11LayersCrashGuard detectCrashes;
   if (detectCrashes.Crashed()) {
-    mAcceleration = FeatureStatus::Blocked;
+    gfxConfig::Disable(Feature::HW_COMPOSITING,
+                       FeatureStatus::CrashedOnStartup,
+                       "Crashed during startup in a previous session");
     return;
   }
 
@@ -2298,21 +2296,6 @@ gfxWindowsPlatform::InitializeDevices()
     gfxCriticalNote << "Attempting DWrite without D2D support";
     InitDWriteSupport();
   }
-}
-
-FeatureStatus
-gfxWindowsPlatform::CheckAccelerationSupport()
-{
-  // Don't retry acceleration if it failed earlier.
-  if (IsFeatureStatusFailure(mAcceleration)) {
-    return mAcceleration;
-  }
-  if (XRE_IsContentProcess()) {
-    return GetParentDevicePrefs().useHwCompositing()
-           ? FeatureStatus::Available
-           : FeatureStatus::Blocked;
-  }
-  return gfxConfig::GetValue(Feature::HW_COMPOSITING);
 }
 
 bool
@@ -2900,8 +2883,8 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
 FeatureStatus
 gfxWindowsPlatform::GetD3D11Status() const
 {
-  if (mAcceleration != FeatureStatus::Available) {
-    return mAcceleration;
+  if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    return gfxConfig::GetValue(Feature::HW_COMPOSITING);
   }
   return mD3D11Status;
 }

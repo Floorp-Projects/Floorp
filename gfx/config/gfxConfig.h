@@ -59,6 +59,15 @@ public:
     return true;
   }
 
+  // Same as SetDefault, except if the feature already has a default value
+  // set, the new value will be set as a runtime value. This is useful for
+  // when the base value can change (for example, via an update from the
+  // parent process).
+  static bool InitOrUpdate(Feature aFeature,
+                           bool aEnable,
+                           FeatureStatus aDisableStatus,
+                           const char* aDisableMessage);
+
   // Set a user status that overrides the base value (but not runtime value)
   // of a parameter.
   static void UserEnable(Feature aFeature, const char* aMessage);

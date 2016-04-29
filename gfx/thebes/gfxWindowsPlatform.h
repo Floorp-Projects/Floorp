@@ -288,7 +288,6 @@ private:
 
     void DisableD2D();
 
-    mozilla::gfx::FeatureStatus CheckAccelerationSupport();
     mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
     mozilla::gfx::FeatureStatus CheckD2D1Support();
 
@@ -343,7 +342,6 @@ private:
 
     // These should not be accessed directly. Use the Get[Feature]Status
     // accessors instead.
-    mozilla::gfx::FeatureStatus mAcceleration;
     mozilla::gfx::FeatureStatus mD3D11Status;
     mozilla::gfx::FeatureStatus mD2D1Status;
 
