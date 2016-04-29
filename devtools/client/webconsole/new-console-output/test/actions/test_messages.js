@@ -7,8 +7,7 @@ const {
   messagesClear
 } = require("devtools/client/webconsole/new-console-output/actions/messages");
 const {
-  prepareMessage,
-  getRepeatId
+  prepareMessage
 } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
@@ -21,15 +20,8 @@ add_task(function*() {
   const action = messageAdd(packet);
   const expected = {
     type: constants.MESSAGE_ADD,
-    message: {
-      allowRepeating: true,
-      category: "console",
-      data: packet.message,
-      messageType: "ConsoleApiCall",
-      repeat: 1,
-      repeatId: getRepeatId(packet.message),
-      severity: "log"
-    }
+    // Prepare message is tested independently.
+    message: prepareMessage(packet)
   };
   deepEqual(action, expected,
     "messageAdd action creator returns expected action object");

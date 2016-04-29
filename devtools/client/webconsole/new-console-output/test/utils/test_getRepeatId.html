@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for getRepeatId()</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for getRepeatId()</p>
+
+<script type="text/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  const {
+    prepareMessage,
+    getRepeatId
+  } = require("devtools/client/webconsole/new-console-output/utils/messages");
+
+  yield testDuplicateValues();
+  yield testDifferentValues();
+  yield testDifferentSeverities();
+  yield testFalsyValues();
+  yield testConsoleVsJSTerm();
+
+  SimpleTest.finish();
+
+  function testDuplicateValues() {
+    const packet1 = yield getPacket("console.log('same')", "consoleAPICall");
+    const packet2 = yield getPacket("console.log('same')", "consoleAPICall");
+
+    const message1 = prepareMessage(packet1);
+    const message2 = prepareMessage(packet2);
+
+    is(getRepeatId(message1.data), getRepeatId(message2.data),
+      "getRepeatId() returns same repeat id for objects with the same values");
+  }
+
+  function testDifferentValues() {
+    const packet1 = yield getPacket("console.log('same')", "consoleAPICall");
+    const packet2 = yield getPacket("console.log('diff')", "consoleAPICall");
+
+    const message1 = prepareMessage(packet1);
+    const message2 = prepareMessage(packet2);
+
+    isnot(getRepeatId(message1.data), getRepeatId(message2.data),
+      "getRepeatId() returns different repeat ids for different values");
+  }
+
+  function testDifferentSeverities() {
+    const packet1 = yield getPacket("console.log('test')", "consoleAPICall");
+    const packet2 = yield getPacket("console.warn('test')", "consoleAPICall");
+
+    const message1 = prepareMessage(packet1);
+    const message2 = prepareMessage(packet2);
+
+    isnot(getRepeatId(message1.data), getRepeatId(message2.data),
+      "getRepeatId() returns different repeat ids for different severities");
+  }
+
+  function testFalsyValues() {
+    const packetNaN = yield getPacket("console.log(NaN)", "consoleAPICall");
+    const packetUnd = yield getPacket("console.log(undefined)", "consoleAPICall");
+    const packetNul = yield getPacket("console.log(null)", "consoleAPICall");
+
+    const messageNaN = prepareMessage(packetNaN);
+    const messageUnd = prepareMessage(packetUnd);
+    const messageNul = prepareMessage(packetNul);
+
+    const repeatIds = new Set([
+      getRepeatId(messageNaN.data),
+      getRepeatId(messageUnd.data),
+      getRepeatId(messageNul.data)]
+    );
+    is(repeatIds.size, 3,
+      "getRepeatId() handles falsy values distinctly");
+
+    const packetNaN2 = yield getPacket("console.log(NaN)", "consoleAPICall");
+    const packetUnd2 = yield getPacket("console.log(undefined)", "consoleAPICall");
+    const packetNul2 = yield getPacket("console.log(null)", "consoleAPICall");
+
+    const messageNaN2 = prepareMessage(packetNaN2);
+    const messageUnd2 = prepareMessage(packetUnd2);
+    const messageNul2 = prepareMessage(packetNul2);
+
+    is(getRepeatId(messageNaN.data), getRepeatId(messageNaN2.data),
+      "getRepeatId() handles NaN values");
+    is(getRepeatId(messageUnd.data), getRepeatId(messageUnd2.data),
+      "getRepeatId() handles undefined values");
+    is(getRepeatId(messageNul.data), getRepeatId(messageNul2.data),
+      "getRepeatId() handles null values");
+  }
+
+  function testConsoleVsJSTerm() {
+    const packet1 = yield getPacket("console.log(undefined)", "consoleAPICall");
+    const packet2 = yield getPacket("undefined");
+
+    const message1 = prepareMessage(packet1);
+    const message2 = prepareMessage(packet2);
+
+    isnot(getRepeatId(message1.data), getRepeatId(message2.data),
+      "getRepeatId() returns different repeat ids for console vs JSTerm");
+  }
+});
+</script>
+</body>
+</html>

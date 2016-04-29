@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for DatePreview component</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for DatePreview component</p>
+
+<script type="text/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
+  const { DatePreview } = require("devtools/client/webconsole/new-console-output/components/message-types/date-preview");
+
+  const testCommand = testCommands.get("new Date()");
+  const packet = yield getPacket(testCommand.command, testCommand.commandType);
+  const message = prepareMessage(packet);
+  const props = {
+    data: message.data,
+  };
+  const rendered = renderComponent(DatePreview, props);
+
+  const queryPathBase = "div.message.cm-s-mozilla span.message-body-wrapper.message-body.devtools-monospace span span.class-Date";
+
+  const preview = rendered.querySelectorAll(queryPathBase);
+  is(preview[0].textContent, testCommand.expectedText, "DatePreview outputs expected text");
+
+  const link = rendered.querySelectorAll(`${queryPathBase} a[draggable=false][href="#"].cm-variable`);
+  is(link.length, 1, "DatePreview outputs the variables view link");
+
+  SimpleTest.finish()
+});
+</script>
+</body>
+</html>
