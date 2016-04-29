@@ -326,7 +326,7 @@ NS_NewLocalFileOutputStream(nsIOutputStream **result,
     return rv;
 }
 
-INLINE_IF_EXTERN MOZ_WARN_UNUSED_RESULT nsresult
+INLINE_IF_EXTERN MOZ_MUST_USE nsresult
 NS_NewBufferedInputStream(nsIInputStream **result,
                           nsIInputStream  *str,
                           uint32_t         bufferSize)

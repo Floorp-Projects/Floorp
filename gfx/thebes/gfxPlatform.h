@@ -450,13 +450,8 @@ public:
     static bool OffMainThreadCompositingEnabled();
 
     static bool CanUseDirect3D9();
-    static bool CanUseDirect3D11();
     virtual bool CanUseHardwareVideoDecoding();
     static bool CanUseDirect3D11ANGLE();
-
-    // Returns whether or not layers acceleration should be used. This should
-    // only be called on the parent process.
-    bool ShouldUseLayersAcceleration();
 
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
@@ -665,6 +660,8 @@ protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
+    virtual void InitAcceleration();
+
     /**
      * Initialized hardware vsync based on each platform.
      */
@@ -686,20 +683,15 @@ protected:
                           uint32_t aContentBitmask, mozilla::gfx::BackendType aContentDefault);
 
     /**
-     * If in a child process, triggers a refresh of device preferences.
+     * If in a child process, triggers a refresh of device preferences, then returns true.
+     * In a parent process, nothing happens and false is returned.
      */
-    void UpdateDeviceInitData();
+    virtual bool UpdateDeviceInitData();
 
     /**
      * Increase the global device counter after a device has been removed/reset.
      */
     void BumpDeviceCounter();
-
-    /**
-     * Called when new device preferences are available.
-     */
-    virtual void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData)
-    {}
 
     /**
      * returns the first backend named in the pref gfx.canvas.azure.backends
@@ -728,6 +720,8 @@ protected:
 
     static already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
+
+    static mozilla::gfx::DeviceInitData& GetParentDevicePrefs();
 
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;
@@ -777,6 +771,8 @@ private:
      * This uses nsIScreenManager to determine the screen size and color depth
      */
     void PopulateScreenInfo();
+
+    void InitCompositorAccelerationPrefs();
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;

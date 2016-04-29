@@ -6,7 +6,6 @@
  */
 
 #include "SkOnce.h"
-#include "SkRunnable.h"
 #include "SkSemaphore.h"
 #include "SkSpinlock.h"
 #include "SkTArray.h"
@@ -40,13 +39,6 @@ namespace {
 
 class ThreadPool : SkNoncopyable {
 public:
-    static void Add(SkRunnable* task, SkAtomic<int32_t>* pending) {
-        if (!gGlobal) {  // If we have no threads, run synchronously.
-            return task->run();
-        }
-        gGlobal->add([task]() { task->run(); }, pending);
-    }
-
     static void Add(std::function<void(void)> fn, SkAtomic<int32_t>* pending) {
         if (!gGlobal) {
             return fn();
@@ -99,8 +91,6 @@ private:
         SkSpinlock* fLock;
     };
 
-    static void CallRunnable(void* arg) { static_cast<SkRunnable*>(arg)->run(); }
-
     struct Work {
         std::function<void(void)> fn; // A function to call
         SkAtomic<int32_t>* pending;   // then decrement pending afterwards.
@@ -147,9 +137,7 @@ private:
         {
             AutoLock lock(&fWorkLock);
             for (int i = 0; i < N; i++) {
-                Work work;
-                work.fn = [i, fn]() { fn(i); };
-                work.pending = pending;
+                Work work = { [i, fn]() { fn(i); }, pending };
                 fWork.push_back(work);
             }
         }
@@ -215,9 +203,7 @@ SkTaskGroup::Enabler::~Enabler() { delete ThreadPool::gGlobal; }
 SkTaskGroup::SkTaskGroup() : fPending(0) {}
 
 void SkTaskGroup::wait()                            { ThreadPool::Wait(&fPending); }
-void SkTaskGroup::add(SkRunnable* task)             { ThreadPool::Add(task, &fPending); }
 void SkTaskGroup::add(std::function<void(void)> fn) { ThreadPool::Add(fn, &fPending); }
 void SkTaskGroup::batch(int N, std::function<void(int)> fn) {
     ThreadPool::Batch(N, fn, &fPending);
 }
-

@@ -225,6 +225,15 @@ void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set)
             "non-MOZ_STYLO build");
 }
 
+void
+Servo_InsertStyleSheetBefore(RawServoStyleSheet* sheet,
+                             RawServoStyleSheet* reference,
+                             RawServoStyleSet* set)
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_InsertStyleSheetBefore in a "
+            "non-MOZ_STYLO build");
+}
+
 bool
 Servo_StyleSheetHasRules(RawServoStyleSheet* sheet)
 {
@@ -247,7 +256,7 @@ Servo_DropStyleSet(RawServoStyleSet* set)
 }
 
 ServoComputedValues*
-Servo_GetComputedValues(RawGeckoElement* element)
+Servo_GetComputedValues(RawGeckoNode* node)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValues in a "
             "non-MOZ_STYLO build");

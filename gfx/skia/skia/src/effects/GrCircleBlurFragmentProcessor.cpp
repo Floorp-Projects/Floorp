@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2015 Google Inc.
  *
@@ -19,9 +18,10 @@
 #include "glsl/GrGLSLProgramDataManager.h"
 #include "glsl/GrGLSLUniformHandler.h"
 
+#include "SkFixed.h"
+
 class GrGLCircleBlurFragmentProcessor : public GrGLSLFragmentProcessor {
 public:
-    GrGLCircleBlurFragmentProcessor(const GrProcessor&) {}
     void emitCode(EmitArgs&) override;
 
 protected:
@@ -41,13 +41,13 @@ void GrGLCircleBlurFragmentProcessor::emitCode(EmitArgs& args) {
     // x,y  - the center of the circle
     // z    - the distance at which the intensity starts falling off (e.g., the start of the table)
     // w    - the inverse of the profile texture size
-    fDataUniform = args.fUniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+    fDataUniform = args.fUniformHandler->addUniform(kFragment_GrShaderFlag,
                                                     kVec4f_GrSLType,
                                                     kDefault_GrSLPrecision,
                                                     "data",
                                                     &dataName);
 
-    GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
+    GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const char *fragmentPos = fragBuilder->fragmentPosition();
 
     if (args.fInputColor) {
@@ -58,7 +58,7 @@ void GrGLCircleBlurFragmentProcessor::emitCode(EmitArgs& args) {
 
     // We just want to compute "length(vec) - %s.z + 0.5) * %s.w" but need to rearrange
     // for precision
-    fragBuilder->codeAppendf("vec2 vec = vec2( (%s.x - %s.x) * %s.w , (%s.y - %s.y) * %s.w );", 
+    fragBuilder->codeAppendf("vec2 vec = vec2( (%s.x - %s.x) * %s.w , (%s.y - %s.y) * %s.w );",
                              fragmentPos, dataName, dataName,
                              fragmentPos, dataName, dataName);
     fragBuilder->codeAppendf("float dist = length(vec) + ( 0.5 - %s.z ) * %s.w;",
@@ -89,7 +89,7 @@ void GrGLCircleBlurFragmentProcessor::onSetData(const GrGLSLProgramDataManager& 
 GrCircleBlurFragmentProcessor::GrCircleBlurFragmentProcessor(const SkRect& circle,
                                                              float sigma,
                                                              float offset,
-                                                             GrTexture* blurProfile) 
+                                                             GrTexture* blurProfile)
     : fCircle(circle)
     , fSigma(sigma)
     , fOffset(offset)
@@ -100,7 +100,7 @@ GrCircleBlurFragmentProcessor::GrCircleBlurFragmentProcessor(const SkRect& circl
 }
 
 GrGLSLFragmentProcessor* GrCircleBlurFragmentProcessor::onCreateGLSLInstance() const {
-    return new GrGLCircleBlurFragmentProcessor(*this);
+    return new GrGLCircleBlurFragmentProcessor;
 }
 
 void GrCircleBlurFragmentProcessor::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
@@ -210,9 +210,11 @@ static uint8_t* create_profile(float halfWH, float sigma) {
     compute_profile_offset_and_size(halfWH, sigma, &offset, &numSteps);
 
     uint8_t* weights = new uint8_t[numSteps];
-    for (int i = 0; i < numSteps; ++i) {
+    for (int i = 0; i < numSteps - 1; ++i) {
         weights[i] = eval_at(offset+i, halfWH, halfKernel.get(), kernelWH);
     }
+    // Ensure the tail of the Gaussian goes to zero.
+    weights[numSteps-1] = 0;
 
     return weights;
 }
@@ -246,7 +248,7 @@ GrTexture* GrCircleBlurFragmentProcessor::CreateCircleBlurProfileTexture(
     if (!blurProfile) {
         SkAutoTDeleteArray<uint8_t> profile(create_profile(halfWH, sigma));
 
-        blurProfile = textureProvider->createTexture(texDesc, true, profile.get(), 0);
+        blurProfile = textureProvider->createTexture(texDesc, SkBudgeted::kYes, profile.get(), 0);
         if (blurProfile) {
             textureProvider->assignUniqueKeyToTexture(key, blurProfile);
         }

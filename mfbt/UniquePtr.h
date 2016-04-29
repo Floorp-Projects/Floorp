@@ -328,7 +328,7 @@ public:
   DeleterType& get_deleter() { return del(); }
   const DeleterType& get_deleter() const { return del(); }
 
-  MOZ_WARN_UNUSED_RESULT Pointer release()
+  MOZ_MUST_USE Pointer release()
   {
     Pointer p = ptr();
     ptr() = nullptr;
@@ -463,7 +463,7 @@ public:
   DeleterType& get_deleter() { return mTuple.second(); }
   const DeleterType& get_deleter() const { return mTuple.second(); }
 
-  MOZ_WARN_UNUSED_RESULT Pointer release()
+  MOZ_MUST_USE Pointer release()
   {
     Pointer p = mTuple.first();
     mTuple.first() = nullptr;

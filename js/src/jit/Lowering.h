@@ -123,6 +123,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLsh(MLsh* ins);
     void visitRsh(MRsh* ins);
     void visitUrsh(MUrsh* ins);
+    void visitRotate(MRotate* ins);
     void visitFloor(MFloor* ins);
     void visitCeil(MCeil* ins);
     void visitRound(MRound* ins);
@@ -158,6 +159,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitToFloat32(MToFloat32* convert);
     void visitToInt32(MToInt32* convert);
     void visitTruncateToInt32(MTruncateToInt32* truncate);
+    void visitWasmTruncateToInt32(MWasmTruncateToInt32* truncate);
     void visitWrapInt64ToInt32(MWrapInt64ToInt32* ins);
     void visitExtendInt32ToInt64(MExtendInt32ToInt64* ins);
     void visitToString(MToString* convert);

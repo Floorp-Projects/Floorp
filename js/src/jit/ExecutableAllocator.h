@@ -204,7 +204,7 @@ class ExecutableAllocator
     static void reprotectPool(JSRuntime* rt, ExecutablePool* pool, ProtectionSetting protection);
 
   public:
-    MOZ_WARN_UNUSED_RESULT
+    MOZ_MUST_USE
     static bool makeWritable(void* start, size_t size)
     {
 #ifdef NON_WRITABLE_JIT_CODE
@@ -214,7 +214,7 @@ class ExecutableAllocator
 #endif
     }
 
-    MOZ_WARN_UNUSED_RESULT
+    MOZ_MUST_USE
     static bool makeExecutable(void* start, size_t size)
     {
 #ifdef NON_WRITABLE_JIT_CODE
@@ -308,7 +308,7 @@ class ExecutableAllocator
     void operator=(const ExecutableAllocator&) = delete;
 
 #ifdef NON_WRITABLE_JIT_CODE
-    MOZ_WARN_UNUSED_RESULT
+    MOZ_MUST_USE
     static bool reprotectRegion(void*, size_t, ProtectionSetting);
 #endif
 

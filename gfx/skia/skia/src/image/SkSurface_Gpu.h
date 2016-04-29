@@ -22,10 +22,11 @@ public:
     GrBackendObject onGetTextureHandle(BackendHandleAccess) override;
     bool onGetRenderTargetHandle(GrBackendObject*, BackendHandleAccess) override;
     SkCanvas* onNewCanvas() override;
-    SkSurface* onNewSurface(const SkImageInfo&) override;
-    SkImage* onNewImageSnapshot(Budgeted) override;
+    sk_sp<SkSurface> onNewSurface(const SkImageInfo&) override;
+    sk_sp<SkImage> onNewImageSnapshot(SkBudgeted, ForceCopyMode) override;
     void onCopyOnWrite(ContentChangeMode) override;
     void onDiscard() override;
+    void onPrepareForExternalIO() override;
 
     SkGpuDevice* getDevice() { return fDevice; }
 

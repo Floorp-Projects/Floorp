@@ -147,13 +147,10 @@ pref("app.update.cert.checkAttributes", false);
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);
 
-// This preference turns on app.update.mode and allows automatic download and
-// install to take place. We use a separate boolean toggle for this to make
-// the UI easier to construct.
+// If set to true, the Update Service will automatically download updates when
+// app updates are enabled per the app.update.enabled preference and if the user
+// can apply updates.
 pref("app.update.auto", true);
-
-// See chart in nsUpdateService.js source for more details
-pref("app.update.mode", 1);
 
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
@@ -190,13 +187,6 @@ pref("app.update.idletime", 60);
 // a whatsNewURL field in their brand.properties that contains a link to a page
 // which tells users what's new in this new update.
 pref("app.update.showInstalledUI", false);
-
-// 0 = suppress prompting for incompatibilities if there are updates available
-//     to newer versions of installed addons that resolve them.
-// 1 = suppress prompting for incompatibilities only if there are VersionInfo
-//     updates available to installed addons that resolve them, not newer
-//     versions.
-pref("app.update.incompatible.mode", 0);
 
 // Whether or not to attempt using the service for updates.
 #ifdef MOZ_MAINTENANCE_SERVICE
@@ -1057,7 +1047,6 @@ pref("services.sync.prefs.sync.addons.ignoreUserEnabledChanges", true);
 // could weaken the pref locally, install an add-on from an untrusted
 // source, and this would propagate automatically to other,
 // uncompromised Sync-connected devices.
-pref("services.sync.prefs.sync.app.update.mode", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
 pref("services.sync.prefs.sync.browser.newtabpage.enabled", true);

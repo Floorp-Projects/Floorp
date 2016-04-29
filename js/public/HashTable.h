@@ -77,8 +77,8 @@ class HashMap
     // HashMap construction is fallible (due to OOM); thus the user must call
     // init after constructing a HashMap and check the return value.
     explicit HashMap(AllocPolicy a = AllocPolicy()) : impl(a)  {}
-    MOZ_WARN_UNUSED_RESULT bool init(uint32_t len = 16) { return impl.init(len); }
-    bool initialized() const                          { return impl.initialized(); }
+    MOZ_MUST_USE bool init(uint32_t len = 16) { return impl.init(len); }
+    bool initialized() const                  { return impl.initialized(); }
 
     // Return whether the given lookup value is present in the map. E.g.:
     //
@@ -140,19 +140,19 @@ class HashMap
     }
 
     template<typename KeyInput, typename ValueInput>
-    MOZ_WARN_UNUSED_RESULT bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+    MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return impl.add(p,
                         mozilla::Forward<KeyInput>(k),
                         mozilla::Forward<ValueInput>(v));
     }
 
     template<typename KeyInput>
-    MOZ_WARN_UNUSED_RESULT bool add(AddPtr& p, KeyInput&& k) {
+    MOZ_MUST_USE bool add(AddPtr& p, KeyInput&& k) {
         return impl.add(p, mozilla::Forward<KeyInput>(k), Value());
     }
 
     template<typename KeyInput, typename ValueInput>
-    MOZ_WARN_UNUSED_RESULT bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
+    MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
         return impl.relookupOrAdd(p, k,
                                   mozilla::Forward<KeyInput>(k),
                                   mozilla::Forward<ValueInput>(v));
@@ -223,7 +223,7 @@ class HashMap
 
     // Overwrite existing value with v. Return false on oom.
     template<typename KeyInput, typename ValueInput>
-    MOZ_WARN_UNUSED_RESULT bool put(KeyInput&& k, ValueInput&& v) {
+    MOZ_MUST_USE bool put(KeyInput&& k, ValueInput&& v) {
         AddPtr p = lookupForAdd(k);
         if (p) {
             p->value() = mozilla::Forward<ValueInput>(v);
@@ -234,7 +234,7 @@ class HashMap
 
     // Like put, but assert that the given key is not already present.
     template<typename KeyInput, typename ValueInput>
-    MOZ_WARN_UNUSED_RESULT bool putNew(KeyInput&& k, ValueInput&& v) {
+    MOZ_MUST_USE bool putNew(KeyInput&& k, ValueInput&& v) {
         return impl.putNew(k, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
     }
 
@@ -331,8 +331,8 @@ class HashSet
     // HashSet construction is fallible (due to OOM); thus the user must call
     // init after constructing a HashSet and check the return value.
     explicit HashSet(AllocPolicy a = AllocPolicy()) : impl(a)  {}
-    MOZ_WARN_UNUSED_RESULT bool init(uint32_t len = 16) { return impl.init(len); }
-    bool initialized() const                          { return impl.initialized(); }
+    MOZ_MUST_USE bool init(uint32_t len = 16) { return impl.init(len); }
+    bool initialized() const                  { return impl.initialized(); }
 
     // Return whether the given lookup value is present in the map. E.g.:
     //
@@ -389,12 +389,12 @@ class HashSet
     AddPtr lookupForAdd(const Lookup& l) const        { return impl.lookupForAdd(l); }
 
     template <typename U>
-    MOZ_WARN_UNUSED_RESULT bool add(AddPtr& p, U&& u) {
+    MOZ_MUST_USE bool add(AddPtr& p, U&& u) {
         return impl.add(p, mozilla::Forward<U>(u));
     }
 
     template <typename U>
-    MOZ_WARN_UNUSED_RESULT bool relookupOrAdd(AddPtr& p, const Lookup& l, U&& u) {
+    MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, const Lookup& l, U&& u) {
         return impl.relookupOrAdd(p, l, mozilla::Forward<U>(u));
     }
 
@@ -463,19 +463,19 @@ class HashSet
 
     // Add |u| if it is not present already. Return false on oom.
     template <typename U>
-    MOZ_WARN_UNUSED_RESULT bool put(U&& u) {
+    MOZ_MUST_USE bool put(U&& u) {
         AddPtr p = lookupForAdd(u);
         return p ? true : add(p, mozilla::Forward<U>(u));
     }
 
     // Like put, but assert that the given key is not already present.
     template <typename U>
-    MOZ_WARN_UNUSED_RESULT bool putNew(U&& u) {
+    MOZ_MUST_USE bool putNew(U&& u) {
         return impl.putNew(u, mozilla::Forward<U>(u));
     }
 
     template <typename U>
-    MOZ_WARN_UNUSED_RESULT bool putNew(const Lookup& l, U&& u) {
+    MOZ_MUST_USE bool putNew(const Lookup& l, U&& u) {
         return impl.putNew(l, mozilla::Forward<U>(u));
     }
 
@@ -1193,7 +1193,7 @@ class HashTable : private AllocPolicy
 #endif
     {}
 
-    MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
+    MOZ_MUST_USE bool init(uint32_t length)
     {
         MOZ_ASSERT(!initialized());
 
@@ -1689,7 +1689,7 @@ class HashTable : private AllocPolicy
     }
 
     template <typename... Args>
-    MOZ_WARN_UNUSED_RESULT bool add(AddPtr& p, Args&&... args)
+    MOZ_MUST_USE bool add(AddPtr& p, Args&&... args)
     {
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(table);
@@ -1738,7 +1738,7 @@ class HashTable : private AllocPolicy
     // Note: |l| may be alias arguments in |args|, so this function must take
     // care not to use |l| after moving |args|.
     template <typename... Args>
-    MOZ_WARN_UNUSED_RESULT bool putNew(const Lookup& l, Args&&... args)
+    MOZ_MUST_USE bool putNew(const Lookup& l, Args&&... args)
     {
         if (!this->checkSimulatedOOM())
             return false;
@@ -1753,7 +1753,7 @@ class HashTable : private AllocPolicy
     // Note: |l| may be a reference to a piece of |u|, so this function
     // must take care not to use |l| after moving |u|.
     template <typename... Args>
-    MOZ_WARN_UNUSED_RESULT bool relookupOrAdd(AddPtr& p, const Lookup& l, Args&&... args)
+    MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, const Lookup& l, Args&&... args)
     {
 #ifdef JS_DEBUG
         p.generation = generation();

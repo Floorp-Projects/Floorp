@@ -4022,14 +4022,17 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
       // done
     } else {
       const nscoord endPos = *aPos + *aLength;
-      nscoord startPos =
-        aTracks.GridLineEdge(mStart, GridLineSide::eAfterGridGap);
+      auto side = mStart == aTracks.mSizes.Length() ? GridLineSide::eBeforeGridGap
+                                                    : GridLineSide::eAfterGridGap;
+      nscoord startPos = aTracks.GridLineEdge(mStart, side);
       *aPos = aGridOrigin + startPos;
       *aLength = std::max(endPos - *aPos, 0);
     }
   } else {
     if (mStart == kAutoLine) {
-      nscoord endPos = aTracks.GridLineEdge(mEnd, GridLineSide::eBeforeGridGap);
+      auto side = mEnd == 0 ? GridLineSide::eAfterGridGap
+                            : GridLineSide::eBeforeGridGap;
+      nscoord endPos = aTracks.GridLineEdge(mEnd, side);
       *aLength = std::max(aGridOrigin + endPos, 0);
     } else {
       nscoord pos;

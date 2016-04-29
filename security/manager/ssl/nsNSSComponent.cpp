@@ -1340,6 +1340,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
                            static_cast<int32_t>(BRNameMatchingPolicy::Mode::DoNotEnforce)));
   switch (nameMatchingMode) {
     case BRNameMatchingPolicy::Mode::Enforce:
+    case BRNameMatchingPolicy::Mode::EnforceAfter23August2015:
     case BRNameMatchingPolicy::Mode::EnforceAfter23August2016:
     case BRNameMatchingPolicy::Mode::DoNotEnforce:
       break;

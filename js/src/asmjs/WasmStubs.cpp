@@ -20,6 +20,8 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "asmjs/WasmIonCompile.h"
+
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
@@ -901,6 +903,10 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
         return GenerateErrorStub(masm, SymbolicAddress::BadIndirectCall);
       case JumpTarget::UnreachableTrap:
         return GenerateErrorStub(masm, SymbolicAddress::UnreachableTrap);
+      case JumpTarget::InvalidConversionToIntegerTrap:
+        return GenerateErrorStub(masm, SymbolicAddress::InvalidConversionToIntegerTrap);
+      case JumpTarget::IntegerOverflowTrap:
+        return GenerateErrorStub(masm, SymbolicAddress::IntegerOverflowTrap);
       case JumpTarget::Throw:
         return GenerateThrow(masm);
       case JumpTarget::Limit:

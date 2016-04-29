@@ -12,9 +12,6 @@ libs::
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
 
-libs::
-	$(INSTALL) $(DIST)/bin/components/xpcomtest.xpt $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
-
 ifeq (,$(filter-out WINNT, $(HOST_OS_ARCH)))
 getnativepath = $(call normalizepath,$(1))
 else

@@ -420,6 +420,38 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 }
 
 // ===============================================================
+// Rotate functions
+void
+MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
+{
+    if (count.value)
+        ma_rol(count, input, dest);
+    else
+        ma_mov(input, dest);
+}
+
+void
+MacroAssembler::rotateLeft(Register count, Register input, Register dest)
+{
+    ma_rol(count, input, dest);
+}
+
+void
+MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
+{
+    if (count.value)
+        ma_ror(count, input, dest);
+    else
+        ma_mov(input, dest);
+}
+
+void
+MacroAssembler::rotateRight(Register count, Register input, Register dest)
+{
+    ma_ror(count, input, dest);
+}
+
+// ===============================================================
 // Branch functions
 
 void
@@ -682,7 +714,7 @@ MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegis
     ma_b(label, ConditionFromDoubleCondition(cond));
 }
 
-// There are two options for implementing emitTruncateDouble:
+// There are two options for implementing branchTruncateDouble:
 //
 // 1. Convert the floating point value to an integer, if it did not fit, then it
 // was clamped to INT_MIN/INT_MAX, and we can test it. NOTE: if the value

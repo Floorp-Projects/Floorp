@@ -344,37 +344,37 @@ class Endian : private EndianUtils
 {
 protected:
   /** Read a uint16_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT uint16_t readUint16(const void* aPtr)
+  static MOZ_MUST_USE uint16_t readUint16(const void* aPtr)
   {
     return read<uint16_t>(aPtr);
   }
 
   /** Read a uint32_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT uint32_t readUint32(const void* aPtr)
+  static MOZ_MUST_USE uint32_t readUint32(const void* aPtr)
   {
     return read<uint32_t>(aPtr);
   }
 
   /** Read a uint64_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT uint64_t readUint64(const void* aPtr)
+  static MOZ_MUST_USE uint64_t readUint64(const void* aPtr)
   {
     return read<uint64_t>(aPtr);
   }
 
   /** Read an int16_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT int16_t readInt16(const void* aPtr)
+  static MOZ_MUST_USE int16_t readInt16(const void* aPtr)
   {
     return read<int16_t>(aPtr);
   }
 
   /** Read an int32_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT int32_t readInt32(const void* aPtr)
+  static MOZ_MUST_USE int32_t readInt32(const void* aPtr)
   {
     return read<uint32_t>(aPtr);
   }
 
   /** Read an int64_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_WARN_UNUSED_RESULT int64_t readInt64(const void* aPtr)
+  static MOZ_MUST_USE int64_t readInt64(const void* aPtr)
   {
     return read<int64_t>(aPtr);
   }
@@ -423,7 +423,7 @@ protected:
    * format for transmission.
    */
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapToLittleEndian(T aValue)
+  MOZ_MUST_USE static T swapToLittleEndian(T aValue)
   {
     return maybeSwap<ThisEndian, Little>(aValue);
   }
@@ -453,7 +453,7 @@ protected:
    * Converts a value of type T to big-endian format.
    */
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapToBigEndian(T aValue)
+  MOZ_MUST_USE static T swapToBigEndian(T aValue)
   {
     return maybeSwap<ThisEndian, Big>(aValue);
   }
@@ -485,7 +485,7 @@ protected:
    */
 
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapToNetworkOrder(T aValue)
+  MOZ_MUST_USE static T swapToNetworkOrder(T aValue)
   {
     return swapToBigEndian(aValue);
   }
@@ -508,7 +508,7 @@ protected:
    * Converts a value of type T from little-endian format.
    */
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapFromLittleEndian(T aValue)
+  MOZ_MUST_USE static T swapFromLittleEndian(T aValue)
   {
     return maybeSwap<Little, ThisEndian>(aValue);
   }
@@ -538,7 +538,7 @@ protected:
    * Converts a value of type T from big-endian format.
    */
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapFromBigEndian(T aValue)
+  MOZ_MUST_USE static T swapFromBigEndian(T aValue)
   {
     return maybeSwap<Big, ThisEndian>(aValue);
   }
@@ -569,7 +569,7 @@ protected:
    * in network code.
    */
   template<typename T>
-  MOZ_WARN_UNUSED_RESULT static T swapFromNetworkOrder(T aValue)
+  MOZ_MUST_USE static T swapFromNetworkOrder(T aValue)
   {
     return swapFromBigEndian(aValue);
   }

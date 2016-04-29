@@ -32,10 +32,7 @@ private:
 
         DataId() { }
 
-        // This is actually a move!!!
-        explicit DataId(DataId& that)
-            : fLoader(that.fLoader), fKey(that.fKey), fKeySize(that.fKeySize)
-        {
+        DataId(DataId&& that) : fLoader(that.fLoader), fKey(that.fKey), fKeySize(that.fKeySize) {
             that.fLoader = nullptr;
             that.fKey = nullptr;
             SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF;)
@@ -175,7 +172,7 @@ public:
 
             HRN(FontToIdentity(font.get(), &fontIds[fontIndex]));
         }
-        return fontIdSet.detach();
+        return fontIdSet.release();
     }
 
     virtual SkFontIdentity matchIndexStyle(int familyIndex,

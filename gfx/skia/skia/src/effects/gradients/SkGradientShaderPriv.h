@@ -51,20 +51,10 @@ static inline SkFixed repeat_tileproc(SkFixed x) {
 
 // Mirror
 
-// Visual Studio 2010 (MSC_VER=1600) optimizes bit-shift code incorrectly.
-// See http://code.google.com/p/skia/issues/detail?id=472
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", off)
-#endif
-
 static inline SkFixed mirror_tileproc(SkFixed x) {
     int s = SkLeftShift(x, 15) >> 31;
     return (x ^ s) & 0xFFFF;
 }
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", on)
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -221,6 +211,8 @@ public:
     uint32_t getGradFlags() const { return fGradFlags; }
 
 protected:
+    class GradientShaderBase4fContext;
+
     SkGradientShaderBase(SkReadBuffer& );
     void flatten(SkWriteBuffer&) const override;
     SK_TO_STRING_OVERRIDE()
@@ -404,7 +396,6 @@ private:
 class GrGLGradientEffect : public GrGLSLFragmentProcessor {
 public:
     GrGLGradientEffect();
-    virtual ~GrGLGradientEffect();
 
 protected:
     void onSetData(const GrGLSLProgramDataManager&, const GrProcessor&) override;
@@ -425,7 +416,7 @@ protected:
     // emit code that gets a fragment's color from an expression for t; Has branches for 3 separate
     // control flows inside -- 2 color gradients, 3 color symmetric gradients (both using
     // native GLSL mix), and 4+ color gradients that use the traditional texture lookup.
-    void emitColor(GrGLSLFragmentBuilder* fragBuilder,
+    void emitColor(GrGLSLFPFragmentBuilder* fragBuilder,
                    GrGLSLUniformHandler* uniformHandler,
                    const GrGLSLCaps* caps,
                    const GrGradientEffect&,

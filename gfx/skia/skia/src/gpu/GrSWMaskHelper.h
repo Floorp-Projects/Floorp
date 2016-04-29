@@ -8,6 +8,7 @@
 #ifndef GrSWMaskHelper_DEFINED
 #define GrSWMaskHelper_DEFINED
 
+#include "SkAutoPixmapStorage.h"
 #include "GrColor.h"
 #include "GrPipelineBuilder.h"
 #include "SkBitmap.h"
@@ -66,7 +67,7 @@ public:
 
     // Convert mask generation results to a signed distance field
     void toSDF(unsigned char* sdf);
-    
+
     // Reset the internal bitmap
     void clear(uint8_t alpha) {
         fPixels.erase(SkColorSetARGB(alpha, 0xFF, 0xFF, 0xFF));

@@ -56,6 +56,7 @@ flags:
     mochitest-dt: /mochitest-devtools-chrome.*/
     mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
     mochitest-gl: /mochitest-webgl.*/
+    mochitest-gl-e10s: /mochitest-webgl-e10s.*/
     mochitest-jetpack: /mochitest-jetpack.*/
     mochitest-media: /mochitest-media.*/
     mochitest-media-e10s: /mochitest-media-e10s.*/
@@ -132,6 +133,7 @@ flags:
     - mochitest-media-e10s
     - mochitest-oop
     - mochitest-webgl
+    - mochitest-webgl-e10s
     - mochitest-valgrind
     - mozmill
     - reftest

@@ -21,14 +21,10 @@ enum LegacySaveFlags {
     kHasAlphaLayer_LegacySaveFlags    = 0x04,
     kClipToLayer_LegacySaveFlags      = 0x10,
 };
-#ifdef SK_SUPPORT_LEGACY_SAVEFLAGS
-static_assert(kHasAlphaLayer_LegacySaveFlags == (int)SkCanvas::kHasAlphaLayer_SaveFlag, "");
-static_assert(kClipToLayer_LegacySaveFlags == (int)SkCanvas::kClipToLayer_SaveFlag, "");
-#endif
 
 SkCanvas::SaveLayerFlags SkCanvas::LegacySaveFlagsToSaveLayerFlags(uint32_t flags) {
     uint32_t layerFlags = 0;
-    
+
     if (0 == (flags & kClipToLayer_LegacySaveFlags)) {
         layerFlags |= SkCanvas::kDontClipToLayer_PrivateSaveLayerFlag;
     }
@@ -179,6 +175,11 @@ void SkPicturePlayback::handleOp(SkReader32* reader,
             canvas->concat(matrix);
             break;
         }
+        case DRAW_ANNOTATION: {
+            const SkRect& rect = reader->skipT<SkRect>();
+            const char* key = reader->readString();
+            canvas->drawAnnotation(rect, key, reader->readData().get());
+        } break;
         case DRAW_ATLAS: {
             const SkPaint* paint = fPictureData->getPaint(reader);
             const SkImage* atlas = fPictureData->getImage(reader);
@@ -306,15 +307,15 @@ void SkPicturePlayback::handleOp(SkReader32* reader,
                 texCoords = (const SkPoint*)reader->skip(SkPatchUtils::kNumCorners *
                                                          sizeof(SkPoint));
             }
-            SkAutoTUnref<SkXfermode> xfer;
+            sk_sp<SkXfermode> xfer;
             if (flag & DRAW_VERTICES_HAS_XFER) {
                 int mode = reader->readInt();
                 if (mode < 0 || mode > SkXfermode::kLastMode) {
                     mode = SkXfermode::kModulate_Mode;
                 }
-                xfer.reset(SkXfermode::Create((SkXfermode::Mode)mode));
+                xfer = SkXfermode::Make((SkXfermode::Mode)mode);
             }
-            canvas->drawPatch(cubics, colors, texCoords, xfer, paint);
+            canvas->drawPatch(cubics, colors, texCoords, std::move(xfer), paint);
         } break;
         case DRAW_PATH: {
             const SkPaint& paint = *fPictureData->getPaint(reader);
@@ -434,7 +435,7 @@ void SkPicturePlayback::handleOp(SkReader32* reader,
             canvas->drawTextOnPath(text.text(), text.length(), path, &matrix, paint);
         } break;
         case DRAW_VERTICES: {
-            SkAutoTUnref<SkXfermode> xfer;
+            sk_sp<SkXfermode> xfer;
             const SkPaint& paint = *fPictureData->getPaint(reader);
             DrawVertexFlags flags = (DrawVertexFlags)reader->readInt();
             SkCanvas::VertexMode vmode = (SkCanvas::VertexMode)reader->readInt();
@@ -459,7 +460,7 @@ void SkPicturePlayback::handleOp(SkReader32* reader,
                 if (mode < 0 || mode > SkXfermode::kLastMode) {
                     mode = SkXfermode::kModulate_Mode;
                 }
-                xfer.reset(SkXfermode::Create((SkXfermode::Mode)mode));
+                xfer = SkXfermode::Make((SkXfermode::Mode)mode);
             }
             canvas->drawVertices(vmode, vCount, verts, texs, colors, xfer, indices, iCount, paint);
         } break;
@@ -531,4 +532,3 @@ void SkPicturePlayback::handleOp(SkReader32* reader,
             SkASSERTF(false, "Unknown draw type: %d", op);
     }
 }
-

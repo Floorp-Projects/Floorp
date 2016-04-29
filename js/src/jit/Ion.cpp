@@ -24,6 +24,7 @@
 #include "jit/EagerSimdUnbox.h"
 #include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
+#include "jit/FlowAliasAnalysis.h"
 #include "jit/InstructionReordering.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
@@ -1613,15 +1614,24 @@ OptimizeMIR(MIRGenerator* mir)
     if (mir->optimizationInfo().licmEnabled() ||
         mir->optimizationInfo().gvnEnabled())
     {
-        AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
-        AliasAnalysis analysis(mir, graph);
-        if (!analysis.analyze())
-            return false;
-        gs.spewPass("Alias analysis");
-        AssertExtendedGraphCoherency(graph);
+        {
+            AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
+            if (JitOptions.disableFlowAA) {
+                AliasAnalysis analysis(mir, graph);
+                if (!analysis.analyze())
+                    return false;
+            } else {
+                FlowAliasAnalysis analysis(mir, graph);
+                if (!analysis.analyze())
+                    return false;
+            }
 
-        if (mir->shouldCancel("Alias analysis"))
-            return false;
+            gs.spewPass("Alias analysis");
+            AssertExtendedGraphCoherency(graph);
+
+            if (mir->shouldCancel("Alias analysis"))
+                return false;
+        }
 
         if (!mir->compilingAsmJS()) {
             // Eliminating dead resume point operands requires basic block

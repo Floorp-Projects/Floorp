@@ -147,10 +147,6 @@ XPCOMUtils.defineLazyGetter(this, "interAppCommService", function() {
          .getService(Ci.nsIInterAppCommService);
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "dataStoreService",
-                                   "@mozilla.org/datastore-service;1",
-                                   "nsIDataStoreService");
-
 XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
@@ -448,18 +444,6 @@ this.DOMApplicationRegistry = {
       // Nothing else to do but notifying we're ready.
       this.notifyAppsRegistryReady();
     }
-  }),
-
-  updateDataStoreForApp: Task.async(function*(aId) {
-    if (!this.webapps[aId]) {
-      return;
-    }
-
-    // Create or Update the DataStore for this app
-    let results = yield this._readManifests([{ id: aId }]);
-    let app = this.webapps[aId];
-    this.updateDataStore(app.localId, app.origin, app.manifestURL,
-                         results[0].manifest, app.appStatus);
   }),
 
   appKind: function(aApp, aManifest) {
@@ -813,50 +797,8 @@ this.DOMApplicationRegistry = {
         Services.prefs.setBoolPref("dom.apps.reset-permissions", true);
       }
 
-      // DataStores must be initialized at startup.
-      for (let id in this.webapps) {
-        yield this.updateDataStoreForApp(id);
-      }
-
       yield this.registerAppsHandlers(runUpdate);
     }.bind(this)).then(null, Cu.reportError);
-  },
-
-  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
-    if (!aManifest) {
-      debug("updateDataStore: no manifest for " + aOrigin);
-      return;
-    }
-
-    let uri = Services.io.newURI(aOrigin, null, null);
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(Ci.nsIScriptSecurityManager);
-    let principal = secMan.createCodebasePrincipal(uri, {appId: aId});
-    if (!dataStoreService.checkPermission(principal)) {
-      return;
-    }
-
-    if ('datastores-owned' in aManifest) {
-      for (let name in aManifest['datastores-owned']) {
-        let readonly = "access" in aManifest['datastores-owned'][name]
-                         ? aManifest['datastores-owned'][name].access == 'readonly'
-                         : false;
-
-        dataStoreService.installDataStore(aId, name, aOrigin, aManifestURL,
-                                          readonly);
-      }
-    }
-
-    if ('datastores-access' in aManifest) {
-      for (let name in aManifest['datastores-access']) {
-        let readonly = ("readonly" in aManifest['datastores-access'][name]) &&
-                       !aManifest['datastores-access'][name].readonly
-                         ? false : true;
-
-        dataStoreService.installAccessDataStore(aId, name, aOrigin,
-                                                aManifestURL, readonly);
-      }
-    }
   },
 
   // |aEntryPoint| is either the entry_point name or the null in which case we
@@ -1969,8 +1911,6 @@ this.DOMApplicationRegistry = {
           manifestURL: app.manifestURL },
         true);
     }
-    this.updateDataStore(this.webapps[id].localId, app.origin,
-                         app.manifestURL, newManifest);
     MessageBroadcaster.broadcastMessage("Webapps:UpdateState", {
       app: app,
       manifest: newManifest,
@@ -2418,9 +2358,6 @@ this.DOMApplicationRegistry = {
           manifestURL: aData.manifestURL
         }, true);
       }
-
-      this.updateDataStore(this.webapps[aId].localId, aApp.origin,
-                           aApp.manifestURL, aApp.manifest);
 
       aApp.name = aNewManifest.name;
       aApp.csp = manifest.csp || "";
@@ -3076,9 +3013,6 @@ this.DOMApplicationRegistry = {
           this.doUninstall.bind(this, aData, aData.mm)
         );
       }
-
-      this.updateDataStore(this.webapps[id].localId,  this.webapps[id].origin,
-                           this.webapps[id].manifestURL, jsonManifest);
     }
 
     for (let prop of ["installState", "downloadAvailable", "downloading",
@@ -3216,9 +3150,6 @@ this.DOMApplicationRegistry = {
         kind: this.webapps[aId].kind
       }, true);
     }
-
-    this.updateDataStore(this.webapps[aId].localId, aNewApp.origin,
-                         aNewApp.manifestURL, aManifest);
 
     if (aInstallSuccessCallback) {
       yield aInstallSuccessCallback(aNewApp, aManifest, zipFile.path);
@@ -4753,13 +4684,6 @@ this.DOMApplicationRegistry = {
 
   areAnyAppsInstalled: function() {
     return AppsUtils.areAnyAppsInstalled(this.webapps);
-  },
-
-  updateDataStoreEntriesFromLocalId: function(aLocalId) {
-    let app = appsService.getAppByLocalId(aLocalId);
-    if (app) {
-      this.updateDataStoreForApp(app.id);
-    }
   },
 
   _notifyCategoryAndObservers: function(subject, topic, data,  msg) {

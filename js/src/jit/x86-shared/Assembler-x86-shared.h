@@ -1657,6 +1657,19 @@ class AssemblerX86Shared : public AssemblerShared
         masm.sarl_CLr(dest.encoding());
     }
 
+    void roll(const Imm32 imm, Register dest) {
+        masm.roll_ir(imm.value, dest.encoding());
+    }
+    void roll_cl(Register dest) {
+        masm.roll_CLr(dest.encoding());
+    }
+    void rorl(const Imm32 imm, Register dest) {
+        masm.rorl_ir(imm.value, dest.encoding());
+    }
+    void rorl_cl(Register dest) {
+        masm.rorl_CLr(dest.encoding());
+    }
+
     void incl(const Operand& op) {
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:

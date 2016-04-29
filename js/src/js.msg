@@ -350,6 +350,8 @@ MSG_DEF(JSMSG_WASM_BAD_IND_CALL,       0, JSEXN_ERR,     "wasm indirect call sig
 MSG_DEF(JSMSG_WASM_BAD_BUF_ARG,        0, JSEXN_TYPEERR, "first argument must be a typed array")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR, "second argument, if present, must be an object")
 MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,     "reached unreachable trap")
+MSG_DEF(JSMSG_WASM_INTEGER_OVERFLOW,   0, JSEXN_ERR,     "integer overflow")
+MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,     "invalid conversion to integer")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")

@@ -106,7 +106,7 @@ struct BaseRect {
   // (including edges) of *this and aRect. If there are no points in that
   // intersection, returns an empty rectangle with x/y set to the std::max of the x/y
   // of *this and aRect.
-  MOZ_WARN_UNUSED_RESULT Sub Intersect(const Sub& aRect) const
+  MOZ_MUST_USE Sub Intersect(const Sub& aRect) const
   {
     Sub result;
     result.x = std::max<T>(x, aRect.x);
@@ -134,7 +134,7 @@ struct BaseRect {
   // this and aRect2.
   // Thus, empty input rectangles are ignored.
   // If both rectangles are empty, returns this.
-  MOZ_WARN_UNUSED_RESULT Sub Union(const Sub& aRect) const
+  MOZ_MUST_USE Sub Union(const Sub& aRect) const
   {
     if (IsEmpty()) {
       return aRect;
@@ -147,7 +147,7 @@ struct BaseRect {
   // Returns the smallest rectangle that contains both the points (including
   // edges) of both aRect1 and aRect2.
   // Thus, empty input rectangles are allowed to affect the result.
-  MOZ_WARN_UNUSED_RESULT Sub UnionEdges(const Sub& aRect) const
+  MOZ_MUST_USE Sub UnionEdges(const Sub& aRect) const
   {
     Sub result;
     result.x = std::min(x, aRect.x);
@@ -525,7 +525,7 @@ struct BaseRect {
    * Clamp aPoint to this rectangle. It is allowed to end up on any
    * edge of the rectangle.
    */
-  MOZ_WARN_UNUSED_RESULT Point ClampPoint(const Point& aPoint) const
+  MOZ_MUST_USE Point ClampPoint(const Point& aPoint) const
   {
     return Point(std::max(x, std::min(XMost(), aPoint.x)),
                  std::max(y, std::min(YMost(), aPoint.y)));
@@ -536,7 +536,7 @@ struct BaseRect {
    * aRect then the dimensions that don't fit will be shrunk so that they
    * do fit. The resulting rect is returned.
    */
-  MOZ_WARN_UNUSED_RESULT Sub MoveInsideAndClamp(const Sub& aRect) const
+  MOZ_MUST_USE Sub MoveInsideAndClamp(const Sub& aRect) const
   {
     Sub rect(std::max(aRect.x, x),
              std::max(aRect.y, y),

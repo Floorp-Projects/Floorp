@@ -409,6 +409,44 @@ promise_test(function(t) {
 }, 'animation is NOT running on compositor' +
    ' when endTime is positive and endDelay is negative');
 
-</script>
+promise_test(function(t) {
+  var effect = new KeyframeEffect(null,
+                                  { opacity: [ 0, 1 ] },
+                                  100 * MS_PER_SEC);
+  var animation = new Animation(effect, document.timeline);
+  animation.play();
+
+  var div = addDiv(t);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation with null target reports that it is not running ' +
+                  'on the compositor');
+
+    animation.effect.target = div;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Animation reports that it is running on the compositor ' +
+                  'after setting a valid target');
+  });
+}, 'animation is added to the compositor when setting a valid target');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Animation reports that it is running on the compositor');
+
+    animation.effect.target = null;
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation reports that it is NOT running on the ' +
+                  'compositor after setting null target');
+  });
+}, 'animation is removed from the compositor when setting null target');
+
+
 </script>
 </body>

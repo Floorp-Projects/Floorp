@@ -24,6 +24,7 @@
 #endif
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/HTMLImageElement.h"

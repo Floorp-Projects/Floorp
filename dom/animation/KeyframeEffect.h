@@ -14,12 +14,13 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/AnimationPerformanceWarning.h"
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/Maybe.h"
-#include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/OwningNonNull.h"      // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -190,8 +191,7 @@ class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 {
 public:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
-                         Element* aTarget,
-                         CSSPseudoElementType aPseudoType,
+                         const Maybe<OwningAnimationTarget>& aTarget,
                          const TimingParams& aTiming);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -220,7 +220,7 @@ public:
   {
     Maybe<NonOwningAnimationTarget> result;
     if (mTarget) {
-      result.emplace(mTarget, mPseudoType);
+      result.emplace(*mTarget);
     }
     return result;
   }
@@ -337,8 +337,7 @@ public:
 
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
-                         Element* aTarget,
-                         CSSPseudoElementType aPseudoType,
+                         const Maybe<OwningAnimationTarget>& aTarget,
                          AnimationEffectTimingReadOnly* aTiming);
 
   virtual ~KeyframeEffectReadOnly();
@@ -352,6 +351,7 @@ protected:
                           ErrorResult& aRv);
 
   void ResetIsRunningOnCompositor();
+  void ResetWinsInCascade();
 
   // This effect is registered with its target element so long as:
   //
@@ -364,11 +364,15 @@ protected:
   // owning Animation's timing.
   void UpdateTargetRegistration();
 
-  nsCOMPtr<Element> mTarget;
+  // Remove the current effect target from its EffectSet.
+  void UnregisterTarget();
+
+  void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
+
+  Maybe<OwningAnimationTarget> mTarget;
   RefPtr<Animation> mAnimation;
 
   RefPtr<AnimationEffectTimingReadOnly> mTiming;
-  CSSPseudoElementType mPseudoType;
 
   // The specified keyframes.
   nsTArray<Keyframe>          mFrames;
@@ -406,8 +410,7 @@ class KeyframeEffect : public KeyframeEffectReadOnly
 {
 public:
   KeyframeEffect(nsIDocument* aDocument,
-                 Element* aTarget,
-                 CSSPseudoElementType aPseudoType,
+                 const Maybe<OwningAnimationTarget>& aTarget,
                  const TimingParams& aTiming);
 
   JSObject* WrapObject(JSContext* aCx,
@@ -432,8 +435,21 @@ public:
 
   void NotifySpecifiedTimingUpdated();
 
+  // This method calls MaybeUpdateProperties which is not safe to use when
+  // we are in the middle of updating style. If we need to use this when
+  // updating style, we should pass the nsStyleContext into this method and use
+  // that to update the properties rather than calling
+  // GetStyleContextForElement.
+  void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
+
 protected:
   ~KeyframeEffect() override;
+
+  // We need to be careful to *not* call this when we are updating the style
+  // context. That's because calling GetStyleContextForElement when we are in
+  // the process of building a style context may trigger various forms of
+  // infinite recursion.
+  void MaybeUpdateProperties();
 };
 
 } // namespace dom

@@ -287,6 +287,40 @@ class BaseAssemblerX64 : public BaseAssembler
         }
     }
 
+    void rolq_ir(int32_t imm, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 64);
+        spew("rolq       $%d, %s", imm, GPReg64Name(dst));
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, dst, GROUP2_OP_ROL);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, dst, GROUP2_OP_ROL);
+            m_formatter.immediate8u(imm);
+        }
+    }
+    void rolq_CLr(RegisterID dst)
+    {
+        spew("rolq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_ROL);
+    }
+
+    void rorq_ir(int32_t imm, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 64);
+        spew("rorq       $%d, %s", imm, GPReg64Name(dst));
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, dst, GROUP2_OP_ROR);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, dst, GROUP2_OP_ROR);
+            m_formatter.immediate8u(imm);
+        }
+    }
+    void rorq_CLr(RegisterID dst)
+    {
+        spew("rorq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_ROR);
+    }
+
     void imulq_rr(RegisterID src, RegisterID dst)
     {
         spew("imulq      %s, %s", GPReg64Name(src), GPReg64Name(dst));
@@ -617,7 +651,7 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.oneByteOp64(OP_MOVSXD_GvEv, offset, base, index, scale, dst);
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     movl_ripr(RegisterID dst)
     {
         m_formatter.oneByteRipOp(OP_MOV_GvEv, 0, (RegisterID)dst);
@@ -626,7 +660,7 @@ class BaseAssemblerX64 : public BaseAssembler
         return label;
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     movl_rrip(RegisterID src)
     {
         m_formatter.oneByteRipOp(OP_MOV_EvGv, 0, (RegisterID)src);
@@ -635,7 +669,7 @@ class BaseAssemblerX64 : public BaseAssembler
         return label;
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     movq_ripr(RegisterID dst)
     {
         m_formatter.oneByteRipOp64(OP_MOV_GvEv, 0, dst);
@@ -650,7 +684,7 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.oneByteOp64(OP_LEA, offset, base, dst);
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     leaq_rip(RegisterID dst)
     {
         m_formatter.oneByteRipOp64(OP_LEA, 0, dst);
@@ -714,44 +748,44 @@ class BaseAssemblerX64 : public BaseAssembler
         twoByteOpInt64Simd("vmovq", VEX_PD, OP2_MOVD_VdEd, src, invalid_xmm, dst);
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovsd_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_VsdWsd, invalid_xmm, dst);
     }
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovss_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_VsdWsd, invalid_xmm, dst);
     }
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovsd_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovsd", VEX_SD, OP2_MOVSD_WsdVsd, invalid_xmm, src);
     }
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovss_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovss", VEX_SS, OP2_MOVSD_WsdVsd, invalid_xmm, src);
     }
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovdqa_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_WdqVdq, invalid_xmm, src);
     }
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovaps_rrip(XMMRegisterID src)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PS, OP2_MOVAPS_WsdVsd, invalid_xmm, src);
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovaps_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovaps", VEX_PS, OP2_MOVAPS_VsdWsd, invalid_xmm, dst);
     }
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     vmovdqa_ripr(XMMRegisterID dst)
     {
         return twoByteRipOpSimd("vmovdqa", VEX_PD, OP2_MOVDQ_VdqWdq, invalid_xmm, dst);
@@ -759,7 +793,7 @@ class BaseAssemblerX64 : public BaseAssembler
 
   private:
 
-    MOZ_WARN_UNUSED_RESULT JmpSrc
+    MOZ_MUST_USE JmpSrc
     twoByteRipOpSimd(const char* name, VexOperandType ty, TwoByteOpcodeID opcode,
                      XMMRegisterID src0, XMMRegisterID dst)
     {

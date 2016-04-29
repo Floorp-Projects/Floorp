@@ -1284,6 +1284,23 @@ LIRGenerator::visitUrsh(MUrsh* ins)
 }
 
 void
+LIRGenerator::visitRotate(MRotate* ins)
+{
+    MDefinition* input = ins->input();
+    MDefinition* count = ins->count();
+
+    if (ins->type() == MIRType::Int32) {
+        auto* lir = new(alloc()) LRotate();
+        lowerForShift(lir, ins, input, count);
+    } else if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LRotate64();
+        lowerForShiftInt64(lir, ins, input, count);
+    } else {
+        MOZ_CRASH("unexpected type in visitRotate");
+    }
+}
+
+void
 LIRGenerator::visitFloor(MFloor* ins)
 {
     MIRType type = ins->input()->type();
@@ -2091,6 +2108,22 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate)
         // Objects might be effectful. Symbols throw.
         // Strings are complicated - we don't handle them yet.
         MOZ_CRASH("unexpected type");
+    }
+}
+
+void
+LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins)
+{
+    MDefinition* input = ins->input();
+    switch (input->type()) {
+      case MIRType::Double:
+      case MIRType::Float32: {
+        auto* lir = new(alloc()) LWasmTruncateToInt32(useRegisterAtStart(input));
+        define(lir, ins);
+        break;
+      }
+      default:
+        MOZ_CRASH("unexpected type in WasmTruncateToInt32");
     }
 }
 

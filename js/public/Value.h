@@ -1695,18 +1695,19 @@ SameType(const Value& lhs, const Value& rhs)
 
 namespace JS {
 JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const Value& next);
-} // namespace JS
-
-namespace js {
 
 template <>
 struct GCPolicy<JS::Value>
 {
-    static JS::Value initial() { return JS::UndefinedValue(); }
-    static void trace(JSTracer* trc, JS::Value* v, const char* name) {
+    static Value initial() { return UndefinedValue(); }
+    static void trace(JSTracer* trc, Value* v, const char* name) {
         js::UnsafeTraceManuallyBarrieredEdge(trc, v, name);
     }
 };
+
+} // namespace JS
+
+namespace js {
 
 template <>
 struct BarrierMethods<JS::Value>

@@ -9,6 +9,7 @@
 
 #include "vm/UnboxedObject.h"
 
+#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

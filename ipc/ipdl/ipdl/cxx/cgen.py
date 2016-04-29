@@ -185,7 +185,7 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.printdent()
 
         if md.warn_unused:
-            self.write('MOZ_WARN_UNUSED_RESULT ')
+            self.write('MOZ_MUST_USE ')
         if md.inline:
             self.write('inline ')
         if md.never_inline:

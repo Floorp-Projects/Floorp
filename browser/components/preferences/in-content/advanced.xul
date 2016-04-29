@@ -75,9 +75,6 @@
   <preference id="app.update.auto"
               name="app.update.auto"
               type="bool"/>
-  <preference id="app.update.mode"
-              name="app.update.mode"
-              type="int"/>
 
   <preference id="app.update.disable_button.showUpdateHistory"
               name="app.update.disable_button.showUpdateHistory"
@@ -336,14 +333,6 @@
                  value="auto"
                  label="&updateAuto1.label;"
                  accesskey="&updateAuto1.accesskey;"/>
-          <hbox class="indent">
-            <checkbox id="warnIncompatible"
-                      label="&updateAutoAddonWarn.label;"
-                      accesskey="&updateAutoAddonWarn.accesskey;"
-                      preference="app.update.mode"
-                      onsyncfrompreference="return gAdvancedPane.readAddonWarn();"
-                      onsynctopreference="return gAdvancedPane.writeAddonWarn();"/>
-          </hbox>
           <radio value="checkOnly"
                 label="&updateCheck.label;"
                 accesskey="&updateCheck.accesskey;"/>

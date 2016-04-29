@@ -113,7 +113,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
     void visitRandom(MRandom* ins);
-    void visitTruncateToInt64(MTruncateToInt64* ins);
+    void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
 };
 

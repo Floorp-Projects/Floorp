@@ -12,19 +12,14 @@
 #include "SkBlitRow_opts.h"
 #include "SkBlurImageFilter_opts.h"
 #include "SkColorCubeFilter_opts.h"
-#include "SkFloatingPoint_opts.h"
 #include "SkMatrix_opts.h"
 #include "SkMorphologyImageFilter_opts.h"
 #include "SkSwizzler_opts.h"
 #include "SkTextureCompressor_opts.h"
-#include "SkUtils_opts.h"
 #include "SkXfermode_opts.h"
 
 namespace SkOpts {
     void Init_neon() {
-        rsqrt           = sk_neon::rsqrt;
-        memset16        = sk_neon::memset16;
-        memset32        = sk_neon::memset32;
         create_xfermode = sk_neon::create_xfermode;
 
         box_blur_xx = sk_neon::box_blur_xx;
@@ -41,7 +36,8 @@ namespace SkOpts {
 
         blit_mask_d32_a8 = sk_neon::blit_mask_d32_a8;
 
-        blit_row_color32 = sk_neon::blit_row_color32;
+        blit_row_color32     = sk_neon::blit_row_color32;
+        blit_row_s32a_opaque = sk_neon::blit_row_s32a_opaque;
 
         color_cube_filter_span = sk_neon::color_cube_filter_span;
 
@@ -49,8 +45,15 @@ namespace SkOpts {
         matrix_scale_translate = sk_neon::matrix_scale_translate;
         matrix_affine          = sk_neon::matrix_affine;
 
-        premul_xxxa        = sk_neon::premul_xxxa;
-        premul_swaprb_xxxa = sk_neon::premul_swaprb_xxxa;
-        swaprb_xxxa        = sk_neon::swaprb_xxxa;
+        RGBA_to_BGRA          = sk_neon::RGBA_to_BGRA;
+        RGBA_to_rgbA          = sk_neon::RGBA_to_rgbA;
+        RGBA_to_bgrA          = sk_neon::RGBA_to_bgrA;
+        RGB_to_RGB1           = sk_neon::RGB_to_RGB1;
+        RGB_to_BGR1           = sk_neon::RGB_to_BGR1;
+        gray_to_RGB1          = sk_neon::gray_to_RGB1;
+        grayA_to_RGBA         = sk_neon::grayA_to_RGBA;
+        grayA_to_rgbA         = sk_neon::grayA_to_rgbA;
+        inverted_CMYK_to_RGB1 = sk_neon::inverted_CMYK_to_RGB1;
+        inverted_CMYK_to_BGR1 = sk_neon::inverted_CMYK_to_BGR1;
     }
 }

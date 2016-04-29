@@ -412,6 +412,7 @@ jit::CheckLogging()
             "  prune      Prune unused branches\n"
             "  escape     Escape analysis\n"
             "  alias      Alias analysis\n"
+            "  alias-sum  Alias analysis: shows summaries for every block\n"
             "  gvn        Global Value Numbering\n"
             "  licm       Loop invariant code motion\n"
             "  sincos     Replace sin/cos by sincos\n"
@@ -456,6 +457,8 @@ jit::CheckLogging()
         EnableChannel(JitSpew_Escape);
     if (ContainsFlag(env, "alias"))
         EnableChannel(JitSpew_Alias);
+    if (ContainsFlag(env, "alias-sum"))
+        EnableChannel(JitSpew_AliasSummaries);
     if (ContainsFlag(env, "scripts"))
         EnableChannel(JitSpew_IonScripts);
     if (ContainsFlag(env, "mir"))

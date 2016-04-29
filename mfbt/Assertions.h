@@ -547,14 +547,14 @@ struct AssertionConditionType
 #else
 #  define MOZ_ALWAYS_TRUE(expr) \
   do { \
-    if ( ( expr ) ) {                       \
-      /* Silence MOZ_WARN_UNUSED_RESULT. */ \
+    if ( ( expr ) ) { \
+      /* Silence MOZ_MUST_USE. */ \
     } \
   } while (0)
 #  define MOZ_ALWAYS_FALSE(expr) \
   do { \
-    if ( ( expr ) ) {                       \
-      /* Silence MOZ_WARN_UNUSED_RESULT. */ \
+    if ( ( expr ) ) { \
+      /* Silence MOZ_MUST_USE. */ \
     } \
   } while (0)
 #endif

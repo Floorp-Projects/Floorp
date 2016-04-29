@@ -14,7 +14,7 @@
 #include "js/TracingAPI.h"
 #include "js/Vector.h"
 
-namespace js {
+namespace JS {
 
 // A GCVector is a Vector with an additional trace method that knows how
 // to visit all of the items stored in the Vector. For vectors that contain GC
@@ -32,7 +32,7 @@ namespace js {
 // it must either be used with Rooted, or barriered and traced manually.
 template <typename T,
           size_t MinInlineCapacity = 0,
-          typename AllocPolicy = TempAllocPolicy>
+          typename AllocPolicy = js::TempAllocPolicy>
 class GCVector
 {
     mozilla::Vector<T, MinInlineCapacity, AllocPolicy> vector;
@@ -126,10 +126,14 @@ class GCVector
     }
 };
 
+} // namespace JS
+
+namespace js {
+
 template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class GCVectorOperations
 {
-    using Vec = GCVector<T, Capacity, AllocPolicy>;
+    using Vec = JS::GCVector<T, Capacity, AllocPolicy>;
     const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
@@ -150,7 +154,7 @@ template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
 class MutableGCVectorOperations
   : public GCVectorOperations<Outer, T, Capacity, AllocPolicy>
 {
-    using Vec = GCVector<T, Capacity, AllocPolicy>;
+    using Vec = JS::GCVector<T, Capacity, AllocPolicy>;
     const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
     Vec& vec() { return static_cast<Outer*>(this)->get(); }
 
@@ -214,23 +218,23 @@ class MutableGCVectorOperations
 };
 
 template <typename T, size_t N, typename AP>
-class RootedBase<GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::Rooted<GCVector<T,N,AP>>, T,N,AP>
+class RootedBase<JS::GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::Rooted<JS::GCVector<T,N,AP>>, T,N,AP>
 {};
 
 template <typename T, size_t N, typename AP>
-class MutableHandleBase<GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::MutableHandle<GCVector<T,N,AP>>, T,N,AP>
+class MutableHandleBase<JS::GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::MutableHandle<JS::GCVector<T,N,AP>>, T,N,AP>
 {};
 
 template <typename T, size_t N, typename AP>
-class HandleBase<GCVector<T,N,AP>>
-  : public GCVectorOperations<JS::Handle<GCVector<T,N,AP>>, T,N,AP>
+class HandleBase<JS::GCVector<T,N,AP>>
+  : public GCVectorOperations<JS::Handle<JS::GCVector<T,N,AP>>, T,N,AP>
 {};
 
 template <typename T, size_t N, typename AP>
-class PersistentRootedBase<GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::PersistentRooted<GCVector<T,N,AP>>, T,N,AP>
+class PersistentRootedBase<JS::GCVector<T,N,AP>>
+  : public MutableGCVectorOperations<JS::PersistentRooted<JS::GCVector<T,N,AP>>, T,N,AP>
 {};
 
 } // namespace js

@@ -82,8 +82,8 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 static void
 MarkExactStackRoots(JSRuntime* rt, JSTracer* trc)
 {
-    for (ContextIter cx(rt); !cx.done(); cx.next())
-        cx->roots.traceStackRoots(trc);
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
+        zone->roots.traceStackRoots(trc);
     rt->mainThread.roots.traceStackRoots(trc);
 }
 
@@ -113,8 +113,6 @@ JS_FOR_EACH_TRACEKIND(MARK_ROOTS)
 static void
 MarkPersistentRooted(JSRuntime* rt, JSTracer* trc)
 {
-    for (ContextIter cx(rt); !cx.done(); cx.next())
-        cx->roots.tracePersistentRoots(trc);
     rt->mainThread.roots.tracePersistentRoots(trc);
 }
 

@@ -49,6 +49,22 @@ GR_STATIC_ASSERT(3 == GrPathRendering::kTranslate_PathTransformType);
 GR_STATIC_ASSERT(4 == GrPathRendering::kAffine_PathTransformType);
 GR_STATIC_ASSERT(GrPathRendering::kAffine_PathTransformType == GrPathRendering::kLast_PathTransformType);
 
+#ifdef SK_DEBUG
+static const GrGLenum gXformType2ComponentCount[] = {
+    0,
+    1,
+    1,
+    2,
+    6
+};
+
+static void verify_floats(const float* floats, int count) {
+    for (int i = 0; i < count; ++i) {
+        SkASSERT(!SkScalarIsNaN(SkFloatToScalar(floats[i])));
+    }
+}
+#endif
+
 static GrGLenum gr_stencil_op_to_gl_path_rendering_fill_mode(GrStencilOp op) {
     switch (op) {
         default:
@@ -75,7 +91,10 @@ GrGLPathRendering::~GrGLPathRendering() {
     }
 }
 
-void GrGLPathRendering::abandonGpuResources() {
+void GrGLPathRendering::disconnect(GrGpu::DisconnectType type) {
+    if (GrGpu::DisconnectType::kCleanup == type) {
+        this->deletePaths(fFirstPreallocatedPathID, fPreallocatedPathCount);
+    };
     fPreallocatedPathCount = 0;
 }
 
@@ -106,7 +125,7 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs& args, const GrPath*
     SkISize size = SkISize::Make(rt->width(), rt->height());
     this->setProjectionMatrix(*args.fViewMatrix, size, rt->origin());
     gpu->flushScissor(*args.fScissor, rt->getViewport(), rt->origin());
-    gpu->flushHWAAState(rt, args.fUseHWAA);
+    gpu->flushHWAAState(rt, args.fUseHWAA, true);
     gpu->flushRenderTarget(rt, nullptr);
 
     const GrGLPath* glPath = static_cast<const GrGLPath*>(path);
@@ -126,13 +145,16 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs& args, const GrPath*
     }
 }
 
-void GrGLPathRendering::onDrawPath(const DrawPathArgs& args, const GrPath* path) {
-    if (!this->gpu()->flushGLState(args)) {
+void GrGLPathRendering::onDrawPath(const GrPipeline& pipeline,
+                                   const GrPrimitiveProcessor& primProc,
+                                   const GrStencilSettings& stencil,
+                                   const GrPath* path) {
+    if (!this->gpu()->flushGLState(pipeline, primProc)) {
         return;
     }
     const GrGLPath* glPath = static_cast<const GrGLPath*>(path);
 
-    this->flushPathStencilSettings(*args.fStencil);
+    this->flushPathStencilSettings(stencil);
     SkASSERT(!fHWPathStencilSettings.isTwoSided());
 
     GrGLenum fillMode = gr_stencil_op_to_gl_path_rendering_fill_mode(
@@ -151,14 +173,18 @@ void GrGLPathRendering::onDrawPath(const DrawPathArgs& args, const GrPath* path)
     }
 }
 
-void GrGLPathRendering::onDrawPaths(const DrawPathArgs& args, const GrPathRange* pathRange,
+void GrGLPathRendering::onDrawPaths(const GrPipeline& pipeline,
+                                    const GrPrimitiveProcessor& primProc,
+                                    const GrStencilSettings& stencil, const GrPathRange* pathRange,
                                     const void* indices, PathIndexType indexType,
                                     const float transformValues[], PathTransformType transformType,
                                     int count) {
-    if (!this->gpu()->flushGLState(args)) {
+    SkDEBUGCODE(verify_floats(transformValues, gXformType2ComponentCount[transformType] * count));
+
+    if (!this->gpu()->flushGLState(pipeline, primProc)) {
         return;
     }
-    this->flushPathStencilSettings(*args.fStencil);
+    this->flushPathStencilSettings(stencil);
     SkASSERT(!fHWPathStencilSettings.isTwoSided());
 
 
@@ -210,6 +236,7 @@ void GrGLPathRendering::setProgramPathFragmentInputTransform(GrGLuint program, G
         coefficients[7] = SkScalarToFloat(matrix[SkMatrix::kMPersp1]);
         coefficients[8] = SkScalarToFloat(matrix[SkMatrix::kMPersp2]);
     }
+    SkDEBUGCODE(verify_floats(coefficients, components * 3));
 
     GL_CALL(ProgramPathFragmentInputGen(program, location, genMode, components, coefficients));
 }
@@ -232,6 +259,7 @@ void GrGLPathRendering::setProjectionMatrix(const SkMatrix& matrix,
 
     float glMatrix[4 * 4];
     fHWProjectionMatrixState.getRTAdjustedGLMatrix<4>(glMatrix);
+    SkDEBUGCODE(verify_floats(glMatrix, SK_ARRAY_COUNT(glMatrix)));
     GL_CALL(MatrixLoadf(GR_GL_PATH_PROJECTION, glMatrix));
 }
 
@@ -291,13 +319,20 @@ void GrGLPathRendering::deletePaths(GrGLuint path, GrGLsizei range) {
 
 void GrGLPathRendering::flushPathStencilSettings(const GrStencilSettings& stencilSettings) {
     if (fHWPathStencilSettings != stencilSettings) {
+        SkASSERT(stencilSettings.isValid());
         // Just the func, ref, and mask is set here. The op and write mask are params to the call
         // that draws the path to the SB (glStencilFillPath)
-        GrGLenum func =
-            GrToGLStencilFunc(stencilSettings.func(GrStencilSettings::kFront_Face));
-        GL_CALL(PathStencilFunc(func, stencilSettings.funcRef(GrStencilSettings::kFront_Face),
-                                stencilSettings.funcMask(GrStencilSettings::kFront_Face)));
+        const GrStencilSettings::Face kFront_Face = GrStencilSettings::kFront_Face;
+        GrStencilFunc func = stencilSettings.func(kFront_Face);
+        uint16_t funcRef = stencilSettings.funcRef(kFront_Face);
+        uint16_t funcMask = stencilSettings.funcMask(kFront_Face);
 
+        if (!fHWPathStencilSettings.isValid() ||
+            func != fHWPathStencilSettings.func(kFront_Face) ||
+            funcRef != fHWPathStencilSettings.funcRef(kFront_Face) ||
+            funcMask != fHWPathStencilSettings.funcMask(kFront_Face)) {
+            GL_CALL(PathStencilFunc(GrToGLStencilFunc(func), funcRef, funcMask));
+        }
         fHWPathStencilSettings = stencilSettings;
     }
 }
