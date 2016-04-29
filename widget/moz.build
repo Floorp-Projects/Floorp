@@ -87,6 +87,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'widget'
 
 EXPORTS += [
+    'CompositorWidgetProxy.h',
     'ContentHelper.h',
     'GfxDriverInfo.h',
     'GfxInfoBase.h',
