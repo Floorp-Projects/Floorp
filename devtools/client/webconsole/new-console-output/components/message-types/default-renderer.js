@@ -8,13 +8,28 @@
 
 // React & Redux
 const {
+  createFactory,
   DOM: dom,
 } = require("devtools/client/shared/vendor/react");
+const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 
 DefaultRenderer.displayName = "DefaultRenderer";
 
 function DefaultRenderer(props) {
-  return dom.div({ className: "message cm-s-mozilla" },
+  const { category, severity } = props;
+
+  const icon = MessageIcon({ severity });
+
+  // @TODO Use of "is" is a temporary hack to get the category and severity
+  // attributes to be applied. There are targeted in webconsole's CSS rules,
+  // so if we remove this hack, we have to modify the CSS rules accordingly.
+  return dom.div({
+    class: "message cm-s-mozilla",
+    is: "fdt-message",
+    category: category,
+    severity: severity
+  },
+    icon,
     "This evaluation result type is not supported yet."
   );
 }

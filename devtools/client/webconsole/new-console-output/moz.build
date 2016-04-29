@@ -13,7 +13,7 @@ DIRS += [
 DevToolsModules(
     'constants.js',
     'main.js',
-    'output-wrapper-thingy.js',
+    'new-console-output-wrapper.js',
     'store.js',
 )
 

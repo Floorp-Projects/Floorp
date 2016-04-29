@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for MessageRepeat component</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for MessageIcon component</p>
+
+<script type="text/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  const {
+    SEVERITY_CLASS_FRAGMENTS,
+    SEVERITY_ERROR,
+  } = require("devtools/client/webconsole/new-console-output/constants");
+  const { MessageIcon } = require("devtools/client/webconsole/new-console-output/components/message-icon");
+
+  let severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
+  const iconRendered = renderComponent(MessageIcon, { severity });
+  ok(iconRendered.classList.contains("icon"), "MessageIcon has expected class");
+  is(iconRendered.getAttribute("title"), "Error",
+    "MessageIcon shows correct title attribute");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

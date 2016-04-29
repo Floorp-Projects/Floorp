@@ -39,7 +39,7 @@ window.onload = Task.async(function* () {
     };
     const rendered = renderComponent(EvaluationResult, props);
 
-    ok(rendered.textContent.contains(testValue.expectedText),
+    ok(rendered.textContent.includes(testValue.expectedText),
       "EvaluationResult pipes data to its children as expected");
 }
 

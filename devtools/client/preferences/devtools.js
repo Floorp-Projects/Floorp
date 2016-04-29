@@ -296,6 +296,9 @@ pref("devtools.webconsole.timestampMessages", false);
 // to automatically trigger multiline editing (equivalent to shift + enter).
 pref("devtools.webconsole.autoMultiline", true);
 
+// Enable the experimental webconsole frontend (work in progress)
+pref("devtools.webconsole.new-frontend-enabled", false);
+
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories. These defaults should be kept in sync
 // with DEFAULT_LOG_LIMIT in the webconsole frontend.

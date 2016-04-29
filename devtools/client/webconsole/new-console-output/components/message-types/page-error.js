@@ -8,11 +8,12 @@
 
 // React & Redux
 const {
-  createElement,
+  createFactory,
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const { MessageRepeat } = require("devtools/client/webconsole/new-console-output/components/message-repeat");
+const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
+const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 
 PageError.displayName = "PageError";
 
@@ -25,13 +26,23 @@ function PageError(props) {
   const messageBody =
     dom.span({className: "message-body devtools-monospace"},
       message.data.errorMessage);
-  const repeat = createElement(MessageRepeat, {repeat: message.repeat});
+  const repeat = MessageRepeat({repeat: message.repeat});
+  const icon = MessageIcon({severity: message.severity});
   const children = [
     messageBody,
     repeat
   ];
 
-  return dom.div({ className: "message cm-s-mozilla"},
+  // @TODO Use of "is" is a temporary hack to get the category and severity
+  // attributes to be applied. There are targeted in webconsole's CSS rules,
+  // so if we remove this hack, we have to modify the CSS rules accordingly.
+  return dom.div({
+    class: "message cm-s-mozilla",
+    is: "fdt-message",
+    category: message.category,
+    severity: message.severity
+  },
+    icon,
     dom.span({className: "message-body-wrapper"},
       dom.span({},
         dom.span({className: "message-flex-body"},

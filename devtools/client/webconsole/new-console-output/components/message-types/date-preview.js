@@ -14,15 +14,16 @@ const {
 } = require("devtools/client/shared/vendor/react");
 
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link").VariablesViewLink);
+const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
 
 DatePreview.displayName = "DatePreview";
 
 DatePreview.propTypes = {
-  message: PropTypes.object.isRequired,
+  data: PropTypes.object.isRequired,
 };
 
 function DatePreview(props) {
-  const { data } = props;
+  const { data, category, severity } = props;
   const { preview } = data;
 
   const dateString = new Date(preview.timestamp).toISOString();
@@ -33,8 +34,18 @@ function DatePreview(props) {
     }),
     dom.span({ className: "cm-string-2" }, ` ${dateString}`)
   ];
+  const icon = MessageIcon({ severity });
 
-  return dom.div({ className: "message cm-s-mozilla" },
+  // @TODO Use of "is" is a temporary hack to get the category and severity
+  // attributes to be applied. There are targeted in webconsole's CSS rules,
+  // so if we remove this hack, we have to modify the CSS rules accordingly.
+  return dom.div({
+    class: "message cm-s-mozilla",
+    is: "fdt-message",
+    category: category,
+    severity: severity
+  },
+    icon,
     dom.span({
       className: "message-body-wrapper message-body devtools-monospace"
     }, dom.span({},
