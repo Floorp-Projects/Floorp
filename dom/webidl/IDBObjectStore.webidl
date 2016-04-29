@@ -42,14 +42,8 @@ interface IDBObjectStore {
     [Throws]
     IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
 
-    // Bug 899972
-    // IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
-
     [Throws]
-    IDBIndex   createIndex (DOMString name, DOMString keyPath, optional IDBIndexParameters optionalParameters);
-
-    [Throws]
-    IDBIndex   createIndex (DOMString name, sequence<DOMString> keyPath, optional IDBIndexParameters optionalParameters);
+    IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
 
     [Throws]
     IDBIndex   index (DOMString name);
