@@ -51,6 +51,7 @@ struct DefaultJitOptions
     bool disableEaa;
     bool disableEagerSimdUnbox;
     bool disableEdgeCaseAnalysis;
+    bool disableFlowAA;
     bool disableGvn;
     bool disableInlining;
     bool disableLicm;

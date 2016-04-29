@@ -371,6 +371,8 @@ class AliasSet {
     }
 
   public:
+    static const char* Name(size_t flag);
+
     inline bool isNone() const {
         return flags_ == None_;
     }
@@ -405,6 +407,30 @@ class AliasSet {
     }
 };
 
+typedef Vector<MDefinition*, 6, JitAllocPolicy> MDefinitionVector;
+typedef Vector<MInstruction*, 6, JitAllocPolicy> MInstructionVector;
+typedef Vector<MDefinition*, 1, JitAllocPolicy> MStoreVector;
+
+class StoreDependency : public TempObject
+{
+    MStoreVector all_;
+
+  public:
+    explicit StoreDependency(TempAllocator& alloc)
+      : all_(alloc)
+    { }
+
+    bool init(MDefinitionVector& all) {
+        if (!all_.appendAll(all))
+            return false;
+        return true;
+    }
+
+    MStoreVector& get() {
+        return all_;
+    }
+};
+
 // An MDefinition is an SSA name.
 class MDefinition : public MNode
 {
@@ -427,8 +453,8 @@ class MDefinition : public MNode
     MIRType resultType_;           // Representation of result type.
     TemporaryTypeSet* resultTypeSet_; // Optional refinement of the result type.
     union {
-        MInstruction* dependency_; // Implicit dependency (store, call, etc.) of this instruction.
-                                   // Used by alias analysis, GVN and LICM.
+        MDefinition* loadDependency_;      // Implicit dependency (store, call, etc.) of this
+        StoreDependency* storeDependency_; // instruction. Used by alias analysis, GVN and LICM.
         uint32_t virtualRegister_; // Used by lowering to map definitions to virtual registers.
     };
 
@@ -469,7 +495,7 @@ class MDefinition : public MNode
         range_(nullptr),
         resultType_(MIRType::None),
         resultTypeSet_(nullptr),
-        dependency_(nullptr),
+        loadDependency_(nullptr),
         trackedSite_(nullptr)
     { }
 
@@ -480,7 +506,7 @@ class MDefinition : public MNode
         range_(other.range_),
         resultType_(other.resultType_),
         resultTypeSet_(other.resultTypeSet_),
-        dependency_(other.dependency_),
+        loadDependency_(other.loadDependency_),
         trackedSite_(other.trackedSite_)
     { }
 
@@ -869,16 +895,27 @@ class MDefinition : public MNode
     void setResultTypeSet(TemporaryTypeSet* types) {
         resultTypeSet_ = types;
     }
-
-    MInstruction* dependency() const {
-        return dependency_;
-    }
-    void setDependency(MInstruction* dependency) {
-        dependency_ = dependency;
-    }
     virtual AliasSet getAliasSet() const {
         // Instructions are effectful by default.
         return AliasSet::Store(AliasSet::Any);
+    }
+
+    MDefinition* dependency() const {
+        if (getAliasSet().isStore())
+            return nullptr;
+        return loadDependency_;
+    }
+    void setDependency(MDefinition* dependency) {
+        MOZ_ASSERT(!getAliasSet().isStore());
+        loadDependency_ = dependency;
+    }
+    void setStoreDependency(StoreDependency* dependency) {
+        MOZ_ASSERT(getAliasSet().isStore());
+        storeDependency_ = dependency;
+    }
+    StoreDependency* storeDependency() {
+        MOZ_ASSERT_IF(!getAliasSet().isStore(), !storeDependency_);
+        return storeDependency_;
     }
     bool isEffectful() const {
         return getAliasSet().isStore();
@@ -890,13 +927,20 @@ class MDefinition : public MNode
         return isEffectful();
     }
 #endif
-    virtual bool mightAlias(const MDefinition* store) const {
+
+    enum class AliasType : uint32_t {
+        NoAlias = 0,
+        MayAlias = 1,
+        MustAlias = 2
+    };
+    virtual AliasType mightAlias(const MDefinition* store) const {
         // Return whether this load may depend on the specified store, given
         // that the alias sets intersect. This may be refined to exclude
         // possible aliasing in cases where alias set flags are too imprecise.
+        if (!(getAliasSet().flags() & store->getAliasSet().flags()))
+            return AliasType::NoAlias;
         MOZ_ASSERT(!isEffectful() && store->isEffectful());
-        MOZ_ASSERT(getAliasSet().flags() & store->getAliasSet().flags());
-        return true;
+        return AliasType::MayAlias;
     }
 
     virtual bool canRecoverOnBailout() const {
@@ -948,9 +992,6 @@ class MUseDefIterator
         return current_->consumer()->toDefinition();
     }
 };
-
-typedef Vector<MDefinition*, 8, JitAllocPolicy> MDefinitionVector;
-typedef Vector<MInstruction*, 6, JitAllocPolicy> MInstructionVector;
 
 // An instruction is an SSA name that is inserted into a basic block's IR
 // stream.
@@ -8398,7 +8439,7 @@ class MElements
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MElements)
 };
@@ -8592,7 +8633,7 @@ class MInitializedLength
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     void computeRange(TempAllocator& alloc) override;
 
@@ -8690,7 +8731,7 @@ class MUnboxedArrayInitializedLength
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::ObjectFields);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MUnboxedArrayInitializedLength)
 };
@@ -9320,7 +9361,7 @@ class MLoadElement
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::Element);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadElement)
 };
@@ -9477,7 +9518,7 @@ class MLoadUnboxedObjectOrNull
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadUnboxedObjectOrNull)
 };
@@ -9527,7 +9568,7 @@ class MLoadUnboxedString
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadUnboxedString)
 };
@@ -10135,7 +10176,7 @@ class MLoadUnboxedScalar
             return AliasSet::Store(AliasSet::UnboxedElement);
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     bool congruentTo(const MDefinition* ins) const override {
         if (requiresBarrier_)
@@ -10665,7 +10706,7 @@ class MLoadFixedSlot
         return AliasSet::Load(AliasSet::FixedSlot);
     }
 
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadFixedSlot)
 };
@@ -10726,7 +10767,7 @@ class MLoadFixedSlotAndUnbox
         return AliasSet::Load(AliasSet::FixedSlot);
     }
 
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadFixedSlotAndUnbox);
 };
@@ -11029,7 +11070,7 @@ class MGetPropertyPolymorphic
                               (hasUnboxedLoad ? AliasSet::UnboxedElement : 0));
     }
 
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 };
 
 // Emit code to store a value to an object's slots if its shape/group matches
@@ -11711,7 +11752,7 @@ class MLoadSlot
         MOZ_ASSERT(slots()->type() == MIRType::Slots);
         return AliasSet::Load(AliasSet::DynamicSlot);
     }
-    bool mightAlias(const MDefinition* store) const override;
+    AliasType mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadSlot)
 };
@@ -14120,7 +14161,7 @@ class MAsmJSLoadHeap
             return AliasSet::Store(AliasSet::AsmJSHeap);
         return AliasSet::Load(AliasSet::AsmJSHeap);
     }
-    bool mightAlias(const MDefinition* def) const override;
+    AliasType mightAlias(const MDefinition* def) const override;
 };
 
 class MAsmJSStoreHeap
@@ -14289,7 +14330,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
         return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::AsmJSGlobalVar);
     }
 
-    bool mightAlias(const MDefinition* def) const override;
+    AliasType mightAlias(const MDefinition* def) const override;
 };
 
 class MAsmJSStoreGlobalVar
