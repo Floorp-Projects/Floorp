@@ -2075,9 +2075,41 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // their protocol with the inner URI of the view-source URI
 pref("security.view-source.reachable-from-inner-protocol", false);
 
+// Services security settings
+pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
+
+// Blocklist preferences
+pref("extensions.blocklist.enabled", true);
+// OneCRL freshness checking depends on this value, so if you change it,
+// please also update security.onecrl.maximum_staleness_in_seconds.
+pref("extensions.blocklist.interval", 86400);
+// Required blocklist freshness for OneCRL OCSP bypass
+// (default is 1.25x extensions.blocklist.interval, or 30 hours)
+pref("security.onecrl.maximum_staleness_in_seconds", 108000);
+pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
+pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
+pref("extensions.blocklist.itemURL", "https://blocklist.addons.mozilla.org/%LOCALE%/%APP%/blocked/%blockID%");
+// Controls what level the blocklist switches from warning about items to forcibly
+// blocking them.
+pref("extensions.blocklist.level", 2);
+// Blocklist via settings server (Kinto)
+pref("services.blocklist.changes.path", "/buckets/monitor/collections/changes/records");
+pref("services.blocklist.bucket", "blocklists");
+pref("services.blocklist.onecrl.collection", "certificates");
+pref("services.blocklist.onecrl.checked", 0);
+pref("services.blocklist.addons.collection", "addons");
+pref("services.blocklist.addons.checked", 0);
+pref("services.blocklist.plugins.collection", "plugins");
+pref("services.blocklist.plugins.checked", 0);
+pref("services.blocklist.gfx.collection", "gfx");
+pref("services.blocklist.gfx.checked", 0);
+
+// For now, let's keep settings server update out of the release builds
 #ifdef RELEASE_BUILD
+pref("services.blocklist.update_enabled", false);
 pref("security.onecrl.via.amo", true);
 #else
+pref("services.blocklist.update_enabled", true);
 pref("security.onecrl.via.amo", false);
 #endif
 
