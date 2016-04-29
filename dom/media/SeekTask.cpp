@@ -177,7 +177,10 @@ SeekTask::GetSeekJob()
 bool
 SeekTask::Exists() const
 {
-  return mSeekJob.Exists();
+  // mSeekTaskPromise communicates SeekTask and MDSM;
+  // mSeekJob communicates MDSM and MediaDecoder;
+  // Either one exists means the current seek task has yet finished.
+  return !mSeekTaskPromise.IsEmpty() || mSeekJob.Exists();
 }
 
 RefPtr<SeekTask::SeekTaskPromise>
