@@ -283,6 +283,7 @@ function promiseFormsProcessed(expectedCount = 1) {
 }
 
 function loadRecipes(recipes) {
+  info("Loading recipes");
   return new Promise(resolve => {
     chromeScript.addMessageListener("loadedRecipes", function loaded() {
       chromeScript.removeMessageListener("loadedRecipes", loaded);
@@ -293,6 +294,7 @@ function loadRecipes(recipes) {
 }
 
 function resetRecipes() {
+  info("Resetting recipes");
   return new Promise(resolve => {
     chromeScript.addMessageListener("recipesReset", function reset() {
       chromeScript.removeMessageListener("recipesReset", reset);
