@@ -22,6 +22,7 @@ DIRS += [
     'qrcode',
     'security',
     'sourcemap',
+    'specs',
     'shims',
     'touch',
     'transport',

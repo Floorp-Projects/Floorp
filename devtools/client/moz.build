@@ -15,6 +15,7 @@ DIRS += [
     'dom',
     'eyedropper',
     'framework',
+    'fronts',
     'inspector',
     'jsonview',
     'locales',
