@@ -79,12 +79,6 @@ protected:
     mIsForBrowser = aIsForBrowser;
   }
 
-  void Close()
-  {
-    // Trick NS_NewRunnableMethod
-    PContentBridgeParent::Close();
-  }
-
 protected:
   virtual bool
   RecvSyncMessage(const nsString& aMsg,

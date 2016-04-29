@@ -1335,8 +1335,8 @@ APZCTreeManager::ClearTree()
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
   // the InputQueue.
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(mInputQueue.get(), &InputQueue::Clear);
-  APZThreadUtils::RunOnControllerThread(runnable.forget());
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+    mInputQueue.get(), &InputQueue::Clear));
 
   MutexAutoLock lock(mTreeLock);
 

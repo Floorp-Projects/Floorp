@@ -58,12 +58,9 @@ RemoteContentController::HandleDoubleTap(const CSSPoint& aPoint,
   if (MessageLoop::current() != mUILoop) {
     // We have to send this message from the "UI thread" (main
     // thread).
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<CSSPoint,
-                                   Modifiers,
-                                   ScrollableLayerGuid>(this, &RemoteContentController::HandleDoubleTap,
-                                                        aPoint, aModifiers, aGuid);
-    mUILoop->PostTask(runnable.forget());
+    mUILoop->PostTask(
+      NewRunnableMethod(this, &RemoteContentController::HandleDoubleTap,
+                        aPoint, aModifiers, aGuid));
     return;
   }
   if (CanSend()) {
@@ -80,12 +77,9 @@ RemoteContentController::HandleSingleTap(const CSSPoint& aPoint,
   if (MessageLoop::current() != mUILoop) {
     // We have to send this message from the "UI thread" (main
     // thread).
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<CSSPoint,
-                                   Modifiers,
-                                   ScrollableLayerGuid>(this, &RemoteContentController::HandleSingleTap,
-                                                        aPoint, aModifiers, aGuid);
-    mUILoop->PostTask(runnable.forget());
+    mUILoop->PostTask(
+      NewRunnableMethod(this, &RemoteContentController::HandleSingleTap,
+                        aPoint, aModifiers, aGuid));
     return;
   }
 
@@ -116,13 +110,9 @@ RemoteContentController::HandleLongTap(const CSSPoint& aPoint,
   if (MessageLoop::current() != mUILoop) {
     // We have to send this message from the "UI thread" (main
     // thread).
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<CSSPoint,
-                                   Modifiers,
-                                   ScrollableLayerGuid,
-                                   uint64_t>(this, &RemoteContentController::HandleLongTap,
-                                             aPoint, aModifiers, aGuid, aInputBlockId);
-    mUILoop->PostTask(runnable.forget());
+    mUILoop->PostTask(
+      NewRunnableMethod(this, &RemoteContentController::HandleLongTap,
+                        aPoint, aModifiers, aGuid, aInputBlockId));
     return;
   }
   if (CanSend()) {
@@ -160,12 +150,9 @@ RemoteContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                               int aArg)
 {
   if (MessageLoop::current() != mUILoop) {
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<ScrollableLayerGuid,
-                                   APZStateChange,
-                                   int>(this, &RemoteContentController::NotifyAPZStateChange,
-                                        aGuid, aChange, aArg);
-    mUILoop->PostTask(runnable.forget());
+    mUILoop->PostTask(
+      NewRunnableMethod(this, &RemoteContentController::NotifyAPZStateChange,
+                        aGuid, aChange, aArg));
     return;
   }
   if (CanSend()) {
@@ -178,11 +165,9 @@ RemoteContentController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& a
                                                    const nsString& aEvent)
 {
   if (MessageLoop::current() != mUILoop) {
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<FrameMetrics::ViewID,
-                                   nsString>(this, &RemoteContentController::NotifyMozMouseScrollEvent,
-                                             aScrollId, aEvent);
-    mUILoop->PostTask(runnable.forget());
+    mUILoop->PostTask(
+      NewRunnableMethod(this, &RemoteContentController::NotifyMozMouseScrollEvent,
+                        aScrollId, aEvent));
     return;
   }
 
@@ -232,13 +217,9 @@ RemoteContentController::RecvContentReceivedInputBlock(const ScrollableLayerGuid
     return false;
   }
   if (RefPtr<APZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<uint64_t,
-                                   bool>(apzcTreeManager,
-                                         &APZCTreeManager::ContentReceivedInputBlock,
-                                         aInputBlockId, aPreventDefault);
-    APZThreadUtils::RunOnControllerThread(runnable.forget());
-
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        apzcTreeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
+        aInputBlockId, aPreventDefault));
   }
   return true;
 }
@@ -250,12 +231,10 @@ RemoteContentController::RecvStartScrollbarDrag(const AsyncDragMetrics& aDragMet
     ScrollableLayerGuid guid(mLayersId, aDragMetrics.mPresShellId,
                              aDragMetrics.mViewId);
 
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<ScrollableLayerGuid,
-                                   AsyncDragMetrics>(apzcTreeManager,
-                                                     &APZCTreeManager::StartScrollbarDrag,
-                                                     guid, aDragMetrics);
-    APZThreadUtils::RunOnControllerThread(runnable.forget());
+    APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod(apzcTreeManager.get(),
+                        &APZCTreeManager::StartScrollbarDrag,
+                        guid, aDragMetrics));
   }
   return true;
 }
@@ -275,12 +254,9 @@ RemoteContentController::RecvSetTargetAPZC(const uint64_t& aInputBlockId,
     // need a local var to disambiguate between the SetTargetAPZC overloads.
     void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
         = &APZCTreeManager::SetTargetAPZC;
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<uint64_t,
-                                   StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(apzcTreeManager, setTargetApzcFunc,
-                                                                                       aInputBlockId, aTargets);
-    APZThreadUtils::RunOnControllerThread(runnable.forget());
-
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        apzcTreeManager.get(), setTargetApzcFunc,
+        aInputBlockId, aTargets));
   }
   return true;
 }
@@ -290,12 +266,9 @@ RemoteContentController::RecvSetAllowedTouchBehavior(const uint64_t& aInputBlock
                                                      nsTArray<TouchBehaviorFlags>&& aFlags)
 {
   if (RefPtr<APZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<uint64_t,
-                                   StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>(apzcTreeManager,
-                                                                                      &APZCTreeManager::SetAllowedTouchBehavior,
-                                                                                      aInputBlockId, Move(aFlags));
-    APZThreadUtils::RunOnControllerThread(runnable.forget());
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+        apzcTreeManager.get(), &APZCTreeManager::SetAllowedTouchBehavior,
+        aInputBlockId, Move(aFlags)));
   }
   return true;
 }
