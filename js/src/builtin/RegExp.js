@@ -565,7 +565,10 @@ function RegExpSearch(string) {
     return result.index;
 }
 
-function IsRegExpSplitOptimizable(C) {
+function IsRegExpSplitOptimizable(rx, C) {
+    if (!IsRegExpObject(rx))
+        return false;
+
     var RegExpCtor = GetBuiltinConstructor("RegExp");
     if (C !== RegExpCtor)
         return false;
@@ -601,7 +604,7 @@ function RegExpSplit(string, limit) {
     // Step 14 (reordered).
     var size = S.length;
 
-    var optimizable = IsRegExpSplitOptimizable(C);
+    var optimizable = IsRegExpSplitOptimizable(rx, C);
     var splitter;
     if (optimizable && size !== 0) {
         // Steps 8-9 (skipped).
