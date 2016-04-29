@@ -508,6 +508,7 @@ WebConsoleFrame.prototype = {
   _initUI: function() {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
+    this.SUPER_FRONTEND_EXPERIMENT = !this.owner._browserConsole && !!this.window.NewConsoleOutput;
 
     this._initDefaultFilterPrefs();
 
@@ -528,6 +529,18 @@ WebConsoleFrame.prototype = {
     this.filterBox = doc.querySelector(".hud-filter-box");
     this.outputNode = doc.getElementById("output-container");
     this.outputWrapper = doc.getElementById("output-wrapper");
+
+    if (this.SUPER_FRONTEND_EXPERIMENT) {
+      console.log("Entering experimental mode for console frontend");
+
+      // XXX: We should actually stop output from happening on old output
+      // panel, but for now let's just hide it.
+      this.experimentalOutputNode = this.outputNode.cloneNode();
+      this.outputNode.hidden = true;
+      this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
+      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode);
+      console.log("Created newConsoleOutput", this.newConsoleOutput);
+    }
 
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");

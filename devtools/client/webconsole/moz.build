@@ -7,7 +7,8 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DIRS += [
-    'net'
+    'net',
+    'new-console-output',
 ]
 
 DevToolsModules(
