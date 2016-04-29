@@ -4,11 +4,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'reducers'
+    'actions',
+    'components',
+    'reducers',
+    'utils',
 ]
 
 DevToolsModules(
-    'dummy-child-component.js',
+    'constants.js',
     'main.js',
     'output-wrapper-thingy.js',
+    'store.js',
 )
+
+MOCHITEST_CHROME_MANIFESTS += ['test/components/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += [
+  'test/actions/xpcshell.ini',
+  'test/store/xpcshell.ini'
+]
+

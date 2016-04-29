@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for ConsoleApiCall component</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for ConsoleApiCall component</p>
+
+<script type="text/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
+  const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
+
+  const packet = yield getPacket("console.log('foobar', 'test')", "consoleAPICall");
+  const message = prepareMessage(packet);
+  const rendered = renderComponent(ConsoleApiCall, {message});
+
+  const queryPath = "span span.message-flex-body span.message-body.devtools-monospace";
+  const messageBody = rendered.querySelectorAll(queryPath);
+  const consoleStringNodes = messageBody[0].querySelectorAll("span.console-string");
+  is(consoleStringNodes.length, 2, "ConsoleApiCall outputs expected HTML structure");
+  is(messageBody[0].textContent, "foobar test", "ConsoleApiCall outputs expected text");
+
+  SimpleTest.finish()
+});
+</script>
+</body>
+</html>

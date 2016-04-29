@@ -1289,12 +1289,8 @@ WebConsoleFrame.prototype = {
       case "exception":
       case "assert":
       case "debug": {
-        if (this.SUPER_FRONTEND_EXPERIMENT) {
-          this.newConsoleOutput.dispatchMessageAdd(message);
-        } else {
-          let msg = new Messages.ConsoleGeneric(message);
-          node = msg.init(this.output).render().element;
-        }
+        let msg = new Messages.ConsoleGeneric(message);
+        node = msg.init(this.output).render().element;
         break;
       }
       case "table": {
@@ -3385,7 +3381,11 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onConsoleAPICall: function(type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
-      this.webConsoleFrame.handleConsoleAPICall(packet.message);
+      if (this.webConsoleFrame.SUPER_FRONTEND_EXPERIMENT) {
+        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+      } else {
+        this.webConsoleFrame.handleConsoleAPICall(packet.message);
+      }
     }
   },
 
