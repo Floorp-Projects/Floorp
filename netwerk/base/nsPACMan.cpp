@@ -415,8 +415,10 @@ nsPACMan::LoadPACFromURI(const nsCString &spec)
   // queries the enter between now and when we actually load the PAC file.
 
   if (!mLoadPending) {
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(this, &nsPACMan::StartLoading);
     nsresult rv;
-    if (NS_FAILED(rv = NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsPACMan::StartLoading))))
+    if (NS_FAILED(rv = NS_DispatchToCurrentThread(event)))
       return rv;
     mLoadPending = true;
   }
@@ -782,9 +784,9 @@ nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
   if (NS_FAILED(rv))
     return rv;
 
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &nsPACMan::NamePACThread);
   // don't check return value as it is not a big deal for this to fail.
-  mPACThread->Dispatch(NewRunnableMethod(this, &nsPACMan::NamePACThread),
-                       nsIEventTarget::DISPATCH_NORMAL);
+  mPACThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 
   return NS_OK;
 }

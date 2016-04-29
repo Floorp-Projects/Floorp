@@ -177,7 +177,7 @@ void
 MediaSourceDemuxer::AttachSourceBuffer(TrackBuffersManager* aSourceBuffer)
 {
   nsCOMPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackBuffersManager*>(
+    NS_NewRunnableMethodWithArg<TrackBuffersManager*>(
       this, &MediaSourceDemuxer::DoAttachSourceBuffer,
       aSourceBuffer);
   GetTaskQueue()->Dispatch(task.forget());
@@ -195,7 +195,7 @@ void
 MediaSourceDemuxer::DetachSourceBuffer(TrackBuffersManager* aSourceBuffer)
 {
   nsCOMPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackBuffersManager*>(
+    NS_NewRunnableMethodWithArg<TrackBuffersManager*>(
       this, &MediaSourceDemuxer::DoDetachSourceBuffer,
       aSourceBuffer);
   GetTaskQueue()->Dispatch(task.forget());

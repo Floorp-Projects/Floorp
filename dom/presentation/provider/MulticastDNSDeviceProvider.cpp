@@ -721,7 +721,7 @@ MulticastDNSDeviceProvider::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo
 
   if (aErrorCode == nsIDNSRegistrationListener::ERROR_SERVICE_NOT_RUNNING) {
     return NS_DispatchToMainThread(
-             NewRunnableMethod(this, &MulticastDNSDeviceProvider::RegisterService));
+             NS_NewRunnableMethod(this, &MulticastDNSDeviceProvider::RegisterService));
   }
 
   return NS_OK;

@@ -11823,7 +11823,7 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
   MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(runnable, NS_DISPATCH_NORMAL));
 
   nsCOMPtr<nsIRunnable> shutdownRunnable =
-    NewRunnableMethod(thread, &nsIThread::Shutdown);
+    NS_NewRunnableMethod(thread, &nsIThread::Shutdown);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(shutdownRunnable));
 
   mTotalThreadCount--;
@@ -13668,7 +13668,7 @@ Database::MaybeCloseConnection()
       IsClosed() &&
       mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &Database::ConnectionClosedCallback);
+      NS_NewRunnableMethod(this, &Database::ConnectionClosedCallback);
 
     RefPtr<WaitForTransactionsHelper> helper =
       new WaitForTransactionsHelper(Id(), callback);
@@ -21414,7 +21414,7 @@ OpenDatabaseOp::SendResults()
     mDatabase = nullptr;
   } else if (mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
+      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
 
     RefPtr<WaitForTransactionsHelper> helper =
       new WaitForTransactionsHelper(mDatabaseId, callback);

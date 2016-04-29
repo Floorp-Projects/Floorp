@@ -132,9 +132,11 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
 nsresult
 OpusDataDecoder::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &OpusDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+      this, &OpusDataDecoder::Decode,
+      RefPtr<MediaRawData>(aSample)));
+  mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
 }
@@ -307,7 +309,9 @@ OpusDataDecoder::DoDrain()
 nsresult
 OpusDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &OpusDataDecoder::DoDrain));
+  RefPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethod(this, &OpusDataDecoder::DoDrain));
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 

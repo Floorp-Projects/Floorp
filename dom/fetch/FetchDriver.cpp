@@ -83,7 +83,9 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
   MOZ_RELEASE_ASSERT(!mRequest->IsSynchronous(),
                      "Synchronous fetch not supported");
 
-  return NS_DispatchToCurrentThread(NewRunnableMethod(this, &FetchDriver::ContinueFetch));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &FetchDriver::ContinueFetch);
+  return NS_DispatchToCurrentThread(r);
 }
 
 nsresult

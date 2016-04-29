@@ -517,7 +517,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
       }
       else {
         nsContentUtils::AddScriptRunner(
-          NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
+          NS_NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
       }
     }
   }

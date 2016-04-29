@@ -2494,7 +2494,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
      under normal circumstances, but bug 49615 describes a case.) */
 
   nsContentUtils::AddScriptRunner(
-    NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
+    NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
   // Sometimes, WouldReuseInnerWindow() returns true even if there's no inner
   // window (see bug 776497). Be safe.
@@ -2799,8 +2799,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // up with the outer. See bug 969156.
   if (createdInnerWindow) {
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod(newInnerWindow,
-                        &nsGlobalWindow::FireOnNewGlobalObject));
+      NS_NewRunnableMethod(newInnerWindow,
+                           &nsGlobalWindow::FireOnNewGlobalObject));
   }
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
@@ -2813,7 +2813,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         nsContentUtils::IsSystemPrincipal(mDoc->NodePrincipal())) {
       newInnerWindow->mHasNotifiedGlobalCreated = true;
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+        NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
     }
   }
 
@@ -11476,7 +11476,7 @@ public:
   ~AutoUnblockScriptClosing()
   {
     void (nsGlobalWindow::*run)() = &nsGlobalWindow::UnblockScriptedClosing;
-    NS_DispatchToCurrentThread(NewRunnableMethod(mWin, run));
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(mWin, run));
   }
 };
 

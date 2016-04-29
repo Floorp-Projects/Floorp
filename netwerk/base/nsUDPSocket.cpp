@@ -48,10 +48,12 @@ typedef void (nsUDPSocket:: *nsUDPSocketFunc)(void);
 static nsresult
 PostEvent(nsUDPSocket *s, nsUDPSocketFunc func)
 {
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(s, func);
+
   if (!gSocketTransportService)
     return NS_ERROR_FAILURE;
 
-  return gSocketTransportService->Dispatch(NewRunnableMethod(s, func), NS_DISPATCH_NORMAL);
+  return gSocketTransportService->Dispatch(ev, NS_DISPATCH_NORMAL);
 }
 
 static nsresult
@@ -345,7 +347,7 @@ nsUDPSocket::TryAttach()
   if (!gSocketTransportService->CanAttachSocket())
   {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &nsUDPSocket::OnMsgAttach);
+      NS_NewRunnableMethod(this, &nsUDPSocket::OnMsgAttach);
 
     nsresult rv = gSocketTransportService->NotifyWhenCanAttachSocket(event);
     if (NS_FAILED(rv))

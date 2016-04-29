@@ -44,9 +44,8 @@ public:
           return NS_OK;
       }
 
-      rv = mTarget->Dispatch(NewRunnableMethod(mCopier,
-					       &nsAsyncStreamCopier::AsyncCopyInternal),
-			     NS_DISPATCH_NORMAL);
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(mCopier, &nsAsyncStreamCopier::AsyncCopyInternal);
+      rv = mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
 
       if (NS_FAILED(rv)) {

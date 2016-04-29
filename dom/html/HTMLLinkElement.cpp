@@ -184,10 +184,10 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   void (HTMLLinkElement::*update)() = &HTMLLinkElement::UpdateStyleSheetInternal;
-  nsContentUtils::AddScriptRunner(NewRunnableMethod(this, update));
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   void (HTMLLinkElement::*updateImport)() = &HTMLLinkElement::UpdateImport;
-  nsContentUtils::AddScriptRunner(NewRunnableMethod(this, updateImport));
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, updateImport));
 
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 

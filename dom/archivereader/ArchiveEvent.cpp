@@ -86,7 +86,8 @@ ArchiveReaderEvent::RunShare(nsresult aStatus)
 {
   mStatus = aStatus;
 
-  NS_DispatchToMainThread(NewRunnableMethod(this, &ArchiveReaderEvent::ShareMainThread));
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &ArchiveReaderEvent::ShareMainThread);
+  NS_DispatchToMainThread(event);
 
   return NS_OK;
 }

@@ -107,10 +107,11 @@ PresentationAvailability::Value() const
 NS_IMETHODIMP
 PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
 {
-  return NS_DispatchToCurrentThread(NewRunnableMethod
-                                    <bool>(this,
-                                           &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
-                                           aIsAvailable));
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg<bool>(this,
+                                      &PresentationAvailability::UpdateAvailabilityAndDispatchEvent,
+                                      aIsAvailable);
+  return NS_DispatchToCurrentThread(runnable);
 }
 
 void

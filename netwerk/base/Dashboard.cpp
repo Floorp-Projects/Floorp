@@ -175,9 +175,10 @@ ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
     }
 
     GetErrorString(aStatus, mStatus);
-    mThread->Dispatch(NewRunnableMethod<RefPtr<ConnectionData>>
-		      (mDashboard, &Dashboard::GetConnectionStatus, this),
-		      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<ConnectionData> >
+        (mDashboard, &Dashboard::GetConnectionStatus, this);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
@@ -196,9 +197,10 @@ ConnectionData::Notify(nsITimer *aTimer)
     mTimer = nullptr;
 
     mStatus.AssignLiteral(MOZ_UTF16("NS_ERROR_NET_TIMEOUT"));
-    mThread->Dispatch(NewRunnableMethod<RefPtr<ConnectionData>>
-		      (mDashboard, &Dashboard::GetConnectionStatus, this),
-		      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<ConnectionData> >
+        (mDashboard, &Dashboard::GetConnectionStatus, this);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
@@ -285,9 +287,10 @@ LookupHelper::OnLookupComplete(nsICancelable *aRequest,
     mStatus = aStatus;
 
     RefPtr<LookupArgument> arg = new LookupArgument(aRecord, this);
-    mThread->Dispatch(NewRunnableMethod<RefPtr<LookupArgument>>
-		      (this, &LookupHelper::ConstructAnswer, arg),
-		      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<LookupArgument> >(
+        this, &LookupHelper::ConstructAnswer, arg);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
     return NS_OK;
 }
@@ -351,9 +354,10 @@ Dashboard::RequestSockets(NetDashboardCallback *aCallback)
     socketData->mCallback =
         new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
     socketData->mThread = NS_GetCurrentThread();
-    gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<SocketData>>
-				      (this, &Dashboard::GetSocketsDispatch, socketData),
-				      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<SocketData> >
+        (this, &Dashboard::GetSocketsDispatch, socketData);
+    gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -366,9 +370,10 @@ Dashboard::GetSocketsDispatch(SocketData *aSocketData)
         socketData->mTotalSent = gSocketTransportService->GetSentBytes();
         socketData->mTotalRecv = gSocketTransportService->GetReceivedBytes();
     }
-    socketData->mThread->Dispatch(NewRunnableMethod<RefPtr<SocketData>>
-				  (this, &Dashboard::GetSockets, socketData),
-				  NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<SocketData> >
+        (this, &Dashboard::GetSockets, socketData);
+    socketData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -421,9 +426,10 @@ Dashboard::RequestHttpConnections(NetDashboardCallback *aCallback)
         new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
     httpData->mThread = NS_GetCurrentThread();
 
-    gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<HttpData>>
-				      (this, &Dashboard::GetHttpDispatch, httpData),
-				      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<HttpData> >
+        (this, &Dashboard::GetHttpDispatch, httpData);
+    gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -432,9 +438,10 @@ Dashboard::GetHttpDispatch(HttpData *aHttpData)
 {
     RefPtr<HttpData> httpData = aHttpData;
     HttpInfo::GetHttpConnectionData(&httpData->mData);
-    httpData->mThread->Dispatch(NewRunnableMethod<RefPtr<HttpData>>
-				(this, &Dashboard::GetHttpConnections, httpData),
-				NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<HttpData> >
+        (this, &Dashboard::GetHttpConnections, httpData);
+    httpData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -597,9 +604,10 @@ Dashboard::RequestWebsocketConnections(NetDashboardCallback *aCallback)
         new nsMainThreadPtrHolder<NetDashboardCallback>(aCallback, true);
     wsRequest->mThread = NS_GetCurrentThread();
 
-    wsRequest->mThread->Dispatch(NewRunnableMethod<RefPtr<WebSocketRequest>>
-				 (this, &Dashboard::GetWebSocketConnections, wsRequest),
-				 NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<WebSocketRequest> >
+        (this, &Dashboard::GetWebSocketConnections, wsRequest);
+    wsRequest->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -658,9 +666,10 @@ Dashboard::RequestDNSInfo(NetDashboardCallback *aCallback)
         }
     }
 
-    gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<DnsData>>
-				      (this, &Dashboard::GetDnsInfoDispatch, dnsData),
-				      NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<DnsData> >
+        (this, &Dashboard::GetDnsInfoDispatch, dnsData);
+    gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -671,9 +680,10 @@ Dashboard::GetDnsInfoDispatch(DnsData *aDnsData)
     if (mDnsService) {
         mDnsService->GetDNSCacheEntries(&dnsData->mData);
     }
-    dnsData->mThread->Dispatch(NewRunnableMethod<RefPtr<DnsData>>
-			       (this, &Dashboard::GetDNSCacheEntries, dnsData),
-			       NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<RefPtr<DnsData> >
+        (this, &Dashboard::GetDNSCacheEntries, dnsData);
+    dnsData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
@@ -800,9 +810,10 @@ Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
     rv = TestNewConnection(connectionData);
     if (NS_FAILED(rv)) {
         mozilla::net::GetErrorString(rv, connectionData->mStatus);
-        connectionData->mThread->Dispatch(NewRunnableMethod<RefPtr<ConnectionData>>
-					  (this, &Dashboard::GetConnectionStatus, connectionData),
-					  NS_DISPATCH_NORMAL);
+        nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethodWithArg<RefPtr<ConnectionData> >
+            (this, &Dashboard::GetConnectionStatus, connectionData);
+        connectionData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
         return rv;
     }
 

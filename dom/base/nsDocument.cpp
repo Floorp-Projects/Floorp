@@ -4352,7 +4352,7 @@ nsDocument::SetStyleSheetApplicableState(StyleSheetHandle aSheet,
   }
 
   if (!mSSApplicableStateNotificationPending) {
-    nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(this,
+    nsCOMPtr<nsIRunnable> notification = NS_NewRunnableMethod(this,
       &nsDocument::NotifyStyleSheetApplicableStateChanged);
     mSSApplicableStateNotificationPending =
       NS_SUCCEEDED(NS_DispatchToCurrentThread(notification));
@@ -4961,7 +4961,7 @@ nsDocument::MaybeEndOutermostXBLUpdate()
       BindingManager()->EndOutermostUpdate();
     } else if (!mInDestructor) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod(this, &nsDocument::MaybeEndOutermostXBLUpdate));
+        NS_NewRunnableMethod(this, &nsDocument::MaybeEndOutermostXBLUpdate));
     }
   }
 }
@@ -5279,7 +5279,7 @@ nsDocument::UnblockDOMContentLoaded()
   MOZ_ASSERT(mReadyState == READYSTATE_INTERACTIVE);
   if (!mSynchronousDOMContentLoaded) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
+      NS_NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
     NS_DispatchToCurrentThread(ev);
   } else {
     DispatchContentLoadedEvents();
@@ -7262,7 +7262,7 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
     return;
 
   RefPtr<nsRunnableMethod<nsDocument, void, false> > event =
-    NewNonOwningRunnableMethod(this,
+    NS_NewNonOwningRunnableMethod(this,
       &nsDocument::DoNotifyPossibleTitleChange);
   nsresult rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv)) {
@@ -7411,7 +7411,7 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
   mInitializableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+      NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -7429,7 +7429,7 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader, nsIRunnable* aFinalizer)
   mFrameLoaderFinalizers.AppendElement(aFinalizer);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+      NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -7453,7 +7453,7 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
         (mInitializableFrameLoaders.Length() ||
          mFrameLoaderFinalizers.Length())) {
       mFrameLoaderRunner =
-        NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
+        NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
       nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
     }
     return;
@@ -9064,7 +9064,7 @@ nsDocument::BlockOnload()
       ++mAsyncOnloadBlockCount;
       if (mAsyncOnloadBlockCount == 1) {
         bool success = nsContentUtils::AddScriptRunner(
-          NewRunnableMethod(this, &nsDocument::AsyncBlockOnload));
+          NS_NewRunnableMethod(this, &nsDocument::AsyncBlockOnload));
 
         // The script runner shouldn't fail to add. But if somebody broke
         // something and it does, we'll thrash at 100% cpu forever. The best
@@ -12772,7 +12772,7 @@ nsDocument::GetVisibilityState() const
 nsDocument::PostVisibilityUpdateEvent()
 {
   nsCOMPtr<nsIRunnable> event =
-    NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
+    NS_NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
   NS_DispatchToMainThread(event);
 }
 
@@ -13503,7 +13503,7 @@ nsIDocument::RebuildUserFontSet()
   // change reflow).
   if (!mPostedFlushUserFontSet) {
     nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod(this, &nsIDocument::HandleRebuildUserFontSet);
+      NS_NewRunnableMethod(this, &nsIDocument::HandleRebuildUserFontSet);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPostedFlushUserFontSet = true;
     }

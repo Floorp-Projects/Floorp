@@ -232,7 +232,7 @@ nsFileUploadContentStream::AsyncWait(nsIInputStreamCallback *callback,
 
   if (IsNonBlocking()) {
     nsCOMPtr<nsIRunnable> callback =
-      NewRunnableMethod(this, &nsFileUploadContentStream::OnCopyComplete);
+      NS_NewRunnableMethod(this, &nsFileUploadContentStream::OnCopyComplete);
     mCopyEvent->Dispatch(callback, mSink, target);
   }
 

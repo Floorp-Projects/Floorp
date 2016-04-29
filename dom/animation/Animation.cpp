@@ -1236,7 +1236,7 @@ Animation::DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag)
     DoFinishNotificationImmediately();
   } else if (!mFinishNotificationTask.IsPending()) {
     RefPtr<nsRunnableMethod<Animation>> runnable =
-      NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
+      NS_NewRunnableMethod(this, &Animation::DoFinishNotificationImmediately);
     runtime->DispatchToMicroTask(runnable);
     mFinishNotificationTask = runnable;
   }

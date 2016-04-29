@@ -90,7 +90,6 @@ protected:
                                     UniquePtr<GetGMPContentParentCallback>&& aCallback) = 0;
 
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
-  nsresult GMPDispatch(already_AddRefed<nsIRunnable> event, uint32_t flags = NS_DISPATCH_NORMAL);
   void ShutdownGMPThread();
 
   Mutex mMutex; // Protects mGMPThread and mGMPThreadShutdown and some members
