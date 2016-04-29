@@ -1101,16 +1101,7 @@ Layer::GetCombinedClipRect() const
   Maybe<ParentLayerIntRect> clip = GetClipRect();
 
   for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
-    if (!mScrollMetadata[i].HasClipRect()) {
-      continue;
-    }
-
-    const ParentLayerIntRect& other = mScrollMetadata[i].ClipRect();
-    if (clip) {
-      clip = Some(clip.value().Intersect(other));
-    } else {
-      clip = Some(other);
-    }
+    clip = IntersectMaybeRects(clip, mScrollMetadata[i].GetClipRect());
   }
 
   return clip;
