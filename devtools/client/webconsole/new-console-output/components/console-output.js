@@ -9,12 +9,34 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/message-container").MessageContainer);
 
 const ConsoleOutput = createClass({
   displayName: "ConsoleOutput",
+
+  propTypes: {
+    jsterm: PropTypes.object.isRequired,
+    // This function is created in mergeProps
+    openVariablesView: PropTypes.func.isRequired
+  },
+
+  componentWillUpdate() {
+    // @TODO Move this to a parent component.
+    let node = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode;
+    if (node.lastChild) {
+      this.shouldScrollBottom = isScrolledToBottom(node.lastChild, node);
+    }
+  },
+
+  componentDidUpdate() {
+    if (this.shouldScrollBottom) {
+      let node = ReactDOM.findDOMNode(this).parentNode.parentNode.parentNode;
+      node.scrollTop = node.scrollHeight;
+    }
+  },
 
   render() {
     let messageNodes = this.props.messages.map(function(message) {
@@ -27,6 +49,13 @@ const ConsoleOutput = createClass({
     );
   }
 });
+
+function isScrolledToBottom(outputNode, scrollNode) {
+  let lastNodeHeight = outputNode.lastChild ?
+                       outputNode.lastChild.clientHeight : 0;
+  return scrollNode.scrollTop + scrollNode.clientHeight >=
+         scrollNode.scrollHeight - lastNodeHeight / 2;
+}
 
 function mapStateToProps(state) {
   return {
