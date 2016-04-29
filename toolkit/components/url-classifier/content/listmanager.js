@@ -30,7 +30,7 @@ this.log = function log(...stuff) {
   var d = new Date();
   let msg = "listmanager: " + d.toTimeString() + ": " + stuff.join(" ");
   Services.console.logStringMessage(msg);
-  dump(msg + "\n");
+  dump(Services.urlFormatter.trimSensitiveURLs(msg) + "\n");
 }
 
 this.QueryAdapter = function QueryAdapter(callback) {

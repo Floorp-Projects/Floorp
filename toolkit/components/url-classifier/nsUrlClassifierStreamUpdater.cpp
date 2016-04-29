@@ -22,6 +22,7 @@
 #include "mozilla/LoadContext.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
+#include "nsIURLFormatter.h"
 
 static const char* gQuitApplicationMessage = "quit-application";
 
@@ -32,7 +33,32 @@ const uint32_t MAX_FILE_SIZE = (32 * 1024 * 1024);
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
 static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog("UrlClassifierStreamUpdater");
-#define LOG(args) MOZ_LOG(gUrlClassifierStreamUpdaterLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) TrimAndLog args
+
+// Calls nsIURLFormatter::TrimSensitiveURLs to remove sensitive
+// info from the logging message.
+static void TrimAndLog(const char* aFmt, ...)
+{
+  nsString raw;
+
+  va_list ap;
+  va_start(ap, aFmt);
+  raw.AppendPrintf(aFmt, ap);
+  va_end(ap);
+
+  nsCOMPtr<nsIURLFormatter> urlFormatter =
+    do_GetService("@mozilla.org/toolkit/URLFormatterService;1");
+
+  nsString trimmed;
+  nsresult rv = urlFormatter->TrimSensitiveURLs(raw, trimmed);
+  if (NS_FAILED(rv)) {
+    trimmed = EmptyString();
+  }
+
+  MOZ_LOG(gUrlClassifierStreamUpdaterLog,
+          mozilla::LogLevel::Debug,
+          (NS_ConvertUTF16toUTF8(trimmed).get()));
+}
 
 // This class does absolutely nothing, except pass requests onto the DBService.
 
