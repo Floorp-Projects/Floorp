@@ -14123,13 +14123,8 @@ class MAsmJSHeapAccess
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
-    void setOffset(uint32_t o) {
-        offset_ = o;
-    }
-    void setAlign(uint32_t a) {
-        MOZ_ASSERT(mozilla::IsPowerOfTwo(a));
-        align_ = a;
-    }
+    void setOffset(uint32_t o) { offset_ = o; }
+    void setAlign(uint32_t a) { MOZ_ASSERT(mozilla::IsPowerOfTwo(a)); align_ = a; }
     MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
     bool isAtomicAccess() const { return (barrierBefore_|barrierAfter_) != MembarNobits; }
