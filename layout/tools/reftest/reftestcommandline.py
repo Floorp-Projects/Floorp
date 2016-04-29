@@ -134,6 +134,14 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=None,
                           help="host:port to use when connecting to Marionette")
 
+        self.add_argument("--marionette-port-timeout",
+                          default=None,
+                          help=argparse.SUPPRESS)
+
+        self.add_argument("--marionette-socket-timeout",
+                          default=None,
+                          help=argparse.SUPPRESS)
+
         self.add_argument("--setenv",
                           action="append",
                           type=str,
@@ -340,6 +348,12 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
                 self.error("cannot specify focusFilterMode with parallel tests")
             if options.debugger is not None:
                 self.error("cannot specify a debugger with parallel tests")
+
+        if options.debugger:
+            # valgrind and some debuggers may cause Gecko to start slowly. Make sure
+            # marionette waits long enough to connect.
+            options.marionette_port_timeout = 900
+            options.marionette_socket_timeout = 540
 
         if not options.tests:
             self.error("No test files specified.")
