@@ -531,7 +531,7 @@ class RecursiveMakeBackend(CommonBackend):
 
 """.format(output=first_output,
            dep_file=dep_file,
-           inputs=' ' + ' '.join([f.full_path for f in obj.inputs]) if obj.inputs else '',
+           inputs=' ' + ' '.join([self._pretty_path(f, backend_file) for f in obj.inputs]) if obj.inputs else '',
            flags=' ' + ' '.join(obj.flags) if obj.flags else '',
            backend=' backend.mk' if obj.flags else '',
            script=obj.script,
