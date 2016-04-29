@@ -558,8 +558,7 @@ class FunctionCompiler
         curBlock_->setSlot(info().localSlot(slot), def);
     }
 
-    MDefinition* loadHeap(MDefinition* base,
-                          const MAsmJSHeapAccess& access)
+    MDefinition* loadHeap(MDefinition* base, const MAsmJSHeapAccess& access)
     {
         if (inDeadCode())
             return nullptr;
@@ -2036,8 +2035,7 @@ SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MAsmJSHeapAccess* acce
         return false;
 
     // Assume worst case.
-    bool accessNeedsBoundsCheck = true;
-    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck, bool(atomic))) {
+    if (endOffset > f.mirGen().foldableOffsetRange(/* bounds check */ true, bool(atomic))) {
         MDefinition* rhs = f.constant(Int32Value(offset), MIRType::Int32);
         *base = f.binary<MAdd>(*base, rhs, MIRType::Int32);
         access->setOffset(0);
