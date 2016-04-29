@@ -8,16 +8,6 @@
               android:layout_height="match_parent"
               android:orientation="vertical">
 
-    <ViewStub android:id="@+id/home_empty_view_stub"
-              android:layout="@layout/home_empty_panel"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"/>
-
-    <ViewStub android:id="@+id/home_sync_empty_view_stub"
-              android:layout="@layout/remote_tabs_setup"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"/>
-
     <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/refresh_layout"
             android:layout_width="match_parent"
@@ -26,10 +16,24 @@
 
         <org.mozilla.gecko.home.CombinedHistoryRecyclerView
                 android:id="@+id/combined_recycler_view"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"/>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
+
+    <include android:id="@+id/home_history_empty_view"
+              layout="@layout/home_empty_panel"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_weight="3"
+              android:visibility="gone"/>
+
+    <include android:id="@+id/home_clients_empty_view"
+              layout="@layout/history_sync_setup"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_weight="3"
+              android:visibility="gone"/>
 
     <Button android:id="@+id/clear_history_button"
             style="@style/Widget.Home.ActionButton"
