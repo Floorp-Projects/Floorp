@@ -725,6 +725,8 @@ private:
   Maybe<size_t> mMaskLayerIndex;
 };
 
+typedef Maybe<LayerClip> MaybeLayerClip;  // for passing over IPDL
+
 /**
  * Metadata about a scroll frame that's stored in the layer tree for use by
  * the compositor (including APZ). This includes the scroll frame's FrameMetrics,
