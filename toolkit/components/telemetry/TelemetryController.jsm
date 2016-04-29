@@ -49,7 +49,7 @@ const PING_FORMAT_VERSION = 4;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = Preferences.get("toolkit.telemetry.initDelay", 60) * 1000;
 // Delay before initializing telemetry if we're testing (ms)
-const TELEMETRY_TEST_DELAY = 100;
+const TELEMETRY_TEST_DELAY = 1;
 
 // Ping types.
 const PING_TYPE_MAIN = "main";
