@@ -441,10 +441,6 @@ var gUpdates = {
           return;
         }
 
-        if (this.update.licenseURL) {
-          this.wiz.getPageById(this.updatesFoundPageId).setAttribute("next", "license");
-        }
-
         aCallback(this.updatesFoundPageId);
         return;
       }
@@ -578,12 +574,6 @@ var gCheckingPage = {
           gUpdates.never();
           gUpdates.wiz.goTo("manualUpdate");
           return;
-        }
-
-        if (gUpdates.update.licenseURL) {
-          // gUpdates.updatesFoundPageId returns the pageid and not the
-          // element's id so use the wizard's getPageById method.
-          gUpdates.wiz.getPageById(gUpdates.updatesFoundPageId).setAttribute("next", "license");
         }
 
         gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
@@ -876,127 +866,6 @@ var gUpdatesFoundBillboardPage = {
     catch (e) {
       LOG("gUpdatesFoundBillboardPage", "onWizardCancel - " +
           "moreInfoContent.stopDownloading() failed: " + e);
-    }
-  }
-};
-
-/**
- * The page which shows the user a license associated with an update. The
- * user must agree to the terms of the license before continuing to install
- * the update.
- */
-var gLicensePage = {
-  /**
-   * If the license url has been previously loaded
-   */
-  _licenseLoaded: false,
-
-  /**
-   * Initialize
-   */
-  onPageShow: function() {
-    gUpdates.setButtons("backButton", null, "acceptTermsButton", false);
-
-    var licenseContent = document.getElementById("licenseContent");
-    if (this._licenseLoaded || licenseContent.getAttribute("state") == "error") {
-      this.onAcceptDeclineRadio();
-      var licenseGroup = document.getElementById("acceptDeclineLicense");
-      licenseGroup.focus();
-      return;
-    }
-
-    gUpdates.wiz.canAdvance = false;
-
-    // Disable the license radiogroup until the EULA has been downloaded
-    document.getElementById("acceptDeclineLicense").disabled = true;
-    gUpdates.update.setProperty("licenseAccepted", "false");
-
-    licenseContent.addEventListener("load", gLicensePage.onLicenseLoad, false);
-    // The update_name and update_version need to be set before url so the ui
-    // can display the formatted "Download..." string when attempting to
-    // download the url.
-    licenseContent.update_name = gUpdates.brandName;
-    licenseContent.update_version = gUpdates.update.displayVersion;
-    licenseContent.url = gUpdates.update.licenseURL;
-  },
-
-  /**
-   * When the license document has loaded
-   */
-  onLicenseLoad: function(aEvent) {
-    var licenseContent = document.getElementById("licenseContent");
-    // Disable or enable the radiogroup based on the state attribute of
-    // licenseContent.
-    // Note: may be called multiple times due to multiple onLoad events.
-    var state = licenseContent.getAttribute("state");
-    if (state == "loading" || aEvent.originalTarget != licenseContent)
-      return;
-
-    licenseContent.removeEventListener("load", gLicensePage.onLicenseLoad, false);
-
-    if (state == "error") {
-      gUpdates.wiz.goTo("manualUpdate");
-      return;
-    }
-
-    gLicensePage._licenseLoaded = true;
-    document.getElementById("acceptDeclineLicense").disabled = false;
-    gUpdates.wiz.getButton("extra1").disabled = false;
-  },
-
-  /**
-   * When the user changes the state of the accept / decline radio group
-   */
-  onAcceptDeclineRadio: function() {
-    // Return early if this page hasn't been loaded (bug 405257). This event is
-    // fired during the construction of the wizard before gUpdates has received
-    // its onload event (bug 452389).
-    if (!this._licenseLoaded)
-      return;
-
-    var selectedIndex = document.getElementById("acceptDeclineLicense")
-                                .selectedIndex;
-    // 0 == Accept, 1 == Decline
-    var licenseAccepted = (selectedIndex == 0);
-    gUpdates.wiz.canAdvance = licenseAccepted;
-  },
-
-  /**
-   * The non-standard "Back" button.
-   */
-  onExtra1: function() {
-    gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
-  },
-
-  /**
-   * When the user clicks next after accepting the license
-   */
-  onWizardNext: function() {
-    try {
-      gUpdates.update.setProperty("licenseAccepted", "true");
-      var um = CoC["@mozilla.org/updates/update-manager;1"].
-               getService(CoI.nsIUpdateManager);
-      um.saveUpdates();
-    }
-    catch (e) {
-      LOG("gLicensePage", "onWizardNext - nsIUpdateManager:saveUpdates() " +
-          "failed: " + e);
-    }
-  },
-
-  /**
-   * When the user cancels the wizard
-   */
-  onWizardCancel: function() {
-    try {
-      var licenseContent = document.getElementById("licenseContent");
-      // If the license was downloading, stop it.
-      if (licenseContent)
-        licenseContent.stopDownloading();
-    }
-    catch (e) {
-      LOG("gLicensePage", "onWizardCancel - " +
-          "licenseContent.stopDownloading() failed: " + e);
     }
   }
 };

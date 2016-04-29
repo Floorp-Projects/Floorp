@@ -128,28 +128,6 @@
     <remotecontent id="updateMoreInfoContent" flex="1" remotetype="billboard"/>
   </wizardpage>
 
-  <wizardpage id="license" pageid="license" next="downloading"
-              object="gLicensePage" onpageshow="gLicensePage.onPageShow();"
-              onextra1="gLicensePage.onExtra1();">
-    <updateheader label="&license.titleText;"/>
-    <vbox class="update-content" flex="1">
-      <label>&license.instructionText;</label>
-      <!-- note: the localized strings used by remotecontent are prefixed by
-                 the id for the remotecontent (e.g. licenseContentNotFound,
-                 licenseContentDownloading, etc.) -->
-      <remotecontent id="licenseContent" flex="1" remotetype="license"/>
-      <separator class="thin"/>
-      <radiogroup id="acceptDeclineLicense" align="start"
-                  onselect="gLicensePage.onAcceptDeclineRadio();">
-        <radio id="accept" label="&license.accept;"
-               accesskey="&license.accept.accesskey;"/>
-        <radio id="decline" label="&license.decline;"
-               accesskey="&license.decline.accesskey;"
-               selected="true"/>
-      </radiogroup>
-    </vbox>
-  </wizardpage>
-
   <wizardpage id="downloading" pageid="downloading"
               object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
               onpageshow="gDownloadingPage.onPageShow();">

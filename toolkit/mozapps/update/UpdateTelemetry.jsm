@@ -329,7 +329,6 @@ this.AUSTLMY = {
                     unsupported: 6,
                     updatesfoundbasic: 8,
                     updatesfoundbillboard: 9,
-                    license: 10,
                     downloading: 12,
                     errors: 13,
                     errorextra: 14,
