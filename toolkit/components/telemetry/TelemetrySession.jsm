@@ -311,13 +311,16 @@ var TelemetryScheduler = {
     this._log.trace("init");
     this._shuttingDown = false;
     this._isUserIdle = false;
+
     // Initialize the last daily ping and aborted session last due times to the current time.
     // Otherwise, we might end up sending daily pings even if the subsession is not long enough.
     let now = Policy.now();
     this._lastDailyPingTime = now.getTime();
     this._lastSessionCheckpointTime = now.getTime();
     this._rescheduleTimeout();
+
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    Services.obs.addObserver(this, "wake_notification", false);
   },
 
   /**
@@ -340,6 +343,7 @@ var TelemetryScheduler = {
     }
 
     idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    Services.obs.removeObserver(this, "wake_notification");
 
     this._shuttingDown = true;
   },
@@ -437,6 +441,13 @@ var TelemetryScheduler = {
       case "active":
         // User is back to work, restore the original tick interval.
         this._isUserIdle = false;
+        return this._onSchedulerTick();
+        break;
+      case "wake_notification":
+        // The machine woke up from sleep, trigger a tick to avoid sessions
+        // spanning more than a day.
+        // This is needed because sleep time does not count towards timeouts
+        // on Mac & Linux - see bug 1262386, bug 1204823 et al.
         return this._onSchedulerTick();
         break;
     }

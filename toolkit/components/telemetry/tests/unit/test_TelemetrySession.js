@@ -1451,24 +1451,43 @@ add_task(function* test_schedulerComputerSleep() {
   yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
 
   // Set a fake current date and start Telemetry.
-  let nowDate = new Date(2009, 10, 18, 0, 0, 0);
-  fakeNow(nowDate);
+  let nowDate = fakeNow(2009, 10, 18, 0, 0, 0);
   let schedulerTickCallback = null;
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
   yield TelemetryController.testReset();
 
   // Set the current time 3 days in the future at midnight, before running the callback.
-  let future = futureDate(nowDate, MS_IN_ONE_DAY * 3);
-  fakeNow(future);
+  nowDate = fakeNow(futureDate(nowDate, 3 * MS_IN_ONE_DAY));
   Assert.ok(!!schedulerTickCallback);
   // Execute one scheduler tick.
   yield schedulerTickCallback();
 
   let dailyPing = yield PingServer.promiseNextPing();
-  Assert.equal(dailyPing.payload.info.reason, REASON_DAILY);
+  Assert.equal(dailyPing.payload.info.reason, REASON_DAILY,
+               "The wake notification should have triggered a daily ping.");
+  Assert.equal(dailyPing.creationDate, nowDate.toISOString(),
+               "The daily ping date should be correct.");
 
   Assert.ok((yield OS.File.exists(ABORTED_FILE)),
             "There must be an aborted session ping.");
+
+  // Now also test if we are sending a daily ping if we wake up on the next
+  // day even when the timer doesn't trigger.
+  // This can happen due to timeouts not running out during sleep times,
+  // see bug 1262386, bug 1204823 et al.
+  // Note that we don't get wake notifications on Linux due to bug 758848.
+  nowDate = fakeNow(futureDate(nowDate, 1 * MS_IN_ONE_DAY));
+
+  // We emulate the mentioned timeout behavior by sending the wake notification
+  // instead of triggering the timeout callback.
+  // This should trigger a daily ping, because we passed midnight.
+  Services.obs.notifyObservers(null, "wake_notification", null);
+
+  dailyPing = yield PingServer.promiseNextPing();
+  Assert.equal(dailyPing.payload.info.reason, REASON_DAILY,
+               "The wake notification should have triggered a daily ping.");
+  Assert.equal(dailyPing.creationDate, nowDate.toISOString(),
+               "The daily ping date should be correct.");
 
   yield TelemetryController.testShutdown();
 });
