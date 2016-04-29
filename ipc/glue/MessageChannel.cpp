@@ -693,11 +693,8 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
-    RefPtr<Runnable> runnable =
-        NS_NewNonOwningRunnableMethodWithArgs<MessageChannel*, Side>(aTargetChan,
-                                                                     &MessageChannel::OnOpenAsSlave,
-                                                                     this, oppSide);
-    aTargetLoop->PostTask(runnable.forget());
+    aTargetLoop->PostTask(
+        NewRunnableMethod(aTargetChan, &MessageChannel::OnOpenAsSlave, this, oppSide));
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
