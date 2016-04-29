@@ -6627,6 +6627,9 @@ ComputePositionValue(nsStyleContext* aStyleContext,
                "unexpected unit for CSS <position> value");
 
   RefPtr<nsCSSValue::Array> positionArray = aValue.GetArrayValue();
+  NS_ASSERTION(positionArray->Count() == 4,
+               "unexpected number of values in CSS <position> value");
+
   const nsCSSValue &xEdge   = positionArray->Item(0);
   const nsCSSValue &xOffset = positionArray->Item(1);
   const nsCSSValue &yEdge   = positionArray->Item(2);
@@ -6649,19 +6652,33 @@ ComputePositionValue(nsStyleContext* aStyleContext,
                        aConditions);
 }
 
-template <>
-struct BackgroundItemComputer<nsCSSValueList, nsStyleImageLayers::Position>
+/* Helper function to convert the -x or -y part of a CSS <position> specified
+ * value into its computed-style form. */
+static void
+ComputePositionCoordValue(nsStyleContext* aStyleContext,
+                          const nsCSSValue& aValue,
+                          nsStyleImageLayers::Position::PositionCoord& aComputedValue,
+                          RuleNodeCacheConditions& aConditions)
 {
-  static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValueList* aSpecifiedValue,
-                           nsStyleImageLayers::Position& aComputedValue,
-                           RuleNodeCacheConditions& aConditions)
-  {
-    ComputePositionValue(aStyleContext, aSpecifiedValue->mValue,
-                         aComputedValue, aConditions);
-  }
-};
+  NS_ASSERTION(aValue.GetUnit() == eCSSUnit_Array,
+               "unexpected unit for position coord value");
 
+  RefPtr<nsCSSValue::Array> positionArray = aValue.GetArrayValue();
+  NS_ASSERTION(positionArray->Count() == 2,
+               "unexpected number of values, expecting one edge and one offset");
+
+  const nsCSSValue &edge   = positionArray->Item(0);
+  const nsCSSValue &offset = positionArray->Item(1);
+
+  NS_ASSERTION((eCSSUnit_Enumerated == edge.GetUnit() ||
+                eCSSUnit_Null       == edge.GetUnit()) &&
+               eCSSUnit_Enumerated != offset.GetUnit(),
+               "Invalid background position");
+
+  ComputePositionCoord(aStyleContext, edge, offset,
+                       &aComputedValue,
+                       aConditions);
+}
 
 struct BackgroundSizeAxis {
   nsCSSValue nsCSSValuePairList::* specified;
@@ -6827,6 +6844,76 @@ SetImageLayerList(nsStyleContext* aStyleContext,
     aMaxItemCount = aItemCount;
 }
 
+// The same as SetImageLayerList, but for values stored in
+// layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
+// This code is duplicated because it would be annoying to make
+// SetImageLayerList generic enough to handle both cases.
+static void
+SetImageLayerPositionCoordList(
+                  nsStyleContext* aStyleContext,
+                  const nsCSSValue& aValue,
+                  nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
+                  const nsStyleAutoArray<nsStyleImageLayers::Layer>& aParentLayers,
+                  nsStyleImageLayers::Position::PositionCoord
+                      nsStyleImageLayers::Position::* aResultLocation,
+                  nsStyleImageLayers::Position::PositionCoord aInitialValue,
+                  uint32_t aParentItemCount,
+                  uint32_t& aItemCount,
+                  uint32_t& aMaxItemCount,
+                  bool& aRebuild,
+                  RuleNodeCacheConditions& aConditions)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aRebuild = true;
+    aConditions.SetUncacheable();
+    aLayers.EnsureLengthAtLeast(aParentItemCount);
+    aItemCount = aParentItemCount;
+    for (uint32_t i = 0; i < aParentItemCount; ++i) {
+      aLayers[i].mPosition.*aResultLocation = aParentLayers[i].mPosition.*aResultLocation;
+    }
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+    aRebuild = true;
+    aItemCount = 1;
+    aLayers[0].mPosition.*aResultLocation = aInitialValue;
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    aRebuild = true;
+    aItemCount = 0;
+    const nsCSSValueList* item = aValue.GetListValue();
+    do {
+      NS_ASSERTION(item->mValue.GetUnit() != eCSSUnit_Null &&
+                   item->mValue.GetUnit() != eCSSUnit_Inherit &&
+                   item->mValue.GetUnit() != eCSSUnit_Initial &&
+                   item->mValue.GetUnit() != eCSSUnit_Unset,
+                   "unexpected unit");
+      ++aItemCount;
+      aLayers.EnsureLengthAtLeast(aItemCount);
+
+      ComputePositionCoordValue(aStyleContext, item->mValue,
+                                aLayers[aItemCount-1].mPosition.*aResultLocation,
+                                aConditions);
+      item = item->mNext;
+    } while (item);
+    break;
+  }
+
+  default:
+    MOZ_ASSERT(false, "unexpected unit");
+  }
+
+  if (aItemCount > aMaxItemCount)
+    aMaxItemCount = aItemCount;
+}
+
 template <class ComputedValueItem>
 static void
 SetImageLayerPairList(nsStyleContext* aStyleContext,
@@ -6908,6 +6995,24 @@ FillBackgroundList(
        ++sourceLayer, ++destLayer) {
     aLayers[destLayer].*aResultLocation =
       aLayers[sourceLayer].*aResultLocation;
+  }
+}
+
+// The same as FillBackgroundList, but for values stored in
+// layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
+static void
+FillBackgroundPositionCoordList(
+    nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
+    nsStyleImageLayers::Position::PositionCoord
+        nsStyleImageLayers::Position::* aResultLocation,
+    uint32_t aItemCount, uint32_t aFillCount)
+{
+  NS_PRECONDITION(aFillCount <= aLayers.Length(), "unexpected array length");
+  for (uint32_t sourceLayer = 0, destLayer = aItemCount;
+       destLayer < aFillCount;
+       ++sourceLayer, ++destLayer) {
+    aLayers[destLayer].mPosition.*aResultLocation =
+      aLayers[sourceLayer].mPosition.*aResultLocation;
   }
 }
 
@@ -6995,15 +7100,27 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                     bg->mImage.mOriginCount, maxItemCount, rebuild,
                     conditions);
 
-  // background-position: enum, length, percent (flags), inherit [pair list]
-  nsStyleImageLayers::Position initialPosition;
-  initialPosition.SetInitialPercentValues(0.0f);
-  SetImageLayerList(aContext, *aRuleData->ValueForBackgroundPosition(),
+  // background-position-x/y: enum, length, percent (flags), inherit [list]
+  nsStyleImageLayers::Position::PositionCoord initialPositionCoord;
+  initialPositionCoord.mPercent = 0.0f;
+  initialPositionCoord.mLength = 0;
+  initialPositionCoord.mHasPercent = true;
+
+  SetImageLayerPositionCoordList(
+                    aContext, *aRuleData->ValueForBackgroundPositionX(),
                     bg->mImage.mLayers,
                     parentBG->mImage.mLayers,
-                    &nsStyleImageLayers::Layer::mPosition,
-                    initialPosition, parentBG->mImage.mPositionCount,
-                    bg->mImage.mPositionCount, maxItemCount, rebuild,
+                    &nsStyleImageLayers::Position::mXPosition,
+                    initialPositionCoord, parentBG->mImage.mPositionXCount,
+                    bg->mImage.mPositionXCount, maxItemCount, rebuild,
+                    conditions);
+  SetImageLayerPositionCoordList(
+                    aContext, *aRuleData->ValueForBackgroundPositionY(),
+                    bg->mImage.mLayers,
+                    parentBG->mImage.mLayers,
+                    &nsStyleImageLayers::Position::mYPosition,
+                    initialPositionCoord, parentBG->mImage.mPositionYCount,
+                    bg->mImage.mPositionYCount, maxItemCount, rebuild,
                     conditions);
 
   // background-size: enum, length, auto, inherit, initial [pair list]
@@ -7041,9 +7158,12 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     FillBackgroundList(bg->mImage.mLayers,
                        &nsStyleImageLayers::Layer::mOrigin,
                        bg->mImage.mOriginCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mPosition,
-                       bg->mImage.mPositionCount, fillCount);
+    FillBackgroundPositionCoordList(bg->mImage.mLayers,
+                                    &nsStyleImageLayers::Position::mXPosition,
+                                    bg->mImage.mPositionXCount, fillCount);
+    FillBackgroundPositionCoordList(bg->mImage.mLayers,
+                                    &nsStyleImageLayers::Position::mYPosition,
+                                    bg->mImage.mPositionYCount, fillCount);
     FillBackgroundList(bg->mImage.mLayers,
                        &nsStyleImageLayers::Layer::mSize,
                        bg->mImage.mSizeCount, fillCount);
@@ -9792,15 +9912,27 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mOriginCount, maxItemCount, rebuild,
                     conditions);
 
-  // mask-position: enum, length, percent (flags), inherit [pair list]
-  nsStyleImageLayers::Position initialPosition;
-  initialPosition.SetInitialPercentValues(0.0f);
-  SetImageLayerList(aContext, *aRuleData->ValueForMaskPosition(),
+  // mask-position-x/y: enum, length, percent (flags), inherit [list]
+  nsStyleImageLayers::Position::PositionCoord initialPositionCoord;
+  initialPositionCoord.mPercent = 0.0f;
+  initialPositionCoord.mLength = 0;
+  initialPositionCoord.mHasPercent = true;
+
+  SetImageLayerPositionCoordList(
+                    aContext, *aRuleData->ValueForMaskPositionX(),
                     svgReset->mMask.mLayers,
                     parentSVGReset->mMask.mLayers,
-                    &nsStyleImageLayers::Layer::mPosition,
-                    initialPosition, parentSVGReset->mMask.mPositionCount,
-                    svgReset->mMask.mPositionCount, maxItemCount, rebuild,
+                    &nsStyleImageLayers::Position::mXPosition,
+                    initialPositionCoord, parentSVGReset->mMask.mPositionXCount,
+                    svgReset->mMask.mPositionXCount, maxItemCount, rebuild,
+                    conditions);
+  SetImageLayerPositionCoordList(
+                    aContext, *aRuleData->ValueForMaskPositionY(),
+                    svgReset->mMask.mLayers,
+                    parentSVGReset->mMask.mLayers,
+                    &nsStyleImageLayers::Position::mYPosition,
+                    initialPositionCoord, parentSVGReset->mMask.mPositionYCount,
+                    svgReset->mMask.mPositionYCount, maxItemCount, rebuild,
                     conditions);
 
   // mask-size: enum, length, auto, inherit, initial [pair list]
@@ -9854,9 +9986,12 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
     FillBackgroundList(svgReset->mMask.mLayers,
                        &nsStyleImageLayers::Layer::mOrigin,
                        svgReset->mMask.mOriginCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mPosition,
-                       svgReset->mMask.mPositionCount, fillCount);
+    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
+                                    &nsStyleImageLayers::Position::mXPosition,
+                                    svgReset->mMask.mPositionXCount, fillCount);
+    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
+                                    &nsStyleImageLayers::Position::mYPosition,
+                                    svgReset->mMask.mPositionYCount, fillCount);
     FillBackgroundList(svgReset->mMask.mLayers,
                        &nsStyleImageLayers::Layer::mSize,
                        svgReset->mMask.mSizeCount, fillCount);
