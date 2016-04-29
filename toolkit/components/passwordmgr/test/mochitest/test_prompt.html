@@ -22,6 +22,7 @@ Login Manager test: username/password prompts
 SimpleTest.waitForExplicitFinish();
 
 /** Test for Login Manager: username / password prompts. **/
+var state, action;
 var pwmgr, ioService, observerService;
 var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
@@ -267,7 +268,6 @@ function handleDialog(doc, testNum) {
   ok(true, "Time is " + (new Date()).toUTCString());
   dumpNotifications();
 
-  var clickOK = true;
   var body = doc.getElementById("info.body");
   var userfield = doc.getElementById("loginTextbox");
   var passfield = doc.getElementById("password1Textbox");
@@ -277,175 +277,274 @@ function handleDialog(doc, testNum) {
 
   switch(testNum) {
     case 1:
+      action = {
+        buttonClick : "ok",
+        textField   : "xyz",
+      };
       is(username, "abc", "Checking provided username");
-      userfield.setAttribute("value", "xyz");
       // Temporarily commented out because of Bug #718543
       // is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
       // doc.commandDispatcher.rewindFocus();
       // is(doc.activeElement, body, "description focusable");
       break;
     case 2:
-      clickOK = false;
+      action = {
+        buttonClick : "cancel",
+      };
       break;
     case 10:
+      action = {
+        buttonClick : "ok",
+        passField   : "secret",
+      };
       is(password, "inputpw", "Checking provided password");
-      passfield.setAttribute("value", "secret");
       // Temporarily commented out because of Bug #718543
       // is(doc.activeElement, passfield.inputField, "focus correct for test" + testNum);
       break;
     case 11:
+      action = {
+        buttonClick : "cancel",
+      };
       is(password, "inputpw", "Checking provided password");
-      clickOK = false;
       break;
     case 12:
+      action = {
+        buttonClick : "ok",
+        passField   : "secret",
+      };
       is(password, "", "Checking provided password");
-      passfield.setAttribute("value", "secret");
       break;
     case 14:
+      action = {
+        buttonClick : "ok",
+        passField   : "secret",
+      };
       is(password, "", "Checking provided password");
-      passfield.setAttribute("value", "secret");
       break;
     case 30:
     case 31:
+      action = {
+        buttonClick : "ok",
+        passField   : "fill2pass",
+      };
       is(password, "", "Checking provided password");
-      passfield.setAttribute("value", "fill2pass");
       break;
     case 100:
+      action = {
+        buttonClick : "ok",
+        textField   : "outuser",
+        passField   : "outpass",
+      };
       is(username, "inuser", "Checking provided username");
       is(password, "inpass", "Checking provided password");
-      userfield.setAttribute("value", "outuser");
-      passfield.setAttribute("value", "outpass");
       break;
     case 101:
-      clickOK = false;
+      action = {
+        buttonClick : "cancel",
+      };
       break;
     case 102:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "", "Checking provided username");
       is(password, "examplepass", "Checking provided password");
       break;
     case 103:
+      action = {
+        buttonClick : "ok",
+      };
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
       break;
     case 104:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "user1name", "Checking filled username");
       is(password, "user1pass", "Checking filled password");
       break;
     case 105:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "user2name", "Checking filled username");
       is(password, "user2pass", "Checking filled password");
       break;
     case 106:
+      action = {
+        buttonClick : "ok",
+        passField   : "NEWuser2pass",
+      };
       is(username, "user2name", "Checking filled username");
       is(password, "user2pass", "Checking filled password");
-      passfield.setAttribute("value", "NEWuser2pass");
       break;
     case 107:
+      action = {
+        buttonClick : "ok",
+        passField   : "user2pass",
+      };
       is(username, "user2name", "Checking filled username");
       is(password, "NEWuser2pass", "Checking filled password");
-      passfield.setAttribute("value", "user2pass");
       break;
     case 120:
     case 121:
+      action = {
+        buttonClick : "ok",
+        textField   : "fill2user",
+        passField   : "fill2pass",
+      };
       is(username, "", "Checking filled username");
       is(password, "", "Checking filled password");
-      userfield.setAttribute("value", "fill2user");
-      passfield.setAttribute("value", "fill2pass");
       break;
     case 500:
+      action = {
+        buttonClick : "ok",
+        textField   : "outuser",
+        passField   : "outpass",
+      };
       is(username, "inuser", "Checking unfilled username");
       is(password, "inpass", "Checking unfilled password");
-      userfield.setAttribute("value", "outuser");
-      passfield.setAttribute("value", "outpass");
       break;
     case 501:
-      clickOK = false;
+      action = {
+        buttonClick : "cancel",
+      };
       break;
     case 502:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "", "Checking filled username");
       is(password, "examplepass", "Checking filled password");
       break;
     case 503:
+      action = {
+        buttonClick : "ok",
+      };
       // either of the two logins might have been filled in
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
       break;
     case 504:
+      // enter one of the known logins, test 504+505 exercise the two possible states.
+      action = {
+        buttonClick : "ok",
+        textField   : "user1name",
+        passField   : "user1pass",
+      };
       // either of the two logins might have been filled in
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-      // enter one of the known logins, test 504+505 exercise the two possible states.
-      userfield.setAttribute("value", "user1name");
-      passfield.setAttribute("value", "user1pass");
       break;
     case 505:
+      // enter one of the known logins, test 504+505 exercise the two possible states.
+      action = {
+        buttonClick : "ok",
+        textField   : "user2name",
+        passField   : "user2pass",
+      };
       // either of the two logins might have been filled in
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-      // enter one of the known logins, test 504+505 exercise the two possible states.
-      userfield.setAttribute("value", "user2name");
-      passfield.setAttribute("value", "user2pass");
       break;
     case 506:
+      // force to user2, and change the password
+      action = {
+        buttonClick : "ok",
+        textField   : "user2name",
+        passField   : "NEWuser2pass",
+      };
       // either of the two logins might have been filled in
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-      // force to user2, and change the password
-      userfield.setAttribute("value", "user2name");
-      passfield.setAttribute("value", "NEWuser2pass");
       break;
     case 507:
+      // force to user2, and change the password back
+      action = {
+        buttonClick : "ok",
+        textField   : "user2name",
+        passField   : "user2pass",
+      };
       // either of the two logins might have been filled in
       ok(username == "user1name" || username == "user2name", "Checking filled username");
       ok(password == "user1pass" || password == "user2pass", "Checking filled password");
-      // force to user2, and change the password back
-      userfield.setAttribute("value", "user2name");
-      passfield.setAttribute("value", "user2pass");
       break;
     case 508:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "proxuser", "Checking filled username");
       is(password, "proxpass", "Checking filled password");
       break;
     // No case 509, it's unprompted.
     case 510:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "proxuser", "Checking filled username");
       is(password, "proxpass", "Checking filled password");
       break;
     case 511:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "proxuser", "Checking filled username");
       is(password, "proxpass", "Checking filled password");
       break;
     case 1000:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "mochiuser1", "Checking filled username");
       is(password, "mochipass1", "Checking filled password");
       break;
     case 1001:
+      action = {
+        buttonClick : "ok",
+      };
       is(username, "mochiuser2", "Checking filled username");
       is(password, "mochipass2", "Checking filled password");
       break;
     // (1002 doesn't trigger a dialog)
     case 1003:
+      action = {
+        buttonClick : "ok",
+        passField   : "mochipass1-new",
+      };
       is(username, "mochiuser1", "Checking filled username");
       is(password, "mochipass1", "Checking filled password");
-      passfield.setAttribute("value", "mochipass1-new");
       break;
     case 1004:
+      action = {
+        buttonClick : "ok",
+        passField   : "mochipass3-new",
+      };
       is(username, "mochiuser3", "Checking filled username");
       is(password, "mochipass3-old", "Checking filled password");
-      passfield.setAttribute("value", "mochipass3-new");
       break;
     case 1005:
+      action = {
+        buttonClick : "ok",
+        textField   : "mochiuser3",
+        passField   : "mochipass3-old",
+      };
       is(username, "", "Checking filled username");
       is(password, "", "Checking filled password");
-      userfield.setAttribute("value", "mochiuser3");
-      passfield.setAttribute("value", "mochipass3-old");
       break;
     default:
       ok(false, "Uhh, unhandled switch for testNum #" + testNum);
       break;
   }
 
-  if (clickOK)
+  if ("textField" in action) {
+    doc.getElementById("loginTextbox").setAttribute("value", action.textField);
+  }
+  if ("passField" in action) {
+    doc.getElementById("password1Textbox").setAttribute("value", action.passField);
+  }
+
+  if (action.buttonClick == "ok")
     dialog.acceptDialog();
   else
     dialog.cancelDialog();
