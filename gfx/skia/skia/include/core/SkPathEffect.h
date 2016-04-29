@@ -14,7 +14,6 @@
 #include "SkPath.h"
 #include "SkPoint.h"
 #include "SkRect.h"
-#include "SkTDArray.h"
 
 class SkPath;
 class SkStrokeRec;
@@ -155,16 +154,14 @@ private:
     for managing the lifetimes of its two arguments.
 */
 class SkPairPathEffect : public SkPathEffect {
-public:
-    virtual ~SkPairPathEffect();
-
 protected:
-    SkPairPathEffect(SkPathEffect* pe0, SkPathEffect* pe1);
+    SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1);
 
     void flatten(SkWriteBuffer&) const override;
 
     // these are visible to our subclasses
-    SkPathEffect* fPE0, *fPE1;
+    sk_sp<SkPathEffect> fPE0;
+    sk_sp<SkPathEffect> fPE1;
 
     SK_TO_STRING_OVERRIDE()
 
@@ -184,9 +181,21 @@ public:
         The reference counts for outer and inner are both incremented in the constructor,
         and decremented in the destructor.
     */
-    static SkComposePathEffect* Create(SkPathEffect* outer, SkPathEffect* inner) {
-        return new SkComposePathEffect(outer, inner);
+    static sk_sp<SkPathEffect> Make(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner) {
+        if (!outer) {
+            return inner;
+        }
+        if (!inner) {
+            return outer;
+        }
+        return sk_sp<SkPathEffect>(new SkComposePathEffect(outer, inner));
     }
+
+#ifdef SK_SUPPORT_LEGACY_PATHEFFECT_PTR
+    static SkPathEffect* Create(SkPathEffect* outer, SkPathEffect* inner) {
+        return Make(sk_ref_sp(outer), sk_ref_sp(inner)).release();
+    }
+#endif
 
     virtual bool filterPath(SkPath* dst, const SkPath& src,
                             SkStrokeRec*, const SkRect*) const override;
@@ -199,7 +208,8 @@ public:
 #endif
 
 protected:
-    SkComposePathEffect(SkPathEffect* outer, SkPathEffect* inner) : INHERITED(outer, inner) {}
+    SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
+        : INHERITED(outer, inner) {}
 
 private:
     // illegal
@@ -221,10 +231,21 @@ public:
         The reference counts for first and second are both incremented in the constructor,
         and decremented in the destructor.
     */
-    static SkSumPathEffect* Create(SkPathEffect* first, SkPathEffect* second) {
-        return new SkSumPathEffect(first, second);
+    static sk_sp<SkPathEffect> Make(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second) {
+        if (!first) {
+            return second;
+        }
+        if (!second) {
+            return first;
+        }
+        return sk_sp<SkPathEffect>(new SkSumPathEffect(first, second));
     }
 
+#ifdef SK_SUPPORT_LEGACY_PATHEFFECT_PTR
+    static SkPathEffect* Create(SkPathEffect* first, SkPathEffect* second) {
+        return Make(sk_ref_sp(first), sk_ref_sp(second)).release();
+    }
+#endif
     virtual bool filterPath(SkPath* dst, const SkPath& src,
                             SkStrokeRec*, const SkRect*) const override;
 
@@ -236,7 +257,8 @@ public:
 #endif
 
 protected:
-    SkSumPathEffect(SkPathEffect* first, SkPathEffect* second) : INHERITED(first, second) {}
+    SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
+        : INHERITED(first, second) {}
 
 private:
     // illegal

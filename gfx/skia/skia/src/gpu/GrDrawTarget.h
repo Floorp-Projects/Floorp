@@ -13,11 +13,8 @@
 #include "GrContext.h"
 #include "GrPathProcessor.h"
 #include "GrPrimitiveProcessor.h"
-#include "GrIndexBuffer.h"
 #include "GrPathRendering.h"
 #include "GrPipelineBuilder.h"
-#include "GrPipeline.h"
-#include "GrVertexBuffer.h"
 #include "GrXferProcessor.h"
 
 #include "batches/GrDrawBatch.h"
@@ -45,10 +42,15 @@ class GrDrawTarget final : public SkRefCnt {
 public:
     /** Options for GrDrawTarget behavior. */
     struct Options {
-        Options () : fClipBatchToBounds(false), fDrawBatchBounds(false), fMaxBatchLookback(-1) {}
+        Options ()
+            : fClipBatchToBounds(false)
+            , fDrawBatchBounds(false)
+            , fMaxBatchLookback(-1)
+            , fMaxBatchLookahead(-1) {}
         bool fClipBatchToBounds;
         bool fDrawBatchBounds;
         int  fMaxBatchLookback;
+        int  fMaxBatchLookahead;
     };
 
     GrDrawTarget(GrRenderTarget*, GrGpu*, GrResourceProvider*, GrAuditTrail*, const Options&);
@@ -61,7 +63,9 @@ public:
 #ifdef ENABLE_MDB
         this->setFlag(kClosed_Flag);
 #endif
+        this->forwardCombine();
     }
+
     bool isClosed() const { return this->isSetFlag(kClosed_Flag); }
 
     // TODO: this entry point is only needed in the non-MDB world. Remove when
@@ -101,7 +105,7 @@ public:
      */
     const GrCaps* caps() const { return fGpu->caps(); }
 
-    void drawBatch(const GrPipelineBuilder&, GrDrawBatch*);
+    void drawBatch(const GrPipelineBuilder&, GrDrawBatch*, const SkIRect* scissorRect = nullptr);
 
     /**
      * Draws path into the stencil buffer. The fill must be either even/odd or
@@ -144,7 +148,7 @@ public:
      * depending on the type of surface, configs, etc, and the backend-specific
      * limitations.
      */
-    void copySurface(GrSurface* dst,
+    bool copySurface(GrSurface* dst,
                      GrSurface* src,
                      const SkIRect& srcRect,
                      const SkIPoint& dstPoint);
@@ -216,6 +220,7 @@ private:
     };
 
     void recordBatch(GrBatch*);
+    void forwardCombine();
     bool installPipelineInDrawBatch(const GrPipelineBuilder* pipelineBuilder,
                                     const GrScissorState* scissor,
                                     GrDrawBatch* batch);
@@ -232,11 +237,6 @@ private:
     void getPathStencilSettingsForFilltype(GrPathRendering::FillType,
                                            const GrStencilAttachment*,
                                            GrStencilSettings*);
-    bool setupClip(const GrPipelineBuilder&,
-                           GrPipelineBuilder::AutoRestoreFragmentProcessorState*,
-                           GrPipelineBuilder::AutoRestoreStencil*,
-                           GrScissorState*,
-                           const SkRect* devBounds);
 
     void addDependency(GrDrawTarget* dependedOn);
 
@@ -260,6 +260,7 @@ private:
 
     bool                                        fDrawBatchBounds;
     int                                         fMaxBatchLookback;
+    int                                         fMaxBatchLookahead;
 
     typedef SkRefCnt INHERITED;
 };

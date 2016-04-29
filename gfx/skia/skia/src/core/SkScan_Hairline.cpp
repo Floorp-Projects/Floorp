@@ -192,7 +192,7 @@ void SkScan::HairRect(const SkRect& rect, const SkRasterClip& clip,
 #include "SkGeometry.h"
 #include "SkNx.h"
 
-#define kMaxCubicSubdivideLevel 6
+#define kMaxCubicSubdivideLevel 9
 #define kMaxQuadSubdivideLevel  5
 
 static int compute_int_quad_dist(const SkPoint pts[3]) {
@@ -218,8 +218,7 @@ static void hairquad(const SkPoint pts[3], const SkRegion* clip,
                      SkBlitter* blitter, int level, SkScan::HairRgnProc lineproc) {
     SkASSERT(level <= kMaxQuadSubdivideLevel);
 
-    SkPoint coeff[3];
-    SkQuadToCoeff(pts, coeff);
+    SkQuadCoeff coeff(pts);
 
     const int lines = 1 << level;
     Sk2s t(0);
@@ -229,12 +228,12 @@ static void hairquad(const SkPoint pts[3], const SkRegion* clip,
     SkASSERT((unsigned)lines < SK_ARRAY_COUNT(tmp));
 
     tmp[0] = pts[0];
-    Sk2s A = Sk2s::Load(&coeff[0].fX);
-    Sk2s B = Sk2s::Load(&coeff[1].fX);
-    Sk2s C = Sk2s::Load(&coeff[2].fX);
+    Sk2s A = coeff.fA;
+    Sk2s B = coeff.fB;
+    Sk2s C = coeff.fC;
     for (int i = 1; i < lines; ++i) {
         t = t + dt;
-        ((A * t + B) * t + C).store(&tmp[i].fX);
+        ((A * t + B) * t + C).store(&tmp[i]);
     }
     tmp[lines] = pts[2];
     lineproc(tmp, lines + 1, clip, blitter);
@@ -296,8 +295,7 @@ static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* bl
         return;
     }
 
-    SkPoint coeff[4];
-    SkCubicToCoeff(pts, coeff);
+    SkCubicCoeff coeff(pts);
 
     const Sk2s dt(SK_Scalar1 / lines);
     Sk2s t(0);
@@ -306,13 +304,13 @@ static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* bl
     SkASSERT((unsigned)lines < SK_ARRAY_COUNT(tmp));
 
     tmp[0] = pts[0];
-    Sk2s A = Sk2s::Load(&coeff[0].fX);
-    Sk2s B = Sk2s::Load(&coeff[1].fX);
-    Sk2s C = Sk2s::Load(&coeff[2].fX);
-    Sk2s D = Sk2s::Load(&coeff[3].fX);
+    Sk2s A = coeff.fA;
+    Sk2s B = coeff.fB;
+    Sk2s C = coeff.fC;
+    Sk2s D = coeff.fD;
     for (int i = 1; i < lines; ++i) {
         t = t + dt;
-        (((A * t + B) * t + C) * t + D).store(&tmp[i].fX);
+        (((A * t + B) * t + C) * t + D).store(&tmp[i]);
     }
     tmp[lines] = pts[3];
     lineproc(tmp, lines + 1, clip, blitter);
@@ -321,14 +319,14 @@ static void hair_cubic(const SkPoint pts[4], const SkRegion* clip, SkBlitter* bl
 static SkRect compute_nocheck_cubic_bounds(const SkPoint pts[4]) {
     SkASSERT(SkScalarsAreFinite(&pts[0].fX, 8));
 
-    Sk2s min = Sk2s::Load(&pts[0].fX);
+    Sk2s min = Sk2s::Load(pts);
     Sk2s max = min;
     for (int i = 1; i < 4; ++i) {
-        Sk2s pair = Sk2s::Load(&pts[i].fX);
+        Sk2s pair = Sk2s::Load(pts+i);
         min = Sk2s::Min(min, pair);
         max = Sk2s::Max(max, pair);
     }
-    return { min.kth<0>(), min.kth<1>(), max.kth<0>(), max.kth<1>() };
+    return { min[0], min[1], max[0], max[1] };
 }
 
 static bool is_inverted(const SkRect& r) {
