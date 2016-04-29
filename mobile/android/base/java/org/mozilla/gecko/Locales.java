@@ -48,7 +48,7 @@ public class Locales {
         }
     }
 
-    public static class LocaleAwareAppCompatActivity extends AppCompatActivity {
+    public static abstract class LocaleAwareAppCompatActivity extends AppCompatActivity {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             Locales.initializeLocale(getApplicationContext());
@@ -56,7 +56,7 @@ public class Locales {
         }
 
     }
-    public static class LocaleAwareFragmentActivity extends FragmentActivity {
+    public static abstract class LocaleAwareFragmentActivity extends FragmentActivity {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             Locales.initializeLocale(getApplicationContext());
@@ -64,7 +64,7 @@ public class Locales {
         }
     }
 
-    public static class LocaleAwareActivity extends Activity {
+    public static abstract class LocaleAwareActivity extends Activity {
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             Locales.initializeLocale(getApplicationContext());

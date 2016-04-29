@@ -14,7 +14,7 @@ import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 /**
  * Activity which shows the status activity or passes through to web flow.
  */
-public class FxAccountWebFlowActivity extends FxAccountAbstractActivity {
+public abstract class FxAccountWebFlowActivity extends FxAccountAbstractActivity {
     protected static final String LOG_TAG = FxAccountWebFlowActivity.class.getSimpleName();
 
     protected static final String ABOUT_ACCOUNTS = "about:accounts";

@@ -24,6 +24,7 @@
          and not fail everything. -->
     <issue id="AppCompatResource" severity="warning" />
     <issue id="GoogleAppIndexingDeepLinkError" severity="warning" />
+    <issue id="GoogleAppIndexingUrlError" severity="warning" />
     <issue id="Instantiatable" severity="warning" />
     <issue id="LongLogTag" severity="warning" />
     <issue id="MissingPermission" severity="warning" />
@@ -34,6 +35,11 @@
     <issue id="ResourceType" severity="warning" />
     <issue id="ValidFragment" severity="warning" />
     <issue id="WrongConstant" severity="warning" />
+
+    <!-- We fixed all "Registered" lint errors. However the current gradle plugin has a bug where
+         it ignores @SuppressLint annotations for this check. See CrashReporter class and
+         https://code.google.com/p/android/issues/detail?id=204846 -->
+    <issue id="Registered" severity="warning" />
 
     <!-- WHEN YOU FIX A LINT WARNING, ADD IT TO THIS LIST.
 
@@ -144,7 +150,6 @@
     <issue id="ProtectedPermissions" severity="error" />
     <issue id="PxUsage" severity="error" />
     <issue id="Range" severity="error" />
-    <issue id="Registered" severity="error" />
     <issue id="RelativeOverlap" severity="error" />
     <issue id="RequiredSize" severity="error" />
     <issue id="ResAuto" severity="error" />
