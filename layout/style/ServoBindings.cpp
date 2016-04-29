@@ -247,7 +247,7 @@ Servo_DropStyleSet(RawServoStyleSet* set)
 }
 
 ServoComputedValues*
-Servo_GetComputedValues(RawGeckoElement* element)
+Servo_GetComputedValues(RawGeckoNode* node)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_GetComputedValues in a "
             "non-MOZ_STYLO build");
