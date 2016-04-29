@@ -61,8 +61,7 @@ public:
 
   /**
    * If the source stream is malformed, the function will stop decoding
-   * and return a negative result, indicating the byte position of the
-   * faulty instruction
+   * and return false.
    *
    * This function never writes outside of provided buffers, and never
    * modifies input buffer.
@@ -71,9 +70,9 @@ public:
    *       minimum of |aOutputSize| bytes.
    *
    * @param aOutputSize is the output size, therefore the original size
-   * @return the number of bytes read in the source buffer
+   * @return true on success, false on failure
    */
-  static MFBT_API bool
+  static MFBT_API MOZ_MUST_USE bool
   decompress(const char* aSource, char* aDest, size_t aOutputSize);
 
   /**
@@ -91,8 +90,9 @@ public:
    *   already allocated)
    * @param aOutputSize the actual number of bytes decoded in the destination
    *   buffer (necessarily <= aMaxOutputSize)
+   * @return true on success, false on failure
    */
-  static MFBT_API bool
+  static MFBT_API MOZ_MUST_USE bool
   decompress(const char* aSource, size_t aInputSize, char* aDest,
              size_t aMaxOutputSize, size_t* aOutputSize);
 
