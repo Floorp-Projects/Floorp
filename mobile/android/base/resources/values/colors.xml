@@ -103,11 +103,6 @@
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="tab_row_pressed">#4D000000</color>
 
-  <color name="textbox_background">#FFF</color>
-  <color name="textbox_background_disabled">#DDD</color>
-  <color name="textbox_stroke">#000</color>
-  <color name="textbox_stroke_disabled">#666</color>
-
   <color name="url_bar_urltext">#AFB1B3</color>
   <color name="url_bar_urltext_private">#777777</color>
   <color name="url_bar_domaintext">#363B40</color>
