@@ -23,7 +23,7 @@ function test() {
 
   // Test search URLs (including purposes).
   url = engine.getSubmission("foo").uri.spec;
-  is(url, base, "Check search URL for 'foo'");
+  is(url, base + "&hsimp=yhs-001", "Check search URL for 'foo'");
 
   waitForExplicitFinish();
 
