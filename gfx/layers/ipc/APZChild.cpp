@@ -78,17 +78,12 @@ APZChild::Create(const dom::TabId& aTabId)
   return apz.forget();
 }
 
-APZChild::APZChild()
-  : mDestroyed(false)
-{
-}
-
 APZChild::~APZChild()
 {
   if (mObserver) {
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     os->RemoveObserver(mObserver, "tab-child-created");
-  } else if (mBrowser) {
+  } else {
     mBrowser->SetAPZChild(nullptr);
   }
 }
@@ -164,18 +159,6 @@ APZChild::RecvNotifyFlushComplete()
   return true;
 }
 
-bool
-APZChild::RecvDestroy()
-{
-  mDestroyed = true;
-  if (mBrowser) {
-    mBrowser->SetAPZChild(nullptr);
-    mBrowser = nullptr;
-  }
-  PAPZChild::Send__delete__(this);
-  return true;
-}
-
 void
 APZChild::SetObserver(nsIObserver* aObserver)
 {
@@ -192,13 +175,8 @@ APZChild::SetBrowser(dom::TabChild* aBrowser)
     os->RemoveObserver(mObserver, "tab-child-created");
     mObserver = nullptr;
   }
-  // We might get the tab-child-created notification after we receive a
-  // Destroy message from the parent. In that case we don't want to install
-  // ourselves with the browser.
-  if (!mDestroyed) {
-    mBrowser = aBrowser;
-    mBrowser->SetAPZChild(this);
-  }
+  mBrowser = aBrowser;
+  mBrowser->SetAPZChild(this);
 }
 
 } // namespace layers
