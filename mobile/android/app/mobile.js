@@ -236,35 +236,6 @@ pref("extensions.getAddons.getWithPerformance.url", "https://services.addons.moz
 pref("extensions.getLocales.get.url", "");
 pref("extensions.compatability.locales.buildid", "0");
 
-/* blocklist preferences */
-pref("extensions.blocklist.enabled", true);
-// OneCRL freshness checking depends on this value, so if you change it,
-// please also update security.onecrl.maximum_staleness_in_seconds.
-pref("extensions.blocklist.interval", 86400);
-pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
-pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
-
-// Blocklist preferences
-pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
-pref("services.blocklist.changes.path", "/buckets/monitor/collections/changes/records");
-pref("services.blocklist.bucket", "blocklists");
-pref("services.blocklist.onecrl.collection", "certificates");
-pref("services.blocklist.onecrl.checked", 0);
-pref("services.blocklist.addons.collection", "addons");
-pref("services.blocklist.addons.checked", 0);
-pref("services.blocklist.plugins.collection", "plugins");
-pref("services.blocklist.plugins.checked", 0);
-pref("services.blocklist.gfx.collection", "gfx");
-pref("services.blocklist.gfx.checked", 0);
-
-// for now, let's keep kinto update out of the release channel (pending
-// collection signatures)
-#ifdef RELEASE_BUILD
-pref("services.blocklist.update_enabled", false);
-#else
-pref("services.blocklist.update_enabled", true);
-#endif
-
 /* Don't let XPIProvider install distribution add-ons; we do our own thing on mobile. */
 pref("extensions.installDistroAddons", false);
 
@@ -528,10 +499,6 @@ pref("security.mixed_content.block_active_content", true);
 
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
-
-// Required blocklist freshness for OneCRL OCSP bypass
-// (default is 1.25x extensions.blocklist.interval, or 30 hours)
-pref("security.onecrl.maximum_staleness_in_seconds", 108000);
 
 // Only fetch OCSP for EV certificates
 pref("security.OCSP.enabled", 2);
