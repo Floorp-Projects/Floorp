@@ -1026,9 +1026,9 @@ function* runTests() {
     info("Starting test: promptAuth with long realm");
     state = {
         msg : 'A username and password are being requested by http://example.com. The site '  +
-              'says: "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
+              'says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
               'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
-              'abcdefghi \u2026"',
+              'abcdefghi \u2026\u201d',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,

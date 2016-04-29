@@ -23,7 +23,7 @@ add_task(function* () {
     messages: [
       {
         name: "Logged blocking mixed active content",
-        text: "Blocked loading mixed active content \"http://example.com/\"",
+        text: "Blocked loading mixed active content \u201chttp://example.com/\u201d",
         category: CATEGORY_SECURITY,
         severity: SEVERITY_ERROR
       },
