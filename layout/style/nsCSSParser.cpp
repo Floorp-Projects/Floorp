@@ -865,19 +865,22 @@ protected:
     nsCSSValueList* mAttachment;   // A property for background layer only
     nsCSSValueList* mClip;
     nsCSSValueList* mOrigin;
-    nsCSSValueList* mPosition;
+    nsCSSValueList* mPositionX;
+    nsCSSValueList* mPositionY;
     nsCSSValuePairList* mSize;
     nsCSSValueList* mComposite;    // A property for mask layer only
     nsCSSValueList* mMode;         // A property for mask layer only
     ImageLayersShorthandParseState(
         nsCSSValue& aColor, nsCSSValueList* aImage, nsCSSValuePairList* aRepeat,
         nsCSSValueList* aAttachment, nsCSSValueList* aClip,
-        nsCSSValueList* aOrigin, nsCSSValueList* aPosition,
+        nsCSSValueList* aOrigin,
+        nsCSSValueList* aPositionX, nsCSSValueList* aPositionY,
         nsCSSValuePairList* aSize, nsCSSValueList* aComposite,
         nsCSSValueList* aMode) :
         mColor(aColor), mImage(aImage), mRepeat(aRepeat),
         mAttachment(aAttachment), mClip(aClip), mOrigin(aOrigin),
-        mPosition(aPosition), mSize(aSize), mComposite(aComposite),
+        mPositionX(aPositionX), mPositionY(aPositionY),
+        mSize(aSize), mComposite(aComposite),
         mMode(aMode) {};
   };
 
@@ -888,7 +891,8 @@ protected:
   bool ParseValueList(nsCSSProperty aPropID); // a single value prop-id
   bool ParseImageLayerRepeat(nsCSSProperty aPropID);
   bool ParseImageLayerRepeatValues(nsCSSValuePair& aValue);
-  bool ParseImageLayerPosition(nsCSSProperty aPropID);
+  bool ParseImageLayerPosition(const nsCSSProperty aTable[]);
+  bool ParseImageLayerPositionCoord(nsCSSProperty aPropID, bool aIsHorizontal);
 
   // ParseBoxPositionValues parses the CSS 2.1 background-position syntax,
   // which is still used by some properties. See ParsePositionValue
@@ -899,7 +903,9 @@ protected:
   // ParsePositionValue parses a CSS <position> value, which is used by
   // the 'background-position' property.
   bool ParsePositionValue(nsCSSValue& aOut);
+  bool ParsePositionValueSeparateCoords(nsCSSValue& aOutX, nsCSSValue& aOutY);
 
+  bool ParseImageLayerPositionCoordItem(nsCSSValue& aOut, bool aIsHorizontal);
   bool ParseImageLayerSize(nsCSSProperty aPropID);
   bool ParseImageLayerSizeValues(nsCSSValuePair& aOut);
   bool ParseBorderColor();
@@ -11426,7 +11432,11 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_background_repeat:
     return ParseImageLayerRepeat(eCSSProperty_background_repeat);
   case eCSSProperty_background_position:
-    return ParseImageLayerPosition(eCSSProperty_background_position);
+    return ParseImageLayerPosition(nsStyleImageLayers::kBackgroundLayerTable);
+  case eCSSProperty_background_position_x:
+  case eCSSProperty_background_position_y:
+    return ParseImageLayerPositionCoord(aPropID,
+               aPropID == eCSSProperty_background_position_x);
   case eCSSProperty_background_size:
     return ParseImageLayerSize(eCSSProperty_background_size);
   case eCSSProperty_border:
@@ -11608,7 +11618,11 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_mask_repeat:
     return ParseImageLayerRepeat(eCSSProperty_mask_repeat);
   case eCSSProperty_mask_position:
-    return ParseImageLayerPosition(eCSSProperty_mask_position);
+    return ParseImageLayerPosition(nsStyleImageLayers::kMaskLayerTable);
+  case eCSSProperty_mask_position_x:
+  case eCSSProperty_mask_position_y:
+    return ParseImageLayerPositionCoord(aPropID,
+               aPropID == eCSSProperty_mask_position_x);
   case eCSSProperty_mask_size:
     return ParseImageLayerSize(eCSSProperty_mask_size);
 #endif
@@ -11889,12 +11903,13 @@ CSSParserImpl::ParseImageLayers(const nsCSSProperty aTable[])
     return true;
   }
 
-  nsCSSValue image, repeat, attachment, clip, origin, position, size,
+  nsCSSValue image, repeat, attachment, clip, origin, positionX, positionY, size,
              composite, maskMode;
   ImageLayersShorthandParseState state(color, image.SetListValue(),
                                        repeat.SetPairListValue(),
                                        attachment.SetListValue(), clip.SetListValue(),
-                                       origin.SetListValue(), position.SetListValue(),
+                                       origin.SetListValue(),
+                                       positionX.SetListValue(), positionY.SetListValue(),
                                        size.SetPairListValue(), composite.SetListValue(),
                                        maskMode.SetListValue());
 
@@ -11928,7 +11943,9 @@ CSSParserImpl::ParseImageLayers(const nsCSSProperty aTable[])
                nsCSSValueList);
     APPENDNEXT(nsStyleImageLayers::origin, state.mOrigin,
                nsCSSValueList);
-    APPENDNEXT(nsStyleImageLayers::position, state.mPosition,
+    APPENDNEXT(nsStyleImageLayers::positionX, state.mPositionX,
+               nsCSSValueList);
+    APPENDNEXT(nsStyleImageLayers::positionY, state.mPositionY,
                nsCSSValueList);
     APPENDNEXT(nsStyleImageLayers::size, state.mSize,
                nsCSSValuePairList);
@@ -11957,7 +11974,8 @@ CSSParserImpl::ParseImageLayers(const nsCSSProperty aTable[])
   APPENDVALUE(aTable[nsStyleImageLayers::repeat],     repeat);
   APPENDVALUE(aTable[nsStyleImageLayers::clip],       clip);
   APPENDVALUE(aTable[nsStyleImageLayers::origin],     origin);
-  APPENDVALUE(aTable[nsStyleImageLayers::position],   position);
+  APPENDVALUE(aTable[nsStyleImageLayers::positionX],  positionX);
+  APPENDVALUE(aTable[nsStyleImageLayers::positionY],  positionY);
   APPENDVALUE(aTable[nsStyleImageLayers::size],       size);
   APPENDVALUE(aTable[nsStyleImageLayers::color],      color);
   APPENDVALUE(aTable[nsStyleImageLayers::attachment], attachment);
@@ -12016,10 +12034,13 @@ CSSParserImpl::ParseImageLayersItem(
                                    eCSSUnit_Enumerated);
   aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_PADDING,
                                      eCSSUnit_Enumerated);
-  RefPtr<nsCSSValue::Array> positionArr = nsCSSValue::Array::Create(4);
-  aState.mPosition->mValue.SetArrayValue(positionArr, eCSSUnit_Array);
-  positionArr->Item(1).SetPercentValue(0.0f);
-  positionArr->Item(3).SetPercentValue(0.0f);
+
+  RefPtr<nsCSSValue::Array> positionXArr = nsCSSValue::Array::Create(2);
+  RefPtr<nsCSSValue::Array> positionYArr = nsCSSValue::Array::Create(2);
+  aState.mPositionX->mValue.SetArrayValue(positionXArr, eCSSUnit_Array);
+  aState.mPositionY->mValue.SetArrayValue(positionYArr, eCSSUnit_Array);
+  positionXArr->Item(1).SetPercentValue(0.0f);
+  positionYArr->Item(1).SetPercentValue(0.0f);
   aState.mSize->mXValue.SetAutoValue();
   aState.mSize->mYValue.SetAutoValue();
   aState.mComposite->mValue.SetIntValue(NS_STYLE_MASK_COMPOSITE_ADD,
@@ -12092,7 +12113,9 @@ CSSParserImpl::ParseImageLayersItem(
         if (havePositionAndSize)
           return false;
         havePositionAndSize = true;
-        if (!ParsePositionValue(aState.mPosition->mValue)) {
+
+        if (!ParsePositionValueSeparateCoords(aState.mPositionX->mValue,
+                                              aState.mPositionY->mValue)) {
           return false;
         }
         if (ExpectSymbol('/', true)) {
@@ -12204,7 +12227,8 @@ CSSParserImpl::ParseImageLayersItem(
       if (havePositionAndSize)
         return false;
       havePositionAndSize = true;
-      if (!ParsePositionValue(aState.mPosition->mValue)) {
+      if (!ParsePositionValueSeparateCoords(aState.mPositionX->mValue,
+                                            aState.mPositionY->mValue)) {
         return false;
       }
       if (ExpectSymbol('/', true)) {
@@ -12313,16 +12337,54 @@ CSSParserImpl::ParseImageLayerRepeatValues(nsCSSValuePair& aValue)
   return false;
 }
 
-// This function is very similar to ParseScrollSnapCoordinate,
-// ParseImageLayers, ParseImageLayerSize.
 bool
-CSSParserImpl::ParseImageLayerPosition(nsCSSProperty aPropID)
+CSSParserImpl::ParseImageLayerPosition(const nsCSSProperty aTable[])
+{
+  // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
+  nsCSSValue position;
+  if (ParseSingleTokenVariant(position, VARIANT_INHERIT, nullptr)) {
+    AppendValue(aTable[nsStyleImageLayers::positionX], position);
+    AppendValue(aTable[nsStyleImageLayers::positionY], position);
+    return true;
+  }
+
+  nsCSSValue itemValueX;
+  nsCSSValue itemValueY;
+  if (!ParsePositionValueSeparateCoords(itemValueX, itemValueY)) {
+    return false;
+  }
+
+  nsCSSValue valueX;
+  nsCSSValue valueY;
+  nsCSSValueList* itemX = valueX.SetListValue();
+  nsCSSValueList* itemY = valueY.SetListValue();
+  for (;;) {
+    itemX->mValue = itemValueX;
+    itemY->mValue = itemValueY;
+    if (!ExpectSymbol(',', true)) {
+      break;
+    }
+    if (!ParsePositionValueSeparateCoords(itemValueX, itemValueY)) {
+      return false;
+    }
+    itemX->mNext = new nsCSSValueList;
+    itemY->mNext = new nsCSSValueList;
+    itemX = itemX->mNext;
+    itemY = itemY->mNext;
+  }
+  AppendValue(aTable[nsStyleImageLayers::positionX], valueX);
+  AppendValue(aTable[nsStyleImageLayers::positionY], valueY);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseImageLayerPositionCoord(nsCSSProperty aPropID, bool aIsHorizontal)
 {
   nsCSSValue value;
   // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
   if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
     nsCSSValue itemValue;
-    if (!ParsePositionValue(itemValue)) {
+    if (!ParseImageLayerPositionCoordItem(itemValue, aIsHorizontal)) {
       return false;
     }
     nsCSSValueList* item = value.SetListValue();
@@ -12331,7 +12393,7 @@ CSSParserImpl::ParseImageLayerPosition(nsCSSProperty aPropID)
       if (!ExpectSymbol(',', true)) {
         break;
       }
-      if (!ParsePositionValue(itemValue)) {
+      if (!ParseImageLayerPositionCoordItem(itemValue, aIsHorizontal)) {
         return false;
       }
       item->mNext = new nsCSSValueList;
@@ -12627,6 +12689,80 @@ CSSParserImpl::ParsePositionValue(nsCSSValue& aOut)
     yEdge = swapEdge;
     yOffset = swapOffset;
   }
+
+  return true;
+}
+
+bool
+CSSParserImpl::ParsePositionValueSeparateCoords(nsCSSValue& aOutX, nsCSSValue& aOutY)
+{
+  nsCSSValue scratch;
+  if (!ParsePositionValue(scratch)) {
+    return false;
+  }
+
+  // Separate the four values into two pairs of two values for X and Y.
+  RefPtr<nsCSSValue::Array> valueX = nsCSSValue::Array::Create(2);
+  RefPtr<nsCSSValue::Array> valueY = nsCSSValue::Array::Create(2);
+  aOutX.SetArrayValue(valueX, eCSSUnit_Array);
+  aOutY.SetArrayValue(valueY, eCSSUnit_Array);
+
+  RefPtr<nsCSSValue::Array> value = scratch.GetArrayValue();
+  valueX->Item(0) = value->Item(0);
+  valueX->Item(1) = value->Item(1);
+  valueY->Item(0) = value->Item(2);
+  valueY->Item(1) = value->Item(3);
+  return true;
+}
+
+// Parses one item in a list of values for the 'background-position-x' or
+// 'background-position-y' property. Does not support the start/end keywords.
+// Spec reference: https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-x
+bool
+CSSParserImpl::ParseImageLayerPositionCoordItem(nsCSSValue& aOut, bool aIsHorizontal)
+{
+  RefPtr<nsCSSValue::Array> value = nsCSSValue::Array::Create(2);
+  aOut.SetArrayValue(value, eCSSUnit_Array);
+
+  nsCSSValue &edge   = value->Item(0),
+             &offset = value->Item(1);
+
+  nsCSSValue edgeOrOffset;
+  CSSParseResult result =
+    ParseVariant(edgeOrOffset, VARIANT_LPCALC | VARIANT_KEYWORD,
+                 nsCSSProps::kImageLayerPositionKTable);
+  if (result != CSSParseResult::Ok) {
+    return false;
+  }
+
+  if (edgeOrOffset.GetUnit() == eCSSUnit_Enumerated) {
+    edge = edgeOrOffset;
+
+    // The edge can be followed by an optional offset.
+    result = ParseVariant(offset, VARIANT_LPCALC, nullptr);
+    if (result == CSSParseResult::Error) {
+      return false;
+    }
+  } else {
+    offset = edgeOrOffset;
+  }
+
+  // Keywords for horizontal properties cannot be vertical keywords, and
+  // keywords for vertical properties cannot be horizontal keywords.
+  // Also, if an offset is specified, the edge cannot be center.
+  int32_t edgeEnum =
+          edge.GetUnit() == eCSSUnit_Enumerated ? edge.GetIntValue() : 0;
+  int32_t allowedKeywords =
+    (aIsHorizontal ? (BG_LEFT | BG_RIGHT) : (BG_TOP | BG_BOTTOM)) |
+    (offset.GetUnit() == eCSSUnit_Null ? BG_CENTER : 0);
+  if (edgeEnum & ~allowedKeywords) {
+    return false;
+  }
+
+  NS_ASSERTION((eCSSUnit_Enumerated == edge.GetUnit() ||
+                eCSSUnit_Null       == edge.GetUnit()) &&
+               eCSSUnit_Enumerated != offset.GetUnit(),
+               "Unexpected units");
 
   return true;
 }
