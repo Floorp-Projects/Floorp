@@ -139,16 +139,6 @@ partial interface Navigator {
   readonly attribute BatteryManager? battery;
 };
 
-// https://wiki.mozilla.org/WebAPI/DataStore
-[NoInterfaceObject,
- Exposed=(Window,Worker)]
-interface NavigatorDataStore {
-    [NewObject, Func="Navigator::HasDataStoreSupport"]
-    Promise<sequence<DataStore>> getDataStores(DOMString name,
-                                               optional DOMString? owner = null);
-};
-Navigator implements NavigatorDataStore;
-
 // http://www.w3.org/TR/vibration/#vibration-interface
 partial interface Navigator {
     // We don't support sequences in unions yet

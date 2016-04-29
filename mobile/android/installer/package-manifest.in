@@ -556,10 +556,6 @@
 @BINPATH@/components/marionettecomponent.js
 #endif
 
-@BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreImpl.js
-@BINPATH@/components/dom_datastore.xpt
-
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
