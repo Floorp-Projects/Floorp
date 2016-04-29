@@ -90,8 +90,7 @@ const TEST_DATA = [
   },
   {
     key: "#",
-    suggestions: [{label: "body #"},
-                  {label: "body #d1\\.d2"}]
+    suggestions: [{label: "body #d1\\.d2"}]
   }
 ];
 
