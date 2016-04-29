@@ -6,7 +6,7 @@
 // Test "Copy color" item of the context menu #1: Test _isColorPopup.
 
 const TEST_URI = `
-  <div style="color: #123ABC; margin: 0px; background: span[data-color];">
+  <div style="color:rgb(18, 58, 188);margin:0px;background:span[data-color];">
     Test "Copy color" context menu option
   </div>
 `;

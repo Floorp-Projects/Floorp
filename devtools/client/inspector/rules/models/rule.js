@@ -196,7 +196,11 @@ Rule.prototype = {
 
     this.applyProperties((modifications) => {
       modifications.createProperty(ind, name, value, priority);
+      // Now that the rule has been updated, the server might have given us data
+      // that changes the state of the property. Update it now.
+      prop.updateEditor();
     });
+
     return prop;
   },
 
@@ -241,6 +245,9 @@ Rule.prototype = {
 
     return modifications.apply().then(() => {
       let cssProps = {};
+      // Note that even though StyleRuleActors normally provide parsed
+      // declarations already, _applyPropertiesNoAuthored is only used when
+      // connected to older backend that do not provide them. So parse here.
       for (let cssProp of parseDeclarations(this.style.authoredText)) {
         cssProps[cssProp.name] = cssProp;
       }
@@ -433,7 +440,13 @@ Rule.prototype = {
   _getTextProperties: function () {
     let textProps = [];
     let store = this.elementStyle.store;
-    let props = parseDeclarations(this.style.authoredText, true);
+
+    // Starting with FF49, StyleRuleActors provide parsed declarations.
+    let props = this.style.declarations;
+    if (!props) {
+      props = parseDeclarations(this.style.authoredText, true);
+    }
+
     for (let prop of props) {
       let name = prop.name;
       // If the authored text has an invalid property, it will show up
