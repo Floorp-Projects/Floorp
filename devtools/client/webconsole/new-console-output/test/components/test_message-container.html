@@ -18,6 +18,7 @@ window.onload = Task.async(function* () {
   const { MessageContainer } = require("devtools/client/webconsole/new-console-output/components/message-container");
   const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
   const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
+  const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
   yield testFullRender();
   yield testGetMessageComponent();
@@ -39,7 +40,7 @@ window.onload = Task.async(function* () {
     };
     const rendered = renderComponent(MessageContainer, props);
 
-    ok(rendered.textContent.contains(testValue.expectedText),
+    ok(rendered.textContent.includes(testValue.expectedText),
       "MessageContainer pipes data to its children as expected");
   }
 
@@ -55,6 +56,10 @@ window.onload = Task.async(function* () {
       {
         commandObj: testCommands.get("new Date()"),
         expectedComponent: EvaluationResult
+      },
+      {
+        commandObj: testCommands.get("pageError"),
+        expectedComponent: PageError
       }
     ];
 

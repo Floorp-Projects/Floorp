@@ -73,4 +73,5 @@ const levels = {
 };
 
 // Combine into a single constants object
-module.exports = Object.assign({}, actionTypes, categories, severities, fragments, levels);
+module.exports = Object.assign({}, actionTypes, categories, severities,
+  fragments, levels);

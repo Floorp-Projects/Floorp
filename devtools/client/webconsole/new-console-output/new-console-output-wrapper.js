@@ -8,22 +8,19 @@ const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const {
-  MESSAGE_ADD,
-  MESSAGES_CLEAR
-} = require("devtools/client/webconsole/new-console-output/constants");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { store } = require("devtools/client/webconsole/new-console-output/store");
 
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
 
-function OutputWrapperThingy(parentNode, jsterm) {
+function NewConsoleOutputWrapper(parentNode, jsterm) {
   let childComponent = ConsoleOutput({ jsterm });
-  let provider = React.createElement(Provider, { store: store }, childComponent);
+  let provider = React.createElement(
+    Provider, { store: store }, childComponent);
   this.body = ReactDOM.render(provider, parentNode);
 }
 
-OutputWrapperThingy.prototype = {
+NewConsoleOutputWrapper.prototype = {
   dispatchMessageAdd: (message) => {
     store.dispatch(actions.messageAdd(message));
   },
@@ -33,4 +30,4 @@ OutputWrapperThingy.prototype = {
 };
 
 // Exports from this module
-module.exports = OutputWrapperThingy;
+module.exports = NewConsoleOutputWrapper;

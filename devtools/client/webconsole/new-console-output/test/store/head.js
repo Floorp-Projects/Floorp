@@ -1,12 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* exported storeFactory */
+
 "use strict";
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { utils: Cu } = Components;
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
-var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
 DevToolsUtils.dumpn.wantLogging = true;
