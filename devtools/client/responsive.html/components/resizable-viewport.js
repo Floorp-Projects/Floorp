@@ -75,10 +75,10 @@ module.exports = createClass({
     }
 
     let { lastClientX, lastClientY, ignoreX, ignoreY } = this.state;
-    // we are resizing a centered viewport, so dragging a mouse resizes
-    // twice as much - also on opposite side.
+    // the viewport is centered horizontally, so horizontal resize resizes
+    // by twice the distance the mouse was dragged - on left and right side.
     let deltaX = 2 * (clientX - lastClientX);
-    let deltaY = 2 * (clientY - lastClientY);
+    let deltaY = (clientY - lastClientY);
 
     if (ignoreX) {
       deltaX = 0;
