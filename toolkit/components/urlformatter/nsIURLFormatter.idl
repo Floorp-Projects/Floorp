@@ -42,4 +42,9 @@ interface nsIURLFormatter: nsISupports
    * @return The formatted URL returned by formatURL(), or "about:blank".
    */
   AString formatURLPref(in AString aPref);
+
+  /**
+   * Remove all of the sensitive query parameter strings from URLs in |aMsg|.
+   */
+  AString trimSensitiveURLs(in AString aMsg);
 };
