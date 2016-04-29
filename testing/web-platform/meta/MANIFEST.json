@@ -35376,6 +35376,18 @@
             "url": "/html/webappapis/scripting/processing-model-2/window-onerror-with-cross-frame-event-listeners-4.html"
           }
         ],
+        "secure-contexts/basic-popup-and-iframe-tests.html": [
+          {
+            "path": "secure-contexts/basic-popup-and-iframe-tests.html",
+            "url": "/secure-contexts/basic-popup-and-iframe-tests.html"
+          }
+        ],
+        "secure-contexts/basic-popup-and-iframe-tests.https.html": [
+          {
+            "path": "secure-contexts/basic-popup-and-iframe-tests.https.html",
+            "url": "/secure-contexts/basic-popup-and-iframe-tests.https.html"
+          }
+        ],
         "service-workers/service-worker/navigate-window.https.html": [
           {
             "path": "service-workers/service-worker/navigate-window.https.html",
