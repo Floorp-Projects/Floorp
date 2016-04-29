@@ -1586,7 +1586,6 @@ function Update(update) {
         case "buildID":
         case "channel":
         case "displayVersion":
-        case "licenseURL":
         case "name":
         case "platformVersion":
         case "previousAppVersion":
@@ -1720,9 +1719,6 @@ Update.prototype = {
     }
     if (this.detailsURL) {
       update.setAttribute("detailsURL", this.detailsURL);
-    }
-    if (this.licenseURL) {
-      update.setAttribute("licenseURL", this.licenseURL);
     }
     if (this.platformVersion) {
       update.setAttribute("platformVersion", this.platformVersion);
