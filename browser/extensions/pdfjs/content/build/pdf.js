@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.216';
-var pdfjsBuild = '3cbaa9a';
+var pdfjsVersion = '1.4.258';
+var pdfjsBuild = '990150c';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -2935,21 +2935,23 @@ var renderTextLayer = (function renderTextLayerClosure() {
       }
 
       var width = ctx.measureText(textDiv.textContent).width;
-      textLayerFrag.appendChild(textDiv);
-      var transform;
-      if (textDiv.dataset.canvasWidth !== undefined && width > 0) {
-        // Dataset values come of type string.
-        var textScale = textDiv.dataset.canvasWidth / width;
-        transform = 'scaleX(' + textScale + ')';
-      } else {
-        transform = '';
-      }
-      var rotation = textDiv.dataset.angle;
-      if (rotation) {
-        transform = 'rotate(' + rotation + 'deg) ' + transform;
-      }
-      if (transform) {
-        CustomStyle.setProp('transform' , textDiv, transform);
+      if (width > 0) {
+        textLayerFrag.appendChild(textDiv);
+        var transform;
+        if (textDiv.dataset.canvasWidth !== undefined) {
+          // Dataset values come of type string.
+          var textScale = textDiv.dataset.canvasWidth / width;
+          transform = 'scaleX(' + textScale + ')';
+        } else {
+          transform = '';
+        }
+        var rotation = textDiv.dataset.angle;
+        if (rotation) {
+          transform = 'rotate(' + rotation + 'deg) ' + transform;
+        }
+        if (transform) {
+          CustomStyle.setProp('transform' , textDiv, transform);
+        }
       }
     }
     capability.resolve();
@@ -7619,26 +7621,28 @@ var WorkerTransport = (function WorkerTransportClosure() {
           case 'Font':
             var exportedData = data[2];
 
+            var font;
             if ('error' in exportedData) {
-              var exportedError = exportedData.error;
-              warn('Error during font loading: ' + exportedError);
-              this.commonObjs.resolve(id, exportedError);
+              var error = exportedData.error;
+              warn('Error during font loading: ' + error);
+              this.commonObjs.resolve(id, error);
               break;
+            } else {
+              var fontRegistry = null;
+              if (getDefaultSetting('pdfBug') && globalScope.FontInspector &&
+                  globalScope['FontInspector'].enabled) {
+                fontRegistry = {
+                  registerFont: function (font, url) {
+                    globalScope['FontInspector'].fontAdded(font, url);
+                  }
+                };
+              }
+              font = new FontFaceObject(exportedData, {
+                isEvalSuported: getDefaultSetting('isEvalSupported'),
+                disableFontFace: getDefaultSetting('disableFontFace'),
+                fontRegistry: fontRegistry
+              });
             }
-            var fontRegistry = null;
-            if (getDefaultSetting('pdfBug') && globalScope.FontInspector &&
-                globalScope['FontInspector'].enabled) {
-              fontRegistry = {
-                registerFont: function (font, url) {
-                  globalScope['FontInspector'].fontAdded(font, url);
-                }
-              };
-            }
-            var font = new FontFaceObject(exportedData, {
-              isEvalSuported: getDefaultSetting('isEvalSupported'),
-              disableFontFace: getDefaultSetting('disableFontFace'),
-              fontRegistry: fontRegistry
-            });
 
             this.fontLoader.bind(
               [font],
@@ -8446,6 +8450,8 @@ exports._UnsupportedManager = _UnsupportedManager;
   exports.isWorker = isWorker;
   exports.PDFJS = globalScope.PDFJS;
 }));
+
+
   }).call(pdfjsLibs);
 
   exports.PDFJS = pdfjsLibs.pdfjsDisplayGlobal.PDFJS;
@@ -8476,4 +8482,5 @@ exports._UnsupportedManager = _UnsupportedManager;
     pdfjsLibs.pdfjsDisplayDOMUtils.getFilenameFromUrl;
   exports.addLinkAttributes = pdfjsLibs.pdfjsDisplayDOMUtils.addLinkAttributes;
 }));
+
 
