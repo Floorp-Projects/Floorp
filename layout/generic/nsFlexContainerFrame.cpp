@@ -1899,6 +1899,13 @@ FlexItem::CanMainSizeInfluenceCrossSize(
     return false;
   }
 
+  if (HasIntrinsicRatio()) {
+    // For flex items that have an intrinsic ratio (and maintain it, i.e. are
+    // not stretched, which we already checked above): changes to main-size
+    // *do* influence the cross size.
+    return true;
+  }
+
   if (aAxisTracker.IsCrossAxisHorizontal()) {
     // If the cross axis is horizontal, then changes to the item's main size
     // (height) can't influence its cross size (width), if the item is a block
@@ -3687,16 +3694,17 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   FlexItem& aItem)
 {
   if (aAxisTracker.IsCrossAxisHorizontal()) {
-    // XXXdholbert NOTE: For now, we should never hit this case, due to a
-    // !aAxisTracker.IsCrossAxisHorizontal() check that guards this
-    // call in the caller. BUT, when we add support for vertical writing-modes,
-    // (in bug 1079155 or a dependency), we'll relax that check, and we'll need
-    // to be able to measure the baseline & width (given our resolved height)
+    MOZ_ASSERT(aItem.HasIntrinsicRatio(),
+               "For now, caller's CanMainSizeInfluenceCrossSize check should "
+               "only allow us to get here for items with intrinsic ratio");
+    // XXXdholbert When we finish support for vertical writing-modes,
+    // (in bug 1079155 or a dependency), we'll relax the horizontal check in
+    // CanMainSizeInfluenceCrossSize, and this function will need to be able
+    // to measure the baseline & width (given our resolved height)
     // of vertical-writing-mode flex items here.
-    MOZ_ASSERT_UNREACHABLE("Caller should use tentative cross size instead "
-                           "of calling SizeItemInCrossAxis");
-    // (But if we do happen to get here, just trust the passed-in reflow state
-    // for our cross size [width].)
+    // For now, we only expect to get here for items with an intrinsic aspect
+    // ratio; and for those items, we can just read the size off of the reflow
+    // state, without performing reflow.
     aItem.SetCrossSize(aChildReflowState.ComputedWidth());
     return;
   }
@@ -3950,10 +3958,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         if (aAxisTracker.IsMainAxisHorizontal()) {
           childReflowState.SetComputedWidth(item->GetMainSize());
         } else {
-          // XXXdholbert NOTE: For now, we'll never hit this case, due to the
-          // !aAxisTracker.IsCrossAxisHorizontal() check above. But
-          // when we add support for vertical writing modes, we'll relax that
-          // check and be able to hit this code.
           childReflowState.SetComputedHeight(item->GetMainSize());
         }
         
