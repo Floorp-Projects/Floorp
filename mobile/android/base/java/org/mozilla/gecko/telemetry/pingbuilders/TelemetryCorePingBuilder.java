@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry.core;
+package org.mozilla.gecko.telemetry.pingbuilders;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,17 +16,13 @@ import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
-import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.telemetry.TelemetryConstants;
 import org.mozilla.gecko.telemetry.TelemetryPing;
-import org.mozilla.gecko.telemetry.TelemetryPingBuilder;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.StringUtils;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
