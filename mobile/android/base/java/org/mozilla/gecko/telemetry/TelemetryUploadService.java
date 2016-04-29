@@ -62,12 +62,23 @@ public class TelemetryUploadService extends IntentService {
         }
 
         final TelemetryPingStore store = intent.getParcelableExtra(EXTRA_STORE);
-        uploadPendingPingsFromStore(this, store);
+        final boolean wereAllUploadsSuccessful = uploadPendingPingsFromStore(this, store);
         store.maybePrunePings();
         Log.d(LOGTAG, "Service finished: upload and prune attempts completed");
+
+        if (!wereAllUploadsSuccessful) {
+            // If we had an upload failure, we should stop the IntentService and drop any
+            // pending Intents in the queue so we don't waste resources (e.g. battery)
+            // trying to upload when there's likely to be another connection failure.
+            Log.d(LOGTAG, "Clearing Intent queue due to connection failures");
+            stopSelf();
+        }
     }
 
-    private static void uploadPendingPingsFromStore(final Context context, final TelemetryPingStore store) {
+    /**
+     * @return true if all pings were uploaded successfully, false otherwise.
+     */
+    private static boolean uploadPendingPingsFromStore(final Context context, final TelemetryPingStore store) {
         final ArrayList<TelemetryPingFromStore> pingsToUpload = store.getAllPings();
         if (pingsToUpload.isEmpty()) {
             return true;
@@ -88,11 +99,13 @@ public class TelemetryUploadService extends IntentService {
             uploadPayload(url, ping.getPayload(), delegate);
         }
 
-        if (!delegate.hadConnectionError()) {
+        final boolean wereAllUploadsSuccessful = !delegate.hadConnectionError();
+        if (wereAllUploadsSuccessful) {
             // We don't log individual successful uploads to avoid log spam.
             Log.d(LOGTAG, "Telemetry upload success!");
         }
         store.onUploadAttemptComplete(successfulUploadIDs);
+        return wereAllUploadsSuccessful;
     }
 
     private static String getServerSchemeHostPort(final Context context) {
@@ -207,16 +220,10 @@ public class TelemetryUploadService extends IntentService {
      * We use mutation on the set ID and the successful upload array to avoid object allocation.
      */
     private static class PingResultDelegate extends ResultDelegate {
-        // Since an IntentService handles one Intent at a time and queues subsequent Intents,
-        // an upload attempt can block the next upload attempt. This is problematic in the case
-        // that we don't have a connection – e.g. if we block for 2 minutes on each upload attempt,
-        // then each Intent will keep the radio active for two minutes and our users will have a
-        // bad day. Therefore, keep these durations short - we will try to upload these pings later
-        // and will generally not lose data.
-        //
-        // We can prevent this issue with better upload scheduling (bug 1268730).
-        private static final int SOCKET_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(20);
-        private static final int CONNECTION_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(15);
+        // We persist pings and don't need to worry about losing data so we keep these
+        // durations short to save resources (e.g. battery).
+        private static final int SOCKET_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(30);
+        private static final int CONNECTION_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(30);
 
         /** The store ID of the ping currently being uploaded. Use {@link #getPingID()} to access it. */
         private int pingID = -1;
