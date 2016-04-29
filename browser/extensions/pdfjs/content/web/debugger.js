@@ -531,7 +531,7 @@ var PDFBug = (function PDFBugClosure() {
         });
       }
     },
-    init: function init(pdfjsLib, container) {
+    init: function init(pdfjsLib) {
       /*
        * Basic Layout:
        * PDFBug
@@ -552,6 +552,7 @@ var PDFBug = (function PDFBugClosure() {
       panels.setAttribute('class', 'panels');
       ui.appendChild(panels);
 
+      var container = document.getElementById('viewerContainer');
       container.appendChild(ui);
       container.style.right = panelWidth + 'px';
 
