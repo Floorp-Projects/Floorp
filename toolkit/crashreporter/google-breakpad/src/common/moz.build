@@ -55,6 +55,15 @@ if CONFIG['OS_TARGET'] == 'Android':
         'android/breakpad_getcontext.S',
     ]
 
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/gonk-include',
+        ]
+    else:
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
+
 Library('breakpad_common_s')
 
 # We allow warnings for third-party code that can be updated from upstream.
