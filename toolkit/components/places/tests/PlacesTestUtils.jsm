@@ -137,6 +137,43 @@ this.PlacesTestUtils = Object.freeze({
       });
       commit.finalize();
     });
-  }
+  },
 
+  /**
+   * Asynchronously checks if an address is found in the database.
+   * @param aURI
+   *        nsIURI or address to look for.
+   *
+   * @return {Promise}
+   * @resolves Returns true if the page is found.
+   * @rejects JavaScript exception.
+   */
+  isPageInDB: Task.async(function* (aURI) {
+    let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(
+      "SELECT id FROM moz_places WHERE url = :url",
+      { url });
+    return rows.length > 0;
+  }),
+
+  /**
+   * Asynchronously checks how many visits exist for a specified page.
+   * @param aURI
+   *        nsIURI or address to look for.
+   *
+   * @return {Promise}
+   * @resolves Returns the number of visits found.
+   * @rejects JavaScript exception.
+   */
+  visitsInDB: Task.async(function* (aURI) {
+    let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(
+      `SELECT count(*) FROM moz_historyvisits v
+       JOIN moz_places h ON h.id = v.place_id
+       WHERE url = :url`,
+      { url });
+    return rows[0].getResultByIndex(0);
+  })
 });
