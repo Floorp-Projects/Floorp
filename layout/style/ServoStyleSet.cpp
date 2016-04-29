@@ -8,6 +8,7 @@
 
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
+#include "nsIDocumentInlines.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 
@@ -202,7 +203,23 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
                                       ServoStyleSheet* aNewSheet,
                                       ServoStyleSheet* aReferenceSheet)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(aNewSheet);
+  MOZ_ASSERT(aReferenceSheet);
+  MOZ_ASSERT(aNewSheet->IsApplicable());
+
+  mSheets[aType].RemoveElement(aNewSheet);
+  size_t idx = mSheets[aType].IndexOf(aReferenceSheet);
+  if (idx == mSheets[aType].NoIndex) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mSheets[aType].InsertElementAt(idx, aNewSheet);
+
+  // Maintain a mirrored list of sheets on the servo side.
+  Servo_InsertStyleSheetBefore(aNewSheet->RawSheet(),
+                               aReferenceSheet->RawSheet(), mRawSet.get());
+
+  return NS_OK;
 }
 
 int32_t
@@ -223,15 +240,31 @@ ServoStyleSet::StyleSheetAt(SheetType aType,
 nsresult
 ServoStyleSet::RemoveDocStyleSheet(ServoStyleSheet* aSheet)
 {
-  MOZ_CRASH("stylo: not implemented");
+  return RemoveStyleSheet(SheetType::Doc, aSheet);
 }
 
 nsresult
 ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
-  // XXXbholley: Implement this.
-  NS_ERROR("stylo: no support for adding doc stylesheets to ServoStyleSet");
+  StyleSheetHandle::RefPtr strong(aSheet);
+
+  mSheets[SheetType::Doc].RemoveElement(aSheet);
+
+  size_t index =
+    aDocument->FindDocStyleSheetInsertionPoint(mSheets[SheetType::Doc], aSheet);
+  mSheets[SheetType::Doc].InsertElementAt(index, aSheet);
+
+  // Maintain a mirrored list of sheets on the servo side.
+  ServoStyleSheet* followingSheet =
+    mSheets[SheetType::Doc].SafeElementAt(index + 1);
+  if (followingSheet) {
+    Servo_InsertStyleSheetBefore(aSheet->RawSheet(), followingSheet->RawSheet(),
+                                 mRawSet.get());
+  } else {
+    Servo_AppendStyleSheet(aSheet->RawSheet(), mRawSet.get());
+  }
+
   return NS_OK;
 }
 
