@@ -2245,7 +2245,7 @@ var WalkerActor = protocol.ActorClass({
           sugs.ids.set(node.id, (sugs.ids.get(node.id)|0) + 1);
         }
         for (let [id, count] of sugs.ids) {
-          if (id.startsWith(completing)) {
+          if (id.startsWith(completing) && id !== "") {
             result.push(["#" + CSS.escape(id), count, selectorState]);
           }
         }
