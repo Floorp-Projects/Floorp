@@ -112,9 +112,6 @@ class ObjectToIdMap
     using Table = js::GCHashMap<JS::Heap<JSObject*>, ObjectId, Hasher, js::SystemAllocPolicy>;
 
   public:
-    explicit ObjectToIdMap(JSRuntime* rt);
-    ~ObjectToIdMap();
-
     bool init();
     void trace(JSTracer* trc);
     void sweep();
@@ -125,7 +122,6 @@ class ObjectToIdMap
     void clear();
 
   private:
-    JSRuntime* rt_;
     Table table_;
 };
 
