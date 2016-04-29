@@ -52,7 +52,6 @@ public:
   void BeginUpdate();
   nsresult EndUpdate();
 
-  // resolve a style context
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext);
@@ -118,6 +117,11 @@ public:
                                        EventStates aStateMask);
 
 private:
+  already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
+                                              nsStyleContext* aParentContext,
+                                              nsIAtom* aPseudoTag,
+                                              CSSPseudoElementType aPseudoType);
+
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
