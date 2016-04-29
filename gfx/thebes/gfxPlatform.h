@@ -694,12 +694,6 @@ protected:
     void BumpDeviceCounter();
 
     /**
-     * Called when new device preferences are available.
-     */
-    virtual void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData)
-    {}
-
-    /**
      * returns the first backend named in the pref gfx.canvas.azure.backends
      * which is a component of aBackendBitmask, a bitmask of backend types
      */
@@ -726,6 +720,8 @@ protected:
 
     static already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
+
+    static mozilla::gfx::DeviceInitData& GetParentDevicePrefs();
 
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;
