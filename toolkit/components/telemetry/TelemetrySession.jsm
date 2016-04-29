@@ -320,6 +320,30 @@ var TelemetryScheduler = {
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
   },
 
+  /**
+   * Stops the scheduler.
+   */
+  shutdown: function() {
+    if (this._shuttingDown) {
+      if (this._log) {
+        this._log.error("shutdown - Already shut down");
+      } else {
+        Cu.reportError("TelemetryScheduler.shutdown - Already shut down");
+      }
+      return;
+    }
+
+    this._log.trace("shutdown");
+    if (this._schedulerTimer) {
+      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
+      this._schedulerTimer = null;
+    }
+
+    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+
+    this._shuttingDown = true;
+  },
+
   _clearTimeout: function() {
     if (this._schedulerTimer) {
       Policy.clearSchedulerTickTimeout(this._schedulerTimer);
@@ -517,30 +541,6 @@ var TelemetryScheduler = {
 
     this._rescheduleTimeout();
   },
-
-  /**
-   * Stops the scheduler.
-   */
-  shutdown: function() {
-    if (this._shuttingDown) {
-      if (this._log) {
-        this._log.error("shutdown - Already shut down");
-      } else {
-        Cu.reportError("TelemetryScheduler.shutdown - Already shut down");
-      }
-      return;
-    }
-
-    this._log.trace("shutdown");
-    if (this._schedulerTimer) {
-      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
-      this._schedulerTimer = null;
-    }
-
-    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-
-    this._shuttingDown = true;
-  }
 };
 
 this.EXPORTED_SYMBOLS = ["TelemetrySession"];
