@@ -8,11 +8,53 @@
 
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "nsStyleSheetService.h"
 
 inline mozilla::dom::HTMLBodyElement*
 nsIDocument::GetBodyElement()
 {
   return static_cast<mozilla::dom::HTMLBodyElement*>(GetHtmlChildElement(nsGkAtoms::body));
+}
+
+template<typename T>
+size_t
+nsIDocument::FindDocStyleSheetInsertionPoint(
+    const nsTArray<RefPtr<T>>& aDocSheets,
+    T* aSheet)
+{
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+
+  // lowest index first
+  int32_t newDocIndex = GetIndexOfStyleSheet(aSheet);
+
+  int32_t count = aDocSheets.Length();
+  int32_t index;
+  for (index = 0; index < count; index++) {
+    T* sheet = aDocSheets[index];
+    int32_t sheetDocIndex = GetIndexOfStyleSheet(sheet);
+    if (sheetDocIndex > newDocIndex)
+      break;
+
+    mozilla::StyleSheetHandle sheetHandle = sheet;
+
+    // If the sheet is not owned by the document it can be an author
+    // sheet registered at nsStyleSheetService or an additional author
+    // sheet on the document, which means the new
+    // doc sheet should end up before it.
+    if (sheetDocIndex < 0) {
+      if (sheetService) {
+        auto& authorSheets = *sheetService->AuthorStyleSheets();
+        if (authorSheets.IndexOf(sheetHandle) != authorSheets.NoIndex) {
+          break;
+        }
+      }
+      if (sheetHandle == GetFirstAdditionalAuthorSheet()) {
+        break;
+      }
+    }
+  }
+
+  return size_t(index);
 }
 
 #endif // nsIDocumentInlines_h
