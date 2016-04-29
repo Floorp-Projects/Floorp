@@ -8,6 +8,39 @@
 
 BEGIN_WORKERS_NAMESPACE
 
+namespace {
+
+class ContinueActivateRunnable final : public LifeCycleEventCallback
+{
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
+  bool mSuccess;
+
+public:
+  explicit ContinueActivateRunnable(const nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
+    : mRegistration(aRegistration)
+    , mSuccess(false)
+  {
+    AssertIsOnMainThread();
+  }
+
+  void
+  SetResult(bool aResult) override
+  {
+    mSuccess = aResult;
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    AssertIsOnMainThread();
+    mRegistration->FinishActivate(mSuccess);
+    mRegistration = nullptr;
+    return NS_OK;
+  }
+};
+
+} // anonymous namespace
+
 void
 ServiceWorkerRegistrationInfo::Clear()
 {
