@@ -70,3 +70,19 @@ function getDialogDoc() {
 
   return null;
 }
+
+function checkPromptState(promptState, expectedState) {
+    // is(promptState.title,       expectedState.title,       "Checking expected title");
+    is(promptState.msg,         expectedState.msg,         "Checking expected message");
+    is(promptState.textValue, expectedState.textValue, "Checking textbox value");
+    is(promptState.passValue, expectedState.passValue, "Checking passbox value");
+}
+
+function getPromptState(ui) {
+  let state = {};
+  state.msg         = ui.infoBody.textContent;
+  state.title       = ui.infoTitle.textContent;
+  state.textValue   = ui.loginTextbox.getAttribute("value");
+  state.passValue   = ui.password1Textbox.getAttribute("value");
+  return state;
+}
