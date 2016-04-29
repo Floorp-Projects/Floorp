@@ -77,8 +77,7 @@ function handleRequest(aRequest, aResponse) {
 
   if (params.uiURL) {
     let remoteType = "";
-    if (!params.remoteNoTypeAttr &&
-        (params.uiURL == "BILLBOARD" || params.uiURL == "LICENSE")) {
+    if (!params.remoteNoTypeAttr && params.uiURL == "BILLBOARD") {
       remoteType = " " + params.uiURL.toLowerCase() + "=\"1\"";
     }
     aResponse.write("<html><head><meta http-equiv=\"content-type\" content=" +
@@ -138,13 +137,6 @@ function handleRequest(aRequest, aResponse) {
   if (params.billboard404) {
     billboardURL = URL_HOST + "/missing.html";
   }
-  let licenseURL = params.showLicense ? URL_HTTP_UPDATE_SJS + "?uiURL=LICENSE" : null;
-  if (licenseURL && params.remoteNoTypeAttr) {
-    licenseURL += "&amp;remoteNoTypeAttr=1";
-  }
-  if (params.license404) {
-    licenseURL = URL_HOST + "/missing.html";
-  }
   let showPrompt = params.showPrompt ? "true" : null;
   let showNever = params.showNever ? "true" : null;
   let promptWaitTime = params.promptWaitTime ? params.promptWaitTime : null;
@@ -172,7 +164,7 @@ function handleRequest(aRequest, aResponse) {
   let updates = getRemoteUpdateString(patches, type, "App Update Test",
                                       displayVersion, appVersion,
                                       platformVersion, buildID, detailsURL,
-                                      billboardURL, licenseURL, showPrompt,
+                                      billboardURL, showPrompt,
                                       showNever, promptWaitTime, showSurvey,
                                       version, extensionVersion);
 

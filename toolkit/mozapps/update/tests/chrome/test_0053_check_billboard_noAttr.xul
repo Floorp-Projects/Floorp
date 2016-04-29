@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
-<window title="Update Wizard pages: update check, billoard, basic, license, and manual update (bug 548061)"
+<window title="Update Wizard pages: update check, billoard, basic, download, and finished (bug 548061)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
 <script type="application/javascript"
@@ -29,19 +29,17 @@ const TESTS = [ {
   pageid: PAGEID_FOUND_BASIC,
   buttonClick: "next"
 }, {
-  pageid: PAGEID_LICENSE,
-  extraDelayedCheckFunction: checkRemoteContentState,
-  expectedRemoteContentState: "loading"
+  pageid: PAGEID_DOWNLOADING
 }, {
-  pageid: PAGEID_MANUAL_UPDATE,
-  buttonClick: "finish"
+  pageid: PAGEID_FINISHED,
+  buttonClick: "extra1"
 } ];
 
 function runTest() {
   debugDump("entering");
 
-  let url = URL_HTTP_UPDATE_XML + "?showBillboard=1&showLicense=1" +
-            "&remoteNoTypeAttr=1&showDetails=1" + getVersionParams();
+  let url = URL_HTTP_UPDATE_XML + "?showBillboard=1&remoteNoTypeAttr=1" +
+            "&showDetails=1" + getVersionParams();
   setUpdateURLOverride(url);
 
   gUP.checkForUpdates();
