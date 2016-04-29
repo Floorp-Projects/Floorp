@@ -25,6 +25,9 @@ namespace gfx {
 class gfxConfig
 {
 public:
+  // Return the full state history of a feature.
+  static FeatureState& GetFeature(Feature aFeature);
+
   // Query whether a parameter is enabled, taking into account any user or
   // runtime overrides. The algorithm works as follow:
   //
@@ -57,6 +60,10 @@ public:
                          bool aEnable,
                          FeatureStatus aDisableStatus,
                          const char* aDisableMessage);
+  static void DisableByDefault(Feature aFeature,
+                               FeatureStatus aDisableStatus,
+                               const char* aDisableMessage);
+  static void EnableByDefault(Feature aFeature);
 
   // Set a environment status that overrides both the default and user
   // statuses; this should be used to disable features based on system
@@ -142,8 +149,6 @@ private:
 
   bool UseFallbackImpl(Fallback aFallback) const;
   void EnableFallbackImpl(Fallback aFallback);
-
-  static void AssertStatusInitialized(Feature aFeature);
 
 private:
   static const size_t kNumFeatures = size_t(Feature::NumValues);
