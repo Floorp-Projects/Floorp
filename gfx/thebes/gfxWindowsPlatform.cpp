@@ -2030,7 +2030,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation()
   RefPtr<ID3D11Device> device;
   if (!AttemptD3D11DeviceCreationHelper(adapter, device, hr)) {
     gfxCriticalError() << "Crash during D3D11 device creation";
-    return FeatureStatus::Crashed;
+    return FeatureStatus::CrashedInHandler;
   }
 
   if (FAILED(hr) || !device) {
@@ -2091,7 +2091,7 @@ gfxWindowsPlatform::AttemptWARPDeviceCreation()
   RefPtr<ID3D11Device> device;
   if (!AttemptWARPDeviceCreationHelper(reporterWARP, device, hr)) {
     gfxCriticalError() << "Exception occurred initializing WARP D3D11 device!";
-    return FeatureStatus::Crashed;
+    return FeatureStatus::CrashedInHandler;
   }
 
   if (FAILED(hr) || !device) {
@@ -2185,7 +2185,7 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
   if (!AttemptD3D11ContentDeviceCreationHelper(adapter, hr)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
     RecordContentDeviceFailure(TelemetryDeviceCode::Content);
-    return FeatureStatus::Crashed;
+    return FeatureStatus::CrashedInHandler;
   }
 
   if (FAILED(hr) || !mD3D11ContentDevice) {
@@ -2244,7 +2244,7 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
   if (!AttemptD3D11ImageBridgeDeviceCreationHelper(GetDXGIAdapter(), hr)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 image bridge device";
     RecordContentDeviceFailure(TelemetryDeviceCode::Image);
-    return FeatureStatus::Crashed;
+    return FeatureStatus::CrashedInHandler;
   }
 
   if (FAILED(hr) || !mD3D11ImageBridgeDevice) {
@@ -2380,7 +2380,7 @@ gfxWindowsPlatform::InitializeD3D11()
     // First try to create a hardware accelerated device.
     if (canUseHardware) {
       mD3D11Status = AttemptD3D11DeviceCreation();
-      if (mD3D11Status == FeatureStatus::Crashed) {
+      if (mD3D11Status == FeatureStatus::CrashedInHandler) {
         return;
       }
     }
@@ -2412,13 +2412,13 @@ gfxWindowsPlatform::InitializeD3D11()
   }
 
   if (CanUseD3D11ImageBridge()) {
-    if (AttemptD3D11ImageBridgeDeviceCreation() == FeatureStatus::Crashed) {
+    if (AttemptD3D11ImageBridgeDeviceCreation() == FeatureStatus::CrashedInHandler) {
       DisableD3D11AfterCrash();
       return;
     }
   }
 
-  if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::Crashed) {
+  if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::CrashedInHandler) {
     DisableD3D11AfterCrash();
     return;
   }
@@ -2432,7 +2432,7 @@ gfxWindowsPlatform::InitializeD3D11()
 void
 gfxWindowsPlatform::DisableD3D11AfterCrash()
 {
-  mD3D11Status = FeatureStatus::Crashed;
+  mD3D11Status = FeatureStatus::CrashedInHandler;
   ResetD3D11Devices();
 }
 
