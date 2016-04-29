@@ -35300,6 +35300,12 @@
             "url": "/service-workers/service-worker/navigate-window.https.html"
           }
         ],
+        "service-workers/service-worker/update-recovery.https.html": [
+          {
+            "path": "service-workers/service-worker/update-recovery.https.html",
+            "url": "/service-workers/service-worker/update-recovery.https.html"
+          }
+        ],
         "web-animations/timing-model/active-time.html": [
           {
             "path": "web-animations/timing-model/active-time.html",
