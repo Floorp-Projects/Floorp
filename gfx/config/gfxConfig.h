@@ -13,16 +13,26 @@
 namespace mozilla {
 namespace gfx {
 
+// Manages the history and state of a graphics feature. The flow of a feature
+// is:
+//   - A default value, set by all.js, gfxPrefs, or gfxPlatform.
+//   - A user value, set by an external value or user pref.
+//   - An environment value, determined by system/hardware factors or nsIGfxInfo.
+//   - A runtime value, determined by any failures encountered after enabling
+//     the feature.
+//
+// Each state change for a feature is recorded in this class.
 class gfxConfig
 {
 public:
   // Query whether a parameter is enabled, taking into account any user or
   // runtime overrides. The algorithm works as follow:
   //
-  //  1. If a runtime decision disabled the parameter, return false.
-  //  2. If a user decision enabled or disabled the parameter, return true or
-  //     false accordingly.
-  //  3. Return whether or not the base value is enabled or disabled.
+  //  1. If a runtime decision disabled the feature, return false.
+  //  2. If the user force-enabled the feature, return true.
+  //  3. If the environment disabled the feature, return false.
+  //  4. If the user specified a decision, return it.
+  //  5. Return the base setting for the feature.
   static bool IsEnabled(Feature aFeature);
 
   // Query the history of a parameter. ForcedOnByUser returns whether or not
@@ -32,7 +42,14 @@ public:
   static bool IsForcedOnByUser(Feature aFeature);
   static bool IsDisabledByDefault(Feature aFeature);
 
-  // Query the raw computed status value of a parameter.
+  // Query the raw computed status value of a parameter. This is computed
+  // similar to IsEnabled:
+  //
+  //  1. If a runtime failure was set, return it.
+  //  2. If the user force-enabled the feature, return ForceEnabled.
+  //  3. If an environment status was set, return it.
+  //  4. If a user status was set, return it.
+  //  5. Return the default status.
   static FeatureStatus GetValue(Feature aFeature);
 
   // Initialize the base value of a parameter. The return value is aEnable.
@@ -41,22 +58,55 @@ public:
                          FeatureStatus aDisableStatus,
                          const char* aDisableMessage);
 
-  // Disable a parameter based on a runtime decision.
+  // Set a environment status that overrides both the default and user
+  // statuses; this should be used to disable features based on system
+  // or hardware problems that can be determined up-front. The only
+  // status that can override this decision is the user force-enabling
+  // the feature.
   static void Disable(Feature aFeature,
                       FeatureStatus aStatus,
                       const char* aMessage);
 
-  // Convenience helper for Disable().
-  static bool UpdateIfFailed(Feature aFeature,
+  // Disable a parameter based on a runtime decision. This permanently
+  // disables the feature, since runtime decisions override all other
+  // decisions.
+  static void SetFailed(Feature aFeature,
+                        FeatureStatus aStatus,
+                        const char* aMessage);
+
+  // Force a feature to be disabled permanently. This is the same as
+  // SetFailed(), but the name may be clearer depending on the context.
+  static void ForceDisable(Feature aFeature,
+                           FeatureStatus aStatus,
+                           const char* aMessage)
+  {
+    SetFailed(aFeature, aStatus, aMessage);
+  }
+
+  // Convenience helpers for SetFailed().
+  static bool MaybeSetFailed(Feature aFeature,
                              bool aEnable,
                              FeatureStatus aDisableStatus,
                              const char* aDisableMessage)
   {
     if (!aEnable) {
-      Disable(aFeature, aDisableStatus, aDisableMessage);
+      SetFailed(aFeature, aDisableStatus, aDisableMessage);
       return false;
     }
     return true;
+  }
+
+  // Convenience helper for SetFailed().
+  static bool MaybeSetFailed(Feature aFeature,
+                             FeatureStatus aStatus,
+                             const char* aDisableMessage)
+  {
+    return MaybeSetFailed(
+      aFeature,
+      (aStatus != FeatureStatus::Available &&
+       aStatus != FeatureStatus::ForceEnabled),
+      aStatus,
+      aDisableMessage);
   }
 
   // Same as SetDefault, except if the feature already has a default value

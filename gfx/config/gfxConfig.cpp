@@ -80,7 +80,20 @@ gfxConfig::InitOrUpdate(Feature aFeature,
   if (!state.IsInitialized()) {
     return SetDefault(aFeature, aEnable, aDisableStatus, aDisableMessage);
   }
-  return UpdateIfFailed(aFeature, aEnable, aDisableStatus, aDisableMessage);
+  return MaybeSetFailed(aFeature, aEnable, aDisableStatus, aDisableMessage);
+}
+
+/* static */ void
+gfxConfig::SetFailed(Feature aFeature, FeatureStatus aStatus, const char* aMessage)
+{
+  AssertStatusInitialized(aFeature);
+
+  // We should never bother setting a runtime status to "enabled," since it could
+  // override an explicit user decision to disable it.
+  MOZ_ASSERT(IsFeatureStatusFailure(aStatus));
+
+  FeatureState& state = sConfig.GetState(aFeature);
+  state.SetRuntime(aStatus, aMessage);
 }
 
 /* static */ void
@@ -88,12 +101,12 @@ gfxConfig::Disable(Feature aFeature, FeatureStatus aStatus, const char* aMessage
 {
   AssertStatusInitialized(aFeature);
 
-  // We should never bother setting a runtime status to "enabled," since it would
-  // override an explicit user decision to disable it.
+  // We should never bother setting an environment status to "enabled," since
+  // it could override an explicit user decision to disable it.
   MOZ_ASSERT(IsFeatureStatusFailure(aStatus));
 
   FeatureState& state = sConfig.GetState(aFeature);
-  state.SetRuntime(aStatus, aMessage);
+  state.SetEnvironment(aStatus, aMessage);
 }
 
 /* static */ void

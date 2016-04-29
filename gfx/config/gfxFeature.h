@@ -33,6 +33,7 @@ class FeatureState
   void EnableByDefault();
   void DisableByDefault(FeatureStatus aStatus, const char* aMessage);
   void SetUser(FeatureStatus aStatus, const char* aMessage);
+  void SetEnvironment(FeatureStatus aStatus, const char* aMessage);
   void SetRuntime(FeatureStatus aStatus, const char* aMessage);
   bool IsForcedOnByUser() const;
   bool DisabledByDefault() const;
@@ -52,14 +53,18 @@ class FeatureState
     void Set(FeatureStatus aStatus, const char* aMessage = nullptr);
   };
 
-  // The default state is the state we decide on startup, based on default
-  // the system, environment, and default preferences.
+  // The default state is the state we decide on startup, based on the operating
+  // system or a base preference.
   //
   // The user state factors in any changes to preferences that the user made.
+  //
+  // The environment state factors in any additional decisions made, such as
+  // availability or blacklisting.
   //
   // The runtime state factors in any problems discovered at runtime.
   Instance mDefault;
   Instance mUser;
+  Instance mEnvironment;
   Instance mRuntime;
 };
 
