@@ -1091,16 +1091,11 @@ nsLookAndFeel::Init()
 #else
     GdkRGBA color;
     GtkStyleContext *style;
-    GtkSettings *settings;
 
     // Gtk manages a screen's CSS in the settings object so we
     // ask Gtk to create it explicitly. Otherwise we may end up
     // with wrong color theme, see Bug 972382
-    settings = gtk_settings_get_for_screen(gdk_screen_get_default());
-
-    // Disable dark theme because it interracts poorly with wdget styling in
-    // web content.
-    g_object_set(settings, "gtk-application-prefer-dark-theme", FALSE, nullptr);
+    (void)gtk_settings_get_for_screen(gdk_screen_get_default());
 
     GtkWidgetPath *path = gtk_widget_path_new();
     gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
