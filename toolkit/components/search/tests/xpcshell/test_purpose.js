@@ -43,12 +43,13 @@ add_task(function* test_purpose() {
 
   // Tests for a param that varies with a purpose but has a default value.
   base = "http://www.google.com/search?q=foo";
-  check_submission("&channel=none", "foo", "application/x-moz-default-purpose");
-  check_submission("&channel=none", "foo", "application/x-moz-default-purpose", null);
-  check_submission("&channel=none", "foo", "application/x-moz-default-purpose", "");
+  check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose");
+  check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", null);
+  check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "");
   check_submission("&channel=rcs",  "foo", "application/x-moz-default-purpose", "contextmenu");
   check_submission("&channel=fflb", "foo", "application/x-moz-default-purpose", "keyword");
-  check_submission("",              "foo", "application/x-moz-default-purpose", "invalid");
+  check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "searchbar");
+  check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "invalid");
 
   // Tests for a purpose on the search form (ie. empty query).
   engine = Services.search.getEngineByName("engine-rel-searchform-purpose");
