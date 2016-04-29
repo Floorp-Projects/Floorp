@@ -9,8 +9,7 @@
 
 const EXPECTED_PROPERTIES = [
   "background-color",
-  "background-position-x",
-  "background-position-y",
+  "background-position",
   "background-size",
   "border-bottom-left-radius",
   "border-bottom-right-radius",

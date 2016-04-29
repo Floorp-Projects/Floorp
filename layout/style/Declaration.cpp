@@ -201,41 +201,6 @@ Declaration::GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const
   GetValue(aProperty, aValue, nsCSSValue::eAuthorSpecified);
 }
 
-static void
-AppendSingleImageLayerPositionValue(const nsCSSValue& aPositionX,
-                                    const nsCSSValue& aPositionY,
-                                    const nsCSSProperty aTable[],
-                                    nsAString& aValue,
-                                    nsCSSValue::Serialization aSerialization)
-{
-  // We need to make sure that we don't serialize to an invalid 3-value form.
-  // The 3-value form is only valid if both edges are present.
-  const nsCSSValue &xEdge = aPositionX.GetArrayValue()->Item(0);
-  const nsCSSValue &xOffset = aPositionX.GetArrayValue()->Item(1);
-  const nsCSSValue &yEdge = aPositionY.GetArrayValue()->Item(0);
-  const nsCSSValue &yOffset = aPositionY.GetArrayValue()->Item(1);
-  bool xHasEdge = (eCSSUnit_Enumerated == xEdge.GetUnit());
-  bool xHasBoth = xHasEdge && (eCSSUnit_Null != xOffset.GetUnit());
-  bool yHasEdge = (eCSSUnit_Enumerated == yEdge.GetUnit());
-  bool yHasBoth = yHasEdge && (eCSSUnit_Null != yOffset.GetUnit());
-
-  if (yHasBoth && !xHasEdge) {
-    // Output 4-value form by adding the x edge.
-    aValue.AppendLiteral("left ");
-  }
-  aPositionX.AppendToString(aTable[nsStyleImageLayers::positionX],
-                            aValue, aSerialization);
-
-  aValue.Append(char16_t(' '));
-
-  if (xHasBoth && !yHasEdge) {
-    // Output 4-value form by adding the y edge.
-    aValue.AppendLiteral("top ");
-  }
-  aPositionY.AppendToString(aTable[nsStyleImageLayers::positionY],
-                            aValue, aSerialization);
-}
-
 void
 Declaration::GetImageLayerValue(
                    nsCSSCompressedDataBlock *data,
@@ -256,10 +221,8 @@ Declaration::GetImageLayerValue(
     data->ValueFor(aTable[nsStyleImageLayers::image])->GetListValue();
   const nsCSSValuePairList *repeat =
     data->ValueFor(aTable[nsStyleImageLayers::repeat])->GetPairListValue();
-  const nsCSSValueList *positionX =
-    data->ValueFor(aTable[nsStyleImageLayers::positionX])->GetListValue();
-  const nsCSSValueList *positionY =
-    data->ValueFor(aTable[nsStyleImageLayers::positionY])->GetListValue();
+  const nsCSSValueList *position =
+    data->ValueFor(aTable[nsStyleImageLayers::position])->GetListValue();
   const nsCSSValueList *clip =
     data->ValueFor(aTable[nsStyleImageLayers::clip])->GetListValue();
   const nsCSSValueList *origin =
@@ -311,8 +274,8 @@ Declaration::GetImageLayerValue(
     }
 
     aValue.Append(char16_t(' '));
-    AppendSingleImageLayerPositionValue(positionX->mValue, positionY->mValue,
-                                        aTable, aValue, aSerialization);
+    position->mValue.AppendToString(aTable[nsStyleImageLayers::position],
+                                    aValue, aSerialization);
 
     if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
         size->mYValue.GetUnit() != eCSSUnit_Auto) {
@@ -374,8 +337,7 @@ Declaration::GetImageLayerValue(
 
     image = image->mNext;
     repeat = repeat->mNext;
-    positionX = positionX->mNext;
-    positionY = positionY->mNext;
+    position = position->mNext;
     clip = clip->mNext;
     origin = origin->mNext;
     size = size->mNext;
@@ -386,8 +348,7 @@ Declaration::GetImageLayerValue(
     if (!image) {
       // This layer is an background layer
       if (aTable == nsStyleImageLayers::kBackgroundLayerTable) {
-        if (repeat || positionX || positionY || clip || origin || size ||
-            attachment) {
+        if (repeat || position || clip || origin || size || attachment) {
           // Uneven length lists, so can't be serialized as shorthand.
           aValue.Truncate();
           return;
@@ -399,8 +360,7 @@ Declaration::GetImageLayerValue(
 #else
         MOZ_ASSERT_UNREACHABLE("Should never get here when mask-as-shorthand is disable");
 #endif
-        if (repeat || positionX || positionY || clip || origin || size ||
-            composite || mode) {
+        if (repeat || position || clip || origin || size || composite || mode) {
           // Uneven length lists, so can't be serialized as shorthand.
           aValue.Truncate();
           return;
@@ -411,8 +371,7 @@ Declaration::GetImageLayerValue(
 
     // This layer is an background layer
     if (aTable == nsStyleImageLayers::kBackgroundLayerTable) {
-      if (!repeat || !positionX || !positionY || !clip || !origin || !size ||
-          !attachment) {
+      if (!repeat || !position || !clip || !origin || !size || !attachment) {
         // Uneven length lists, so can't be serialized as shorthand.
         aValue.Truncate();
         return;
@@ -424,45 +383,12 @@ Declaration::GetImageLayerValue(
 #else
       MOZ_ASSERT_UNREACHABLE("Should never get here when mask-as-shorthand is disable");
 #endif
-      if (!repeat || !positionX || !positionY || !clip || !origin || !size ||
+      if (!repeat || !position || !clip || !origin || !size ||
           !composite || !mode) {
         // Uneven length lists, so can't be serialized as shorthand.
         aValue.Truncate();
         return;
       }
-    }
-    aValue.Append(char16_t(','));
-    aValue.Append(char16_t(' '));
-  }
-}
-
-void
-Declaration::GetImageLayerPositionValue(
-                   nsCSSCompressedDataBlock *data,
-                   nsAString& aValue,
-                   nsCSSValue::Serialization aSerialization,
-                   const nsCSSProperty aTable[]) const
-{
-  // We know from above that all subproperties were specified.
-  // However, we still can't represent that in the shorthand unless
-  // they're all lists of the same length.  So if they're different
-  // lengths, we need to bail out.
-  const nsCSSValueList *positionX =
-    data->ValueFor(aTable[nsStyleImageLayers::positionX])->GetListValue();
-  const nsCSSValueList *positionY =
-    data->ValueFor(aTable[nsStyleImageLayers::positionY])->GetListValue();
-  for (;;) {
-    AppendSingleImageLayerPositionValue(positionX->mValue, positionY->mValue,
-                                        aTable, aValue, aSerialization);
-    positionX = positionX->mNext;
-    positionY = positionY->mNext;
-
-    if (!positionX || !positionY) {
-      if (positionX || positionY) {
-        // Uneven length lists, so can't be serialized as shorthand.
-        aValue.Truncate();
-      }
-      return;
     }
     aValue.Append(char16_t(','));
     aValue.Append(char16_t(' '));
@@ -743,20 +669,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                          nsStyleImageLayers::kBackgroundLayerTable);
       break;
     }
-    case eCSSProperty_background_position: {
-      GetImageLayerPositionValue(data, aValue, aSerialization,
-                                 nsStyleImageLayers::kBackgroundLayerTable);
-      break;
-    }
 #ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
     case eCSSProperty_mask: {
       GetImageLayerValue(data, aValue, aSerialization,
                          nsStyleImageLayers::kMaskLayerTable);
-      break;
-    }
-    case eCSSProperty_mask_position: {
-      GetImageLayerPositionValue(data, aValue, aSerialization,
-                                 nsStyleImageLayers::kMaskLayerTable);
       break;
     }
 #endif

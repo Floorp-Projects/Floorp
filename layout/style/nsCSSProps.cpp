@@ -2625,17 +2625,10 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
   eCSSProperty_background_image,
   eCSSProperty_background_repeat,
   eCSSProperty_background_attachment,
+  eCSSProperty_background_position,
   eCSSProperty_background_clip,
   eCSSProperty_background_origin,
-  eCSSProperty_background_position_x,
-  eCSSProperty_background_position_y,
   eCSSProperty_background_size,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gBackgroundPositionSubpropTable[] = {
-  eCSSProperty_background_position_x,
-  eCSSProperty_background_position_y,
   eCSSProperty_UNKNOWN
 };
 
@@ -2972,18 +2965,12 @@ static const nsCSSProperty gScrollSnapTypeSubpropTable[] = {
 static const nsCSSProperty gMaskSubpropTable[] = {
   eCSSProperty_mask_image,
   eCSSProperty_mask_repeat,
-  eCSSProperty_mask_position_x,
-  eCSSProperty_mask_position_y,
+  eCSSProperty_mask_position,
   eCSSProperty_mask_clip,
   eCSSProperty_mask_origin,
   eCSSProperty_mask_size,
   eCSSProperty_mask_composite,
   eCSSProperty_mask_mode,
-  eCSSProperty_UNKNOWN
-};
-static const nsCSSProperty gMaskPositionSubpropTable[] = {
-  eCSSProperty_mask_position_x,
-  eCSSProperty_mask_position_y,
   eCSSProperty_UNKNOWN
 };
 #endif
