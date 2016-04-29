@@ -176,3 +176,13 @@ function checkPromptState(promptState, expectedState) {
         is(promptState.focused, expectedState.focused, "Checking focused element");
     }
 }
+
+function onloadPromiseFor(id) {
+  var iframe = document.getElementById(id);
+  return new Promise(resolve => {
+    iframe.addEventListener("load", function onload(e) {
+      iframe.removeEventListener("load", onload);
+      resolve(true);
+    });
+  });
+}
