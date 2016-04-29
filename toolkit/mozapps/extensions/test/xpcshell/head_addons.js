@@ -1872,8 +1872,7 @@ Services.prefs.setBoolPref("extensions.showMismatchUI", false);
 Services.prefs.setCharPref("extensions.update.url", "http://127.0.0.1/updateURL");
 Services.prefs.setCharPref("extensions.update.background.url", "http://127.0.0.1/updateBackgroundURL");
 Services.prefs.setCharPref("extensions.blocklist.url", "http://127.0.0.1/blocklistURL");
-Services.prefs.setCharPref("services.kinto.base",
-                           "http://localhost/dummy-kinto/v1");
+Services.prefs.setCharPref("services.settings.server", "http://localhost/dummy-kinto/v1");
 
 // By default ignore bundled add-ons
 Services.prefs.setBoolPref("extensions.installDistroAddons", false);
