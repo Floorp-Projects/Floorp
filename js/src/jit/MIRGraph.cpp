@@ -132,8 +132,8 @@ MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
 size_t
 MIRGenerator::foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const
 {
-    // This determines whether it's ok to fold up to WasmImmediateSize
-    // offsets, instead of just WasmCheckedImmediateSize.
+    // This determines whether it's ok to fold up to WasmImmediateRange
+    // offsets, instead of just WasmCheckedImmediateRange.
 
     static_assert(WasmCheckedImmediateRange <= WasmImmediateRange,
                   "WasmImmediateRange should be the size of an unconstrained "
