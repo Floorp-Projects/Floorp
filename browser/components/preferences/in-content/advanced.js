@@ -637,34 +637,26 @@ var gAdvancedPane = {
    *
    * app.update.enabled
    * - true if updates to the application are enabled, false otherwise
+   * app.update.auto
+   * - true if updates should be automatically downloaded and installed and
+   * false if the user should be asked what he wants to do when an update is
+   * available
    * extensions.update.enabled
    * - true if updates to extensions and themes are enabled, false otherwise
    * browser.search.update
    * - true if updates to search engines are enabled, false otherwise
-   * app.update.auto
-   * - true if updates should be automatically downloaded and installed,
-   *   possibly with a warning if incompatible extensions are installed (see
-   *   app.update.mode); false if the user should be asked what he wants to do
-   *   when an update is available
-   * app.update.mode
-   * - an integer:
-   *     0    do not warn if an update will disable extensions or themes
-   *     1    warn if an update will disable extensions or themes
-   *     2    warn if an update will disable extensions or themes *or* if the
-   *          update is a major update
    */
 
 #ifdef MOZ_UPDATER
   /**
-   * Selects the item of the radiogroup, and sets the warnIncompatible checkbox
-   * based on the pref values and locked states.
+   * Selects the item of the radiogroup based on the pref values and locked
+   * states.
    *
    * UI state matrix for update preference conditions
    *
    * UI Components:                              Preferences
    * Radiogroup                                  i   = app.update.enabled
-   * Warn before disabling extensions checkbox   ii  = app.update.auto
-   *                                             iii = app.update.mode
+   *                                             ii  = app.update.auto
    *
    * Disabled states:
    * Element           pref  value  locked  disabled
@@ -672,15 +664,6 @@ var gAdvancedPane = {
    *                   i     t/f    *t*     *true*
    *                   ii    t/f    f       false
    *                   ii    t/f    *t*     *true*
-   *                   iii   0/1/2  t/f     false
-   * warnIncompatible  i     t      f       false
-   *                   i     t      *t*     *true*
-   *                   i     *f*    t/f     *true*
-   *                   ii    t      f       false
-   *                   ii    t      *t*     *true*
-   *                   ii    *f*    t/f     *true*
-   *                   iii   0/1/2  f       false
-   *                   iii   0/1/2  *t*     *true*
    */
   updateReadPrefs: function ()
   {
@@ -703,12 +686,6 @@ var gAdvancedPane = {
     // A locked pref is sufficient to disable the radiogroup.
     radiogroup.disabled = !canCheck || enabledPref.locked || autoPref.locked;
 
-    var modePref = document.getElementById("app.update.mode");
-    var warnIncompatible = document.getElementById("warnIncompatible");
-    // the warnIncompatible checkbox value is set by readAddonWarn
-    warnIncompatible.disabled = radiogroup.disabled || modePref.locked ||
-                                !enabledPref.value || !autoPref.value;
-
 #ifdef MOZ_MAINTENANCE_SERVICE
     // Check to see if the maintenance service is installed.
     // If it is don't show the preference at all.
@@ -730,14 +707,12 @@ var gAdvancedPane = {
   },
 
   /**
-   * Sets the pref values based on the selected item of the radiogroup,
-   * and sets the disabled state of the warnIncompatible checkbox accordingly.
+   * Sets the pref values based on the selected item of the radiogroup.
    */
   updateWritePrefs: function ()
   {
     var enabledPref = document.getElementById("app.update.enabled");
     var autoPref = document.getElementById("app.update.auto");
-    var modePref = document.getElementById("app.update.mode");
     var radiogroup = document.getElementById("updateRadioGroup");
     switch (radiogroup.value) {
       case "auto":      // 1. Automatically install updates for Desktop only
@@ -752,52 +727,6 @@ var gAdvancedPane = {
         enabledPref.value = false;
         autoPref.value = false;
     }
-
-    var warnIncompatible = document.getElementById("warnIncompatible");
-    warnIncompatible.disabled = enabledPref.locked || !enabledPref.value ||
-                                autoPref.locked || !autoPref.value ||
-                                modePref.locked;
-  },
-
-  /**
-   * Stores the value of the app.update.mode preference, which is a tristate
-   * integer preference.  We store the value here so that we can properly
-   * restore the preference value if the UI reflecting the preference value
-   * is in a state which can represent either of two integer values (as
-   * opposed to only one possible value in the other UI state).
-   */
-  _modePreference: -1,
-
-  /**
-   * Reads the app.update.mode preference and converts its value into a
-   * true/false value for use in determining whether the "Warn me if this will
-   * disable extensions or themes" checkbox is checked.  We also save the value
-   * of the preference so that the preference value can be properly restored if
-   * the user's preferences cannot adequately be expressed by a single checkbox.
-   *
-   * app.update.mode          Checkbox State    Meaning
-   * 0                        Unchecked         Do not warn
-   * 1                        Checked           Warn if there are incompatibilities
-   * 2                        Checked           Warn if there are incompatibilities,
-   *                                            or the update is major.
-   */
-  readAddonWarn: function ()
-  {
-    var preference = document.getElementById("app.update.mode");
-    var warn = preference.value != 0;
-    gAdvancedPane._modePreference = warn ? preference.value : 1;
-    return warn;
-  },
-
-  /**
-   * Converts the state of the "Warn me if this will disable extensions or
-   * themes" checkbox into the integer preference which represents it,
-   * returning that value.
-   */
-  writeAddonWarn: function ()
-  {
-    var warnIncompatible = document.getElementById("warnIncompatible");
-    return !warnIncompatible.checked ? 0 : gAdvancedPane._modePreference;
   },
 
   /**

@@ -527,8 +527,6 @@ pref("b2g.update.download-watchdog-max-retries", 5);
 pref("app.update.enabled", true);
 pref("app.update.auto", false);
 pref("app.update.silent", false);
-pref("app.update.mode", 0);
-pref("app.update.incompatible.mode", 0);
 pref("app.update.staging.enabled", true);
 pref("app.update.service.enabled", true);
 
