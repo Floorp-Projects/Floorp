@@ -274,211 +274,6 @@ function handleDialog(doc, testNum) {
 
   checkPromptState(actualState, state);
 
-  switch(testNum) {
-    case 1:
-      action = {
-        buttonClick : "ok",
-        textField   : "xyz",
-      };
-      // Temporarily commented out because of Bug #718543
-      // is(doc.activeElement, userfield.inputField, "focus correct for test" + testNum);
-      // doc.commandDispatcher.rewindFocus();
-      // is(doc.activeElement, body, "description focusable");
-      break;
-    case 2:
-      action = {
-        buttonClick : "cancel",
-      };
-      break;
-    case 10:
-      action = {
-        buttonClick : "ok",
-        passField   : "secret",
-      };
-      // Temporarily commented out because of Bug #718543
-      // is(doc.activeElement, passfield.inputField, "focus correct for test" + testNum);
-      break;
-    case 11:
-      action = {
-        buttonClick : "cancel",
-      };
-      break;
-    case 12:
-      action = {
-        buttonClick : "ok",
-        passField   : "secret",
-      };
-      break;
-    case 14:
-      action = {
-        buttonClick : "ok",
-        passField   : "secret",
-      };
-      break;
-    case 30:
-    case 31:
-      action = {
-        buttonClick : "ok",
-        passField   : "fill2pass",
-      };
-      break;
-    case 100:
-      action = {
-        buttonClick : "ok",
-        textField   : "outuser",
-        passField   : "outpass",
-      };
-      break;
-    case 101:
-      action = {
-        buttonClick : "cancel",
-      };
-      break;
-    case 102:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 103:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 104:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 105:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 106:
-      action = {
-        buttonClick : "ok",
-        passField   : "NEWuser2pass",
-      };
-      break;
-    case 107:
-      action = {
-        buttonClick : "ok",
-        passField   : "user2pass",
-      };
-      break;
-    case 120:
-    case 121:
-      action = {
-        buttonClick : "ok",
-        textField   : "fill2user",
-        passField   : "fill2pass",
-      };
-      break;
-    case 500:
-      action = {
-        buttonClick : "ok",
-        textField   : "outuser",
-        passField   : "outpass",
-      };
-      break;
-    case 501:
-      action = {
-        buttonClick : "cancel",
-      };
-      break;
-    case 502:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 503:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 504:
-      // enter one of the known logins, test 504+505 exercise the two possible states.
-      action = {
-        buttonClick : "ok",
-        textField   : "user1name",
-        passField   : "user1pass",
-      };
-      break;
-    case 505:
-      // enter one of the known logins, test 504+505 exercise the two possible states.
-      action = {
-        buttonClick : "ok",
-        textField   : "user2name",
-        passField   : "user2pass",
-      };
-      break;
-    case 506:
-      // force to user2, and change the password
-      action = {
-        buttonClick : "ok",
-        textField   : "user2name",
-        passField   : "NEWuser2pass",
-      };
-      break;
-    case 507:
-      // force to user2, and change the password back
-      action = {
-        buttonClick : "ok",
-        textField   : "user2name",
-        passField   : "user2pass",
-      };
-      break;
-    case 508:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    // No case 509, it's unprompted.
-    case 510:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 511:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 1000:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    case 1001:
-      action = {
-        buttonClick : "ok",
-      };
-      break;
-    // (1002 doesn't trigger a dialog)
-    case 1003:
-      action = {
-        buttonClick : "ok",
-        passField   : "mochipass1-new",
-      };
-      break;
-    case 1004:
-      action = {
-        buttonClick : "ok",
-        passField   : "mochipass3-new",
-      };
-      break;
-    case 1005:
-      action = {
-        buttonClick : "ok",
-        textField   : "mochiuser3",
-        passField   : "mochipass3-old",
-      };
-      break;
-    default:
-      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-      break;
-  }
-
   if ("textField" in action) {
     doc.getElementById("loginTextbox").setAttribute("value", action.textField);
   }
@@ -527,6 +322,9 @@ function handleLoad() {
         textValue   : "mochiuser2",
         passValue   : "mochipass2",
       };
+      action = {
+        buttonClick : "ok",
+      };
       startCallbackTimer();
       // We've already authenticated to this host:port. For this next
       // request, the existing auth should be sent, we'll get a 401 reply,
@@ -557,6 +355,10 @@ function handleLoad() {
         title       : "Authentication Required",
         textValue   : "mochiuser1",
         passValue   : "mochipass1",
+      };
+      action = {
+        buttonClick : "ok",
+        passField   : "mochipass1-new",
       };
       startCallbackTimer();
       iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
@@ -591,6 +393,10 @@ function handleLoad() {
         textValue   : "mochiuser3",
         passValue   : "mochipass3-old",
       };
+      action = {
+        buttonClick : "ok",
+        passField   : "mochipass3-new",
+      };
       startCallbackTimer();
       iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
       break;
@@ -605,6 +411,11 @@ function handleLoad() {
         title       : "Authentication Required",
         textValue   : "",
         passValue   : "",
+      };
+      action = {
+        buttonClick : "ok",
+        textField   : "mochiuser3",
+        passField   : "mochipass3-old",
       };
       // Housekeeping: change it back to the original login4. Actually,
       // just delete it and we'll re-add it as the next test.
@@ -716,6 +527,10 @@ function doTests() {
     textValue   : "abc",
     passValue   : "",
   };
+  action = {
+    buttonClick : "ok",
+    textField   : "xyz",
+  };
   startCallbackTimer();
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
@@ -732,6 +547,9 @@ function doTests() {
     textValue   : "abc",
     passValue   : "",
   };
+  action = {
+    buttonClick : "cancel",
+  };
   startCallbackTimer();
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
@@ -746,6 +564,10 @@ function doTests() {
     title       : "the title",
     textValue   : "",
     passValue   : "inputpw",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "secret",
   };
   pword.value = "inputpw";
   startCallbackTimer();
@@ -764,6 +586,9 @@ function doTests() {
     textValue   : "",
     passValue   : "inputpw",
   };
+  action = {
+    buttonClick : "cancel",
+  };
   pword.value = "inputpw";
   startCallbackTimer();
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
@@ -779,6 +604,10 @@ function doTests() {
     title       : "the title",
     textValue   : "",
     passValue   : "",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "secret",
   };
   pword.value = null;
   startCallbackTimer();
@@ -806,6 +635,10 @@ function doTests() {
     title       : "the title",
     textValue   : "",
     passValue   : "",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "secret",
   };
   pword.value = null;
   startCallbackTimer();
@@ -871,6 +704,10 @@ function doTests() {
     textValue   : "",
     passValue   : "",
   };
+  action = {
+    buttonClick : "ok",
+    passField   : "fill2pass",
+  };
   pword.value = null;
   startCallbackTimer();
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
@@ -888,6 +725,10 @@ function doTests() {
     textValue   : "",
     passValue   : "",
   };
+  action = {
+    buttonClick : "ok",
+    passField   : "fill2pass",
+  };
   pword.value = null;
   startCallbackTimer();
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
@@ -903,6 +744,11 @@ function doTests() {
     title       : "the title",
     textValue   : "inuser",
     passValue   : "inpass",
+  };
+  action = {
+    buttonClick : "ok",
+    textField   : "outuser",
+    passField   : "outpass",
   };
   uname.value = "inuser";
   pword.value = "inpass";
@@ -922,6 +768,9 @@ function doTests() {
     textValue   : "inuser",
     passValue   : "inpass",
   };
+  action = {
+    buttonClick : "cancel",
+  };
   uname.value = "inuser";
   pword.value = "inpass";
   startCallbackTimer();
@@ -938,6 +787,9 @@ function doTests() {
     title       : "the title",
     textValue   : "",
     passValue   : "examplepass",
+  };
+  action = {
+    buttonClick : "ok",
   };
   uname.value = null;
   pword.value = null;
@@ -959,6 +811,9 @@ function doTests() {
     textValue   : "user1name",
     passValue   : "user1pass",
   };
+  action = {
+    buttonClick : "ok",
+  };
   uname.value = null;
   pword.value = null;
   startCallbackTimer();
@@ -977,6 +832,9 @@ function doTests() {
     title       : "the title",
     textValue   : "user1name",
     passValue   : "user1pass",
+  };
+  action = {
+    buttonClick : "ok",
   };
   uname.value = "user1name";
   pword.value = null;
@@ -997,6 +855,9 @@ function doTests() {
     textValue   : "user2name",
     passValue   : "user2pass",
   };
+  action = {
+    buttonClick : "ok",
+  };
   uname.value = "user2name";
   pword.value = null;
   startCallbackTimer();
@@ -1015,6 +876,10 @@ function doTests() {
     title       : "the title",
     textValue   : "user2name",
     passValue   : "user2pass",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "NEWuser2pass",
   };
   uname.value = "user2name";
   pword.value = null;
@@ -1035,6 +900,10 @@ function doTests() {
     textValue   : "user2name",
     passValue   : "NEWuser2pass",
   };
+  action = {
+    buttonClick : "ok",
+    passField   : "user2pass",
+  };
   uname.value = "user2name";
   pword.value = null;
   startCallbackTimer();
@@ -1054,6 +923,11 @@ function doTests() {
     textValue   : "",
     passValue   : "",
   };
+  action = {
+    buttonClick : "ok",
+    textField   : "fill2user",
+    passField   : "fill2pass",
+  };
   uname.value = null;
   pword.value = null;
   startCallbackTimer();
@@ -1072,6 +946,11 @@ function doTests() {
     title       : "the title",
     textValue   : "",
     passValue   : "",
+  };
+  action = {
+    buttonClick : "ok",
+    textField   : "fill2user",
+    passField   : "fill2pass",
   };
   uname.value = null;
   pword.value = null;
@@ -1112,6 +991,11 @@ function doTests() {
     textValue   : "inuser",
     passValue   : "inpass",
   };
+  action = {
+    buttonClick : "ok",
+    textField   : "outuser",
+    passField   : "outpass",
+  };
   authinfo.username = "inuser";
   authinfo.password = "inpass";
   authinfo.realm    = "some realm";
@@ -1132,6 +1016,9 @@ function doTests() {
     textValue   : "outuser",
     passValue   : "outpass",
   };
+  action = {
+    buttonClick : "cancel",
+  };
   startCallbackTimer();
   isOk = prompter2.promptAuth(channel1, level, authinfo);
 
@@ -1146,6 +1033,9 @@ function doTests() {
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "examplepass",
+  };
+  action = {
+    buttonClick : "ok",
   };
   authinfo.username = "";
   authinfo.password = "";
@@ -1169,6 +1059,9 @@ function doTests() {
     textValue   : "user1name",
     passValue   : "user1pass",
   };
+  action = {
+    buttonClick : "ok",
+  };
   authinfo.username = "";
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
@@ -1191,6 +1084,12 @@ function doTests() {
     textValue   : "user1name",
     passValue   : "user1pass",
   };
+  // enter one of the known logins, test 504+505 exercise the two possible states.
+  action = {
+    buttonClick : "ok",
+    textField   : "user1name",
+    passField   : "user1pass",
+  };
   authinfo.username = "";
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
@@ -1212,6 +1111,12 @@ function doTests() {
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
+  };
+  // enter one of the known logins, test 504+505 exercise the two possible states.
+  action = {
+    buttonClick : "ok",
+    textField   : "user2name",
+    passField   : "user2pass",
   };
   authinfo.username = "";
   authinfo.password = "";
@@ -1236,6 +1141,12 @@ function doTests() {
     textValue   : "user1name",
     passValue   : "user1pass",
   };
+  // force to user2, and change the password
+  action = {
+    buttonClick : "ok",
+    textField   : "user2name",
+    passField   : "NEWuser2pass",
+  };
   authinfo.username = "";
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
@@ -1259,6 +1170,12 @@ function doTests() {
     textValue   : "user1name",
     passValue   : "user1pass",
   };
+  // force to user2, and change the password back
+  action = {
+    buttonClick : "ok",
+    textField   : "user2name",
+    passField   : "user2pass",
+  };
   authinfo.username = "";
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
@@ -1280,6 +1197,9 @@ function doTests() {
     title       : "Authentication Required",
     textValue   : "proxuser",
     passValue   : "proxpass",
+  };
+  action = {
+    buttonClick : "ok",
   };
   proxyAuthinfo.username = "";
   proxyAuthinfo.password = "";
@@ -1328,6 +1248,9 @@ function doTests() {
     textValue   : "proxuser",
     passValue   : "proxpass",
   };
+  action = {
+    buttonClick : "ok",
+  };
 
   proxyAuthinfo.username = "";
   proxyAuthinfo.password = "";
@@ -1353,6 +1276,9 @@ function doTests() {
     title       : "the title",
     textValue   : "proxuser",
     passValue   : "proxpass",
+  };
+  action = {
+    buttonClick : "ok",
   };
 
   proxyAuthinfo.username = "";
@@ -1382,6 +1308,9 @@ function doTests() {
     title       : "Authentication Required",
     textValue   : "mochiuser1",
     passValue   : "mochipass1",
+  };
+  action = {
+    buttonClick : "ok",
   };
   startCallbackTimer();
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
