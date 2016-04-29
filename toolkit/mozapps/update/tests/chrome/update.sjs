@@ -52,11 +52,6 @@ function handleRequest(aRequest, aResponse) {
   aResponse.setStatusLine(aRequest.httpVersion, statusCode, statusReason);
   aResponse.setHeader("Cache-Control", "no-cache", false);
   
-  if (params.addonID) {
-    aResponse.write(getUpdateRDF(params));
-    return;
-  }
-
   // When a mar download is started by the update service it can finish
   // downloading before the ui has loaded. By specifying a serviceURL for the
   // update patch that points to this file and has a slowDownloadMar param the
@@ -206,65 +201,6 @@ function parseQueryString(aQueryString) {
   }
 
   return params;
-}
-
-/**
- * Helper function to gets the string representation of the contents of the
- * add-on's update manifest file.
- *
- * @param  aParams
- *         A JS object representing the url parameters from the request's
- *         queryString.
- * @return A string representation of the contents of the add-on's update
- *         manifest file.
- */
-function getUpdateRDF(aParams) {
-  let addonVersion;
-  let maxVersion;
-  let addonID = aParams.addonID;
-  let addonUpdateType = addonID.split("_")[0];
-
-  switch (addonUpdateType) {
-    case "updatecompatibility":
-      // Use "1.0" for the add-on version for the compatibility update case since
-      // the tests create all add-ons with "1.0" for the version.
-      addonVersion = "1.0";
-      maxVersion = aParams.newerPlatformVersion;
-      break;
-    case "updateversion":
-      // Use "2.0" for the add-on version for the version update case since the
-      // tests create all add-ons with "1.0" for the version.
-      addonVersion = "2.0";
-      maxVersion = aParams.newerPlatformVersion;
-      break;
-    default:
-      addonVersion = "1.0";
-      maxVersion = aParams.platformVersion;
-  }
-
-  return "<?xml version=\"1.0\"?>\n" +
-         "<RDF:RDF xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" " +
-         "         xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n" +
-         "  <RDF:Description about=\"urn:mozilla:extension:" + addonID + "\">\n" +
-         "    <em:updates>\n" +
-         "      <RDF:Seq>\n" +
-         "        <RDF:li resource=\"urn:mozilla:extension:" + addonID + ":" + addonVersion + "\"/>\n" +
-         "      </RDF:Seq>\n" +
-         "    </em:updates>\n" +
-         "  </RDF:Description>\n" +
-         "  <RDF:Description about=\"urn:mozilla:extension:" + addonID + ":" + addonVersion + "\">\n" +
-         "    <em:version>" + addonVersion + "</em:version>\n" +
-         "    <em:targetApplication>\n" +
-         "      <RDF:Description>\n" +
-         "        <em:id>toolkit@mozilla.org</em:id>\n" +
-         "        <em:minVersion>0</em:minVersion>\n" +
-         "        <em:maxVersion>" + maxVersion + "</em:maxVersion>\n" +
-         "        <em:updateLink>" + URL_HTTP_UPDATE_SJS + "</em:updateLink>\n" +
-         "        <em:updateHash>sha256:0</em:updateHash>\n" + 
-         "      </RDF:Description>\n" +
-         "    </em:targetApplication>\n" +
-         "  </RDF:Description>\n" +
-         "</RDF:RDF>\n";
 }
 
 /**
