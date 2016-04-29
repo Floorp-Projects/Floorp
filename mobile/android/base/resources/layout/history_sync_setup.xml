@@ -25,7 +25,7 @@
             android:text="@string/fxaccount_getting_started_description" />
 
         <Button
-            android:id="@+id/remote_tabs_setup_get_started"
+            android:id="@+id/sync_setup_button"
             style="@style/RemoteTabsPanelItem.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
