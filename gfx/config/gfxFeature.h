@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include "gfxTelemetry.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Function.h"
 
 namespace mozilla {
 namespace gfx {
@@ -55,6 +56,13 @@ class FeatureState
   bool MaybeSetFailed(bool aEnable, FeatureStatus aStatus, const char* aMessage);
   bool MaybeSetFailed(FeatureStatus aStatus, const char* aMessage);
 
+  // aType is "base", "user", "env", or "runtime".
+  // aMessage may be null.
+  typedef mozilla::function<void(const char* aType,
+                                 FeatureStatus aStatus,
+                                 const char* aMessage)> StatusIterCallback;
+  void ForEachStatusChange(const StatusIterCallback& aCallback) const;
+
  private:
   void SetUser(FeatureStatus aStatus, const char* aMessage);
   void SetEnvironment(FeatureStatus aStatus, const char* aMessage);
@@ -63,7 +71,7 @@ class FeatureState
   bool DisabledByDefault() const;
   const char* GetRuntimeMessage() const;
   bool IsInitialized() const {
-    return mDefault.mStatus != FeatureStatus::Unused;
+    return mDefault.IsInitialized();
   }
 
   void AssertInitialized() const {
@@ -76,6 +84,16 @@ class FeatureState
     FeatureStatus mStatus;
 
     void Set(FeatureStatus aStatus, const char* aMessage = nullptr);
+    bool IsInitialized() const {
+      return mStatus != FeatureStatus::Unused;
+    }
+    const char* MessageOrNull() const {
+      return mMessage[0] != '\0' ? mMessage : nullptr;
+    }
+    const char* Message() const {
+      MOZ_ASSERT(MessageOrNull());
+      return mMessage;
+    }
   };
 
   // The default state is the state we decide on startup, based on the operating

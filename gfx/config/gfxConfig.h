@@ -9,6 +9,7 @@
 #include "gfxFeature.h"
 #include "gfxFallback.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Function.h"
 
 namespace mozilla {
 namespace gfx {
@@ -151,6 +152,20 @@ public:
   // Enable a fallback.
   static void EnableFallback(Fallback aFallback, const char* aMessage);
 
+  // Run a callback for each initialized FeatureState.
+  typedef mozilla::function<void(const char* aName,
+                                 const char* aDescription,
+                                 FeatureState& aFeature)> FeatureIterCallback;
+  static void ForEachFeature(const FeatureIterCallback& aCallback);
+
+  // Run a callback for each enabled fallback.
+  typedef mozilla::function<void(const char* aName, const char* aMsg)> 
+    FallbackIterCallback;
+  static void ForEachFallback(const FallbackIterCallback& aCallback);
+
+private:
+  void ForEachFallbackImpl(const FallbackIterCallback& aCallback);
+
 private:
   FeatureState& GetState(Feature aFeature) {
     MOZ_ASSERT(size_t(aFeature) < kNumFeatures);
@@ -162,14 +177,24 @@ private:
   }
 
   bool UseFallbackImpl(Fallback aFallback) const;
-  void EnableFallbackImpl(Fallback aFallback);
+  void EnableFallbackImpl(Fallback aFallback, const char* aMessage);
 
 private:
   static const size_t kNumFeatures = size_t(Feature::NumValues);
+  static const size_t kNumFallbacks = size_t(Fallback::NumValues);
 
 private:
   FeatureState mFeatures[kNumFeatures];
   uint64_t mFallbackBits;
+
+private:
+  struct FallbackLogEntry {
+    Fallback mFallback;
+    char mMessage[80];
+  };
+
+  FallbackLogEntry mFallbackLog[kNumFallbacks];
+  size_t mNumFallbackLogEntries;
 };
 
 } // namespace gfx
