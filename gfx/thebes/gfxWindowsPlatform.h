@@ -270,7 +270,6 @@ protected:
     }
     void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) override;
-    void SetDeviceInitData(mozilla::gfx::DeviceInitData& aData) override;
 
 protected:
     RenderMode mRenderMode;
@@ -313,6 +312,7 @@ private:
     bool AttemptD3D11ContentDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
 
+    bool CanUseWARP();
     bool CanUseD3D11ImageBridge();
     bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 

@@ -358,16 +358,6 @@ public:
 
 NS_IMPL_ISUPPORTS(D3D9SharedTextureReporter, nsIMemoryReporter)
 
-// Device init data should only be used on child processes, so we protect it
-// behind a getter here.
-static DeviceInitData sDeviceInitDataDoNotUseDirectly;
-static inline DeviceInitData&
-GetParentDevicePrefs()
-{
-  MOZ_ASSERT(XRE_IsContentProcess());
-  return sDeviceInitDataDoNotUseDirectly;
-}
-
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
   , mDeviceLock("gfxWindowsPlatform.mDeviceLock")
@@ -1927,8 +1917,8 @@ bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
   return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM, D3D11_BIND_SHADER_RESOURCE);
 }
 
-static inline bool
-CanUseWARP()
+bool
+gfxWindowsPlatform::CanUseWARP()
 {
   if (gfxPrefs::LayersD3D11ForceWARP()) {
     return true;
@@ -2266,13 +2256,6 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
 }
 
 void
-gfxWindowsPlatform::SetDeviceInitData(mozilla::gfx::DeviceInitData& aData)
-{
-  MOZ_ASSERT(XRE_IsContentProcess());
-  sDeviceInitDataDoNotUseDirectly = aData;
-}
-
-void
 gfxWindowsPlatform::InitializeDevices()
 {
   // If acceleration is disabled, we refuse to initialize anything.
@@ -2325,7 +2308,7 @@ gfxWindowsPlatform::CheckAccelerationSupport()
     return mAcceleration;
   }
   if (XRE_IsContentProcess()) {
-    return GetParentDevicePrefs().useAcceleration()
+    return GetParentDevicePrefs().useHwCompositing()
            ? FeatureStatus::Available
            : FeatureStatus::Blocked;
   }
