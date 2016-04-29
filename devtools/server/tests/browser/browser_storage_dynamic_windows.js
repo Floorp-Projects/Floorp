@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {StorageFront} = require("devtools/server/actors/storage");
+const {StorageFront} = require("devtools/client/fronts/storage");
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js", this);
 
 const beforeReload = {
