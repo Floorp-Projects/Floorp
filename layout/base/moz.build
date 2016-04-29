@@ -91,6 +91,7 @@ EXPORTS += [
     'nsPresState.h',
     'nsRefreshDriver.h',
     'nsStyleChangeList.h',
+    'nsStyleSheetService.h',
     'ScrollbarStyles.h',
     'StackArena.h',
     'Units.h',
