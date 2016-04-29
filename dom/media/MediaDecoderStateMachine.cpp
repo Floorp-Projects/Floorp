@@ -898,7 +898,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   MOZ_ASSERT(NS_IsMainThread());
 
   // Dispatch initialization that needs to happen on that task queue.
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<RefPtr<MediaDecoder>>(
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<RefPtr<MediaDecoder>>(
     this, &MediaDecoderStateMachine::InitializationTask, aDecoder);
   mTaskQueue->Dispatch(r.forget());
 
@@ -921,7 +921,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaDecoderStateMachine::ReadMetadata));
+  r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::ReadMetadata);
+  OwnerThread()->Dispatch(r.forget());
 
   return NS_OK;
 }
@@ -1095,7 +1096,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
 void
 MediaDecoderStateMachine::DispatchSetDormant(bool aDormant)
 {
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<bool>(
     this, &MediaDecoderStateMachine::SetDormant, aDormant);
   OwnerThread()->Dispatch(r.forget());
 }
@@ -2421,7 +2422,9 @@ MediaDecoderStateMachine::ScheduleStateMachine()
   }
   mDispatchedStateMachine = true;
 
-  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine));
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
+  OwnerThread()->Dispatch(task.forget());
 }
 
 void
@@ -2680,7 +2683,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
   mOutputStreamManager->Add(aStream, aFinishWhenEnded);
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<bool>(
     this, &MediaDecoderStateMachine::SetAudioCaptured, true);
   OwnerThread()->Dispatch(r.forget());
 }
@@ -2691,7 +2694,7 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
   DECODER_LOG("RemoveOutputStream=%p!", aStream);
   mOutputStreamManager->Remove(aStream);
   if (mOutputStreamManager->IsEmpty()) {
-    nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<bool>(
       this, &MediaDecoderStateMachine::SetAudioCaptured, false);
     OwnerThread()->Dispatch(r.forget());
   }

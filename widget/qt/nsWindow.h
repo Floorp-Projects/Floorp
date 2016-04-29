@@ -312,7 +312,7 @@ private:
     void DispatchMotionToMainThread() {
         if (!mTimerStarted) {
             nsCOMPtr<nsIRunnable> event =
-                mozilla::NewRunnableMethod(this, &nsWindow::ProcessMotionEvent);
+                NS_NewRunnableMethod(this, &nsWindow::ProcessMotionEvent);
             NS_DispatchToMainThread(event);
             mTimerStarted = true;
         }

@@ -9,8 +9,6 @@
 #include "gfxPlatform.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla;
-
 SoftwareVsyncSource::SoftwareVsyncSource()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -47,8 +45,8 @@ SoftwareDisplay::EnableVsync()
     }
     mVsyncEnabled = true;
 
-    mVsyncThread->message_loop()->PostTask(
-      NewRunnableMethod(this, &SoftwareDisplay::EnableVsync));
+    RefPtr<mozilla::Runnable> runnable = NS_NewRunnableMethod(this, &SoftwareDisplay::EnableVsync);
+    mVsyncThread->message_loop()->PostTask(runnable.forget());
     return;
   }
 
@@ -66,8 +64,8 @@ SoftwareDisplay::DisableVsync()
     }
     mVsyncEnabled = false;
 
-    mVsyncThread->message_loop()->PostTask(
-      NewRunnableMethod(this, &SoftwareDisplay::DisableVsync));
+    RefPtr<mozilla::Runnable> runnable = NS_NewRunnableMethod(this, &SoftwareDisplay::DisableVsync);
+    mVsyncThread->message_loop()->PostTask(runnable.forget());
     return;
   }
 
@@ -131,11 +129,11 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
   }
 
   mCurrentVsyncTask =
-    NewCancelableRunnableMethod<mozilla::TimeStamp>(this,
-                                                    &SoftwareDisplay::NotifyVsync,
-                                                    nextVsync);
+    NS_NewCancelableRunnableMethodWithArgs<mozilla::TimeStamp>(this,
+                                                               &SoftwareDisplay::NotifyVsync,
+                                                               nextVsync);
 
-  RefPtr<Runnable> addrefedTask = mCurrentVsyncTask;
+  RefPtr<mozilla::Runnable> addrefedTask = mCurrentVsyncTask;
   mVsyncThread->message_loop()->PostDelayedTask(
     addrefedTask.forget(),
     delay.ToMilliseconds());

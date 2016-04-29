@@ -767,7 +767,7 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
   LOGV("SchedulingUpdate(%s)", TrackTypeToStr(aTrack));
   decoder.mUpdateScheduled = true;
   RefPtr<nsIRunnable> task(
-    NewRunnableMethod<TrackType>(this, &MediaFormatReader::Update, aTrack));
+    NS_NewRunnableMethodWithArg<TrackType>(this, &MediaFormatReader::Update, aTrack));
   OwnerThread()->Dispatch(task.forget());
 }
 
@@ -1288,7 +1288,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
   }
 
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType, MediaData*>(
+    NS_NewRunnableMethodWithArgs<TrackType, MediaData*>(
       this, &MediaFormatReader::NotifyNewOutput, aTrack, aSample);
   OwnerThread()->Dispatch(task.forget());
 }
@@ -1297,7 +1297,7 @@ void
 MediaFormatReader::DrainComplete(TrackType aTrack)
 {
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType>(
+    NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyDrainComplete, aTrack);
   OwnerThread()->Dispatch(task.forget());
 }
@@ -1306,7 +1306,7 @@ void
 MediaFormatReader::InputExhausted(TrackType aTrack)
 {
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType>(
+    NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyInputExhausted, aTrack);
   OwnerThread()->Dispatch(task.forget());
 }
@@ -1315,7 +1315,7 @@ void
 MediaFormatReader::Error(TrackType aTrack)
 {
   RefPtr<nsIRunnable> task =
-    NewRunnableMethod<TrackType>(
+    NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyError, aTrack);
   OwnerThread()->Dispatch(task.forget());
 }
@@ -1435,7 +1435,9 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
-  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaFormatReader::AttemptSeek));
+  RefPtr<nsIRunnable> task(
+    NS_NewRunnableMethod(this, &MediaFormatReader::AttemptSeek));
+  OwnerThread()->Dispatch(task.forget());
 
   return p;
 }

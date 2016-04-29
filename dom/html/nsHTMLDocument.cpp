@@ -2505,7 +2505,7 @@ nsHTMLDocument::MaybeEditingStateChanged()
       EditingStateChanged();
     } else if (!mInDestructor) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod(this, &nsHTMLDocument::MaybeEditingStateChanged));
+        NS_NewRunnableMethod(this, &nsHTMLDocument::MaybeEditingStateChanged));
     }
   }
 }

@@ -260,8 +260,8 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
     media->NotifyAddedSource();
     LOG(LogLevel::Debug, ("Track element sent notification to parent."));
 
-    RefPtr<Runnable> r = NewRunnableMethod(this, &HTMLTrackElement::LoadResource);
-    mMediaParent->RunInStableState(r);
+    mMediaParent->RunInStableState(
+      NS_NewRunnableMethod(this, &HTMLTrackElement::LoadResource));
   }
 
   return NS_OK;
@@ -314,7 +314,7 @@ void
 HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
 {
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod
+    NS_NewRunnableMethodWithArg
       <const nsString>(this,
                        &HTMLTrackElement::DispatchTrustedEvent,
                        aEventName);

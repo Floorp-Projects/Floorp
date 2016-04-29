@@ -100,7 +100,7 @@ AppleVDADecoder::Shutdown()
   mIsShutDown = true;
   if (mTaskQueue) {
     nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod(this, &AppleVDADecoder::ProcessShutdown);
+      NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessShutdown);
     mTaskQueue->Dispatch(runnable.forget());
   } else {
     ProcessShutdown();
@@ -133,7 +133,7 @@ AppleVDADecoder::Input(MediaRawData* aSample)
   mInputIncoming++;
 
   nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<RefPtr<MediaRawData>>(
+      NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
           this,
           &AppleVDADecoder::SubmitFrame,
           RefPtr<MediaRawData>(aSample));
@@ -148,7 +148,7 @@ AppleVDADecoder::Flush()
   mIsFlushing = true;
   mTaskQueue->Flush();
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &AppleVDADecoder::ProcessFlush);
+    NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessFlush);
   MonitorAutoLock mon(mMonitor);
   mTaskQueue->Dispatch(runnable.forget());
   while (mIsFlushing) {
@@ -163,7 +163,7 @@ AppleVDADecoder::Drain()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &AppleVDADecoder::ProcessDrain);
+    NS_NewRunnableMethod(this, &AppleVDADecoder::ProcessDrain);
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }

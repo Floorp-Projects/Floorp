@@ -70,9 +70,11 @@ WaveDataDecoder::Init()
 nsresult
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &WaveDataDecoder::Decode,
-                         RefPtr<MediaRawData>(aSample)));
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+      this, &WaveDataDecoder::Decode,
+      RefPtr<MediaRawData>(aSample)));
+  mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
 }
@@ -156,7 +158,9 @@ WaveDataDecoder::DoDrain()
 nsresult
 WaveDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WaveDataDecoder::DoDrain));
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethod(this, &WaveDataDecoder::DoDrain));
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 

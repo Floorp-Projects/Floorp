@@ -293,7 +293,8 @@ AndroidSurfaceTexture::NotifyFrameAvailable()
     // Proxy to main thread if we aren't on it
     if (!NS_IsMainThread()) {
       // Proxy to main thread
-      NS_DispatchToCurrentThread(NewRunnableMethod(this, &AndroidSurfaceTexture::NotifyFrameAvailable));
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &AndroidSurfaceTexture::NotifyFrameAvailable);
+      NS_DispatchToCurrentThread(event);
     } else {
       mFrameAvailableCallback->Run();
     }

@@ -73,8 +73,10 @@ public:
                                 TrackID aInputTrackID) override
   {
     if (aTrackEvents & TRACK_EVENT_CREATED) {
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod<TrackID>(
-          this, &TrackCreatedListener::DoNotifyTrackCreated, aID));
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethodWithArgs<TrackID>(
+          this, &TrackCreatedListener::DoNotifyTrackCreated, aID);
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
   }
 

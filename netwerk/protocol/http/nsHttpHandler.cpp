@@ -2165,8 +2165,8 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (mConnMgr) {
             if (gSocketTransportService) {
                 nsCOMPtr<nsIRunnable> event =
-                    NewRunnableMethod(mConnMgr,
-                                      &nsHttpConnectionMgr::ClearConnectionHistory);
+                    NS_NewRunnableMethod(mConnMgr,
+                                         &nsHttpConnectionMgr::ClearConnectionHistory);
                 gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
             }
             mConnMgr->ClearAltServiceMappings();

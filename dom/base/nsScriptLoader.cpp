@@ -503,8 +503,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     if (!scriptURI) {
       // Asynchronously report the failure to create a URI object
       NS_DispatchToCurrentThread(
-        NewRunnableMethod(aElement,
-                          &nsIScriptElement::FireErrorEvent));
+        NS_NewRunnableMethod(aElement,
+                             &nsIScriptElement::FireErrorEvent));
       return false;
     }
 
@@ -570,8 +570,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       if (NS_FAILED(rv)) {
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
-          NewRunnableMethod(aElement,
-                            &nsIScriptElement::FireErrorEvent));
+          NS_NewRunnableMethod(aElement,
+                               &nsIScriptElement::FireErrorEvent));
         return false;
       }
     }
@@ -1150,8 +1150,10 @@ void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
   if (mParserBlockingRequest || !mPendingChildLoaders.IsEmpty()) {
-    NS_DispatchToCurrentThread(NewRunnableMethod(this,
-                                                 &nsScriptLoader::ProcessPendingRequests));
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
+      &nsScriptLoader::ProcessPendingRequests);
+
+    NS_DispatchToCurrentThread(ev);
   }
 }
 

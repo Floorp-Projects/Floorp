@@ -1748,7 +1748,7 @@ public:
       ReadLastShutdownDuration(mShutdownTimeFilename);
     mTelemetry->ReadLateWritesStacks(mProfileDir);
     nsCOMPtr<nsIRunnable> e =
-      NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
+      NS_NewRunnableMethod(this, &nsFetchTelemetryData::MainThread);
     NS_ENSURE_STATE(e);
     NS_DispatchToMainThread(e);
     return NS_OK;

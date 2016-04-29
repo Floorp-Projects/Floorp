@@ -114,7 +114,9 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
   LOG("");
   mOmxLayer = new OmxPromiseLayer(mOmxTaskQueue, this, aImageContainer);
 
-  mOmxTaskQueue->Dispatch(NewRunnableMethod(this, &OmxDataDecoder::InitializationTask));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &OmxDataDecoder::InitializationTask);
+  mOmxTaskQueue->Dispatch(r.forget());
 }
 
 OmxDataDecoder::~OmxDataDecoder()
@@ -207,7 +209,9 @@ OmxDataDecoder::Flush()
 
   mFlushing = true;
 
-  mOmxTaskQueue->Dispatch(NewRunnableMethod(this, &OmxDataDecoder::DoFlush));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &OmxDataDecoder::DoFlush);
+  mOmxTaskQueue->Dispatch(r.forget());
 
   // According to the definition of Flush() in PDM:
   // "the decoder must be ready to accept new input for decoding".
@@ -225,7 +229,9 @@ OmxDataDecoder::Drain()
 {
   LOG("");
 
-  mOmxTaskQueue->Dispatch(NewRunnableMethod(this, &OmxDataDecoder::SendEosBuffer));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &OmxDataDecoder::SendEosBuffer);
+  mOmxTaskQueue->Dispatch(r.forget());
 
   return NS_OK;
 }
@@ -237,7 +243,9 @@ OmxDataDecoder::Shutdown()
 
   mShuttingDown = true;
 
-  mOmxTaskQueue->Dispatch(NewRunnableMethod(this, &OmxDataDecoder::DoAsyncShutdown));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &OmxDataDecoder::DoAsyncShutdown);
+  mOmxTaskQueue->Dispatch(r.forget());
 
   {
     // DoAsyncShutdown() will be running for a while, it could be still running

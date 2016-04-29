@@ -79,7 +79,9 @@ WMFMediaDataDecoder::Shutdown()
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
   if (mTaskQueue) {
-    mTaskQueue->Dispatch(NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown);
+    mTaskQueue->Dispatch(runnable.forget());
   } else {
     ProcessShutdown();
   }
@@ -107,7 +109,7 @@ WMFMediaDataDecoder::Input(MediaRawData* aSample)
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
       this,
       &WMFMediaDataDecoder::ProcessDecode,
       RefPtr<MediaRawData>(aSample));
@@ -183,9 +185,11 @@ WMFMediaDataDecoder::Flush()
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessFlush);
   MonitorAutoLock mon(mMonitor);
   mIsFlushing = true;
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessFlush));
+  mTaskQueue->Dispatch(runnable.forget());
   while (mIsFlushing) {
     mon.Wait();
   }
@@ -215,7 +219,9 @@ WMFMediaDataDecoder::Drain()
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessDrain));
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessDrain);
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 
@@ -232,7 +238,7 @@ WMFMediaDataDecoder::ConfigurationChanged(const TrackInfo& aConfig)
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
 
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<UniquePtr<TrackInfo>&&>(
+    NS_NewRunnableMethodWithArg<UniquePtr<TrackInfo>&&>(
     this,
     &WMFMediaDataDecoder::ProcessConfigurationChanged,
     aConfig.Clone());

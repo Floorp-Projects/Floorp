@@ -201,7 +201,9 @@ TrackBuffersManager::ProcessTasks()
         NS_WARNING("Invalid Task");
     }
   }
-  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks));
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 // A PromiseHolder will assert upon destruction if it has a pending promise
@@ -791,7 +793,9 @@ TrackBuffersManager::ScheduleSegmentParserLoop()
   if (mDetached) {
     return;
   }
-  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop));
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -967,10 +971,11 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   int64_t duration = std::max(videoDuration, audioDuration);
   // 1. Update the duration attribute if it currently equals NaN.
   // Those steps are performed by the MediaSourceDecoder::SetInitialDuration
-  AbstractThread::MainThread()->Dispatch(NewRunnableMethod<int64_t>
-                                         (mParentDecoder,
-                                          &MediaSourceDecoder::SetInitialDuration,
-                                          duration ? duration : -1));
+  nsCOMPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArg<int64_t>(mParentDecoder,
+                                         &MediaSourceDecoder::SetInitialDuration,
+                                         duration ? duration : -1);
+  AbstractThread::MainThread()->Dispatch(task.forget());
 
   // 2. If the initialization segment has no audio, video, or text tracks, then
   // run the append error algorithm with the decode error parameter set to true

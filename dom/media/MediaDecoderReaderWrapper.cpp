@@ -260,7 +260,7 @@ MediaDecoderReaderWrapper::ReleaseMediaResources()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
@@ -269,7 +269,7 @@ MediaDecoderReaderWrapper::SetIdle()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
@@ -278,7 +278,7 @@ MediaDecoderReaderWrapper::ResetDecode()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
+    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 

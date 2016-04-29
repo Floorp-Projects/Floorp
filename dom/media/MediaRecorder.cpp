@@ -819,8 +819,10 @@ private:
       new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
 
     if (NS_FAILED(rv)) {
-      NS_DispatchToMainThread(NewRunnableMethod<nsresult>(mRecorder,
-                                                          &MediaRecorder::NotifyError, rv));
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethodWithArg<nsresult>(mRecorder,
+                                              &MediaRecorder::NotifyError, rv);
+      NS_DispatchToMainThread(runnable);
     }
     if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");

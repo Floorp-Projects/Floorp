@@ -56,8 +56,9 @@ MediaResource::Destroy()
     delete this;
     return;
   }
-  MOZ_ALWAYS_SUCCEEDS(
-    NS_DispatchToMainThread(NewNonOwningRunnableMethod(this, &MediaResource::Destroy)));
+  nsCOMPtr<nsIRunnable> destroyRunnable =
+    NS_NewNonOwningRunnableMethod(this, &MediaResource::Destroy);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(destroyRunnable));
 }
 
 NS_IMPL_ADDREF(MediaResource)
@@ -870,7 +871,7 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
     return;
 
   mDataReceivedEvent =
-    NewNonOwningRunnableMethod(this, &ChannelMediaResource::DoNotifyDataReceived);
+    NS_NewNonOwningRunnableMethod(this, &ChannelMediaResource::DoNotifyDataReceived);
   NS_DispatchToMainThread(mDataReceivedEvent.get());
 }
 

@@ -315,9 +315,9 @@ TVTuner::DispatchCurrentSourceChangedEvent(TVSource* aSource)
                                              NS_LITERAL_STRING("currentsourcechanged"),
                                              init);
   nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<nsCOMPtr<nsIDOMEvent>>(this,
-                                             &TVTuner::DispatchTVEvent,
-                                             event);
+    NS_NewRunnableMethodWithArg<nsCOMPtr<nsIDOMEvent>>(this,
+                                                       &TVTuner::DispatchTVEvent,
+                                                       event);
   return NS_DispatchToCurrentThread(runnable);
 }
 

@@ -367,7 +367,7 @@ public:
     MOZ_ASSERT(onAsyncThread);
 #endif // DEBUG
 
-    nsCOMPtr<nsIRunnable> event = NewRunnableMethod<nsCOMPtr<nsIThread>>
+    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<nsCOMPtr<nsIThread>>
       (mConnection, &Connection::shutdownAsyncThread, mAsyncExecutionThread);
     (void)NS_DispatchToMainThread(event);
 

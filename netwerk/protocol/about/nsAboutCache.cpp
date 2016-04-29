@@ -179,7 +179,9 @@ nsAboutCache::VisitNextStorage()
     // from visitor callback.  The cache v1 service doesn't like it.
     // TODO - mayhemer, bug 913828, remove this dispatch and call
     // directly.
-    return NS_DispatchToMainThread(mozilla::NewRunnableMethod(this, &nsAboutCache::FireVisitStorage));
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(this, &nsAboutCache::FireVisitStorage);
+    return NS_DispatchToMainThread(event);
 }
 
 void

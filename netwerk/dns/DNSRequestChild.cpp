@@ -207,7 +207,7 @@ DNSRequestChild::StartRequest()
   // we can only do IPDL on the main thread
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(
-      NewRunnableMethod(this, &DNSRequestChild::StartRequest));
+      NS_NewRunnableMethod(this, &DNSRequestChild::StartRequest));
     return;
   }
 
@@ -260,7 +260,7 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
     CallOnLookupComplete();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &DNSRequestChild::CallOnLookupComplete);
+      NS_NewRunnableMethod(this, &DNSRequestChild::CallOnLookupComplete);
     mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 

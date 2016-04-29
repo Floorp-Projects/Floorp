@@ -186,9 +186,11 @@ VPXDecoder::DecodeFrame(MediaRawData* aSample)
 nsresult
 VPXDecoder::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                         this, &VPXDecoder::DecodeFrame,
-                         RefPtr<MediaRawData>(aSample)));
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+      this, &VPXDecoder::DecodeFrame,
+      RefPtr<MediaRawData>(aSample)));
+  mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
 }
@@ -202,7 +204,9 @@ VPXDecoder::DoDrain()
 nsresult
 VPXDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &VPXDecoder::DoDrain));
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableMethod(this, &VPXDecoder::DoDrain));
+  mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
 }
