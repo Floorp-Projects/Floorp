@@ -29,9 +29,9 @@ public:
   NS_IMETHOD Finish(char* aDest,
                     int32_t* aDestLength) override;
 
-  MOZ_WARN_UNUSED_RESULT NS_IMETHOD GetMaxLength(const char16_t* aSrc,
-                                                 int32_t aSrcLength,
-                                                 int32_t* aDestLength) override;
+  MOZ_MUST_USE NS_IMETHOD GetMaxLength(const char16_t* aSrc,
+                                       int32_t aSrcLength,
+                                       int32_t* aDestLength) override;
 
   NS_IMETHOD Reset() override;
 

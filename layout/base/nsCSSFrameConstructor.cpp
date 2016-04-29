@@ -3001,7 +3001,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*     aPresShell,
                                                  nsFrameState      aTypeBit)
 {
   RefPtr<nsStyleContext> placeholderStyle = aPresShell->StyleSet()->
-    ResolveStyleForNonElement(aParentStyle, nsCSSAnonBoxes::mozOtherNonElement);
+    ResolveStyleForOtherNonElement(aParentStyle);
 
   // The placeholder frame gets a pseudo style context
   nsPlaceholderFrame* placeholderFrame =
@@ -4960,8 +4960,7 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
     NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                  "shouldn't waste time creating style contexts for "
                  "comments and processing instructions");
-    result = styleSet->ResolveStyleForNonElement(aParentStyleContext,
-                                                 nsCSSAnonBoxes::mozText);
+    result = styleSet->ResolveStyleForText(aContent, aParentStyleContext);
   }
 
   // ServoRestyleManager does not handle transitions yet, and when it does
@@ -11106,7 +11105,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // frame shouldn't have that set).
   StyleSetHandle styleSet = mPresShell->StyleSet();
   RefPtr<nsStyleContext> textSC = styleSet->
-    ResolveStyleForNonElement(aStyleContext, nsCSSAnonBoxes::mozText);
+    ResolveStyleForText(aTextContent, aStyleContext);
   aTextFrame->SetStyleContextWithoutNotification(textSC);
   InitAndRestoreFrame(aState, aTextContent, letterFrame, aTextFrame);
 
@@ -11125,7 +11124,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     nsStyleContext* parentStyleContext = aStyleContext->GetParent();
     if (parentStyleContext) {
       RefPtr<nsStyleContext> newSC = styleSet->
-        ResolveStyleForNonElement(parentStyleContext, nsCSSAnonBoxes::mozText);
+        ResolveStyleForText(aTextContent, parentStyleContext);
       nextTextFrame->SetStyleContext(newSC);
     }
   }
@@ -11179,7 +11178,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
                                                     parentStyleContext);
   if (sc) {
     RefPtr<nsStyleContext> textSC = mPresShell->StyleSet()->
-      ResolveStyleForNonElement(sc, nsCSSAnonBoxes::mozText);
+      ResolveStyleForText(aTextContent, sc);
 
     // Create a new text frame (the original one will be discarded)
     // pass a temporary stylecontext, the correct one will be set
@@ -11378,7 +11377,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     return NS_OK;
   }
   RefPtr<nsStyleContext> newSC = aPresShell->StyleSet()->
-    ResolveStyleForNonElement(parentSC, nsCSSAnonBoxes::mozText);
+    ResolveStyleForText(textContent, parentSC);
   nsIFrame* newTextFrame = NS_NewTextFrame(aPresShell, newSC);
   newTextFrame->Init(textContent, parentFrame, nullptr);
 
@@ -11451,7 +11450,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresShell* aPresShell,
         break;
       }
       RefPtr<nsStyleContext> newSC = aPresShell->StyleSet()->
-        ResolveStyleForNonElement(parentSC, nsCSSAnonBoxes::mozText);
+        ResolveStyleForText(textContent, parentSC);
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nullptr);
 

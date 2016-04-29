@@ -164,18 +164,18 @@ class LUDivOrMod64 : public LBinaryMath<1>
     }
 };
 
-class LTruncateToInt64 : public LInstructionHelper<1, 1, 1>
+class LWasmTruncateToInt64 : public LInstructionHelper<1, 1, 1>
 {
   public:
-    LIR_HEADER(TruncateToInt64);
+    LIR_HEADER(WasmTruncateToInt64);
 
-    LTruncateToInt64(const LAllocation& in, const LDefinition& temp) {
+    LWasmTruncateToInt64(const LAllocation& in, const LDefinition& temp) {
         setOperand(0, in);
         setTemp(0, temp);
     }
 
-    MTruncateToInt64* mir() const {
-        return mir_->toTruncateToInt64();
+    MWasmTruncateToInt64* mir() const {
+        return mir_->toWasmTruncateToInt64();
     }
 
     const LDefinition* temp() {

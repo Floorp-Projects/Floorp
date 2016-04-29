@@ -54,8 +54,8 @@ public:
 
   void Put(KeyType aKey, already_AddRefed<PtrType> aData);
 
-  MOZ_WARN_UNUSED_RESULT bool Put(KeyType aKey, already_AddRefed<PtrType> aData,
-                                  const mozilla::fallible_t&);
+  MOZ_MUST_USE bool Put(KeyType aKey, already_AddRefed<PtrType> aData,
+                        const mozilla::fallible_t&);
 
   // Overload Remove, rather than overriding it.
   using base_type::Remove;

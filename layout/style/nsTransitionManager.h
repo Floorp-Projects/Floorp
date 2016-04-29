@@ -36,12 +36,11 @@ namespace mozilla {
 struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
 {
   ElementPropertyTransition(nsIDocument* aDocument,
-                            dom::Element* aTarget,
-                            CSSPseudoElementType aPseudoType,
+                            Maybe<OwningAnimationTarget>& aTarget,
                             const TimingParams &aTiming,
                             StyleAnimationValue aStartForReversingTest,
                             double aReversePortion)
-    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
+    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aTiming)
     , mStartForReversingTest(aStartForReversingTest)
     , mReversePortion(aReversePortion)
   { }

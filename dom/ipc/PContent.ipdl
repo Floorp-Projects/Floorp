@@ -289,14 +289,6 @@ struct DataStorageItem {
   DataStorageType type;
 };
 
-struct DataStoreSetting {
-  nsString name;
-  nsString originURL;
-  nsString manifestURL;
-  bool readOnly;
-  bool enabled;
-};
-
 // Note: Any changes to this structure should also be changed in
 // FileSystemUpdate below.
 struct VolumeInfo {
@@ -497,9 +489,6 @@ child:
      * BidiKeyboard hosted by the parent
      */
     async BidiKeyboardNotify(bool isLangRTL);
-
-    async DataStoreNotify(uint32_t aAppId, nsString aName,
-                          nsString aManifestURL);
 
     /**
      * Dump this process's GC and CC logs to the provided files.
@@ -952,9 +941,6 @@ parent:
                                     bool aAnyActiveChannel);
 
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
-
-    sync DataStoreGetStores(nsString aName, nsString aOwner, Principal aPrincipal)
-        returns (DataStoreSetting[] dataStores);
 
     async FilePathUpdateNotify(nsString aType,
                                nsString aStorageName,

@@ -13,6 +13,8 @@
 #include "nsIFile.h"
 #include "nsZipArchive.h"
 
+#include "mozilla/StaticPtr.h"
+
 namespace mozilla {
 
 class Omnijar
@@ -24,17 +26,28 @@ private:
    * (corresponding to resource:/// and resource://app/), but only
    * store one when both point to the same location (unified).
    */
-  static nsIFile* sPath[2];
+  static StaticRefPtr<nsIFile> sPath[2];
 
   /**
    * Cached nsZipArchives for the corresponding sPath
    */
-  static nsZipArchive* sReader[2];
+  static StaticRefPtr<nsZipArchive> sReader[2];
+
+  /**
+   * Cached nsZipArchives for the outer jar, when using nested jars.
+   * Otherwise nullptr.
+   */
+  static StaticRefPtr<nsZipArchive> sOuterReader[2];
 
   /**
    * Has Omnijar::Init() been called?
    */
   static bool sInitialized;
+
+  /**
+   * Is using unified GRE/APP jar?
+   */
+  static bool sIsUnified;
 
 public:
   enum Type
@@ -43,6 +56,29 @@ public:
     APP = 1
   };
 
+private:
+  /**
+   * Returns whether we are using nested jars.
+   */
+  static inline bool IsNested(Type aType)
+  {
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
+    return !!sOuterReader[aType];
+  }
+
+  /**
+   * Returns a nsZipArchive pointer for the outer jar file when using nested
+   * jars. Returns nullptr in the same cases GetPath() would, or if not using
+   * nested jars.
+   */
+  static inline already_AddRefed<nsZipArchive> GetOuterReader(Type aType)
+  {
+    MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
+    RefPtr<nsZipArchive> reader = sOuterReader[aType].get();
+    return reader.forget();
+  }
+
+public:
   /**
    * Returns whether SetBase has been called at least once with
    * a valid nsIFile
@@ -71,7 +107,7 @@ public:
   static inline already_AddRefed<nsIFile> GetPath(Type aType)
   {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
-    nsCOMPtr<nsIFile> path = sPath[aType];
+    nsCOMPtr<nsIFile> path = sPath[aType].get();
     return path.forget();
   }
 
@@ -92,7 +128,7 @@ public:
   static inline already_AddRefed<nsZipArchive> GetReader(Type aType)
   {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
-    RefPtr<nsZipArchive> reader = sReader[aType];
+    RefPtr<nsZipArchive> reader = sReader[aType].get();
     return reader.forget();
   }
 

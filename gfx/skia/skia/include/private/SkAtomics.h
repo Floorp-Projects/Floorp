@@ -58,6 +58,10 @@ public:
         sk_atomic_store(&fVal, val, mo);
     }
 
+    T exchange(const T& val, sk_memory_order mo = default_memory_order) {
+        return sk_atomic_exchange(&fVal, val, mo);
+    }
+
     // Alias for .load(default_memory_order).
     MOZ_IMPLICIT operator T() const {
         return this->load();

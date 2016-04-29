@@ -1505,11 +1505,11 @@ class ReservedRooted : public ReservedRootedBase<T>
     }
 
     explicit ReservedRooted(Rooted<T>* root) : savedRoot(root) {
-        *root = js::GCPolicy<T>::initial();
+        *root = JS::GCPolicy<T>::initial();
     }
 
     ~ReservedRooted() {
-        *savedRoot = js::GCPolicy<T>::initial();
+        *savedRoot = JS::GCPolicy<T>::initial();
     }
 
     void set(const T& p) const { *savedRoot = p; }

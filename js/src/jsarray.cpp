@@ -923,6 +923,9 @@ IsArraySpecies(JSContext* cx, HandleObject origArray)
     if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
         return false;
 
+    if (!getter)
+        return false;
+
     return IsSelfHostedFunctionWithName(getter, cx->names().ArraySpecies);
 }
 

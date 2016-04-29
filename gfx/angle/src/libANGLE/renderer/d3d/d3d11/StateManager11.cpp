@@ -582,7 +582,9 @@ gl::Error StateManager11::setDepthStencilState(const gl::State &glState)
 
 gl::Error StateManager11::setRasterizerState(const gl::RasterizerState &rasterState)
 {
-    if (!mRasterizerStateIsDirty)
+    // TODO: Remove pointDrawMode and multiSample from gl::RasterizerState.
+    if (!mRasterizerStateIsDirty && rasterState.pointDrawMode == mCurRasterState.pointDrawMode &&
+        rasterState.multiSample == mCurRasterState.multiSample)
     {
         return gl::Error(GL_NO_ERROR);
     }

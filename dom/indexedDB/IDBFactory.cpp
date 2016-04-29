@@ -209,31 +209,6 @@ IDBFactory::CreateForMainThreadJS(JSContext* aCx,
 
 // static
 nsresult
-IDBFactory::CreateForDatastore(JSContext* aCx,
-                               JS::Handle<JSObject*> aOwningObject,
-                               IDBFactory** aFactory)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // There should be a null principal pushed here, but it's still chrome...
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
-  nsAutoPtr<PrincipalInfo> principalInfo(
-    new PrincipalInfo(SystemPrincipalInfo()));
-
-  nsresult rv =
-    CreateForMainThreadJSInternal(aCx, aOwningObject, principalInfo, aFactory);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(!principalInfo);
-
-  return NS_OK;
-}
-
-// static
-nsresult
 IDBFactory::CreateForWorker(JSContext* aCx,
                             JS::Handle<JSObject*> aOwningObject,
                             const PrincipalInfo& aPrincipalInfo,

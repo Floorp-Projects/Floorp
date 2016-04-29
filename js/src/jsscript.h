@@ -576,7 +576,7 @@ class ScriptSource;
 class UncompressedSourceCache
 {
     typedef HashMap<ScriptSource*,
-                    const char16_t*,
+                    UniqueTwoByteChars,
                     DefaultHasher<ScriptSource*>,
                     SystemAllocPolicy> Map;
 
@@ -586,26 +586,26 @@ class UncompressedSourceCache
     {
         UncompressedSourceCache* cache_;
         ScriptSource* source_;
-        const char16_t* charsToFree_;
+        UniqueTwoByteChars charsToFree_;
       public:
         explicit AutoHoldEntry();
         ~AutoHoldEntry();
       private:
         void holdEntry(UncompressedSourceCache* cache, ScriptSource* source);
-        void deferDelete(const char16_t* chars);
+        void deferDelete(UniqueTwoByteChars chars);
         ScriptSource* source() const { return source_; }
         friend class UncompressedSourceCache;
     };
 
   private:
-    Map* map_;
+    UniquePtr<Map> map_;
     AutoHoldEntry* holder_;
 
   public:
-    UncompressedSourceCache() : map_(nullptr), holder_(nullptr) {}
+    UncompressedSourceCache() : holder_(nullptr) {}
 
     const char16_t* lookup(ScriptSource* ss, AutoHoldEntry& asp);
-    bool put(ScriptSource* ss, const char16_t* chars, AutoHoldEntry& asp);
+    bool put(ScriptSource* ss, UniqueTwoByteChars chars, AutoHoldEntry& asp);
 
     void purge();
 

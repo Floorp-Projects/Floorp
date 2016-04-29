@@ -41,6 +41,7 @@
 
 #include "jsatominlines.h"
 
+#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
@@ -785,6 +786,9 @@ IsArrayBufferSpecies(JSContext* cx, HandleObject origBuffer)
     RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
     JSFunction* getter;
     if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
+        return false;
+
+    if (!getter)
         return false;
 
     return IsSelfHostedFunctionWithName(getter, cx->names().ArrayBufferSpecies);

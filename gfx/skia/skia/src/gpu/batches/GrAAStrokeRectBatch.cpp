@@ -62,13 +62,12 @@ public:
 
     const char* name() const override { return "AAStrokeRect"; }
 
-    void computePipelineOptimizations(GrInitInvariantOutput* color, 
+    void computePipelineOptimizations(GrInitInvariantOutput* color,
                                       GrInitInvariantOutput* coverage,
                                       GrBatchToXPOverrides* overrides) const override {
         // When this is called on a batch, there is only one geometry bundle
         color->setKnownFourComponents(fGeoData[0].fColor);
         coverage->setUnknownSingleComponent();
-        overrides->fUsePLSDstRead = false;
     }
 
     SkSTArray<1, Geometry, true>* geoData() { return &fGeoData; }
@@ -124,8 +123,7 @@ private:
     static const int kBevelVertexCnt = 24;
     static const int kNumBevelRectsInIndexBuffer = 256;
 
-    static const GrIndexBuffer* GetIndexBuffer(GrResourceProvider* resourceProvider,
-                                               bool miterStroke);
+    static const GrBuffer* GetIndexBuffer(GrResourceProvider* resourceProvider, bool miterStroke);
 
     GrColor color() const { return fBatch.fColor; }
     bool usesLocalCoords() const { return fBatch.fUsesLocalCoords; }
@@ -194,8 +192,6 @@ void AAStrokeRectBatch::onPrepareDraws(Target* target) const {
         return;
     }
 
-    target->initDraw(gp, this->pipeline());
-
     size_t vertexStride = gp->getVertexStride();
 
     SkASSERT(canTweakAlphaForCoverage ?
@@ -207,11 +203,11 @@ void AAStrokeRectBatch::onPrepareDraws(Target* target) const {
     int indicesPerInstance = this->miterStroke() ? kMiterIndexCnt : kBevelIndexCnt;
     int instanceCount = fGeoData.count();
 
-    const SkAutoTUnref<const GrIndexBuffer> indexBuffer(
+    const SkAutoTUnref<const GrBuffer> indexBuffer(
         GetIndexBuffer(target->resourceProvider(), this->miterStroke()));
     InstancedHelper helper;
     void* vertices = helper.init(target, kTriangles_GrPrimitiveType, vertexStride,
-                                 indexBuffer, verticesPerInstance,  indicesPerInstance,
+                                 indexBuffer, verticesPerInstance, indicesPerInstance,
                                  instanceCount);
     if (!vertices || !indexBuffer) {
          SkDebugf("Could not allocate vertices\n");
@@ -233,11 +229,11 @@ void AAStrokeRectBatch::onPrepareDraws(Target* target) const {
                                            args.fDegenerate,
                                            canTweakAlphaForCoverage);
     }
-    helper.recordDraw(target);
+    helper.recordDraw(target, gp);
 }
 
-const GrIndexBuffer* AAStrokeRectBatch::GetIndexBuffer(GrResourceProvider* resourceProvider,
-                                                       bool miterStroke) {
+const GrBuffer* AAStrokeRectBatch::GetIndexBuffer(GrResourceProvider* resourceProvider,
+                                                  bool miterStroke) {
 
     if (miterStroke) {
         static const uint16_t gMiterIndices[] = {

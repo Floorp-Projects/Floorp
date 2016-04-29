@@ -5,37 +5,14 @@
 
 _DEST_DIR = $(DEPTH)/_tests/reftest
 
-_HARNESS_FILES = \
-  $(srcdir)/b2g_start_script.js \
-  $(srcdir)/runreftest.py \
-  $(srcdir)/reftestcommandline.py \
-  $(srcdir)/reftest-preferences.js \
-  $(srcdir)/remotereftest.py \
-  $(srcdir)/runreftestb2g.py \
-  $(srcdir)/runreftestmulet.py \
-  $(srcdir)/gaia_lock_screen.js \
-  $(srcdir)/output.py \
-  automation.py \
-  $(topsrcdir)/build/mobile/b2gautomation.py \
-  $(topsrcdir)/build/mobile/remoteautomation.py \
-  $(topsrcdir)/testing/mochitest/server.js \
-  $(topsrcdir)/build/pgo/server-locations.txt \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # We're installing to _tests/reftest
 TARGET_DEPTH = ../..
 include $(topsrcdir)/build/automation-build.mk
 
-$(_DEST_DIR):
-	$(NSINSTALL) -D $@
-
-$(_HARNESS_FILES): $(_DEST_DIR)
-
 # copy harness and the reftest extension bits to $(_DEST_DIR)
 # This needs to happen after jar.mn handling from rules.mk included above.
 # The order of the :: rules ensures that.
-libs:: $(_HARNESS_FILES) $(addprefix $(_DEST_DIR)/,$(_HARNESS_PP_FILES))
-	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
+libs::
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)

@@ -313,22 +313,22 @@
 #endif
 
 /**
- * MOZ_WARN_UNUSED_RESULT tells the compiler to emit a warning if a function's
+ * MOZ_MUST_USE tells the compiler to emit a warning if a function's
  * return value is not used by the caller.
  *
- * Place this attribute at the very beginning of a function definition. For
+ * Place this attribute at the very beginning of a function declaration. For
  * example, write
  *
- *   MOZ_WARN_UNUSED_RESULT int foo();
+ *   MOZ_MUST_USE int foo();
  *
  * or
  *
- *   MOZ_WARN_UNUSED_RESULT int foo() { return 42; }
+ *   MOZ_MUST_USE int foo() { return 42; }
  */
 #if defined(__GNUC__) || defined(__clang__)
-#  define MOZ_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
+#  define MOZ_MUST_USE __attribute__ ((warn_unused_result))
 #else
-#  define MOZ_WARN_UNUSED_RESULT
+#  define MOZ_MUST_USE
 #endif
 
 /**
@@ -508,9 +508,9 @@
  *   function.  This is intended to be used with operator->() of our smart
  *   pointer classes to ensure that the refcount of an object wrapped in a
  *   smart pointer is not manipulated directly.
- * MOZ_MUST_USE: Applies to type declarations.  Makes it a compile time error to not
- *   use the return value of a function which has this type.  This is intended to be
- *   used with types which it is an error to not use.
+ * MOZ_MUST_USE_TYPE: Applies to type declarations.  Makes it a compile time
+ *   error to not use the return value of a function which has this type.  This
+ *   is intended to be used with types which it is an error to not use.
  * MOZ_NEEDS_NO_VTABLE_TYPE: Applies to template class declarations.  Makes it
  *   a compile time error to instantiate this template with a type parameter which
  *   has a VTable.
@@ -526,7 +526,7 @@
  * MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS: Applies to template class
  *   declarations where an instance of the template should be considered, for
  *   static analysis purposes, to inherit any type annotations (such as
- *   MOZ_MUST_USE and MOZ_STACK_CLASS) from its template arguments.
+ *   MOZ_MUST_USE_TYPE and MOZ_STACK_CLASS) from its template arguments.
  * MOZ_NON_AUTOABLE: Applies to class declarations. Makes it a compile time error to
  *   use `auto` in place of this type in variable declarations.  This is intended to
  *   be used with types which are intended to be implicitly constructed into other
@@ -552,7 +552,7 @@
 #  define MOZ_NON_OWNING_REF __attribute__((annotate("moz_weak_ref")))
 #  define MOZ_UNSAFE_REF(reason) __attribute__((annotate("moz_weak_ref")))
 #  define MOZ_NO_ADDREF_RELEASE_ON_RETURN __attribute__((annotate("moz_no_addref_release_on_return")))
-#  define MOZ_MUST_USE __attribute__((annotate("moz_must_use")))
+#  define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
 #  define MOZ_NEEDS_NO_VTABLE_TYPE __attribute__((annotate("moz_needs_no_vtable_type")))
 #  define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE __attribute__((annotate("moz_needs_memmovable_type")))
@@ -585,7 +585,7 @@
 #  define MOZ_NON_OWNING_REF /* nothing */
 #  define MOZ_UNSAFE_REF(reason) /* nothing */
 #  define MOZ_NO_ADDREF_RELEASE_ON_RETURN /* nothing */
-#  define MOZ_MUST_USE /* nothing */
+#  define MOZ_MUST_USE_TYPE /* nothing */
 #  define MOZ_NEEDS_NO_VTABLE_TYPE /* nothing */
 #  define MOZ_NON_MEMMOVABLE /* nothing */
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE /* nothing */

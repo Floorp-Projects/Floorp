@@ -3853,11 +3853,14 @@ AsyncPanZoomController::GetZoomConstraints() const
 
 void AsyncPanZoomController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) {
   APZThreadUtils::AssertOnControllerThread();
+  RefPtr<Runnable> task = aTask;
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    controller->PostDelayedTask(Move(aTask), aDelayMs);
+    controller->PostDelayedTask(task.forget(), aDelayMs);
   }
-  // XXX khuey what is supposed to happen if there's no controller? We were leaking tasks ...
+  // If there is no controller, that means this APZC has been destroyed, and
+  // we probably don't need to run the task. It will get destroyed when the
+  // RefPtr goes out of scope.
 }
 
 bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)

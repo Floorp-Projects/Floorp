@@ -97,6 +97,16 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 == flexbox-flex-wrap-vert-001.html  flexbox-flex-wrap-vert-001-ref.html
 == flexbox-flex-wrap-vert-002.html  flexbox-flex-wrap-vert-002-ref.html
 
+# Tests for intrinsic ratio interactions on flex items.
+# (Note that tests 001 and 002 share a reference case; they render the same,
+# because they don't do any direction-specific stretching/flexing.)
+== flexbox-intrinsic-ratio-001.html flexbox-intrinsic-ratio-001-ref.html
+== flexbox-intrinsic-ratio-002.html flexbox-intrinsic-ratio-001-ref.html
+== flexbox-intrinsic-ratio-003.html flexbox-intrinsic-ratio-003-ref.html
+== flexbox-intrinsic-ratio-004.html flexbox-intrinsic-ratio-004-ref.html
+== flexbox-intrinsic-ratio-005.html flexbox-intrinsic-ratio-005-ref.html
+== flexbox-intrinsic-ratio-006.html flexbox-intrinsic-ratio-006-ref.html
+
 # Tests for flex items as (pseudo) stacking contexts
 == flexbox-items-as-stacking-contexts-001.xhtml flexbox-items-as-stacking-contexts-001-ref.xhtml
 == flexbox-items-as-stacking-contexts-002.html flexbox-items-as-stacking-contexts-002-ref.html
@@ -132,13 +142,13 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 # Tests for min-height:auto / min-width:auto on flex items
 == flexbox-min-height-auto-001.html flexbox-min-height-auto-001-ref.html
 == flexbox-min-height-auto-002a.html flexbox-min-height-auto-002-ref.html
-fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # Bug 1041019
+fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # bug 1055354
 == flexbox-min-height-auto-002c.html flexbox-min-height-auto-002-ref.html
 == flexbox-min-height-auto-003.html flexbox-min-height-auto-003-ref.html
 == flexbox-min-height-auto-004.html flexbox-min-height-auto-004-ref.html
 == flexbox-min-width-auto-001.html flexbox-min-width-auto-001-ref.html
 == flexbox-min-width-auto-002a.html flexbox-min-width-auto-002-ref.html
-fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # Bug 1041019
+== flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-002c.html flexbox-min-width-auto-002-ref.html
 == flexbox-min-width-auto-003.html flexbox-min-width-auto-003-ref.html
 == flexbox-min-width-auto-004.html flexbox-min-width-auto-004-ref.html

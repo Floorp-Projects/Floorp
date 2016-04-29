@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -8,7 +7,6 @@
 
 
 #include "SkAtomics.h"
-#include "SkFixed.h"
 #include "SkString.h"
 #include "SkUtils.h"
 #include <stdarg.h>
@@ -144,44 +142,6 @@ char* SkStrAppendFloat(char string[], float value) {
     return string + len;
 }
 
-char* SkStrAppendFixed(char string[], SkFixed x) {
-    SkDEBUGCODE(char* start = string;)
-    if (x < 0) {
-        *string++ = '-';
-        x = -x;
-    }
-
-    unsigned frac = x & 0xFFFF;
-    x >>= 16;
-    if (frac == 0xFFFF) {
-        // need to do this to "round up", since 65535/65536 is closer to 1 than to .9999
-        x += 1;
-        frac = 0;
-    }
-    string = SkStrAppendS32(string, x);
-
-    // now handle the fractional part (if any)
-    if (frac) {
-        static const uint16_t   gTens[] = { 1000, 100, 10, 1 };
-        const uint16_t*         tens = gTens;
-
-        x = SkFixedRoundToInt(frac * 10000);
-        SkASSERT(x <= 10000);
-        if (x == 10000) {
-            x -= 1;
-        }
-        *string++ = '.';
-        do {
-            unsigned powerOfTen = *tens++;
-            *string++ = SkToU8('0' + x / powerOfTen);
-            x %= powerOfTen;
-        } while (x != 0);
-    }
-
-    SkASSERT(string - start <= SkStrAppendScalar_MaxSize);
-    return string;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 // the 3 values are [length] [refcnt] [terminating zero data]
@@ -275,6 +235,13 @@ SkString::SkString(const SkString& src) {
     fRec = RefRec(src.fRec);
 }
 
+SkString::SkString(SkString&& src) {
+    src.validate();
+
+    fRec = src.fRec;
+    src.fRec = const_cast<Rec*>(&gEmptyRec);
+}
+
 SkString::~SkString() {
     this->validate();
 
@@ -306,6 +273,15 @@ SkString& SkString::operator=(const SkString& src) {
     if (fRec != src.fRec) {
         SkString    tmp(src);
         this->swap(tmp);
+    }
+    return *this;
+}
+
+SkString& SkString::operator=(SkString&& src) {
+    this->validate();
+
+    if (fRec != src.fRec) {
+        this->swap(src);
     }
     return *this;
 }

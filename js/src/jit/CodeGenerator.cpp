@@ -11438,5 +11438,28 @@ CodeGenerator::visitRandom(LRandom* ins)
     masm.mulDoublePtr(ImmPtr(&ScaleInv), tempReg, output);
 }
 
+void
+CodeGenerator::visitRotate(LRotate* ins)
+{
+    MRotate* mir = ins->mir();
+    Register input = ToRegister(ins->input());
+    Register dest = ToRegister(ins->output());
+
+    const LAllocation* count = ins->count();
+    if (count->isConstant()) {
+        int32_t c = ToInt32(count) & 0x1F;
+        if (mir->isLeftRotate())
+            masm.rotateLeft(Imm32(c), input, dest);
+        else
+            masm.rotateRight(Imm32(c), input, dest);
+    } else {
+        Register creg = ToRegister(count);
+        if (mir->isLeftRotate())
+            masm.rotateLeft(creg, input, dest);
+        else
+            masm.rotateRight(creg, input, dest);
+    }
+}
+
 } // namespace jit
 } // namespace js
