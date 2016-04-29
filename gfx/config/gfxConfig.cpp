@@ -55,8 +55,7 @@ gfxConfig::GetValue(Feature aFeature)
   return state.GetValue();
 }
 
-/* static */
-bool
+/* static */ bool
 gfxConfig::SetDefault(Feature aFeature,
                       bool aEnable,
                       FeatureStatus aDisableStatus,
@@ -69,6 +68,19 @@ gfxConfig::SetDefault(Feature aFeature,
   }
   state.EnableByDefault();
   return true;
+}
+
+/* static */ bool
+gfxConfig::InitOrUpdate(Feature aFeature,
+                        bool aEnable,
+                        FeatureStatus aDisableStatus,
+                        const char* aDisableMessage)
+{
+  FeatureState& state = sConfig.GetState(aFeature);
+  if (!state.IsInitialized()) {
+    return SetDefault(aFeature, aEnable, aDisableStatus, aDisableMessage);
+  }
+  return UpdateIfFailed(aFeature, aEnable, aDisableStatus, aDisableMessage);
 }
 
 /* static */ void
