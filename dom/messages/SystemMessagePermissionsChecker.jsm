@@ -14,10 +14,6 @@ Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/PermissionsTable.jsm");
 Cu.import("resource://gre/modules/PermissionSettings.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "dataStoreService",
-                                   "@mozilla.org/datastore-service;1",
-                                   "nsIDataStoreService");
-
 this.EXPORTED_SYMBOLS = ["SystemMessagePermissionsChecker",
                          "SystemMessagePermissionsTable"];
 
@@ -186,34 +182,6 @@ this.SystemMessagePermissionsChecker = {
   },
 
   /**
-   * Check if the message is a datastore-update message
-   * @param string aSysMsgName
-   *        The system messsage name.
-   */
-  isDataStoreSystemMessage: function(aSysMsgName) {
-    return aSysMsgName.indexOf('datastore-update-') === 0;
-  },
-
-  /**
-   * Check if this manifest can deliver this particular datastore message.
-   */
-  canDeliverDataStoreSystemMessage: function(aSysMsgName, aManifestURL) {
-    let store = aSysMsgName.substr('datastore-update-'.length);
-
-    // Get all the manifest URLs of the apps which can access the datastore.
-    let manifestURLs = dataStoreService.getAppManifestURLsForDataStore(store);
-    let enumerate = manifestURLs.enumerate();
-    while (enumerate.hasMoreElements()) {
-      let manifestURL = enumerate.getNext().QueryInterface(Ci.nsISupportsString);
-      if (manifestURL == aManifestURL) {
-        return true;
-      }
-    }
-
-    return false;
-  },
-
-  /**
    * Check if the system message is permitted to be registered for the given
    * app at start-up based on the permissions claimed in the app's manifest.
    * @param string aSysMsgName
@@ -257,11 +225,6 @@ this.SystemMessagePermissionsChecker = {
           "aSysMsgName: " + aSysMsgName + ", " +
           "aPageURL: " + aPageURL + ", " +
           "aManifestURL: " + aManifestURL);
-
-    if (this.isDataStoreSystemMessage(aSysMsgName) &&
-        this.canDeliverDataStoreSystemMessage(aSysMsgName, aManifestURL)) {
-      return true;
-    }
 
     let permNames = this.getSystemMessagePermissions(aSysMsgName);
     if (permNames === null) {

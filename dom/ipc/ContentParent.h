@@ -336,11 +336,6 @@ public:
     return mSendPermissionUpdates;
   }
 
-  bool NeedsDataStoreInfos() const
-  {
-    return mSendDataStoreInfos;
-  }
-
   /**
    * Kill our subprocess and make sure it dies.  Should only be used
    * in emergency situations since it bypasses the normal shutdown
@@ -995,12 +990,6 @@ private:
 
   virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
-  virtual bool RecvDataStoreGetStores(
-                     const nsString& aName,
-                     const nsString& aOwner,
-                     const IPC::Principal& aPrincipal,
-                     InfallibleTArray<DataStoreSetting>* aValue) override;
-
   virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) override;
 
   virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) override;
@@ -1164,7 +1153,6 @@ private:
   bool mMetamorphosed;
 
   bool mSendPermissionUpdates;
-  bool mSendDataStoreInfos;
   bool mIsForBrowser;
   bool mIsNuwaProcess;
   bool mHasGamepadListener;
