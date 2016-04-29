@@ -10,9 +10,9 @@
 <!ENTITY search.commandkey                    "f">
 
 <!ENTITY loading.label                        "Loading…">
-<!ENTITY listEmpty.installed.label            "You don't have any add-ons of this type installed">
+<!ENTITY listEmpty.installed.label            "You don’t have any add-ons of this type installed">
 <!ENTITY listEmpty.availableUpdates.label     "No updates found">
-<!ENTITY listEmpty.recentUpdates.label        "You haven't recently updated any add-ons">
+<!ENTITY listEmpty.recentUpdates.label        "You haven’t recently updated any add-ons">
 <!ENTITY listEmpty.findUpdates.label          "Check For Updates">
 <!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
 <!ENTITY listEmpty.button.label               "Learn more about add-ons">
@@ -108,9 +108,9 @@
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.showPreferencesWin.label         "Options">
-<!ENTITY cmd.showPreferencesWin.tooltip       "Change this add-on's options">
+<!ENTITY cmd.showPreferencesWin.tooltip       "Change this add-on’s options">
 <!ENTITY cmd.showPreferencesUnix.label        "Preferences">
-<!ENTITY cmd.showPreferencesUnix.tooltip      "Change this add-on's preferences">
+<!ENTITY cmd.showPreferencesUnix.tooltip      "Change this add-on’s preferences">
 <!ENTITY cmd.contribute.label                 "Contribute">
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
@@ -127,7 +127,7 @@
 <!ENTITY discover.description2                "Add-ons are applications that let you personalize &brandShortName; with
   extra functionality or style. Try a time-saving sidebar, a weather notifier, or a themed look to make &brandShortName;
   your own.">
-<!ENTITY discover.footer                      "When you're connected to the internet, this pane will feature
+<!ENTITY discover.footer                      "When you’re connected to the internet, this pane will feature
   some of the best and most popular add-ons for you to try out.">
 
 <!-- detail view -->
@@ -141,11 +141,11 @@
 
 <!ENTITY detail.updateType                    "Automatic Updates">
 <!ENTITY detail.updateDefault.label           "Default">
-<!ENTITY detail.updateDefault.tooltip         "Automatically install updates only if that's the default">
+<!ENTITY detail.updateDefault.tooltip         "Automatically install updates only if that’s the default">
 <!ENTITY detail.updateAutomatic.label         "On">
 <!ENTITY detail.updateAutomatic.tooltip       "Automatically install updates">
 <!ENTITY detail.updateManual.label            "Off">
-<!ENTITY detail.updateManual.tooltip          "Don't automatically install updates">
+<!ENTITY detail.updateManual.tooltip          "Don’t automatically install updates">
 <!ENTITY detail.home                          "Homepage">
 <!ENTITY detail.repository                    "Add-on Profile">
 <!ENTITY detail.size                          "Size">
@@ -155,10 +155,10 @@
 <!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
 <!ENTITY detail.showPreferencesWin.label      "Options">
 <!ENTITY detail.showPreferencesWin.accesskey  "O">
-<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on's options">
+<!ENTITY detail.showPreferencesWin.tooltip    "Change this add-on’s options">
 <!ENTITY detail.showPreferencesUnix.label     "Preferences">
 <!ENTITY detail.showPreferencesUnix.accesskey "P">
-<!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on's preferences">
+<!ENTITY detail.showPreferencesUnix.tooltip   "Change this add-on’s preferences">
 
 
 <!-- ratings -->
@@ -228,7 +228,7 @@
      This tab won't be displayed unless an Experiment add-on is installed.
      Install https://people.mozilla.org/~gszorc/dummy-experiment-addon.xpi
      to cause this tab to appear. -->
-<!ENTITY experiment.info.label "What's this? Telemetry may install and run experiments from time to time.">
+<!ENTITY experiment.info.label "What’s this? Telemetry may install and run experiments from time to time.">
 <!ENTITY experiment.info.learnmore "Learn More">
 <!ENTITY experiment.info.learnmore.accesskey "L">
 <!ENTITY experiment.info.changetelemetry "Telemetry Settings">
