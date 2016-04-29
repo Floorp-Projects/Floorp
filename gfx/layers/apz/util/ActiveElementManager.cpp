@@ -94,7 +94,7 @@ ActiveElementManager::TriggerElementActivation()
                     // bug properly should make this unnecessary.
     MOZ_ASSERT(mSetActiveTask == nullptr);
 
-    RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod(
+    RefPtr<CancelableRunnable> task = NewRunnableMethod(
         this, &ActiveElementManager::SetActiveTask, mTarget);
     mSetActiveTask = task;
     MessageLoop::current()->PostDelayedTask(task.forget(), sActivationDelayMs);

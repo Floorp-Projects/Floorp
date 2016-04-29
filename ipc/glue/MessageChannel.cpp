@@ -502,11 +502,11 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mIsSyncWaitingOnNonMainThread = false;
 #endif
 
-    mDequeueOneTask = new RefCountedTask(NewCancelableRunnableMethod(
+    mDequeueOneTask = new RefCountedTask(NewRunnableMethod(
                                                  this,
                                                  &MessageChannel::OnMaybeDequeueOne));
 
-    mOnChannelConnectedTask = new RefCountedTask(NewCancelableRunnableMethod(
+    mOnChannelConnectedTask = new RefCountedTask(NewRunnableMethod(
         this,
         &MessageChannel::DispatchOnChannelConnected));
 
@@ -2091,7 +2091,7 @@ MessageChannel::OnNotifyMaybeChannelError()
 
     if (IsOnCxxStack()) {
         mChannelErrorTask =
-            NewCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+            NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
         RefPtr<Runnable> task = mChannelErrorTask;
         // 10 ms delay is completely arbitrary
         mWorkerLoop->PostDelayedTask(task.forget(), 10);
@@ -2111,7 +2111,7 @@ MessageChannel::PostErrorNotifyTask()
 
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
-        NewCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+        NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
     RefPtr<Runnable> task = mChannelErrorTask;
     mWorkerLoop->PostTask(task.forget());
 }
