@@ -20,10 +20,10 @@ function run_test() {
   let updates = getLocalUpdateString(patches, "major", "New", "version 4",
                                      "4.0", "4.0", "20070811053724",
                                      "http://details1/", "http://billboard1/",
-                                     "http://license1/", "http://service1/",
-                                     "1238441300314", "test status text",
-                                     "false", "test_channel", "true", "true",
-                                     "true", "345600", "true", "test version",
+                                     "http://service1/", "1238441300314",
+                                     "test status text", "false",
+                                     "test_channel", "true", "true", "true",
+                                     "345600", "true", "test version",
                                      "3.0", "3.0",
                                      "custom1_attr=\"custom1 value\"",
                                      "custom2_attr=\"custom2 value\"");
@@ -34,7 +34,7 @@ function run_test() {
   patches = getLocalPatchString("complete", "http://complete/", "SHA1", "6232",
                                 "75", "true", STATE_FAILED);
   updates = getLocalUpdateString(patches, "major", "Existing", null, null,
-                                 "3.0", null, "http://details2/", null, null,
+                                 "3.0", null, "http://details2/", null,
                                  "http://service2/", null,
                                  getString("patchApplyFailure"), "true",
                                  "test_channel", "false", null, null, "691200",
@@ -69,8 +69,6 @@ function run_test() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.billboardURL, "http://billboard1/",
                "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.licenseURL, "http://license1/",
-               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.serviceURL, "http://service1/",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.installDate, "1238441300314",
@@ -129,8 +127,6 @@ function run_test() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.billboardURL, "http://details2/",
                "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!update.licenseURL,
-            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.serviceURL, "http://service2/",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.installDate, "1238441400314",
@@ -182,10 +178,10 @@ function run_test() {
                                 STATE_PENDING);
   updates = getLocalUpdateString(patches, "major", "New", null, null, "4.0",
                                  null, "http://details/", "http://billboard/",
-                                 "http://license/", "http://service/",
-                                 "1238441400314", "test status text", null,
-                                 "test_channel", "true", "true", "true", "100",
-                                 "true", "version 4.0", "4.0", "3.0");
+                                 "http://service/", "1238441400314",
+                                 "test status text", null, "test_channel",
+                                 "true", "true", "true", "100", "true",
+                                 "version 4.0", "4.0", "3.0");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_SUCCEEDED);
@@ -194,7 +190,7 @@ function run_test() {
                                 STATE_FAILED);
   updates = getLocalUpdateString(patches, "major", "Existing", "version 3.0",
                                  "3.0", "3.0", null, "http://details/", null,
-                                 null, "http://service/", null,
+                                 "http://service/", null,
                                  getString("patchApplyFailure"), null,
                                  "test_channel", "false", null, null, "200",
                                  null, "version 3", null, null);
@@ -225,8 +221,6 @@ function run_test() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.billboardURL, "http://billboard/",
                "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(update.licenseURL, "http://license/",
-               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.serviceURL, "http://service/",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.installDate, "1238441400314",
@@ -281,8 +275,6 @@ function run_test() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(!update.billboardURL,
             "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!update.licenseURL,
-            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.serviceURL, "http://service/",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.installDate, "1238441400314",

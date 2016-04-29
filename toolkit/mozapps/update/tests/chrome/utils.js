@@ -66,14 +66,9 @@
  *   value of prefHasUserValue using gPrefToCheck for the preference name in the
  *   checkPrefHasUserValue function.
  *
- * expectedRadioGroupSelectedIndex (optional)
- *   For comparing the expected selectedIndex attribute value of the wizard's
- *   license page radiogroup selectedIndex attribute in the
- *   checkRadioGroupSelectedIndex function.
- *
  * expectedRemoteContentState (optional)
  *   For comparing the expected remotecontent state attribute value of the
- *   wizard's billboard and license pages in the checkRemoteContentState and
+ *   wizard's billboard page in the checkRemoteContentState and
  *   waitForRemoteContentLoaded functions.
  */
 
@@ -97,7 +92,6 @@ const PAGEID_MANUAL_UPDATE    = "manualUpdate";          // Done
 const PAGEID_UNSUPPORTED      = "unsupported";           // Done
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
 const PAGEID_FOUND_BILLBOARD  = "updatesfoundbillboard"; // Done
-const PAGEID_LICENSE          = "license";               // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
 const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
@@ -184,11 +178,8 @@ this.__defineGetter__("gCallback", function() {
  * remotecontent element doesn't exist.
  */
 this.__defineGetter__("gRemoteContent", function() {
-  switch (gTest.pageid) {
-    case PAGEID_FOUND_BILLBOARD:
+  if (gTest.pageid == PAGEID_FOUND_BILLBOARD) {
       return gWin.document.getElementById("updateMoreInfoContent");
-    case PAGEID_LICENSE:
-      return gWin.document.getElementById("licenseContent");
   }
   return null;
 });
@@ -202,13 +193,6 @@ this.__defineGetter__("gRemoteContentState", function() {
     return gRemoteContent.getAttribute("state");
   }
   return null;
-});
-
-/**
- * The radiogroup for the license page.
- */
-this.__defineGetter__("gAcceptDeclineLicense", function() {
-  return gWin.document.getElementById("acceptDeclineLicense");
 });
 
 /**
@@ -563,14 +547,6 @@ function getExpectedButtonStates() {
       }
       return { extra1: { disabled: false, hidden: false },
                next  : { disabled: false, hidden: false } };
-    case PAGEID_LICENSE:
-      if (gRemoteContentState != "loaded" ||
-          gAcceptDeclineLicense.selectedIndex != 0) {
-        return { extra1: { disabled: false, hidden: false },
-                 next  : { disabled: true, hidden: false } };
-      }
-      return { extra1: { disabled: false, hidden: false },
-               next  : { disabled: false, hidden: false } };
     case PAGEID_DOWNLOADING:
       return { extra1: { disabled: false, hidden: false } };
     case PAGEID_NO_UPDATES_FOUND:
@@ -654,46 +630,6 @@ function checkRemoteContentState() {
   is(gRemoteContentState, gTest.expectedRemoteContentState, "Checking remote " +
      "content state equals " + gTest.expectedRemoteContentState + " - pageid " +
      gTest.pageid);
-}
-
-/**
- * Adds a select event listener to the license radiogroup element and clicks
- * the radio element specified in the current test's radioClick property.
- */
-function addRadioGroupSelectListenerAndClick() {
-  debugDump("entering - TESTS[" + gTestCounter + "], pageid: " + gTest.pageid);
-
-  gAcceptDeclineLicense.addEventListener("select", radioGroupSelectListener,
-                                         false);
-  gWin.document.getElementById(gTest.radioClick).click();
-}
-
-/**
- * The nsIDOMEventListener for the license radiogroup select event.
- */
-function radioGroupSelectListener(aEvent) {
-  // Return early if the event's original target's nodeName isn't radiogroup.
-  if (aEvent.originalTarget.nodeName != "radiogroup") {
-    debugDump("only handles events with an originalTarget nodeName of " +
-              "|radiogroup|. aEvent.originalTarget.nodeName = " +
-              aEvent.originalTarget.nodeName);
-    return;
-  }
-
-  gAcceptDeclineLicense.removeEventListener("select", radioGroupSelectListener,
-                                            false);
-  gTestCounter++;
-  gCallback(aEvent);
-}
-
-/**
- * Compares the value of the License radiogroup's selectedIndex attribute with
- * the value specified in the test's expectedRadioGroupSelectedIndex property.
- */
-function checkRadioGroupSelectedIndex() {
-  is(gAcceptDeclineLicense.selectedIndex, gTest.expectedRadioGroupSelectedIndex,
-     "Checking license radiogroup selectedIndex equals " +
-     gTest.expectedRadioGroupSelectedIndex);
 }
 
 /**
