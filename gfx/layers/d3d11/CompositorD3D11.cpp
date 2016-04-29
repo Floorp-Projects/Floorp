@@ -159,7 +159,7 @@ private:
   bool mInitOkay;
 };
 
-CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, nsIWidget* aWidget)
+CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
   : Compositor(aWidget, aParent)
   , mAttachments(nullptr)
   , mHwnd(nullptr)
@@ -215,7 +215,7 @@ CompositorD3D11::Initialize()
 
   mFeatureLevel = mDevice->GetFeatureLevel();
 
-  mHwnd = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
+  mHwnd = (HWND)mWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW);
 
   memset(&mVSConstants, 0, sizeof(VertexShaderConstants));
 
@@ -1288,13 +1288,12 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 void
 CompositorD3D11::ForcePresent()
 {
-  LayoutDeviceIntRect rect;
-  mWidget->GetClientBounds(rect);
+  LayoutDeviceIntSize size = mWidget->GetClientSize();
 
   DXGI_SWAP_CHAIN_DESC desc;
   mSwapChain->GetDesc(&desc);
 
-  if (desc.BufferDesc.Width == rect.width && desc.BufferDesc.Height == rect.height) {
+  if (desc.BufferDesc.Width == size.width && desc.BufferDesc.Height == size.height) {
     mSwapChain->Present(0, 0);
   }
 }
@@ -1320,10 +1319,7 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
 void
 CompositorD3D11::EnsureSize()
 {
-  LayoutDeviceIntRect rect;
-  mWidget->GetClientBounds(rect);
-
-  mSize = rect.Size();
+  mSize = mWidget->GetClientSize();
 }
 
 bool

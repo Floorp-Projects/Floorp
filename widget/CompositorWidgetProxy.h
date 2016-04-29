@@ -11,6 +11,7 @@
 
 namespace mozilla {
 namespace layers {
+class Compositor;
 class LayerManagerComposite;
 class Compositor;
 class Composer2D;

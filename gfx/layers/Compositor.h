@@ -189,7 +189,8 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(nsIWidget* aWidget, CompositorBridgeParent* aParent = nullptr)
+  explicit Compositor(widget::CompositorWidgetProxy* aWidget,
+                      CompositorBridgeParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)
@@ -584,7 +585,7 @@ protected:
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
-  nsIWidget* mWidget;
+  widget::CompositorWidgetProxy* mWidget;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;
