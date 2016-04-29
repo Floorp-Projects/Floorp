@@ -454,10 +454,6 @@ public:
     virtual bool CanUseHardwareVideoDecoding();
     static bool CanUseDirect3D11ANGLE();
 
-    // Returns whether or not layers acceleration should be used. This should
-    // only be called on the parent process.
-    bool ShouldUseLayersAcceleration();
-
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
 
@@ -779,6 +775,8 @@ private:
      * This uses nsIScreenManager to determine the screen size and color depth
      */
     void PopulateScreenInfo();
+
+    void InitCompositorAccelerationPrefs();
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
