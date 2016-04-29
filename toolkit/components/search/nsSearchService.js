@@ -2831,6 +2831,9 @@ SearchService.prototype = {
   },
 
   _buildCache: function SRCH_SVC__buildCache() {
+    if (this._batchTask)
+      this._batchTask.disarm();
+
     TelemetryStopwatch.start("SEARCH_SERVICE_BUILD_CACHE_MS");
     let cache = {};
     let locale = getLocale();
