@@ -684,10 +684,12 @@ CompositorVsyncScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRec
   mCompositorBridgeParent->CompositeToTarget(aTarget, aRect);
 }
 
-CompositorBridgeParent::CompositorBridgeParent(nsIWidget* aWidget,
+CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
+                                               CSSToLayoutDeviceScale aScale,
+                                               bool aUseAPZ,
                                                bool aUseExternalSurfaceSize,
                                                int aSurfaceWidth, int aSurfaceHeight)
-  : mWidget(aWidget)
+  : mWidgetProxy(aWidget)
   , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
@@ -727,15 +729,12 @@ CompositorBridgeParent::CompositorBridgeParent(nsIWidget* aWidget,
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
 
-  // The Compositor uses the APZ pref directly since it needs to know whether
-  // to attempt to create the APZ machinery at all.
-  if (gfxPlatform::AsyncPanZoomEnabled() &&
-      (aWidget->WindowType() == eWindowType_toplevel || aWidget->WindowType() == eWindowType_child)) {
+  if (aUseAPZ) {
     mApzcTreeManager = new APZCTreeManager();
   }
 
-  mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget);
-  LayerScope::SetPixelScale(mWidget->GetDefaultScale().scale);
+  mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget->RealWidget());
+  LayerScope::SetPixelScale(aScale.scale);
 
   // mSelfRef is cleared in DeferredDestroy.
   mSelfRef = this;
@@ -1240,7 +1239,8 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   // to local pages, hide every plugin associated with the window.
   if (!hasRemoteContent && BrowserTabsRemoteAutostart() &&
       mCachedPluginData.Length()) {
-    Unused << SendHideAllPlugins((uintptr_t)GetWidget());
+    nsIWidget* widget = GetWidgetProxy()->RealWidget();
+    Unused << SendHideAllPlugins(reinterpret_cast<uintptr_t>(widget));
     mCachedPluginData.Clear();
   }
 #endif
@@ -1583,24 +1583,24 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
     RefPtr<Compositor> compositor;
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
       compositor = new CompositorOGL(this,
-                                     mWidget,
+                                     mWidgetProxy,
                                      mEGLSurfaceSize.width,
                                      mEGLSurfaceSize.height,
                                      mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
 #ifdef MOZ_WIDGET_GTK
       if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
-        compositor = new X11BasicCompositor(this, mWidget);
+        compositor = new X11BasicCompositor(this, mWidgetProxy);
       } else
 #endif
       {
-        compositor = new BasicCompositor(this, mWidget);
+        compositor = new BasicCompositor(this, mWidgetProxy);
       }
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-      compositor = new CompositorD3D11(this, mWidget);
+      compositor = new CompositorD3D11(this, mWidgetProxy);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9) {
-      compositor = new CompositorD3D9(this, mWidget);
+      compositor = new CompositorD3D9(this, mWidgetProxy);
 #endif
     }
 
@@ -2468,13 +2468,16 @@ CompositorBridgeParent::UpdatePluginWindowState(uint64_t aId)
       PLUGINS_LOG("[%" PRIu64 "] nothing to hide", aId);
       return false;
     }
+
+    nsIWidget* widget = GetWidgetProxy()->RealWidget();
+    uintptr_t parentWidget = reinterpret_cast<uintptr_t>(widget);
+
     // We will pass through here in cases where the previous shadow layer
     // tree contained visible plugins and the new tree does not. All we need
     // to do here is hide the plugins for the old tree, so don't waste time
     // calculating clipping.
     mPluginsLayerOffset = nsIntPoint(0,0);
     mPluginsLayerVisibleRegion.SetEmpty();
-    uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
     Unused << lts.mParent->SendHideAllPlugins(parentWidget);
     lts.mUpdatedPluginDataAvailable = false;
     PLUGINS_LOG("[%" PRIu64 "] hide all", aId);
@@ -2551,9 +2554,13 @@ CompositorBridgeParent::HideAllPluginWindows()
   if (!mCachedPluginData.Length() || mDeferPluginWindows) {
     return;
   }
+
+  nsIWidget* widget = GetWidgetProxy()->RealWidget();
+  uintptr_t parentWidget = reinterpret_cast<uintptr_t>(widget);
+
   mDeferPluginWindows = true;
   mPluginWindowsHidden = true;
-  Unused << SendHideAllPlugins((uintptr_t)GetWidget());
+  Unused << SendHideAllPlugins(parentWidget);
   ScheduleComposition();
 }
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)

@@ -930,10 +930,22 @@ nsBaseWidget::ComputeShouldAccelerate()
   return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING);
 }
 
-CompositorBridgeParent* nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
-                                                    int aSurfaceHeight)
+bool
+nsBaseWidget::UseAPZ()
 {
-  return new CompositorBridgeParent(this, false, aSurfaceWidth, aSurfaceHeight);
+  return (gfxPlatform::AsyncPanZoomEnabled() &&
+          (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child));
+}
+
+CompositorBridgeParent*
+nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
+                                        int aSurfaceHeight)
+{
+  return new CompositorBridgeParent(this,
+                                    GetDefaultScale(),
+                                    UseAPZ(),
+                                    false,
+                                    aSurfaceWidth, aSurfaceHeight);
 }
 
 void nsBaseWidget::CreateCompositor()
