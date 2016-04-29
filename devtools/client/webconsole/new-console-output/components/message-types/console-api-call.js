@@ -31,10 +31,12 @@ function ConsoleApiCall(props) {
     repeat
   ];
 
-  return dom.span({className: "message-body-wrapper"},
-    dom.span({},
-      dom.span({className: "message-flex-body"},
-        children
+  return dom.div({ className: "message cm-s-mozilla" },
+    dom.span({className: "message-body-wrapper"},
+      dom.span({},
+        dom.span({className: "message-flex-body"},
+          children
+        )
       )
     )
   );

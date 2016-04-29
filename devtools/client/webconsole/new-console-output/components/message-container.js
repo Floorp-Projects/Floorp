@@ -10,7 +10,6 @@
 const {
   createClass,
   createElement,
-  DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 
@@ -18,13 +17,13 @@ const MessageContainer = createClass({
   displayName: "MessageContainer",
 
   propTypes: {
-    message: PropTypes.object.isRequired,
+    message: PropTypes.object.isRequired
   },
 
   render() {
-    debugger
-    let MessageComponent = getMessageComponent(this.props.message.messageType);
-    return createElement(MessageComponent, { message: this.props.message });
+    const { message } = this.props;
+    let MessageComponent = getMessageComponent(message.messageType);
+    return createElement(MessageComponent, { message });
   }
 });
 
@@ -34,10 +33,14 @@ function getMessageComponent(messageType) {
     case "ConsoleApiCall":
       MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call").ConsoleApiCall;
       break;
+    case "EvaluationResult":
+      MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result").EvaluationResult;
+      break;
   }
   return MessageComponent;
 }
 
 module.exports.MessageContainer = MessageContainer;
+
 // Exported so we can test it with unit tests.
 module.exports.getMessageComponent = getMessageComponent;

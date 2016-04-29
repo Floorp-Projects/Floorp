@@ -17,7 +17,10 @@ DevToolsModules(
     'store.js',
 )
 
-MOCHITEST_CHROME_MANIFESTS += ['test/components/chrome.ini']
+MOCHITEST_CHROME_MANIFESTS += [
+  'test/components/chrome.ini',
+  'test/utils/chrome.ini'
+]
 XPCSHELL_TESTS_MANIFESTS += [
   'test/actions/xpcshell.ini',
   'test/store/xpcshell.ini'

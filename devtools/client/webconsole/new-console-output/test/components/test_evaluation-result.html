@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf8">
-  <title>Test for MessageContainer component</title>
+  <title>Test for EvaluationResult component</title>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript;version=1.8" src="head.js"></script>
   <!-- Any copyright is dedicated to the Public Domain.
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
 </head>
 <body>
-<p>Test for MessageContainer component</p>
+<p>Test for EvaluationResult component</p>
 
 <script type="text/javascript;version=1.8">
 window.onload = Task.async(function* () {
   const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
-
-  const { MessageContainer } = require("devtools/client/webconsole/new-console-output/components/message-container");
-  const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
-  const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
+  const {
+    EvaluationResult,
+    getPreviewComponent
+  } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 
   yield testFullRender();
-  yield testGetMessageComponent();
+  yield testGetPreviewComponent();
 
-  SimpleTest.finish();
+  SimpleTest.finish()
 
   /**
    * Test that passing in a message correctly wires up all the children.
@@ -31,30 +31,26 @@ window.onload = Task.async(function* () {
    * tests. This test just ensures that this component pipes data to its children.
    */
   function testFullRender() {
-    const testValue = testCommands.get("console.log()");
+    const testValue = testCommands.get("new Date()");
     const packet = yield getPacket(testValue.command, testValue.commandType);
     const message = prepareMessage(packet);
     const props = {
       message
     };
-    const rendered = renderComponent(MessageContainer, props);
+    const rendered = renderComponent(EvaluationResult, props);
 
     ok(rendered.textContent.contains(testValue.expectedText),
-      "MessageContainer pipes data to its children as expected");
-  }
+      "EvaluationResult pipes data to its children as expected");
+}
 
   /**
-   * Test that getMessageComponent() returns correct component for each message type.
+   * Test that getPreviewComponent() returns correct component for each object type.
    */
-  function testGetMessageComponent() {
+  function testGetPreviewComponent() {
     const testValues = [
       {
-        commandObj: testCommands.get("console.log()"),
-        expectedComponent: ConsoleApiCall
-      },
-      {
         commandObj: testCommands.get("new Date()"),
-        expectedComponent: EvaluationResult
+        expectedComponent: require("devtools/client/webconsole/new-console-output/components/message-types/date-preview").DatePreview
       }
     ];
 
@@ -62,12 +58,13 @@ window.onload = Task.async(function* () {
       const { commandObj, expectedComponent } = testValue;
       const packet = yield getPacket(commandObj.command, commandObj.commandType);
       const message = prepareMessage(packet);
-      const rendered = shallowRenderComponent(MessageContainer, {message});
+      const rendered = shallowRenderComponent(EvaluationResult, {message});
       is(rendered.type, expectedComponent,
-        `MessageContainer nests ${expectedComponent} based on command: ${commandObj.command}`);
+        `EvaluationResult nests ${expectedComponent} based on command: ${commandObj.command}`);
     }
   }
 });
+
 </script>
 </body>
 </html>
