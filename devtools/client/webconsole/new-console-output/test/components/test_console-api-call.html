@@ -20,7 +20,7 @@ window.onload = Task.async(function* () {
   const message = prepareMessage(packet);
   const rendered = renderComponent(ConsoleApiCall, {message});
 
-  const queryPath = "span span.message-flex-body span.message-body.devtools-monospace";
+  const queryPath = "div.message.cm-s-mozilla span span.message-flex-body span.message-body.devtools-monospace";
   const messageBody = rendered.querySelectorAll(queryPath);
   const consoleStringNodes = messageBody[0].querySelectorAll("span.console-string");
   is(consoleStringNodes.length, 2, "ConsoleApiCall outputs expected HTML structure");

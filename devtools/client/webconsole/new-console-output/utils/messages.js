@@ -7,9 +7,14 @@
 "use strict";
 
 const {
+  CATEGORY_CLASS_FRAGMENTS,
+  CATEGORY_WEBDEV,
+  CATEGORY_OUTPUT,
   LEVELS,
-  SEVERITY_CLASS_FRAGMENTS
+  SEVERITY_CLASS_FRAGMENTS,
+  SEVERITY_LOG,
 } = require("../constants");
+const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 
 function prepareMessage(packet) {
   // @TODO turn this into an Immutable Record.
@@ -23,13 +28,23 @@ function prepareMessage(packet) {
 
   switch (packet.type) {
     case "consoleAPICall":
-      allowRepeating = true;
-      category = "console";
       data = Object.assign({}, packet.message);
+      allowRepeating = true;
+      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_WEBDEV];
       messageType = "ConsoleApiCall";
       repeat = 1;
-      repeatId = getRepeatId(packet.message);
-      severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[packet.message.level]];
+      repeatId = getRepeatId(data);
+      severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]];
+      break;
+    case "evaluationResult":
+    default:
+      data = Object.assign({}, packet.result);
+      allowRepeating = true;
+      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_OUTPUT];
+      messageType = "EvaluationResult";
+      repeat = 1;
+      repeatId = getRepeatId(data);
+      severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
       break;
   }
 
@@ -51,6 +66,6 @@ function getRepeatId(message) {
   return JSON.stringify(clonedMessage);
 }
 
-// Export for use in testing.
 exports.prepareMessage = prepareMessage;
+// Export for use in testing.
 exports.getRepeatId = getRepeatId;

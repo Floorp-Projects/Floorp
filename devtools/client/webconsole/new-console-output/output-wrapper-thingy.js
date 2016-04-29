@@ -17,8 +17,8 @@ const { store } = require("devtools/client/webconsole/new-console-output/store")
 
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
 
-function OutputWrapperThingy(parentNode) {
-  let childComponent = ConsoleOutput({});
+function OutputWrapperThingy(parentNode, jsterm) {
+  let childComponent = ConsoleOutput({ jsterm });
   let provider = React.createElement(Provider, { store: store }, childComponent);
   this.body = ReactDOM.render(provider, parentNode);
 }

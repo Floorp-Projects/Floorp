@@ -57,11 +57,10 @@ function* getPacket(command, type = "evaluationResult") {
           eval(`top.${command}`);
         });
         break;
-      case "evaluate":
-        // @TODO support JavaScriptEvalOutput
-        // let evaluated =
-        //   new Promise(resolve => state.client.evaluateJSAsync("top.console.log(\"bitty\")", resolve));
-        // let packet = yield evaluated;
+      case "evaluationResult":
+        packet = yield new Promise(resolve => {
+          state.client.evaluateJS(command, resolve);
+        });
         break;
     }
 
