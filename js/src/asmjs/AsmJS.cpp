@@ -1581,6 +1581,7 @@ class MOZ_STACK_CLASS ModuleValidator
     MathNameMap           standardLibraryMathNames_;
     AtomicsNameMap        standardLibraryAtomicsNames_;
     SimdOperationNameMap  standardLibrarySimdOpNames_;
+    RootedFunction        dummyFunction_;
 
     // Validation-internal state:
     LifoAlloc             validationLifo_;
@@ -1658,6 +1659,7 @@ class MOZ_STACK_CLASS ModuleValidator
         standardLibraryMathNames_(cx),
         standardLibraryAtomicsNames_(cx),
         standardLibrarySimdOpNames_(cx),
+        dummyFunction_(cx),
         validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
         functions_(cx),
         funcPtrTables_(cx),
@@ -1752,6 +1754,13 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #undef ADDSTDLIBSIMDOPNAME
 
+        // This flows into FunctionBox, so must be tenured.
+        dummyFunction_ = NewScriptedFunction(cx_, 0, JSFunction::INTERPRETED, nullptr,
+                                             /* proto = */ nullptr, gc::AllocKind::FUNCTION,
+                                             TenuredObject);
+        if (!dummyFunction_)
+            return false;
+
         UniqueModuleGeneratorData genData = MakeUnique<ModuleGeneratorData>(cx_, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
@@ -1785,6 +1794,7 @@ class MOZ_STACK_CLASS ModuleValidator
     ModuleGenerator& mg()                    { return mg_; }
     AsmJSParser& parser() const              { return parser_; }
     TokenStream& tokenStream() const         { return parser_.tokenStream; }
+    RootedFunction& dummyFunction()          { return dummyFunction_; }
     bool supportsSimd() const                { return cx_->jitSupportsSimd(); }
     bool atomicsPresent() const              { return atomicsPresent_; }
     uint32_t minHeapLength() const           { return module_->minHeapLength; }
@@ -6600,16 +6610,11 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     if (!fn)
         return false;
 
-    // This flows into FunctionBox, so must be tenured.
-    RootedFunction fun(m.cx(),
-                       NewScriptedFunction(m.cx(), 0, JSFunction::INTERPRETED,
-                                           name, /* proto = */ nullptr, gc::AllocKind::FUNCTION,
-                                           TenuredObject));
-    if (!fun)
-        return false;
+    RootedFunction& fun = m.dummyFunction();
+    fun->setAtom(name);
+    fun->setArgCount(0);
 
     AsmJSParseContext* outerpc = m.parser().pc;
-
     Directives directives(outerpc);
     FunctionBox* funbox = m.parser().newFunctionBox(fn, fun, outerpc, directives, NotGenerator);
     if (!funbox)
