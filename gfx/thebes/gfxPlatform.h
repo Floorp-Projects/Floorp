@@ -451,7 +451,7 @@ public:
 
     static bool CanUseDirect3D9();
     virtual bool CanUseHardwareVideoDecoding();
-    static bool CanUseDirect3D11ANGLE();
+    virtual bool CanUseDirect3D11ANGLE() { return false; }
 
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
