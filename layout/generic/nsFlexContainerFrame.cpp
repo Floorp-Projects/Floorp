@@ -4309,19 +4309,28 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
     didOverrideComputedHeight = true;
   }
 
-  // Override reflow state's computed cross-size, for stretched items.
-  if (aItem.IsStretched()) {
-    MOZ_ASSERT(aItem.GetAlignSelf() == NS_STYLE_ALIGN_STRETCH,
-               "stretched item w/o 'align-self: stretch'?");
+  // Override reflow state's computed cross-size if either:
+  // - the item was stretched (in which case we're imposing a cross size)
+  // ...or...
+  // - the item it has an aspect ratio (in which case the cross-size that's
+  // currently in the reflow state is based on arithmetic involving a stale
+  // main-size value that we just stomped on above). (Note that we could handle
+  // this case using an AutoFlexItemMainSizeOverride, as we do elsewhere; but
+  // given that we *already know* the correct cross size to use here, it's
+  // cheaper to just directly set it instead of setting a frame property.)
+  if (aItem.IsStretched() ||
+      aItem.HasIntrinsicRatio()) {
     if (aAxisTracker.IsCrossAxisHorizontal()) {
       childReflowState.SetComputedWidth(aItem.GetCrossSize());
       didOverrideComputedWidth = true;
     } else {
-      // If this item's height is stretched, it's a relative height.
-      aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       childReflowState.SetComputedHeight(aItem.GetCrossSize());
       didOverrideComputedHeight = true;
     }
+  }
+  if (aItem.IsStretched() && !aAxisTracker.IsCrossAxisHorizontal()) {
+    // If this item's height is stretched, it's a relative height.
+    aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
 
   // XXXdholbert Might need to actually set the correct margins in the
