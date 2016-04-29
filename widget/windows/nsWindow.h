@@ -494,6 +494,7 @@ protected:
   static void             ActivateOtherWindowHelper(HWND aWnd);
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
+
   virtual bool            PreRender(LayerManagerComposite*) override;
   virtual void            PostRender(LayerManagerComposite*) override;
 
