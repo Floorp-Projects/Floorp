@@ -46,9 +46,9 @@ class TraceableFifo : public js::Fifo<T, MinInlineCapacity, AllocPolicy>
 
     void trace(JSTracer* trc) {
         for (size_t i = 0; i < this->front_.length(); ++i)
-            GCPolicy<T>::trace(trc, &this->front_[i], "fifo element");
+            JS::GCPolicy<T>::trace(trc, &this->front_[i], "fifo element");
         for (size_t i = 0; i < this->rear_.length(); ++i)
-            GCPolicy<T>::trace(trc, &this->rear_[i], "fifo element");
+            JS::GCPolicy<T>::trace(trc, &this->rear_[i], "fifo element");
     }
 };
 

@@ -688,9 +688,11 @@ nsTransitionManager::ConsiderStartingTransition(
   timing.mDirection = dom::PlaybackDirection::Normal;
   timing.mFill = dom::FillMode::Backwards;
 
+  // aElement is non-null here, so we emplace it directly.
+  Maybe<OwningAnimationTarget> target;
+  target.emplace(aElement, aNewStyleContext->GetPseudoType());
   RefPtr<ElementPropertyTransition> pt =
-    new ElementPropertyTransition(aElement->OwnerDoc(), aElement,
-                                  aNewStyleContext->GetPseudoType(), timing,
+    new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
                                   startForReversingTest, reversePortion);
 
   pt->SetFrames(GetTransitionKeyframes(aNewStyleContext, aProperty,

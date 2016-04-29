@@ -16,8 +16,24 @@ SkImageGenerator* SkCodecImageGenerator::NewFromEncodedCodec(SkData* data) {
     return new SkCodecImageGenerator(codec, data);
 }
 
+// FIXME: We should expose information about the encoded format on the
+//        SkImageGenerator, so the client can interpret the encoded
+//        format and request an output format.  For now, as a workaround,
+//        we guess what output format the client wants.
+static SkImageInfo fix_info(const SkCodec& codec) {
+    const SkImageInfo& info = codec.getInfo();
+    SkAlphaType alphaType = (kUnpremul_SkAlphaType == info.alphaType()) ? kPremul_SkAlphaType :
+            info.alphaType();
+
+    // Crudely guess that the presence of a color space means sRGB.
+    SkColorProfileType profileType = (codec.getColorSpace()) ? kSRGB_SkColorProfileType :
+            kLinear_SkColorProfileType;
+
+    return SkImageInfo::Make(info.width(), info.height(), info.colorType(), alphaType, profileType);
+}
+
 SkCodecImageGenerator::SkCodecImageGenerator(SkCodec* codec, SkData* data)
-    : INHERITED(codec->getInfo())
+    : INHERITED(fix_info(*codec))
     , fCodec(codec)
     , fData(SkRef(data))
 {}
@@ -40,7 +56,19 @@ bool SkCodecImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels, s
     }
 }
 
-bool SkCodecImageGenerator::onGetYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3],
-        SkYUVColorSpace* colorSpace) {
-    return false;
+bool SkCodecImageGenerator::onQueryYUV8(SkYUVSizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const
+{
+    return fCodec->queryYUV8(sizeInfo, colorSpace);
+}
+
+bool SkCodecImageGenerator::onGetYUV8Planes(const SkYUVSizeInfo& sizeInfo, void* planes[3]) {
+    SkCodec::Result result = fCodec->getYUV8Planes(sizeInfo, planes);
+
+    switch (result) {
+        case SkCodec::kSuccess:
+        case SkCodec::kIncompleteInput:
+            return true;
+        default:
+            return false;
+    }
 }

@@ -82,7 +82,7 @@ BEGIN_TEST(testGCUID)
 
     // Allocate a few arenas worth of objects to ensure we get some compaction.
     const static size_t N = 2049;
-    using ObjectVector = js::GCVector<JSObject*>;
+    using ObjectVector = JS::GCVector<JSObject*>;
     JS::Rooted<ObjectVector> vec(cx, ObjectVector(cx));
     for (size_t i = 0; i < N; ++i) {
         obj = JS_NewPlainObject(cx);

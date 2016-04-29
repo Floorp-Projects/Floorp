@@ -932,10 +932,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/FxAccountsUIGlue.js
 @RESPATH@/components/services_fxaccounts.xpt
 
-@RESPATH@/components/DataStore.manifest
-@RESPATH@/components/DataStoreImpl.js
-@RESPATH@/components/dom_datastore.xpt
-
 @RESPATH@/components/MobileIdentity.manifest
 @RESPATH@/components/MobileIdentity.js
 @RESPATH@/components/dom_mobileidentity.xpt

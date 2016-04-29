@@ -76,8 +76,7 @@ function run_test_pt02() {
                                       "version 2.1a1pre", "2.1a1pre",
                                       "3.1a1pre", "20080811053724",
                                       "http://details/",
-                                      "http://billboard/",
-                                      "http://license/", "true",
+                                      "http://billboard/", "true",
                                       "true", "345600", "true", "4.1a1pre",
                                       "5.1a1pre",
                                       "custom1_attr=\"custom1 value\"",
@@ -120,8 +119,6 @@ function check_test_pt02() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.billboardURL, "http://billboard/",
                "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(bestUpdate.licenseURL, "http://license/",
-               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(bestUpdate.showPrompt,
             "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(bestUpdate.showNeverForVersion,
@@ -214,7 +211,7 @@ function run_test_pt03() {
                                       null, null,
                                       "5.1a1pre", "20080811053724",
                                       "http://details/",
-                                      null, null, null, null, "691200",
+                                      null, null, null, "691200",
                                       null, "version 4.1a1pre", "4.1a1pre");
   gResponseBody = getRemoteUpdatesXMLString(updates);
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
@@ -240,8 +237,6 @@ function check_test_pt03() {
                "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.billboardURL, "http://details/",
                "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
-  Assert.ok(!bestUpdate.licenseURL,
-            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(bestUpdate.showPrompt,
             "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
   Assert.ok(bestUpdate.showNeverForVersion,

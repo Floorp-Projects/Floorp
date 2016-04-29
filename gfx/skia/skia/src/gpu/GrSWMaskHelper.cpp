@@ -105,17 +105,13 @@ void GrSWMaskHelper::draw(const SkRect& rect, SkRegion::Op op,
                           bool antiAlias, uint8_t alpha) {
     SkPaint paint;
 
-    SkXfermode* mode = SkXfermode::Create(op_to_mode(op));
-
     SkASSERT(kNone_CompressionMode == fCompressionMode);
 
-    paint.setXfermode(mode);
+    paint.setXfermode(SkXfermode::Make(op_to_mode(op)));
     paint.setAntiAlias(antiAlias);
     paint.setColor(SkColorSetARGB(alpha, alpha, alpha, alpha));
 
     fDraw.drawRect(rect, paint);
-
-    SkSafeUnref(mode);
 }
 
 /**
@@ -127,7 +123,6 @@ void GrSWMaskHelper::draw(const SkPath& path, const SkStrokeRec& stroke, SkRegio
     SkPaint paint;
     if (stroke.isHairlineStyle()) {
         paint.setStyle(SkPaint::kStroke_Style);
-        paint.setStrokeWidth(SK_Scalar1);
     } else {
         if (stroke.isFillStyle()) {
             paint.setStyle(SkPaint::kFill_Style);
@@ -200,7 +195,7 @@ bool GrSWMaskHelper::init(const SkIRect& resultBounds,
             fCompressedBuffer.reset(cmpSz);
             fCompressionMode = kBlitter_CompressionMode;
         }
-    } 
+    }
 
     sk_bzero(&fDraw, sizeof(fDraw));
 
@@ -252,17 +247,11 @@ GrTexture* GrSWMaskHelper::createTexture() {
 
 void GrSWMaskHelper::sendTextureData(GrTexture *texture, const GrSurfaceDesc& desc,
                                      const void *data, size_t rowbytes) {
-    // If we aren't reusing scratch textures we don't need to flush before
-    // writing since no one else will be using 'texture'
-    bool reuseScratch = fContext->caps()->reuseScratchTextures();
-
     // Since we're uploading to it, and it's compressed, 'texture' shouldn't
     // have a render target.
     SkASSERT(nullptr == texture->asRenderTarget());
 
-    texture->writePixels(0, 0, desc.fWidth, desc.fHeight,
-                         desc.fConfig, data, rowbytes,
-                         reuseScratch ? 0 : GrContext::kDontFlush_PixelOpsFlag);
+    texture->writePixels(0, 0, desc.fWidth, desc.fHeight, desc.fConfig, data, rowbytes);
 }
 
 void GrSWMaskHelper::compressTextureData(GrTexture *texture, const GrSurfaceDesc& desc) {
@@ -285,7 +274,7 @@ void GrSWMaskHelper::toTexture(GrTexture *texture) {
     desc.fWidth = fPixels.width();
     desc.fHeight = fPixels.height();
     desc.fConfig = texture->config();
-        
+
     // First see if we should compress this texture before uploading.
     switch (fCompressionMode) {
         case kNone_CompressionMode:

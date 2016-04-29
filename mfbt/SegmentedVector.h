@@ -159,7 +159,7 @@ public:
   // Returns false if the allocation failed. (If you are using an infallible
   // allocation policy, use InfallibleAppend() instead.)
   template<typename U>
-  MOZ_WARN_UNUSED_RESULT bool Append(U&& aU)
+  MOZ_MUST_USE bool Append(U&& aU)
   {
     Segment* last = mSegments.getLast();
     if (!last || last->Length() == kSegmentCapacity) {

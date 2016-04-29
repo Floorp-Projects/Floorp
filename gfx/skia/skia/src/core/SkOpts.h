@@ -23,13 +23,6 @@ namespace SkOpts {
 
     // Declare function pointers here...
 
-    // Returns a fast approximation of 1.0f/sqrtf(x).
-    extern float (*rsqrt)(float);
-
-    // See SkUtils.h
-    extern void (*memset16)(uint16_t[], uint16_t, int);
-    extern void (*memset32)(uint32_t[], uint32_t, int);
-
     // May return nullptr if we haven't specialized the given Mode.
     extern SkXfermode* (*create_xfermode)(const ProcCoeff&, SkXfermode::Mode);
 
@@ -46,6 +39,7 @@ namespace SkOpts {
 
     extern void (*blit_mask_d32_a8)(SkPMColor*, size_t, const SkAlpha*, size_t, SkColor, int, int);
     extern void (*blit_row_color32)(SkPMColor*, const SkPMColor*, int, SkPMColor);
+    extern void (*blit_row_s32a_opaque)(SkPMColor*, const SkPMColor*, int, U8CPU);
 
     // This function is an optimized version of SkColorCubeFilter::filterSpan
     extern void (*color_cube_filter_span)(const SkPMColor[],
@@ -58,10 +52,21 @@ namespace SkOpts {
 
     extern SkMatrix::MapPtsProc matrix_translate, matrix_scale_translate, matrix_affine;
 
-    typedef void (*Swizzle_8888_8888)(uint32_t[], const uint32_t[], int);
-    extern Swizzle_8888_8888 premul_xxxa,  // BGRA -> bgrA or RGBA -> rgbA
-                             swaprb_xxxa,  // BGRA -> RGBA or RGBA -> BGRA
-                      premul_swaprb_xxxa;  // BGRA -> rgbA or RGBA -> bgrA
+    // Swizzle input into some sort of 8888 pixel, {premul,unpremul} x {rgba,bgra}.
+    typedef void (*Swizzle_8888)(uint32_t*, const void*, int);
+    extern Swizzle_8888 RGBA_to_BGRA,          // i.e. just swap RB
+                        RGBA_to_rgbA,          // i.e. just premultiply
+                        RGBA_to_bgrA,          // i.e. swap RB and premultiply
+                        RGB_to_RGB1,           // i.e. insert an opaque alpha
+                        RGB_to_BGR1,           // i.e. swap RB and insert an opaque alpha
+                        gray_to_RGB1,          // i.e. expand to color channels + an opaque alpha
+                        grayA_to_RGBA,         // i.e. expand to color channels
+                        grayA_to_rgbA,         // i.e. expand to color channels and premultiply
+                        inverted_CMYK_to_RGB1, // i.e. convert color space
+                        inverted_CMYK_to_BGR1; // i.e. convert color space
+
+    extern void (*half_to_float)(float[], const uint16_t[], int);
+    extern void (*float_to_half)(uint16_t[], const float[], int);
 }
 
 #endif//SkOpts_DEFINED

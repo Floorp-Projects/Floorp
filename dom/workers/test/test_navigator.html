@@ -35,12 +35,6 @@ Tests of DOM Worker Navigator
       return;
     }
 
-    if (args.name === "getDataStores") {
-      var type = typeof navigator[args.name];
-      is(type, args.value, "getDataStores() exists and it's a function.");
-      return;
-    }
-
     if (args.name === "languages") {
       is(navigator.languages.toString(), args.value.toString(), "languages matches");
       return;

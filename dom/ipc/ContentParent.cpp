@@ -41,7 +41,6 @@
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
-#include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/Element.h"
@@ -2305,7 +2304,6 @@ ContentParent::InitializeMembers()
   mIsAlive = true;
   mMetamorphosed = false;
   mSendPermissionUpdates = false;
-  mSendDataStoreInfos = false;
   mCalledClose = false;
   mCalledCloseWithError = false;
   mCalledKillHard = false;
@@ -2955,27 +2953,6 @@ ContentParent::RecvAudioChannelServiceStatus(
 
   service->ChildStatusReceived(mChildID, aTelephonyChannel,
                                aContentOrNormalChannel, aAnyChannel);
-  return true;
-}
-
-bool
-ContentParent::RecvDataStoreGetStores(
-                                    const nsString& aName,
-                                    const nsString& aOwner,
-                                    const IPC::Principal& aPrincipal,
-                                    InfallibleTArray<DataStoreSetting>* aValue)
-{
-  RefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
-  if (NS_WARN_IF(!service)) {
-    return false;
-  }
-
-  nsresult rv = service->GetDataStoresFromIPC(aName, aOwner, aPrincipal, aValue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  mSendDataStoreInfos = true;
   return true;
 }
 

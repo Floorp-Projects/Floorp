@@ -393,12 +393,12 @@ public:
    */
   void ReplaceSubstring(const self_type& aTarget, const self_type& aNewValue);
   void ReplaceSubstring(const char_type* aTarget, const char_type* aNewValue);
-  MOZ_WARN_UNUSED_RESULT bool ReplaceSubstring(const self_type& aTarget,
-                                               const self_type& aNewValue,
-                                               const fallible_t&);
-  MOZ_WARN_UNUSED_RESULT bool ReplaceSubstring(const char_type* aTarget,
-                                               const char_type* aNewValue,
-                                               const fallible_t&);
+  MOZ_MUST_USE bool ReplaceSubstring(const self_type& aTarget,
+                                     const self_type& aNewValue,
+                                     const fallible_t&);
+  MOZ_MUST_USE bool ReplaceSubstring(const char_type* aTarget,
+                                     const char_type* aNewValue,
+                                     const fallible_t&);
 
 
   /**

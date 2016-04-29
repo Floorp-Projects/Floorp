@@ -44,7 +44,7 @@ function log(...stuff) {
 
   var d = new Date();
   let msg = "hashcompleter: " + d.toTimeString() + ": " + stuff.join(" ");
-  dump(msg + "\n");
+  dump(Services.urlFormatter.trimSensitiveURLs(msg) + "\n");
 }
 
 // Map the HTTP response code to a Telemetry bucket
@@ -313,7 +313,7 @@ HashCompleterRequest.prototype = {
   // begin.
   begin: function HCR_begin() {
     if (!this._completer.canMakeRequest(this.gethashUrl)) {
-      dump("hashcompleter: Can't make request to " + this.gethashUrl + "\n");
+      log("Can't make request to " + this.gethashUrl + "\n");
       this.notifyFailure(Cr.NS_ERROR_ABORT);
       return;
     }
@@ -337,7 +337,7 @@ HashCompleterRequest.prototype = {
     // with onStopRequest since we implement nsIStreamListener on the
     // channel.
     if (this._channel && this._channel.isPending()) {
-      dump("hashcompleter: cancelling request to " + this.gethashUrl + "\n");
+      log("cancelling request to " + this.gethashUrl + "\n");
       Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT").add(1);
       this._channel.cancel(Cr.NS_BINDING_ABORTED);
     }
@@ -505,7 +505,7 @@ HashCompleterRequest.prototype = {
   },
 
   notifyFailure: function HCR_notifyFailure(aStatus) {
-    dump("hashcompleter: notifying failure\n");
+    log("notifying failure\n");
     for (let i = 0; i < this._requests.length; i++) {
       let request = this._requests[i];
       request.callback.completionFinished(aStatus);
@@ -559,7 +559,7 @@ HashCompleterRequest.prototype = {
         this.handleResponse();
       }
       catch (err) {
-        dump(err.stack);
+        log(err.stack);
         aStatusCode = err.value;
         success = false;
       }

@@ -6,11 +6,13 @@
  */
 
 #include "SkCodec.h"
+#include "SkColorSpace.h"
 #include "SkColorTable.h"
 #include "SkImageInfo.h"
 #include "SkSwizzler.h"
 
-#include "gif_lib.h"
+struct GifFileType;
+struct SavedImage;
 
 /*
  *
@@ -64,7 +66,7 @@ protected:
 
     bool onRewind() override;
 
-    uint32_t onGetFillValue(SkColorType colorType, SkAlphaType alphaType) const override;
+    uint32_t onGetFillValue(SkColorType) const override;
 
     int onOutputScanline(int inputScanline) const override;
 
@@ -128,7 +130,7 @@ private:
      * @param options  Informs the swizzler if destination memory is zero initialized.
      *                 Contains subset information.
      */
-    Result initializeSwizzler(const SkImageInfo& dstInfo,
+    void initializeSwizzler(const SkImageInfo& dstInfo,
             const Options& options);
 
     SkSampler* getSampler(bool createIfNecessary) override {

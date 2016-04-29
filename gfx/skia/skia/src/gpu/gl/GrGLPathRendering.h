@@ -41,10 +41,10 @@ public:
     void resetContext();
 
     /**
-     * Called when the GPU resources have been lost and need to be abandoned
-     * (for example after a context loss).
+     * Called when the context either is about to be lost or is lost. DisconnectType indicates
+     * whether GPU resources should be cleaned up or abandoned when this is called.
      */
-    void abandonGpuResources();
+    void disconnect(GrGpu::DisconnectType);
 
     bool shouldBindFragmentInputs() const {
         return fCaps.bindFragmentInputSupport;
@@ -65,9 +65,19 @@ public:
 
 protected:
     void onStencilPath(const StencilPathArgs&, const GrPath*) override;
-    void onDrawPath(const DrawPathArgs&, const GrPath*) override;
-    void onDrawPaths(const DrawPathArgs&, const GrPathRange*, const void* indices, PathIndexType,
-                     const float transformValues[], PathTransformType, int count) override;
+    void onDrawPath(const GrPipeline&,
+                    const GrPrimitiveProcessor&,
+                    const GrStencilSettings&,
+                    const GrPath*) override;
+    void onDrawPaths(const GrPipeline&,
+                     const GrPrimitiveProcessor&,
+                     const GrStencilSettings&,
+                     const GrPathRange*,
+                     const void* indices,
+                     PathIndexType,
+                     const float transformValues[],
+                     PathTransformType,
+                     int count) override;
 private:
     /**
      * Mark certain functionality as not supported.

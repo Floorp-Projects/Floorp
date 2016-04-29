@@ -8,6 +8,7 @@
 #define gc_GCRuntime_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/EnumSet.h"
 
 #include "jsfriendapi.h"
 #include "jsgc.h"
@@ -577,6 +578,8 @@ class ChainedIter
 
 typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy> RootedValueMap;
 
+using AllocKinds = mozilla::EnumSet<AllocKind>;
+
 class GCRuntime
 {
   public:
@@ -611,7 +614,6 @@ class GCRuntime
         gcstats::AutoPhase ap(stats, gcstats::PHASE_EVICT_NURSERY);
         minorGCImpl(reason, nullptr);
     }
-    void clearPostBarrierCallbacks();
     bool gcIfRequested(JSContext* cx = nullptr);
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
@@ -970,6 +972,7 @@ class GCRuntime
     bool relocateArenas(Zone* zone, JS::gcreason::Reason reason, Arena*& relocatedListOut,
                         SliceBudget& sliceBudget);
     void updateTypeDescrObjects(MovingTracer* trc, Zone* zone);
+    void updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount);
     void updateAllCellPointers(MovingTracer* trc, Zone* zone);
     void updatePointersToRelocatedCells(Zone* zone);
     void protectAndHoldArenas(Arena* arenaList);
@@ -1173,7 +1176,7 @@ class GCRuntime
     bool sweepingTypes;
     unsigned finalizePhase;
     JS::Zone* sweepZone;
-    unsigned sweepKindIndex;
+    AllocKind sweepKind;
     bool abortSweepAfterCurrentGroup;
 
     /*

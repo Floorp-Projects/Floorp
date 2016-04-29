@@ -49,7 +49,7 @@ MediaShutdownManager::Instance()
 void
 MediaShutdownManager::EnsureCorrectShutdownObserverState()
 {
-  MOZ_ASSERT(!mIsDoingXPCOMShutDown);
+  MOZ_DIAGNOSTIC_ASSERT(!mIsDoingXPCOMShutDown);
   bool needShutdownObserver = mDecoders.Count() > 0;
   if (needShutdownObserver != mIsObservingShutdown) {
     mIsObservingShutdown = needShutdownObserver;

@@ -332,8 +332,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
   , mAudioChannelAgentPlaying(false)
-  , mExtraCurrentTimeSinceLastStartedBlocking(0)
-  , mExtraCurrentTimeUpdatedSinceLastStableState(false)
   , mCaptured(false)
 {
   MediaStreamGraph* graph = aIsOffline ?
@@ -647,74 +645,6 @@ AudioDestinationNode::CreateAudioChannelAgent()
   }
 
   return NS_OK;
-}
-
-void
-AudioDestinationNode::NotifyStableState()
-{
-  mExtraCurrentTimeUpdatedSinceLastStableState = false;
-}
-
-void
-AudioDestinationNode::ScheduleStableStateNotification()
-{
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
-  // Dispatch will fail if this is called on AudioNode destruction during
-  // shutdown, in which case failure can be ignored.
-  nsContentUtils::RunInStableState(event.forget());
-}
-
-StreamTime
-AudioDestinationNode::ExtraCurrentTime()
-{
-  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() &&
-      !mExtraCurrentTimeUpdatedSinceLastStableState) {
-    mExtraCurrentTimeUpdatedSinceLastStableState = true;
-    // Round to nearest processing block.
-    double seconds =
-      (TimeStamp::Now() - mStartedBlockingDueToBeingOnlyNode).ToSeconds();
-    mExtraCurrentTimeSinceLastStartedBlocking = WEBAUDIO_BLOCK_SIZE *
-      StreamTime(seconds * Context()->SampleRate() / WEBAUDIO_BLOCK_SIZE + 0.5);
-    ScheduleStableStateNotification();
-  }
-  return mExtraCurrentTimeSinceLastStartedBlocking;
-}
-
-void
-AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
-{
-  if (!mStartedBlockingDueToBeingOnlyNode.IsNull() == aIsOnlyNode) {
-    // Nothing changed.
-    return;
-  }
-
-  if (!mStream) {
-    // DestroyMediaStream has been called, presumably during CC Unlink().
-    return;
-  }
-
-  if (mIsOffline) {
-    // Don't block the destination stream for offline AudioContexts, since
-    // we expect the zero data produced when there are no other nodes to
-    // show up in its result buffer. Also, we would get confused by adding
-    // ExtraCurrentTime before StartRendering has even been called.
-    return;
-  }
-
-  if (aIsOnlyNode) {
-    mStream->Suspend();
-    mStartedBlockingDueToBeingOnlyNode = TimeStamp::Now();
-    // Don't do an update of mExtraCurrentTimeSinceLastStartedBlocking until the next stable state.
-    mExtraCurrentTimeUpdatedSinceLastStableState = true;
-    ScheduleStableStateNotification();
-  } else {
-    // Force update of mExtraCurrentTimeSinceLastStartedBlocking if necessary
-    ExtraCurrentTime();
-    mStream->AdvanceAndResume(mExtraCurrentTimeSinceLastStartedBlocking);
-    mExtraCurrentTimeSinceLastStartedBlocking = 0;
-    mStartedBlockingDueToBeingOnlyNode = TimeStamp();
-  }
 }
 
 void

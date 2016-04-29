@@ -45,3 +45,6 @@ else:
     secondary_cert.inputs += ['dep2.der']
 
 xpcshell_cert.inputs += ['xpcshellCertificate.der']
+
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+    FINAL_TARGET_FILES.icons += ['updater.png']

@@ -20,20 +20,22 @@ public:
      */
     enum SrcConfig {
         kUnknown,  // Invalid type.
-        kBit,      // A single bit to distinguish between white and black
+        kBit,      // A single bit to distinguish between white and black.
         kGray,
+        kGrayAlpha,
         kIndex1,
         kIndex2,
         kIndex4,
         kIndex,
         kRGB,
         kBGR,
-        kRGBX,
-        kBGRX,
+        kBGRX,     // The alpha channel can be anything, but the image is opaque.
         kRGBA,
         kBGRA,
-        kRGB_565,
         kCMYK,
+        kNoOp8,    // kNoOp modes are used exclusively for sampling, subsetting, and
+        kNoOp16,   // copying.  The pixels themselves do not need to be modified.
+        kNoOp32,
     };
 
     /*
@@ -52,17 +54,19 @@ public:
                 return 4;
             case kGray:
             case kIndex:
+            case kNoOp8:
                 return 8;
-            case kRGB_565:
+            case kGrayAlpha:
+            case kNoOp16:
                 return 16;
             case kRGB:
             case kBGR:
                 return 24;
-            case kRGBX:
             case kRGBA:
             case kBGRX:
             case kBGRA:
             case kCMYK:
+            case kNoOp32:
                 return 32;
             default:
                 SkASSERT(false);
@@ -160,10 +164,18 @@ private:
                                          int dstWidth, int bpp, int deltaSrc, int offset,
                                          const SkPMColor ctable[]);
 
-    // May be NULL.  We will not always be able to used an optimized function.
-    RowProc             fFastProc;
-    // Always non-NULL.  We use this if fFastProc is NULL.
-    const RowProc       fProc;
+    template <RowProc Proc>
+    static void SkipLeadingGrayAlphaZerosThen(void* dst, const uint8_t* src, int width, int bpp,
+                                              int deltaSrc, int offset, const SkPMColor ctable[]);
+
+    // May be NULL.  We have not implemented optimized functions for all supported transforms.
+    const RowProc       fFastProc;
+    // Always non-NULL.  Supports sampling.
+    const RowProc       fSlowProc;
+    // The actual RowProc we are using.  This depends on if fFastProc is non-NULL and
+    // whether or not we are sampling.
+    RowProc             fActualProc;
+
     const SkPMColor*    fColorTable;      // Unowned pointer
 
     // Subset Swizzles

@@ -59,7 +59,7 @@ struct JSObjWrapperHasher
   }
 };
 
-namespace js {
+namespace JS {
 template <>
 struct GCPolicy<nsJSObjWrapper*> {
     static void trace(JSTracer* trc, nsJSObjWrapper** wrapper, const char* name) {
@@ -68,7 +68,7 @@ struct GCPolicy<nsJSObjWrapper*> {
         (*wrapper)->trace(trc);
     }
 };
-} // namespace js
+} // namespace JS
 
 class NPObjWrapperHashEntry : public PLDHashEntryHdr
 {
@@ -85,7 +85,7 @@ public:
 // when a plugin is torn down in case there's a leak in the plugin (we
 // don't want to leak the world just because a plugin leaks an
 // NPObject).
-typedef js::GCHashMap<nsJSObjWrapperKey,
+typedef JS::GCHashMap<nsJSObjWrapperKey,
                       nsJSObjWrapper*,
                       JSObjWrapperHasher,
                       js::SystemAllocPolicy> JSObjWrapperTable;

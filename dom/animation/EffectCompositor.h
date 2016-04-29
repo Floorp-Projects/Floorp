@@ -10,7 +10,6 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
-#include "mozilla/NonOwningAnimationTarget.h"
 #include "mozilla/PseudoElementHashEntry.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSProperty.h"
@@ -30,6 +29,7 @@ namespace mozilla {
 class EffectSet;
 class RestyleTracker;
 struct AnimationPerformanceWarning;
+struct NonOwningAnimationTarget;
 
 namespace dom {
 class Animation;

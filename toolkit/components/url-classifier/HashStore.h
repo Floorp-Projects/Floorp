@@ -39,28 +39,27 @@ public:
 
   // Throughout, uint32_t aChunk refers only to the chunk number. Chunk data is
   // stored in the Prefix structures.
-  MOZ_WARN_UNUSED_RESULT nsresult NewAddChunk(uint32_t aChunk) {
+  MOZ_MUST_USE nsresult NewAddChunk(uint32_t aChunk) {
     return mAddChunks.Set(aChunk);
   };
-  MOZ_WARN_UNUSED_RESULT nsresult NewSubChunk(uint32_t aChunk) {
+  MOZ_MUST_USE nsresult NewSubChunk(uint32_t aChunk) {
     return mSubChunks.Set(aChunk);
   };
-  MOZ_WARN_UNUSED_RESULT nsresult NewAddExpiration(uint32_t aChunk) {
+  MOZ_MUST_USE nsresult NewAddExpiration(uint32_t aChunk) {
     return mAddExpirations.Set(aChunk);
   };
-  MOZ_WARN_UNUSED_RESULT nsresult NewSubExpiration(uint32_t aChunk) {
+  MOZ_MUST_USE nsresult NewSubExpiration(uint32_t aChunk) {
     return mSubExpirations.Set(aChunk);
   };
-  MOZ_WARN_UNUSED_RESULT nsresult NewAddPrefix(uint32_t aAddChunk,
-                                               const Prefix& aPrefix);
-  MOZ_WARN_UNUSED_RESULT nsresult NewSubPrefix(uint32_t aAddChunk,
-                                               const Prefix& aPrefix,
-                                               uint32_t aSubChunk);
-  MOZ_WARN_UNUSED_RESULT nsresult NewAddComplete(uint32_t aChunk,
-                                                 const Completion& aCompletion);
-  MOZ_WARN_UNUSED_RESULT nsresult NewSubComplete(uint32_t aAddChunk,
-                                                 const Completion& aCompletion,
-                                                 uint32_t aSubChunk);
+  MOZ_MUST_USE nsresult NewAddPrefix(uint32_t aAddChunk, const Prefix& aPrefix);
+  MOZ_MUST_USE nsresult NewSubPrefix(uint32_t aAddChunk,
+                                     const Prefix& aPrefix,
+                                     uint32_t aSubChunk);
+  MOZ_MUST_USE nsresult NewAddComplete(uint32_t aChunk,
+                                       const Completion& aCompletion);
+  MOZ_MUST_USE nsresult NewSubComplete(uint32_t aAddChunk,
+                                       const Completion& aCompletion,
+                                       uint32_t aSubChunk);
   void SetLocalUpdate(void) { mLocalUpdate = true; }
   bool IsLocalUpdate(void) { return mLocalUpdate; }
 

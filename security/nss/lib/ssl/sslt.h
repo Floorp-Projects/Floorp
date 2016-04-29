@@ -181,31 +181,12 @@ typedef struct SSLChannelInfoStr {
     const char* compressionMethodName;
     SSLCompressionMethod compressionMethod;
 
-    /*
-     * Any attributes that follow MUST NOT accessed directly using their
-     * names. Instead, you must use the accessor macros
-     *   SSL_CHANNEL_INFO_FIELD_GET and SSL_CHANNEL_INFO_FIELD_SET,
-     * which check at runtime that the dynamically linked version of NSS
-     * supports the attribute.
-     * The names of the attributes must start with "UseMacroToAccess_".
-     * (Only internal NSS library code may access the attributes directly,
-     *  but NSS tools MUST use the macros.)
-     */
-
     /* The following fields are added in NSS 3.21.
      * This field only has meaning in TLS < 1.3 and will be set to
      *  PR_FALSE in TLS 1.3.
      */
-    PRBool UseMacroToAccess_extendedMasterSecretUsed;
+    PRBool extendedMasterSecretUsed;
 } SSLChannelInfo;
-
-/* Use these macros to access the entries in SSLChannelInfo that are named
- * starting with "UseMacroToAccess_" */
-#define SSL_CHANNEL_INFO_FIELD_EXISTS(info, field) \
-   ((info).length >= (offsetof(SSLChannelInfo, UseMacroToAccess_##field) + sizeof((info).UseMacroToAccess_##field)))
-
-#define SSL_CHANNEL_INFO_FIELD_GET(info,field) \
-   (SSL_CHANNEL_INFO_FIELD_EXISTS(info,field) ? info.UseMacroToAccess_##field : -1)
 
 /* Preliminary channel info */
 #define ssl_preinfo_version (1U << 0)

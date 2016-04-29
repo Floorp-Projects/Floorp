@@ -6,20 +6,20 @@ const magic1 = 0x61;  // 'a'
 const magic2 = 0x73;  // 's'
 const magic3 = 0x6d;  // 'm'
 
-// EncodingVersion = 10 (to be changed to 1 at some point in the future)
-const ver0 = 0x0a;
-const ver1 = 0x00;
-const ver2 = 0x00;
-const ver3 = 0x00;
+// EncodingVersion (temporary; to be set to 1 at some point before release)
+const ver0 = (Wasm.experimentalVersion >>>  0) & 0xff;
+const ver1 = (Wasm.experimentalVersion >>>  8) & 0xff;
+const ver2 = (Wasm.experimentalVersion >>> 16) & 0xff;
+const ver3 = (Wasm.experimentalVersion >>> 24) & 0xff;
 
 // Section names
-const sigId                = "signatures";
-const importId             = "import_table";
-const functionSignaturesId = "function_signatures";
-const functionTableId      = "function_table";
-const exportTableId        = "export_table";
-const functionBodiesId     = "function_bodies";
-const dataSegmentsId       = "data_segments";
+const sigId                = "type";
+const importId             = "import";
+const functionSignaturesId = "function";
+const functionTableId      = "table";
+const exportTableId        = "export";
+const functionBodiesId     = "code";
+const dataSegmentsId       = "data";
 
 const magicError = /failed to match magic number/;
 const versionError = /failed to match binary version/;
@@ -32,8 +32,10 @@ const I64Code = 2;
 const F32Code = 3;
 const F64Code = 4;
 
-const NopCode = 0x00;
-const BlockCode = 0x01;
+const FunctionConstructorCode = 0x40;
+
+const Block = 0x01;
+const End = 0x0f;
 
 function toU8(array) {
     for (let b of array)
@@ -75,15 +77,15 @@ function moduleHeaderThen(...rest) {
 var o = wasmEval(toU8(moduleHeaderThen()));
 assertEq(Object.getOwnPropertyNames(o).length, 0);
 
-wasmEval(toU8(moduleHeaderThen(1, 0)));        // unknown section containing 0-length string
-wasmEval(toU8(moduleHeaderThen(2, 1, 0)));     // unknown section containing 1-length string ("\0")
-wasmEval(toU8(moduleHeaderThen(1, 0,  1, 0)));
-wasmEval(toU8(moduleHeaderThen(1, 0,  2, 1, 0)));
-wasmEval(toU8(moduleHeaderThen(1, 0,  2, 1, 0)));
+wasmEval(toU8(moduleHeaderThen(0, 0)));        // unknown section containing 0-length string
+wasmEval(toU8(moduleHeaderThen(1, 0, 0)));     // unknown section containing 1-length string ("\0")
+wasmEval(toU8(moduleHeaderThen(0, 0,  0, 0)));
+wasmEval(toU8(moduleHeaderThen(0, 0,  1, 0, 0)));
+wasmEval(toU8(moduleHeaderThen(1, 0, 0,  1, 0, 0)));
+wasmEval(toU8(moduleHeaderThen(1, 0, 0,  0, 0)));
 
 assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1))), TypeError, sectionError);
-assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 0))), TypeError, unknownSectionError);
+assertErrorMessage(() => wasmEval(toU8(moduleHeaderThen(0, 1))), TypeError, unknownSectionError);
 
 function cstring(name) {
     return (name + '\0').split('').map(c => c.charCodeAt(0));
@@ -101,9 +103,8 @@ function string(name) {
 function moduleWithSections(sectionArray) {
     var bytes = moduleHeaderThen();
     for (let section of sectionArray) {
-        var sectionName = string(section.name);
-        bytes.push(...varU32(sectionName.length + section.body.length));
-        bytes.push(...sectionName);
+        bytes.push(...string(section.name));
+        bytes.push(...varU32(section.body.length));
         bytes.push(...section.body);
     }
     return toU8(bytes);
@@ -113,10 +114,13 @@ function sigSection(sigs) {
     var body = [];
     body.push(...varU32(sigs.length));
     for (let sig of sigs) {
+        body.push(...varU32(FunctionConstructorCode));
         body.push(...varU32(sig.args.length));
-        body.push(...varU32(sig.ret));
         for (let arg of sig.args)
             body.push(...varU32(arg));
+        body.push(...varU32(sig.ret == VoidCode ? 0 : 1));
+        if (sig.ret != VoidCode)
+            body.push(...varU32(sig.ret));
     }
     return { name: sigId, body };
 }
@@ -167,8 +171,8 @@ const i2vSig = {args:[I32Code], ret:VoidCode};
 const v2vBody = funcBody({locals:[], body:[]});
 
 assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: U32MAX_LEB } ])), TypeError, /too many signatures/);
-assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, ...U32MAX_LEB], } ])), TypeError, /too many arguments in signature/);
-assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([{args:[], ret:VoidCode}, {args:[], ret:VoidCode}])])), TypeError, /duplicate signature/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, 0], } ])), TypeError, /expected function form/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ {name: sigId, body: [1, FunctionConstructorCode, ...U32MAX_LEB], } ])), TypeError, /too many arguments in signature/);
 
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: sigId, body: [1]}])), TypeError);
 assertThrowsInstanceOf(() => wasmEval(moduleWithSections([{name: sigId, body: [1, 1, 0]}])), TypeError);
@@ -209,14 +213,8 @@ assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), decl
 wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection([0,1,0,2]), bodySection([v2vBody, v2vBody, v2vBody])]));
 wasmEval(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection([0,1,2]), bodySection([v2vBody, v2vBody, v2vBody])]));
 
-// Deep nesting shouldn't crash. With iterative decoding, we should test that
-// this doesn't even throw.
-try {
-    var manyBlocks = [];
-    for (var i = 0; i < 20000; i++)
-        manyBlocks.push(BlockCode, 1);
-    manyBlocks.push(NopCode);
-    wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:manyBlocks})])]));
-} catch (e) {
-    assertEq(String(e).indexOf("too much recursion") == -1, false);
-}
+// Deep nesting shouldn't crash or even throw.
+var manyBlocks = [];
+for (var i = 0; i < 20000; i++)
+    manyBlocks.push(Block, End);
+wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0]), bodySection([funcBody({locals:[], body:manyBlocks})])]));

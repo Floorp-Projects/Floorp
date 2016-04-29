@@ -63,10 +63,29 @@ void GrGLSLShaderBuilder::appendTextureLookup(SkString* out,
     const GrGLSLCaps* glslCaps = fProgramBuilder->glslCaps();
     GrGLSLUniformHandler* uniformHandler = fProgramBuilder->uniformHandler();
     GrSLType samplerType = uniformHandler->getUniformVariable(sampler.fSamplerUniform).getType();
-    out->appendf("%s(%s, %s)",
-                 GrGLSLTexture2DFunctionName(varyingType, samplerType, glslCaps->generation()),
-                 uniformHandler->getUniformCStr(sampler.fSamplerUniform),
-                 coordName);
+    if (samplerType == kSampler2DRect_GrSLType) {
+        if (varyingType == kVec2f_GrSLType) {
+            out->appendf("%s(%s, textureSize(%s) * %s)",
+                         GrGLSLTexture2DFunctionName(varyingType, samplerType,
+                                                     glslCaps->generation()),
+                         uniformHandler->getUniformCStr(sampler.fSamplerUniform),
+                         uniformHandler->getUniformCStr(sampler.fSamplerUniform),
+                         coordName);
+        } else {
+            out->appendf("%s(%s, vec3(textureSize(%s) * %s.xy, %s.z))",
+                         GrGLSLTexture2DFunctionName(varyingType, samplerType,
+                                                     glslCaps->generation()),
+                         uniformHandler->getUniformCStr(sampler.fSamplerUniform),
+                         uniformHandler->getUniformCStr(sampler.fSamplerUniform),
+                         coordName,
+                         coordName);
+        }
+    } else {
+        out->appendf("%s(%s, %s)",
+                     GrGLSLTexture2DFunctionName(varyingType, samplerType, glslCaps->generation()),
+                     uniformHandler->getUniformCStr(sampler.fSamplerUniform),
+                     coordName);
+    }
 
     // This refers to any swizzling we may need to get from some backend internal format to the
     // format used in GrPixelConfig. If this is implemented by the GrGpu object, then swizzle will
@@ -93,11 +112,13 @@ void GrGLSLShaderBuilder::appendTextureLookupAndModulate(const char* modulation,
     this->codeAppend((GrGLSLExpr4(modulation) * GrGLSLExpr4(lookup)).c_str());
 }
 
-void GrGLSLShaderBuilder::addFeature(uint32_t featureBit, const char* extensionName) {
-    if (!(featureBit & fFeaturesAddedMask)) {
-        this->extensions().appendf("#extension %s: require\n", extensionName);
-        fFeaturesAddedMask |= featureBit;
+bool GrGLSLShaderBuilder::addFeature(uint32_t featureBit, const char* extensionName) {
+    if (featureBit & fFeaturesAddedMask) {
+        return false;
     }
+    this->extensions().appendf("#extension %s: require\n", extensionName);
+    fFeaturesAddedMask |= featureBit;
+    return true;
 }
 
 void GrGLSLShaderBuilder::appendDecls(const VarArray& vars, SkString* out) const {
@@ -139,8 +160,7 @@ void GrGLSLShaderBuilder::finalize(uint32_t visibility) {
     this->versionDecl() = fProgramBuilder->glslCaps()->versionDeclString();
     this->compileAndAppendLayoutQualifiers();
     SkASSERT(visibility);
-    fProgramBuilder->appendUniformDecls((GrGLSLUniformHandler::ShaderVisibility) visibility,
-                                        &this->uniforms());
+    fProgramBuilder->appendUniformDecls((GrShaderFlags) visibility, &this->uniforms());
     this->appendDecls(fInputs, &this->inputs());
     this->appendDecls(fOutputs, &this->outputs());
     this->onFinalize();
@@ -154,4 +174,3 @@ void GrGLSLShaderBuilder::finalize(uint32_t visibility) {
 
     fFinalized = true;
 }
-

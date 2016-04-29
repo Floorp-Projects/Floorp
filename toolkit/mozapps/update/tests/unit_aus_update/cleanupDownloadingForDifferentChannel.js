@@ -20,7 +20,7 @@ function run_test() {
   patches = getLocalPatchString(null, null, null, null, null, null,
                                 STATE_FAILED);
   updates = getLocalUpdateString(patches, null, "Existing", "version 3.0",
-                                 "3.0", "3.0", null, null, null, null, null,
+                                 "3.0", "3.0", null, null, null, null,
                                  getString("patchApplyFailure"));
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
 

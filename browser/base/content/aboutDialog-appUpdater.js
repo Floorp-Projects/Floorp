@@ -6,7 +6,6 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
@@ -191,21 +190,6 @@ appUpdater.prototype =
   },
 
   /**
-   * Check for addon compat, or start the download right away
-   */
-  doUpdate: function() {
-    // skip the compatibility check if the update doesn't provide appVersion,
-    // or the appVersion is unchanged, e.g. nightly update
-    if (!this.update.appVersion ||
-        Services.vc.compare(gAppUpdater.update.appVersion,
-                            Services.appinfo.version) == 0) {
-      this.startDownload();
-    } else {
-      this.checkAddonCompatibility();
-    }
-  },
-
-  /**
    * Handles oncommand for the "Restart to Update" button
    * which is presented after the download has been downloaded.
    */
@@ -237,7 +221,7 @@ appUpdater.prototype =
 
   /**
    * Handles oncommand for the "Apply Update…" button
-   * which is presented if we need to show the billboard or license.
+   * which is presented if we need to show the billboard.
    */
   buttonApplyBillboard: function() {
     const URI_UPDATE_PROMPT_DIALOG = "chrome://mozapps/content/update/updates.xul";
@@ -282,15 +266,13 @@ appUpdater.prototype =
         return;
       }
 
-      // Firefox no longer displays a license for updates and the licenseURL
-      // check is just in case a distibution does.
-      if (gAppUpdater.update.billboardURL || gAppUpdater.update.licenseURL) {
+      if (gAppUpdater.update.billboardURL) {
         gAppUpdater.selectPanel("applyBillboard");
         return;
       }
 
       if (gAppUpdater.updateAuto) // automatically download and install
-        gAppUpdater.doUpdate();
+        gAppUpdater.startDownload();
       else // ask
         gAppUpdater.selectPanel("downloadAndInstall");
     },
@@ -315,118 +297,6 @@ appUpdater.prototype =
         throw Components.results.NS_ERROR_NO_INTERFACE;
       return this;
     }
-  },
-
-  /**
-   * Checks the compatibility of add-ons for the application update.
-   */
-  checkAddonCompatibility: function() {
-    try {
-      var hotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
-    }
-    catch (e) { }
-
-    var self = this;
-    AddonManager.getAllAddons(function(aAddons) {
-      self.addons = [];
-      self.addonsCheckedCount = 0;
-      aAddons.forEach(function(aAddon) {
-        // Protect against code that overrides the add-ons manager and doesn't
-        // implement the isCompatibleWith or the findUpdates method.
-        if (!("isCompatibleWith" in aAddon) || !("findUpdates" in aAddon)) {
-          let errMsg = "Add-on doesn't implement either the isCompatibleWith " +
-                       "or the findUpdates method!";
-          if (aAddon.id)
-            errMsg += " Add-on ID: " + aAddon.id;
-          Components.utils.reportError(errMsg);
-          return;
-        }
-
-        // If an add-on isn't appDisabled and isn't userDisabled then it is
-        // either active now or the user expects it to be active after the
-        // restart. If that is the case and the add-on is not installed by the
-        // application and is not compatible with the new application version
-        // then the user should be warned that the add-on will become
-        // incompatible. If an addon's type equals plugin it is skipped since
-        // checking plugins compatibility information isn't supported and
-        // getting the scope property of a plugin breaks in some environments
-        // (see bug 566787). The hotfix add-on is also ignored as it shouldn't
-        // block the user from upgrading.
-        try {
-          if (aAddon.type != "plugin" && aAddon.id != hotfixID &&
-              !aAddon.appDisabled && !aAddon.userDisabled &&
-              aAddon.scope != AddonManager.SCOPE_APPLICATION &&
-              aAddon.isCompatible &&
-              !aAddon.isCompatibleWith(self.update.appVersion,
-                                       self.update.platformVersion))
-            self.addons.push(aAddon);
-        }
-        catch (e) {
-          Components.utils.reportError(e);
-        }
-      });
-      self.addonsTotalCount = self.addons.length;
-      if (self.addonsTotalCount == 0) {
-        self.startDownload();
-        return;
-      }
-
-      self.checkAddonsForUpdates();
-    });
-  },
-
-  /**
-   * Checks if there are updates for add-ons that are incompatible with the
-   * application update.
-   */
-  checkAddonsForUpdates: function() {
-    this.addons.forEach(function(aAddon) {
-      aAddon.findUpdates(this, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED,
-                         this.update.appVersion,
-                         this.update.platformVersion);
-    }, this);
-  },
-
-  /**
-   * See XPIProvider.jsm
-   */
-  onCompatibilityUpdateAvailable: function(aAddon) {
-    for (var i = 0; i < this.addons.length; ++i) {
-      if (this.addons[i].id == aAddon.id) {
-        this.addons.splice(i, 1);
-        break;
-      }
-    }
-  },
-
-  /**
-   * See XPIProvider.jsm
-   */
-  onUpdateAvailable: function(aAddon, aInstall) {
-    if (!Services.blocklist.isAddonBlocklisted(aAddon,
-                                               this.update.appVersion,
-                                               this.update.platformVersion)) {
-      // Compatibility or new version updates mean the same thing here.
-      this.onCompatibilityUpdateAvailable(aAddon);
-    }
-  },
-
-  /**
-   * See XPIProvider.jsm
-   */
-  onUpdateFinished: function(aAddon) {
-    ++this.addonsCheckedCount;
-
-    if (this.addonsCheckedCount < this.addonsTotalCount)
-      return;
-
-    if (this.addons.length == 0) {
-      // Compatibility updates or new version updates were found for all add-ons
-      this.startDownload();
-      return;
-    }
-
-    this.selectPanel("applyBillboard");
   },
 
   /**

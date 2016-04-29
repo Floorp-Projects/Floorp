@@ -44,7 +44,6 @@ protected:
 
 private:
 
-    bool initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
     SkSampler* getSampler(bool createIfNecessary) override {
         SkASSERT(fMaskSwizzler);
         return fMaskSwizzler;
@@ -55,7 +54,6 @@ private:
 
     SkAutoTDelete<SkMasks>              fMasks;        // owned
     SkAutoTDelete<SkMaskSwizzler>       fMaskSwizzler;
-    const size_t                        fSrcRowBytes;
     SkAutoTDeleteArray<uint8_t>         fSrcBuffer;
 
     typedef SkBmpCodec INHERITED;

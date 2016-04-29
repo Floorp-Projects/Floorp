@@ -53,10 +53,10 @@ class GrRenderTarget;
         return kClassID; \
     }
 
-class GrBatch : public GrNonAtomicRef {
+class GrBatch : public GrNonAtomicRef<GrBatch> {
 public:
     GrBatch(uint32_t classID);
-    ~GrBatch() override;
+    virtual ~GrBatch();
 
     virtual const char* name() const = 0;
 
@@ -95,9 +95,13 @@ public:
 
     uint32_t classID() const { SkASSERT(kIllegalBatchID != fClassID); return fClassID; }
 
-#if GR_BATCH_SPEW
-    uint32_t uniqueID() const { return fUniqueID; }
-#endif
+    // We lazily initialize the uniqueID because currently the only user is GrAuditTrail
+    uint32_t uniqueID() const {
+        if (kIllegalBatchID == fUniqueID) {
+            fUniqueID = GenBatchID();
+        }
+        return fUniqueID;
+    }
     SkDEBUGCODE(bool isUsed() const { return fUsed; })
 
     /** Called prior to drawing. The batch should perform any resource creation necessary to
@@ -153,13 +157,10 @@ private:
 
     SkDEBUGCODE(bool                    fUsed;)
     const uint32_t                      fClassID;
-#if GR_BATCH_SPEW
     static uint32_t GenBatchID() { return GenID(&gCurrBatchUniqueID); }
-    const uint32_t                      fUniqueID;
+    mutable uint32_t                    fUniqueID;
     static int32_t                      gCurrBatchUniqueID;
-#endif
     static int32_t                      gCurrBatchClassID;
-    typedef GrNonAtomicRef INHERITED;
 };
 
 #endif

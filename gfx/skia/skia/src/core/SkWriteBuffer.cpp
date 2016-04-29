@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2012 Google Inc.
  *
@@ -46,10 +45,6 @@ void SkWriteBuffer::writeByteArray(const void* data, size_t size) {
 
 void SkWriteBuffer::writeBool(bool value) {
     fWriter.writeBool(value);
-}
-
-void SkWriteBuffer::writeFixed(SkFixed value) {
-    fWriter.write32(value);
 }
 
 void SkWriteBuffer::writeScalar(SkScalar value) {

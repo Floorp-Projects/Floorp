@@ -1619,7 +1619,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock* mir, Assembler::Condition cond)
 }
 #endif
 
-MOZ_WARN_UNUSED_RESULT bool
+MOZ_MUST_USE bool
 CodeGeneratorShared::addCacheLocations(const CacheLocationList& locs, size_t* numLocs,
                                        size_t* curIndex)
 {

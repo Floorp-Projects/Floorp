@@ -13,8 +13,8 @@ pref("app.update.interval", 28800); // 8 hours
 // background (in seconds)
 // 0 means "download everything at once"
 pref("app.update.download.backgroundInterval", 0);
-// Give the user x seconds to react before showing the big UI. default=168 hours
-pref("app.update.promptWaitTime", 604800);
+// Give the user x seconds to react before showing the big UI. default=184 hours
+pref("app.update.promptWaitTime", 691200);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
 pref("app.update.url.manual", "https://www.mozilla.org/firefox/aurora/");
