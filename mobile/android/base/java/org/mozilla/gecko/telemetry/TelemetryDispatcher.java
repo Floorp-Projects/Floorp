@@ -8,7 +8,7 @@ package org.mozilla.gecko.telemetry;
 
 import android.content.Context;
 import android.util.Log;
-import org.mozilla.gecko.telemetry.core.TelemetryCorePingBuilder;
+import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCorePingBuilder;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadScheduler;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadAllPingsImmediatelyScheduler;
 import org.mozilla.gecko.telemetry.stores.TelemetryJSONFilePingStore;
@@ -36,7 +36,7 @@ import java.lang.ref.WeakReference;
  * this queued ping by reading directly from the store.
  *
  * To implement a new ping type, you should:
- *   1) Implement a {@link TelemetryPingBuilder} for your ping type.
+ *   1) Implement a {@link org.mozilla.gecko.telemetry.pingbuilders.TelemetryPingBuilder} for your ping type.
  *   2) Re-use a ping store in .../stores/ or implement a new one: {@link TelemetryPingStore}. The
  * type of store may be affected by robustness requirements (e.g. do you have data in addition to
  * pings that need to be atomically updated when a ping is stored?) and performance requirements.
