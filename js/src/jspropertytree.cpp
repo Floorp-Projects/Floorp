@@ -239,7 +239,7 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     // list then it points to the shape_ field of the object the list is for.
     // We can tell which it is because the base shape is owned if this is the
     // last property and not otherwise.
-    bool listpPointsIntoShape = !base()->isOwned();
+    bool listpPointsIntoShape = !MaybeForwarded(base())->isOwned();
 
 #ifdef DEBUG
     // Check that we got this right by interrogating the arena.
