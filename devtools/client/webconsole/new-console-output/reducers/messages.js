@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Immutable = require("devtools/client/shared/vendor/immutable");
-
-const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
 function messages(state = [], action) {
@@ -18,7 +15,7 @@ function messages(state = [], action) {
         let lastMessage = state[state.length - 1];
         if (lastMessage.repeatId === newMessage.repeatId) {
           newMessage.repeat = lastMessage.repeat + 1;
-          return state.slice(0, state.length-1).concat(newMessage);
+          return state.slice(0, state.length - 1).concat(newMessage);
         }
       }
       return state.concat([ newMessage ]);

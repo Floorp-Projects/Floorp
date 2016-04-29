@@ -21,6 +21,8 @@ window.onload = Task.async(function* () {
   const message = prepareMessage(packet);
   const props = {
     data: message.data,
+    severity: message.severity,
+    category: message.category,
   };
   const rendered = renderComponent(DatePreview, props);
 

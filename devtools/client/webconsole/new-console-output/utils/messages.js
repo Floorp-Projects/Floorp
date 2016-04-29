@@ -15,10 +15,11 @@ const {
   SEVERITY_CLASS_FRAGMENTS,
   SEVERITY_ERROR,
   SEVERITY_WARNING,
-  SEVERITY_INFO,
   SEVERITY_LOG,
 } = require("../constants");
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
+const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
+const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 function prepareMessage(packet) {
   // @TODO turn this into an Immutable Record.
@@ -88,3 +89,5 @@ function getRepeatId(message) {
 exports.prepareMessage = prepareMessage;
 // Export for use in testing.
 exports.getRepeatId = getRepeatId;
+
+exports.l10n = l10n;

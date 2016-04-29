@@ -1,5 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* exported getPacket, renderComponent, shallowRenderComponent,
+   cleanActualHTML, cleanExpectedHTML */
+
 "use strict";
 
 var { utils: Cu } = Components;
@@ -36,12 +40,17 @@ testCommands.set("new Date()", {
   commandType: "evaluationResult",
   expectedText: "Date 1984-03-15T00:00:00.000Z"
 });
+testCommands.set("pageError", {
+  command: null,
+  commandType: "pageError",
+  expectedText: "ReferenceError: asdf is not defined"
+});
 
 function* getPacket(command, type = "evaluationResult") {
   try {
     // Attach the console to the tab.
     let state = yield new Promise(function(resolve) {
-      attachConsoleToTab(["ConsoleAPI"], (state) => resolve(state));
+      attachConsoleToTab(["ConsoleAPI"], resolve);
     });
 
     // Run the command and get the packet.
@@ -49,18 +58,65 @@ function* getPacket(command, type = "evaluationResult") {
     switch (type) {
       case "consoleAPICall":
         packet = yield new Promise((resolve) => {
-          function onConsoleApiCall(type, packet) {
+          function onConsoleApiCall(apiCallType, apiCallPacket) {
             state.dbgClient.removeListener("consoleAPICall", onConsoleApiCall);
-            resolve(packet)
-          };
-          state.dbgClient.addListener("consoleAPICall", onConsoleApiCall)
-          eval(`top.${command}`);
+            resolve(apiCallPacket);
+          }
+          state.dbgClient.addListener("consoleAPICall", onConsoleApiCall);
+          state.client.evaluateJS(`top.${command}`);
         });
         break;
       case "evaluationResult":
         packet = yield new Promise(resolve => {
           state.client.evaluateJS(command, resolve);
         });
+        break;
+      case "pageError":
+        // @TODO: get packet with RDP
+        packet = {
+          "from": "server1.conn1.child1/consoleActor2",
+          "type": "pageError",
+          "pageError": {
+            "errorMessage": "ReferenceError: asdf is not defined",
+            "sourceName": "data:text/html,<script>asdf</script>",
+            "lineText": "",
+            "lineNumber": 1,
+            "columnNumber": 1,
+            "category": "content javascript",
+            "timeStamp": 1455735574091,
+            "warning": false,
+            "error": false,
+            "exception": true,
+            "strict": false,
+            "info": false,
+            "private": false,
+            "stacktrace": [{
+              "columnNumber": 68,
+              "filename": "test.html",
+              "functionName": "baz",
+              "language": 2,
+              "lineNumber": 1
+            }, {
+              "columnNumber": 43,
+              "filename": "test.html",
+              "functionName": "bar",
+              "language": 2,
+              "lineNumber": 2
+            }, {
+              "columnNumber": 18,
+              "filename": "test.html",
+              "functionName": "foo",
+              "language": 2,
+              "lineNumber": 3
+            }, {
+              "columnNumber": 150,
+              "filename": "test.html",
+              "functionName": "",
+              "language": 2,
+              "lineNumber": 4
+            }]
+          }
+        };
         break;
     }
 
