@@ -8,7 +8,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
-public class GeckoActivity extends AppCompatActivity implements GeckoActivityStatus {
+public abstract class GeckoActivity extends AppCompatActivity implements GeckoActivityStatus {
     // has this activity recently started another Gecko activity?
     private boolean mGeckoActivityOpened;
 
