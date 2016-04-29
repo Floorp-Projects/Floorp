@@ -2021,8 +2021,14 @@ EmitSelect(FunctionCompiler& f)
     return true;
 }
 
+enum class IsAtomic {
+    No = false,
+    Yes = true
+};
+
 static bool
-SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MAsmJSHeapAccess* access, MDefinition** base)
+SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MAsmJSHeapAccess* access, MDefinition** base,
+                    IsAtomic atomic = IsAtomic::No)
 {
     // TODO Remove this after implementing non-wraparound offset semantics.
     uint32_t endOffset = offset + access->byteSize();
@@ -2031,8 +2037,7 @@ SetHeapAccessOffset(FunctionCompiler& f, uint32_t offset, MAsmJSHeapAccess* acce
 
     // Assume worst case.
     bool accessNeedsBoundsCheck = true;
-    bool atomicAccess = true;
-    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck, atomicAccess)) {
+    if (endOffset > f.mirGen().foldableOffsetRange(accessNeedsBoundsCheck, bool(atomic))) {
         MDefinition* rhs = f.constant(Int32Value(offset), MIRType::Int32);
         *base = f.binary<MAdd>(*base, rhs, MIRType::Int32);
         access->setOffset(0);
@@ -2179,7 +2184,7 @@ EmitAtomicsLoad(FunctionCompiler& f)
     access.setAlign(atomicLoad.addr.align);
 
     MDefinition* base = atomicLoad.addr.base;
-    if (!SetHeapAccessOffset(f, atomicLoad.addr.offset, &access, &base))
+    if (!SetHeapAccessOffset(f, atomicLoad.addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
     f.iter().setResult(f.atomicLoadHeap(base, access));
@@ -2198,7 +2203,7 @@ EmitAtomicsStore(FunctionCompiler& f)
     access.setAlign(atomicStore.addr.align);
 
     MDefinition* base = atomicStore.addr.base;
-    if (!SetHeapAccessOffset(f, atomicStore.addr.offset, &access, &base))
+    if (!SetHeapAccessOffset(f, atomicStore.addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
     f.atomicStoreHeap(base, access, atomicStore.value);
@@ -2218,7 +2223,7 @@ EmitAtomicsBinOp(FunctionCompiler& f)
     access.setAlign(atomicBinOp.addr.align);
 
     MDefinition* base = atomicBinOp.addr.base;
-    if (!SetHeapAccessOffset(f, atomicBinOp.addr.offset, &access, &base))
+    if (!SetHeapAccessOffset(f, atomicBinOp.addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
     f.iter().setResult(f.atomicBinopHeap(atomicBinOp.op, base, access, atomicBinOp.value));
@@ -2238,7 +2243,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f)
     access.setAlign(atomicCompareExchange.addr.align);
 
     MDefinition* base = atomicCompareExchange.addr.base;
-    if (!SetHeapAccessOffset(f, atomicCompareExchange.addr.offset, &access, &base))
+    if (!SetHeapAccessOffset(f, atomicCompareExchange.addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
     f.iter().setResult(f.atomicCompareExchangeHeap(base, access,
@@ -2259,7 +2264,7 @@ EmitAtomicsExchange(FunctionCompiler& f)
     access.setAlign(atomicExchange.addr.align);
 
     MDefinition* base = atomicExchange.addr.base;
-    if (!SetHeapAccessOffset(f, atomicExchange.addr.offset, &access, &base))
+    if (!SetHeapAccessOffset(f, atomicExchange.addr.offset, &access, &base, IsAtomic::Yes))
         return false;
 
     f.iter().setResult(f.atomicExchangeHeap(base, access, atomicExchange.value));
