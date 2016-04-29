@@ -220,7 +220,7 @@ function setMasterPassword(enable) {
 
   var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
   var token = pk11db.findTokenByName("");
-  ok(true, "change from " + oldPW + " to " + newPW);
+  info("MP change from " + oldPW + " to " + newPW);
   token.changePassword(oldPW, newPW);
 }
 
