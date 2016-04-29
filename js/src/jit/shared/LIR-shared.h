@@ -1297,6 +1297,32 @@ class LAsmReinterpretToI64 : public LAsmReinterpretBase<INT64_PIECES, 1>
     }
 };
 
+namespace details {
+    template<size_t Defs, size_t Ops>
+    class RotateBase : public LInstructionHelper<Defs, Ops, 0>
+    {
+        typedef LInstructionHelper<Defs, Ops, 0> Base;
+      public:
+        MRotate* mir() {
+            return Base::mir_->toRotate();
+        }
+        const LAllocation* input() { return Base::getOperand(0); }
+        const LAllocation* count() { return Base::getOperand(1); }
+    };
+} // details
+
+class LRotate : public details::RotateBase<1, 2>
+{
+  public:
+    LIR_HEADER(Rotate);
+};
+
+class LRotate64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1>
+{
+  public:
+    LIR_HEADER(Rotate64);
+};
+
 class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
     Label* oolEntry_;

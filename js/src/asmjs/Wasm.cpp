@@ -321,10 +321,9 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Shl:
       case Expr::I32ShrS:
       case Expr::I32ShrU:
-        return f.iter().readBinary(ValType::I32);
       case Expr::I32Rotl:
       case Expr::I32Rotr:
-        return f.iter().notYetImplemented("rotate");
+        return f.iter().readBinary(ValType::I32);
       case Expr::I64Add:
       case Expr::I64Sub:
       case Expr::I64Mul:
@@ -338,11 +337,10 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64Shl:
       case Expr::I64ShrS:
       case Expr::I64ShrU:
-        return f.checkI64Support() &&
-               f.iter().readBinary(ValType::I64);
       case Expr::I64Rotl:
       case Expr::I64Rotr:
-        return f.iter().notYetImplemented("rotate");
+        return f.checkI64Support() &&
+               f.iter().readBinary(ValType::I64);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:

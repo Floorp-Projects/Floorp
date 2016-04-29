@@ -523,11 +523,11 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* reinterpret(MDefinition* op, MIRType to)
+    MDefinition* rotate(MDefinition* input, MDefinition* count, MIRType type, bool left)
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = MAsmReinterpret::New(alloc(), op, to);
+        auto* ins = MRotate::NewAsmJS(alloc(), input, count, type, left);
         curBlock_->add(ins);
         return ins;
     }
@@ -1901,7 +1901,7 @@ EmitReinterpret(FunctionCompiler& f, ValType resultType, ValType operandType, MI
 
     const UnaryRecord<MDefinition*>& unary = f.iter().unary();
 
-    f.iter().setResult(f.reinterpret(unary.op, mirType));
+    f.iter().setResult(f.unary<MAsmReinterpret>(unary.op, mirType));
     return true;
 }
 
@@ -1915,6 +1915,19 @@ EmitBinary(FunctionCompiler& f, ValType type, MIRType mirType)
     const BinaryRecord<MDefinition*>& binary = f.iter().binary();
 
     f.iter().setResult(f.binary<MIRClass>(binary.lhs, binary.rhs, mirType));
+    return true;
+}
+
+static bool
+EmitRotate(FunctionCompiler& f, ValType type, bool isLeftRotation)
+{
+    if (!f.iter().readBinary(type))
+        return false;
+
+    const BinaryRecord<MDefinition*>& binary = f.iter().binary();
+
+    MDefinition* result = f.rotate(binary.lhs, binary.rhs, ToMIRType(type), isLeftRotation);
+    f.iter().setResult(result);
     return true;
 }
 
@@ -2831,6 +2844,9 @@ EmitExpr(FunctionCompiler& f)
         return EmitStore(f, ValType::I32, Scalar::Int16);
       case Expr::I32Store:
         return EmitStore(f, ValType::I32, Scalar::Int32);
+      case Expr::I32Rotr:
+      case Expr::I32Rotl:
+        return EmitRotate(f, ValType::I32, expr == Expr::I32Rotl);
 
       // I64
       case Expr::I64Const:
@@ -2874,6 +2890,9 @@ EmitExpr(FunctionCompiler& f)
         return EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64);
       case Expr::I64ShrU:
         return EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64);
+      case Expr::I64Rotr:
+      case Expr::I64Rotl:
+        return EmitRotate(f, ValType::I64, expr == Expr::I64Rotl);
 
       // F32
       case Expr::F32Const:
@@ -3145,10 +3164,6 @@ EmitExpr(FunctionCompiler& f)
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
       case Expr::I64Eqz:
-      case Expr::I32Rotr:
-      case Expr::I32Rotl:
-      case Expr::I64Rotr:
-      case Expr::I64Rotl:
       case Expr::CurrentMemory:
       case Expr::GrowMemory:
         MOZ_CRASH("NYI");

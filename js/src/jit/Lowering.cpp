@@ -1284,6 +1284,23 @@ LIRGenerator::visitUrsh(MUrsh* ins)
 }
 
 void
+LIRGenerator::visitRotate(MRotate* ins)
+{
+    MDefinition* input = ins->input();
+    MDefinition* count = ins->count();
+
+    if (ins->type() == MIRType::Int32) {
+        auto* lir = new(alloc()) LRotate();
+        lowerForShift(lir, ins, input, count);
+    } else if (ins->type() == MIRType::Int64) {
+        auto* lir = new(alloc()) LRotate64();
+        lowerForShiftInt64(lir, ins, input, count);
+    } else {
+        MOZ_CRASH("unexpected type in visitRotate");
+    }
+}
+
+void
 LIRGenerator::visitFloor(MFloor* ins)
 {
     MIRType type = ins->input()->type();
