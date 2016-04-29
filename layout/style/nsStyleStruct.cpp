@@ -2281,7 +2281,8 @@ const nsCSSProperty nsStyleImageLayers::kBackgroundLayerTable[] = {
   eCSSProperty_background_color,          // color
   eCSSProperty_background_image,          // image
   eCSSProperty_background_repeat,         // repeat
-  eCSSProperty_background_position,       // position
+  eCSSProperty_background_position_x,     // positionX
+  eCSSProperty_background_position_y,     // positionY
   eCSSProperty_background_clip,           // clip
   eCSSProperty_background_origin,         // origin
   eCSSProperty_background_size,           // size
@@ -2296,7 +2297,8 @@ const nsCSSProperty nsStyleImageLayers::kMaskLayerTable[] = {
   eCSSProperty_UNKNOWN,                   // color
   eCSSProperty_mask_image,                // image
   eCSSProperty_mask_repeat,               // repeat
-  eCSSProperty_mask_position,             // position
+  eCSSProperty_mask_position_x,           // positionX
+  eCSSProperty_mask_position_y,           // positionY
   eCSSProperty_mask_clip,                 // clip
   eCSSProperty_mask_origin,               // origin
   eCSSProperty_mask_size,                 // size
@@ -2311,7 +2313,8 @@ nsStyleImageLayers::nsStyleImageLayers()
   , mClipCount(1)
   , mOriginCount(1)
   , mRepeatCount(1)
-  , mPositionCount(1)
+  , mPositionXCount(1)
+  , mPositionYCount(1)
   , mImageCount(1)
   , mSizeCount(1)
   , mMaskModeCount(1)
@@ -2327,7 +2330,8 @@ nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers &aSource)
   , mClipCount(aSource.mClipCount)
   , mOriginCount(aSource.mOriginCount)
   , mRepeatCount(aSource.mRepeatCount)
-  , mPositionCount(aSource.mPositionCount)
+  , mPositionXCount(aSource.mPositionXCount)
+  , mPositionYCount(aSource.mPositionYCount)
   , mImageCount(aSource.mImageCount)
   , mSizeCount(aSource.mSizeCount)
   , mMaskModeCount(aSource.mMaskModeCount)
@@ -2344,7 +2348,8 @@ nsStyleImageLayers::nsStyleImageLayers(const nsStyleImageLayers &aSource)
     mClipCount = std::max(mClipCount, count);
     mOriginCount = std::max(mOriginCount, count);
     mRepeatCount = std::max(mRepeatCount, count);
-    mPositionCount = std::max(mPositionCount, count);
+    mPositionXCount = std::max(mPositionXCount, count);
+    mPositionYCount = std::max(mPositionYCount, count);
     mImageCount = std::max(mImageCount, count);
     mSizeCount = std::max(mSizeCount, count);
     mMaskModeCount = std::max(mMaskModeCount, count);
@@ -2394,7 +2399,8 @@ nsStyleImageLayers::CalcDifference(const nsStyleImageLayers& aOther) const
       mMaskModeCount != aOther.mMaskModeCount ||
       mOriginCount != aOther.mOriginCount ||
       mRepeatCount != aOther.mRepeatCount ||
-      mPositionCount != aOther.mPositionCount ||
+      mPositionXCount != aOther.mPositionXCount ||
+      mPositionYCount != aOther.mPositionYCount ||
       mSizeCount != aOther.mSizeCount) {
     NS_UpdateHint(hint, nsChangeHint_NeutralChange);
   }
