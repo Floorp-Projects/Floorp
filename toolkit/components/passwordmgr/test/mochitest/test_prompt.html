@@ -27,9 +27,11 @@ var pwmgr, ioService, observerService;
 var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
 var proxyChannel;
-var testNum = 1;
 var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
 var iframe = document.getElementById("iframe");
+
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+isTabModal = false;
 
 function initLogins(pi) {
   observerService = Cc["@mozilla.org/observer-service;1"].
@@ -256,42 +258,6 @@ var storageObserver = SpecialPowers.wrapCallbackObject({
   }
 });
 
-/*
- * handleDialog
- *
- * Invoked a short period of time after calling startCallbackTimer(), and
- * allows testing the actual auth dialog while it's being displayed. Tests
- * should call startCallbackTimer() each time the auth dialog is expected (the
- * timer is a one-shot).
- */
-function handleDialog(doc, testNum) {
-  ok(true, "."); // make it easier to see next line in logs.
-  ok(true, "handleDialog running for test " + testNum);
-  ok(true, "Time is " + (new Date()).toUTCString());
-  dumpNotifications();
-
-  var dialog    = doc.getElementById("commonDialog");
-  var ui = doc.defaultView.Dialog.ui;
-  var actualState = getPromptState(ui);
-
-  checkPromptState(actualState, state);
-
-  if ("textField" in action) {
-    doc.getElementById("loginTextbox").setAttribute("value", action.textField);
-  }
-  if ("passField" in action) {
-    doc.getElementById("password1Textbox").setAttribute("value", action.passField);
-  }
-
-  if (action.buttonClick == "ok")
-    dialog.acceptDialog();
-  else
-    dialog.cancelDialog();
-
-  ok(true, "handleDialog done");
-  didDialog = true;
-}
-
 startup();
 
 add_task(function* runTests() {
@@ -347,7 +313,6 @@ add_task(function* runTests() {
   ok(popupNotifications, "Got popupNotifications");
 
   // ===== test 1 =====
-  testNum = 1;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -367,16 +332,15 @@ add_task(function* runTests() {
     buttonClick : "ok",
     textField   : "xyz",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(result.value, "xyz", "Checking prompt() returned value");
 
   // ===== test 2 =====
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -395,15 +359,14 @@ add_task(function* runTests() {
   action = {
     buttonClick : "cancel",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.prompt(defaultTitle, defaultMsg, "http://example.com",
                           Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
-  ok(didDialog, "handleDialog was invoked");
+  yield promptDone;
   ok(!isOk, "Checking dialog return value (cancel)");
 
   // ===== test 10 =====
   // Default password provided, existing logins are ignored.
-  testNum = 10;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -424,16 +387,15 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = "inputpw";
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(pword.value, "secret", "Checking returned password");
 
   // ===== test 11 =====
   // Default password provided, existing logins are ignored.
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -453,15 +415,14 @@ add_task(function* runTests() {
     buttonClick : "cancel",
   };
   pword.value = "inputpw";
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  yield promptDone;
   ok(!isOk, "Checking dialog return value (cancel)");
-  ok(didDialog, "handleDialog was invoked");
 
   // ===== test 12 =====
   // No default password provided, realm does not match existing login.
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -482,16 +443,15 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(pword.value, "secret", "Checking returned password");
 
   // ===== test 13 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -501,7 +461,6 @@ add_task(function* runTests() {
   // ===== test 14 =====
   // No default password provided, none of the logins from this host are
   // password-only so the user is prompted.
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -522,16 +481,15 @@ add_task(function* runTests() {
     passField   : "secret",
   };
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(pword.value, "secret", "Checking returned password");
 
   // ===== test 15 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user1name@example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -540,7 +498,6 @@ add_task(function* runTests() {
 
   // ===== test 16 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user2name@example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -549,7 +506,6 @@ add_task(function* runTests() {
 
   // ===== test 17 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user3%2Ename%40host@example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -558,7 +514,6 @@ add_task(function* runTests() {
 
   // ===== test 18 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://100@beef@example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -567,7 +522,6 @@ add_task(function* runTests() {
 
   // ===== test 19 =====
   // No default password provided, matching login is returned w/o prompting.
-  testNum++;
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://100%25beef@example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
@@ -578,7 +532,6 @@ add_task(function* runTests() {
 
   // ===== test 30 =====
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-  testNum = 30;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -599,16 +552,15 @@ add_task(function* runTests() {
     passField   : "fill2pass",
   };
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(pword.value, "fill2pass", "Checking returned password");
 
   // ===== test 31 =====
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -629,15 +581,14 @@ add_task(function* runTests() {
     passField   : "fill2pass",
   };
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(pword.value, "fill2pass", "Checking returned password");
 
   // ===== test 100 =====
-  testNum = 100;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -660,16 +611,15 @@ add_task(function* runTests() {
   };
   uname.value = "inuser";
   pword.value = "inpass";
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "outuser", "Checking returned username");
   is(pword.value, "outpass", "Checking returned password");
 
   // ===== test 101 =====
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -690,15 +640,14 @@ add_task(function* runTests() {
   };
   uname.value = "inuser";
   pword.value = "inpass";
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  yield promptDone;
   ok(!isOk, "Checking dialog return value (cancel)");
-  ok(didDialog, "handleDialog was invoked");
 
   // ===== test 102 =====
   // test filling in existing password-only login
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -719,17 +668,16 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "", "Checking returned username");
   is(pword.value, "examplepass", "Checking returned password");
 
   // ===== test 103 =====
   // test filling in existing login (undetermined from multiple selection)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "the message",
@@ -751,17 +699,16 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
   ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
 
   // ===== test 104 =====
   // test filling in existing login (user1 from multiple selection)
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -782,17 +729,16 @@ add_task(function* runTests() {
   };
   uname.value = "user1name";
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "user1name", "Checking returned username");
   is(pword.value, "user1pass", "Checking returned password");
 
   // ===== test 105 =====
   // test filling in existing login (user2 from multiple selection)
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -813,17 +759,16 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "user2pass", "Checking returned password");
 
   // ===== test 106 =====
   // test changing password
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -845,17 +790,16 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "NEWuser2pass", "Checking returned password");
 
   // ===== test 107 =====
   // test changing password (back to original value)
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -877,17 +821,16 @@ add_task(function* runTests() {
   };
   uname.value = "user2name";
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "user2pass", "Checking returned password");
 
   // ===== test 120 =====
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-  testNum = 120;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -910,17 +853,16 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "fill2user", "Checking returned username");
   is(pword.value, "fill2pass", "Checking returned password");
 
   // ===== test 121 =====
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -943,11 +885,11 @@ add_task(function* runTests() {
   };
   uname.value = null;
   pword.value = null;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
                                   Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+  yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(uname.value, "fill2user", "Checking returned username");
   is(pword.value, "fill2pass", "Checking returned password");
 
@@ -973,7 +915,6 @@ add_task(function* runTests() {
   var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 
   // ===== test 500 =====
-  testNum = 500;
   state = {
     msg         : "A username and password are being requested by http://example.com. The site says: \"some realm\"",
     title       : "Authentication Required",
@@ -998,16 +939,15 @@ add_task(function* runTests() {
   authinfo.password = "inpass";
   authinfo.realm    = "some realm";
 
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "outuser", "Checking returned username");
   is(authinfo.password, "outpass", "Checking returned password");
 
   // ===== test 501 =====
-  testNum++;
   state = {
     msg         : "A username and password are being requested by http://example.com. The site says: \"some realm\"",
     title       : "Authentication Required",
@@ -1026,15 +966,14 @@ add_task(function* runTests() {
   action = {
     buttonClick : "cancel",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
+  yield promptDone;
 
   ok(!isOk, "Checking dialog return value (cancel)");
-  ok(didDialog, "handleDialog was invoked");
 
   // ===== test 502 =====
   // test filling in password-only login
-  testNum++;
   state = {
     msg         : "A username and password are being requested by http://example.com. The site says: \"http://example.com\"",
     title       : "Authentication Required",
@@ -1057,17 +996,16 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example.com";
 
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel1, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "", "Checking returned username");
   is(authinfo.password, "examplepass", "Checking returned password");
 
   // ===== test 503 =====
   // test filling in existing login (undetermined from multiple selection)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "A username and password are being requested by http://example2.com. The site says: \"http://example2.com\"",
@@ -1091,17 +1029,16 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
   ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
 
   // ===== test 504 =====
   // test filling in existing login (undetermined --> user1)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "A username and password are being requested by http://example2.com. The site says: \"http://example2.com\"",
@@ -1128,17 +1065,16 @@ add_task(function* runTests() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "user1name", "Checking returned username");
   is(authinfo.password, "user1pass", "Checking returned password");
 
   // ===== test 505 =====
   // test filling in existing login (undetermined --> user2)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "A username and password are being requested by http://example2.com. The site says: \"http://example2.com\"",
@@ -1166,17 +1102,16 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
 
   // ===== test 506 =====
   // test changing a password (undetermined --> user2 w/ newpass)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "A username and password are being requested by http://example2.com. The site says: \"http://example2.com\"",
@@ -1204,17 +1139,16 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "NEWuser2pass", "Checking returned password");
 
   // ===== test 507 =====
   // test changing a password (undetermined --> user2 w/ origpass)
-  testNum++;
   // user2name/user2pass would also be valid to fill here.
   state = {
     msg         : "A username and password are being requested by http://example2.com. The site says: \"http://example2.com\"",
@@ -1242,17 +1176,16 @@ add_task(function* runTests() {
   authinfo.realm    = "http://example2.com";
 
   dumpNotifications();
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(channel2, level, authinfo);
+  yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
 
   // ===== test 508 =====
   // test proxy login (default = no autologin), make sure it prompts.
-  testNum++;
   state = {
     msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: \"Proxy Realm\"",
     title       : "Authentication Required",
@@ -1278,19 +1211,18 @@ add_task(function* runTests() {
 
   dumpNotifications();
   var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  yield promptDone;
   var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   isnot(time1, time2, "Checking that timeLastUsed was updated");
   is(proxyAuthinfo.username, "proxuser", "Checking returned username");
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
 
   // ===== test 509 =====
   // test proxy login (with autologin)
-  testNum++;
 
   // Enable the autologin pref.
   prefs.setBoolPref("signon.autologin.proxy", true);
@@ -1311,7 +1243,6 @@ add_task(function* runTests() {
 
   // ===== test 510 =====
   // test proxy login (with autologin), ensure it prompts after a failed auth.
-  testNum++;
   state = {
     msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: \"Proxy Realm\"",
     title       : "Authentication Required",
@@ -1337,19 +1268,18 @@ add_task(function* runTests() {
   proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
 
   time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  yield promptDone;
   time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
 
   ok(isOk, "Checking dialog return value (accept)");
-  ok(didDialog, "handleDialog was invoked");
   isnot(time1, time2, "Checking that timeLastUsed was updated");
   is(proxyAuthinfo.username, "proxuser", "Checking returned username");
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
 
   // ===== test 511 =====
   // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
-  testNum++;
   state = {
     msg         : "the message",
     title       : "the title",
@@ -1378,7 +1308,6 @@ add_task(function* runTests() {
   authMgr.clearAll();
 
   // ===== test 1000 =====
-  testNum = 1000;
   state = {
     msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest\"",
     title       : "Authentication Required",
@@ -1397,7 +1326,7 @@ add_task(function* runTests() {
   action = {
     buttonClick : "ok",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
 
   // The following tests are driven by iframe loads
 
@@ -1414,10 +1343,10 @@ add_task(function* runTests() {
 
   var iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  yield promptDone;
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
 
-  testNum++;
   state = {
     msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest2\"",
     title       : "Authentication Required",
@@ -1436,16 +1365,16 @@ add_task(function* runTests() {
   action = {
     buttonClick : "ok",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   // We've already authenticated to this host:port. For this next
   // request, the existing auth should be sent, we'll get a 401 reply,
   // and we should prompt for new auth.
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+  yield promptDone;
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"});
 
-  testNum++;
   // Now make a load that requests the realm from test 1000. It was
   // already provided there, so auth will *not* be prompted for -- the
   // networking layer already knows it!
@@ -1454,7 +1383,6 @@ add_task(function* runTests() {
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
 
-  testNum++;
   // Same realm we've already authenticated to, but with a different
   // expected password (to trigger an auth prompt, and change-password
   // popup notification).
@@ -1477,13 +1405,13 @@ add_task(function* runTests() {
     buttonClick : "ok",
     passField   : "mochipass1-new",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+  yield promptDone;
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"});
 
-  testNum++;
   // Housekeeping: change it back
   var pwchanged = new Promise(resolve => {
     function resetIt() {
@@ -1526,13 +1454,13 @@ add_task(function* runTests() {
     buttonClick : "ok",
     passField   : "mochipass3-new",
   };
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+  yield promptDone;
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"});
 
-  testNum++;
   // Housekeeping: change it back to the original login4. Actually,
   // just delete it and we'll re-add it as the next test.
   pwchanged = new Promise(resolve => {
@@ -1584,14 +1512,14 @@ add_task(function* runTests() {
     passField   : "mochipass3-old",
   };
   // Trigger a new prompt, so we can test adding a new login.
-  startCallbackTimer();
+  promptDone = handlePrompt(action);
 
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+  yield promptDone;
   yield iframeLoaded;
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"});
 
-  testNum++;
   var pwsaved = new Promise(resolve => {
     function finishIt() {
       finishTest();
