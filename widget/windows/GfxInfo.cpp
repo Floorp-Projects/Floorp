@@ -1289,7 +1289,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
     JS_SetProperty(aCx, obj, "blacklisted", val);
   }
 
-  gfx::FeatureStatus d2d = platform->GetD2D1Status();
+  gfx::FeatureStatus d2d = gfxConfig::GetValue(Feature::DIRECT2D);
   if (!InitFeatureObject(aCx, aObj, "d2d", d2d, &obj)) {
     return;
   }
