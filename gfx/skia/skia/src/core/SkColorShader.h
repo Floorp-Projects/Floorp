@@ -9,6 +9,7 @@
 #define SkColorShader_DEFINED
 
 #include "SkShader.h"
+#include "SkPM4f.h"
 
 /** \class SkColorShader
     A Shader that represents a single color. In general, this effect can be
@@ -25,10 +26,6 @@ public:
 
     bool isOpaque() const override;
 
-    size_t contextSize() const override {
-        return sizeof(ColorShaderContext);
-    }
-
     class ColorShaderContext : public SkShader::Context {
     public:
         ColorShaderContext(const SkColorShader& shader, const ContextRec&);
@@ -36,8 +33,13 @@ public:
         uint32_t getFlags() const override;
         void shadeSpan(int x, int y, SkPMColor span[], int count) override;
         void shadeSpanAlpha(int x, int y, uint8_t alpha[], int count) override;
+        void shadeSpan4f(int x, int y, SkPM4f[], int count) override;
+
+    protected:
+        bool onChooseBlitProcs(const SkImageInfo&, BlitState*) override;
 
     private:
+        SkPM4f      fPM4f;
         SkPMColor   fPMColor;
         uint32_t    fFlags;
 
@@ -58,6 +60,7 @@ protected:
     SkColorShader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
     Context* onCreateContext(const ContextRec&, void* storage) const override;
+    size_t onContextSize(const ContextRec&) const override { return sizeof(ColorShaderContext); }
     bool onAsLuminanceColor(SkColor* lum) const override {
         *lum = fColor;
         return true;

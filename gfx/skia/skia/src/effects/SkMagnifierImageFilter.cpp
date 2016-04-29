@@ -100,9 +100,7 @@ typedef GrGLSLProgramDataManager::UniformHandle UniformHandle;
 
 class GrGLMagnifierEffect : public GrGLSLFragmentProcessor {
 public:
-    GrGLMagnifierEffect(const GrProcessor&);
-
-    virtual void emitCode(EmitArgs&) override;
+    void emitCode(EmitArgs&) override;
 
 protected:
     void onSetData(const GrGLSLProgramDataManager&, const GrProcessor&) override;
@@ -116,25 +114,22 @@ private:
     typedef GrGLSLFragmentProcessor INHERITED;
 };
 
-GrGLMagnifierEffect::GrGLMagnifierEffect(const GrProcessor&) {
-}
-
 void GrGLMagnifierEffect::emitCode(EmitArgs& args) {
     GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
-    fOffsetVar = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+    fOffsetVar = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                             kVec2f_GrSLType, kDefault_GrSLPrecision,
                                             "Offset");
-    fInvZoomVar = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+    fInvZoomVar = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                              kVec2f_GrSLType, kDefault_GrSLPrecision,
                                              "InvZoom");
-    fInvInsetVar = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+    fInvInsetVar = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                               kVec2f_GrSLType, kDefault_GrSLPrecision,
                                               "InvInset");
-    fBoundsVar = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+    fBoundsVar = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                             kVec4f_GrSLType, kDefault_GrSLPrecision,
                                             "Bounds");
 
-    GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
+    GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     SkString coords2D = fragBuilder->ensureFSCoords2D(args.fCoords, 0);
     fragBuilder->codeAppendf("\t\tvec2 coord = %s;\n", coords2D.c_str());
     fragBuilder->codeAppendf("\t\tvec2 zoom_coord = %s + %s * %s;\n",
@@ -187,7 +182,7 @@ void GrMagnifierEffect::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
 }
 
 GrGLSLFragmentProcessor* GrMagnifierEffect::onCreateGLSLInstance() const {
-    return new GrGLMagnifierEffect(*this);
+    return new GrGLMagnifierEffect;
 }
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrMagnifierEffect);
@@ -237,8 +232,8 @@ void GrMagnifierEffect::onComputeInvariantOutput(GrInvariantOutput* inout) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkImageFilter* SkMagnifierImageFilter::Create(const SkRect& srcRect, SkScalar inset,
-                                              SkImageFilter* input) {
+sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(const SkRect& srcRect, SkScalar inset,
+                                                  sk_sp<SkImageFilter> input) {
 
     if (!SkScalarIsFinite(inset) || !SkIsValidRect(srcRect)) {
         return nullptr;
@@ -247,13 +242,15 @@ SkImageFilter* SkMagnifierImageFilter::Create(const SkRect& srcRect, SkScalar in
     if (srcRect.fLeft < 0 || srcRect.fTop < 0) {
         return nullptr;
     }
-    return new SkMagnifierImageFilter(srcRect, inset, input);
+    return sk_sp<SkImageFilter>(new SkMagnifierImageFilter(srcRect, inset, std::move(input)));
 }
 
 
 SkMagnifierImageFilter::SkMagnifierImageFilter(const SkRect& srcRect, SkScalar inset,
-                                               SkImageFilter* input)
-    : INHERITED(1, &input), fSrcRect(srcRect), fInset(inset) {
+                                               sk_sp<SkImageFilter> input)
+    : INHERITED(&input, 1, nullptr)
+    , fSrcRect(srcRect)
+    , fInset(inset) {
     SkASSERT(srcRect.x() >= 0 && srcRect.y() >= 0 && inset >= 0);
 }
 
@@ -286,11 +283,11 @@ bool SkMagnifierImageFilter::asFragmentProcessor(GrFragmentProcessor** fp,
 }
 #endif
 
-SkFlattenable* SkMagnifierImageFilter::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkMagnifierImageFilter::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
     SkRect src;
     buffer.readRect(&src);
-    return Create(src, buffer.readScalar(), common.getInput(0));
+    return Make(src, buffer.readScalar(), common.getInput(0));
 }
 
 void SkMagnifierImageFilter::flatten(SkWriteBuffer& buffer) const {
@@ -299,9 +296,9 @@ void SkMagnifierImageFilter::flatten(SkWriteBuffer& buffer) const {
     buffer.writeScalar(fInset);
 }
 
-bool SkMagnifierImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
-                                           const Context&, SkBitmap* dst,
-                                           SkIPoint* offset) const {
+bool SkMagnifierImageFilter::onFilterImageDeprecated(Proxy* proxy, const SkBitmap& src,
+                                                     const Context&, SkBitmap* dst,
+                                                     SkIPoint* offset) const {
     if ((src.colorType() != kN32_SkColorType) ||
         (fSrcRect.width() >= src.width()) ||
         (fSrcRect.height() >= src.height())) {

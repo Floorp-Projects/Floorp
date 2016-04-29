@@ -8,11 +8,11 @@
 #ifndef SkTaskGroup_DEFINED
 #define SkTaskGroup_DEFINED
 
+#include <functional>
+
 #include "SkTypes.h"
 #include "SkAtomics.h"
 #include "SkTemplates.h"
-
-struct SkRunnable;
 
 class SkTaskGroup : SkNoncopyable {
 public:
@@ -26,9 +26,6 @@ public:
     ~SkTaskGroup() { this->wait(); }
 
     // Add a task to this SkTaskGroup.  It will likely run on another thread.
-    // Neither add() method takes owership of any of its parameters.
-    void add(SkRunnable*);
-
     void add(std::function<void(void)> fn);
 
     // Add a batch of N tasks, all calling fn with different arguments.

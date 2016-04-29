@@ -1335,8 +1335,6 @@ BaseShape::traceChildren(JSTracer* trc)
 void
 BaseShape::traceChildrenSkipShapeTable(JSTracer* trc)
 {
-    assertConsistency();
-
     if (trc->isMarkingTracer())
         compartment()->mark();
 
@@ -1346,6 +1344,8 @@ BaseShape::traceChildrenSkipShapeTable(JSTracer* trc)
     JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
     if (global)
         TraceManuallyBarrieredEdge(trc, &global, "global");
+
+    assertConsistency();
 }
 
 void
@@ -1589,6 +1589,7 @@ JSCompartment::fixupInitialShapeTable()
             shape = Forwarded(shape);
             e.mutableFront().shape.set(shape);
         }
+        shape->updateBaseShapeAfterMovingGC();
 
         // If the prototype has moved we have to rekey the entry.
         InitialShapeEntry entry = e.front();

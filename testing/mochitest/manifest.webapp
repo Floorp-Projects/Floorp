@@ -36,9 +36,5 @@
       "description": "Mochitests"
     }
   },
-  "datastores-access" : {
-    "foo" : { "readonly": false },
-    "bar" : { "readonly": false }
-  },
   "default_locale": "en-US"
 }

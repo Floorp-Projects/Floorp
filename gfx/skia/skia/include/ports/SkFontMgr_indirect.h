@@ -8,12 +8,12 @@
 #ifndef SkFontMgr_indirect_DEFINED
 #define SkFontMgr_indirect_DEFINED
 
+#include "../private/SkMutex.h"
+#include "../private/SkTArray.h"
 #include "SkDataTable.h"
 #include "SkFontMgr.h"
-#include "../private/SkMutex.h"
 #include "SkRefCnt.h"
 #include "SkRemotableFontMgr.h"
-#include "SkTArray.h"
 #include "SkTypeface.h"
 #include "SkTypes.h"
 
@@ -70,8 +70,7 @@ private:
 
         DataEntry() { }
 
-        // This is a move!!!
-        DataEntry(DataEntry& that)
+        DataEntry(DataEntry&& that)
             : fDataId(that.fDataId)
             , fTtcIndex(that.fTtcIndex)
             , fTypeface(that.fTypeface)

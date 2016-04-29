@@ -212,7 +212,7 @@ InstallSigSysHandler(void)
  * @see SandboxInfo
  * @see BroadcastSetThreadSandbox
  */
-static bool MOZ_WARN_UNUSED_RESULT
+static bool MOZ_MUST_USE
 InstallSyscallFilter(const sock_fprog *aProg, bool aUseTSync)
 {
   if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {

@@ -66,58 +66,10 @@
  *   value of prefHasUserValue using gPrefToCheck for the preference name in the
  *   checkPrefHasUserValue function.
  *
- * expectedRadioGroupSelectedIndex (optional)
- *   For comparing the expected selectedIndex attribute value of the wizard's
- *   license page radiogroup selectedIndex attribute in the
- *   checkRadioGroupSelectedIndex function.
- *
  * expectedRemoteContentState (optional)
  *   For comparing the expected remotecontent state attribute value of the
- *   wizard's billboard and license pages in the checkRemoteContentState and
+ *   wizard's billboard page in the checkRemoteContentState and
  *   waitForRemoteContentLoaded functions.
- *
- *
- * Test Add-ons
- *
- * All tests include the test add-ons specified in the TEST_ADDONS array and
- * the only thing that can be configured is whether the noupdate test add-on is
- * disabled (see below). The add-on names are in the format of typename_X where
- * X is a number to make the add-on ID unique and typename is one of the values
- * specified below:
- *
- * appdisabled
- *   disabled by the application due to being incompatible with the current
- *   toolkit version.
- *
- * compatible
- *   compatible with the current toolkit version and the update's toolkit
- *   version.
- *
- * noupdate
- *   the add-on is compatible with the current toolkit version and does not have
- *   an update to make it compatible with the update's toolkit version. Tests
- *   that need to have all add-ons compatible for the application update can
- *   disable this add-on by setting the gDisableNoUpdateAddon variable to true.
- *
- * updatecompatibility
- *   the add-on is compatible with the current toolkit version and has a
- *   compatibility update to make it compatible with the update's toolkit
- *   version. Tests that need to have add-ons compatible for the application
- *   update without updating the add-on's compatibility information can disable
- *   this add-on by setting the gDisableUpdateCompatibilityAddon variable to
- *   true.
- *
- * updateversion
- *   the add-on is compatible with the current toolkit version and has a version
- *   update to make it compatible with the update's toolkit version. Tests that
- *   need to have add-ons compatible for the application update without updating
- *   the add-on's to a new version that is compatible can disable this add-on by
- *   setting the gDisableUpdateVersionAddon variable to true.
- *
- * userdisabled
- *   disabled by the user and compatible with the current toolkit version but
- *   not the update's toolkit version. This add-on will be disabled after its
- *   install completes.
  */
 
 'use strict';
@@ -125,7 +77,6 @@
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
         utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/AddonManager.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 const IS_MACOSX = ("nsILocalFileMac" in Ci);
@@ -139,11 +90,8 @@ const PAGEID_PLUGIN_UPDATES   = "pluginupdatesfound";
 const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
 const PAGEID_MANUAL_UPDATE    = "manualUpdate";          // Done
 const PAGEID_UNSUPPORTED      = "unsupported";           // Done
-const PAGEID_INCOMPAT_CHECK   = "incompatibleCheck";     // Done
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
 const PAGEID_FOUND_BILLBOARD  = "updatesfoundbillboard"; // Done
-const PAGEID_LICENSE          = "license";               // Done
-const PAGEID_INCOMPAT_LIST    = "incompatibleList";      // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
 const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
@@ -165,22 +113,8 @@ const URL_HTTPS_UPDATE_XML = "https://example.com" + URL_PATH_UPDATE_XML;
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
-const ADDON_ID_SUFFIX = "@appupdatetest.mozilla.org";
-const ADDON_PREP_DIR = "appupdateprep";
-
 const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
 const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
-
-// Preference for storing add-ons that are disabled by the tests to prevent them
-// from interefering with the tests.
-const PREF_DISABLEDADDONS = "app.update.test.disabledAddons";
-const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
-const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
-                      "compatible_1", "compatible_2",
-                      "noupdate_1", "noupdate_2",
-                      "updatecompatibility_1", "updatecompatibility_2",
-                      "updateversion_1", "updateversion_2",
-                      "userdisabled_1", "userdisabled_2", "hotfix" ];
 
 const LOG_FUNCTION = info;
 
@@ -207,15 +141,11 @@ var gAppUpdateServiceEnabled;     // app.update.service.enabled
 var gAppUpdateStagingEnabled;     // app.update.staging.enabled
 var gAppUpdateURLDefault;         // app.update.url (default prefbranch)
 var gAppUpdateURL;                // app.update.url.override
-var gExtUpdateURL;                // extensions.update.url
 
 var gTestCounter = -1;
 var gWin;
 var gDocElem;
 var gPrefToCheck;
-var gDisableNoUpdateAddon = false;
-var gDisableUpdateCompatibilityAddon = false;
-var gDisableUpdateVersionAddon = false;
 var gUseTestUpdater = false;
 
 // Set to true to log additional information for debugging. To log additional
@@ -248,11 +178,8 @@ this.__defineGetter__("gCallback", function() {
  * remotecontent element doesn't exist.
  */
 this.__defineGetter__("gRemoteContent", function() {
-  switch (gTest.pageid) {
-    case PAGEID_FOUND_BILLBOARD:
+  if (gTest.pageid == PAGEID_FOUND_BILLBOARD) {
       return gWin.document.getElementById("updateMoreInfoContent");
-    case PAGEID_LICENSE:
-      return gWin.document.getElementById("licenseContent");
   }
   return null;
 });
@@ -266,20 +193,6 @@ this.__defineGetter__("gRemoteContentState", function() {
     return gRemoteContent.getAttribute("state");
   }
   return null;
-});
-
-/**
- * The radiogroup for the license page.
- */
-this.__defineGetter__("gAcceptDeclineLicense", function() {
-  return gWin.document.getElementById("acceptDeclineLicense");
-});
-
-/**
- * The listbox for the incompatibleList page.
- */
-this.__defineGetter__("gIncompatibleListbox", function() {
-  return gWin.document.getElementById("incompatibleListbox");
 });
 
 /**
@@ -334,7 +247,8 @@ function runTestDefaultWaitForWindowClosed() {
     gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
     reloadUpdateManagerData();
-    setupAddons(setupTestUpdater);
+    setupTimer(gTestTimeout);
+    SimpleTest.executeSoon(setupTestUpdater);
   }
 }
 
@@ -623,7 +537,6 @@ function getExpectedButtonStates() {
 
   switch (gTest.pageid) {
     case PAGEID_CHECKING:
-    case PAGEID_INCOMPAT_CHECK:
       return { cancel: { disabled: false, hidden: false } };
     case PAGEID_FOUND_BASIC:
     case PAGEID_FOUND_BILLBOARD:
@@ -632,17 +545,6 @@ function getExpectedButtonStates() {
                  extra2: { disabled: false, hidden: false },
                  next  : { disabled: false, hidden: false } }
       }
-      return { extra1: { disabled: false, hidden: false },
-               next  : { disabled: false, hidden: false } };
-    case PAGEID_LICENSE:
-      if (gRemoteContentState != "loaded" ||
-          gAcceptDeclineLicense.selectedIndex != 0) {
-        return { extra1: { disabled: false, hidden: false },
-                 next  : { disabled: true, hidden: false } };
-      }
-      return { extra1: { disabled: false, hidden: false },
-               next  : { disabled: false, hidden: false } };
-    case PAGEID_INCOMPAT_LIST:
       return { extra1: { disabled: false, hidden: false },
                next  : { disabled: false, hidden: false } };
     case PAGEID_DOWNLOADING:
@@ -728,59 +630,6 @@ function checkRemoteContentState() {
   is(gRemoteContentState, gTest.expectedRemoteContentState, "Checking remote " +
      "content state equals " + gTest.expectedRemoteContentState + " - pageid " +
      gTest.pageid);
-}
-
-/**
- * Adds a select event listener to the license radiogroup element and clicks
- * the radio element specified in the current test's radioClick property.
- */
-function addRadioGroupSelectListenerAndClick() {
-  debugDump("entering - TESTS[" + gTestCounter + "], pageid: " + gTest.pageid);
-
-  gAcceptDeclineLicense.addEventListener("select", radioGroupSelectListener,
-                                         false);
-  gWin.document.getElementById(gTest.radioClick).click();
-}
-
-/**
- * The nsIDOMEventListener for the license radiogroup select event.
- */
-function radioGroupSelectListener(aEvent) {
-  // Return early if the event's original target's nodeName isn't radiogroup.
-  if (aEvent.originalTarget.nodeName != "radiogroup") {
-    debugDump("only handles events with an originalTarget nodeName of " +
-              "|radiogroup|. aEvent.originalTarget.nodeName = " +
-              aEvent.originalTarget.nodeName);
-    return;
-  }
-
-  gAcceptDeclineLicense.removeEventListener("select", radioGroupSelectListener,
-                                            false);
-  gTestCounter++;
-  gCallback(aEvent);
-}
-
-/**
- * Compares the value of the License radiogroup's selectedIndex attribute with
- * the value specified in the test's expectedRadioGroupSelectedIndex property.
- */
-function checkRadioGroupSelectedIndex() {
-  is(gAcceptDeclineLicense.selectedIndex, gTest.expectedRadioGroupSelectedIndex,
-     "Checking license radiogroup selectedIndex equals " +
-     gTest.expectedRadioGroupSelectedIndex);
-}
-
-/**
- * Checks that only incompatible add-ons (e.g. noupdate_X add-ons) that don't
- * have an update are listed in the add-ons incompatible list.
- */
-function checkIncompatbleList() {
-  for (let i = 0; i < gIncompatibleListbox.itemCount; i++) {
-    let label = gIncompatibleListbox.getItemAtIndex(i).label;
-    // Use indexOf since locales can change the text displayed
-    ok(label.indexOf("noupdate") != -1, "Checking that only incompatible " +
-       "add-ons that don't have an update are listed in the incompatible list");
-  }
 }
 
 /**
@@ -1052,19 +901,9 @@ function setupPrefs() {
   }
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
 
-  if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_UPDATE_URL)) {
-    gExtUpdateURL = Services.prefs.getCharPref(PREF_EXTENSIONS_UPDATE_URL);
-  }
-  let extUpdateUrl = URL_HTTP_UPDATE_XML + "?addonID=%ITEM_ID%" +
-                     "&platformVersion=" + Services.appinfo.platformVersion +
-                     "&newerPlatformVersion=" + getNewerPlatformVersion();
-  Services.prefs.setCharPref(PREF_EXTENSIONS_UPDATE_URL, extUpdateUrl);
-
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
-  Services.prefs.setBoolPref(PREF_EXTENSIONS_STRICT_COMPAT, true);
-  Services.prefs.setCharPref(PREF_EM_HOTFIX_ID, "hotfix" + ADDON_ID_SUFFIX);
 }
 
 /**
@@ -1131,12 +970,6 @@ function resetPrefs() {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, gAppUpdateStagingEnabled);
   } else if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_STAGING_ENABLED)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_STAGING_ENABLED);
-  }
-
-  if (gExtUpdateURL !== undefined) {
-    Services.prefs.setCharPref(PREF_EXTENSIONS_UPDATE_URL, gExtUpdateURL);
-  } else if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_UPDATE_URL)) {
-    Services.prefs.clearUserPref(PREF_EXTENSIONS_UPDATE_URL);
   }
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_IDLETIME)) {
@@ -1209,14 +1042,6 @@ function resetPrefs() {
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SILENT)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_SILENT);
   }
-
-  if (Services.prefs.prefHasUserValue(PREF_EXTENSIONS_STRICT_COMPAT)) {
-		Services.prefs.clearUserPref(PREF_EXTENSIONS_STRICT_COMPAT);
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_EM_HOTFIX_ID)) {
-    Services.prefs.clearUserPref(PREF_EM_HOTFIX_ID);
-  }
 }
 
 function setupTimer(aTestTimeout) {
@@ -1229,256 +1054,6 @@ function setupTimer(aTestTimeout) {
                   createInstance(Ci.nsITimer);
   gTimeoutTimer.initWithCallback(finishTestTimeout, gTestTimeout,
                                  Ci.nsITimer.TYPE_ONE_SHOT);
-}
-
-/**
- * Disables pre-existing add-ons so they don't interfere with the tests,
- * installs the test add-ons, sets the noupdate test add-ons' userDisabled value
- * for the test, and calls the callback specified in the aCallback parameter. If
- * the app.update.test.disabledAddons has a user value then setting the noupdate
- * test add-ons' userDisabled value for the test is the only thing that is done.
- *
- * @param  aCallback
- *         A callback to call after all operations have completed.
- */
-function setupAddons(aCallback) {
-  debugDump("entering");
-
-  // Sets the appropriate userDisabled value for the noupdate test add-ons based
-  // on the value of gDisableNoUpdateAddon and calls the callback specified in
-  // setupAddons aCallback parameter.
-  function setNoUpdateAddonsDisabledState() {
-    AddonManager.getAllAddons(function(aAddons) {
-      aAddons.forEach(function(aAddon) {
-        if (aAddon.name.startsWith("appdisabled")) {
-          if (!aAddon.userDisabled) {
-            aAddon.userDisabled = true;
-          }
-        }
-
-        if (aAddon.name.startsWith("noupdate")) {
-          if (aAddon.userDisabled != gDisableNoUpdateAddon) {
-            aAddon.userDisabled = gDisableNoUpdateAddon;
-          }
-        }
-
-        if (aAddon.name.startsWith("updatecompatibility")) {
-          if (aAddon.userDisabled != gDisableUpdateCompatibilityAddon) {
-            aAddon.userDisabled = gDisableUpdateCompatibilityAddon;
-          }
-        }
-
-        if (aAddon.name.startsWith("updateversion")) {
-          if (aAddon.userDisabled != gDisableUpdateVersionAddon) {
-            aAddon.userDisabled = gDisableUpdateVersionAddon;
-          }
-        }
-      });
-      // Start the timout timer before the update window is displayed so it can
-      // clean up tests that don't successfully display the update window.
-      setupTimer(gTestTimeout);
-      SimpleTest.executeSoon(aCallback);
-    });
-  }
-
-  // If the app.update.test.disabledAddons preference exists the pre-existing
-  // add-ons have already been disabled so they don't interfere with the tests,
-  // the test add-ons have already been installed, and the only thing that needs
-  // to be done is setting the appropriate userDisabled value for the noupdate
-  // test add-ons.
-  if (Services.prefs.prefHasUserValue(PREF_DISABLEDADDONS)) {
-    setNoUpdateAddonsDisabledState();
-    return;
-  }
-
-  // Disable all pre-existing enabled addons so they don't interfere with the
-  // tests.
-  AddonManager.getAllAddons(function(aAddons) {
-    let disabledAddons = [];
-    let harnessAddons = ["special-powers@mozilla.org", "mochikit@mozilla.org"];
-    aAddons.forEach(function(aAddon) {
-      // If an addon's type equals plugin it is skipped since
-      // checking plugins compatibility information isn't supported at this
-      // time (also see bug 566787). Also, SCOPE_APPLICATION add-ons are
-      // excluded by app update so there is no reason to disable them.
-      // Specialpowers and mochikit are excluded as the test harness requires
-      // them to run the tests.
-      if (aAddon.type != "plugin" && !aAddon.appDisabled &&
-          !aAddon.userDisabled &&
-          aAddon.scope != AddonManager.SCOPE_APPLICATION &&
-          harnessAddons.indexOf(aAddon.id) == -1) {
-        disabledAddons.push(aAddon);
-        aAddon.userDisabled = true;
-      }
-    });
-    // If there are no pre-existing add-ons the preference value will be an
-    // empty string.
-    Services.prefs.setCharPref(PREF_DISABLEDADDONS, disabledAddons.join(" "));
-
-    // Install the test add-ons.
-    let promises = getTestAddonXPIFiles().map(function(aFile) {
-      return AddonManager.installTemporaryAddon(aFile).then(addon => {
-        if (getAddonTestType(addon.name) == "userdisabled") {
-          addon.userDisabled = true;
-        }
-      });
-    });
-    return Promise.all(promises).then(setNoUpdateAddonsDisabledState);
-  });
-}
-
-/**
- * Uninstalls the test add-ons, enables add-ons that were disabled when the
- * test started, and calls the callback specified in the aCallback parameter.
- *
- * @param  aCallback
- *         A callback to call after all operations have completed.
- */
-function resetAddons(aCallback) {
-  debugDump("entering");
-  // If test_9999_cleanup.xul is ran by itself then the test add-ons will not
-  // have been installed and any pre-existing add-ons will not have been
-  // disabled so return early.
-  if (!Services.prefs.prefHasUserValue(PREF_DISABLEDADDONS)) {
-    debugDump("preference " + PREF_DISABLEDADDONS + " doesn't exist... " +
-              "returning early");
-    aCallback();
-    return;
-  }
-
-  // Uninstall the test add-ons.
-  let count = TEST_ADDONS.length;
-  function uninstallCompleted(aAddon) {
-    if (--count == 0) {
-      AddonManager.removeAddonListener(listener);
-
-      // Enable the pre-existing add-ons that were disabled so they wouldn't
-      // interfere with the tests.
-      let disabledAddons = Services.prefs.getCharPref(PREF_DISABLEDADDONS).split(" ");
-      Services.prefs.clearUserPref(PREF_DISABLEDADDONS);
-      AddonManager.getAllAddons(function(aAddons) {
-        aAddons.forEach(function(aAddon) {
-          if (disabledAddons.indexOf(aAddon.id)) {
-            aAddon.userDisabled = false;
-          }
-        });
-        SimpleTest.executeSoon(aCallback);
-      });
-    }
-  }
-
-  let listener = {
-    onUninstalled: uninstallCompleted
-  };
-
-  AddonManager.addAddonListener(listener);
-  TEST_ADDONS.forEach(function(aName) {
-    AddonManager.getAddonByID(aName + ADDON_ID_SUFFIX, function(aAddon) {
-      aAddon.uninstall();
-    });
-  });
-}
-
-/**
- * Helper function to get the string before the '_' character in an add-on's
- * name or id which is used to determine the add-on test type used by the tests.
- *
- * @param  aName
- *         The test add-on's name or id.
- * @return The string before the '_' character in the string passed in the aName
- *         parameter.
- */
-function getAddonTestType(aName) {
-  return aName.split("_")[0];
-}
-
-/**
- * Helper function to create add-on xpi files for the default test add-ons.
- *
- * @return An array with each member being an nsILocalFile for an add-on XPI
- *         file.
- */
-function getTestAddonXPIFiles() {
-  let addonPrepDir = Services.dirsvc.get(NS_APP_USER_PROFILE_50_DIR,
-                                         Ci.nsILocalFile);
-  addonPrepDir.append(ADDON_PREP_DIR);
-
-  let bootstrap = addonPrepDir.clone();
-  bootstrap.append("bootstrap.js");
-  // If a previous test has already created bootstrap.js don't create it again.
-  if (!bootstrap.exists()) {
-    let bootstrapContents = "function install(data, reason){ }\n" +
-                            "function startup(data, reason){ }\n" +
-                            "function shutdown(data, reason){ }\n" +
-                            "function uninstall(data, reason){ }\n";
-    writeFile(bootstrap, bootstrapContents);
-  }
-
-  let installRDF = addonPrepDir.clone();
-  installRDF.append("install.rdf");
-
-  let xpiFiles = [];
-  TEST_ADDONS.forEach(function(aName) {
-    let xpiFile = addonPrepDir.clone();
-    xpiFile.append(aName + ".xpi");
-
-    if (installRDF.exists()) {
-      installRDF.remove(false);
-    }
-    writeFile(installRDF, getInstallRDFString(aName));
-    gZipW.open(xpiFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
-    gZipW.addEntryFile(installRDF.leafName,
-                       Ci.nsIZipWriter.COMPRESSION_DEFAULT, installRDF,
-                       false);
-    gZipW.addEntryFile(bootstrap.leafName,
-                       Ci.nsIZipWriter.COMPRESSION_DEFAULT, bootstrap,
-                       false);
-    gZipW.close();
-    xpiFiles.push(xpiFile);
-  });
-
-  return xpiFiles;
-}
-
-/**
- * Helper function to gets the string representation of the contents of the
- * add-on's install.rdf file.
- *
- * @param  aName
- *         The string to use for the add-on's name which is also used to
- *         construct the local-part in RFC 5322 format of the add-on's ID.
- * @return A string representation of the contents of the add-on's install.rdf
- *         file.
- */
-function getInstallRDFString(aName) {
-  let maxVersion = Services.appinfo.platformVersion;
-  switch (getAddonTestType(aName)) {
-    case "compatible":
-      maxVersion = getNewerPlatformVersion();
-      break;
-    case "appdisabled":
-      maxVersion = "0.1";
-      break;
-  }
-
-  return "<?xml version=\"1.0\"?>\n" +
-         "<RDF xmlns=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" +
-         "  xmlns:em=\"http://www.mozilla.org/2004/em-rdf#\">\n" +
-         "  <Description about=\"urn:mozilla:install-manifest\">\n" +
-         "    <em:id>" + aName + ADDON_ID_SUFFIX + "</em:id>\n" +
-         "    <em:version>1.0</em:version>\n" +
-         "    <em:bootstrap>true</em:bootstrap>\n" +
-         "    <em:name>" + aName + "</em:name>\n" +
-         "    <em:description>Test Description</em:description>\n" +
-         "    <em:targetApplication>\n" +
-         "      <Description>\n" +
-         "        <em:id>toolkit@mozilla.org</em:id>\n" +
-         "        <em:minVersion>undefined</em:minVersion>\n" +
-         "        <em:maxVersion>" + maxVersion + "</em:maxVersion>\n" +
-         "      </Description>\n" +
-         "    </em:targetApplication>\n" +
-         "  </Description>\n" +
-         "</RDF>";
 }
 
 /**

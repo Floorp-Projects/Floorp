@@ -34,7 +34,7 @@ struct ClassInfo;
 
 namespace js {
 
-using PropertyDescriptorVector = GCVector<PropertyDescriptor>;
+using PropertyDescriptorVector = JS::GCVector<PropertyDescriptor>;
 class GCMarker;
 class Nursery;
 

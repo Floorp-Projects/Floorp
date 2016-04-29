@@ -36,22 +36,13 @@ this.AUSTLMY = {
    */
   // No update found (no notification)
   CHK_NO_UPDATE_FOUND: 0,
-  // No incompatible add-ons found during incompatible check (background download)
-  CHK_ADDON_NO_INCOMPAT: 1,
+  // Update will be downloaded in the background (background download)
+  CHK_DOWNLOAD_UPDATE: 1,
   // Showing prompt due to the update.xml specifying showPrompt
   // (update notification)
   CHK_SHOWPROMPT_SNIPPET: 2,
   // Showing prompt due to preference (update notification)
   CHK_SHOWPROMPT_PREF: 3,
-  // Incompatible add-on check disabled by preference (background download)
-  CHK_ADDON_PREF_DISABLED: 4,
-  // Incompatible add-on check not performed due to same app version as the
-  // update's app version (background download)
-  CHK_ADDON_SAME_APP_VER: 5,
-  // Incompatible add-ons found and all of them have updates (background download)
-  CHK_ADDON_UPDATES_FOR_INCOMPAT: 6,
-  // Incompatible add-ons found (update notification)
-  CHK_ADDON_HAVE_INCOMPAT: 7,
   // Already has an active update in progress (no notification)
   CHK_HAS_ACTIVEUPDATE: 8,
   // A background download is already in progress (no notification)
@@ -336,11 +327,8 @@ this.AUSTLMY = {
                     noupdatesfound: 4,
                     manualUpdate: 5,
                     unsupported: 6,
-                    incompatibleCheck: 7,
                     updatesfoundbasic: 8,
                     updatesfoundbillboard: 9,
-                    license: 10,
-                    incompatibleList: 11,
                     downloading: 12,
                     errors: 13,
                     errorextra: 14,

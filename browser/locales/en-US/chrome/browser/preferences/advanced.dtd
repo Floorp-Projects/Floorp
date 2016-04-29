@@ -83,9 +83,6 @@
 <!ENTITY updateManual.label              "Never check for updates (not recommended: security risk)">
 <!ENTITY updateManual.accesskey          "N">
 
-<!ENTITY updateAutoAddonWarn.label       "Warn me if this will disable any of my add-ons">
-<!ENTITY updateAutoAddonWarn.accesskey   "W">
-
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
 

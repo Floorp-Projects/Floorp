@@ -505,10 +505,12 @@ HttpObserverManager = {
     let requestHeaderNames;
     let responseHeaderNames;
 
-    let includeStatus = kind === "headersReceived" ||
-                        kind === "onRedirect" ||
-                        kind === "onStart" ||
-                        kind === "onStop";
+    let includeStatus = (
+                          kind === "headersReceived" ||
+                          kind === "onRedirect" ||
+                          kind === "onStart" ||
+                          kind === "onStop"
+                        ) && channel instanceof Ci.nsIHttpChannel;
 
     let commonData = null;
     let uri = channel.URI;

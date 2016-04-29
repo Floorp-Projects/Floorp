@@ -55,7 +55,6 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
-#include "nsIURL.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsTArray.h"
@@ -273,35 +272,6 @@ ServiceWorkerManager::Init()
   }
 }
 
-class ContinueActivateRunnable final : public LifeCycleEventCallback
-{
-  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
-  bool mSuccess;
-
-public:
-  explicit ContinueActivateRunnable(const nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
-    : mRegistration(aRegistration)
-    , mSuccess(false)
-  {
-    AssertIsOnMainThread();
-  }
-
-  void
-  SetResult(bool aResult) override
-  {
-    mSuccess = aResult;
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    AssertIsOnMainThread();
-    mRegistration->FinishActivate(mSuccess);
-    mRegistration = nullptr;
-    return NS_OK;
-  }
-};
-
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
 {
   RefPtr<nsPIDOMWindowInner> mWindow;
@@ -344,66 +314,6 @@ public:
 };
 
 namespace {
-
-/**
- * The spec mandates slightly different behaviors for computing the scope
- * prefix string in case a Service-Worker-Allowed header is specified versus
- * when it's not available.
- *
- * With the header:
- *   "Set maxScopeString to "/" concatenated with the strings in maxScope's
- *    path (including empty strings), separated from each other by "/"."
- * Without the header:
- *   "Set maxScopeString to "/" concatenated with the strings, except the last
- *    string that denotes the script's file name, in registration's registering
- *    script url's path (including empty strings), separated from each other by
- *    "/"."
- *
- * In simpler terms, if the header is not present, we should only use the
- * "directory" part of the pathname, and otherwise the entire pathname should be
- * used.  ScopeStringPrefixMode allows the caller to specify the desired
- * behavior.
- */
-enum ScopeStringPrefixMode {
-  eUseDirectory,
-  eUsePath
-};
-
-nsresult
-GetRequiredScopeStringPrefix(nsIURI* aScriptURI, nsACString& aPrefix,
-                             ScopeStringPrefixMode aPrefixMode)
-{
-  nsresult rv = aScriptURI->GetPrePath(aPrefix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (aPrefixMode == eUseDirectory) {
-    nsCOMPtr<nsIURL> scriptURL(do_QueryInterface(aScriptURI));
-    if (NS_WARN_IF(!scriptURL)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoCString dir;
-    rv = scriptURL->GetDirectory(dir);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    aPrefix.Append(dir);
-  } else if (aPrefixMode == eUsePath) {
-    nsAutoCString path;
-    rv = aScriptURI->GetPath(path);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    aPrefix.Append(path);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Invalid value for aPrefixMode");
-  }
-  return NS_OK;
-}
 
 class PropagateSoftUpdateRunnable final : public Runnable
 {

@@ -305,8 +305,8 @@ class WasmAstBlock : public WasmAstExpr
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::Block;
-    explicit WasmAstBlock(Expr expr, WasmName breakName, WasmName continueName,
-                          WasmAstExprVector&& exprs)
+    explicit WasmAstBlock(Expr expr, WasmName breakName,
+                          WasmName continueName, WasmAstExprVector&& exprs)
       : WasmAstExpr(Kind),
         expr_(expr),
         breakName_(breakName),
@@ -471,18 +471,22 @@ class WasmAstBranchTable : public WasmAstExpr
     WasmAstExpr& index_;
     WasmRef default_;
     WasmRefVector table_;
+    WasmAstExpr* value_;
 
   public:
     static const WasmAstExprKind Kind = WasmAstExprKind::BranchTable;
-    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table)
+    explicit WasmAstBranchTable(WasmAstExpr& index, WasmRef def, WasmRefVector&& table,
+                                WasmAstExpr* maybeValue)
       : WasmAstExpr(Kind),
         index_(index),
         default_(def),
-        table_(Move(table))
+        table_(Move(table)),
+        value_(maybeValue)
     {}
     WasmAstExpr& index() const { return index_; }
     WasmRef& def() { return default_; }
     WasmRefVector& table() { return table_; }
+    WasmAstExpr* maybeValue() { return value_; }
 };
 
 class WasmAstFunc : public WasmAstNode
@@ -1004,7 +1008,7 @@ IsWasmLetter(char16_t c)
 static bool
 IsNameAfterDollar(char16_t c)
 {
-    return IsWasmLetter(c) || IsWasmDigit(c) || c == '_' || c == '$' || c == '-';
+    return IsWasmLetter(c) || IsWasmDigit(c) || c == '_' || c == '$' || c == '-' || c == '.';
 }
 
 static bool
@@ -2800,7 +2804,17 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable)
     if (!index)
         return nullptr;
 
-    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table));
+    WasmAstExpr* value = nullptr;
+    if (c.ts.getIf(WasmToken::OpenParen)) {
+        value = index;
+        index = ParseExprInsideParens(c);
+        if (!index)
+            return nullptr;
+        if (!c.ts.match(WasmToken::CloseParen, c.error))
+            return nullptr;
+    }
+
+    return new(c.lifo) WasmAstBranchTable(*index, def, Move(table), value);
 }
 
 static WasmAstExpr*
@@ -3481,9 +3495,18 @@ ResolveConversionOperator(Resolver& r, WasmAstConversionOperator& b)
 static bool
 ResolveIfElse(Resolver& r, WasmAstIf& i)
 {
-    return ResolveExpr(r, i.cond()) &&
-           ResolveExpr(r, i.thenBranch()) &&
-           (!i.hasElse() || ResolveExpr(r, i.elseBranch()));
+    if (!ResolveExpr(r, i.cond()))
+        return false;
+    if (!r.pushTarget(WasmName()))
+        return false;
+    if (!ResolveExpr(r, i.thenBranch()))
+        return false;
+    if (i.hasElse()) {
+        if (!ResolveExpr(r, i.elseBranch()))
+            return false;
+    }
+    r.popTarget(WasmName());
+    return true;
 }
 
 static bool
@@ -3654,13 +3677,14 @@ EncodeBlock(Encoder& e, WasmAstBlock& b)
         return false;
 
     size_t numExprs = b.exprs().length();
-    if (!e.writeVarU32(numExprs))
-        return false;
 
     for (size_t i = 0; i < numExprs; i++) {
         if (!EncodeExpr(e, *b.exprs()[i]))
             return false;
     }
+
+    if (!e.writeExpr(Expr::End))
+        return false;
 
     return true;
 }
@@ -3670,19 +3694,26 @@ EncodeBranch(Encoder& e, WasmAstBranch& br)
 {
     MOZ_ASSERT(br.expr() == Expr::Br || br.expr() == Expr::BrIf);
 
-    if (!e.writeExpr(br.expr()))
-        return false;
-
-    if (!e.writeVarU32(br.target().index()))
-        return false;
-
-    if (br.maybeValue() ? !EncodeExpr(e, *br.maybeValue()) : !e.writeExpr(Expr::Nop))
-        return false;
+    uint32_t arity = 0;
+    if (br.maybeValue()) {
+        arity = 1;
+        if (!EncodeExpr(e, *br.maybeValue()))
+            return false;
+    }
 
     if (br.expr() == Expr::BrIf) {
         if (!EncodeExpr(e, br.cond()))
             return false;
     }
+
+    if (!e.writeExpr(br.expr()))
+        return false;
+
+    if (!e.writeVarU32(arity))
+        return false;
+
+    if (!e.writeVarU32(br.target().index()))
+        return false;
 
     return true;
 }
@@ -3701,13 +3732,16 @@ EncodeArgs(Encoder& e, const WasmAstExprVector& args)
 static bool
 EncodeCall(Encoder& e, WasmAstCall& c)
 {
+    if (!EncodeArgs(e, c.args()))
+        return false;
+
     if (!e.writeExpr(c.expr()))
         return false;
 
-    if (!e.writeVarU32(c.func().index()))
+    if (!e.writeVarU32(c.args().length()))
         return false;
 
-    if (!EncodeArgs(e, c.args()))
+    if (!e.writeVarU32(c.func().index()))
         return false;
 
     return true;
@@ -3716,16 +3750,19 @@ EncodeCall(Encoder& e, WasmAstCall& c)
 static bool
 EncodeCallIndirect(Encoder& e, WasmAstCallIndirect& c)
 {
-    if (!e.writeExpr(Expr::CallIndirect))
-        return false;
-
-    if (!e.writeVarU32(c.sig().index()))
-        return false;
-
     if (!EncodeExpr(e, *c.index()))
         return false;
 
     if (!EncodeArgs(e, c.args()))
+        return false;
+
+    if (!e.writeExpr(Expr::CallIndirect))
+        return false;
+
+    if (!e.writeVarU32(c.args().length()))
+        return false;
+
+    if (!e.writeVarU32(c.sig().index()))
         return false;
 
     return true;
@@ -3763,93 +3800,128 @@ EncodeGetLocal(Encoder& e, WasmAstGetLocal& gl)
 static bool
 EncodeSetLocal(Encoder& e, WasmAstSetLocal& sl)
 {
-    return e.writeExpr(Expr::SetLocal) &&
-           e.writeVarU32(sl.local().index()) &&
-           EncodeExpr(e, sl.value());
+    return EncodeExpr(e, sl.value()) &&
+           e.writeExpr(Expr::SetLocal) &&
+           e.writeVarU32(sl.local().index());
 }
 
 static bool
 EncodeUnaryOperator(Encoder& e, WasmAstUnaryOperator& b)
 {
-    return e.writeExpr(b.expr()) &&
-           EncodeExpr(e, *b.op());
+    return EncodeExpr(e, *b.op()) &&
+           e.writeExpr(b.expr());
 }
 
 static bool
 EncodeBinaryOperator(Encoder& e, WasmAstBinaryOperator& b)
 {
-    return e.writeExpr(b.expr()) &&
-           EncodeExpr(e, *b.lhs()) &&
-           EncodeExpr(e, *b.rhs());
+    return EncodeExpr(e, *b.lhs()) &&
+           EncodeExpr(e, *b.rhs()) &&
+           e.writeExpr(b.expr());
 }
 
 static bool
 EncodeTernaryOperator(Encoder& e, WasmAstTernaryOperator& b)
 {
-    return e.writeExpr(b.expr()) &&
-           EncodeExpr(e, *b.op0()) &&
+    return EncodeExpr(e, *b.op0()) &&
            EncodeExpr(e, *b.op1()) &&
-           EncodeExpr(e, *b.op2());
+           EncodeExpr(e, *b.op2()) &&
+           e.writeExpr(b.expr());
 }
 
 static bool
 EncodeComparisonOperator(Encoder& e, WasmAstComparisonOperator& b)
 {
-    return e.writeExpr(b.expr()) &&
-           EncodeExpr(e, *b.lhs()) &&
-           EncodeExpr(e, *b.rhs());
+    return EncodeExpr(e, *b.lhs()) &&
+           EncodeExpr(e, *b.rhs()) &&
+           e.writeExpr(b.expr());
 }
 
 static bool
 EncodeConversionOperator(Encoder& e, WasmAstConversionOperator& b)
 {
-    return e.writeExpr(b.expr()) &&
-           EncodeExpr(e, *b.op());
+    return EncodeExpr(e, *b.op()) &&
+           e.writeExpr(b.expr());
 }
 
 static bool
 EmitIf(Encoder& e, WasmAstIf& i)
 {
-    return e.writeExpr(i.hasElse() ? Expr::IfElse : Expr::If) &&
-           EncodeExpr(e, i.cond()) &&
+    return EncodeExpr(e, i.cond()) &&
+           e.writeExpr(Expr::If) &&
            EncodeExpr(e, i.thenBranch()) &&
-           (!i.hasElse() || EncodeExpr(e, i.elseBranch()));
+           (!i.hasElse() ||
+            (e.writeExpr(Expr::Else) &&
+             EncodeExpr(e, i.elseBranch()))) &&
+           e.writeExpr(Expr::End);
 }
 
 static bool
 EncodeLoadStoreAddress(Encoder &e, const WasmAstLoadStoreAddress &address)
 {
+    return EncodeExpr(e, address.base());
+}
+
+static bool
+EncodeLoadStoreFlags(Encoder &e, const WasmAstLoadStoreAddress &address)
+{
     return e.writeVarU32(address.flags()) &&
-           e.writeVarU32(address.offset()) &&
-           EncodeExpr(e, address.base());
+           e.writeVarU32(address.offset());
 }
 
 static bool
 EncodeLoad(Encoder& e, WasmAstLoad& l)
 {
-    return e.writeExpr(l.expr()) &&
-           EncodeLoadStoreAddress(e, l.address());
+    return EncodeLoadStoreAddress(e, l.address()) &&
+           e.writeExpr(l.expr()) &&
+           EncodeLoadStoreFlags(e, l.address());
 }
 
 static bool
 EncodeStore(Encoder& e, WasmAstStore& s)
 {
-    return e.writeExpr(s.expr()) &&
-           EncodeLoadStoreAddress(e, s.address()) &&
-           EncodeExpr(e, s.value());
+    return EncodeLoadStoreAddress(e, s.address()) &&
+           EncodeExpr(e, s.value()) &&
+           e.writeExpr(s.expr()) &&
+           EncodeLoadStoreFlags(e, s.address());
 }
 
 static bool
 EncodeReturn(Encoder& e, WasmAstReturn& r)
 {
-    return e.writeExpr(Expr::Return) &&
-           (!r.maybeExpr() || EncodeExpr(e, *r.maybeExpr()));
+    uint32_t arity = 0;
+    if (r.maybeExpr()) {
+        arity = 1;
+        if (!EncodeExpr(e, *r.maybeExpr()))
+           return false;
+    }
+
+    if (!e.writeExpr(Expr::Return))
+        return false;
+
+    if (!e.writeVarU32(arity))
+        return false;
+
+    return true;
 }
 
 static bool
 EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
 {
+    uint32_t arity = 0;
+    if (bt.maybeValue()) {
+        arity = 1;
+        if (!EncodeExpr(e, *bt.maybeValue()))
+            return false;
+    }
+
+    if (!EncodeExpr(e, bt.index()))
+        return false;
+
     if (!e.writeExpr(Expr::BrTable))
+        return false;
+
+    if (!e.writeVarU32(arity))
         return false;
 
     if (!e.writeVarU32(bt.table().length()))
@@ -3863,7 +3935,7 @@ EncodeBranchTable(Encoder& e, WasmAstBranchTable& bt)
     if (!e.writeFixedU32(bt.def().index()))
         return false;
 
-    return EncodeExpr(e, bt.index());
+    return true;
 }
 
 static bool
@@ -3916,27 +3988,35 @@ EncodeExpr(Encoder& e, WasmAstExpr& expr)
 // wasm AST binary serialization
 
 static bool
-EncodeSignatures(Encoder& e, WasmAstModule& module)
+EncodeTypeSection(Encoder& e, WasmAstModule& module)
 {
     if (module.sigs().empty())
         return true;
 
     size_t offset;
-    if (!e.startSection(SignaturesId, &offset))
+    if (!e.startSection(TypeSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(module.sigs().length()))
         return false;
 
     for (WasmAstSig* sig : module.sigs()) {
-        if (!e.writeVarU32(sig->args().length()))
+        if (!e.writeVarU32(uint32_t(TypeConstructor::Function)))
             return false;
 
-        if (!e.writeExprType(sig->ret()))
+        if (!e.writeVarU32(sig->args().length()))
             return false;
 
         for (ValType t : sig->args()) {
             if (!e.writeValType(t))
+                return false;
+        }
+
+        if (!e.writeVarU32(!IsVoid(sig->ret())))
+            return false;
+
+        if (!IsVoid(sig->ret())) {
+            if (!e.writeValType(NonVoidToValType(sig->ret())))
                 return false;
         }
     }
@@ -3946,13 +4026,13 @@ EncodeSignatures(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionSignatures(Encoder& e, WasmAstModule& module)
+EncodeFunctionSection(Encoder& e, WasmAstModule& module)
 {
     if (module.funcs().empty())
         return true;
 
     size_t offset;
-    if (!e.startSection(FunctionSignaturesId, &offset))
+    if (!e.startSection(FunctionSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(module.funcs().length()))
@@ -3991,13 +4071,13 @@ EncodeImport(Encoder& e, WasmAstImport& imp)
 }
 
 static bool
-EncodeImportTable(Encoder& e, WasmAstModule& module)
+EncodeImportSection(Encoder& e, WasmAstModule& module)
 {
     if (module.imports().empty())
         return true;
 
     size_t offset;
-    if (!e.startSection(ImportTableId, &offset))
+    if (!e.startSection(ImportSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(module.imports().length()))
@@ -4013,13 +4093,13 @@ EncodeImportTable(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeMemory(Encoder& e, WasmAstModule& module)
+EncodeMemorySection(Encoder& e, WasmAstModule& module)
 {
     if (!module.maybeMemory())
         return true;
 
     size_t offset;
-    if (!e.startSection(MemoryId, &offset))
+    if (!e.startSection(MemorySectionId, &offset))
         return false;
 
     WasmAstMemory& memory = *module.maybeMemory();
@@ -4059,7 +4139,7 @@ EncodeFunctionExport(Encoder& e, WasmAstExport& exp)
 }
 
 static bool
-EncodeExportTable(Encoder& e, WasmAstModule& module)
+EncodeExportSection(Encoder& e, WasmAstModule& module)
 {
     uint32_t numFuncExports = 0;
     for (WasmAstExport* exp : module.exports()) {
@@ -4071,7 +4151,7 @@ EncodeExportTable(Encoder& e, WasmAstModule& module)
         return true;
 
     size_t offset;
-    if (!e.startSection(ExportTableId, &offset))
+    if (!e.startSection(ExportSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(numFuncExports))
@@ -4093,13 +4173,13 @@ EncodeExportTable(Encoder& e, WasmAstModule& module)
 }
 
 static bool
-EncodeFunctionTable(Encoder& e, WasmAstModule& module)
+EncodeTableSection(Encoder& e, WasmAstModule& module)
 {
     if (!module.maybeTable())
         return true;
 
     size_t offset;
-    if (!e.startSection(FunctionTableId, &offset))
+    if (!e.startSection(TableSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(module.maybeTable()->elems().length()))
@@ -4139,13 +4219,13 @@ EncodeFunctionBody(Encoder& e, WasmAstFunc& func)
 }
 
 static bool
-EncodeFunctionBodies(Encoder& e, WasmAstModule& module)
+EncodeCodeSection(Encoder& e, WasmAstModule& module)
 {
     if (module.funcs().empty())
         return true;
 
     size_t offset;
-    if (!e.startSection(FunctionBodiesId, &offset))
+    if (!e.startSection(CodeSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(module.funcs().length()))
@@ -4187,7 +4267,7 @@ EncodeDataSegment(Encoder& e, WasmAstSegment& segment)
 }
 
 static bool
-EncodeDataSegments(Encoder& e, WasmAstModule& module)
+EncodeDataSection(Encoder& e, WasmAstModule& module)
 {
     if (!module.maybeMemory() || module.maybeMemory()->segments().empty())
         return true;
@@ -4195,7 +4275,7 @@ EncodeDataSegments(Encoder& e, WasmAstModule& module)
     const WasmAstSegmentVector& segments = module.maybeMemory()->segments();
 
     size_t offset;
-    if (!e.startSection(DataSegmentsId, &offset))
+    if (!e.startSection(DataSectionId, &offset))
         return false;
 
     if (!e.writeVarU32(segments.length()))
@@ -4221,28 +4301,28 @@ EncodeModule(WasmAstModule& module, Bytes* bytes)
     if (!e.writeFixedU32(EncodingVersion))
         return false;
 
-    if (!EncodeSignatures(e, module))
+    if (!EncodeTypeSection(e, module))
         return false;
 
-    if (!EncodeImportTable(e, module))
+    if (!EncodeImportSection(e, module))
         return false;
 
-    if (!EncodeFunctionSignatures(e, module))
+    if (!EncodeFunctionSection(e, module))
         return false;
 
-    if (!EncodeFunctionTable(e, module))
+    if (!EncodeTableSection(e, module))
         return false;
 
-    if (!EncodeMemory(e, module))
+    if (!EncodeMemorySection(e, module))
         return false;
 
-    if (!EncodeExportTable(e, module))
+    if (!EncodeExportSection(e, module))
         return false;
 
-    if (!EncodeFunctionBodies(e, module))
+    if (!EncodeCodeSection(e, module))
         return false;
 
-    if (!EncodeDataSegments(e, module))
+    if (!EncodeDataSection(e, module))
         return false;
 
     return true;

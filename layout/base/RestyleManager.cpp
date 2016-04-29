@@ -3934,10 +3934,12 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     // continuation.
     LOG_RESTYLE("using previous continuation's context");
     newContext = prevContinuationContext;
+  } else if (pseudoTag == nsCSSAnonBoxes::mozText) {
+    MOZ_ASSERT(aSelf->GetType() == nsGkAtoms::textFrame);
+    newContext =
+      styleSet->ResolveStyleForText(aSelf->GetContent(), parentContext);
   } else if (nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
-    NS_ASSERTION(aSelf->GetContent(),
-                 "non pseudo-element frame without content node");
-    newContext = styleSet->ResolveStyleForNonElement(parentContext, pseudoTag);
+    newContext = styleSet->ResolveStyleForOtherNonElement(parentContext);
   }
   else {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);

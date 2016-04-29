@@ -1099,3 +1099,43 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
 
     masm.jump(ool->rejoin());
 }
+
+void
+CodeGeneratorX86::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
+{
+    auto input = ToFloatRegister(lir->input());
+    auto output = ToRegister(lir->output());
+
+    MWasmTruncateToInt32* mir = lir->mir();
+    MIRType fromType = mir->input()->type();
+
+    auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
+    addOutOfLineCode(ool, mir);
+
+    if (mir->isUnsigned()) {
+        Label done;
+        if (fromType == MIRType::Double) {
+            masm.vcvttsd2si(input, output);
+            masm.branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
+            masm.loadConstantDouble(double(int32_t(0x80000000)), ScratchDoubleReg);
+            masm.addDouble(input, ScratchDoubleReg);
+            masm.vcvttsd2si(ScratchDoubleReg, output);
+        } else {
+            MOZ_ASSERT(fromType == MIRType::Float32);
+            masm.vcvttss2si(input, output);
+            masm.branch32(Assembler::Condition::NotSigned, output, Imm32(0), &done);
+            masm.loadConstantFloat32(float(int32_t(0x80000000)), ScratchFloat32Reg);
+            masm.addFloat32(input, ScratchFloat32Reg);
+            masm.vcvttss2si(ScratchFloat32Reg, output);
+        }
+
+        masm.branch32(Assembler::Condition::Signed, output, Imm32(0), ool->entry());
+        masm.or32(Imm32(0x80000000), output);
+        masm.bind(&done);
+        return;
+    }
+
+    emitWasmSignedTruncateToInt32(ool, output);
+
+    masm.bind(ool->rejoin());
+}

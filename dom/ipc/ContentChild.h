@@ -261,10 +261,6 @@ public:
   virtual bool
   DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor) override;
 
-  virtual bool
-  RecvDataStoreNotify(const uint32_t& aAppId, const nsString& aName,
-                      const nsString& aManifestURL) override;
-
   virtual PTestShellChild* AllocPTestShellChild() override;
 
   virtual bool DeallocPTestShellChild(PTestShellChild*) override;

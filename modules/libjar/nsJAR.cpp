@@ -86,7 +86,8 @@ nsJAR::nsJAR(): mZip(new nsZipArchive()),
                 mLock("nsJAR::mLock"),
                 mMtime(0),
                 mTotalItemsInManifest(0),
-                mOpened(false)
+                mOpened(false),
+                mIsOmnijar(false)
 {
 }
 
@@ -141,6 +142,7 @@ nsJAR::Open(nsIFile* zipFile)
   RefPtr<nsZipArchive> zip = mozilla::Omnijar::GetReader(zipFile);
   if (zip) {
     mZip = zip;
+    mIsOmnijar = true;
     return NS_OK;
   }
   return mZip->OpenArchive(zipFile);
@@ -201,19 +203,23 @@ nsJAR::GetFile(nsIFile* *result)
 NS_IMETHODIMP
 nsJAR::Close()
 {
+  if (!mOpened) {
+    return NS_ERROR_FAILURE; // Never opened or already closed.
+  }
+
   mOpened = false;
   mParsedManifest = false;
   mManifestData.Clear();
   mGlobalStatus = JAR_MANIFEST_NOT_PARSED;
   mTotalItemsInManifest = 0;
 
-  RefPtr<nsZipArchive> greOmni = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
-  RefPtr<nsZipArchive> appOmni = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
-
-  if (mZip == greOmni || mZip == appOmni) {
+  if (mIsOmnijar) {
+    // Reset state, but don't close the omnijar because we did not open it.
+    mIsOmnijar = false;
     mZip = new nsZipArchive();
     return NS_OK;
   }
+
   return mZip->CloseArchive();
 }
 

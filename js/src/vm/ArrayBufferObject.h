@@ -282,7 +282,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     // Detach this buffer from its original memory.  (This necessarily makes
     // views of this buffer unusable for modifying that original memory.)
-    static MOZ_WARN_UNUSED_RESULT bool
+    static MOZ_MUST_USE bool
     detach(JSContext* cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
 
   private:

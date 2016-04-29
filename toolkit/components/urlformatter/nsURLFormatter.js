@@ -156,6 +156,13 @@ nsURLFormatterService.prototype = {
     }
 
     return this.formatURL(format);
+  },
+
+  trimSensitiveURLs: function uf_trimSensitiveURLs(aMsg) {
+    // Only the google API key is sensitive for now.
+    return "@MOZ_GOOGLE_API_KEY@" ? aMsg.replace("@MOZ_GOOGLE_API_KEY@",
+                                                 "[trimmed-google-api-key]", "g")
+                                  : aMsg;
   }
 };
 

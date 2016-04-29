@@ -174,8 +174,11 @@ def get_default_debugger_name(search=DebuggerSearch.OnlyFirst):
      looking for other compatible debuggers (|DebuggerSearch.KeepLooking|).
     '''
 
+    mozinfo.find_and_update_from_json()
+    os = mozinfo.info['os']
+
     # Find out which debuggers are preferred for use on this platform.
-    debuggerPriorities = _DEBUGGER_PRIORITIES[mozinfo.os if mozinfo.os in _DEBUGGER_PRIORITIES else 'unknown']
+    debuggerPriorities = _DEBUGGER_PRIORITIES[os if os in _DEBUGGER_PRIORITIES else 'unknown']
 
     # Finally get the debugger information.
     for debuggerName in debuggerPriorities:

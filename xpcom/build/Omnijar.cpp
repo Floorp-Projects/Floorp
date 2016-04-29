@@ -14,11 +14,11 @@
 
 namespace mozilla {
 
-nsIFile* Omnijar::sPath[2] = { nullptr, nullptr };
-nsZipArchive* Omnijar::sReader[2] = { nullptr, nullptr };
+StaticRefPtr<nsIFile> Omnijar::sPath[2];
+StaticRefPtr<nsZipArchive> Omnijar::sReader[2];
+StaticRefPtr<nsZipArchive> Omnijar::sOuterReader[2];
 bool Omnijar::sInitialized = false;
-static bool sIsUnified = false;
-static bool sIsNested[2] = { false, false };
+bool Omnijar::sIsUnified = false;
 
 static const char* sProp[2] = {
   NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR
@@ -31,10 +31,13 @@ Omnijar::CleanUpOne(Type aType)
 {
   if (sReader[aType]) {
     sReader[aType]->CloseArchive();
-    NS_IF_RELEASE(sReader[aType]);
+    sReader[aType] = nullptr;
   }
-  sReader[aType] = nullptr;
-  NS_IF_RELEASE(sPath[aType]);
+  if (sOuterReader[aType]) {
+    sOuterReader[aType]->CloseArchive();
+    sOuterReader[aType] = nullptr;
+  }
+  sPath[aType] = nullptr;
 }
 
 void
@@ -85,21 +88,21 @@ Omnijar::InitOne(nsIFile* aPath, Type aType)
     return;
   }
 
+  RefPtr<nsZipArchive> outerReader;
   RefPtr<nsZipHandle> handle;
   if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, NS_STRINGIFY(OMNIJAR_NAME),
                                      getter_AddRefs(handle)))) {
+    outerReader = zipReader;
     zipReader = new nsZipArchive();
     if (NS_FAILED(zipReader->OpenArchive(handle))) {
       return;
     }
-    sIsNested[aType] = true;
   }
 
   CleanUpOne(aType);
   sReader[aType] = zipReader;
-  NS_IF_ADDREF(sReader[aType]);
+  sOuterReader[aType] = outerReader;
   sPath[aType] = file;
-  NS_IF_ADDREF(sPath[aType]);
 }
 
 void
@@ -126,16 +129,16 @@ Omnijar::GetReader(nsIFile* aPath)
   bool equals;
   nsresult rv;
 
-  if (sPath[GRE] && !sIsNested[GRE]) {
+  if (sPath[GRE]) {
     rv = sPath[GRE]->Equals(aPath, &equals);
     if (NS_SUCCEEDED(rv) && equals) {
-      return GetReader(GRE);
+      return IsNested(GRE) ? GetOuterReader(GRE) : GetReader(GRE);
     }
   }
-  if (sPath[APP] && !sIsNested[APP]) {
+  if (sPath[APP]) {
     rv = sPath[APP]->Equals(aPath, &equals);
     if (NS_SUCCEEDED(rv) && equals) {
-      return GetReader(APP);
+      return IsNested(APP) ? GetOuterReader(APP) : GetReader(APP);
     }
   }
   return nullptr;
@@ -161,12 +164,12 @@ Omnijar::GetURIString(Type aType, nsACString& aResult)
     }
 
     aResult = "jar:";
-    if (sIsNested[aType]) {
+    if (IsNested(aType)) {
       aResult += "jar:";
     }
     aResult += omniJarSpec;
     aResult += "!";
-    if (sIsNested[aType]) {
+    if (IsNested(aType)) {
       aResult += "/" NS_STRINGIFY(OMNIJAR_NAME) "!";
     }
   } else {

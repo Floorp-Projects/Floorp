@@ -467,6 +467,29 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 }
 
 // ===============================================================
+// Rotation functions
+void
+MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+void
+MacroAssembler::rotateLeft(Register count, Register input, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+void
+MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+void
+MacroAssembler::rotateRight(Register count, Register input, Register dest)
+{
+    MOZ_CRASH("NYI");
+}
+
+// ===============================================================
 // Branch functions
 
 void

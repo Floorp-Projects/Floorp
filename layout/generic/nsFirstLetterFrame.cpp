@@ -70,8 +70,7 @@ nsFirstLetterFrame::Init(nsIContent*       aContent,
     nsStyleContext* parentStyleContext = mStyleContext->GetParent();
     if (parentStyleContext) {
       newSC = PresContext()->StyleSet()->
-        ResolveStyleForNonElement(parentStyleContext,
-                                  nsCSSAnonBoxes::mozOtherNonElement);
+        ResolveStyleForOtherNonElement(parentStyleContext);
       SetStyleContextWithoutNotification(newSC);
     }
   }
@@ -332,8 +331,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   nsStyleContext* parentSC = this->StyleContext()->GetParent();
   if (parentSC) {
     RefPtr<nsStyleContext> newSC;
-    newSC = presShell->StyleSet()->
-      ResolveStyleForNonElement(parentSC, nsCSSAnonBoxes::mozOtherNonElement);
+    newSC = presShell->StyleSet()->ResolveStyleForOtherNonElement(parentSC);
     continuation->SetStyleContext(newSC);
     nsLayoutUtils::MarkDescendantsDirty(continuation);
   }
@@ -387,8 +385,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
                    "should contain only text nodes");
       nsStyleContext* parentSC = prevInFlow ? mStyleContext->GetParent() :
                                               mStyleContext;
-      sc = aPresContext->StyleSet()->
-        ResolveStyleForNonElement(parentSC, nsCSSAnonBoxes::mozText);
+      sc = aPresContext->StyleSet()->ResolveStyleForText(kidContent, parentSC);
       kid->SetStyleContext(sc);
       nsLayoutUtils::MarkDescendantsDirty(kid);
     }

@@ -13,7 +13,7 @@
 #include "js/SweepingAPI.h"
 #include "js/TracingAPI.h"
 
-namespace js {
+namespace JS {
 
 // Define a reasonable default GC policy for GC-aware Maps.
 template <typename Key, typename Value>
@@ -49,12 +49,12 @@ struct DefaultMapSweepPolicy {
 // sweeping, currently it requires an explicit call to <map>.sweep().
 template <typename Key,
           typename Value,
-          typename HashPolicy = DefaultHasher<Key>,
-          typename AllocPolicy = TempAllocPolicy,
+          typename HashPolicy = js::DefaultHasher<Key>,
+          typename AllocPolicy = js::TempAllocPolicy,
           typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
-class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>
+class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy>
 {
-    using Base = HashMap<Key, Value, HashPolicy, AllocPolicy>;
+    using Base = js::HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
   public:
     explicit GCHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
@@ -92,6 +92,10 @@ class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>
     GCHashMap& operator=(const GCHashMap& hm) = delete;
 };
 
+} // namespace JS
+
+namespace js {
+
 // HashMap that supports rekeying.
 //
 // If your keys are pointers to something like JSObject that can be tenured or
@@ -101,10 +105,10 @@ template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
-          typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
-class GCRekeyableHashMap : public GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>
+          typename MapSweepPolicy = JS::DefaultMapSweepPolicy<Key, Value>>
+class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>
 {
-    using Base = GCHashMap<Key, Value, HashPolicy, AllocPolicy>;
+    using Base = JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy>;
 
   public:
     explicit GCRekeyableHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
@@ -133,7 +137,7 @@ class GCRekeyableHashMap : public GCHashMap<Key, Value, HashPolicy, AllocPolicy,
 template <typename Outer, typename... Args>
 class GCHashMapOperations
 {
-    using Map = GCHashMap<Args...>;
+    using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
     using Ptr = typename Map::Ptr;
     using Range = typename Map::Range;
@@ -163,7 +167,7 @@ template <typename Outer, typename... Args>
 class MutableGCHashMapOperations
   : public GCHashMapOperations<Outer, Args...>
 {
-    using Map = GCHashMap<Args...>;
+    using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
     using Ptr = typename Map::Ptr;
     using Range = typename Map::Range;
@@ -208,24 +212,28 @@ class MutableGCHashMapOperations
 };
 
 template <typename A, typename B, typename C, typename D, typename E>
-class RootedBase<GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::Rooted<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class RootedBase<JS::GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::Rooted<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
 template <typename A, typename B, typename C, typename D, typename E>
-class MutableHandleBase<GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::MutableHandle<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class MutableHandleBase<JS::GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::MutableHandle<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
 template <typename A, typename B, typename C, typename D, typename E>
-class HandleBase<GCHashMap<A,B,C,D,E>>
-  : public GCHashMapOperations<JS::Handle<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class HandleBase<JS::GCHashMap<A,B,C,D,E>>
+  : public GCHashMapOperations<JS::Handle<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
 template <typename A, typename B, typename C, typename D, typename E>
-class WeakCacheBase<GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::WeakCache<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class WeakCacheBase<JS::GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::WeakCache<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
+
+} // namespace js
+
+namespace JS {
 
 // A GCHashSet is a HashSet with an additional trace method that knows
 // be traced to be kept alive will generally want to use this GCHashSet
@@ -241,11 +249,11 @@ class WeakCacheBase<GCHashMap<A,B,C,D,E>>
 // function properly it must either be used with Rooted or barriered and traced
 // manually.
 template <typename T,
-          typename HashPolicy = DefaultHasher<T>,
-          typename AllocPolicy = TempAllocPolicy>
-class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>
+          typename HashPolicy = js::DefaultHasher<T>,
+          typename AllocPolicy = js::TempAllocPolicy>
+class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy>
 {
-    using Base = HashSet<T, HashPolicy, AllocPolicy>;
+    using Base = js::HashSet<T, HashPolicy, AllocPolicy>;
 
   public:
     explicit GCHashSet(AllocPolicy a = AllocPolicy()) : Base(a)  {}
@@ -280,10 +288,14 @@ class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>
     GCHashSet& operator=(const GCHashSet& hs) = delete;
 };
 
+} // namespace JS
+
+namespace js {
+
 template <typename Outer, typename... Args>
 class GCHashSetOperations
 {
-    using Set = GCHashSet<Args...>;
+    using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
     using Ptr = typename Set::Ptr;
     using Range = typename Set::Range;
@@ -314,7 +326,7 @@ template <typename Outer, typename... Args>
 class MutableGCHashSetOperations
   : public GCHashSetOperations<Outer, Args...>
 {
-    using Set = GCHashSet<Args...>;
+    using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
     using Ptr = typename Set::Ptr;
     using Range = typename Set::Range;
@@ -359,26 +371,26 @@ class MutableGCHashSetOperations
 };
 
 template <typename T, typename HP, typename AP>
-class RootedBase<GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::Rooted<GCHashSet<T, HP, AP>>, T, HP, AP>
+class RootedBase<JS::GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::Rooted<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
 {
 };
 
 template <typename T, typename HP, typename AP>
-class MutableHandleBase<GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::MutableHandle<GCHashSet<T, HP, AP>>, T, HP, AP>
+class MutableHandleBase<JS::GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::MutableHandle<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
 {
 };
 
 template <typename T, typename HP, typename AP>
-class HandleBase<GCHashSet<T, HP, AP>>
-  : public GCHashSetOperations<JS::Handle<GCHashSet<T, HP, AP>>, T, HP, AP>
+class HandleBase<JS::GCHashSet<T, HP, AP>>
+  : public GCHashSetOperations<JS::Handle<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
 {
 };
 
 template <typename T, typename HP, typename AP>
-class WeakCacheBase<GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::WeakCache<GCHashSet<T, HP, AP>>, T, HP, AP>
+class WeakCacheBase<JS::GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::WeakCache<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
 {
 };
 

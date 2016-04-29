@@ -229,15 +229,15 @@ void SkDrawPaint::setupPaint(SkPaint* paint) const {
     if (maskFilter == nullptr)
         paint->setMaskFilter(nullptr);
     else if (maskFilter != (SkDrawMaskFilter*) -1)
-        SkSafeUnref(paint->setMaskFilter(maskFilter->getMaskFilter()));
+        paint->setMaskFilter(sk_sp<SkMaskFilter>(maskFilter->getMaskFilter()));
     if (pathEffect == nullptr)
         paint->setPathEffect(nullptr);
     else if (pathEffect != (SkDrawPathEffect*) -1)
-        SkSafeUnref(paint->setPathEffect(pathEffect->getPathEffect()));
+        paint->setPathEffect(sk_ref_sp(pathEffect->getPathEffect()));
     if (shader == nullptr)
         paint->setShader(nullptr);
     else if (shader != (SkDrawShader*) -1)
-        SkSafeUnref(paint->setShader(shader->getShader()));
+        paint->setShader(sk_ref_sp(shader->getShader()));
     if (strikeThru != -1)
         paint->setStrikeThruText(SkToBool(strikeThru));
     if (strokeCap != -1)

@@ -208,7 +208,7 @@ MDefinition::valueHash() const
     HashNumber out = op();
     for (size_t i = 0, e = numOperands(); i < e; i++)
         out = addU32ToHash(out, getOperand(i)->id());
-    if (MInstruction* dep = dependency())
+    if (MDefinition* dep = dependency())
         out = addU32ToHash(out, dep->id());
     return out;
 }
@@ -343,6 +343,25 @@ MaybeCallable(CompilerConstraintList* constraints, MDefinition* op)
         return true;
 
     return types->maybeCallable(constraints);
+}
+
+/* static */ const char*
+AliasSet::Name(size_t flag)
+{
+    switch(flag) {
+      case 0: return "ObjectFields";
+      case 1: return "Element";
+      case 2: return "UnboxedElement";
+      case 3: return "DynamicSlot";
+      case 4: return "FixedSlot";
+      case 5: return "DOMProperty";
+      case 6: return "FrameArgument";
+      case 7: return "AsmJSGlobalVar";
+      case 8: return "AsmJSHeap";
+      case 9: return "TypedArrayLength";
+      default:
+        MOZ_CRASH("Unknown flag");
+    }
 }
 
 MTest*
@@ -3794,6 +3813,40 @@ MTruncateToInt32::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
+MWasmTruncateToInt32::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = getOperand(0);
+    if (input->type() == MIRType::Int32)
+        return input;
+
+    if (input->type() == MIRType::Double && input->isConstant()) {
+        double d = input->toConstant()->toDouble();
+        if (IsNaN(d))
+            return this;
+
+        if (!isUnsigned_ && d <= double(INT32_MAX) && d >= double(INT32_MIN))
+            return MConstant::New(alloc, Int32Value(ToInt32(d)));
+
+        if (isUnsigned_ && d <= double(UINT32_MAX) && d >= 0)
+            return MConstant::New(alloc, Int32Value(ToInt32(d)));
+    }
+
+    if (input->type() == MIRType::Float32 && input->isConstant()) {
+        double f = double(input->toConstant()->toFloat32());
+        if (IsNaN(f))
+            return this;
+
+        if (!isUnsigned_ && f <= double(INT32_MAX) && f >= double(INT32_MIN))
+            return MConstant::New(alloc, Int32Value(ToInt32(f)));
+
+        if (isUnsigned_ && f <= double(UINT32_MAX) && f >= 0)
+            return MConstant::New(alloc, Int32Value(ToInt32(f)));
+    }
+
+    return this;
+}
+
+MDefinition*
 MWrapInt64ToInt32::foldsTo(TempAllocator& alloc)
 {
     MDefinition* input = this->input();
@@ -4551,20 +4604,20 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MCons
     }
 }
 
-bool
+MDefinition::AliasType
 MLoadFixedSlot::mightAlias(const MDefinition* store) const
 {
     if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
-        return false;
-    return true;
+        return AliasType::NoAlias;
+    return AliasType::MayAlias;
 }
 
-bool
+MDefinition::AliasType
 MLoadFixedSlotAndUnbox::mightAlias(const MDefinition* store) const
 {
     if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
-        return false;
-    return true;
+        return AliasType::NoAlias;
+    return AliasType::MayAlias;
 }
 
 MDefinition*
@@ -4586,20 +4639,21 @@ MLoadFixedSlot::foldsTo(TempAllocator& alloc)
     return foldsToStoredValue(alloc, store->value());
 }
 
-bool
+MDefinition::AliasType
 MAsmJSLoadHeap::mightAlias(const MDefinition* def) const
 {
     if (def->isAsmJSStoreHeap()) {
         const MAsmJSStoreHeap* store = def->toAsmJSStoreHeap();
         if (store->accessType() != accessType())
-            return true;
+            return AliasType::MayAlias;
         if (!base()->isConstant() || !store->base()->isConstant())
-            return true;
+            return AliasType::MayAlias;
         const MConstant* otherBase = store->base()->toConstant();
-        return base()->toConstant()->equals(otherBase) &&
-               offset() == store->offset();
+        if (base()->toConstant()->equals(otherBase) && offset() == store->offset())
+            return AliasType::MayAlias;
+        return AliasType::NoAlias;
     }
-    return true;
+    return AliasType::MayAlias;
 }
 
 bool
@@ -4613,14 +4667,15 @@ MAsmJSLoadHeap::congruentTo(const MDefinition* ins) const
            congruentIfOperandsEqual(load);
 }
 
-bool
+MDefinition::AliasType
 MAsmJSLoadGlobalVar::mightAlias(const MDefinition* def) const
 {
     if (def->isAsmJSStoreGlobalVar()) {
         const MAsmJSStoreGlobalVar* store = def->toAsmJSStoreGlobalVar();
-        return store->globalDataOffset() == globalDataOffset_;
+        return (store->globalDataOffset() == globalDataOffset_) ? AliasType::MayAlias :
+                                                                  AliasType::NoAlias;
     }
-    return true;
+    return AliasType::MayAlias;
 }
 
 HashNumber
@@ -4702,12 +4757,12 @@ MAsmJSLoadFFIFunc::congruentTo(const MDefinition* ins) const
     return false;
 }
 
-bool
+MDefinition::AliasType
 MLoadSlot::mightAlias(const MDefinition* store) const
 {
     if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
-        return false;
-    return true;
+        return AliasType::NoAlias;
+    return AliasType::MayAlias;
 }
 
 HashNumber
@@ -4850,7 +4905,7 @@ GetStoreObject(const MDefinition* store)
 }
 
 // Implements mightAlias() logic common to all load operations.
-static bool
+static MDefinition::AliasType
 GenericLoadMightAlias(const MDefinition* elementsOrObj, const MDefinition* store)
 {
     const MElements* elements = MaybeUnwrapElements(elementsOrObj);
@@ -4859,70 +4914,76 @@ GenericLoadMightAlias(const MDefinition* elementsOrObj, const MDefinition* store
 
     // Unhandled Elements kind.
     if (elementsOrObj->type() != MIRType::Object)
-        return true;
+        return MDefinition::AliasType::MayAlias;
 
     // Inline storage for objects.
     // Refer to IsValidElementsType().
     const MDefinition* object = elementsOrObj;
     MOZ_ASSERT(object->type() == MIRType::Object);
     if (!object->resultTypeSet())
-        return true;
+        return MDefinition::AliasType::MayAlias;
 
     const MDefinition* storeObject = GetStoreObject(store);
     if (!storeObject)
-        return true;
+        return MDefinition::AliasType::MayAlias;
     if (!storeObject->resultTypeSet())
-        return true;
+        return MDefinition::AliasType::MayAlias;
 
-    return object->resultTypeSet()->objectsIntersect(storeObject->resultTypeSet());
+    if (object->resultTypeSet()->objectsIntersect(storeObject->resultTypeSet()))
+        return MDefinition::AliasType::MayAlias;
+    return MDefinition::AliasType::NoAlias;
 }
 
-bool
+MDefinition::AliasType
 MElements::mightAlias(const MDefinition* store) const
 {
     if (!input()->resultTypeSet())
-        return true;
+        return AliasType::MayAlias;
 
     const MDefinition* storeObj = GetStoreObject(store);
     if (!storeObj)
-        return true;
+        return AliasType::MayAlias;
     if (!storeObj->resultTypeSet())
-        return true;
+        return AliasType::MayAlias;
 
-    return input()->resultTypeSet()->objectsIntersect(storeObj->resultTypeSet());
+        return AliasType::MayAlias;
+
+    if (input()->resultTypeSet()->objectsIntersect(storeObj->resultTypeSet()))
+        return AliasType::MayAlias;
+    return AliasType::NoAlias;
 }
 
-bool
+MDefinition::AliasType
 MLoadElement::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
 }
 
-bool
+MDefinition::AliasType
 MInitializedLength::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
 }
 
-bool
+MDefinition::AliasType
 MLoadUnboxedObjectOrNull::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
 }
 
-bool
+MDefinition::AliasType
 MLoadUnboxedString::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
 }
 
-bool
+MDefinition::AliasType
 MLoadUnboxedScalar::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(elements(), store);
 }
 
-bool
+MDefinition::AliasType
 MUnboxedArrayInitializedLength::mightAlias(const MDefinition* store) const
 {
     return GenericLoadMightAlias(object(), store);
@@ -5076,14 +5137,14 @@ MStoreTypedArrayElementStatic::length() const
     return someTypedArray_->as<TypedArrayObject>().byteLength();
 }
 
-bool
+MDefinition::AliasType
 MGetPropertyPolymorphic::mightAlias(const MDefinition* store) const
 {
     // Allow hoisting this instruction if the store does not write to a
     // slot read by this instruction.
 
     if (!store->isStoreFixedSlot() && !store->isStoreSlot())
-        return true;
+        return AliasType::MayAlias;
 
     for (size_t i = 0; i < numReceivers(); i++) {
         const Shape* shape = this->shape(i);
@@ -5105,10 +5166,10 @@ MGetPropertyPolymorphic::mightAlias(const MDefinition* store) const
                 continue;
         }
 
-        return true;
+        return AliasType::MayAlias;
     }
 
-    return false;
+    return AliasType::NoAlias;
 }
 
 void
