@@ -46,5 +46,12 @@ IsFeatureStatusFailure(FeatureStatus aStatus)
            aStatus == FeatureStatus::ForceEnabled);
 }
 
+bool
+IsFeatureStatusSuccess(FeatureStatus aStatus)
+{
+  return aStatus == FeatureStatus::Available ||
+         aStatus == FeatureStatus::ForceEnabled;
+}
+
 } // namespace gfx
 } // namespace mozilla
