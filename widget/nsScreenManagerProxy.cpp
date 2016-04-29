@@ -199,7 +199,9 @@ nsScreenManagerProxy::InvalidateCacheOnNextTick()
 
   mCacheWillInvalidate = true;
 
-  nsContentUtils::RunInStableState(NewRunnableMethod(this, &nsScreenManagerProxy::InvalidateCache));
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &nsScreenManagerProxy::InvalidateCache);
+  nsContentUtils::RunInStableState(r.forget());
 }
 
 void

@@ -260,7 +260,7 @@ GMPRemoveTest::CreateVideoDecoder(nsCString aNodeId)
   GMPVideoDecoderProxy* decoder = nullptr;
 
   mGMPThread->Dispatch(
-    NewNonOwningRunnableMethod<nsCString, GMPVideoDecoderProxy**, GMPVideoHost**>(
+    NS_NewNonOwningRunnableMethodWithArgs<nsCString, GMPVideoDecoderProxy**, GMPVideoHost**>(
       this, &GMPRemoveTest::gmp_GetVideoDecoder, aNodeId, &decoder, &host),
     NS_DISPATCH_NORMAL);
 
@@ -276,7 +276,7 @@ GMPRemoveTest::CreateVideoDecoder(nsCString aNodeId)
 
   nsTArray<uint8_t> empty;
   mGMPThread->Dispatch(
-    NewNonOwningRunnableMethod<const GMPVideoCodec&, const nsTArray<uint8_t>&, GMPVideoDecoderCallbackProxy*, int32_t>(
+    NS_NewNonOwningRunnableMethodWithArgs<const GMPVideoCodec&, const nsTArray<uint8_t>&, GMPVideoDecoderCallbackProxy*, int32_t>(
       decoder, &GMPVideoDecoderProxy::InitDecode,
       codec, empty, this, 1 /* core count */),
     NS_DISPATCH_SYNC);
@@ -328,7 +328,7 @@ void
 GMPRemoveTest::CloseVideoDecoder()
 {
   mGMPThread->Dispatch(
-    NewNonOwningRunnableMethod(mDecoder, &GMPVideoDecoderProxy::Close),
+    NS_NewNonOwningRunnableMethod(mDecoder, &GMPVideoDecoderProxy::Close),
     NS_DISPATCH_SYNC);
 
   mDecoder = nullptr;
@@ -345,7 +345,7 @@ GMPErr
 GMPRemoveTest::Decode()
 {
   mGMPThread->Dispatch(
-    NewNonOwningRunnableMethod(this, &GMPRemoveTest::gmp_Decode),
+    NS_NewNonOwningRunnableMethod(this, &GMPRemoveTest::gmp_Decode),
     NS_DISPATCH_NORMAL);
 
   mTestMonitor.AwaitFinished();

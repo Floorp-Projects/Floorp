@@ -504,7 +504,9 @@ public:
       RefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback, true);
       NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
       // As per IHistory contract, we must notify asynchronously.
-      NS_DispatchToMainThread(NewRunnableMethod(cb, &VisitedQuery::NotifyVisitedStatus));
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(cb, &VisitedQuery::NotifyVisitedStatus);
+      NS_DispatchToMainThread(event);
 
       return NS_OK;
     }

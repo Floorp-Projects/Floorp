@@ -195,7 +195,8 @@ PluginProcessParent::Delete()
       return;
   }
 
-  ioLoop->PostTask(NewNonOwningRunnableMethod(this, &PluginProcessParent::Delete));
+  RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &PluginProcessParent::Delete);
+  ioLoop->PostTask(runnable.forget());
 }
 
 void

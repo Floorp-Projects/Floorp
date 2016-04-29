@@ -74,7 +74,7 @@ AppleATDecoder::Input(MediaRawData* aSample)
 
   // Queue a task to perform the actual decoding on a separate thread.
   nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<RefPtr<MediaRawData>>(
+      NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
         this,
         &AppleATDecoder::SubmitSample,
         RefPtr<MediaRawData>(aSample));

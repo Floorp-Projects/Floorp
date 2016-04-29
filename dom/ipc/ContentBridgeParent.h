@@ -81,7 +81,7 @@ protected:
 
   void Close()
   {
-    // Trick NewRunnableMethod
+    // Trick NS_NewRunnableMethod
     PContentBridgeParent::Close();
   }
 

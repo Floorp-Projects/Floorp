@@ -82,7 +82,7 @@ public:
       mDemuxOnly = aDemuxedOnly;
       return;
     }
-    nsCOMPtr<nsIRunnable> r = NewRunnableMethod<bool>(
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<bool>(
       this, &MediaDecoderReader::SetDemuxOnly, aDemuxedOnly);
     OwnerThread()->Dispatch(r.forget());
   }

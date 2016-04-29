@@ -54,7 +54,7 @@ public:
   {
     if (event == EVENT_FINISHED) {
       nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
+        NS_NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
     }
   }
@@ -99,9 +99,9 @@ UpdateStreamSuspended(MediaStream* aStream, bool aBlocking)
   } else {
     nsCOMPtr<nsIRunnable> r;
     if (aBlocking) {
-      r = NewRunnableMethod(aStream, &MediaStream::Suspend);
+      r = NS_NewRunnableMethod(aStream, &MediaStream::Suspend);
     } else {
-      r = NewRunnableMethod(aStream, &MediaStream::Resume);
+      r = NS_NewRunnableMethod(aStream, &MediaStream::Resume);
     }
     AbstractThread::MainThread()->Dispatch(r.forget());
   }

@@ -383,7 +383,7 @@ Service::minimizeMemory()
       // We are on the wrong thread, the query should be executed on the
       // opener thread, so we must dispatch to it.
       nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod<const nsCString>(
+        NS_NewRunnableMethodWithArg<const nsCString>(
           conn, &Connection::ExecuteSimpleSQL, shrinkPragma);
       conn->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
     }
@@ -702,7 +702,7 @@ public:
                                : mConnection->initialize();
     if (NS_FAILED(rv)) {
       nsCOMPtr<nsIRunnable> closeRunnable =
-        NewRunnableMethod<mozIStorageCompletionCallback*>(
+        NS_NewRunnableMethodWithArg<mozIStorageCompletionCallback*>(
           mConnection.get(),
           &Connection::AsyncClose,
           nullptr);

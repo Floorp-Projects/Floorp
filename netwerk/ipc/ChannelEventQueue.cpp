@@ -67,13 +67,13 @@ ChannelEventQueue::Resume()
   }
 
   if (!--mSuspendCount) {
-    RefPtr<Runnable> event =
-      NewRunnableMethod(this, &ChannelEventQueue::CompleteResume);
+    RefPtr<nsRunnableMethod<ChannelEventQueue> > event =
+      NS_NewRunnableMethod(this, &ChannelEventQueue::CompleteResume);
     if (mTargetThread) {
-      mTargetThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+      mTargetThread->Dispatch(event, NS_DISPATCH_NORMAL);
     } else {
       MOZ_RELEASE_ASSERT(NS_IsMainThread());
-      NS_WARN_IF(NS_FAILED(NS_DispatchToCurrentThread(event.forget())));
+      NS_WARN_IF(NS_FAILED(NS_DispatchToCurrentThread(event)));
     }
   }
 }

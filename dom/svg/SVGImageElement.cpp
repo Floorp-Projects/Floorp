@@ -183,7 +183,7 @@ SVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     ClearBrokenState();
     RemoveStatesSilently(NS_EVENT_STATE_BROKEN);
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod(this, &SVGImageElement::MaybeLoadSVGImage));
+      NS_NewRunnableMethod(this, &SVGImageElement::MaybeLoadSVGImage));
   }
 
   return rv;

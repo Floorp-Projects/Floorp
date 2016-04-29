@@ -389,8 +389,9 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
   NS_ENSURE_SUCCESS(rv = ResetInputBuffers(), rv);
   NS_ENSURE_SUCCESS(rv = ResetOutputBuffers(), rv);
 
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop);
-  rv = NS_NewNamedThread("MC Decoder", getter_AddRefs(mThread), r);
+  rv = NS_NewNamedThread(
+      "MC Decoder", getter_AddRefs(mThread),
+      NS_NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop));
 
   return rv;
 }

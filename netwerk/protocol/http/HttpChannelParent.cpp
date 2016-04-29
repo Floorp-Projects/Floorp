@@ -1433,7 +1433,7 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
   // Call OnStartRequest and SendDivertMessages asynchronously to avoid
   // reentering client context.
   NS_DispatchToCurrentThread(
-    NewRunnableMethod(this, &HttpChannelParent::StartDiversion));
+    NS_NewRunnableMethod(this, &HttpChannelParent::StartDiversion));
   return;
 }
 

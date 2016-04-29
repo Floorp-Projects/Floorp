@@ -672,7 +672,7 @@ nsWebBrowserPersist::SerializeNextFile()
         // Finish and clean things up.  Defer this because the caller
         // may have been expecting to use the listeners that that
         // method will clear.
-        NS_DispatchToCurrentThread(NewRunnableMethod(this,
+        NS_DispatchToCurrentThread(NS_NewRunnableMethod(this,
             &nsWebBrowserPersist::FinishDownload));
         return;
     }
@@ -784,7 +784,7 @@ nsWebBrowserPersist::OnWrite::OnFinish(nsIWebBrowserPersistDocument* aDoc,
             return NS_OK;
         }
     }
-    NS_DispatchToCurrentThread(NewRunnableMethod(mParent,
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(mParent,
         &nsWebBrowserPersist::SerializeNextFile));
     return NS_OK;
 }
@@ -1794,8 +1794,8 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
         typedef StoreCopyPassByRRef<decltype(toWalk)> WalkStorage;
         auto saveMethod = &nsWebBrowserPersist::SaveDocumentDeferred;
         nsCOMPtr<nsIRunnable> saveLater =
-            NewRunnableMethod<WalkStorage>(this, saveMethod,
-                                           mozilla::Move(toWalk));
+            NS_NewRunnableMethodWithArg<WalkStorage>(this, saveMethod,
+                                                     mozilla::Move(toWalk));
         NS_DispatchToCurrentThread(saveLater);
     } else {
         // Done walking DOMs; on to the serialization phase.

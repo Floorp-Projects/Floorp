@@ -412,8 +412,9 @@ AudioDestinationNode::NotifyMainThreadStreamFinished()
   MOZ_ASSERT(mStream->IsFinished());
 
   if (mIsOffline) {
-    NS_DispatchToCurrentThread(NewRunnableMethod(this,
-                                                 &AudioDestinationNode::FireOfflineCompletionEvent));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &AudioDestinationNode::FireOfflineCompletionEvent);
+    NS_DispatchToCurrentThread(runnable);
   }
 }
 
@@ -657,10 +658,11 @@ AudioDestinationNode::NotifyStableState()
 void
 AudioDestinationNode::ScheduleStableStateNotification()
 {
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &AudioDestinationNode::NotifyStableState);
   // Dispatch will fail if this is called on AudioNode destruction during
   // shutdown, in which case failure can be ignored.
-  nsContentUtils::RunInStableState(NewRunnableMethod(this,
-                                                     &AudioDestinationNode::NotifyStableState));
+  nsContentUtils::RunInStableState(event.forget());
 }
 
 StreamTime

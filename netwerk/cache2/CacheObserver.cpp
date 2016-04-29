@@ -323,7 +323,7 @@ CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity)
     sSelf->StoreDiskCacheCapacity();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(sSelf, &CacheObserver::StoreDiskCacheCapacity);
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreDiskCacheCapacity);
     NS_DispatchToMainThread(event);
   }
 }
@@ -349,7 +349,7 @@ CacheObserver::SetCacheFSReported()
     sSelf->StoreCacheFSReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(sSelf, &CacheObserver::StoreCacheFSReported);
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreCacheFSReported);
     NS_DispatchToMainThread(event);
   }
 }
@@ -375,7 +375,7 @@ CacheObserver::SetHashStatsReported()
     sSelf->StoreHashStatsReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(sSelf, &CacheObserver::StoreHashStatsReported);
+      NS_NewRunnableMethod(sSelf, &CacheObserver::StoreHashStatsReported);
     NS_DispatchToMainThread(event);
   }
 }

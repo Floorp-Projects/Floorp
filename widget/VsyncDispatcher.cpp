@@ -89,7 +89,7 @@ CompositorVsyncDispatcher::SetCompositorVsyncObserver(VsyncObserver* aVsyncObser
   }
 
   bool observeVsync = aVsyncObserver != nullptr;
-  nsCOMPtr<nsIRunnable> vsyncControl = NewRunnableMethod<bool>(this,
+  nsCOMPtr<nsIRunnable> vsyncControl = NS_NewRunnableMethodWithArg<bool>(this,
                                         &CompositorVsyncDispatcher::ObserveVsync,
                                         observeVsync);
   NS_DispatchToMainThread(vsyncControl);
@@ -180,8 +180,9 @@ void
 RefreshTimerVsyncDispatcher::UpdateVsyncStatus()
 {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NewRunnableMethod(this,
-                                              &RefreshTimerVsyncDispatcher::UpdateVsyncStatus));
+    nsCOMPtr<nsIRunnable> vsyncControl = NS_NewRunnableMethod(this,
+                                           &RefreshTimerVsyncDispatcher::UpdateVsyncStatus);
+    NS_DispatchToMainThread(vsyncControl);
     return;
   }
 
