@@ -2514,6 +2514,14 @@ public class BrowserApp extends GeckoApp
             if (panelId == null) {
                 // No panel was specified in the URL. Try loading the most recent
                 // home panel for this tab.
+                // Note: this isn't necessarily correct. We don't update the URL when we switch tabs.
+                // If a user explicitly navigated to about:reader?panel=FOO, and then switches
+                // to panel BAR, the history URL still contains FOO, and we restore to FOO. In most
+                // cases however we aren't supplying a panel ID in the URL so this code still works
+                // for most cases.
+                // We can't fix this directly since we can't ignore the panelId if we're explicitly
+                // loading a specific panel, and we currently can't distinguish between loading
+                // history, and loading new pages, see Bug 1268887
                 panelId = tab.getMostRecentHomePanel();
                 panelRestoreData = tab.getMostRecentHomePanelData();
             }
