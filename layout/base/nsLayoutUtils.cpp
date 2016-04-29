@@ -8899,7 +8899,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     ParentLayerRect rect = LayoutDeviceRect::FromAppUnits(*aClipRect, auPerDevPixel)
                          * metrics.GetCumulativeResolution()
                          * layerToParentLayerScale;
-    metadata.SetClipRect(Some(RoundedToInt(rect)));
+    metadata.SetScrollClip(Some(LayerClip(RoundedToInt(rect))));
   }
 
   // For the root scroll frame of the root content document (RCD-RSF), the above calculation

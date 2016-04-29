@@ -4623,7 +4623,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
 
     // The base FrameMetrics was not computed by the nsIScrollableframe, so it
     // should not have a mask layer.
-    MOZ_ASSERT(!aEntry->mBaseScrollMetadata->GetMaskLayerIndex());
+    MOZ_ASSERT(!aEntry->mBaseScrollMetadata->HasMaskLayer());
   }
 
   // Any extra mask layers we need to attach to FrameMetrics.
@@ -4660,7 +4660,8 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       RefPtr<Layer> maskLayer =
         CreateMaskLayer(aEntry->mLayer, *clip, nextIndex, clip->GetRoundedRectCount());
       if (maskLayer) {
-        metadata->SetMaskLayerIndex(nextIndex);
+        MOZ_ASSERT(metadata->HasScrollClip());
+        metadata->ScrollClip().SetMaskLayerIndex(nextIndex);
         maskLayers.AppendElement(maskLayer);
       }
     }
@@ -4673,7 +4674,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   aEntry->mLayer->SetAncestorMaskLayers(maskLayers);
 }
 
-static inline const Maybe<ParentLayerIntRect>&
+static inline Maybe<ParentLayerIntRect>
 GetStationaryClipInContainer(Layer* aLayer)
 {
   if (size_t metricsCount = aLayer->GetScrollMetadataCount()) {
@@ -4707,7 +4708,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     if (hideAll) {
       e->mVisibleRegion.SetEmpty();
     } else if (!e->mLayer->IsScrollbarContainer()) {
-      const Maybe<ParentLayerIntRect>& clipRect = GetStationaryClipInContainer(e->mLayer);
+      Maybe<ParentLayerIntRect> clipRect = GetStationaryClipInContainer(e->mLayer);
       if (clipRect && opaqueRegionForContainer >= 0 &&
           opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(clipRect->ToUnknownRect())) {
         e->mVisibleRegion.SetEmpty();
