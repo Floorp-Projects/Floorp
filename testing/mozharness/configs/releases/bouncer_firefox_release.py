@@ -99,10 +99,6 @@ config = {
                     "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
                     "bouncer-platform": "win",
                 },
-                "win64": {
-                    "path": "/firefox/releases/%(version)s/win64/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
-                    "bouncer-platform": "win64",
-                },
             },
         },
         "complete-mar": {
