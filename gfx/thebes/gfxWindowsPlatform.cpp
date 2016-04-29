@@ -69,6 +69,7 @@
 
 #include "SurfaceCache.h"
 #include "gfxPrefs.h"
+#include "gfxConfig.h"
 
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
@@ -1567,7 +1568,7 @@ bool DoesD3D11DeviceWork()
   checked = true;
 
   if (gfxPrefs::Direct2DForceEnabled() ||
-      gfxPrefs::LayersAccelerationForceEnabled())
+      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING))
   {
     result = true;
     return true;
@@ -1766,7 +1767,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   }
 
   if (gfxPrefs::Direct2DForceEnabled() ||
-      gfxPrefs::LayersAccelerationForceEnabled())
+      gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING))
   {
     return true;
   }
@@ -1969,7 +1970,7 @@ gfxWindowsPlatform::CheckD3D11Support(bool* aCanUseHardware)
     *aCanUseHardware = false;
     return FeatureStatus::Available;
   }
-  if (gfxPrefs::LayersAccelerationForceEnabled()) {
+  if (gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     *aCanUseHardware = true;
     return FeatureStatus::Available;
   }
@@ -2280,6 +2281,8 @@ gfxWindowsPlatform::InitializeDevices()
     return;
   }
 
+  MOZ_ASSERT(!InSafeMode());
+
   // If we previously crashed initializing devices, bail out now. This is
   // effectively a parent-process only check, since the content process
   // cannot create a lock file.
@@ -2326,13 +2329,7 @@ gfxWindowsPlatform::CheckAccelerationSupport()
            ? FeatureStatus::Available
            : FeatureStatus::Blocked;
   }
-  if (InSafeMode()) {
-    return FeatureStatus::Blocked;
-  }
-  if (!ShouldUseLayersAcceleration()) {
-    return FeatureStatus::Disabled;
-  }
-  return FeatureStatus::Available;
+  return gfxConfig::GetValue(Feature::HW_COMPOSITING);
 }
 
 bool

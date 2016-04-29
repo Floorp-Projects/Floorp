@@ -38,7 +38,10 @@ enum class FeatureStatus
   Disabled,
 
   // This feature is available for use.
-  Available
+  Available,
+
+  // This feature was explicitly force-enabled by the user.
+  ForceEnabled
 };
 
 const char* FeatureStatusToString(FeatureStatus aStatus);
