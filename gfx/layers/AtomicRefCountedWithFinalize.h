@@ -68,6 +68,9 @@ public:
     template<class U>
     friend struct mozilla::RefPtrTraits;
 
+    template<class U>
+    friend struct ::RunnableMethodTraits;
+
     template<typename U>
     friend class ::mozilla::gl::RefSet;
 
