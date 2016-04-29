@@ -69,8 +69,11 @@ public class TelemetryUploadService extends IntentService {
 
     private static void uploadPendingPingsFromStore(final Context context, final TelemetryPingStore store) {
         final ArrayList<TelemetryPingFromStore> pingsToUpload = store.getAllPings();
-        final String serverSchemeHostPort = getServerSchemeHostPort(context);
+        if (pingsToUpload.isEmpty()) {
+            return true;
+        }
 
+        final String serverSchemeHostPort = getServerSchemeHostPort(context);
         final HashSet<Integer> successfulUploadIDs = new HashSet<>(pingsToUpload.size()); // used for side effects.
         final PingResultDelegate delegate = new PingResultDelegate(successfulUploadIDs);
         for (final TelemetryPingFromStore ping : pingsToUpload) {
