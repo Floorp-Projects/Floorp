@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
                                   "resource://gre/modules/TelemetryController.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySession",
+                                  "resource://gre/modules/TelemetrySession.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
 
@@ -26,6 +28,7 @@ TelemetryStartup.prototype.QueryInterface = XPCOMUtils.generateQI([Components.in
 TelemetryStartup.prototype.observe = function(aSubject, aTopic, aData) {
   if (aTopic == "profile-after-change" || aTopic == "app-startup") {
     TelemetryController.observe(null, aTopic, null);
+    TelemetrySession.observe(null, aTopic, null);
   }
   if (aTopic == "profile-after-change") {
     annotateEnvironment();
