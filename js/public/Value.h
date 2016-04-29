@@ -653,7 +653,7 @@ PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
     jsval_layout l;
     MOZ_ASSERT(uintptr_t(cell) > 0x1000);
     l.s.tag = JSVAL_TAG_PRIVATE_GCTHING;
-    l.s.payload.cell = ptr;
+    l.s.payload.cell = cell;
     return l;
 }
 
