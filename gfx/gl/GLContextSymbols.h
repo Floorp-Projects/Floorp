@@ -690,10 +690,6 @@ struct GLContextSymbols
     // APPLE_framebuffer_multisample
     typedef void (GLAPIENTRY * PFNRESOLVEMULTISAMPLEFRAMEBUFFERAPPLE) (void);
     PFNRESOLVEMULTISAMPLEFRAMEBUFFERAPPLE fResolveMultisampleFramebufferAPPLE;
-
-    // NV_texture_barrier
-    typedef void (GLAPIENTRY * PFNTEXTUREBARRIERPROC) (void);
-    PFNTEXTUREBARRIERPROC fTextureBarrier;
 };
 
 } // namespace gl
