@@ -507,7 +507,14 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_defines(obj, backend_file)
 
         elif isinstance(obj, GeneratedFile):
-            tier = 'misc' if any(isinstance(f, ObjDirPath) for f in obj.inputs) else 'export'
+            export_suffixes = (
+                '.c',
+                '.cpp',
+                '.h',
+                '.inc',
+                '.py',
+            )
+            tier = 'export' if any(f.endswith(export_suffixes) for f in obj.outputs) else 'misc'
             self._no_skip[tier].add(backend_file.relobjdir)
             first_output = obj.outputs[0]
             dep_file = "%s.pp" % first_output
