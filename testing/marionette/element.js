@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 
@@ -226,7 +226,11 @@ ElementManager.prototype = {
         else {
           result = {};
           for (let prop in val) {
-            result[prop] = this.wrapValue(val[prop]);
+            try {
+              result[prop] = this.wrapValue(val[prop]);
+            } catch (e if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED)) {
+              logger.debug(`Skipping ${prop} due to: ${e.message}`);
+            }
           }
         }
         break;
