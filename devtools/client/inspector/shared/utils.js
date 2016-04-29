@@ -10,9 +10,7 @@ const {Ci} = require("chrome");
 const {parseDeclarations} =
       require("devtools/client/shared/css-parsing-utils");
 const promise = require("promise");
-
-loader.lazyServiceGetter(this, "domUtils",
-  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+const {getCSSLexer} = require("devtools/shared/css-lexer");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -85,7 +83,7 @@ function advanceValidate(keyCode, value, insertionPoint) {
   // value.  Otherwise it's been inserted in some spot where it has a
   // valid meaning, like a comment or string.
   value = value.slice(0, insertionPoint) + ";" + value.slice(insertionPoint);
-  let lexer = domUtils.getCSSLexer(value);
+  let lexer = getCSSLexer(value);
   while (true) {
     let token = lexer.nextToken();
     if (token.endOffset > insertionPoint) {
