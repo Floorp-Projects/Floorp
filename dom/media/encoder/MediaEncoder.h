@@ -51,7 +51,7 @@ namespace mozilla {
  * 4) To stop encoding, remove this component from its source stream.
  *    => sourceStream->RemoveListener(encoder);
  */
-class MediaEncoder : public MediaStreamDirectListener
+class MediaEncoder : public DirectMediaStreamListener
 {
 public :
   enum {
