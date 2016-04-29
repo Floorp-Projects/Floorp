@@ -602,14 +602,17 @@ class RefTest(object):
         proc = runner.process_handler
 
         if self.use_marionette:
-            marionette_args = { 'symbols_path': options.symbolsPath }
+            marionette_args = {
+                'socket_timeout': options.marionette_socket_timeout,
+                'symbols_path': options.symbolsPath,
+            }
             if options.marionette:
                 host, port = options.marionette.split(':')
                 marionette_args['host'] = host
                 marionette_args['port'] = int(port)
 
             marionette = Marionette(**marionette_args)
-            marionette.start_session()
+            marionette.start_session(timeout=options.marionette_port_timeout)
 
             addons = Addons(marionette)
             if options.specialPowersExtensionPath:
