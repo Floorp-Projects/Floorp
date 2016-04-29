@@ -2653,8 +2653,8 @@ nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
                                                LayerManager* aManager)
 {
   nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(mFrame);
-  if (ActiveLayerTracker::IsBackgroundPositionAnimated(aBuilder,
-                                                       backgroundStyleFrame)) {
+  if (ActiveLayerTracker::IsStyleAnimated(aBuilder, backgroundStyleFrame,
+                                          eCSSProperty_background_position)) {
     return WHENEVER_POSSIBLE;
   }
 
