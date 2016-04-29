@@ -30,6 +30,8 @@ namespace jit {
     _(Escape)                               \
     /* Information during alias analysis */ \
     _(Alias)                                \
+    /* Information during alias analysis */ \
+    _(AliasSummaries)                       \
     /* Information during GVN */            \
     _(GVN)                                  \
     /* Information during sincos */         \
