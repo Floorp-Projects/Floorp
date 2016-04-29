@@ -87,6 +87,7 @@ public:
                                           const InputContextAction& aAction) override {}
   NS_IMETHOD_(InputContext) GetInputContext() override { abort(); }
   NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override { return NS_OK; }
+
 private:
   ~MockWidget() {}
 };
@@ -96,16 +97,21 @@ NS_IMPL_ISUPPORTS_INHERITED0(MockWidget, nsBaseWidget)
 struct LayerManagerData {
   RefPtr<MockWidget> mWidget;
   RefPtr<Compositor> mCompositor;
+  RefPtr<widget::CompositorWidgetProxy> mCompositorWidgetProxy;
   RefPtr<LayerManagerComposite> mLayerManager;
 
-  LayerManagerData(Compositor* compositor, MockWidget* widget, LayerManagerComposite* layerManager)
+  LayerManagerData(Compositor* compositor,
+                   MockWidget* widget,
+                   widget::CompositorWidgetProxy* aProxy,
+                   LayerManagerComposite* layerManager)
     : mWidget(widget)
     , mCompositor(compositor)
+    , mCompositorWidgetProxy(aProxy)
     , mLayerManager(layerManager)
   {}
 };
 
-static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, MockWidget* widget)
+static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, widget::CompositorWidgetProxy* widget)
 {
   gfxPrefs::GetSingleton();
 
@@ -149,11 +155,12 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
     auto backend = aBackends[i];
 
     RefPtr<MockWidget> widget = new MockWidget();
-    RefPtr<Compositor> compositor = CreateTestCompositor(backend, widget);
+    RefPtr<widget::CompositorWidgetProxy> proxy = widget->NewCompositorWidgetProxy();
+    RefPtr<Compositor> compositor = CreateTestCompositor(backend, proxy);
 
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
 
-    managers.push_back(LayerManagerData(compositor, widget, layerManager));
+    managers.push_back(LayerManagerData(compositor, widget, proxy, layerManager));
   }
 
   return managers;
