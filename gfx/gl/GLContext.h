@@ -478,7 +478,6 @@ public:
         NV_geometry_program4,
         NV_half_float,
         NV_instanced_arrays,
-        NV_texture_barrier,
         NV_transform_feedback,
         NV_transform_feedback2,
         OES_EGL_image,
@@ -2877,17 +2876,6 @@ public:
         ASSERT_SYMBOL_PRESENT(fGetFenceiv);
         BEFORE_GL_CALL;
         mSymbols.fGetFenceiv(fence, pname, params);
-        AFTER_GL_CALL;
-    }
-
-// -----------------------------------------------------------------------------
-// Extension NV_texture_barrier
-public:
-    void fTextureBarrier()
-    {
-        ASSERT_SYMBOL_PRESENT(fTextureBarrier);
-        BEFORE_GL_CALL;
-        mSymbols.fTextureBarrier();
         AFTER_GL_CALL;
     }
 
