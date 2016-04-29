@@ -189,7 +189,12 @@
     <issue id="UnlocalizedSms" severity="error" />
     <issue id="UnusedNamespace" severity="error" />
     <issue id="UnusedQuantity" severity="error" />
-    <issue id="UnusedResources" severity="error" />
+    <issue id="UnusedResources" severity="error">
+        <!-- The moz.build based build system leaves a .mkdir.done file lying around in the
+             preprocessed_resources res/raw folder. Lint reports it as unused. We should get
+             rid of the file eventually. See bug 1268948. -->
+        <ignore path="**/raw/.mkdir.done" />
+    </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
     <issue id="UseCompoundDrawables" severity="error" />
