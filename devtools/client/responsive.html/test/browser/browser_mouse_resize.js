@@ -5,34 +5,55 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = "about:logo";
 
-function dragElementBy(selector, x, y, win) {
+function getElRect(selector, win) {
   let el = win.document.querySelector(selector);
-  let rect = el.getBoundingClientRect();
+  return el.getBoundingClientRect();
+}
+
+/**
+ * Drag an element identified by 'selector' by [x,y] amount. Returns
+ * the rect of the dragged element as it was before drag.
+ */
+function dragElementBy(selector, x, y, win) {
+  let rect = getElRect(selector, win);
   let startPoint = [ rect.left + rect.width / 2, rect.top + rect.height / 2 ];
   let endPoint = [ startPoint[0] + x, startPoint[1] + y ];
 
   EventUtils.synthesizeMouseAtPoint(...startPoint, { type: "mousedown" }, win);
   EventUtils.synthesizeMouseAtPoint(...endPoint, { type: "mousemove" }, win);
   EventUtils.synthesizeMouseAtPoint(...endPoint, { type: "mouseup" }, win);
+
+  return rect;
+}
+
+function* testViewportResize(ui, selector, moveBy,
+                             expectedViewportSize, expectedHandleMove) {
+  let win = ui.toolWindow;
+
+  let resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
+  let startRect = dragElementBy(selector, ...moveBy, win);
+  yield resized;
+
+  let endRect = getElRect(selector, win);
+  is(endRect.left - startRect.left, expectedHandleMove[0],
+    `The x move of ${selector} is as expected`);
+  is(endRect.top - startRect.top, expectedHandleMove[1],
+    `The y move of ${selector} is as expected`);
 }
 
 addRDMTask(TEST_URL, function* ({ ui, manager }) {
   ok(ui, "An instance of the RDM should be attached to the tab.");
   yield setViewportSize(ui, manager, 300, 300);
-  let win = ui.toolWindow;
 
   // Do horizontal + vertical resize
-  let resized = waitForViewportResizeTo(ui, 320, 320);
-  dragElementBy(".viewport-resize-handle", 10, 10, win);
-  yield resized;
+  yield testViewportResize(ui, ".viewport-resize-handle",
+    [10, 10], [320, 310], [10, 10]);
 
   // Do horizontal resize
-  let hResized = waitForViewportResizeTo(ui, 300, 320);
-  dragElementBy(".viewport-horizontal-resize-handle", -10, -10, win);
-  yield hResized;
+  yield testViewportResize(ui, ".viewport-horizontal-resize-handle",
+    [-10, 10], [300, 310], [-10, 0]);
 
   // Do vertical resize
-  let vResized = waitForViewportResizeTo(ui, 300, 300);
-  dragElementBy(".viewport-vertical-resize-handle", -10, -10, win);
-  yield vResized;
+  yield testViewportResize(ui, ".viewport-vertical-resize-handle",
+    [-10, -10], [300, 300], [0, -10], ui);
 });
