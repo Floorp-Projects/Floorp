@@ -210,8 +210,6 @@ public:
 
   virtual void Destroy() override;
 
-  virtual void DetachWidget() override { mWidget = nullptr; }
-
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
     TextureFactoryIdentifier result =
@@ -278,8 +276,6 @@ public:
 
   virtual void Pause() override;
   virtual bool Resume() override;
-
-  virtual nsIWidget* GetWidget() const override { return mWidget; }
 
   virtual bool HasImageHostOverlays() override
   {
@@ -353,7 +349,6 @@ private:
   void PrepareViewport(CompositingRenderTargetOGL *aRenderTarget);
 
   /** Widget associated with this compositor */
-  nsIWidget *mWidget;
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;

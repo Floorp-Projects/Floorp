@@ -189,11 +189,12 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(CompositorBridgeParent* aParent = nullptr)
+  explicit Compositor(nsIWidget* aWidget, CompositorBridgeParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)
     , mScreenRotation(ROTATION_0)
+    , mWidget(aWidget)
   {
   }
 
@@ -204,7 +205,8 @@ public:
 
   virtual bool Initialize() = 0;
   virtual void Destroy() = 0;
-  virtual void DetachWidget() {}
+
+  virtual void DetachWidget() { mWidget = nullptr; }
 
   /**
    * Return true if the effect type is supported.
@@ -472,9 +474,7 @@ public:
 
   virtual void ForcePresent() { }
 
-  // XXX I expect we will want to move mWidget into this class and implement
-  // these methods properly.
-  virtual nsIWidget* GetWidget() const { return nullptr; }
+  nsIWidget* GetWidget() const { return mWidget; }
 
   virtual bool HasImageHostOverlays() { return false; }
 
@@ -583,6 +583,8 @@ protected:
 
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
+
+  nsIWidget* mWidget;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;
