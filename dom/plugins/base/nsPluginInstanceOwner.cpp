@@ -337,6 +337,7 @@ nsPluginInstanceOwner::UpdateScrollState(bool aIsScrolling)
 }
 
 nsPluginInstanceOwner::nsPluginInstanceOwner()
+  : mPluginWindow(nullptr)
 {
   // create nsPluginNativeWindow object, it is derived from NPWindow
   // struct and allows to manipulate native window procedure
@@ -344,8 +345,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mPluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (mPluginHost)
     mPluginHost->NewPluginNativeWindow(&mPluginWindow);
-  else
-    mPluginWindow = nullptr;
 
   mPluginFrame = nullptr;
   mWidgetCreationComplete = false;
