@@ -1095,7 +1095,19 @@ nsLookAndFeel::Init()
     // Gtk manages a screen's CSS in the settings object so we
     // ask Gtk to create it explicitly. Otherwise we may end up
     // with wrong color theme, see Bug 972382
-    (void)gtk_settings_get_for_screen(gdk_screen_get_default());
+    GtkSettings *settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+
+    // Disable dark theme because it interacts poorly with widget styling in
+    // web content (see bug 1216658).
+    // To avoid triggering reload of theme settings unnecessarily, only set the
+    // setting when necessary.
+    const gchar* dark_setting = "gtk-application-prefer-dark-theme";
+    gboolean dark;
+    g_object_get(settings, dark_setting, &dark, nullptr);
+
+    if (dark) {
+        g_object_set(settings, dark_setting, FALSE, nullptr);
+    }
 
     GtkWidgetPath *path = gtk_widget_path_new();
     gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
