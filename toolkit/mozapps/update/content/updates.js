@@ -10,7 +10,6 @@
 const {classes: CoC, interfaces: CoI, results: CoR, utils: CoU} = Components;
 
 CoU.import("resource://gre/modules/DownloadUtils.jsm", this);
-CoU.import("resource://gre/modules/AddonManager.jsm", this);
 CoU.import("resource://gre/modules/Services.jsm", this);
 CoU.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 
@@ -27,7 +26,6 @@ const PREF_APP_UPDATE_URL_MANUAL          = "app.update.url.manual";
 
 const PREFBRANCH_APP_UPDATE_NEVER         = "app.update.never.";
 
-const PREF_EM_HOTFIX_ID                   = "extensions.hotfix.id";
 const PREF_PLUGINS_UPDATE_URL             = "plugins.update.url";
 
 const UPDATE_TEST_LOOP_INTERVAL = 2000;
@@ -119,11 +117,6 @@ var gUpdates = {
   update: null,
 
   /**
-   * List of incompatible add-ons
-   */
-  addons: [],
-
-  /**
    * The updates.properties <stringbundle> element.
    */
   strings: null,
@@ -195,10 +188,9 @@ var gUpdates = {
    *
    * Note:
    * Per Bug 324121 the wizard should not look like a wizard and to accomplish
-   * this the back button is never displayed and the cancel button is only
-   * displayed for the checking and the incompatibleCheck pages. This causes the
-   * wizard buttons to be arranged as follows on Windows with the next and
-   * finish buttons never being displayed at the same time.
+   * this the back button is never displayed. This causes the wizard buttons to
+   * be arranged as follows on Windows with the next and finish buttons never
+   * being displayed at the same time.
    * +--------------------------------------------------------------+
    * | [ extra1 ] [ extra2 ]                     [ next or finish ] |
    * +--------------------------------------------------------------+
@@ -298,9 +290,7 @@ var gUpdates = {
    *   should remain active for the duration of the download.
    * SRCEVT_BACKGROUND:
    *   A background update check caused this UI to appear, probably because
-   *   incompatibilities in Extensions or other addons were discovered and
-   *   the user's consent to continue was required. When in this mode, the
-   *   UI will disappear after the user's consent is obtained.
+   *   the user has the app.update.auto preference set to false.
    */
   sourceEvent: SRCEVT_FOREGROUND,
 
@@ -373,11 +363,10 @@ var gUpdates = {
    * checkForUpdates      null          --            foreground  --        checking
    * checkForUpdates      null          downloading   foreground  --        downloading
    *
-   * Note: the page returned (e.g. Result) for showUpdateAvaulable is as follows:
-   * New enabled incompatible add-ons   : incompatibleCheck page
-   * No new enabled incompatible add-ons: either updatesfoundbasic or
-   *                                      updatesfoundbillboard as determined by
-   *                                      updatesFoundPageId
+   * Note: the page returned (e.g. Result) for showUpdateAvailable is either
+   *       updatesfoundbasic or updatesfoundbillboard which is determined by the
+   *       value of updatesFoundPageId.
+   *
    * @param   aCallback
    *          A callback to pass the <wizardpage> object to be displayed first to.
    */
@@ -456,16 +445,7 @@ var gUpdates = {
           this.wiz.getPageById(this.updatesFoundPageId).setAttribute("next", "license");
         }
 
-        var self = this;
-        this.getShouldCheckAddonCompatibility(function(shouldCheck) {
-          if (shouldCheck) {
-            var incompatCheckPage = document.getElementById("incompatibleCheck");
-            incompatCheckPage.setAttribute("next", self.updatesFoundPageId);
-            aCallback(incompatCheckPage.id);
-          } else {
-            aCallback(self.updatesFoundPageId);
-          }
-        });
+        aCallback(this.updatesFoundPageId);
         return;
       }
       else if (arg0 == "installed") {
@@ -501,67 +481,6 @@ var gUpdates = {
     else {
       aCallback("checking");
     }
-  },
-
-  getShouldCheckAddonCompatibility: function(aCallback) {
-    // this early return should never happen
-    if (!this.update) {
-      aCallback(false);
-      return;
-    }
-
-    if (!this.update.appVersion ||
-        Services.vc.compare(this.update.appVersion, Services.appinfo.version) == 0) {
-      aCallback(false);
-      return;
-    }
-
-    try {
-      var hotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
-    }
-    catch (e) { }
-
-    var self = this;
-    AddonManager.getAllAddons(function(addons) {
-      self.addons = [];
-      addons.forEach(function(addon) {
-        // Protect against code that overrides the add-ons manager and doesn't
-        // implement the isCompatibleWith or the findUpdates method.
-        if (!("isCompatibleWith" in addon) || !("findUpdates" in addon)) {
-          let errMsg = "Add-on doesn't implement either the isCompatibleWith " +
-                       "or the findUpdates method!";
-          if (addon.id)
-            errMsg += " Add-on ID: " + addon.id;
-          CoU.reportError(errMsg);
-          return;
-        }
-
-        // If an add-on isn't appDisabled and isn't userDisabled then it is
-        // either active now or the user expects it to be active after the
-        // restart. If that is the case and the add-on is not installed by the
-        // application and is not compatible with the new application version
-        // then the user should be warned that the add-on will become
-        // incompatible. If an addon's type equals plugin it is skipped since
-        // checking plugins compatibility information isn't supported and
-        // getting the scope property of a plugin breaks in some environments
-        // (see bug 566787). The hotfix add-on is also ignored as it shouldn't
-        // block the user from upgrading.
-        try {
-          if (addon.type != "plugin" && addon.id != hotfixID &&
-              !addon.appDisabled && !addon.userDisabled &&
-              addon.scope != AddonManager.SCOPE_APPLICATION &&
-              addon.isCompatible &&
-              !addon.isCompatibleWith(self.update.appVersion,
-                                      self.update.platformVersion))
-            self.addons.push(addon);
-        }
-        catch (e) {
-          CoU.reportError(e);
-        }
-      });
-
-      aCallback(self.addons.length != 0);
-    });
   },
 
   /**
@@ -667,16 +586,7 @@ var gCheckingPage = {
           gUpdates.wiz.getPageById(gUpdates.updatesFoundPageId).setAttribute("next", "license");
         }
 
-        gUpdates.getShouldCheckAddonCompatibility(function(shouldCheck) {
-          if (shouldCheck) {
-            var incompatCheckPage = document.getElementById("incompatibleCheck");
-            incompatCheckPage.setAttribute("next", gUpdates.updatesFoundPageId);
-            gUpdates.wiz.goTo("incompatibleCheck");
-          }
-          else {
-            gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
-          }
-        });
+        gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
         return;
       }
 
@@ -785,102 +695,6 @@ var gNoUpdatesPage = {
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();
-  }
-};
-
-
-/**
- * The page that checks if there are any incompatible add-ons.
- */
-var gIncompatibleCheckPage = {
-  /**
-   * Count of incompatible add-ons to check for updates
-   */
-  _totalCount: 0,
-
-  /**
-   * Count of incompatible add-ons that have beend checked for updates
-   */
-  _completedCount: 0,
-
-  /**
-   * The progress bar for this page
-   */
-  _pBar: null,
-
-  /**
-   * Initialize
-   */
-  onPageShow: function() {
-    LOG("gIncompatibleCheckPage", "onPageShow - checking for updates to " +
-        "incompatible add-ons");
-
-    gUpdates.setButtons(null, null, null, false, true);
-    gUpdates.wiz.getButton("cancel").focus();
-    this._pBar = document.getElementById("incompatibleCheckProgress");
-    this._totalCount = gUpdates.addons.length;
-
-    this._pBar.mode = "normal";
-    gUpdates.addons.forEach(function(addon) {
-      addon.findUpdates(this, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED,
-                        gUpdates.update.appVersion,
-                        gUpdates.update.platformVersion);
-    }, this);
-  },
-
-  // Addon UpdateListener
-  onCompatibilityUpdateAvailable: function(addon) {
-    // Remove the add-on from the list of add-ons that will become incompatible
-    // with the new version of the application.
-    for (var i = 0; i < gUpdates.addons.length; ++i) {
-      if (gUpdates.addons[i].id == addon.id) {
-        LOG("gIncompatibleCheckPage", "onCompatibilityUpdateAvailable - " +
-            "found update for add-on ID: " + addon.id);
-        gUpdates.addons.splice(i, 1);
-        break;
-      }
-    }
-  },
-
-  onUpdateAvailable: function(addon, install) {
-    // If the new version of this add-on is blocklisted for the new application
-    // then it isn't a valid update and the user should still be warned that
-    // the add-on will become incompatible.
-    let bs = CoC["@mozilla.org/extensions/blocklist;1"].
-             getService(CoI.nsIBlocklistService);
-    if (bs.isAddonBlocklisted(addon,
-                              gUpdates.update.appVersion,
-                              gUpdates.update.platformVersion))
-      return;
-
-    // Compatibility or new version updates mean the same thing here.
-    this.onCompatibilityUpdateAvailable(addon);
-  },
-
-  onUpdateFinished: function(addon) {
-    ++this._completedCount;
-    this._pBar.value = Math.ceil((this._completedCount / this._totalCount) * 100);
-
-    if (this._completedCount < this._totalCount)
-      return;
-
-    if (gUpdates.addons.length == 0) {
-      LOG("gIncompatibleCheckPage", "onUpdateFinished - updates were found " +
-          "for all incompatible add-ons");
-    }
-    else {
-      LOG("gIncompatibleCheckPage", "onUpdateFinished - there are still " +
-          "incompatible add-ons");
-      if (gUpdates.update.licenseURL) {
-        document.getElementById("license").setAttribute("next", "incompatibleList");
-      }
-      else {
-        // gUpdates.updatesFoundPageId returns the pageid and not the element's
-        // id so use the wizard's getPageById method.
-        gUpdates.wiz.getPageById(gUpdates.updatesFoundPageId).setAttribute("next", "incompatibleList");
-      }
-    }
-    gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
   }
 };
 
@@ -1184,45 +998,6 @@ var gLicensePage = {
       LOG("gLicensePage", "onWizardCancel - " +
           "licenseContent.stopDownloading() failed: " + e);
     }
-  }
-};
-
-/**
- * The page which shows add-ons that are incompatible and do not have updated
- * compatibility information or a version update available to make them
- * compatible.
- */
-var gIncompatibleListPage = {
-  /**
-   * Initialize
-   */
-  onPageShow: function() {
-    gUpdates.setButtons("backButton", null, "okButton", true);
-    var listbox = document.getElementById("incompatibleListbox");
-    if (listbox.children.length > 0)
-      return;
-
-    var intro = gUpdates.getAUSString("incompatAddons_" + gUpdates.update.type,
-                                      [gUpdates.brandName,
-                                       gUpdates.update.displayVersion]);
-    document.getElementById("incompatibleListDesc").textContent = intro;
-
-    var addons = gUpdates.addons;
-    for (var i = 0; i < addons.length; ++i) {
-      var listitem = document.createElement("listitem");
-      var addonLabel = gUpdates.getAUSString("addonLabel", [addons[i].name,
-                                                            addons[i].version]);
-      listitem.setAttribute("label", addonLabel);
-      listbox.appendChild(listitem);
-    }
-  },
-
-  /**
-   * The non-standard "Back" button.
-   */
-  onExtra1: function() {
-    gUpdates.wiz.goTo(gUpdates.update.licenseURL ? "license"
-                                                 : gUpdates.updatesFoundPageId);
   }
 };
 

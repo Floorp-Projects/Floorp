@@ -95,17 +95,6 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="incompatibleCheck" pageid="incompatibleCheck"
-              next="updatesfoundbasic" object="gIncompatibleCheckPage"
-              onpageshow="gIncompatibleCheckPage.onPageShow();">
-    <updateheader label="&incompatibleCheck.title;"/>
-    <vbox class="update-content" flex="1">
-      <label>&incompatibleCheck.label;</label>
-      <separator class="thin"/>
-      <progressmeter id="incompatibleCheckProgress" mode="undetermined"/>
-    </vbox>
-  </wizardpage>
-
   <wizardpage id="updatesfoundbasic" pageid="updatesfoundbasic"
               object="gUpdatesFoundBasicPage" next="downloading"
               onpageshow="gUpdatesFoundBasicPage.onPageShow();"
@@ -158,17 +147,6 @@
                accesskey="&license.decline.accesskey;"
                selected="true"/>
       </radiogroup>
-    </vbox>
-  </wizardpage>
-
-  <wizardpage id="incompatibleList" pageid="incompatibleList"
-              next="downloading" object="gIncompatibleListPage"
-              onpageshow="gIncompatibleListPage.onPageShow();"
-              onextra1="gIncompatibleListPage.onExtra1();">
-    <updateheader label="&incompatibleList.title;"/>
-    <vbox class="update-content" flex="1">
-      <label id="incompatibleListDesc"/>
-      <listbox id="incompatibleListbox" flex="1"/>
     </vbox>
   </wizardpage>
 
