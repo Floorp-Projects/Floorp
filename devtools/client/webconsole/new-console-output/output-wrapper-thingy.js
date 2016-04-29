@@ -6,11 +6,13 @@
 // React
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const DummyChildComponent = React.createFactory(require("./dummy-child-component"));
 
-function OutputWrapperThingy(parentNode) {
+function OutputWrapperThingy(parentNode, store) {
   let childComponent = DummyChildComponent({});
-  this.body = ReactDOM.render(childComponent, parentNode);
+  let provider = React.createElement(Provider, { store: store }, childComponent);
+  this.body = ReactDOM.render(provider, parentNode);
 }
 
 // Exports from this module

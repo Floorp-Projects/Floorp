@@ -19,6 +19,17 @@ const Services = require("Services");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 const Telemetry = require("devtools/client/shared/telemetry")
 
+// React & Redux
+const React = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
+const { combineReducers } = require("devtools/client/shared/vendor/redux");
+
+const createStore = require("devtools/client/shared/redux/create-store")();
+
+const { reducers } = require("./new-console-output/reducers/index");
+const store = createStore(combineReducers(reducers));
+
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
@@ -538,7 +549,7 @@ WebConsoleFrame.prototype = {
       this.experimentalOutputNode = this.outputNode.cloneNode();
       this.outputNode.hidden = true;
       this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
-      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode);
+      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, store);
       console.log("Created newConsoleOutput", this.newConsoleOutput);
     }
 
@@ -1285,8 +1296,16 @@ WebConsoleFrame.prototype = {
       case "exception":
       case "assert":
       case "debug": {
-        let msg = new Messages.ConsoleGeneric(message);
-        node = msg.init(this.output).render().element;
+        if (this.SUPER_FRONTEND_EXPERIMENT) {
+          let action = {
+            type: "MESSAGE_ADD",
+            message
+          }
+          store.dispatch(action)
+        } else {
+          let msg = new Messages.ConsoleGeneric(message);
+          node = msg.init(this.output).render().element;
+        }
         break;
       }
       case "table": {

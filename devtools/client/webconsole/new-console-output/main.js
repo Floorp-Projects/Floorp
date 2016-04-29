@@ -18,7 +18,7 @@ const require = BrowserLoader({
 const OutputWrapperThingy = require("./output-wrapper-thingy");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-this.NewConsoleOutput = function(parentNode) {
+this.NewConsoleOutput = function(parentNode, store) {
   console.log("Creating NewConsoleOutput", parentNode, OutputWrapperThingy);
-  return new OutputWrapperThingy(parentNode);
+  return new OutputWrapperThingy(parentNode, store);
 }
