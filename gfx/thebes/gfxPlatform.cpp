@@ -2468,6 +2468,13 @@ gfxPlatform::UpdateDeviceInitData()
   mozilla::dom::ContentChild::GetSingleton()->SendGetGraphicsDeviceInitData(&data);
 
   sDeviceInitDataDoNotUseDirectly = data;
+
+  // Ensure that child processes have inherited the HW_COMPOSITING pref.
+  gfxConfig::InitOrUpdate(
+    Feature::HW_COMPOSITING,
+    GetParentDevicePrefs().useHwCompositing(),
+    FeatureStatus::Blocked,
+    "Hardware-accelerated compositing disabled in parent process");
 }
 
 bool
