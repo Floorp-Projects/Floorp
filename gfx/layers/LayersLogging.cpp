@@ -154,8 +154,8 @@ AppendToString(std::stringstream& aStream, const ScrollMetadata& m,
   if (m.GetScrollParentId() != FrameMetrics::NULL_SCROLL_ID) {
     AppendToString(aStream, m.GetScrollParentId(), "] [scrollParent=");
   }
-  if (m.HasClipRect()) {
-    AppendToString(aStream, m.ClipRect(), "] [clip=");
+  if (m.HasScrollClip()) {
+    AppendToString(aStream, m.ScrollClip().GetClipRect(), "] [clip=");
   }
   aStream << "] }" << sfx;
 }
