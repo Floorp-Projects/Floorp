@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -10,6 +9,8 @@
 #include "GrPathRendererChain.h"
 
 #include "GrCaps.h"
+#include "gl/GrGLCaps.h"
+#include "glsl/GrGLSLCaps.h"
 #include "GrContext.h"
 #include "GrGpu.h"
 
@@ -21,6 +22,7 @@
 #include "batches/GrDefaultPathRenderer.h"
 #include "batches/GrStencilAndCoverPathRenderer.h"
 #include "batches/GrTessellatingPathRenderer.h"
+#include "batches/GrPLSPathRenderer.h"
 
 GrPathRendererChain::GrPathRendererChain(GrContext* context) {
     const GrCaps& caps = *context->caps();
@@ -34,6 +36,9 @@ GrPathRendererChain::GrPathRendererChain(GrContext* context) {
     this->addPathRenderer(new GrAAHairLinePathRenderer)->unref();
     this->addPathRenderer(new GrAAConvexPathRenderer)->unref();
     this->addPathRenderer(new GrAALinearizingConvexPathRenderer)->unref();
+    if (caps.shaderCaps()->plsPathRenderingSupport()) {
+        this->addPathRenderer(new GrPLSPathRenderer)->unref();
+    }
     this->addPathRenderer(new GrAADistanceFieldPathRenderer)->unref();
     this->addPathRenderer(new GrDefaultPathRenderer(caps.twoSidedStencilSupport(),
                                                     caps.stencilWrapOpsSupport()))->unref();

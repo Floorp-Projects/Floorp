@@ -113,7 +113,7 @@ template <typename T, T* (*C)(), void (*D)(T*)> class SkAutoFc
 public:
     SkAutoFc() : SkAutoTCallVProc<T, FcTDestroy<T, D> >(C()) {
         T* obj = this->operator T*();
-        SK_ALWAYSBREAK(nullptr != obj);
+        SkASSERT_RELEASE(nullptr != obj);
     }
     explicit SkAutoFc(T* obj) : SkAutoTCallVProc<T, FcTDestroy<T, D> >(obj) {}
 };
@@ -196,8 +196,8 @@ static SkWeakReturn is_weak(FcPattern* pattern, const char object[], int id) {
     FcPatternAddString(weak, object, (const FcChar8*)"nomatchstring");
     FcPatternAddLangSet(weak, FC_LANG, weakLangSet);
 
-    FcFontSetAdd(fontSet, strong.detach());
-    FcFontSetAdd(fontSet, weak.detach());
+    FcFontSetAdd(fontSet, strong.release());
+    FcFontSetAdd(fontSet, weak.release());
 
     // Add 'matchlang' to the copy of the pattern.
     FcPatternAddLangSet(minimal, FC_LANG, weakLangSet);
@@ -725,7 +725,7 @@ protected:
             }
         }
 
-        return new StyleSet(this, matches.detach());
+        return new StyleSet(this, matches.release());
     }
 
     virtual SkTypeface* onMatchFamilyStyle(const char familyName[],
@@ -830,8 +830,31 @@ protected:
             return nullptr;
         }
 
-        return new SkTypeface_stream(new SkFontData(stream.detach(), ttcIndex, nullptr, 0), style,
+        return new SkTypeface_stream(new SkFontData(stream.release(), ttcIndex, nullptr, 0), style,
                                      isFixedWidth);
+    }
+
+    SkTypeface* onCreateFromStream(SkStreamAsset* s, const FontParameters& params) const override {
+        using Scanner = SkTypeface_FreeType::Scanner;
+        SkAutoTDelete<SkStreamAsset> stream(s);
+        bool isFixedPitch;
+        SkFontStyle style;
+        SkString name;
+        Scanner::AxisDefinitions axisDefinitions;
+        if (!fScanner.scanFont(stream, params.getCollectionIndex(), &name, &style, &isFixedPitch,
+                               &axisDefinitions))
+        {
+            return nullptr;
+        }
+
+        int paramAxisCount;
+        const FontParameters::Axis* paramAxes = params.getAxes(&paramAxisCount);
+        SkAutoSTMalloc<4, SkFixed> axisValues(axisDefinitions.count());
+        Scanner::computeAxisValues(axisDefinitions, paramAxes, paramAxisCount, axisValues, name);
+
+        SkFontData* data(new SkFontData(stream.release(), params.getCollectionIndex(),
+                                        axisValues.get(), axisDefinitions.count()));
+        return new SkTypeface_stream(data, style, isFixedPitch);
     }
 
     SkTypeface* onCreateFromData(SkData* data, int ttcIndex) const override {
@@ -870,7 +893,7 @@ protected:
                                                : SkFontStyle::kUpright_Slant);
         SkAutoTUnref<SkTypeface> typeface(this->matchFamilyStyle(familyName, style));
         if (typeface.get()) {
-            return typeface.detach();
+            return typeface.release();
         }
 
         return this->matchFamilyStyle(nullptr, style);

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -102,6 +101,11 @@ bool GrRenderTargetPriv::attachStencilAttachment(GrStencilAttachment* stencil) {
     if (!fRenderTarget->completeStencilAttachment()) {
         SkSafeSetNull(fRenderTarget->fStencilAttachment);
         return false;
-    } 
+    }
     return true;
+}
+
+const GrGpu::MultisampleSpecs&
+GrRenderTargetPriv::getMultisampleSpecs(const GrStencilSettings& stencil) const {
+    return fRenderTarget->getGpu()->getMultisampleSpecs(fRenderTarget, stencil);
 }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -37,7 +36,7 @@ GrGpuResource::~GrGpuResource() {
     SkASSERT(this->wasDestroyed());
 }
 
-void GrGpuResource::release() { 
+void GrGpuResource::release() {
     SkASSERT(fGpu);
     this->onRelease();
     get_resource_cache(fGpu)->resourceAccess().removeResource(this);
@@ -119,7 +118,7 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
     SkASSERT(key.isValid());
 
     // Wrapped and uncached resources can never have a unique key.
-    if (!this->resourcePriv().isBudgeted()) {
+    if (SkBudgeted::kNo == this->resourcePriv().isBudgeted()) {
         return;
     }
 
@@ -169,7 +168,7 @@ void GrGpuResource::setScratchKey(const GrScratchKey& scratchKey) {
     SkASSERT(!fScratchKey.isValid());
     SkASSERT(scratchKey.isValid());
     // Wrapped resources can never have a scratch key.
-    if (this->cacheAccess().isExternal()) {
+    if (this->resourcePriv().isExternal()) {
         return;
     }
     fScratchKey = scratchKey;

@@ -32,7 +32,8 @@ public:
                  const char* inputCoverage,
                  const char* outputPrimary,
                  const char* outputSecondary,
-                 const TextureSamplerArray& samplers)
+                 const TextureSamplerArray& samplers,
+                 const bool usePLSDstRead)
             : fXPFragBuilder(fragBuilder)
             , fUniformHandler(uniformHandler)
             , fGLSLCaps(caps)
@@ -41,7 +42,8 @@ public:
             , fInputCoverage(inputCoverage)
             , fOutputPrimary(outputPrimary)
             , fOutputSecondary(outputSecondary)
-            , fSamplers(samplers) {}
+            , fSamplers(samplers)
+            , fUsePLSDstRead(usePLSDstRead) {}
 
         GrGLSLXPFragmentBuilder* fXPFragBuilder;
         GrGLSLUniformHandler* fUniformHandler;
@@ -52,6 +54,7 @@ public:
         const char* fOutputPrimary;
         const char* fOutputSecondary;
         const TextureSamplerArray& fSamplers;
+        bool fUsePLSDstRead;
     };
     /**
      * This is similar to emitCode() in the base class, except it takes a full shader builder.
@@ -67,6 +70,14 @@ public:
         function calls onSetData on the subclass of GrGLSLXferProcessor
      */
     void setData(const GrGLSLProgramDataManager& pdm, const GrXferProcessor& xp);
+
+protected:
+    static void DefaultCoverageModulation(GrGLSLXPFragmentBuilder* fragBuilder,
+                                          const char* srcCoverage,
+                                          const char* dstColor,
+                                          const char* outColor,
+                                          const char* outColorSecondary,
+                                          const GrXferProcessor& proc);
 
 private:
     /**

@@ -93,13 +93,10 @@ void SkPictureData::init() {
     fTextBlobCount = 0;
     fImageRefs = nullptr;
     fImageCount = 0;
-    fOpData = nullptr;
     fFactoryPlayback = nullptr;
 }
 
 SkPictureData::~SkPictureData() {
-    SkSafeUnref(fOpData);
-
     for (int i = 0; i < fPictureCount; i++) {
         fPictureRefs[i]->unref();
     }
@@ -358,7 +355,7 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
     switch (tag) {
         case SK_PICT_READER_TAG:
             SkASSERT(nullptr == fOpData);
-            fOpData = SkData::NewFromStream(stream, size);
+            fOpData = SkData::MakeFromStream(stream, size);
             if (!fOpData) {
                 return false;
             }
@@ -395,7 +392,7 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
             fPictureCount = 0;
             fPictureRefs = new const SkPicture* [size];
             for (uint32_t i = 0; i < size; i++) {
-                fPictureRefs[i] = SkPicture::CreateFromStream(stream, proc, topLevelTFPlayback);
+                fPictureRefs[i] = SkPicture::MakeFromStream(stream, proc, topLevelTFPlayback).release();
                 if (!fPictureRefs[i]) {
                     return false;
                 }
@@ -413,6 +410,9 @@ bool SkPictureData::parseStreamTag(SkStream* stream,
             buffer.setFlags(pictInfoFlagsToReadBufferFlags(fInfo.fFlags));
             buffer.setVersion(fInfo.fVersion);
 
+            if (!fFactoryPlayback) {
+                return false;
+            }
             fFactoryPlayback->setupBuffer(buffer);
             buffer.setBitmapDecoder(proc);
 
@@ -447,7 +447,7 @@ static const SkImage* create_image_from_buffer(SkReadBuffer& buffer) {
 // Need a shallow wrapper to return const SkPicture* to match the other factories,
 // as SkPicture::CreateFromBuffer() returns SkPicture*
 static const SkPicture* create_picture_from_buffer(SkReadBuffer& buffer) {
-    return SkPicture::CreateFromBuffer(buffer);
+    return SkPicture::MakeFromBuffer(buffer).release();
 }
 
 template <typename T>
@@ -526,13 +526,13 @@ bool SkPictureData::parseBufferTag(SkReadBuffer& buffer, uint32_t tag, uint32_t 
             }
             break;
         case SK_PICT_READER_TAG: {
-            SkAutoDataUnref data(SkData::NewUninitialized(size));
+            auto data(SkData::MakeUninitialized(size));
             if (!buffer.readByteArray(data->writable_data(), size) ||
                 !buffer.validate(nullptr == fOpData)) {
                 return false;
             }
             SkASSERT(nullptr == fOpData);
-            fOpData = data.detach();
+            fOpData = std::move(data);
         } break;
         case SK_PICT_PICTURE_TAG:
             if (!new_array_from_buffer(buffer, size, &fPictureRefs, &fPictureCount,
@@ -559,7 +559,7 @@ SkPictureData* SkPictureData::CreateFromStream(SkStream* stream,
     if (!data->parseStream(stream, proc, topLevelTFPlayback)) {
         return nullptr;
     }
-    return data.detach();
+    return data.release();
 }
 
 SkPictureData* SkPictureData::CreateFromBuffer(SkReadBuffer& buffer,
@@ -570,7 +570,7 @@ SkPictureData* SkPictureData::CreateFromBuffer(SkReadBuffer& buffer,
     if (!data->parseBuffer(buffer)) {
         return nullptr;
     }
-    return data.detach();
+    return data.release();
 }
 
 bool SkPictureData::parseStream(SkStream* stream,
@@ -630,5 +630,3 @@ bool SkPictureData::suitableForLayerOptimization() const {
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////////
-
-

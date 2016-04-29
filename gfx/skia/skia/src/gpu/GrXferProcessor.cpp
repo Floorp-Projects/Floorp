@@ -201,10 +201,10 @@ GrXferProcessor* GrXPFactory::createXferProcessor(const GrPipelineOptimizations&
         if (!caps.shaderCaps()->dstReadInShaderSupport()) {
             SkASSERT(dstTexture && dstTexture->texture());
         } else {
-            SkASSERT(!dstTexture || !dstTexture->texture()); 
+            SkASSERT(!dstTexture || !dstTexture->texture());
         }
     } else {
-        SkASSERT(!dstTexture || !dstTexture->texture()); 
+        SkASSERT(!dstTexture || !dstTexture->texture());
     }
     SkASSERT(!hasMixedSamples || caps.shaderCaps()->dualSourceBlendingSupport());
 #endif
@@ -216,4 +216,11 @@ bool GrXPFactory::willNeedDstTexture(const GrCaps& caps,
                                      bool hasMixedSamples) const {
     return (this->willReadDstColor(caps, optimizations, hasMixedSamples) &&
             !caps.shaderCaps()->dstReadInShaderSupport());
+}
+
+bool GrXPFactory::willReadDstColor(const GrCaps& caps,
+                                   const GrPipelineOptimizations& optimizations,
+                                   bool hasMixedSamples) const {
+    return optimizations.fOverrides.fUsePLSDstRead || this->onWillReadDstColor(caps, optimizations,
+                                                                               hasMixedSamples);
 }

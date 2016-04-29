@@ -13,14 +13,10 @@
 #include "SkColorCubeFilter_opts.h"
 #include "SkMatrix_opts.h"
 #include "SkMorphologyImageFilter_opts.h"
-#include "SkSwizzler_opts.h"
-#include "SkUtils_opts.h"
 #include "SkXfermode_opts.h"
 
 namespace SkOpts {
     void Init_sse2() {
-        memset16 = sk_sse2::memset16;
-        memset32 = sk_sse2::memset32;
         create_xfermode = sk_sse2::create_xfermode;
         color_cube_filter_span = sk_sse2::color_cube_filter_span;
 
@@ -40,10 +36,6 @@ namespace SkOpts {
         matrix_translate = sk_sse2::matrix_translate;
         matrix_scale_translate = sk_sse2::matrix_scale_translate;
         matrix_affine = sk_sse2::matrix_affine;
-
-        premul_xxxa = sk_sse2::premul_xxxa;
-        swaprb_xxxa = sk_sse2::swaprb_xxxa;
-        premul_swaprb_xxxa = sk_sse2::premul_swaprb_xxxa;
     }
 }
 
