@@ -733,7 +733,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
   protected:
     virtual int32_t getKey() const {
         MOZ_ASSERT(static_cast<int32_t>(acctype_) <= 7);
-        MOZ_ASSERT(static_cast<int32_t>(unboxedType_) <= 8);
+        MOZ_ASSERT(static_cast<int32_t>(unboxedType_) <= 15);
         return static_cast<int32_t>(engine_) |
               (static_cast<int32_t>(kind) << 1) |
               (static_cast<int32_t>(needsAtomize_) << 17) |

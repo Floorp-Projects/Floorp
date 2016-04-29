@@ -261,7 +261,7 @@ struct InternalBarrierMethods<T*>
     static void readBarrier(T* v) { T::readBarrier(v); }
 };
 
-template <typename S> struct PreBarrierFunctor : VoidDefaultAdaptor<S> {
+template <typename S> struct PreBarrierFunctor : public VoidDefaultAdaptor<S> {
     template <typename T> void operator()(T* t);
 };
 
