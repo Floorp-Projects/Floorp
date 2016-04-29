@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.RemoteTab;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> implements CombinedHistoryRecyclerView.AdapterContextMenuBuilder {
     private static final int SYNCED_DEVICES_SMARTFOLDER_INDEX = 0;
