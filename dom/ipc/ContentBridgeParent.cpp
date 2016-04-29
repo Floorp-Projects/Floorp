@@ -37,8 +37,8 @@ ContentBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
   if (os) {
     os->RemoveObserver(this, "content-child-shutdown");
   }
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &ContentBridgeParent::DeferredDestroy);
-  MessageLoop::current()->PostTask(runnable.forget());
+  MessageLoop::current()->PostTask(
+    NewRunnableMethod(this, &ContentBridgeParent::DeferredDestroy));
 }
 
 /*static*/ ContentBridgeParent*
@@ -168,8 +168,8 @@ ContentBridgeParent::NotifyTabDestroyed()
 {
   int32_t numLiveTabs = ManagedPBrowserParent().Count();
   if (numLiveTabs == 1) {
-    RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &ContentBridgeParent::Close);
-    MessageLoop::current()->PostTask(runnable.forget());
+    MessageLoop::current()->PostTask(
+      NewRunnableMethod(this, &ContentBridgeParent::Close));
   }
 }
 
