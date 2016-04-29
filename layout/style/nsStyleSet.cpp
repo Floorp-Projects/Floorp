@@ -1749,11 +1749,20 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext,
-                                      nsIAtom* aPseudoTag)
+nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
+                                nsStyleContext* aParentContext)
 {
-  MOZ_ASSERT(nsCSSAnonBoxes::IsNonElement(aPseudoTag));
-  return GetContext(aParentContext, mRuleTree, nullptr, aPseudoTag,
+  MOZ_ASSERT(aTextNode && aTextNode->IsNodeOfType(nsINode::eTEXT));
+  return GetContext(aParentContext, mRuleTree, nullptr,
+                    nsCSSAnonBoxes::mozText,
+                    CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+{
+  return GetContext(aParentContext, mRuleTree, nullptr,
+                    nsCSSAnonBoxes::mozOtherNonElement,
                     CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
 }
 

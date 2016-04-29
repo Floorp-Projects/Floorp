@@ -100,8 +100,14 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext,
-                                         nsIAtom* aPseudoTag)
+ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
+                                   nsStyleContext* aParentContext)
+{
+  MOZ_CRASH("stylo: not implemented");
+}
+
+already_AddRefed<nsStyleContext>
+ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
 {
   MOZ_CRASH("stylo: not implemented");
 }
