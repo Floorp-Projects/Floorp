@@ -291,6 +291,8 @@ enum GroupOpcodeID {
 
     GROUP1A_OP_POP = 0,
 
+    GROUP2_OP_ROL = 0,
+    GROUP2_OP_ROR = 1,
     GROUP2_OP_SHL = 4,
     GROUP2_OP_SHR = 5,
     GROUP2_OP_SAR = 7,

@@ -420,6 +420,38 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 }
 
 // ===============================================================
+// Rotate functions
+void
+MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
+{
+    if (count.value)
+        ma_rol(count, input, dest);
+    else
+        ma_mov(input, dest);
+}
+
+void
+MacroAssembler::rotateLeft(Register count, Register input, Register dest)
+{
+    ma_rol(count, input, dest);
+}
+
+void
+MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
+{
+    if (count.value)
+        ma_ror(count, input, dest);
+    else
+        ma_mov(input, dest);
+}
+
+void
+MacroAssembler::rotateRight(Register count, Register input, Register dest)
+{
+    ma_ror(count, input, dest);
+}
+
+// ===============================================================
 // Branch functions
 
 void

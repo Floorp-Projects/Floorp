@@ -14667,7 +14667,7 @@ class MAsmReinterpret
   public:
     INSTRUCTION_HEADER(AsmReinterpret)
 
-    static MAsmReinterpret* New(TempAllocator& alloc, MDefinition* val, MIRType toType)
+    static MAsmReinterpret* NewAsmJS(TempAllocator& alloc, MDefinition* val, MIRType toType)
     {
         return new(alloc) MAsmReinterpret(val, toType);
     }
@@ -14680,6 +14680,48 @@ class MAsmReinterpret
     }
 
     ALLOW_CLONE(MAsmReinterpret)
+};
+
+class MRotate
+  : public MBinaryInstruction,
+    public NoTypePolicy::Data
+{
+    bool isLeftRotate_;
+
+    MRotate(MDefinition* input, MDefinition* count, MIRType type, bool isLeftRotate)
+      : MBinaryInstruction(input, count), isLeftRotate_(isLeftRotate)
+    {
+        setMovable();
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Rotate)
+
+    static MRotate* NewAsmJS(TempAllocator& alloc, MDefinition* input, MDefinition* count,
+                             MIRType type, bool isLeft)
+    {
+        return new(alloc) MRotate(input, count, type, isLeft);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins) && ins->toRotate()->isLeftRotate() == isLeftRotate_;
+    }
+
+    MDefinition* input() const {
+        return getOperand(0);
+    }
+    MDefinition* count() const {
+        return getOperand(1);
+    }
+    bool isLeftRotate() const {
+        return isLeftRotate_;
+    }
+
+    ALLOW_CLONE(MRotate)
 };
 
 class MUnknownValue : public MNullaryInstruction
