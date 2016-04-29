@@ -5,19 +5,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// @TODO move this to constants and use in webconsole.js
-const MESSAGE_ADD = "MESSAGE_ADD";
+const Immutable = require("devtools/client/shared/vendor/immutable");
 
-/**
- * Filter displayed object properties.
- */
+const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const constants = require("devtools/client/webconsole/new-console-output/constants");
+
 function messages(state = [], action) {
-  if (action.type == MESSAGE_ADD) {
-    return state.concat([action.message]);
+  switch (action.type) {
+    case constants.MESSAGE_ADD:
+      let newMessage = action.message;
+      if (newMessage.allowRepeating && state.length > 0) {
+        let lastMessage = state[state.length - 1];
+        if (lastMessage.repeatId === newMessage.repeatId) {
+          newMessage.repeat = lastMessage.repeat + 1;
+          return state.slice(0, state.length-1).concat(newMessage);
+        }
+      }
+      return state.concat([ newMessage ]);
+    case constants.MESSAGES_CLEAR:
+      return [];
   }
 
   return state;
 }
 
-// Exports from this module
 exports.messages = messages;
