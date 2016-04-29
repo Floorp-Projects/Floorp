@@ -1092,7 +1092,6 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     aOpacity = 1.f;
   }
 
-  bool createdMixBlendBackdropTexture = false;
   GLuint mixBlendBackdrop = 0;
   gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
 
@@ -1125,19 +1124,9 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   if (BlendOpIsMixBlendMode(blendMode)) {
     gfx::Matrix4x4 backdropTransform;
+    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
 
-    if (gl()->IsExtensionSupported(GLContext::NV_texture_barrier)) {
-      // The NV_texture_barrier extension lets us read directly from the
-      // backbuffer. Let's do that.
-      // We need to tell OpenGL about this, so that it can make sure everything
-      // on the GPU is happening in the right order.
-      gl()->fTextureBarrier();
-      mixBlendBackdrop = mCurrentRenderTarget->GetTextureHandle();
-    } else {
-      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
-      mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
-      createdMixBlendBackdropTexture = true;
-    }
+    mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
     program->SetBackdropTransform(backdropTransform);
   }
 
@@ -1454,7 +1443,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                              LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   }
-  if (createdMixBlendBackdropTexture) {
+  if (mixBlendBackdrop) {
     gl()->fDeleteTextures(1, &mixBlendBackdrop);
   }
 
