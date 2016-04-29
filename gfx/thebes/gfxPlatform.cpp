@@ -2174,13 +2174,6 @@ gfxPlatform::CanUseHardwareVideoDecoding()
 }
 
 bool
-gfxPlatform::CanUseDirect3D11ANGLE()
-{
-  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
-  return gANGLESupportsD3D11;
-}
-
-bool
 gfxPlatform::AccelerateLayersByDefault()
 {
 #if defined(MOZ_GL_PROVIDER) || defined(MOZ_WIDGET_UIKIT)
