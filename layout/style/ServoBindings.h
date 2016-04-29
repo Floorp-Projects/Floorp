@@ -73,6 +73,9 @@ void Servo_ReleaseStyleSheet(RawServoStyleSheet* sheet);
 void Servo_AppendStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
 void Servo_PrependStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
 void Servo_RemoveStyleSheet(RawServoStyleSheet* sheet, RawServoStyleSet* set);
+void Servo_InsertStyleSheetBefore(RawServoStyleSheet* sheet,
+                                  RawServoStyleSheet* reference,
+                                  RawServoStyleSet* set);
 bool Servo_StyleSheetHasRules(RawServoStyleSheet* sheet);
 RawServoStyleSet* Servo_InitStyleSet();
 void Servo_DropStyleSet(RawServoStyleSet* set);
