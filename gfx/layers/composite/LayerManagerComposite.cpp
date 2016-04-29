@@ -853,7 +853,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   if (!mTarget && !haveLayerEffects &&
       gfxPrefs::Composer2DCompositionEnabled() &&
       composer2D && composer2D->HasHwc() && composer2D->TryRenderWithHwc(mRoot,
-          mCompositor->GetWidget(),
+          mCompositor->GetWidget()->RealWidget(),
           mGeometryChanged,
           mCompositor->HasImageHostOverlays()))
   {
@@ -942,12 +942,13 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
       js::ProfileEntry::Category::GRAPHICS);
 
     mCompositor->EndFrame();
-    mCompositor->SetDispAcquireFence(mRoot,
-                                     mCompositor->GetWidget()); // Call after EndFrame()
+
+    // Call after EndFrame()
+    mCompositor->SetDispAcquireFence(mRoot, mCompositor->GetWidget()->RealWidget());
   }
 
   if (composer2D) {
-    composer2D->Render(mCompositor->GetWidget());
+    composer2D->Render(mCompositor->GetWidget()->RealWidget());
   }
 
   mCompositor->GetWidget()->PostRender(this);
@@ -1546,7 +1547,7 @@ LayerComposite::SetLayerManager(LayerManagerComposite* aManager)
 bool
 LayerManagerComposite::AsyncPanZoomEnabled() const
 {
-  return mCompositor->GetWidget()->AsyncPanZoomEnabled();
+  return mCompositor->GetWidget()->RealWidget()->AsyncPanZoomEnabled();
 }
 
 nsIntRegion
