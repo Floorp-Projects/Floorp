@@ -6542,3 +6542,10 @@ JS::GetObjectZone(JSObject* obj)
 {
     return obj->zone();
 }
+
+JS_PUBLIC_API(JS::TraceKind)
+JS::GCThingTraceKind(js::gc::Cell* thing)
+{
+    MOZ_ASSERT(thing);
+    return thing->getTraceKind();
+}
