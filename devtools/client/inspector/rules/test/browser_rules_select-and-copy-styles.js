@@ -59,13 +59,12 @@ function* checkCopySelection(view) {
   range.setStart(prop, 0);
   range.setEnd(values[4], 2);
   win.getSelection().addRange(range);
-
   info("Checking that _Copy() returns the correct clipboard value");
 
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
-                        "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-                        "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
+                        "    font-family: helvetica, sans-serif;[\\r\\n]+" +
+                        "    color: #AAA;[\\r\\n]+" +
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
                         "    color: #000000;[\\r\\n]*";
@@ -101,8 +100,8 @@ function* checkSelectAll(view) {
   let expectedPattern = "element {[\\r\\n]+" +
                         "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
-                        "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-                        "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
+                        "    font-family: helvetica, sans-serif;[\\r\\n]+" +
+                        "    color: #AAA;[\\r\\n]+" +
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
                         "    color: #000000;[\\r\\n]+" +

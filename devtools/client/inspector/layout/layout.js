@@ -39,12 +39,19 @@ EditingSession.prototype = {
   /**
    * Gets the value of a single property from the CSS rule.
    *
-   * @param rule      The CSS rule
-   * @param property  The name of the property
+   * @param {StyleRuleFront} rule The CSS rule.
+   * @param {String} property The name of the property.
+   * @return {String} The value.
    */
   getPropertyFromRule: function (rule, property) {
-    let dummyStyle = this._element.style;
+    // Use the parsed declarations in the StyleRuleFront object if available.
+    let index = this.getPropertyIndex(property, rule);
+    if (index !== -1) {
+      return rule.declarations[index].value;
+    }
 
+    // Fallback to parsing the cssText locally otherwise.
+    let dummyStyle = this._element.style;
     dummyStyle.cssText = rule.cssText;
     return dummyStyle.getPropertyValue(property);
   },
@@ -77,49 +84,91 @@ EditingSession.prototype = {
   },
 
   /**
-   * Sets a number of properties on the node. Returns a promise that will be
-   * resolved when the modifications are complete.
-   *
+   * Get the index of a given css property name in a CSS rule.
+   * Or -1, if there are no properties in the rule yet.
+   * @param {String} name The property name.
+   * @param {StyleRuleFront} rule Optional, defaults to the element style rule.
+   * @return {Number} The property index in the rule.
+   */
+  getPropertyIndex: function (name, rule = this._rules[0]) {
+    let elementStyleRule = this._rules[0];
+    if (!elementStyleRule.declarations.length) {
+      return -1;
+    }
+
+    return elementStyleRule.declarations.findIndex(p => p.name === name);
+  },
+
+  /**
+   * Sets a number of properties on the node.
    * @param properties  An array of properties, each is an object with name and
    *                    value properties. If the value is "" then the property
    *                    is removed.
+   * @return {Promise} Resolves when the modifications are complete.
    */
-  setProperties: function (properties) {
-    let modifications = this._rules[0].startModifyingProperties();
-
+  setProperties: Task.async(function* (properties) {
     for (let property of properties) {
+      // Get a RuleModificationList or RuleRewriter helper object from the
+      // StyleRuleActor to make changes to CSS properties.
+      // Note that RuleRewriter doesn't support modifying several properties at
+      // once, so we do this in a sequence here.
+      let modifications = this._rules[0].startModifyingProperties();
+
+      // Remember the property so it can be reverted.
       if (!this._modifications.has(property.name)) {
         this._modifications.set(property.name,
           this.getPropertyFromRule(this._rules[0], property.name));
       }
 
-      if (property.value == "") {
-        modifications.removeProperty(-1, property.name);
-      } else {
-        modifications.setProperty(-1, property.name, property.value, "");
+      // Find the index of the property to be changed, or get the next index to
+      // insert the new property at.
+      let index = this.getPropertyIndex(property.name);
+      if (index === -1) {
+        index = this._rules[0].declarations.length;
       }
-    }
 
-    return modifications.apply().then(null, console.error);
-  },
+      if (property.value == "") {
+        modifications.removeProperty(index, property.name);
+      } else {
+        modifications.setProperty(index, property.name, property.value, "");
+      }
+
+      yield modifications.apply();
+    }
+  }),
 
   /**
-   * Reverts all of the property changes made by this instance. Returns a
-   * promise that will be resolved when complete.
+   * Reverts all of the property changes made by this instance.
+   * @return {Promise} Resolves when all properties have been reverted.
    */
-  revert: function () {
-    let modifications = this._rules[0].startModifyingProperties();
-
+  revert: Task.async(function* () {
+    // Revert each property that we modified previously, one by one. See
+    // setProperties for information about why.
     for (let [property, value] of this._modifications) {
-      if (value != "") {
-        modifications.setProperty(-1, property, value, "");
-      } else {
-        modifications.removeProperty(-1, property);
-      }
-    }
+      let modifications = this._rules[0].startModifyingProperties();
 
-    return modifications.apply().then(null, console.error);
-  },
+      // Find the index of the property to be reverted.
+      let index = this.getPropertyIndex(property);
+
+      if (value != "") {
+        // If the property doesn't exist anymore, insert at the beginning of the
+        // rule.
+        if (index === -1) {
+          index = 0;
+        }
+        modifications.setProperty(index, property, value, "");
+      } else {
+        // If the property doesn't exist anymore, no need to remove it. It had
+        // not been added after all.
+        if (index === -1) {
+          continue;
+        }
+        modifications.removeProperty(index, property);
+      }
+
+      yield modifications.apply();
+    }
+  }),
 
   destroy: function () {
     this._doc = null;
@@ -342,14 +391,15 @@ LayoutView.prototype = {
           }
         }
 
-        session.setProperties(properties);
+        session.setProperties(properties).catch(e => console.error(e));
       },
 
       done: (value, commit) => {
         editor.elt.parentNode.classList.remove("layout-editing");
         if (!commit) {
-          session.revert();
-          session.destroy();
+          session.revert().then(() => {
+            session.destroy();
+          }, e => console.error(e));
         }
       }
     }, event);

@@ -22,61 +22,76 @@ var gWalker = null;
 var gStyles = null;
 var gClient = null;
 
-addTest(function setup() {
+addAsyncTest(function* setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
-    gInspectee = doc;
-    let {InspectorFront} = require("devtools/server/actors/inspector");
-    let inspector = InspectorFront(client, tab);
-    promiseDone(inspector.getWalker().then(walker => {
-      ok(walker, "getWalker() should return an actor.");
+  let inspector;
+
+  yield new Promise(resolve => {
+    attachURL(url, function(err, client, tab, doc) {
+      gInspectee = doc;
       gClient = client;
-      gWalker = walker;
-      return inspector.getPageStyle();
-    }).then(styles => {
-      gStyles = styles;
-    }).then(runNextTest));
+      let {InspectorFront} = require("devtools/server/actors/inspector");
+      inspector = InspectorFront(client, tab);
+      resolve();
+    });
   });
+
+  gWalker = yield inspector.getWalker();
+  gStyles = yield inspector.getPageStyle();
+
+  runNextTest();
 });
 
-addTest(function modifyProperties() {
+addAsyncTest(function* modifyProperties() {
   let localNode = gInspectee.querySelector("#inheritable-rule-inheritable-style");
-  let elementStyle = null;
-  promiseDone(gWalker.querySelector(gWalker.rootNode, "#inheritable-rule-inheritable-style").then(node => {
-    return gStyles.getApplied(node, { inherited: false, filter: "user" });
-  }).then(applied => {
-    elementStyle = applied[0].rule;
-    is(elementStyle.cssText, localNode.style.cssText, "Got expected css text");
 
-    // Will start with "color:blue"
-    let changes = elementStyle.startModifyingProperties();
+  let node = yield gWalker.querySelector(gWalker.rootNode,
+    "#inheritable-rule-inheritable-style");
 
-    // Change an existing property...
-    changes.setProperty(-1, "color", "black");
-    // Create a new property
-    changes.setProperty(-1, "background-color", "green");
+  let applied = yield gStyles.getApplied(node,
+    { inherited: false, filter: "user" });
 
-    // Create a new property and then change it immediately.
-    changes.setProperty(-1, "border", "1px solid black");
-    changes.setProperty(-1, "border", "2px solid black");
+  let elementStyle = applied[0].rule;
+  is(elementStyle.cssText, localNode.style.cssText, "Got expected css text");
 
-    return changes.apply();
-  }).then(() => {
-    is(elementStyle.cssText, "color: black; background-color: green; border: 2px solid black;", "Should have expected cssText");
-    is(elementStyle.cssText, localNode.style.cssText, "Local node and style front match.");
+  // Change an existing property...
+  yield setProperty(elementStyle, 0, "color", "black");
+  // Create a new property
+  yield setProperty(elementStyle, 1, "background-color", "green");
 
-    // Remove all the properties
-    let changes = elementStyle.startModifyingProperties();
-    changes.removeProperty(-1, "color");
-    changes.removeProperty(-1, "background-color");
-    changes.removeProperty(-1, "border");
+  // Create a new property and then change it immediately.
+  yield setProperty(elementStyle, 2, "border", "1px solid black");
+  yield setProperty(elementStyle, 2, "border", "2px solid black");
 
-    return changes.apply();
-  }).then(() => {
-    is(elementStyle.cssText, "", "Should have expected cssText");
-    is(elementStyle.cssText, localNode.style.cssText, "Local node and style front match.");
-  }).then(runNextTest));
+  is(elementStyle.cssText,
+     "color: black; background-color: green; border: 2px solid black;",
+     "Should have expected cssText");
+  is(elementStyle.cssText, localNode.style.cssText,
+     "Local node and style front match.");
+
+  // Remove all the properties
+  yield removeProperty(elementStyle, 0, "color");
+  yield removeProperty(elementStyle, 0, "background-color");
+  yield removeProperty(elementStyle, 0, "border");
+
+  is(elementStyle.cssText, "", "Should have expected cssText");
+  is(elementStyle.cssText, localNode.style.cssText,
+     "Local node and style front match.");
+
+  runNextTest();
 });
+
+function* setProperty(rule, index, name, value) {
+  let changes = rule.startModifyingProperties();
+  changes.setProperty(index, name, value);
+  yield changes.apply();
+}
+
+function* removeProperty(rule, index, name) {
+  let changes = rule.startModifyingProperties();
+  changes.removeProperty(index, name);
+  yield changes.apply();
+}
 
 addTest(function cleanup() {
   delete gStyles;

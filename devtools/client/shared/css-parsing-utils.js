@@ -908,6 +908,12 @@ RuleRewriter.prototype = {
    */
   removeProperty: function (index, name) {
     this.completeInitialization(index);
+
+    // If asked to remove a property that does not exist, bail out.
+    if (!this.decl) {
+      return;
+    }
+
     let copyOffset = this.decl.offsets[1];
     // Maybe removing this rule left us with a completely blank
     // line.  In this case, we'll delete the whole thing.  We only

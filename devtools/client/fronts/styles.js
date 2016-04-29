@@ -150,6 +150,9 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
   get authoredText() {
     return this._form.authoredText || this._form.cssText;
   },
+  get declarations() {
+    return this._form.declarations || [];
+  },
   get keyText() {
     return this._form.keyText;
   },
