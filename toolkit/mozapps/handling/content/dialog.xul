@@ -34,7 +34,7 @@
                  ondblclick="dialog.onDblClick();"
                  onselect="dialog.updateOKButton();">
       <richlistitem id="item-choose" orient="horizontal" selected="true">
-        <label value="&ChooseApp.description;" flex="1"/>
+        <label value="&ChooseOtherApp.description;" flex="1"/>
         <button oncommand="dialog.chooseApplication();"
                 label="&ChooseApp.label;" accesskey="&ChooseApp.accessKey;"/>
       </richlistitem>
@@ -43,5 +43,10 @@
 
   <checkbox id="remember" aria-describedby="remember-text" oncommand="dialog.onCheck();"/>
   <description id="remember-text"/>
+
+  <hbox class="dialog-button-box" pack="end">
+    <button dlgtype="cancel" icon="cancel" class="dialog-button"/>
+    <button dlgtype="accept" label="&accept;" icon="open" class="dialog-button"/>
+  </hbox>
 
 </dialog>
