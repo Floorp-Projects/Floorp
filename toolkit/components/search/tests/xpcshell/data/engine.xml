@@ -16,8 +16,8 @@
 </Url>
 <Url type="application/x-moz-default-purpose" method="GET" template="http://www.google.com/search" resultdomain="purpose.google.com">
   <Param name="q" value="{searchTerms}"/>
-  <!-- MozParam with a default value if purpose is not specified -->
-  <MozParam name="channel" condition="purpose" purpose="" value="none"/>
+  <!-- MozParam uses searchbar if purpose is not specified -->
+  <MozParam name="channel" condition="purpose" purpose="searchbar" value="ffsb"/>
   <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>
   <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
 </Url>
