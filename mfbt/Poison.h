@@ -59,4 +59,50 @@ extern MFBT_DATA uintptr_t gMozillaPoisonSize;
 
 MOZ_END_EXTERN_C
 
+#if defined(__cplusplus)
+
+namespace mozilla {
+
+/**
+ * This class is designed to cause crashes when various kinds of memory
+ * corruption are observed. For instance, let's say we have a class C where we
+ * suspect out-of-bounds writes to some members.  We can insert a member of type
+ * Poison near the members we suspect are being corrupted by out-of-bounds
+ * writes.  Or perhaps we have a class K we suspect is subject to use-after-free
+ * violations, in which case it doesn't particularly matter where in the class
+ * we add the member of type Poison.
+ *
+ * In either case, we then insert calls to Check() throughout the code.  Doing
+ * so enables us to narrow down the location where the corruption is occurring.
+ * A pleasant side-effect of these additional Check() calls is that crash
+ * signatures may become more regular, as crashes will ideally occur
+ * consolidated at the point of a Check(), rather than scattered about at
+ * various uses of the corrupted memory.
+ */
+class CorruptionCanary {
+public:
+  CorruptionCanary() {
+    mValue = kCanarySet;
+  }
+
+  ~CorruptionCanary() {
+    Check();
+    mValue = mozPoisonValue();
+  }
+
+  void Check() const {
+    if (mValue != kCanarySet) {
+      MOZ_CRASH("Canary check failed, check lifetime");
+    }
+  }
+
+private:
+  static const uintptr_t kCanarySet = 0x0f0b0f0b;
+  uintptr_t mValue;
+};
+
+} // mozilla
+
+#endif
+
 #endif /* mozilla_Poison_h */
