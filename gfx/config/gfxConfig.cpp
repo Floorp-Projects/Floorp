@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "gfxConfig.h"
+#include "plstr.h"
 
 namespace mozilla {
 namespace gfx {
@@ -146,7 +147,7 @@ gfxConfig::UseFallback(Fallback aFallback)
 gfxConfig::EnableFallback(Fallback aFallback, const char* aMessage)
 {
   // Ignore aMessage for now.
-  sConfig.EnableFallbackImpl(aFallback);
+  sConfig.EnableFallbackImpl(aFallback, aMessage);
 }
 
 bool
@@ -156,9 +157,66 @@ gfxConfig::UseFallbackImpl(Fallback aFallback) const
 }
 
 void
-gfxConfig::EnableFallbackImpl(Fallback aFallback)
+gfxConfig::EnableFallbackImpl(Fallback aFallback, const char* aMessage)
 {
+  if (!UseFallbackImpl(aFallback)) {
+    MOZ_ASSERT(mNumFallbackLogEntries < kNumFallbacks);
+
+    FallbackLogEntry& entry = mFallbackLog[mNumFallbackLogEntries];
+    mNumFallbackLogEntries++;
+
+    entry.mFallback = aFallback;
+    PL_strncpyz(entry.mMessage, aMessage, sizeof(entry.mMessage));
+  }
   mFallbackBits |= (uint64_t(1) << uint64_t(aFallback));
+}
+
+struct FeatureInfo {
+  const char* name;
+  const char* description;
+};
+static const FeatureInfo sFeatureInfo[] = {
+#define FOR_EACH_FEATURE(name, type, desc) {#name, desc},
+  GFX_FEATURE_MAP(FOR_EACH_FEATURE)
+#undef FOR_EACH_FEATURE
+  {nullptr, nullptr}
+};
+
+/* static */ void
+gfxConfig::ForEachFeature(const FeatureIterCallback& aCallback)
+{
+  for (size_t i = 0; i < kNumFeatures; i++) {
+    FeatureState& state = GetFeature(static_cast<Feature>(i));
+    if (!state.IsInitialized()) {
+      continue;
+    }
+
+    aCallback(sFeatureInfo[i].name,
+              sFeatureInfo[i].description,
+              state);
+  }
+}
+
+static const char* sFallbackNames[] = {
+#define FOR_EACH_FALLBACK(name) #name,
+  GFX_FALLBACK_MAP(FOR_EACH_FALLBACK)
+#undef FOR_EACH_FALLBACK
+  nullptr
+};
+
+/* static  */ void
+gfxConfig::ForEachFallback(const FallbackIterCallback& aCallback)
+{
+  sConfig.ForEachFallbackImpl(aCallback);
+}
+
+void
+gfxConfig::ForEachFallbackImpl(const FallbackIterCallback& aCallback)
+{
+  for (size_t i = 0; i < mNumFallbackLogEntries; i++) {
+    const FallbackLogEntry& entry = mFallbackLog[i];
+    aCallback(sFallbackNames[size_t(entry.mFallback)], entry.mMessage);
+  }
 }
 
 } // namespace gfx
