@@ -1809,7 +1809,7 @@ JSScript::sourceData(JSContext* cx)
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
-  : cache_(nullptr), source_(nullptr), charsToFree_(nullptr)
+  : cache_(nullptr), source_(nullptr)
 {
 }
 
@@ -1824,24 +1824,19 @@ UncompressedSourceCache::AutoHoldEntry::holdEntry(UncompressedSourceCache* cache
 }
 
 void
-UncompressedSourceCache::AutoHoldEntry::deferDelete(const char16_t* chars)
+UncompressedSourceCache::AutoHoldEntry::deferDelete(UniqueTwoByteChars chars)
 {
     // Take ownership of source chars now the cache is being purged. Remove our
     // reference to the ScriptSource which might soon be destroyed.
     MOZ_ASSERT(cache_ && source_ && !charsToFree_);
     cache_ = nullptr;
     source_ = nullptr;
-    charsToFree_ = chars;
+    charsToFree_ = Move(chars);
 }
 
 UncompressedSourceCache::AutoHoldEntry::~AutoHoldEntry()
 {
-    // The holder is going out of scope. If it has taken ownership of cached
-    // chars then delete them, otherwise unregister ourself with the cache.
-    if (charsToFree_) {
-        MOZ_ASSERT(!cache_ && !source_);
-        js_free(const_cast<char16_t*>(charsToFree_));
-    } else if (cache_) {
+    if (cache_) {
         MOZ_ASSERT(source_);
         cache_->releaseEntry(*this);
     }
@@ -1870,29 +1865,25 @@ UncompressedSourceCache::lookup(ScriptSource* ss, AutoHoldEntry& holder)
         return nullptr;
     if (Map::Ptr p = map_->lookup(ss)) {
         holdEntry(holder, ss);
-        return p->value();
+        return p->value().get();
     }
     return nullptr;
 }
 
 bool
-UncompressedSourceCache::put(ScriptSource* ss, const char16_t* str, AutoHoldEntry& holder)
+UncompressedSourceCache::put(ScriptSource* ss, UniqueTwoByteChars str, AutoHoldEntry& holder)
 {
     MOZ_ASSERT(!holder_);
 
     if (!map_) {
-        map_ = js_new<Map>();
-        if (!map_)
+        UniquePtr<Map> map = MakeUnique<Map>();
+        if (!map || !map->init())
             return false;
 
-        if (!map_->init()) {
-            js_delete(map_);
-            map_ = nullptr;
-            return false;
-        }
+        map_ = Move(map);
     }
 
-    if (!map_->put(ss, str))
+    if (!map_->put(ss, Move(str)))
         return false;
 
     holdEntry(holder, ss);
@@ -1906,17 +1897,13 @@ UncompressedSourceCache::purge()
         return;
 
     for (Map::Range r = map_->all(); !r.empty(); r.popFront()) {
-        const char16_t* chars = r.front().value();
         if (holder_ && r.front().key() == holder_->source()) {
-            holder_->deferDelete(chars);
+            holder_->deferDelete(Move(r.front().value()));
             holder_ = nullptr;
-        } else {
-            js_free(const_cast<char16_t*>(chars));
         }
     }
 
-    js_delete(map_);
-    map_ = nullptr;
+    map_.reset();
 }
 
 size_t
@@ -1925,10 +1912,8 @@ UncompressedSourceCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     size_t n = 0;
     if (map_ && !map_->empty()) {
         n += map_->sizeOfIncludingThis(mallocSizeOf);
-        for (Map::Range r = map_->all(); !r.empty(); r.popFront()) {
-            const char16_t* v = r.front().value();
-            n += mallocSizeOf(v);
-        }
+        for (Map::Range r = map_->all(); !r.empty(); r.popFront())
+            n += mallocSizeOf(r.front().value().get());
     }
     return n;
 }
@@ -1959,29 +1944,31 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             if (const char16_t* decompressed = cx->runtime()->uncompressedSourceCache.lookup(&ss, holder))
                 return decompressed;
 
-            const size_t nbytes = sizeof(char16_t) * (ss.length() + 1);
-            char16_t* decompressed = static_cast<char16_t*>(js_malloc(nbytes));
+            const size_t lengthWithNull = ss.length() + 1;
+            UniqueTwoByteChars decompressed(js_pod_malloc<char16_t>(lengthWithNull));
             if (!decompressed) {
                 JS_ReportOutOfMemory(cx);
                 return nullptr;
             }
 
-            if (!DecompressString((const unsigned char*) ss.compressedData(), ss.compressedBytes(),
-                                  reinterpret_cast<unsigned char*>(decompressed), nbytes)) {
+            if (!DecompressString((const unsigned char*) ss.compressedData(),
+                                  ss.compressedBytes(),
+                                  reinterpret_cast<unsigned char*>(decompressed.get()),
+                                  lengthWithNull * sizeof(char16_t)))
+            {
                 JS_ReportOutOfMemory(cx);
-                js_free(decompressed);
                 return nullptr;
             }
 
             decompressed[ss.length()] = 0;
 
-            if (!cx->runtime()->uncompressedSourceCache.put(&ss, decompressed, holder)) {
+            ReturnType ret = decompressed.get();
+            if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
                 JS_ReportOutOfMemory(cx);
-                js_free(decompressed);
                 return nullptr;
             }
 
-            return decompressed;
+            return ret;
         }
 
         ReturnType match(Parent& p) {
