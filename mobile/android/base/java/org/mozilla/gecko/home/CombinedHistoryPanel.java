@@ -10,6 +10,7 @@ import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -29,7 +30,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -41,6 +41,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteClientsDialogFragment;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.Telemetry;
@@ -83,7 +84,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     protected RemoteTabsSyncListener mSyncStatusListener;
 
     // Reference to the View to display when there are no results.
-    private View mEmptyView;
+    private View mHistoryEmptyView;
+    private View mClientsEmptyView;
 
     public interface OnPanelLevelChangeListener {
         enum PanelLevel {
@@ -124,6 +126,10 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh_layout);
         setUpRefreshLayout();
 
+        mClientsEmptyView = view.findViewById(R.id.home_clients_empty_view);
+        mHistoryEmptyView = view.findViewById(R.id.home_history_empty_view);
+        setUpEmptyViews();
+
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
     }
@@ -151,6 +157,40 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     private void setUpRefreshLayout() {
         mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
         mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
+    }
+
+    private void setUpEmptyViews() {
+        // Set up history empty view.
+        final ImageView emptyIcon = (ImageView) mHistoryEmptyView.findViewById(R.id.home_empty_image);
+        emptyIcon.setVisibility(View.GONE);
+
+        final TextView emptyText = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_text);
+        emptyText.setText(R.string.home_most_recent_empty);
+
+        final TextView emptyHint = (TextView) mHistoryEmptyView.findViewById(R.id.home_empty_hint);
+
+        if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
+            emptyHint.setVisibility(View.GONE);
+        } else {
+            final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
+            final SpannableStringBuilder hintBuilder = formatHintText(hintText);
+            if (hintBuilder != null) {
+                emptyHint.setText(hintBuilder);
+                emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
+                emptyHint.setVisibility(View.VISIBLE);
+            }
+        }
+
+        // Set up Clients empty view.
+        final Button syncSetupButton = (Button) mClientsEmptyView.findViewById(R.id.sync_setup_button);
+        syncSetupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // This Activity will redirect to the correct Activity as needed.
+                final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -253,7 +293,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
             mPanelLevel = level;
             switch (level) {
                 case PARENT:
-                    mRecyclerView.swapAdapter(mHistoryAdapter, false);
+                    mRecyclerView.swapAdapter(mHistoryAdapter, true);
                     break;
                 case CHILD:
                     mRecyclerView.swapAdapter(mClientsAdapter, true);
@@ -270,7 +310,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         switch (mPanelLevel) {
             case PARENT:
                 final boolean historyRestricted = !Restrictions.isAllowed(getActivity(), Restrictable.CLEAR_HISTORY);
-                if (historyRestricted || mHistoryAdapter.getItemCount() <= NUM_SMART_FOLDERS) {
+                if (historyRestricted || mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS) {
                     mPanelFooterButton.setVisibility(View.GONE);
                 } else {
                     mPanelFooterButton.setVisibility(View.VISIBLE);
@@ -318,51 +358,25 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     }
 
     private void updateEmptyView() {
+        boolean showEmptyHistoryView = false;
+        boolean showEmptyClientsView = false;
         switch (mPanelLevel) {
             case PARENT:
-                final boolean showEmptyHistoryView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS && mClientsAdapter.getItemCount() == 1;
-                if (showEmptyHistoryView) {
-                    if (mEmptyView == null) {
-                        // Set empty panel view if it needs to be shown and hasn't been inflated.
-                        final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
-                        mEmptyView = emptyViewStub.inflate();
-
-                        final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-                        emptyIcon.setImageResource(R.drawable.icon_most_recent_empty);
-
-                        final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-                        emptyText.setText(R.string.home_most_recent_empty);
-
-                        final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
-
-                        if (!Restrictions.isAllowed(getActivity(), Restrictable.PRIVATE_BROWSING)) {
-                            emptyHint.setVisibility(View.GONE);
-                        } else {
-                            final String hintText = getResources().getString(R.string.home_most_recent_emptyhint);
-                            final SpannableStringBuilder hintBuilder = formatHintText(hintText);
-                            if (hintBuilder != null) {
-                                emptyHint.setText(hintBuilder);
-                                emptyHint.setMovementMethod(LinkMovementMethod.getInstance());
-                                emptyHint.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    }
-                    mEmptyView.setVisibility(View.VISIBLE);
-                } else {
-                    if (mEmptyView != null) {
-                        mEmptyView.setVisibility(View.GONE);
-                    }
-                }
+                showEmptyHistoryView = mHistoryAdapter.getItemCount() == NUM_SMART_FOLDERS;
                 break;
 
             case CHILD:
-                // TODO: Bug 1262285
-                if (mEmptyView != null) {
-                    mEmptyView.setVisibility(View.GONE);
-                }
+                showEmptyClientsView = mClientsAdapter.getItemCount() == 1;
                 break;
         }
+
+        final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView;
+        mRecyclerView.setOverScrollMode(showEmptyView? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+
+        mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
+        mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
     }
+
     /**
      * Make Span that is clickable, and underlined
      * between the string markers <code>FORMAT_S1</code> and
