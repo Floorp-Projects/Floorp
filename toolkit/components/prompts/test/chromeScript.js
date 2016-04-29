@@ -155,11 +155,11 @@ function dismissPrompt(ui, action) {
     ui.checkbox.doCommand();
   }
 
-  if (action.textField) {
+  if ("textField" in action) {
     ui.loginTextbox.setAttribute("value", action.textField);
   }
 
-  if (action.passField) {
+  if ("passField" in action) {
     ui.password1Textbox.setAttribute("value", action.passField);
   }
 
