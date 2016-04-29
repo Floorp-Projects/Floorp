@@ -1961,11 +1961,25 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
             }
 
             decompressed[ss.length()] = 0;
-
             ReturnType ret = decompressed.get();
-            if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
-                JS_ReportOutOfMemory(cx);
-                return nullptr;
+
+            // Decompressing a huge script is expensive. With lazy parsing and
+            // relazification, this can happen repeatedly, so conservatively go
+            // back to storing the data uncompressed to avoid wasting too much
+            // time decompressing.
+            const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
+            if (lengthWithNull > HUGE_SCRIPT) {
+                if (ss.inCompressedSourceSet) {
+                    TlsPerThreadData.get()->runtimeFromMainThread()->compressedSourceSet.remove(&ss);
+                    ss.inCompressedSourceSet = false;
+                }
+                js_free(ss.compressedData());
+                ss.data = SourceType(Uncompressed(decompressed.release(), true));
+            } else {
+                if (!cx->runtime()->uncompressedSourceCache.put(&ss, Move(decompressed), holder)) {
+                    JS_ReportOutOfMemory(cx);
+                    return nullptr;
+                }
             }
 
             return ret;
@@ -2083,9 +2097,6 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
 
     // There are several cases where source compression is not a good idea:
     //  - If the script is tiny, then compression will save little or no space.
-    //  - If the script is enormous, then decompression can take seconds. With
-    //    lazy parsing, decompression is not uncommon, so this can significantly
-    //    increase latency.
     //  - If there is only one core, then compression will contend with JS
     //    execution (which hurts benchmarketing).
     //  - If the source contains a giant string, then parsing will finish much
@@ -2107,8 +2118,7 @@ ScriptSource::setSourceCopy(ExclusiveContext* cx, SourceBufferHolder& srcBuf,
         HelperThreadState().threadCount >= 2 &&
         CanUseExtraThreads();
     const size_t TINY_SCRIPT = 256;
-    const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
-    if (TINY_SCRIPT <= srcBuf.length() && srcBuf.length() < HUGE_SCRIPT && canCompressOffThread) {
+    if (TINY_SCRIPT <= srcBuf.length() && canCompressOffThread) {
         task->ss = this;
         if (!StartOffThreadCompression(cx, task))
             return false;
