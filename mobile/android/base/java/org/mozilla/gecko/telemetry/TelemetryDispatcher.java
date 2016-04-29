@@ -11,7 +11,7 @@ import android.util.Log;
 import org.mozilla.gecko.telemetry.core.TelemetryCorePingBuilder;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadScheduler;
 import org.mozilla.gecko.telemetry.schedulers.TelemetryUploadAllPingsImmediatelyScheduler;
-import org.mozilla.gecko.telemetry.stores.JSONFilePingStore;
+import org.mozilla.gecko.telemetry.stores.TelemetryJSONFilePingStore;
 import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -53,7 +53,7 @@ public class TelemetryDispatcher {
     private static final String STORE_CONTAINER_DIR_NAME = "telemetry_java";
     private static final String CORE_STORE_DIR_NAME = "core";
 
-    private final JSONFilePingStore coreStore;
+    private final TelemetryJSONFilePingStore coreStore;
 
     private final TelemetryUploadAllPingsImmediatelyScheduler uploadAllPingsImmediatelyScheduler;
 
@@ -63,7 +63,7 @@ public class TelemetryDispatcher {
         // There are measurements in the core ping (e.g. seq #) that would ideally be atomically updated
         // when the ping is stored. However, for simplicity, we use the json store and accept the possible
         // loss of data (see bug 1243585 comment 16+ for more).
-        coreStore = new JSONFilePingStore(new File(storePath, CORE_STORE_DIR_NAME));
+        coreStore = new TelemetryJSONFilePingStore(new File(storePath, CORE_STORE_DIR_NAME));
 
         uploadAllPingsImmediatelyScheduler = new TelemetryUploadAllPingsImmediatelyScheduler();
     }
