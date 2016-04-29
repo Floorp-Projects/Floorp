@@ -292,219 +292,6 @@ function handleDialog(doc, testNum) {
   didDialog = true;
 }
 
-/*
- * handleLoad
- *
- * Called when a load event is fired at the subtest's iframe.
- */
-function *handleLoad() {
-      function checkEchoedAuthInfo(expectedState) {
-        // The server echos back the HTTP auth info it received.
-        let username = iframe.contentDocument.getElementById("user").textContent;
-        let password = iframe.contentDocument.getElementById("pass").textContent;
-        let authok = iframe.contentDocument.getElementById("ok").textContent;
-
-        is(authok, "PASS", "Checking for successful authentication");
-        is(username, expectedState.user, "Checking for echoed username");
-        is(password, expectedState.pass, "Checking for echoed password");
-      }
-
-      var iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
-
-      testNum++;
-      state = {
-        msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest2\"",
-        title       : "Authentication Required",
-        textValue   : "mochiuser2",
-        passValue   : "mochipass2",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : true,
-        checkMsg    : "",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-      };
-      action = {
-        buttonClick : "ok",
-      };
-      startCallbackTimer();
-      // We've already authenticated to this host:port. For this next
-      // request, the existing auth should be sent, we'll get a 401 reply,
-      // and we should prompt for new auth.
-      iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"});
-
-      testNum++;
-      // Now make a load that requests the realm from test 1000. It was
-      // already provided there, so auth will *not* be prompted for -- the
-      // networking layer already knows it!
-      iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
-
-      testNum++;
-      // Same realm we've already authenticated to, but with a different
-      // expected password (to trigger an auth prompt, and change-password
-      // popup notification).
-      state = {
-        msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest\"",
-        title       : "Authentication Required",
-        textValue   : "mochiuser1",
-        passValue   : "mochipass1",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : true,
-        checkMsg    : "",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-      };
-      action = {
-        buttonClick : "ok",
-        passField   : "mochipass1-new",
-      };
-      startCallbackTimer();
-      iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"});
-
-      testNum++;
-      // Housekeeping: change it back
-      var pwchanged = new Promise(resolve => {
-        function resetIt() {
-          tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                        "mochiuser1", "mochipass1-new", "", "");
-          pwmgr.modifyLogin(tmpLogin, login3A);
-          resolve(true);
-        }
-        addNotificationCallback(resetIt);
-      });
-
-      // Check for the popup notification, and change the password.
-      popupNotifications = getPopupNotifications(window.top);
-      popup = getPopup(popupNotifications, "password-change");
-      ok(popup, "got popup notification");
-      clickPopupButton(popup, kChangeButton);
-      popup.remove();
-
-      yield pwchanged;
-
-      // Same as last test, but for a realm we haven't already authenticated
-      // to (but have an existing saved login for, so that we'll trigger
-      // a change-password popup notification.
-      state = {
-        msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest3\"",
-        title       : "Authentication Required",
-        textValue   : "mochiuser3",
-        passValue   : "mochipass3-old",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : true,
-        checkMsg    : "",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-      };
-      action = {
-        buttonClick : "ok",
-        passField   : "mochipass3-new",
-      };
-      startCallbackTimer();
-      iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"});
-
-      testNum++;
-      // Housekeeping: change it back to the original login4. Actually,
-      // just delete it and we'll re-add it as the next test.
-      pwchanged = new Promise(resolve => {
-        function clearIt() {
-          ok(true, "1004's clearIt() called.");
-          try {
-            tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                          "mochiuser3", "mochipass3-new", "", "");
-            pwmgr.removeLogin(tmpLogin);
-          } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
-          resolve(true);
-        }
-        addNotificationCallback(clearIt);
-      });
-
-      // Check for the popup notification, and change the password.
-      popup = getPopup(popupNotifications, "password-change");
-      ok(popup, "got popup notification");
-      clickPopupButton(popup, kChangeButton);
-      popup.remove();
-
-      yield pwchanged;
-
-
-      // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-      var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                    getService(Ci.nsIHttpAuthManager);
-      authMgr.clearAll();
-      ok(true, "authMgr cleared cached auth");
-
-      state = {
-        msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest3\"",
-        title       : "Authentication Required",
-        textValue   : "",
-        passValue   : "",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : true,
-        checkMsg    : "",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-      };
-      action = {
-        buttonClick : "ok",
-        textField   : "mochiuser3",
-        passField   : "mochipass3-old",
-      };
-      // Trigger a new prompt, so we can test adding a new login.
-      startCallbackTimer();
-
-      iframeLoaded = onloadPromiseFor("iframe");
-      iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
-      yield iframeLoaded;
-      checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"});
-
-      testNum++;
-      var pwsaved = new Promise(resolve => {
-        function finishIt() {
-          finishTest();
-          resolve(true);
-        }
-        addNotificationCallback(finishIt);
-      });
-
-      // Check for the popup notification, and change the password.
-      popup = getPopup(popupNotifications, "password-save");
-      ok(popup, "got popup notification");
-      clickPopupButton(popup, kRememberButton);
-      popup.remove();
-      yield pwsaved;
-}
-
 startup();
 
 add_task(function* runTests() {
@@ -1612,8 +1399,213 @@ add_task(function* runTests() {
   };
   startCallbackTimer();
 
-  // ...remaining tests are driven by handleLoad()...
-  yield *handleLoad();
+  // The following tests are driven by iframe loads
+
+  function checkEchoedAuthInfo(expectedState) {
+    // The server echos back the HTTP auth info it received.
+    let username = iframe.contentDocument.getElementById("user").textContent;
+    let password = iframe.contentDocument.getElementById("pass").textContent;
+    let authok = iframe.contentDocument.getElementById("ok").textContent;
+
+    is(authok, "PASS", "Checking for successful authentication");
+    is(username, expectedState.user, "Checking for echoed username");
+    is(password, expectedState.pass, "Checking for echoed password");
+  }
+
+  var iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
+
+  testNum++;
+  state = {
+    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest2\"",
+    title       : "Authentication Required",
+    textValue   : "mochiuser2",
+    passValue   : "mochipass2",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+  startCallbackTimer();
+  // We've already authenticated to this host:port. For this next
+  // request, the existing auth should be sent, we'll get a 401 reply,
+  // and we should prompt for new auth.
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"});
+
+  testNum++;
+  // Now make a load that requests the realm from test 1000. It was
+  // already provided there, so auth will *not* be prompted for -- the
+  // networking layer already knows it!
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
+
+  testNum++;
+  // Same realm we've already authenticated to, but with a different
+  // expected password (to trigger an auth prompt, and change-password
+  // popup notification).
+  state = {
+    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest\"",
+    title       : "Authentication Required",
+    textValue   : "mochiuser1",
+    passValue   : "mochipass1",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "mochipass1-new",
+  };
+  startCallbackTimer();
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"});
+
+  testNum++;
+  // Housekeeping: change it back
+  var pwchanged = new Promise(resolve => {
+    function resetIt() {
+      tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                    "mochiuser1", "mochipass1-new", "", "");
+      pwmgr.modifyLogin(tmpLogin, login3A);
+      resolve(true);
+    }
+    addNotificationCallback(resetIt);
+  });
+
+  // Check for the popup notification, and change the password.
+  popupNotifications = getPopupNotifications(window.top);
+  popup = getPopup(popupNotifications, "password-change");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kChangeButton);
+  popup.remove();
+
+  yield pwchanged;
+
+  // Same as last test, but for a realm we haven't already authenticated
+  // to (but have an existing saved login for, so that we'll trigger
+  // a change-password popup notification.
+  state = {
+    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest3\"",
+    title       : "Authentication Required",
+    textValue   : "mochiuser3",
+    passValue   : "mochipass3-old",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "mochipass3-new",
+  };
+  startCallbackTimer();
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"});
+
+  testNum++;
+  // Housekeeping: change it back to the original login4. Actually,
+  // just delete it and we'll re-add it as the next test.
+  pwchanged = new Promise(resolve => {
+    function clearIt() {
+      ok(true, "1004's clearIt() called.");
+      try {
+        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                      "mochiuser3", "mochipass3-new", "", "");
+        pwmgr.removeLogin(tmpLogin);
+      } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
+      resolve(true);
+    }
+    addNotificationCallback(clearIt);
+  });
+
+  // Check for the popup notification, and change the password.
+  popup = getPopup(popupNotifications, "password-change");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kChangeButton);
+  popup.remove();
+
+  yield pwchanged;
+
+
+  // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                getService(Ci.nsIHttpAuthManager);
+  authMgr.clearAll();
+  ok(true, "authMgr cleared cached auth");
+
+  state = {
+    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest3\"",
+    title       : "Authentication Required",
+    textValue   : "",
+    passValue   : "",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    textField   : "mochiuser3",
+    passField   : "mochipass3-old",
+  };
+  // Trigger a new prompt, so we can test adding a new login.
+  startCallbackTimer();
+
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"});
+
+  testNum++;
+  var pwsaved = new Promise(resolve => {
+    function finishIt() {
+      finishTest();
+      resolve(true);
+    }
+    addNotificationCallback(finishIt);
+  });
+
+  // Check for the popup notification, and change the password.
+  popup = getPopup(popupNotifications, "password-save");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kRememberButton);
+  popup.remove();
+  yield pwsaved;
 });
 </script>
 </pre>
