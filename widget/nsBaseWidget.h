@@ -355,6 +355,10 @@ public:
 
   void Shutdown();
 
+  virtual nsIWidget* RealWidget() override {
+    return this;
+  }
+
 protected:
 
   void            ResolveIconName(const nsAString &aIconName,
