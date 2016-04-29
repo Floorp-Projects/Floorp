@@ -6,8 +6,6 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
-const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";
-
 function init(aEvent)
 {
   if (aEvent.target != document)
