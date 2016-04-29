@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test username/password prompts</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
   <script type="text/javascript" src="notification_common.js"></script>
@@ -19,7 +20,6 @@ Login Manager test: username/password prompts
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
 
 /** Test for Login Manager: username / password prompts. **/
 var state, action;
@@ -29,6 +29,7 @@ var mozproxy, proxiedHost = "http://mochi.test:8888";
 var proxyChannel;
 var testNum = 1;
 var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
+var iframe = document.getElementById("iframe");
 
 function initLogins(pi) {
   observerService = Cc["@mozilla.org/observer-service;1"].
@@ -130,14 +131,15 @@ function finishTest() {
     ok(false, "finishTest FAILED: " + e);
   }
   ok(true, "whee, done!");
-
-  SimpleTest.finish();
 }
+
+var startupCompleteResolver;
+var startupComplete = new Promise(resolve => startupCompleteResolver = resolve);
 
 function proxyChannelListener() { }
 proxyChannelListener.prototype = {
   onStartRequest: function(request, context) {
-    doTests();
+    startupCompleteResolver();
   },
   onStopRequest: function(request, context, status) { }
 };
@@ -295,27 +297,24 @@ function handleDialog(doc, testNum) {
  *
  * Called when a load event is fired at the subtest's iframe.
  */
-function handleLoad() {
-  ok(true, "."); // make it easier to see next line in logs.
-  ok(true, "handleLoad running for test " + testNum);
-  ok(true, "Time is " + (new Date()).toUTCString());
-  dumpNotifications();
+function *handleLoad() {
+      function checkEchoedAuthInfo(expectedState) {
+        // The server echos back the HTTP auth info it received.
+        let username = iframe.contentDocument.getElementById("user").textContent;
+        let password = iframe.contentDocument.getElementById("pass").textContent;
+        let authok = iframe.contentDocument.getElementById("ok").textContent;
 
-  if (testNum != 1002)
-    ok(didDialog, "handleDialog was invoked");
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, expectedState.user, "Checking for echoed username");
+        is(password, expectedState.pass, "Checking for echoed password");
+      }
 
-  // The server echos back the user/pass it received.
-  var username = iframe.contentDocument.getElementById("user").textContent;
-  var password = iframe.contentDocument.getElementById("pass").textContent;
-  var authok = iframe.contentDocument.getElementById("ok").textContent;
+      var iframeLoaded = onloadPromiseFor("iframe");
+      iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
 
-  switch(testNum) {
-    case 1000:
       testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser1", "Checking for echoed username");
-      is(password, "mochipass1", "Checking for echoed password");
-
       state = {
         msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest2\"",
         title       : "Authentication Required",
@@ -338,24 +337,21 @@ function handleLoad() {
       // We've already authenticated to this host:port. For this next
       // request, the existing auth should be sent, we'll get a 401 reply,
       // and we should prompt for new auth.
+      iframeLoaded = onloadPromiseFor("iframe");
       iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
-      break;
-    case 1001:
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"});
+
       testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser2", "Checking for echoed username");
-      is(password, "mochipass2", "Checking for echoed password");
       // Now make a load that requests the realm from test 1000. It was
       // already provided there, so auth will *not* be prompted for -- the
       // networking layer already knows it!
+      iframeLoaded = onloadPromiseFor("iframe");
       iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-      break;
-    case 1002:
-      testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser1", "Checking for echoed username");
-      is(password, "mochipass1", "Checking for echoed password");
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
 
+      testNum++;
       // Same realm we've already authenticated to, but with a different
       // expected password (to trigger an auth prompt, and change-password
       // popup notification).
@@ -379,21 +375,22 @@ function handleLoad() {
         passField   : "mochipass1-new",
       };
       startCallbackTimer();
+      iframeLoaded = onloadPromiseFor("iframe");
       iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
-      break;
-    case 1003:
-      testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser1", "Checking for echoed username");
-      is(password, "mochipass1-new", "Checking for echoed password");
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"});
 
+      testNum++;
       // Housekeeping: change it back
-      function resetIt() {
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                      "mochiuser1", "mochipass1-new", "", "");
-        pwmgr.modifyLogin(tmpLogin, login3A);
-      }
-      addNotificationCallback(resetIt);
+      var pwchanged = new Promise(resolve => {
+        function resetIt() {
+          tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                        "mochiuser1", "mochipass1-new", "", "");
+          pwmgr.modifyLogin(tmpLogin, login3A);
+          resolve(true);
+        }
+        addNotificationCallback(resetIt);
+      });
 
       // Check for the popup notification, and change the password.
       popupNotifications = getPopupNotifications(window.top);
@@ -401,6 +398,8 @@ function handleLoad() {
       ok(popup, "got popup notification");
       clickPopupButton(popup, kChangeButton);
       popup.remove();
+
+      yield pwchanged;
 
       // Same as last test, but for a realm we haven't already authenticated
       // to (but have an existing saved login for, so that we'll trigger
@@ -425,13 +424,41 @@ function handleLoad() {
         passField   : "mochipass3-new",
       };
       startCallbackTimer();
+      iframeLoaded = onloadPromiseFor("iframe");
       iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
-      break;
-    case 1004:
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"});
+
       testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser3", "Checking for echoed username");
-      is(password, "mochipass3-new", "Checking for echoed password");
+      // Housekeeping: change it back to the original login4. Actually,
+      // just delete it and we'll re-add it as the next test.
+      pwchanged = new Promise(resolve => {
+        function clearIt() {
+          ok(true, "1004's clearIt() called.");
+          try {
+            tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                          "mochiuser3", "mochipass3-new", "", "");
+            pwmgr.removeLogin(tmpLogin);
+          } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
+          resolve(true);
+        }
+        addNotificationCallback(clearIt);
+      });
+
+      // Check for the popup notification, and change the password.
+      popup = getPopup(popupNotifications, "password-change");
+      ok(popup, "got popup notification");
+      clickPopupButton(popup, kChangeButton);
+      popup.remove();
+
+      yield pwchanged;
+
+
+      // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+      var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                    getService(Ci.nsIHttpAuthManager);
+      authMgr.clearAll();
+      ok(true, "authMgr cleared cached auth");
 
       state = {
         msg         : "A username and password are being requested by http://mochi.test:8888. The site says: \"mochitest3\"",
@@ -453,60 +480,37 @@ function handleLoad() {
         textField   : "mochiuser3",
         passField   : "mochipass3-old",
       };
-      // Housekeeping: change it back to the original login4. Actually,
-      // just delete it and we'll re-add it as the next test.
-      function clearIt() {
-        ok(true, "1004's clearIt() called.");
-       try {
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                      "mochiuser3", "mochipass3-new", "", "");
-        pwmgr.removeLogin(tmpLogin);
+      // Trigger a new prompt, so we can test adding a new login.
+      startCallbackTimer();
 
-        // Trigger a new prompt, so we can test adding a new login.
-        startCallbackTimer();
-        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
-       } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
-      }
-      addNotificationCallback(clearIt);
+      iframeLoaded = onloadPromiseFor("iframe");
+      iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+      yield iframeLoaded;
+      checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"});
 
-      // Check for the popup notification, and change the password.
-      popup = getPopup(popupNotifications, "password-change");
-      ok(popup, "got popup notification");
-      clickPopupButton(popup, kChangeButton);
-      popup.remove();
-
-      // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-      var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                    getService(Ci.nsIHttpAuthManager);
-      authMgr.clearAll();
-      ok(true, "authMgr cleared cached auth");
-      break;
-    case 1005:
       testNum++;
-      is(authok, "PASS", "Checking for successful authentication");
-      is(username, "mochiuser3", "Checking for echoed username");
-      is(password, "mochipass3-old", "Checking for echoed password");
-
-      function finishIt() {
-        finishTest();
-      }
-      addNotificationCallback(finishIt);
+      var pwsaved = new Promise(resolve => {
+        function finishIt() {
+          finishTest();
+          resolve(true);
+        }
+        addNotificationCallback(finishIt);
+      });
 
       // Check for the popup notification, and change the password.
       popup = getPopup(popupNotifications, "password-save");
       ok(popup, "got popup notification");
       clickPopupButton(popup, kRememberButton);
       popup.remove();
-      break;
-    default:
-      ok(false, "Uhh, unhandled switch for testNum #" + testNum);
-      break;
-  }
+      yield pwsaved;
 }
 
 startup();
 
-function doTests() {
+add_task(function* runTests() {
+  info("Waiting for startup to complete...");
+  yield startupComplete;
+
   var authinfo = {
     username : "",
     password : "",
@@ -1580,9 +1584,6 @@ function doTests() {
   // XXX check for checkbox / checkstate on old prompts?
   // XXX check NTLM domain stuff
 
-  var iframe = document.getElementById("iframe");
-  iframe.onload = handleLoad;
-
   // clear plain HTTP auth sessions before the test, to allow
   // running them more than once.
   var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
@@ -1610,10 +1611,10 @@ function doTests() {
     buttonClick : "ok",
   };
   startCallbackTimer();
-  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
 
   // ...remaining tests are driven by handleLoad()...
-}
+  yield *handleLoad();
+});
 </script>
 </pre>
 </body>
