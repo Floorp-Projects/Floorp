@@ -49,7 +49,6 @@ public:
 
   virtual bool Initialize() override;
   virtual void Destroy() override {}
-  virtual void DetachWidget() override { mWidget = nullptr; }
 
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() override;
@@ -149,8 +148,6 @@ public:
 
   virtual void ForcePresent();
 
-  virtual nsIWidget* GetWidget() const override { return mWidget; }
-
   ID3D11Device* GetDevice() { return mDevice; }
 
   ID3D11DeviceContext* GetDC() { return mContext; }
@@ -190,8 +187,6 @@ private:
   RefPtr<CompositingRenderTargetD3D11> mCurrentRT;
 
   DeviceAttachmentsD3D11* mAttachments;
-
-  nsIWidget* mWidget;
 
   LayoutDeviceIntSize mSize;
 
