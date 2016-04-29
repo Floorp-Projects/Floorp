@@ -20,11 +20,13 @@ var MemoryObserver = {
 
   handleLowMemory: function() {
     // do things to reduce memory usage here
-    let tabs = BrowserApp.tabs;
-    let selected = BrowserApp.selectedTab;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i] != selected && !tabs[i].playingAudio) {
-        this.zombify(tabs[i]);
+    if (!Services.prefs.getBoolPref("browser.tabs.disableBackgroundZombification")) {
+      let tabs = BrowserApp.tabs;
+      let selected = BrowserApp.selectedTab;
+      for (let i = 0; i < tabs.length; i++) {
+        if (tabs[i] != selected && !tabs[i].playingAudio) {
+          this.zombify(tabs[i]);
+        }
       }
     }
 
