@@ -465,6 +465,7 @@ public:
     AutoCFRelease<CTFontRef> fFontRef;
     AutoCFRelease<CFTypeRef> fOriginatingCFTypeRef;
     const bool fHasColorGlyphs;
+    bool hasColorGlyphs() const override { return fHasColorGlyphs; }
 
 protected:
     int onGetUPEM() const override;
