@@ -127,7 +127,7 @@ struct Zone : public JS::shadow::Zone,
 {
     explicit Zone(JSRuntime* rt);
     ~Zone();
-    MOZ_WARN_UNUSED_RESULT bool init(bool isSystem);
+    MOZ_MUST_USE bool init(bool isSystem);
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone>& finder);
 
@@ -151,7 +151,7 @@ struct Zone : public JS::shadow::Zone,
     bool isTooMuchMalloc() const { return gcMallocBytes <= 0; }
     void onTooMuchMalloc();
 
-    MOZ_WARN_UNUSED_RESULT void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,
+    MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes,
                                                void* reallocPtr = nullptr) {
         if (!js::CurrentThreadCanAccessRuntime(runtime_))
             return nullptr;
@@ -380,7 +380,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
-    MOZ_WARN_UNUSED_RESULT bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
+    MOZ_MUST_USE bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
         uint64_t uid;
         if (!getUniqueId(cell, &uid))
             return false;
@@ -390,7 +390,7 @@ struct Zone : public JS::shadow::Zone,
 
     // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
     // puts that into |uidp|. Returns false on OOM.
-    MOZ_WARN_UNUSED_RESULT bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
+    MOZ_MUST_USE bool getUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
         MOZ_ASSERT(uidp);
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
 
@@ -425,7 +425,7 @@ struct Zone : public JS::shadow::Zone,
     }
 
     // Return true if this cell has a UID associated with it.
-    MOZ_WARN_UNUSED_RESULT bool hasUniqueId(js::gc::Cell* cell) {
+    MOZ_MUST_USE bool hasUniqueId(js::gc::Cell* cell) {
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
         return uniqueIds_.has(cell);
     }

@@ -91,11 +91,6 @@ public:
                         IDBFactory** aFactory);
 
   static nsresult
-  CreateForDatastore(JSContext* aCx,
-                    JS::Handle<JSObject*> aOwningObject,
-                    IDBFactory** aFactory);
-
-  static nsresult
   CreateForWorker(JSContext* aCx,
                   JS::Handle<JSObject*> aOwningObject,
                   const PrincipalInfo& aPrincipalInfo,

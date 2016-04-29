@@ -373,75 +373,68 @@ const uint32_t Arena::ThingsPerArena[] = {
 
 struct js::gc::FinalizePhase
 {
-    size_t length;
-    const AllocKind* kinds;
     gcstats::Phase statsPhase;
+    AllocKinds kinds;
 };
-
-#define PHASE(x, p) { ArrayLength(x), x, p }
 
 /*
- * Finalization order for incrementally swept things.
+ * Finalization order for GC things swept incrementally on the main thrad.
  */
-
-static const AllocKind IncrementalPhaseStrings[] = {
-    AllocKind::EXTERNAL_STRING
-};
-
-static const AllocKind IncrementalPhaseScripts[] = {
-    AllocKind::SCRIPT
-};
-
-static const AllocKind IncrementalPhaseJitCode[] = {
-    AllocKind::JITCODE
-};
-
 static const FinalizePhase IncrementalFinalizePhases[] = {
-    PHASE(IncrementalPhaseStrings, gcstats::PHASE_SWEEP_STRING),
-    PHASE(IncrementalPhaseScripts, gcstats::PHASE_SWEEP_SCRIPT),
-    PHASE(IncrementalPhaseJitCode, gcstats::PHASE_SWEEP_JITCODE)
+    {
+        gcstats::PHASE_SWEEP_STRING, {
+            AllocKind::EXTERNAL_STRING
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_SCRIPT, {
+            AllocKind::SCRIPT
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_JITCODE, {
+            AllocKind::JITCODE
+        }
+    }
 };
 
 /*
- * Finalization order for things swept in the background.
+ * Finalization order for GC things swept on the background thread.
  */
-
-static const AllocKind BackgroundPhaseObjects[] = {
-    AllocKind::FUNCTION,
-    AllocKind::FUNCTION_EXTENDED,
-    AllocKind::OBJECT0_BACKGROUND,
-    AllocKind::OBJECT2_BACKGROUND,
-    AllocKind::OBJECT4_BACKGROUND,
-    AllocKind::OBJECT8_BACKGROUND,
-    AllocKind::OBJECT12_BACKGROUND,
-    AllocKind::OBJECT16_BACKGROUND
-};
-
-static const AllocKind BackgroundPhaseScripts[] = {
-    AllocKind::LAZY_SCRIPT
-};
-
-static const AllocKind BackgroundPhaseStringsAndSymbols[] = {
-    AllocKind::FAT_INLINE_STRING,
-    AllocKind::STRING,
-    AllocKind::SYMBOL
-};
-
-static const AllocKind BackgroundPhaseShapes[] = {
-    AllocKind::SHAPE,
-    AllocKind::ACCESSOR_SHAPE,
-    AllocKind::BASE_SHAPE,
-    AllocKind::OBJECT_GROUP
-};
-
 static const FinalizePhase BackgroundFinalizePhases[] = {
-    PHASE(BackgroundPhaseScripts, gcstats::PHASE_SWEEP_SCRIPT),
-    PHASE(BackgroundPhaseObjects, gcstats::PHASE_SWEEP_OBJECT),
-    PHASE(BackgroundPhaseStringsAndSymbols, gcstats::PHASE_SWEEP_STRING),
-    PHASE(BackgroundPhaseShapes, gcstats::PHASE_SWEEP_SHAPE)
+    {
+        gcstats::PHASE_SWEEP_SCRIPT, {
+            AllocKind::LAZY_SCRIPT
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_OBJECT, {
+            AllocKind::FUNCTION,
+            AllocKind::FUNCTION_EXTENDED,
+            AllocKind::OBJECT0_BACKGROUND,
+            AllocKind::OBJECT2_BACKGROUND,
+            AllocKind::OBJECT4_BACKGROUND,
+            AllocKind::OBJECT8_BACKGROUND,
+            AllocKind::OBJECT12_BACKGROUND,
+            AllocKind::OBJECT16_BACKGROUND
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_STRING, {
+            AllocKind::FAT_INLINE_STRING,
+            AllocKind::STRING,
+            AllocKind::SYMBOL
+        }
+    },
+    {
+        gcstats::PHASE_SWEEP_SHAPE, {
+            AllocKind::SHAPE,
+            AllocKind::ACCESSOR_SHAPE,
+            AllocKind::BASE_SHAPE,
+            AllocKind::OBJECT_GROUP
+        }
+    }
 };
-
-#undef PHASE
 
 template<>
 JSObject*
@@ -1145,7 +1138,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     zoneGroups(nullptr),
     currentZoneGroup(nullptr),
     sweepZone(nullptr),
-    sweepKindIndex(0),
+    sweepKind(AllocKind::FIRST),
     abortSweepAfterCurrentGroup(false),
     arenasAllocatedDuringSweep(nullptr),
     startedCompacting(false),
@@ -2048,6 +2041,7 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::LAZY_SCRIPT,
     AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE,
+    AllocKind::BASE_SHAPE,
     AllocKind::FAT_INLINE_STRING,
     AllocKind::STRING,
     AllocKind::EXTERNAL_STRING
@@ -2422,6 +2416,14 @@ MovingTracer::onLazyScriptEdge(LazyScript** lazyp)
 }
 
 void
+MovingTracer::onBaseShapeEdge(BaseShape** basep)
+{
+    BaseShape* base = *basep;
+    if (IsForwarded(base))
+        *basep = Forwarded(base);
+}
+
+void
 Zone::prepareForCompacting()
 {
     FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -2557,65 +2559,25 @@ struct ArenaListSegment
 
 struct ArenasToUpdate
 {
-    enum UpdateKind {
-        NONE = 0,
-        FOREGROUND = 1,
-        BACKGROUND = 2,
-        ALL = FOREGROUND | BACKGROUND
-    };
-    ArenasToUpdate(Zone* zone, UpdateKind kind);
+    ArenasToUpdate(Zone* zone, AllocKinds kinds);
     bool done() { return kind == AllocKind::LIMIT; }
     ArenaListSegment getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned maxLength);
 
   private:
-    UpdateKind kinds; // Selects which thing kinds to iterate
-    Zone* zone;          // Zone to process
-    AllocKind kind;      // Current alloc kind to process
-    Arena* arena;  // Next arena to process
+    AllocKinds kinds;  // Selects which thing kinds to update
+    Zone* zone;        // Zone to process
+    AllocKind kind;    // Current alloc kind to process
+    Arena* arena;      // Next arena to process
 
     AllocKind nextAllocKind(AllocKind i) { return AllocKind(uint8_t(i) + 1); }
-    UpdateKind updateKind(AllocKind kind);
     bool shouldProcessKind(AllocKind kind);
     Arena* next(AutoLockHelperThreadState& lock);
 };
 
-ArenasToUpdate::UpdateKind
-ArenasToUpdate::updateKind(AllocKind kind)
-{
-    MOZ_ASSERT(IsValidAllocKind(kind));
-
-    // GC things that do not contain pointers to cells we relocate don't need
-    // updating. Note that AllocKind::STRING is the only string kind which can
-    // be a rope and hence contain relocatable pointers.
-    if (kind == AllocKind::FAT_INLINE_STRING ||
-        kind == AllocKind::EXTERNAL_STRING ||
-        kind == AllocKind::SYMBOL)
-    {
-        return NONE;
-    }
-
-    // We try to update as many GC things in parallel as we can, but there are
-    // kinds for which this might not be safe:
-    //  - we assume JSObjects that are foreground finalized are not safe to
-    //    update in parallel
-    //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
-    if (!js::gc::IsBackgroundFinalized(kind) || IsShapeAllocKind(kind))
-        return FOREGROUND;
-
-    return BACKGROUND;
-}
-
-bool
-ArenasToUpdate::shouldProcessKind(AllocKind kind)
-{
-    return (updateKind(kind) & kinds) != 0;
-}
-
-ArenasToUpdate::ArenasToUpdate(Zone* zone, UpdateKind kinds)
+ArenasToUpdate::ArenasToUpdate(Zone* zone, AllocKinds kinds)
   : kinds(kinds), zone(zone), kind(AllocKind::FIRST), arena(nullptr)
 {
     MOZ_ASSERT(zone->isGCCompacting());
-    MOZ_ASSERT(!(kinds & ~ALL));
 }
 
 Arena*
@@ -2628,7 +2590,7 @@ ArenasToUpdate::next(AutoLockHelperThreadState& lock)
     // object and we just return when we find an arena.
 
     for (; kind < AllocKind::LIMIT; kind = nextAllocKind(kind)) {
-        if (shouldProcessKind(kind)) {
+        if (kinds.contains(kind)) {
             if (!arena)
                 arena = zone->arenas.getFirstArena(kind);
             else
@@ -2672,7 +2634,10 @@ struct UpdatePointersTask : public GCParallelTask
 
     UpdatePointersTask(JSRuntime* rt, ArenasToUpdate* source, AutoLockHelperThreadState& lock)
       : rt_(rt), source_(source)
-    {}
+    {
+        arenas_.begin = nullptr;
+        arenas_.end = nullptr;
+    }
 
     ~UpdatePointersTask() override { join(); }
 
@@ -2725,18 +2690,46 @@ CellUpdateBackgroundTaskCount()
     return Min(Max(targetTaskCount, MinCellUpdateBackgroundTasks), MaxCellUpdateBackgroundTasks);
 }
 
-void
-GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
+static bool
+CanUpdateKindInBackground(AllocKind kind) {
+    // We try to update as many GC things in parallel as we can, but there are
+    // kinds for which this might not be safe:
+    //  - we assume JSObjects that are foreground finalized are not safe to
+    //    update in parallel
+    //  - updating a shape touches child shapes in fixupShapeTreeAfterMovingGC()
+    if (!js::gc::IsBackgroundFinalized(kind) || IsShapeAllocKind(kind))
+        return false;
+
+    return true;
+}
+
+static AllocKinds
+ForegroundUpdateKinds(AllocKinds kinds)
 {
-    AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
+    AllocKinds result;
+    for (AllocKind kind : kinds) {
+        if (!CanUpdateKindInBackground(kind))
+            result += kind;
+    }
+    return result;
+}
 
-    size_t bgTaskCount = CellUpdateBackgroundTaskCount();
+void
+GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
+{
+    zone->typeDescrObjects.sweep();
+    for (auto r = zone->typeDescrObjects.all(); !r.empty(); r.popFront())
+        UpdateCellPointers(trc, r.front().get());
+}
 
-    ArenasToUpdate
-        fgArenas(zone, bgTaskCount == 0 ? ArenasToUpdate::ALL : ArenasToUpdate::FOREGROUND);
-    ArenasToUpdate
-        bgArenas(zone, bgTaskCount == 0 ? ArenasToUpdate::NONE : ArenasToUpdate::BACKGROUND);
+void
+GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, size_t bgTaskCount)
+{
+    AllocKinds fgKinds = bgTaskCount == 0 ? kinds : ForegroundUpdateKinds(kinds);
+    AllocKinds bgKinds = kinds - fgKinds;
 
+    ArenasToUpdate fgArenas(zone, fgKinds);
+    ArenasToUpdate bgArenas(zone, bgKinds);
     Maybe<UpdatePointersTask> fgTask;
     Maybe<UpdatePointersTask> bgTasks[MaxCellUpdateBackgroundTasks];
 
@@ -2764,12 +2757,48 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
     }
 }
 
+static const AllocKinds UpdatePhaseMisc {
+    AllocKind::SCRIPT,
+    AllocKind::LAZY_SCRIPT,
+    AllocKind::SHAPE,
+    AllocKind::BASE_SHAPE,
+    AllocKind::ACCESSOR_SHAPE,
+    AllocKind::OBJECT_GROUP,
+    AllocKind::STRING,
+    AllocKind::JITCODE
+};
+
+static const AllocKinds UpdatePhaseObjects {
+    AllocKind::FUNCTION,
+    AllocKind::FUNCTION_EXTENDED,
+    AllocKind::OBJECT0,
+    AllocKind::OBJECT0_BACKGROUND,
+    AllocKind::OBJECT2,
+    AllocKind::OBJECT2_BACKGROUND,
+    AllocKind::OBJECT4,
+    AllocKind::OBJECT4_BACKGROUND,
+    AllocKind::OBJECT8,
+    AllocKind::OBJECT8_BACKGROUND,
+    AllocKind::OBJECT12,
+    AllocKind::OBJECT12_BACKGROUND,
+    AllocKind::OBJECT16,
+    AllocKind::OBJECT16_BACKGROUND
+};
+
 void
-GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
+GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 {
-    zone->typeDescrObjects.sweep();
-    for (auto r = zone->typeDescrObjects.all(); !r.empty(); r.popFront())
-        UpdateCellPointers(trc, r.front().get());
+    AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
+
+    size_t bgTaskCount = CellUpdateBackgroundTaskCount();
+
+    updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
+
+    // Update TypeDescrs before all other objects as typed objects access these
+    // objects when we trace them.
+    updateTypeDescrObjects(trc, zone);
+
+    updateCellPointers(trc, zone, UpdatePhaseObjects, bgTaskCount);
 }
 
 /*
@@ -2792,10 +2821,6 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
         comp->fixupAfterMovingGC();
     JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(&trc);
     rt->spsProfiler.fixupStringsMapAfterMovingGC();
-
-    // Update TypeDescrs before all other objects as typed objects access these
-    // objects when we trace them.
-    updateTypeDescrObjects(&trc, zone);
 
     // Iterate through all cells that can contain relocatable pointers to update
     // them. Since updating each cell is independent we try to parallelize this
@@ -2955,8 +2980,8 @@ void
 ArenaLists::finalizeNow(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        finalizeNow(fop, phase.kinds[i], RELEASE_ARENAS, nullptr);
+    for (auto kind : phase.kinds)
+        finalizeNow(fop, kind, RELEASE_ARENAS, nullptr);
 }
 
 void
@@ -2996,8 +3021,8 @@ void
 ArenaLists::queueForForegroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        queueForForegroundSweep(fop, phase.kinds[i]);
+    for (auto kind : phase.kinds)
+        queueForForegroundSweep(fop, kind);
 }
 
 void
@@ -3015,8 +3040,8 @@ void
 ArenaLists::queueForBackgroundSweep(FreeOp* fop, const FinalizePhase& phase)
 {
     gcstats::AutoPhase ap(fop->runtime()->gc.stats, phase.statsPhase);
-    for (unsigned i = 0; i < phase.length; ++i)
-        queueForBackgroundSweep(fop, phase.kinds[i]);
+    for (auto kind : phase.kinds)
+        queueForBackgroundSweep(fop, kind);
 }
 
 inline void
@@ -3470,8 +3495,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
     FreeOp fop(rt, threadType);
     for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
         for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
-            for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
-                AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
+            for (auto kind : BackgroundFinalizePhases[phase].kinds) {
                 Arena* arenas = zone->arenas.arenaListsToSweep[kind];
                 MOZ_RELEASE_ASSERT(uintptr_t(arenas) != uintptr_t(-1));
                 if (arenas)
@@ -3481,7 +3505,22 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
     }
 
     AutoLockGC lock(rt);
-    ReleaseArenaList(rt, emptyArenas, lock);
+
+    // Release swept areans, dropping and reaquiring the lock every so often to
+    // avoid blocking the main thread from allocating chunks.
+    static const size_t LockReleasePeriod = 32;
+    size_t releaseCount = 0;
+    Arena* next;
+    for (Arena* arena = emptyArenas; arena; arena = next) {
+        next = arena->next;
+        rt->gc.releaseArena(arena, lock);
+        releaseCount++;
+        if (releaseCount % LockReleasePeriod == 0) {
+            lock.unlock();
+            lock.lock();
+        }
+    }
+
     while (!zones.isEmpty())
         zones.removeFront();
 }
@@ -5361,7 +5400,7 @@ GCRuntime::beginSweepingZoneGroup()
 
     finalizePhase = 0;
     sweepZone = currentZoneGroup;
-    sweepKindIndex = 0;
+    sweepKind = AllocKind::FIRST;
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
@@ -5572,8 +5611,9 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget)
             for (; sweepZone; sweepZone = sweepZone->nextNodeInGroup()) {
                 Zone* zone = sweepZone;
 
-                while (sweepKindIndex < IncrementalFinalizePhases[finalizePhase].length) {
-                    AllocKind kind = IncrementalFinalizePhases[finalizePhase].kinds[sweepKindIndex];
+                for (auto kind : SomeAllocKinds(sweepKind, AllocKind::LIMIT)) {
+                    if (!IncrementalFinalizePhases[finalizePhase].kinds.contains(kind))
+                        continue;
 
                     /* Set the number of things per arena for this AllocKind. */
                     size_t thingsPerArena = Arena::thingsPerArena(kind);
@@ -5581,14 +5621,15 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget)
 
                     if (!zone->arenas.foregroundFinalize(&fop, kind, sliceBudget,
                                                          incrementalSweepList))
+                    {
+                        sweepKind = kind;
                         return NotFinished;
+                    }
 
                     /* Reset the slots of the sweep list that we used. */
                     incrementalSweepList.reset(thingsPerArena);
-
-                    ++sweepKindIndex;
                 }
-                sweepKindIndex = 0;
+                sweepKind = AllocKind::FIRST;
             }
             sweepZone = currentZoneGroup;
         }
@@ -6757,13 +6798,6 @@ GCRuntime::minorGC(JSContext* cx, JS::gcreason::Reason reason)
         if (pretenureGroups[i]->canPreTenure())
             pretenureGroups[i]->setShouldPreTenure(cx);
     }
-}
-
-void
-GCRuntime::clearPostBarrierCallbacks()
-{
-    if (storeBuffer.hasPostBarrierCallbacks())
-        evictNursery();
 }
 
 void

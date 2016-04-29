@@ -9,4 +9,5 @@ DIRS += [
     'loop',
     'pdfjs',
     'pocket',
+    'webcompat',
 ]

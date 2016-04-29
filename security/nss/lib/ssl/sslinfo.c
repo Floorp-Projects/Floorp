@@ -20,10 +20,6 @@ ssl_GetCompressionMethodName(SSLCompressionMethod compression)
     }
 }
 
-#define SSL_CHANNEL_INFO_FIELD_SET(info,field,value) \
-    if (SSL_CHANNEL_INFO_FIELD_EXISTS(info,field)) \
-        {info.UseMacroToAccess_##field = value;}
-
 SECStatus
 SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 {
@@ -75,19 +71,15 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
         }
         if (sid) {
             unsigned int sidLen;
-            PRBool EMSValue;
 
             inf.creationTime = sid->creationTime;
             inf.lastAccessTime = sid->lastAccessTime;
             inf.expirationTime = sid->expirationTime;
-
-            EMSValue = 
+            inf.extendedMasterSecretUsed =
                 (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ||
                  sid->u.ssl3.keys.extendedMasterSecretUsed)
                     ? PR_TRUE
                     : PR_FALSE;
-
-            SSL_CHANNEL_INFO_FIELD_SET(inf, extendedMasterSecretUsed, EMSValue)
 
             sidLen = sid->u.ssl3.sessionIDLength;
             sidLen = PR_MIN(sidLen, sizeof inf.sessionID);

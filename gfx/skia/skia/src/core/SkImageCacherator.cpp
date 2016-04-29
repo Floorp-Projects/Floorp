@@ -55,7 +55,7 @@ SkImageCacherator* SkImageCacherator::NewFromGenerator(SkImageGenerator* gen,
 
     // Now that we know we can hand-off the generator (to be owned by the cacherator) we can
     // release our holder. (we DONT want to delete it here anymore)
-    genHolder.detach();
+    genHolder.release();
 
     return new SkImageCacherator(gen, gen->getInfo().makeWH(subset->width(), subset->height()),
                                  SkIPoint::Make(subset->x(), subset->y()), uniqueID);
@@ -171,7 +171,8 @@ bool SkImageCacherator::lockAsBitmap(SkBitmap* bitmap, const SkImage* client,
     }
 
     const uint32_t pixelOpsFlags = 0;
-    if (!tex->readPixels(0, 0, bitmap->width(), bitmap->height(), SkImageInfo2GrPixelConfig(fInfo),
+    if (!tex->readPixels(0, 0, bitmap->width(), bitmap->height(),
+                         SkImageInfo2GrPixelConfig(fInfo, *tex->getContext()->caps()),
                          bitmap->getPixels(), bitmap->rowBytes(), pixelOpsFlags)) {
         bitmap->reset();
         return false;
@@ -203,7 +204,7 @@ static GrTexture* load_compressed_into_texture(GrContext* ctx, SkData* data, GrS
     }
 
     desc.fConfig = config;
-    return ctx->textureProvider()->createTexture(desc, true, rawStart, 0);
+    return ctx->textureProvider()->createTexture(desc, SkBudgeted::kYes, rawStart, 0);
 }
 
 class Generator_GrYUVProvider : public GrYUVProvider {
@@ -213,12 +214,11 @@ public:
     Generator_GrYUVProvider(SkImageGenerator* gen) : fGen(gen) {}
 
     uint32_t onGetID() override { return fGen->uniqueID(); }
-    bool onGetYUVSizes(SkISize sizes[3]) override {
-        return fGen->getYUV8Planes(sizes, nullptr, nullptr, nullptr);
+    bool onQueryYUV8(SkYUVSizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const override {
+        return fGen->queryYUV8(sizeInfo, colorSpace);
     }
-    bool onGetYUVPlanes(SkISize sizes[3], void* planes[3], size_t rowBytes[3],
-                        SkYUVColorSpace* space) override {
-        return fGen->getYUV8Planes(sizes, planes, rowBytes, space);
+    bool onGetYUV8Planes(const SkYUVSizeInfo& sizeInfo, void* planes[3]) override {
+        return fGen->getYUV8Planes(sizeInfo, planes);
     }
 };
 
@@ -239,10 +239,26 @@ static GrTexture* set_key_and_return(GrTexture* tex, const GrUniqueKey& key) {
  *  5. Ask the generator to return RGB(A) data, which the GPU can convert
  */
 GrTexture* SkImageCacherator::lockTexture(GrContext* ctx, const GrUniqueKey& key,
-                                          const SkImage* client, SkImage::CachingHint chint) {
+                                          const SkImage* client, SkImage::CachingHint chint,
+                                          bool willBeMipped) {
+    // Values representing the various texture lock paths we can take. Used for logging the path
+    // taken to a histogram.
+    enum LockTexturePath {
+        kFailure_LockTexturePath,
+        kPreExisting_LockTexturePath,
+        kNative_LockTexturePath,
+        kCompressed_LockTexturePath,
+        kYUV_LockTexturePath,
+        kRGBA_LockTexturePath,
+    };
+
+    enum { kLockTexturePathCount = kRGBA_LockTexturePath + 1 };
+
     // 1. Check the cache for a pre-existing one
     if (key.isValid()) {
         if (GrTexture* tex = ctx->textureProvider()->findAndRefTextureByUniqueKey(key)) {
+            SK_HISTOGRAM_ENUMERATION("LockTexturePath", kPreExisting_LockTexturePath,
+                                     kLockTexturePathCount);
             return tex;
         }
     }
@@ -252,17 +268,21 @@ GrTexture* SkImageCacherator::lockTexture(GrContext* ctx, const GrUniqueKey& key
         ScopedGenerator generator(this);
         SkIRect subset = SkIRect::MakeXYWH(fOrigin.x(), fOrigin.y(), fInfo.width(), fInfo.height());
         if (GrTexture* tex = generator->generateTexture(ctx, &subset)) {
+            SK_HISTOGRAM_ENUMERATION("LockTexturePath", kNative_LockTexturePath,
+                                     kLockTexturePathCount);
             return set_key_and_return(tex, key);
         }
     }
 
-    const GrSurfaceDesc desc = GrImageInfoToSurfaceDesc(fInfo);
+    const GrSurfaceDesc desc = GrImageInfoToSurfaceDesc(fInfo, *ctx->caps());
 
     // 3. Ask the generator to return a compressed form that the GPU might support
     SkAutoTUnref<SkData> data(this->refEncoded(ctx));
     if (data) {
         GrTexture* tex = load_compressed_into_texture(ctx, data, desc);
         if (tex) {
+            SK_HISTOGRAM_ENUMERATION("LockTexturePath", kCompressed_LockTexturePath,
+                                     kLockTexturePathCount);
             return set_key_and_return(tex, key);
         }
     }
@@ -273,6 +293,8 @@ GrTexture* SkImageCacherator::lockTexture(GrContext* ctx, const GrUniqueKey& key
         Generator_GrYUVProvider provider(generator);
         GrTexture* tex = provider.refAsTexture(ctx, desc, true);
         if (tex) {
+            SK_HISTOGRAM_ENUMERATION("LockTexturePath", kYUV_LockTexturePath,
+                                     kLockTexturePathCount);
             return set_key_and_return(tex, key);
         }
     }
@@ -280,11 +302,21 @@ GrTexture* SkImageCacherator::lockTexture(GrContext* ctx, const GrUniqueKey& key
     // 5. Ask the generator to return RGB(A) data, which the GPU can convert
     SkBitmap bitmap;
     if (this->tryLockAsBitmap(&bitmap, client, chint)) {
-        GrTexture* tex = GrUploadBitmapToTexture(ctx, bitmap);
+        GrTexture* tex = nullptr;
+        if (willBeMipped) {
+            tex = GrGenerateMipMapsAndUploadToTexture(ctx, bitmap);
+        }
+        if (!tex) {
+            tex = GrUploadBitmapToTexture(ctx, bitmap);
+        }
         if (tex) {
+            SK_HISTOGRAM_ENUMERATION("LockTexturePath", kRGBA_LockTexturePath,
+                                     kLockTexturePathCount);
             return set_key_and_return(tex, key);
         }
     }
+    SK_HISTOGRAM_ENUMERATION("LockTexturePath", kFailure_LockTexturePath,
+                             kLockTexturePathCount);
     return nullptr;
 }
 

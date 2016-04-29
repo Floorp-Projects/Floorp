@@ -159,6 +159,35 @@ interface nsIGfxInfo : nsISupports
   [implicit_jscontext]
   jsval getInfo();
 
+  // Return an object describing all features that have been configured:
+  //
+  //   "features": [
+  //     // For each feature:
+  //     {
+  //       "name": <string>,
+  //       "description": <string>,
+  //       "status": <string>,
+  //       "log": [
+  //          // One or more log entries, the first denotes the default value.
+  //          {
+  //            "type": <string>,    // "base", "user", "env", or "runtime"
+  //            "status": <string>,
+  //            "message": <string>  // Set unless type is "base" and status is "available".
+  //          }
+  //       ]
+  //     }
+  //   ]
+  //   "fallbacks": [
+  //     // For each workaround:
+  //     {
+  //       "name:" <string>,
+  //       "description": <string>,
+  //       "message": <string>
+  //     ]
+  //   }
+  [implicit_jscontext]
+  jsval getFeatureLog();
+
   // Returns an object containing information about graphics features. It is
   // intended to be directly included into the Telemetry environment.
   //

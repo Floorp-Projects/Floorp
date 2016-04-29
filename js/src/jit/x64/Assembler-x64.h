@@ -589,6 +589,18 @@ class Assembler : public AssemblerX86Shared
     void sarq_cl(Register dest) {
         masm.sarq_CLr(dest.encoding());
     }
+    void rolq(Imm32 imm, Register dest) {
+        masm.rolq_ir(imm.value, dest.encoding());
+    }
+    void rolq_cl(Register dest) {
+        masm.rolq_CLr(dest.encoding());
+    }
+    void rorq(Imm32 imm, Register dest) {
+        masm.rorq_ir(imm.value, dest.encoding());
+    }
+    void rorq_cl(Register dest) {
+        masm.rorq_CLr(dest.encoding());
+    }
     void orq(Imm32 imm, Register dest) {
         masm.orq_ir(imm.value, dest.encoding());
     }

@@ -91,7 +91,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
     nsPresContext* presContext = PresContext();
     RefPtr<nsStyleContext> textStyleContext;
     textStyleContext = presContext->StyleSet()->
-      ResolveStyleForNonElement(mStyleContext, nsCSSAnonBoxes::mozText);
+      ResolveStyleForText(mTextContent, mStyleContext);
 
     newFrame = NS_NewTextFrame(presContext->PresShell(), textStyleContext);
     // initialize the text frame

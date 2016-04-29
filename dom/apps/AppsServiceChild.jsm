@@ -418,10 +418,6 @@ this.DOMApplicationRegistry = {
 
   getAppInfo: function getAppInfo(aAppId) {
     return AppsUtils.getAppInfo(this.webapps, aAppId);
-  },
-
-  updateDataStoreEntriesFromLocalId: function(aLocalId) {
-    debug("updateDataStoreEntriesFromLocalId() not yet supported on child!");
   }
 }
 

@@ -28850,6 +28850,10 @@
         "url": "/web-animations/animation/reverse.html"
       },
       {
+        "path": "web-animations/document/getAnimations.html",
+        "url": "/web-animations/document/getAnimations.html"
+      },
+      {
         "path": "web-animations/keyframe-effect/constructor.html",
         "url": "/web-animations/keyframe-effect/constructor.html"
       },
@@ -35388,6 +35392,12 @@
           {
             "path": "web-animations/animation/startTime.html",
             "url": "/web-animations/animation/startTime.html"
+          }
+        ],
+        "web-animations/keyframe-effect/setTarget.html": [
+          {
+            "path": "web-animations/keyframe-effect/setTarget.html",
+            "url": "/web-animations/keyframe-effect/setTarget.html"
           }
         ],
         "web-animations/timing-model/animation-effects/active-time.html": [

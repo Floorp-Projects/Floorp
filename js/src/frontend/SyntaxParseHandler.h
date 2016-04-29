@@ -502,7 +502,7 @@ class SyntaxParseHandler
     void setBlockId(Node pn, unsigned blockid) {}
     void setFlag(Node pn, unsigned flag) {}
     void setListFlag(Node pn, unsigned flag) {}
-    MOZ_WARN_UNUSED_RESULT Node parenthesize(Node node) {
+    MOZ_MUST_USE Node parenthesize(Node node) {
         // A number of nodes have different behavior upon parenthesization, but
         // only in some circumstances.  Convert these nodes to special
         // parenthesized forms.
@@ -531,7 +531,7 @@ class SyntaxParseHandler
         // to the unparenthesized form: return |node| unchanged.
         return node;
     }
-    MOZ_WARN_UNUSED_RESULT Node setLikelyIIFE(Node pn) {
+    MOZ_MUST_USE Node setLikelyIIFE(Node pn) {
         return pn; // Remain in syntax-parse mode.
     }
     void setPrologue(Node pn) {}

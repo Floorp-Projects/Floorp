@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2012 Google Inc.
  *
@@ -32,7 +31,6 @@ SkReadBuffer::SkReadBuffer() {
     fTFArray = nullptr;
     fTFCount = 0;
 
-    fFactoryTDArray = nullptr;
     fFactoryArray = nullptr;
     fFactoryCount = 0;
     fBitmapDecoder = nullptr;
@@ -51,7 +49,6 @@ SkReadBuffer::SkReadBuffer(const void* data, size_t size) {
     fTFArray = nullptr;
     fTFCount = 0;
 
-    fFactoryTDArray = nullptr;
     fFactoryArray = nullptr;
     fFactoryCount = 0;
     fBitmapDecoder = nullptr;
@@ -72,7 +69,6 @@ SkReadBuffer::SkReadBuffer(SkStream* stream) {
     fTFArray = nullptr;
     fTFCount = 0;
 
-    fFactoryTDArray = nullptr;
     fFactoryArray = nullptr;
     fFactoryCount = 0;
     fBitmapDecoder = nullptr;
@@ -92,10 +88,6 @@ bool SkReadBuffer::readBool() {
 
 SkColor SkReadBuffer::readColor() {
     return fReader.readInt();
-}
-
-SkFixed SkReadBuffer::readFixed() {
-    return fReader.readS32();
 }
 
 int32_t SkReadBuffer::readInt() {
@@ -298,11 +290,11 @@ SkImage* SkReadBuffer::readImage() {
         return nullptr;
     }
 
-    SkAutoTUnref<SkData> encoded(this->readByteArrayAsData());
+    sk_sp<SkData> encoded(this->readByteArrayAsData());
     if (encoded->size() == 0) {
         // The image could not be encoded at serialization time - return an empty placeholder.
-        return SkImage::NewFromGenerator(
-            new EmptyImageGenerator(SkImageInfo::MakeN32Premul(width, height)));
+        return SkImage::MakeFromGenerator(
+            new EmptyImageGenerator(SkImageInfo::MakeN32Premul(width, height))).release();
     }
 
     int originX = this->read32();
@@ -313,7 +305,13 @@ SkImage* SkReadBuffer::readImage() {
     }
 
     const SkIRect subset = SkIRect::MakeXYWH(originX, originY, width, height);
-    return SkImage::NewFromEncoded(encoded, &subset);
+    SkImage* image = SkImage::MakeFromEncoded(std::move(encoded), &subset).release();
+    if (image) {
+        return image;
+    }
+
+    return SkImage::MakeFromGenerator(
+            new EmptyImageGenerator(SkImageInfo::MakeN32Premul(width, height))).release();
 }
 
 SkTypeface* SkReadBuffer::readTypeface() {
@@ -340,15 +338,11 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
             return nullptr; // writer failed to give us the flattenable
         }
         index -= 1;     // we stored the index-base-1
-        SkASSERT(index < fFactoryCount);
-        factory = fFactoryArray[index];
-    } else if (fFactoryTDArray) {
-        int32_t index = fReader.readU32();
-        if (0 == index) {
-            return nullptr; // writer failed to give us the flattenable
+        if ((unsigned)index >= (unsigned)fFactoryCount) {
+            this->validate(false);
+            return nullptr;
         }
-        index -= 1;     // we stored the index-base-1
-        factory = (*fFactoryTDArray)[index];
+        factory = fFactoryArray[index];
     } else {
         factory = (SkFlattenable::Factory)readFunctionPtr();
         if (nullptr == factory) {
@@ -358,7 +352,7 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
 
     // if we get here, factory may still be null, but if that is the case, the
     // failure was ours, not the writer.
-    SkFlattenable* obj = nullptr;
+    sk_sp<SkFlattenable> obj;
     uint32_t sizeRecorded = fReader.readU32();
     if (factory) {
         size_t offset = fReader.offset();
@@ -366,14 +360,14 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
         // check that we read the amount we expected
         size_t sizeRead = fReader.offset() - offset;
         if (sizeRecorded != sizeRead) {
-            // we could try to fix up the offset...
-            sk_throw();
+            this->validate(false);
+            return nullptr;
         }
     } else {
         // we must skip the remaining data
         fReader.skip(sizeRecorded);
     }
-    return obj;
+    return obj.release();
 }
 
 /**
@@ -382,10 +376,6 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
  */
 void SkReadBuffer::skipFlattenable() {
     if (fFactoryCount > 0) {
-        if (0 == fReader.readU32()) {
-            return;
-        }
-    } else if (fFactoryTDArray) {
         if (0 == fReader.readU32()) {
             return;
         }

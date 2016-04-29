@@ -663,7 +663,7 @@ CacheFileChunk::BufForReading() const
   return mBuf ? mBuf : mRWBuf;
 }
 
-MOZ_WARN_UNUSED_RESULT nsresult
+MOZ_MUST_USE nsresult
 CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
 {
   mFile->AssertOwnsLock();

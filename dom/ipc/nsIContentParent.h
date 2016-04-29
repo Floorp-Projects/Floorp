@@ -59,11 +59,11 @@ public:
   virtual bool IsForApp() const = 0;
   virtual bool IsForBrowser() const = 0;
 
-  MOZ_WARN_UNUSED_RESULT virtual PBlobParent*
+  MOZ_MUST_USE virtual PBlobParent*
   SendPBlobConstructor(PBlobParent* aActor,
                        const BlobConstructorParams& aParams) = 0;
 
-  MOZ_WARN_UNUSED_RESULT virtual PBrowserParent*
+  MOZ_MUST_USE virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* actor,
                           const TabId& aTabId,
                           const IPCTabContext& context,

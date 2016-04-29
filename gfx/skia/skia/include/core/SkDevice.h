@@ -41,6 +41,13 @@ public:
     virtual SkImageInfo imageInfo() const;
 
     /**
+     *  Return SurfaceProps for this device.
+     */
+    const SkSurfaceProps& surfaceProps() const {
+        return fSurfaceProps;
+    }
+
+    /**
      *  Return the bounds of the device in the coordinate space of the root
      *  canvas. The root device will have its top-left at 0,0, but other devices
      *  such as those associated with saveLayer may have a non-zero origin.
@@ -252,6 +259,8 @@ protected:
     virtual void drawAtlas(const SkDraw&, const SkImage* atlas, const SkRSXform[], const SkRect[],
                            const SkColor[], int count, SkXfermode::Mode, const SkPaint&);
 
+    virtual void drawAnnotation(const SkDraw&, const SkRect&, const char[], SkData*) {}
+
     /** The SkDevice passed will be an SkDevice which was returned by a call to
         onCreateDevice on this device with kNeverTile_TileExpectation.
      */
@@ -294,7 +303,7 @@ protected:
     }
 
 protected:
-    virtual SkSurface* newSurface(const SkImageInfo&, const SkSurfaceProps&) { return NULL; }
+    virtual sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&);
     virtual bool onPeekPixels(SkPixmap*) { return false; }
 
     /**
@@ -314,10 +323,6 @@ protected:
     virtual bool onWritePixels(const SkImageInfo&, const void*, size_t, int x, int y);
 
     virtual bool onAccessPixels(SkPixmap*) { return false; }
-
-    const SkSurfaceProps& surfaceProps() const {
-        return fSurfaceProps;
-    }
 
     /**
      *  PRIVATE / EXPERIMENTAL -- do not call
@@ -376,6 +381,12 @@ protected:
         return NULL;
     }
 
+    /**
+     *  Calls through to drawSprite, processing the imagefilter.
+     */
+    virtual void drawSpriteWithFilter(const SkDraw&, const SkBitmap&,
+                                      int x, int y, const SkPaint&);
+
 private:
     friend class SkCanvas;
     friend struct DeviceCM; //for setMatrixClip
@@ -385,11 +396,6 @@ private:
     friend class SkImageFilter::DeviceProxy;
     friend class SkNoPixelsBitmapDevice;
     friend class SkSurface_Raster;
-
-    /**
-     *  Calls through to drawSprite, processing imagefilter as needed.
-     */
-    void drawBitmapAsSprite(const SkDraw&, const SkBitmap&, int x, int y, const SkPaint&);
 
     // used to change the backend's pixels (and possibly config/rowbytes)
     // but cannot change the width/height, so there should be no change to

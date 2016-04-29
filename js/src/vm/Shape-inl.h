@@ -98,6 +98,14 @@ Shape::new_(ExclusiveContext* cx, Handle<StackShape> other, uint32_t nfixed)
     return shape;
 }
 
+inline void
+Shape::updateBaseShapeAfterMovingGC()
+{
+    BaseShape* base = base_.unbarrieredGet();
+    if (IsForwarded(base))
+        base_.unsafeSet(Forwarded(base));
+}
+
 template<class ObjectSubclass>
 /* static */ inline bool
 EmptyShape::ensureInitialCustomShape(ExclusiveContext* cx, Handle<ObjectSubclass*> obj)

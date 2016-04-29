@@ -181,6 +181,40 @@ MacroAssembler::negateDouble(FloatRegister reg)
 }
 
 // ===============================================================
+// Rotation instructions
+void
+MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest)
+{
+    MOZ_ASSERT(input == dest, "defineReuseInput");
+    if (count.value)
+        roll(count, input);
+}
+
+void
+MacroAssembler::rotateLeft(Register count, Register input, Register dest)
+{
+    MOZ_ASSERT(input == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+    roll_cl(input);
+}
+
+void
+MacroAssembler::rotateRight(Imm32 count, Register input, Register dest)
+{
+    MOZ_ASSERT(input == dest, "defineReuseInput");
+    if (count.value)
+        rorl(count, input);
+}
+
+void
+MacroAssembler::rotateRight(Register count, Register input, Register dest)
+{
+    MOZ_ASSERT(input == dest, "defineReuseInput");
+    MOZ_ASSERT(count == ecx, "defineFixed(ecx)");
+    rorl_cl(input);
+}
+
+// ===============================================================
 // Branch instructions
 
 void

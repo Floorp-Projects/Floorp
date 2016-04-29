@@ -296,7 +296,7 @@ protected:
         SkFontStyle style;
         SkString name;
         if (fScanner.scanFont(stream, ttcIndex, &name, &style, &isFixedPitch, nullptr)) {
-            return new SkTypeface_Stream(style, isFixedPitch, false, name, stream.detach(),
+            return new SkTypeface_Stream(style, isFixedPitch, false, name, stream.release(),
                                          ttcIndex);
         } else {
             return nullptr;
@@ -305,7 +305,7 @@ protected:
 
     SkTypeface* onCreateFromFile(const char path[], int ttcIndex) const override {
         SkAutoTDelete<SkStreamAsset> stream(SkStream::NewFromFile(path));
-        return stream.get() ? this->createFromStream(stream.detach(), ttcIndex) : nullptr;
+        return stream.get() ? this->createFromStream(stream.release(), ttcIndex) : nullptr;
     }
 
     SkTypeface* onLegacyCreateTypeface(const char familyName[], unsigned styleBits) const override {
@@ -489,7 +489,7 @@ private:
 
             SkTypeface_Custom* tf =
                     new SkTypeface_Stream(style, isFixedPitch, true,  // system-font (cannot delete)
-                                          realname, stream.detach(), faceIndex);
+                                          realname, stream.release(), faceIndex);
 
             SkFontStyleSet_Custom* addTo = find_family(*families, realname.c_str());
             if (nullptr == addTo) {
@@ -505,4 +505,24 @@ private:
 
 SkFontMgr* SkFontMgr_New_Custom_Embedded(const SkEmbeddedResourceHeader* header) {
     return new SkFontMgr_Custom(EmbeddedSystemFontLoader(header));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+class EmptyFontLoader : public SkFontMgr_Custom::SystemFontLoader {
+public:
+    EmptyFontLoader() { }
+
+    void loadSystemFonts(const SkTypeface_FreeType::Scanner& scanner,
+                         SkFontMgr_Custom::Families* families) const override
+    {
+        SkFontStyleSet_Custom* family = new SkFontStyleSet_Custom(SkString());
+        families->push_back().reset(family);
+        family->appendTypeface(new SkTypeface_Empty);
+    }
+
+};
+
+SK_API SkFontMgr* SkFontMgr_New_Custom_Empty() {
+    return new SkFontMgr_Custom(EmptyFontLoader());
 }

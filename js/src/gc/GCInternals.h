@@ -128,6 +128,7 @@ struct MovingTracer : JS::CallbackTracer
     void onStringEdge(JSString** stringp) override;
     void onScriptEdge(JSScript** scriptp) override;
     void onLazyScriptEdge(LazyScript** lazyp) override;
+    void onBaseShapeEdge(BaseShape** basep) override;
     void onChild(const JS::GCCellPtr& thing) override {
         MOZ_ASSERT(!RelocationOverlay::isCellForwarded(thing.asCell()));
     }

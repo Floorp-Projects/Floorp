@@ -22,7 +22,7 @@ function testConversion(resultType, opcode, paramType, op, expect) {
     assertEq(wasmEvalText('(module (func (param ' + paramType + ') (result ' + resultType + ') (' + resultType + '.' + opcode + '/' + paramType + ' (get_local 0))) (export "" 0))')(op), expect);
   }
 
-  let formerWasmExtraTests = getJitCompilerOptions()['wasm.test-mode'];
+  let formerTestMode = getJitCompilerOptions()['wasm.test-mode'];
   setJitCompilerOption('wasm.test-mode', 1);
   for (var bad of ['i32', 'f32', 'f64', 'i64']) {
       if (bad === 'i64' && !hasI64())
@@ -44,7 +44,25 @@ function testConversion(resultType, opcode, paramType, op, expect) {
           );
       }
   }
-  setJitCompilerOption('wasm.test-mode', formerWasmExtraTests);
+  setJitCompilerOption('wasm.test-mode', formerTestMode);
+}
+
+function testTrap(resultType, opcode, paramType, op, expect) {
+    if (resultType === 'i64' && !hasI64())
+        return;
+
+    let func = wasmEvalText(`(module
+        (func
+            (param ${paramType})
+            (result ${resultType})
+            (${resultType}.${opcode}/${paramType} (get_local 0))
+        )
+        (export "" 0)
+    )`);
+
+    let expectedError = op === 'nan' ? /invalid conversion to integer/ : /integer overflow/;
+
+    assertErrorMessage(() => func(jsify(op)), Error, expectedError);
 }
 
 if (hasI64()) {
@@ -160,30 +178,29 @@ if (hasI64()) {
     testConversion('i64', 'trunc_u', 'f32', 4294967296, "0x100000000");
     testConversion('i64', 'trunc_u', 'f32', 18446742974197923840.0, "0xffffff0000000000");
 
-    // TODO: these should trap.
-    testConversion('i64', 'trunc_s', 'f64', 9223372036854775808.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f64', -9223372036854777856.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f64', "nan", "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f64', "infinity", "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f64', "-infinity", "0x8000000000000000");
+    testTrap('i64', 'trunc_s', 'f64', 9223372036854776000.0);
+    testTrap('i64', 'trunc_s', 'f64', -9223372036854778000.0);
+    testTrap('i64', 'trunc_s', 'f64', "nan");
+    testTrap('i64', 'trunc_s', 'f64', "infinity");
+    testTrap('i64', 'trunc_s', 'f64', "-infinity");
 
-    testConversion('i64', 'trunc_u', 'f64', -1, "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f64', 18446744073709551616.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f64', "nan", "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f64', "infinity", "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f64', "-infinity", "0x8000000000000000");
+    testTrap('i64', 'trunc_u', 'f64', -1);
+    testTrap('i64', 'trunc_u', 'f64', 18446744073709551616.0);
+    testTrap('i64', 'trunc_u', 'f64', "nan");
+    testTrap('i64', 'trunc_u', 'f64', "infinity");
+    testTrap('i64', 'trunc_u', 'f64', "-infinity");
 
-    testConversion('i64', 'trunc_s', 'f32', 9223372036854775808.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f32', -9223372036854777856.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f32', "nan", "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f32', "infinity", "0x8000000000000000");
-    testConversion('i64', 'trunc_s', 'f32', "-infinity", "0x8000000000000000");
+    testTrap('i64', 'trunc_s', 'f32', 9223372036854776000.0);
+    testTrap('i64', 'trunc_s', 'f32', -9223372586610630000.0);
+    testTrap('i64', 'trunc_s', 'f32', "nan");
+    testTrap('i64', 'trunc_s', 'f32', "infinity");
+    testTrap('i64', 'trunc_s', 'f32', "-infinity");
 
-    testConversion('i64', 'trunc_u', 'f32', 18446744073709551616.0, "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f32', -1, "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f32', "nan", "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f32', "infinity", "0x8000000000000000");
-    testConversion('i64', 'trunc_u', 'f32', "-infinity", "0x8000000000000000");
+    testTrap('i64', 'trunc_u', 'f32', 18446744073709551616.0);
+    testTrap('i64', 'trunc_u', 'f32', -1);
+    testTrap('i64', 'trunc_u', 'f32', "nan");
+    testTrap('i64', 'trunc_u', 'f32', "infinity");
+    testTrap('i64', 'trunc_u', 'f32', "-infinity");
 
     testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, "0x40440ccccccccca0");
     testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
@@ -193,7 +210,7 @@ if (hasI64()) {
     // Sleeper test: once i64 works on more platforms, remove this if-else.
     try {
         testConversion('i32', 'wrap', 'i64', 4294967336, 40);
-        assertEq(0, 1);
+        throw new Error('hasI64() in wasm.js needs an update!');
     } catch(e) {
         assertEq(e.toString().indexOf("NYI on this platform") >= 0, true);
     }

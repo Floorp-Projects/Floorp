@@ -29,7 +29,7 @@ function run_test() {
                                     START_STATE);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
                                      null, null, null, null, null, null,
-                                     null, "true", channel);
+                                     "true", channel);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(getAppVersion());
   writeStatusFile(START_STATE);

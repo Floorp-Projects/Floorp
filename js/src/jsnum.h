@@ -34,7 +34,7 @@ namespace js {
 
 class StringBuffer;
 
-extern bool
+extern MOZ_MUST_USE bool
 InitRuntimeNumberState(JSRuntime* rt);
 
 #if !EXPOSE_INTL_API
@@ -83,7 +83,7 @@ Int32ToAtom(ExclusiveContext* cx, int32_t si);
  * Convert an integer or double (contained in the given value) to a string and
  * append to the given buffer.
  */
-extern bool JS_FASTCALL
+extern MOZ_MUST_USE bool JS_FASTCALL
 NumberValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb);
 
 /* Same as js_NumberToString, different signature. */
@@ -151,7 +151,7 @@ ParseDecimalNumber(const mozilla::Range<const CharT> chars);
  * *dp == 0 and *endp == start upon return.
  */
 template <typename CharT>
-extern bool
+extern MOZ_MUST_USE bool
 GetPrefixInteger(ExclusiveContext* cx, const CharT* start, const CharT* end, int base,
                  const CharT** endp, double* dp);
 
@@ -160,14 +160,14 @@ GetPrefixInteger(ExclusiveContext* cx, const CharT* start, const CharT* end, int
  * and |endp| outparam.  It should only be used when the characters are known to
  * only contain digits.
  */
-extern bool
+extern MOZ_MUST_USE bool
 GetDecimalInteger(ExclusiveContext* cx, const char16_t* start, const char16_t* end, double* dp);
 
-extern bool
+extern MOZ_MUST_USE bool
 StringToNumber(ExclusiveContext* cx, JSString* str, double* result);
 
 /* ES5 9.3 ToNumber, overwriting *vp with the appropriate number value. */
-MOZ_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
 ToNumber(JSContext* cx, JS::MutableHandleValue vp)
 {
     if (vp.isNumber())
@@ -181,7 +181,7 @@ ToNumber(JSContext* cx, JS::MutableHandleValue vp)
     return true;
 }
 
-bool
+MOZ_MUST_USE bool
 num_parseInt(JSContext* cx, unsigned argc, Value* vp);
 
 }  /* namespace js */
@@ -199,16 +199,16 @@ num_parseInt(JSContext* cx, unsigned argc, Value* vp);
  * Return false if out of memory.
  */
 template <typename CharT>
-extern bool
+extern MOZ_MUST_USE bool
 js_strtod(js::ExclusiveContext* cx, const CharT* begin, const CharT* end,
           const CharT** dEnd, double* d);
 
 namespace js {
 
-extern bool
+extern MOZ_MUST_USE bool
 num_toString(JSContext* cx, unsigned argc, Value* vp);
 
-extern bool
+extern MOZ_MUST_USE bool
 num_valueOf(JSContext* cx, unsigned argc, Value* vp);
 
 static MOZ_ALWAYS_INLINE bool
@@ -248,7 +248,7 @@ IsDefinitelyIndex(const Value& v, uint32_t* indexp)
 }
 
 /* ES5 9.4 ToInteger. */
-static inline bool
+static MOZ_MUST_USE inline bool
 ToInteger(JSContext* cx, HandleValue v, double* dp)
 {
     if (v.isInt32()) {
@@ -273,7 +273,7 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
  * For JSContext and ExclusiveContext.
  */
 template<typename T>
-bool ToLengthClamped(T* cx, HandleValue v, uint32_t* out, bool* overflow);
+MOZ_MUST_USE bool ToLengthClamped(T* cx, HandleValue v, uint32_t* out, bool* overflow);
 
 /* Convert and range check an index value as for DataView, SIMD, and Atomics
  * operations, eg ES7 24.2.1.1, DataView's GetViewValue():
@@ -293,9 +293,9 @@ bool ToLengthClamped(T* cx, HandleValue v, uint32_t* out, bool* overflow);
  *
  * The returned index will always be in the range 0 <= *index <= 2^53.
  */
-bool ToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index);
+MOZ_MUST_USE bool ToIntegerIndex(JSContext* cx, JS::HandleValue v, uint64_t* index);
 
-inline bool
+MOZ_MUST_USE inline bool
 SafeAdd(int32_t one, int32_t two, int32_t* res)
 {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_sadd_overflow)
@@ -310,7 +310,7 @@ SafeAdd(int32_t one, int32_t two, int32_t* res)
 #endif
 }
 
-inline bool
+MOZ_MUST_USE inline bool
 SafeSub(int32_t one, int32_t two, int32_t* res)
 {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_ssub_overflow)
@@ -322,7 +322,7 @@ SafeSub(int32_t one, int32_t two, int32_t* res)
 #endif
 }
 
-inline bool
+MOZ_MUST_USE inline bool
 SafeMul(int32_t one, int32_t two, int32_t* res)
 {
 #if BUILTIN_CHECKED_ARITHMETIC_SUPPORTED(__builtin_smul_overflow)
@@ -334,12 +334,12 @@ SafeMul(int32_t one, int32_t two, int32_t* res)
 #endif
 }
 
-extern bool
+extern MOZ_MUST_USE bool
 ToNumberSlow(ExclusiveContext* cx, Value v, double* dp);
 
 // Variant of ToNumber which takes an ExclusiveContext instead of a JSContext.
 // ToNumber is part of the API and can't use ExclusiveContext directly.
-MOZ_ALWAYS_INLINE bool
+MOZ_ALWAYS_INLINE MOZ_MUST_USE bool
 ToNumber(ExclusiveContext* cx, const Value& v, double* out)
 {
     if (v.isNumber()) {

@@ -9,15 +9,14 @@
 
 #include "GrBatchFlushState.h"
 #include "GrBatchTest.h"
+#include "GrBuffer.h"
 #include "GrCaps.h"
 #include "GrContext.h"
 #include "GrDefaultGeoProcFactory.h"
-#include "GrIndexBuffer.h"
 #include "GrPathUtils.h"
 #include "GrPipelineBuilder.h"
 #include "GrProcessor.h"
 #include "GrResourceProvider.h"
-#include "GrVertexBuffer.h"
 #include "SkGeometry.h"
 #include "SkStroke.h"
 #include "SkTemplates.h"
@@ -65,7 +64,7 @@ static const int kQuadNumVertices = 5;
 static const int kQuadsNumInIdxBuffer = 256;
 GR_DECLARE_STATIC_UNIQUE_KEY(gQuadsIndexBufferKey);
 
-static const GrIndexBuffer* ref_quads_index_buffer(GrResourceProvider* resourceProvider) {
+static const GrBuffer* ref_quads_index_buffer(GrResourceProvider* resourceProvider) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gQuadsIndexBufferKey);
     return resourceProvider->findOrCreateInstancedIndexBuffer(
         kQuadIdxBufPattern, kIdxsPerQuad, kQuadsNumInIdxBuffer, kQuadNumVertices,
@@ -99,7 +98,7 @@ static const int kLineSegsNumInIdxBuffer = 256;
 
 GR_DECLARE_STATIC_UNIQUE_KEY(gLinesIndexBufferKey);
 
-static const GrIndexBuffer* ref_lines_index_buffer(GrResourceProvider* resourceProvider) {
+static const GrBuffer* ref_lines_index_buffer(GrResourceProvider* resourceProvider) {
     GR_DEFINE_STATIC_UNIQUE_KEY(gLinesIndexBufferKey);
     return resourceProvider->findOrCreateInstancedIndexBuffer(
         kLineSegIdxBufPattern, kIdxsPerLineSeg,  kLineSegsNumInIdxBuffer, kLineSegNumVertices,
@@ -345,17 +344,14 @@ static int gather_lines_and_quads(const SkPath& path,
                 bounds.roundOut(&ibounds);
                 if (SkIRect::Intersects(devClipBounds, ibounds)) {
                     PREALLOC_PTARRAY(32) q;
-                    // we don't need a direction if we aren't constraining the subdivision
-                    const SkPathPriv::FirstDirection kDummyDir = SkPathPriv::kCCW_FirstDirection;
                     // We convert cubics to quadratics (for now).
                     // In perspective have to do conversion in src space.
                     if (persp) {
                         SkScalar tolScale =
-                            GrPathUtils::scaleToleranceToSrc(SK_Scalar1, m,
-                                                             path.getBounds());
-                        GrPathUtils::convertCubicToQuads(pathPts, tolScale, false, kDummyDir, &q);
+                            GrPathUtils::scaleToleranceToSrc(SK_Scalar1, m, path.getBounds());
+                        GrPathUtils::convertCubicToQuads(pathPts, tolScale, &q);
                     } else {
-                        GrPathUtils::convertCubicToQuads(devPts, SK_Scalar1, false, kDummyDir, &q);
+                        GrPathUtils::convertCubicToQuads(devPts, SK_Scalar1, &q);
                     }
                     for (int i = 0; i < q.count(); i += 3) {
                         SkPoint* qInDevSpace;
@@ -686,13 +682,12 @@ public:
 
     const char* name() const override { return "AAHairlineBatch"; }
 
-    void computePipelineOptimizations(GrInitInvariantOutput* color, 
+    void computePipelineOptimizations(GrInitInvariantOutput* color,
                                       GrInitInvariantOutput* coverage,
                                       GrBatchToXPOverrides* overrides) const override {
         // When this is called on a batch, there is only one geometry bundle
         color->setKnownFourComponents(fGeoData[0].fColor);
         coverage->setUnknownSingleComponent();
-        overrides->fUsePLSDstRead = true;
     }
 
 private:
@@ -811,37 +806,6 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
         toSrc = &invert;
     }
 
-    SkAutoTUnref<const GrGeometryProcessor> lineGP;
-    {
-        using namespace GrDefaultGeoProcFactory;
-
-        Color color(this->color());
-        Coverage coverage(Coverage::kAttribute_Type);
-        LocalCoords localCoords(this->usesLocalCoords() ? LocalCoords::kUsePosition_Type :
-                                                          LocalCoords::kUnused_Type);
-        localCoords.fMatrix = geometryProcessorLocalM;
-        lineGP.reset(GrDefaultGeoProcFactory::Create(color, coverage, localCoords,
-                                                     *geometryProcessorViewM));
-    }
-
-    SkAutoTUnref<const GrGeometryProcessor> quadGP(
-            GrQuadEffect::Create(this->color(),
-                                 *geometryProcessorViewM,
-                                 kHairlineAA_GrProcessorEdgeType,
-                                 target->caps(),
-                                 *geometryProcessorLocalM,
-                                 this->usesLocalCoords(),
-                                 this->coverage()));
-
-    SkAutoTUnref<const GrGeometryProcessor> conicGP(
-            GrConicEffect::Create(this->color(),
-                                  *geometryProcessorViewM,
-                                  kHairlineAA_GrProcessorEdgeType,
-                                  target->caps(),
-                                  *geometryProcessorLocalM,
-                                  this->usesLocalCoords(),
-                                  this->coverage()));
-
     // This is hand inlined for maximum performance.
     PREALLOC_PTARRAY(128) lines;
     PREALLOC_PTARRAY(128) quads;
@@ -862,11 +826,23 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
 
     // do lines first
     if (lineCount) {
-        SkAutoTUnref<const GrIndexBuffer> linesIndexBuffer(
-            ref_lines_index_buffer(target->resourceProvider()));
-        target->initDraw(lineGP, this->pipeline());
+        SkAutoTUnref<const GrGeometryProcessor> lineGP;
+        {
+            using namespace GrDefaultGeoProcFactory;
 
-        const GrVertexBuffer* vertexBuffer;
+            Color color(this->color());
+            Coverage coverage(Coverage::kAttribute_Type);
+            LocalCoords localCoords(this->usesLocalCoords() ? LocalCoords::kUsePosition_Type :
+                                    LocalCoords::kUnused_Type);
+            localCoords.fMatrix = geometryProcessorLocalM;
+            lineGP.reset(GrDefaultGeoProcFactory::Create(color, coverage, localCoords,
+                                                         *geometryProcessorViewM));
+        }
+
+        SkAutoTUnref<const GrBuffer> linesIndexBuffer(
+            ref_lines_index_buffer(target->resourceProvider()));
+
+        const GrBuffer* vertexBuffer;
         int firstVertex;
 
         size_t vertexStride = lineGP->getVertexStride();
@@ -885,20 +861,36 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
             add_line(&lines[2*i], toSrc, this->coverage(), &verts);
         }
 
-        {
-            GrVertices vertices;
-            vertices.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, linesIndexBuffer,
-                                   firstVertex, kLineSegNumVertices, kIdxsPerLineSeg, lineCount,
-                                   kLineSegsNumInIdxBuffer);
-            target->draw(vertices);
-        }
+        GrMesh mesh;
+        mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, linesIndexBuffer,
+                           firstVertex, kLineSegNumVertices, kIdxsPerLineSeg, lineCount,
+                           kLineSegsNumInIdxBuffer);
+        target->draw(lineGP, mesh);
     }
 
     if (quadCount || conicCount) {
-        const GrVertexBuffer* vertexBuffer;
+        SkAutoTUnref<const GrGeometryProcessor> quadGP(
+            GrQuadEffect::Create(this->color(),
+                                 *geometryProcessorViewM,
+                                 kHairlineAA_GrProcessorEdgeType,
+                                 target->caps(),
+                                 *geometryProcessorLocalM,
+                                 this->usesLocalCoords(),
+                                 this->coverage()));
+
+        SkAutoTUnref<const GrGeometryProcessor> conicGP(
+            GrConicEffect::Create(this->color(),
+                                  *geometryProcessorViewM,
+                                  kHairlineAA_GrProcessorEdgeType,
+                                  target->caps(),
+                                  *geometryProcessorLocalM,
+                                  this->usesLocalCoords(),
+                                  this->coverage()));
+
+        const GrBuffer* vertexBuffer;
         int firstVertex;
 
-        SkAutoTUnref<const GrIndexBuffer> quadsIndexBuffer(
+        SkAutoTUnref<const GrBuffer> quadsIndexBuffer(
             ref_quads_index_buffer(target->resourceProvider()));
 
         size_t vertexStride = sizeof(BezierVertex);
@@ -926,28 +918,20 @@ void AAHairlineBatch::onPrepareDraws(Target* target) const {
         }
 
         if (quadCount > 0) {
-            target->initDraw(quadGP, this->pipeline());
-
-            {
-                GrVertices tempVerts;
-                tempVerts.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
-                                        firstVertex, kQuadNumVertices, kIdxsPerQuad, quadCount,
-                                        kQuadsNumInIdxBuffer);
-                target->draw(tempVerts);
-                firstVertex += quadCount * kQuadNumVertices;
-           }
+            GrMesh mesh;
+            mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
+                               firstVertex, kQuadNumVertices, kIdxsPerQuad, quadCount,
+                               kQuadsNumInIdxBuffer);
+            target->draw(quadGP, mesh);
+            firstVertex += quadCount * kQuadNumVertices;
         }
 
         if (conicCount > 0) {
-            target->initDraw(conicGP, this->pipeline());
-
-            {
-                GrVertices tempVerts;
-                tempVerts.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
-                                        firstVertex, kQuadNumVertices, kIdxsPerQuad, conicCount,
-                                        kQuadsNumInIdxBuffer);
-                target->draw(tempVerts);
-            }
+            GrMesh mesh;
+            mesh.initInstanced(kTriangles_GrPrimitiveType, vertexBuffer, quadsIndexBuffer,
+                               firstVertex, kQuadNumVertices, kIdxsPerQuad, conicCount,
+                               kQuadsNumInIdxBuffer);
+            target->draw(conicGP, mesh);
         }
     }
 }

@@ -557,7 +557,7 @@ class ObjectGroupCompartment
     struct PlainObjectTableSweepPolicy {
         static bool needsSweep(PlainObjectKey* key, PlainObjectEntry* entry);
     };
-    using PlainObjectTable = js::GCHashMap<PlainObjectKey,
+    using PlainObjectTable = JS::GCHashMap<PlainObjectKey,
                                            PlainObjectEntry,
                                            PlainObjectKey,
                                            SystemAllocPolicy,
@@ -576,7 +576,7 @@ class ObjectGroupCompartment
     PlainObjectTable* plainObjectTable;
 
     struct AllocationSiteKey;
-    using AllocationSiteTable = js::GCHashMap<AllocationSiteKey,
+    using AllocationSiteTable = JS::GCHashMap<AllocationSiteKey,
                                               ReadBarrieredObjectGroup,
                                               AllocationSiteKey,
                                               SystemAllocPolicy>;

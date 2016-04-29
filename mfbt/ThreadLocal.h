@@ -131,7 +131,7 @@ public:
   {}
 #endif
 
-  MOZ_WARN_UNUSED_RESULT inline bool init();
+  MOZ_MUST_USE inline bool init();
 
   inline T get() const;
 

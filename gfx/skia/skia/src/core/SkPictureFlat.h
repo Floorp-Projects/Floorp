@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -78,7 +77,9 @@ enum DrawType {
     SAVE_LAYER_SAVELAYERFLAGS_DEPRECATED_JAN_2016,
     SAVE_LAYER_SAVELAYERREC,
 
-    LAST_DRAWTYPE_ENUM = SAVE_LAYER_SAVELAYERREC,
+    DRAW_ANNOTATION,
+
+    LAST_DRAWTYPE_ENUM = DRAW_ANNOTATION,
 };
 
 // In the 'match' method, this constant will match any flavor of DRAW_BITMAP*

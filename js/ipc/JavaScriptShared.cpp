@@ -83,16 +83,6 @@ IdToObjectMap::empty() const
     return table_.empty();
 }
 
-ObjectToIdMap::ObjectToIdMap(JSRuntime* rt)
-  : rt_(rt)
-{
-}
-
-ObjectToIdMap::~ObjectToIdMap()
-{
-    JS_ClearAllPostBarrierCallbacks(rt_);
-}
-
 bool
 ObjectToIdMap::init()
 {
@@ -145,9 +135,7 @@ bool JavaScriptShared::sStackLoggingEnabled;
 JavaScriptShared::JavaScriptShared(JSRuntime* rt)
   : rt_(rt),
     refcount_(1),
-    nextSerialNumber_(1),
-    unwaivedObjectIds_(rt),
-    waivedObjectIds_(rt)
+    nextSerialNumber_(1)
 {
     if (!sLoggingInitialized) {
         sLoggingInitialized = true;

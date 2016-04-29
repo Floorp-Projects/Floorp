@@ -17,9 +17,9 @@ public:
     GLConstColorProcessor() : fPrevColor(GrColor_ILLEGAL) {}
 
     void emitCode(EmitArgs& args) override {
-        GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
+        GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
         const char* colorUni;
-        fColorUniform = args.fUniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+        fColorUniform = args.fUniformHandler->addUniform(kFragment_GrShaderFlag,
                                                          kVec4f_GrSLType, kMedium_GrSLPrecision,
                                                          "constantColor",
                                                          &colorUni);
@@ -63,7 +63,7 @@ protected:
 
 private:
     GrGLSLProgramDataManager::UniformHandle fColorUniform;
-    GrColor                               fPrevColor;
+    GrColor                                 fPrevColor;
 
     typedef GrGLSLFragmentProcessor INHERITED;
 };

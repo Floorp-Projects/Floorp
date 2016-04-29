@@ -121,6 +121,7 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
 
 static void make_canonical(LOGFONT* lf) {
     lf->lfHeight = -64;
+    lf->lfWidth = 0;  // lfWidth is related to lfHeight, not to the OS/2::usWidthClass.
     lf->lfQuality = CLEARTYPE_QUALITY;//PROOF_QUALITY;
     lf->lfCharSet = DEFAULT_CHARSET;
 //    lf->lfClipPrecision = 64;
@@ -128,7 +129,7 @@ static void make_canonical(LOGFONT* lf) {
 
 static SkFontStyle get_style(const LOGFONT& lf) {
     return SkFontStyle(lf.lfWeight,
-                       lf.lfWidth,
+                       SkFontStyle::kNormal_Width,
                        lf.lfItalic ? SkFontStyle::kItalic_Slant : SkFontStyle::kUpright_Slant);
 }
 
@@ -596,6 +597,10 @@ static FIXED float2FIXED(float x) {
     return SkFixedToFIXED(SkFloatToFixed(x));
 }
 
+static inline float FIXED2float(FIXED x) {
+    return SkFixedToFloat(SkFIXEDToFixed(x));
+}
+
 static BYTE compute_quality(const SkScalerContext::Rec& rec) {
     switch (rec.fMaskFormat) {
         case SkMask::kBW_Format:
@@ -868,7 +873,7 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
         // Bitmap FON cannot underhang, but vector FON may.
         // There appears no means of determining underhang of vector FON.
         glyph->fLeft = SkToS16(0);
-        glyph->fAdvanceX = SkIntToFixed(glyph->fWidth);
+        glyph->fAdvanceX = glyph->fWidth;
         glyph->fAdvanceY = 0;
 
         // Vector FON will transform nicely, but bitmap FON do not.
@@ -888,8 +893,8 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
         }
 
         // Apply matrix to advance.
-        glyph->fAdvanceY = SkFixedMul(-SkFIXEDToFixed(fMat22.eM12), glyph->fAdvanceX);
-        glyph->fAdvanceX = SkFixedMul(SkFIXEDToFixed(fMat22.eM11), glyph->fAdvanceX);
+        glyph->fAdvanceY = -FIXED2float(fMat22.eM12) * glyph->fAdvanceX;
+        glyph->fAdvanceX *= FIXED2float(fMat22.eM11);
 
         return;
     }
@@ -934,8 +939,9 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
         glyph->fTop -= 2;
         glyph->fLeft -= 2;
     }
-    glyph->fAdvanceX = SkIntToFixed(gm.gmCellIncX);
-    glyph->fAdvanceY = SkIntToFixed(gm.gmCellIncY);
+    // TODO(benjaminwagner): What is the type of gm.gmCellInc[XY]?
+    glyph->fAdvanceX = (float)((int)gm.gmCellIncX);
+    glyph->fAdvanceY = (float)((int)gm.gmCellIncY);
     glyph->fRsbDelta = 0;
     glyph->fLsbDelta = 0;
 
@@ -945,16 +951,16 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
         if (GDI_ERROR != status) {
             SkPoint advance;
             fHiResMatrix.mapXY(SkIntToScalar(gm.gmCellIncX), SkIntToScalar(gm.gmCellIncY), &advance);
-            glyph->fAdvanceX = SkScalarToFixed(advance.fX);
-            glyph->fAdvanceY = SkScalarToFixed(advance.fY);
+            glyph->fAdvanceX = SkScalarToFloat(advance.fX);
+            glyph->fAdvanceY = SkScalarToFloat(advance.fY);
         }
     } else if (!isAxisAligned(this->fRec)) {
         status = GetGlyphOutlineW(fDDC, glyphId, GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nullptr, &fGsA);
         if (GDI_ERROR != status) {
             SkPoint advance;
             fG_inv.mapXY(SkIntToScalar(gm.gmCellIncX), SkIntToScalar(gm.gmCellIncY), &advance);
-            glyph->fAdvanceX = SkScalarToFixed(advance.fX);
-            glyph->fAdvanceY = SkScalarToFixed(advance.fY);
+            glyph->fAdvanceX = SkScalarToFloat(advance.fX);
+            glyph->fAdvanceY = SkScalarToFloat(advance.fY);
         }
     }
 }
@@ -2189,7 +2195,7 @@ int LogFontTypeface::onCharsToGlyphs(const void* chars, Encoding encoding,
         break;
     }
     default:
-        SK_CRASH();
+        SK_ABORT("Invalid Text Encoding");
     }
 
     if (sc) {
