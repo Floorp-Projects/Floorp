@@ -474,7 +474,7 @@ public:
 
   virtual void ForcePresent() { }
 
-  nsIWidget* GetWidget() const { return mWidget; }
+  widget::CompositorWidgetProxy* GetWidget() const { return mWidget; }
 
   virtual bool HasImageHostOverlays() { return false; }
 
