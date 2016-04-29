@@ -118,6 +118,7 @@ devtools/client/webide/**
 devtools/server/**
 !devtools/server/actors/webbrowser.js
 devtools/shared/*.js
+!devtools/shared/css-lexer.js
 devtools/shared/*.jsm
 devtools/shared/apps/**
 devtools/shared/client/**
@@ -132,6 +133,7 @@ devtools/shared/qrcode/**
 devtools/shared/security/**
 devtools/shared/shims/**
 devtools/shared/tests/**
+!devtools/shared/tests/unit/test_csslexer.js
 devtools/shared/touch/**
 devtools/shared/transport/**
 devtools/shared/webconsole/test/**
