@@ -31,7 +31,6 @@
 #include "nsIWidgetListener.h"
 #include "FrameMetrics.h"
 #include "Units.h"
-#include "CompositorWidgetProxy.h"
 
 // forward declarations
 class   nsIRollupListener;
@@ -323,9 +322,7 @@ private:
  * The base class for all the widgets. It provides the interface for
  * all basic and necessary functionality.
  */
-class nsIWidget
-  : public nsISupports,
-    public mozilla::widget::CompositorWidgetProxy
+class nsIWidget : public nsISupports
 {
   protected:
     typedef mozilla::dom::TabChild TabChild;

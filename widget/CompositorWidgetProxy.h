@@ -8,6 +8,11 @@
 #include "nsISupports.h"
 #include "mozilla/RefPtr.h"
 #include "Units.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/layers/LayersTypes.h"
+
+class nsIWidget;
+class nsBaseWidget;
 
 namespace mozilla {
 namespace layers {
@@ -27,6 +32,8 @@ namespace widget {
 class CompositorWidgetProxy
 {
 public:
+  NS_INLINE_DECL_REFCOUNTING(mozilla::widget::CompositorWidgetProxy)
+
   /**
    * Called before rendering using OMTC. Returns false when the widget is
    * not ready to be rendered (for example while the window is closed).
@@ -75,7 +82,7 @@ public:
    * The window may specify its buffer mode. If unspecified, it is assumed
    * to require double-buffering.
    */
-  virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() = 0;
+  virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing();
   virtual already_AddRefed<gfx::DrawTarget>
   StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
                              layers::BufferMode* aBufferMode)
@@ -99,28 +106,12 @@ public:
   }
 
   /**
-   * Clean up any resources used by Start/EndRemoteDrawing.
-   *
-   * Called by BasicCompositor on the compositor thread for OMTC drawing
-   * when the compositor is destroyed.
-   */
-  virtual void CleanupRemoteDrawing() = 0;
-
-  /**
    * Called when shutting down the LayerManager to clean-up any cached resources.
    *
    * Always called from the compositing thread.
    */
   virtual void CleanupWindowEffects()
   {}
-
-  /**
-   * Create DrawTarget used as BackBuffer of the screen
-   */
-  virtual already_AddRefed<gfx::DrawTarget>
-  CreateBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
-                             const LayoutDeviceIntRect& aRect,
-                             const LayoutDeviceIntRect& aClearRect) = 0;
 
   /**
    * A hook for the widget to prepare a Compositor, during the latter's initialization.
@@ -144,9 +135,7 @@ public:
    * Return the internal format of the default framebuffer for this
    * widget.
    */
-  virtual uint32_t GetGLFrameBufferFormat() {
-    return 0; /* GL_NONE */
-  }
+  virtual uint32_t GetGLFrameBufferFormat();
 
   /**
    * If this widget has a more efficient composer available for its
@@ -164,8 +153,64 @@ public:
    * depends on nsIWidget on any platform.
    */
   virtual nsIWidget* RealWidget() = 0;
+
+  /**
+   * Clean up any resources used by Start/EndRemoteDrawing.
+   *
+   * Called by BasicCompositor on the compositor thread for OMTC drawing
+   * when the compositor is destroyed.
+   */
+  virtual void CleanupRemoteDrawing();
+
+  /**
+   * Create a backbuffer for the software compositor.
+   */
+  virtual already_AddRefed<gfx::DrawTarget>
+  CreateBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                             const LayoutDeviceIntRect& aRect,
+                             const LayoutDeviceIntRect& aClearRect);
+
+protected:
+  virtual ~CompositorWidgetProxy();
+
+private:
+  // Back buffer of BasicCompositor
+  RefPtr<gfx::DrawTarget> mLastBackBuffer;
 };
 
+// This version of CompositorWidgetProxy implements a wrapper around
+// nsBaseWidget.
+class CompositorWidgetProxyWrapper : public CompositorWidgetProxy
+{
+public:
+  explicit CompositorWidgetProxyWrapper(nsBaseWidget* aWidget);
+
+  virtual bool PreRender(layers::LayerManagerComposite* aManager) override;
+  virtual void PostRender(layers::LayerManagerComposite* aManager) override;
+  virtual void DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
+                                  LayoutDeviceIntRect aRect) override;
+  virtual void DrawWindowOverlay(layers::LayerManagerComposite* aManager,
+                                 LayoutDeviceIntRect aRect) override;
+  virtual already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
+  virtual already_AddRefed<gfx::DrawTarget>
+  StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                             layers::BufferMode* aBufferMode) override;
+  virtual void EndRemoteDrawing() override;
+  virtual void EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
+                                        LayoutDeviceIntRegion& aInvalidRegion) override;
+  virtual void CleanupRemoteDrawing() override;
+  virtual void CleanupWindowEffects() override;
+  virtual bool InitCompositor(layers::Compositor* aCompositor) override;
+  virtual LayoutDeviceIntSize GetClientSize() override;
+  virtual uint32_t GetGLFrameBufferFormat() override;
+  virtual layers::Composer2D* GetComposer2D() override;
+
+  // If you can override this method, inherit from CompositorWidgetProxy instead.
+  nsIWidget* RealWidget() override;
+
+private:
+  nsBaseWidget* mWidget;
+};
 
 } // namespace widget
 } // namespace mozilla
