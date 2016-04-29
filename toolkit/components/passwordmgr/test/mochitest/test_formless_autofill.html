@@ -10,32 +10,33 @@
 </head>
 <body>
 <script type="application/javascript;version=1.8">
-let mm = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginFrame").addEventListener("load", (evt) => {
     // Tell the parent to setup test logins.
-    mm.sendAsyncMessage("setupParent", { selfFilling: true });
+    chromeScript.sendAsyncMessage("setupParent", { selfFilling: true });
   });
 });
 
-// When the setup is done, load a recipe for this test.
-mm.addMessageListener("doneSetup", function doneSetup() {
-  mm.sendAsyncMessage("loadRecipes", {
+let doneSetupPromise = new Promise(resolve => {
+  // When the setup is done, load a recipe for this test.
+  chromeScript.addMessageListener("doneSetup", function doneSetup() {
+    resolve();
+  });
+});
+
+add_task(function* setup() {
+  info("Waiting for loads and setup");
+  yield doneSetupPromise;
+
+  yield loadRecipes({
     siteRecipes: [{
       hosts: ["mochi.test:8888"],
       usernameSelector: "input[name='recipeuname']",
       passwordSelector: "input[name='recipepword']",
     }],
   });
-});
-
-let loadedRecipesPromise = new Promise(resolve => {
-  mm.addMessageListener("loadedRecipes", resolve);
-});
-
-add_task(function* setup() {
-  yield loadedRecipesPromise;
 });
 
 
