@@ -2528,56 +2528,56 @@ MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
 }
 
 void
-MediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+MediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStreamTrackListener> aListener,
                                         TrackID aTrackID)
 {
   // Base implementation, for streams that don't support direct track listeners.
-  RefPtr<MediaStreamTrackDirectListener> listener = aListener;
+  RefPtr<DirectMediaStreamTrackListener> listener = aListener;
   listener->NotifyDirectListenerInstalled(
-    MediaStreamTrackDirectListener::InstallationResult::STREAM_NOT_SUPPORTED);
+    DirectMediaStreamTrackListener::InstallationResult::STREAM_NOT_SUPPORTED);
 }
 
 void
-MediaStream::AddDirectTrackListener(MediaStreamTrackDirectListener* aListener,
+MediaStream::AddDirectTrackListener(DirectMediaStreamTrackListener* aListener,
                                     TrackID aTrackID)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamTrackDirectListener* aListener,
+    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
     virtual void Run()
     {
       mStream->AddDirectTrackListenerImpl(mListener.forget(), mTrackID);
     }
-    RefPtr<MediaStreamTrackDirectListener> mListener;
+    RefPtr<DirectMediaStreamTrackListener> mListener;
     TrackID mTrackID;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
 }
 
 void
-MediaStream::RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+MediaStream::RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                            TrackID aTrackID)
 {
   // Base implementation, the listener was never added so nothing to do.
-  RefPtr<MediaStreamTrackDirectListener> listener = aListener;
+  RefPtr<DirectMediaStreamTrackListener> listener = aListener;
 }
 
 void
-MediaStream::RemoveDirectTrackListener(MediaStreamTrackDirectListener* aListener,
+MediaStream::RemoveDirectTrackListener(DirectMediaStreamTrackListener* aListener,
                                        TrackID aTrackID)
 {
   class Message : public ControlMessage {
   public:
-    Message(MediaStream* aStream, MediaStreamTrackDirectListener* aListener,
+    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
     virtual void Run()
     {
       mStream->RemoveDirectTrackListenerImpl(mListener, mTrackID);
     }
-    RefPtr<MediaStreamTrackDirectListener> mListener;
+    RefPtr<DirectMediaStreamTrackListener> mListener;
     TrackID mTrackID;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
@@ -2845,13 +2845,13 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
   MOZ_ASSERT(aTrack);
 
   for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
-    MediaStreamDirectListener* l = mDirectListeners[j];
+    DirectMediaStreamListener* l = mDirectListeners[j];
     StreamTime offset = 0; // FIX! need a separate StreamTime.... or the end of the internal buffer
     l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID,
                           offset, aTrack->mCommands, *aSegment);
   }
 
-  for (const TrackBound<MediaStreamTrackDirectListener>& source
+  for (const TrackBound<DirectMediaStreamTrackListener>& source
          : mDirectTrackListeners) {
     if (aTrack->mID != source.mTrackID) {
       continue;
@@ -2888,7 +2888,7 @@ SourceMediaStream::NotifyListenersEvent(MediaStreamListener::MediaStreamGraphEve
 }
 
 void
-SourceMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
+SourceMediaStream::AddDirectListener(DirectMediaStreamListener* aListener)
 {
   bool wasEmpty;
   {
@@ -2904,7 +2904,7 @@ SourceMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
 }
 
 void
-SourceMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
+SourceMediaStream::RemoveDirectListener(DirectMediaStreamListener* aListener)
 {
   bool isEmpty;
   {
@@ -2920,7 +2920,7 @@ SourceMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
 }
 
 void
-SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
+SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStreamTrackListener> aListener,
                                               TrackID aTrackID)
 {
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
@@ -2928,7 +2928,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
   bool found;
   bool isAudio;
   bool isVideo;
-  RefPtr<MediaStreamTrackDirectListener> listener = aListener;
+  RefPtr<DirectMediaStreamTrackListener> listener = aListener;
   STREAM_LOG(LogLevel::Debug, ("Adding direct track listener %p bound to track %d to source stream %p",
              listener.get(), aTrackID, this));
 
@@ -2941,7 +2941,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
       isVideo = data->mData->GetType() == MediaSegment::VIDEO;
     }
     if (found && (isAudio || isVideo)) {
-      TrackBound<MediaStreamTrackDirectListener>* sourceListener =
+      TrackBound<DirectMediaStreamTrackListener>* sourceListener =
         mDirectTrackListeners.AppendElement();
       sourceListener->mListener = listener;
       sourceListener->mTrackID = aTrackID;
@@ -2951,7 +2951,7 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
     STREAM_LOG(LogLevel::Warning, ("Couldn't find source track for direct track listener %p",
                                    listener.get()));
     listener->NotifyDirectListenerInstalled(
-      MediaStreamTrackDirectListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
+      DirectMediaStreamTrackListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
     return;
   }
   if (!isAudio && !isVideo) {
@@ -2963,16 +2963,16 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
   }
   STREAM_LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));
   listener->NotifyDirectListenerInstalled(
-    MediaStreamTrackDirectListener::InstallationResult::SUCCESS);
+    DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
 }
 
 void
-SourceMediaStream::RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
+SourceMediaStream::RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                                  TrackID aTrackID)
 {
   MutexAutoLock lock(mMutex);
   for (int32_t i = mDirectTrackListeners.Length() - 1; i >= 0; --i) {
-    const TrackBound<MediaStreamTrackDirectListener>& source =
+    const TrackBound<DirectMediaStreamTrackListener>& source =
       mDirectTrackListeners[i];
     if (source.mListener == aListener && source.mTrackID == aTrackID) {
       aListener->NotifyDirectListenerUninstalled();
@@ -3032,7 +3032,7 @@ SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled)
 {
   {
     MutexAutoLock lock(mMutex);
-    for (TrackBound<MediaStreamTrackDirectListener>& l: mDirectTrackListeners) {
+    for (TrackBound<DirectMediaStreamTrackListener>& l: mDirectTrackListeners) {
       if (l.mTrackID == aTrackID) {
         bool oldEnabled = !mDisabledTrackIDs.Contains(aTrackID);
         if (!oldEnabled && aEnabled) {

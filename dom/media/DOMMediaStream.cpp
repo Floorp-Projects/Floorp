@@ -755,7 +755,7 @@ DOMMediaStream::OwnsTrack(const MediaStreamTrack& aTrack) const
 }
 
 bool
-DOMMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
+DOMMediaStream::AddDirectListener(DirectMediaStreamListener* aListener)
 {
   if (GetInputStream() && GetInputStream()->AsSourceStream()) {
     GetInputStream()->AsSourceStream()->AddDirectListener(aListener);
@@ -765,7 +765,7 @@ DOMMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
 }
 
 void
-DOMMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
+DOMMediaStream::RemoveDirectListener(DirectMediaStreamListener* aListener)
 {
   if (GetInputStream() && GetInputStream()->AsSourceStream()) {
     GetInputStream()->AsSourceStream()->RemoveDirectListener(aListener);
