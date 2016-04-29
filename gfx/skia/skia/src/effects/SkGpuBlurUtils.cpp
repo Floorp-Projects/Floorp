@@ -56,6 +56,7 @@ static void convolve_gaussian_1d(GrDrawContext* drawContext,
                                  bool useBounds,
                                  float bounds[2]) {
     GrPaint paint;
+    paint.setAllowSRGBInputs(drawContext->allowSRGBInputs());
     SkAutoTUnref<GrFragmentProcessor> conv(GrConvolutionEffect::CreateGaussian(
         texture, direction, radius, sigma, useBounds, bounds));
     paint.addColorFragmentProcessor(conv);
@@ -78,6 +79,7 @@ static void convolve_gaussian_2d(GrDrawContext* drawContext,
     SkISize size = SkISize::Make(2 * radiusX + 1,  2 * radiusY + 1);
     SkIPoint kernelOffset = SkIPoint::Make(radiusX, radiusY);
     GrPaint paint;
+    paint.setAllowSRGBInputs(drawContext->allowSRGBInputs());
     SkIRect bounds;
     if (srcBounds) {
         srcBounds->roundOut(&bounds);
@@ -164,6 +166,7 @@ static void convolve_gaussian(GrDrawContext* drawContext,
 GrTexture* GaussianBlur(GrContext* context,
                         GrTexture* srcTexture,
                         bool canClobberSrc,
+                        bool allowSRGBInputs,
                         const SkRect& dstBounds,
                         const SkRect* srcBounds,
                         float sigmaX,
@@ -198,6 +201,8 @@ GrTexture* GaussianBlur(GrContext* context,
 
     SkASSERT(kBGRA_8888_GrPixelConfig == srcTexture->config() ||
              kRGBA_8888_GrPixelConfig == srcTexture->config() ||
+             kSRGBA_8888_GrPixelConfig == srcTexture->config() ||
+             kSBGRA_8888_GrPixelConfig == srcTexture->config() ||
              kAlpha_8_GrPixelConfig == srcTexture->config());
 
     GrSurfaceDesc desc;
@@ -227,6 +232,7 @@ GrTexture* GaussianBlur(GrContext* context,
 
     for (int i = 1; i < scaleFactorX || i < scaleFactorY; i *= 2) {
         GrPaint paint;
+        paint.setAllowSRGBInputs(allowSRGBInputs);
         SkMatrix matrix;
         matrix.setIDiv(srcTexture->width(), srcTexture->height());
         SkRect dstRect(srcRect);
@@ -266,6 +272,9 @@ GrTexture* GaussianBlur(GrContext* context,
         localSrcBounds = srcRect;
     }
 
+    SkSurfaceProps props(allowSRGBInputs ? SkSurfaceProps::kAllowSRGBInputs_Flag : 0,
+                         SkSurfaceProps::kLegacyFontHost_InitType);
+
     // For really small blurs (certainly no wider than 5x5 on desktop gpus) it is faster to just
     // launch a single non separable kernel vs two launches
     srcRect = localDstBounds;
@@ -275,7 +284,7 @@ GrTexture* GaussianBlur(GrContext* context,
         SkASSERT((1 == scaleFactorX) && (1 == scaleFactorY));
 
         SkAutoTUnref<GrDrawContext> dstDrawContext(
-                                             context->drawContext(dstTexture->asRenderTarget()));
+            context->drawContext(dstTexture->asRenderTarget(), &props));
         if (!dstDrawContext) {
             return nullptr;
         }
@@ -298,7 +307,7 @@ GrTexture* GaussianBlur(GrContext* context,
                     srcDrawContext.reset(context->drawContext(srcTexture->asRenderTarget()));
                     if (!srcDrawContext) {
                         return nullptr;
-                    }        
+                    }
                 }
 
                 // Clear out a radius to the right of the srcRect to prevent the
@@ -309,7 +318,7 @@ GrTexture* GaussianBlur(GrContext* context,
             }
 
             SkAutoTUnref<GrDrawContext> dstDrawContext(
-                                             context->drawContext(dstTexture->asRenderTarget()));
+                context->drawContext(dstTexture->asRenderTarget(), &props));
             if (!dstDrawContext) {
                 return nullptr;
             }
@@ -331,7 +340,7 @@ GrTexture* GaussianBlur(GrContext* context,
                     srcDrawContext.reset(context->drawContext(srcTexture->asRenderTarget()));
                     if (!srcDrawContext) {
                         return nullptr;
-                    }        
+                    }
                 }
 
                 // Clear out a radius below the srcRect to prevent the Y
@@ -342,7 +351,7 @@ GrTexture* GaussianBlur(GrContext* context,
             }
 
             SkAutoTUnref<GrDrawContext> dstDrawContext(
-                                               context->drawContext(dstTexture->asRenderTarget()));
+                context->drawContext(dstTexture->asRenderTarget(), &props));
             if (!dstDrawContext) {
                 return nullptr;
             }
@@ -373,6 +382,7 @@ GrTexture* GaussianBlur(GrContext* context,
         matrix.setIDiv(srcTexture->width(), srcTexture->height());
 
         GrPaint paint;
+        paint.setAllowSRGBInputs(allowSRGBInputs);
         // FIXME:  this should be mitchell, not bilinear.
         GrTextureParams params(SkShader::kClamp_TileMode, GrTextureParams::kBilerp_FilterMode);
         paint.addColorTextureProcessor(srcTexture, matrix, params);

@@ -471,28 +471,8 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
       return surface.forget();
     }
 
-    // We need to fall back to generic copying and cropping for the Windows8.1,
-    // D2D1 backend.
-    // In the Windows8.1 D2D1 backend, it might trigger "partial upload" from a
-    // non-SourceSurfaceD2D1 surface to a D2D1Image in the following
-    // CopySurface() step. However, the "partial upload" only supports uploading
-    // a rectangle starts from the upper-left point, which means it cannot
-    // upload an arbitrary part of the source surface and this causes problems
-    // if the mPictureRect is not starts from the upper-left point.
-    if (target->GetBackendType() == BackendType::DIRECT2D1_1 &&
-        mSurface->GetType() != SurfaceType::D2D1_1_IMAGE) {
-      RefPtr<DataSourceSurface> dataSurface = mSurface->GetDataSurface();
-      if (NS_WARN_IF(!dataSurface)) {
-        mSurface = nullptr;
-        RefPtr<gfx::SourceSurface> surface(mSurface);
-        return surface.forget();
-      }
-
-      mSurface = CropAndCopyDataSourceSurface(dataSurface, mPictureRect);
-    } else {
-      target->CopySurface(mSurface, surfPortion, dest);
-      mSurface = target->Snapshot();
-    }
+    target->CopySurface(mSurface, surfPortion, dest);
+    mSurface = target->Snapshot();
 
     // Make mCropRect match new surface we've cropped to
     mPictureRect.MoveTo(0, 0);
@@ -505,12 +485,27 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
 
-    RefPtr<DataSourceSurface> dataSourceSurface = mSurface->GetDataSurface();
-    MOZ_ASSERT(dataSourceSurface);
+    RefPtr<DataSourceSurface> dstSurface = mSurface->GetDataSurface();
+    MOZ_ASSERT(dstSurface);
 
-    DataSourceSurface::ScopedMap map(dataSourceSurface, DataSourceSurface::READ_WRITE);
-    if (NS_WARN_IF(!map.IsMapped())) {
-      return nullptr;
+    RefPtr<DataSourceSurface> srcSurface;
+    DataSourceSurface::MappedSurface srcMap;
+    DataSourceSurface::MappedSurface dstMap;
+
+    if (!dstSurface->Map(DataSourceSurface::MapType::READ_WRITE, &dstMap)) {
+      srcSurface = dstSurface;
+      if (!srcSurface->Map(DataSourceSurface::READ, &srcMap)) {
+        gfxCriticalError() << "Failed to map source surface for premultiplying alpha.";
+        return nullptr;
+      }
+
+      dstSurface = Factory::CreateDataSourceSurface(srcSurface->GetSize(), srcSurface->GetFormat());
+
+      if (!dstSurface || !dstSurface->Map(DataSourceSurface::MapType::WRITE, &dstMap)) {
+        gfxCriticalError() << "Failed to map destination surface for premultiplying alpha.";
+        srcSurface->Unmap();
+        return nullptr;
+      }
     }
 
     uint8_t rIndex = 0;
@@ -535,13 +530,14 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
       aIndex = 0;
     }
 
-    for (int i = 0; i < dataSourceSurface->GetSize().height; ++i) {
-      uint8_t* bufferPtr = map.GetData() + map.GetStride() * i;
-      for (int i = 0; i < dataSourceSurface->GetSize().width; ++i) {
-        uint8_t r = *(bufferPtr+rIndex);
-        uint8_t g = *(bufferPtr+gIndex);
-        uint8_t b = *(bufferPtr+bIndex);
-        uint8_t a = *(bufferPtr+aIndex);
+    for (int i = 0; i < dstSurface->GetSize().height; ++i) {
+      uint8_t* bufferPtr = dstMap.mData + dstMap.mStride * i;
+      uint8_t* srcBufferPtr = srcSurface ? srcMap.mData + srcMap.mStride * i : bufferPtr;
+      for (int i = 0; i < dstSurface->GetSize().width; ++i) {
+        uint8_t r = *(srcBufferPtr+rIndex);
+        uint8_t g = *(srcBufferPtr+gIndex);
+        uint8_t b = *(srcBufferPtr+bIndex);
+        uint8_t a = *(srcBufferPtr+aIndex);
 
         *(bufferPtr+rIndex) = gfxUtils::sPremultiplyTable[a * 256 + r];
         *(bufferPtr+gIndex) = gfxUtils::sPremultiplyTable[a * 256 + g];
@@ -549,10 +545,16 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
         *(bufferPtr+aIndex) = a;
 
         bufferPtr += 4;
+        srcBufferPtr += 4;
       }
     }
 
-    mSurface = dataSourceSurface;
+    dstSurface->Unmap();
+    if (srcSurface) {
+      srcSurface->Unmap();
+    }
+
+    mSurface = dstSurface;
   }
 
   // Replace our surface with one optimized for the target we're about to draw
@@ -883,7 +885,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   }
 
   RefPtr<layers::Image> data = aImageBitmap.mData;
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aImageBitmap.mIsPremultipliedAlpha);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {

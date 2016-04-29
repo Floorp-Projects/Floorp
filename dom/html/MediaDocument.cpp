@@ -190,16 +190,10 @@ MediaDocument::StartDocumentLoad(const char*         aCommand,
 void
 MediaDocument::BecomeInteractive()
 {
-  // In principle, if we knew the readyState code to work, we could infer
-  // restoration from GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE.
-  bool restoring = false;
-  if (nsPIDOMWindowOuter* window = GetWindow()) {
-    nsIDocShell* docShell = window->GetDocShell();
-    if (docShell) {
-      docShell->GetRestoringDocument(&restoring);
-    }
-  }
-  if (!restoring) {
+  // Even though our readyState code isn't really reliable, here we pretend
+  // that it is and conclude that we are restoring from the b/f cache if
+  // GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE.
+  if (GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
     MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING,
                "Bad readyState");
     SetReadyStateInternal(nsIDocument::READYSTATE_INTERACTIVE);

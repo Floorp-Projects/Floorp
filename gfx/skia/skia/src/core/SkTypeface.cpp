@@ -180,7 +180,12 @@ SkTypeface* SkTypeface::Deserialize(SkStream* stream) {
     if (gDeserializeTypefaceDelegate) {
         return (*gDeserializeTypefaceDelegate)(stream);
     }
-    SkFontDescriptor desc(stream);
+
+    SkFontDescriptor desc;
+    if (!SkFontDescriptor::Deserialize(stream, &desc)) {
+        return nullptr;
+    }
+
     SkFontData* data = desc.detachFontData();
     if (data) {
         SkTypeface* typeface = SkTypeface::CreateFromFontData(data);
@@ -227,7 +232,7 @@ SkFontData* SkTypeface::createFontData() const {
 SkFontData* SkTypeface::onCreateFontData() const {
     int index;
     SkAutoTDelete<SkStreamAsset> stream(this->onOpenStream(&index));
-    return new SkFontData(stream.detach(), index, nullptr, 0);
+    return new SkFontData(stream.release(), index, nullptr, 0);
 };
 
 int SkTypeface::charsToGlyphs(const void* chars, Encoding encoding,
@@ -353,4 +358,3 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
     }
     return false;
 }
-

@@ -31,7 +31,7 @@ static int HandleSigset(int (*aRealFunc)(int, const sigset_t*, sigset_t*),
   }
 
   // Avoid unnecessary work
-  if (aHow == SIG_UNBLOCK || !sigismember(aSet, SIGSYS))
+  if (aSet == NULL || aHow == SIG_UNBLOCK || !sigismember(aSet, SIGSYS))
     return aRealFunc(aHow, aSet, aOldSet);
 
   sigset_t newSet = *aSet;

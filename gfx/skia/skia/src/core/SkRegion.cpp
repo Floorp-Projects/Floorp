@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -599,7 +598,7 @@ bool SkRegion::setRects(const SkIRect rects[], int count) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined _WIN32 && _MSC_VER >= 1300  // disable warning : local variable used without having been initialized
+#if defined _WIN32  // disable warning : local variable used without having been initialized
 #pragma warning ( push )
 #pragma warning ( disable : 4701 )
 #endif
@@ -737,7 +736,7 @@ static SkRegion::RunType* operate_on_span(const SkRegion::RunType a_runs[],
     return dst;
 }
 
-#if defined _WIN32 && _MSC_VER >= 1300
+#if defined _WIN32
 #pragma warning ( pop )
 #endif
 

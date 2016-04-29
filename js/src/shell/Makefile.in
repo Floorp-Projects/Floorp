@@ -10,11 +10,5 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# People expect the js shell to wind up in the top-level JS dir.
-libs::
-	$(INSTALL) $(IFLAGS2) $(PROGRAM) ..
-
-GARBAGE += ../$(PROGRAM)
-
 install:: $(PROGRAM)
 	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)

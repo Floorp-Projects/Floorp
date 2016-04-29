@@ -225,9 +225,7 @@ CompositorOGL::CleanupResources()
 bool
 CompositorOGL::Initialize()
 {
-  bool force = gfxPrefs::LayersAccelerationForceEnabled();
-
-  ScopedGfxFeatureReporter reporter("GL Layers", force);
+  ScopedGfxFeatureReporter reporter("GL Layers");
 
   // Do not allow double initialization
   MOZ_ASSERT(mGLContext == nullptr, "Don't reinitialize CompositorOGL");

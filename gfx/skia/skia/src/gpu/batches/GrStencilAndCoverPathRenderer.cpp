@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2012 Google Inc.
  *
@@ -28,7 +27,7 @@ GrPathRenderer* GrStencilAndCoverPathRenderer::Create(GrResourceProvider* resour
 }
 
 GrStencilAndCoverPathRenderer::GrStencilAndCoverPathRenderer(GrResourceProvider* resourceProvider)
-    : fResourceProvider(resourceProvider) {    
+    : fResourceProvider(resourceProvider) {
 }
 
 bool GrStencilAndCoverPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
@@ -60,7 +59,7 @@ static GrPath* get_gr_path(GrResourceProvider* resourceProvider, const SkPath& s
     } else {
         SkASSERT(path->isEqualTo(skPath, stroke));
     }
-    return path.detach();
+    return path.release();
 }
 
 void GrStencilAndCoverPathRenderer::onStencilPath(const StencilPathArgs& args) {

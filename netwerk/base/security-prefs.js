@@ -59,7 +59,9 @@ pref("security.pki.sha1_enforcement_level", 3);
 //    contain any DNS names or IP addresses)
 // 1: fall back to the subject common name for certificates valid before 23
 //    August 2016 if necessary
-// 2: only use name information from the subject alternative name extension
+// 2: fall back to the subject common name for certificates valid before 23
+//    August 2015 if necessary
+// 3: only use name information from the subject alternative name extension
 #ifdef RELEASE_BUILD
 pref("security.pki.name_matching_mode", 1);
 #else

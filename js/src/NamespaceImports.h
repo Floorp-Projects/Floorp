@@ -13,6 +13,7 @@
 // These includes are needed these for some typedefs (e.g. HandleValue) and
 // functions (e.g. NullValue())...
 #include "js/CallNonGenericMethod.h"
+#include "js/GCHashTable.h"
 #include "js/GCVector.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -36,9 +37,9 @@ typedef AutoVectorRooter<jsid> AutoIdVector;
 typedef AutoVectorRooter<JSObject*> AutoObjectVector;
 typedef AutoVectorRooter<JSScript*> AutoVector;
 
-using ValueVector = js::GCVector<JS::Value>;
-using IdVector = js::GCVector<jsid>;
-using ScriptVector = js::GCVector<JSScript*>;
+using ValueVector = JS::GCVector<JS::Value>;
+using IdVector = JS::GCVector<jsid>;
+using ScriptVector = JS::GCVector<JSScript*>;
 
 template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
@@ -93,6 +94,10 @@ using JS::ScriptVector;
 
 using JS::AutoHashMapRooter;
 using JS::AutoHashSetRooter;
+
+using JS::GCVector;
+using JS::GCHashMap;
+using JS::GCHashSet;
 
 using JS::CallArgs;
 using JS::CallNonGenericMethod;

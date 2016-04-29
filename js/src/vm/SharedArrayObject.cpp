@@ -385,9 +385,6 @@ js::InitSharedArrayBufferClass(JSContext* cx, HandleObject obj)
     if (!ctor)
         return nullptr;
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
-        return nullptr;
-
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
@@ -406,6 +403,9 @@ js::InitSharedArrayBufferClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     if (!JS_DefineFunctions(cx, proto, SharedArrayBufferObject::jsfuncs))
+        return nullptr;
+
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
         return nullptr;
 
     return proto;

@@ -217,6 +217,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+    void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
+    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
 
     void visitMemoryBarrier(LMemoryBarrier* ins);
 

@@ -32,6 +32,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void bailout(const T& t, LSnapshot* snapshot);
 
   protected:
+    void emitWasmSignedTruncateToInt32(OutOfLineWasmTruncateCheck* ool, Register output);
+
     // Load a NaN or zero into a register for an out of bounds AsmJS or static
     // typed array load.
     class OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86Shared>
@@ -92,23 +94,23 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     };
 
   private:
-    MOZ_WARN_UNUSED_RESULT uint32_t
+    MOZ_MUST_USE uint32_t
     emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* mir, const MInstruction* ins,
                                Register ptr, Label* fail);
 
   public:
     // For SIMD and atomic loads and stores (which throw on out-of-bounds):
-    MOZ_WARN_UNUSED_RESULT uint32_t
+    MOZ_MUST_USE uint32_t
     maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* mir, const MInstruction* ins,
                                       const LAllocation* ptr);
 
     // For asm.js plain and atomic loads that possibly require a bounds check:
-    MOZ_WARN_UNUSED_RESULT uint32_t
+    MOZ_MUST_USE uint32_t
     maybeEmitAsmJSLoadBoundsCheck(const MAsmJSLoadHeap* mir, LAsmJSLoadHeap* ins,
                                   OutOfLineLoadTypedArrayOutOfBounds** ool);
 
     // For asm.js plain and atomic stores that possibly require a bounds check:
-    MOZ_WARN_UNUSED_RESULT uint32_t
+    MOZ_MUST_USE uint32_t
     maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mir, LAsmJSStoreHeap* ins,
                                    Label** rejoin);
 
@@ -279,6 +281,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitNegI(LNegI* lir);
     void visitNegD(LNegD* lir);
     void visitNegF(LNegF* lir);
+
+    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
 
     // SIMD operators
     void visitSimdValueInt32x4(LSimdValueInt32x4* lir);

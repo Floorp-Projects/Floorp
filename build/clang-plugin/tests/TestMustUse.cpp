@@ -1,7 +1,7 @@
-#define MOZ_MUST_USE __attribute__((annotate("moz_must_use")))
+#define MOZ_MUST_USE_TYPE __attribute__((annotate("moz_must_use_type")))
 
 struct Temporary { ~Temporary(); };
-class MOZ_MUST_USE MustUse {};
+class MOZ_MUST_USE_TYPE MustUse {};
 class MayUse {};
 
 MustUse producesMustUse();

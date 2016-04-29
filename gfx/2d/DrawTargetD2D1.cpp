@@ -363,7 +363,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
-  Matrix mat;
+  Matrix mat = Matrix::Translation(aDestination.x - aSourceRect.x, aDestination.y - aSourceRect.y);
   RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
 
   if (!image) {
@@ -371,10 +371,16 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
     return;
   }
 
-  if (!mat.IsIdentity()) {
-    gfxDebug() << *this << ": At this point complex partial uploads are not supported for CopySurface.";
+  if (mat.HasNonIntegerTranslation()) {
+    gfxDebug() << *this << ": At this point scaled partial uploads are not supported for CopySurface.";
     return;
   }
+
+  IntRect sourceRect = aSourceRect;
+  sourceRect.x += (aDestination.x - aSourceRect.x) - mat._31;
+  sourceRect.width -= (aDestination.x - aSourceRect.x) - mat._31;
+  sourceRect.y += (aDestination.y - aSourceRect.y) - mat._32;
+  sourceRect.height -= (aDestination.y - aSourceRect.y) - mat._32;
 
   RefPtr<ID2D1Bitmap> bitmap;
   image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
@@ -391,7 +397,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
     return;
   }
 
-  Rect srcRect(Float(aSourceRect.x), Float(aSourceRect.y),
+  Rect srcRect(Float(sourceRect.x), Float(sourceRect.y),
                Float(aSourceRect.width), Float(aSourceRect.height));
 
   Rect dstRect(Float(aDestination.x), Float(aDestination.y),

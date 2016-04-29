@@ -25,22 +25,19 @@ namespace js {
 namespace wasm {
 
 static const uint32_t MagicNumber        = 0x6d736100; // "\0asm"
-static const uint32_t EncodingVersion    = 0xa;
+static const uint32_t EncodingVersion    = 0x0b;
 
-static const char SignaturesId[]         = "signatures";
-static const char ImportTableId[]        = "import_table";
-static const char FunctionSignaturesId[] = "function_signatures";
-static const char FunctionTableId[]      = "function_table";
-static const char MemoryId[]             = "memory";
-static const char ExportTableId[]        = "export_table";
-static const char FunctionBodiesId[]     = "function_bodies";
-static const char DataSegmentsId[]       = "data_segments";
+static const char TypeSectionId[]        = "type";
+static const char ImportSectionId[]      = "import";
+static const char FunctionSectionId[]    = "function";
+static const char TableSectionId[]       = "table";
+static const char MemorySectionId[]      = "memory";
+static const char ExportSectionId[]      = "export";
+static const char CodeSectionId[]        = "code";
+static const char DataSectionId[]        = "data";
 
 enum class ValType
 {
-    // 0x00 is reserved for ExprType::Void in the binary encoding. See comment
-    // below about ExprType going away.
-
     I32                                  = 0x01,
     I64                                  = 0x02,
     F32                                  = 0x03,
@@ -57,6 +54,11 @@ enum class ValType
     Limit
 };
 
+enum class TypeConstructor
+{
+    Function                             = 0x40
+};
+
 enum class Expr
 {
     // Control flow operators
@@ -64,24 +66,25 @@ enum class Expr
     Block                                = 0x01,
     Loop                                 = 0x02,
     If                                   = 0x03,
-    IfElse                               = 0x04,
+    Else                                 = 0x04,
     Select                               = 0x05,
     Br                                   = 0x06,
     BrIf                                 = 0x07,
     BrTable                              = 0x08,
-    Return                               = 0x14,
-    Unreachable                          = 0x15,
+    Return                               = 0x09,
+    Unreachable                          = 0x0a,
+    End                                  = 0x0f,
 
     // Basic operators
-    I32Const                             = 0x0a,
-    I64Const                             = 0x0b,
-    F64Const                             = 0x0c,
-    F32Const                             = 0x0d,
-    GetLocal                             = 0x0e,
-    SetLocal                             = 0x0f,
-    Call                                 = 0x12,
-    CallIndirect                         = 0x13,
-    CallImport                           = 0x1f,
+    I32Const                             = 0x10,
+    I64Const                             = 0x11,
+    F64Const                             = 0x12,
+    F32Const                             = 0x13,
+    GetLocal                             = 0x14,
+    SetLocal                             = 0x15,
+    Call                                 = 0x16,
+    CallIndirect                         = 0x17,
+    CallImport                           = 0x18,
 
     // Memory-related operators
     I32Load8S                            = 0x20,
@@ -107,7 +110,7 @@ enum class Expr
     I64Store                             = 0x34,
     F32Store                             = 0x35,
     F64Store                             = 0x36,
-    MemorySize                           = 0x3b,
+    CurrentMemory                        = 0x3b,
     GrowMemory                           = 0x39,
 
     // i32 operators
@@ -252,8 +255,7 @@ enum class Expr
     // compiling asm.js and are rejected by wasm validation.
 
     // asm.js-specific operators
-    Id                                   = 0xc0,
-    LoadGlobal,
+    LoadGlobal                           = 0xc0,
     StoreGlobal,
     I32Min,
     I32Max,
@@ -343,12 +345,12 @@ class Encoder
     Bytes& bytes_;
 
     template <class T>
-    MOZ_WARN_UNUSED_RESULT bool write(const T& v) {
+    MOZ_MUST_USE bool write(const T& v) {
         return bytes_.append(reinterpret_cast<const uint8_t*>(&v), sizeof(T));
     }
 
     template <typename UInt>
-    MOZ_WARN_UNUSED_RESULT bool writeVarU(UInt i) {
+    MOZ_MUST_USE bool writeVarU(UInt i) {
         do {
             uint8_t byte = i & 0x7f;
             i >>= 7;
@@ -361,7 +363,7 @@ class Encoder
     }
 
     template <typename SInt>
-    MOZ_WARN_UNUSED_RESULT bool writeVarS(SInt i) {
+    MOZ_MUST_USE bool writeVarS(SInt i) {
         bool done;
         do {
             uint8_t byte = i & 0x7f;
@@ -413,48 +415,44 @@ class Encoder
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).
 
-    MOZ_WARN_UNUSED_RESULT bool writeFixedU8(uint8_t i) {
+    MOZ_MUST_USE bool writeFixedU8(uint8_t i) {
         return write<uint8_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeFixedU32(uint32_t i) {
+    MOZ_MUST_USE bool writeFixedU32(uint32_t i) {
         return write<uint32_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeFixedF32(float f) {
+    MOZ_MUST_USE bool writeFixedF32(float f) {
         return write<float>(f);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeFixedF64(double d) {
+    MOZ_MUST_USE bool writeFixedF64(double d) {
         return write<double>(d);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeFixedI32x4(const I32x4& i32x4) {
+    MOZ_MUST_USE bool writeFixedI32x4(const I32x4& i32x4) {
         return write<I32x4>(i32x4);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeFixedF32x4(const F32x4& f32x4) {
+    MOZ_MUST_USE bool writeFixedF32x4(const F32x4& f32x4) {
         return write<F32x4>(f32x4);
     }
 
     // Variable-length encodings that all use LEB128.
 
-    MOZ_WARN_UNUSED_RESULT bool writeVarU32(uint32_t i) {
+    MOZ_MUST_USE bool writeVarU32(uint32_t i) {
         return writeVarU<uint32_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeVarS32(int32_t i) {
+    MOZ_MUST_USE bool writeVarS32(int32_t i) {
         return writeVarS<int32_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeVarU64(uint64_t i) {
+    MOZ_MUST_USE bool writeVarU64(uint64_t i) {
         return writeVarU<uint64_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeVarS64(int64_t i) {
+    MOZ_MUST_USE bool writeVarS64(int64_t i) {
         return writeVarS<int64_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool writeValType(ValType type) {
+    MOZ_MUST_USE bool writeValType(ValType type) {
         static_assert(size_t(ValType::Limit) <= INT8_MAX, "fits");
         return writeFixedU8(size_t(type));
     }
-    MOZ_WARN_UNUSED_RESULT bool writeExprType(ExprType type) {
-        static_assert(size_t(ExprType::Limit) <= INT8_MAX, "fits");
-        return writeFixedU8(uint8_t(type));
-    }
-    MOZ_WARN_UNUSED_RESULT bool writeExpr(Expr expr) {
+    MOZ_MUST_USE bool writeExpr(Expr expr) {
         static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
         if (size_t(expr) < UINT8_MAX)
             return writeFixedU8(uint8_t(expr));
@@ -464,16 +462,7 @@ class Encoder
 
     // Variable-length encodings that allow back-patching.
 
-    MOZ_WARN_UNUSED_RESULT bool writePatchableFixedU8(size_t* offset) {
-        *offset = bytes_.length();
-        return bytes_.append(0xff);
-    }
-    void patchFixedU8(size_t offset, uint8_t i) {
-        MOZ_ASSERT(bytes_[offset] == 0xff);
-        bytes_[offset] = i;
-    }
-
-    MOZ_WARN_UNUSED_RESULT bool writePatchableVarU32(size_t* offset) {
+    MOZ_MUST_USE bool writePatchableVarU32(size_t* offset) {
         *offset = bytes_.length();
         return writeVarU32(UINT32_MAX);
     }
@@ -481,20 +470,10 @@ class Encoder
         return patchVarU32(offset, patchBits, UINT32_MAX);
     }
 
-    MOZ_WARN_UNUSED_RESULT bool writePatchableOneByteExpr(size_t* offset) {
-        *offset = bytes_.length();
-        return writeFixedU8(0xff);
-    }
-    void patchOneByteExpr(size_t offset, Expr expr) {
-        MOZ_ASSERT(size_t(expr) < UINT8_MAX);
-        MOZ_ASSERT(bytes_[offset] == 0xff);
-        bytes_[offset] = uint8_t(expr);
-    }
-
     // Byte ranges start with an LEB128 length followed by an arbitrary sequence
     // of bytes. When used for strings, bytes are to be interpreted as utf8.
 
-    MOZ_WARN_UNUSED_RESULT bool writeBytes(const void* bytes, uint32_t numBytes) {
+    MOZ_MUST_USE bool writeBytes(const void* bytes, uint32_t numBytes) {
         return writeVarU32(numBytes) &&
                bytes_.append(reinterpret_cast<const uint8_t*>(bytes), numBytes);
     }
@@ -506,12 +485,12 @@ class Encoder
     // after the section length is the string id of the section.
 
     template <size_t IdSizeWith0>
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], size_t* offset) {
+    MOZ_MUST_USE bool startSection(const char (&id)[IdSizeWith0], size_t* offset) {
         static const size_t IdSize = IdSizeWith0 - 1;
         MOZ_ASSERT(id[IdSize] == '\0');
-        return writePatchableVarU32(offset) &&
-               writeVarU32(IdSize) &&
-               bytes_.append(reinterpret_cast<const uint8_t*>(id), IdSize);
+        return writeVarU32(IdSize) &&
+               bytes_.append(reinterpret_cast<const uint8_t*>(id), IdSize) &&
+               writePatchableVarU32(offset);
     }
     void finishSection(size_t offset) {
         return patchVarU32(offset, bytes_.length() - offset - varU32ByteLength(offset));
@@ -529,7 +508,7 @@ class Decoder
     const uint8_t* cur_;
 
     template <class T>
-    MOZ_WARN_UNUSED_RESULT bool read(T* out) {
+    MOZ_MUST_USE bool read(T* out) {
         if (bytesRemain() < sizeof(T))
             return false;
         memcpy((void*)out, cur_, sizeof(T));
@@ -547,7 +526,7 @@ class Decoder
     }
 
     template <typename UInt>
-    MOZ_WARN_UNUSED_RESULT bool readVarU(UInt* out) {
+    MOZ_MUST_USE bool readVarU(UInt* out) {
         const unsigned numBits = sizeof(UInt) * CHAR_BIT;
         const unsigned remainderBits = numBits % 7;
         const unsigned numBitsInSevens = numBits - remainderBits;
@@ -571,7 +550,7 @@ class Decoder
     }
 
     template <typename SInt>
-    MOZ_WARN_UNUSED_RESULT bool readVarS(SInt* out) {
+    MOZ_MUST_USE bool readVarS(SInt* out) {
         const unsigned numBits = sizeof(SInt) * CHAR_BIT;
         const unsigned remainderBits = numBits % 7;
         const unsigned numBitsInSevens = numBits - remainderBits;
@@ -634,40 +613,40 @@ class Decoder
     // Fixed-size encoding operations simply copy the literal bytes (without
     // attempting to align).
 
-    MOZ_WARN_UNUSED_RESULT bool readFixedU8(uint8_t* i) {
+    MOZ_MUST_USE bool readFixedU8(uint8_t* i) {
         return read<uint8_t>(i);
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedU32(uint32_t* u) {
+    MOZ_MUST_USE bool readFixedU32(uint32_t* u) {
         return read<uint32_t>(u);
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF32(float* f) {
+    MOZ_MUST_USE bool readFixedF32(float* f) {
         return read<float>(f);
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF64(double* d) {
+    MOZ_MUST_USE bool readFixedF64(double* d) {
         return read<double>(d);
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedI32x4(I32x4* i32x4) {
+    MOZ_MUST_USE bool readFixedI32x4(I32x4* i32x4) {
         return read<I32x4>(i32x4);
     }
-    MOZ_WARN_UNUSED_RESULT bool readFixedF32x4(F32x4* f32x4) {
+    MOZ_MUST_USE bool readFixedF32x4(F32x4* f32x4) {
         return read<F32x4>(f32x4);
     }
 
     // Variable-length encodings that all use LEB128.
 
-    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* out) {
+    MOZ_MUST_USE bool readVarU32(uint32_t* out) {
         return readVarU<uint32_t>(out);
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarS32(int32_t* out) {
+    MOZ_MUST_USE bool readVarS32(int32_t* out) {
         return readVarS<int32_t>(out);
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarU64(uint64_t* out) {
+    MOZ_MUST_USE bool readVarU64(uint64_t* out) {
         return readVarU<uint64_t>(out);
     }
-    MOZ_WARN_UNUSED_RESULT bool readVarS64(int64_t* out) {
+    MOZ_MUST_USE bool readVarS64(int64_t* out) {
         return readVarS<int64_t>(out);
     }
-    MOZ_WARN_UNUSED_RESULT bool readValType(ValType* type) {
+    MOZ_MUST_USE bool readValType(ValType* type) {
         static_assert(uint8_t(ValType::Limit) <= INT8_MAX, "fits");
         uint8_t u8;
         if (!readFixedU8(&u8))
@@ -675,15 +654,7 @@ class Decoder
         *type = (ValType)u8;
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readExprType(ExprType* type) {
-        static_assert(uint8_t(ExprType::Limit) <= INT8_MAX, "fits");
-        uint8_t u8;
-        if (!readFixedU8(&u8))
-            return false;
-        *type = (ExprType)u8;
-        return true;
-    }
-    MOZ_WARN_UNUSED_RESULT bool readExpr(Expr* expr) {
+    MOZ_MUST_USE bool readExpr(Expr* expr) {
         static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
         uint8_t u8;
         if (!readFixedU8(&u8))
@@ -702,7 +673,7 @@ class Decoder
 
     // See writeBytes comment.
 
-    MOZ_WARN_UNUSED_RESULT bool readBytes(Bytes* bytes) {
+    MOZ_MUST_USE bool readBytes(Bytes* bytes) {
         uint32_t numBytes;
         if (!readVarU32(&numBytes))
             return false;
@@ -714,7 +685,7 @@ class Decoder
         cur_ += numBytes;
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool readBytesRaw(uint32_t numBytes, const uint8_t** bytes) {
+    MOZ_MUST_USE bool readBytesRaw(uint32_t numBytes, const uint8_t** bytes) {
         if (bytes)
             *bytes = cur_;
         if (bytesRemain() < numBytes)
@@ -728,15 +699,11 @@ class Decoder
     static const uint32_t NotStarted = UINT32_MAX;
 
     template <size_t IdSizeWith0>
-    MOZ_WARN_UNUSED_RESULT bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset) {
+    MOZ_MUST_USE bool startSection(const char (&id)[IdSizeWith0], uint32_t* startOffset,
+                                             uint32_t* size) {
         static const size_t IdSize = IdSizeWith0 - 1;
         MOZ_ASSERT(id[IdSize] == '\0');
         const uint8_t* before = cur_;
-        uint32_t size;
-        if (!readVarU32(&size))
-            goto backup;
-        if (bytesRemain() < size)
-            return false;
         uint32_t idSize;
         if (!readVarU32(&idSize))
             goto backup;
@@ -745,32 +712,29 @@ class Decoder
         if (idSize != IdSize || !!memcmp(cur_, id, IdSize))
             goto backup;
         cur_ += IdSize;
-        *startOffset = before - beg_;
+        if (!readVarU32(size))
+            goto backup;
+        if (bytesRemain() < *size)
+            return false;
+        *startOffset = cur_ - beg_;
         return true;
       backup:
         cur_ = before;
         *startOffset = NotStarted;
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool finishSection(uint32_t startOffset) {
-        uint32_t currentOffset = cur_ - beg_;
-        cur_ = beg_ + startOffset;
-        uint32_t size = uncheckedReadVarU32();
-        uint32_t afterSize = cur_ - beg_;
-        cur_ = beg_ + currentOffset;
-        return size == (currentOffset - afterSize);
+    MOZ_MUST_USE bool finishSection(uint32_t startOffset, uint32_t size) {
+        return size == (cur_ - beg_) - startOffset;
     }
-    MOZ_WARN_UNUSED_RESULT bool skipSection() {
-        uint32_t size;
-        if (!readVarU32(&size) || bytesRemain() < size)
-            return false;
-        const uint8_t* begin = cur_;
+    MOZ_MUST_USE bool skipSection() {
         uint32_t idSize;
         if (!readVarU32(&idSize) || bytesRemain() < idSize)
             return false;
-        if (uint32_t(cur_ - begin) > size)
+        cur_ += idSize;
+        uint32_t size;
+        if (!readVarU32(&size) || bytesRemain() < size)
             return false;
-        cur_ = begin + size;
+        cur_ += size;
         return true;
     }
 
@@ -834,12 +798,15 @@ class Decoder
                ? Expr(u8)
                : Expr(uncheckedReadFixedU8() + UINT8_MAX);
     }
-    Expr uncheckedPeekExpr() {
-        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
-        uint8_t u8 = cur_[0];
-        return u8 != UINT8_MAX
-               ? Expr(u8)
-               : Expr(cur_[1] + UINT8_MAX);
+    void uncheckedReadFixedI32x4(I32x4* i32x4) {
+        struct T { I32x4 v; };
+        T t = uncheckedRead<T>();
+        memcpy(i32x4, &t, sizeof(t));
+    }
+    void uncheckedReadFixedF32x4(F32x4* f32x4) {
+        struct T { F32x4 v; };
+        T t = uncheckedRead<T>();
+        memcpy(f32x4, &t, sizeof(t));
     }
 };
 

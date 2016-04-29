@@ -146,14 +146,6 @@ interface nsIUpdate : nsISupports
   attribute AString billboardURL;
 
   /**
-   * The URL to a HTML fragment that contains a license for this update. If
-   * this is specified, the user is shown the license file after they choose
-   * to install the update and they must agree to it before the download
-   * commences.
-   */
-  attribute AString licenseURL;
-
-  /**
    * The URL to the Update Service that supplied this update.
    */
   attribute AString serviceURL;

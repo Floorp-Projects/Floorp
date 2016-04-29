@@ -108,7 +108,7 @@ public:
      */
     class AutoRestoreFragmentProcessorState : public ::SkNoncopyable {
     public:
-        AutoRestoreFragmentProcessorState() 
+        AutoRestoreFragmentProcessorState()
             : fPipelineBuilder(nullptr)
             , fColorEffectCnt(0)
             , fCoverageEffectCnt(0) {}
@@ -155,14 +155,6 @@ public:
     }
 
     /**
-     * Sets a GrXPFactory that will ignore src color and perform a set operation between the draws
-     * output coverage and the destination. This is useful to render coverage masks as CSG.
-     */
-    void setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage = false) {
-        fXPFactory.reset(GrCoverageSetOpXPFactory::Create(regionOp, invertCoverage));
-    }
-
-    /**
      * Sets a GrXPFactory that disables color writes to the destination. This is useful when
      * rendering to the stencil buffer.
      */
@@ -177,7 +169,7 @@ public:
     /**
      * Checks whether the xp will need destination in a texture to correctly blend.
      */
-    bool willXPNeedDstTexture(const GrCaps& caps, 
+    bool willXPNeedDstTexture(const GrCaps& caps,
                               const GrPipelineOptimizations& optimizations) const;
 
     /// @}
@@ -291,12 +283,26 @@ public:
          */
         kSnapVerticesToPixelCenters_Flag = 0x02,
 
-        kLast_Flag = kSnapVerticesToPixelCenters_Flag,
+        /**
+         * Suppress linear -> sRGB conversion when rendering to sRGB render targets.
+         */
+        kDisableOutputConversionToSRGB_Flag = 0x04,
+
+        /**
+         * Allow sRGB -> linear conversion when reading from sRGB inputs.
+         */
+        kAllowSRGBInputs_Flag = 0x08,
+
+        kLast_Flag = kAllowSRGBInputs_Flag,
     };
 
     bool isHWAntialias() const { return SkToBool(fFlags & kHWAntialias_Flag); }
     bool snapVerticesToPixelCenters() const {
         return SkToBool(fFlags & kSnapVerticesToPixelCenters_Flag); }
+    bool getDisableOutputConversionToSRGB() const {
+        return SkToBool(fFlags & kDisableOutputConversionToSRGB_Flag); }
+    bool getAllowSRGBInputs() const {
+        return SkToBool(fFlags & kAllowSRGBInputs_Flag); }
 
     /**
      * Enable render state settings.
@@ -304,7 +310,7 @@ public:
      * @param flags bitfield of Flags specifying the states to enable
      */
     void enableState(uint32_t flags) { fFlags |= flags; }
-        
+
     /**
      * Disable render state settings.
      *

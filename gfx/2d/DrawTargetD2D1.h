@@ -131,6 +131,9 @@ public:
   bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
+  // This function will get an image for a surface, it may adjust the source
+  // transform for any transformation of the resulting image relative to the
+  // oritingal SourceSurface.
   already_AddRefed<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
                                               ExtendMode aExtendMode, const IntRect* aSourceRect = nullptr);
 

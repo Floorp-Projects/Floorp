@@ -149,7 +149,7 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
                 // stores to a location read by the instruction.
                 if (prev->isEffectful() &&
                     (ins->getAliasSet().flags() & prev->getAliasSet().flags()) &&
-                    ins->mightAlias(prev))
+                    ins->mightAlias(prev) != MDefinition::AliasType::NoAlias)
                 {
                     break;
                 }

@@ -5,7 +5,11 @@
  * found in the LICENSE file.
  */
 
+#include "Sk4fLinearGradient.h"
 #include "SkLinearGradient.h"
+
+// define to test the 4f gradient path
+// #define FORCE_4F_CONTEXT
 
 static const float kInv255Float = 1.0f / 255;
 
@@ -13,22 +17,12 @@ static inline int repeat_8bits(int x) {
     return x & 0xFF;
 }
 
-// Visual Studio 2010 (MSC_VER=1600) optimizes bit-shift code incorrectly.
-// See http://code.google.com/p/skia/issues/detail?id=472
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", off)
-#endif
-
 static inline int mirror_8bits(int x) {
     if (x & 256) {
         x = ~x;
     }
     return x & 255;
 }
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#pragma optimize("", on)
-#endif
 
 static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
     SkVector    vec = pts[1] - pts[0];
@@ -43,6 +37,15 @@ static SkMatrix pts_to_unit_matrix(const SkPoint pts[2]) {
     return matrix;
 }
 
+static bool use_4f_context(const SkShader::ContextRec& rec, uint32_t flags) {
+#ifdef FORCE_4F_CONTEXT
+    return true;
+#else
+    return rec.fPreferredDstType == SkShader::ContextRec::kPM4f_DstType
+        || SkToBool(flags & SkLinearGradient::kForce4fContext_PrivateFlag);
+#endif
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 SkLinearGradient::SkLinearGradient(const SkPoint pts[2], const Descriptor& desc)
@@ -51,7 +54,7 @@ SkLinearGradient::SkLinearGradient(const SkPoint pts[2], const Descriptor& desc)
     , fEnd(pts[1]) {
 }
 
-SkFlattenable* SkLinearGradient::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkLinearGradient::CreateProc(SkReadBuffer& buffer) {
     DescriptorScope desc;
     if (!desc.unflatten(buffer)) {
         return nullptr;
@@ -59,8 +62,8 @@ SkFlattenable* SkLinearGradient::CreateProc(SkReadBuffer& buffer) {
     SkPoint pts[2];
     pts[0] = buffer.readPoint();
     pts[1] = buffer.readPoint();
-    return SkGradientShader::CreateLinear(pts, desc.fColors, desc.fPos, desc.fCount,
-                                          desc.fTileMode, desc.fGradFlags, desc.fLocalMatrix);
+    return SkGradientShader::MakeLinear(pts, desc.fColors, desc.fPos, desc.fCount, desc.fTileMode,
+                                        desc.fGradFlags, desc.fLocalMatrix);
 }
 
 void SkLinearGradient::flatten(SkWriteBuffer& buffer) const {
@@ -69,12 +72,16 @@ void SkLinearGradient::flatten(SkWriteBuffer& buffer) const {
     buffer.writePoint(fEnd);
 }
 
-size_t SkLinearGradient::contextSize() const {
-    return sizeof(LinearGradientContext);
+size_t SkLinearGradient::onContextSize(const ContextRec& rec) const {
+    return use_4f_context(rec, fGradFlags)
+        ? sizeof(LinearGradient4fContext)
+        : sizeof(LinearGradientContext);
 }
 
 SkShader::Context* SkLinearGradient::onCreateContext(const ContextRec& rec, void* storage) const {
-    return new (storage) LinearGradientContext(*this, rec);
+    return use_4f_context(rec, fGradFlags)
+        ? static_cast<SkShader::Context*>(new (storage) LinearGradient4fContext(*this, rec))
+        : static_cast<SkShader::Context*>(new (storage) LinearGradientContext(*this, rec));
 }
 
 // This swizzles SkColor into the same component order as SkPMColor, but does not actually
@@ -133,7 +140,7 @@ SkLinearGradient::LinearGradientContext::LinearGradientContext(
         const Sk4f scale(1, 1, 1, paintAlpha);
         for (int i = 0; i < count; ++i) {
             uint32_t c = SkSwizzle_Color_to_PMColor(shader.fOrigColors[i]);
-            rec[i].fColor = SkNx_cast<float>(Sk4b::Load((const uint8_t*)&c)) * scale;
+            rec[i].fColor = SkNx_cast<float>(Sk4b::Load(&c)) * scale;
             if (i > 0) {
                 SkASSERT(rec[i - 1].fPos <= rec[i].fPos);
             }
@@ -145,7 +152,7 @@ SkLinearGradient::LinearGradientContext::LinearGradientContext(
         for (int i = 0; i < count; ++i) {
             SkPMColor pmc = SkPreMultiplyColor(shader.fOrigColors[i]);
             pmc = SkAlphaMulQ(pmc, alphaScale);
-            rec[i].fColor = SkNx_cast<float>(Sk4b::Load((const uint8_t*)&pmc));
+            rec[i].fColor = SkNx_cast<float>(Sk4b::Load(&pmc));
             if (i > 0) {
                 SkASSERT(rec[i - 1].fPos <= rec[i].fPos);
             }
@@ -287,10 +294,9 @@ void SkLinearGradient::LinearGradientContext::shadeSpan(int x, int y, SkPMColor*
         SkGradFixed dx, fx = SkScalarToGradFixed(srcPt.fX);
 
         if (fDstToIndexClass == kFixedStepInX_MatrixClass) {
-            SkFixed dxStorage[1];
-            (void)fDstToIndex.fixedStepInX(SkIntToScalar(y), dxStorage, nullptr);
+            const auto step = fDstToIndex.fixedStepInX(SkIntToScalar(y));
             // todo: do we need a real/high-precision value for dx here?
-            dx = SkFixedToGradFixed(dxStorage[0]);
+            dx = SkScalarToGradFixed(step.fX);
         } else {
             SkASSERT(fDstToIndexClass == kLinear_MatrixClass);
             dx = SkScalarToGradFixed(fDstToIndex.getScaleX());
@@ -408,9 +414,7 @@ const GrFragmentProcessor* GrLinearGradient::TestCreate(GrProcessorTestData* d) 
     SkScalar* stops = stopsArray;
     SkShader::TileMode tm;
     int colorCount = RandomGradientParams(d->fRandom, colors, &stops, &tm);
-    SkAutoTUnref<SkShader> shader(SkGradientShader::CreateLinear(points,
-                                                                 colors, stops, colorCount,
-                                                                 tm));
+    auto shader = SkGradientShader::MakeLinear(points, colors, stops, colorCount, tm);
     const GrFragmentProcessor* fp = shader->asFragmentProcessor(d->fContext,
         GrTest::TestMatrix(d->fRandom), NULL, kNone_SkFilterQuality);
     GrAlwaysAssert(fp);
@@ -515,7 +519,7 @@ find_backward(const SkLinearGradient::LinearGradientContext::Rec rec[], float ti
 
 template <bool apply_alpha> SkPMColor trunc_from_255(const Sk4f& x) {
     SkPMColor c;
-    SkNx_cast<uint8_t>(x).store((uint8_t*)&c);
+    SkNx_cast<uint8_t>(x).store(&c);
     if (apply_alpha) {
         c = SkPreMultiplyARGB(SkGetPackedA32(c), SkGetPackedR32(c),
                               SkGetPackedG32(c), SkGetPackedB32(c));
@@ -747,4 +751,3 @@ void SkLinearGradient::LinearGradientContext::shade4_clamp(int x, int y, SkPMCol
         }
     }
 }
-

@@ -80,23 +80,6 @@ APZThreadUtils::RunOnControllerThread(already_AddRefed<Runnable> aTask)
 #endif
 }
 
-/*static*/ void
-APZThreadUtils::RunDelayedTaskOnCurrentThread(already_AddRefed<Runnable> aTask,
-                                              const TimeDuration& aDelay)
-{
-  if (MessageLoop* messageLoop = MessageLoop::current()) {
-    messageLoop->PostDelayedTask(Move(aTask), aDelay.ToMilliseconds());
-  } else {
-#ifdef MOZ_ANDROID_APZ
-    // Fennec does not have a MessageLoop::current() on the controller thread.
-    AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelay.ToMilliseconds());
-#else
-    // Other platforms should.
-    MOZ_RELEASE_ASSERT(false, "This non-Fennec platform should have a MessageLoop::current()");
-#endif
-  }
-}
-
 /*static*/ bool
 APZThreadUtils::IsControllerThread()
 {

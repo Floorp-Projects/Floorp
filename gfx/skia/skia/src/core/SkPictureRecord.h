@@ -43,15 +43,15 @@ public:
         return fImageRefs;
     }
 
-    SkData* opData(bool deepCopy) const {
+    sk_sp<SkData> opData(bool deepCopy) const {
         this->validate(fWriter.bytesWritten(), 0);
 
         if (fWriter.bytesWritten() == 0) {
-            return SkData::NewEmpty();
+            return SkData::MakeEmpty();
         }
 
         if (deepCopy) {
-            return SkData::NewWithCopy(fWriter.contiguousArray(), fWriter.bytesWritten());
+            return SkData::MakeWithCopy(fWriter.contiguousArray(), fWriter.bytesWritten());
         }
 
         return fWriter.snapshotAsData();
@@ -149,7 +149,7 @@ protected:
         SkASSERT(fWriter.bytesWritten() == initialOffset + size);
     }
 
-    SkSurface* onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
+    sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
     bool onPeekPixels(SkPixmap*) override { return false; }
 
     void willSave() override;
@@ -204,6 +204,7 @@ protected:
     void onClipRegion(const SkRegion&, SkRegion::Op) override;
 
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
+    void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
 
     int addPathToHeap(const SkPath& path);  // does not write to ops stream
 

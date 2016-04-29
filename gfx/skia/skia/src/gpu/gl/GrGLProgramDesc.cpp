@@ -8,6 +8,7 @@
 
 #include "GrProcessor.h"
 #include "GrPipeline.h"
+#include "GrRenderTargetPriv.h"
 #include "SkChecksum.h"
 #include "gl/GrGLDefines.h"
 #include "gl/GrGLTexture.h"
@@ -16,9 +17,18 @@
 #include "glsl/GrGLSLFragmentShaderBuilder.h"
 #include "glsl/GrGLSLCaps.h"
 
-static uint16_t texture_target_key(GrGLenum target) {
-    SkASSERT((uint32_t)target < SK_MaxU16);
-    return target;
+static uint8_t texture_target_key(GrGLenum target) {
+    switch (target) {
+        case GR_GL_TEXTURE_2D:
+            return 0;
+        case GR_GL_TEXTURE_EXTERNAL:
+            return 1;
+        case GR_GL_TEXTURE_RECTANGLE:
+            return 2;
+        default:
+            SkFAIL("Unexpected texture target.");
+            return 0;
+    }
 }
 
 static void add_texture_key(GrProcessorKeyBuilder* b, const GrProcessor& proc,
@@ -33,8 +43,8 @@ static void add_texture_key(GrProcessorKeyBuilder* b, const GrProcessor& proc,
     for (int i = 0; i < numTextures; ++i) {
         const GrTextureAccess& access = proc.textureAccess(i);
         GrGLTexture* texture = static_cast<GrGLTexture*>(access.getTexture());
-        k16[i] = caps.configTextureSwizzle(texture->config()).asKey() |
-                 (texture_target_key(texture->target()) << 16);
+        k16[i] = SkToU16(caps.configTextureSwizzle(texture->config()).asKey() |
+                         (texture_target_key(texture->target()) << 8));
     }
     // zero the last 16 bits if the number of textures is odd.
     if (numTextures & 0x1) {
@@ -111,6 +121,7 @@ bool GrGLProgramDescBuilder::Build(GrProgramDesc* desc,
         glDesc->key().reset();
         return false;
     }
+    GrProcessor::RequiredFeatures requiredFeatures = primProc.requiredFeatures();
 
     for (int i = 0; i < pipeline.numFragmentProcessors(); ++i) {
         const GrFragmentProcessor& fp = pipeline.getFragmentProcessor(i);
@@ -118,6 +129,7 @@ bool GrGLProgramDescBuilder::Build(GrProgramDesc* desc,
             glDesc->key().reset();
             return false;
         }
+        requiredFeatures |= fp.requiredFeatures();
     }
 
     const GrXferProcessor& xp = pipeline.getXferProcessor();
@@ -126,6 +138,7 @@ bool GrGLProgramDescBuilder::Build(GrProgramDesc* desc,
         glDesc->key().reset();
         return false;
     }
+    requiredFeatures |= xp.requiredFeatures();
 
     // --------DO NOT MOVE HEADER ABOVE THIS LINE--------------------------------------------------
     // Because header is a pointer into the dynamic array, we can't push any new data into the key
@@ -135,15 +148,24 @@ bool GrGLProgramDescBuilder::Build(GrProgramDesc* desc,
     // make sure any padding in the header is zeroed.
     memset(header, 0, kHeaderSize);
 
-    if (pipeline.readsFragPosition()) {
-        header->fFragPosKey =
-                GrGLSLFragmentShaderBuilder::KeyForFragmentPosition(pipeline.getRenderTarget());
+    GrRenderTarget* rt = pipeline.getRenderTarget();
+
+    if (requiredFeatures & (GrProcessor::kFragmentPosition_RequiredFeature |
+                            GrProcessor::kSampleLocations_RequiredFeature)) {
+        header->fSurfaceOriginKey = GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(rt->origin());
     } else {
-        header->fFragPosKey = 0;
+        header->fSurfaceOriginKey = 0;
     }
 
-    header->fOutputSwizzle =
-        glslCaps.configOutputSwizzle(pipeline.getRenderTarget()->config()).asKey();
+    if (requiredFeatures & GrProcessor::kSampleLocations_RequiredFeature) {
+        SkASSERT(pipeline.isHWAntialiasState());
+        header->fSamplePatternKey =
+            rt->renderTargetPriv().getMultisampleSpecs(pipeline.getStencil()).fUniqueID;
+    } else {
+        header->fSamplePatternKey = 0;
+    }
+
+    header->fOutputSwizzle = glslCaps.configOutputSwizzle(rt->config()).asKey();
 
     if (pipeline.ignoresCoverage()) {
         header->fIgnoresCoverage = 1;

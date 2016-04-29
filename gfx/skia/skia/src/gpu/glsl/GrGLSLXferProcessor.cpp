@@ -36,12 +36,12 @@ void GrGLSLXferProcessor::emitCode(const EmitArgs& args) {
         const char* dstTopLeftName;
         const char* dstCoordScaleName;
 
-        fDstTopLeftUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+        fDstTopLeftUni = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                                     kVec2f_GrSLType,
                                                     kDefault_GrSLPrecision,
                                                     "DstTextureUpperLeft",
                                                     &dstTopLeftName);
-        fDstScaleUni = uniformHandler->addUniform(GrGLSLUniformHandler::kFragment_Visibility,
+        fDstScaleUni = uniformHandler->addUniform(kFragment_GrShaderFlag,
                                                   kVec2f_GrSLType,
                                                   kDefault_GrSLPrecision,
                                                   "DstTextureCoordScale",
@@ -88,3 +88,21 @@ void GrGLSLXferProcessor::setData(const GrGLSLProgramDataManager& pdm, const GrX
     this->onSetData(pdm, xp);
 }
 
+void GrGLSLXferProcessor::DefaultCoverageModulation(GrGLSLXPFragmentBuilder* fragBuilder,
+                                                    const char* srcCoverage,
+                                                    const char* dstColor,
+                                                    const char* outColor,
+                                                    const char* outColorSecondary,
+                                                    const GrXferProcessor& proc) {
+    if (proc.dstReadUsesMixedSamples()) {
+        if (srcCoverage) {
+            fragBuilder->codeAppendf("%s *= %s;", outColor, srcCoverage);
+            fragBuilder->codeAppendf("%s = %s;", outColorSecondary, srcCoverage);
+        } else {
+            fragBuilder->codeAppendf("%s = vec4(1.0);", outColorSecondary);
+        }
+    } else if (srcCoverage) {
+        fragBuilder->codeAppendf("%s = %s * %s + (vec4(1.0) - %s) * %s;",
+                                 outColor, srcCoverage, outColor, srcCoverage, dstColor);
+    }
+}

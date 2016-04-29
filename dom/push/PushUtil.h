@@ -5,6 +5,10 @@
 #ifndef mozilla_dom_PushUtil_h
 #define mozilla_dom_PushUtil_h
 
+#include "nsTArray.h"
+
+#include "mozilla/dom/TypedArray.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -19,6 +23,10 @@ public:
   static bool
   CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
                          nsTArray<uint8_t>& aArray);
+
+  static bool
+  CopyArrayBufferViewToArray(const ArrayBufferView& aView,
+                             nsTArray<uint8_t>& aArray);
 
   static bool
   CopyBufferSourceToArray(const OwningArrayBufferViewOrArrayBuffer& aSource,

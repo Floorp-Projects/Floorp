@@ -387,13 +387,13 @@ LIRGeneratorX64::lowerUMod64(MMod* mod)
 }
 
 void
-LIRGeneratorX64::visitTruncateToInt64(MTruncateToInt64* ins)
+LIRGeneratorX64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
     MDefinition* opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
 
     LDefinition maybeTemp = ins->isUnsigned() ? tempDouble() : LDefinition::BogusTemp();
-    defineInt64(new(alloc()) LTruncateToInt64(useRegister(opd), maybeTemp), ins);
+    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd), maybeTemp), ins);
 }
 
 void

@@ -1718,6 +1718,81 @@ addAsyncAnimTest("exclude_animations_targeting_pseudo_elements",
                  "records after animation is finished");
 });
 
+addAsyncAnimTest("create_animation_without_target",
+                 { observe: document, subtree: true }, function*() {
+  var effect = new KeyframeEffectReadOnly(null,
+                                          { opacity: [ 0, 1 ] },
+                                          { duration: 10000 });
+  var anim = new Animation(effect, document.timeline);
+  anim.play();
+  yield await_frame();
+  assert_records([], "no records after animation is added");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([], "no records after animation is removed");
+});
+
+addAsyncAnimTest("set_animation_target",
+                 { observe: document, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100 * MS_PER_SEC });
+
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.target = null;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after setting null");
+
+  anim.effect.target = div;
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after setting a target");
+
+  var newTarget = document.createElement("div");
+  document.body.appendChild(newTarget);
+  anim.effect.target = newTarget;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] },
+                  { added: [anim], changed: [], removed: [] }],
+                 "records after setting a different target");
+
+  anim.cancel();
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation ends");
+
+  newTarget.remove();
+});
+
+addAsyncAnimTest("set_redundant_animation_target",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100 * MS_PER_SEC });
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect.target = div;
+  yield await_frame();
+  assert_records([], "no records after setting the same target");
+
+  anim.effect.target = null;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after setting null");
+
+  anim.effect.target = null;
+  yield await_frame();
+  assert_records([], "records after setting redundant null");
+
+  anim.cancel();
+  yield await_frame();
+});
+
 // Run the tests.
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();

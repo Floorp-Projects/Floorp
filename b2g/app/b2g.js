@@ -527,8 +527,6 @@ pref("b2g.update.download-watchdog-max-retries", 5);
 pref("app.update.enabled", true);
 pref("app.update.auto", false);
 pref("app.update.silent", false);
-pref("app.update.mode", 0);
-pref("app.update.incompatible.mode", 0);
 pref("app.update.staging.enabled", true);
 pref("app.update.service.enabled", true);
 
@@ -887,13 +885,6 @@ pref("network.sntp.pools", // Servers separated by ';'.
 pref("network.sntp.port", 123);
 pref("network.sntp.timeout", 30); // In seconds.
 
-// Enable dataStore
-pref("dom.datastore.enabled", true);
-// When an entry is changed, use two timers to fire system messages in a more
-// moderate pattern.
-pref("dom.datastore.sysMsgOnChangeShortTimeoutSec", 10);
-pref("dom.datastore.sysMsgOnChangeLongTimeoutSec", 60);
-
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", true);
 
@@ -1007,6 +998,9 @@ pref("layout.accessiblecaret.enabled", true);
 // Show the selection bars at the two ends of the selection highlight. Required
 // by the spec in bug 921965.
 pref("layout.accessiblecaret.bar.enabled", true);
+
+// Hide the caret in cursor mode after 3 seconds.
+pref("layout.accessiblecaret.timeout_ms", 3000);
 
 // APZ on real devices supports long tap events.
 #ifdef MOZ_WIDGET_GONK

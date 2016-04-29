@@ -515,6 +515,8 @@ protected:
 private:
   void Init();
 
+  void AppendSamplesToTrack(int16_t *audio10ms, int length);
+
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
