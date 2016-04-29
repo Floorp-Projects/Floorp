@@ -186,6 +186,10 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
 
     @Override
     public void onUploadAttemptComplete(final Set<Integer> successfulRemoveIDs) {
+        if (successfulRemoveIDs.isEmpty()) {
+            return;
+        }
+
         final File[] files = storeDir.listFiles(new PingFileFilter(successfulRemoveIDs));
         for (final File file : files) {
             file.delete();
