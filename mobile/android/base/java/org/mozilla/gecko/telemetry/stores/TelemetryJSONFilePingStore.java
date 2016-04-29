@@ -52,8 +52,8 @@ import java.util.regex.Pattern;
  *   * no locking: {@link #onUploadAttemptComplete(Set)} deletes the given pings, none of which should be
  * currently written
  */
-public class JSONFilePingStore implements TelemetryPingStore {
-    private static final String LOGTAG = "Gecko" + JSONFilePingStore.class.getSimpleName();
+public class TelemetryJSONFilePingStore implements TelemetryPingStore {
+    private static final String LOGTAG = "Gecko" + TelemetryJSONFilePingStore.class.getSimpleName();
 
     @VisibleForTesting static final int MAX_PING_COUNT = 40; // TODO: value.
 
@@ -66,7 +66,7 @@ public class JSONFilePingStore implements TelemetryPingStore {
 
     private final File storeDir;
 
-    public JSONFilePingStore(final File storeDir) {
+    public TelemetryJSONFilePingStore(final File storeDir) {
         this.storeDir = storeDir;
         this.storeDir.mkdirs();
     }
@@ -254,16 +254,16 @@ public class JSONFilePingStore implements TelemetryPingStore {
         }
     }
 
-    public static final Parcelable.Creator<JSONFilePingStore> CREATOR = new Parcelable.Creator<JSONFilePingStore>() {
+    public static final Parcelable.Creator<TelemetryJSONFilePingStore> CREATOR = new Parcelable.Creator<TelemetryJSONFilePingStore>() {
         @Override
-        public JSONFilePingStore createFromParcel(final Parcel source) {
+        public TelemetryJSONFilePingStore createFromParcel(final Parcel source) {
             final String storeDirPath = source.readString();
-            return new JSONFilePingStore(new File(storeDirPath));
+            return new TelemetryJSONFilePingStore(new File(storeDirPath));
         }
 
         @Override
-        public JSONFilePingStore[] newArray(final int size) {
-            return new JSONFilePingStore[size];
+        public TelemetryJSONFilePingStore[] newArray(final int size) {
+            return new TelemetryJSONFilePingStore[size];
         }
     };
 
