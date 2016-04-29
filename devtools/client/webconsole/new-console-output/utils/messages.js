@@ -8,10 +8,14 @@
 
 const {
   CATEGORY_CLASS_FRAGMENTS,
+  CATEGORY_JS,
   CATEGORY_WEBDEV,
   CATEGORY_OUTPUT,
   LEVELS,
   SEVERITY_CLASS_FRAGMENTS,
+  SEVERITY_ERROR,
+  SEVERITY_WARNING,
+  SEVERITY_INFO,
   SEVERITY_LOG,
 } = require("../constants");
 const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
@@ -35,6 +39,21 @@ function prepareMessage(packet) {
       repeat = 1;
       repeatId = getRepeatId(data);
       severity = SEVERITY_CLASS_FRAGMENTS[LEVELS[data.level]];
+      break;
+    case "pageError":
+      data = Object.assign({}, packet.pageError);
+      allowRepeating = true;
+      category = CATEGORY_CLASS_FRAGMENTS[CATEGORY_JS];
+      messageType = "PageError";
+      repeat = 1;
+      repeatId = getRepeatId(data);
+
+      severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_ERROR];
+      if (data.warning || data.strict) {
+        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_WARNING];
+      } else if (data.info) {
+        severity = SEVERITY_CLASS_FRAGMENTS[SEVERITY_LOG];
+      }
       break;
     case "evaluationResult":
     default:

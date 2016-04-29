@@ -36,6 +36,9 @@ function getMessageComponent(messageType) {
     case "EvaluationResult":
       MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result").EvaluationResult;
       break;
+    case "PageError":
+      MessageComponent = require("devtools/client/webconsole/new-console-output/components/message-types/page-error").PageError;
+      break;
   }
   return MessageComponent;
 }

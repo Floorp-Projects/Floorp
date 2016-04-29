@@ -8,4 +8,5 @@ DevToolsModules(
     'date-preview.js',
     'default-renderer.js',
     'evaluation-result.js',
+    'page-error.js',
 )
