@@ -3550,7 +3550,11 @@ nsWindow::NeedsPaint()
 CompositorBridgeParent*
 nsWindow::NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight)
 {
-    return new CompositorBridgeParent(this, true, aSurfaceWidth, aSurfaceHeight);
+    return new CompositorBridgeParent(this,
+                                      GetDefaultScale(),
+                                      UseAPZ(),
+                                      true,
+                                      aSurfaceWidth, aSurfaceHeight);
 }
 
 void
