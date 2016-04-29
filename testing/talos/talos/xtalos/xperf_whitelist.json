@@ -9,6 +9,7 @@
  "{firefox}\\browser\\features\\e10srollout@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\loop@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{firefox}\\browser\\features\\firefox@getpocket.com.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
+ "{firefox}\\browser\\features\\webcompat@mozilla.org.xpi": {"mincount": 0, "maxcount": 100, "minbytes": 0, "maxbytes": 10000000},
  "{talos}\\tests\\tp5n\\tp5n.manifest": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},
  "{talos}\\talos\\tests\\tp5n\\tp5n.manifest": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},
  "{talos}\\tests\\tp5n\\tp5n.manifest.develop": {"mincount": 0, "maxcount": 8, "minbytes": 0, "maxbytes": 32786},
