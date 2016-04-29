@@ -67,25 +67,16 @@ public class TestRunner extends RobolectricGradleTestRunner {
         final String flavor = getFlavor(config);
         final String packageName = getPackageName(config);
 
-        final FsFile res;
-        final FsFile assets;
-        final FsFile manifest;
+        final FsFile assets = buildFolder.join("assets", flavor, type);;
+        final FsFile manifest = buildFolder.join("manifests", "full", flavor, type, "AndroidManifest.xml");
 
-        if (areResourcesFromLibrary()) {
-            FsFile bundlesFolder = buildFolder.join("bundles", flavor, type);
-            res = bundlesFolder.join("res");
-            assets = bundlesFolder.join("assets");
-            manifest = bundlesFolder.join("AndroidManifest.xml");
+        final FsFile res;
+        if (buildFolder.join("res", "merged").exists()) {
+            res = buildFolder.join("res", "merged", flavor, type);
+        } else if(buildFolder.join("res").exists()) {
+            res = buildFolder.join("res", flavor, type);
         } else {
-            if (buildFolder.join("res", "merged").exists()) {
-                res = buildFolder.join("res", "merged", flavor, type);
-            } else if(buildFolder.join("res").exists()) {
-                res = buildFolder.join("res", flavor, type);
-            } else {
-                throw new IllegalStateException("No resource folder found");
-            }
-            assets = buildFolder.join("assets", flavor, type);
-            manifest = buildFolder.join("manifests", "full", flavor, type, "AndroidManifest.xml");
+            throw new IllegalStateException("No resource folder found");
         }
 
         Logger.debug("Robolectric assets directory: " + assets.getPath());
@@ -93,10 +84,6 @@ public class TestRunner extends RobolectricGradleTestRunner {
         Logger.debug("   Robolectric manifest path: " + manifest.getPath());
         Logger.debug("    Robolectric package name: " + packageName);
         return new AndroidManifest(manifest, res, assets, packageName);
-    }
-
-    private boolean areResourcesFromLibrary() {
-        return buildFolder.join("bundles").exists();
     }
 
     private static String getType(Config config) {

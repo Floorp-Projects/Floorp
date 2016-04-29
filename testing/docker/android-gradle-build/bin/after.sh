@@ -3,7 +3,7 @@
 set -x -e
 
 : WORKSPACE ${WORKSPACE:=/workspace}
-: GRADLE_VERSION ${GRADLE_VERSION:=2.7}
+: GRADLE_VERSION ${GRADLE_VERSION:=2.10}
 
 set -v
 
