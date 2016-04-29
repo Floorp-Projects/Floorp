@@ -287,6 +287,40 @@ class BaseAssemblerX64 : public BaseAssembler
         }
     }
 
+    void rolq_ir(int32_t imm, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 64);
+        spew("rolq       $%d, %s", imm, GPReg64Name(dst));
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, dst, GROUP2_OP_ROL);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, dst, GROUP2_OP_ROL);
+            m_formatter.immediate8u(imm);
+        }
+    }
+    void rolq_CLr(RegisterID dst)
+    {
+        spew("rolq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_ROL);
+    }
+
+    void rorq_ir(int32_t imm, RegisterID dst)
+    {
+        MOZ_ASSERT(imm < 64);
+        spew("rorq       $%d, %s", imm, GPReg64Name(dst));
+        if (imm == 1)
+            m_formatter.oneByteOp64(OP_GROUP2_Ev1, dst, GROUP2_OP_ROR);
+        else {
+            m_formatter.oneByteOp64(OP_GROUP2_EvIb, dst, GROUP2_OP_ROR);
+            m_formatter.immediate8u(imm);
+        }
+    }
+    void rorq_CLr(RegisterID dst)
+    {
+        spew("rorq       %%cl, %s", GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_GROUP2_EvCL, dst, GROUP2_OP_ROR);
+    }
+
     void imulq_rr(RegisterID src, RegisterID dst)
     {
         spew("imulq      %s, %s", GPReg64Name(src), GPReg64Name(dst));

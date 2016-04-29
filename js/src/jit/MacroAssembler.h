@@ -795,6 +795,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
 
     // ===============================================================
+    // Rotation functions
+    inline void rotateLeft(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateLeft(Register count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateRight(Imm32 count, Register input, Register dest) PER_SHARED_ARCH;
+    inline void rotateRight(Register count, Register input, Register dest) PER_SHARED_ARCH;
+
+    // ===============================================================
     // Branch functions
 
     inline void branch32(Condition cond, Register lhs, Register rhs, Label* label) PER_SHARED_ARCH;

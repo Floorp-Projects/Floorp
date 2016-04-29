@@ -283,6 +283,7 @@ namespace jit {
     _(AsmJSCall)                                                            \
     _(AsmSelect)                                                            \
     _(AsmReinterpret)                                                       \
+    _(Rotate)                                                               \
     _(NewDerivedTypedObject)                                                \
     _(RecompileCheck)                                                       \
     _(AsmJSCompareExchangeHeap)                                             \

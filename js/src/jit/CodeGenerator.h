@@ -412,6 +412,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir);
     void visitAsmThrowUnreachable(LAsmThrowUnreachable* lir);
     void visitRecompileCheck(LRecompileCheck* ins);
+    void visitRotate(LRotate* ins);
 
     void visitRandom(LRandom* ins);
 
