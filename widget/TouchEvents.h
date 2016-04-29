@@ -39,7 +39,7 @@ public:
   WidgetGestureNotifyEvent(bool aIsTrusted, EventMessage aMessage,
                            nsIWidget *aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eGestureNotifyEventClass)
-    , panDirection(ePanNone)
+    , mPanDirection(ePanNone)
     , displayPanFeedback(false)
   {
   }
@@ -70,7 +70,7 @@ public:
     ePanBoth
   };
 
-  PanDirection panDirection;
+  PanDirection mPanDirection;
   bool displayPanFeedback;
 
   void AssignGestureNotifyEventData(const WidgetGestureNotifyEvent& aEvent,
@@ -78,7 +78,7 @@ public:
   {
     AssignGUIEventData(aEvent, aCopyTargets);
 
-    panDirection = aEvent.panDirection;
+    mPanDirection = aEvent.mPanDirection;
     displayPanFeedback = aEvent.displayPanFeedback;
   }
 };
