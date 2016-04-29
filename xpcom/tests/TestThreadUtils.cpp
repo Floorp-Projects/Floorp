@@ -7,7 +7,6 @@
 
 enum {
   TEST_CALL_VOID_ARG_VOID_RETURN,
-  TEST_CALL_VOID_ARG_VOID_RETURN_CONST,
   TEST_CALL_VOID_ARG_NONVOID_RETURN,
   TEST_CALL_NONVOID_ARG_VOID_RETURN,
   TEST_CALL_NONVOID_ARG_NONVOID_RETURN,
@@ -63,9 +62,6 @@ public:
   NS_DECL_ISUPPORTS
   void DoBar1(void) {
     gRunnableExecuted[TEST_CALL_VOID_ARG_VOID_RETURN] = true;
-  }
-  void DoBar1Const(void) const {
-    gRunnableExecuted[TEST_CALL_VOID_ARG_VOID_RETURN_CONST] = true;
   }
   nsresult DoBar2(void) {
     gRunnableExecuted[TEST_CALL_VOID_ARG_NONVOID_RETURN] = true;
@@ -124,7 +120,6 @@ int main(int argc, char** argv)
   {
     RefPtr<nsFoo> foo = new nsFoo();
     RefPtr<nsBar> bar = new nsBar();
-    RefPtr<const nsBar> constBar = bar;
 
     // This pointer will be freed at the end of the block
     // Do not dereference this pointer in the runnable method!
@@ -134,7 +129,6 @@ int main(int argc, char** argv)
     char* message = (char*)"Test message";
 
     NS_DispatchToMainThread(NS_NewRunnableMethod(bar, &nsBar::DoBar1));
-    NS_DispatchToMainThread(NS_NewRunnableMethod(constBar, &nsBar::DoBar1Const));
     NS_DispatchToMainThread(NS_NewRunnableMethod(bar, &nsBar::DoBar2));
     NS_DispatchToMainThread(NS_NewRunnableMethodWithArg< RefPtr<nsFoo> >
       (bar, &nsBar::DoBar3, foo));
