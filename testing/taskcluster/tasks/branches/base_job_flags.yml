@@ -82,6 +82,8 @@ flags:
     - linux32_gecko  # b2g desktop linux 32 bit
     - linux64_gecko  # b2g desktop linux 64 bit
     - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
+    - linux64-haz    # Firefox desktop browser, rooting hazard analysis
+    - linux64-shell-haz  # JS shell, rooting hazard analysis
     - linux64-mulet-haz  # Firefox desktop - b2g gecko linux 64 bit, rooting hazard analysis
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit

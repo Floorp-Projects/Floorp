@@ -71,6 +71,18 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_st-an.yml
+  linux64-haz:
+    platforms:
+      - Linux64
+    types:
+      debug:
+        task: tasks/builds/haz_linux.yml
+  linux64-shell-haz:
+    platforms:
+      - Linux64
+    types:
+      debug:
+        task: tasks/builds/haz_shell_linux.yml
   macosx64:
     platforms:
       - MacOSX64
