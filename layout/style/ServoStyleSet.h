@@ -63,8 +63,11 @@ public:
                   TreeMatchContext& aTreeMatchContext);
 
   already_AddRefed<nsStyleContext>
-  ResolveStyleForNonElement(nsStyleContext* aParentContext,
-                            nsIAtom* aPseudoTag);
+  ResolveStyleForText(nsIContent* aTextNode,
+                      nsStyleContext* aParentContext);
+
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForOtherNonElement(nsStyleContext* aParentContext);
 
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(dom::Element* aParentElement,
