@@ -78,7 +78,7 @@ public:
   bool mWrappingExistingData;
 };
 
-BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget)
+BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
   : Compositor(aWidget, aParent)
   , mDidExternalComposition(false)
 {
