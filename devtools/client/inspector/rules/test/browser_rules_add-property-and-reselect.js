@@ -15,7 +15,7 @@ add_task(function* () {
   yield selectNode("#target", inspector);
 
   info("Setting a font-weight property on all rules");
-  setPropertyOnAllRules(view);
+  yield setPropertyOnAllRules(view);
 
   info("Reselecting the element");
   yield selectNode("body", inspector);
@@ -24,10 +24,14 @@ add_task(function* () {
   checkPropertyOnAllRules(view);
 });
 
-function setPropertyOnAllRules(view) {
+function* setPropertyOnAllRules(view) {
+  // Wait for the properties to be properly created on the backend and for the
+  // view to be updated.
+  let onRefreshed = view.once("ruleview-refreshed");
   for (let rule of view._elementStyle.rules) {
     rule.editor.addProperty("font-weight", "bold", "");
   }
+  yield onRefreshed;
 }
 
 function checkPropertyOnAllRules(view) {
