@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.telemetry;
+package org.mozilla.gecko.telemetry.pingbuilders;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.telemetry.TelemetryPing;
 
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.UUID;
  *   * Validating mandatory fields
  *   * Forming the server url
  */
-public abstract class TelemetryPingBuilder {
+abstract class TelemetryPingBuilder {
     // In the server url, the initial path directly after the "scheme://host:port/"
     private static final String SERVER_INITIAL_PATH = "submit/telemetry";
 
