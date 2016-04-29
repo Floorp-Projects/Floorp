@@ -843,6 +843,15 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     mIterationDurationMS /= 4;
   }
 
+  // Process mic data if any/needed
+  if (aInputBuffer) {
+    if (mAudioInput) { // for this specific input-only or full-duplex stream
+      mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
+                                   static_cast<size_t>(aFrames),
+                                   mSampleRate, mInputChannels);
+    }
+  }
+
   mBuffer.SetBuffer(aOutputBuffer, aFrames);
   // fill part or all with leftover data from last iteration (since we
   // align to Audio blocks)
@@ -898,15 +907,6 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   // use separate callback methods.
   mGraphImpl->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
                                mSampleRate, ChannelCount);
-
-  // Process mic data if any/needed -- after inserting far-end data for AEC!
-  if (aInputBuffer) {
-    if (mAudioInput) { // for this specific input-only or full-duplex stream
-      mAudioInput->NotifyInputData(mGraphImpl, aInputBuffer,
-                                   static_cast<size_t>(aFrames),
-                                   mSampleRate, mInputChannels);
-    }
-  }
 
   bool switching = false;
   {
