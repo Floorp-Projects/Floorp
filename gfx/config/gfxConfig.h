@@ -116,6 +116,12 @@ public:
       aDisableMessage);
   }
 
+  // Re-enables a feature that was previously disabled, by attaching it to a
+  // fallback. The fallback inherits the message that was used for disabling
+  // the feature. This can be used, for example, when D3D11 fails at runtime
+  // but we acquire a second, successful device with WARP.
+  static void Reenable(Feature aFeature, Fallback aFallback);
+
   // Same as SetDefault, except if the feature already has a default value
   // set, the new value will be set as a runtime value. This is useful for
   // when the base value can change (for example, via an update from the
