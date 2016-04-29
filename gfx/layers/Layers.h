@@ -1037,6 +1037,26 @@ public:
 
   /**
    * CONSTRUCTION PHASE ONLY
+   * Set an optional scrolled clip on the layer.
+   * The scrolled clip, if present, consists of a clip rect and an optional mask.
+   * This scrolled clip is always scrolled by all scroll frames associated with
+   * this layer. (By contrast, the scroll clips stored in ScrollMetadata are
+   * only scrolled by scroll frames above that ScrollMetadata, and the layer's
+   * mClipRect is always fixed to the layer contents (which may or may not be
+   * scrolled by some of the scroll frames associated with the layer, depending
+   * on whether the layer is fixed).)
+   */
+  void SetScrolledClip(const Maybe<LayerClip>& aScrolledClip)
+  {
+    if (mScrolledClip != aScrolledClip) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrolledClip", this));
+      mScrolledClip = aScrolledClip;
+      Mutated();
+    }
+  }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
    * Set a layer to mask this layer.
    *
    * The mask layer should be applied using its effective transform (after it
@@ -1281,6 +1301,7 @@ public:
   float GetOpacity() { return mOpacity; }
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
+  const Maybe<LayerClip>& GetScrolledClip() const { return mScrolledClip; }
   uint32_t GetContentFlags() { return mContentFlags; }
   const gfx::IntRect& GetLayerBounds() const { return mLayerBounds; }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
@@ -1850,6 +1871,7 @@ protected:
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
   Maybe<ParentLayerIntRect> mClipRect;
+  Maybe<LayerClip> mScrolledClip;
   gfx::IntRect mTileSourceRect;
   gfx::TiledIntRegion mInvalidRegion;
   nsTArray<RefPtr<AsyncPanZoomController> > mApzcs;

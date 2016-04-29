@@ -1100,6 +1100,8 @@ Layer::GetCombinedClipRect() const
 {
   Maybe<ParentLayerIntRect> clip = GetClipRect();
 
+  clip = IntersectMaybeRects(clip, GetScrolledClipRect());
+
   for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
     clip = IntersectMaybeRects(clip, mScrollMetadata[i].GetClipRect());
   }
@@ -1901,6 +1903,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 
   if (mClipRect) {
     AppendToString(aStream, *mClipRect, " [clip=", "]");
+  }
+  if (mScrolledClip) {
+    AppendToString(aStream, mScrolledClip->GetClipRect(), " [scrolled-clip=", "]");
   }
   if (1.0 != mPostXScale || 1.0 != mPostYScale) {
     aStream << nsPrintfCString(" [postScale=%g, %g]", mPostXScale, mPostYScale).get();

@@ -45,6 +45,7 @@ using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
 
 namespace mozilla {
 namespace layers {
@@ -218,6 +219,7 @@ struct CommonLayerAttributes {
   float opacity;
   bool useClipRect;
   ParentLayerIntRect clipRect;
+  MaybeLayerClip scrolledClip;
   bool isFixedPosition;
   uint64_t fixedPositionScrollContainerId;
   LayerPoint fixedPositionAnchor;
