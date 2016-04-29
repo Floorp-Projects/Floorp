@@ -160,9 +160,8 @@ private:
 };
 
 CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, nsIWidget* aWidget)
-  : Compositor(aParent)
+  : Compositor(aWidget, aParent)
   , mAttachments(nullptr)
-  , mWidget(aWidget)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
   , mVerifyBuffersFailed(false)

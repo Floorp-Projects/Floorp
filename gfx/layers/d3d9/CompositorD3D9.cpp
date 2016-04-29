@@ -24,8 +24,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, nsIWidget *aWidget)
-  : Compositor(aParent)
-  , mWidget(aWidget)
+  : Compositor(aWidget, aParent)
   , mDeviceResetCount(0)
   , mFailedResetAttempts(0)
 {
