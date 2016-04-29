@@ -136,7 +136,7 @@ label.findbar-find-fast:-moz-lwtheme,
   border: @roundButtonBorder@;
   border-radius: 10000px 0 0 10000px;
   box-shadow: @roundButtonShadow@;
-  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 5px center;
+  background: url("chrome://global/skin/icons/search-textbox.svg") -moz-Field no-repeat 5px center;
   margin: 0;
   padding: 2px 8px;
   -moz-padding-start: 19px;
@@ -185,8 +185,7 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-previous,
 .findbar-find-next {
   -moz-margin-start: 0;
-  list-style-image: url(chrome://global/skin/icons/find-arrows.png);
-  padding: 2px 6px;
+  padding: 3px 6px 1px;
 }
 
 .findbar-find-previous > .toolbarbutton-icon,
@@ -198,12 +197,12 @@ label.findbar-find-fast:-moz-lwtheme,
   border-left: none;
   border-right: none;
   -moz-margin-end: 0;
-  -moz-image-region: rect(0, 10px, 9px, 0);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-previous);
   border-radius: 0;
 }
 
 .findbar-find-next {
-  -moz-image-region: rect(0, 20px, 9px, 10px);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-next);
   -moz-padding-end: 7px;
 }
 
