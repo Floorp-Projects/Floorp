@@ -78,7 +78,7 @@ RawServoStyleSet* Servo_InitStyleSet();
 void Servo_DropStyleSet(RawServoStyleSet* set);
 
 // Computed style data.
-ServoComputedValues* Servo_GetComputedValues(RawGeckoElement* element);
+ServoComputedValues* Servo_GetComputedValues(RawGeckoNode* node);
 ServoComputedValues* Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
                                                             nsIAtom* pseudoTag,
                                                             RawServoStyleSet* set);
