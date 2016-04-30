@@ -500,6 +500,13 @@ js::GetObjectProto(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<J
     return true;
 }
 
+JS_FRIEND_API(JSObject*)
+js::GetStaticPrototype(JSObject* obj)
+{
+    MOZ_ASSERT(obj->hasStaticPrototype());
+    return obj->staticPrototype();
+}
+
 JS_FRIEND_API(bool)
 js::GetOriginalEval(JSContext* cx, HandleObject scope, MutableHandleObject eval)
 {

@@ -40758,6 +40758,12 @@
             "url": "/XMLHttpRequest/open-url-multi-window-6.htm"
           }
         ],
+        "html/browsers/history/the-location-interface/allow_prototype_cycle_through_location.sub.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/allow_prototype_cycle_through_location.sub.html",
+            "url": "/html/browsers/history/the-location-interface/allow_prototype_cycle_through_location.sub.html"
+          }
+        ],
         "html/semantics/document-metadata/the-base-element/base_about_blank.html": [
           {
             "path": "html/semantics/document-metadata/the-base-element/base_about_blank.html",

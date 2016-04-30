@@ -2498,10 +2498,8 @@ bool
 js::GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
                            MutableHandleObject protop)
 {
-    if (obj->hasDynamicPrototype()) {
-        MOZ_ASSERT(obj->is<js::ProxyObject>());
+    if (obj->is<js::ProxyObject>())
         return js::Proxy::getPrototypeIfOrdinary(cx, obj, isOrdinary, protop);
-    }
 
     *isOrdinary = true;
     protop.set(obj->staticPrototype());
