@@ -1398,11 +1398,6 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   TrackBuffer samples; // array that will contain the frames to be added
                        // to our track buffer.
 
-  // We assume that no frames are contiguous within a media segment and as such
-  // don't need to check for discontinuity except for the first frame and should
-  // a frame be ignored due to the target window.
-  bool needDiscontinuityCheck = true;
-
   if (aSamples.Length()) {
     aTrackData.mLastParsedEndTime = TimeUnit();
   }
@@ -1463,7 +1458,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     // OR
     // If last decode timestamp for track buffer is set and the difference between decode timestamp and last decode timestamp is greater than 2 times last frame duration:
 
-    if (needDiscontinuityCheck && trackBuffer.mLastDecodeTimestamp.isSome() &&
+    if (trackBuffer.mLastDecodeTimestamp.isSome() &&
         (decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref() ||
          decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() > 2*trackBuffer.mLongestFrameDuration.ref())) {
       MSE_DEBUG("Discontinuity detected.");
@@ -1513,7 +1508,6 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
             : TimeUnit::FromMicroseconds(sample->mTimecode) + mSourceBufferAttributes->GetTimestampOffset();
       }
       trackBuffer.mNeedRandomAccessPoint = false;
-      needDiscontinuityCheck = false;
     }
 
     // 7. Let frame end timestamp equal the sum of presentation timestamp and frame duration.
@@ -1532,7 +1526,6 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
         sizeNewSamples = 0;
       }
       trackBuffer.mNeedRandomAccessPoint = true;
-      needDiscontinuityCheck = true;
       continue;
     }
 
