@@ -5084,6 +5084,9 @@ pref("layout.accessiblecaret.allow_dragging_across_other_caret", true);
 // Optionally provide haptic feedback on longPress selection events.
 pref("layout.accessiblecaret.hapticfeedback", false);
 
+// Smart phone-number selection on long-press is not enabled by default.
+pref("layout.accessiblecaret.extend_selection_for_phone_number", false);
+
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
