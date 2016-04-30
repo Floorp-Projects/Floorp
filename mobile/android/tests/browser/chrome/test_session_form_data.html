@@ -26,6 +26,9 @@ Cu.import("resource://gre/modules/Task.jsm");
 let gChromeWin;
 let gBrowserApp;
 
+// Waiting for a tab to load or restore can be slow on the emulator.
+SimpleTest.requestLongerTimeout(2);
+
 setup_browser();
 
 function queryElement(contentWindow, data) {
