@@ -200,7 +200,6 @@ Proxy::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto, Objec
 Proxy::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
                               MutableHandleObject proto)
 {
-    MOZ_ASSERT(proxy->hasDynamicPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->getPrototypeIfOrdinary(cx, proxy, isOrdinary,
                                                                       proto);

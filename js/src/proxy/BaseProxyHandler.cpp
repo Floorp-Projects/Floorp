@@ -412,13 +412,6 @@ BaseProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject p
 }
 
 bool
-BaseProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
-                                         MutableHandleObject protop) const
-{
-    MOZ_CRASH("must override getPrototypeIfOrdinary with dynamic prototype");
-}
-
-bool
 BaseProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded) const
 {
     *succeeded = false;
