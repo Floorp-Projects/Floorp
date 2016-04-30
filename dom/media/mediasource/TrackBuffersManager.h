@@ -229,7 +229,9 @@ private:
     // been appended yet.
     Maybe<media::TimeUnit> mHighestEndTimestamp;
     // Longest frame duration seen since last random access point.
-    Maybe<media::TimeUnit> mLongestFrameDuration;
+    // Only ever accessed when mLastDecodeTimestamp and mLastFrameDuration are
+    // set.
+    media::TimeUnit mLongestFrameDuration;
     // Need random access point flag variable that keeps track of whether the
     // track buffer is waiting for a random access point coded frame.
     // The variable is initially set to true to indicate that random access
@@ -278,7 +280,6 @@ private:
       mHighestEndTimestamp.reset();
       mNeedRandomAccessPoint = true;
 
-      mLongestFrameDuration.reset();
       mNextInsertionIndex.reset();
     }
 
