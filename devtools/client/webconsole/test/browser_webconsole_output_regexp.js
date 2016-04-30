@@ -10,8 +10,6 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console-output-regexp.html";
 
-var dateNow = Date.now();
-
 var inputTests = [
   // 0
   {
@@ -24,7 +22,7 @@ var inputTests = [
 
 function test() {
   requestLongerTimeout(2);
-  Task.spawn(function*() {
+  Task.spawn(function* () {
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
     return checkOutputForInputs(hud, inputTests);
@@ -32,6 +30,6 @@ function test() {
 }
 
 function finishUp() {
-  inputTests = dateNow = null;
+  inputTests = null;
   finishTest();
 }
