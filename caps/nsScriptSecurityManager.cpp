@@ -11,7 +11,6 @@
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
 #include "nsIAppsService.h"
-#include "nsIInputStreamChannel.h"
 #include "nsILoadContext.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -330,23 +329,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
                                                    nsIPrincipal** aPrincipal)
 {
-  return GetChannelResultPrincipal(aChannel, aPrincipal,
-                                   /*aIgnoreSandboxing*/ false);
-}
-
-nsresult
-nsScriptSecurityManager::GetChannelResultPrincipalIfNotSandboxed(nsIChannel* aChannel,
-                                                                 nsIPrincipal** aPrincipal)
-{
-  return GetChannelResultPrincipal(aChannel, aPrincipal,
-                                   /*aIgnoreSandboxing*/ true);
-}
-
-nsresult
-nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
-                                                   nsIPrincipal** aPrincipal,
-                                                   bool aIgnoreSandboxing)
-{
     NS_PRECONDITION(aChannel, "Must have channel!");
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
@@ -361,7 +343,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     nsCOMPtr<nsILoadInfo> loadInfo;
     aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo) {
-        if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
+        if (loadInfo->GetLoadingSandboxed()) {
             RefPtr<nsNullPrincipal> prin;
             if (loadInfo->LoadingPrincipal()) {
               prin =
@@ -377,17 +359,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
             return NS_OK;
         }
 
-        bool forceInterit = loadInfo->GetForceInheritPrincipal();
-        if (aIgnoreSandboxing && !forceInterit) {
-          // Check if SEC_FORCE_INHERIT_PRINCIPAL was dropped because of
-          // sandboxing:
-          if (loadInfo->GetLoadingSandboxed() &&
-              (loadInfo->GetSecurityFlags() &
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED)) {
-            forceInterit = true;
-          }
-        }
-        if (forceInterit) {
+        if (loadInfo->GetForceInheritPrincipal()) {
             NS_ADDREF(*aPrincipal = loadInfo->TriggeringPrincipal());
             return NS_OK;
         }
