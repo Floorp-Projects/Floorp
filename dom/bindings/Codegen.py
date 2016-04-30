@@ -11666,6 +11666,23 @@ class CGDOMJSProxyHandler_getInstance(ClassMethod):
             """)
 
 
+class CGDOMJSProxyHandler_getPrototypeIfOrdinary(ClassMethod):
+    def __init__(self):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('JS::Handle<JSObject*>', 'proxy'),
+                Argument('bool*', 'isOrdinary'),
+                Argument('JS::MutableHandle<JSObject*>', 'proto')]
+
+        ClassMethod.__init__(self, "getPrototypeIfOrdinary", "bool", args,
+                             virtual=True, override=True, const=True)
+
+    def getBody(self):
+        return dedent("""
+            *isOrdinary = false;
+            return true;
+            """)
+
+
 class CGDOMJSProxyHandler_call(ClassMethod):
     def __init__(self):
         args = [Argument('JSContext*', 'cx'),
@@ -11697,7 +11714,8 @@ class CGDOMJSProxyHandler_isCallable(ClassMethod):
 class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
-                descriptor.supportsNamedProperties())
+                descriptor.supportsNamedProperties() or
+                descriptor.hasNonOrdinaryGetPrototypeOf())
         methods = [CGDOMJSProxyHandler_getOwnPropDescriptor(descriptor),
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
@@ -11724,6 +11742,8 @@ class CGDOMJSProxyHandler(CGClass):
             (descriptor.operations['NamedSetter'] is not None and
              descriptor.interface.getExtendedAttribute('OverrideBuiltins'))):
             methods.append(CGDOMJSProxyHandler_setCustom(descriptor))
+        if descriptor.hasNonOrdinaryGetPrototypeOf():
+            methods.append(CGDOMJSProxyHandler_getPrototypeIfOrdinary())
         if descriptor.operations['LegacyCaller']:
             methods.append(CGDOMJSProxyHandler_call())
             methods.append(CGDOMJSProxyHandler_isCallable())
