@@ -1114,6 +1114,7 @@ ToolUtils.h
 tr1/functional
 trace.h
 Traps.h
+type_traits
 typeinfo
 types.h
 Types.h
