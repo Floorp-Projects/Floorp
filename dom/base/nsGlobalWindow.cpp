@@ -3979,6 +3979,9 @@ nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled()
   // Automatically get this setting from the top level window so that nested
   // iframes get the correct devtools setting.
   nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetScriptableTop();
+  if (!topWindow) {
+    return false;
+  }
   return topWindow->mServiceWorkersTestingEnabled;
 }
 
