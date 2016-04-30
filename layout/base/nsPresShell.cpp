@@ -2411,6 +2411,7 @@ PresShell::RestoreRootScrollPosition()
 {
   nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
   if (scrollableFrame) {
+    scrollableFrame->SetRestoringHistoryScrollPosition(true);
     scrollableFrame->ScrollToRestoredPosition();
   }
 }
@@ -2468,6 +2469,11 @@ PresShell::EndLoad(nsIDocument *aDocument)
 void
 PresShell::LoadComplete()
 {
+  nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
+  if (scrollableFrame) {
+    scrollableFrame->SetRestoringHistoryScrollPosition(false);
+  }
+
   gfxTextPerfMetrics *tp = nullptr;
   if (mPresContext) {
     tp = mPresContext->GetTextPerfMetrics();
