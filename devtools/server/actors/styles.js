@@ -152,6 +152,9 @@ var PageStyleActor = protocol.ActorClass({
     // Stores the association of DOM objects -> actors
     this.refMap = new Map();
 
+    // Maps document elements to style elements, used to add new rules.
+    this.styleElements = new WeakMap();
+
     this.onFrameUnload = this.onFrameUnload.bind(this);
     events.on(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
 
@@ -169,7 +172,7 @@ var PageStyleActor = protocol.ActorClass({
     this.walker = null;
     this.refMap = null;
     this.cssLogic = null;
-    this._styleElement = null;
+    this.styleElements = null;
 
     for (let sheet of this._watchedSheets) {
       sheet.off("style-applied", this._styleApplied);
@@ -971,23 +974,26 @@ var PageStyleActor = protocol.ActorClass({
    * On page navigation, tidy up remaining objects.
    */
   onFrameUnload: function() {
-    this._styleElement = null;
+    this.styleElements = new WeakMap();
   },
 
   /**
-   * Helper function to addNewRule to construct a new style tag in the document.
+   * Helper function to addNewRule to get or create a style tag in the provided
+   * document.
+   *
+   * @param {Document} document
+   *        The document in which the style element should be appended.
    * @returns DOMElement of the style tag
    */
-  get styleElement() {
-    if (!this._styleElement) {
-      let document = this.inspector.window.document;
+  getStyleElement: function(document) {
+    if (!this.styleElements.has(document)) {
       let style = document.createElementNS(XHTML_NS, "style");
       style.setAttribute("type", "text/css");
       document.documentElement.appendChild(style);
-      this._styleElement = style;
+      this.styleElements.set(document, style);
     }
 
-    return this._styleElement;
+    return this.styleElements.get(document);
   },
 
   /**
@@ -1016,7 +1022,7 @@ var PageStyleActor = protocol.ActorClass({
    */
   addNewRule: method(Task.async(function* (node, pseudoClasses,
                                           editAuthored = false) {
-    let style = this.styleElement;
+    let style = this.getStyleElement(node.rawNode.ownerDocument);
     let sheet = style.sheet;
     let cssRules = sheet.cssRules;
     let rawNode = node.rawNode;
