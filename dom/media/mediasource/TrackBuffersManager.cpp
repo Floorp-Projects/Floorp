@@ -1003,9 +1003,6 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
     // 3. Set the need random access point flag on all track buffers to true.
     mVideoTracks.mNeedRandomAccessPoint = true;
     mAudioTracks.mNeedRandomAccessPoint = true;
-
-    mVideoTracks.mLongestFrameDuration = mVideoTracks.mLastFrameDuration;
-    mAudioTracks.mLongestFrameDuration = mAudioTracks.mLastFrameDuration;
   }
 
   // 4. Let active track flag equal false.
@@ -1399,7 +1396,9 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   TimeInterval targetWindow = mAppendWindow.mStart != TimeUnit::FromSeconds(0)
     ? mAppendWindow
     : TimeInterval(mAppendWindow.mStart, mAppendWindow.mEnd,
-                   trackBuffer.mLongestFrameDuration.refOr(TimeUnit::FromMicroseconds(aSamples[0]->mDuration)));
+                   trackBuffer.mLastFrameDuration.isSome()
+                     ? trackBuffer.mLongestFrameDuration
+                     : TimeUnit::FromMicroseconds(aSamples[0]->mDuration));
 
   TimeIntervals samplesRange;
   uint32_t sizeNewSamples = 0;
@@ -1456,16 +1455,20 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     // Step 3 is performed earlier or when a discontinuity has been detected.
     // 4. If timestampOffset is not 0, then run the following steps:
 
+    TimeUnit sampleTime = TimeUnit::FromMicroseconds(sample->mTime);
+    TimeUnit sampleTimecode = TimeUnit::FromMicroseconds(sample->mTimecode);
+    TimeUnit sampleDuration = TimeUnit::FromMicroseconds(sample->mDuration);
+    TimeUnit timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
+
     TimeInterval sampleInterval =
       mSourceBufferAttributes->mGenerateTimestamps
-        ? TimeInterval(mSourceBufferAttributes->GetTimestampOffset(),
-                       mSourceBufferAttributes->GetTimestampOffset() + TimeUnit::FromMicroseconds(sample->mDuration))
-        : TimeInterval(TimeUnit::FromMicroseconds(sample->mTime) + mSourceBufferAttributes->GetTimestampOffset(),
-                       TimeUnit::FromMicroseconds(sample->GetEndTime()) + mSourceBufferAttributes->GetTimestampOffset());
+        ? TimeInterval(timestampOffset, timestampOffset + sampleDuration)
+        : TimeInterval(timestampOffset + sampleTime,
+                       timestampOffset + sampleTime + sampleDuration);
     TimeUnit decodeTimestamp =
       mSourceBufferAttributes->mGenerateTimestamps
-        ? mSourceBufferAttributes->GetTimestampOffset()
-        : TimeUnit::FromMicroseconds(sample->mTimecode) + mSourceBufferAttributes->GetTimestampOffset();
+        ? timestampOffset
+        : timestampOffset + sampleTimecode;
 
     // 6. If last decode timestamp for track buffer is set and decode timestamp is less than last decode timestamp:
     // OR
@@ -1473,7 +1476,8 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
 
     if (needDiscontinuityCheck && trackBuffer.mLastDecodeTimestamp.isSome() &&
         (decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref() ||
-         decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() > 2*trackBuffer.mLongestFrameDuration.ref())) {
+         (decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref()
+          > 2 * trackBuffer.mLongestFrameDuration))) {
       MSE_DEBUG("Discontinuity detected.");
       SourceBufferAppendMode appendMode = mSourceBufferAttributes->GetAppendMode();
 
@@ -1500,7 +1504,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
       // steps again instead.
       // 3. If mode equals "sequence" and group start timestamp is set, then run the following steps:
       TimeUnit presentationTimestamp = mSourceBufferAttributes->mGenerateTimestamps
-        ? TimeUnit() : TimeUnit::FromMicroseconds(sample->mTime);
+        ? TimeUnit() : sampleTime;
       CheckSequenceDiscontinuity(presentationTimestamp);
 
       if (!sample->mKeyframe) {
@@ -1509,16 +1513,16 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
       if (appendMode == SourceBufferAppendMode::Sequence) {
         // mSourceBufferAttributes->GetTimestampOffset() was modified during CheckSequenceDiscontinuity.
         // We need to update our variables.
+        timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
         sampleInterval =
           mSourceBufferAttributes->mGenerateTimestamps
-            ? TimeInterval(mSourceBufferAttributes->GetTimestampOffset(),
-                           mSourceBufferAttributes->GetTimestampOffset() + TimeUnit::FromMicroseconds(sample->mDuration))
-            : TimeInterval(TimeUnit::FromMicroseconds(sample->mTime) + mSourceBufferAttributes->GetTimestampOffset(),
-                           TimeUnit::FromMicroseconds(sample->GetEndTime()) + mSourceBufferAttributes->GetTimestampOffset());
+            ? TimeInterval(timestampOffset, timestampOffset + sampleDuration)
+            : TimeInterval(timestampOffset + sampleTime,
+                           timestampOffset + sampleTime + sampleDuration);
         decodeTimestamp =
           mSourceBufferAttributes->mGenerateTimestamps
-            ? mSourceBufferAttributes->GetTimestampOffset()
-            : TimeUnit::FromMicroseconds(sample->mTimecode) + mSourceBufferAttributes->GetTimestampOffset();
+            ? timestampOffset
+            : timestampOffset + sampleTimecode;
       }
       trackBuffer.mNeedRandomAccessPoint = false;
       needDiscontinuityCheck = false;
@@ -1553,20 +1557,17 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
 
     // Steps 11,12,13,14, 15 and 16 will be done in one block in InsertFrames.
 
-    // 17. Set last decode timestamp for track buffer to decode timestamp.
-    trackBuffer.mLastDecodeTimestamp =
-      Some(TimeUnit::FromMicroseconds(sample->mTimecode));
-    // 18. Set last frame duration for track buffer to frame duration.
-    trackBuffer.mLastFrameDuration =
-      Some(TimeUnit::FromMicroseconds(sample->mDuration));
-
     trackBuffer.mLongestFrameDuration =
-      Some(trackBuffer.mLongestFrameDuration.isNothing()
-           ? trackBuffer.mLastFrameDuration.ref()
-           : sample->mKeyframe
-             ? trackBuffer.mLastFrameDuration.ref()
-             : std::max(trackBuffer.mLastFrameDuration.ref(),
-                        trackBuffer.mLongestFrameDuration.ref()));
+      trackBuffer.mLastFrameDuration.isSome()
+      ? sample->mKeyframe
+        ? sampleDuration
+        : std::max(sampleDuration, trackBuffer.mLongestFrameDuration)
+      : sampleDuration;
+
+    // 17. Set last decode timestamp for track buffer to decode timestamp.
+    trackBuffer.mLastDecodeTimestamp = Some(decodeTimestamp);
+    // 18. Set last frame duration for track buffer to frame duration.
+    trackBuffer.mLastFrameDuration = Some(sampleDuration);
 
     // 19. If highest end timestamp for track buffer is unset or frame end timestamp is greater than highest end timestamp, then set highest end timestamp for track buffer to frame end timestamp.
     if (trackBuffer.mHighestEndTimestamp.isNothing() ||
@@ -1701,7 +1702,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   // as fuzz is +/- value, giving an effective leeway of a full frame
   // length.
   TimeIntervals range(aIntervals);
-  range.SetFuzz(trackBuffer.mLongestFrameDuration.ref() / 2);
+  range.SetFuzz(trackBuffer.mLongestFrameDuration / 2);
   trackBuffer.mSanitizedBufferedRanges += range;
 }
 
