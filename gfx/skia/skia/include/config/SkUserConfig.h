@@ -164,4 +164,15 @@
 #  endif
 #endif
 
+/* Check if building with either MSVC, libc++, or a sufficiently recent version of libstdc++.
++ * On platforms like OS X 10.6 or older Android SDKs, we need to work around a lack of certain
++ * C++11 features.
++ */
+#include "mozilla/Compiler.h"
+#if MOZ_IS_MSVC || MOZ_USING_LIBCXX || MOZ_LIBSTDCXX_VERSION_AT_LEAST(4, 8, 0)
+#  define MOZ_SKIA_AVOID_CXX11 0
+#else
+#  define MOZ_SKIA_AVOID_CXX11 1
+#endif
+
 #endif
