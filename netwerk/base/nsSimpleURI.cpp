@@ -236,7 +236,7 @@ nsSimpleURI::SetScheme(const nsACString &scheme)
 
     const nsPromiseFlatCString &flat = PromiseFlatCString(scheme);
     if (!net_IsValidScheme(flat)) {
-        NS_ERROR("the given url scheme contains invalid characters");
+        NS_WARNING("the given url scheme contains invalid characters");
         return NS_ERROR_MALFORMED_URI;
     }
 
