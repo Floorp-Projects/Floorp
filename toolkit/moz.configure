@@ -370,9 +370,13 @@ def packager_format(value):
 
 set_config('MOZ_PACKAGER_FORMAT', packager_format)
 
-@depends(host)
-def jar_maker_format(host):
-    return 'flat' if host.os == 'WINNT' else 'symlink'
+@depends(host, build_project)
+def jar_maker_format(host, build_project):
+    # Multilocales for mobile/android use the same mergedirs for all locales,
+    # so we can't use symlinks for those builds.
+    if host.os == 'WINNT' or build_project == 'mobile/android':
+        return 'flat'
+    return 'symlink'
 
 set_config('MOZ_JAR_MAKER_FILE_FORMAT', jar_maker_format)
 
