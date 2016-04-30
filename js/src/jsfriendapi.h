@@ -147,9 +147,6 @@ typedef void
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
 
-extern JS_FRIEND_API(bool)
-JS_GetIsSecureContext(JSCompartment* compartment);
-
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment);
 
