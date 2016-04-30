@@ -268,7 +268,7 @@ private:
     // The variable is initially unset to indicate that no coded frames have
     // been appended yet.
     Maybe<media::TimeUnit> mHighestEndTimestamp;
-    // Longest frame duration seen in a coded frame group.
+    // Longest frame duration seen since last random access point.
     Maybe<media::TimeUnit> mLongestFrameDuration;
     // Need random access point flag variable that keeps track of whether the
     // track buffer is waiting for a random access point coded frame.
