@@ -1494,8 +1494,10 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     trackBuffer.mLongestFrameDuration =
       Some(trackBuffer.mLongestFrameDuration.isNothing()
            ? trackBuffer.mLastFrameDuration.ref()
-           : std::max(trackBuffer.mLastFrameDuration.ref(),
-                      trackBuffer.mLongestFrameDuration.ref()));
+           : sample->mKeyframe
+             ? trackBuffer.mLastFrameDuration.ref()
+             : std::max(trackBuffer.mLastFrameDuration.ref(),
+                        trackBuffer.mLongestFrameDuration.ref()));
 
     // 19. If highest end timestamp for track buffer is unset or frame end timestamp is greater than highest end timestamp, then set highest end timestamp for track buffer to frame end timestamp.
     if (trackBuffer.mHighestEndTimestamp.isNothing() ||
