@@ -16,6 +16,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.RecyclerView;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
@@ -134,7 +135,12 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mRecyclerView.setAdapter(mPanelLevel == OnPanelLevelChangeListener.PanelLevel.PARENT ? mHistoryAdapter : mClientsAdapter);
 
-        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        final RecyclerView.ItemAnimator animator = new DefaultItemAnimator();
+        animator.setAddDuration(100);
+        animator.setChangeDuration(100);
+        animator.setMoveDuration(100);
+        animator.setRemoveDuration(100);
+        mRecyclerView.setItemAnimator(animator);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext()));
         mRecyclerView.setOnHistoryClickedListener(mUrlOpenListener);
         mRecyclerView.setOnPanelLevelChangeListener(new OnLevelChangeListener());
