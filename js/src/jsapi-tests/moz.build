@@ -68,6 +68,7 @@ UNIFIED_SOURCES += [
     'testParseJSON.cpp',
     'testPersistentRooted.cpp',
     'testPreserveJitCode.cpp',
+    'testPrivateGCThingValue.cpp',
     'testProfileStrings.cpp',
     'testPropCache.cpp',
     'testRegExp.cpp',
