@@ -259,6 +259,9 @@ public:
    * @note This method might destroy the frame, pres shell and other objects.
    */
   void ScrollToRestoredPosition();
+
+  void SetRestoringHistoryScrollPosition(bool aValue);
+
   /**
    * GetSnapPointForDestination determines which point to snap to after
    * scrolling. aStartPos gives the position before scrolling and aDestination
@@ -581,6 +584,11 @@ public:
   // True if we don't want the scrollbar to repaint itself right now.
   bool mSuppressScrollbarRepaints:1;
 
+  // True if the calls to ScrollToRestoredPosition() are trying to restore the
+  // scroll position from history, and need to account for incremental page
+  // load.
+  bool mRestoringHistoryScrollPosition:1;
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
 protected:
@@ -844,6 +852,9 @@ public:
    */
   virtual void ScrollToRestoredPosition() override {
     mHelper.ScrollToRestoredPosition();
+  }
+  virtual void SetRestoringHistoryScrollPosition(bool aValue) override {
+    mHelper.SetRestoringHistoryScrollPosition(aValue);
   }
   virtual void AddScrollPositionListener(nsIScrollPositionListener* aListener) override {
     mHelper.AddScrollPositionListener(aListener);
@@ -1253,6 +1264,9 @@ public:
    */
   virtual void ScrollToRestoredPosition() override {
     mHelper.ScrollToRestoredPosition();
+  }
+  virtual void SetRestoringHistoryScrollPosition(bool aValue) override {
+    mHelper.SetRestoringHistoryScrollPosition(aValue);
   }
   virtual void AddScrollPositionListener(nsIScrollPositionListener* aListener) override {
     mHelper.AddScrollPositionListener(aListener);
