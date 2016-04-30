@@ -21,6 +21,7 @@ public:
   nsPresState()
     : mContentData(nullptr)
     , mScrollState(0, 0)
+    , mRestoringHistoryScrollPosition(true)
     , mResolution(1.0)
     , mScaleToResolution(false)
     , mDisabledSet(false)
@@ -28,14 +29,20 @@ public:
     , mDroppedDown(false)
   {}
 
-  void SetScrollState(const nsPoint& aState)
+  void SetScrollState(const nsPoint& aState, bool aRestoringHistoryScrollPosition = true)
   {
     mScrollState = aState;
+    mRestoringHistoryScrollPosition = aRestoringHistoryScrollPosition;
   }
 
-  nsPoint GetScrollState() const
+  nsPoint GetScrollPosition() const
   {
     return mScrollState;
+  }
+
+  bool GetRestoringHistoryScrollPosition() const
+  {
+    return mRestoringHistoryScrollPosition;
   }
 
   void SetResolution(float aSize)
@@ -104,6 +111,7 @@ public:
 protected:
   nsCOMPtr<nsISupports> mContentData;
   nsPoint mScrollState;
+  bool mRestoringHistoryScrollPosition;
   float mResolution;
   bool mScaleToResolution;
   bool mDisabledSet;
