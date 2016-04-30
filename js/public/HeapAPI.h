@@ -394,6 +394,9 @@ GCThingIsMarkedGray(GCCellPtr thing)
     return js::gc::detail::CellIsMarkedGray(thing.asCell());
 }
 
+extern JS_PUBLIC_API(JS::TraceKind)
+GCThingTraceKind(void* thing);
+
 } /* namespace JS */
 
 namespace js {
