@@ -143,12 +143,6 @@ JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSOb
     return JS_NewObjectWithGivenProto(cx, clasp, proto);
 }
 
-JS_FRIEND_API(bool)
-JS_GetIsSecureContext(JSCompartment* compartment)
-{
-    return compartment->creationOptions().secureContext();
-}
-
 JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment)
 {
