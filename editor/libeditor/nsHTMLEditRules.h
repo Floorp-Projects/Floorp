@@ -163,7 +163,7 @@ protected:
   nsresult WillCSSIndent(Selection* aSelection, bool* aCancel, bool* aHandled);
   nsresult WillHTMLIndent(Selection* aSelection, bool* aCancel,
                           bool* aHandled);
-  nsresult WillOutdent(Selection* aSelection, bool* aCancel, bool* aHandled);
+  nsresult WillOutdent(Selection& aSelection, bool* aCancel, bool* aHandled);
   nsresult WillAlign(Selection& aSelection, const nsAString& aAlignType,
                      bool* aCancel, bool* aHandled);
   nsresult WillAbsolutePosition(Selection* aSelection, bool* aCancel,
