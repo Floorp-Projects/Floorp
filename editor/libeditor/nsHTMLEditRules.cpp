@@ -5294,7 +5294,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
       mHTMLEditor->GetPriorHTMLNode(node, offset, true);
 
     while (priorNode && priorNode->GetParentNode() &&
-           mHTMLEditor && !mHTMLEditor->IsVisBreak(priorNode) &&
+           mHTMLEditor && !mHTMLEditor->IsVisBreak(priorNode->AsDOMNode()) &&
            !IsBlockNode(*priorNode)) {
       offset = priorNode->GetParentNode()->IndexOf(priorNode);
       node = priorNode->GetParentNode();
@@ -5370,7 +5370,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
     offset = 1 + nextNode->GetParentNode()->IndexOf(nextNode);
     node = nextNode->GetParentNode();
     NS_ENSURE_TRUE(mHTMLEditor, /* void */);
-    if (mHTMLEditor->IsVisBreak(nextNode)) {
+    if (mHTMLEditor->IsVisBreak(nextNode->AsDOMNode())) {
       break;
     }
 
@@ -6218,8 +6218,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
                                    bool* aCancel,
                                    bool* aHandled)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!aSelection || !aPara || !node || !aCancel || !aHandled) {
+  if (!aSelection || !aPara || !aNode || !aCancel || !aHandled) {
     return NS_ERROR_NULL_POINTER;
   }
   *aCancel = false;
@@ -6227,21 +6226,21 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
   nsresult res;
 
   int32_t offset;
-  nsCOMPtr<nsINode> parent = nsEditor::GetNodeLocation(node, &offset);
+  nsCOMPtr<nsIDOMNode> parent = nsEditor::GetNodeLocation(aNode, &offset);
 
   NS_ENSURE_STATE(mHTMLEditor);
   bool doesCRCreateNewP = mHTMLEditor->GetReturnInParagraphCreatesNewParagraph();
 
   bool newBRneeded = false;
   bool newSelNode = false;
-  nsCOMPtr<nsIContent> sibling;
+  nsCOMPtr<nsIDOMNode> sibling;
   nsCOMPtr<nsIDOMNode> selNode = aNode;
   int32_t selOffset = aOffset;
 
   NS_ENSURE_STATE(mHTMLEditor);
   if (aNode == aPara && doesCRCreateNewP) {
     // we are at the edges of the block, newBRneeded not needed!
-    sibling = node->AsContent();
+    sibling = aNode;
   } else if (mHTMLEditor->IsTextNode(aNode)) {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
     uint32_t strLength;
@@ -6252,9 +6251,9 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
     if (!aOffset) {
       // is there a BR prior to it?
       NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetPriorHTMLSibling(node);
+      mHTMLEditor->GetPriorHTMLSibling(aNode, address_of(sibling));
       if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
+          nsTextEditUtils::HasMozAttr(sibling)) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
       }
@@ -6262,9 +6261,9 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
       // we're at the end of text node...
       // is there a BR after to it?
       NS_ENSURE_STATE(mHTMLEditor);
-      sibling = mHTMLEditor->GetNextHTMLSibling(node);
+      res = mHTMLEditor->GetNextHTMLSibling(aNode, address_of(sibling));
       if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
+          nsTextEditUtils::HasMozAttr(sibling)) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
         offset++;
@@ -6283,20 +6282,22 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
   } else {
     // not in a text node.
     // is there a BR prior to it?
-    nsCOMPtr<nsIContent> nearNode;
+    nsCOMPtr<nsIDOMNode> nearNode;
     NS_ENSURE_STATE(mHTMLEditor);
-    nearNode = mHTMLEditor->GetPriorHTMLNode(node, aOffset);
+    res = mHTMLEditor->GetPriorHTMLNode(aNode, aOffset, address_of(nearNode));
+    NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_STATE(mHTMLEditor);
     if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
-        nsTextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+        nsTextEditUtils::HasMozAttr(nearNode)) {
       // is there a BR after it?
       NS_ENSURE_STATE(mHTMLEditor);
-      nearNode = mHTMLEditor->GetNextHTMLNode(node, aOffset);
+      res = mHTMLEditor->GetNextHTMLNode(aNode, aOffset, address_of(nearNode));
+      NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
       if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
-          nsTextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+          nsTextEditUtils::HasMozAttr(nearNode)) {
         newBRneeded = true;
-        parent = node;
+        parent = aNode;
         offset = aOffset;
         newSelNode = true;
       }
@@ -6309,11 +6310,13 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
     // if CR does not create a new P, default to BR creation
     NS_ENSURE_TRUE(doesCRCreateNewP, NS_OK);
 
+    nsCOMPtr<nsIDOMNode> brNode;
     NS_ENSURE_STATE(mHTMLEditor);
-    sibling = mHTMLEditor->CreateBR(parent, offset);
+    res =  mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
+    sibling = brNode;
     if (newSelNode) {
       // We split the parent after the br we've just inserted.
-      selNode = GetAsDOMNode(parent);
+      selNode = parent;
       selOffset = offset + 1;
     }
   }
@@ -6326,7 +6329,7 @@ nsHTMLEditRules::ReturnInParagraph(Selection* aSelection,
 //
 nsresult
 nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
-                                nsIContent* aBRNode,
+                                nsIDOMNode *aBRNode,
                                 Selection* aSelection,
                                 nsCOMPtr<nsIDOMNode> *aSelNode,
                                 int32_t *aOffset)
