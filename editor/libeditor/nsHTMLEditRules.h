@@ -202,7 +202,7 @@ protected:
                              nsIDOMNode* aTextNode, int32_t aOffset,
                              bool* aCancel, bool* aHandled);
   nsresult SplitParagraph(nsIDOMNode *aPara,
-                          nsIDOMNode *aBRNode,
+                          nsIContent* aBRNode,
                           Selection* aSelection,
                           nsCOMPtr<nsIDOMNode> *aSelNode,
                           int32_t *aOffset);
