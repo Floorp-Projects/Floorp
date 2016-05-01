@@ -2649,10 +2649,8 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       }
     }
     // Do br adjustment.
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = CheckForInvisibleBR(GetAsDOMNode(leftBlock), kBlockEnd,
-                              address_of(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> brNode =
+      CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
     if (mergeLists) {
       // The idea here is to take all children in rightList that are past
       // offset, and pull them into leftlist.
@@ -2696,10 +2694,8 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       }
     }
     // Do br adjustment.
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = CheckForInvisibleBR(GetAsDOMNode(leftBlock), kBeforeBlock,
-                              address_of(brNode), leftOffset);
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> brNode =
+      CheckForInvisibleBR(*leftBlock, BRLocation::beforeBlock, leftOffset);
     if (mergeLists) {
       res = MoveContents(GetAsDOMNode(rightList), GetAsDOMNode(leftList),
                          &leftOffset);
@@ -2773,13 +2769,11 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     res = nsWSRunObject::PrepareToJoinBlocks(mHTMLEditor, leftBlock, rightBlock);
     NS_ENSURE_SUCCESS(res, res);
     // Do br adjustment.
-    nsCOMPtr<nsIDOMNode> brNode;
-    res = CheckForInvisibleBR(GetAsDOMNode(leftBlock), kBlockEnd,
-                              address_of(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> brNode =
+      CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
     if (mergeLists || leftBlock->NodeInfo()->NameAtom() ==
                       rightBlock->NodeInfo()->NameAtom()) {
-      // Nodes are same type.  Merge them.
+      // Nodes are same type.  merge them.
       ::DOMPoint pt = JoinNodesSmart(*leftBlock, *rightBlock);
       if (pt.node && mergeLists) {
         nsCOMPtr<Element> newBlock;
@@ -4951,55 +4945,39 @@ nsHTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
   return NS_OK;
 }
 
-nsresult
-nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
-                                     BRLocation aWhere,
-                                     nsCOMPtr<nsIDOMNode> *outBRNode,
+Element*
+nsHTMLEditRules::CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
                                      int32_t aOffset)
 {
-  nsCOMPtr<nsINode> block = do_QueryInterface(aBlock);
-  NS_ENSURE_TRUE(block && outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nullptr;
-
-  nsCOMPtr<nsIDOMNode> testNode;
+  nsCOMPtr<nsINode> testNode;
   int32_t testOffset = 0;
-  bool runTest = false;
 
-  if (aWhere == kBlockEnd)
-  {
-    nsCOMPtr<nsIDOMNode> rightmostNode =
-      // no block crossing
-      GetAsDOMNode(mHTMLEditor->GetRightmostChild(block, true));
+  if (aWhere == BRLocation::blockEnd) {
+    // No block crossing
+    nsCOMPtr<nsIContent> rightmostNode =
+      mHTMLEditor->GetRightmostChild(&aBlock, true);
 
-    if (rightmostNode)
-    {
-      int32_t nodeOffset;
-      nsCOMPtr<nsIDOMNode> nodeParent = nsEditor::GetNodeLocation(rightmostNode,
-                                                                  &nodeOffset);
-      runTest = true;
-      testNode = nodeParent;
-      // use offset + 1, because we want the last node included in our
-      // evaluation
-      testOffset = nodeOffset + 1;
+    if (!rightmostNode) {
+      return nullptr;
     }
-  }
-  else if (aOffset)
-  {
-    runTest = true;
-    testNode = aBlock;
-    // we'll check everything to the left of the input position
+
+    testNode = rightmostNode->GetParentNode();
+    // Use offset + 1, so last node is included in our evaluation
+    testOffset = testNode->IndexOf(rightmostNode) + 1;
+  } else if (aOffset) {
+    testNode = &aBlock;
+    // We'll check everything to the left of the input position
     testOffset = aOffset;
+  } else {
+    return nullptr;
   }
 
-  if (runTest)
-  {
-    nsWSRunObject wsTester(mHTMLEditor, testNode, testOffset);
-    if (WSType::br == wsTester.mStartReason) {
-      *outBRNode = GetAsDOMNode(wsTester.mStartReasonNode);
-    }
+  nsWSRunObject wsTester(mHTMLEditor, testNode, testOffset);
+  if (WSType::br == wsTester.mStartReason) {
+    return wsTester.mStartReasonNode->AsElement();
   }
 
-  return NS_OK;
+  return nullptr;
 }
 
 
