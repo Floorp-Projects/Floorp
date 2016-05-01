@@ -83,14 +83,17 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
 NS_IMETHODIMP
 nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
 {
+  nsCOMPtr<nsIDOMElement> element;
+  nsresult res = GetSelectionContainer(getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(res, res);
+
   nsAutoString positionStr;
-  nsCOMPtr<nsINode> node = GetSelectionContainer();
+  nsCOMPtr<nsINode> node = do_QueryInterface(element);
   nsCOMPtr<nsIDOMNode> resultNode;
 
   while (!resultNode && node && !node->IsHTMLElement(nsGkAtoms::html)) {
-    nsresult res =
-      mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
-                                         positionStr);
+    res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
+                                             positionStr);
     NS_ENSURE_SUCCESS(res, res);
     if (positionStr.EqualsLiteral("absolute"))
       resultNode = GetAsDOMNode(node);
@@ -99,8 +102,9 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
     }
   }
 
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(resultNode);
-  element.forget(_retval);
+  element = do_QueryInterface(resultNode );
+  *_retval = element;
+  NS_IF_ADDREF(*_retval);
   return NS_OK;
 }
 
