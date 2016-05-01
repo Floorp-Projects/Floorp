@@ -339,7 +339,7 @@ protected:
   nsresult UpdateDocChangeRange(nsRange* aRange);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsINode& aNode);
-  bool     IsEmptyInline(nsIDOMNode *aNode);
+  bool     IsEmptyInline(nsINode& aNode);
   bool     ListIsEmptyLine(nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, bool aChildrenOnly);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts);
