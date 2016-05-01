@@ -324,7 +324,8 @@ protected:
   enum class ContentsOnly { no, yes };
   nsresult AlignBlock(Element& aElement,
                       const nsAString& aAlignType, ContentsOnly aContentsOnly);
-  nsresult RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_t aRelativeChange);
+  enum class Change { minus, plus };
+  nsresult ChangeIndentation(Element& aElement, Change aChange);
   void DocumentModifiedWorker();
 
 // data members
