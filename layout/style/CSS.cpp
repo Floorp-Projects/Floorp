@@ -39,8 +39,8 @@ GetParsingInfo(const GlobalObject& aGlobal,
     return NS_ERROR_FAILURE;
   }
 
-  aInfo.mDocURI = nsCOMPtr<nsIURI>(doc->GetDocumentURI());
-  aInfo.mBaseURI = nsCOMPtr<nsIURI>(doc->GetBaseURI());
+  aInfo.mDocURI = nsCOMPtr<nsIURI>(doc->GetDocumentURI()).get();
+  aInfo.mBaseURI = nsCOMPtr<nsIURI>(doc->GetBaseURI()).get();
   aInfo.mPrincipal = win->GetPrincipal();
   return NS_OK;
 }

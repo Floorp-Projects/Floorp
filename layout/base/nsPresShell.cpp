@@ -6447,7 +6447,8 @@ nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aConte
 {
   PointerCaptureInfo* pointerCaptureInfo = nullptr;
   gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo);
-  nsIContent* content = pointerCaptureInfo ? pointerCaptureInfo->mOverrideContent : nullptr;
+  nsIContent* content = pointerCaptureInfo ?
+    pointerCaptureInfo->mOverrideContent.get() : nullptr;
 
   if (!content && (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId))) {
     SetCapturingContent(aContent, CAPTURE_PREVENTDRAG);

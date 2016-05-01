@@ -2381,7 +2381,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   // We should only use a language for hyphenation if it was specified
   // explicitly.
   nsIAtom* hyphenationLanguage =
-    styleFont->mExplicitLanguage ? styleFont->mLanguage : nullptr;
+    styleFont->mExplicitLanguage ? styleFont->mLanguage.get() : nullptr;
   // We keep this pointed at the skip-chars data for the current mappedFlow.
   // This lets us cheaply check whether the flow has compressed initial
   // whitespace...
