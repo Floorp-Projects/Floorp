@@ -998,6 +998,14 @@ nsHTMLEditor::IsVisBreak(nsINode* aNode)
   return true;
 }
 
+bool
+nsHTMLEditor::IsVisBreak(nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, false);
+  return IsVisBreak(node);
+}
+
 NS_IMETHODIMP
 nsHTMLEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
