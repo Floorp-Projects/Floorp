@@ -3579,7 +3579,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     NS_ENSURE_STATE(theBlock);
     // remember our new block for postprocessing
     mNewBlock = theBlock->AsDOMNode();
-    RelativeChangeIndentationOfElementNode(theBlock->AsDOMNode(), +1);
+    ChangeIndentation(*theBlock, Change::plus);
     // delete anything that was in the list of nodes
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
@@ -3682,7 +3682,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     else // not a list item
     {
       if (curNode && IsBlockNode(*curNode)) {
-        RelativeChangeIndentationOfElementNode(curNode->AsDOMNode(), +1);
+        ChangeIndentation(*curNode->AsElement(), Change::plus);
         curQuote = nullptr;
       }
       else {
@@ -3699,7 +3699,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
           curQuote = mHTMLEditor->CreateNode(nsGkAtoms::div, curParent,
                                              offset);
           NS_ENSURE_STATE(curQuote);
-          RelativeChangeIndentationOfElementNode(curQuote->AsDOMNode(), +1);
+          ChangeIndentation(*curQuote, Change::plus);
           // remember our new block for postprocessing
           mNewBlock = curQuote->AsDOMNode();
           // curQuote is now the correct thing to put curNode in
@@ -4023,7 +4023,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
         if (f > 0) {
-          RelativeChangeIndentationOfElementNode(GetAsDOMNode(curNode), -1);
+          ChangeIndentation(*curNode->AsElement(), Change::minus);
           continue;
         }
       }
@@ -4157,7 +4157,7 @@ nsHTMLEditRules::WillOutdent(Selection& aSelection,
             element = curNode->AsElement();
           }
           if (element) {
-            RelativeChangeIndentationOfElementNode(element->AsDOMNode(), -1);
+            ChangeIndentation(*element, Change::minus);
           }
         }
       }
@@ -4283,14 +4283,14 @@ nsHTMLEditRules::OutdentPartOfBlock(Element& aBlock,
 
   NS_ENSURE_STATE(middleNode);
 
-  if (aIsBlockIndentedWithCSS) {
-    nsresult res =
-      RelativeChangeIndentationOfElementNode(GetAsDOMNode(middleNode), -1);
-    NS_ENSURE_SUCCESS(res, res);
-  } else {
+  if (!aIsBlockIndentedWithCSS) {
     NS_ENSURE_STATE(mHTMLEditor);
     nsresult res =
       mHTMLEditor->RemoveBlockContainer(*middleNode);
+    NS_ENSURE_SUCCESS(res, res);
+  } else if (middleNode->IsElement()) {
+    // We do nothing if middleNode isn't an element
+    nsresult res = ChangeIndentation(*middleNode->AsElement(), Change::minus);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -8410,87 +8410,69 @@ nsHTMLEditRules::AlignBlock(Element& aElement, const nsAString& aAlignType,
 }
 
 nsresult
-nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_t aRelativeChange)
+nsHTMLEditRules::ChangeIndentation(Element& aElement, Change aChange)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  if (aRelativeChange != 1 && aRelativeChange != -1) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  nsCOMPtr<Element> element = do_QueryInterface(aNode);
-  if (!element) {
-    return NS_OK;
-  }
-
   NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
   nsIAtom& marginProperty =
-    MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, *element);
+    MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, aElement);
   nsAutoString value;
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*element, marginProperty,
+  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aElement, marginProperty,
                                                    value);
   float f;
   nsCOMPtr<nsIAtom> unit;
-  NS_ENSURE_STATE(mHTMLEditor);
   mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
   if (0 == f) {
     nsAutoString defaultLengthUnit;
-    NS_ENSURE_STATE(mHTMLEditor);
     mHTMLEditor->mHTMLCSSUtils->GetDefaultLengthUnit(defaultLengthUnit);
     unit = NS_Atomize(defaultLengthUnit);
   }
+  int8_t multiplier = aChange == Change::plus ? +1 : -1;
   if        (nsGkAtoms::in == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_IN * multiplier;
   } else if (nsGkAtoms::cm == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_CM * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_CM * multiplier;
   } else if (nsGkAtoms::mm == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_MM * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_MM * multiplier;
   } else if (nsGkAtoms::pt == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_PT * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_PT * multiplier;
   } else if (nsGkAtoms::pc == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_PC * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_PC * multiplier;
   } else if (nsGkAtoms::em == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_EM * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_EM * multiplier;
   } else if (nsGkAtoms::ex == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_EX * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_EX * multiplier;
   } else if (nsGkAtoms::px == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_PX * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_PX * multiplier;
   } else if (nsGkAtoms::percentage == unit) {
-            f += NS_EDITOR_INDENT_INCREMENT_PERCENT * aRelativeChange;
+            f += NS_EDITOR_INDENT_INCREMENT_PERCENT * multiplier;
   }
 
   if (0 < f) {
     nsAutoString newValue;
     newValue.AppendFloat(f);
     newValue.Append(nsDependentAtomString(unit));
-    NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(*element, marginProperty,
+    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(aElement, marginProperty,
                                                newValue);
     return NS_OK;
   }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(*element, marginProperty,
+  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(aElement, marginProperty,
                                                 value);
 
-  // remove unnecessary DIV blocks:
-  // we could skip this section but that would cause a FAIL in
-  // editor/libeditor/tests/browserscope/richtext.html, which expects
-  // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
-  // removing the DIV container instead of just removing the CSS property.
-  nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);
-  if (!node || !node->IsHTMLElement(nsGkAtoms::div) ||
-      !mHTMLEditor ||
-      node == mHTMLEditor->GetActiveEditingHost() ||
-      !mHTMLEditor->IsDescendantOfEditorRoot(node) ||
-      nsHTMLEditor::HasAttributes(node)) {
-    NS_ENSURE_STATE(mHTMLEditor);
+  // Remove unnecessary divs
+  if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
+      &aElement == mHTMLEditor->GetActiveEditingHost() ||
+      !mHTMLEditor->IsDescendantOfEditorRoot(&aElement) ||
+      nsHTMLEditor::HasAttributes(&aElement)) {
     return NS_OK;
   }
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  return mHTMLEditor->RemoveContainer(node);
+  nsresult res = mHTMLEditor->RemoveContainer(&aElement);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 //
