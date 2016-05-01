@@ -169,7 +169,7 @@ protected:
   nsresult WillOutdent(Selection& aSelection, bool* aCancel, bool* aHandled);
   nsresult WillAlign(Selection& aSelection, const nsAString& aAlignType,
                      bool* aCancel, bool* aHandled);
-  nsresult WillAbsolutePosition(Selection& aSelection, bool* aCancel,
+  nsresult WillAbsolutePosition(Selection* aSelection, bool* aCancel,
                                 bool* aHandled);
   nsresult WillRemoveAbsolutePosition(Selection* aSelection, bool* aCancel,
                                       bool* aHandled);
