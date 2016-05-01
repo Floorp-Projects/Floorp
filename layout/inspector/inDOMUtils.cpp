@@ -246,8 +246,10 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   }
 
   nsCOMPtr<nsISupportsArray> rules;
-  NS_NewISupportsArray(getter_AddRefs(rules));
-  if (!rules) return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(rules));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
     RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
