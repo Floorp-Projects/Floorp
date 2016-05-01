@@ -178,8 +178,8 @@ protected:
   nsresult WillMakeDefListItem(Selection* aSelection,
                                const nsAString* aBlockType, bool aEntireList,
                                bool* aCancel, bool* aHandled);
-  nsresult WillMakeBasicBlock(Selection* aSelection,
-                              const nsAString* aBlockType,
+  nsresult WillMakeBasicBlock(Selection& aSelection,
+                              const nsAString& aBlockType,
                               bool* aCancel, bool* aHandled);
   nsresult DidMakeBasicBlock(Selection* aSelection, nsRulesInfo* aInfo,
                              nsresult aResult);
@@ -283,6 +283,8 @@ protected:
   nsresult ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                            nsIAtom& aBlockTag);
   nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+  nsresult SplitAsNeeded(nsIAtom& aTag, OwningNonNull<nsINode>& inOutParent,
+                         int32_t& inOutOffset);
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
                          int32_t& inOutOffset);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
