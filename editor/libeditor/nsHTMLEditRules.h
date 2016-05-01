@@ -298,7 +298,7 @@ protected:
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
   nsresult BustUpInlinesAtBRs(nsIContent& aNode,
                               nsTArray<mozilla::OwningNonNull<nsINode>>& aOutArrayOfNodes);
-  nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
+  nsIContent* GetHighestInlineParent(nsINode& aNode);
   void MakeTransitionList(nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);
   nsresult RemoveBlockStyle(nsTArray<mozilla::OwningNonNull<nsINode>>& aNodeArray);
