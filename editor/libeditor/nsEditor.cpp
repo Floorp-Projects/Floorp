@@ -3253,13 +3253,6 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
 }
 
 bool
-nsEditor::IsBlockNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return IsBlockNode(node);
-}
-
-bool
 nsEditor::IsBlockNode(nsINode* aNode)
 {
   // stub to be overridden in nsHTMLEditor.
