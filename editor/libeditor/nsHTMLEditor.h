@@ -620,7 +620,6 @@ protected:
 
   /* small utility routine to test if a break node is visible to user */
   bool     IsVisBreak(nsINode* aNode);
-  bool     IsVisBreak(nsIDOMNode *aNode);
 
   /* utility routine to possibly adjust the insertion position when
      inserting a block level element */
