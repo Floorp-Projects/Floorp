@@ -784,7 +784,8 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
   // Update our cached TimeRange.
   decoder.mTimeRanges = decoder.mTrackDemuxer->GetBuffered();
 
-  if (decoder.mDrainComplete || decoder.mDraining) {
+  if (decoder.mDrainComplete || decoder.mDraining ||
+      decoder.mDemuxRequest.Exists()) {
     // We do not want to clear mWaitingForData or mDemuxEOS while
     // a drain is in progress in order to properly complete the operation.
     return false;
