@@ -379,6 +379,8 @@ protected:
    */
   NS_IMETHOD ScrollSelectionIntoView(bool aScrollToAnchor);
 
+  // Convenience method; forwards to IsBlockNode(nsINode*).
+  bool IsBlockNode(nsIDOMNode* aNode);
   // stub.  see comment in source.
   virtual bool IsBlockNode(nsINode* aNode);
 
