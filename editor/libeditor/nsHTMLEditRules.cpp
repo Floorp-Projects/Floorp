@@ -4589,8 +4589,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
       // header; in HTML 4, it can directly carry the ALIGN attribute and we
       // don't need to make a div! If we are in CSS mode, all the work is done
       // in AlignBlock
-      rv = AlignBlock(static_cast<nsIDOMElement*>(node->AsDOMNode()),
-                       &aAlignType, true);
+      rv = AlignBlock(*node->AsElement(), aAlignType, ContentsOnly::yes);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_OK;
     }
@@ -4647,8 +4646,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
     // Remember our new block for postprocessing
     mNewBlock = div->AsDOMNode();
     // Set up the alignment on the div, using HTML or CSS
-    rv = AlignBlock(static_cast<nsIDOMElement*>(GetAsDOMNode(div)),
-                    &aAlignType, true);
+    rv = AlignBlock(*div, aAlignType, ContentsOnly::yes);
     NS_ENSURE_SUCCESS(rv, rv);
     *aHandled = true;
     // Put in a moz-br so that it won't get deleted
@@ -4686,8 +4684,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
     // don't need to nest it, just set the alignment.  In CSS, assign the
     // corresponding CSS styles in AlignBlock
     if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(curNode))) {
-      rv = AlignBlock(static_cast<nsIDOMElement*>(curNode->AsDOMNode()),
-                      &aAlignType, false);
+      rv = AlignBlock(*curNode->AsElement(), aAlignType, ContentsOnly::no);
       NS_ENSURE_SUCCESS(rv, rv);
       // Clear out curDiv so that we don't put nodes after this one into it
       curDiv = nullptr;
@@ -4748,8 +4745,7 @@ nsHTMLEditRules::WillAlign(Selection& aSelection,
       // Remember our new block for postprocessing
       mNewBlock = curDiv->AsDOMNode();
       // Set up the alignment on the div
-      rv = AlignBlock(static_cast<nsIDOMElement*>(curDiv->AsDOMNode()),
-                       &aAlignType, true);
+      rv = AlignBlock(*curDiv, aAlignType, ContentsOnly::yes);
     }
 
     NS_ENSURE_STATE(curNode->IsContent());
@@ -8471,34 +8467,36 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)
 }
 
 nsresult
-nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignType, bool aContentsOnly)
+nsHTMLEditRules::AlignBlock(Element& aElement, const nsAString& aAlignType,
+                            ContentsOnly aContentsOnly)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-  bool isBlock = IsBlockNode(node);
-  if (!isBlock && !nsHTMLEditUtils::IsHR(node)) {
-    // we deal only with blocks; early way out
+  if (!IsBlockNode(aElement.AsDOMNode()) &&
+      !aElement.IsHTMLElement(nsGkAtoms::hr)) {
+    // We deal only with blocks; early way out
     return NS_OK;
   }
 
-  nsresult res = RemoveAlignment(node, *aAlignType, aContentsOnly);
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  nsresult res = RemoveAlignment(aElement.AsDOMNode(), aAlignType,
+                                 aContentsOnly == ContentsOnly::yes);
   NS_ENSURE_SUCCESS(res, res);
   NS_NAMED_LITERAL_STRING(attr, "align");
-  NS_ENSURE_STATE(mHTMLEditor);
   if (mHTMLEditor->IsCSSEnabled()) {
-    // let's use CSS alignment; we use margin-left and margin-right for tables
+    // Let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType, false);
+    res = mHTMLEditor->SetAttributeOrEquivalent(
+      static_cast<nsIDOMElement*>(aElement.AsDOMNode()), attr, aAlignType,
+      false);
     NS_ENSURE_SUCCESS(res, res);
-  }
-  else {
+  } else {
     // HTML case; this code is supposed to be called ONLY if the element
     // supports the align attribute but we'll never know...
-    if (nsHTMLEditUtils::SupportsAlignAttr(node)) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->SetAttribute(aElement, attr, *aAlignType);
+    if (nsHTMLEditUtils::SupportsAlignAttr(aElement.AsDOMNode())) {
+      res =
+        mHTMLEditor->SetAttribute(static_cast<nsIDOMElement*>(aElement.AsDOMNode()),
+                                  attr, aAlignType);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
