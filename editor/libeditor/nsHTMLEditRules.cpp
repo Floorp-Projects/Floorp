@@ -2747,22 +2747,14 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
 
       nsCOMPtr<Element> editorRoot = mHTMLEditor->GetEditorRoot();
       if (!editorRoot || &aLeftNode != editorRoot) {
-        nsCOMPtr<nsIDOMNode> previousContentParentDOM =
-          GetAsDOMNode(previousContentParent);
-        nsCOMPtr<nsIDOMNode> splittedPreviousContentDOM;
-        res = mHTMLEditor->SplitStyleAbovePoint(address_of(previousContentParentDOM),
+        nsCOMPtr<nsIContent> splittedPreviousContent;
+        res = mHTMLEditor->SplitStyleAbovePoint(address_of(previousContentParent),
                                                 &previousContentOffset,
                                                 nullptr, nullptr, nullptr,
-                                                address_of(splittedPreviousContentDOM));
+                                                getter_AddRefs(splittedPreviousContent));
         NS_ENSURE_SUCCESS(res, res);
-        previousContentParent = do_QueryInterface(previousContentParentDOM);
-        NS_ENSURE_STATE(previousContentParent || !previousContentParentDOM);
 
-        if (splittedPreviousContentDOM) {
-          nsCOMPtr<nsINode> splittedPreviousContent =
-            do_QueryInterface(splittedPreviousContentDOM);
-          NS_ENSURE_STATE(splittedPreviousContent ||
-                          !splittedPreviousContentDOM);
+        if (splittedPreviousContent) {
           previousContentParent = splittedPreviousContent->GetParentNode();
           previousContentOffset = previousContentParent ?
             previousContentParent->IndexOf(splittedPreviousContent) : -1;
