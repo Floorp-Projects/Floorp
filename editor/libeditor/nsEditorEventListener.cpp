@@ -324,7 +324,11 @@ nsEditorEventListener::GetFocusedRootContent()
   nsIDocument* composedDoc = focusedContent->GetComposedDoc();
   NS_ENSURE_TRUE(composedDoc, nullptr);
 
-  return composedDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent;
+  if (composedDoc->HasFlag(NODE_IS_EDITABLE)) {
+    return nullptr;
+  }
+
+  return focusedContent;
 }
 
 bool
