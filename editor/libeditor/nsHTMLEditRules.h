@@ -246,8 +246,8 @@ protected:
                            nsIAtom* aListType,
                            nsIAtom* aItemType);
 
-  nsresult CreateStyleForInsertText(mozilla::dom::Selection* aSelection,
-                                    nsIDOMDocument* aDoc);
+  nsresult CreateStyleForInsertText(mozilla::dom::Selection& aSelection,
+                                    nsIDocument& aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode,
                         bool *outIsEmptyBlock,
                         bool aMozBRDoesntCount = false,
