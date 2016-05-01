@@ -1651,10 +1651,12 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Must be sure that element is contained in the document body
-  if (IsDescendantOfEditorRoot(aElement)) {
+  if (IsDescendantOfEditorRoot(element)) {
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
@@ -1677,10 +1679,12 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Be sure the element is contained in the document body
-  if (aElement && IsDescendantOfEditorRoot(aElement)) {
+  if (aElement && IsDescendantOfEditorRoot(element)) {
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
