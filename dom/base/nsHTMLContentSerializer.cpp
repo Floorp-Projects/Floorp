@@ -82,8 +82,7 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
   nsAutoString valueStr;
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
-  for (int32_t index = count; index > 0;) {
-    --index;
+  for (int32_t index = 0; index < count; index++) {
     const nsAttrName* name = aContent->GetAttrNameAt(index);
     int32_t namespaceID = name->NamespaceID();
     nsIAtom* attrName = name->LocalName();
