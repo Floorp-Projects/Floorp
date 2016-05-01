@@ -117,12 +117,6 @@ protected:
     kEnd
   };
 
-  enum BRLocation
-  {
-    kBeforeBlock,
-    kBlockEnd
-  };
-
   void InitFields();
 
   // nsHTMLEditRules implementation methods
@@ -258,8 +252,10 @@ protected:
                               mozilla::dom::Selection* aSelection,
                               nsIEditor::EDirection aAction,
                               bool* aHandled);
-  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere,
-                               nsCOMPtr<nsIDOMNode> *outBRNode, int32_t aOffset=0);
+  enum class BRLocation { beforeBlock, blockEnd };
+  mozilla::dom::Element* CheckForInvisibleBR(mozilla::dom::Element& aBlock,
+                                             BRLocation aWhere,
+                                             int32_t aOffset = 0);
   nsresult ExpandSelectionForDeletion(mozilla::dom::Selection& aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
