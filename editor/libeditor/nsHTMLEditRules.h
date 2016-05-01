@@ -338,7 +338,7 @@ protected:
   nsresult SelectionEndpointInNode(nsINode *aNode, bool *aResult);
   nsresult UpdateDocChangeRange(nsRange* aRange);
   nsresult ConfirmSelectionInBody();
-  nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
+  nsresult InsertMozBRIfNeeded(nsINode& aNode);
   bool     IsEmptyInline(nsIDOMNode *aNode);
   bool     ListIsEmptyLine(nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, bool aChildrenOnly);
