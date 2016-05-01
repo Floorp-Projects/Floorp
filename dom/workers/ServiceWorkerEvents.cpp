@@ -64,8 +64,8 @@ NS_IMETHODIMP
 CancelChannelRunnable::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = mChannel->Cancel(mStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mChannel->Cancel(mStatus);
+  mRegistration->MaybeScheduleUpdate();
   return NS_OK;
 }
 
