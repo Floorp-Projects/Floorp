@@ -149,8 +149,10 @@ protected:
                       bool* aCanceled);
   nsresult MoveBlock(Element& aLeftBlock, Element& aRightBlock,
                      int32_t aLeftOffset, int32_t aRightOffset);
-  nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
-  nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
+  nsresult MoveNodeSmart(nsIContent& aNode, Element& aDestElement,
+                         int32_t* aOffset);
+  nsresult MoveContents(Element& aElement, Element& aDestElement,
+                        int32_t* aOffset);
   nsresult DeleteNonTableElements(nsINode* aNode);
   nsresult WillMakeList(Selection* aSelection,
                         const nsAString* aListType,
