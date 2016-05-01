@@ -215,12 +215,12 @@ protected:
                       nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
                       nsCOMPtr<nsIDOMNode> *aRightNode = 0,
                       nsCOMPtr<nsIDOMNode> *aMiddleNode = 0);
-  nsresult OutdentPartOfBlock(nsIDOMNode *aBlock,
-                              nsIDOMNode *aStartChild,
-                              nsIDOMNode *aEndChild,
+  nsresult OutdentPartOfBlock(Element& aBlock,
+                              nsIContent& aStartChild,
+                              nsIContent& aEndChild,
                               bool aIsBlockIndentedWithCSS,
-                              nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
-                              nsCOMPtr<nsIDOMNode> *aRightNode = 0);
+                              nsIContent** aOutLeftNode,
+                              nsIContent** aOutRightNode);
 
   nsresult ConvertListType(Element* aList, Element** aOutList,
                            nsIAtom* aListType, nsIAtom* aItemType);
