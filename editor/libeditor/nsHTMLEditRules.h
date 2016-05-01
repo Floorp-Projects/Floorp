@@ -343,7 +343,9 @@ protected:
   bool     ListIsEmptyLine(nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, bool aChildrenOnly);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts);
-  nsresult AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignType, bool aContentsOnly);
+  enum class ContentsOnly { no, yes };
+  nsresult AlignBlock(mozilla::dom::Element& aElement,
+                      const nsAString& aAlignType, ContentsOnly aContentsOnly);
   nsresult RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_t aRelativeChange);
   void DocumentModifiedWorker();
 
