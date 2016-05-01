@@ -44,46 +44,74 @@
         label="&inspectorHTMLEdit.label;"
         accesskey="&inspectorHTMLEdit.accesskey;"
         oncommand="inspector.editHTML()"/>
-      <menuitem id="node-menu-copyinner"
-        label="&inspectorHTMLCopyInner.label;"
-        accesskey="&inspectorHTMLCopyInner.accesskey;"
-        oncommand="inspector.copyInnerHTML()"/>
-      <menuitem id="node-menu-copyouter"
-        label="&inspectorHTMLCopyOuter.label;"
-        accesskey="&inspectorHTMLCopyOuter.accesskey;"
-        oncommand="inspector.copyOuterHTML()"/>
-      <menuitem id="node-menu-copyuniqueselector"
-        label="&inspectorCopyUniqueSelector.label;"
-        accesskey="&inspectorCopyUniqueSelector.accesskey;"
-        oncommand="inspector.copyUniqueSelector()"/>
-      <menuitem id="node-menu-copyimagedatauri"
-        label="&inspectorCopyImageDataUri.label;"
-        oncommand="inspector.copyImageDataUri()"/>
-      <menuitem id="node-menu-showdomproperties"
-        label="&inspectorShowDOMProperties.label;"
-        oncommand="inspector.showDOMProperties()"/>
-      <menuitem id="node-menu-useinconsole"
-        label="&inspectorUseInConsole.label;"
-        oncommand="inspector.useInConsole()"/>
-      <menuitem id="node-menu-expand"
-        label="&inspectorExpandNode.label;"
-        oncommand="inspector.expandNode()"/>
-      <menuitem id="node-menu-collapse"
-        label="&inspectorCollapseNode.label;"
-        oncommand="inspector.collapseNode()"/>
-      <menuseparator/>
-      <menuitem id="node-menu-pasteinnerhtml"
-        label="&inspectorHTMLPasteInner.label;"
-        accesskey="&inspectorHTMLPasteInner.accesskey;"
-        oncommand="inspector.pasteInnerHTML()"/>
-      <menuitem id="node-menu-pasteouterhtml"
-        label="&inspectorHTMLPasteOuter.label;"
-        accesskey="&inspectorHTMLPasteOuter.accesskey;"
-        oncommand="inspector.pasteOuterHTML()"/>
-      <menu id="node-menu-paste-extra-submenu"
-        label="&inspectorHTMLPasteExtraSubmenu.label;"
-        accesskey="&inspectorHTMLPasteExtraSubmenu.accesskey;">
+      <menuitem id="node-menu-add"
+        label="&inspectorAddNode.label;"
+        accesskey="&inspectorAddNode.accesskey;"
+        oncommand="inspector.addNode()"/>
+      <menuitem id="node-menu-duplicatenode"
+        label="&inspectorDuplicateNode.label;"
+        oncommand="inspector.duplicateNode()"/>
+      <menuitem id="node-menu-delete"
+        label="&inspectorHTMLDelete.label;"
+        accesskey="&inspectorHTMLDelete.accesskey;"
+        oncommand="inspector.deleteNode()"/>
+      <menu label="&inspectorAttributesSubmenu.label;"
+        accesskey="&inspectorAttributesSubmenu.accesskey;">
         <menupopup>
+          <menuitem id="node-menu-add-attribute"
+            label="&inspectorAddAttribute.label;"
+            accesskey="&inspectorAddAttribute.accesskey;"
+            oncommand="inspector.onAddAttribute()"/>
+          <menuitem id="node-menu-edit-attribute"
+            label="&inspectorEditAttribute.label;"
+            accesskey="&inspectorEditAttribute.accesskey;"
+            oncommand="inspector.onEditAttribute()"/>
+          <menuitem id="node-menu-remove-attribute"
+            label="&inspectorRemoveAttribute.label;"
+            accesskey="&inspectorRemoveAttribute.accesskey;"
+            oncommand="inspector.onRemoveAttribute()"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem id="node-menu-pseudo-hover"
+        label=":hover" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':hover')"/>
+      <menuitem id="node-menu-pseudo-active"
+        label=":active" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':active')"/>
+      <menuitem id="node-menu-pseudo-focus"
+        label=":focus" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':focus')"/>
+      <menuseparator/>
+      <menu label="&inspectorCopyHTMLSubmenu.label;">
+        <menupopup>
+          <menuitem id="node-menu-copyinner"
+            label="&inspectorCopyInnerHTML.label;"
+            accesskey="&inspectorCopyInnerHTML.accesskey;"
+            oncommand="inspector.copyInnerHTML()"/>
+          <menuitem id="node-menu-copyouter"
+            label="&inspectorCopyOuterHTML.label;"
+            accesskey="&inspectorCopyOuterHTML.accesskey;"
+            oncommand="inspector.copyOuterHTML()"/>
+          <menuitem id="node-menu-copyuniqueselector"
+            label="&inspectorCopyCSSSelector.label;"
+            accesskey="&inspectorCopyCSSSelector.accesskey;"
+            oncommand="inspector.copyUniqueSelector()"/>
+          <menuitem id="node-menu-copyimagedatauri"
+            label="&inspectorImageDataUri.label;"
+            oncommand="inspector.copyImageDataUri()"/>
+        </menupopup>
+      </menu>
+      <menu label="&inspectorPasteHTMLSubmenu.label;">
+        <menupopup>
+          <menuitem id="node-menu-pasteinnerhtml"
+            label="&inspectorPasteInnerHTML.label;"
+            accesskey="&inspectorPasteInnerHTML.accesskey;"
+            oncommand="inspector.pasteInnerHTML()"/>
+          <menuitem id="node-menu-pasteouterhtml"
+            label="&inspectorPasteOuterHTML.label;"
+            accesskey="&inspectorPasteOuterHTML.accesskey;"
+            oncommand="inspector.pasteOuterHTML()"/>
           <menuitem id="node-menu-pastebefore"
             label="&inspectorHTMLPasteBefore.label;"
             accesskey="&inspectorHTMLPasteBefore.accesskey;"
@@ -103,6 +131,13 @@
         </menupopup>
       </menu>
       <menuseparator/>
+      <menuitem id="node-menu-expand"
+        label="&inspectorExpandNode.label;"
+        oncommand="inspector.expandNode()"/>
+      <menuitem id="node-menu-collapse"
+        label="&inspectorCollapseNode.label;"
+        oncommand="inspector.collapseNode()"/>
+      <menuseparator/>
       <menuitem id="node-menu-scrollnodeintoview"
         label="&inspectorScrollNodeIntoView.label;"
         accesskey="&inspectorScrollNodeIntoView.accesskey;"
@@ -110,49 +145,17 @@
       <menuitem id="node-menu-screenshotnode"
         label="&inspectorScreenshotNode.label;"
         oncommand="inspector.screenshotNode()" />
-      <menuitem id="node-menu-add"
-        label="&inspectorAddNode.label;"
-        accesskey="&inspectorAddNode.accesskey;"
-        oncommand="inspector.addNode()"/>
-      <menuitem id="node-menu-duplicatenode"
-        label="&inspectorDuplicateNode.label;"
-        oncommand="inspector.duplicateNode()"/>
-      <menuitem id="node-menu-delete"
-        label="&inspectorHTMLDelete.label;"
-        accesskey="&inspectorHTMLDelete.accesskey;"
-        oncommand="inspector.deleteNode()"/>
-      <menu label="&inspectorAttributeSubmenu.label;"
-        accesskey="&inspectorAttributeSubmenu.accesskey;">
-        <menupopup>
-          <menuitem id="node-menu-add-attribute"
-            label="&inspectorAddAttribute.label;"
-            accesskey="&inspectorAddAttribute.accesskey;"
-            oncommand="inspector.onAddAttribute()"/>
-          <menuitem id="node-menu-edit-attribute"
-            label="&inspectorEditAttribute.label;"
-            accesskey="&inspectorEditAttribute.accesskey;"
-            oncommand="inspector.onEditAttribute()"/>
-          <menuitem id="node-menu-remove-attribute"
-            label="&inspectorRemoveAttribute.label;"
-            accesskey="&inspectorRemoveAttribute.accesskey;"
-            oncommand="inspector.onRemoveAttribute()"/>
-        </menupopup>
-      </menu>
+      <menuitem id="node-menu-useinconsole"
+        label="&inspectorUseInConsole.label;"
+        oncommand="inspector.useInConsole()"/>
+      <menuitem id="node-menu-showdomproperties"
+        label="&inspectorShowDOMProperties.label;"
+        oncommand="inspector.showDOMProperties()"/>
       <menuseparator id="node-menu-link-separator"/>
       <menuitem id="node-menu-link-follow"
         oncommand="inspector.onFollowLink()"/>
       <menuitem id="node-menu-link-copy"
         oncommand="inspector.onCopyLink()"/>
-      <menuseparator/>
-      <menuitem id="node-menu-pseudo-hover"
-        label=":hover" type="checkbox"
-        oncommand="inspector.togglePseudoClass(':hover')"/>
-      <menuitem id="node-menu-pseudo-active"
-        label=":active" type="checkbox"
-        oncommand="inspector.togglePseudoClass(':active')"/>
-      <menuitem id="node-menu-pseudo-focus"
-        label=":focus" type="checkbox"
-        oncommand="inspector.togglePseudoClass(':focus')"/>
     </menupopup>
   </popupset>
 
