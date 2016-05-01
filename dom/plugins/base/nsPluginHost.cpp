@@ -3378,7 +3378,8 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   // in case aURL is relative
   RefPtr<nsPluginInstanceOwner> owner = aInstance->GetOwner();
   if (owner) {
-    rv = NS_MakeAbsoluteURI(absUrl, aURL, nsCOMPtr<nsIURI>(owner->GetBaseURI()));
+    nsCOMPtr<nsIURI> baseURI = owner->GetBaseURI();
+    rv = NS_MakeAbsoluteURI(absUrl, aURL, baseURI);
   }
 
   if (absUrl.IsEmpty())

@@ -33,7 +33,7 @@ class MtransportTestUtils {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  nsCOMPtr<nsIEventTarget> sts_target() { return sts_target_; }
+  nsIEventTarget* sts_target() { return sts_target_; }
 
  private:
   nsCOMPtr<nsIEventTarget> sts_target_;
