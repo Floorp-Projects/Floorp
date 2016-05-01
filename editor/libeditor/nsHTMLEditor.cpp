@@ -3782,95 +3782,79 @@ nsHTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// RemoveBlockContainer: remove inNode, reparenting its children into their
-//                  the parent of inNode.  In addition, INSERT ANY BR's NEEDED
-//                  TO PRESERVE IDENTITY OF REMOVED BLOCK.
-//
+/**
+ * Remove aNode, reparenting any children into the parent of aNode.  In
+ * addition, insert any br's needed to preserve identity of removed block.
+ */
 nsresult
-nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
+nsHTMLEditor::RemoveBlockContainer(nsIContent& aNode)
 {
-  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> sibling, child, unused;
+  // Two possibilities: the container could be empty of editable content.  If
+  // that is the case, we need to compare what is before and after aNode to
+  // determine if we need a br.
+  //
+  // Or it could be not empty, in which case we have to compare previous
+  // sibling and first child to determine if we need a leading br, and compare
+  // following sibling and last child to determine if we need a trailing br.
 
-  // Two possibilities: the container cold be empty of editable content.
-  // If that is the case, we need to compare what is before and after inNode
-  // to determine if we need a br.
-  // Or it could not be empty, in which case we have to compare previous
-  // sibling and first child to determine if we need a leading br,
-  // and compare following sibling and last child to determine if we need a
-  // trailing br.
+  nsCOMPtr<nsIContent> child = GetFirstEditableChild(aNode);
 
-  child = GetAsDOMNode(GetFirstEditableChild(*node));
-
-  if (child)  // the case of inNode not being empty
-  {
-    // we need a br at start unless:
-    // 1) previous sibling of inNode is a block, OR
-    // 2) previous sibling of inNode is a br, OR
-    // 3) first child of inNode is a block OR
+  if (child) {
+    // The case of aNode not being empty.  We need a br at start unless:
+    // 1) previous sibling of aNode is a block, OR
+    // 2) previous sibling of aNode is a br, OR
+    // 3) first child of aNode is a block OR
     // 4) either is null
 
-    res = GetPriorHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-    {
-      if (!IsBlockNode(child)) {
-        // insert br node
-        res = CreateBR(inNode, 0, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
-      }
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling) &&
+        !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
+      // Insert br node
+      nsCOMPtr<Element> br = CreateBR(&aNode, 0);
+      NS_ENSURE_STATE(br);
     }
 
-    // we need a br at end unless:
-    // 1) following sibling of inNode is a block, OR
-    // 2) last child of inNode is a block, OR
-    // 3) last child of inNode is a block OR
+    // We need a br at end unless:
+    // 1) following sibling of aNode is a block, OR
+    // 2) last child of aNode is a block, OR
+    // 3) last child of aNode is a br OR
     // 4) either is null
 
-    res = GetNextHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling))
-    {
-      child = GetAsDOMNode(GetLastEditableChild(*node));
-      if (child && !IsBlockNode(child) && !nsTextEditUtils::IsBreak(child))
-      {
-        // insert br node
-        uint32_t len;
-        res = GetLengthOfDOMNode(inNode, len);
-        NS_ENSURE_SUCCESS(res, res);
-        res = CreateBR(inNode, (int32_t)len, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
+    sibling = GetNextHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling)) {
+      child = GetLastEditableChild(aNode);
+      MOZ_ASSERT(child, "aNode has first editable child but not last?");
+      if (!IsBlockNode(child) && !child->IsHTMLElement(nsGkAtoms::br)) {
+        // Insert br node
+        nsCOMPtr<Element> br = CreateBR(&aNode, aNode.Length());
+        NS_ENSURE_STATE(br);
       }
     }
-  }
-  else  // the case of inNode being empty
-  {
-    // we need a br at start unless:
-    // 1) previous sibling of inNode is a block, OR
-    // 2) previous sibling of inNode is a br, OR
-    // 3) following sibling of inNode is a block, OR
-    // 4) following sibling of inNode is a br OR
+  } else {
+    // The case of aNode being empty.  We need a br at start unless:
+    // 1) previous sibling of aNode is a block, OR
+    // 2) previous sibling of aNode is a br, OR
+    // 3) following sibling of aNode is a block, OR
+    // 4) following sibling of aNode is a br OR
     // 5) either is null
-    res = GetPriorHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-    {
-      res = GetNextHTMLSibling(inNode, address_of(sibling));
-      NS_ENSURE_SUCCESS(res, res);
-      if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-      {
-        // insert br node
-        res = CreateBR(inNode, 0, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling) &&
+        !sibling->IsHTMLElement(nsGkAtoms::br)) {
+      sibling = GetNextHTMLSibling(&aNode);
+      if (sibling && !IsBlockNode(sibling) &&
+          !sibling->IsHTMLElement(nsGkAtoms::br)) {
+        // Insert br node
+        nsCOMPtr<Element> br = CreateBR(&aNode, 0);
+        NS_ENSURE_STATE(br);
       }
     }
   }
 
-  // now remove container
-  return RemoveContainer(node);
+  // Now remove container
+  nsresult res = RemoveContainer(&aNode);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 
