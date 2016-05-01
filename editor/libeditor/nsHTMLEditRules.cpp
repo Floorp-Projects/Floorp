@@ -1565,8 +1565,7 @@ nsHTMLEditRules::WillInsertBreak(Selection& aSelection, bool* aCancel,
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    ReturnInListItem(&aSelection, GetAsDOMNode(listItem), GetAsDOMNode(node),
-                     offset);
+    ReturnInListItem(aSelection, *listItem, node, offset);
     *aHandled = true;
     return NS_OK;
   } else if (nsHTMLEditUtils::IsHeader(*blockParent)) {
@@ -6556,178 +6555,160 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// ReturnInListItem: do the right thing for returns pressed in list items
-//
+/**
+ * ReturnInListItem: do the right thing for returns pressed in list items
+ */
 nsresult
-nsHTMLEditRules::ReturnInListItem(Selection* aSelection,
-                                  nsIDOMNode *aListItem,
-                                  nsIDOMNode *aNode,
+nsHTMLEditRules::ReturnInListItem(Selection& aSelection,
+                                  Element& aListItem,
+                                  nsINode& aNode,
                                   int32_t aOffset)
 {
-  nsCOMPtr<Element> listItem = do_QueryInterface(aListItem);
-  NS_ENSURE_TRUE(aSelection && listItem && aNode, NS_ERROR_NULL_POINTER);
-  nsresult res = NS_OK;
+  MOZ_ASSERT(nsHTMLEditUtils::IsListItem(&aListItem));
 
-  nsCOMPtr<nsIDOMNode> listitem;
-
-  // sanity check
-  NS_PRECONDITION(true == nsHTMLEditUtils::IsListItem(aListItem),
-                  "expected a list item and didn't get one");
-
-  // get the listitem parent and the active editing host.
   NS_ENSURE_STATE(mHTMLEditor);
-  nsIContent* rootContent = mHTMLEditor->GetActiveEditingHost();
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootContent);
-  nsCOMPtr<nsINode> list = listItem->GetParentNode();
-  int32_t itemOffset = list ? list->IndexOf(listItem) : -1;
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-  // if we are in an empty listitem, then we want to pop up out of the list
-  // but only if prefs says it's ok and if the parent isn't the active editing host.
+  // Get the item parent and the active editing host.
+  nsCOMPtr<Element> root = mHTMLEditor->GetActiveEditingHost();
+
+  nsCOMPtr<Element> list = aListItem.GetParentElement();
+  int32_t itemOffset = list ? list->IndexOf(&aListItem) : -1;
+
+  // If we are in an empty item, then we want to pop up out of the list, but
+  // only if prefs say it's okay and if the parent isn't the active editing
+  // host.
   bool isEmpty;
-  res = IsEmptyBlock(aListItem, &isEmpty, true, false);
+  nsresult res = IsEmptyBlock(aListItem.AsDOMNode(), &isEmpty, true, false);
   NS_ENSURE_SUCCESS(res, res);
-  if (isEmpty && (rootNode != GetAsDOMNode(list)) &&
-      mReturnInEmptyLIKillsList) {
-    // get the list offset now -- before we might eventually split the list
+  if (isEmpty && root != list && mReturnInEmptyLIKillsList) {
+    // Get the list offset now -- before we might eventually split the list
     nsCOMPtr<nsINode> listParent = list->GetParentNode();
     int32_t offset = listParent ? listParent->IndexOf(list) : -1;
 
-    // are we the last list item in the list?
-    bool bIsLast;
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->IsLastEditableChild(aListItem, &bIsLast);
+    // Are we the last list item in the list?
+    bool isLast;
+    res = mHTMLEditor->IsLastEditableChild(aListItem.AsDOMNode(), &isLast);
     NS_ENSURE_SUCCESS(res, res);
-    if (!bIsLast)
-    {
-      // we need to split the list!
-      nsCOMPtr<nsIDOMNode> tempNode;
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->SplitNode(GetAsDOMNode(list), itemOffset,
-                                   getter_AddRefs(tempNode));
-      NS_ENSURE_SUCCESS(res, res);
+    if (!isLast) {
+      // We need to split the list!
+      ErrorResult rv;
+      mHTMLEditor->SplitNode(*list, itemOffset, rv);
+      NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
     }
 
-    // are we in a sublist?
+    // Are we in a sublist?
     if (nsHTMLEditUtils::IsList(listParent)) {
-      // if so, move this list item out of this list and into the grandparent list
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->MoveNode(listItem, listParent, offset + 1);
+      // If so, move item out of this list and into the grandparent list
+      res = mHTMLEditor->MoveNode(&aListItem, listParent, offset + 1);
       NS_ENSURE_SUCCESS(res, res);
-      res = aSelection->Collapse(aListItem,0);
-    }
-    else
-    {
-      // otherwise kill this listitem
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->DeleteNode(aListItem);
-      NS_ENSURE_SUCCESS(res, res);
-
-      // time to insert a paragraph
-      NS_NAMED_LITERAL_STRING(pType, "p");
-      nsCOMPtr<nsIDOMNode> pNode;
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->CreateNode(pType, GetAsDOMNode(listParent),
-                                    offset + 1, getter_AddRefs(pNode));
-      NS_ENSURE_SUCCESS(res, res);
-
-      // append a <br> to it
-      nsCOMPtr<nsIDOMNode> brNode;
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->CreateBR(pNode, 0, address_of(brNode));
-      NS_ENSURE_SUCCESS(res, res);
-
-      // set selection to before the break
-      res = aSelection->Collapse(pNode, 0);
-    }
-    return res;
-  }
-
-  // else we want a new list item at the same list level.
-  // get ws code to adjust any ws
-  nsCOMPtr<nsINode> selNode(do_QueryInterface(aNode));
-  NS_ENSURE_STATE(mHTMLEditor);
-  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor, address_of(selNode), &aOffset);
-  NS_ENSURE_SUCCESS(res, res);
-  // now split list item
-  NS_ENSURE_STATE(mHTMLEditor);
-  NS_ENSURE_STATE(selNode->IsContent());
-  mHTMLEditor->SplitNodeDeep(*listItem, *selNode->AsContent(), aOffset);
-  // hack: until I can change the damaged doc range code back to being
-  // extra inclusive, I have to manually detect certain list items that
-  // may be left empty.
-  nsCOMPtr<nsIDOMNode> prevItem;
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->GetPriorHTMLSibling(aListItem, address_of(prevItem));
-
-  if (prevItem && nsHTMLEditUtils::IsListItem(prevItem))
-  {
-    bool bIsEmptyNode;
-    NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->IsEmptyNode(prevItem, &bIsEmptyNode);
-    NS_ENSURE_SUCCESS(res, res);
-    if (bIsEmptyNode) {
-      res = CreateMozBR(prevItem, 0);
+      res = aSelection.Collapse(&aListItem, 0);
       NS_ENSURE_SUCCESS(res, res);
     } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->IsEmptyNode(aListItem, &bIsEmptyNode, true);
+      // Otherwise kill this item
+      res = mHTMLEditor->DeleteNode(&aListItem);
       NS_ENSURE_SUCCESS(res, res);
-      if (bIsEmptyNode)
-      {
-        nsCOMPtr<nsIAtom> nodeAtom = nsEditor::GetTag(aListItem);
+
+      // Time to insert a paragraph
+      nsCOMPtr<Element> pNode =
+        mHTMLEditor->CreateNode(nsGkAtoms::p, listParent, offset + 1);
+      NS_ENSURE_STATE(pNode);
+
+      // Append a <br> to it
+      nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(pNode, 0);
+      NS_ENSURE_STATE(brNode);
+
+      // Set selection to before the break
+      res = aSelection.Collapse(pNode, 0);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    return NS_OK;
+  }
+
+  // Else we want a new list item at the same list level.  Get ws code to
+  // adjust any ws.
+  nsCOMPtr<nsINode> selNode = &aNode;
+  res = nsWSRunObject::PrepareToSplitAcrossBlocks(mHTMLEditor,
+                                                  address_of(selNode),
+                                                  &aOffset);
+  NS_ENSURE_SUCCESS(res, res);
+  // Now split list item
+  NS_ENSURE_STATE(selNode->IsContent());
+  mHTMLEditor->SplitNodeDeep(aListItem, *selNode->AsContent(), aOffset);
+
+  // Hack: until I can change the damaged doc range code back to being
+  // extra-inclusive, I have to manually detect certain list items that may be
+  // left empty.
+  nsCOMPtr<nsIContent> prevItem = mHTMLEditor->GetPriorHTMLSibling(&aListItem);
+  if (prevItem && nsHTMLEditUtils::IsListItem(prevItem)) {
+    bool isEmptyNode;
+    res = mHTMLEditor->IsEmptyNode(prevItem, &isEmptyNode);
+    NS_ENSURE_SUCCESS(res, res);
+    if (isEmptyNode) {
+      res = CreateMozBR(prevItem->AsDOMNode(), 0);
+      NS_ENSURE_SUCCESS(res, res);
+    } else {
+      res = mHTMLEditor->IsEmptyNode(&aListItem, &isEmptyNode, true);
+      NS_ENSURE_SUCCESS(res, res);
+      if (isEmptyNode) {
+        nsCOMPtr<nsIAtom> nodeAtom = aListItem.NodeInfo()->NameAtom();
         if (nodeAtom == nsGkAtoms::dd || nodeAtom == nsGkAtoms::dt) {
-          int32_t itemOffset;
-          nsCOMPtr<nsIDOMNode> list = nsEditor::GetNodeLocation(aListItem, &itemOffset);
+          nsCOMPtr<nsINode> list = aListItem.GetParentNode();
+          int32_t itemOffset = list ? list->IndexOf(&aListItem) : -1;
 
-          nsAutoString listTag(nodeAtom == nsGkAtoms::dt
-            ? NS_LITERAL_STRING("dd") : NS_LITERAL_STRING("dt"));
-          nsCOMPtr<nsIDOMNode> newListItem;
-          NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->CreateNode(listTag, list, itemOffset+1, getter_AddRefs(newListItem));
+          nsIAtom* listAtom = nodeAtom == nsGkAtoms::dt ? nsGkAtoms::dd
+                                                        : nsGkAtoms::dt;
+          nsCOMPtr<Element> newListItem =
+            mHTMLEditor->CreateNode(listAtom, list, itemOffset + 1);
+          NS_ENSURE_STATE(newListItem);
+          res = mEditor->DeleteNode(&aListItem);
           NS_ENSURE_SUCCESS(res, res);
-          res = mEditor->DeleteNode(aListItem);
+          res = aSelection.Collapse(newListItem, 0);
           NS_ENSURE_SUCCESS(res, res);
-          return aSelection->Collapse(newListItem, 0);
+
+          return NS_OK;
         }
 
-        nsCOMPtr<nsIDOMNode> brNode;
-        NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->CopyLastEditableChildStyles(prevItem, aListItem, getter_AddRefs(brNode));
+        nsCOMPtr<Element> brNode;
+        res = mHTMLEditor->CopyLastEditableChildStyles(GetAsDOMNode(prevItem),
+          GetAsDOMNode(&aListItem), getter_AddRefs(brNode));
         NS_ENSURE_SUCCESS(res, res);
-        if (brNode)
-        {
-          int32_t offset;
-          nsCOMPtr<nsIDOMNode> brParent = nsEditor::GetNodeLocation(brNode, &offset);
-          return aSelection->Collapse(brParent, offset);
+        if (brNode) {
+          nsCOMPtr<nsINode> brParent = brNode->GetParentNode();
+          int32_t offset = brParent ? brParent->IndexOf(brNode) : -1;
+          res = aSelection.Collapse(brParent, offset);
+          NS_ENSURE_SUCCESS(res, res);
+
+          return NS_OK;
         }
-      }
-      else
-      {
-        NS_ENSURE_STATE(mHTMLEditor);
-        nsWSRunObject wsObj(mHTMLEditor, aListItem, 0);
-        nsCOMPtr<nsINode> visNode_;
+      } else {
+        nsWSRunObject wsObj(mHTMLEditor, &aListItem, 0);
+        nsCOMPtr<nsINode> visNode;
         int32_t visOffset = 0;
         WSType wsType;
-        nsCOMPtr<nsINode> aListItem_(do_QueryInterface(aListItem));
-        wsObj.NextVisibleNode(aListItem_, 0, address_of(visNode_),
+        wsObj.NextVisibleNode(&aListItem, 0, address_of(visNode),
                               &visOffset, &wsType);
-        nsCOMPtr<nsIDOMNode> visNode(GetAsDOMNode(visNode_));
         if (wsType == WSType::special || wsType == WSType::br ||
-            nsHTMLEditUtils::IsHR(visNode)) {
-          int32_t offset;
-          nsCOMPtr<nsIDOMNode> parent = nsEditor::GetNodeLocation(visNode, &offset);
-          return aSelection->Collapse(parent, offset);
-        }
-        else
-        {
-          return aSelection->Collapse(visNode, visOffset);
+            visNode->IsHTMLElement(nsGkAtoms::hr)) {
+          nsCOMPtr<nsINode> parent = visNode->GetParentNode();
+          int32_t offset = parent ? parent->IndexOf(visNode) : -1;
+          res = aSelection.Collapse(parent, offset);
+          NS_ENSURE_SUCCESS(res, res);
+
+          return NS_OK;
+        } else {
+          res = aSelection.Collapse(visNode, visOffset);
+          NS_ENSURE_SUCCESS(res, res);
+
+          return NS_OK;
         }
       }
     }
   }
-  res = aSelection->Collapse(aListItem,0);
-  return res;
+  res = aSelection.Collapse(&aListItem, 0);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 
