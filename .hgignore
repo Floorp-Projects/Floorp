@@ -116,8 +116,8 @@ GPATH
 # Ignore tox generated dir
 .tox/
 
-# Ignore node_modules from eslint-plugin-mozilla
-^testing/eslint-plugin-mozilla/node_modules/
+# Ignore node_modules
+^testing/eslint/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at
