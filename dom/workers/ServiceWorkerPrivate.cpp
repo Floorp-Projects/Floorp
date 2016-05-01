@@ -1259,10 +1259,6 @@ private:
       }
 
       if (!runnable) {
-        nsCOMPtr<nsIRunnable> updateRunnable =
-          new RegistrationUpdateRunnable(mRegistration, false /* time check */);
-        NS_DispatchToMainThread(runnable.forget());
-
         runnable = new CancelChannelRunnable(mInterceptedChannel,
                                              mRegistration,
                                              NS_ERROR_INTERCEPTION_FAILED);
