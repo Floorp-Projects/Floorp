@@ -52,8 +52,10 @@ using namespace mozilla::dom;
 BEGIN_WORKERS_NAMESPACE
 
 CancelChannelRunnable::CancelChannelRunnable(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                                             nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                                              nsresult aStatus)
   : mChannel(aChannel)
+  , mRegistration(aRegistration)
   , mStatus(aStatus)
 {
 }
@@ -82,9 +84,11 @@ FetchEvent::~FetchEvent()
 
 void
 FetchEvent::PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      const nsACString& aScriptSpec)
 {
   mChannel = aChannel;
+  mRegistration = aRegistration;
   mScriptSpec.Assign(aScriptSpec);
 }
 
@@ -247,6 +251,7 @@ public:
 class RespondWithHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   const RequestMode mRequestMode;
   const DebugOnly<bool> mIsClientRequest;
   const bool mIsNavigationRequest;
@@ -260,6 +265,7 @@ public:
   NS_DECL_ISUPPORTS
 
   RespondWithHandler(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      RequestMode aRequestMode, bool aIsClientRequest,
                      bool aIsNavigationRequest,
                      const nsACString& aScriptSpec,
@@ -268,6 +274,7 @@ public:
                      uint32_t aRespondWithLineNumber,
                      uint32_t aRespondWithColumnNumber)
     : mInterceptedChannel(aChannel)
+    , mRegistration(aRegistration)
     , mRequestMode(aRequestMode)
     , mIsClientRequest(aIsClientRequest)
     , mIsNavigationRequest(aIsNavigationRequest)
@@ -314,6 +321,7 @@ private:
 struct RespondWithClosure
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<InternalResponse> mInternalResponse;
   ChannelInfo mWorkerChannelInfo;
   const nsCString mScriptSpec;
@@ -324,6 +332,7 @@ struct RespondWithClosure
   const uint32_t mRespondWithColumnNumber;
 
   RespondWithClosure(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      InternalResponse* aInternalResponse,
                      const ChannelInfo& aWorkerChannelInfo,
                      const nsCString& aScriptSpec,
@@ -333,6 +342,7 @@ struct RespondWithClosure
                      uint32_t aRespondWithLineNumber,
                      uint32_t aRespondWithColumnNumber)
     : mInterceptedChannel(aChannel)
+    , mRegistration(aRegistration)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
     , mScriptSpec(aScriptSpec)
@@ -355,6 +365,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
              NS_LITERAL_CSTRING("InterceptionFailedWithURL"),
              data->mRequestURL);
     event = new CancelChannelRunnable(data->mInterceptedChannel,
+                                      data->mRegistration,
                                       NS_ERROR_INTERCEPTION_FAILED);
   } else {
     event = new FinishResponse(data->mInterceptedChannel,
@@ -610,7 +621,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     }
   }
 
-  nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel, ir,
+  nsAutoPtr<RespondWithClosure> closure(new RespondWithClosure(mInterceptedChannel,
+                                                               mRegistration, ir,
                                                                worker->GetChannelInfo(),
                                                                mScriptSpec,
                                                                responseURL,
@@ -691,7 +703,7 @@ void
 RespondWithHandler::CancelRequest(nsresult aStatus)
 {
   nsCOMPtr<nsIRunnable> runnable =
-    new CancelChannelRunnable(mInterceptedChannel, aStatus);
+    new CancelChannelRunnable(mInterceptedChannel, mRegistration, aStatus);
   NS_DispatchToMainThread(runnable);
   mRequestWasHandled = true;
 }
@@ -723,9 +735,9 @@ FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv)
   StopImmediatePropagation();
   mWaitToRespond = true;
   RefPtr<RespondWithHandler> handler =
-    new RespondWithHandler(mChannel, mRequest->Mode(), ir->IsClientRequest(),
-                           ir->IsNavigationRequest(), mScriptSpec,
-                           NS_ConvertUTF8toUTF16(requestURL),
+    new RespondWithHandler(mChannel, mRegistration, mRequest->Mode(),
+                           ir->IsClientRequest(), ir->IsNavigationRequest(),
+                           mScriptSpec, NS_ConvertUTF8toUTF16(requestURL),
                            spec, line, column);
   aArg.AppendNativeHandler(handler);
 
