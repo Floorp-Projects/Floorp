@@ -944,14 +944,13 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   return NS_OK;
 }
 
-static nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils,
-                                            nsIDOMNode* aNode) {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node || !aNode, nsGkAtoms::marginLeft);
+static nsIAtom& MarginPropertyAtomForIndent(nsHTMLCSSUtils& aHTMLCSSUtils,
+                                            nsINode& aNode)
+{
   nsAutoString direction;
-  aHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::direction, direction);
+  aHTMLCSSUtils.GetComputedProperty(aNode, *nsGkAtoms::direction, direction);
   return direction.EqualsLiteral("rtl") ?
-    nsGkAtoms::marginRight : nsGkAtoms::marginLeft;
+    *nsGkAtoms::marginRight : *nsGkAtoms::marginLeft;
 }
 
 nsresult
@@ -984,14 +983,13 @@ nsHTMLEditRules::GetIndentState(bool *aCanIndent, bool *aCanOutdent)
     else if (useCSS) {
       // we are in CSS mode, indentation is done using the margin-left (or margin-right) property
       NS_ENSURE_STATE(mHTMLEditor);
-      nsIAtom* marginProperty =
-        MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
-                                    GetAsDOMNode(curNode));
+      nsIAtom& marginProperty =
+        MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, curNode);
       nsAutoString value;
       // retrieve its specified value
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode,
-                                                       *marginProperty, value);
+                                                       marginProperty, value);
       float f;
       nsCOMPtr<nsIAtom> unit;
       // get its number part and its unit
@@ -4059,13 +4057,12 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
       // is it a block with a 'margin' property?
       if (useCSS && IsBlockNode(GetAsDOMNode(curNode))) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsIAtom* marginProperty =
-          MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
-                                      GetAsDOMNode(curNode));
+        nsIAtom& marginProperty =
+          MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, curNode);
         nsAutoString value;
         NS_ENSURE_STATE(mHTMLEditor);
-        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode,
-                                                         *marginProperty,
+        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode,
+                                                         marginProperty,
                                                          value);
         float f;
         nsCOMPtr<nsIAtom> unit;
@@ -4146,12 +4143,11 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
         else if (useCSS)
         {
           NS_ENSURE_STATE(mHTMLEditor);
-          nsIAtom* marginProperty =
-            MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
-                                        GetAsDOMNode(curNode));
+          nsIAtom& marginProperty =
+            MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, curNode);
           nsAutoString value;
           NS_ENSURE_STATE(mHTMLEditor);
-          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*n, *marginProperty,
+          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*n, marginProperty,
                                                            value);
           float f;
           nsCOMPtr<nsIAtom> unit;
@@ -8655,12 +8651,11 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  nsIAtom* marginProperty =
-    MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
-                                GetAsDOMNode(element));
+  nsIAtom& marginProperty =
+    MarginPropertyAtomForIndent(*mHTMLEditor->mHTMLCSSUtils, *element);
   nsAutoString value;
   NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*element, *marginProperty,
+  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*element, marginProperty,
                                                    value);
   float f;
   nsCOMPtr<nsIAtom> unit;
@@ -8697,13 +8692,13 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
     newValue.AppendFloat(f);
     newValue.Append(nsDependentAtomString(unit));
     NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(*element, *marginProperty,
+    mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(*element, marginProperty,
                                                newValue);
     return NS_OK;
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(*element, *marginProperty,
+  mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(*element, marginProperty,
                                                 value);
 
   // remove unnecessary DIV blocks:
