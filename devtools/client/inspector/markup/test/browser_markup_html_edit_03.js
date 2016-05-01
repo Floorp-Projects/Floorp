@@ -168,7 +168,7 @@ function* testDocumentElement(inspector, testActor) {
 function* testDocumentElement2(inspector, testActor) {
   let currentDocElementOuterHMTL = yield testActor.eval(
     "content.document.documentElement.outerHMTL");
-  let docElementHTML = "<html class=\"updated\" id=\"somethingelse\"><head>" +
+  let docElementHTML = "<html id=\"somethingelse\" class=\"updated\"><head>" +
                        "<title>Updated again from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
                        "<p>Hello again</p></body></html>";
