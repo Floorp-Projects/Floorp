@@ -222,10 +222,6 @@ protected:
                               nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
                               nsCOMPtr<nsIDOMNode> *aRightNode = 0);
 
-  nsresult ConvertListType(nsIDOMNode* aList,
-                           nsCOMPtr<nsIDOMNode>* outList,
-                           nsIAtom* aListType,
-                           nsIAtom* aItemType);
   nsresult ConvertListType(Element* aList, Element** aOutList,
                            nsIAtom* aListType, nsIAtom* aItemType);
 

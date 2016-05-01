@@ -3076,7 +3076,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
 
   for (uint32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsIDOMNode> newBlock;
+    nsCOMPtr<Element> newBlock;
     NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
     OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
     int32_t offset;
@@ -3113,18 +3113,18 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         res = mHTMLEditor->MoveNode(curNode, curList, -1);
         NS_ENSURE_SUCCESS(res, res);
-        res = ConvertListType(GetAsDOMNode(curNode), address_of(newBlock),
+        res = ConvertListType(curNode->AsElement(), getter_AddRefs(newBlock),
                               listType, itemType);
         NS_ENSURE_SUCCESS(res, res);
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->RemoveBlockContainer(newBlock);
+        res = mHTMLEditor->RemoveBlockContainer(GetAsDOMNode(newBlock));
         NS_ENSURE_SUCCESS(res, res);
       } else {
         // replace list with new list type
-        res = ConvertListType(GetAsDOMNode(curNode), address_of(newBlock),
+        res = ConvertListType(curNode->AsElement(), getter_AddRefs(newBlock),
                               listType, itemType);
         NS_ENSURE_SUCCESS(res, res);
-        curList = do_QueryInterface(newBlock);
+        curList = newBlock;
       }
       prevListItem = 0;
       continue;
@@ -3137,9 +3137,12 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
         // split the old list and make a new list of correct type.
         if (!curList || nsEditorUtils::IsDescendantOf(curNode, curList)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->SplitNode(curParent->AsDOMNode(), offset,
-                                       getter_AddRefs(newBlock));
-          NS_ENSURE_SUCCESS(res, res);
+          NS_ENSURE_STATE(curParent->IsContent());
+          ErrorResult rv;
+          nsCOMPtr<nsIContent> splitNode =
+            mHTMLEditor->SplitNode(*curParent->AsContent(), offset, rv);
+          NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+          newBlock = splitNode ? splitNode->AsElement() : nullptr;
           int32_t offset;
           nsCOMPtr<nsINode> parent = nsEditor::GetNodeLocation(curParent,
                                                                &offset);
@@ -3155,9 +3158,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         if (!curNode->IsHTMLElement(itemType)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          newBlock = dont_AddRef(GetAsDOMNode(
-            mHTMLEditor->ReplaceContainer(curNode->AsElement(),
-                                          itemType).take()));
+          newBlock = mHTMLEditor->ReplaceContainer(curNode->AsElement(),
+                                                   itemType);
           NS_ENSURE_STATE(newBlock);
         }
       } else {
@@ -3174,9 +3176,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         if (!curNode->IsHTMLElement(itemType)) {
           NS_ENSURE_STATE(mHTMLEditor);
-          newBlock = dont_AddRef(GetAsDOMNode(
-            mHTMLEditor->ReplaceContainer(curNode->AsElement(),
-                                          itemType).take()));
+          newBlock = mHTMLEditor->ReplaceContainer(curNode->AsElement(),
+                                                   itemType);
           NS_ENSURE_STATE(newBlock);
         }
       }
@@ -4339,27 +4340,8 @@ nsHTMLEditRules::OutdentPartOfBlock(nsIDOMNode *aBlock,
 //
 //
 nsresult
-nsHTMLEditRules::ConvertListType(nsIDOMNode* aList,
-                                 nsCOMPtr<nsIDOMNode>* outList,
-                                 nsIAtom* aListType,
-                                 nsIAtom* aItemType)
-{
-  MOZ_ASSERT(aListType);
-  MOZ_ASSERT(aItemType);
-
-  NS_ENSURE_TRUE(aList && outList, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<Element> list = do_QueryInterface(aList);
-  NS_ENSURE_STATE(list);
-
-  nsCOMPtr<dom::Element> outNode;
-  nsresult rv = ConvertListType(list, getter_AddRefs(outNode), aListType, aItemType);
-  *outList = outNode ? outNode->AsDOMNode() : nullptr;
-  return rv;
-}
-
-nsresult
 nsHTMLEditRules::ConvertListType(Element* aList,
-                                 dom::Element** aOutList,
+                                 Element** aOutList,
                                  nsIAtom* aListType,
                                  nsIAtom* aItemType)
 {
