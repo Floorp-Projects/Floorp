@@ -563,6 +563,12 @@
             "url": "/_mozilla/service-workers/service-worker/update-after-oneday.https.html"
           }
         ],
+        "service-workers/service-worker/update-recovery.https.html": [
+          {
+            "path": "service-workers/service-worker/update-recovery.https.html",
+            "url": "/_mozilla/service-workers/service-worker/update-recovery.https.html"
+          }
+        ],
         "service-workers/service-worker/update.https.html": [
           {
             "path": "service-workers/service-worker/update.https.html",
