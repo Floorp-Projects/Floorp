@@ -3318,7 +3318,7 @@ nsHTMLEditRules::WillRemoveList(Selection* aSelection,
     }
     else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, move list items out
     {
-      res = RemoveListStructure(GetAsDOMNode(curNode));
+      res = RemoveListStructure(*curNode->AsElement());
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -7813,46 +7813,37 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, bool *aOutOfList)
 }
 
 nsresult
-nsHTMLEditRules::RemoveListStructure(nsIDOMNode *aList)
+nsHTMLEditRules::RemoveListStructure(Element& aList)
 {
-  NS_ENSURE_ARG_POINTER(aList);
-
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
   nsresult res;
 
-  nsCOMPtr<nsIDOMNode> child;
-  aList->GetFirstChild(getter_AddRefs(child));
+  while (aList.GetFirstChild()) {
+    OwningNonNull<nsIContent> child = *aList.GetFirstChild();
 
-  while (child)
-  {
-    if (nsHTMLEditUtils::IsListItem(child))
-    {
-      bool bOutOfList;
-      do
-      {
-        res = PopListItem(child, &bOutOfList);
+    if (nsHTMLEditUtils::IsListItem(child)) {
+      bool isOutOfList;
+      // Keep popping it out until it's not in a list anymore
+      do {
+        res = PopListItem(child->AsDOMNode(), &isOutOfList);
         NS_ENSURE_SUCCESS(res, res);
-      } while (!bOutOfList);   // keep popping it out until it's not in a list anymore
-    }
-    else if (nsHTMLEditUtils::IsList(child))
-    {
-      res = RemoveListStructure(child);
+      } while (!isOutOfList);
+    } else if (nsHTMLEditUtils::IsList(child)) {
+      res = RemoveListStructure(*child->AsElement());
       NS_ENSURE_SUCCESS(res, res);
-    }
-    else
-    {
-      // delete any non- list items for now
-      NS_ENSURE_STATE(mHTMLEditor);
+    } else {
+      // Delete any non-list items for now
       res = mHTMLEditor->DeleteNode(child);
       NS_ENSURE_SUCCESS(res, res);
     }
-    aList->GetFirstChild(getter_AddRefs(child));
   }
-  // delete the now-empty list
-  NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->RemoveBlockContainer(aList);
+
+  // Delete the now-empty list
+  res = mHTMLEditor->RemoveBlockContainer(aList.AsDOMNode());
   NS_ENSURE_SUCCESS(res, res);
 
-  return res;
+  return NS_OK;
 }
 
 
