@@ -7082,7 +7082,7 @@ nsGlobalWindow::PrintOuter(ErrorResult& aError)
   if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
                                 getter_AddRefs(webBrowserPrint)))) {
     nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ?
-                               GetCurrentInnerWindowInternal()->mDoc :
+                               GetCurrentInnerWindowInternal()->mDoc.get() :
                                nullptr);
 
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =

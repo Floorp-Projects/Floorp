@@ -104,7 +104,10 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   nsPluginStreamListenerPeer *pslp =
     static_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
 
-  NS_ASSERTION(pslp->mRequests.IndexOfObject(GetBaseRequest(request)) != -1,
+#ifdef DEBUG
+  nsCOMPtr<nsIRequest> baseRequest = GetBaseRequest(request);
+#endif
+  NS_ASSERTION(pslp->mRequests.IndexOfObject(baseRequest) != -1,
                "Untracked byte-range request?");
 
   nsCOMPtr<nsIStreamConverterService> serv = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
@@ -431,7 +434,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   PROFILER_LABEL("nsPluginStreamListenerPeer", "OnStartRequest",
     js::ProfileEntry::Category::OTHER);
 
-  if (mRequests.IndexOfObject(GetBaseRequest(request)) == -1) {
+  nsCOMPtr<nsIRequest> baseRequest = GetBaseRequest(request);
+  if (mRequests.IndexOfObject(baseRequest) == -1) {
     NS_ASSERTION(mRequests.Count() == 0,
                  "Only our initial stream should be unknown!");
     TrackRequest(request);
@@ -888,7 +892,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
                                                           uint64_t sourceOffset,
                                                           uint32_t aLength)
 {
-  if (mRequests.IndexOfObject(GetBaseRequest(request)) == -1) {
+  nsCOMPtr<nsIRequest> baseRequest = GetBaseRequest(request);
+  if (mRequests.IndexOfObject(baseRequest) == -1) {
     MOZ_ASSERT(false, "Received OnDataAvailable for untracked request.");
     return NS_ERROR_UNEXPECTED;
   }
