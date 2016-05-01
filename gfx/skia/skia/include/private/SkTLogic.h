@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <functional>
 
-#ifdef MOZ_SKIA_AVOID_CXX11
+#if MOZ_SKIA_AVOID_CXX11
 #include "mozilla/Function.h"
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
