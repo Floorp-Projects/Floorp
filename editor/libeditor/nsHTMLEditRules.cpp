@@ -570,10 +570,10 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
 
   if (!mDidExplicitlySetInterline)
   {
-    res = CheckInterlinePosition(selection);
+    CheckInterlinePosition(*selection);
   }
 
-  return res;
+  return NS_OK;
 }
 
 
@@ -7297,49 +7297,45 @@ nsHTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
   }
 }
 
-nsresult
-nsHTMLEditRules::CheckInterlinePosition(Selection* aSelection)
+void
+nsHTMLEditRules::CheckInterlinePosition(Selection& aSelection)
 {
-  NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
-
-  // if the selection isn't collapsed, do nothing.
-  if (!aSelection->Collapsed()) {
-    return NS_OK;
+  // If the selection isn't collapsed, do nothing.
+  if (!aSelection.Collapsed()) {
+    return;
   }
 
-  // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode, node;
-  int32_t selOffset;
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE_VOID(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  // Get the (collapsed) selection location
+  NS_ENSURE_TRUE_VOID(aSelection.GetRangeAt(0) &&
+                      aSelection.GetRangeAt(0)->GetStartParent());
+  OwningNonNull<nsINode> selNode = *aSelection.GetRangeAt(0)->GetStartParent();
+  int32_t selOffset = aSelection.GetRangeAt(0)->StartOffset();
 
   // First, let's check to see if we are after a <br>.  We take care of this
-  // special-case first so that we don't accidentally fall through into one
-  // of the other conditionals.
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(node), true);
-  if (node && nsTextEditUtils::IsBreak(node))
-  {
-    aSelection->SetInterlinePosition(true);
-    return NS_OK;
+  // special-case first so that we don't accidentally fall through into one of
+  // the other conditionals.
+  nsCOMPtr<nsIContent> node =
+    mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, true);
+  if (node && node->IsHTMLElement(nsGkAtoms::br)) {
+    aSelection.SetInterlinePosition(true);
+    return;
   }
 
-  // are we after a block?  If so try set caret to following content
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(node));
-  if (node && IsBlockNode(node))
-  {
-    aSelection->SetInterlinePosition(true);
-    return NS_OK;
+  // Are we after a block?  If so try set caret to following content
+  node = mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset);
+  if (node && IsBlockNode(node->AsDOMNode())) {
+    aSelection.SetInterlinePosition(true);
+    return;
   }
 
-  // are we before a block?  If so try set caret to prior content
-  NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->GetNextHTMLSibling(selNode, selOffset, address_of(node));
-  if (node && IsBlockNode(node))
-    aSelection->SetInterlinePosition(false);
-  return NS_OK;
+  // Are we before a block?  If so try set caret to prior content
+  node = mHTMLEditor->GetNextHTMLSibling(selNode, selOffset);
+  if (node && IsBlockNode(node->AsDOMNode())) {
+    aSelection.SetInterlinePosition(false);
+  }
 }
 
 nsresult
