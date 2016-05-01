@@ -1409,9 +1409,9 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
     nsCOMPtr<nsINode> startNode = range->GetStartParent();
     nsCOMPtr<nsINode> endNode = range->GetEndParent();
     if (startNode == endNode && IsTextNode(startNode)) {
-      res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-          static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
-          range->StartOffset(), range->EndOffset());
+      res = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
+                                         range->StartOffset(),
+                                         range->EndOffset());
       NS_ENSURE_SUCCESS(res, res);
     } else {
       // Not the easy case.  Range not contained in single text node.  There
@@ -1451,15 +1451,14 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
       // to be separately handled (they do if they are text nodes, due to how
       // the subtree iterator works - it will not have reported them).
       if (IsTextNode(startNode) && IsEditable(startNode)) {
-        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
-            range->StartOffset(), startNode->Length());
+        res = RelativeFontChangeOnTextNode(aDir, *startNode->GetAsText(),
+                                           range->StartOffset(),
+                                           startNode->Length());
         NS_ENSURE_SUCCESS(res, res);
       }
       if (IsTextNode(endNode) && IsEditable(endNode)) {
-        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-            static_cast<nsIDOMCharacterData*>(endNode->AsDOMNode()),
-            0, range->EndOffset());
+        res = RelativeFontChangeOnTextNode(aDir, *endNode->GetAsText(), 0,
+                                           range->EndOffset());
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -1469,68 +1468,61 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
 }
 
 nsresult
-nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
-                                            nsIDOMCharacterData *aTextNode,
-                                            int32_t aStartOffset,
-                                            int32_t aEndOffset)
+nsHTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
+                                           Text& aTextNode,
+                                           int32_t aStartOffset,
+                                           int32_t aEndOffset)
 {
-  // Can only change font size by + or - 1
-  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
-    return NS_ERROR_ILLEGAL_VALUE;
-  nsCOMPtr<nsIContent> textNode = do_QueryInterface(aTextNode);
-  NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
-
-  // don't need to do anything if no characters actually selected
-  if (aStartOffset == aEndOffset) return NS_OK;
-
-  if (!textNode->GetParentNode() ||
-      !CanContainTag(*textNode->GetParentNode(), *nsGkAtoms::big)) {
+  // Don't need to do anything if no characters actually selected
+  if (aStartOffset == aEndOffset) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> tmp;
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aTextNode);
-  NS_ENSURE_STATE(node);
+  if (!aTextNode.GetParentNode() ||
+      !CanContainTag(*aTextNode.GetParentNode(), *nsGkAtoms::big)) {
+    return NS_OK;
+  }
 
-  // do we need to split the text node?
-  uint32_t textLen;
-  aTextNode->GetLength(&textLen);
+  OwningNonNull<nsIContent> node = aTextNode;
+
+  // Do we need to split the text node?
 
   // -1 is a magic value meaning to the end of node
-  if (aEndOffset == -1) aEndOffset = textLen;
-
-  nsresult res = NS_OK;
-  if ( (uint32_t)aEndOffset != textLen )
-  {
-    // we need to split off back of text node
-    res = SplitNode(GetAsDOMNode(node), aEndOffset, getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    // remember left node
-    node = do_QueryInterface(tmp);
-  }
-  if ( aStartOffset )
-  {
-    // we need to split off front of text node
-    res = SplitNode(GetAsDOMNode(node), aStartOffset, getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(res, res);
+  if (aEndOffset == -1) {
+    aEndOffset = aTextNode.Length();
   }
 
-  // look for siblings that are correct type of node
-  nsIAtom* nodeType = aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
+  ErrorResult rv;
+  if ((uint32_t)aEndOffset != aTextNode.Length()) {
+    // We need to split off back of text node
+    node = SplitNode(node, aEndOffset, rv);
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+  }
+  if (aStartOffset) {
+    // We need to split off front of text node
+    SplitNode(node, aStartOffset, rv);
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
+  }
+
+  // Look for siblings that are correct type of node
+  nsIAtom* nodeType = aDir == FontSize::incr ? nsGkAtoms::big
+                                             : nsGkAtoms::small;
   nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(node);
   if (sibling && sibling->IsHTMLElement(nodeType)) {
-    // previous sib is already right kind of inline node; slide this over into it
-    res = MoveNode(node, sibling, -1);
-    return res;
+    // Previous sib is already right kind of inline node; slide this over
+    nsresult res = MoveNode(node, sibling, -1);
+    NS_ENSURE_SUCCESS(res, res);
+    return NS_OK;
   }
   sibling = GetNextHTMLSibling(node);
   if (sibling && sibling->IsHTMLElement(nodeType)) {
-    // following sib is already right kind of inline node; slide this over into it
-    res = MoveNode(node, sibling, 0);
-    return res;
+    // Following sib is already right kind of inline node; slide this over
+    nsresult res = MoveNode(node, sibling, 0);
+    NS_ENSURE_SUCCESS(res, res);
+    return NS_OK;
   }
 
-  // else reparent the node inside font node with appropriate relative size
+  // Else reparent the node inside font node with appropriate relative size
   nsCOMPtr<Element> newElement = InsertContainerAbove(node, nodeType);
   NS_ENSURE_STATE(newElement);
 
