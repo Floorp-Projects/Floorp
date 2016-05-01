@@ -6008,8 +6008,7 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
 {
   bool isCollapsed = ((item.startNode == item.endNode) && (item.startOffset == item.endOffset));
 
-  nsCOMPtr<nsIContent> endInline =
-    do_QueryInterface(GetHighestInlineParent(GetAsDOMNode(item.endNode)));
+  nsCOMPtr<nsIContent> endInline = GetHighestInlineParent(*item.endNode);
 
   // if we have inline parents above range endpoints, split them
   if (endInline && !isCollapsed)
@@ -6027,8 +6026,7 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
     item.endOffset = resultEndOffset;
   }
 
-  nsCOMPtr<nsIContent> startInline =
-    do_QueryInterface(GetHighestInlineParent(GetAsDOMNode(item.startNode)));
+  nsCOMPtr<nsIContent> startInline = GetHighestInlineParent(*item.startNode);
 
   if (startInline)
   {
@@ -6111,19 +6109,18 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIContent& aNode,
 }
 
 
-nsCOMPtr<nsIDOMNode>
-nsHTMLEditRules::GetHighestInlineParent(nsIDOMNode* aNode)
+nsIContent*
+nsHTMLEditRules::GetHighestInlineParent(nsINode& aNode)
 {
-  NS_ENSURE_TRUE(aNode, nullptr);
-  if (IsBlockNode(aNode)) return nullptr;
-  nsCOMPtr<nsIDOMNode> inlineNode, node=aNode;
-
-  while (node && IsInlineNode(node))
-  {
-    inlineNode = node;
-    inlineNode->GetParentNode(getter_AddRefs(node));
+  if (!aNode.IsContent() || IsBlockNode(aNode.AsDOMNode())) {
+    return nullptr;
   }
-  return inlineNode;
+  OwningNonNull<nsIContent> node = *aNode.AsContent();
+
+  while (node->GetParent() && IsInlineNode(node->GetParent()->AsDOMNode())) {
+    node = *node->GetParent();
+  }
+  return node;
 }
 
 
