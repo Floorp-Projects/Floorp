@@ -205,8 +205,8 @@ protected:
                        int32_t* aIndex, Lists aLists = Lists::yes,
                        Tables aTables = Tables::yes);
   mozilla::dom::Element* IsInListItem(nsINode* aNode);
-  nsresult ReturnInHeader(mozilla::dom::Selection* aSelection,
-                          nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
+  nsresult ReturnInHeader(mozilla::dom::Selection& aSelection,
+                          mozilla::dom::Element& aHeader, nsINode& aNode,
                           int32_t aOffset);
   nsresult ReturnInParagraph(mozilla::dom::Selection* aSelection,
                              nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
