@@ -4807,74 +4807,89 @@ nsHTMLEditor::EndUpdateViewBatch()
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSelectionContainer(nsIDOMElement** aReturn)
+nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
 {
-  nsCOMPtr<nsIDOMElement> container =
-    static_cast<nsIDOMElement*>(GetAsDOMNode(GetSelectionContainer()));
-  NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
-  container.forget(aReturn);
-  return NS_OK;
-}
+  RefPtr<Selection> selection = GetSelection();
+  // if we don't get the selection, just skip this
+  if (!selection) {
+    return NS_ERROR_FAILURE;
+  }
 
-Element*
-nsHTMLEditor::GetSelectionContainer()
-{
-  // If we don't get the selection, just skip this
-  NS_ENSURE_TRUE(GetSelection(), nullptr);
+  nsCOMPtr<nsIDOMNode> focusNode;
 
-  OwningNonNull<Selection> selection = *GetSelection();
-
-  nsCOMPtr<nsINode> focusNode;
-
+  nsresult res;
   if (selection->Collapsed()) {
-    focusNode = selection->GetFocusNode();
+    res = selection->GetFocusNode(getter_AddRefs(focusNode));
+    NS_ENSURE_SUCCESS(res, res);
   } else {
-    int32_t rangeCount = selection->RangeCount();
+
+    int32_t rangeCount;
+    res = selection->GetRangeCount(&rangeCount);
+    NS_ENSURE_SUCCESS(res, res);
 
     if (rangeCount == 1) {
+
       RefPtr<nsRange> range = selection->GetRangeAt(0);
+      NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-      nsCOMPtr<nsINode> startContainer = range->GetStartParent();
-      int32_t startOffset = range->StartOffset();
-      nsCOMPtr<nsINode> endContainer = range->GetEndParent();
-      int32_t endOffset = range->EndOffset();
+      nsCOMPtr<nsIDOMNode> startContainer, endContainer;
+      res = range->GetStartContainer(getter_AddRefs(startContainer));
+      NS_ENSURE_SUCCESS(res, res);
+      res = range->GetEndContainer(getter_AddRefs(endContainer));
+      NS_ENSURE_SUCCESS(res, res);
+      int32_t startOffset, endOffset;
+      res = range->GetStartOffset(&startOffset);
+      NS_ENSURE_SUCCESS(res, res);
+      res = range->GetEndOffset(&endOffset);
+      NS_ENSURE_SUCCESS(res, res);
 
+      nsCOMPtr<nsIDOMElement> focusElement;
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        nsCOMPtr<nsIDOMElement> focusElement;
-        nsresult res = GetSelectedElement(EmptyString(),
-                                          getter_AddRefs(focusElement));
-        NS_ENSURE_SUCCESS(res, nullptr);
-        if (focusElement) {
+        res = GetSelectedElement(EmptyString(), getter_AddRefs(focusElement));
+        NS_ENSURE_SUCCESS(res, res);
+        if (focusElement)
           focusNode = do_QueryInterface(focusElement);
-        }
       }
       if (!focusNode) {
-        focusNode = range->GetCommonAncestor();
+        res = range->GetCommonAncestorContainer(getter_AddRefs(focusNode));
+        NS_ENSURE_SUCCESS(res, res);
       }
-    } else {
-      for (int32_t i = 0; i < rangeCount; i++) {
-        RefPtr<nsRange> range = selection->GetRangeAt(i);
-
-        nsCOMPtr<nsINode> startContainer = range->GetStartParent();
-        if (!focusNode) {
+    }
+    else {
+      int32_t i;
+      RefPtr<nsRange> range;
+      for (i = 0; i < rangeCount; i++)
+      {
+        range = selection->GetRangeAt(i);
+        NS_ENSURE_STATE(range);
+        nsCOMPtr<nsIDOMNode> startContainer;
+        res = range->GetStartContainer(getter_AddRefs(startContainer));
+        if (NS_FAILED(res)) continue;
+        if (!focusNode)
           focusNode = startContainer;
-        } else if (focusNode != startContainer) {
-          focusNode = startContainer->GetParentNode();
+        else if (focusNode != startContainer) {
+          res = startContainer->GetParentNode(getter_AddRefs(focusNode));
+          NS_ENSURE_SUCCESS(res, res);
           break;
         }
       }
     }
   }
 
-  if (focusNode && focusNode->GetAsText()) {
-    focusNode = focusNode->GetParentNode();
+  if (focusNode) {
+    uint16_t nodeType;
+    focusNode->GetNodeType(&nodeType);
+    if (nsIDOMNode::TEXT_NODE == nodeType) {
+      nsCOMPtr<nsIDOMNode> parent;
+      res = focusNode->GetParentNode(getter_AddRefs(parent));
+      NS_ENSURE_SUCCESS(res, res);
+      focusNode = parent;
+    }
   }
 
-  if (focusNode && focusNode->IsElement()) {
-    return focusNode->AsElement();
-  }
-
-  return nullptr;
+  nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(focusNode);
+  focusElement.forget(aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

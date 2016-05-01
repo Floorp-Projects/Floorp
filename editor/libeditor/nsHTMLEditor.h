@@ -101,7 +101,6 @@ public:
   nsHTMLEditor();
 
   bool GetReturnInParagraphCreatesNewParagraph();
-  Element* GetSelectionContainer();
 
   /* ------------ nsPlaintextEditor overrides -------------- */
   NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable) override;
