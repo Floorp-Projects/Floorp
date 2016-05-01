@@ -3507,12 +3507,12 @@ nsHTMLEditRules::DidMakeBasicBlock(Selection* aSelection,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> parent;
-  int32_t offset;
-  nsresult res = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(parent), &offset);
+  NS_ENSURE_STATE(aSelection->GetRangeAt(0) &&
+                  aSelection->GetRangeAt(0)->GetStartParent());
+  nsresult res =
+    InsertMozBRIfNeeded(*aSelection->GetRangeAt(0)->GetStartParent());
   NS_ENSURE_SUCCESS(res, res);
-  res = InsertMozBRIfNeeded(parent);
-  return res;
+  return NS_OK;
 }
 
 nsresult
@@ -6479,9 +6479,9 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   NS_ENSURE_SUCCESS(res, res);
 
   // check both halves of para to see if we need mozBR
-  res = InsertMozBRIfNeeded(GetAsDOMNode(leftPara));
+  res = InsertMozBRIfNeeded(*leftPara);
   NS_ENSURE_SUCCESS(res, res);
-  res = InsertMozBRIfNeeded(GetAsDOMNode(rightPara));
+  res = InsertMozBRIfNeeded(*rightPara);
   NS_ENSURE_SUCCESS(res, res);
 
   // selection to beginning of right hand para;
@@ -8065,20 +8065,21 @@ nsHTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
 }
 
 nsresult
-nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
+nsHTMLEditRules::InsertMozBRIfNeeded(nsINode& aNode)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  if (!IsBlockNode(aNode)) return NS_OK;
+  if (!IsBlockNode(aNode.AsDOMNode())) {
+    return NS_OK;
+  }
 
   bool isEmpty;
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult res = mHTMLEditor->IsEmptyNode(aNode, &isEmpty);
+  nsresult res = mHTMLEditor->IsEmptyNode(&aNode, &isEmpty);
   NS_ENSURE_SUCCESS(res, res);
   if (!isEmpty) {
     return NS_OK;
   }
 
-  return CreateMozBR(aNode, 0);
+  return CreateMozBR(aNode.AsDOMNode(), 0);
 }
 
 NS_IMETHODIMP
