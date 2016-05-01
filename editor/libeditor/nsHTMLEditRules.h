@@ -209,12 +209,12 @@ protected:
                           nsIEditor::EDirection aDirection);
   nsresult RemovePartOfBlock(Element& aBlock, nsIContent& aStartChild,
                              nsIContent& aEndChild);
-  nsresult SplitBlock(nsIDOMNode *aBlock,
-                      nsIDOMNode *aStartChild,
-                      nsIDOMNode *aEndChild,
-                      nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
-                      nsCOMPtr<nsIDOMNode> *aRightNode = 0,
-                      nsCOMPtr<nsIDOMNode> *aMiddleNode = 0);
+  void     SplitBlock(Element& aBlock,
+                      nsIContent& aStartChild,
+                      nsIContent& aEndChild,
+                      nsIContent** aOutLeftNode = nullptr,
+                      nsIContent** aOutRightNode = nullptr,
+                      nsIContent** aOutMiddleNode = nullptr);
   nsresult OutdentPartOfBlock(Element& aBlock,
                               nsIContent& aStartChild,
                               nsIContent& aEndChild,
