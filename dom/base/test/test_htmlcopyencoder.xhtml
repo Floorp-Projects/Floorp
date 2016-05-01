@@ -38,11 +38,7 @@ function testHtmlCopyEncoder () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  // the attributes are in the reverse order because the XHTML parser parse in the
-  // right order but the html serializer serializes in the reverse order
-  // (because the html parser stores the attribute in the reverse order,
-  // see bug 213347 for reason).
-  expected = "<div ondragstart=\"doDragStartSelection(event)\" id=\"draggable\">This is a <em>draggable</em> <br>bit of text.</div>";
+  expected = "<div id=\"draggable\" ondragstart=\"doDragStartSelection(event)\">This is a <em>draggable</em> <br>bit of text.</div>";
   is(out, expected, "test node");
 
   var select = window.getSelection();

@@ -39,7 +39,7 @@ var vectors = [
   },
   {
     "data": "<video poster=javascript:alert(1)//></video>",
-    "sanitized": "<html><head></head><body><video controls=\"controls\" poster=\"javascript:alert(1)//\"></video></body></html>"
+    "sanitized": "<html><head></head><body><video poster=\"javascript:alert(1)//\" controls=\"controls\"></video></body></html>"
   },
   {
     "data": "<svg xmlns=\"http://www.w3.org/2000/svg\"><g onload=\"javascript:alert(1)\"></g></svg>",

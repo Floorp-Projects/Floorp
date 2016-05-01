@@ -51,8 +51,8 @@ function makeColorTest(name, value, segments) {
       result.expected += segment;
     } else {
       result.expected += "<span data-color=\"" + segment.name + "\">" +
-        "<span style=\"background-color:" + segment.name +
-        "\" class=\"" + COLOR_TEST_CLASS + "\"></span><span>" +
+        "<span class=\"" + COLOR_TEST_CLASS + "\" style=\"background-color:" +
+        segment.name + "\"></span><span>" +
         segment.name + "</span></span>";
     }
   }
@@ -241,8 +241,8 @@ function testParseURL(doc, parser) {
     let expectedTrailer = test.expectedTrailer || test.trailer;
 
     let expected = test.leader +
-        "<a href=\"something.jpg\" class=\"test-urlclass\" " +
-        "target=\"_blank\">something.jpg</a>" +
+        "<a target=\"_blank\" class=\"test-urlclass\" " +
+        "href=\"something.jpg\">something.jpg</a>" +
         expectedTrailer;
 
     is(target.innerHTML, expected, test.desc);
