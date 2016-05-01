@@ -624,7 +624,7 @@ protected:
 
   /* utility routine to possibly adjust the insertion position when
      inserting a block level element */
-  void NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
+  void NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
                                   nsCOMPtr<nsIDOMNode> *insertParentNode,
                                   int32_t *insertOffset);
 
