@@ -3348,6 +3348,13 @@ nsEditor::IsDescendantOfRoot(nsINode* inNode)
 }
 
 bool
+nsEditor::IsDescendantOfEditorRoot(nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsDescendantOfEditorRoot(node);
+}
+
+bool
 nsEditor::IsDescendantOfEditorRoot(nsINode* aNode)
 {
   NS_ENSURE_TRUE(aNode, false);
@@ -3641,15 +3648,13 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, int32_t aOffset)
 // assuming that aParentOrNode is the node itself if it's a text node, or
 // the node's parent otherwise.
 //
-nsIContent*
+nsCOMPtr<nsIDOMNode>
 nsEditor::GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset)
 {
-  nsCOMPtr<nsINode> parentOrNode = do_QueryInterface(aParentOrNode);
-  NS_ENSURE_TRUE(parentOrNode || !aParentOrNode, nullptr);
-  if (parentOrNode->GetAsText()) {
-    return parentOrNode->AsContent();
+  if (IsTextNode(aParentOrNode)) {
+    return aParentOrNode;
   }
-  return parentOrNode->GetChildAt(aOffset);
+  return GetChildAt(aParentOrNode, aOffset);
 }
 
 
