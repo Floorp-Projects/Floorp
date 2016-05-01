@@ -260,7 +260,7 @@ protected:
                               bool* aHandled);
   nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere,
                                nsCOMPtr<nsIDOMNode> *outBRNode, int32_t aOffset=0);
-  nsresult ExpandSelectionForDeletion(mozilla::dom::Selection* aSelection);
+  nsresult ExpandSelectionForDeletion(mozilla::dom::Selection& aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
   nsresult NormalizeSelection(mozilla::dom::Selection* aSelection);
