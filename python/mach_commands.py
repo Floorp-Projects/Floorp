@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import __main__
 import argparse
 import logging
 import mozpack.path as mozpath
@@ -233,7 +234,7 @@ class MachCommands(MachCommandBase):
                     npmPath = self.getNodeOrNpmPath("npm")
                     if npmPath:
                         try:
-                            output = subprocess.check_output([npmPath, "bin", "-g"],
+                            output = subprocess.check_output([npmPath, "bin"],
                                                              stderr=subprocess.STDOUT)
                             if output:
                                 base = output.split("\n")[0].strip()
@@ -285,40 +286,55 @@ class MachCommands(MachCommandBase):
         guide you through an interactive wizard helping you configure
         eslint for optimal use on Mozilla projects.
         """
+        orig_cwd = os.getcwd()
         sys.path.append(os.path.dirname(__file__))
+
+        root = self.get_project_root()
+        module_path = root + "/testing/eslint"
+
+        # npm sometimes fails to respect cwd when it is run using check_call so
+        # we manually switch folders here instead.
+        os.chdir(module_path)
 
         npmPath = self.getNodeOrNpmPath("npm")
         if not npmPath:
             return 1
 
+        # eslint-plugin-mozilla should **never** be installed (linked) globally.
+        # Let's unlink it just in case.
+        self.callProcess("remove-eslint-plugin-mozilla",
+                         [npmPath, "unlink", "eslint-plugin-mozilla"])
+
         # Install eslint.
         # Note that that's the version currently compatible with the mozilla
         # eslint plugin.
         success = self.callProcess("eslint",
-                                   [npmPath, "install", "eslint@%s" % ESLINT_VERSION, "-g"])
+                                   [npmPath, "install", "eslint@2.9.0"])
         if not success:
             return 1
 
         # Install eslint-plugin-mozilla.
         success = self.callProcess("eslint-plugin-mozilla",
-                                   [npmPath, "link"],
-                                   "testing/eslint-plugin-mozilla")
+                                   [npmPath, "install", os.path.join(module_path, "eslint-plugin-mozilla")])
         if not success:
             return 1
 
         # Install eslint-plugin-html.
         success = self.callProcess("eslint-plugin-html",
-                                   [npmPath, "install", "eslint-plugin-html@1.4.0", "-g"])
+                                   [npmPath, "install", "eslint-plugin-html@1.4.0"])
         if not success:
             return 1
 
         # Install eslint-plugin-react.
         success = self.callProcess("eslint-plugin-react",
-                                   [npmPath, "install", "eslint-plugin-react@4.2.3", "-g"])
+                                   [npmPath, "install", "eslint-plugin-react@4.2.3"])
         if not success:
             return 1
 
         print("\nESLint and approved plugins installed successfully!")
+        print("\nNOTE: Your local eslint binary is at %s/node_modules/.bin/eslint\n" % module_path)
+
+        os.chdir(orig_cwd)
 
     def callProcess(self, name, cmd, cwd=None):
         print("\nInstalling %s using \"%s\"..." % (name, " ".join(cmd)))
@@ -399,3 +415,7 @@ class MachCommands(MachCommandBase):
             return True
         except (subprocess.CalledProcessError, OSError):
             return False
+
+    def get_project_root(self):
+        fullpath = os.path.abspath(sys.modules['__main__'].__file__)
+        return os.path.dirname(fullpath)
