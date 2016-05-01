@@ -2660,8 +2660,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
         NS_ENSURE_SUCCESS(res, res);
       }
     } else {
-      res = MoveBlock(GetAsDOMNode(leftBlock), GetAsDOMNode(rightBlock),
-                      leftOffset, rightOffset);
+      res = MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
     }
     if (brNode) {
       mHTMLEditor->DeleteNode(brNode);
@@ -2751,9 +2750,10 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
         }
       }
 
-      res = MoveBlock(GetAsDOMNode(previousContentParent),
-                      GetAsDOMNode(rightBlock),
-                      previousContentOffset, rightOffset);
+      NS_ENSURE_TRUE(previousContentParent, NS_ERROR_NULL_POINTER);
+
+      res = MoveBlock(*previousContentParent->AsElement(), *rightBlock,
+          previousContentOffset, rightOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
     if (brNode) {
@@ -2782,8 +2782,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       }
     } else {
       // Nodes are dissimilar types.
-      res = MoveBlock(GetAsDOMNode(leftBlock), GetAsDOMNode(rightBlock),
-                      leftOffset, rightOffset);
+      res = MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
       NS_ENSURE_SUCCESS(res, res);
     }
     if (brNode) {
@@ -2795,40 +2794,41 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
 }
 
 
-/*****************************************************************************************************
-*    MoveBlock: this method is used to move the content from rightBlock into leftBlock
-*    Note that the "block" might merely be inline nodes between <br>s, or between blocks, etc.
-*    DTD containment rules are followed throughout.
-*         nsIDOMNode *aLeftBlock         parent to receive moved content
-*         nsIDOMNode *aRightBlock        parent to provide moved content
-*         int32_t aLeftOffset            offset in aLeftBlock to move content to
-*         int32_t aRightOffset           offset in aRightBlock to move content from
-*/
+/**
+ * Moves the content from aRightBlock starting from aRightOffset into
+ * aLeftBlock at aLeftOffset. Note that the "block" might merely be inline
+ * nodes between <br>s, or between blocks, etc.  DTD containment rules are
+ * followed throughout.
+ */
 nsresult
-nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, int32_t aLeftOffset, int32_t aRightOffset)
+nsHTMLEditRules::MoveBlock(Element& aLeftBlock, Element& aRightBlock,
+                           int32_t aLeftOffset, int32_t aRightOffset)
 {
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
-  nsresult res = GetNodesFromPoint(::DOMPoint(aRightBlock,aRightOffset),
+  nsresult res = GetNodesFromPoint(::DOMPoint(&aRightBlock, aRightOffset),
                                    EditAction::makeList, arrayOfNodes,
                                    TouchContent::yes);
   NS_ENSURE_SUCCESS(res, res);
-  for (auto& curNode : arrayOfNodes) {
+  for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
     // get the node to act on
-    if (IsBlockNode(curNode)) {
+    if (IsBlockNode(arrayOfNodes[i])) {
       // For block nodes, move their contents only, then delete block.
-      res = MoveContents(GetAsDOMNode(curNode), aLeftBlock, &aLeftOffset);
+      res = MoveContents(arrayOfNodes[i]->AsDOMNode(), aLeftBlock.AsDOMNode(),
+                         &aLeftOffset);
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->DeleteNode(curNode);
-    }
-    else
-    {
-      // otherwise move the content as is, checking against the dtd.
-      res = MoveNodeSmart(GetAsDOMNode(curNode), aLeftBlock, &aLeftOffset);
+      res = mHTMLEditor->DeleteNode(arrayOfNodes[i]);
+    } else {
+      // Otherwise move the content as is, checking against the DTD.
+      res = MoveNodeSmart(arrayOfNodes[i]->AsDOMNode(), aLeftBlock.AsDOMNode(),
+                          &aLeftOffset);
     }
   }
-  return res;
+
+  // XXX We're only checking return value of the last iteration
+  NS_ENSURE_SUCCESS(res, res);
+  return NS_OK;
 }
 
 /*****************************************************************************************************

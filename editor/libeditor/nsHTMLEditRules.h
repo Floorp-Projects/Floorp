@@ -147,7 +147,8 @@ protected:
                                     nsIEditor::EDirection aAction);
   nsresult JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
                       bool* aCanceled);
-  nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, int32_t aLeftOffset, int32_t aRightOffset);
+  nsresult MoveBlock(Element& aLeftBlock, Element& aRightBlock,
+                     int32_t aLeftOffset, int32_t aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
   nsresult DeleteNonTableElements(nsINode* aNode);
