@@ -318,7 +318,7 @@ protected:
   void AdjustSpecialBreaks();
   nsresult AdjustWhitespace(mozilla::dom::Selection* aSelection);
   nsresult PinSelectionToNewBlock(mozilla::dom::Selection* aSelection);
-  nsresult CheckInterlinePosition(mozilla::dom::Selection* aSelection);
+  void CheckInterlinePosition(mozilla::dom::Selection& aSelection);
   nsresult AdjustSelection(mozilla::dom::Selection* aSelection,
                            nsIEditor::EDirection aAction);
   nsresult FindNearSelectableNode(nsIDOMNode *aSelNode,
