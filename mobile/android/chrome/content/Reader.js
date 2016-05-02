@@ -82,8 +82,13 @@ var Reader = {
       }
 
       case "Reader:AddToCache": {
+        let tab = BrowserApp.getTabForId(aData);
+        if (!tab) {
+          throw new Error("No tab for tabID = " + aData + " when trying to save reader view article");
+        }
+
         // If the article is coming from reader mode, we must have fetched it already.
-        this._getArticle(aData).then((article) => {
+        this._getArticleData(tab.browser).then((article) => {
           ReaderMode.storeArticleInCache(article);
         }).catch(e => Cu.reportError("Error storing article in cache: " + e));
         break;
@@ -280,6 +285,23 @@ var Reader = {
       return null;
     });
   }),
+
+  _getArticleData: function(browser) {
+    return new Promise((resolve, reject) => {
+      if (browser == null) {
+        reject("_getArticleData needs valid browser");
+      }
+
+      let mm = browser.messageManager;
+      let listener = (message) => {
+        mm.removeMessageListener("Reader:StoredArticleData", listener);
+        resolve(message.data.article);
+      };
+      mm.addMessageListener("Reader:StoredArticleData", listener);
+      mm.sendAsyncMessage("Reader:GetStoredArticleData");
+    });
+  },
+
 
   /**
    * Migrates old indexedDB reader mode cache to new JSON cache.
