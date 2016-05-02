@@ -265,17 +265,11 @@ SessionStore.prototype = {
         break;
       }
       case "DOMTitleChanged": {
-        let browser = aEvent.currentTarget;
-
-        // Handle only top-level DOMTitleChanged event
-        if (browser.contentDocument !== aEvent.originalTarget) {
-          return;
-        }
-
         // Use DOMTitleChanged to detect page loads over alternatives.
         // onLocationChange happens too early, so we don't have the page title
         // yet; pageshow happens too late, so we could lose session data if the
         // browser were killed.
+        let browser = aEvent.currentTarget;
         log("DOMTitleChanged for tab " + window.BrowserApp.getTabForBrowser(browser).id);
         this.onTabLoad(window, browser);
         break;
