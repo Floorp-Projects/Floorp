@@ -89,6 +89,8 @@ var gAdvancedPane = {
                      gAdvancedPane.showCertificates);
     setEventListener("viewSecurityDevicesButton", "command",
                      gAdvancedPane.showSecurityDevices);
+    setEventListener("cacheSize", "change",
+                     gAdvancedPane.updateCacheSizePref);
 
 #ifdef MOZ_WIDGET_GTK
     // GTK tabbox' allow the scroll wheel to change the selected tab,

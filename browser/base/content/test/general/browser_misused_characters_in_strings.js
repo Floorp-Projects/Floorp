@@ -52,6 +52,66 @@ let gWhitelist = [{
     file: "phishing-afterload-warning-message.dtd",
     key: "safeb.blocked.forbiddenPage.shortDesc2",
     type: "single-quote"
+  }, {
+    file: "mathfont.properties",
+    key: "operator.\\u002E\\u002E\\u002E.postfix",
+    type: "ellipsis"
+  }, {
+    file: "layout_errors.properties",
+    key: "ImageMapRectBoundsError",
+    type: "double-quote"
+  }, {
+    file: "layout_errors.properties",
+    key: "ImageMapCircleWrongNumberOfCoords",
+    type: "double-quote"
+  }, {
+    file: "layout_errors.properties",
+    key: "ImageMapCircleNegativeRadius",
+    type: "double-quote"
+  }, {
+    file: "layout_errors.properties",
+    key: "ImageMapPolyWrongNumberOfCoords",
+    type: "double-quote"
+  }, {
+    file: "layout_errors.properties",
+    key: "ImageMapPolyOddNumberOfCoords",
+    type: "double-quote"
+  }, {
+    file: "xbl.properties",
+    key: "CommandNotInChrome",
+    type: "double-quote"
+  }, {
+    file: "dom.properties",
+    key: "PatternAttributeCompileFailure",
+    type: "single-quote"
+  }, {
+    file: "pipnss.properties",
+    key: "certErrorMismatchSingle2",
+    type: "double-quote"
+  }, {
+    file: "pipnss.properties",
+    key: "certErrorCodePrefix2",
+    type: "double-quote"
+  }, {
+    file: "aboutSupport.dtd",
+    key: "aboutSupport.pageSubtitle",
+    type: "single-quote"
+  }, {
+    file: "aboutSupport.dtd",
+    key: "aboutSupport.userJSDescription",
+    type: "single-quote"
+  }, {
+    file: "netError.dtd",
+    key: "inadequateSecurityError.longDesc",
+    type: "single-quote"
+  }, {
+    file: "netErrorApp.dtd",
+    key: "securityOverride.warningContent",
+    type: "single-quote"
+  }, {
+    file: "sync.properties",
+    key: "client.name2",
+    type: "apostrophe"
   }
 ];
 
@@ -118,12 +178,25 @@ function testForErrors(filepath, key, str) {
   testForError(filepath, key, str, /\.\.\./, "ellipsis", "Strings with an ellipsis should use the Unicode \u2026 character instead of three periods.");
 }
 
+function* getAllTheFiles(extension) {
+  let appDirGreD = Services.dirsvc.get("GreD", Ci.nsIFile);
+  let appDirXCurProcD = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+  if (appDirGreD.contains(appDirXCurProcD)) {
+    return yield generateURIsFromDirTree(appDirGreD, [extension]);
+  }
+  if (appDirXCurProcD.contains(appDirGreD)) {
+    return yield generateURIsFromDirTree(appDirXCurProcD, [extension]);
+  }
+  let urisGreD = yield generateURIsFromDirTree(appDirGreD, [extension]);
+  let urisXCurProcD = yield generateURIsFromDirTree(appDirXCurProcD, [extension]);
+  return Array.from(new Set(urisGreD.concat(appDirXCurProcD)));
+}
+
 add_task(function* checkAllTheProperties() {
-  let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
   // our zipreader APIs are all sync)
-  let uris = yield generateURIsFromDirTree(appDir, [".properties"]);
+  let uris = yield getAllTheFiles(".properties");
   ok(uris.length, `Found ${uris.length} .properties files to scan for misused characters`);
 
   for (let uri of uris) {
@@ -140,6 +213,10 @@ var checkDTD = Task.async(function* (aURISpec) {
   // The regular expression below is adapted from:
   // https://hg.mozilla.org/mozilla-central/file/68c0b7d6f16ce5bb023e08050102b5f2fe4aacd8/python/compare-locales/compare_locales/parser.py#l233
   let entities = rawContents.match(/<!ENTITY\s+([\w\.]*)\s+("[^"]*"|'[^']*')\s*>/g);
+  if (!entities) {
+    // Some files, such as requestAutocomplete.dtd, have no entities defined.
+    return;
+  }
   for (let entity of entities) {
     let [, key, str] = entity.match(/<!ENTITY\s+([\w\.]*)\s+("[^"]*"|'[^']*')\s*>/);
     // The matched string includes the enclosing quotation marks,
@@ -150,8 +227,7 @@ var checkDTD = Task.async(function* (aURISpec) {
 });
 
 add_task(function* checkAllTheDTDs() {
-  let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
-  let uris = yield generateURIsFromDirTree(appDir, [".dtd"]);
+  let uris = yield getAllTheFiles(".dtd");
   ok(uris.length, `Found ${uris.length} .dtd files to scan for misused characters`);
   for (let uri of uris) {
     yield checkDTD(uri.spec);

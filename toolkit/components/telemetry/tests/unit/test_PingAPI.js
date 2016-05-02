@@ -7,7 +7,9 @@
 "use strict";
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
@@ -118,7 +120,7 @@ add_task(function* test_archivedPings() {
   yield checkLoadingPings();
 
   // Check that we find the archived pings again by scanning after a restart.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
 
   let pingList = yield TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList,
@@ -172,7 +174,7 @@ add_task(function* test_archivedPings() {
   expectedPingList.sort((a, b) => a.timestampCreated - b.timestampCreated);
 
   // Reset the TelemetryArchive so we scan the archived dir again.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
 
   // Check that we are still picking up the valid archived pings on disk,
   // plus the valid ones above.
@@ -200,7 +202,7 @@ add_task(function* test_archiveCleanup() {
   Telemetry.getHistogramById("TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB").clear();
 
   // Build the cache. Nothing should be evicted as there's no ping directory.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   yield TelemetryStorage.testCleanupTaskPromise();
   yield TelemetryArchive.promiseArchivedPingList();
 
@@ -262,7 +264,7 @@ add_task(function* test_archiveCleanup() {
   // Move the current date 180 days ahead of the first ping.
   let now = fakeNow(2010, 7, 1, 1, 0, 0);
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   // Wait for the cleanup to finish.
   yield TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir.
@@ -295,7 +297,7 @@ add_task(function* test_archiveCleanup() {
   // Move the current date 180 days ahead of the second ping.
   fakeNow(2010, 8, 1, 1, 0, 0);
   // Reset TelemetryController and TelemetryArchive.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   // Wait for the cleanup to finish.
   yield TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir again.
@@ -344,7 +346,7 @@ add_task(function* test_archiveCleanup() {
   expectedPrunedInfo = expectedPrunedInfo.concat(pingsOutsideQuota);
 
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   yield TelemetryStorage.testCleanupTaskPromise();
   yield TelemetryArchive.promiseArchivedPingList();
   // Check that the archive is in the correct state.
@@ -357,7 +359,7 @@ add_task(function* test_archiveCleanup() {
   Assert.equal(h.sum, 300, "Archive quota was hit, a special size must be reported.");
 
   // Trigger a cleanup again and make sure we're not removing anything.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   yield TelemetryStorage.testCleanupTaskPromise();
   yield TelemetryArchive.promiseArchivedPingList();
   yield checkArchive();
@@ -382,7 +384,7 @@ add_task(function* test_archiveCleanup() {
   expectedPrunedInfo.push({ id: OVERSIZED_PING_ID, creationDate: new Date(OVERSIZED_PING.creationDate) });
 
   // Scan the archive.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   yield TelemetryStorage.testCleanupTaskPromise();
   yield TelemetryArchive.promiseArchivedPingList();
   // The following also checks that non oversized pings are not removed.
@@ -399,7 +401,7 @@ add_task(function* test_archiveCleanup() {
 add_task(function* test_clientId() {
   // Check that a ping submitted after the delayed telemetry initialization completed
   // should get a valid client id.
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   const clientId = TelemetryController.clientID;
 
   let id = yield TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
@@ -413,7 +415,7 @@ add_task(function* test_clientId() {
   // We should have cached the client id now. Lets confirm that by
   // checking the client id on a ping submitted before the async
   // controller setup is finished.
-  let promiseSetup = TelemetryController.testReset();
+  let promiseSetup = TelemetryController.reset();
   id = yield TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
   ping = yield TelemetryArchive.promiseArchivedPingById(id);
   Assert.equal(ping.clientId, clientId);
@@ -446,7 +448,7 @@ add_task(function* test_InvalidPingType() {
 });
 
 add_task(function* test_currentPingData() {
-  yield TelemetryController.testSetup();
+  yield TelemetrySession.setup();
 
   // Setup test data.
   let h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
@@ -475,5 +477,5 @@ add_task(function* test_currentPingData() {
 });
 
 add_task(function* test_shutdown() {
-  yield TelemetryController.testShutdown();
+  yield TelemetrySend.shutdown();
 });
