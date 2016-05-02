@@ -73,6 +73,16 @@ def get_max_wait(tasks, timeout):
             if remaining < wait:
                 wait = remaining
 
+    if wait > ProgressBar.update_granularity():
+        print >> sys.stderr, "Inconsistent return value in get_max_wait:"
+        for task in tasks:
+            print >> sys.stderr, "\tstart={} elapsed={} remaining={}".format(\
+                    task.start, total_seconds(now - task.start), \
+                    total_seconds(task.start + timeout_delta - now))
+        print >> sys.stderr, "wait={} total_seconds(wait)={} timeout={} \
+        update_granularity={} now={}".format(wait, total_seconds(wait), \
+                timeout, total_seconds(ProgressBar.update_granularity()), now)
+
     # Return the wait time in seconds, clamped to zero.
     return max(total_seconds(wait), 0)
 
