@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import org.mozilla.gecko.tabs.TabsPanel;
@@ -58,4 +59,13 @@ public abstract class BrowserAppDelegate {
      * Called when the tabs tray is closed.
      */
     public void onTabsTrayHidden(BrowserApp browserApp, TabsPanel tabsPanel) {}
+
+    /**
+     * Called when an activity started using startActivityForResult() returns.
+     *
+     * Delegates should only use request and result codes declared in BrowserApp itself (as opposed
+     * to declarations in the delegate), in order to avoid conflicts.
+     */
+    public void onActivityResult(BrowserApp browserApp, int requestCode, int resultCode, Intent data) {}
 }
+
