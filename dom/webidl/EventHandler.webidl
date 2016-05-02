@@ -118,7 +118,9 @@ interface GlobalEventHandlers {
            attribute EventHandler onlostpointercapture;
 
            // Fullscreen events handlers
+           [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
            attribute EventHandler onfullscreenchange;
+           [Func="nsDocument::IsUnprefixedFullscreenEnabled"]
            attribute EventHandler onfullscreenerror;
            attribute EventHandler onmozfullscreenchange;
            attribute EventHandler onmozfullscreenerror;
