@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test sessionStorage is copied over when a new window opens to the
+same domain as the opener.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test storage copied</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="head.js" type="application/javascript;version=1.8"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    function waitForMessage(win) {
+      return new Promise(resolve => {
+        win.addEventListener("message", function onMessage(event) {
+          win.removeEventListener("message", onMessage);
+          resolve(event.data);
+        });
+      });
+    }
+
+    add_task(function*() {
+      const TEST_VALUE = "test-value";
+      // This magic value of 2 means that by default, when content tries
+      // to open a new window, it'll actually open in a new window instead
+      // of a new tab.
+      yield SpecialPowers.pushPrefEnv({"set": [
+        ["browser.link.open_newwindow", 2],
+      ]});
+
+      window.sessionStorage.setItem("test-item", TEST_VALUE);
+      let win = window.open("file_storage_copied.html", "my_window");
+      let data = yield waitForMessage(win);
+      is(data, TEST_VALUE, "Should have cloned the test value");
+      win.close();
+    });
+  </script>
+</body>
+</html>
