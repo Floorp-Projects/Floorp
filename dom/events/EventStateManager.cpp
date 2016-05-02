@@ -816,6 +816,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case eContentCommandUndo:
   case eContentCommandRedo:
   case eContentCommandPasteTransferable:
+  case eContentCommandLookUpDictionary:
     DoContentCommandEvent(aEvent->AsContentCommandEvent());
     break;
   case eContentCommandScroll:
@@ -5224,6 +5225,9 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
     case eContentCommandPasteTransferable:
       cmd = "cmd_pasteTransferable";
       break;
+    case eContentCommandLookUpDictionary:
+      cmd = "cmd_lookUpDictionary";
+      break;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -5254,7 +5258,34 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
           rv = commandController->DoCommandWithParams(cmd, params);
           break;
         }
-        
+
+        case eContentCommandLookUpDictionary: {
+          nsCOMPtr<nsICommandController> commandController =
+            do_QueryInterface(controller);
+          if (NS_WARN_IF(!commandController)) {
+            return NS_ERROR_FAILURE;
+          }
+
+          nsCOMPtr<nsICommandParams> params =
+            do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
+          rv = params->SetLongValue("x", aEvent->mRefPoint.x);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
+          rv = params->SetLongValue("y", aEvent->mRefPoint.y);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
+          rv = commandController->DoCommandWithParams(cmd, params);
+          break;
+        }
+
         default:
           rv = controller->DoCommand(cmd);
           break;
