@@ -1,0 +1,46 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test undefined rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - undefined</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { Undefined } = browserRequire("devtools/client/shared/components/reps/undefined");
+
+    let gripStub = {
+      "type": "undefined"
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Undefined.rep, `Rep correctly selects ${Undefined.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(Undefined.rep, {});
+    is(renderedComponent.className, "objectBox objectBox-undefined", "Undefined rep has expected class names");
+    is(renderedComponent.getAttribute("role"), "presentation", "Undefined rep has expected aria role");
+    is(renderedComponent.textContent, "undefined", "Undefined rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

@@ -24,6 +24,10 @@ var { require: browserRequire } = BrowserLoader({
   window: this
 });
 
+let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+let React = browserRequire("devtools/client/shared/vendor/react");
+var TestUtils = React.addons.TestUtils;
+
 var EXAMPLE_URL = "http://example.com/browser/browser/devtools/shared/test/";
 
 function forceRender(comp) {
@@ -163,4 +167,21 @@ function checkFrameString({ frame, file, line, column, shouldLink, tooltip }) {
   } else {
     ok(!$column, "Should not have an element for `column`");
   }
+}
+
+function renderComponent(component, props) {
+  const el = React.createElement(component, props, {});
+  // By default, renderIntoDocument() won't work for stateless components, but
+  // it will work if the stateless component is wrapped in a stateful one.
+  // See https://github.com/facebook/react/issues/4839
+  const wrappedEl = React.DOM.span({}, [el]);
+  const renderedComponent = TestUtils.renderIntoDocument(wrappedEl);
+  return ReactDOM.findDOMNode(renderedComponent).children[0];
+}
+
+function shallowRenderComponent(component, props) {
+  const el = React.createElement(component, props);
+  const renderer = TestUtils.createRenderer();
+  renderer.render(el, {});
+  return renderer.getRenderOutput();
 }
