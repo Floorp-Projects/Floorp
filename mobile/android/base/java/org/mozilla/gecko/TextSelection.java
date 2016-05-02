@@ -14,6 +14,8 @@ import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -144,6 +146,9 @@ class TextSelection extends Layer implements GeckoEventListener,
             public void run() {
                 try {
                     if (event.equals("TextSelection:ShowHandles")) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
+                            TelemetryContract.Method.CONTENT, "text_selection");
+
                         selectionID = message.getString("selectionID");
                         final JSONArray handles = message.getJSONArray("handles");
                         for (int i=0; i < handles.length(); i++) {
