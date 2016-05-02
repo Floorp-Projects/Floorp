@@ -757,7 +757,7 @@ AbstractFramePtr::initArgsObj(ArgumentsObject& argsobj) const
 }
 
 inline bool
-AbstractFramePtr::copyRawFrameSlots(AutoValueVector* vec) const
+AbstractFramePtr::copyRawFrameSlots(MutableHandle<GCVector<Value>> vec) const
 {
     if (isInterpreterFrame())
         return asInterpreterFrame()->copyRawFrameSlots(vec);

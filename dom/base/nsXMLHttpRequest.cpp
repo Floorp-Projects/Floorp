@@ -548,7 +548,10 @@ nsXMLHttpRequest::GetResponseXML(ErrorResult& aRv)
     mWarnAboutSyncHtml = false;
     LogMessage("HTMLSyncXHRWarning", GetOwner());
   }
-  return (XML_HTTP_REQUEST_DONE & mState) ? mResponseXML : nullptr;
+  if (!(XML_HTTP_REQUEST_DONE & mState)) {
+    return nullptr;
+  }
+  return mResponseXML;
 }
 
 /*

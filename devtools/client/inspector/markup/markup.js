@@ -3200,9 +3200,7 @@ function parseAttributeValues(attr, doc) {
     }
   }
 
-  // Attributes return from DOMParser in reverse order from how they are
-  // entered.
-  return attributes.reverse();
+  return attributes;
 }
 
 /**

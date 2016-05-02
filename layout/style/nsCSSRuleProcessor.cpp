@@ -1424,8 +1424,8 @@ static inline bool ActiveHoverQuirkMatches(nsCSSSelector* aSelector,
   // No pseudo-class other than :active and :hover.
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    if (pseudoClass->mType != nsCSSPseudoClasses::ePseudoClass_hover &&
-        pseudoClass->mType != nsCSSPseudoClasses::ePseudoClass_active) {
+    if (pseudoClass->mType != CSSPseudoClassType::hover &&
+        pseudoClass->mType != CSSPseudoClassType::active) {
       return false;
     }
   }
@@ -1621,8 +1621,8 @@ static const EventStates sPseudoClassStates[] = {
   EventStates()
 };
 static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
-              nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
-              "ePseudoClass_NotPseudoClass is no longer at the end of"
+              static_cast<size_t>(CSSPseudoClassType::MAX),
+              "CSSPseudoClassType::MAX is no longer equal to the length of "
               "sPseudoClassStates");
 
 static bool
@@ -1683,7 +1683,8 @@ StateSelectorMatches(Element* aElement,
 {
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    EventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
+    auto idx = static_cast<CSSPseudoClassTypeBase>(pseudoClass->mType);
+    EventStates statesToCheck = sPseudoClassStates[idx];
     if (!statesToCheck.IsEmpty() &&
         !StateSelectorMatches(aElement, aSelector, aNodeMatchContext,
                               aTreeMatchContext, aSelectorFlags, nullptr,
@@ -1800,24 +1801,25 @@ static bool SelectorMatches(Element* aElement,
   // test for pseudo class match
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    EventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
+    auto idx = static_cast<CSSPseudoClassTypeBase>(pseudoClass->mType);
+    EventStates statesToCheck = sPseudoClassStates[idx];
     if (statesToCheck.IsEmpty()) {
       // keep the cases here in the same order as the list in
       // nsCSSPseudoClassList.h
       switch (pseudoClass->mType) {
-      case nsCSSPseudoClasses::ePseudoClass_empty:
+      case CSSPseudoClassType::empty:
         if (!checkGenericEmptyMatches(aElement, aTreeMatchContext, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozOnlyWhitespace:
+      case CSSPseudoClassType::mozOnlyWhitespace:
         if (!checkGenericEmptyMatches(aElement, aTreeMatchContext, false)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozEmptyExceptChildrenWithLocalname:
+      case CSSPseudoClassType::mozEmptyExceptChildrenWithLocalname:
         {
           NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
           nsIContent *child = nullptr;
@@ -1842,7 +1844,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_lang:
+      case CSSPseudoClassType::lang:
         {
           NS_ASSERTION(nullptr != pseudoClass->u.mString, "null lang parameter");
           if (!pseudoClass->u.mString || !*pseudoClass->u.mString) {
@@ -1897,19 +1899,19 @@ static bool SelectorMatches(Element* aElement,
         }
         return false;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozBoundElement:
+      case CSSPseudoClassType::mozBoundElement:
         if (aTreeMatchContext.mScopedRoot != aElement) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_root:
+      case CSSPseudoClassType::root:
         if (aElement != aElement->OwnerDoc()->GetRootElement()) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_any:
+      case CSSPseudoClassType::any:
         {
           nsCSSSelectorList *l;
           for (l = pseudoClass->u.mSelectors; l; l = l->mNext) {
@@ -1928,13 +1930,13 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_firstChild:
+      case CSSPseudoClassType::firstChild:
         if (!edgeChildMatches(aElement, aTreeMatchContext, true, false)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_firstNode:
+      case CSSPseudoClassType::firstNode:
         {
           nsIContent *firstNode = nullptr;
           nsIContent *parent = aElement->GetParent();
@@ -1955,13 +1957,13 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_lastChild:
+      case CSSPseudoClassType::lastChild:
         if (!edgeChildMatches(aElement, aTreeMatchContext, false, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_lastNode:
+      case CSSPseudoClassType::lastNode:
         {
           nsIContent *lastNode = nullptr;
           nsIContent *parent = aElement->GetParent();
@@ -1982,71 +1984,71 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_onlyChild:
+      case CSSPseudoClassType::onlyChild:
         if (!edgeChildMatches(aElement, aTreeMatchContext, true, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_firstOfType:
+      case CSSPseudoClassType::firstOfType:
         if (!edgeOfTypeMatches(aElement, aTreeMatchContext, true, false)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_lastOfType:
+      case CSSPseudoClassType::lastOfType:
         if (!edgeOfTypeMatches(aElement, aTreeMatchContext, false, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_onlyOfType:
+      case CSSPseudoClassType::onlyOfType:
         if (!edgeOfTypeMatches(aElement, aTreeMatchContext, true, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_nthChild:
+      case CSSPseudoClassType::nthChild:
         if (!nthChildGenericMatches(aElement, aTreeMatchContext, pseudoClass,
                                     false, false)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_nthLastChild:
+      case CSSPseudoClassType::nthLastChild:
         if (!nthChildGenericMatches(aElement, aTreeMatchContext, pseudoClass,
                                     false, true)) {
           return false;
         }
       break;
 
-      case nsCSSPseudoClasses::ePseudoClass_nthOfType:
+      case CSSPseudoClassType::nthOfType:
         if (!nthChildGenericMatches(aElement, aTreeMatchContext, pseudoClass,
                                     true, false)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_nthLastOfType:
+      case CSSPseudoClassType::nthLastOfType:
         if (!nthChildGenericMatches(aElement, aTreeMatchContext, pseudoClass,
                                     true, true)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozIsHTML:
+      case CSSPseudoClassType::mozIsHTML:
         if (!aTreeMatchContext.mIsHTMLDocument || !aElement->IsHTMLElement()) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozNativeAnonymous:
+      case CSSPseudoClassType::mozNativeAnonymous:
         if (!aElement->IsInNativeAnonymousSubtree()) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozSystemMetric:
+      case CSSPseudoClassType::mozSystemMetric:
         {
           nsCOMPtr<nsIAtom> metric = NS_Atomize(pseudoClass->u.mString);
           if (!nsCSSRuleProcessor::HasSystemMetric(metric)) {
@@ -2055,7 +2057,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozLocaleDir:
+      case CSSPseudoClassType::mozLocaleDir:
         {
           bool docIsRTL =
             aTreeMatchContext.mDocument->GetDocumentState().
@@ -2078,7 +2080,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozLWTheme:
+      case CSSPseudoClassType::mozLWTheme:
         {
           if (aTreeMatchContext.mDocument->GetDocumentLWTheme() <=
                 nsIDocument::Doc_Theme_None) {
@@ -2087,7 +2089,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozLWThemeBrightText:
+      case CSSPseudoClassType::mozLWThemeBrightText:
         {
           if (aTreeMatchContext.mDocument->GetDocumentLWTheme() !=
                 nsIDocument::Doc_Theme_Bright) {
@@ -2096,7 +2098,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozLWThemeDarkText:
+      case CSSPseudoClassType::mozLWThemeDarkText:
         {
           if (aTreeMatchContext.mDocument->GetDocumentLWTheme() !=
                 nsIDocument::Doc_Theme_Dark) {
@@ -2105,14 +2107,14 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozWindowInactive:
+      case CSSPseudoClassType::mozWindowInactive:
         if (!aTreeMatchContext.mDocument->GetDocumentState().
                HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
           return false;
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozTableBorderNonzero:
+      case CSSPseudoClassType::mozTableBorderNonzero:
         {
           if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
             return false;
@@ -2126,7 +2128,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_mozBrowserFrame:
+      case CSSPseudoClassType::mozBrowserFrame:
         {
           nsCOMPtr<nsIMozBrowserFrame>
             browserFrame = do_QueryInterface(aElement);
@@ -2137,11 +2139,11 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_dir:
+      case CSSPseudoClassType::dir:
         {
           if (aDependence) {
-            EventStates states
-              = sPseudoClassStateDependences[pseudoClass->mType];
+            EventStates states = sPseudoClassStateDependences[
+              static_cast<CSSPseudoClassTypeBase>(pseudoClass->mType)];
             if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(states)) {
               *aDependence = true;
               return false;
@@ -2172,7 +2174,7 @@ static bool SelectorMatches(Element* aElement,
         }
         break;
 
-      case nsCSSPseudoClasses::ePseudoClass_scope:
+      case CSSPseudoClassType::scope:
         if (aTreeMatchContext.mForScopedStyle) {
           if (aTreeMatchContext.mCurrentStyleScope) {
             // If mCurrentStyleScope is null, aElement must be the style
@@ -2753,7 +2755,7 @@ nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aD
            (selector->mPseudoClassList &&
             (selector->mPseudoClassList->mNext ||
              selector->mPseudoClassList->mType !=
-               nsCSSPseudoClasses::ePseudoClass_hover)) ||
+               CSSPseudoClassType::hover)) ||
            selector->mAttrList || selector->mNegations) &&
           (!isPseudoElement ||
            StateSelectorMatches(aStatefulElement, selectorForPseudo,
@@ -3243,10 +3245,12 @@ EventStates ComputeSelectorStateDependence(nsCSSSelector& aSelector)
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     // Tree pseudo-elements overload mPseudoClassList for things that
     // aren't pseudo-classes.
-    if (pseudoClass->mType >= nsCSSPseudoClasses::ePseudoClass_Count) {
+    if (pseudoClass->mType >= CSSPseudoClassType::Count) {
       continue;
     }
-    states |= sPseudoClassStateDependences[pseudoClass->mType];
+
+    auto idx = static_cast<CSSPseudoClassTypeBase>(pseudoClass->mType);
+    states |= sPseudoClassStateDependences[idx];
   }
   return states;
 }
@@ -3274,15 +3278,15 @@ AddSelector(RuleCascadeData* aCascade,
     for (nsPseudoClassList* pseudoClass = negation->mPseudoClassList;
          pseudoClass; pseudoClass = pseudoClass->mNext) {
       switch (pseudoClass->mType) {
-        case nsCSSPseudoClasses::ePseudoClass_mozLocaleDir: {
+        case CSSPseudoClassType::mozLocaleDir: {
           aCascade->mSelectorDocumentStates |= NS_DOCUMENT_STATE_RTL_LOCALE;
           break;
         }
-        case nsCSSPseudoClasses::ePseudoClass_mozWindowInactive: {
+        case CSSPseudoClassType::mozWindowInactive: {
           aCascade->mSelectorDocumentStates |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
           break;
         }
-        case nsCSSPseudoClasses::ePseudoClass_mozTableBorderNonzero: {
+        case CSSPseudoClassType::mozTableBorderNonzero: {
           nsTArray<SelectorPair> *array =
             aCascade->AttributeListFor(nsGkAtoms::border);
           if (!array) {
@@ -3359,7 +3363,7 @@ AddSelector(RuleCascadeData* aCascade,
     // Recur through any :-moz-any selectors
     for (nsPseudoClassList* pseudoClass = negation->mPseudoClassList;
          pseudoClass; pseudoClass = pseudoClass->mNext) {
-      if (pseudoClass->mType == nsCSSPseudoClasses::ePseudoClass_any) {
+      if (pseudoClass->mType == CSSPseudoClassType::any) {
         for (nsCSSSelectorList *l = pseudoClass->u.mSelectors; l; l = l->mNext) {
           nsCSSSelector *s = l->mSelectors;
           if (!AddSelector(aCascade, aSelectorInTopLevel, s,

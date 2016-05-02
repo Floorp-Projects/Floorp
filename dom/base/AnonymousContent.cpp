@@ -29,7 +29,7 @@ AnonymousContent::~AnonymousContent()
 {
 }
 
-nsCOMPtr<Element>
+Element*
 AnonymousContent::GetContentNode()
 {
   return mContentNode;

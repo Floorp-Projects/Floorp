@@ -1,0 +1,41 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="nonTrickleIce.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1231975",
+    title: "Basic audio-only peer connection with endpoint independent NAT"
+  });
+
+  var test;
+  runNetworkTest(options => {
+    SpecialPowers.pushPrefEnv(
+      {
+        'set': [
+          ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+          ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT']
+        ]
+      }, function (options) {
+        options = options || {};
+        options.expectedLocalCandidateType = "serverreflexive";
+        options.expectedRemoteCandidateType = "serverreflexive";
+        test = new PeerConnectionTest(options);
+        // Make sure we don't end up choosing the wrong thing due to delays in
+        // trickle. Once we are willing to accept trickle after ICE success, we
+        // can maybe wait a bit to allow things to stabilize.
+        // TODO(bug 1238249)
+        makeOffererNonTrickle(test.chain);
+        makeAnswererNonTrickle(test.chain);
+        test.setMediaConstraints([{audio: true}], [{audio: true}]);
+        test.run();
+      })
+  }, { useIceServer: true });
+</script>
+</pre>
+</body>
+</html>

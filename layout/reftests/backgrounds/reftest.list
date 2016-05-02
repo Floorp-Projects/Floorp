@@ -35,15 +35,25 @@ skip-if(B2G||Mulet) == continuous-inline-4b.html continuous-inline-4-ref.html # 
 skip-if(B2G||Mulet) == background-position-1a.html background-position-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == background-position-1b.html background-position-1-ref.html
 == background-position-1c.html background-position-1-ref.html
+skip-if(B2G||Mulet) == background-position-1d.html background-position-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+== background-position-1e.html background-position-1-ref.html
+== background-position-1f.html background-position-1-ref.html
 == background-position-2a.html background-position-2-ref.html
 == background-position-2b.html background-position-2-ref.html
+== background-position-2c.html background-position-2-ref.html
+== background-position-2d.html background-position-2-ref.html
 == background-position-3a.html background-position-3-ref.html
 == background-position-3b.html background-position-3-ref.html
+== background-position-3c.html background-position-3-ref.html
+== background-position-3d.html background-position-3-ref.html
 == background-position-4a.html background-position-4-ref.html
 == background-position-4b.html background-position-4-ref.html
 == background-position-4c.html background-position-4-ref.html
+== background-position-4d.html background-position-4-ref.html
+== background-position-4e.html background-position-4-ref.html
 == background-position-5.html background-position-5-ref.html
-== background-position-6.html background-position-6-ref.html
+== background-position-6a.html background-position-6-ref.html
+== background-position-6b.html background-position-6-ref.html
 == background-position-7.html background-position-7-ref.html
 == background-position-8.html background-position-8-ref.html
 

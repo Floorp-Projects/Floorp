@@ -602,9 +602,6 @@ NS_IMETHODIMP
 nsSupportsArray::Enumerate(nsIEnumerator** aResult)
 {
   nsSupportsArrayEnumerator* e = new nsSupportsArrayEnumerator(this);
-  if (!e) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   *aResult = e;
   NS_ADDREF(e);
   return NS_OK;

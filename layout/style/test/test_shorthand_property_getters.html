@@ -158,6 +158,43 @@ is(e.style.background, "", "should not have background shorthand (background-rep
 e.setAttribute("style", "background-clip: border-box, padding-box, border-box; background-origin: border-box, padding-box, padding-box; background-size: cover, auto, contain, contain; background-color: blue; background-image: url(404.png), none, url(404-2.png); background-attachment: fixed, scroll, scroll; background-position: top left, center, 30px 50px; background-repeat: repeat-x, repeat, no-repeat");
 is(e.style.background, "", "should not have background shorthand (background-size too long)");
 
+// Check that we only serialize background-position when the lists (of layers) for
+// the -x/-y subproperties are the same length.
+e.setAttribute("style", "background-position-x: 10%, left 2em, right; background-position-y: top 2em, bottom, 10%");
+is(e.style.backgroundPosition, "left 10% top 2em, left 2em bottom, right 10%", "should have background-position shorthand (both lists length 3)");
+e.setAttribute("style", "background-position-x: 10%, left 2em; background-position-y: top 2em, bottom, 10%");
+is(e.style.backgroundPosition, "", "should not have background-position shorthand (background-position-x too short)");
+e.setAttribute("style", "background-position-x: 10%, left 2em, right; background-position-y: top 2em");
+is(e.style.backgroundPosition, "", "should not have background-position shorthand (background-position-y too short)");
+
+// Check that background-position serialization doesn't produce invalid values.
+e.setAttribute("style", "background-position: 0px");
+is(e.style.backgroundPosition, "0px center", "1-value form should be accepted, with implied center value for background-position-y");
+e.setAttribute("style", "background-position: 0px center");
+is(e.style.backgroundPosition, "0px center", "2-value form 'x-offset' 'y-edge' should be accepted, and serialize to 2-value form");
+e.setAttribute("style", "background-position: left 0px center");
+is(e.style.backgroundPosition, "left 0px center", "3-value form 'x-edge' 'x-offset' 'y-edge' should be accepted and serialize to 3-value form");
+e.setAttribute("style", "background-position: left top 0px");
+is(e.style.backgroundPosition, "left top 0px", "3-value form 'x-edge' 'y-edge' 'y-offset' should be accepted and serialize to 3-value form");
+e.setAttribute("style", "background-position: left 0px top 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "4-value form should be accepted and serialize to 4-value form");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: center");
+is(e.style.backgroundPosition, "0px center", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: 0px");
+is(e.style.backgroundPosition, "0px 0px", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: center; background-position-y: 0px");
+is(e.style.backgroundPosition, "center 0px", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: left; background-position-y: top");
+is(e.style.backgroundPosition, "left top", "should always serialize to 2-value form if setting -x and -y with the 1-value form");
+e.setAttribute("style", "background-position-x: left 0px; background-position-y: center");
+is(e.style.backgroundPosition, "left 0px center", "should always serialize to 3-value form if both -x and -y specified an edge");
+e.setAttribute("style", "background-position-x: right; background-position-y: top 0px");
+is(e.style.backgroundPosition, "right top 0px", "should always serialize to 3-value form if both -x and -y specified an edge");
+e.setAttribute("style", "background-position-x: left 0px; background-position-y: 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "should serialize to 4-value form if 3-value form would only have one edge");
+e.setAttribute("style", "background-position-x: 0px; background-position-y: top 0px");
+is(e.style.backgroundPosition, "left 0px top 0px", "should serialize to 4-value form if 3-value form would only have one edge");
+
 // Check that we only serialize transition when the lists are the same length.
 e.setAttribute("style", "transition-property: color, width; transition-duration: 1s, 200ms; transition-timing-function: ease-in, linear; transition-delay: 0s, 1s");
 isnot(e.style.transition, "", "should have transition shorthand (lists same length)");

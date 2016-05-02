@@ -80,6 +80,8 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
 {
   switch (aPropID) {
     case eCSSProperty_background_position:
+    case eCSSProperty_background_position_x:
+    case eCSSProperty_background_position_y:
     case eCSSProperty_transform:
     case eCSSProperty_top:
     case eCSSProperty_left:

@@ -78,9 +78,8 @@ public:
   bool mWrappingExistingData;
 };
 
-BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, nsIWidget *aWidget)
-  : Compositor(aParent)
-  , mWidget(aWidget)
+BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
+  : Compositor(aWidget, aParent)
   , mDidExternalComposition(false)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
@@ -119,8 +118,8 @@ void BasicCompositor::DetachWidget()
 {
   if (mWidget) {
     mWidget->CleanupRemoteDrawing();
-    mWidget = nullptr;
   }
+  Compositor::DetachWidget();
 }
 
 TextureFactoryIdentifier

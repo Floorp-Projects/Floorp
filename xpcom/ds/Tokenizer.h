@@ -209,10 +209,11 @@ public:
   /**
    * These are shortcuts to obtain the value immediately when the token type matches.
    */
-  bool ReadChar(char* aValue);
-  bool ReadChar(bool (*aClassifier)(const char aChar), char* aValue);
-  bool ReadWord(nsACString& aValue);
-  bool ReadWord(nsDependentCSubstring& aValue);
+  MOZ_MUST_USE bool ReadChar(char* aValue);
+  MOZ_MUST_USE bool ReadChar(bool (*aClassifier)(const char aChar),
+                             char* aValue);
+  MOZ_MUST_USE bool ReadWord(nsACString& aValue);
+  MOZ_MUST_USE bool ReadWord(nsDependentCSubstring& aValue);
 
   /**
    * This is an integer read helper.  It returns false and doesn't move the read
@@ -223,7 +224,7 @@ public:
    * and the cursor is moved forward.
    */
   template <typename T>
-  bool ReadInteger(T* aValue)
+  MOZ_MUST_USE bool ReadInteger(T* aValue)
   {
     MOZ_RELEASE_ASSERT(aValue);
 
@@ -299,8 +300,12 @@ public:
    * Calling Rollback() after ReadUntil() will return the read cursor to the
    * position it had before ReadUntil was called.
    */
-  bool ReadUntil(Token const& aToken, nsDependentCSubstring& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
-  bool ReadUntil(Token const& aToken, nsACString& aResult, ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool
+  ReadUntil(Token const& aToken, nsDependentCSubstring& aResult,
+            ClaimInclusion aInclude = EXCLUDE_LAST);
+  MOZ_MUST_USE bool
+  ReadUntil(Token const& aToken, nsACString& aResult,
+            ClaimInclusion aInclude = EXCLUDE_LAST);
 
 protected:
   // false if we have already read the EOF token.

@@ -222,7 +222,8 @@ already_AddRefed<ImageBitmap>
 OffscreenCanvas::TransferToImageBitmap()
 {
   ErrorResult rv;
-  RefPtr<ImageBitmap> result = ImageBitmap::CreateFromOffscreenCanvas(GetGlobalObject(), *this, rv);
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalObject();
+  RefPtr<ImageBitmap> result = ImageBitmap::CreateFromOffscreenCanvas(globalObject, *this, rv);
 
   // Clear the content.
   if ((mCurrentContextType == CanvasContextType::WebGL1 ||

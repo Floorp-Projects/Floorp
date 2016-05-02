@@ -904,18 +904,10 @@ Layer::GetTransformTyped() const
 const Matrix4x4
 Layer::GetLocalTransform()
 {
-  Matrix4x4 transform;
   if (LayerComposite* shadow = AsLayerComposite())
-    transform = shadow->GetShadowBaseTransform();
+    return shadow->GetShadowTransform();
   else
-    transform = mTransform;
-
-  transform.PostScale(GetPostXScale(), GetPostYScale(), 1.0f);
-  if (ContainerLayer* c = AsContainerLayer()) {
-    transform.PreScale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
-  }
-
-  return transform;
+    return GetTransform();
 }
 
 const LayerToParentLayerMatrix4x4
@@ -981,7 +973,7 @@ Layer::GetEffectiveOpacity()
   }
   return opacity;
 }
-  
+
 CompositionOp
 Layer::GetEffectiveMixBlendMode()
 {
@@ -1578,7 +1570,7 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   aAttrs = RefLayerAttributes(GetReferentId(), mEventRegionsOverride);
 }
 
-/** 
+/**
  * StartFrameTimeRecording, together with StopFrameTimeRecording
  * enable recording of frame intervals.
  *
