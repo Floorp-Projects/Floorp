@@ -19,7 +19,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 var inputTests = [
   {
     input: "testBodyNode()",
-    output: '<body id="body-id" class="body-class">',
+    output: '<body class="body-class" id="body-id">',
     printOutput: "[object HTMLBodyElement]",
     inspectable: true,
     noClick: true,
@@ -28,7 +28,7 @@ var inputTests = [
 
   {
     input: "testDocumentElement()",
-    output: '<html lang="en-US" dir="ltr">',
+    output: '<html dir="ltr" lang="en-US">',
     printOutput: "[object HTMLHtmlElement]",
     inspectable: true,
     noClick: true,
@@ -75,7 +75,7 @@ var inputTests = [
 
   {
     input: "testLotsOfAttributes()",
-    output: '<p n="" m="" l="" k="" j="" i="" h="" g="" f="" e="" d="" c="" b="" a="" id="lots-of-attributes">',
+    output: '<p id="lots-of-attributes" a="" b="" c="" d="" e="" f="" g="" h="" i="" j="" k="" l="" m="" n="">',
     printOutput: "[object HTMLParagraphElement]",
     inspectable: true,
     noClick: true,

@@ -2085,7 +2085,10 @@ nsIScriptContext *
 nsGlobalWindow::GetScriptContext()
 {
   nsGlobalWindow* outer = GetOuterWindowInternal();
-  return outer ? outer->mContext : nullptr;
+  if (!outer) {
+    return nullptr;
+  }
+  return outer->mContext;
 }
 
 JSObject *
@@ -3810,6 +3813,9 @@ nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled()
   // Automatically get this setting from the top level window so that nested
   // iframes get the correct devtools setting.
   nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetScriptableTop();
+  if (!topWindow) {
+    return false;
+  }
   return topWindow->mServiceWorkersTestingEnabled;
 }
 
@@ -7076,7 +7082,7 @@ nsGlobalWindow::PrintOuter(ErrorResult& aError)
   if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
                                 getter_AddRefs(webBrowserPrint)))) {
     nsAutoSyncOperation sync(GetCurrentInnerWindowInternal() ?
-                               GetCurrentInnerWindowInternal()->mDoc :
+                               GetCurrentInnerWindowInternal()->mDoc.get() :
                                nullptr);
 
     nsCOMPtr<nsIPrintSettingsService> printSettingsService =

@@ -380,16 +380,6 @@ main()
       else
         printf("foo1p == foo2p\n");
 
-      printf("\n### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nullptr [!=]?\n");
-      if ( foo1p != 0 )
-      	printf("foo1p != 0\n");
-      if ( 0 != foo1p )
-      	printf("0 != foo1p\n");
-      if ( foo1p == 0 )
-      	printf("foo1p == 0\n");
-      if ( 0 == foo1p )
-      	printf("0 == foo1p\n");
-			
 
       IFoo* raw_foo2p = foo2p.get();
 
@@ -429,33 +419,27 @@ main()
       else
         printf("foo1p is NULL\n");
 
-      printf("\n### Test 13: numeric pointer test?\n");
-      if ( foo1p == 0 )
-        printf("foo1p is NULL\n");
-      else
-        printf("foo1p is not NULL\n");
-
 #if 0
 			if ( foo1p == 1 )
 				printf("foo1p allowed compare with in\n");
 #endif
 
-      printf("\n### Test 14: how about when two |nsCOMPtr|s referring to the same object go out of scope?\n");
+      printf("\n### Test 13: how about when two |nsCOMPtr|s referring to the same object go out of scope?\n");
     }
 
     {
-      printf("\n### Test 15,16 ...setup...\n");
+      printf("\n### Test 14,15 ...setup...\n");
       IFoo* raw_foo1p = new IFoo;
       raw_foo1p->AddRef();
 
       IFoo* raw_foo2p = new IFoo;
       raw_foo2p->AddRef();
 
-      printf("\n### Test 15: what if I don't want to |AddRef| when I construct?\n");
+      printf("\n### Test 14: what if I don't want to |AddRef| when I construct?\n");
       nsCOMPtr<IFoo> foo1p( dont_AddRef(raw_foo1p) );
       //nsCOMPtr<IFoo> foo1p = dont_AddRef(raw_foo1p);
 
-      printf("\n### Test 16: what if I don't want to |AddRef| when I assign in?\n");
+      printf("\n### Test 15: what if I don't want to |AddRef| when I assign in?\n");
       nsCOMPtr<IFoo> foo2p;
       foo2p = dont_AddRef(raw_foo2p);
     }
@@ -467,76 +451,76 @@ main()
 
 
     {
-    	printf("\n### setup for Test 17\n");
+      printf("\n### setup for Test 16\n");
       nsCOMPtr<IFoo> foop;
-      printf("### Test 17: basic parameter behavior?\n");
+      printf("### Test 16: basic parameter behavior?\n");
       CreateIFoo( nsGetterAddRefs<IFoo>(foop) );
+    }
+    printf("### End Test 16\n");
+
+
+    {
+      printf("\n### setup for Test 17\n");
+      nsCOMPtr<IFoo> foop;
+      printf("### Test 17: basic parameter behavior, using the short form?\n");
+      CreateIFoo( getter_AddRefs(foop) );
     }
     printf("### End Test 17\n");
 
 
     {
-    	printf("\n### setup for Test 18\n");
+      printf("\n### setup for Test 18, 19\n");
       nsCOMPtr<IFoo> foop;
-      printf("### Test 18: basic parameter behavior, using the short form?\n");
-      CreateIFoo( getter_AddRefs(foop) );
-    }
-    printf("### End Test 18\n");
-
-
-    {
-    	printf("\n### setup for Test 19, 20\n");
-      nsCOMPtr<IFoo> foop;
-      printf("### Test 19: reference parameter behavior?\n");
+      printf("### Test 18: reference parameter behavior?\n");
       set_a_IFoo(address_of(foop));
 
-      printf("### Test 20: return value behavior?\n");
+      printf("### Test 19: return value behavior?\n");
       foop = return_a_IFoo();
     }
-    printf("### End Test 19, 20\n");
+    printf("### End Test 18, 19\n");
 
 		{
-    	printf("\n### setup for Test 21\n");
+      printf("\n### setup for Test 20\n");
 			nsCOMPtr<IFoo> fooP;
 
-			printf("### Test 21: is |QueryInterface| called on assigning in a raw pointer?\n");
+			printf("### Test 20: is |QueryInterface| called on assigning in a raw pointer?\n");
 			fooP = do_QueryInterface(new IFoo);
 		}
-    printf("### End Test 21\n");
+    printf("### End Test 20\n");
 
 		{
-    	printf("\n### setup for Test 22\n");
+      printf("\n### setup for Test 21\n");
 			nsCOMPtr<IFoo> fooP;
 			fooP = do_QueryInterface(new IFoo);
 
 			nsCOMPtr<IFoo> foo2P;
 
-			printf("### Test 22: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?\n");
+			printf("### Test 21: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?\n");
 			foo2P = fooP;
 		}
-    printf("### End Test 22\n");
+    printf("### End Test 21\n");
 
 		{
-    	printf("\n### setup for Test 23\n");
+      printf("\n### setup for Test 22\n");
 			nsCOMPtr<IBar> barP( do_QueryInterface(new IBar) );
 
-			printf("### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?\n");
+			printf("### Test 22: is |QueryInterface| called when assigning in a smart-pointer of a different type?\n");
 
 			nsCOMPtr<IFoo> fooP( do_QueryInterface(barP) );
 			if ( fooP )
 				printf("an IBar* is an IFoo*\n");
 		}
-    printf("### End Test 23\n");
+    printf("### End Test 22\n");
 
 
 		{
-    	printf("\n### setup for Test 24\n");
+      printf("\n### setup for Test 23\n");
 			nsCOMPtr<IFoo> fooP( do_QueryInterface(new IFoo) );
 
-			printf("### Test 24: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
+			printf("### Test 23: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
       nsCOMPtr<IFoo> fooP2( fooP.forget() );
 		}
-    printf("### End Test 24\n");
+    printf("### End Test 23\n");
 
 		{
 			nsCOMPtr<IFoo> fooP;
@@ -554,7 +538,7 @@ main()
 		}
 
 
-    printf("\n### Test 25: will a static |nsCOMPtr| |Release| before program termination?\n");
+    printf("\n### Test 24: will a static |nsCOMPtr| |Release| before program termination?\n");
     gFoop = do_QueryInterface(new IFoo);
     
     printf("<<main()\n");

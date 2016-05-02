@@ -31,6 +31,12 @@ public:
     init(aValue);
   }
 
+  template<class U>
+  MOZ_IMPLICIT OwningNonNull(const OwningNonNull<U>& aValue)
+  {
+    init(aValue);
+  }
+
   // This is no worse than get() in terms of const handling.
   operator T&() const
   {
@@ -71,8 +77,17 @@ public:
     return *this;
   }
 
+  template<class U>
   OwningNonNull<T>&
-  operator=(already_AddRefed<T>&& aValue)
+  operator=(already_AddRefed<U>&& aValue)
+  {
+    init(aValue);
+    return *this;
+  }
+
+  template<class U>
+  OwningNonNull<T>&
+  operator=(const OwningNonNull<U>& aValue)
   {
     init(aValue);
     return *this;
@@ -87,6 +102,16 @@ public:
     mInited = false;
 #endif
     return mPtr.forget();
+  }
+
+  template<class U>
+  void
+  forget(U** aOther)
+  {
+#ifdef DEBUG
+    mInited = false;
+#endif
+    mPtr.forget(aOther);
   }
 
   // Make us work with smart pointer helpers that expect a get().

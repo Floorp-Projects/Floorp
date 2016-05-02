@@ -229,7 +229,7 @@ class BaselineFrame
         return UndefinedValue();
     }
 
-    bool copyRawFrameSlots(AutoValueVector* vec) const;
+    bool copyRawFrameSlots(MutableHandle<GCVector<Value>> vec) const;
 
     bool hasReturnValue() const {
         return flags_ & HAS_RVAL;

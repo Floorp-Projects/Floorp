@@ -194,7 +194,8 @@ class CompositorOGL final : public Compositor
   std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
 public:
   explicit CompositorOGL(CompositorBridgeParent* aParent,
-                         nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
+                         widget::CompositorWidgetProxy* aWidget,
+                         int aSurfaceWidth = -1, int aSurfaceHeight = -1,
                          bool aUseExternalSurfaceSize = false);
 
 protected:
@@ -209,8 +210,6 @@ public:
   virtual bool Initialize() override;
 
   virtual void Destroy() override;
-
-  virtual void DetachWidget() override { mWidget = nullptr; }
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
@@ -278,8 +277,6 @@ public:
 
   virtual void Pause() override;
   virtual bool Resume() override;
-
-  virtual nsIWidget* GetWidget() const override { return mWidget; }
 
   virtual bool HasImageHostOverlays() override
   {
@@ -353,7 +350,6 @@ private:
   void PrepareViewport(CompositingRenderTargetOGL *aRenderTarget);
 
   /** Widget associated with this compositor */
-  nsIWidget *mWidget;
   LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;

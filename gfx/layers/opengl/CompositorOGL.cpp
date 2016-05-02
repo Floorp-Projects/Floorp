@@ -84,10 +84,10 @@ CompositorOGL::BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum
 }
 
 CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
-                             nsIWidget *aWidget, int aSurfaceWidth,
-                             int aSurfaceHeight, bool aUseExternalSurfaceSize)
-  : Compositor(aParent)
-  , mWidget(aWidget)
+                             widget::CompositorWidgetProxy* aWidget,
+                             int aSurfaceWidth, int aSurfaceHeight,
+                             bool aUseExternalSurfaceSize)
+  : Compositor(aWidget, aParent)
   , mWidgetSize(-1, -1)
   , mSurfaceSize(aSurfaceWidth, aSurfaceHeight)
   , mHasBGRA(0)
@@ -112,7 +112,7 @@ CompositorOGL::CreateContext()
   RefPtr<GLContext> context;
 
   // Used by mock widget to create an offscreen context
-  void* widgetOpenGLContext = mWidget->GetNativeData(NS_NATIVE_OPENGL_CONTEXT);
+  void* widgetOpenGLContext = mWidget->RealWidget()->GetNativeData(NS_NATIVE_OPENGL_CONTEXT);
   if (widgetOpenGLContext) {
     GLContext* alreadyRefed = reinterpret_cast<GLContext*>(widgetOpenGLContext);
     return already_AddRefed<GLContext>(alreadyRefed);
@@ -121,7 +121,7 @@ CompositorOGL::CreateContext()
 #ifdef XP_WIN
   if (gfxEnv::LayersPreferEGL()) {
     printf_stderr("Trying GL layers...\n");
-    context = gl::GLContextProviderEGL::CreateForWindow(mWidget, false);
+    context = gl::GLContextProviderEGL::CreateForWindow(mWidget->RealWidget(), false);
   }
 #endif
 
@@ -136,7 +136,7 @@ CompositorOGL::CreateContext()
   }
 
   if (!context) {
-    context = gl::GLContextProvider::CreateForWindow(mWidget,
+    context = gl::GLContextProvider::CreateForWindow(mWidget->RealWidget(),
                 gfxPlatform::GetPlatform()->RequiresAcceleratedGLContextForCompositorOGL());
   }
 
@@ -605,7 +605,7 @@ CompositorOGL::GetCurrentRenderTarget() const
 static GLenum
 GetFrameBufferInternalFormat(GLContext* gl,
                              GLuint aFrameBuffer,
-                             nsIWidget* aWidget)
+                             mozilla::widget::CompositorWidgetProxy* aWidget)
 {
   if (aFrameBuffer == 0) { // default framebuffer
     return aWidget->GetGLFrameBufferFormat();
@@ -1092,6 +1092,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     aOpacity = 1.f;
   }
 
+  bool createdMixBlendBackdropTexture = false;
   GLuint mixBlendBackdrop = 0;
   gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
 
@@ -1124,9 +1125,19 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   if (BlendOpIsMixBlendMode(blendMode)) {
     gfx::Matrix4x4 backdropTransform;
-    gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
 
-    mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
+    if (gl()->IsExtensionSupported(GLContext::NV_texture_barrier)) {
+      // The NV_texture_barrier extension lets us read directly from the
+      // backbuffer. Let's do that.
+      // We need to tell OpenGL about this, so that it can make sure everything
+      // on the GPU is happening in the right order.
+      gl()->fTextureBarrier();
+      mixBlendBackdrop = mCurrentRenderTarget->GetTextureHandle();
+    } else {
+      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect, aTransform, &backdropTransform);
+      mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
+      createdMixBlendBackdropTexture = true;
+    }
     program->SetBackdropTransform(backdropTransform);
   }
 
@@ -1443,7 +1454,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                              LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   }
-  if (mixBlendBackdrop) {
+  if (createdMixBlendBackdropTexture) {
     gl()->fDeleteTextures(1, &mixBlendBackdrop);
   }
 
@@ -1462,13 +1473,13 @@ CompositorOGL::EndFrame()
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxEnv::DumpCompositorTextures()) {
-    LayoutDeviceIntRect rect;
+    LayoutDeviceIntSize size;
     if (mUseExternalSurfaceSize) {
-      rect = LayoutDeviceIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
+      size = LayoutDeviceIntSize(mSurfaceSize.width, mSurfaceSize.height);
     } else {
-      mWidget->GetBounds(rect);
+      size = mWidget->GetClientSize();
     }
-    RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(rect.width, rect.height), SurfaceFormat::B8G8R8A8);
+    RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(size.width, size.height), SurfaceFormat::B8G8R8A8);
     if (target) {
       CopyToTarget(target, nsIntPoint(), Matrix());
       WriteSnapshotToDumpFile(this, target);
@@ -1600,7 +1611,7 @@ CompositorOGL::Resume()
     return false;
 
   // RenewSurface internally calls MakeCurrent.
-  return gl()->RenewSurface(GetWidget());
+  return gl()->RenewSurface(GetWidget()->RealWidget());
 #endif
   return true;
 }

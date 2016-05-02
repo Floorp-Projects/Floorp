@@ -240,6 +240,10 @@ extern sdp_result_e sdp_parse_attr_simple_flag (
 
 extern sdp_result_e sdp_parse_attr_complete_line (
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
+extern sdp_result_e sdp_parse_attr_long_line(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, const char *ptr);
+extern sdp_result_e sdp_build_attr_long_line(sdp_t *sdp_p,
+                                     sdp_attr_t *attr_p, flex_string *fs);
 
 /* sdp_attr_access.c */
 extern void sdp_free_attr(sdp_attr_t *attr_p);

@@ -534,6 +534,7 @@ typedef enum sdp_srtp_crypto_suite_t_ {
 
 /* SDP Defines */
 
+#define SDP_MAX_LONG_STRING_LEN 4096 /* Max len for long SDP strings */
 #define SDP_MAX_STRING_LEN      256  /* Max len for SDP string       */
 #define SDP_MAX_SHORT_STRING_LEN      12  /* Max len for a short SDP string  */
 #define SDP_MAX_PAYLOAD_TYPES   23  /* Max payload types in m= line */
@@ -1000,6 +1001,7 @@ typedef struct sdp_attr {
         tinybool              boolean_val;
         uint32_t                   u32_val;
         char                  string_val[SDP_MAX_STRING_LEN+1];
+        char *stringp;
         char                  ice_attr[SDP_MAX_STRING_LEN+1];
         sdp_fmtp_t            fmtp;
         sdp_sctpmap_t         sctpmap;
@@ -1274,6 +1276,8 @@ extern tinybool sdp_attr_valid(sdp_t *sdp_p, sdp_attr_e attr_type,
 extern uint32_t sdp_attr_line_number(sdp_t *sdp_p, sdp_attr_e attr_type,
                                 uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern const char *sdp_attr_get_simple_string(sdp_t *sdp_p,
+                   sdp_attr_e attr_type, uint16_t level, uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_long_string(sdp_t *sdp_p,
                    sdp_attr_e attr_type, uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern uint32_t sdp_attr_get_simple_u32(sdp_t *sdp_p, sdp_attr_e attr_type,
                                     uint16_t level, uint8_t cap_num, uint16_t inst_num);

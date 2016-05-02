@@ -87,7 +87,12 @@ public:
    * as being animated for constructing active layers.
    */
   static bool IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame);
-
+  /**
+   * Return true if aFrame's background-position-x or background-position-y
+   * property is animated.
+   */
+  static bool IsBackgroundPositionAnimated(nsDisplayListBuilder* aBuilder,
+                                           nsIFrame* aFrame);
   /**
    * Return true if aFrame either has an animated scale now, or is likely to
    * have one in the future because it has a CSS animation or transition

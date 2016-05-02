@@ -930,10 +930,25 @@ nsBaseWidget::ComputeShouldAccelerate()
   return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING);
 }
 
-CompositorBridgeParent* nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
-                                                    int aSurfaceHeight)
+bool
+nsBaseWidget::UseAPZ()
 {
-  return new CompositorBridgeParent(this, false, aSurfaceWidth, aSurfaceHeight);
+  return (gfxPlatform::AsyncPanZoomEnabled() &&
+          (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child));
+}
+
+CompositorBridgeParent*
+nsBaseWidget::NewCompositorBridgeParent(int aSurfaceWidth,
+                                        int aSurfaceHeight)
+{
+  if (!mCompositorWidgetProxy) {
+    mCompositorWidgetProxy = NewCompositorWidgetProxy();
+  }
+  return new CompositorBridgeParent(mCompositorWidgetProxy,
+                                    GetDefaultScale(),
+                                    UseAPZ(),
+                                    false,
+                                    aSurfaceWidth, aSurfaceHeight);
 }
 
 void nsBaseWidget::CreateCompositor()
@@ -1372,46 +1387,22 @@ CompositorBridgeChild* nsBaseWidget::GetRemoteRenderer()
   return mCompositorBridgeChild;
 }
 
-already_AddRefed<mozilla::gfx::DrawTarget>
+already_AddRefed<gfx::DrawTarget>
 nsBaseWidget::StartRemoteDrawing()
 {
   return nullptr;
 }
 
-void
-nsBaseWidget::CleanupRemoteDrawing()
+uint32_t
+nsBaseWidget::GetGLFrameBufferFormat()
 {
-  mLastBackBuffer = nullptr;
+  return LOCAL_GL_RGBA;
 }
 
-already_AddRefed<mozilla::gfx::DrawTarget>
-nsBaseWidget::CreateBackBufferDrawTarget(mozilla::gfx::DrawTarget* aScreenTarget,
-                                         const LayoutDeviceIntRect& aRect,
-                                         const LayoutDeviceIntRect& aClearRect)
+mozilla::widget::CompositorWidgetProxy*
+nsBaseWidget::NewCompositorWidgetProxy()
 {
-  MOZ_ASSERT(aScreenTarget);
-  gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-  gfx::IntSize size = aRect.ToUnknownRect().Size();
-  gfx::IntSize clientSize(GetClientSize().ToUnknownSize());
-
-  RefPtr<gfx::DrawTarget> target;
-  // Re-use back buffer if possible
-  if (mLastBackBuffer &&
-      mLastBackBuffer->GetBackendType() == aScreenTarget->GetBackendType() &&
-      mLastBackBuffer->GetFormat() == format &&
-      size <= mLastBackBuffer->GetSize() &&
-      mLastBackBuffer->GetSize() <= clientSize) {
-    target = mLastBackBuffer;
-    target->SetTransform(gfx::Matrix());
-    if (!aClearRect.IsEmpty()) {
-      gfx::IntRect clearRect = aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
-      target->ClearRect(gfx::Rect(clearRect.x, clearRect.y, clearRect.width, clearRect.height));
-    }
-  } else {
-    target = aScreenTarget->CreateSimilarDrawTarget(size, format);
-    mLastBackBuffer = target;
-  }
-  return target.forget();
+  return new mozilla::widget::CompositorWidgetProxyWrapper(this);
 }
 
 //-------------------------------------------------------------------------
@@ -1694,12 +1685,6 @@ NS_IMETHODIMP
 nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-uint32_t
-nsBaseWidget::GetGLFrameBufferFormat()
-{
-  return LOCAL_GL_RGBA;
 }
 
 void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)

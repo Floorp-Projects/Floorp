@@ -1,0 +1,13 @@
+twisted==10.2.0
+
+# websocket adapter for twisted, might be built into twisted someday
+txws==0.9.1
+
+psutil==3.1.1
+
+# needed by txws, but pypi doesn't know about it
+six==1.10.0
+
+# Needed by iceserver
+ipaddr==2.1.11
+passlib==1.6.5

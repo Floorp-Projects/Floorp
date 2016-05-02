@@ -1,0 +1,68 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1268195
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1268195</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .noscroll {
+        overflow: hidden;
+        height: 100%;
+    }
+
+    /* Toggling this on and off triggers a frame reconstruction on the <body> */
+    html.reconstruct-body::before {
+        top: 0;
+        content: '';
+        display: block;
+        height: 2px;
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+    }
+  </style>
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function run() {
+        // Make sure we have the right scroll element
+        SimpleTest.is(document.body.scrollTopMax > 0, true, "Body is the scrolling element");
+
+        // Scroll to the bottom
+        document.body.scrollTop = document.body.scrollTopMax;
+        SimpleTest.is(document.body.scrollTop > 0, true, "Scrolled body");
+
+        // Do a frame reconstruction on the body while also shortening the
+        // height.
+        document.body.classList.toggle('noscroll');
+        document.documentElement.classList.toggle('reconstruct-body');
+        document.getElementById('spacer').style.height = '1px';
+        SimpleTest.is(document.body.scrollTop, 0, "Scroll forced to top");
+
+        // Do another frame reconstruction while lengthening the height again.
+        document.body.classList.toggle('noscroll');
+        document.documentElement.classList.toggle('reconstruct-body');
+        document.getElementById('spacer').style.height = '5000px';
+        SimpleTest.is(document.body.scrollTop, 0, "Scroll remained at top");
+
+        SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="setTimeout(run, 0)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1268195">Mozilla Bug 1268195</a><br/>
+The scroll position should end the top of the page. This is the top, yay!
+<div id="spacer" style="height: 5000px"></div>
+The scroll position should end the top of the page. This is the bottom!
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -953,15 +953,16 @@ const Class UnboxedPlainObject::class_ = {
 
 template <JSValueType Type>
 DenseElementResult
-AppendUnboxedDenseElements(UnboxedArrayObject* obj, uint32_t initlen, AutoValueVector* values)
+AppendUnboxedDenseElements(UnboxedArrayObject* obj, uint32_t initlen,
+                           MutableHandle<GCVector<Value>> values)
 {
     for (size_t i = 0; i < initlen; i++)
-        values->infallibleAppend(obj->getElementSpecific<Type>(i));
+        values.infallibleAppend(obj->getElementSpecific<Type>(i));
     return DenseElementResult::Success;
 }
 
 DefineBoxedOrUnboxedFunctor3(AppendUnboxedDenseElements,
-                             UnboxedArrayObject*, uint32_t, AutoValueVector*);
+                             UnboxedArrayObject*, uint32_t, MutableHandle<GCVector<Value>>);
 
 /* static */ bool
 UnboxedArrayObject::convertToNativeWithGroup(ExclusiveContext* cx, JSObject* obj,
@@ -970,7 +971,7 @@ UnboxedArrayObject::convertToNativeWithGroup(ExclusiveContext* cx, JSObject* obj
     size_t length = obj->as<UnboxedArrayObject>().length();
     size_t initlen = obj->as<UnboxedArrayObject>().initializedLength();
 
-    AutoValueVector values(cx);
+    Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     if (!values.reserve(initlen))
         return false;
 
@@ -1848,13 +1849,13 @@ SetLayoutTraceList(ExclusiveContext* cx, UnboxedLayout* layout)
 }
 
 static inline Value
-NextValue(const AutoValueVector& values, size_t* valueCursor)
+NextValue(Handle<GCVector<Value>> values, size_t* valueCursor)
 {
     return values[(*valueCursor)++];
 }
 
 static bool
-GetValuesFromPreliminaryArrayObject(ArrayObject* obj, AutoValueVector& values)
+GetValuesFromPreliminaryArrayObject(ArrayObject* obj, MutableHandle<GCVector<Value>> values)
 {
     if (!values.append(Int32Value(obj->length())))
         return false;
@@ -1869,7 +1870,7 @@ GetValuesFromPreliminaryArrayObject(ArrayObject* obj, AutoValueVector& values)
 
 void
 UnboxedArrayObject::fillAfterConvert(ExclusiveContext* cx,
-                                     const AutoValueVector& values, size_t* valueCursor)
+                                     Handle<GCVector<Value>> values, size_t* valueCursor)
 {
     MOZ_ASSERT(CapacityArray[1] == 0);
     setCapacityIndex(1);
@@ -1893,7 +1894,7 @@ UnboxedArrayObject::fillAfterConvert(ExclusiveContext* cx,
 }
 
 static bool
-GetValuesFromPreliminaryPlainObject(PlainObject* obj, AutoValueVector& values)
+GetValuesFromPreliminaryPlainObject(PlainObject* obj, MutableHandle<GCVector<Value>> values)
 {
     for (size_t i = 0; i < obj->slotSpan(); i++) {
         if (!values.append(obj->getSlot(i)))
@@ -1904,7 +1905,7 @@ GetValuesFromPreliminaryPlainObject(PlainObject* obj, AutoValueVector& values)
 
 void
 UnboxedPlainObject::fillAfterConvert(ExclusiveContext* cx,
-                                     const AutoValueVector& values, size_t* valueCursor)
+                                     Handle<GCVector<Value>> values, size_t* valueCursor)
 {
     initExpando();
     memset(data(), 0, layout().size());
@@ -2040,7 +2041,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
 
     // Accumulate a list of all the values in each preliminary object, and
     // update their shapes.
-    AutoValueVector values(cx);
+    Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
         JSObject* obj = objects->get(i);
         if (!obj)
@@ -2048,9 +2049,9 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
 
         bool ok;
         if (isArray)
-            ok = GetValuesFromPreliminaryArrayObject(&obj->as<ArrayObject>(), values);
+            ok = GetValuesFromPreliminaryArrayObject(&obj->as<ArrayObject>(), &values);
         else
-            ok = GetValuesFromPreliminaryPlainObject(&obj->as<PlainObject>(), values);
+            ok = GetValuesFromPreliminaryPlainObject(&obj->as<PlainObject>(), &values);
 
         if (!ok) {
             cx->recoverFromOutOfMemory();
