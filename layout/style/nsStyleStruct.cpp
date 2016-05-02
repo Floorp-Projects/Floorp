@@ -566,6 +566,12 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 }
 
 nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
+  : mOutlineWidth(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated)
+  , mOutlineOffset(0)
+  , mCachedOutlineWidth(0)
+  , mOutlineColor(NS_RGB(0, 0, 0))
+  , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mTwipsPerPixel(aContext.DevPixelsToAppUnits(1))
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
   // spacing values not inherited
@@ -573,14 +579,6 @@ nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   NS_FOR_CSS_HALF_CORNERS(corner) {
     mOutlineRadius.Set(corner, zero);
   }
-
-  mOutlineOffset = 0;
-
-  mOutlineWidth = nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
-  mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
-  mOutlineColor = NS_RGB(0, 0, 0);
-
-  mTwipsPerPixel = aContext.DevPixelsToAppUnits(1);
 
   SetOutlineInitialColor();
 }
