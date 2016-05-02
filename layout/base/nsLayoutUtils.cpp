@@ -8628,23 +8628,24 @@ nsLayoutUtils::CanScrollOriginClobberApz(nsIAtom* aScrollOrigin)
       && aScrollOrigin != nsGkAtoms::restore;
 }
 
-/* static */ FrameMetrics
-nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
-                                   nsIFrame* aScrollFrame,
-                                   nsIContent* aContent,
-                                   const nsIFrame* aReferenceFrame,
-                                   Layer* aLayer,
-                                   ViewID aScrollParentId,
-                                   const nsRect& aViewport,
-                                   const Maybe<nsRect>& aClipRect,
-                                   bool aIsRootContent,
-                                   const ContainerLayerParameters& aContainerParameters)
+/* static */ ScrollMetadata
+nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
+                                     nsIFrame* aScrollFrame,
+                                     nsIContent* aContent,
+                                     const nsIFrame* aReferenceFrame,
+                                     Layer* aLayer,
+                                     ViewID aScrollParentId,
+                                     const nsRect& aViewport,
+                                     const Maybe<nsRect>& aClipRect,
+                                     bool aIsRootContent,
+                                     const ContainerLayerParameters& aContainerParameters)
 {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
   nsIPresShell* presShell = presContext->GetPresShell();
-  FrameMetrics metrics;
+  ScrollMetadata metadata;
+  FrameMetrics& metrics = metadata.GetMetrics();
   metrics.SetViewport(CSSRect::FromAppUnits(aViewport));
 
   ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
@@ -8779,7 +8780,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     ParentLayerRect rect = LayoutDeviceRect::FromAppUnits(*aClipRect, auPerDevPixel)
                          * metrics.GetCumulativeResolution()
                          * layerToParentLayerScale;
-    metrics.SetClipRect(Some(RoundedToInt(rect)));
+    metadata.SetClipRect(Some(RoundedToInt(rect)));
   }
 
   // For the root scroll frame of the root content document (RCD-RSF), the above calculation
@@ -8843,13 +8844,13 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     }
   }
 
-  return metrics;
+  return metadata;
 }
 
 /* static */ bool
 nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId)
 {
-  for (uint32_t i = aLayer->GetFrameMetricsCount(); i > 0; i--) {
+  for (uint32_t i = aLayer->GetScrollMetadataCount(); i > 0; i--) {
     if (aLayer->GetFrameMetrics(i-1).GetScrollId() == aScrollId) {
       return true;
     }

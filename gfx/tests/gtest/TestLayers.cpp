@@ -389,11 +389,11 @@ TEST(LayerMetricsWrapper, SimpleTree) {
   ASSERT_TRUE(rootWrapper == wrapper.GetParent());
 }
 
-static FrameMetrics
-MakeMetrics(FrameMetrics::ViewID aId) {
-  FrameMetrics metrics;
-  metrics.SetScrollId(aId);
-  return metrics;
+static ScrollMetadata
+MakeMetadata(FrameMetrics::ViewID aId) {
+  ScrollMetadata metadata;
+  metadata.GetMetrics().SetScrollId(aId);
+  return metadata;
 }
 
 TEST(LayerMetricsWrapper, MultiFramemetricsTree) {
@@ -401,31 +401,31 @@ TEST(LayerMetricsWrapper, MultiFramemetricsTree) {
   RefPtr<LayerManager> lm;
   RefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
 
-  nsTArray<FrameMetrics> metrics;
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 0)); // topmost of root layer
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 1));
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 2));
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));      // bottom of root layer
-  root->SetFrameMetrics(metrics);
+  nsTArray<ScrollMetadata> metadata;
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 0)); // topmost of root layer
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::NULL_SCROLL_ID));
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 1));
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 2));
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::NULL_SCROLL_ID));
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::NULL_SCROLL_ID));      // bottom of root layer
+  root->SetScrollMetadata(metadata);
 
-  metrics.Clear();
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 3));
-  layers[1]->SetFrameMetrics(metrics);
+  metadata.Clear();
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 3));
+  layers[1]->SetScrollMetadata(metadata);
 
-  metrics.Clear();
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::NULL_SCROLL_ID));
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 4));
-  layers[2]->SetFrameMetrics(metrics);
+  metadata.Clear();
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::NULL_SCROLL_ID));
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 4));
+  layers[2]->SetScrollMetadata(metadata);
 
-  metrics.Clear();
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 5));
-  layers[4]->SetFrameMetrics(metrics);
+  metadata.Clear();
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 5));
+  layers[4]->SetScrollMetadata(metadata);
 
-  metrics.Clear();
-  metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 6));
-  layers[5]->SetFrameMetrics(metrics);
+  metadata.Clear();
+  metadata.InsertElementAt(0, MakeMetadata(FrameMetrics::START_SCROLL_ID + 6));
+  layers[5]->SetScrollMetadata(metadata);
 
   LayerMetricsWrapper wrapper(root, LayerMetricsWrapper::StartAt::TOP);
   nsTArray<Layer*> expectedLayers;

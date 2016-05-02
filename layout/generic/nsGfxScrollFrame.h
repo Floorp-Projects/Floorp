@@ -414,7 +414,7 @@ public:
     }
   }
   bool WantAsyncScroll() const;
-  Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
+  Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const;
@@ -868,12 +868,12 @@ public:
   virtual bool WantAsyncScroll() const override {
     return mHelper.WantAsyncScroll();
   }
-  virtual mozilla::Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
+  virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aClip);
+    return mHelper.ComputeScrollMetadata(aLayer, aContainerReferenceFrame, aParameters, aClip);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
@@ -1269,12 +1269,12 @@ public:
   virtual bool WantAsyncScroll() const override {
     return mHelper.WantAsyncScroll();
   }
-  virtual mozilla::Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
+  virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {
-    return mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame, aParameters, aClip);
+    return mHelper.ComputeScrollMetadata(aLayer, aContainerReferenceFrame, aParameters, aClip);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
