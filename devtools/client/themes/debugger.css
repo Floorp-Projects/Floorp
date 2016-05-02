@@ -288,11 +288,11 @@
 }
 
 .theme-dark .trace-item.selected-matching {
-  background-color: rgba(29,79,115,.4); /* Select highlight blue at 40% alpha */
+  background-color: rgba(86, 117, 185, .4); /* Select highlight blue at 40% alpha */
 }
 
 .theme-dark .selected > .trace-item {
-  background-color: rgba(29,79,115,.6); /* Select highlight blue at 60% alpha */
+  background-color: rgba(86, 117, 185, .6); /* Select highlight blue at 60% alpha */
 }
 
 .trace-call {
@@ -550,7 +550,7 @@
 }
 
 .theme-dark .dbg-search-result:hover {
-  background-color: rgba(29,79,115,.2); /* Select highlight blue at 40% alpha */
+  background-color: rgba(86, 117, 185, .2); /* Select highlight blue at 40% alpha */
 }
 
 .theme-light .dbg-search-result:hover {
