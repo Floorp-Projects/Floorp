@@ -844,6 +844,26 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    JSValueType fieldType = reader.valueType();
+
+    Address fieldOffset(stubAddress(reader.stubOffset()));
+    masm.load32(fieldOffset, scratch);
+    masm.loadUnboxedProperty(BaseIndex(obj, scratch, TimesOne), fieldType, R0);
+
+    if (fieldType == JSVAL_TYPE_OBJECT)
+        emitEnterTypeMonitorIC();
+    else
+        emitReturnFromIC();
+
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitLoadUndefinedResult()
 {
     masm.moveValue(UndefinedValue(), R0);
