@@ -15,3 +15,5 @@ skip-if(!asyncZoom) fuzzy-if(B2G,94,146) == async-scrollbar-zoom-2.html async-sc
 
 # Meta-viewport tag support
 skip-if(!asyncZoom) == initial-scale-1.html initial-scale-1-ref.html
+
+skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
