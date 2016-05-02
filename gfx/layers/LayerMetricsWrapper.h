@@ -245,7 +245,7 @@ public:
     MOZ_ASSERT(IsValid());
 
     if (mIndex >= mLayer->GetScrollMetadataCount()) {
-      return ScrollMetadata::sNullMetadata;
+      return *ScrollMetadata::sNullMetadata;
     }
     return mLayer->GetScrollMetadata(mIndex);
   }
@@ -451,7 +451,7 @@ public:
         return aLayer->GetFrameMetrics(i - 1);
       }
     }
-    return ScrollMetadata::sNullMetadata.GetMetrics();
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
   static const FrameMetrics& BottommostScrollableMetrics(Layer* aLayer)
@@ -461,7 +461,7 @@ public:
         return aLayer->GetFrameMetrics(i);
       }
     }
-    return ScrollMetadata::sNullMetadata.GetMetrics();
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
   static const FrameMetrics& BottommostMetrics(Layer* aLayer)
@@ -469,7 +469,7 @@ public:
     if (aLayer->GetScrollMetadataCount() > 0) {
       return aLayer->GetFrameMetrics(0);
     }
-    return ScrollMetadata::sNullMetadata.GetMetrics();
+    return ScrollMetadata::sNullMetadata->GetMetrics();
   }
 
 private:
