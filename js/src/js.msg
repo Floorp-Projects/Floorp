@@ -350,6 +350,7 @@ MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR, "second argument, if pr
 MSG_DEF(JSMSG_WASM_UNREACHABLE,        0, JSEXN_ERR,     "reached unreachable trap")
 MSG_DEF(JSMSG_WASM_INTEGER_OVERFLOW,   0, JSEXN_ERR,     "integer overflow")
 MSG_DEF(JSMSG_WASM_INVALID_CONVERSION, 0, JSEXN_ERR,     "invalid conversion to integer")
+MSG_DEF(JSMSG_WASM_INT_DIVIDE_BY_ZERO, 0, JSEXN_ERR,     "integer divide by zero")
 
 // Proxy
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,   2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")

@@ -466,20 +466,22 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* div(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd)
+    MDefinition* div(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd,
+                     bool trapOnError)
     {
         if (inDeadCode())
             return nullptr;
-        MDiv* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd);
+        MDiv* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError);
         curBlock_->add(ins);
         return ins;
     }
 
-    MDefinition* mod(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd)
+    MDefinition* mod(MDefinition* lhs, MDefinition* rhs, MIRType type, bool unsignd,
+                     bool trapOnError)
     {
         if (inDeadCode())
             return nullptr;
-        MMod* ins = MMod::NewAsmJS(alloc(), lhs, rhs, type, unsignd);
+        MMod* ins = MMod::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError);
         curBlock_->add(ins);
         return ins;
     }
@@ -1984,7 +1986,8 @@ EmitDiv(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.div(lhs, rhs, mirType, isUnsigned));
+    bool trapOnError = f.mg().kind == ModuleKind::Wasm;
+    f.iter().setResult(f.div(lhs, rhs, mirType, isUnsigned, trapOnError));
     return true;
 }
 
@@ -1996,7 +1999,8 @@ EmitRem(FunctionCompiler& f, ValType operandType, MIRType mirType, bool isUnsign
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.mod(lhs, rhs, mirType, isUnsigned));
+    bool trapOnError = f.mg().kind == ModuleKind::Wasm;
+    f.iter().setResult(f.mod(lhs, rhs, mirType, isUnsigned, trapOnError));
     return true;
 }
 
