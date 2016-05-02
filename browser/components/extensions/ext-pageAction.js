@@ -26,6 +26,12 @@ function PageAction(options, extension) {
     popup: options.default_popup || "",
   };
 
+  this.browserStyle = options.browser_style || false;
+  if (options.browser_style === null) {
+    this.extension.logger.warn("Please specify whether you want browser_style " +
+                               "or not in your page_action options.");
+  }
+
   this.tabContext = new TabContext(tab => Object.create(this.defaults),
                                    extension);
 
@@ -152,7 +158,8 @@ PageAction.prototype = {
     // If it has no popup URL defined, we dispatch a click event, but do not
     // open a popup.
     if (popupURL) {
-      new PanelPopup(this.extension, this.getButton(window), popupURL);
+      new PanelPopup(this.extension, this.getButton(window), popupURL,
+                     this.browserStyle);
     } else {
       this.emit("click", tab);
     }

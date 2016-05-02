@@ -27,6 +27,10 @@
                 "format": "relativeUrl",
                 "optional": true,
                 "preprocess": "localize"
+              },
+              "browser_style": {
+                "type": "boolean",
+                "optional": true
               }
             },
             "optional": true
