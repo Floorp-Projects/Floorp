@@ -37,6 +37,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._mm.addMessageListener("Reader:CloseDropdown", this);
   this._mm.addMessageListener("Reader:AddButton", this);
   this._mm.addMessageListener("Reader:RemoveButton", this);
+  this._mm.addMessageListener("Reader:GetStoredArticleData", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -205,6 +206,9 @@ AboutReader.prototype = {
         }
         break;
       }
+      case "Reader:GetStoredArticleData": {
+        this._mm.sendAsyncMessage("Reader:StoredArticleData", { article: this._article });
+      }
     }
   },
 
@@ -253,6 +257,7 @@ AboutReader.prototype = {
         this._mm.removeMessageListener("Reader:CloseDropdown", this);
         this._mm.removeMessageListener("Reader:AddButton", this);
         this._mm.removeMessageListener("Reader:RemoveButton", this);
+        this._mm.removeMessageListener("Reader:GetStoredArticleData", this);
         this._windowUnloaded = true;
         break;
     }
