@@ -108,7 +108,15 @@ sending it: we only want to send consistent values.
 
 Version history
 ---------------
-* v4: added ``distributionId``
-* v3: ``profileDate`` will return package install time when times.json is not available
-* v2: added ``defaultSearch``
+* v4: ``profileDate`` will return package install time when times.json is not available
+* v3: added ``defaultSearch``
+* v2: added ``distributionId``
 * v1: initial version
+
+Notes
+~~~~~
+
+* ``distributionId`` (v2) actually landed after ``profileDate`` (v4) but was
+  uplifted to 46, whereas ``profileDate`` landed on 47. The version numbers in
+  code were updated to be increasing (bug 1264492) and the version history docs
+  rearranged accordingly.
