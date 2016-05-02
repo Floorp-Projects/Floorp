@@ -20,22 +20,20 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.delegates.BrowserAppDelegate;
 
 import java.lang.ref.WeakReference;
 
 /**
  * Delegate for observing screenshots being taken.
  */
-public class ScreenshotDelegate extends BrowserAppDelegate implements ScreenshotObserver.OnScreenshotListener {
+public class ScreenshotDelegate extends BrowserAppDelegateWithReference implements ScreenshotObserver.OnScreenshotListener {
     private static final String LOGTAG = "GeckoScreenshotDelegate";
 
-    private WeakReference<Activity> activityReference;
     private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
 
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        activityReference = new WeakReference<Activity>(browserApp);
+        super.onCreate(browserApp, savedInstanceState);
 
         mScreenshotObserver.setListener(browserApp, this);
     }
@@ -55,7 +53,7 @@ public class ScreenshotDelegate extends BrowserAppDelegate implements Screenshot
             return;
         }
 
-        final Activity activity = activityReference.get();
+        final Activity activity = getBrowserApp();
         if (activity == null) {
             return;
         }
