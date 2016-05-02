@@ -549,7 +549,7 @@ public class Tab {
         });
 
         if (AboutPages.isAboutReader(url)) {
-            ReadingListHelper.cacheReaderItem(pageUrl, mAppContext);
+            ReadingListHelper.cacheReaderItem(pageUrl, mId, mAppContext);
         }
     }
 
