@@ -268,7 +268,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   TimeInterval interval(currentPosition,
                         currentPosition + media::TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED),
                         MediaSourceDemuxer::EOS_FUZZ);
-  return GetBuffered().Contains(interval)
+  return GetBuffered().Contains(ClampIntervalToEnd(interval))
     ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
     : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
@@ -301,7 +301,17 @@ MediaSourceDecoder::CanPlayThrough()
   TimeInterval interval(currentPosition,
                         timeAhead,
                         MediaSourceDemuxer::EOS_FUZZ);
-  return GetBuffered().Contains(interval);
+  return GetBuffered().Contains(ClampIntervalToEnd(interval));
+}
+
+TimeInterval
+MediaSourceDecoder::ClampIntervalToEnd(const TimeInterval& aInterval)
+{
+  if (!mEnded) {
+    return aInterval;
+  }
+  TimeInterval interval(TimeUnit(), TimeUnit::FromSeconds(GetDuration()));
+  return aInterval.Intersection(interval);
 }
 
 #undef MSE_DEBUG
