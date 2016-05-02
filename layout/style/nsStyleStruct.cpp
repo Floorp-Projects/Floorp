@@ -757,18 +757,18 @@ nsStyleList::sNoneQuotes;
 // nsStyleXUL
 //
 nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
-{ 
+  : mBoxFlex(0.0f)
+  , mBoxOrdinal(1)
+  , mBoxAlign(NS_STYLE_BOX_ALIGN_STRETCH)
+  , mBoxDirection(NS_STYLE_BOX_DIRECTION_NORMAL)
+  , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
+  , mBoxPack(NS_STYLE_BOX_PACK_START)
+  , mStretchStack(true)
+{
   MOZ_COUNT_CTOR(nsStyleXUL);
-  mBoxAlign  = NS_STYLE_BOX_ALIGN_STRETCH;
-  mBoxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
-  mBoxFlex = 0.0f;
-  mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
-  mBoxPack   = NS_STYLE_BOX_PACK_START;
-  mBoxOrdinal = 1;
-  mStretchStack = true;
 }
 
-nsStyleXUL::~nsStyleXUL() 
+nsStyleXUL::~nsStyleXUL()
 {
   MOZ_COUNT_DTOR(nsStyleXUL);
 }
