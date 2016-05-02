@@ -20,6 +20,7 @@ namespace gfx {
   _(D3D11_COMPOSITING,            Feature,      "Direct3D11 Compositing")         \
   _(D3D9_COMPOSITING,             Feature,      "Direct3D9 Compositing")          \
   _(DIRECT2D,                     Feature,      "Direct2D")                       \
+  _(D3D11_ANGLE,                  Feature,      "Direct3D11 ANGLE")               \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
