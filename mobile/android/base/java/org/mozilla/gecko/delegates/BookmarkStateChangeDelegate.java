@@ -45,15 +45,8 @@ import java.lang.ref.WeakReference;
  * This is responsible for showing snackbars and helper UIs related to the addition/removal
  * of bookmarks, or reader view bookmarks.
  */
-public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements Tabs.OnTabsChangedListener {
+public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "BookmarkDelegate";
-
-    private WeakReference<BrowserApp> mBrowserApp;
-
-    @Override
-    public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        mBrowserApp = new WeakReference<>(browserApp);
-    }
 
     @Override
     public void onResume(BrowserApp browserApp) {
@@ -100,7 +93,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements T
     }
 
     private boolean promoteReaderViewBookmarkAdded() {
-        final BrowserApp browserApp = mBrowserApp.get();
+        final BrowserApp browserApp = getBrowserApp();
         if (browserApp == null) {
             return false;
         }
@@ -130,7 +123,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements T
     }
 
     private void showBookmarkAddedSnackbar() {
-        final BrowserApp browserApp = mBrowserApp.get();
+        final BrowserApp browserApp = getBrowserApp();
         if (browserApp == null) {
             return;
         }
@@ -153,7 +146,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements T
     }
 
     private void showBookmarkRemovedSnackbar() {
-        final BrowserApp browserApp = mBrowserApp.get();
+        final BrowserApp browserApp = getBrowserApp();
         if (browserApp == null) {
             return;
         }
@@ -213,7 +206,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements T
     }
 
     private void showReaderModeBookmarkAddedSnackbar() {
-        final BrowserApp browserApp = mBrowserApp.get();
+        final BrowserApp browserApp = getBrowserApp();
         if (browserApp == null) {
             return;
         }
