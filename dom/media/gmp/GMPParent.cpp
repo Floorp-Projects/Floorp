@@ -575,6 +575,23 @@ GMPParent::SupportsAPI(const nsCString& aAPI, const nsCString& aTag)
     nsTArray<nsCString>& tags = mCapabilities[i].mAPITags;
     for (uint32_t j = 0; j < tags.Length(); j++) {
       if (tags[j].Equals(aTag)) {
+#ifdef XP_WIN
+        // Clearkey on Windows advertises that it can decode in its GMP info
+        // file, but uses Windows Media Foundation to decode. That's not present
+        // on Windows XP, and on some Vista, Windows N, and KN variants without
+        // certain services packs.
+        if (tags[j].EqualsLiteral("org.w3.clearkey")) {
+          if (mCapabilities[i].mAPIName.EqualsLiteral(GMP_API_VIDEO_DECODER)) {
+            if (!WMFDecoderModule::HasH264()) {
+              continue;
+            }
+          } else if (mCapabilities[i].mAPIName.EqualsLiteral(GMP_API_AUDIO_DECODER)) {
+            if (!WMFDecoderModule::HasAAC()) {
+              continue;
+            }
+          }
+        }
+#endif
         return true;
       }
     }
@@ -887,25 +904,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       }
 #endif // XP_WIN
     }
-
-#ifdef XP_WIN
-    // Clearkey on Windows advertises that it can decode in its GMP info
-    // file, but uses Windows Media Foundation to decode. That's not present
-    // on Windows XP, and on some Vista, Windows N, and KN variants without
-    // certain services packs. So don't add the decoding capability to
-    // gmp-clearkey's GMPParent if it's not going to be able to use WMF to
-    // decode.
-    if (cap.mAPIName.EqualsLiteral(GMP_API_VIDEO_DECODER) &&
-        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
-        !WMFDecoderModule::HasH264()) {
-      continue;
-    }
-    if (cap.mAPIName.EqualsLiteral(GMP_API_AUDIO_DECODER) &&
-        cap.mAPITags.Contains(NS_LITERAL_CSTRING("org.w3.clearkey")) &&
-        !WMFDecoderModule::HasAAC()) {
-      continue;
-    }
-#endif
 
     mCapabilities.AppendElement(Move(cap));
   }
