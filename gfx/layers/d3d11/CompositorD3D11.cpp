@@ -1140,13 +1140,6 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  mContext->IASetInputLayout(mAttachments->mInputLayout);
-
-  ID3D11Buffer* buffer = mAttachments->mVertexBuffer;
-  UINT size = sizeof(Vertex);
-  UINT offset = 0;
-  mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
-
   IntRect intRect = IntRect(IntPoint(0, 0), mSize.ToUnknownSize());
   // Sometimes the invalid region is larger than we want to draw.
   nsIntRegion invalidRegionSafe;
@@ -1158,6 +1151,24 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   IntRect invalidRect = invalidRegionSafe.GetBounds();
+
+  IntRect clipRect = invalidRect;
+  if (aClipRectIn) {
+    clipRect.IntersectRect(clipRect, IntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height));
+  }
+
+  if (clipRect.IsEmpty()) {
+    *aRenderBoundsOut = Rect();
+    return;
+  }
+
+  mContext->IASetInputLayout(mAttachments->mInputLayout);
+
+  ID3D11Buffer* buffer = mAttachments->mVertexBuffer;
+  UINT size = sizeof(Vertex);
+  UINT offset = 0;
+  mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
+
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
   mInvalidRegion = invalidRegionSafe;
 
@@ -1168,18 +1179,14 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
 
-  if (aClipRectIn) {
-    invalidRect.IntersectRect(invalidRect, IntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height));
-  }
-
-  mCurrentClip = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
+  mCurrentClip = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
 
   mContext->RSSetState(mAttachments->mRasterizerState);
 
   SetRenderTarget(mDefaultRT);
 
   // ClearRect will set the correct blend state for us.
-  ClearRect(Rect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height));
+  ClearRect(Rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height));
 
   if (mAttachments->mSyncTexture) {
     RefPtr<IDXGIKeyedMutex> mutex;
