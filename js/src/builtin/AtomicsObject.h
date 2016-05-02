@@ -118,7 +118,7 @@ public:
                                      //   interrupt handler
         WaitingInterrupted,          // We are waiting, but have been interrupted
                                      //   and are running the interrupt handler
-        Woken                        // Woken by a script call to futexWake
+        Woken                        // Woken by a script call to Atomics.wake
     };
 
     // Condition variable that this runtime will wait on.
