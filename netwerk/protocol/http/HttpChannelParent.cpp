@@ -1057,6 +1057,9 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
   }
 
+  // !!! We need to lock headers and please don't forget to unlock them !!!
+  requestHead->Lock();
+  nsresult rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(channelStatus,
                           responseHead ? *responseHead : nsHttpResponseHead(),
@@ -1069,9 +1072,10 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           redirectCount,
                           cacheKeyValue))
   {
-    return NS_ERROR_UNEXPECTED;
+    rv = NS_ERROR_UNEXPECTED;
   }
-  return NS_OK;
+  requestHead->Unlock();
+  return rv;
 }
 
 NS_IMETHODIMP
