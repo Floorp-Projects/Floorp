@@ -454,6 +454,11 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 
         cStats.classInfo.add(info);
 
+        if (obj->is<WasmModuleObject>()) {
+            if (ScriptSource* ss = obj->as<WasmModuleObject>().module().maybeScriptSource())
+                CollectScriptSourceStats<granularity>(closure, ss);
+        }
+
         const Class* clasp = obj->getClass();
         const char* className = clasp->name;
         AddClassInfo(granularity, cStats, className, info);
@@ -462,11 +467,6 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
             nsISupports* iface;
             if (opv->getISupports_(obj, &iface) && iface)
                 cStats.objectsPrivate += opv->sizeOfIncludingThis(iface);
-        }
-
-        if (obj->is<WasmModuleObject>()) {
-            if (ScriptSource* ss = obj->as<WasmModuleObject>().module().maybeScriptSource())
-                CollectScriptSourceStats<granularity>(closure, ss);
         }
         break;
       }
