@@ -388,19 +388,18 @@ DecodePool::Observe(nsISupports*, const char* aTopic, const char16_t*)
 {
   MOZ_ASSERT(strcmp(aTopic, "xpcom-shutdown-threads") == 0, "Unexpected topic");
 
-  nsCOMArray<nsIThread> threads;
+  nsTArray<nsCOMPtr<nsIThread>> threads;
   nsCOMPtr<nsIThread> ioThread;
 
   {
     MutexAutoLock lock(mMutex);
-    threads.AppendElements(mThreads);
-    mThreads.Clear();
+    threads.SwapElements(mThreads);
     ioThread.swap(mIOThread);
   }
 
   mImpl->RequestShutdown();
 
-  for (int32_t i = 0 ; i < threads.Count() ; ++i) {
+  for (uint32_t i = 0 ; i < threads.Length() ; ++i) {
     threads[i]->Shutdown();
   }
 

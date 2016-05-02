@@ -998,14 +998,6 @@ nsHTMLEditor::IsVisBreak(nsINode* aNode)
   return true;
 }
 
-bool
-nsHTMLEditor::IsVisBreak(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, false);
-  return IsVisBreak(node);
-}
-
 NS_IMETHODIMP
 nsHTMLEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
@@ -1417,7 +1409,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
 }
 
 void
-nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
+nsHTMLEditor::NormalizeEOLInsertPosition(nsINode* firstNodeToInsert,
                                      nsCOMPtr<nsIDOMNode> *insertParentNode,
                                      int32_t *insertOffset)
 {
@@ -1497,7 +1489,8 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
 
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
 
@@ -1521,7 +1514,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
   {
     if (aDeleteSelection)
     {
-      if (!IsBlockNode(aElement)) {
+      if (!IsBlockNode(element)) {
         // E.g., inserting an image.  In this case we don't need to delete any
         // inline wrappers before we do the insertion.  Otherwise we let
         // DeleteSelectionAndPrepareToCreateNode do the deletion for us, which
@@ -1556,7 +1549,8 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
     if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) && parentSelectedNode)
     {
       // Adjust position based on the node we are going to insert.
-      NormalizeEOLInsertPosition(node, address_of(parentSelectedNode), &offsetForInsert);
+      NormalizeEOLInsertPosition(element, address_of(parentSelectedNode),
+                                 &offsetForInsert);
 
       res = InsertNodeAtPoint(node, address_of(parentSelectedNode), &offsetForInsert, false);
       NS_ENSURE_SUCCESS(res, res);
@@ -1657,10 +1651,12 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Must be sure that element is contained in the document body
-  if (IsDescendantOfEditorRoot(aElement)) {
+  if (IsDescendantOfEditorRoot(element)) {
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
@@ -1683,10 +1679,12 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Be sure the element is contained in the document body
-  if (aElement && IsDescendantOfEditorRoot(aElement)) {
+  if (aElement && IsDescendantOfEditorRoot(element)) {
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
@@ -2553,8 +2551,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   // the transaction system
 
   // New call to use instead to get proper HTML element, bug 39919
-  nsCOMPtr<Element> newElement =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(NS_Atomize(realTagName)));
+  nsCOMPtr<nsIAtom> realTagAtom = NS_Atomize(realTagName);
+  nsCOMPtr<Element> newElement = CreateHTMLContent(realTagAtom);
   if (!newElement) {
     return nullptr;
   }
@@ -3782,95 +3780,79 @@ nsHTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// RemoveBlockContainer: remove inNode, reparenting its children into their
-//                  the parent of inNode.  In addition, INSERT ANY BR's NEEDED
-//                  TO PRESERVE IDENTITY OF REMOVED BLOCK.
-//
+/**
+ * Remove aNode, reparenting any children into the parent of aNode.  In
+ * addition, insert any br's needed to preserve identity of removed block.
+ */
 nsresult
-nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
+nsHTMLEditor::RemoveBlockContainer(nsIContent& aNode)
 {
-  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  nsCOMPtr<nsIDOMNode> sibling, child, unused;
+  // Two possibilities: the container could be empty of editable content.  If
+  // that is the case, we need to compare what is before and after aNode to
+  // determine if we need a br.
+  //
+  // Or it could be not empty, in which case we have to compare previous
+  // sibling and first child to determine if we need a leading br, and compare
+  // following sibling and last child to determine if we need a trailing br.
 
-  // Two possibilities: the container cold be empty of editable content.
-  // If that is the case, we need to compare what is before and after inNode
-  // to determine if we need a br.
-  // Or it could not be empty, in which case we have to compare previous
-  // sibling and first child to determine if we need a leading br,
-  // and compare following sibling and last child to determine if we need a
-  // trailing br.
+  nsCOMPtr<nsIContent> child = GetFirstEditableChild(aNode);
 
-  child = GetAsDOMNode(GetFirstEditableChild(*node));
-
-  if (child)  // the case of inNode not being empty
-  {
-    // we need a br at start unless:
-    // 1) previous sibling of inNode is a block, OR
-    // 2) previous sibling of inNode is a br, OR
-    // 3) first child of inNode is a block OR
+  if (child) {
+    // The case of aNode not being empty.  We need a br at start unless:
+    // 1) previous sibling of aNode is a block, OR
+    // 2) previous sibling of aNode is a br, OR
+    // 3) first child of aNode is a block OR
     // 4) either is null
 
-    res = GetPriorHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-    {
-      if (!IsBlockNode(child)) {
-        // insert br node
-        res = CreateBR(inNode, 0, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
-      }
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling) &&
+        !sibling->IsHTMLElement(nsGkAtoms::br) && !IsBlockNode(child)) {
+      // Insert br node
+      nsCOMPtr<Element> br = CreateBR(&aNode, 0);
+      NS_ENSURE_STATE(br);
     }
 
-    // we need a br at end unless:
-    // 1) following sibling of inNode is a block, OR
-    // 2) last child of inNode is a block, OR
-    // 3) last child of inNode is a block OR
+    // We need a br at end unless:
+    // 1) following sibling of aNode is a block, OR
+    // 2) last child of aNode is a block, OR
+    // 3) last child of aNode is a br OR
     // 4) either is null
 
-    res = GetNextHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling))
-    {
-      child = GetAsDOMNode(GetLastEditableChild(*node));
-      if (child && !IsBlockNode(child) && !nsTextEditUtils::IsBreak(child))
-      {
-        // insert br node
-        uint32_t len;
-        res = GetLengthOfDOMNode(inNode, len);
-        NS_ENSURE_SUCCESS(res, res);
-        res = CreateBR(inNode, (int32_t)len, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
+    sibling = GetNextHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling)) {
+      child = GetLastEditableChild(aNode);
+      MOZ_ASSERT(child, "aNode has first editable child but not last?");
+      if (!IsBlockNode(child) && !child->IsHTMLElement(nsGkAtoms::br)) {
+        // Insert br node
+        nsCOMPtr<Element> br = CreateBR(&aNode, aNode.Length());
+        NS_ENSURE_STATE(br);
       }
     }
-  }
-  else  // the case of inNode being empty
-  {
-    // we need a br at start unless:
-    // 1) previous sibling of inNode is a block, OR
-    // 2) previous sibling of inNode is a br, OR
-    // 3) following sibling of inNode is a block, OR
-    // 4) following sibling of inNode is a br OR
+  } else {
+    // The case of aNode being empty.  We need a br at start unless:
+    // 1) previous sibling of aNode is a block, OR
+    // 2) previous sibling of aNode is a br, OR
+    // 3) following sibling of aNode is a block, OR
+    // 4) following sibling of aNode is a br OR
     // 5) either is null
-    res = GetPriorHTMLSibling(inNode, address_of(sibling));
-    NS_ENSURE_SUCCESS(res, res);
-    if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-    {
-      res = GetNextHTMLSibling(inNode, address_of(sibling));
-      NS_ENSURE_SUCCESS(res, res);
-      if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
-      {
-        // insert br node
-        res = CreateBR(inNode, 0, address_of(unused));
-        NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(&aNode);
+    if (sibling && !IsBlockNode(sibling) &&
+        !sibling->IsHTMLElement(nsGkAtoms::br)) {
+      sibling = GetNextHTMLSibling(&aNode);
+      if (sibling && !IsBlockNode(sibling) &&
+          !sibling->IsHTMLElement(nsGkAtoms::br)) {
+        // Insert br node
+        nsCOMPtr<Element> br = CreateBR(&aNode, 0);
+        NS_ENSURE_STATE(br);
       }
     }
   }
 
-  // now remove container
-  return RemoveContainer(node);
+  // Now remove container
+  nsresult res = RemoveContainer(&aNode);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 
@@ -4719,7 +4701,7 @@ nsHTMLEditor::AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
 
 nsresult
 nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNode * aNewBlock,
-                                          nsIDOMNode **aOutBrNode)
+                                          Element** aOutBrNode)
 {
   nsCOMPtr<nsINode> newBlock = do_QueryInterface(aNewBlock);
   NS_ENSURE_STATE(newBlock || !aNewBlock);
@@ -4773,7 +4755,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    *aOutBrNode = GetAsDOMNode(CreateBR(deepestStyle, 0));
+    *aOutBrNode = CreateBR(deepestStyle, 0);
     NS_ENSURE_STATE(*aOutBrNode);
   }
   return NS_OK;
@@ -4823,89 +4805,74 @@ nsHTMLEditor::EndUpdateViewBatch()
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
+nsHTMLEditor::GetSelectionContainer(nsIDOMElement** aReturn)
 {
-  RefPtr<Selection> selection = GetSelection();
-  // if we don't get the selection, just skip this
-  if (!selection) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIDOMElement> container =
+    static_cast<nsIDOMElement*>(GetAsDOMNode(GetSelectionContainer()));
+  NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
+  container.forget(aReturn);
+  return NS_OK;
+}
 
-  nsCOMPtr<nsIDOMNode> focusNode;
+Element*
+nsHTMLEditor::GetSelectionContainer()
+{
+  // If we don't get the selection, just skip this
+  NS_ENSURE_TRUE(GetSelection(), nullptr);
 
-  nsresult res;
+  OwningNonNull<Selection> selection = *GetSelection();
+
+  nsCOMPtr<nsINode> focusNode;
+
   if (selection->Collapsed()) {
-    res = selection->GetFocusNode(getter_AddRefs(focusNode));
-    NS_ENSURE_SUCCESS(res, res);
+    focusNode = selection->GetFocusNode();
   } else {
-
-    int32_t rangeCount;
-    res = selection->GetRangeCount(&rangeCount);
-    NS_ENSURE_SUCCESS(res, res);
+    int32_t rangeCount = selection->RangeCount();
 
     if (rangeCount == 1) {
-
       RefPtr<nsRange> range = selection->GetRangeAt(0);
-      NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-      nsCOMPtr<nsIDOMNode> startContainer, endContainer;
-      res = range->GetStartContainer(getter_AddRefs(startContainer));
-      NS_ENSURE_SUCCESS(res, res);
-      res = range->GetEndContainer(getter_AddRefs(endContainer));
-      NS_ENSURE_SUCCESS(res, res);
-      int32_t startOffset, endOffset;
-      res = range->GetStartOffset(&startOffset);
-      NS_ENSURE_SUCCESS(res, res);
-      res = range->GetEndOffset(&endOffset);
-      NS_ENSURE_SUCCESS(res, res);
+      nsCOMPtr<nsINode> startContainer = range->GetStartParent();
+      int32_t startOffset = range->StartOffset();
+      nsCOMPtr<nsINode> endContainer = range->GetEndParent();
+      int32_t endOffset = range->EndOffset();
 
-      nsCOMPtr<nsIDOMElement> focusElement;
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        res = GetSelectedElement(EmptyString(), getter_AddRefs(focusElement));
-        NS_ENSURE_SUCCESS(res, res);
-        if (focusElement)
+        nsCOMPtr<nsIDOMElement> focusElement;
+        nsresult res = GetSelectedElement(EmptyString(),
+                                          getter_AddRefs(focusElement));
+        NS_ENSURE_SUCCESS(res, nullptr);
+        if (focusElement) {
           focusNode = do_QueryInterface(focusElement);
+        }
       }
       if (!focusNode) {
-        res = range->GetCommonAncestorContainer(getter_AddRefs(focusNode));
-        NS_ENSURE_SUCCESS(res, res);
+        focusNode = range->GetCommonAncestor();
       }
-    }
-    else {
-      int32_t i;
-      RefPtr<nsRange> range;
-      for (i = 0; i < rangeCount; i++)
-      {
-        range = selection->GetRangeAt(i);
-        NS_ENSURE_STATE(range);
-        nsCOMPtr<nsIDOMNode> startContainer;
-        res = range->GetStartContainer(getter_AddRefs(startContainer));
-        if (NS_FAILED(res)) continue;
-        if (!focusNode)
+    } else {
+      for (int32_t i = 0; i < rangeCount; i++) {
+        RefPtr<nsRange> range = selection->GetRangeAt(i);
+
+        nsCOMPtr<nsINode> startContainer = range->GetStartParent();
+        if (!focusNode) {
           focusNode = startContainer;
-        else if (focusNode != startContainer) {
-          res = startContainer->GetParentNode(getter_AddRefs(focusNode));
-          NS_ENSURE_SUCCESS(res, res);
+        } else if (focusNode != startContainer) {
+          focusNode = startContainer->GetParentNode();
           break;
         }
       }
     }
   }
 
-  if (focusNode) {
-    uint16_t nodeType;
-    focusNode->GetNodeType(&nodeType);
-    if (nsIDOMNode::TEXT_NODE == nodeType) {
-      nsCOMPtr<nsIDOMNode> parent;
-      res = focusNode->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(res, res);
-      focusNode = parent;
-    }
+  if (focusNode && focusNode->GetAsText()) {
+    focusNode = focusNode->GetParentNode();
   }
 
-  nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(focusNode);
-  focusElement.forget(aReturn);
-  return NS_OK;
+  if (focusNode && focusNode->IsElement()) {
+    return focusNode->AsElement();
+  }
+
+  return nullptr;
 }
 
 NS_IMETHODIMP

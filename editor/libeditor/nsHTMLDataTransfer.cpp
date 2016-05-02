@@ -344,8 +344,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
     if (aClearStyle) {
       // pasting does not inherit local inline styles
-      nsCOMPtr<nsIDOMNode> tmpNode =
-        do_QueryInterface(selection->GetAnchorNode());
+      nsCOMPtr<nsINode> tmpNode = selection->GetAnchorNode();
       int32_t tmpOffset = static_cast<int32_t>(selection->AnchorOffset());
       rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -382,8 +381,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     NS_ENSURE_TRUE(parentNode, NS_ERROR_FAILURE);
 
     // Adjust position based on the first node we are going to insert.
-    NormalizeEOLInsertPosition(GetAsDOMNode(nodeList[0]),
-                               address_of(parentNode), &offsetOfNewNode);
+    NormalizeEOLInsertPosition(nodeList[0], address_of(parentNode),
+                               &offsetOfNewNode);
 
     // if there are any invisible br's after our insertion point, remove them.
     // this is because if there is a br at end of what we paste, it will make
@@ -457,7 +456,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     nsCOMPtr<nsIDOMNode> parentBlock, lastInsertNode, insertedContextParent;
     int32_t listCount = nodeList.Length();
     int32_t j;
-    if (IsBlockNode(parentNode))
+    nsCOMPtr<nsINode> parentNodeNode = do_QueryInterface(parentNode);
+    NS_ENSURE_STATE(parentNodeNode || !parentNode);
+    if (IsBlockNode(parentNodeNode))
       parentBlock = parentNode;
     else
       parentBlock = GetBlockNodeParent(parentNode);

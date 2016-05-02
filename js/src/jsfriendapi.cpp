@@ -143,6 +143,12 @@ JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSOb
     return JS_NewObjectWithGivenProto(cx, clasp, proto);
 }
 
+JS_FRIEND_API(bool)
+JS_GetIsSecureContext(JSCompartment* compartment)
+{
+    return compartment->creationOptions().secureContext();
+}
+
 JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment)
 {
@@ -579,13 +585,6 @@ js::ZoneGlobalsAreAllGray(JS::Zone* zone)
             return false;
     }
     return true;
-}
-
-JS_FRIEND_API(JS::TraceKind)
-js::GCThingTraceKind(void* thing)
-{
-    MOZ_ASSERT(thing);
-    return static_cast<js::gc::Cell*>(thing)->getTraceKind();
 }
 
 JS_FRIEND_API(void)

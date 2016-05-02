@@ -85,6 +85,11 @@ ServoComputedValues* Servo_GetComputedValues(RawGeckoNode* node);
 ServoComputedValues* Servo_GetComputedValuesForAnonymousBox(ServoComputedValues* parentStyleOrNull,
                                                             nsIAtom* pseudoTag,
                                                             RawServoStyleSet* set);
+ServoComputedValues* Servo_GetComputedValuesForPseudoElement(ServoComputedValues* parent_style,
+                                                             RawGeckoElement* match_element,
+                                                             nsIAtom* pseudo_tag,
+                                                             RawServoStyleSet* set,
+                                                             bool is_probe);
 void Servo_AddRefComputedValues(ServoComputedValues*);
 void Servo_ReleaseComputedValues(ServoComputedValues*);
 

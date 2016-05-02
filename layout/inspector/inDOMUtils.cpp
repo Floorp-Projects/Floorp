@@ -37,6 +37,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
+#include "nsCSSPseudoClasses.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
@@ -245,8 +246,10 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   }
 
   nsCOMPtr<nsISupportsArray> rules;
-  NS_NewISupportsArray(getter_AddRefs(rules));
-  if (!rules) return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(rules));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
     RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
@@ -774,9 +777,13 @@ PropertySupportsVariant(nsCSSProperty aPropertyID, uint32_t aVariant)
       case eCSSProperty_border_bottom_left_radius:
       case eCSSProperty_border_bottom_right_radius:
       case eCSSProperty_background_position:
+      case eCSSProperty_background_position_x:
+      case eCSSProperty_background_position_y:
       case eCSSProperty_background_size:
 #ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
       case eCSSProperty_mask_position:
+      case eCSSProperty_mask_position_x:
+      case eCSSProperty_mask_position_y:
       case eCSSProperty_mask_size:
 #endif
       case eCSSProperty_grid_auto_columns:
@@ -1200,7 +1207,7 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
     EventStates()
   };
   static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
-                nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
+                static_cast<size_t>(CSSPseudoClassType::MAX),
                 "Length of PseudoClassStates array is incorrect");
 
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
@@ -1208,12 +1215,13 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
   // Ignore :moz-any-link so we don't give the element simultaneous
   // visited and unvisited style state
   if (nsCSSPseudoClasses::GetPseudoType(atom) ==
-      nsCSSPseudoClasses::ePseudoClass_mozAnyLink) {
+      CSSPseudoClassType::mozAnyLink) {
     return EventStates();
   }
   // Our array above is long enough that indexing into it with
-  // NotPseudoClass is ok.
-  return sPseudoClassStates[nsCSSPseudoClasses::GetPseudoType(atom)];
+  // NotPseudo is ok.
+  CSSPseudoClassType type = nsCSSPseudoClasses::GetPseudoType(atom);
+  return sPseudoClassStates[static_cast<CSSPseudoClassTypeBase>(type)];
 }
 
 NS_IMETHODIMP

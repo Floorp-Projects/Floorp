@@ -76,8 +76,9 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
     JSVAL_TYPE_MAGIC               = 0x04,
     JSVAL_TYPE_STRING              = 0x05,
     JSVAL_TYPE_SYMBOL              = 0x06,
-    JSVAL_TYPE_NULL                = 0x07,
-    JSVAL_TYPE_OBJECT              = 0x08,
+    JSVAL_TYPE_PRIVATE_GCTHING     = 0x07,
+    JSVAL_TYPE_NULL                = 0x08,
+    JSVAL_TYPE_OBJECT              = 0x0c,
 
     /* These never appear in a jsval; they are only provided as an out-of-band value. */
     JSVAL_TYPE_UNKNOWN             = 0x20,
@@ -100,7 +101,8 @@ JS_ENUM_HEADER(JSValueTag, uint32_t)
     JSVAL_TAG_BOOLEAN              = JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN,
     JSVAL_TAG_MAGIC                = JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC,
     JSVAL_TAG_NULL                 = JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL,
-    JSVAL_TAG_OBJECT               = JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT
+    JSVAL_TAG_OBJECT               = JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT,
+    JSVAL_TAG_PRIVATE_GCTHING      = JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING
 } JS_ENUM_FOOTER(JSValueTag);
 
 static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
@@ -119,7 +121,8 @@ JS_ENUM_HEADER(JSValueTag, uint32_t)
     JSVAL_TAG_BOOLEAN              = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN,
     JSVAL_TAG_MAGIC                = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC,
     JSVAL_TAG_NULL                 = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL,
-    JSVAL_TAG_OBJECT               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT
+    JSVAL_TAG_OBJECT               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT,
+    JSVAL_TAG_PRIVATE_GCTHING      = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_PRIVATE_GCTHING
 } JS_ENUM_FOOTER(JSValueTag);
 
 static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
@@ -127,15 +130,16 @@ static_assert(sizeof(JSValueTag) == sizeof(uint32_t),
 
 JS_ENUM_HEADER(JSValueShiftedTag, uint64_t)
 {
-    JSVAL_SHIFTED_TAG_MAX_DOUBLE   = ((((uint64_t)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT) | 0xFFFFFFFF),
-    JSVAL_SHIFTED_TAG_INT32        = (((uint64_t)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_UNDEFINED    = (((uint64_t)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_STRING       = (((uint64_t)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_SYMBOL       = (((uint64_t)JSVAL_TAG_SYMBOL)     << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_BOOLEAN      = (((uint64_t)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_MAGIC        = (((uint64_t)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_NULL         = (((uint64_t)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT),
-    JSVAL_SHIFTED_TAG_OBJECT       = (((uint64_t)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
+    JSVAL_SHIFTED_TAG_MAX_DOUBLE      = ((((uint64_t)JSVAL_TAG_MAX_DOUBLE)     << JSVAL_TAG_SHIFT) | 0xFFFFFFFF),
+    JSVAL_SHIFTED_TAG_INT32           = (((uint64_t)JSVAL_TAG_INT32)           << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_UNDEFINED       = (((uint64_t)JSVAL_TAG_UNDEFINED)       << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_STRING          = (((uint64_t)JSVAL_TAG_STRING)          << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_SYMBOL          = (((uint64_t)JSVAL_TAG_SYMBOL)          << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_BOOLEAN         = (((uint64_t)JSVAL_TAG_BOOLEAN)         << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_MAGIC           = (((uint64_t)JSVAL_TAG_MAGIC)           << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_NULL            = (((uint64_t)JSVAL_TAG_NULL)            << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_OBJECT          = (((uint64_t)JSVAL_TAG_OBJECT)          << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_PRIVATE_GCTHING = (((uint64_t)JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT)
 } JS_ENUM_FOOTER(JSValueShiftedTag);
 
 static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
@@ -163,8 +167,9 @@ typedef uint8_t JSValueType;
 #define JSVAL_TYPE_MAGIC             ((uint8_t)0x04)
 #define JSVAL_TYPE_STRING            ((uint8_t)0x05)
 #define JSVAL_TYPE_SYMBOL            ((uint8_t)0x06)
-#define JSVAL_TYPE_NULL              ((uint8_t)0x07)
-#define JSVAL_TYPE_OBJECT            ((uint8_t)0x08)
+#define JSVAL_TYPE_PRIVATE_GCTHING   ((uint8_t)0x07)
+#define JSVAL_TYPE_NULL              ((uint8_t)0x08)
+#define JSVAL_TYPE_OBJECT            ((uint8_t)0x0c)
 #define JSVAL_TYPE_UNKNOWN           ((uint8_t)0x20)
 
 #if defined(JS_NUNBOX32)
@@ -179,6 +184,7 @@ typedef uint32_t JSValueTag;
 #define JSVAL_TAG_MAGIC              ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC))
 #define JSVAL_TAG_NULL               ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL))
 #define JSVAL_TAG_OBJECT             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_OBJECT))
+#define JSVAL_TAG_PRIVATE_GCTHING    ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_PRIVATE_GCTHING))
 
 #elif defined(JS_PUNBOX64)
 
@@ -192,17 +198,19 @@ typedef uint32_t JSValueTag;
 #define JSVAL_TAG_MAGIC              (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC)
 #define JSVAL_TAG_NULL               (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL)
 #define JSVAL_TAG_OBJECT             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_OBJECT)
+#define JSVAL_TAG_PRIVATE_GCTHING    (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_PRIVATE_GCTHING)
 
 typedef uint64_t JSValueShiftedTag;
-#define JSVAL_SHIFTED_TAG_MAX_DOUBLE ((((uint64_t)JSVAL_TAG_MAX_DOUBLE) << JSVAL_TAG_SHIFT) | 0xFFFFFFFF)
-#define JSVAL_SHIFTED_TAG_INT32      (((uint64_t)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_UNDEFINED  (((uint64_t)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_STRING     (((uint64_t)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_SYMBOL     (((uint64_t)JSVAL_TAG_SYMBOL)     << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_BOOLEAN    (((uint64_t)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_MAGIC      (((uint64_t)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_NULL       (((uint64_t)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT)
-#define JSVAL_SHIFTED_TAG_OBJECT     (((uint64_t)JSVAL_TAG_OBJECT)     << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_MAX_DOUBLE      ((((uint64_t)JSVAL_TAG_MAX_DOUBLE)     << JSVAL_TAG_SHIFT) | 0xFFFFFFFF)
+#define JSVAL_SHIFTED_TAG_INT32           (((uint64_t)JSVAL_TAG_INT32)           << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_UNDEFINED       (((uint64_t)JSVAL_TAG_UNDEFINED)       << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_STRING          (((uint64_t)JSVAL_TAG_STRING)          << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_SYMBOL          (((uint64_t)JSVAL_TAG_SYMBOL)          << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_BOOLEAN         (((uint64_t)JSVAL_TAG_BOOLEAN)         << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_MAGIC           (((uint64_t)JSVAL_TAG_MAGIC)           << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_NULL            (((uint64_t)JSVAL_TAG_NULL)            << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_OBJECT          (((uint64_t)JSVAL_TAG_OBJECT)          << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_PRIVATE_GCTHING (((uint64_t)JSVAL_TAG_PRIVATE_GCTHING) << JSVAL_TAG_SHIFT)
 
 #endif  /* JS_PUNBOX64 */
 #endif  /* !defined(__SUNPRO_CC) && !defined(__xlC__) */
@@ -632,6 +640,29 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
     return l.s.payload.ptr;
 }
 
+static inline jsval_layout
+PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
+{
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::String,
+               "Private GC thing Values must not be strings. Make a StringValue instead.");
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Symbol,
+               "Private GC thing Values must not be symbols. Make a SymbolValue instead.");
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
+               "Private GC thing Values must not be objects. Make an ObjectValue instead.");
+
+    jsval_layout l;
+    MOZ_ASSERT(uintptr_t(cell) > 0x1000);
+    l.s.tag = JSVAL_TAG_PRIVATE_GCTHING;
+    l.s.payload.cell = cell;
+    return l;
+}
+
+static inline bool
+JSVAL_IS_PRIVATE_GCTHING_IMPL(jsval_layout l)
+{
+    return l.s.tag == JSVAL_TAG_PRIVATE_GCTHING;
+}
+
 static inline bool
 JSVAL_IS_GCTHING_IMPL(jsval_layout l)
 {
@@ -654,6 +685,8 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
                   "Value type tags must correspond with JS::TraceKinds.");
     static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
                   "Value type tags must correspond with JS::TraceKinds.");
+    if (MOZ_UNLIKELY(JSVAL_IS_PRIVATE_GCTHING_IMPL(l)))
+        return (uint32_t)JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(l));
     return l.s.tag & 0x03;
 }
 
@@ -873,6 +906,12 @@ JSVAL_IS_NULL_IMPL(jsval_layout l)
 }
 
 static inline bool
+JSVAL_IS_PRIVATE_GCTHING_IMPL(jsval_layout l)
+{
+    return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_PRIVATE_GCTHING;
+}
+
+static inline bool
 JSVAL_IS_GCTHING_IMPL(jsval_layout l)
 {
     return l.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET;
@@ -895,6 +934,8 @@ JSVAL_TRACE_KIND_IMPL(jsval_layout l)
                   "Value type tags must correspond with JS::TraceKinds.");
     static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
                   "Value type tags must correspond with JS::TraceKinds.");
+    if (MOZ_UNLIKELY(JSVAL_IS_PRIVATE_GCTHING_IMPL(l)))
+        return (uint32_t)JS::GCThingTraceKind(JSVAL_TO_GCTHING_IMPL(l));
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) & 0x03;
 }
 
@@ -914,6 +955,24 @@ JSVAL_TO_PRIVATE_PTR_IMPL(jsval_layout l)
 {
     MOZ_ASSERT((l.asBits & 0x8000000000000000LL) == 0);
     return (void*)(l.asBits << 1);
+}
+
+static inline jsval_layout
+PRIVATE_GCTHING_TO_JSVAL_IMPL(js::gc::Cell* cell)
+{
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::String,
+               "Private GC thing Values must not be strings. Make a StringValue instead.");
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Symbol,
+               "Private GC thing Values must not be symbols. Make a SymbolValue instead.");
+    MOZ_ASSERT(JS::GCThingTraceKind(cell) != JS::TraceKind::Object,
+               "Private GC thing Values must not be objects. Make an ObjectValue instead.");
+
+    jsval_layout l;
+    uint64_t cellBits = (uint64_t)cell;
+    MOZ_ASSERT(uintptr_t(cellBits) > 0x1000);
+    MOZ_ASSERT((cellBits >> JSVAL_TAG_SHIFT) == 0);
+    l.asBits = cellBits | JSVAL_SHIFTED_TAG_PRIVATE_GCTHING;
+    return l;
 }
 
 static inline bool
@@ -1342,6 +1401,23 @@ class Value
     }
 
     /*
+     * Private GC Thing API
+     *
+     * Non-JSObject, JSString, and JS::Symbol cells may be put into the 64-bit
+     * payload as private GC things. Such Values are considered isMarkable()
+     * and isGCThing(), and as such, automatically marked. Their traceKind()
+     * is gotten via their cells.
+     */
+
+    void setPrivateGCThing(js::gc::Cell* cell) {
+        data = PRIVATE_GCTHING_TO_JSVAL_IMPL(cell);
+    }
+
+    bool isPrivateGCThing() const {
+        return JSVAL_IS_PRIVATE_GCTHING_IMPL(data);
+    }
+
+    /*
      * An unmarked value is just a void* cast as a Value. Thus, the Value is
      * not safe for GC and must not be marked. This API avoids raw casts
      * and the ensuing strict-aliasing warnings.
@@ -1683,6 +1759,14 @@ PrivateUint32Value(uint32_t ui)
     return v;
 }
 
+static inline Value
+PrivateGCThingValue(js::gc::Cell* cell)
+{
+    Value v;
+    v.setPrivateGCThing(cell);
+    return v;
+}
+
 inline bool
 SameType(const Value& lhs, const Value& rhs)
 {
@@ -1801,6 +1885,7 @@ class MutableValueOperations : public ValueOperations<Outer>
     void setSymbol(JS::Symbol* sym) { this->value().setSymbol(sym); }
     void setObject(JSObject& obj) { this->value().setObject(obj); }
     void setObjectOrNull(JSObject* arg) { this->value().setObjectOrNull(arg); }
+    void setPrivateGCThing(js::gc::Cell* cell) { this->value().setPrivateGCThing(cell); }
 };
 
 /*
@@ -1829,6 +1914,7 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     void setString(JSString* str) { setBarriered(JS::StringValue(str)); }
     void setSymbol(JS::Symbol* sym) { setBarriered(JS::SymbolValue(sym)); }
     void setObject(JSObject& obj) { setBarriered(JS::ObjectValue(obj)); }
+    void setPrivateGCThing(js::gc::Cell* cell) { setBarriered(JS::PrivateGCThingValue(cell)); }
 
     bool setNumber(uint32_t ui) {
         if (ui > JSVAL_INT_MAX) {
@@ -1890,6 +1976,8 @@ DispatchTyped(F f, const JS::Value& val, Args&&... args)
         return f(&val.toObject(), mozilla::Forward<Args>(args)...);
     if (val.isSymbol())
         return f(val.toSymbol(), mozilla::Forward<Args>(args)...);
+    if (MOZ_UNLIKELY(val.isPrivateGCThing()))
+        return DispatchTyped(f, val.toGCCellPtr(), mozilla::Forward<Args>(args)...);
     MOZ_ASSERT(!val.isMarkable());
     return F::defaultValue(val);
 }

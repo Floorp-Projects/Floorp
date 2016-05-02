@@ -381,12 +381,12 @@ nsAttrAndChildArray::AttrAt(uint32_t aPos) const
   NS_ASSERTION(aPos < AttrCount(),
                "out-of-bounds access in nsAttrAndChildArray");
 
-  uint32_t mapped = MappedAttrCount();
-  if (aPos < mapped) {
-    return mImpl->mMappedAttrs->AttrAt(aPos);
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return &ATTRS(mImpl)[aPos].mValue;
   }
 
-  return &ATTRS(mImpl)[aPos - mapped].mValue;
+  return mImpl->mMappedAttrs->AttrAt(aPos - nonmapped);
 }
 
 nsresult
@@ -454,36 +454,35 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
 {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
-  uint32_t mapped = MappedAttrCount();
-  if (aPos < mapped) {
-    if (mapped == 1) {
-      // We're removing the last mapped attribute.  Can't swap in this
-      // case; have to copy.
-      aValue.SetTo(*mImpl->mMappedAttrs->AttrAt(0));
-      NS_RELEASE(mImpl->mMappedAttrs);
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    ATTRS(mImpl)[aPos].mValue.SwapValueWith(aValue);
+    ATTRS(mImpl)[aPos].~InternalAttr();
 
-      return NS_OK;
-    }
+    uint32_t slotCount = AttrSlotCount();
+    memmove(&ATTRS(mImpl)[aPos],
+            &ATTRS(mImpl)[aPos + 1],
+            (slotCount - aPos - 1) * sizeof(InternalAttr));
+    memset(&ATTRS(mImpl)[slotCount - 1], 0, sizeof(InternalAttr));
 
-    RefPtr<nsMappedAttributes> mapped =
-      GetModifiableMapped(nullptr, nullptr, false);
-
-    mapped->RemoveAttrAt(aPos, aValue);
-
-    return MakeMappedUnique(mapped);
+    return NS_OK;
   }
 
-  aPos -= mapped;
-  ATTRS(mImpl)[aPos].mValue.SwapValueWith(aValue);
-  ATTRS(mImpl)[aPos].~InternalAttr();
+  if (MappedAttrCount() == 1) {
+    // We're removing the last mapped attribute.  Can't swap in this
+    // case; have to copy.
+    aValue.SetTo(*mImpl->mMappedAttrs->AttrAt(0));
+    NS_RELEASE(mImpl->mMappedAttrs);
 
-  uint32_t slotCount = AttrSlotCount();
-  memmove(&ATTRS(mImpl)[aPos],
-          &ATTRS(mImpl)[aPos + 1],
-          (slotCount - aPos - 1) * sizeof(InternalAttr));
-  memset(&ATTRS(mImpl)[slotCount - 1], 0, sizeof(InternalAttr));
+    return NS_OK;
+  }
 
-  return NS_OK;
+  RefPtr<nsMappedAttributes> mapped =
+    GetModifiableMapped(nullptr, nullptr, false);
+
+  mapped->RemoveAttrAt(aPos - nonmapped, aValue);
+
+  return MakeMappedUnique(mapped);
 }
 
 const nsAttrName*
@@ -492,33 +491,32 @@ nsAttrAndChildArray::AttrNameAt(uint32_t aPos) const
   NS_ASSERTION(aPos < AttrCount(),
                "out-of-bounds access in nsAttrAndChildArray");
 
-  uint32_t mapped = MappedAttrCount();
-  if (aPos < mapped) {
-    return mImpl->mMappedAttrs->NameAt(aPos);
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return &ATTRS(mImpl)[aPos].mName;
   }
 
-  return &ATTRS(mImpl)[aPos - mapped].mName;
+  return mImpl->mMappedAttrs->NameAt(aPos - nonmapped);
 }
 
 const nsAttrName*
 nsAttrAndChildArray::GetSafeAttrNameAt(uint32_t aPos) const
 {
-  uint32_t mapped = MappedAttrCount();
-  if (aPos < mapped) {
-    return mImpl->mMappedAttrs->NameAt(aPos);
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    void** pos = mImpl->mBuffer + aPos * ATTRSIZE;
+    if (!*pos) {
+      return nullptr;
+    }
+
+    return &reinterpret_cast<InternalAttr*>(pos)->mName;
   }
 
-  aPos -= mapped;
-  if (aPos >= AttrSlotCount()) {
+  if (aPos >= AttrCount()) {
     return nullptr;
   }
 
-  void** pos = mImpl->mBuffer + aPos * ATTRSIZE;
-  if (!*pos) {
-    return nullptr;
-  }
-
-  return &reinterpret_cast<InternalAttr*>(pos)->mName;
+  return mImpl->mMappedAttrs->NameAt(aPos - nonmapped);
 }
 
 const nsAttrName*
@@ -545,25 +543,24 @@ nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, int32_t aNamespaceID) cons
   if (mImpl && mImpl->mMappedAttrs && aNamespaceID == kNameSpaceID_None) {
     idx = mImpl->mMappedAttrs->IndexOfAttr(aLocalName);
     if (idx >= 0) {
-      return idx;
+      return NonMappedAttrCount() + idx;
     }
   }
 
   uint32_t i;
-  uint32_t mapped = MappedAttrCount();
   uint32_t slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
     for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
-        return i + mapped;
+        return i;
       }
     }
   }
   else {
     for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       if (ATTRS(mImpl)[i].mName.Equals(aLocalName, aNamespaceID)) {
-        return i + mapped;
+        return i;
       }
     }
   }

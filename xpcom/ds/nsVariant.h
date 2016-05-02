@@ -43,79 +43,82 @@ public:
 
   uint16_t GetType() const { return mType; }
 
-  nsresult ConvertToInt8(uint8_t* aResult) const;
-  nsresult ConvertToInt16(int16_t* aResult) const;
-  nsresult ConvertToInt32(int32_t* aResult) const;
-  nsresult ConvertToInt64(int64_t* aResult) const;
-  nsresult ConvertToUint8(uint8_t* aResult) const;
-  nsresult ConvertToUint16(uint16_t* aResult) const;
-  nsresult ConvertToUint32(uint32_t* aResult) const;
-  nsresult ConvertToUint64(uint64_t* aResult) const;
-  nsresult ConvertToFloat(float* aResult) const;
-  nsresult ConvertToDouble(double* aResult) const;
-  nsresult ConvertToBool(bool* aResult) const;
-  nsresult ConvertToChar(char* aResult) const;
-  nsresult ConvertToWChar(char16_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToInt8(uint8_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToInt16(int16_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToInt32(int32_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToInt64(int64_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToUint8(uint8_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToUint16(uint16_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToUint32(uint32_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToUint64(uint64_t* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToFloat(float* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToDouble(double* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToBool(bool* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToChar(char* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToWChar(char16_t* aResult) const;
 
-  nsresult ConvertToID(nsID* aResult) const;
+  MOZ_MUST_USE nsresult ConvertToID(nsID* aResult) const;
 
-  nsresult ConvertToAString(nsAString& aResult) const;
-  nsresult ConvertToAUTF8String(nsAUTF8String& aResult) const;
-  nsresult ConvertToACString(nsACString& aResult) const;
-  nsresult ConvertToString(char** aResult) const;
-  nsresult ConvertToWString(char16_t** aResult) const;
-  nsresult ConvertToStringWithSize(uint32_t* aSize, char** aStr) const;
-  nsresult ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const;
+  MOZ_MUST_USE nsresult ConvertToAString(nsAString& aResult) const;
+  MOZ_MUST_USE nsresult ConvertToAUTF8String(nsAUTF8String& aResult) const;
+  MOZ_MUST_USE nsresult ConvertToACString(nsACString& aResult) const;
+  MOZ_MUST_USE nsresult ConvertToString(char** aResult) const;
+  MOZ_MUST_USE nsresult ConvertToWString(char16_t** aResult) const;
+  MOZ_MUST_USE nsresult ConvertToStringWithSize(uint32_t* aSize, char** aStr) const;
+  MOZ_MUST_USE nsresult ConvertToWStringWithSize(uint32_t* aSize, char16_t** aStr) const;
 
-  nsresult ConvertToISupports(nsISupports** aResult) const;
-  nsresult ConvertToInterface(nsIID** aIID, void** aInterface) const;
-  nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
-                          uint32_t* aCount, void** aPtr) const;
+  MOZ_MUST_USE nsresult ConvertToISupports(nsISupports** aResult) const;
+  MOZ_MUST_USE nsresult ConvertToInterface(nsIID** aIID, void** aInterface) const;
+  MOZ_MUST_USE nsresult ConvertToArray(uint16_t* aType, nsIID* aIID,
+                                       uint32_t* aCount, void** aPtr) const;
 
-  nsresult SetFromVariant(nsIVariant* aValue);
+  MOZ_MUST_USE nsresult SetFromVariant(nsIVariant* aValue);
 
-  nsresult SetFromInt8(uint8_t aValue);
-  nsresult SetFromInt16(int16_t aValue);
-  nsresult SetFromInt32(int32_t aValue);
-  nsresult SetFromInt64(int64_t aValue);
-  nsresult SetFromUint8(uint8_t aValue);
-  nsresult SetFromUint16(uint16_t aValue);
-  nsresult SetFromUint32(uint32_t aValue);
-  nsresult SetFromUint64(uint64_t aValue);
-  nsresult SetFromFloat(float aValue);
-  nsresult SetFromDouble(double aValue);
-  nsresult SetFromBool(bool aValue);
-  nsresult SetFromChar(char aValue);
-  nsresult SetFromWChar(char16_t aValue);
-  nsresult SetFromID(const nsID& aValue);
-  nsresult SetFromAString(const nsAString& aValue);
-  nsresult SetFromDOMString(const nsAString& aValue);
-  nsresult SetFromAUTF8String(const nsAUTF8String& aValue);
-  nsresult SetFromACString(const nsACString& aValue);
-  nsresult SetFromString(const char* aValue);
-  nsresult SetFromWString(const char16_t* aValue);
-  nsresult SetFromISupports(nsISupports* aValue);
-  nsresult SetFromInterface(const nsIID& aIID, nsISupports* aValue);
-  nsresult SetFromArray(uint16_t aType, const nsIID* aIID, uint32_t aCount,
-                        void* aValue);
-  nsresult SetFromStringWithSize(uint32_t aSize, const char* aValue);
-  nsresult SetFromWStringWithSize(uint32_t aSize, const char16_t* aValue);
+  void SetFromInt8(uint8_t aValue);
+  void SetFromInt16(int16_t aValue);
+  void SetFromInt32(int32_t aValue);
+  void SetFromInt64(int64_t aValue);
+  void SetFromUint8(uint8_t aValue);
+  void SetFromUint16(uint16_t aValue);
+  void SetFromUint32(uint32_t aValue);
+  void SetFromUint64(uint64_t aValue);
+  void SetFromFloat(float aValue);
+  void SetFromDouble(double aValue);
+  void SetFromBool(bool aValue);
+  void SetFromChar(char aValue);
+  void SetFromWChar(char16_t aValue);
+  void SetFromID(const nsID& aValue);
+  void SetFromAString(const nsAString& aValue);
+  void SetFromDOMString(const nsAString& aValue);
+  void SetFromAUTF8String(const nsAUTF8String& aValue);
+  void SetFromACString(const nsACString& aValue);
+  MOZ_MUST_USE nsresult SetFromString(const char* aValue);
+  MOZ_MUST_USE nsresult SetFromWString(const char16_t* aValue);
+  void SetFromISupports(nsISupports* aValue);
+  void SetFromInterface(const nsIID& aIID, nsISupports* aValue);
+  MOZ_MUST_USE nsresult SetFromArray(uint16_t aType, const nsIID* aIID,
+                                     uint32_t aCount, void* aValue);
+  MOZ_MUST_USE nsresult SetFromStringWithSize(uint32_t aSize,
+                                              const char* aValue);
+  MOZ_MUST_USE nsresult SetFromWStringWithSize(uint32_t aSize,
+                                               const char16_t* aValue);
 
   // Like SetFromWStringWithSize, but leaves the string uninitialized. It does
   // does write the null-terminator.
-  nsresult AllocateWStringWithSize(uint32_t aSize);
+  void AllocateWStringWithSize(uint32_t aSize);
 
-  nsresult SetToVoid();
-  nsresult SetToEmpty();
-  nsresult SetToEmptyArray();
+  void SetToVoid();
+  void SetToEmpty();
+  void SetToEmptyArray();
 
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
 
 private:
-  nsresult ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
+  MOZ_MUST_USE nsresult
+  ToManageableNumber(nsDiscriminatedUnion* aOutData) const;
   void FreeArray();
-  bool String2ID(nsID* aPid) const;
-  nsresult ToString(nsACString& aOutString) const;
+  MOZ_MUST_USE bool String2ID(nsID* aPid) const;
+  MOZ_MUST_USE nsresult ToString(nsACString& aOutString) const;
 
 public:
   union

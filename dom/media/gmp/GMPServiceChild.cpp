@@ -76,7 +76,7 @@ public:
     bool ok = aGMPServiceChild->SendLoadGMP(mNodeId, mAPI, mTags,
                                             alreadyBridgedTo, &otherProcess,
                                             &displayName, &pluginId, &rv);
-    if (!ok && rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+    if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
       mCallback->Done(nullptr);
       return;
     }

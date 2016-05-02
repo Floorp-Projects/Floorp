@@ -104,7 +104,7 @@ nsAtomList::~nsAtomList(void)
   NS_CSS_DELETE_LIST_MEMBER(nsAtomList, this, mNext);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType)
+nsPseudoClassList::nsPseudoClassList(CSSPseudoClassType aType)
   : mType(aType),
     mNext(nullptr)
 {
@@ -115,7 +115,7 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType)
   u.mMemory = nullptr;
 }
 
-nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(CSSPseudoClassType aType,
                                      const char16_t* aString)
   : mType(aType),
     mNext(nullptr)
@@ -127,7 +127,7 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
   u.mString = NS_strdup(aString);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(CSSPseudoClassType aType,
                                      const int32_t* aIntPair)
   : mType(aType),
     mNext(nullptr)
@@ -141,7 +141,7 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
 }
 
 // adopts aSelectorList
-nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
+nsPseudoClassList::nsPseudoClassList(CSSPseudoClassType aType,
                                      nsCSSSelectorList* aSelectorList)
   : mType(aType),
     mNext(nullptr)
@@ -421,24 +421,24 @@ void nsCSSSelector::AddClass(const nsString& aClass)
   }
 }
 
-void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType)
+void nsCSSSelector::AddPseudoClass(CSSPseudoClassType aType)
 {
   AddPseudoClassInternal(new nsPseudoClassList(aType));
 }
 
-void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
+void nsCSSSelector::AddPseudoClass(CSSPseudoClassType aType,
                                    const char16_t* aString)
 {
   AddPseudoClassInternal(new nsPseudoClassList(aType, aString));
 }
 
-void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
+void nsCSSSelector::AddPseudoClass(CSSPseudoClassType aType,
                                    const int32_t* aIntPair)
 {
   AddPseudoClassInternal(new nsPseudoClassList(aType, aIntPair));
 }
 
-void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
+void nsCSSSelector::AddPseudoClass(CSSPseudoClassType aType,
                                    nsCSSSelectorList* aSelectorList)
 {
   // Take ownership of nsCSSSelectorList instead of copying.

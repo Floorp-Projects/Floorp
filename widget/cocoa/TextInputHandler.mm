@@ -3967,6 +3967,16 @@ IMEInputHandler::OnSelectionChange(const IMENotification& aIMENotification)
   }
 }
 
+bool
+IMEInputHandler::OnHandleEvent(NSEvent* aEvent)
+{
+  if (!IsFocused()) {
+    return false;
+  }
+  NSTextInputContext* inputContext = [mView inputContext];
+  return [inputContext handleEvent:aEvent];
+}
+
 #pragma mark -
 
 

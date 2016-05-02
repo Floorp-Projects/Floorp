@@ -148,8 +148,8 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Create a new node through the element factory
-  nsCOMPtr<Element> newContent =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(NS_Atomize(aTag)));
+  nsCOMPtr<nsIAtom> tagAtom = NS_Atomize(aTag);
+  nsCOMPtr<Element> newContent = CreateHTMLContent(tagAtom);
   NS_ENSURE_STATE(newContent);
 
   nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);

@@ -3253,13 +3253,6 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
 }
 
 bool
-nsEditor::IsBlockNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return IsBlockNode(node);
-}
-
-bool
 nsEditor::IsBlockNode(nsINode* aNode)
 {
   // stub to be overridden in nsHTMLEditor.
@@ -3352,13 +3345,6 @@ nsEditor::IsDescendantOfRoot(nsINode* inNode)
   NS_ENSURE_TRUE(root, false);
 
   return nsContentUtils::ContentIsDescendantOf(inNode, root);
-}
-
-bool
-nsEditor::IsDescendantOfEditorRoot(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return IsDescendantOfEditorRoot(node);
 }
 
 bool
@@ -3655,13 +3641,15 @@ nsEditor::GetChildAt(nsIDOMNode *aParent, int32_t aOffset)
 // assuming that aParentOrNode is the node itself if it's a text node, or
 // the node's parent otherwise.
 //
-nsCOMPtr<nsIDOMNode>
+nsIContent*
 nsEditor::GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset)
 {
-  if (IsTextNode(aParentOrNode)) {
-    return aParentOrNode;
+  nsCOMPtr<nsINode> parentOrNode = do_QueryInterface(aParentOrNode);
+  NS_ENSURE_TRUE(parentOrNode || !aParentOrNode, nullptr);
+  if (parentOrNode->GetAsText()) {
+    return parentOrNode->AsContent();
   }
-  return GetChildAt(aParentOrNode, aOffset);
+  return parentOrNode->GetChildAt(aOffset);
 }
 
 

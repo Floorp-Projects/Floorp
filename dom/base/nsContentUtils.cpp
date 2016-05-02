@@ -8559,8 +8559,7 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
   }
 
   int32_t count = aContent->GetAttrCount();
-  for (int32_t i = count; i > 0;) {
-    --i;
+  for (int32_t i = 0; i < count; i++) {
     const nsAttrName* name = aContent->GetAttrNameAt(i);
     int32_t attNs = name->NamespaceID();
     nsIAtom* attName = name->LocalName();

@@ -222,7 +222,7 @@ PromiseObject::getID()
  * its dependent promise is.
  */
 bool
-PromiseObject::dependentPromises(JSContext* cx, AutoValueVector& values)
+PromiseObject::dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values)
 {
     RootedValue rejectReactionsVal(cx, getReservedSlot(PROMISE_REJECT_REACTIONS_SLOT));
     RootedObject rejectReactions(cx, rejectReactionsVal.toObjectOrNull());
