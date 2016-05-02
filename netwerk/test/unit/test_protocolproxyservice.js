@@ -604,6 +604,36 @@ function run_pac4_test() {
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
+  var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", run_pac5_test));
+}
+
+function run_pac5_test() {
+  // Bug 1251332
+  let wRange = [
+    ["SUN", "MON", "SAT", "MON"], // for Sun
+    ["SUN", "TUE", "SAT", "TUE"], // for Mon
+    ["MON", "WED", "SAT", "WED"], // for Tue
+    ["TUE", "THU", "SAT", "THU"], // for Wed
+    ["WED", "FRI", "WED", "SUN"], // for Thu
+    ["THU", "SAT", "THU", "SUN"], // for Fri
+    ["FRI", "SAT", "FRI", "SUN"], // for Sat
+  ];
+  let today = (new Date()).getDay();
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            '  if (weekdayRange("' + wRange[today][0] + '", "' + wRange[today][1] + '") &&' +
+            '      weekdayRange("' + wRange[today][2] + '", "' + wRange[today][3] + '")) {' +
+            '    return "PROXY foopy:8080; DIRECT";' +
+            '  }' +
+            '}';
+  var channel = NetUtil.newChannel({
+    uri: "http://www.mozilla.org/",
+    loadUsingSystemPrincipal: true
+  });
+  // Configure PAC
+
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
   var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", finish_pac_test));
 }
 

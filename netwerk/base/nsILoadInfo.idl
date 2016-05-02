@@ -118,7 +118,10 @@ interface nsILoadInfo : nsISupports
    * is loading the URI "http://b.com/whatever", GetChannelResultPrincipal
    * will return a principal from "http://a.com/".
    *
-   * This flag can not be used together with SEC_SANDBOXED.
+   * This flag can not be used together with SEC_SANDBOXED.  If both are passed
+   * to the LoadInfo constructor then this flag will be dropped.  If you need
+   * to know whether this flag would have been present but was dropped due to
+   * sandboxing, check for the SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED flag.
    */
   const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<7);
 
@@ -165,6 +168,14 @@ interface nsILoadInfo : nsISupports
    * GetUsePrivateBrowsing will always return true.
    */
   const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<12);
+
+  /**
+   * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
+   * object is created.  Specifically, it will be dropped if the SEC_SANDBOXED
+   * flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL was
+   * dropped.
+   */
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL_WAS_DROPPED = (1<<13);
 
   /**
    * The loadingPrincipal is the principal that is responsible for the load.

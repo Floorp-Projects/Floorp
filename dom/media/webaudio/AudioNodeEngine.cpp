@@ -78,10 +78,7 @@ void AudioBufferAddWithScale(const float* aInput,
 #endif
 
 #ifdef USE_SSE2
-  // TODO: See Bug 1266112, we should either fix the source of the unaligned
-  //       buffers or do as much as possible with vector instructions and
-  //       fallback to scalar instructions where necessary.
-  if (mozilla::supports_sse2() && IS_ALIGNED16(aInput) && IS_ALIGNED16(aOutput)) {
+  if (mozilla::supports_sse2()) {
     AudioBufferAddWithScale_SSE(aInput, aScale, aOutput, aSize);
     return;
   }
@@ -122,10 +119,7 @@ AudioBlockCopyChannelWithScale(const float* aInput,
 #endif
 
 #ifdef USE_SSE2
-    // TODO: See Bug 1266112, we should either fix the source of the unaligned
-    //       buffers or do as much as possible with vector instructions and
-    //       fallback to scalar instructions where necessary.
-    if (mozilla::supports_sse2() && IS_ALIGNED16(aInput) && IS_ALIGNED16(aOutput)) {
+    if (mozilla::supports_sse2()) {
       AudioBlockCopyChannelWithScale_SSE(aInput, aScale, aOutput);
       return;
     }

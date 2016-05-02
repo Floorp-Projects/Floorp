@@ -85,7 +85,15 @@ ServoStyleSet::GetContext(nsIContent* aContent,
 {
   RefPtr<ServoComputedValues> computedValues = dont_AddRef(Servo_GetComputedValues(aContent));
   MOZ_ASSERT(computedValues);
+  return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
+}
 
+already_AddRefed<nsStyleContext>
+ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
+                          nsStyleContext* aParentContext,
+                          nsIAtom* aPseudoTag,
+                          CSSPseudoElementType aPseudoType)
+{
   // XXXbholley: nsStyleSet does visited handling here.
 
   // XXXbholley: Figure out the correct thing to pass here. Does this fixup
@@ -94,7 +102,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
 
   return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
                             aPseudoType,
-                            computedValues.forget(), skipFixup);
+                            Move(aComputedValues), skipFixup);
 }
 
 already_AddRefed<nsStyleContext>
@@ -129,7 +137,19 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
                                          nsStyleContext* aParentContext,
                                          Element* aPseudoElement)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(!aPseudoElement,
+             "stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  MOZ_ASSERT(aParentContext);
+  MOZ_ASSERT(aType < CSSPseudoElementType::Count);
+  nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
+
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_GetComputedValuesForPseudoElement(
+      aParentContext->StyleSource().AsServoComputedValues(),
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false);
+  MOZ_ASSERT(computedValues);
+
+  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
 }
 
 // aFlags is an nsStyleSet flags bitfield
@@ -290,7 +310,35 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                        CSSPseudoElementType aType,
                                        nsStyleContext* aParentContext)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(aParentContext);
+  MOZ_ASSERT(aType < CSSPseudoElementType::Count);
+  nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
+
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_GetComputedValuesForPseudoElement(
+      aParentContext->StyleSource().AsServoComputedValues(),
+      aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true);
+
+  if (!computedValues) {
+    return nullptr;
+  }
+
+  // For :before and :after pseudo-elements, having display: none or no
+  // 'content' property is equivalent to not having the pseudo-element
+  // at all.
+  if (computedValues &&
+      (pseudoTag == nsCSSPseudoElements::before ||
+       pseudoTag == nsCSSPseudoElements::after)) {
+    const nsStyleDisplay *display = Servo_GetStyleDisplay(computedValues);
+    const nsStyleContent *content = Servo_GetStyleContent(computedValues);
+    // XXXldb What is contentCount for |content: ""|?
+    if (display->mDisplay == NS_STYLE_DISPLAY_NONE ||
+        content->ContentCount() == 0) {
+      return nullptr;
+    }
+  }
+
+  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
 }
 
 already_AddRefed<nsStyleContext>
@@ -300,7 +348,9 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                        TreeMatchContext& aTreeMatchContext,
                                        Element* aPseudoElement)
 {
-  MOZ_CRASH("stylo: not implemented");
+  MOZ_ASSERT(!aPseudoElement,
+             "stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  return ProbePseudoElementStyle(aParentElement, aType, aParentContext);
 }
 
 nsRestyleHint

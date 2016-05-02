@@ -1907,7 +1907,7 @@ public:
                                            MediaStreamTrackSource)
 
   explicit CaptureStreamTrackSource(HTMLMediaElement* aElement)
-    : MediaStreamTrackSource(nsCOMPtr<nsIPrincipal>(aElement->GetCurrentPrincipal()),
+    : MediaStreamTrackSource(nsCOMPtr<nsIPrincipal>(aElement->GetCurrentPrincipal()).get(),
                              true,
                              nsString())
     , mElement(aElement)

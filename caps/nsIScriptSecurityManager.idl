@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(b7ae2310-576e-11e5-a837-0800200c9a66)]
+[scriptable, uuid(da831650-4241-4892-806c-cce8465a2ba8)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -241,6 +241,24 @@ interface nsIScriptSecurityManager : nsISupports
      * channel's URI otherwise.  aChannel must not be null.
      */
     nsIPrincipal getChannelResultPrincipal(in nsIChannel aChannel);
+
+    /**
+     * Temporary API until bug 1220687 is fixed.
+     *
+     * Returns the same value as getChannelResultPrincipal, but ignoring
+     * sandboxing.  Specifically, if sandboxing would have prevented the
+     * channel's triggering principal from being returned by
+     * getChannelResultPrincipal, the triggering principal will be returned
+     * by this method.
+     *
+     * Note that this method only ignores sandboxing of the channel in
+     * question, it does not ignore sandboxing of any channels further up a
+     * document chain.  The triggering principal itself may still be the null
+     * principal due to sandboxing further up a document chain.  In that regard
+     * the ignoring of sandboxing is limited.
+     */
+    [noscript, nostdcall]
+    nsIPrincipal getChannelResultPrincipalIfNotSandboxed(in nsIChannel aChannel);
 
     /**
      * Get the codebase principal for the channel's URI.

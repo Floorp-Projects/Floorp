@@ -81,7 +81,7 @@ interface nsISupportsArray : nsICollection {
 %{C++
 
 // Construct and return a default implementation of nsISupportsArray:
-extern nsresult
+extern MOZ_MUST_USE nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult);
 
 %}

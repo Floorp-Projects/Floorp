@@ -159,7 +159,10 @@ public:
   // nullptr if the import is not yet ready.
   nsIDocument* GetImport()
   {
-    return mReady ? mDocument : nullptr;
+    if (!mReady) {
+      return nullptr;
+    }
+    return mDocument;
   }
 
   // There is only one referring link that is marked as primary link per
@@ -170,7 +173,10 @@ public:
   // a new import link is added to the manager.
   nsINode* GetMainReferrer()
   {
-    return mLinks.IsEmpty() ? nullptr : mLinks[mMainReferrer];
+    if (mLinks.IsEmpty()) {
+      return nullptr;
+    }
+    return mLinks[mMainReferrer];
   }
 
   // An import is not only blocked by its import children, but also

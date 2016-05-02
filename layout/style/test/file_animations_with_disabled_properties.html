@@ -1,0 +1,50 @@
+<!doctype html>
+<head>
+  <meta charset=utf-8>
+  <style>
+  @keyframes enabled-and-disabled {
+    from {
+      left: 0px;
+      -webkit-text-fill-color: green;
+    }
+    to {
+      left: 100px;
+      -webkit-text-fill-color: blue;
+    }
+  }
+  </style>
+  <script>
+    var is = opener.is.bind(opener);
+    var ok = opener.ok.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script>
+'use strict';
+
+var display = document.getElementById('display');
+display.style.animation = 'enabled-and-disabled 0.01s';
+
+var animation = display.getAnimations()[0];
+is(animation.effect.getFrames().length, 2,
+   'Got two frames on the generated animation');
+
+ok(animation.effect.getFrames()[0].hasOwnProperty('left'),
+   'Enabled property is set on initial keyframe');
+ok(!animation.effect.getFrames()[0].hasOwnProperty('webkitTextFillColor'),
+   'Disabled property is not set on initial keyframe');
+
+ok(animation.effect.getFrames()[1].hasOwnProperty('left'),
+   'Enabled property is set on final keyframe');
+ok(!animation.effect.getFrames()[1].hasOwnProperty('webkitTextFillColor'),
+   'Disabled property is not set on final keyframe');
+
+finish();
+</script>
+</body>

@@ -26,6 +26,7 @@ import platform
 import re
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -528,6 +529,7 @@ class MochitestBase(object):
         self.update_mozinfo()
         self.server = None
         self.wsserver = None
+        self.websocketProcessBridge = None
         self.sslTunnel = None
         self._active_tests = None
         self._locations = None
@@ -805,6 +807,37 @@ class MochitestBase(object):
             with open(options.pidFile + ".xpcshell.pid", 'w') as f:
                 f.write("%s" % self.server._process.pid)
 
+    def startWebsocketProcessBridge(self, options):
+        """Create a websocket server that can launch various processes that
+        JS needs (eg; ICE server for webrtc testing)
+        """
+
+        command = [sys.executable,
+                   os.path.join("websocketprocessbridge",
+                                "websocketprocessbridge.py")]
+        self.websocketProcessBridge = mozprocess.ProcessHandler(command,
+                                                                cwd=SCRIPT_DIR)
+        self.websocketProcessBridge.run()
+        self.log.info("runtests.py | websocket/process bridge pid: %d"
+                      % self.websocketProcessBridge.pid)
+
+        # ensure the server is up, wait for at most ten seconds
+        for i in range(1,100):
+            if self.websocketProcessBridge.proc.poll() is not None:
+                self.log.error("runtests.py | websocket/process bridge failed "
+                               "to launch. Are all the dependencies installed?")
+                return
+
+            try:
+                sock = socket.create_connection(("127.0.0.1", 8191))
+                sock.close()
+                break
+            except:
+                time.sleep(0.1)
+        else:
+            self.log.error("runtests.py | Timed out while waiting for "
+                           "websocket/process bridge startup.")
+
     def startServers(self, options, debuggerInfo, ignoreSSLTunnelExts=False):
         # start servers and set ports
         # TODO: pass these values, don't set on `self`
@@ -822,6 +855,9 @@ class MochitestBase(object):
 
         self.startWebServer(options)
         self.startWebSocketServer(options, debuggerInfo)
+
+        if options.subsuite in ["media"]:
+            self.startWebsocketProcessBridge(options)
 
         # start SSL pipe
         self.sslTunnel = SSLTunnel(
@@ -861,6 +897,13 @@ class MochitestBase(object):
                 self.sslTunnel.stop()
             except Exception:
                 self.log.critical('Exception stopping ssltunnel')
+
+        if self.websocketProcessBridge is not None:
+            try:
+                self.websocketProcessBridge.kill()
+                self.log.info('Stopping websocket/process bridge')
+            except Exception:
+                self.log.critical('Exception stopping websocket/process bridge')
 
     def copyExtraFilesToProfile(self, options):
         "Copy extra files or dirs specified on the command line to the testing profile."

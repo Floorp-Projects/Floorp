@@ -185,14 +185,14 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
       EffectCompositor::RestyleType::Throttled :
       EffectCompositor::RestyleType::Standard;
     RequestRestyle(restyleType);
+  }
 
-    // If we're not relevant, we will have been removed from the EffectSet.
-    // As a result, when the restyle we requested above is fulfilled, our
-    // ComposeStyle will not get called and mProgressOnLastCompose will not
-    // be updated. Instead, we need to manually clear it.
-    if (!isRelevant) {
-      mProgressOnLastCompose.SetNull();
-    }
+  // If we're no longer "in effect", our ComposeStyle method will never be
+  // called and we will never have a chance to update mProgressOnLastCompose.
+  // We clear mProgressOnLastCompose here to ensure that if we later become
+  // "in effect" we will request a restyle (above).
+  if (!inEffect) {
+     mProgressOnLastCompose.SetNull();
   }
 }
 

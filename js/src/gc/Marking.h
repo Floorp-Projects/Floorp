@@ -420,14 +420,34 @@ template <typename S, typename T>
 struct RewrapTaggedPointer{};
 #define DECLARE_REWRAP(S, T, method, prefix) \
     template <> struct RewrapTaggedPointer<S, T> { \
-        static S wrap(T thing) { return method ( prefix thing ); } \
+        static S wrap(T* thing) { return method ( prefix thing ); } \
     }
-DECLARE_REWRAP(JS::Value, JSObject*, JS::ObjectOrNullValue, );
-DECLARE_REWRAP(JS::Value, JSString*, JS::StringValue, );
-DECLARE_REWRAP(JS::Value, JS::Symbol*, JS::SymbolValue, );
-DECLARE_REWRAP(jsid, JSString*, NON_INTEGER_ATOM_TO_JSID, (JSAtom*));
-DECLARE_REWRAP(jsid, JS::Symbol*, SYMBOL_TO_JSID, );
-DECLARE_REWRAP(js::TaggedProto, JSObject*, js::TaggedProto, );
+DECLARE_REWRAP(JS::Value, JSObject, JS::ObjectOrNullValue, );
+DECLARE_REWRAP(JS::Value, JSString, JS::StringValue, );
+DECLARE_REWRAP(JS::Value, JS::Symbol, JS::SymbolValue, );
+DECLARE_REWRAP(jsid, JSString, NON_INTEGER_ATOM_TO_JSID, (JSAtom*));
+DECLARE_REWRAP(jsid, JS::Symbol, SYMBOL_TO_JSID, );
+DECLARE_REWRAP(js::TaggedProto, JSObject, js::TaggedProto, );
+#undef DECLARE_REWRAP
+
+template <typename T>
+struct IsPrivateGCThingInValue
+  : public mozilla::EnableIf<mozilla::IsBaseOf<Cell, T>::value &&
+                             !mozilla::IsBaseOf<JSObject, T>::value &&
+                             !mozilla::IsBaseOf<JSString, T>::value &&
+                             !mozilla::IsBaseOf<JS::Symbol, T>::value, T>
+{
+    static_assert(!mozilla::IsSame<Cell, T>::value && !mozilla::IsSame<TenuredCell, T>::value,
+                  "T must not be Cell or TenuredCell");
+};
+
+template <typename T>
+struct RewrapTaggedPointer<Value, T>
+{
+    static Value wrap(typename IsPrivateGCThingInValue<T>::Type* thing) {
+        return JS::PrivateGCThingValue(thing);
+    }
+};
 
 } /* namespace gc */
 

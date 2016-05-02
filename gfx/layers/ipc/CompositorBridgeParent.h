@@ -38,6 +38,7 @@
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/VsyncDispatcher.h"
+#include "CompositorWidgetProxy.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -227,9 +228,11 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
   friend class CompositorVsyncScheduler;
 
 public:
-  explicit CompositorBridgeParent(nsIWidget* aWidget,
-                            bool aUseExternalSurfaceSize = false,
-                            int aSurfaceWidth = -1, int aSurfaceHeight = -1);
+  explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
+                                  CSSToLayoutDeviceScale aScale,
+                                  bool aUseAPZ,
+                                  bool aUseExternalSurfaceSize = false,
+                                  int aSurfaceWidth = -1, int aSurfaceHeight = -1);
 
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
@@ -496,7 +499,7 @@ public:
    */
   static bool IsInCompositorThread();
 
-  nsIWidget* GetWidget() { return mWidget; }
+  widget::CompositorWidgetProxy* GetWidgetProxy() { return mWidgetProxy; }
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
@@ -569,7 +572,7 @@ protected:
   RefPtr<LayerManagerComposite> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
-  nsIWidget* mWidget;
+  widget::CompositorWidgetProxy* mWidgetProxy;
   TimeStamp mTestTime;
   bool mIsTesting;
 

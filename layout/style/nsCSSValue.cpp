@@ -934,7 +934,7 @@ nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
     aResult.Append(' ');
   }
   aResult.AppendLiteral("at ");
-  array->Item(count).AppendToString(eCSSProperty_background_position,
+  array->Item(count).AppendToString(eCSSProperty_object_position,
                                     aResult, aSerialization);
 }
 
@@ -1549,12 +1549,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         aResult.AppendLiteral("to");
         if (!(gradient->mBgPos.mXValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
           aResult.Append(' ');
-          gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
+          gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position_x,
                                                   aResult, aSerialization);
         }
         if (!(gradient->mBgPos.mYValue.GetIntValue() & NS_STYLE_IMAGELAYER_POSITION_CENTER)) {
           aResult.Append(' ');
-          gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
+          gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position_y,
                                                   aResult, aSerialization);
         }
         needSep = true;
@@ -1572,12 +1572,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         aResult.AppendLiteral("at ");
       }
       if (gradient->mBgPos.mXValue.GetUnit() != eCSSUnit_None) {
-        gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position,
+        gradient->mBgPos.mXValue.AppendToString(eCSSProperty_background_position_x,
                                                 aResult, aSerialization);
         aResult.Append(' ');
       }
       if (gradient->mBgPos.mYValue.GetUnit() != eCSSUnit_None) {
-        gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position,
+        gradient->mBgPos.mYValue.AppendToString(eCSSProperty_background_position_y,
                                                 aResult, aSerialization);
         aResult.Append(' ');
       }

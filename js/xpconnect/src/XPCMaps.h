@@ -465,7 +465,10 @@ public:
     inline nsIXPCFunctionThisTranslator* Find(REFNSIID iid)
     {
         auto entry = static_cast<Entry*>(mTable.Search(&iid));
-        return entry ? entry->value : nullptr;
+        if (!entry) {
+            return nullptr;
+        }
+        return entry->value;
     }
 
     inline nsIXPCFunctionThisTranslator* Add(REFNSIID iid,

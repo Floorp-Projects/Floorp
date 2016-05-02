@@ -51,7 +51,7 @@ public:
     mState = ZERO;
   }
 
-  nsresult Put(const KeyType aVal);
+  void Put(const KeyType aVal);
 
   void Remove(const KeyType aVal);
 
@@ -119,14 +119,14 @@ private:
 };
 
 template<typename EntryType>
-nsresult
+void
 nsCheapSet<EntryType>::Put(const KeyType aVal)
 {
   switch (mState) {
     case ZERO:
       new (GetSingleEntry()) EntryType(EntryType::KeyToPointer(aVal));
       mState = ONE;
-      return NS_OK;
+      return;
     case ONE: {
       nsTHashtable<EntryType>* table = new nsTHashtable<EntryType>();
       EntryType* entry = GetSingleEntry();
@@ -139,10 +139,10 @@ nsCheapSet<EntryType>::Put(const KeyType aVal)
 
     case MANY:
       mUnion.table->PutEntry(aVal);
-      return NS_OK;
+      return;
     default:
       NS_NOTREACHED("bogus state");
-      return NS_OK;
+      return;
   }
 }
 

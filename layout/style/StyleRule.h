@@ -17,7 +17,6 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
 
@@ -25,7 +24,7 @@ class nsIAtom;
 struct nsCSSSelectorList;
 
 namespace mozilla {
-enum class CSSPseudoElementType : uint8_t;
+enum class CSSPseudoClassType : uint8_t;
 class CSSStyleSheet;
 } // namespace mozilla
 
@@ -42,7 +41,7 @@ public:
 
   nsCOMPtr<nsIAtom> mAtom;
   nsAtomList*       mNext;
-private: 
+private:
   nsAtomList* Clone(bool aDeep) const;
 
   nsAtomList(const nsAtomList& aCopy) = delete;
@@ -51,10 +50,12 @@ private:
 
 struct nsPseudoClassList {
 public:
-  explicit nsPseudoClassList(nsCSSPseudoClasses::Type aType);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const char16_t *aString);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const int32_t *aIntPair);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType,
+  typedef mozilla::CSSPseudoClassType CSSPseudoClassType;
+
+  explicit nsPseudoClassList(CSSPseudoClassType aType);
+  nsPseudoClassList(CSSPseudoClassType aType, const char16_t *aString);
+  nsPseudoClassList(CSSPseudoClassType aType, const int32_t *aIntPair);
+  nsPseudoClassList(CSSPseudoClassType aType,
                     nsCSSSelectorList *aSelectorList /* takes ownership */);
   ~nsPseudoClassList(void);
 
@@ -74,13 +75,13 @@ public:
     //   d. a selector list, which means mSelectors is non-null
     //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
     void*           mMemory; // mString and mNumbers use moz_xmalloc/free
-    char16_t*      mString;
+    char16_t*       mString;
     int32_t*        mNumbers;
     nsCSSSelectorList* mSelectors;
   } u;
-  nsCSSPseudoClasses::Type mType;
+  CSSPseudoClassType mType;
   nsPseudoClassList* mNext;
-private: 
+private:
   nsPseudoClassList* Clone(bool aDeep) const;
 
   nsPseudoClassList(const nsPseudoClassList& aCopy) = delete;
@@ -132,7 +133,7 @@ public:
   uint8_t         mFunction;
   ValueCaseSensitivity mValueCaseSensitivity;
 
-private: 
+private:
   nsAttrSelector* Clone(bool aDeep) const;
 
   nsAttrSelector(const nsAttrSelector& aCopy) = delete;
@@ -141,6 +142,8 @@ private:
 
 struct nsCSSSelector {
 public:
+  typedef mozilla::CSSPseudoClassType CSSPseudoClassType;
+
   nsCSSSelector(void);
   ~nsCSSSelector(void);
 
@@ -152,14 +155,14 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const char16_t* aString);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const int32_t* aIntPair);
+  void AddPseudoClass(CSSPseudoClassType aType);
+  void AddPseudoClass(CSSPseudoClassType aType, const char16_t* aString);
+  void AddPseudoClass(CSSPseudoClassType aType, const int32_t* aIntPair);
   // takes ownership of aSelectorList
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType,
+  void AddPseudoClass(CSSPseudoClassType aType,
                       nsCSSSelectorList* aSelectorList);
   void AddAttribute(int32_t aNameSpace, const nsString& aAttr);
-  void AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
+  void AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc,
                     const nsString& aValue,
                     nsAttrSelector::ValueCaseSensitivity aValueCaseSensitivity);
   void SetOperator(char16_t aOperator);
