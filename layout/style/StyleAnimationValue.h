@@ -436,6 +436,7 @@ public:
   void SetColorValue(nscolor aColor);
   void SetCurrentColorValue();
   void SetUnparsedStringValue(const nsString& aString);
+  void SetCSSValueArrayValue(nsCSSValue::Array* aValue, Unit aUnit);
 
   // These setters take ownership of |aValue|, and are therefore named
   // "SetAndAdopt*".
@@ -443,7 +444,6 @@ public:
   void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
   void SetAndAdoptCSSValueTripletValue(nsCSSValueTriplet *aValue, Unit aUnit);
   void SetAndAdoptCSSRectValue(nsCSSRect *aValue, Unit aUnit);
-  void SetAndAdoptCSSValueArrayValue(nsCSSValue::Array* aValue, Unit aUnit);
   void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
   void SetAndAdoptCSSValuePairListValue(nsCSSValuePairList *aValue);
 
