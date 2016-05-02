@@ -42,6 +42,7 @@ add_task(function* runTest()
   yield iframe1Loaded;
   info("Ensuring iframe2 has loaded...");
   yield iframe2Loaded;
+  let state, action;
 
   state = {
     msg         : "hello world",
@@ -61,7 +62,7 @@ add_task(function* runTest()
     buttonClick: "ok",
   };
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   var button = document.querySelector("button");
   dispatchMouseEvent(button, "click");
@@ -72,7 +73,7 @@ add_task(function* runTest()
   // mostly reusing same state/action
   state.titleHidden = false;
   state.msg = "hello world 2";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   var iframe = document.getElementById("iframe_diff_origin");
   button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
@@ -84,7 +85,7 @@ add_task(function* runTest()
   // mostly reusing same state/action
   state.titleHidden = true;
   state.msg = "hello world 2";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   iframe = document.getElementById("iframe_same_origin");
   button = iframe.contentWindow.document.getElementById("btn1");
@@ -95,7 +96,7 @@ add_task(function* runTest()
 
   // mostly reusing same state/action
   state.msg = "hello world 3";
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   button = iframe.contentWindow.document.getElementById("btn2");
   dispatchMouseEvent(button, "click");

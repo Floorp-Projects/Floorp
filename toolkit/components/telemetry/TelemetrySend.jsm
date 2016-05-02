@@ -911,6 +911,7 @@ var TelemetrySendImpl = {
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+    request.setRequestHeader("Date", Policy.now().toUTCString());
 
     this._pendingPingRequests.set(id, request);
 

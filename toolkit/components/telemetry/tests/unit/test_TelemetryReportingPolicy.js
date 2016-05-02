@@ -217,7 +217,7 @@ add_task(function* test_canSend() {
   PingServer.start();
   Preferences.set(PREF_SERVER, "http://localhost:" + PingServer.port);
 
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   TelemetryReportingPolicy.reset();
 
   // User should be reported as not notified by default.
@@ -248,7 +248,7 @@ add_task(function* test_canSend() {
 
   // Fake a restart with a pending ping.
   yield TelemetryController.addPendingPing(TEST_PING_TYPE, {});
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
 
   // We should be immediately sending the ping out.
   ping = yield PingServer.promiseNextPings(1);

@@ -1834,7 +1834,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          if (!this.parentNode.parentNode.popupOpen) {
+          let popup = this.parentNode.parentNode;
+          if (!popup.popupOpen) {
             // Removing the max-width and resetting it later when overflow is
             // handled is jarring when the item is visible, so skip this when
             // the popup is open.
@@ -1946,11 +1947,15 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           }
 
           if (!displayUrl) {
-            let input = this.parentNode.parentNode.input;
+            let input = popup.input;
             let url = typeof(input.trimValue) == "function" ?
                       input.trimValue(originalUrl) :
                       originalUrl;
             displayUrl = this._unescapeUrl(url);
+          }
+          // For performance reasons we may want to limit the displayUrl size.
+          if (popup.textRunsMaxLen) {
+            displayUrl = displayUrl.substr(0, popup.textRunsMaxLen);
           }
           this.setAttribute("displayurl", displayUrl);
 
@@ -2009,8 +2014,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this.setAttribute("type", type);
 
           if (Array.isArray(title)) {
+            // For performance reasons we may want to limit the title size.
+            if (popup.textRunsMaxLen) {
+              title = title.map(t => t.substr(0, popup.textRunsMaxLen));
+            }
             this._setUpEmphasisedSections(this._titleText, title);
           } else {
+            // For performance reasons we may want to limit the title size.
+            if (popup.textRunsMaxLen) {
+              title = title.substr(0, popup.textRunsMaxLen);
+            }
             this._setUpDescription(this._titleText, title, false);
           }
           this._setUpDescription(this._urlText, displayUrl, !emphasiseUrl);
