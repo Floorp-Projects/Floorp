@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Don't get stuck buffering for too long when we have frames to show</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var receivedSourceOpen = false;
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    ok(true, "Receive a sourceopen event");
+    ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
+    receivedSourceOpen = true;
+    var sb = ms.addSourceBuffer("video/mp4");
+    ok(sb, "Create a SourceBuffer");
+
+    sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+    fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
+    .then(function() {
+      var promises = [];
+      promises.push(fetchAndLoad(sb, 'bipbop/bipbop', range(1,3), '.m4s'));
+      promises.push(once(v, "loadeddata"));
+      return Promise.all(promises);
+    }).then(function() {
+      // clear the entire sourcebuffer.
+      sb.remove(0, 5);
+      return once(sb, "updateend");
+    }).then(function() {
+      v.play();
+      // We have nothing to play, waiting will be fired.
+      return once(v, "waiting");
+    }).then(function() {
+      var promises = [];
+      promises.push(once(v, "playing"));
+      promises.push(fetchAndLoad(sb, 'bipbop/bipbop', range(1,3), '.m4s'));
+      return Promise.all(promises);
+    }).then(function() {
+      ms.endOfStream();
+      var promises = [];
+      promises.push(once(ms, "sourceended"));
+      promises.push(once(v, "ended"));
+      return Promise.all(promises);
+    }).then(SimpleTest.finish.bind(SimpleTest));
+  });
+});
+</script>
+</pre>
+</body>
+</html>
