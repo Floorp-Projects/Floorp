@@ -424,81 +424,95 @@ class ExprIter MOZ_STACK_CLASS : private Policy
 
     MOZ_MUST_USE bool readExpr(Expr* expr);
     MOZ_MUST_USE bool readFunctionStart();
-    MOZ_MUST_USE bool readFunctionEnd(ExprType ret, Value* value);
-    MOZ_MUST_USE bool readReturn(Value* value);
+    MOZ_MUST_USE bool readFunctionEnd(ExprType ret, Value* value = nullptr);
+    MOZ_MUST_USE bool readReturn(Value* value = nullptr);
     MOZ_MUST_USE bool readBlock();
     MOZ_MUST_USE bool readLoop();
-    MOZ_MUST_USE bool readIf(Value* condition);
-    MOZ_MUST_USE bool readElse(ExprType* thenType, Value* thenValue);
-    MOZ_MUST_USE bool readEnd(LabelKind* kind, ExprType* type, Value* value);
-    MOZ_MUST_USE bool readBr(uint32_t* relativeDepth, ExprType* type, Value* value);
-    MOZ_MUST_USE bool readBrIf(uint32_t* relativeDepth, ExprType* type,
-                               Value* value, Value* condition);
+    MOZ_MUST_USE bool readIf(Value* condition = nullptr);
+    MOZ_MUST_USE bool readElse(ExprType* thenType = nullptr, Value* thenValue = nullptr);
+    MOZ_MUST_USE bool readEnd(LabelKind* kind = nullptr,
+                              ExprType* type = nullptr, Value* value = nullptr);
+    MOZ_MUST_USE bool readBr(uint32_t* relativeDepth = nullptr,
+                             ExprType* type = nullptr, Value* value = nullptr);
+    MOZ_MUST_USE bool readBrIf(uint32_t* relativeDepth = nullptr, ExprType* type = nullptr,
+                               Value* value = nullptr, Value* condition = nullptr);
     MOZ_MUST_USE bool readBrTable(uint32_t* tableLength, ExprType* type,
-                                  Value* value, Value* index);
+                                  Value* value = nullptr, Value* index = nullptr);
     MOZ_MUST_USE bool readBrTableEntry(ExprType type, uint32_t* depth);
     MOZ_MUST_USE bool readUnreachable();
-    MOZ_MUST_USE bool readUnary(ValType operandType, Value* input);
-    MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType, Value* input);
-    MOZ_MUST_USE bool readBinary(ValType operandType, Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readComparison(ValType operandType, Value* lhs, Value* rhs);
+    MOZ_MUST_USE bool readUnary(ValType operandType, Value* input = nullptr);
+    MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType,
+                                     Value* input = nullptr);
+    MOZ_MUST_USE bool readBinary(ValType operandType,
+                                 Value* lhs = nullptr, Value* rhs = nullptr);
+    MOZ_MUST_USE bool readComparison(ValType operandType,
+                                     Value* lhs = nullptr, Value* rhs = nullptr);
     MOZ_MUST_USE bool readLoad(ValType resultType, uint32_t byteSize,
-                               LinearMemoryAddress<Value>* addr);
+                               LinearMemoryAddress<Value>* addr = nullptr);
     MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize,
-                                LinearMemoryAddress<Value>* addr, Value* value);
+                                LinearMemoryAddress<Value>* addr = nullptr,
+                                Value* value = nullptr);
     MOZ_MUST_USE bool readNullary();
-    MOZ_MUST_USE bool readSelect(ExprType* type,
-                                 Value* trueValue, Value* falseValue, Value* condition);
-    MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
-    MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* value);
-    MOZ_MUST_USE bool readGetGlobal(const GlobalDescVector& globals, uint32_t* id);
-    MOZ_MUST_USE bool readSetGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value);
-    MOZ_MUST_USE bool readI32Const(int32_t* i32);
-    MOZ_MUST_USE bool readI64Const(int64_t* i64);
-    MOZ_MUST_USE bool readF32Const(float* f32);
-    MOZ_MUST_USE bool readF64Const(double* f64);
-    MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4);
-    MOZ_MUST_USE bool readF32x4Const(F32x4* f32x4);
-    MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
+    MOZ_MUST_USE bool readSelect(ExprType* type = nullptr,
+                                 Value* trueValue = nullptr, Value* falseValue = nullptr,
+                                 Value* condition = nullptr);
+    MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals,
+                                   uint32_t* id = nullptr);
+    MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals,
+                                   uint32_t* id = nullptr, Value* value = nullptr);
+    MOZ_MUST_USE bool readGetGlobal(const GlobalDescVector& globals,
+                                    uint32_t* id = nullptr);
+    MOZ_MUST_USE bool readSetGlobal(const GlobalDescVector& globals,
+                                    uint32_t* id = nullptr, Value* value = nullptr);
+    MOZ_MUST_USE bool readI32Const(int32_t* i32 = nullptr);
+    MOZ_MUST_USE bool readI64Const(int64_t* i64 = nullptr);
+    MOZ_MUST_USE bool readF32Const(float* f32 = nullptr);
+    MOZ_MUST_USE bool readF64Const(double* f64 = nullptr);
+    MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4 = nullptr);
+    MOZ_MUST_USE bool readF32x4Const(F32x4* f32x4 = nullptr);
+    MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4 = nullptr);
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, uint32_t* arity);
-    MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, uint32_t* arity);
+    MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex,
+                                       uint32_t* arity);
     MOZ_MUST_USE bool readCallImport(uint32_t* importIndex, uint32_t* arity);
-    MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
+    MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex,
+                                  Value* arg = nullptr);
     MOZ_MUST_USE bool readCallArgsEnd(uint32_t numArgs);
-    MOZ_MUST_USE bool readCallIndirectCallee(Value* callee);
+    MOZ_MUST_USE bool readCallIndirectCallee(Value* callee = nullptr);
     MOZ_MUST_USE bool readCallReturn(ExprType ret);
-    MOZ_MUST_USE bool readAtomicLoad(LinearMemoryAddress<Value>* addr,
-                                     Scalar::Type* viewType);
-    MOZ_MUST_USE bool readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
-                                      Value* value);
-    MOZ_MUST_USE bool readAtomicBinOp(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
-                                      jit::AtomicOp* op,
-                                      Value* value);
-    MOZ_MUST_USE bool readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                                Scalar::Type* viewType,
-                                                Value* oldValue,
-                                                Value* newValue);
-    MOZ_MUST_USE bool readAtomicExchange(LinearMemoryAddress<Value>* addr,
-                                         Scalar::Type* viewType,
-                                         Value* newValue);
-    MOZ_MUST_USE bool readSimdComparison(ValType simdType, Value* lhs,
-                                         Value* rhs);
-    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
-                                            Value* rhs);
-    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input);
-    MOZ_MUST_USE bool readExtractLane(ValType simdType, jit::SimdLane* lane,
-                                      Value* vector);
-    MOZ_MUST_USE bool readReplaceLane(ValType simdType, jit::SimdLane* lane,
-                                      Value* vector, Value* scalar);
-    MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
-    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector);
-    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[4],
-                                  Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue,
-                                     Value* falseValue,
-                                     Value* condition);
+    MOZ_MUST_USE bool readAtomicLoad(LinearMemoryAddress<Value>* addr = nullptr,
+                                     Scalar::Type* viewType = nullptr);
+    MOZ_MUST_USE bool readAtomicStore(LinearMemoryAddress<Value>* addr = nullptr,
+                                      Scalar::Type* viewType = nullptr,
+                                      Value* value = nullptr);
+    MOZ_MUST_USE bool readAtomicBinOp(LinearMemoryAddress<Value>* addr = nullptr,
+                                      Scalar::Type* viewType = nullptr,
+                                      jit::AtomicOp* op = nullptr,
+                                      Value* value = nullptr);
+    MOZ_MUST_USE bool readAtomicCompareExchange(LinearMemoryAddress<Value>* addr = nullptr,
+                                                Scalar::Type* viewType = nullptr,
+                                                Value* oldValue = nullptr,
+                                                Value* newValue = nullptr);
+    MOZ_MUST_USE bool readAtomicExchange(LinearMemoryAddress<Value>* addr = nullptr,
+                                         Scalar::Type* viewType = nullptr,
+                                         Value* newValue = nullptr);
+    MOZ_MUST_USE bool readSimdComparison(ValType simdType, Value* lhs = nullptr,
+                                         Value* rhs = nullptr);
+    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs = nullptr,
+                                            Value* rhs = nullptr);
+    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input = nullptr);
+    MOZ_MUST_USE bool readExtractLane(ValType simdType, jit::SimdLane* lane = nullptr,
+                                      Value* vector = nullptr);
+    MOZ_MUST_USE bool readReplaceLane(ValType simdType, jit::SimdLane* lane = nullptr,
+                                      Value* vector = nullptr, Value* scalar = nullptr);
+    MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar = nullptr);
+    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4] = nullptr,
+                                  Value* vector = nullptr);
+    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[4] = nullptr,
+                                  Value* lhs = nullptr, Value* rhs = nullptr);
+    MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue = nullptr,
+                                     Value* falseValue = nullptr,
+                                     Value* condition = nullptr);
     MOZ_MUST_USE bool readSimdCtor();
     MOZ_MUST_USE bool readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t argIndex, Value* arg);
     MOZ_MUST_USE bool readSimdCtorArgsEnd(uint32_t numElements);
