@@ -150,28 +150,28 @@ add_task(function* test_pushNotifications() {
 
   let notifyPromise = Promise.all([
     promiseObserverNotification(PushServiceComponent.pushTopic, function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
+      var message = subject.QueryInterface(Ci.nsIPushMessage).data;
       if (message && (data == "https://example.com/page/1")){
         equal(message.text(), "Some message", "decoded message is incorrect");
         return true;
       }
     }),
     promiseObserverNotification(PushServiceComponent.pushTopic, function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
+      var message = subject.QueryInterface(Ci.nsIPushMessage).data;
       if (message && (data == "https://example.com/page/2")){
         equal(message.text(), "Some message", "decoded message is incorrect");
         return true;
       }
     }),
     promiseObserverNotification(PushServiceComponent.pushTopic, function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
+      var message = subject.QueryInterface(Ci.nsIPushMessage).data;
       if (message && (data == "https://example.com/page/3")){
         equal(message.text(), "Some message", "decoded message is incorrect");
         return true;
       }
     }),
     promiseObserverNotification(PushServiceComponent.pushTopic, function(subject, data) {
-      var message = subject.QueryInterface(Ci.nsIPushMessage);
+      var message = subject.QueryInterface(Ci.nsIPushMessage).data;
       if (message && (data == "https://example.com/page/4")){
         equal(message.text(), "Yet another message", "decoded message is incorrect");
         return true;

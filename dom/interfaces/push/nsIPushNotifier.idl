@@ -80,14 +80,16 @@ interface nsIPushNotifier : nsISupports
                          in MaybeData data);
 
   [noscript, nostdcall]
-  void notifyPushObservers(in ACString scope, in MaybeData data);
+  void notifyPushObservers(in ACString scope, in nsIPrincipal principal,
+                           in MaybeData data);
 
   [noscript, nostdcall]
   void notifySubscriptionChangeWorkers(in ACString scope,
                                        in nsIPrincipal principal);
 
   [noscript, nostdcall]
-  void notifySubscriptionChangeObservers(in ACString scope);
+  void notifySubscriptionChangeObservers(in ACString scope,
+                                         in nsIPrincipal principal);
 
   [noscript, nostdcall]
   void notifySubscriptionModifiedObservers(in ACString scope,
@@ -99,13 +101,11 @@ interface nsIPushNotifier : nsISupports
 };
 
 /**
- * A push message sent to a subscription, used as the subject of a
- * `push-message` observer notification.
- *
+ * Provides methods for retrieving push message data in different formats.
  * This interface resembles the `PushMessageData` WebIDL interface.
  */
-[scriptable, builtinclass, uuid(136dc8fd-8c56-4176-9170-eaa86b6ba99e)]
-interface nsIPushMessage : nsISupports
+[scriptable, builtinclass, uuid(dfc4f151-cead-40df-8eb7-7a7a67c54b16)]
+interface nsIPushData : nsISupports
 {
   /** Extracts the data as a UTF-8 text string. */
   DOMString text();
@@ -116,4 +116,15 @@ interface nsIPushMessage : nsISupports
   /** Extracts the raw binary data. */
   void binary([optional] out uint32_t dataLen,
               [array, retval, size_is(dataLen)] out uint8_t data);
+};
+
+/**
+ * The subject of a `push-message` observer notification. |data| may be |null|
+ * for messages without data.
+ */
+[scriptable, builtinclass, uuid(b9d063ca-0e3f-4fee-be4b-ea9103263433)]
+interface nsIPushMessage : nsISupports
+{
+  readonly attribute nsIPrincipal principal;
+  readonly attribute nsIPushData data;
 };
