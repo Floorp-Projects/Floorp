@@ -2175,6 +2175,11 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
   nsRect scrollRange = GetScrollRangeForClamping();
   mDestination = scrollRange.ClampPoint(aScrollPosition);
+  if (mDestination != aScrollPosition && aOrigin == nsGkAtoms::restore) {
+    // If we're doing a restore but the scroll position is clamped, promote
+    // the origin from one that APZ can clobber to one that it can't clobber.
+    aOrigin = nsGkAtoms::other;
+  }
 
   nsRect range = aRange ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
 
