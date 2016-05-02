@@ -763,7 +763,7 @@ void
 DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = AssertD3D11Compositor(aCompositor);
-  if (!mCompositor) {
+  if (mCompositor && mTextureSources[0]) {
     mTextureSources[0]->SetCompositor(aCompositor);
   }
 }
