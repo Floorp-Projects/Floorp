@@ -1090,13 +1090,16 @@ private:
                                          const uint32_t& aDecodeFPS) override;
 
   virtual bool RecvNotifyPushObservers(const nsCString& aScope,
-                                   const nsString& aMessageId) override;
+                                       const IPC::Principal& aPrincipal,
+                                       const nsString& aMessageId) override;
 
   virtual bool RecvNotifyPushObserversWithData(const nsCString& aScope,
-                                           const nsString& aMessageId,
-                                           InfallibleTArray<uint8_t>&& aData) override;
+                                               const IPC::Principal& aPrincipal,
+                                               const nsString& aMessageId,
+                                               InfallibleTArray<uint8_t>&& aData) override;
 
-  virtual bool RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope) override;
+  virtual bool RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope,
+                                                         const IPC::Principal& aPrincipal) override;
 
   virtual bool RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                                            const IPC::Principal& aPrincipal) override;

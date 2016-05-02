@@ -91,9 +91,9 @@ interface nsIPushService : nsISupports
    * an `nsIPushMessage` as the subject and the |scope| as the data.
    *
    * If the server drops a subscription, a `push-subscription-change` observer
-   * will be fired, with the subject set to `null` and the data set to |scope|.
-   * Servers may drop subscriptions at any time, so callers should recreate
-   * subscriptions if desired.
+   * will be fired, with the subject set to |principal| and the data set to
+   * |scope|. Servers may drop subscriptions at any time, so callers should
+   * recreate subscriptions if desired.
    */
   void subscribe(in DOMString scope, in nsIPrincipal principal,
                  in nsIPushSubscriptionCallback callback);
