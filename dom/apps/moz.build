@@ -9,25 +9,12 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += [
-    'tests/b2g_chrome.ini',
     'tests/chrome.ini'
-]
-
-EXPORTS.mozilla.dom += [
-    'InterAppComm.h',
-]
-
-SOURCES += [
-    'InterAppComm.cpp',
 ]
 
 EXTRA_COMPONENTS += [
     'AppsService.js',
     'AppsService.manifest',
-    'InterAppComm.manifest',
-    'InterAppCommService.js',
-    'InterAppConnection.js',
-    'InterAppMessagePort.js',
     'Webapps.js',
     'Webapps.manifest',
 ]
@@ -48,17 +35,7 @@ EXTRA_JS_MODULES += [
 EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
     'ImportExport.jsm',
-    'InterAppCommService.jsm',
     'OperatorApps.jsm',
     'ScriptPreloader.jsm',
     'Webapps.jsm',
-]
-
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wshadow']
-
-FINAL_LIBRARY = 'xul'
-
-LOCAL_INCLUDES += [
-    '/js/xpconnect/wrappers',
 ]
