@@ -611,4 +611,8 @@
   <string name="helper_first_offline_bookmark_message">&helper_first_offline_bookmark_message;</string>
   <string name="helper_first_offline_bookmark_button">&helper_first_offline_bookmark_button;</string>
 
+  <string name="helper_triple_readerview_open_title">&helper_triple_readerview_open_title;</string>
+  <string name="helper_triple_readerview_open_message">&helper_triple_readerview_open_message;</string>
+  <string name="helper_triple_readerview_open_button">&helper_triple_readerview_open_button;</string>
+
 </resources>
