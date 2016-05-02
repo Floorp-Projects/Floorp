@@ -86,7 +86,9 @@ protected:
                            const nsCString& data,
                            const uint64_t& offset,
                            const uint32_t& count) override;
-  bool RecvOnStopRequest(const nsresult& channelStatus) override;
+  bool RecvOnStopRequest(const nsresult& channelStatus,
+                         const nsCString &aErrorMsg,
+                         const bool &aUseUTF8) override;
   bool RecvFailedAsyncOpen(const nsresult& statusCode) override;
   bool RecvFlushedForDiversion() override;
   bool RecvDivertMessages() override;
@@ -106,7 +108,9 @@ protected:
                          const uint64_t& offset,
                          const uint32_t& count);
   void MaybeDivertOnStop(const nsresult& statusCode);
-  void DoOnStopRequest(const nsresult& statusCode);
+  void DoOnStopRequest(const nsresult& statusCode,
+                       const nsCString &aErrorMsg,
+                       bool aUseUTF8);
   void DoFailedAsyncOpen(const nsresult& statusCode);
   void DoDeleteSelf();
 
