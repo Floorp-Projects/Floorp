@@ -1,0 +1,46 @@
+<!doctype html>
+<head>
+  <meta charset=utf-8>
+  <style>
+  #display {
+    transition: all 0.01s;
+  }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script>
+'use strict';
+
+/*
+ * This tests for transitions generated on the -webkit-text-fill-color property.
+ * This property has an initial value of 'currentcolor' so by triggering a
+ * transition on the 'color' property we also--at least at the point when
+ * this test was written--trigger a transition on the -webkit-text-fill-color
+ * property (that behavior may change in bug 1260543).
+ *
+ * However, before beginning the test we disable -webkit-text-fill-color by
+ * setting layout.css.prefixes.webkit to false. This code tests that we don't
+ * end up triggering a transition on the (disabled) property in that case.
+ */
+
+var display = document.getElementById('display');
+display.style.color = 'green';
+
+var transitionedProperties =
+  display.getAnimations().map(transition => transition.transitionProperty);
+
+ok(!transitionedProperties.includes('-webkit-text-fill-color'),
+   'We should not fire transitions for properties disabled by prefs');
+
+finish();
+</script>
+</body>

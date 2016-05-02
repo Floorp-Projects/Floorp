@@ -8,24 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265611
   <script type="application/javascript"
     src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-  @keyframes enabled-and-disabled {
-    from {
-      left: 0px;
-      -webkit-text-fill-color: green;
-    }
-    to {
-      left: 100px;
-      -webkit-text-fill-color: blue;
-    }
-  }
-  </style>
 </head>
 <body>
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265611">Mozilla Bug
    1265611</a>
-<div id="display"></div>
 <pre id="test">
 <script>
 'use strict';
@@ -40,29 +27,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   { 'set': [[ 'dom.animations-api.core.enabled', true ],
             [ 'layout.css.prefixes.webkit', false ]] },
-  () => {
-    // Reparse stylesheet with updated prefs
-    document.querySelector('style').textContent += " ";
-
-    var display = document.getElementById('display');
-    display.style.animation = 'enabled-and-disabled 0.01s';
-
-    var animation = display.getAnimations()[0];
-    is(animation.effect.getFrames().length, 2,
-      'Got two frames on the generated animation');
-
-    ok(animation.effect.getFrames()[0].hasOwnProperty('left'),
-      'Enabled property is set on initial keyframe');
-    ok(!animation.effect.getFrames()[0].hasOwnProperty('webkitTextFillColor'),
-      'Disabled property is not set on initial keyframe');
-
-    ok(animation.effect.getFrames()[1].hasOwnProperty('left'),
-      'Enabled property is set on final keyframe');
-    ok(!animation.effect.getFrames()[1].hasOwnProperty('webkitTextFillColor'),
-      'Disabled property is not set on final keyframe');
-
-    SimpleTest.finish();
-  });
+  () => window.open('file_animations_with_disabled_properties.html'));
 </script>
 </pre>
 </body>
