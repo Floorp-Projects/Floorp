@@ -323,8 +323,8 @@ EnableSensorNotificationsInternal(SensorType aSensor)
     MOZ_ASSERT(sPollingThread);
     // sPollingThread never terminates because poll may never return
     sPollingThread->Start();
-    sPollingThread->message_loop()->PostTask(FROM_HERE,
-                                     NewRunnableFunction(PollSensors));
+    sPollingThread->message_loop()->PostTask(
+      NewRunnableFunction(PollSensors));
   }
 
   SetSensorState(aSensor, true);

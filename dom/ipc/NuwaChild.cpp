@@ -94,7 +94,7 @@ NuwaFork()
   sNuwaForking = true;
 
   MessageLoop* ioloop = XRE_GetIOMessageLoop();
-  ioloop->PostTask(FROM_HERE, NewRunnableFunction(RunNuwaFork));
+  ioloop->PostTask(NewRunnableFunction(RunNuwaFork));
 }
 
 } // Anonymous namespace.

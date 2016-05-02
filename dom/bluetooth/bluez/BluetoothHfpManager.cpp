@@ -242,10 +242,10 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 }
 
 #ifdef MOZ_B2G_RIL
-class BluetoothHfpManager::RespondToBLDNTask : public Task
+class BluetoothHfpManager::RespondToBLDNTask : public Runnable
 {
 private:
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 
@@ -253,10 +253,11 @@ private:
       sBluetoothHfpManager->mDialingRequestProcessed = true;
       sBluetoothHfpManager->SendLine("ERROR");
     }
+    return NS_OK;
   }
 };
 
-class BluetoothHfpManager::SendRingIndicatorTask : public Task
+class BluetoothHfpManager::SendRingIndicatorTask : public Runnable
 {
 public:
   SendRingIndicatorTask(const nsAString& aNumber, int aType)
@@ -266,18 +267,18 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     // Stop sending RING indicator
     if (sStopSendingRingFlag) {
-      return;
+      return NS_OK;
     }
 
     if (!sBluetoothHfpManager) {
       BT_WARNING("BluetoothHfpManager no longer exists, cannot send ring!");
-      return;
+      return NS_OK;
     }
 
     nsAutoCString ringMsg("RING");
@@ -291,10 +292,10 @@ public:
       sBluetoothHfpManager->SendLine(clipMsg.get());
     }
 
-    MessageLoop::current()->
-      PostDelayedTask(FROM_HERE,
-                      new SendRingIndicatorTask(mNumber, mType),
-                      sRingInterval);
+    MessageLoop::current()->PostDelayedTask(
+      MakeAndAddRef<SendRingIndicatorTask>(mNumber, mType), sRingInterval);
+
+    return NS_OK;
   }
 
 private:
@@ -303,14 +304,16 @@ private:
 };
 #endif // MOZ_B2G_RIL
 
-class BluetoothHfpManager::CloseScoTask : public Task
+class BluetoothHfpManager::CloseScoTask : public Runnable
 {
 private:
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 
     sBluetoothHfpManager->DisconnectSco();
+
+    return NS_OK;
   }
 };
 
@@ -985,7 +988,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     }
 
     MessageLoop::current()->
-      PostDelayedTask(FROM_HERE, new RespondToBLDNTask(),
+      PostDelayedTask(MakeAndAddRef<RespondToBLDNTask>(),
                       sWaitingForDialingInterval);
 
     // Don't send response 'OK' here because we'll respond later in either
@@ -1576,9 +1579,8 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
         }
 
         MessageLoop::current()->PostDelayedTask(
-          FROM_HERE,
-          new SendRingIndicatorTask(number,
-                                    mCurrentCallArray[aCallIndex].mType),
+          MakeAndAddRef<SendRingIndicatorTask>(
+            number, mCurrentCallArray[aCallIndex].mType),
           sRingInterval);
       }
       break;
@@ -1686,8 +1688,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           DisconnectSco();
         } else {
           // Close Sco later since Dialer is still playing busy tone via HF.
-          MessageLoop::current()->PostDelayedTask(FROM_HERE,
-                                                  new CloseScoTask(),
+          MessageLoop::current()->PostDelayedTask(MakeAndAddRef<CloseScoTask>(),
                                                   sBusyToneInterval);
         }
 

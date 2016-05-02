@@ -86,7 +86,7 @@ ConnectionOrientedSocketIO::Connect()
   if (NS_FAILED(rv)) {
     // Tell the consumer thread we've errored
     GetConsumerThread()->PostTask(
-      FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
+      MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_ERROR));
     return NS_ERROR_FAILURE;
   }
 
@@ -153,7 +153,7 @@ ConnectionOrientedSocketIO::OnConnected()
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
 
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -181,7 +181,7 @@ ConnectionOrientedSocketIO::OnError(const char* aFunction, int aErrno)
 
   // Tell the consumer thread we've errored
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_ERROR));
 }
 
 //
