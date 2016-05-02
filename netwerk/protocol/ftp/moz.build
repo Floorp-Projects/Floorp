@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIFTPChannel.idl',
+    'nsIFTPChannelParentInternal.idl',
 ]
 
 XPIDL_MODULE = 'necko_ftp'

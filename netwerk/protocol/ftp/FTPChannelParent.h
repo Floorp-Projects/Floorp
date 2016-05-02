@@ -15,6 +15,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "OfflineObserver.h"
 #include "nsIChannelEventSink.h"
+#include "nsIFTPChannelParentInternal.h"
 
 class nsILoadContext;
 
@@ -34,6 +35,7 @@ class FTPChannelParent final : public PFTPChannelParent
                              , public ADivertableParentChannel
                              , public nsIChannelEventSink
                              , public DisconnectableParent
+                             , public nsIFTPChannelParentInternal
 {
 public:
   NS_DECL_ISUPPORTS
@@ -63,6 +65,8 @@ public:
   // Handles calling OnStart/Stop if there are errors during diversion.
   // Called asynchronously from FailDiversion.
   void NotifyDiversionFailed(nsresult aErrorCode, bool aSkipResume = true);
+
+  NS_IMETHOD SetErrorMsg(const char *aMsg, bool aUseUTF8) override;
 
 protected:
   virtual ~FTPChannelParent();
@@ -137,6 +141,9 @@ protected:
   RefPtr<mozilla::dom::TabParent> mTabParent;
 
   RefPtr<ChannelEventQueue> mEventQ;
+
+  nsCString mErrorMsg;
+  bool mUseUTF8;
 };
 
 } // namespace net
