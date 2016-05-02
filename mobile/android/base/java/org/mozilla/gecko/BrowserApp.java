@@ -59,6 +59,7 @@ import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
 import org.mozilla.gecko.promotion.BookmarkStateChangeDelegate;
+import org.mozilla.gecko.promotion.ReaderViewBookmarkPromotion;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
@@ -215,6 +216,9 @@ public class BrowserApp extends GeckoApp
     public static final int ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK = 3001;
     public static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS = 3002;
     public static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE = 3003;
+    public static final int ACTIVITY_REQUEST_TRIPLE_READERVIEW = 4001;
+    public static final int ACTIVITY_RESULT_TRIPLE_READERVIEW_ADD_BOOKMARK = 4002;
+    public static final int ACTIVITY_RESULT_TRIPLE_READERVIEW_IGNORE = 4003;
 
     public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
 
@@ -306,7 +310,8 @@ public class BrowserApp extends GeckoApp
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
             (BrowserAppDelegate) new AddToHomeScreenPromotion(),
             (BrowserAppDelegate) new ScreenshotDelegate(),
-            (BrowserAppDelegate) new BookmarkStateChangeDelegate()
+            (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
+            (BrowserAppDelegate) new ReaderViewBookmarkPromotion()
     ));
 
     @NonNull

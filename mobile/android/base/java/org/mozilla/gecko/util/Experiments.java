@@ -47,6 +47,9 @@ public class Experiments {
 
     public static final String PREF_ONBOARDING_VERSION = "onboarding_version";
 
+    // Promotion to bookmark reader-view items after entering reader view three times (Bug 1247689)
+    public static final String TRIPLE_READERVIEW_BOOKMARK_PROMPT = "triple-readerview-bookmark-prompt";
+
     private static volatile Boolean disabled = null;
 
     /**

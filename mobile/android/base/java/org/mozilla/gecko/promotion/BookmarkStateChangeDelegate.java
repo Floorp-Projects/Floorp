@@ -117,7 +117,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegate implements T
                 SimpleHelperUI.FIRST_RVBP_SHOWN_TELEMETRYEXTRA,
                 BrowserApp.ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK,
                 R.string.helper_first_offline_bookmark_title, R.string.helper_first_offline_bookmark_message,
-                R.drawable.helper_first_readerview_bookmark, R.string.helper_first_offline_bookmark_button,
+                R.drawable.helper_readerview_bookmark, R.string.helper_first_offline_bookmark_button,
                 BrowserApp.ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS,
                 BrowserApp.ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE);
 
