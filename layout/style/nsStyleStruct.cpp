@@ -806,23 +806,21 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 /* static */ const uint32_t nsStyleColumn::kMaxColumnCount = 1000;
 
 nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
+  : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
+  , mColumnRuleColor(NS_RGB(0, 0, 0))
+  , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
+  , mColumnRuleColorIsForeground(true)
+  , mColumnRuleWidth((StaticPresData::Get()
+                        ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
+  , mTwipsPerPixel(aContext.AppUnitsPerDevPixel())
 {
   MOZ_COUNT_CTOR(nsStyleColumn);
-  mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
   mColumnGap.SetNormalValue();
-  mColumnFill = NS_STYLE_COLUMN_FILL_BALANCE;
-
-  mColumnRuleWidth =
-    (StaticPresData::Get()->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
-  mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
-  mColumnRuleColor = NS_RGB(0, 0, 0);
-  mColumnRuleColorIsForeground = true;
-
-  mTwipsPerPixel = aContext.AppUnitsPerDevPixel();
 }
 
-nsStyleColumn::~nsStyleColumn() 
+nsStyleColumn::~nsStyleColumn()
 {
   MOZ_COUNT_DTOR(nsStyleColumn);
 }
