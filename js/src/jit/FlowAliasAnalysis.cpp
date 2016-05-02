@@ -207,8 +207,8 @@ LoadAliasesStore(MDefinition* load, MDefinition* store)
         return true;
 
     // Check if the alias categories alias eachother.
-    if (!(load->getAliasSet() & store->getAliasSet()).isNone())
-        return true;
+    if ((load->getAliasSet() & store->getAliasSet()).isNone())
+        return false;
 
     // Check if the instruction might alias eachother.
     MDefinition::AliasType type = load->mightAlias(store);
