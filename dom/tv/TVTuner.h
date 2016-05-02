@@ -13,7 +13,7 @@
 
 #define VIDEO_TAG NS_LITERAL_STRING("video")
 
-class nsITVGonkNativeHandleData;
+class nsITVService;
 class nsITVTunerData;
 
 namespace mozilla {
@@ -33,15 +33,13 @@ public:
 
   static already_AddRefed<TVTuner> Create(nsPIDOMWindowInner* aWindow,
                                           nsITVTunerData* aData);
-
   nsresult NotifyImageSizeChanged(uint32_t aWidth, uint32_t aHeight);
 
   // WebIDL (internal functions)
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsresult SetCurrentSource(TVSourceType aSourceType,
-                            nsITVGonkNativeHandleData* aHandleData);
+  nsresult SetCurrentSource(TVSourceType aSourceType);
 
   nsresult DispatchTVEvent(nsIDOMEvent* aEvent);
 
@@ -74,13 +72,11 @@ private:
 
   nsresult InitMediaStream();
 
-  already_AddRefed<DOMMediaStream> CreateHwMediaStream(
-    nsITVGonkNativeHandleData* aHandleData);
-
   already_AddRefed<DOMMediaStream> CreateSimulatedMediaStream();
 
   nsresult DispatchCurrentSourceChangedEvent(TVSource* aSource);
 
+  nsCOMPtr<nsITVService> mTVService;
   RefPtr<DOMMediaStream> mStream;
   uint16_t mStreamType;
   RefPtr<TVSource> mCurrentSource;

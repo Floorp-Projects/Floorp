@@ -81,19 +81,8 @@ TVTunerData::GetSupportedSourceTypes(uint32_t* aCount,
 }
 
 /* virtual */ NS_IMETHODIMP
-TVTunerData::GetSupportedSourceTypesByString(nsTArray<nsCString> & aSourceTypes)
-{
-  for (uint32_t i = 0; i < mCount; i++) {
-    nsCString sourceType;
-    sourceType.AssignASCII(mSupportedSourceTypes[i]);
-    aSourceTypes.AppendElement(sourceType);
-  }
-
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVTunerData::SetSupportedSourceTypes(uint32_t aCount, const char** aSourceTypes)
+TVTunerData::SetSupportedSourceTypes(uint32_t aCount,
+                                     const char** aSourceTypes)
 {
   if (aCount == 0) {
     return NS_ERROR_INVALID_ARG;
@@ -122,39 +111,6 @@ TVTunerData::SetSupportedSourceTypes(uint32_t aCount, const char** aSourceTypes)
   return NS_OK;
 }
 
-/* virtual */ NS_IMETHODIMP
-TVTunerData::SetSupportedSourceTypesByString(
-  const nsTArray<nsCString>& aSourceTypes)
-{
-  uint32_t count = aSourceTypes.Length();
-
-  if (count == 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  for (uint32_t i = 0; i < count; i++) {
-    if (TVSourceType::EndGuard_ ==
-        ToTVSourceType(NS_ConvertUTF8toUTF16(aSourceTypes[i]))) {
-
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  if (mSupportedSourceTypes) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCount, mSupportedSourceTypes);
-  }
-
-  mCount = count;
-
-  mSupportedSourceTypes =
-    (mCount > 0) ? static_cast<char**>(moz_xmalloc(mCount * sizeof(char*)))
-                 : nullptr;
-  for (uint32_t i = 0; i < mCount; i++) {
-    mSupportedSourceTypes[i] = NS_strdup(aSourceTypes[i].get());
-  }
-
-  return NS_OK;
-}
 
 /*
  * Implementation of TVChannelData
@@ -449,19 +405,8 @@ TVProgramData::GetAudioLanguages(uint32_t* aCount,
 }
 
 /* virtual */ NS_IMETHODIMP
-TVProgramData::GetAudioLanguagesByString(nsTArray<nsCString>& aLanguages)
-{
-  for (uint32_t i = 0; i < mAudioLanguageCount; i++) {
-    nsCString languages;
-    languages.AssignASCII(mAudioLanguages[i]);
-    aLanguages.AppendElement(languages);
-  }
-
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVProgramData::SetAudioLanguages(uint32_t aCount, const char** aLanguages)
+TVProgramData::SetAudioLanguages(uint32_t aCount,
+                                 const char** aLanguages)
 {
   if (aCount > 0) {
     NS_ENSURE_ARG_POINTER(aLanguages);
@@ -484,27 +429,8 @@ TVProgramData::SetAudioLanguages(uint32_t aCount, const char** aLanguages)
 }
 
 /* virtual */ NS_IMETHODIMP
-TVProgramData::SetAudioLanguagesByString(const nsTArray<nsCString>& aLanguages)
-{
-  if (mAudioLanguages) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mAudioLanguageCount, mAudioLanguages);
-  }
-
-  mAudioLanguageCount = aLanguages.Length();
-
-  mAudioLanguages =
-    (mAudioLanguageCount > 0)
-      ? static_cast<char**>(moz_xmalloc(mAudioLanguageCount * sizeof(char*)))
-      : nullptr;
-  for (uint32_t i = 0; i < mAudioLanguageCount; i++) {
-    mAudioLanguages[i] = NS_strdup(aLanguages[i].get());
-  }
-
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVProgramData::GetSubtitleLanguages(uint32_t* aCount, char*** aLanguages)
+TVProgramData::GetSubtitleLanguages(uint32_t* aCount,
+                                    char*** aLanguages)
 {
   *aCount = mSubtitleLanguageCount;
 
@@ -520,20 +446,13 @@ TVProgramData::GetSubtitleLanguages(uint32_t* aCount, char*** aLanguages)
 }
 
 /* virtual */ NS_IMETHODIMP
-TVProgramData::GetSubtitleLanguagesByString(nsTArray<nsCString>& aLanguages)
+TVProgramData::SetSubtitleLanguages(uint32_t aCount,
+                                    const char** aLanguages)
 {
-  for (uint32_t i = 0; i < mSubtitleLanguageCount; i++) {
-    nsCString languages;
-    languages.AssignASCII(mSubtitleLanguages[i]);
-    aLanguages.AppendElement(languages);
+  if (aCount > 0) {
+    NS_ENSURE_ARG_POINTER(aLanguages);
   }
 
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVProgramData::SetSubtitleLanguages(uint32_t aCount, const char** aLanguages)
-{
   if (mSubtitleLanguages) {
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSubtitleLanguageCount, mSubtitleLanguages);
   }
@@ -547,52 +466,6 @@ TVProgramData::SetSubtitleLanguages(uint32_t aCount, const char** aLanguages)
     mSubtitleLanguages[i] = NS_strdup(aLanguages[i]);
   }
 
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVProgramData::SetSubtitleLanguagesByString(
-  const nsTArray<nsCString>& aLanguages)
-{
-  if (mSubtitleLanguages) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSubtitleLanguageCount,
-                                          mSubtitleLanguages);
-  }
-
-  mSubtitleLanguageCount = aLanguages.Length();
-
-  mSubtitleLanguages =
-    (mSubtitleLanguageCount > 0)
-      ? static_cast<char**>(moz_xmalloc(mSubtitleLanguageCount * sizeof(char*)))
-      : nullptr;
-  for (uint32_t i = 0; i < mSubtitleLanguageCount; i++) {
-    mSubtitleLanguages[i] = NS_strdup(aLanguages[i].get());
-  }
-
-  return NS_OK;
-}
-
-/*
- * Implementation of TVGonkNativeHandleData
- */
-
-NS_IMPL_ISUPPORTS(TVGonkNativeHandleData, nsITVGonkNativeHandleData)
-
-TVGonkNativeHandleData::TVGonkNativeHandleData() {}
-
-TVGonkNativeHandleData::~TVGonkNativeHandleData() {}
-
-/* virtual */ NS_IMETHODIMP
-TVGonkNativeHandleData::GetHandle(GonkNativeHandle& aHandle)
-{
-  aHandle = mHandle;
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVGonkNativeHandleData::SetHandle(GonkNativeHandle& aHandle)
-{
-  mHandle = aHandle;
   return NS_OK;
 }
 

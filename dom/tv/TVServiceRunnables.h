@@ -32,9 +32,7 @@ public:
     : mCallback(aCallback)
     , mDataList(aDataList)
     , mErrorCode(aErrorCode)
-  {
-    MOZ_ASSERT(mCallback);
-  }
+  {}
 
   NS_IMETHOD Run()
   {
