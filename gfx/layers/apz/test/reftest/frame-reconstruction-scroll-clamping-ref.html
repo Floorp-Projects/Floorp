@@ -1,0 +1,27 @@
+<html>
+<script>
+    function run() {
+        document.body.classList.toggle('noscroll');
+        document.getElementById('spacer').style.height = '100%';
+        // Scroll to the very end, including any fractional pixels
+        document.body.scrollTop = document.body.scrollTopMax + 1;
+    }
+</script>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        background-color: green;
+    }
+
+    .noscroll {
+        overflow: hidden;
+        height: 100%;
+    }
+</style>
+<body onload="run()">
+ <div id="spacer" style="height: 5000px">
+  This is the top of the page.
+ </div>
+ This is the bottom of the page.
+</body>
