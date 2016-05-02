@@ -31,35 +31,35 @@ add_task(function* () {
     url: SJS_URL + "?noMaxAge",
     name: "No max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that did " +
-          "not include a 'max-age' directive."
+          "not include a \u2018max-age\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?invalidIncludeSubDomains",
     name: "Invalid includeSubDomains error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included an invalid 'includeSubDomains' directive."
+          "included an invalid \u2018includeSubDomains\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?invalidMaxAge",
     name: "Invalid max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included an invalid 'max-age' directive."
+          "included an invalid \u2018max-age\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?multipleIncludeSubDomains",
     name: "Multiple includeSubDomains error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included multiple 'includeSubDomains' directives."
+          "included multiple \u2018includeSubDomains\u2019 directives."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?multipleMaxAge",
     name: "Multiple max-age error displayed successfully",
     text: "Strict-Transport-Security: The site specified a header that " +
-          "included multiple 'max-age' directives."
+          "included multiple \u2018max-age\u2019 directives."
   }, hud);
 });
 

@@ -39,7 +39,7 @@ function runtest(e) {
   window.removeEventListener("message", runtest, false);
   window.addEventListener("message", checktest, false);
 
-  state = {
+  let state = {
       msg         : "Message",
       iconClass   : "question-icon",
       titleHidden : true,
@@ -53,11 +53,11 @@ function runtest(e) {
       focused     : "button0",
       defButton   : "button0",
   };
-  action = {
+  let action = {
       buttonClick: "ESC",
   };
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 }
 
 function checktest(e) {

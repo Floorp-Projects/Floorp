@@ -280,7 +280,6 @@
             &limitCacheSizeBefore.label;
           </label>
           <textbox id="cacheSize" type="number" size="4" max="1024"
-                   onchange="gAdvancedPane.updateCacheSizePref();"
                    aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
           <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
         </hbox>

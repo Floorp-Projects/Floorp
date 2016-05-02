@@ -26,26 +26,26 @@
 const patterns = [
   // REPORT_UNEXPECTED_P (only ever used in contexts where identifier-like
   // escaping is appropriate)
-  { i: "<t>|x{}",                 o: "prefix '<i>'" },
+  { i: "<t>|x{}",                 o: "prefix \u2018<i>\u2019" },
   // REPORT_UNEXPECTED_TOKEN with:
   // _Ident
-  { i: "@namespace fnord <t>;",    o: "within @namespace: '<i>'" },
+  { i: "@namespace fnord <t>;",    o: "within @namespace: \u2018<i>\u2019" },
   // _Ref
-  { i: "@namespace fnord #<t>;",   o: "within @namespace: '#<i>'" },
+  { i: "@namespace fnord #<t>;",   o: "within @namespace: \u2018#<i>\u2019" },
   // _Function
-  { i: "@namespace fnord <t>();",  o: "within @namespace: '<i>('" },
+  { i: "@namespace fnord <t>();",  o: "within @namespace: \u2018<i>(\u2019" },
   // _Dimension
-  { i: "@namespace fnord 14<t>;",  o: "within @namespace: '14<i>'" },
+  { i: "@namespace fnord 14<t>;",  o: "within @namespace: \u201814<i>\u2019" },
   // _AtKeyword
-  { i: "x{@<t>: }",        o: "declaration but found '@<i>'." },
+  { i: "x{@<t>: }",        o: "declaration but found \u2018@<i>\u2019." },
   // _String
-  { i: "x{ '<t>'}" ,       o: "declaration but found ''<s>''." },
+  { i: "x{ '<t>'}" ,       o: "declaration but found \u2018'<s>'\u2019." },
   // _Bad_String
-  { i: "x{ '<t>\n}",      o: "declaration but found ''<s>'." },
+  { i: "x{ '<t>\n}",      o: "declaration but found \u2018'<s>\u2019." },
   // _URL
-  { i: "x{ url('<t>')}",   o: "declaration but found 'url('<s>')'." },
+  { i: "x{ url('<t>')}",   o: "declaration but found \u2018url('<s>')\u2019." },
   // _Bad_URL
-  { i: "x{ url('<t>'.)}" , o: "declaration but found 'url('<s>''." }
+  { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'\u2019." }
 ];
 
 // Blocks of characters to test, and how they should be escaped when

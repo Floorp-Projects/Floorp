@@ -61,6 +61,7 @@ html {
 .item.client .item-twisty-container {
   -moz-appearance: treetwistyopen;
   margin-top: 3px;
+  margin-left: 2px;
 }
 
 .item.client.closed .item-twisty-container {

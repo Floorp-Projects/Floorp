@@ -33,6 +33,16 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   });
 }
 
+function* checkDoorhangerUsernamePassword(username, password) {
+  yield BrowserTestUtils.waitForCondition(() => {
+    return document.getElementById("password-notification-username").value == username;
+  }, "Wait for nsLoginManagerPrompter writeDataToUI()");
+  is(document.getElementById("password-notification-username").value, username,
+     "Check doorhanger username");
+  is(document.getElementById("password-notification-password").value, password,
+     "Check doorhanger password");
+}
+
 
 add_task(function* setup() {
   yield SimpleTest.promiseFocus(window);
@@ -49,6 +59,7 @@ add_task(function* test_saveChromeHiddenAutoClose() {
     // the popup closes and the doorhanger should appear in the opener
     let popup = getCaptureDoorhanger("password-save");
     ok(popup, "got notification popup");
+    yield* checkDoorhangerUsernamePassword("notifyu1", "notifyp1");
     // Sanity check, no logins should exist yet.
     let logins = Services.logins.getAllLogins();
     is(logins.length, 0, "Should not have any logins yet");
@@ -72,6 +83,7 @@ add_task(function* test_changeChromeHiddenAutoClose() {
     yield notifShownPromise;
     let popup = getCaptureDoorhanger("password-change");
     ok(popup, "got notification popup");
+    yield* checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
   });
 
@@ -99,6 +111,7 @@ add_task(function* test_saveChromeVisibleSameWindow() {
     yield notifShownPromise;
     let popup = getCaptureDoorhanger("password-save");
     ok(popup, "got notification popup");
+    yield* checkDoorhangerUsernamePassword("notifyu2", "notifyp2");
     clickDoorhangerButton(popup, REMEMBER_BUTTON);
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
@@ -119,6 +132,7 @@ add_task(function* test_changeChromeVisibleSameWindow() {
     yield notifShownPromise;
     let popup = getCaptureDoorhanger("password-change");
     ok(popup, "got notification popup");
+    yield* checkDoorhangerUsernamePassword("notifyu2", "pass2");
     clickDoorhangerButton(popup, CHANGE_BUTTON);
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
