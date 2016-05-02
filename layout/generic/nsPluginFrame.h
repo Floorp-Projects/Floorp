@@ -191,7 +191,12 @@ public:
    */
   static void EndSwapDocShells(nsISupports* aSupports, void*);
 
-  nsIWidget* GetWidget() override { return mInnerView ? mWidget : nullptr; }
+  nsIWidget* GetWidget() override {
+    if (!mInnerView) {
+      return nullptr;
+    }
+    return mWidget;
+  }
 
   /**
    * Adjust the plugin's idea of its size, using aSize as its new size.

@@ -21,31 +21,18 @@
 #include <algorithm>
 #include <functional>
 
-#ifdef MOZ_SKIA
+#if MOZ_SKIA_AVOID_CXX11
 #include "mozilla/Function.h"
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
-// In libc++, symbols such as std::forward may be defined in std::__1.
-// The _LIBCPP_BEGIN_NAMESPACE_STD and _LIBCPP_END_NAMESPACE_STD macros
-// will expand to the correct namespace.
-#ifdef _LIBCPP_BEGIN_NAMESPACE_STD
-#define MOZ_BEGIN_STD_NAMESPACE _LIBCPP_BEGIN_NAMESPACE_STD
-#define MOZ_END_STD_NAMESPACE _LIBCPP_END_NAMESPACE_STD
-#else
-#define MOZ_BEGIN_STD_NAMESPACE namespace std {
-#define MOZ_END_STD_NAMESPACE }
-#endif
-
-MOZ_BEGIN_STD_NAMESPACE
+namespace std {
   using mozilla::Forward;
   using mozilla::Move;
   #define forward Forward
   #define move Move
-MOZ_END_STD_NAMESPACE
 
-namespace std {
   // If we have 'using mozilla::function', we're going to collide with
   // 'std::function' on platforms that have it. Therefore we use a macro
   // work around.
@@ -99,7 +86,7 @@ template <typename T> using underlying_type_t = typename skstd::underlying_type<
 
 }
 
-#else /* !MOZ_SKIA */
+#else /* !MOZ_SKIA_AVOID_CXX11 */
 
 #include <type_traits>
 
@@ -226,7 +213,7 @@ template <typename D, typename S> using same_cv_t = typename same_cv<D, S>::type
 
 }  // namespace sknonstd
 
-#endif /* MOZ_SKIA */
+#endif /* MOZ_SKIA_AVOID_CXX11 */
 
 // Just a pithier wrapper for enable_if_t.
 #define SK_WHEN(condition, T) skstd::enable_if_t<!!(condition), T>

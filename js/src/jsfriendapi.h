@@ -147,6 +147,9 @@ typedef void
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
 
+extern JS_FRIEND_API(bool)
+JS_GetIsSecureContext(JSCompartment* compartment);
+
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment);
 
@@ -506,9 +509,6 @@ VisitGrayWrapperTargets(JS::Zone* zone, GCThingCallback callback, void* closure)
 
 extern JS_FRIEND_API(JSObject*)
 GetWeakmapKeyDelegate(JSObject* key);
-
-JS_FRIEND_API(JS::TraceKind)
-GCThingTraceKind(void* thing);
 
 /**
  * Invoke cellCallback on every gray JS_OBJECT in the given zone.

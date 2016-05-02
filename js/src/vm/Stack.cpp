@@ -81,12 +81,12 @@ InterpreterFrame::isNonGlobalEvalFrame() const
 }
 
 bool
-InterpreterFrame::copyRawFrameSlots(AutoValueVector* vec)
+InterpreterFrame::copyRawFrameSlots(MutableHandle<GCVector<Value>> vec)
 {
-    if (!vec->resize(numFormalArgs() + script()->nfixed()))
+    if (!vec.resize(numFormalArgs() + script()->nfixed()))
         return false;
-    PodCopy(vec->begin(), argv(), numFormalArgs());
-    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed());
+    PodCopy(vec.begin(), argv(), numFormalArgs());
+    PodCopy(vec.begin() + numFormalArgs(), slots(), script()->nfixed());
     return true;
 }
 

@@ -95,9 +95,9 @@ private:
   RefPtr<DecodePoolImpl>    mImpl;
 
   // mMutex protects mThreads and mIOThread.
-  Mutex                     mMutex;
-  nsCOMArray<nsIThread>     mThreads;
-  nsCOMPtr<nsIThread>       mIOThread;
+  Mutex                         mMutex;
+  nsTArray<nsCOMPtr<nsIThread>> mThreads;
+  nsCOMPtr<nsIThread>           mIOThread;
 };
 
 } // namespace image

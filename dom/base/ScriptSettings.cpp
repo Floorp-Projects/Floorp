@@ -52,7 +52,10 @@ public:
 
   static nsIGlobalObject* IncumbentGlobal() {
     ScriptSettingsStackEntry *entry = Top();
-    return entry ? entry->mGlobalObject : nullptr;
+    if (!entry) {
+      return nullptr;
+    }
+    return entry->mGlobalObject;
   }
 
   static ScriptSettingsStackEntry* EntryPoint() {
@@ -70,7 +73,10 @@ public:
 
   static nsIGlobalObject* EntryGlobal() {
     ScriptSettingsStackEntry *entry = EntryPoint();
-    return entry ? entry->mGlobalObject : nullptr;
+    if (!entry) {
+      return nullptr;
+    }
+    return entry->mGlobalObject;
   }
 
 };

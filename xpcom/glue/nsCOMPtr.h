@@ -726,7 +726,21 @@ public:
   //
   // Prefer the implicit use of this operator to calling |get()|, except where
   // necessary to resolve ambiguity.
-  operator T*() const { return get(); }
+  operator T*() const
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  &
+#endif
+  { return get(); }
+
+#ifdef MOZ_HAVE_REF_QUALIFIERS
+  // Don't allow implicit conversion of temporary nsCOMPtr to raw pointer,
+  // because the refcount might be one and the pointer will immediately become
+  // invalid.
+  operator T*() const && = delete;
+
+  // Needed to avoid the deleted operator above
+  explicit operator bool() const { return !!mRawPtr; }
+#endif
 
   T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {

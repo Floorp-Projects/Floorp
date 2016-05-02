@@ -87,6 +87,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'widget'
 
 EXPORTS += [
+    'CompositorWidgetProxy.h',
     'ContentHelper.h',
     'GfxDriverInfo.h',
     'GfxInfoBase.h',
@@ -135,6 +136,7 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    'CompositorWidgetProxy.cpp',
     'ContentCache.cpp',
     'ContentHelper.cpp',
     'GfxDriverInfo.cpp',

@@ -303,7 +303,7 @@ class UnboxedPlainObject : public JSObject
                                           NewObjectKind newKind, IdValuePair* properties);
 
     void fillAfterConvert(ExclusiveContext* cx,
-                          const AutoValueVector& values, size_t* valueCursor);
+                          Handle<GCVector<Value>> values, size_t* valueCursor);
 
     static void trace(JSTracer* trc, JSObject* object);
 
@@ -426,7 +426,7 @@ class UnboxedArrayObject : public JSObject
     bool convertInt32ToDouble(ExclusiveContext* cx, ObjectGroup* group);
 
     void fillAfterConvert(ExclusiveContext* cx,
-                          const AutoValueVector& values, size_t* valueCursor);
+                          Handle<GCVector<Value>> values, size_t* valueCursor);
 
     static void trace(JSTracer* trc, JSObject* object);
     static void objectMoved(JSObject* obj, const JSObject* old);

@@ -174,7 +174,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
   encoder.setSelection(select);
   out = encoder.encodeToString();
-  expected = '<ol start="5" id="aList"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
+  expected = '<ol id="aList" start="5"><li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>';
   is(out, expected, "test list selection with range: selection start at the third child of the ol, and end after the element ol + ol start at the value 5");
 
 
@@ -272,7 +272,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly | de.OutputRaw);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = '<div __moz_e="bare" _-moz_d="bard" id="mozattr" __moz_b="b"> lorem ipsum</div>';
+  expected = '<div id="mozattr" __moz_b="b" _-moz_d="bard" __moz_e="bare"> lorem ipsum</div>';
   is(out, expected, "test -moz/_moz attr #2");
 
   SimpleTest.finish();

@@ -21,7 +21,7 @@ const TEST_DATA = [
   },
   {
     input: "testBodyNode()",
-    output: '<body id="body-id" class="body-class">'
+    output: '<body class="body-class" id="body-id">'
   },
   {
     input: "testNodeInIframe()",
@@ -29,7 +29,7 @@ const TEST_DATA = [
   },
   {
     input: "testDocumentElement()",
-    output: '<html lang="en-US" dir="ltr">'
+    output: '<html dir="ltr" lang="en-US">'
   }
 ];
 

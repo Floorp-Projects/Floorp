@@ -23,9 +23,8 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, nsIWidget *aWidget)
-  : Compositor(aParent)
-  , mWidget(aWidget)
+CompositorD3D9::CompositorD3D9(CompositorBridgeParent* aParent, widget::CompositorWidgetProxy* aWidget)
+  : Compositor(aWidget, aParent)
   , mDeviceResetCount(0)
   , mFailedResetAttempts(0)
 {
@@ -50,7 +49,7 @@ CompositorD3D9::Initialize()
   }
 
   mSwapChain = mDeviceManager->
-    CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
+    CreateSwapChain((HWND)mWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW));
 
   if (!mSwapChain) {
     return false;
@@ -595,7 +594,7 @@ CompositorD3D9::EnsureSwapChain()
 
   if (!mSwapChain) {
     mSwapChain = mDeviceManager->
-      CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
+      CreateSwapChain((HWND)mWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW));
     // We could not create a swap chain, return false
     if (!mSwapChain) {
       // Check the state of the device too
@@ -763,10 +762,7 @@ CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize)
 void
 CompositorD3D9::EnsureSize()
 {
-  LayoutDeviceIntRect rect;
-  mWidget->GetClientBounds(rect);
-
-  mSize = rect.Size();
+  mSize = mWidget->GetClientSize();
 }
 
 void

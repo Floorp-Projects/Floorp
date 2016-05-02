@@ -283,7 +283,8 @@ nsObserverService::EnumerateObservers(const char* aTopic,
     return NS_NewEmptyEnumerator(anEnumerator);
   }
 
-  return observerList->GetObserverList(anEnumerator);
+  observerList->GetObserverList(anEnumerator);
+  return NS_OK;
 }
 
 // Enumerate observers of aTopic and call Observe on each.

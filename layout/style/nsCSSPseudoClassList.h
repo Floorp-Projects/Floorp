@@ -132,7 +132,7 @@ CSS_PSEUDO_CLASS(scope, ":scope", 0, "layout.css.scope-pseudo.enabled")
 
 // :not needs to come at the end of the non-bit pseudo-class list, since
 // it doesn't actually get directly matched on in SelectorMatches.
-CSS_PSEUDO_CLASS(notPseudo, ":not", 0, "")
+CSS_PSEUDO_CLASS(negation, ":not", 0, "")
 
 // :-moz-dir(ltr) and :-moz-dir(rtl) match elements whose resolved
 // directionality in the markup language is ltr or rtl respectively
