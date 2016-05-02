@@ -969,6 +969,10 @@ public:
     mHelper.SetZoomableByAPZ(aZoomable);
   }
   
+  ScrollSnapInfo GetScrollSnapInfo() const override {
+    return mHelper.GetScrollSnapInfo();
+  }
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -1376,6 +1380,10 @@ public:
   }
   void TriggerDisplayPortExpiration() override {
     mHelper.TriggerDisplayPortExpiration();
+  }
+
+  ScrollSnapInfo GetScrollSnapInfo() const override {
+    return mHelper.GetScrollSnapInfo();
   }
 
 #ifdef DEBUG_FRAME_DUMP

@@ -8713,6 +8713,8 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
     }
 
     metrics.SetUsesContainerScrolling(scrollableFrame->UsesContainerScrolling());
+
+    metadata.SetSnapInfo(scrollableFrame->GetScrollSnapInfo());
   }
 
   // If we have the scrollparent being the same as the scroll id, the
