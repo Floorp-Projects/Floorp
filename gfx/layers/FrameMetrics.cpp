@@ -17,7 +17,7 @@ FrameMetrics::SetUsesContainerScrolling(bool aValue) {
   mUsesContainerScrolling = aValue;
 }
 
-const ScrollMetadata ScrollMetadata::sNullMetadata;
+StaticAutoPtr<const ScrollMetadata> ScrollMetadata::sNullMetadata;
 
 }
 }
