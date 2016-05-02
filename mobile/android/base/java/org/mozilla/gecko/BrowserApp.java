@@ -11,7 +11,6 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
@@ -59,7 +58,7 @@ import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
-import org.mozilla.gecko.promotion.SimpleHelperUI;
+import org.mozilla.gecko.promotion.BookmarkStateChangeDelegate;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
@@ -132,7 +131,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -214,9 +212,9 @@ public class BrowserApp extends GeckoApp
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
     private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
-    private static final int ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK = 3001;
-    private static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS = 3002;
-    private static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE = 3003;
+    public static final int ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK = 3001;
+    public static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS = 3002;
+    public static final int ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE = 3003;
 
     public static final String ACTION_VIEW_MULTIPLE = AppConstants.ANDROID_PACKAGE_NAME + ".action.VIEW_MULTIPLE";
 
@@ -307,7 +305,8 @@ public class BrowserApp extends GeckoApp
 
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
             (BrowserAppDelegate) new AddToHomeScreenPromotion(),
-            (BrowserAppDelegate) new ScreenshotDelegate()
+            (BrowserAppDelegate) new ScreenshotDelegate(),
+            (BrowserAppDelegate) new BookmarkStateChangeDelegate()
     ));
 
     @NonNull
@@ -378,39 +377,6 @@ public class BrowserApp extends GeckoApp
             case PAGE_SHOW:
                 tab.loadFavicon();
                 break;
-            case BOOKMARK_ADDED:
-                // We always show the special offline snackbar whenever we bookmark a reader page.
-                // It's possible that the page is already stored offline, however this is highly
-                // unlikely, and even so it is probably nicer to show the same offline notification
-                // every time we bookmark an about:reader page.
-                if (!AboutPages.isAboutReader(tab.getURL())) {
-                    showBookmarkAddedSnackbar();
-                } else {
-                    final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
-
-                    final boolean hasFirstReaderViewPromptBeenShownBefore = prefs.getBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, false);
-
-                    if (hasFirstReaderViewPromptBeenShownBefore) {
-                        showReaderModeBookmarkAddedSnackbar();
-                    } else {
-                        SimpleHelperUI.show(this,
-                                SimpleHelperUI.FIRST_RVBP_SHOWN_TELEMETRYEXTRA,
-                                ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK,
-                                R.string.helper_first_offline_bookmark_title, R.string.helper_first_offline_bookmark_message,
-                                R.drawable.helper_first_readerview_bookmark, R.string.helper_first_offline_bookmark_button,
-                                ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS,
-                                ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE);
-
-                        GeckoSharedPrefs.forProfile(this)
-                                .edit()
-                                .putBoolean(SimpleHelperUI.PREF_FIRST_RVBP_SHOWN, true)
-                                .apply();
-                    }
-                }
-                break;
-            case BOOKMARK_REMOVED:
-                showBookmarkRemovedSnackbar();
-                break;
 
             case UNSELECTED:
                 // We receive UNSELECTED immediately after the SELECTED listeners run
@@ -464,49 +430,6 @@ public class BrowserApp extends GeckoApp
         } else {
             hideBrowserSearch();
         }
-    }
-
-    private void showBookmarkAddedSnackbar() {
-        // This flow is from the option menu which has check to see if a bookmark was already added.
-        // So, it is safe here to show the snackbar that bookmark_added without any checks.
-
-        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
-            @Override
-            public void onClick(View v) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "bookmark_options");
-                showBookmarkDialog();
-            }
-        };
-
-        SnackbarHelper.showSnackbarWithAction(this,
-                getResources().getString(R.string.bookmark_added),
-                Snackbar.LENGTH_LONG,
-                getResources().getString(R.string.bookmark_options),
-                callback);
-    }
-
-    private void showReaderModeBookmarkAddedSnackbar() {
-        final Drawable iconDownloaded = DrawableUtil.tintDrawable(getContext(), R.drawable.status_icon_readercache, Color.WHITE);
-
-        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
-            @Override
-            public void onClick(View v) {
-                openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(PanelType.BOOKMARKS));
-            }
-        };
-
-        SnackbarHelper.showSnackbarWithActionAndColors(this,
-                getResources().getString(R.string.reader_saved_offline),
-                Snackbar.LENGTH_LONG,
-                getResources().getString(R.string.reader_switch_to_bookmarks),
-                callback,
-                iconDownloaded,
-                ContextCompat.getColor(this, R.color.link_blue),
-                Color.WHITE);
-    }
-
-    private void showBookmarkRemovedSnackbar() {
-        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_LONG);
     }
 
     @Override
@@ -1086,7 +1009,7 @@ public class BrowserApp extends GeckoApp
         }
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-            "Prompt:ShowTop");
+                "Prompt:ShowTop");
 
         processTabQueue();
 
@@ -1263,57 +1186,6 @@ public class BrowserApp extends GeckoApp
 
         // Intercept key events for gamepad shortcuts
         mBrowserToolbar.setOnKeyListener(this);
-    }
-
-    private void showBookmarkDialog() {
-        final Resources res = getResources();
-        final Tab tab = Tabs.getInstance().getSelectedTab();
-
-        final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
-            @Override
-            public void onPromptFinished(String result) {
-                int itemId = -1;
-                try {
-                  itemId = new JSONObject(result).getInt("button");
-                } catch (JSONException ex) {
-                    Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
-                }
-
-                if (tab == null) {
-                    return;
-                }
-
-                if (itemId == 0) {
-                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_edit_bookmark);
-                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
-                        TelemetryContract.Method.DIALOG, extrasId);
-
-                    new EditBookmarkDialog(BrowserApp.this).show(tab.getURL());
-                } else if (itemId == 1) {
-                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_to_launcher);
-                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
-                        TelemetryContract.Method.DIALOG, extrasId);
-
-                    final String url = tab.getURL();
-                    final String title = tab.getDisplayTitle();
-
-                    if (url != null && title != null) {
-                        ThreadUtils.postToBackgroundThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                GeckoAppShell.createShortcut(title, url);
-                            }
-                        });
-                    }
-                }
-            }
-        });
-
-        final PromptListItem[] items = new PromptListItem[2];
-        items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
-        items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_to_launcher));
-
-        ps.show("", "", items, ListView.CHOICE_MODE_NONE);
     }
 
     private void setDynamicToolbarEnabled(boolean enabled) {
@@ -2341,7 +2213,7 @@ public class BrowserApp extends GeckoApp
         return true;
     }
 
-    private void openUrlAndStopEditing(String url) {
+    public void openUrlAndStopEditing(String url) {
         openUrlAndStopEditing(url, null, false);
     }
 
@@ -2693,15 +2565,11 @@ public class BrowserApp extends GeckoApp
                 TabQueueHelper.processTabQueuePromptResponse(resultCode, this);
                 break;
 
-            case ACTIVITY_REQUEST_FIRST_READERVIEW_BOOKMARK:
-                if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_GOTO_BOOKMARKS) {
-                    openUrlAndStopEditing("about:home?panel=" + HomeConfig.getIdForBuiltinPanelType(PanelType.BOOKMARKS));
-                } else if (resultCode == ACTIVITY_RESULT_FIRST_READERVIEW_BOOKMARKS_IGNORE) {
-                    showReaderModeBookmarkAddedSnackbar();
-                }
-                break;
-
             default:
+                for (final BrowserAppDelegate delegate : delegates) {
+                    delegate.onActivityResult(this, requestCode, resultCode, data);
+                }
+
                 super.onActivityResult(requestCode, resultCode, data);
         }
     }
