@@ -43,7 +43,7 @@ function test() {
           severity: SEVERITY_ERROR,
         },
         {
-          text: "Unknown property 'test-color'",
+          text: "Unknown property \u2018test-color\u2019",
           category: CATEGORY_CSS,
           severity: SEVERITY_WARNING,
         },

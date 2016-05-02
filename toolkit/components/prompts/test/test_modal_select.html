@@ -26,7 +26,7 @@ function checkPromptState(promptState, expectedState) {
     // XXX check focused element
     // XXX check button labels?
 
-    is(promptState.msg, state.msg, "Checking expected message");
+    is(promptState.msg, expectedState.msg, "Checking expected message");
 
     // Compare listbox contents
     is(promptState.items.length, expectedState.items.length, "Checking listbox length");
@@ -43,7 +43,7 @@ let selectVal = {};
 let isOK;
 let state, action;
 
-function handlePrompt() {
+function handlePrompt(state, action) {
   return new Promise(resolve => {
     gChromeScript.addMessageListener("promptHandled", function handled(msg) {
       gChromeScript.removeMessageListener("promptHandled", handled);
@@ -66,7 +66,7 @@ add_task(function* test_select_empty_list() {
     action = {
         buttonClick: "ok",
     };
-    promptDone = handlePrompt(action);
+    promptDone = handlePrompt(state, action);
     items = [];
     selectVal.value = null; // outparam, just making sure.
     isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
@@ -87,7 +87,7 @@ add_task(function* test_select_ok() {
     action = {
         buttonClick: "ok",
     };
-    promptDone = handlePrompt(action);
+    promptDone = handlePrompt(state, action);
     items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
     isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
@@ -109,7 +109,7 @@ add_task(function* test_select_item() {
         buttonClick: "ok",
         selectItem: 1,
     };
-    promptDone = handlePrompt(action);
+    promptDone = handlePrompt(state, action);
     items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
     isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);
@@ -130,7 +130,7 @@ add_task(function* test_cancel_prompt() {
     action = {
         buttonClick: "cancel",
     };
-    promptDone = handlePrompt(action);
+    promptDone = handlePrompt(state, action);
     items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
     isOK = prompter.select(window, "TestTitle", "This is the select text.", items.length, items, selectVal);

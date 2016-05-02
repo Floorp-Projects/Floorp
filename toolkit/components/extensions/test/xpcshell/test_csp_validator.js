@@ -22,10 +22,10 @@ add_task(function* test_csp_validator() {
               null);
 
   checkPolicy("",
-              "Policy is missing a required 'script-src' directive");
+              "Policy is missing a required \u2018script-src\u2019 directive");
 
   checkPolicy("object-src 'none';",
-              "Policy is missing a required 'script-src' directive");
+              "Policy is missing a required \u2018script-src\u2019 directive");
 
 
   checkPolicy("default-src 'self'", null,
@@ -39,25 +39,25 @@ add_task(function* test_csp_validator() {
 
 
   checkPolicy("default-src 'self'; script-src http://example.com",
-              "'script-src' directive contains a forbidden http: protocol source",
+              "\u2018script-src\u2019 directive contains a forbidden http: protocol source",
               "A valid default-src should not allow an invalid script-src directive");
 
   checkPolicy("default-src 'self'; object-src http://example.com",
-              "'object-src' directive contains a forbidden http: protocol source",
+              "\u2018object-src\u2019 directive contains a forbidden http: protocol source",
               "A valid default-src should not allow an invalid object-src directive");
 
 
   checkPolicy("script-src 'self';",
-              "Policy is missing a required 'object-src' directive");
+              "Policy is missing a required \u2018object-src\u2019 directive");
 
   checkPolicy("script-src 'none'; object-src 'none'",
-              "'script-src' must include the source 'self'");
+              "\u2018script-src\u2019 must include the source 'self'");
 
   checkPolicy("script-src 'self'; object-src 'none';",
               null);
 
   checkPolicy("script-src 'self' 'unsafe-inline'; object-src 'self';",
-              "'script-src' directive contains a forbidden 'unsafe-inline' keyword");
+              "\u2018script-src\u2019 directive contains a forbidden 'unsafe-inline' keyword");
 
 
   let directives = ["script-src", "object-src"];
@@ -65,21 +65,21 @@ add_task(function* test_csp_validator() {
   for (let [directive, other] of [directives, directives.slice().reverse()]) {
     for (let src of ["https://*", "https://*.blogspot.com", "https://*"]) {
       checkPolicy(`${directive} 'self' ${src}; ${other} 'self';`,
-                  `https: wildcard sources in '${directive}' directives must include at least one non-generic sub-domain (e.g., *.example.com rather than *.com)`);
+                  `https: wildcard sources in \u2018${directive}\u2019 directives must include at least one non-generic sub-domain (e.g., *.example.com rather than *.com)`);
     }
 
     checkPolicy(`${directive} 'self' https:; ${other} 'self';`,
-                `https: protocol requires a host in '${directive}' directives`);
+                `https: protocol requires a host in \u2018${directive}\u2019 directives`);
 
     checkPolicy(`${directive} 'self' http://example.com; ${other} 'self';`,
-                `'${directive}' directive contains a forbidden http: protocol source`);
+                `\u2018${directive}\u2019 directive contains a forbidden http: protocol source`);
 
     for (let protocol of ["http", "ftp", "meh"]) {
       checkPolicy(`${directive} 'self' ${protocol}:; ${other} 'self';`,
-                  `'${directive}' directive contains a forbidden ${protocol}: protocol source`);
+                  `\u2018${directive}\u2019 directive contains a forbidden ${protocol}: protocol source`);
     }
 
     checkPolicy(`${directive} 'self' 'nonce-01234'; ${other} 'self';`,
-                `'${directive}' directive contains a forbidden 'nonce-*' keyword`);
+                `\u2018${directive}\u2019 directive contains a forbidden 'nonce-*' keyword`);
   }
 });

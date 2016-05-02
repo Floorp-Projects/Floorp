@@ -18,7 +18,7 @@ function test() {
 
   // Test search URLs (including purposes).
   url = engine.getSubmission("foo").uri.spec;
-  is(url, base, "Check search URL for 'foo'");
+  is(url, base + "&form=MOZSBR", "Check search URL for 'foo'");
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
   is(url, base + "&form=MOZCON", "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
@@ -39,7 +39,7 @@ function test() {
     name: "Bing",
     alias: null,
     description: "Bing. Search by Microsoft.",
-    searchForm: "https://www.bing.com/search?q=&pc=MOZI",
+    searchForm: "https://www.bing.com/search?q=&pc=MOZI&form=MOZSBR",
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",

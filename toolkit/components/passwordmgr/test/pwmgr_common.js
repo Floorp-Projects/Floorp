@@ -220,7 +220,7 @@ function setMasterPassword(enable) {
 
   var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
   var token = pk11db.findTokenByName("");
-  ok(true, "change from " + oldPW + " to " + newPW);
+  info("MP change from " + oldPW + " to " + newPW);
   token.changePassword(oldPW, newPW);
 }
 
@@ -283,6 +283,7 @@ function promiseFormsProcessed(expectedCount = 1) {
 }
 
 function loadRecipes(recipes) {
+  info("Loading recipes");
   return new Promise(resolve => {
     chromeScript.addMessageListener("loadedRecipes", function loaded() {
       chromeScript.removeMessageListener("loadedRecipes", loaded);
@@ -293,6 +294,7 @@ function loadRecipes(recipes) {
 }
 
 function resetRecipes() {
+  info("Resetting recipes");
   return new Promise(resolve => {
     chromeScript.addMessageListener("recipesReset", function reset() {
       chromeScript.removeMessageListener("recipesReset", reset);

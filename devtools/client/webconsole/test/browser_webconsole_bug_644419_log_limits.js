@@ -224,9 +224,9 @@ function testCssLimits2() {
       severity: SEVERITY_WARNING,
     }],
   }).then(() => {
-    testLogEntry(outputNode, "Unknown property '-moz-foobar0'",
+    testLogEntry(outputNode, "Unknown property \u2018-moz-foobar0\u2019",
                  "first message is pruned", false, true);
-    findLogEntry("Unknown property '-moz-foobar1'");
+    findLogEntry("Unknown property \u2018-moz-foobar1\u2019");
     // Check if the sentinel entry is still there.
     findLogEntry("testing CSS limits");
 

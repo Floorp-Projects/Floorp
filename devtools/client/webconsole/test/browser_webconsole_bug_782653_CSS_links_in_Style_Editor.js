@@ -27,12 +27,12 @@ function testViewSource() {
   waitForMessages({
     webconsole: hud,
     messages: [{
-      text: "'font-weight'",
+      text: "\u2018font-weight\u2019",
       category: CATEGORY_CSS,
       severity: SEVERITY_WARNING,
     },
     {
-      text: "'color'",
+      text: "\u2018color\u2019",
       category: CATEGORY_CSS,
       severity: SEVERITY_WARNING,
     }],

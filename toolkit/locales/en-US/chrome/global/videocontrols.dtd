@@ -25,7 +25,7 @@
 
 <!ENTITY error.aborted "Video loading stopped.">
 <!ENTITY error.network "Video playback aborted due to a network error.">
-<!ENTITY error.decode "Video can't be played because the file is corrupt.">
+<!ENTITY error.decode "Video can’t be played because the file is corrupt.">
 <!ENTITY error.srcNotSupported "Video format or MIME type is not supported.">
 <!ENTITY error.noSource2 "No video with supported format and MIME type found.">
 <!ENTITY error.generic "Video playback aborted due to an unknown error.">
