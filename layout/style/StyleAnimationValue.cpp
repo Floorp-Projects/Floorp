@@ -2608,8 +2608,7 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
       if (!result) {
         return false;
       }
-      aResultValue.SetAndAdoptCSSValueArrayValue(result.forget().take(),
-                                                 eUnit_Shape);
+      aResultValue.SetCSSValueArrayValue(result, eUnit_Shape);
       return true;
     }
     case eUnit_Filter: {
@@ -3976,8 +3975,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
             if (!StyleClipBasicShapeToCSSArray(clipPath, result)) {
               return false;
             }
-            aComputedValue.SetAndAdoptCSSValueArrayValue(result.forget().take(),
-                                                         eUnit_Shape);
+            aComputedValue.SetCSSValueArrayValue(result, eUnit_Shape);
+
           } else {
             MOZ_ASSERT(type == NS_STYLE_CLIP_PATH_NONE, "unknown type");
             aComputedValue.SetNoneValue();
@@ -4507,15 +4506,16 @@ StyleAnimationValue::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 }
 
 void
-StyleAnimationValue::SetAndAdoptCSSValueArrayValue(nsCSSValue::Array* aValue,
-                                                   Unit aUnit)
+StyleAnimationValue::SetCSSValueArrayValue(nsCSSValue::Array* aValue,
+                                           Unit aUnit)
 {
   FreeValue();
   MOZ_ASSERT(IsCSSValueArrayUnit(aUnit), "bad unit");
   MOZ_ASSERT(aValue != nullptr,
              "not currently expecting any arrays to be null");
   mUnit = aUnit;
-  mValue.mCSSValueArray = aValue; // take ownership
+  mValue.mCSSValueArray = aValue;
+  mValue.mCSSValueArray->AddRef();
 }
 
 void
@@ -4567,6 +4567,8 @@ StyleAnimationValue::FreeValue()
     delete mValue.mCSSRect;
   } else if (IsCSSValuePairListUnit(mUnit)) {
     delete mValue.mCSSValuePairList;
+  } else if (IsCSSValueArrayUnit(mUnit)) {
+    mValue.mCSSValueArray->Release();
   } else if (IsStringUnit(mUnit)) {
     MOZ_ASSERT(mValue.mString, "expecting non-null string");
     mValue.mString->Release();
