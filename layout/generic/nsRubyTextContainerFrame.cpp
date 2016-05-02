@@ -10,6 +10,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WritingModes.h"
+#include "nsLineLayout.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 
