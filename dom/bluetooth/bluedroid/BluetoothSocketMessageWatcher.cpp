@@ -277,10 +277,11 @@ SocketMessageWatcherTask::SocketMessageWatcherTask(
   MOZ_ASSERT(mWatcher);
 }
 
-void
+NS_IMETHODIMP
 SocketMessageWatcherTask::Run()
 {
   mWatcher->Watch();
+  return NS_OK;
 }
 
 //
@@ -294,19 +295,20 @@ DeleteSocketMessageWatcherTask::DeleteSocketMessageWatcherTask(
   MOZ_ASSERT(mRes);
 }
 
-void
+NS_IMETHODIMP
 DeleteSocketMessageWatcherTask::Run()
 {
   // look up hash table for the watcher corresponding to |mRes|
   SocketMessageWatcherWrapper* wrapper = sWatcherHashtable.Get(mRes);
   if (!wrapper) {
-    return;
+    return NS_OK;
   }
 
   // stop the watcher if it exists
   SocketMessageWatcher* watcher = wrapper->GetSocketMessageWatcher();
   watcher->StopWatching();
   watcher->Proceed(STATUS_DONE);
+  return NS_OK;
 }
 
 END_BLUETOOTH_NAMESPACE

@@ -174,15 +174,15 @@ static const VolumeData gVolumeData[] = {
   {"audio.volume.bt_sco",       AUDIO_STREAM_BLUETOOTH_SCO}
 };
 
-class RunnableCallTask : public Task
+class RunnableCallTask : public Runnable
 {
 public:
   explicit RunnableCallTask(nsIRunnable* aRunnable)
     : mRunnable(aRunnable) {}
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
-    mRunnable->Run();
+    return mRunnable->Run();
   }
 protected:
   nsCOMPtr<nsIRunnable> mRunnable;
@@ -504,7 +504,7 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
           self->mA2dpSwitchDone = true;
         });
       MessageLoop::current()->PostDelayedTask(
-        FROM_HERE, new RunnableCallTask(runnable), 1000);
+        MakeAndAddRef<RunnableCallTask>(runnable), 1000);
 
       mA2dpSwitchDone = false;
     } else {
@@ -663,7 +663,8 @@ AudioManager::HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent)
         self->UpdateHeadsetConnectionState(hal::SWITCH_STATE_OFF);
         self->mSwitchDone = true;
     });
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, new RunnableCallTask(runnable), 1000);
+    MessageLoop::current()->PostDelayedTask(
+      MakeAndAddRef<RunnableCallTask>(runnable), 1000);
     mSwitchDone = false;
   } else if (aEvent.status() != hal::SWITCH_STATE_OFF) {
     UpdateHeadsetConnectionState(aEvent.status());
@@ -1418,7 +1419,7 @@ AudioManager::VolumeStreamState::SetVolumeIndexToConsistentDeviceIfNeeded(uint32
     // No alias device
     rv = SetVolumeIndex(aIndex, aDevice);
   }
-  return rv;  
+  return rv;
 }
 
 nsresult

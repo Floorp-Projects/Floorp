@@ -108,13 +108,14 @@ protected:
   ~GetVolumeTask() { }
 };
 
-class BluetoothHfpManager::CloseScoTask : public Task
+class BluetoothHfpManager::CloseScoTask : public Runnable
 {
 private:
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
     sBluetoothHfpManager->DisconnectSco();
+    return NS_OK;
   }
 };
 
@@ -126,16 +127,16 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     MessageLoop::current()->PostDelayedTask(
-      FROM_HERE, new CloseScoTask(), sBusyToneInterval);
+      MakeAndAddRef<CloseScoTask>(), sBusyToneInterval);
 
     return NS_OK;
   }
 };
 
-class BluetoothHfpManager::RespondToBLDNTask : public Task
+class BluetoothHfpManager::RespondToBLDNTask : public Runnable
 {
 private:
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 
@@ -143,6 +144,7 @@ private:
       sBluetoothHfpManager->mDialingRequestProcessed = true;
       sBluetoothHfpManager->SendResponse(HFP_AT_RESPONSE_ERROR);
     }
+    return NS_OK;
   }
 };
 
@@ -1597,8 +1599,7 @@ void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber,
     mDialingRequestProcessed = false;
     NotifyDialer(NS_LITERAL_STRING("BLDN"));
 
-    MessageLoop::current()->PostDelayedTask(FROM_HERE,
-                                            new RespondToBLDNTask(),
+    MessageLoop::current()->PostDelayedTask(MakeAndAddRef<RespondToBLDNTask>(),
                                             sWaitingForDialingInterval);
   } else if (message[0] == '>') {
     mDialingRequestProcessed = false;
@@ -1607,8 +1608,7 @@ void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber,
     newMsg += StringHead(message, message.Length() - 1);
     NotifyDialer(NS_ConvertUTF8toUTF16(newMsg));
 
-    MessageLoop::current()->PostDelayedTask(FROM_HERE,
-                                            new RespondToBLDNTask(),
+    MessageLoop::current()->PostDelayedTask(MakeAndAddRef<RespondToBLDNTask>(),
                                             sWaitingForDialingInterval);
   } else {
     SendResponse(HFP_AT_RESPONSE_OK);
@@ -1766,8 +1766,7 @@ BluetoothHfpManager::KeyPressedNotification(const BluetoothAddress& aBdAddress)
 
     NotifyDialer(NS_LITERAL_STRING("BLDN"));
 
-    MessageLoop::current()->PostDelayedTask(FROM_HERE,
-                                            new RespondToBLDNTask(),
+    MessageLoop::current()->PostDelayedTask(MakeAndAddRef<RespondToBLDNTask>(),
                                             sWaitingForDialingInterval);
   }
 }

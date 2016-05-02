@@ -525,7 +525,6 @@ void
 EnableBatteryNotifications()
 {
   XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(RegisterBatteryObserverIOThread));
 }
 
@@ -543,7 +542,6 @@ void
 DisableBatteryNotifications()
 {
   XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(UnregisterBatteryObserverIOThread));
 }
 

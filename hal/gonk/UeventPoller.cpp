@@ -161,17 +161,19 @@ NetlinkPoller::OpenSocket()
 
 static StaticAutoPtr<NetlinkPoller> sPoller;
 
-class UeventInitTask : public Task
+class UeventInitTask : public Runnable
 {
-  virtual void Run()
+  NS_IMETHOD Run() override
   {
     if (!sPoller) {
-      return;
+      return NS_OK;
     }
     if (sPoller->OpenSocket()) {
-      return;
+      return NS_OK;
     }
-    sPoller->GetIOLoop()->PostDelayedTask(FROM_HERE, new UeventInitTask(), 1000);
+    sPoller->GetIOLoop()->PostDelayedTask(MakeAndAddRef<UeventInitTask>(),
+                                          1000);
+    return NS_OK;
   }
 };
 
@@ -217,7 +219,6 @@ public:
       MonitorAutoLock lock(*sMonitor);
 
       XRE_GetIOMessageLoop()->PostTask(
-          FROM_HERE,
           NewRunnableFunction(ShutdownUeventIOThread));
 
       while (!sShutdown) {
@@ -267,7 +268,7 @@ InitializeUevent()
 {
   MOZ_ASSERT(!sPoller);
   sPoller = new NetlinkPoller();
-  sPoller->GetIOLoop()->PostTask(FROM_HERE, new UeventInitTask());
+  sPoller->GetIOLoop()->PostTask(MakeAndAddRef<UeventInitTask>());
 
   ShutdownNetlinkPoller::MaybeInit();
 }
