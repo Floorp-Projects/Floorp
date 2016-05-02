@@ -79,7 +79,7 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
     }
 
     // cliprects are post-transform
-    const Maybe<ParentLayerIntRect>& clipRect = l->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clipRect = l->GetLocalClipRect();
     if (clipRect && !clipRect->Contains(ViewAs<ParentLayerPixel>(IntRect(transformOffset, aLayer->GetSize()))))
       return nullptr;
 
