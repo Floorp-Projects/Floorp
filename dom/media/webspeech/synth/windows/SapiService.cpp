@@ -9,6 +9,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWin32Locale.h"
 #include "GeckoProfiler.h"
+#include "nsEscape.h"
 
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
@@ -358,7 +359,14 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
   xml.AppendLiteral("\">");
   uint32_t textOffset = xml.Length();
 
-  xml.Append(aText);
+  const char16_t* escapedText =
+    nsEscapeHTML2(aText.BeginReading(), aText.Length());
+  if (!escapedText) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  xml.Append(escapedText);
+  free((void*)escapedText);
+
   xml.AppendLiteral("</pitch>");
 
   RefPtr<SapiCallback> callback =
