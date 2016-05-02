@@ -17,7 +17,6 @@ EXTRA_COMPONENTS += [
     'FilePicker.js',
     'FxAccountsUIGlue.js',
     'HelperAppDialog.js',
-    'InterAppCommUIGlue.js',
     'KillSwitch.js',
     'MailtoProtocolHandler.js',
     'MobileIdentityUIGlue.js',

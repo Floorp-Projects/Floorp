@@ -58,7 +58,6 @@ this.SystemMessagePermissionsTable = {
   "cellbroadcast-received": {
     "cellbroadcast": []
   },
-  "connection": { },
   "captive-portal": {
     "wifi-manage": []
   },
