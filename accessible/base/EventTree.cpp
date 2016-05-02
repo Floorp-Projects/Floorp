@@ -153,6 +153,7 @@ TreeMutation::Done()
 
   for (uint32_t idx = mStartIdx; idx < length; idx++) {
     mParent->mChildren[idx]->mIndexInParent = idx;
+    mParent->mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
     mParent->mChildren[idx]->mStateFlags |= Accessible::eGroupInfoDirty;
   }
 
