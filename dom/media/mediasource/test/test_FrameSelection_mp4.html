@@ -23,6 +23,18 @@ runWithMSE(function(ms, v) {
     var sb = ms.addSourceBuffer("video/mp4");
     ok(sb, "Create a SourceBuffer");
 
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    function logEvent(e) {
+      var v = e.target;
+      info("got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent, false);
+    });
+
     sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
     fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
     .then(function() {
@@ -45,6 +57,7 @@ runWithMSE(function(ms, v) {
       ms.endOfStream();
       var promises = [];
       promises.push(once(ms, "sourceended"));
+      promises.push(once(v, "playing"));
       promises.push(once(v, "ended"));
       return Promise.all(promises);
     }).then(function() {
