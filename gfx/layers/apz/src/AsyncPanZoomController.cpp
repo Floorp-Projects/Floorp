@@ -3391,6 +3391,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     mFrameMetrics.SetHasScrollgrab(aLayerMetrics.GetHasScrollgrab());
     mFrameMetrics.SetLineScrollAmount(aLayerMetrics.GetLineScrollAmount());
     mFrameMetrics.SetPageScrollAmount(aLayerMetrics.GetPageScrollAmount());
+    mScrollMetadata.SetSnapInfo(ScrollSnapInfo(aScrollMetadata.GetSnapInfo()));
     mScrollMetadata.SetClipRect(aScrollMetadata.GetClipRect());
     mScrollMetadata.SetMaskLayerIndex(aScrollMetadata.GetMaskLayerIndex());
     mFrameMetrics.SetIsLayersIdRoot(aLayerMetrics.IsLayersIdRoot());
