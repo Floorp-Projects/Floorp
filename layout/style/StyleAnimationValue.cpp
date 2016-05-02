@@ -2414,7 +2414,7 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
       }
 
       // We need a heap allocated object to adopt here:
-      auto heapResult = MakeUnique<nsCSSValuePair>(result.ref());
+      auto heapResult = MakeUnique<nsCSSValuePair>(*result);
       aResultValue.SetAndAdoptCSSValuePairValue(heapResult.release(),
                                                 eUnit_CSSValuePair);
       return true;
