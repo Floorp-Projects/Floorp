@@ -99,7 +99,6 @@ public:
 
     virtual void onFilterRec(SkScalerContextRec*) const override
     {
-        SkDEBUGCODE(SkDebugf("SkCairoFTTypeface::onFilterRec unimplemented\n"));
     }
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const override
