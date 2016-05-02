@@ -12,16 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TVSourceListener)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TVSourceListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TVSourceListener)
-  tmp->Shutdown();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION(TVSourceListener, mSources)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TVSourceListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TVSourceListener)
@@ -31,50 +22,20 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TVSourceListener)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<TVSourceListener>
-TVSourceListener::Create(TVSource* aSource)
+void
+TVSourceListener::RegisterSource(TVSource* aSource)
 {
-  RefPtr<TVSourceListener> listener = new TVSourceListener(aSource);
-  return (listener->Init()) ? listener.forget() : nullptr;
-}
-
-TVSourceListener::TVSourceListener(TVSource* aSource) : mSource(aSource)
-{
-  MOZ_ASSERT(mSource);
-}
-
-TVSourceListener::~TVSourceListener()
-{
-  Shutdown();
-}
-
-bool
-TVSourceListener::Init()
-{
-  RefPtr<TVTuner> tuner = mSource->Tuner();
-  tuner->GetId(mTunerId);
-
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    return false;
-  }
-
-  nsresult rv = service->RegisterSourceListener(
-    mTunerId, ToTVSourceTypeStr(mSource->Type()), this);
-  return NS_WARN_IF(NS_FAILED(rv)) ? false : true;
+  mSources.AppendElement(aSource);
 }
 
 void
-TVSourceListener::Shutdown()
+TVSourceListener::UnregisterSource(TVSource* aSource)
 {
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    return;
+  for (uint32_t i = 0; i < mSources.Length(); i++) {
+    if (mSources[i] == aSource) {
+      mSources.RemoveElementsAt(i, 1);
+    }
   }
-
-  nsresult rv = service->UnregisterSourceListener(
-    mTunerId, ToTVSourceTypeStr(mSource->Type()), this);
-  NS_WARN_IF(NS_FAILED(rv));
 }
 
 /* virtual */ NS_IMETHODIMP
@@ -82,33 +43,27 @@ TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
                                        const nsAString& aSourceType,
                                        nsITVChannelData* aChannelData)
 {
-  if (NS_WARN_IF(!IsMatched(aTunerId, aSourceType))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return mSource->NotifyChannelScanned(aChannelData);
+  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  source->NotifyChannelScanned(aChannelData);
+  return NS_OK;
 }
 
 /* virtual */ NS_IMETHODIMP
 TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
                                             const nsAString& aSourceType)
 {
-  if (NS_WARN_IF(!IsMatched(aTunerId, aSourceType))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return mSource->NotifyChannelScanComplete();
+  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  source->NotifyChannelScanComplete();
+  return NS_OK;
 }
 
 /* virtual */ NS_IMETHODIMP
 TVSourceListener::NotifyChannelScanStopped(const nsAString& aTunerId,
                                            const nsAString& aSourceType)
 {
-  if (NS_WARN_IF(!IsMatched(aTunerId, aSourceType))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return mSource->NotifyChannelScanStopped();
+  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  source->NotifyChannelScanStopped();
+  return NS_OK;
 }
 
 /* virtual */ NS_IMETHODIMP
@@ -118,19 +73,29 @@ TVSourceListener::NotifyEITBroadcasted(const nsAString& aTunerId,
                                        nsITVProgramData** aProgramDataList,
                                        const uint32_t aCount)
 {
-  if (NS_WARN_IF(!IsMatched(aTunerId, aSourceType))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return mSource->NotifyEITBroadcasted(aChannelData, aProgramDataList, aCount);
+  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  source->NotifyEITBroadcasted(aChannelData, aProgramDataList, aCount);
+  return NS_OK;
 }
 
-bool
-TVSourceListener::IsMatched(const nsAString& aTunerId,
+already_AddRefed<TVSource>
+TVSourceListener::GetSource(const nsAString& aTunerId,
                             const nsAString& aSourceType)
 {
-  return aTunerId.Equals(mTunerId) &&
-         ToTVSourceType(aSourceType) == mSource->Type();
+  for (uint32_t i = 0; i < mSources.Length(); i++) {
+    nsString tunerId;
+    RefPtr<TVTuner> tuner = mSources[i]->Tuner();
+    tuner->GetId(tunerId);
+
+    nsString sourceType = ToTVSourceTypeStr(mSources[i]->Type());
+
+    if (aTunerId.Equals(tunerId) && aSourceType.Equals(sourceType)) {
+      RefPtr<TVSource> source = mSources[i];
+      return source.forget();
+    }
+  }
+
+  return nullptr;
 }
 
 } // namespace dom

@@ -365,10 +365,6 @@ public:
   virtual bool
   RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId) override;
 
-  virtual PTVChild* AllocPTVChild() override;
-
-  virtual bool DeallocPTVChild(PTVChild* aActor) override;
-
   virtual bool RecvNotifyGMPsChanged() override;
 
   virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild() override;

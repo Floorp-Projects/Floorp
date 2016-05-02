@@ -71,7 +71,6 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
-#include "mozilla/dom/TVParent.h"
 #include "mozilla/dom/voicemail/VoicemailParent.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
@@ -4107,26 +4106,6 @@ bool
 ContentParent::RecvPPresentationConstructor(PPresentationParent* aActor)
 {
   return static_cast<PresentationParent*>(aActor)->Init();
-}
-
-PTVParent*
-ContentParent::AllocPTVParent()
-{
-  RefPtr<TVParent> actor = new TVParent();
-  return actor.forget().take();
-}
-
-bool
-ContentParent::DeallocPTVParent(PTVParent* aActor)
-{
-  RefPtr<TVParent> actor = dont_AddRef(static_cast<TVParent*>(aActor));
-  return true;
-}
-
-bool
-ContentParent::RecvPTVConstructor(PTVParent* aActor)
-{
-  return static_cast<TVParent*>(aActor)->Init();
 }
 
 PSpeechSynthesisParent*
