@@ -20,12 +20,12 @@
 }
 
 :root[devtoolstheme="dark"] #developer-toolbar {
-  --gcli-background-color: #343c45; /* --theme-toolbar-background */
-  --gcli-input-background: rgba(37, 44, 51, .6); /* --theme-tab-toolbar-background */
-  --gcli-input-focused-background: #252c33; /* --theme-tab-toolbar-background */
+  --gcli-background-color: #272b35; /* --theme-toolbar-background */
+  --gcli-input-background: #272b35; /* --theme-tab-toolbar-background */
+  --gcli-input-focused-background: #272b35; /* --theme-tab-toolbar-background */
   --gcli-input-color: #b6babf; /* --theme-body-color-alt */
-  --gcli-border-color: black; /* --theme-splitter-color */
-  --selection-background: #1d4f73; /* --theme-selection-background */
+  --gcli-border-color: #454d5d; /* --theme-splitter-color */
+  --selection-background: #5675b9; /* --theme-selection-background */
   --selection-color: #f5f7fa; /* --theme-selection-color */
 }
 
