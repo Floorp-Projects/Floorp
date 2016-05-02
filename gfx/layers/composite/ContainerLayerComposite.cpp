@@ -541,8 +541,8 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   float scaleFactorX;
   float scaleFactorY;
   Rect dest = Rect(aClipRect.ToUnknownRect());
-  if (aLayer->GetEffectiveClipRect()) {
-    dest = Rect(aLayer->GetEffectiveClipRect().value().ToUnknownRect());
+  if (aLayer->GetLocalClipRect()) {
+    dest = Rect(aLayer->GetLocalClipRect().value().ToUnknownRect());
   } else {
     dest = aContainer->GetEffectiveTransform().Inverse().TransformBounds(dest);
   }

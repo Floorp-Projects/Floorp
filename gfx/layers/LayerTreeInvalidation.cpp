@@ -135,7 +135,7 @@ struct LayerPropertiesBase : public LayerProperties
     , mPostXScale(aLayer->GetPostXScale())
     , mPostYScale(aLayer->GetPostYScale())
     , mOpacity(aLayer->GetLocalOpacity())
-    , mUseClipRect(!!aLayer->GetEffectiveClipRect())
+    , mUseClipRect(!!aLayer->GetLocalClipRect())
   {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
     if (aLayer->GetMaskLayer()) {
@@ -146,7 +146,7 @@ struct LayerPropertiesBase : public LayerProperties
       mAncestorMaskLayers.AppendElement(CloneLayerTreePropertiesInternal(maskLayer, true));
     }
     if (mUseClipRect) {
-      mClipRect = *aLayer->GetEffectiveClipRect();
+      mClipRect = *aLayer->GetLocalClipRect();
     }
     mTransform = GetTransformForInvalidation(aLayer);
   }
@@ -173,7 +173,7 @@ struct LayerPropertiesBase : public LayerProperties
     bool transformChanged = !mTransform.FuzzyEqual(GetTransformForInvalidation(mLayer)) ||
                              mLayer->GetPostXScale() != mPostXScale ||
                              mLayer->GetPostYScale() != mPostYScale;
-    const Maybe<ParentLayerIntRect>& otherClip = mLayer->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& otherClip = mLayer->GetLocalClipRect();
     nsIntRegion result;
 
     bool ancestorMaskChanged = mAncestorMaskLayers.Length() != mLayer->GetAncestorMaskLayerCount();
@@ -191,7 +191,7 @@ struct LayerPropertiesBase : public LayerProperties
         ancestorMaskChanged ||
         (mUseClipRect != !!otherClip) ||
         mLayer->GetLocalOpacity() != mOpacity ||
-        transformChanged) 
+        transformChanged)
     {
       aGeometryChanged = true;
       result = OldTransformedBounds();
@@ -220,7 +220,7 @@ struct LayerPropertiesBase : public LayerProperties
     if (mUseClipRect && otherClip) {
       if (!mClipRect.IsEqualInterior(*otherClip)) {
         aGeometryChanged = true;
-        nsIntRegion tmp; 
+        nsIntRegion tmp;
         tmp.Xor(mClipRect.ToUnknownRect(), otherClip->ToUnknownRect());
         AddRegion(result, tmp);
       }
@@ -474,7 +474,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
                                             bool& aGeometryChanged)
   {
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
-    
+
     if (!imageLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
       aGeometryChanged = true;
       IntRect result = NewTransformedBounds();
@@ -585,7 +585,7 @@ LayerProperties::CloneFrom(Layer* aRoot)
   return CloneLayerTreePropertiesInternal(aRoot);
 }
 
-/* static */ void 
+/* static */ void
 LayerProperties::ClearInvalidations(Layer *aLayer)
 {
   aLayer->ClearInvalidRect();
