@@ -3153,8 +3153,9 @@ CacheFileIOManager::TrashDirectory(nsIFile *aFile)
   rv = aFile->Clone(getter_AddRefs(trash));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  const int32_t kMaxTries = 16;
   srand(static_cast<unsigned>(PR_Now()));
-  while (true) {
+  for (int32_t triesCount = 0; ; ++triesCount) {
     leaf = TRASH_DIR;
     leaf.AppendInt(rand());
     rv = trash->SetNativeLeafName(leaf);
@@ -3163,6 +3164,15 @@ CacheFileIOManager::TrashDirectory(nsIFile *aFile)
     bool exists;
     if (NS_SUCCEEDED(trash->Exists(&exists)) && !exists) {
       break;
+    }
+
+    LOG(("CacheFileIOManager::TrashDirectory() - Trash directory already "
+         "exists [leaf=%s]", leaf.get()));
+
+    if (triesCount == kMaxTries) {
+      LOG(("CacheFileIOManager::TrashDirectory() - Could not find unused trash "
+           "directory in %d tries.", kMaxTries));
+      return NS_ERROR_FAILURE;
     }
   }
 
