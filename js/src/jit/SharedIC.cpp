@@ -404,11 +404,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &propStub->protoShape(), "baseline-getprop-primitive-stub-shape");
         break;
       }
-      case ICStub::GetProp_Unboxed: {
-        ICGetProp_Unboxed* propStub = toGetProp_Unboxed();
-        TraceEdge(trc, &propStub->group(), "baseline-getprop-unboxed-stub-group");
-        break;
-      }
       case ICStub::GetProp_TypedObject: {
         ICGetProp_TypedObject* propStub = toGetProp_TypedObject();
         TraceEdge(trc, &propStub->shape(), "baseline-getprop-typedobject-stub-shape");
@@ -2555,40 +2550,6 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, SharedStubInfo* info,
 }
 
 static bool
-TryAttachUnboxedGetPropStub(JSContext* cx, SharedStubInfo* info,
-                            ICGetProp_Fallback* stub, HandlePropertyName name,
-                            HandleValue val, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!cx->runtime()->jitSupportsFloatingPoint)
-        return true;
-
-    if (!val.isObject() || !val.toObject().is<UnboxedPlainObject>())
-        return true;
-    Rooted<UnboxedPlainObject*> obj(cx, &val.toObject().as<UnboxedPlainObject>());
-
-    const UnboxedLayout::Property* property = obj->layout().lookup(name);
-    if (!property)
-        return true;
-
-    ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-
-    ICGetProp_Unboxed::Compiler compiler(cx, info->engine(), monitorStub, obj->group(),
-                                         property->offset + UnboxedPlainObject::offsetOfData(),
-                                         property->type);
-    ICStub* newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
-    if (!newStub)
-        return false;
-    stub->addNewStub(newStub);
-
-    StripPreliminaryObjectStubs(cx, stub);
-
-    *attached = true;
-    return true;
-}
-
-static bool
 TryAttachTypedObjectGetPropStub(JSContext* cx, SharedStubInfo* info,
                                 ICGetProp_Fallback* stub, HandlePropertyName name,
                                 HandleValue val, bool* attached)
@@ -2860,11 +2821,6 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     if (attached)
         return true;
 
-
-    if (!TryAttachUnboxedGetPropStub(cx, &info, stub, name, val, &attached))
-        return false;
-    if (attached)
-        return true;
 
     if (!TryAttachTypedObjectGetPropStub(cx, &info, stub, name, val, &attached))
         return false;
@@ -3751,39 +3707,6 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
         EmitUnstowICValues(masm, 1, /* discard = */ true);
 
     EmitEnterTypeMonitorIC(masm);
-    return true;
-}
-
-bool
-ICGetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
-
-    Register scratch = regs.takeAnyExcluding(ICTailCallReg);
-
-    // Object and group guard.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    Register object = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICGetProp_Unboxed::offsetOfGroup()), scratch);
-    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfGroup()), scratch,
-                   &failure);
-
-    // Get the address being read from.
-    masm.load32(Address(ICStubReg, ICGetProp_Unboxed::offsetOfFieldOffset()), scratch);
-
-    masm.loadUnboxedProperty(BaseIndex(object, scratch, TimesOne), fieldType_, TypedOrValueRegister(R0));
-
-    // Only monitor the result if its type might change.
-    if (fieldType_ == JSVAL_TYPE_OBJECT)
-        EmitEnterTypeMonitorIC(masm);
-    else
-        EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-
     return true;
 }
 

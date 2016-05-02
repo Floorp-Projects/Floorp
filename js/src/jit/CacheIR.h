@@ -91,6 +91,7 @@ class ObjOperandId : public OperandId
     _(LoadUnboxedExpando)                 \
     _(LoadFixedSlotResult)                \
     _(LoadDynamicSlotResult)              \
+    _(LoadUnboxedPropertyResult)          \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
@@ -304,6 +305,11 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
         addStubWord(offset, StubField::GCType::NoGCThing);
     }
+    void loadUnboxedPropertyResult(ObjOperandId obj, JSValueType type, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadUnboxedPropertyResult, obj);
+        buffer_.writeByte(uint32_t(type));
+        addStubWord(offset, StubField::GCType::NoGCThing);
+    }
     void loadInt32ArrayLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
     }
@@ -349,6 +355,7 @@ class MOZ_RAII CacheIRReader
 
     uint32_t stubOffset() { return buffer_.readByte(); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
+    JSValueType valueType() { return JSValueType(buffer_.readByte()); }
 
     bool matchOp(CacheOp op) {
         const uint8_t* pos = buffer_.currentPosition();
@@ -388,6 +395,7 @@ class MOZ_RAII GetPropIRGenerator
     PreliminaryObjectAction preliminaryObjectAction_;
 
     bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);

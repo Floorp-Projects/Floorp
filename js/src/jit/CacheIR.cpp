@@ -60,6 +60,8 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
             return false;
         if (!emitted_ && !tryAttachNative(*writer, obj, objId))
             return false;
+        if (!emitted_ && !tryAttachUnboxed(*writer, obj, objId))
+            return false;
         if (!emitted_ && !tryAttachUnboxedExpando(*writer, obj, objId))
             return false;
         if (!emitted_ && !tryAttachModuleNamespace(*writer, obj, objId))
@@ -254,6 +256,29 @@ GetPropIRGenerator::tryAttachNative(CacheIRWriter& writer, HandleObject obj, Obj
         MOZ_CRASH("Bad NativeGetPropCacheability");
     }
 
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (!obj->is<UnboxedPlainObject>())
+        return true;
+
+    const UnboxedLayout::Property* property = obj->as<UnboxedPlainObject>().layout().lookup(name_);
+    if (!property)
+        return true;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return true;
+
+    writer.guardGroup(objId, obj->group());
+    writer.loadUnboxedPropertyResult(objId, property->type,
+                                     UnboxedPlainObject::offsetOfData() + property->offset);
+    emitted_ = true;
+    preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
     return true;
 }
 
