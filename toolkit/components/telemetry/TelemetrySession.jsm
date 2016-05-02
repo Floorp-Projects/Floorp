@@ -78,7 +78,7 @@ const TELEMETRY_INTERVAL = 60 * 1000;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = Preferences.get("toolkit.telemetry.initDelay", 60) * 1000;
 // Delay before initializing telemetry if we're testing (ms)
-const TELEMETRY_TEST_DELAY = 100;
+const TELEMETRY_TEST_DELAY = 1;
 // Execute a scheduler tick every 5 minutes.
 const SCHEDULER_TICK_INTERVAL_MS = Preferences.get("toolkit.telemetry.scheduler.tickInterval", 5 * 60) * 1000;
 // When user is idle, execute a scheduler tick every 60 minutes.
@@ -311,13 +311,41 @@ var TelemetryScheduler = {
     this._log.trace("init");
     this._shuttingDown = false;
     this._isUserIdle = false;
+
     // Initialize the last daily ping and aborted session last due times to the current time.
     // Otherwise, we might end up sending daily pings even if the subsession is not long enough.
     let now = Policy.now();
     this._lastDailyPingTime = now.getTime();
     this._lastSessionCheckpointTime = now.getTime();
     this._rescheduleTimeout();
+
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    Services.obs.addObserver(this, "wake_notification", false);
+  },
+
+  /**
+   * Stops the scheduler.
+   */
+  shutdown: function() {
+    if (this._shuttingDown) {
+      if (this._log) {
+        this._log.error("shutdown - Already shut down");
+      } else {
+        Cu.reportError("TelemetryScheduler.shutdown - Already shut down");
+      }
+      return;
+    }
+
+    this._log.trace("shutdown");
+    if (this._schedulerTimer) {
+      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
+      this._schedulerTimer = null;
+    }
+
+    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+    Services.obs.removeObserver(this, "wake_notification");
+
+    this._shuttingDown = true;
   },
 
   _clearTimeout: function() {
@@ -413,6 +441,13 @@ var TelemetryScheduler = {
       case "active":
         // User is back to work, restore the original tick interval.
         this._isUserIdle = false;
+        return this._onSchedulerTick();
+        break;
+      case "wake_notification":
+        // The machine woke up from sleep, trigger a tick to avoid sessions
+        // spanning more than a day.
+        // This is needed because sleep time does not count towards timeouts
+        // on Mac & Linux - see bug 1262386, bug 1204823 et al.
         return this._onSchedulerTick();
         break;
     }
@@ -517,30 +552,6 @@ var TelemetryScheduler = {
 
     this._rescheduleTimeout();
   },
-
-  /**
-   * Stops the scheduler.
-   */
-  shutdown: function() {
-    if (this._shuttingDown) {
-      if (this._log) {
-        this._log.error("shutdown - Already shut down");
-      } else {
-        Cu.reportError("TelemetryScheduler.shutdown - Already shut down");
-      }
-      return;
-    }
-
-    this._log.trace("shutdown");
-    if (this._schedulerTimer) {
-      Policy.clearSchedulerTickTimeout(this._schedulerTimer);
-      this._schedulerTimer = null;
-    }
-
-    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-
-    this._shuttingDown = true;
-  }
 };
 
 this.EXPORTED_SYMBOLS = ["TelemetrySession"];
@@ -617,7 +628,7 @@ this.TelemetrySession = Object.freeze({
   /**
    * Used only for testing purposes.
    */
-  testReset: function() {
+  reset: function() {
     Impl._sessionId = null;
     Impl._subsessionId = null;
     Impl._previousSessionId = null;
@@ -626,43 +637,38 @@ this.TelemetrySession = Object.freeze({
     Impl._profileSubsessionCounter = 0;
     Impl._subsessionStartActiveTicks = 0;
     Impl._subsessionStartTimeMonotonic = 0;
-    this.testUninstall();
+    this.uninstall();
+    return this.setup();
   },
   /**
-   * Triggers shutdown of the module.
+   * Used only for testing purposes.
+   * @param {Boolean} [aForceSavePending=true] If true, always saves the ping whether Telemetry
+   *        can send pings or not, which is used for testing.
    */
-  shutdown: function() {
-    return Impl.shutdownChromeProcess();
-  },
-  /**
-   * Sets up components used in the content process.
-   */
-  setupContent: function(testing = false) {
-    return Impl.setupContentProcess(testing);
+  shutdown: function(aForceSavePending = true) {
+    return Impl.shutdownChromeProcess(aForceSavePending);
   },
   /**
    * Used only for testing purposes.
    */
-  testUninstall: function() {
+  setup: function() {
+    return Impl.setupChromeProcess(true);
+  },
+  /**
+   * Used only for testing purposes.
+   */
+  setupContent: function() {
+    return Impl.setupContentProcess(true);
+  },
+  /**
+   * Used only for testing purposes.
+   */
+  uninstall: function() {
     try {
       Impl.uninstall();
     } catch (ex) {
       // Ignore errors
     }
-  },
-  /**
-   * Lightweight init function, called as soon as Firefox starts.
-   */
-  earlyInit: function(aTesting = false) {
-    return Impl.earlyInit(aTesting);
-  },
-  /**
-   * Does the "heavy" Telemetry initialization later on, so we
-   * don't impact startup performance.
-   * @return {Promise} Resolved when the initialization completes.
-   */
-  delayedInit: function() {
-    return Impl.delayedInit();
   },
   /**
    * Send a notification.
@@ -726,15 +732,17 @@ var Impl = {
   _subsessionStartActiveTicks: 0,
   // A task performing delayed initialization of the chrome process
   _delayedInitTask: null,
+  // The deferred promise resolved when the initialization task completes.
+  _delayedInitTaskDeferred: null,
   // Need a timeout in case children are tardy in giving back their memory reports.
   _totalMemoryTimeout: undefined,
-  _testing: false,
   // An accumulator of total memory across all processes. Only valid once the final child reports.
   _totalMemory: null,
   // A Set of outstanding USS report ids
   _childrenToHearFrom: null,
   // monotonically-increasing id for USS reports
   _nextTotalMemoryId: 1,
+  _testing: false,
 
 
   get _log() {
@@ -1389,22 +1397,26 @@ var Impl = {
   },
 
   /**
-   * Lightweight init function, called as soon as Firefox starts.
+   * Initializes telemetry within a timer.
    */
-  earlyInit: function(testing) {
-    this._log.trace("earlyInit");
-
+  setupChromeProcess: function setupChromeProcess(testing) {
     this._initStarted = true;
+    this._log.trace("setupChromeProcess");
     this._testing = testing;
 
+    if (this._delayedInitTask) {
+      this._log.error("setupChromeProcess - init task already running");
+      return this._delayedInitTaskDeferred.promise;
+    }
+
     if (this._initialized && !testing) {
-      this._log.error("earlyInit - already initialized");
-      return;
+      this._log.error("setupChromeProcess - already initialized");
+      return Promise.resolve();
     }
 
     if (!Telemetry.canRecordBase && !testing) {
-      this._log.config("earlyInit - Telemetry recording is disabled, skipping Chrome process setup.");
-      return;
+      this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
+      return Promise.resolve();
     }
 
     // Generate a unique id once per session so the server can cope with duplicate
@@ -1431,6 +1443,10 @@ var Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
+    TelemetryController.shutdown.addBlocker("TelemetrySession: shutting down",
+                                      () => this.shutdownChromeProcess(),
+                                      () => this._getState());
+
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     if (AppConstants.platform === "android") {
       Services.obs.addObserver(this, "application-background", false);
@@ -1442,17 +1458,12 @@ var Impl = {
     ppml.addMessageListener(MESSAGE_TELEMETRY_PAYLOAD, this);
     ppml.addMessageListener(MESSAGE_TELEMETRY_THREAD_HANGS, this);
     ppml.addMessageListener(MESSAGE_TELEMETRY_USS, this);
-},
 
-/**
-  * Does the "heavy" Telemetry initialization later on, so we
-  * don't impact startup performance.
-  * @return {Promise} Resolved when the initialization completes.
-  */
-  delayedInit:function() {
-    this._log.trace("delayedInit");
-
-    this._delayedInitTask = Task.spawn(function* () {
+    // Delay full telemetry initialization to give the browser time to
+    // run various late initializers. Otherwise our gathered memory
+    // footprint and other numbers would be too optimistic.
+    this._delayedInitTaskDeferred = Promise.defer();
+    this._delayedInitTask = new DeferredTask(function* () {
       try {
         this._initialized = true;
 
@@ -1473,7 +1484,7 @@ var Impl = {
           // Write the first aborted-session ping as early as possible. Just do that
           // if we are not testing, since calling Telemetry.reset() will make a previous
           // aborted ping a pending ping.
-          if (!this._testing) {
+          if (!testing) {
             yield this._saveAbortedSessionPing();
           }
 
@@ -1486,14 +1497,17 @@ var Impl = {
           TelemetryScheduler.init();
         }
 
-        this._delayedInitTask = null;
+        this._delayedInitTaskDeferred.resolve();
       } catch (e) {
+        this._delayedInitTaskDeferred.reject(e);
+      } finally {
         this._delayedInitTask = null;
-        throw e;
+        this._delayedInitTaskDeferred = null;
       }
-    }.bind(this));
+    }.bind(this), testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    return this._delayedInitTask;
+    this._delayedInitTask.arm();
+    return this._delayedInitTaskDeferred.promise;
   },
 
   /**
@@ -1830,6 +1844,12 @@ var Impl = {
     }
 
     switch (aTopic) {
+    case "profile-after-change":
+      // profile-after-change is only registered for chrome processes.
+      return this.setupChromeProcess();
+    case "app-startup":
+      // app-startup is only registered for content processes.
+      return this.setupContentProcess();
     case "content-child-shutdown":
       // content-child-shutdown is only registered for content processes.
       Services.obs.removeObserver(this, "content-child-shutdown");
@@ -1906,9 +1926,11 @@ var Impl = {
 
   /**
    * This tells TelemetrySession to uninitialize and save any pending pings.
+   * @param testing Optional. If true, always saves the ping whether Telemetry
+   *                can send pings or not, which is used for testing.
    */
-  shutdownChromeProcess: function() {
-    this._log.trace("shutdownChromeProcess");
+  shutdownChromeProcess: function(testing = false) {
+    this._log.trace("shutdownChromeProcess - testing: " + testing);
 
     let cleanup = () => {
       if (IS_UNIFIED_TELEMETRY) {
@@ -1934,24 +1956,25 @@ var Impl = {
     };
 
     // We can be in one the following states here:
-    // 1) delayedInit was never called
+    // 1) setupChromeProcess was never called
     // or it was called and
-    //   2) _delayedInitTask is running now.
-    //   3) _delayedInitTask finished running already.
+    //   2) _delayedInitTask was scheduled, but didn't run yet.
+    //   3) _delayedInitTask is running now.
+    //   4) _delayedInitTask finished running already.
 
     // This handles 1).
     if (!this._initStarted) {
       return Promise.resolve();
      }
 
-    // This handles 3).
+    // This handles 4).
     if (!this._delayedInitTask) {
       // We already ran the delayed initialization.
       return cleanup();
      }
 
-     // This handles 2).
-     return this._delayedInitTask.then(cleanup);
+    // This handles 2) and 3).
+    return this._delayedInitTask.finalize().then(cleanup);
    },
 
   /**

@@ -22,7 +22,7 @@ add_task(function* test_manifest_csp() {
   equal(normalized.error, undefined, "Should not have an error");
 
   Assert.deepEqual(normalized.errors,
-                   ["Error processing content_security_policy: SyntaxError: Policy is missing a required 'script-src' directive"],
+                   ["Error processing content_security_policy: SyntaxError: Policy is missing a required \u2018script-src\u2019 directive"],
                    "Should have the expected warning");
 
   equal(normalized.value.content_security_policy, null,

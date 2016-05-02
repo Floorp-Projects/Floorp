@@ -16,6 +16,8 @@ DevToolsModules(
     'devtools-browser.js',
     'devtools.js',
     'gDevTools.jsm',
+    'menu-item.js',
+    'menu.js',
     'selection.js',
     'sidebar.js',
     'source-location.js',
