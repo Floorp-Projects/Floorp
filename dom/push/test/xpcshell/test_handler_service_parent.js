@@ -12,8 +12,8 @@ add_task(function* test_observer_notifications() {
     PushServiceComponent.pushTopic);
   let subChangePromise = promiseObserverNotification(
     PushServiceComponent.subscriptionChangeTopic);
-  let subLostPromise = promiseObserverNotification(
-    PushServiceComponent.subscriptionLostTopic);
+  let subModifiedPromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionModifiedTopic);
 
   yield run_test_in_child('./test_handler_service.js');
 
@@ -25,13 +25,7 @@ add_task(function* test_observer_notifications() {
   equal(subChangeScope, 'chrome://test-scope',
     'Should forward subscription change notifications with the correct scope');
 
-  let {
-    subject: subLostSubject,
-    data: subLostScope
-  } = yield subLostPromise;
-  equal(subLostScope, 'chrome://test-scope',
-    'Should forward subscription lost notifications with the correct scope');
-  let wrapper = subLostSubject.QueryInterface(Ci.nsISupportsPRUint16);
-  equal(wrapper.data, Ci.nsIPushErrorReporter.UNSUBSCRIBE_QUOTA_EXCEEDED,
-    'Should forward subscription lost reasons');
+  let {data: subModifiedScope} = yield subModifiedPromise;
+  equal(subModifiedScope, 'chrome://test-scope',
+    'Should forward subscription modified notifications with the correct scope');
 });

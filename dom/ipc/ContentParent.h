@@ -1098,8 +1098,8 @@ private:
 
   virtual bool RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope) override;
 
-  virtual bool RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
-                                                       const uint16_t& aReason) override;
+  virtual bool RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
+                                                           const IPC::Principal& aPrincipal) override;
 
   // If you add strong pointers to cycle collected objects here, be sure to
   // release these objects in ShutDownProcess.  See the comment there for more

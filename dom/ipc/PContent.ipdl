@@ -1191,9 +1191,10 @@ parent:
     async NotifyPushSubscriptionChangeObservers(nsCString scope);
 
     /**
-     * Notify `push-subscription-lost` observers in the parent.
+     * Notify `push-subscription-modified` observers in the parent.
      */
-    async NotifyPushSubscriptionLostObservers(nsCString scope, uint16_t reason);
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
 
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
