@@ -264,3 +264,29 @@
   margin: 2px 0px;
   cursor: pointer;
 }
+
+/* Keyboard focus highlight styles */
+
+:-moz-focusring {
+  outline: var(--theme-focus-outline);
+  outline-offset: -1px;
+}
+
+textbox[focused="true"] {
+  border-color: var(--theme-focus-border-color-textbox);
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out
+}
+
+textbox :-moz-focusring {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Form fields should already have box-shadow hightlight */
+select:-moz-focusring,
+input[type="radio"]:-moz-focusring,
+input[type="checkbox"]:-moz-focusring,
+checkbox:-moz-focusring {
+  outline: none;
+}
