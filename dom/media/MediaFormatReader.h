@@ -330,6 +330,7 @@ private:
     {
       // Clear demuxer related data.
       mDemuxRequest.DisconnectIfExists();
+      mSeekRequest.DisconnectIfExists();
       mTrackDemuxer->Reset();
     }
 
@@ -354,6 +355,11 @@ private:
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
       mNextStreamSourceID.reset();
+    }
+
+    bool HasInternalSeekPending() const
+    {
+      return mTimeThreshold && !mTimeThreshold.ref().mHasSeeked;
     }
 
     // Used by the MDSM for logging purposes.
