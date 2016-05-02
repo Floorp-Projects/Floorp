@@ -13,11 +13,13 @@
  */
 
 #include "APZTestCommon.h"
+#include "gfxPlatform.h"
 
 class APZCTreeManagerTester : public ::testing::Test {
 protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
+    gfxPlatform::GetPlatform();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
