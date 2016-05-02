@@ -91,6 +91,9 @@ HandleTrap(int32_t trapIndex)
       case Trap::InvalidConversionToInteger:
         errorNumber = JSMSG_WASM_INVALID_CONVERSION;
         break;
+      case Trap::IntegerDivideByZero:
+        errorNumber = JSMSG_WASM_INT_DIVIDE_BY_ZERO;
+        break;
       case Trap::ImpreciseSimdConversion:
         errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
         break;

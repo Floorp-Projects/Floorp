@@ -1115,9 +1115,13 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
     if (ins->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
-            if (!ool)
-                ool = new(alloc()) ReturnZero(output);
-            masm.j(Assembler::Zero, ool->entry());
+            if (ins->trapOnError()) {
+                masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+            } else {
+                if (!ool)
+                    ool = new(alloc()) ReturnZero(output);
+                masm.j(Assembler::Zero, ool->entry());
+            }
         } else {
             bailoutIf(Assembler::Zero, ins->snapshot());
         }
@@ -1159,11 +1163,14 @@ CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
     bool isDiv = (output == edx);
 
     if (d == 0) {
-        if (ins->mir()->isTruncated())
-            masm.xorl(output, output);
-        else
+        if (ins->mir()->isTruncated()) {
+            if (ins->trapOnError())
+                masm.jump(wasm::JumpTarget::IntegerDivideByZero);
+            else
+                masm.xorl(output, output);
+        } else {
             bailout(ins->snapshot());
-
+        }
         return;
     }
 
@@ -1261,7 +1268,7 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
         bailoutIf(Assembler::Zero, ins->snapshot());
     }
 
-    if (shift != 0) {
+    if (shift) {
         if (!mir->isTruncated()) {
             // If the remainder is != 0, bailout since this must be a double.
             masm.test32(lhs, Imm32(UINT32_MAX >> (32 - shift)));
@@ -1288,20 +1295,19 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
             if (negativeDivisor)
                 masm.negl(lhs);
         }
-    } else if (shift == 0) {
-        if (negativeDivisor) {
-            // INT32_MIN / -1 overflows.
-            masm.negl(lhs);
-            if (!mir->isTruncated())
-                bailoutIf(Assembler::Overflow, ins->snapshot());
-        }
+        return;
+    }
 
-        else if (mir->isUnsigned() && !mir->isTruncated()) {
-            // Unsigned division by 1 can overflow if output is not
-            // truncated.
-            masm.test32(lhs, lhs);
-            bailoutIf(Assembler::Signed, ins->snapshot());
-        }
+    if (negativeDivisor) {
+        // INT32_MIN / -1 overflows.
+        masm.negl(lhs);
+        if (!mir->isTruncated())
+            bailoutIf(Assembler::Overflow, ins->snapshot());
+    } else if (mir->isUnsigned() && !mir->isTruncated()) {
+        // Unsigned division by 1 can overflow if output is not
+        // truncated.
+        masm.test32(lhs, lhs);
+        bailoutIf(Assembler::Signed, ins->snapshot());
     }
 }
 
@@ -1414,7 +1420,9 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
-        if (mir->canTruncateInfinities()) {
+        if (mir->trapOnError()) {
+            masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+        } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
                 ool = new(alloc()) ReturnZero(output);
@@ -1431,7 +1439,9 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
         masm.cmp32(lhs, Imm32(INT32_MIN));
         masm.j(Assembler::NotEqual, &notmin);
         masm.cmp32(rhs, Imm32(-1));
-        if (mir->canTruncateOverflow()) {
+        if (mir->trapOnError()) {
+            masm.j(Assembler::Equal, wasm::JumpTarget::IntegerOverflow);
+        } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
             // output register (lhs == eax).
             masm.j(Assembler::Equal, &done);
@@ -1577,9 +1587,13 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
     if (ins->mir()->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
-            if (!ool)
-                ool = new(alloc()) ReturnZero(edx);
-            masm.j(Assembler::Zero, ool->entry());
+            if (ins->mir()->trapOnError()) {
+                masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
+            } else {
+                if (!ool)
+                    ool = new(alloc()) ReturnZero(edx);
+                masm.j(Assembler::Zero, ool->entry());
+            }
         } else {
             bailoutIf(Assembler::Zero, ins->snapshot());
         }

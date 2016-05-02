@@ -943,6 +943,7 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
       case JumpTarget::Unreachable:
       case JumpTarget::IntegerOverflow:
       case JumpTarget::InvalidConversionToInteger:
+      case JumpTarget::IntegerDivideByZero:
       case JumpTarget::ImpreciseSimdConversion:
         return GenerateTrapStub(masm, Trap(target));
       case JumpTarget::Limit:

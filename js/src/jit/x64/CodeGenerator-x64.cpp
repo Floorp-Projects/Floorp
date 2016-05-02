@@ -432,29 +432,21 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
     if (lhs != rax)
         masm.mov(lhs, rax);
 
-    // Handle divide by zero. For now match asm.js and return 0, but
-    // eventually this should trap.
+    // Handle divide by zero.
     if (lir->canBeDivideByZero()) {
-        Label nonZero;
-        masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
-        masm.xorl(output, output);
-        masm.jump(&done);
-        masm.bind(&nonZero);
+        masm.testPtr(rhs, rhs);
+        masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
     }
 
-    // Handle an integer overflow exception from INT64_MIN / -1. Eventually
-    // signed integer division should trap, instead of returning the
-    // LHS (INT64_MIN).
+    // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
         Label notmin;
         masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notmin);
         masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notmin);
-        if (lir->mir()->isMod()) {
+        if (lir->mir()->isMod())
             masm.xorl(output, output);
-        } else {
-            if (lhs != output)
-                masm.mov(lhs, output);
-        }
+        else
+            masm.jump(wasm::JumpTarget::IntegerOverflow);
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -484,14 +476,10 @@ CodeGeneratorX64::visitUDivOrMod64(LUDivOrMod64* lir)
 
     Label done;
 
-    // Prevent divide by zero. For now match asm.js and return 0, but
-    // eventually this should trap.
+    // Prevent divide by zero.
     if (lir->canBeDivideByZero()) {
-        Label nonZero;
-        masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
-        masm.xorl(output, output);
-        masm.jump(&done);
-        masm.bind(&nonZero);
+        masm.testPtr(rhs, rhs);
+        masm.j(Assembler::Zero, wasm::JumpTarget::IntegerDivideByZero);
     }
 
     // Zero extend the lhs into rdx to make (rdx:rax).

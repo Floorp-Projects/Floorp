@@ -501,12 +501,16 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
         // If EQ (LHS == INT32_MIN), sets EQ if rhs == -1.
         masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal);
         if (mir->canTruncateOverflow()) {
-            // (-INT32_MIN)|0 = INT32_MIN
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(INT32_MIN), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(wasm::JumpTarget::IntegerOverflow, Assembler::Equal);
+            } else {
+                // (-INT32_MIN)|0 = INT32_MIN
+                Label skip;
+                masm.ma_b(&skip, Assembler::NotEqual);
+                masm.ma_mov(Imm32(INT32_MIN), output);
+                masm.ma_b(&done);
+                masm.bind(&skip);
+            }
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, snapshot);
@@ -517,12 +521,16 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
     if (mir->canBeDivideByZero()) {
         masm.ma_cmp(rhs, Imm32(0));
         if (mir->canTruncateInfinities()) {
-            // Infinity|0 == 0
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(wasm::JumpTarget::IntegerDivideByZero, Assembler::Equal);
+            } else {
+                // Infinity|0 == 0
+                Label skip;
+                masm.ma_b(&skip, Assembler::NotEqual);
+                masm.ma_mov(Imm32(0), output);
+                masm.ma_b(&done);
+                masm.bind(&skip);
+            }
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, snapshot);
@@ -544,7 +552,6 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
 void
 CodeGeneratorARM::visitDivI(LDivI* ins)
 {
-    // Extract the registers from this instruction.
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register temp = ToRegister(ins->getTemp(0));
@@ -578,7 +585,6 @@ extern "C" {
 void
 CodeGeneratorARM::visitSoftDivI(LSoftDivI* ins)
 {
-    // Extract the registers from this instruction.
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
@@ -673,12 +679,16 @@ CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs, Register out
         masm.ma_cmp(rhs, Imm32(0));
         masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
         if (mir->isTruncated()) {
-            // NaN|0 == 0 and (0 % -X)|0 == 0
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(&done);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(wasm::JumpTarget::IntegerDivideByZero, Assembler::Equal);
+            } else {
+                // NaN|0 == 0 and (0 % -X)|0 == 0
+                Label skip;
+                masm.ma_b(&skip, Assembler::NotEqual);
+                masm.ma_mov(Imm32(0), output);
+                masm.ma_b(&done);
+                masm.bind(&skip);
+            }
         } else {
             MOZ_ASSERT(mir->fallible());
             bailoutIf(Assembler::Equal, snapshot);
@@ -2648,12 +2658,16 @@ CodeGeneratorARM::generateUDivModZeroCheck(Register rhs, Register output, Label*
     if (mir->canBeDivideByZero()) {
         masm.ma_cmp(rhs, Imm32(0));
         if (mir->isTruncated()) {
-            Label skip;
-            masm.ma_b(&skip, Assembler::NotEqual);
-            // Infinity|0 == 0
-            masm.ma_mov(Imm32(0), output);
-            masm.ma_b(done);
-            masm.bind(&skip);
+            if (mir->trapOnError()) {
+                masm.ma_b(wasm::JumpTarget::IntegerDivideByZero, Assembler::Equal);
+            } else {
+                Label skip;
+                masm.ma_b(&skip, Assembler::NotEqual);
+                // Infinity|0 == 0
+                masm.ma_mov(Imm32(0), output);
+                masm.ma_b(done);
+                masm.bind(&skip);
+            }
         } else {
             // Bailout for divide by zero
             MOZ_ASSERT(mir->fallible());
