@@ -43,27 +43,46 @@ private:
 };
 
 /**
- * `PushMessage` implements the `nsIPushMessage` interface, similar to
- * the `PushMessageData` WebIDL interface. Instances of this class are
- * passed as the subject of `push-message` observer notifications.
+ * `PushData` provides methods for retrieving push message data in different
+ * formats. This class is similar to the `PushMessageData` WebIDL interface.
  */
-class PushMessage final : public nsIPushMessage
+class PushData final : public nsIPushData
 {
 public:
-  explicit PushMessage(const nsTArray<uint8_t>& aData);
+  explicit PushData(const nsTArray<uint8_t>& aData);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushMessage,
-                                           nsIPushMessage)
-  NS_DECL_NSIPUSHMESSAGE
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushData, nsIPushData)
+  NS_DECL_NSIPUSHDATA
 
 private:
-  virtual ~PushMessage();
+  virtual ~PushData();
 
   nsresult EnsureDecodedText();
 
   nsTArray<uint8_t> mData;
   nsString mDecodedText;
+};
+
+/**
+ * `PushMessage` exposes the subscription principal and data for a push
+ * message. Each `push-message` observer receives an instance of this class
+ * as the subject.
+ */
+class PushMessage final : public nsIPushMessage
+{
+public:
+  PushMessage(nsIPrincipal* aPrincipal, nsIPushData* aData);
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(PushMessage, nsIPushMessage)
+  NS_DECL_NSIPUSHMESSAGE
+
+private:
+  virtual ~PushMessage();
+
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPushData> mData;
 };
 
 } // namespace dom
