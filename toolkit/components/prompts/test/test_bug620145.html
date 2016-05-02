@@ -25,7 +25,6 @@
 
 <script class="testbody" type="text/javascript">
 var selectionTest = false;
-var state, action;
 
 function openAlert() {
   info("opening alert...");
@@ -34,6 +33,7 @@ function openAlert() {
 }
 
 add_task(function* runTest() {
+  var state, action;
   // The <button> in this test's HTML opens a prompt when clicked.
   // Here we send the events to simulate clicking it.
   info("isTabModal? " + isTabModal);
@@ -57,7 +57,7 @@ add_task(function* runTest() {
     buttonClick: "ok",
   };
 
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   var button = $("button");
   dispatchMouseEvent(button, "mousedown");
@@ -68,7 +68,7 @@ add_task(function* runTest() {
   checkSelection();
 
   // using same state and action.
-  promptDone = handlePrompt(action);
+  promptDone = handlePrompt(state, action);
 
   var text = $("text");
   dispatchMouseEvent(text, "mousedown");

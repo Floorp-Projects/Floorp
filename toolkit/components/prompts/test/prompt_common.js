@@ -29,7 +29,7 @@ function onloadPromiseFor(id) {
   });
 }
 
-function handlePrompt() {
+function handlePrompt(state, action) {
   return new Promise(resolve => {
     gChromeScript.addMessageListener("promptHandled", function handled(msg) {
       gChromeScript.removeMessageListener("promptHandled", handled);

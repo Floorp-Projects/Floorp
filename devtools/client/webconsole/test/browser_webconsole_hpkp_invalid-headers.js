@@ -37,42 +37,42 @@ add_task(function* () {
     url: SJS_URL + "?noMaxAge",
     name: "No max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that did not include " +
-          "a 'max-age' directive."
+          "a \u2018max-age\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?invalidIncludeSubDomains",
     name: "Invalid includeSubDomains error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included an " +
-          "invalid 'includeSubDomains' directive."
+          "invalid \u2018includeSubDomains\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?invalidMaxAge",
     name: "Invalid max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included an " +
-          "invalid 'max-age' directive."
+          "invalid \u2018max-age\u2019 directive."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?multipleIncludeSubDomains",
     name: "Multiple includeSubDomains error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple 'includeSubDomains' directives."
+          "multiple \u2018includeSubDomains\u2019 directives."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?multipleMaxAge",
     name: "Multiple max-age error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple 'max-age' directives."
+          "multiple \u2018max-age\u2019 directives."
   }, hud);
 
   yield* checkForMessage({
     url: SJS_URL + "?multipleReportURIs",
     name: "Multiple report-uri error displayed successfully",
     text: "Public-Key-Pins: The site specified a header that included " +
-          "multiple 'report-uri' directives."
+          "multiple \u2018report-uri\u2019 directives."
   }, hud);
 
   // The root used for mochitests is not built-in, so set the relevant pref to

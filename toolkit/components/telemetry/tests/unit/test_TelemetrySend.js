@@ -120,7 +120,7 @@ add_task(function* test_sendPendingPings() {
   Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
 
   let timerPromise = waitForTimer();
-  yield TelemetryController.testReset();
+  yield TelemetryController.reset();
   let [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
   Assert.ok(!!pingSendTimerCallback, "Should have a timer callback");
 
@@ -170,6 +170,21 @@ add_task(function* test_sendPendingPings() {
   countByType = countPingTypes(pings);
 
   Assert.equal(countByType.get(TEST_TYPE_A), 5, "Should have received the correct amount of type A pings");
+
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  PingServer.resetPingHandler();
+});
+
+add_task(function* test_sendDateHeader() {
+  let now = fakeNow(new Date(Date.UTC(2011, 1, 1, 11, 0, 0)));
+  yield TelemetrySend.reset();
+
+  let pingId = yield TelemetryController.submitExternalPing("test-send-date-header", {});
+  let req = yield PingServer.promiseNextRequest();
+  let ping = decodeRequestPayload(req);
+  Assert.equal(req.getHeader("Date"), "Tue, 01 Feb 2011 11:00:00 GMT",
+               "Telemetry should send the correct Date header with requests.");
+  Assert.equal(ping.id, pingId, "Should have received the correct ping id.");
 });
 
 // Test the backoff timeout behavior after send failures.

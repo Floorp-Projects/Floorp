@@ -557,10 +557,15 @@ var BookmarkPropertiesPanel = {
   _getTransactionsForURIList: function BPP__getTransactionsForURIList() {
     var transactions = [];
     for (let uri of this._URIs) {
-      let title = this._getURITitleFromHistory(uri);
-      let createTxn = new PlacesCreateBookmarkTransaction(uri, -1,
-                                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                          title);
+      // uri should be an object in the form { url, title }. Though add-ons
+      // could still use the legacy form, where it's an nsIURI.
+      let [_uri, _title] = uri instanceof Ci.nsIURI ?
+        [uri, this._getURITitleFromHistory(uri)] : [uri.uri, uri.title];
+
+      let createTxn =
+        new PlacesCreateBookmarkTransaction(_uri, -1,
+                                            PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                            _title);
       transactions.push(createTxn);
     }
     return transactions;

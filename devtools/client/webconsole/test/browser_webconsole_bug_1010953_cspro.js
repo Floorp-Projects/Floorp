@@ -20,14 +20,14 @@ const TEST_URI = "data:text/html;charset=utf8,Web Console CSP report only " +
                  "test (bug 1010953)";
 const TEST_VIOLATION = "http://example.com/browser/devtools/client/" +
                        "webconsole/test/test_bug_1010953_cspro.html";
-const CSP_VIOLATION_MSG = "Content Security Policy: The page's settings " +
+const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
                           "blocked the loading of a resource at " +
                           "http://some.example.com/test.png " +
-                          "(\"img-src http://example.com\").";
-const CSP_REPORT_MSG = "Content Security Policy: The page\'s settings " +
+                          "(\u201cimg-src http://example.com\u201d).";
+const CSP_REPORT_MSG = "Content Security Policy: The page\u2019s settings " +
                        "observed the loading of a resource at " +
                        "http://some.example.com/test_bug_1010953_cspro.js " +
-                       "(\"script-src http://example.com\"). A CSP report is " +
+                       "(\u201cscript-src http://example.com\u201d). A CSP report is " +
                        "being sent.";
 
 add_task(function* () {
