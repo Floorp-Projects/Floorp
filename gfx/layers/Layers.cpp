@@ -600,7 +600,7 @@ Layer::CanUseOpaqueSurface()
 // NB: eventually these methods will be defined unconditionally, and
 // can be moved into Layers.h
 const Maybe<ParentLayerIntRect>&
-Layer::GetEffectiveClipRect()
+Layer::GetLocalClipRect()
 {
   if (LayerComposite* shadow = AsLayerComposite()) {
     return shadow->GetShadowClipRect();
@@ -786,7 +786,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   // ContainerState::SetupScrollingMetadata() may install a clip on
   // the layer.
   Layer *clipLayer =
-    containerChild && containerChild->GetEffectiveClipRect() ?
+    containerChild && containerChild->GetLocalClipRect() ?
     containerChild : this;
 
   // Establish initial clip rect: it's either the one passed in, or
@@ -798,7 +798,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     currentClip = aCurrentScissorRect;
   }
 
-  if (!clipLayer->GetEffectiveClipRect()) {
+  if (!clipLayer->GetLocalClipRect()) {
     return currentClip;
   }
 
@@ -815,7 +815,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   }
 
   const RenderTargetIntRect clipRect =
-    ViewAs<RenderTargetPixel>(*clipLayer->GetEffectiveClipRect(),
+    ViewAs<RenderTargetPixel>(*clipLayer->GetLocalClipRect(),
                               PixelCastJustification::RenderTargetIsParentLayerForRoot);
   if (clipRect.IsEmpty()) {
     // We might have a non-translation transform in the container so we can't
@@ -1053,8 +1053,8 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
 
     // If the parent layer clips its lower layers, clip the visible region
     // we're accumulating.
-    if (layer->GetEffectiveClipRect()) {
-      aResult.AndWith(layer->GetEffectiveClipRect()->ToUnknownRect());
+    if (layer->GetLocalClipRect()) {
+      aResult.AndWith(layer->GetLocalClipRect()->ToUnknownRect());
     }
 
     // Now we need to walk across the list of siblings for this parent layer,
@@ -1078,7 +1078,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
       siblingVisibleRegion.MoveBy(-siblingOffset.x, -siblingOffset.y);
       // Apply the sibling's clip.
       // Layer clip rects are not affected by the layer's transform.
-      Maybe<ParentLayerIntRect> clipRect = sibling->GetEffectiveClipRect();
+      Maybe<ParentLayerIntRect> clipRect = sibling->GetLocalClipRect();
       if (clipRect) {
         siblingVisibleRegion.AndWith(clipRect->ToUnknownRect());
       }
@@ -1319,7 +1319,7 @@ ContainerLayer::HasMultipleChildren()
 {
   uint32_t count = 0;
   for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    const Maybe<ParentLayerIntRect>& clipRect = child->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clipRect = child->GetLocalClipRect();
     if (clipRect && clipRect->IsEmpty())
       continue;
     if (child->GetLocalVisibleRegion().IsEmpty())
@@ -1439,7 +1439,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
 
       if (checkClipRect || checkMaskLayers) {
         for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-          const Maybe<ParentLayerIntRect>& clipRect = child->GetEffectiveClipRect();
+          const Maybe<ParentLayerIntRect>& clipRect = child->GetLocalClipRect();
           /* We can't (easily) forward our transform to children with a non-empty clip
            * rect since it would need to be adjusted for the transform. See
            * the calculations performed by CalculateScissorRect above.

@@ -413,7 +413,7 @@ MarkLayersHidden(Layer* aLayer, const IntRect& aClipRect,
   }
 
   {
-    const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetLocalClipRect();
     if (clipRect) {
       IntRect cr = clipRect->ToUnknownRect();
       // clipRect is in the container's coordinate system. Get it into the
@@ -492,7 +492,7 @@ ApplyDoubleBuffering(Layer* aLayer, const IntRect& aVisibleRect)
   IntRect newVisibleRect(aVisibleRect);
 
   {
-    const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetLocalClipRect();
     if (clipRect) {
       IntRect cr = clipRect->ToUnknownRect();
       // clipRect is in the container's coordinate system. Get it into the
@@ -771,7 +771,7 @@ BasicLayerManager::FlushGroup(PaintLayerContext& aPaintContext, bool aNeedsClipT
 static void
 InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
 {
-  const Maybe<ParentLayerIntRect> &clipRect = aLayer->GetEffectiveClipRect();
+  const Maybe<ParentLayerIntRect> &clipRect = aLayer->GetLocalClipRect();
 
   if (!clipRect) {
     return;
@@ -823,7 +823,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   RenderTraceScope trace("BasicLayerManager::PaintLayer", "707070");
 
-  const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetEffectiveClipRect();
+  const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetLocalClipRect();
   BasicContainerLayer* container =
     static_cast<BasicContainerLayer*>(aLayer->AsContainerLayer());
   bool needsGroup = container && container->UseIntermediateSurface();
@@ -871,7 +871,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     // Don't need to clip to visible region again
     needsClipToVisibleRegion = false;
   }
-  
+
   if (is2D) {
     paintLayerContext.AnnotateOpaqueRect();
   }

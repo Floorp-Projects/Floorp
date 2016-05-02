@@ -1505,7 +1505,7 @@ public:
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
   // accounting for this layer possibly being a shadow.
-  const Maybe<ParentLayerIntRect>& GetEffectiveClipRect();
+  const Maybe<ParentLayerIntRect>& GetLocalClipRect();
   const LayerIntRegion& GetLocalVisibleRegion();
 
   bool Extend3DContext() {

@@ -302,8 +302,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     nsIntRect clip;
-    nsIntRect layerClip = aLayer->GetEffectiveClipRect().valueOr(ParentLayerIntRect()).ToUnknownRect();
-    nsIntRect* layerClipPtr = aLayer->GetEffectiveClipRect() ? &layerClip : nullptr;
+    nsIntRect layerClip = aLayer->GetLocalClipRect().valueOr(ParentLayerIntRect()).ToUnknownRect();
+    nsIntRect* layerClipPtr = aLayer->GetLocalClipRect() ? &layerClip : nullptr;
     if (!HwcUtils::CalculateClipRect(aParentTransform,
                                      layerClipPtr,
                                      aClip,
