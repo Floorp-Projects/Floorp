@@ -2595,65 +2595,6 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     ICGetPropNativeStub* getStub(ICStubSpace* space);
 };
 
-class ICGetProp_Unboxed : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    HeapPtrObjectGroup group_;
-    uint32_t fieldOffset_;
-
-    ICGetProp_Unboxed(JitCode* stubCode, ICStub* firstMonitorStub, ObjectGroup* group,
-                      uint32_t fieldOffset)
-      : ICMonitoredStub(ICStub::GetProp_Unboxed, stubCode, firstMonitorStub),
-        group_(group), fieldOffset_(fieldOffset)
-    {
-        (void) fieldOffset_; // Silence clang warning
-    }
-
-  public:
-    HeapPtrObjectGroup& group() {
-        return group_;
-    }
-
-    static size_t offsetOfGroup() {
-        return offsetof(ICGetProp_Unboxed, group_);
-    }
-    static size_t offsetOfFieldOffset() {
-        return offsetof(ICGetProp_Unboxed, fieldOffset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        ICStub* firstMonitorStub_;
-        RootedObjectGroup group_;
-        uint32_t fieldOffset_;
-        JSValueType fieldType_;
-
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(fieldType_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
-                 ObjectGroup* group, uint32_t fieldOffset, JSValueType fieldType)
-          : ICStubCompiler(cx, ICStub::GetProp_Unboxed, engine),
-            firstMonitorStub_(firstMonitorStub),
-            group_(cx, group),
-            fieldOffset_(fieldOffset),
-            fieldType_(fieldType)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_Unboxed>(space, getStubCode(), firstMonitorStub_, group_,
-                                              fieldOffset_);
-        }
-    };
-};
-
 static uint32_t
 SimpleTypeDescrKey(SimpleTypeDescr* descr)
 {
