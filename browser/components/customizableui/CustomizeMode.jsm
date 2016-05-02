@@ -932,8 +932,10 @@ CustomizeMode.prototype = {
 
     if (aNode.hasAttribute("label")) {
       wrapper.setAttribute("title", aNode.getAttribute("label"));
+      wrapper.setAttribute("tooltiptext", aNode.getAttribute("label"));
     } else if (aNode.hasAttribute("title")) {
       wrapper.setAttribute("title", aNode.getAttribute("title"));
+      wrapper.setAttribute("tooltiptext", aNode.getAttribute("title"));
     }
 
     if (aNode.hasAttribute("flex")) {
