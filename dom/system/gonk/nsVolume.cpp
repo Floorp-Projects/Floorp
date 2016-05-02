@@ -265,7 +265,6 @@ NS_IMETHODIMP nsVolume::Format()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(FormatVolumeIOThread, NameStr()));
 
   return NS_OK;
@@ -289,7 +288,6 @@ NS_IMETHODIMP nsVolume::Mount()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(MountVolumeIOThread, NameStr()));
 
   return NS_OK;
@@ -313,7 +311,6 @@ NS_IMETHODIMP nsVolume::Unmount()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(UnmountVolumeIOThread, NameStr()));
 
   return NS_OK;
@@ -411,7 +408,6 @@ nsVolume::UpdateMountLock(bool aMountLocked)
   mMountLocked = aMountLocked;
   LogState();
   XRE_GetIOMessageLoop()->PostTask(
-     FROM_HERE,
      NewRunnableFunction(Volume::UpdateMountLock,
                          NS_LossyConvertUTF16toASCII(Name()),
                          MountGeneration(), aMountLocked));
