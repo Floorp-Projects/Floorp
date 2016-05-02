@@ -11680,6 +11680,14 @@ nsresult nsDocument::RemoteFrameFullscreenReverted()
   return NS_OK;
 }
 
+/* static */ bool
+nsDocument::IsUnprefixedFullscreenEnabled(JSContext* aCx, JSObject* aObject)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return nsContentUtils::IsCallerChrome() ||
+         nsContentUtils::IsUnprefixedFullscreenApiEnabled();
+}
+
 static void
 ReleaseVRDeviceProxyRef(void *, nsIAtom*, void *aPropertyValue, void *)
 {
