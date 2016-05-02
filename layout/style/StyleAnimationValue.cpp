@@ -1832,7 +1832,7 @@ AddPositions(double aCoeff1, const nsCSSValue& aPos1,
   }
 }
 
-static UniquePtr<nsCSSValuePair>
+static Maybe<nsCSSValuePair>
 AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
                 double aCoeff1, const nsCSSValuePair* aPair1,
                 double aCoeff2, const nsCSSValuePair* aPair2)
@@ -1840,7 +1840,7 @@ AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
   MOZ_ASSERT(aPair1, "expected pair");
   MOZ_ASSERT(aPair2, "expected pair");
 
-  UniquePtr<nsCSSValuePair> result;
+  Maybe<nsCSSValuePair> result;
   nsCSSUnit unit[2];
   unit[0] = GetCommonUnit(aProperty, aPair1->mXValue.GetUnit(),
                           aPair2->mXValue.GetUnit());
@@ -1848,10 +1848,10 @@ AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
                           aPair2->mYValue.GetUnit());
   if (unit[0] == eCSSUnit_Null || unit[1] == eCSSUnit_Null ||
       unit[0] == eCSSUnit_URL || unit[0] == eCSSUnit_Enumerated) {
-    return result; // nullptr (returning |result| for RVO)
+    return result; // Nothing() (returning |result| for RVO)
   }
 
-  result = MakeUnique<nsCSSValuePair>();
+  result.emplace();
 
   static nsCSSValue nsCSSValuePair::* const pairValues[2] = {
     &nsCSSValuePair::mXValue, &nsCSSValuePair::mYValue
@@ -1861,10 +1861,10 @@ AddCSSValuePair(nsCSSProperty aProperty, uint32_t aRestrictions,
     if (!AddCSSValuePixelPercentCalc(aRestrictions, unit[i],
                                      aCoeff1, aPair1->*member,
                                      aCoeff2, aPair2->*member,
-                                     result.get()->*member) ) {
+                                     result.ref().*member) ) {
       MOZ_ASSERT(false, "unexpected unit");
       result.reset();
-      return result; // nullptr (returning |result| for RVO)
+      return result; // Nothing() (returning |result| for RVO)
     }
   }
 
@@ -2034,14 +2034,14 @@ AddShapeFunction(nsCSSProperty aProperty,
       for (size_t i = 0; i < 4; ++i) {
         const nsCSSValuePair& pair1 = radii1->Item(i).GetPairValue();
         const nsCSSValuePair& pair2 = radii2->Item(i).GetPairValue();
-        UniquePtr<nsCSSValuePair>
-          pairResult(AddCSSValuePair(aProperty, restrictions,
-                                     aCoeff1, &pair1,
-                                     aCoeff2, &pair2));
+        const Maybe<nsCSSValuePair> pairResult =
+          AddCSSValuePair(aProperty, restrictions,
+                          aCoeff1, &pair1,
+                          aCoeff2, &pair2);
         if (!pairResult) {
           return nullptr;
         }
-        resultRadii->Item(i).SetPairValue(pairResult.release());
+        resultRadii->Item(i).SetPairValue(pairResult.ptr());
       }
       break;
     }
@@ -2405,15 +2405,17 @@ StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
     }
     case eUnit_CSSValuePair: {
       uint32_t restrictions = nsCSSProps::ValueRestrictions(aProperty);
-      UniquePtr<nsCSSValuePair> result(
+      Maybe<nsCSSValuePair> result =
         AddCSSValuePair(aProperty, restrictions,
                         aCoeff1, aValue1.GetCSSValuePairValue(),
-                        aCoeff2, aValue2.GetCSSValuePairValue()));
+                        aCoeff2, aValue2.GetCSSValuePairValue());
       if (!result) {
         return false;
       }
 
-      aResultValue.SetAndAdoptCSSValuePairValue(result.release(),
+      // We need a heap allocated object to adopt here:
+      auto heapResult = MakeUnique<nsCSSValuePair>(result.ref());
+      aResultValue.SetAndAdoptCSSValuePairValue(heapResult.release(),
                                                 eUnit_CSSValuePair);
       return true;
     }
@@ -3566,9 +3568,9 @@ StyleClipBasicShapeToCSSArray(const nsStyleClipPath& aClipPath,
                                   pair->mXValue) ||
             !StyleCoordToCSSValue(radii.Get(NS_FULL_TO_HALF_CORNER(corner, true)),
                                   pair->mYValue)) {
-              return false;
-            }
-        radiusArray->Item(corner).SetPairValue(pair.release());
+          return false;
+        }
+        radiusArray->Item(corner).SetPairValue(pair.get());
       }
       // Set the last item in functionArray to the radius array:
       functionArray->Item(functionArray->Count() - 1).
