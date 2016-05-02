@@ -307,17 +307,29 @@ add_task(function* test_kinto_sync(){
   // create an empty collection, sync to populate
   const collection = do_get_kinto_collection();
   try {
+    let result;
+
     yield collection.db.open();
-    yield collection.sync();
+    result = yield collection.sync();
+    do_check_true(result.ok);
 
     // our test data has a single record; it should be in the local collection
     let list = yield collection.list();
     do_check_eq(list.data.length, 1);
 
     // now sync again; we should now have 2 records
-    yield collection.sync();
+    result = yield collection.sync();
+    do_check_true(result.ok);
     list = yield collection.list();
     do_check_eq(list.data.length, 2);
+
+    // sync again; the second records should have been modified
+    const before = list.data[0].title;
+    result = yield collection.sync();
+    do_check_true(result.ok);
+    list = yield collection.list();
+    const after = list.data[0].title;
+    do_check_neq(before, after);
   } finally {
     yield collection.db.close();
   }
@@ -380,6 +392,17 @@ function getSampleResponse(req, port) {
       ],
       "status": {status: 200, statusText: "OK"},
       "responseBody": JSON.stringify({"data":[{"last_modified":1445607941223, "done":false, "id":"901967b0-f729-4b30-8d8d-499cba7f4b1d", "title":"Another new test"}]})
+    },
+    "GET:/v1/buckets/default/collections/test_collection/records?_sort=-last_modified&_since=1445607941223": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"1445607541265\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data":[{"last_modified":1445607541265, "done":false, "id":"901967b0-f729-4b30-8d8d-499cba7f4b1d", "title":"Modified title"}]})
     }
   };
   return responses[`${req.method}:${req.path}?${req.queryString}`] ||
