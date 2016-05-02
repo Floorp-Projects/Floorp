@@ -23,7 +23,7 @@ add_task(function* () {
     expectUncaughtException();
   }
 
-  content.location = TEST_URI2;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
 
   yield waitForMessages({
     webconsole: hud,
