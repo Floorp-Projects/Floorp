@@ -55,6 +55,9 @@ IsAsmJSModule(JSFunction* fun);
 extern bool
 IsAsmJSFunction(JSFunction* fun);
 
+extern bool
+IsAsmJSStrictModeModuleOrFunction(JSFunction* fun);
+
 // asm.js testing natives:
 
 extern bool

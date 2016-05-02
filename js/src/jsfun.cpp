@@ -114,6 +114,17 @@ ThrowTypeErrorBehavior(JSContext* cx)
                                  JSMSG_THROW_TYPE_ERROR);
 }
 
+static bool
+IsFunctionInStrictMode(JSFunction* fun)
+{
+    // Interpreted functions have a strict flag.
+    if (fun->isInterpreted() && fun->strict())
+        return true;
+
+    // Only asm.js functions can also be strict.
+    return IsAsmJSStrictModeModuleOrFunction(fun);
+}
+
 // Beware: this function can be invoked on *any* function! That includes
 // natives, strict mode functions, bound functions, arrow functions,
 // self-hosted functions and constructors, asm.js functions, functions with
@@ -124,12 +135,10 @@ static bool
 ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
 {
     // Throw if the function is a builtin (note: this doesn't include asm.js),
-    // a strict mode function (FIXME: needs work handle strict asm.js functions
-    // correctly, should fall out of bug 1057208), or a bound function.
-    if (fun->isBuiltin() ||
-        (fun->isInterpreted() && fun->strict()) ||
-        fun->isBoundFunction())
-    {
+    // a strict mode function, or a bound function.
+    // TODO (bug 1057208): ensure semantics are correct for all possible
+    // pairings of callee/caller.
+    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) || fun->isBoundFunction()) {
         ThrowTypeErrorBehavior(cx);
         return false;
     }
@@ -213,12 +222,10 @@ static bool
 CallerRestrictions(JSContext* cx, HandleFunction fun)
 {
     // Throw if the function is a builtin (note: this doesn't include asm.js),
-    // a strict mode function (FIXME: needs work handle strict asm.js functions
-    // correctly, should fall out of bug 1057208), or a bound function.
-    if (fun->isBuiltin() ||
-        (fun->isInterpreted() && fun->strict()) ||
-        fun->isBoundFunction())
-    {
+    // a strict mode function, or a bound function.
+    // TODO (bug 1057208): ensure semantics are correct for all possible
+    // pairings of callee/caller.
+    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) || fun->isBoundFunction()) {
         ThrowTypeErrorBehavior(cx);
         return false;
     }
