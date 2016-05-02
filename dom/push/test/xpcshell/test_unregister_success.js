@@ -53,10 +53,18 @@ add_task(function* test_unregister_success() {
     }
   });
 
+  let subModifiedPromise = promiseObserverNotification(
+    PushServiceComponent.subscriptionModifiedTopic);
+
   yield PushService.unregister({
     scope: 'https://example.com/page/unregister-success',
     originAttributes: '',
   });
+
+  let {data: subModifiedScope} = yield subModifiedPromise;
+  equal(subModifiedScope, 'https://example.com/page/unregister-success',
+    'Should fire a subscription modified event after unsubscribing');
+
   let record = yield db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 

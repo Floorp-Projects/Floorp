@@ -5834,8 +5834,8 @@ ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope
 }
 
 bool
-ContentParent::RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
-                                                       const uint16_t& aReason)
+ContentParent::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
+                                                           const IPC::Principal& aPrincipal)
 {
 #ifndef MOZ_SIMPLEPUSH
   nsCOMPtr<nsIPushNotifier> pushNotifier =
@@ -5844,7 +5844,8 @@ ContentParent::RecvNotifyPushSubscriptionLostObservers(const nsCString& aScope,
       return true;
   }
 
-  nsresult rv = pushNotifier->NotifySubscriptionLostObservers(aScope, aReason);
+  nsresult rv = pushNotifier->NotifySubscriptionModifiedObservers(aScope,
+                                                                  aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 #endif
   return true;

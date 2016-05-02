@@ -15,7 +15,7 @@
 // These constants are duplicated in `PushComponents.js`.
 #define OBSERVER_TOPIC_PUSH "push-message"
 #define OBSERVER_TOPIC_SUBSCRIPTION_CHANGE "push-subscription-change"
-#define OBSERVER_TOPIC_SUBSCRIPTION_LOST "push-subscription-lost"
+#define OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED "push-subscription-modified"
 %}
 
 interface nsIPrincipal;
@@ -55,19 +55,15 @@ interface nsIPushNotifier : nsISupports
   void notifySubscriptionChange(in ACString scope, in nsIPrincipal principal);
 
   /**
-   * Fires a `push-subscription-lost` observer notification. Chrome code can
-   * listen for this notification to see when the Push service removes or
-   * expires a subscription for the |scope|.
+   * Fires a `push-subscription-modified` observer notification. Chrome code
+   * can listen for this notification to see when a subscription is added,
+   * updated, removed, or expired for any |scope|.
    *
-   * This is useful for Dev Tools and debugging add-ons that need to be
-   * notified when a subscription changes state. Other chrome callers should
-   * listen for `push-subscription-change` and resubscribe instead.
-   *
-   * |reason| is an `nsIPushErrorReporter` unsubscribe reason. The reason is
-   * wrapped in an `nsISupportsPRUint16` and passed as the subject.
+   * This is useful for Dev Tools and debugging add-ons that passively observe
+   * when subscriptions are created or dropped. Other callers should listen for
+   * `push-subscription-change` and resubscribe instead.
    */
-  void notifySubscriptionLost(in ACString scope, in nsIPrincipal principal,
-                              [optional] in uint16_t reason);
+  void notifySubscriptionModified(in ACString scope, in nsIPrincipal principal);
 
   void notifyError(in ACString scope, in nsIPrincipal principal,
                    in DOMString message, in uint32_t flags);
@@ -88,13 +84,14 @@ interface nsIPushNotifier : nsISupports
 
   [noscript, nostdcall]
   void notifySubscriptionChangeWorkers(in ACString scope,
-                                           in nsIPrincipal principal);
+                                       in nsIPrincipal principal);
 
   [noscript, nostdcall]
   void notifySubscriptionChangeObservers(in ACString scope);
 
   [noscript, nostdcall]
-  void notifySubscriptionLostObservers(in ACString scope, in uint16_t reason);
+  void notifySubscriptionModifiedObservers(in ACString scope,
+                                           in nsIPrincipal principal);
 
   [noscript, nostdcall, notxpcom]
   void notifyErrorWorkers(in ACString scope, in DOMString message,
