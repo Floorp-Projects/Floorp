@@ -383,6 +383,14 @@ CSS_PROP_ALIAS(-webkit-mask-position,
                mask_position,
                WebkitMaskPosition,
                WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-position-x,
+               mask_position_x,
+               WebkitMaskPositionX,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-mask-position-y,
+               mask_position_y,
+               WebkitMaskPositionY,
+               WEBKIT_PREFIX_PREF)
 CSS_PROP_ALIAS(-webkit-mask-repeat,
                mask_repeat,
                WebkitMaskRepeat,

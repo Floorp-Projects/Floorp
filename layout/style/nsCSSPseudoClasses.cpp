@@ -48,16 +48,16 @@ static bool sPseudoClassEnabled[] = {
   true,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
-};  
+};
 
 void nsCSSPseudoClasses::AddRefAtoms()
 {
   NS_RegisterStaticAtoms(CSSPseudoClasses_info);
-  
-#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_)                       \
-  if (pref_[0]) {                                                            \
-    Preferences::AddBoolVarCache(&sPseudoClassEnabled[ePseudoClass_##name_], \
-                                 pref_);                                     \
+
+#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_)                        \
+  if (pref_[0]) {                                                             \
+    auto idx = static_cast<CSSPseudoElementTypeBase>(Type::name_);            \
+    Preferences::AddBoolVarCache(&sPseudoClassEnabled[idx], pref_);           \
   }
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
@@ -66,49 +66,49 @@ void nsCSSPseudoClasses::AddRefAtoms()
 bool
 nsCSSPseudoClasses::HasStringArg(Type aType)
 {
-  return aType == ePseudoClass_lang ||
-         aType == ePseudoClass_mozEmptyExceptChildrenWithLocalname ||
-         aType == ePseudoClass_mozSystemMetric ||
-         aType == ePseudoClass_mozLocaleDir ||
-         aType == ePseudoClass_dir;
+  return aType == Type::lang ||
+         aType == Type::mozEmptyExceptChildrenWithLocalname ||
+         aType == Type::mozSystemMetric ||
+         aType == Type::mozLocaleDir ||
+         aType == Type::dir;
 }
 
 bool
 nsCSSPseudoClasses::HasNthPairArg(Type aType)
 {
-  return aType == ePseudoClass_nthChild ||
-         aType == ePseudoClass_nthLastChild ||
-         aType == ePseudoClass_nthOfType ||
-         aType == ePseudoClass_nthLastOfType;
+  return aType == Type::nthChild ||
+         aType == Type::nthLastChild ||
+         aType == Type::nthOfType ||
+         aType == Type::nthLastOfType;
 }
 
 void
 nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 {
-  MOZ_ASSERT(aType < ePseudoClass_Count, "Unexpected type");
-  MOZ_ASSERT(aType >= 0, "Very unexpected type");
-  (*CSSPseudoClasses_info[aType].mAtom)->ToString(aString);
+  MOZ_ASSERT(aType < Type::Count, "Unexpected type");
+  auto idx = static_cast<CSSPseudoClassTypeBase>(aType);
+  (*CSSPseudoClasses_info[idx].mAtom)->ToString(aString);
 }
 
-nsCSSPseudoClasses::Type
+CSSPseudoClassType
 nsCSSPseudoClasses::GetPseudoType(nsIAtom* aAtom)
 {
   for (uint32_t i = 0; i < ArrayLength(CSSPseudoClasses_info); ++i) {
     if (*CSSPseudoClasses_info[i].mAtom == aAtom) {
-      return sPseudoClassEnabled[i] ? Type(i) : ePseudoClass_NotPseudoClass;
+      return sPseudoClassEnabled[i] ? Type(i) : Type::NotPseudo;
     }
   }
 
-  return nsCSSPseudoClasses::ePseudoClass_NotPseudoClass;
+  return Type::NotPseudo;
 }
 
 /* static */ bool
 nsCSSPseudoClasses::IsUserActionPseudoClass(Type aType)
 {
   // See http://dev.w3.org/csswg/selectors4/#useraction-pseudos
-  return aType == ePseudoClass_hover ||
-         aType == ePseudoClass_active ||
-         aType == ePseudoClass_focus;
+  return aType == Type::hover ||
+         aType == Type::active ||
+         aType == Type::focus;
 }
 
 /* static */ uint32_t

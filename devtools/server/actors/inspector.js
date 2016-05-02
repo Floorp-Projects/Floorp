@@ -437,10 +437,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       return undefined;
     }
 
-    // The NamedNodeMap implementation in Firefox (returned by
-    // node.attributes) gives attributes in the reverse order compared
-    // to the source file when iterated. So reverse the list here.
-    return [...this.rawNode.attributes].reverse().map(attr => {
+    return [...this.rawNode.attributes].map(attr => {
       return {namespace: attr.namespace, name: attr.name, value: attr.value };
     });
   },

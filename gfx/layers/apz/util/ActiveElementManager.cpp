@@ -209,7 +209,7 @@ ActiveElementManager::ResetTouchBlockState()
 }
 
 void
-ActiveElementManager::SetActiveTask(dom::Element* aTarget)
+ActiveElementManager::SetActiveTask(const nsCOMPtr<dom::Element>& aTarget)
 {
   AEM_LOG("mSetActiveTask %p running\n", mSetActiveTask);
 

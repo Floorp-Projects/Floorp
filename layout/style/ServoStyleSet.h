@@ -117,6 +117,11 @@ public:
                                        EventStates aStateMask);
 
 private:
+  already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
+                                              nsStyleContext* aParentContext,
+                                              nsIAtom* aPseudoTag,
+                                              CSSPseudoElementType aPseudoType);
+
   already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,

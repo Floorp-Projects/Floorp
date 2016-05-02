@@ -556,12 +556,11 @@ nsWindowsRegKey::IsWatching(bool* aResult)
 
 //-----------------------------------------------------------------------------
 
-nsresult
+void
 NS_NewWindowsRegKey(nsIWindowsRegKey** aResult)
 {
   RefPtr<nsWindowsRegKey> key = new nsWindowsRegKey();
   key.forget(aResult);
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -575,9 +574,6 @@ nsWindowsRegKeyConstructor(nsISupports* aDelegate, const nsIID& aIID,
   }
 
   nsCOMPtr<nsIWindowsRegKey> key;
-  nsresult rv = NS_NewWindowsRegKey(getter_AddRefs(key));
-  if (NS_SUCCEEDED(rv)) {
-    rv = key->QueryInterface(aIID, aResult);
-  }
-  return rv;
+  NS_NewWindowsRegKey(getter_AddRefs(key));
+  return key->QueryInterface(aIID, aResult);
 }

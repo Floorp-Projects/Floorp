@@ -127,6 +127,7 @@ TCPSocketChildBase::ReleaseIPDLReference()
 {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
+  mSocket = nullptr;
   this->Release();
 }
 

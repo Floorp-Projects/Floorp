@@ -1881,7 +1881,8 @@ MediaDecoder::DumpDebugInfo()
 {
   DUMP_LOG("metadata: channels=%u rate=%u hasAudio=%d hasVideo=%d, "
            "state: mPlayState=%s mIsDormant=%d, mShuttingDown=%d",
-           mInfo->mAudio.mChannels, mInfo->mAudio.mRate, mInfo->HasAudio(), mInfo->HasVideo(),
+           mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
+           mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
            PlayStateStr(), mIsDormant, mShuttingDown);
 
   nsString str;

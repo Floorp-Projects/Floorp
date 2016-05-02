@@ -756,6 +756,11 @@ public:
   void OnSelectionChange(const IMENotification& aIMENotification);
 
   /**
+   * Call [NSTextInputContext handleEvent] for mouse event support of IME
+   */
+  bool OnHandleEvent(NSEvent* aEvent);
+
+  /**
    * SetMarkedText() is a handler of setMarkedText of NSTextInput.
    *
    * @param aAttrString           This mut be an instance of NSAttributedString.

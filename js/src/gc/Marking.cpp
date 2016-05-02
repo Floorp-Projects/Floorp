@@ -2021,7 +2021,7 @@ template <typename S>
 struct TenuringTraversalFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, TenuringTracer* trc) {
         trc->traverse(&t);
-        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
+        return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
     }
 };
 
@@ -2427,7 +2427,7 @@ template <typename S>
 struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsMarkedInternal(&t);
-        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
+        return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
     }
 };
 
@@ -2486,7 +2486,7 @@ template <typename S>
 struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
     template <typename T> S operator()(T* t, bool* rv) {
         *rv = IsAboutToBeFinalizedInternal(&t);
-        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
+        return js::gc::RewrapTaggedPointer<S, T>::wrap(t);
     }
 };
 

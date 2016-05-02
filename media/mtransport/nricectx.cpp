@@ -576,8 +576,8 @@ NrIceCtx::Initialize(bool hide_non_default,
     }
   }
 
-  char* mapping_type = nullptr;
-  char* filtering_type = nullptr;
+  nsCString mapping_type;
+  nsCString filtering_type;
   bool block_udp = false;
 
   nsresult rv;
@@ -590,22 +590,22 @@ NrIceCtx::Initialize(bool hide_non_default,
     if (NS_SUCCEEDED(rv)) {
       rv = pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.mapping_type",
-          &mapping_type);
+          getter_Copies(mapping_type));
       rv = pref_branch->GetCharPref(
           "media.peerconnection.nat_simulator.filtering_type",
-          &filtering_type);
+          getter_Copies(filtering_type));
       rv = pref_branch->GetBoolPref(
           "media.peerconnection.nat_simulator.block_udp",
           &block_udp);
     }
   }
 
-  if (mapping_type && filtering_type) {
-    MOZ_MTLOG(ML_DEBUG, "NAT filtering type: " << filtering_type);
-    MOZ_MTLOG(ML_DEBUG, "NAT mapping type: " << mapping_type);
+  if (!mapping_type.IsEmpty() && !filtering_type.IsEmpty()) {
+    MOZ_MTLOG(ML_DEBUG, "NAT filtering type: " << filtering_type.get());
+    MOZ_MTLOG(ML_DEBUG, "NAT mapping type: " << mapping_type.get());
     TestNat* test_nat = new TestNat;
-    test_nat->filtering_type_ = TestNat::ToNatBehavior(filtering_type);
-    test_nat->mapping_type_ = TestNat::ToNatBehavior(mapping_type);
+    test_nat->filtering_type_ = TestNat::ToNatBehavior(filtering_type.get());
+    test_nat->mapping_type_ = TestNat::ToNatBehavior(mapping_type.get());
     test_nat->block_udp_ = block_udp;
     test_nat->enabled_ = true;
     SetNat(test_nat);

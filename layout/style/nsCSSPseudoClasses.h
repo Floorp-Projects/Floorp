@@ -17,26 +17,36 @@
 
 class nsIAtom;
 
-class nsCSSPseudoClasses {
-public:
+namespace mozilla {
 
-  static void AddRefAtoms();
-
-  enum Type {
+// The total count of CSSPseudoClassType is less than 256,
+// so use uint8_t as its underlying type.
+typedef uint8_t CSSPseudoClassTypeBase;
+enum class CSSPseudoClassType : CSSPseudoClassTypeBase
+{
 #define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
-    ePseudoClass_##_name,
+  _name,
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
-    ePseudoClass_Count,
-    ePseudoClass_NotPseudoClass /* This value MUST be last!  SelectorMatches
-                                   depends on it. */
-  };
+  Count,
+  NotPseudo,  // This value MUST be second last! SelectorMatches depends on it.
+  MAX
+};
+
+} // namespace mozilla
+
+class nsCSSPseudoClasses
+{
+  typedef mozilla::CSSPseudoClassType Type;
+
+public:
+  static void AddRefAtoms();
 
   static Type GetPseudoType(nsIAtom* aAtom);
   static bool HasStringArg(Type aType);
   static bool HasNthPairArg(Type aType);
   static bool HasSelectorListArg(Type aType) {
-    return aType == ePseudoClass_any;
+    return aType == Type::any;
   }
   static bool IsUserActionPseudoClass(Type aType);
 

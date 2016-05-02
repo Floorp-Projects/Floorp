@@ -275,9 +275,10 @@ NS_IMETHODIMP
 XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *prefix, nsIEnumerator **_retval)
 {
     nsCOMPtr<nsISupportsArray> array;
-    NS_NewISupportsArray(getter_AddRefs(array));
-    if (!array)
-        return NS_ERROR_UNEXPECTED;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
     uint32_t length = static_cast<uint32_t>(strlen(prefix));
