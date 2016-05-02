@@ -885,9 +885,6 @@ pref("network.sntp.pools", // Servers separated by ';'.
 pref("network.sntp.port", 123);
 pref("network.sntp.timeout", 30); // In seconds.
 
-// DOM Inter-App Communication API.
-pref("dom.inter-app-communication-api.enabled", true);
-
 // Allow ADB to run for this many hours before disabling
 // (only applies when marionette is disabled)
 // 0 disables the timer.
