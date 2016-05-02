@@ -17,7 +17,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(TVChannel, DOMEventTargetHelper, mSource)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TVChannel, DOMEventTargetHelper,
+                                   mTVService, mSource)
 
 NS_IMPL_ADDREF_INHERITED(TVChannel, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TVChannel, DOMEventTargetHelper)
@@ -66,6 +67,9 @@ TVChannel::Init(nsITVChannelData* aData)
   aData->GetIsEmergency(&mIsEmergency);
   aData->GetIsFree(&mIsFree);
 
+  mTVService = TVServiceFactory::AutoCreateTVService();
+  NS_ENSURE_TRUE(mTVService, false);
+
   return true;
 }
 
@@ -92,11 +96,6 @@ TVChannel::GetPrograms(const TVGetProgramsOptions& aOptions, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-  }
-
   RefPtr<TVTuner> tuner = mSource->Tuner();
   nsString tunerId;
   tuner->GetId(tunerId);
@@ -110,8 +109,12 @@ TVChannel::GetPrograms(const TVGetProgramsOptions& aOptions, ErrorResult& aRv)
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceProgramGetterCallback(this, promise, false);
   nsresult rv =
-    service->GetPrograms(tunerId, ToTVSourceTypeStr(mSource->Type()), mNumber,
-                         startTime, endTime, callback);
+    mTVService->GetPrograms(tunerId,
+                            ToTVSourceTypeStr(mSource->Type()),
+                            mNumber,
+                            startTime,
+                            endTime,
+                            callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -185,11 +188,6 @@ TVChannel::GetCurrentProgram(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-  }
-
   RefPtr<TVTuner> tuner = mSource->Tuner();
   nsString tunerId;
   tuner->GetId(tunerId);
@@ -197,9 +195,13 @@ TVChannel::GetCurrentProgram(ErrorResult& aRv)
   // Get only one program from now on.
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceProgramGetterCallback(this, promise, true);
-  nsresult rv = service->GetPrograms(
-    tunerId, ToTVSourceTypeStr(mSource->Type()), mNumber, PR_Now(),
-    std::numeric_limits<uint64_t>::max(), callback);
+  nsresult rv =
+    mTVService->GetPrograms(tunerId,
+                            ToTVSourceTypeStr(mSource->Type()),
+                            mNumber,
+                            PR_Now(),
+                            std::numeric_limits<uint64_t>::max(),
+                            callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }

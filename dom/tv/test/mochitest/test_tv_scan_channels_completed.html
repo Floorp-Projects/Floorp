@@ -16,8 +16,7 @@ function runTest() {
   ok('tv' in navigator, "navigator.tv should exist.");
 
   var isScannedEventFired = false;
-  var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('tv_chrome_script.js'));
-
+  
   navigator.tv.getTuners().then(
     function(aTuners) {
       ok(aTuners.length > 0, "Got at least 1 tuner.");
@@ -27,47 +26,43 @@ function runTest() {
           ok(aSources.length > 0, "Got at least 1 source.");
           var source = aSources[0];
 
+          source.oneitbroadcasted = function(aEvent) {
+            info("Received EIT broadcasted event.");
+
+            var programs = aEvent.programs;
+            for (var i = 0; i < programs.length; i++) {
+              ok(programs[i], "Program " + i + " should be set.")
+            }
+          };
+
           source.onscanningstatechanged = function(aEvent) {
             if (aEvent.state === 'scanned') {
-              if (!isScannedEventFired) {
-                isScannedEventFired = true;
-                gScript.sendAsyncMessage('trigger-channel-scan-complete',
-                                         { tunerId: aTuners[0].id,
-                                           sourceType: source.type });
-              }
+              isScannedEventFired = true;
               info("Received channel scanned event.");
               ok(aEvent.channel, "Scanned channel should be set.");
             } else if (aEvent.state === 'completed') {
               ok(isScannedEventFired, "Received channel scanning completed event after channel scanned event.");
-              gScript.destroy();
               SimpleTest.finish();
             }
           };
 
           // TODO Bug 1088818 - Modify the behavior of channel scanning.
           source.startScanning({}).then(
-            function() {
-              gScript.sendAsyncMessage('trigger-channel-scanned',
-                                       { tunerId: aTuners[0].id,
-                                         sourceType: source.type });
-            },
+            function() {},
             function(aError) {
               ok(false, "Error occurred when starting scanning: " + aError);
-              gScript.destroy();
               SimpleTest.finish();
             }
           );
         },
         function(aError) {
           ok(false, "Error occurred when getting sources: " + aError);
-          gScript.destroy();
           SimpleTest.finish();
         }
       );
     },
     function(aError) {
       ok(false, "Error occurred when getting tuners: " + aError);
-      gScript.destroy();
       SimpleTest.finish();
     }
   );

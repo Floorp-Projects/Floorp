@@ -4,10 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TVTuner.h"
-
 #include "DOMMediaStream.h"
-#include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TVCurrentSourceChangedEvent.h"
 #include "mozilla/dom/TVServiceCallbacks.h"
@@ -18,12 +15,14 @@
 #include "nsITVService.h"
 #include "nsITVSimulatorService.h"
 #include "nsServiceManagerUtils.h"
+#include "TVTuner.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(TVTuner, DOMEventTargetHelper, mStream,
-                                   mCurrentSource, mSources)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(TVTuner, DOMEventTargetHelper,
+                                   mTVService, mStream, mCurrentSource, mSources)
 
 NS_IMPL_ADDREF_INHERITED(TVTuner, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TVTuner, DOMEventTargetHelper)
@@ -82,6 +81,9 @@ TVTuner::Init(nsITVTunerData* aData)
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, supportedSourceTypes);
 
+  mTVService = TVServiceFactory::AutoCreateTVService();
+  NS_ENSURE_TRUE(mTVService, false);
+
   rv = aData->GetStreamType(&mStreamType);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -95,9 +97,9 @@ TVTuner::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 nsresult
-TVTuner::SetCurrentSource(TVSourceType aSourceType,
-                          nsITVGonkNativeHandleData* aHandleData)
+TVTuner::SetCurrentSource(TVSourceType aSourceType)
 {
+  ErrorResult error;
   if (mCurrentSource) {
     if (aSourceType == mCurrentSource->Type()) {
       // No actual change.
@@ -118,7 +120,10 @@ TVTuner::SetCurrentSource(TVSourceType aSourceType,
     }
   }
 
-  mStream = CreateHwMediaStream(aHandleData);
+  nsresult rv = InitMediaStream();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return DispatchCurrentSourceChangedEvent(mCurrentSource);
 }
@@ -163,19 +168,11 @@ TVTuner::SetCurrentSource(const TVSourceType aSourceType, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  if (NS_WARN_IF(!service)) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-  }
-
-  // For TV simulator, |SetCurrentSource(TVSourceType)| will be called once
-  // |notifySuccess| of the callback is invoked. On the other hand, for gonk TV,
-  // |SetCurrentSource(TVSourceType, const GonkNativeHandle&)| will be called
-  // once |notifyStreamHandle| of the callback is invoked.
+  // |SetCurrentSource(const TVSourceType)| will be called once |notifySuccess|
+  // of the callback is invoked.
   nsCOMPtr<nsITVServiceCallback> callback =
     new TVServiceSourceSetterCallback(this, promise, aSourceType);
-  nsresult rv =
-    service->SetSource(mId, ToTVSourceTypeStr(aSourceType), callback);
+  nsresult rv = mTVService->SetSource(mId, ToTVSourceTypeStr(aSourceType), callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
@@ -206,43 +203,22 @@ TVTuner::GetStream() const
 nsresult
 TVTuner::ReloadMediaStream()
 {
-  // Only TV simulator needs to reload the media stream (during channel changes).
-  if (NS_WARN_IF(nsITVTunerData::TV_STREAM_TYPE_SIMULATOR != mStreamType)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mStream = CreateSimulatedMediaStream();
-
-  return NS_OK;
+  return InitMediaStream();
 }
 
-already_AddRefed<DOMMediaStream>
-TVTuner::CreateHwMediaStream(nsITVGonkNativeHandleData* aHandleData)
+nsresult
+TVTuner::InitMediaStream()
 {
-  RefPtr<DOMMediaStream> stream;
-
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  RefPtr<DOMMediaStream> stream = nullptr;
   if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_HW) {
-#ifdef MOZ_WIDGET_GONK
-    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-
-    layers::OverlayImage::SidebandStreamData imageData;
-    aHandleData->GetHandle(imageData.mStream);
-    window->GetInnerWidth(&imageData.mSize.width);
-    window->GetInnerHeight(&imageData.mSize.height);
-
-    RefPtr<layers::OverlayImage> overlayImage = new layers::OverlayImage();
-    overlayImage->SetData(imageData);
-    stream = DOMHwMediaStream::CreateHwStream(window, overlayImage);
-#endif
+    stream = DOMHwMediaStream::CreateHwStream(window);
   } else if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_SIMULATOR) {
     stream = CreateSimulatedMediaStream();
   }
 
-  if (NS_WARN_IF(!stream)) {
-    return nullptr;
-  }
-
-  return stream.forget();
+  mStream = stream.forget();
+  return NS_OK;
 }
 
 already_AddRefed<DOMMediaStream>
@@ -284,10 +260,7 @@ TVTuner::CreateSimulatedMediaStream()
     return nullptr;
   }
 
-  nsCOMPtr<nsITVService> service = do_GetService(TV_SERVICE_CONTRACTID);
-  MOZ_ASSERT(service);
-
-  nsCOMPtr<nsITVSimulatorService> simService(do_QueryInterface(service));
+  nsCOMPtr<nsITVSimulatorService> simService(do_QueryInterface(mTVService));
   if (NS_WARN_IF(!simService)) {
     return nullptr;
   }
