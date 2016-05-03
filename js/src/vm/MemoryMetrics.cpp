@@ -14,6 +14,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
+#include "asmjs/WasmModule.h"
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -395,6 +396,43 @@ AddClassInfo(Granularity granularity, CompartmentStats& cStats, const char* clas
     }
 }
 
+template <Granularity granularity>
+static void
+CollectScriptSourceStats(StatsClosure* closure, ScriptSource* ss)
+{
+    RuntimeStats* rtStats = closure->rtStats;
+
+    SourceSet::AddPtr entry = closure->seenSources.lookupForAdd(ss);
+    if (entry)
+        return;
+
+    bool ok = closure->seenSources.add(entry, ss);
+    (void)ok; // Not much to be done on failure.
+
+    JS::ScriptSourceInfo info;  // This zeroes all the sizes.
+    ss->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &info);
+    MOZ_ASSERT(info.compressed == 0 || info.uncompressed == 0);
+
+    rtStats->runtime.scriptSourceInfo.add(info);
+
+    if (granularity == FineGrained) {
+        const char* filename = ss->filename();
+        if (!filename)
+            filename = "<no filename>";
+
+        JS::RuntimeSizes::ScriptSourcesHashMap::AddPtr p =
+            rtStats->runtime.allScriptSources->lookupForAdd(filename);
+        if (!p) {
+            bool ok = rtStats->runtime.allScriptSources->add(p, filename, info);
+            // Ignore failure -- we just won't record the script source as notable.
+            (void)ok;
+        } else {
+            p->value().add(info);
+        }
+    }
+}
+
+
 // The various kinds of hashing are expensive, and the results are unused when
 // doing coarse-grained measurements. Skipping them more than doubles the
 // profile speed for complex pages such as gmail.com.
@@ -415,6 +453,11 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &info);
 
         cStats.classInfo.add(info);
+
+        if (obj->is<WasmModuleObject>()) {
+            if (ScriptSource* ss = obj->as<WasmModuleObject>().module().maybeScriptSource())
+                CollectScriptSourceStats<granularity>(closure, ss);
+        }
 
         const Class* clasp = obj->getClass();
         const char* className = clasp->name;
@@ -437,36 +480,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         jit::AddSizeOfBaselineData(script, rtStats->mallocSizeOf_, &cStats.baselineData,
                                    &cStats.baselineStubsFallback);
         cStats.ionData += jit::SizeOfIonData(script, rtStats->mallocSizeOf_);
-
-        ScriptSource* ss = script->scriptSource();
-        SourceSet::AddPtr entry = closure->seenSources.lookupForAdd(ss);
-        if (!entry) {
-            bool ok = closure->seenSources.add(entry, ss);
-            (void)ok; // Not much to be done on failure.
-
-            JS::ScriptSourceInfo info;  // This zeroes all the sizes.
-            ss->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &info);
-            MOZ_ASSERT(info.compressed == 0 || info.uncompressed == 0);
-
-            rtStats->runtime.scriptSourceInfo.add(info);
-
-            if (granularity == FineGrained) {
-                const char* filename = ss->filename();
-                if (!filename)
-                    filename = "<no filename>";
-
-                JS::RuntimeSizes::ScriptSourcesHashMap::AddPtr p =
-                    rtStats->runtime.allScriptSources->lookupForAdd(filename);
-                if (!p) {
-                    bool ok = rtStats->runtime.allScriptSources->add(p, filename, info);
-                    // Ignore failure -- we just won't record the script source as notable.
-                    (void)ok;
-                } else {
-                    p->value().add(info);
-                }
-            }
-        }
-
+        CollectScriptSourceStats<granularity>(closure, script->scriptSource());
         break;
       }
 

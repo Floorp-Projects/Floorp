@@ -172,7 +172,7 @@ private:
   uint32_t mAvailablePacketSize;
 };
 
-class BluetoothOppManager::CloseSocketTask final : public Task
+class BluetoothOppManager::CloseSocketTask final : public Runnable
 {
 public:
   CloseSocketTask(BluetoothSocket* aSocket) : mSocket(aSocket)
@@ -180,10 +180,11 @@ public:
     MOZ_ASSERT(aSocket);
   }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mSocket->Close();
+    return NS_OK;
   }
 
 private:
@@ -1158,8 +1159,8 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
     // Disconnect request, so we make a delay here. If the socket hasn't been
     // disconnected, we will close it.
     if (mSocket) {
-      MessageLoop::current()->
-        PostDelayedTask(FROM_HERE, new CloseSocketTask(mSocket), 1000);
+      MessageLoop::current()->PostDelayedTask(
+        MakeAndAddRef<CloseSocketTask>(mSocket), 1000);
     }
   } else if (mLastCommand == ObexRequestCode::Connect) {
     MOZ_ASSERT(!mFileName.IsEmpty());

@@ -361,6 +361,7 @@ private:
   LayoutDeviceIntRect ViewToWidget(nsView* aView, const nsRect& aRect) const;
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
+  bool ShouldDelayResize() const;
 
   bool IsPainting() const {
     return RootViewManager()->mPainting;

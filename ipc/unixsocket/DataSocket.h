@@ -122,7 +122,7 @@ public:
     MOZ_ASSERT(aData);
   }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!SocketIOTask<Tio>::IsCanceled());
 
@@ -131,6 +131,8 @@ public:
     MOZ_ASSERT(!io->IsShutdownOnIOThread());
 
     io->Send(mData);
+
+    return NS_OK;
   }
 
 private:

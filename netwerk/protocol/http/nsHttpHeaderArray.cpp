@@ -137,6 +137,14 @@ nsHttpHeaderArray::GetHeader(nsHttpAtom header, nsACString &result) const
     return NS_OK;
 }
 
+bool
+nsHttpHeaderArray::HasHeader(nsHttpAtom header) const
+{
+    const nsEntry *entry = nullptr;
+    LookupEntry(header, &entry);
+    return entry;
+}
+
 nsresult
 nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor, nsHttpHeaderArray::VisitorFilter filter)
 {

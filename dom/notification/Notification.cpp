@@ -289,7 +289,8 @@ class GetPermissionRunnable final : public WorkerMainThreadRunnable
 
 public:
   explicit GetPermissionRunnable(WorkerPrivate* aWorker)
-    : WorkerMainThreadRunnable(aWorker)
+    : WorkerMainThreadRunnable(aWorker,
+                               NS_LITERAL_CSTRING("Notification :: Get Permission"))
     , mPermission(NotificationPermission::Denied)
   { }
 
@@ -2448,7 +2449,8 @@ class CloseNotificationRunnable final
 
   public:
   explicit CloseNotificationRunnable(Notification* aNotification)
-    : WorkerMainThreadRunnable(aNotification->mWorkerPrivate)
+    : WorkerMainThreadRunnable(aNotification->mWorkerPrivate,
+                               NS_LITERAL_CSTRING("Notification :: Close Notification"))
     , mNotification(aNotification)
     , mHadObserver(false)
   {}
@@ -2555,7 +2557,8 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable
 
 public:
   explicit CheckLoadRunnable(WorkerPrivate* aWorker, const nsACString& aScope)
-    : WorkerMainThreadRunnable(aWorker)
+    : WorkerMainThreadRunnable(aWorker,
+                               NS_LITERAL_CSTRING("Notification :: Check Load"))
     , mRv(NS_ERROR_DOM_SECURITY_ERR)
     , mScope(aScope)
   { }

@@ -38,7 +38,6 @@ static const char16_t DOT          = '.';
 static const char16_t UNDERLINE    = '_';
 static const char16_t TILDE        = '~';
 static const char16_t WILDCARD     = '*';
-static const char16_t WHITESPACE   = ' ';
 static const char16_t SINGLEQUOTE  = '\'';
 static const char16_t OPEN_CURL    = '{';
 static const char16_t CLOSE_CURL   = '}';
@@ -78,7 +77,7 @@ nsCSPTokenizer::generateNextToken()
 {
   skipWhiteSpaceAndSemicolon();
   while (!atEnd() &&
-         *mCurChar != WHITESPACE &&
+         !nsContentUtils::IsHTMLWhitespace(*mCurChar) &&
          *mCurChar != SEMICOLON) {
     mCurToken.Append(*mCurChar++);
   }

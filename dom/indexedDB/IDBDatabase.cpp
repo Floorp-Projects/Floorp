@@ -681,7 +681,7 @@ IDBDatabase::Transaction(JSContext* aCx,
       mQuotaExceeded = false;
       break;
     case IDBTransactionMode::Versionchange:
-      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return NS_ERROR_DOM_TYPE_ERR;
 
     default:
       MOZ_CRASH("Unknown mode!");

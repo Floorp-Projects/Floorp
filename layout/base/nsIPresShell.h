@@ -316,6 +316,8 @@ public:
 
   nsViewManager* GetViewManager() const { return mViewManager; }
 
+  nsRefreshDriver* GetRefreshDriver() const;
+
 #ifdef ACCESSIBILITY
   /**
    * Return the document accessible for this pres shell if there is one.
@@ -1610,9 +1612,6 @@ public:
   nsresult HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                    bool* aRetVal);
 
-  bool IsInFullscreenChange() const { return mIsInFullscreenChange; }
-  void SetIsInFullscreenChange(bool aValue);
-
   /**
    * Refresh observer management.
    */
@@ -1776,11 +1775,6 @@ protected:
   bool                      mIsDestroying : 1;
   bool                      mIsZombie : 1;
   bool                      mIsReflowing : 1;
-
-  // Indicates that the whole document is performing fullscreen change,
-  // in which case, we need to defer dispatching resize event and freeze
-  // the refresh driver to avoid unnecessary reflow.
-  bool                      mIsInFullscreenChange : 1;
 
   // For all documents we initially lock down painting.
   bool                      mPaintingSuppressed : 1;
