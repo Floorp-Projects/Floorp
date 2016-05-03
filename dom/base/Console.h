@@ -36,8 +36,6 @@ class Console final : public nsIObserver
                     , public nsWrapperCache
                     , public nsSupportsWeakReference
 {
-  ~Console();
-
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Console, nsIObserver)
@@ -133,6 +131,7 @@ public:
 
 private:
   explicit Console(nsPIDOMWindowInner* aWindow);
+  ~Console();
 
   void
   Initialize(ErrorResult& aRv);
@@ -342,6 +341,9 @@ private:
 
   void
   AssertIsOnOwningThread() const;
+
+  bool
+  IsShuttingDown() const;
 
   // All these nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
