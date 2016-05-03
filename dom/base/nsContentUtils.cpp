@@ -7383,6 +7383,9 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             }
             RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
               surface->GetDataSurface();
+            if (!dataSurface) {
+              continue;
+            }
             size_t length;
             int32_t stride;
             mozilla::UniquePtr<char[]> surfaceData =
