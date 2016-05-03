@@ -807,6 +807,8 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 
 nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
   : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
+  , mColumnWidth(eStyleUnit_Auto)
+  , mColumnGap(eStyleUnit_Normal)
   , mColumnRuleColor(NS_RGB(0, 0, 0))
   , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
   , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
@@ -816,8 +818,6 @@ nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
   , mTwipsPerPixel(aContext.AppUnitsPerDevPixel())
 {
   MOZ_COUNT_CTOR(nsStyleColumn);
-  mColumnWidth.SetAutoValue();
-  mColumnGap.SetNormalValue();
 }
 
 nsStyleColumn::~nsStyleColumn()
@@ -877,6 +877,9 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   : mFill(eStyleSVGPaintType_Color) // Will be initialized to NS_RGB(0, 0, 0)
   , mStroke(eStyleSVGPaintType_None)
   , mStrokeDasharray(nullptr)
+  , mStrokeDashoffset(0, nsStyleCoord::CoordConstructor)
+  , mStrokeWidth(nsPresContext::CSSPixelsToAppUnits(1),
+                 nsStyleCoord::CoordConstructor)
   , mFillOpacity(1.0f)
   , mStrokeMiterlimit(4.0f)
   , mStrokeOpacity(1.0f)
@@ -897,9 +900,6 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   , mStrokeWidthFromObject(false)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-
-  mStrokeDashoffset.SetCoordValue(0);
-  mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
 }
 
 nsStyleSVG::~nsStyleSVG()
@@ -1455,7 +1455,18 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(StyleStructContext aContext)
-  : mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW)
+  : mWidth(eStyleUnit_Auto)
+  , mMinWidth(eStyleUnit_Auto)
+  , mMaxWidth(eStyleUnit_None)
+  , mHeight(eStyleUnit_Auto)
+  , mMinHeight(eStyleUnit_Auto)
+  , mMaxHeight(eStyleUnit_None)
+  , mFlexBasis(eStyleUnit_Auto)
+  , mGridAutoColumnsMin(eStyleUnit_Auto)
+  , mGridAutoColumnsMax(eStyleUnit_Auto)
+  , mGridAutoRowsMin(eStyleUnit_Auto)
+  , mGridAutoRowsMax(eStyleUnit_Auto)
+  , mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW)
   , mBoxSizing(StyleBoxSizing::Content)
   , mAlignContent(NS_STYLE_ALIGN_NORMAL)
   , mAlignItems(NS_STYLE_ALIGN_NORMAL)
@@ -1469,6 +1480,7 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   , mOrder(NS_STYLE_ORDER_INITIAL)
   , mFlexGrow(0.0f)
   , mFlexShrink(1.0f)
+  , mZIndex(eStyleUnit_Auto)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 
@@ -1477,26 +1489,13 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   mObjectPosition.SetInitialPercentValues(0.5f);
 
   nsStyleCoord  autoCoord(eStyleUnit_Auto);
-  mOffset.SetLeft(autoCoord);
-  mOffset.SetTop(autoCoord);
-  mOffset.SetRight(autoCoord);
-  mOffset.SetBottom(autoCoord);
-  mWidth.SetAutoValue();
-  mMinWidth.SetAutoValue();
-  mMaxWidth.SetNoneValue();
-  mHeight.SetAutoValue();
-  mMinHeight.SetAutoValue();
-  mMaxHeight.SetNoneValue();
-  mFlexBasis.SetAutoValue();
+  NS_FOR_CSS_SIDES(side) {
+    mOffset.Set(side, autoCoord);
+  }
 
   // The initial value of grid-auto-columns and grid-auto-rows is 'auto',
   // which computes to 'minmax(auto, auto)'.
-  mGridAutoColumnsMin.SetAutoValue();
-  mGridAutoColumnsMax.SetAutoValue();
-  mGridAutoRowsMin.SetAutoValue();
-  mGridAutoRowsMax.SetAutoValue();
 
-  mZIndex.SetAutoValue();
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
   // mGridTemplateAreas: nullptr for 'none'
@@ -2880,10 +2879,19 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO)
   , mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
   , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  , mScrollSnapPointsX(eStyleUnit_None)
+  , mScrollSnapPointsY(eStyleUnit_None)
   , mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE)
   , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
   , mTransformBox(NS_STYLE_TRANSFORM_BOX_BORDER_BOX)
   , mSpecifiedTransform(nullptr)
+  , mTransformOrigin{ {0.5f, eStyleUnit_Percent}, // Transform is centered on origin
+                      {0.5f, eStyleUnit_Percent},
+                      {0, nsStyleCoord::CoordConstructor} }
+  , mChildPerspective(eStyleUnit_None)
+  , mPerspectiveOrigin{ {0.5f, eStyleUnit_Percent},
+                        {0.5f, eStyleUnit_Percent} }
+  , mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated)
   , mTransitions(nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT)
   , mTransitionTimingFunctionCount(1)
   , mTransitionDurationCount(1)
@@ -2900,15 +2908,7 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mAnimationIterationCountCount(1)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-  mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
-  mTransformOrigin[1].SetPercentValue(0.5f);
-  mTransformOrigin[2].SetCoordValue(0);
-  mPerspectiveOrigin[0].SetPercentValue(0.5f);
-  mPerspectiveOrigin[1].SetPercentValue(0.5f);
-  mChildPerspective.SetNoneValue();
-  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
-  mScrollSnapPointsX.SetNoneValue();
-  mScrollSnapPointsY.SetNoneValue();
+
   // Initial value for mScrollSnapDestination is "0px 0px"
   mScrollSnapDestination.SetInitialZeroValues();
 
@@ -2950,7 +2950,12 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformStyle(aSource.mTransformStyle)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mTransformOrigin{ aSource.mTransformOrigin[0],
+                      aSource.mTransformOrigin[1],
+                      aSource.mTransformOrigin[2] }
   , mChildPerspective(aSource.mChildPerspective)
+  , mPerspectiveOrigin{ aSource.mPerspectiveOrigin[0],
+                        aSource.mPerspectiveOrigin[1] }
   , mVerticalAlign(aSource.mVerticalAlign)
   , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
@@ -2968,13 +2973,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-
-  /* Copy over transform origin. */
-  mTransformOrigin[0] = aSource.mTransformOrigin[0];
-  mTransformOrigin[1] = aSource.mTransformOrigin[1];
-  mTransformOrigin[2] = aSource.mTransformOrigin[2];
-  mPerspectiveOrigin[0] = aSource.mPerspectiveOrigin[0];
-  mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
@@ -3357,7 +3355,8 @@ nsStyleContentData::UntrackImage(nsPresContext* aContext)
 //
 
 nsStyleContent::nsStyleContent(StyleStructContext aContext)
-  : mContents(nullptr)
+  : mMarkerOffset(eStyleUnit_Auto)
+  , mContents(nullptr)
   , mIncrements(nullptr)
   , mResets(nullptr)
   , mContentCount(0)
@@ -3365,7 +3364,6 @@ nsStyleContent::nsStyleContent(StyleStructContext aContext)
   , mResetCount(0)
 {
   MOZ_COUNT_CTOR(nsStyleContent);
-  mMarkerOffset.SetAutoValue();
 }
 
 nsStyleContent::~nsStyleContent()
@@ -3603,6 +3601,11 @@ nsStyleText::nsStyleText(StyleStructContext aContext)
   , mTextEmphasisColor(aContext.DefaultColor())
   , mWebkitTextFillColor(aContext.DefaultColor())
   , mWebkitTextStrokeColor(aContext.DefaultColor())
+  , mWordSpacing(0, nsStyleCoord::CoordConstructor)
+  , mLetterSpacing(eStyleUnit_Normal)
+  , mLineHeight(eStyleUnit_Normal)
+  , mTextIndent(0, nsStyleCoord::CoordConstructor)
+  , mWebkitTextStrokeWidth(0, nsStyleCoord::CoordConstructor)
   , mTextShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleText);
@@ -3611,11 +3614,6 @@ nsStyleText::nsStyleText(StyleStructContext aContext)
     nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh")) ?
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH :
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT;
-  mWordSpacing.SetCoordValue(0);
-  mLetterSpacing.SetNormalValue();
-  mLineHeight.SetNormalValue();
-  mTextIndent.SetCoordValue(0);
-  mWebkitTextStrokeWidth.SetCoordValue(0);
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
