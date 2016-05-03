@@ -16,7 +16,12 @@ var tests = [
   // For the following two tests, disable displayport suppression to make sure it
   // doesn't interfere with the test by scheduling paints non-deterministically.
   {'file': 'helper_scrollto_tap.html?true', 'prefs': [["apz.paint_skipping.enabled", true]], 'dp_suppression': false},
-  {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false}
+  {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false},
+  // For the long-tap test, reduce the content response timeout because the touchstart
+  // event doesn't get processed (because of the event listener) until this expires.
+  // Once we support passive event listeners, we can use that instead and stop mucking
+  // with the timeout.
+  {'file': 'helper_long_tap.html'}
 ];
 
 var testIndex = -1;
