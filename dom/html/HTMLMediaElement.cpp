@@ -3367,6 +3367,10 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     mMediaStreamListener->Forget();
     mMediaStreamListener = nullptr;
   }
+
+  // If the input is a media stream, we don't check its data and always regard
+  // it as audible when it's playing.
+  NotifyAudibleStateChanged(shouldPlay);
 }
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
@@ -5061,8 +5065,15 @@ HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
   AutoNoJSAPI nojsapi;
 
   if (aPlaying) {
+    // The reason we don't call NotifyStartedPlaying after the media element
+    // really becomes audible is because there is another case needs to block
+    // element as early as we can, we would hear sound leaking if we block it
+    // too late. In that case (block autoplay in non-visited-tab), we need to
+    // create a connection before decoding, because we don't want user hearing
+    // any sound.
     AudioPlaybackConfig config;
-    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+    nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
+                                                           mIsAudioTrackAudible);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -5618,7 +5629,15 @@ HTMLMediaElement::NotifyAudibleStateChanged(bool aAudible)
 {
   if (mIsAudioTrackAudible != aAudible) {
     mIsAudioTrackAudible = aAudible;
-    // To do ...
+    NotifyAudioPlaybackChanged();
+  }
+}
+
+void
+HTMLMediaElement::NotifyAudioPlaybackChanged()
+{
+  if (mAudioChannelAgent) {
+    mAudioChannelAgent->NotifyStartedAudible(mIsAudioTrackAudible);
   }
 }
 
