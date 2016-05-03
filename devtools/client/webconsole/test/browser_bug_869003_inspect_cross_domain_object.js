@@ -21,7 +21,7 @@ add_task(function* () {
   yield loadTab("data:text/html;charset=utf8,<p>hello");
   let hud = yield openConsole();
 
-  content.location = TEST_URI;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
 
   let [result] = yield waitForMessages({
     webconsole: hud,
@@ -75,4 +75,3 @@ add_task(function* () {
     { name: "bug", value: 869003 },
   ], { webconsole: hud });
 });
-
