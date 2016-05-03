@@ -163,7 +163,7 @@ interface nsIAudioChannelAgent : nsISupports
    * @param config
    *    It contains the playback related states (volume/mute/suspend)
    */
-  void notifyStartedPlaying(in AudioPlaybackConfig config);
+  void notifyStartedPlaying(in AudioPlaybackConfig config, in bool audible);
 
   /**
    * Notify the agent we no longer want to play.

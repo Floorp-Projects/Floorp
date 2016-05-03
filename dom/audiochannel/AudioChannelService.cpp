@@ -248,7 +248,8 @@ AudioChannelService::~AudioChannelService()
 }
 
 void
-AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent)
+AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
+                                               AudibleState aAudible)
 {
   MOZ_ASSERT(aAgent);
 
@@ -263,7 +264,7 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent)
   // callback function of AudioChannelAgentOwner that means the agent might be
   // released in their callback.
   RefPtr<AudioChannelAgent> kungFuDeathGrip(aAgent);
-  winData->AppendAgent(aAgent);
+  winData->AppendAgent(aAgent, aAudible);
 
   MaybeSendStatusUpdate();
 }
@@ -1001,13 +1002,14 @@ AudioChannelService::IsAudioChannelMutedByDefault()
 }
 
 void
-AudioChannelService::AudioChannelWindow::AppendAgent(AudioChannelAgent* aAgent)
+AudioChannelService::AudioChannelWindow::AppendAgent(AudioChannelAgent* aAgent,
+                                                     AudibleState aAudible)
 {
   MOZ_ASSERT(aAgent);
 
   AppendAgentAndIncreaseAgentsNum(aAgent);
   AudioCapturedChanged(aAgent, AudioCaptureState::eCapturing);
-  // Audio-playback would be notified when the agent owner starts audible.
+  AudioAudibleChanged(aAgent, aAudible);
 }
 
 void

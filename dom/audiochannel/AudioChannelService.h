@@ -93,7 +93,8 @@ public:
    * Any audio channel agent that starts playing should register itself to
    * this service, sharing the AudioChannel.
    */
-  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent);
+  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
+                                 AudibleState aAudible);
 
   /**
    * Any audio channel agent that stops playing should unregister itself to
@@ -244,7 +245,7 @@ private:
 
     void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible);
 
-    void AppendAgent(AudioChannelAgent* aAgent);
+    void AppendAgent(AudioChannelAgent* aAgent, AudibleState aAudible);
     void RemoveAgent(AudioChannelAgent* aAgent);
 
     uint64_t mWindowID;
