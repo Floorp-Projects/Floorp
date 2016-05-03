@@ -6478,9 +6478,12 @@ nsGlobalWindow::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen
     auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
     if (!NS_WARN_IF(chromeWin->mFullscreenPresShell)) {
       if (nsIPresShell* shell = mDocShell->GetPresShell()) {
-        chromeWin->mFullscreenPresShell = do_GetWeakReference(shell);
-        MOZ_ASSERT(chromeWin->mFullscreenPresShell);
-        shell->SetIsInFullscreenChange(true);
+        if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
+          chromeWin->mFullscreenPresShell = do_GetWeakReference(shell);
+          MOZ_ASSERT(chromeWin->mFullscreenPresShell);
+          rd->SetIsResizeSuppressed();
+          rd->Freeze();
+        }
       }
     }
   }
@@ -6528,7 +6531,9 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
     auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
     if (nsCOMPtr<nsIPresShell> shell =
         do_QueryReferent(chromeWin->mFullscreenPresShell)) {
-      shell->SetIsInFullscreenChange(false);
+      if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
+        rd->Thaw();
+      }
       chromeWin->mFullscreenPresShell = nullptr;
     }
   }

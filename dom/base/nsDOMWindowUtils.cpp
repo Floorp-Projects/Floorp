@@ -3074,7 +3074,9 @@ public:
     : mPresShell(aPresShell)
   {
     if (mPresShell) {
-      mPresShell->SetIsInFullscreenChange(true);
+      if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
+        rd->SetIsResizeSuppressed();
+      }
     }
     if (aSize.IsEmpty()) {
       return;
@@ -3084,13 +3086,6 @@ public:
         viewManager->GetWindowDimensions(&aOldSize->width, &aOldSize->height);
       }
       viewManager->SetWindowDimensions(aSize.width, aSize.height);
-    }
-  }
-
-  ~FullscreenChangePrepare()
-  {
-    if (mPresShell) {
-      mPresShell->SetIsInFullscreenChange(false);
     }
   }
 
