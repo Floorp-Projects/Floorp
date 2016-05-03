@@ -419,6 +419,20 @@ PanGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform
   return true;
 }
 
+ScreenPoint
+PanGestureInput::UserMultipliedPanDisplacement() const
+{
+  return ScreenPoint(mPanDisplacement.x * mUserDeltaMultiplierX,
+                     mPanDisplacement.y * mUserDeltaMultiplierY);
+}
+
+ParentLayerPoint
+PanGestureInput::UserMultipliedLocalPanDisplacement() const
+{
+  return ParentLayerPoint(mLocalPanDisplacement.x * mUserDeltaMultiplierX,
+                          mLocalPanDisplacement.y * mUserDeltaMultiplierY);
+}
+
 bool
 PinchGestureInput::TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform)
 { 
