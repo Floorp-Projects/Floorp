@@ -25,9 +25,6 @@
         <!-- Style for MenuItemActionBar when shown in SecondaryActionBar -->
         <attr name="menuItemSecondaryActionBarStyle" format="reference"/>
 
-        <!-- Style for MenuItemSwitcherLayout's ShareActionButton -->
-        <attr name="menuItemShareActionButtonStyle" format="reference"/>
-
         <!-- Default style for the BookmarksListView -->
         <attr name="bookmarksListViewStyle" format="reference" />
 
