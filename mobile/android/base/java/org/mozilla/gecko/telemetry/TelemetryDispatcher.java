@@ -17,7 +17,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 
 /**
  * The entry-point for Java-based telemetry. This class handles:
@@ -68,9 +67,9 @@ public class TelemetryDispatcher {
         uploadAllPingsImmediatelyScheduler = new TelemetryUploadAllPingsImmediatelyScheduler();
     }
 
-    private void queuePingForUpload(final Context context, final int uniqueID, final TelemetryPing ping,
-            final TelemetryPingStore store, final TelemetryUploadScheduler scheduler) {
-        final QueuePingRunnable runnable = new QueuePingRunnable(context, uniqueID, ping, store, scheduler);
+    private void queuePingForUpload(final Context context, final TelemetryPing ping, final TelemetryPingStore store,
+            final TelemetryUploadScheduler scheduler) {
+        final QueuePingRunnable runnable = new QueuePingRunnable(context, ping, store, scheduler);
         ThreadUtils.postToBackgroundThread(runnable); // TODO: Investigate how busy this thread is. See if we want another.
     }
 
@@ -79,21 +78,18 @@ public class TelemetryDispatcher {
      */
     public void queuePingForUpload(final Context context, final TelemetryCorePingBuilder pingBuilder) {
         final TelemetryPing ping = pingBuilder.build();
-        final int id = ping.getPayload().getIntegerSafely(TelemetryCorePingBuilder.SEQ);
-        queuePingForUpload(context, id, ping, coreStore, uploadAllPingsImmediatelyScheduler);
+        queuePingForUpload(context, ping, coreStore, uploadAllPingsImmediatelyScheduler);
     }
 
     private static class QueuePingRunnable implements Runnable {
-        private final WeakReference<Context> contextWeakReference;
-        private final int uniqueID;
+        private final Context applicationContext;
         private final TelemetryPing ping;
         private final TelemetryPingStore store;
         private final TelemetryUploadScheduler scheduler;
 
-        public QueuePingRunnable(final Context context, final int uniqueID, final TelemetryPing ping,
-                final TelemetryPingStore store, final TelemetryUploadScheduler scheduler) {
-            this.contextWeakReference = new WeakReference<>(context);
-            this.uniqueID = uniqueID;
+        public QueuePingRunnable(final Context context, final TelemetryPing ping, final TelemetryPingStore store,
+                final TelemetryUploadScheduler scheduler) {
+            this.applicationContext = context.getApplicationContext();
             this.ping = ping;
             this.store = store;
             this.scheduler = scheduler;
@@ -101,21 +97,16 @@ public class TelemetryDispatcher {
 
         @Override
         public void run() {
-            final Context context = contextWeakReference.get();
-            if (context == null) {
-                return;
-            }
-
             // We block while storing the ping so the scheduled upload is guaranteed to have the newly-stored value.
             try {
-                store.storePing(uniqueID, ping);
+                store.storePing(ping);
             } catch (final IOException e) {
                 // Don't log exception to avoid leaking profile path.
                 Log.e(LOGTAG, "Unable to write ping to disk. Continuing with upload attempt");
             }
 
             if (scheduler.isReadyToUpload(store)) {
-                scheduler.scheduleUpload(context, store);
+                scheduler.scheduleUpload(applicationContext, store);
             }
         }
     }
