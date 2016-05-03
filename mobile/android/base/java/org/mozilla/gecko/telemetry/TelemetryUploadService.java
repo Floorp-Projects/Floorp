@@ -25,8 +25,8 @@ import org.mozilla.gecko.util.StringUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -79,7 +79,7 @@ public class TelemetryUploadService extends IntentService {
      * @return true if all pings were uploaded successfully, false otherwise.
      */
     private static boolean uploadPendingPingsFromStore(final Context context, final TelemetryPingStore store) {
-        final ArrayList<TelemetryPingFromStore> pingsToUpload = store.getAllPings();
+        final List<TelemetryPing> pingsToUpload = store.getAllPings();
         if (pingsToUpload.isEmpty()) {
             return true;
         }
@@ -87,16 +87,16 @@ public class TelemetryUploadService extends IntentService {
         final String serverSchemeHostPort = getServerSchemeHostPort(context);
         final HashSet<Integer> successfulUploadIDs = new HashSet<>(pingsToUpload.size()); // used for side effects.
         final PingResultDelegate delegate = new PingResultDelegate(successfulUploadIDs);
-        for (final TelemetryPingFromStore ping : pingsToUpload) {
-            // There are minimal gains in trying to upload if we already failed one attempt.
-            if (delegate.hadConnectionError()) {
-                break;
-            }
-
+        for (final TelemetryPing ping : pingsToUpload) {
             // TODO: It'd be great to re-use the same HTTP connection for each upload request.
             delegate.setPingID(ping.getUniqueID());
             final String url = serverSchemeHostPort + "/" + ping.getURLPath();
             uploadPayload(url, ping.getPayload(), delegate);
+
+            // There are minimal gains in trying to upload if we already failed one attempt.
+            if (delegate.hadConnectionError()) {
+                break;
+            }
         }
 
         final boolean wereAllUploadsSuccessful = !delegate.hadConnectionError();
@@ -213,7 +213,7 @@ public class TelemetryUploadService extends IntentService {
     }
 
     /**
-     * Logs on success & failure and appends the set ID to the given ArrayList on success.
+     * Logs on success & failure and appends the set ID to the given Set on success.
      *
      * Note: you *must* set the ping ID before attempting upload or we'll throw!
      *

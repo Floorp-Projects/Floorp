@@ -51,8 +51,9 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     public static final String SEQ = "seq";
     private static final String VERSION_ATTR = "v";
 
-    public TelemetryCorePingBuilder(final Context context) {
-        super();
+    public TelemetryCorePingBuilder(final Context context, final int sequenceNumber) {
+        super(sequenceNumber);
+        setSequenceNumber(sequenceNumber);
         initPayloadConstants(context);
     }
 
@@ -135,20 +136,22 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     /**
      * @param seq a positive sequence number.
      */
-    public TelemetryCorePingBuilder setSequenceNumber(final int seq) {
+    private void setSequenceNumber(final int seq) {
         if (seq < 0) {
             throw new IllegalArgumentException("Expected positive sequence number. Recived: " + seq);
         }
         payload.put(SEQ, seq);
-        return this;
     }
 
+    /**
+     * Gets the sequence number from shared preferences and increments it in the prefs. This method
+     * is not thread safe.
+     */
     @WorkerThread // synchronous shared prefs write.
-    public static int getAndIncrementSequenceNumberSync(final SharedPreferences sharedPrefsForProfile) {
+    public static int getAndIncrementSequenceNumber(final SharedPreferences sharedPrefsForProfile) {
         final int seq = sharedPrefsForProfile.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
 
-        // We store synchronously before constructing  to ensure this sequence number will not be re-used.
-        sharedPrefsForProfile.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
+        sharedPrefsForProfile.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).apply();
         return seq;
     }
 
@@ -168,6 +171,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     /**
      * @return the search engine identifier in the format expected by the core ping.
      */
+    @Nullable
     public static String getEngineIdentifier(final SearchEngine searchEngine) {
         final String identifier = searchEngine.getIdentifier();
         return TextUtils.isEmpty(identifier) ? null : identifier;

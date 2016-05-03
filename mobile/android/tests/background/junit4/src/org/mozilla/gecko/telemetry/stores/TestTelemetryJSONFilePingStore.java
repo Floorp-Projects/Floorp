@@ -15,7 +15,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryPing;
-import org.mozilla.gecko.telemetry.TelemetryPingFromStore;
 import org.mozilla.gecko.util.FileUtils;
 
 import java.io.File;
@@ -77,8 +76,8 @@ public class TestTelemetryJSONFilePingStore {
         assertStoreFileCount(0);
 
         final int expectedID = 48679;
-        final TelemetryPing expectedPing = new TelemetryPing("a/server/url", generateTelemetryPayload());
-        testStore.storePing(expectedID, expectedPing);
+        final TelemetryPing expectedPing = new TelemetryPing("a/server/url", generateTelemetryPayload(), expectedID);
+        testStore.storePing(expectedPing);
 
         assertStoreFileCount(1);
         final String filename = testDir.list()[0];
@@ -92,7 +91,7 @@ public class TestTelemetryJSONFilePingStore {
     public void testStorePingMultiplePingsStoreSeparateFiles() throws Exception {
         assertStoreFileCount(0);
         for (int i = 1; i < 10; ++i) {
-            testStore.storePing(i, new TelemetryPing("server " + i, generateTelemetryPayload()));
+            testStore.storePing(new TelemetryPing("server " + i, generateTelemetryPayload(), i));
             assertStoreFileCount(i);
         }
     }
@@ -100,7 +99,7 @@ public class TestTelemetryJSONFilePingStore {
     @Test
     public void testStorePingReleasesFileLock() throws Exception {
         assertStoreFileCount(0);
-        testStore.storePing(0, new TelemetryPing("server", generateTelemetryPayload()));
+        testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), 0));
         assertStoreFileCount(1);
         final File file = new File(testDir, testDir.list()[0]);
         final FileOutputStream stream = new FileOutputStream(file);
@@ -116,8 +115,8 @@ public class TestTelemetryJSONFilePingStore {
         final String urlPrefix = "url";
         writeTestPingsToStore(3, urlPrefix);
 
-        final ArrayList<TelemetryPingFromStore> pings = testStore.getAllPings();
-        for (final TelemetryPingFromStore ping : pings) {
+        final ArrayList<TelemetryPing> pings = testStore.getAllPings();
+        for (final TelemetryPing ping : pings) {
             final int id = ping.getUniqueID(); // we use ID as a key for specific pings and check against the url values.
             assertEquals("Expected url path value received", urlPrefix + id, ping.getURLPath());
             assertIsGeneratedPayload(ping.getPayload());
