@@ -20,6 +20,7 @@ if CONFIG['MOZ_PLACES']:
         'mozIAsyncLivemarks.idl',
         'mozIColorAnalyzer.idl',
         'mozIPlacesAutoComplete.idl',
+        'mozIPlacesPendingOperation.idl',
         'nsIAnnotationService.idl',
         'nsIBrowserHistory.idl',
         'nsIFaviconService.idl',
