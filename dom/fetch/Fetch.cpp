@@ -718,7 +718,8 @@ class CancelPumpRunnable final : public WorkerMainThreadRunnable
   FetchBody<Derived>* mBody;
 public:
   explicit CancelPumpRunnable(FetchBody<Derived>* aBody)
-    : WorkerMainThreadRunnable(aBody->mWorkerPrivate)
+    : WorkerMainThreadRunnable(aBody->mWorkerPrivate,
+                               NS_LITERAL_CSTRING("Fetch :: Cancel Pump"))
     , mBody(aBody)
   { }
 

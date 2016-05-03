@@ -15,6 +15,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/Telemetry.h"
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -572,8 +573,10 @@ MainThreadWorkerControlRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
 
-WorkerMainThreadRunnable::WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate)
+WorkerMainThreadRunnable::WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
+                                                   const nsACString& aTelemetryKey)
 : mWorkerPrivate(aWorkerPrivate)
+, mTelemetryKey(aTelemetryKey)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
@@ -582,6 +585,8 @@ void
 WorkerMainThreadRunnable::Dispatch(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
+
+  TimeStamp startTime = TimeStamp::NowLoRes();
 
   AutoSyncLoopHolder syncLoop(mWorkerPrivate);
 
@@ -596,6 +601,10 @@ WorkerMainThreadRunnable::Dispatch(ErrorResult& aRv)
   if (!syncLoop.Run()) {
     aRv.ThrowUncatchableException();
   }
+
+  Telemetry::Accumulate(Telemetry::SYNC_WORKER_OPERATION, mTelemetryKey,
+                        static_cast<uint32_t>((TimeStamp::NowLoRes() - startTime)
+                                                .ToMilliseconds()));
 }
 
 NS_IMETHODIMP
@@ -614,6 +623,14 @@ WorkerMainThreadRunnable::Run()
 
   return NS_OK;
 }
+
+WorkerCheckAPIExposureOnMainThreadRunnable::WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate):
+  WorkerMainThreadRunnable(aWorkerPrivate,
+                           NS_LITERAL_CSTRING("WorkerCheckAPIExposureOnMainThread"))
+{}
+
+WorkerCheckAPIExposureOnMainThreadRunnable::~WorkerCheckAPIExposureOnMainThreadRunnable()
+{}
 
 bool
 WorkerCheckAPIExposureOnMainThreadRunnable::Dispatch()
