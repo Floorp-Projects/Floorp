@@ -43,8 +43,9 @@ add_task(function*() {
        "safebrowsing.malware.enabled is set correctly");
 
     // check if the other checkboxes have updated
-    is(blockDownloads.hasAttribute("disabled"), checked, "block downloads checkbox is set correctly");
-    is(blockUncommon.hasAttribute("disabled"), checked, "block uncommon checkbox is set correctly");
+    checked = checkbox.checked;
+    is(blockDownloads.hasAttribute("disabled"), !checked, "block downloads checkbox is set correctly");
+    is(blockUncommon.hasAttribute("disabled"), !checked || !blockDownloads.checked, "block uncommon checkbox is set correctly");
 
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
