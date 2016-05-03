@@ -6,21 +6,21 @@
 
 const { createClass, createFactory, DOM: dom } =
   require("devtools/client/shared/vendor/react");
-const TabMenuEntry = createFactory(require("./tab-menu-entry"));
+const PanelMenuEntry = createFactory(require("./panel-menu-entry"));
 
 module.exports = createClass({
-  displayName: "TabMenu",
+  displayName: "PanelMenu",
 
   render() {
-    let { tabs, selectedTabId, selectTab } = this.props;
-    let tabLinks = tabs.map(({ panelId, id, name, icon }) => {
-      let selected = id == selectedTabId;
-      return TabMenuEntry({
-        tabId: id, panelId, name, icon, selected, selectTab
+    let { panels, selectedPanelId, selectPanel } = this.props;
+    let panelLinks = panels.map(({ id, panelId, name, icon }) => {
+      let selected = id == selectedPanelId;
+      return PanelMenuEntry({
+        id, panelId, name, icon, selected, selectTab
       });
     });
 
     // "categories" id used for styling purposes
-    return dom.div({ id: "categories", role: "tablist" }, tabLinks);
+    return dom.div({ id: "categories", role: "tablist" }, panelLinks);
   },
 });

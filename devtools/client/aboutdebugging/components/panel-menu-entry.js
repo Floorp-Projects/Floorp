@@ -8,15 +8,15 @@ const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
-  displayName: "TabMenuEntry",
+  displayName: "PanelMenuEntry",
 
   onClick() {
-    this.props.selectTab(this.props.tabId);
+    this.props.selectPanel(this.props.id);
   },
 
   onKeyUp(event) {
     if ([" ", "Enter"].includes(event.key)) {
-      this.props.selectTab(this.props.tabId);
+      this.props.selectPanel(this.props.id);
     }
   },
 
