@@ -213,6 +213,15 @@ function createRootActor(connection) {
  * conservative approach of simply searching the entire table for actors that
  * belong to the closing XUL window, rather than trying to somehow track which
  * XUL window each tab belongs to.
+ *
+ * - Title changes:
+ *
+ * For tabs living in the child process, we listen for DOMTitleChange message
+ * via the top-level window's message manager. Doing this also allows listening
+ * for title changes on Fennec.
+ * But as these messages aren't sent for tabs loaded in the parent process,
+ * we also listen for TabAttrModified event, which is fired only on Firefox
+ * desktop.
  */
 function BrowserTabList(connection) {
   this._connection = connection;
@@ -292,8 +301,19 @@ BrowserTabList.prototype._getBrowsers = function* () {
 };
 
 BrowserTabList.prototype._getChildren = function (window) {
-  let children = window.gBrowser ? window.gBrowser.browsers : [];
-  return children ? children : [];
+  if (!window.gBrowser) {
+    return [];
+  }
+  let { gBrowser } = window;
+  if (!gBrowser.browsers) {
+    return [];
+  }
+  return gBrowser.browsers.filter(browser => {
+    // Filter tabs that are closing. listTabs calls made right after TabClose
+    // events still list tabs in process of being closed.
+    let tab = gBrowser.getTabForBrowser(browser);
+    return !tab.closing;
+  });
 };
 
 BrowserTabList.prototype._isRemoteBrowser = function (browser) {
@@ -458,7 +478,9 @@ BrowserTabList.prototype._handleActorClose = function (actor, browser) {
 BrowserTabList.prototype._checkListening = function () {
   /*
    * If we have an onListChanged handler that we haven't sent an announcement
-   * to since the last iteration, we need to watch for tab creation.
+   * to since the last iteration, we need to watch for tab creation as well as
+   * change of the currently selected tab and tab title changes of tabs in
+   * parent process via TabAttrModified (tabs oop uses DOMTitleChanges).
    *
    * Oddly, we don't need to watch for 'close' events here. If our actor list
    * is empty, then either it was empty the last time we iterated, and no
@@ -467,11 +489,13 @@ BrowserTabList.prototype._checkListening = function () {
    * sent a notification already when they closed.
    */
   this._listenForEventsIf(this._onListChanged && this._mustNotify,
-                          "_listeningForTabOpen", ["TabOpen", "TabSelect"]);
+                          "_listeningForTabOpen",
+                          ["TabOpen", "TabSelect", "TabAttrModified"]);
 
   /* If we have live actors, we need to be ready to mark them dead. */
   this._listenForEventsIf(this._actorByBrowser.size > 0,
-                          "_listeningForTabClose", ["TabClose"]);
+                          "_listeningForTabClose",
+                          ["TabClose", "TabRemotenessChange"]);
 
   /*
    * We must listen to the window mediator in either case, since that's the
@@ -480,6 +504,14 @@ BrowserTabList.prototype._checkListening = function () {
    */
   this._listenToMediatorIf((this._onListChanged && this._mustNotify) ||
                            (this._actorByBrowser.size > 0));
+
+  /*
+   * We also listen for title changed from the child process.
+   * This allows listening for title changes from Fennec and OOP tabs in Fx.
+   */
+  this._listenForMessagesIf(this._onListChanged && this._mustNotify,
+                            "_listeningForTitleChange",
+                            ["DOMTitleChanged"]);
 };
 
 /*
@@ -506,26 +538,97 @@ BrowserTabList.prototype._listenForEventsIf =
     }
   };
 
+/*
+ * Add or remove message listeners for all XUL windows.
+ *
+ * @param aShouldListen boolean
+ *    True if we should add message listeners; false if we should remove them.
+ * @param aGuard string
+ *    The name of a guard property of 'this', indicating whether we're
+ *    already listening for those messages.
+ * @param aMessageNames array of strings
+ *    An array of message names.
+ */
+BrowserTabList.prototype._listenForMessagesIf = function(aShouldListen, aGuard, aMessageNames) {
+  if (!aShouldListen !== !this[aGuard]) {
+    let op = aShouldListen ? "addMessageListener" : "removeMessageListener";
+    for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
+      for (let name of aMessageNames) {
+        win.messageManager[op](name, this);
+      }
+    }
+    this[aGuard] = aShouldListen;
+  }
+};
+
+/**
+ * Implement nsIMessageListener.
+ */
+BrowserTabList.prototype.receiveMessage = DevToolsUtils.makeInfallible(function(message) {
+  let browser = message.target;
+  switch (message.name) {
+    case "DOMTitleChanged": {
+      let actor = this._actorByBrowser.get(browser);
+      if (actor) {
+        this._notifyListChanged();
+        this._checkListening();
+      }
+      break;
+    }
+  }
+});
+
 /**
  * Implement nsIDOMEventListener.
  */
 BrowserTabList.prototype.handleEvent =
 DevToolsUtils.makeInfallible(function (event) {
+  let browser = event.target.linkedBrowser;
   switch (event.type) {
     case "TabOpen":
-    case "TabSelect":
-      // Don't create a new actor; iterate will take care of that.
-      // Just notify.
+    case "TabSelect": {
+      /* Don't create a new actor; iterate will take care of that. Just notify. */
       this._notifyListChanged();
       this._checkListening();
       break;
-    case "TabClose":
-      let browser = event.target.linkedBrowser;
+    }
+    case "TabClose": {
       let actor = this._actorByBrowser.get(browser);
       if (actor) {
         this._handleActorClose(actor, browser);
       }
       break;
+    }
+    case "TabRemotenessChange": {
+      // We have to remove the cached actor as we have to create a new instance
+      // based on BrowserTabActor or RemoteBrowserTabActor.
+      let actor = this._actorByBrowser.get(browser);
+      if (actor) {
+        this._actorByBrowser.delete(browser);
+        // Don't create a new actor; iterate will take care of that. Just notify.
+        this._notifyListChanged();
+        this._checkListening();
+      }
+      break;
+    }
+    case "TabAttrModified": {
+      // Remote <browser> title changes are handled via DOMTitleChange message
+      // TabAttrModified is only here for browsers in parent process which
+      // don't send this message.
+      if (browser.isRemoteBrowser) {
+        break;
+      }
+      let actor = this._actorByBrowser.get(browser);
+      if (actor) {
+        // TabAttrModified is fired in various cases, here only care about title
+        // changes
+        if (event.detail.changed.includes("label")) {
+          this._notifyListChanged();
+          this._checkListening();
+        }
+      }
+      break;
+    }
   }
 }, "BrowserTabList.prototype.handleEvent");
 
@@ -566,9 +669,14 @@ DevToolsUtils.makeInfallible(function (window) {
     if (this._listeningForTabOpen) {
       window.addEventListener("TabOpen", this, false);
       window.addEventListener("TabSelect", this, false);
+      window.addEventListener("TabAttrModified", this, false);
     }
     if (this._listeningForTabClose) {
       window.addEventListener("TabClose", this, false);
+      window.addEventListener("TabRemotenessChange", this, false);
+    }
+    if (this._listeningForTitleChange) {
+      window.messageManager.addMessageListener("DOMTitleChanged", this);
     }
 
     // As explained above, we will not receive a TabOpen event for this
@@ -964,9 +1072,10 @@ TabActor.prototype = {
       actor: this.actorID
     };
 
-    // On xpcshell we are using tabactor even if there is no valid document.
-    // Actors like chrome debugger can work.
-    if (this.window) {
+    // We may try to access window while the document is closing, then
+    // accessing window throws. Also on xpcshell we are using tabactor even if
+    // there is no valid document.
+    if (this.docShell && !this.docShell.isBeingDestroyed()) {
       response.title = this.title;
       response.url = this.url;
       let windowUtils = this.window
