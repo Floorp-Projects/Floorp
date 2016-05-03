@@ -139,7 +139,7 @@ SpeechTaskCallback::GetTimeDurationFromStart()
 void
 SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex)
 {
-  mCurrentIndex = mOffsets[aIndex];
+  mCurrentIndex = aIndex < mOffsets.Length() ? mOffsets[aIndex] : mCurrentIndex;
   if (!mTask) {
     return;
   }
