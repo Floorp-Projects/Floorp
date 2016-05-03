@@ -149,12 +149,11 @@ DecodeCallArgs(FunctionDecoder& f, uint32_t arity, const Sig& sig)
     if (arity != sig.args().length())
         return f.iter().fail("call arity out of range");
 
-    Nothing arg;
     const ValTypeVector& args = sig.args();
     uint32_t numArgs = args.length();
     for (size_t i = 0; i < numArgs; ++i) {
         ValType argType = args[i];
-        if (!f.iter().readCallArg(argType, numArgs, i, &arg))
+        if (!f.iter().readCallArg(argType, numArgs, i))
             return false;
     }
 
@@ -170,34 +169,35 @@ DecodeCallReturn(FunctionDecoder& f, const Sig& sig)
 static bool
 DecodeCall(FunctionDecoder& f)
 {
-    if (!f.iter().readCall())
+    uint32_t calleeIndex;
+    uint32_t arity;
+    if (!f.iter().readCall(&calleeIndex, &arity))
         return false;
 
-    const CallRecord& call = f.iter().call();
-    if (call.callee >= f.mg().numFuncSigs())
+    if (calleeIndex >= f.mg().numFuncSigs())
         return f.iter().fail("callee index out of range");
 
-    const Sig& sig = f.mg().funcSig(call.callee);
-    return DecodeCallArgs(f, call.arity, sig) &&
+    const Sig& sig = f.mg().funcSig(calleeIndex);
+    return DecodeCallArgs(f, arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
 static bool
 DecodeCallIndirect(FunctionDecoder& f)
 {
-    if (!f.iter().readCallIndirect())
+    uint32_t sigIndex;
+    uint32_t arity;
+    if (!f.iter().readCallIndirect(&sigIndex, &arity))
         return false;
 
-    const CallIndirectRecord<Nothing>& callIndirect = f.iter().callIndirect();
-    if (callIndirect.sigIndex >= f.mg().numSigs())
+    if (sigIndex >= f.mg().numSigs())
         return f.iter().fail("signature index out of range");
 
-    const Sig& sig = f.mg().sig(callIndirect.sigIndex);
-    if (!DecodeCallArgs(f, callIndirect.arity, sig))
+    const Sig& sig = f.mg().sig(sigIndex);
+    if (!DecodeCallArgs(f, arity, sig))
         return false;
 
-    Nothing callee;
-    if (!f.iter().readCallIndirectCallee(&callee))
+    if (!f.iter().readCallIndirectCallee())
         return false;
 
     return DecodeCallReturn(f, sig);
@@ -206,28 +206,29 @@ DecodeCallIndirect(FunctionDecoder& f)
 static bool
 DecodeCallImport(FunctionDecoder& f)
 {
-    if (!f.iter().readCallImport())
+    uint32_t importIndex;
+    uint32_t arity;
+    if (!f.iter().readCallImport(&importIndex, &arity))
         return false;
 
-    const CallImportRecord& callImport = f.iter().callImport();
-    if (callImport.callee >= f.mg().numImports())
+    if (importIndex >= f.mg().numImports())
         return f.iter().fail("import index out of range");
 
-    const Sig& sig = *f.mg().import(callImport.callee).sig;
-    return DecodeCallArgs(f, callImport.arity, sig) &&
+    const Sig& sig = *f.mg().import(importIndex).sig;
+    return DecodeCallArgs(f, arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
 static bool
 DecodeBrTable(FunctionDecoder& f)
 {
-    if (!f.iter().readBrTable())
+    uint32_t tableLength;
+    ExprType type;
+    if (!f.iter().readBrTable(&tableLength, &type))
         return false;
 
-    ExprType type = f.iter().brTable().type;
-
     uint32_t depth;
-    for (size_t i = 0, e = f.iter().brTable().tableLength; i < e; ++i) {
+    for (size_t i = 0, e = tableLength; i < e; ++i) {
         if (!f.iter().readBrTableEntry(type, &depth))
             return false;
     }
@@ -245,7 +246,7 @@ DecodeExpr(FunctionDecoder& f)
 
     switch (expr) {
       case Expr::Nop:
-        return f.iter().readTrivial();
+        return f.iter().readNullary();
       case Expr::Call:
         return DecodeCall(f);
       case Expr::CallIndirect:
@@ -280,12 +281,10 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
-      case Expr::I32Eqz:
         return f.iter().readUnary(ValType::I32);
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-      case Expr::I64Eqz:
         return f.iter().notYetImplemented("i64") &&
                f.iter().readUnary(ValType::I64);
       case Expr::F32Abs:
@@ -396,6 +395,11 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F64Gt:
       case Expr::F64Ge:
         return f.iter().readComparison(ValType::F64);
+      case Expr::I32Eqz:
+        return f.iter().readConversion(ValType::I32, ValType::I32);
+      case Expr::I64Eqz:
+        return f.checkI64Support() &&
+               f.iter().readConversion(ValType::I64, ValType::I32);
       case Expr::I32WrapI64:
         return f.checkI64Support() &&
                f.iter().readConversion(ValType::I64, ValType::I32);
