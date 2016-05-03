@@ -6,6 +6,9 @@ MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
+# Add configuration
+COPY            dot-config                    /home/worker/.config
+
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 
