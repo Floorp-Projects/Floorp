@@ -9,7 +9,6 @@
 #include <sstream>
 #include <vector>
 
-#include "base/histogram.h"
 #include "CSFLog.h"
 #include "timecard.h"
 
@@ -3900,13 +3899,8 @@ PeerConnectionImpl::startCallTelem() {
   mStartTime = TimeStamp::Now();
 
   // Increment session call counter
-  // If we want to track Loop calls independently here, we need two mConnectionCounters
-  int &cnt = PeerConnectionCtx::GetInstance()->mConnectionCounter;
-  if (cnt > 0) {
-    Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Subtract(cnt);
-  }
-  cnt++;
-  Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(cnt);
+  // If we want to track Loop calls independently here, we need two histograms.
+  Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_2, 1);
 }
 #endif
 
