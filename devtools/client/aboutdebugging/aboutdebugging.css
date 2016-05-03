@@ -17,7 +17,7 @@ button {
   min-width: 100px;
 }
 
-/* Category tabs */
+/* Category panels */
 
 .category {
   display: flex;
@@ -40,7 +40,7 @@ button {
   flex: 1;
 }
 
-.tab {
+.panel {
   max-width: 800px;
 }
 

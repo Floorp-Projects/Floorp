@@ -7,12 +7,12 @@
 const { Ci } = require("chrome");
 const { createClass, createFactory, DOM: dom } =
   require("devtools/client/shared/vendor/react");
-const { getWorkerForms } = require("../modules/worker");
+const { getWorkerForms } = require("../../modules/worker");
 const Services = require("Services");
 
-const TabHeader = createFactory(require("./tab-header"));
-const TargetList = createFactory(require("./target-list"));
-const WorkerTarget = createFactory(require("./worker-target"));
+const PanelHeader = createFactory(require("../panel-header"));
+const TargetList = createFactory(require("../target-list"));
+const WorkerTarget = createFactory(require("./target"));
 const ServiceWorkerTarget = createFactory(require("./service-worker-target"));
 
 const Strings = Services.strings.createBundle(
@@ -21,7 +21,7 @@ const Strings = Services.strings.createBundle(
 const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 
 module.exports = createClass({
-  displayName: "WorkersTab",
+  displayName: "WorkersPanel",
 
   getInitialState() {
     return {
@@ -104,13 +104,13 @@ module.exports = createClass({
     let { workers } = this.state;
 
     return dom.div({
-      id: id,
-      className: "tab",
+      id,
+      className: "panel",
       role: "tabpanel",
-      "aria-labelledby": "tab-workers-header-name"
+      "aria-labelledby": "panel-workers-header-name"
     },
-    TabHeader({
-      id: "tab-workers-header-name",
+    PanelHeader({
+      id: "workers-panel-header-name",
       name: Strings.GetStringFromName("workers")
     }),
     dom.div({ id: "workers", className: "inverted-icons" },

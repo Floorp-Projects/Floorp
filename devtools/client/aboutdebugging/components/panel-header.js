@@ -8,7 +8,7 @@ const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
-  displayName: "TabHeader",
+  displayName: "PanelHeader",
 
   render() {
     let { name, id } = this.props;
