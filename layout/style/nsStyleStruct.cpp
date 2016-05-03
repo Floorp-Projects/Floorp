@@ -874,39 +874,34 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 // nsStyleSVG
 //
 nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
+  : mFill(eStyleSVGPaintType_Color) // Will be initialized to NS_RGB(0, 0, 0)
+  , mStroke(eStyleSVGPaintType_None)
+  , mStrokeDasharray(nullptr)
+  , mFillOpacity(1.0f)
+  , mStrokeMiterlimit(4.0f)
+  , mStrokeOpacity(1.0f)
+  , mStrokeDasharrayLength(0)
+  , mClipRule(NS_STYLE_FILL_RULE_NONZERO)
+  , mColorInterpolation(NS_STYLE_COLOR_INTERPOLATION_SRGB)
+  , mColorInterpolationFilters(NS_STYLE_COLOR_INTERPOLATION_LINEARRGB)
+  , mFillRule(NS_STYLE_FILL_RULE_NONZERO)
+  , mPaintOrder(NS_STYLE_PAINT_ORDER_NORMAL)
+  , mShapeRendering(NS_STYLE_SHAPE_RENDERING_AUTO)
+  , mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT)
+  , mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER)
+  , mTextAnchor(NS_STYLE_TEXT_ANCHOR_START)
+  , mFillOpacitySource(eStyleSVGOpacitySource_Normal)
+  , mStrokeOpacitySource(eStyleSVGOpacitySource_Normal)
+  , mStrokeDasharrayFromObject(false)
+  , mStrokeDashoffsetFromObject(false)
+  , mStrokeWidthFromObject(false)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-  mFill.mType              = eStyleSVGPaintType_Color;
-  mFill.mPaint.mColor      = NS_RGB(0,0,0);
-  mFill.mFallbackColor     = NS_RGB(0,0,0);
-  mStroke.mType            = eStyleSVGPaintType_None;
-  mStroke.mPaint.mColor    = NS_RGB(0,0,0);
-  mStroke.mFallbackColor   = NS_RGB(0,0,0);
-  mStrokeDasharray         = nullptr;
 
   mStrokeDashoffset.SetCoordValue(0);
   mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
+}
 
-  mFillOpacity             = 1.0f;
-  mStrokeMiterlimit        = 4.0f;
-  mStrokeOpacity           = 1.0f;
-
-  mStrokeDasharrayLength   = 0;
-  mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
-  mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
-  mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
-  mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
-  mPaintOrder              = NS_STYLE_PAINT_ORDER_NORMAL;
-  mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
-  mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
-  mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
-  mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
-  mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
-  mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
-  mStrokeDasharrayFromObject = false;
-  mStrokeDashoffsetFromObject = false;
-  mStrokeWidthFromObject   = false;
-} 
 nsStyleSVG::~nsStyleSVG()
 {
   MOZ_COUNT_DTOR(nsStyleSVG);
@@ -914,54 +909,51 @@ nsStyleSVG::~nsStyleSVG()
 }
 
 nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
+  : mFill(aSource.mFill)
+  , mStroke(aSource.mStroke)
+  , mMarkerEnd(aSource.mMarkerEnd)
+  , mMarkerMid(aSource.mMarkerMid)
+  , mMarkerStart(aSource.mMarkerStart)
+  , mStrokeDasharray(nullptr)
+  , mStrokeDashoffset(aSource.mStrokeDashoffset)
+  , mStrokeWidth(aSource.mStrokeWidth)
+  , mFillOpacity(aSource.mFillOpacity)
+  , mStrokeMiterlimit(aSource.mStrokeMiterlimit)
+  , mStrokeOpacity(aSource.mStrokeOpacity)
+  , mStrokeDasharrayLength(0)
+  , mClipRule(aSource.mClipRule)
+  , mColorInterpolation(aSource.mColorInterpolation)
+  , mColorInterpolationFilters(aSource.mColorInterpolationFilters)
+  , mFillRule(aSource.mFillRule)
+  , mPaintOrder(aSource.mPaintOrder)
+  , mShapeRendering(aSource.mShapeRendering)
+  , mStrokeLinecap(aSource.mStrokeLinecap)
+  , mStrokeLinejoin(aSource.mStrokeLinejoin)
+  , mTextAnchor(aSource.mTextAnchor)
+  , mFillOpacitySource(aSource.mFillOpacitySource)
+  , mStrokeOpacitySource(aSource.mStrokeOpacitySource)
+  , mStrokeDasharrayFromObject(aSource.mStrokeDasharrayFromObject)
+  , mStrokeDashoffsetFromObject(aSource.mStrokeDashoffsetFromObject)
+  , mStrokeWidthFromObject(aSource.mStrokeWidthFromObject)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-  mFill = aSource.mFill;
-  mStroke = aSource.mStroke;
 
-  mMarkerEnd = aSource.mMarkerEnd;
-  mMarkerMid = aSource.mMarkerMid;
-  mMarkerStart = aSource.mMarkerStart;
-
-  mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
+  MOZ_ASSERT(bool(aSource.mStrokeDasharray) ==
+             bool(aSource.mStrokeDasharrayLength),
+             "mStrokeDasharry has an inconsistent length in aSource!");
   if (aSource.mStrokeDasharray) {
+    mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
     mStrokeDasharray = new nsStyleCoord[mStrokeDasharrayLength];
     if (mStrokeDasharray) {
       for (size_t i = 0; i < mStrokeDasharrayLength; i++) {
         mStrokeDasharray[i] = aSource.mStrokeDasharray[i];
       }
-    } else {
-      mStrokeDasharrayLength = 0;
     }
-  } else {
-    mStrokeDasharray = nullptr;
   }
-
-  mStrokeDashoffset = aSource.mStrokeDashoffset;
-  mStrokeWidth = aSource.mStrokeWidth;
-
-  mFillOpacity = aSource.mFillOpacity;
-  mStrokeMiterlimit = aSource.mStrokeMiterlimit;
-  mStrokeOpacity = aSource.mStrokeOpacity;
-
-  mClipRule = aSource.mClipRule;
-  mColorInterpolation = aSource.mColorInterpolation;
-  mColorInterpolationFilters = aSource.mColorInterpolationFilters;
-  mFillRule = aSource.mFillRule;
-  mPaintOrder = aSource.mPaintOrder;
-  mShapeRendering = aSource.mShapeRendering;
-  mStrokeLinecap = aSource.mStrokeLinecap;
-  mStrokeLinejoin = aSource.mStrokeLinejoin;
-  mTextAnchor = aSource.mTextAnchor;
-  mFillOpacitySource = aSource.mFillOpacitySource;
-  mStrokeOpacitySource = aSource.mStrokeOpacitySource;
-  mStrokeDasharrayFromObject = aSource.mStrokeDasharrayFromObject;
-  mStrokeDashoffsetFromObject = aSource.mStrokeDashoffsetFromObject;
-  mStrokeWidthFromObject = aSource.mStrokeWidthFromObject;
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
-                              const nsStyleSVGPaint& aPaint2)
+                            const nsStyleSVGPaint& aPaint2)
 {
   if (aPaint1.mType != aPaint2.mType) {
     return aPaint1.mType == eStyleSVGPaintType_Server ||
