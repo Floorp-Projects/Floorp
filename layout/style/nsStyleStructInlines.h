@@ -48,14 +48,16 @@ nsStyleText::NewlineIsSignificant(const nsTextFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
   return NewlineIsSignificantStyle() &&
-    !aContextFrame->ShouldSuppressLineBreak();
+         !aContextFrame->ShouldSuppressLineBreak() &&
+         !aContextFrame->StyleContext()->IsTextCombined();
 }
 
 bool
 nsStyleText::WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleText() == this, "unexpected aContextFrame");
-  return WhiteSpaceCanWrapStyle() && !aContextFrame->IsSVGText();
+  return WhiteSpaceCanWrapStyle() && !aContextFrame->IsSVGText() &&
+         !aContextFrame->StyleContext()->IsTextCombined();
 }
 
 bool
