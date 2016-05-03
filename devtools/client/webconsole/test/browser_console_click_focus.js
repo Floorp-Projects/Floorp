@@ -10,7 +10,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html";
 
-add_task(function*() {
+add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
@@ -37,12 +37,13 @@ add_task(function*() {
 
   yield waitForBlurredInput(inputNode);
 
-  info("Setting a text selection and making sure a click does not re-focus")
+  info("Setting a text selection and making sure a click does not re-focus");
   let selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(outputItem);
 
   EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
-  ok(!inputNode.getAttribute("focused"), "input node is not focused after drag");
+  ok(!inputNode.getAttribute("focused"),
+    "input node is not focused after drag");
 });
 
 function waitForBlurredInput(inputNode) {
