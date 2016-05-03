@@ -186,6 +186,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         syncSetupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "history_syncsetup");
                 // This Activity will redirect to the correct Activity as needed.
                 final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
                 startActivity(intent);
@@ -402,7 +403,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         final ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View widget) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PANEL, "hint-private-browsing");
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "hint_private_browsing");
                 try {
                     final JSONObject json = new JSONObject();
                     json.put("type", "Menu:Open");
