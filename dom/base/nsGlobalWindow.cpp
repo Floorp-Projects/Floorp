@@ -6461,13 +6461,6 @@ nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
     }
   }
 
-  // If we didn't setup the widget, we may need to manually set this
-  // flag, or the assertion in FinishFullscreenChange is violated.
-  if (nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell()) {
-    if (!presShell->IsInFullscreenChange()) {
-      presShell->SetIsInFullscreenChange(true);
-    }
-  }
   FinishFullscreenChange(aFullScreen);
   return NS_OK;
 }
@@ -6481,8 +6474,15 @@ nsGlobalWindow::SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen
   MOZ_ASSERT(!AsOuter()->GetFrameElementInternal(), "Content window should not call this");
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
-  if (nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell()) {
-    presShell->SetIsInFullscreenChange(true);
+  if (!NS_WARN_IF(!IsChromeWindow())) {
+    auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
+    if (!NS_WARN_IF(chromeWin->mFullscreenPresShell)) {
+      if (nsIPresShell* shell = mDocShell->GetPresShell()) {
+        chromeWin->mFullscreenPresShell = do_GetWeakReference(shell);
+        MOZ_ASSERT(chromeWin->mFullscreenPresShell);
+        shell->SetIsInFullscreenChange(true);
+      }
+    }
   }
   nsresult rv = aReason == FullscreenReason::ForFullscreenMode ?
     // If we enter fullscreen for fullscreen mode, we want
@@ -6524,9 +6524,13 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
   // respond visually if we are kicked into full screen mode
   DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"));
 
-  if (nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell()) {
-    MOZ_ASSERT(presShell->IsInFullscreenChange());
-    presShell->SetIsInFullscreenChange(false);
+  if (!NS_WARN_IF(!IsChromeWindow())) {
+    auto chromeWin = static_cast<nsGlobalChromeWindow*>(this);
+    if (nsCOMPtr<nsIPresShell> shell =
+        do_QueryReferent(chromeWin->mFullscreenPresShell)) {
+      shell->SetIsInFullscreenChange(false);
+      chromeWin->mFullscreenPresShell = nullptr;
+    }
   }
 
   if (!mWakeLock && mFullScreen) {

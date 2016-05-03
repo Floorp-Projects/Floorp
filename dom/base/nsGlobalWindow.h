@@ -1979,6 +1979,10 @@ public:
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   nsCOMPtr<nsIMessageBroadcaster> mMessageManager;
   nsInterfaceHashtable<nsStringHashKey, nsIMessageBroadcaster> mGroupMessageManagers;
+  // A weak pointer to the nsPresShell that we are doing fullscreen for.
+  // The pointer being set indicates we've set the IsInFullscreenChange
+  // flag on this pres shell.
+  nsWeakPtr mFullscreenPresShell;
 };
 
 /*
