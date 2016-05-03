@@ -942,9 +942,6 @@ private:
   // Playback will not start when audio is offloading.
   bool mAudioOffloading;
 
-  // Duration of the continuous silent data.
-  uint32_t mSilentDataDuration;
-
 #ifdef MOZ_EME
   void OnCDMProxyReady(RefPtr<CDMProxy> aProxy);
   void OnCDMProxyNotReady();
