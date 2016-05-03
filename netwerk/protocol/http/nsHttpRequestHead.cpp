@@ -36,14 +36,15 @@ nsHttpRequestHead::~nsHttpRequestHead()
 const nsHttpHeaderArray &
 nsHttpRequestHead::Headers() const
 {
-  mLock.AssertCurrentThreadOwns();
-  return mHeaders;
+    mLock.AssertCurrentThreadOwns();
+    return mHeaders;
 }
 
 void
 nsHttpRequestHead::SetHeaders(const nsHttpHeaderArray& aHeaders)
 {
-  mHeaders = aHeaders;
+    MutexAutoLock lock(mLock);
+    mHeaders = aHeaders;
 }
 
 void
