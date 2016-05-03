@@ -49,7 +49,7 @@ function test() {
       ok(toolbox.splitConsole, "Split console is created.");
     });
 
-    let contentWindow = toolbox.frame.contentWindow;
+    let contentWindow = toolbox.win;
     contentWindow.focus();
     EventUtils.sendKey("ESCAPE", contentWindow);
 
@@ -60,7 +60,7 @@ function test() {
     let result = toolbox.once("split-console", () => {
       ok(!toolbox.splitConsole, "Split console is hidden.");
     });
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
+    EventUtils.sendKey("ESCAPE", toolbox.win);
 
     return result;
   }
@@ -72,7 +72,7 @@ function test() {
       ok(toolbox.splitConsole,
         "Split console is open after hiding the variables view.");
     });
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
+    EventUtils.sendKey("ESCAPE", toolbox.win);
 
     return result;
   }
@@ -91,7 +91,7 @@ function test() {
       deferred.resolve();
     }, false);
 
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
+    EventUtils.sendKey("ESCAPE", toolbox.win);
 
     return deferred.promise;
   }
