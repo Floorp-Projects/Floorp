@@ -29,7 +29,7 @@ function test() {
     }
 
     info("generate exception and wait for the message");
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
       let button = content.document.querySelector("button");
       button.click();
     });
@@ -54,14 +54,17 @@ function test() {
   function onMessageFound(results) {
     let viewSource = hud.viewSource;
     let viewSourceCalled = false;
-    hud.viewSourceInDebugger = () => viewSourceCalled = true;
+    hud.viewSourceInDebugger = () => {
+      viewSourceCalled = true;
+    };
 
     for (let result of results) {
       viewSourceCalled = false;
 
       let msg = [...results[0].matched][0];
       ok(msg, "message element found for: " + result.text);
-      let locationNode = msg.querySelector(".message > .message-location .frame-link-filename");
+      let selector = ".message > .message-location .frame-link-filename";
+      let locationNode = msg.querySelector(selector);
       ok(locationNode, "message location element found");
 
       EventUtils.synthesizeMouse(locationNode, 2, 2, {}, hud.iframeWindow);
