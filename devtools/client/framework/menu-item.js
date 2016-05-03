@@ -16,7 +16,6 @@
  *   - sublabel String
  *   - accelerator Accelerator
  *   - icon NativeImage
- *   - visible Boolean - If false, the menu item will be entirely hidden.
  *   - position String - This field allows fine-grained definition of the
  *                       specific location within a given menu.
  *
@@ -33,6 +32,8 @@
  *    Should only be specified for checkbox or radio type menu items.
  *      Menu submenu
  *    Should be specified for submenu type menu items. If submenu is specified, the type: 'submenu' can be omitted. If the value is not a Menu then it will be automatically converted to one using Menu.buildFromTemplate.
+ *    Boolean visible
+ *      If false, the menu item will be entirely hidden.
  *
  */
 function MenuItem({
@@ -44,6 +45,7 @@ function MenuItem({
     id = null,
     submenu = null,
     type = "normal",
+    visible = true,
 } = { }) {
   this.accesskey = accesskey;
   this.checked = checked;
@@ -53,6 +55,7 @@ function MenuItem({
   this.label = label;
   this.submenu = submenu;
   this.type = type;
+  this.visible = visible;
 }
 
 module.exports = MenuItem;
