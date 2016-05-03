@@ -386,9 +386,7 @@ nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
   nsMargin result(0,0,0,0);
 
   if (mOuterFocusStyle) {
-    if (!mOuterFocusStyle->StylePadding()->GetPadding(result)) {
-      NS_NOTYETIMPLEMENTED("percentage padding");
-    }
+    mOuterFocusStyle->StylePadding()->GetPaddingNoPercentage(result);
     result += mOuterFocusStyle->StyleBorder()->GetComputedBorder();
   }
 
@@ -425,9 +423,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
   nsMargin result(0,0,0,0);
 
   if (mInnerFocusStyle) {
-    if (!mInnerFocusStyle->StylePadding()->GetPadding(result)) {
-      NS_NOTYETIMPLEMENTED("percentage padding");
-    }
+    mInnerFocusStyle->StylePadding()->GetPaddingNoPercentage(result);
     result += mInnerFocusStyle->StyleBorder()->GetComputedBorder();
   }
 

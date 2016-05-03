@@ -883,7 +883,6 @@ protected:
   nsMargin      mCachedMargin;
 };
 
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 {
   explicit nsStylePadding(StyleStructContext aContext);
@@ -899,7 +898,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
   }
   void Destroy(nsPresContext* aContext);
 
-  void RecalcData();
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
@@ -919,19 +917,28 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   nsStyleSides  mPadding;         // [reset] coord, percent, calc
 
-  bool IsWidthDependent() const { return !mHasCachedPadding; }
+  bool IsWidthDependent() const {
+    return !mPadding.ConvertsToLength();
+  }
+
   bool GetPadding(nsMargin& aPadding) const
   {
-    if (mHasCachedPadding) {
-      aPadding = mCachedPadding;
+    if (mPadding.ConvertsToLength()) {
+      GetPaddingNoPercentage(aPadding);
       return true;
     }
+
     return false;
   }
 
-protected:
-  bool          mHasCachedPadding;
-  nsMargin      mCachedPadding;
+  void GetPaddingNoPercentage(nsMargin& aPadding) const
+  {
+    MOZ_ASSERT(mPadding.ConvertsToLength());
+    NS_FOR_CSS_SIDES(side) {
+      // Clamp negative calc() to 0.
+      aPadding.Side(side) = std::max(mPadding.Get(side).ToLength(), 0);
+    }
+  }
 };
 
 struct nsBorderColors
