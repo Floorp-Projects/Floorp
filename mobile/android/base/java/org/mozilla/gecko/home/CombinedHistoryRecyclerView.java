@@ -13,17 +13,22 @@ import android.view.KeyEvent;
 import android.view.View;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener;
-import org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.EnumSet;
 
+import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.CHILD;
 import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.PARENT;
 
 public class CombinedHistoryRecyclerView extends RecyclerView
         implements RecyclerViewClickSupport.OnItemClickListener, RecyclerViewClickSupport.OnItemLongClickListener {
+    public static String LOGTAG = "CombinedHistoryRecycView";
+
+    protected interface AdapterContextMenuBuilder {
+        HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position);
+    }
 
     protected HomePager.OnUrlOpenListener mOnUrlOpenListener;
     protected OnPanelLevelChangeListener mOnPanelLevelChangeListener;
@@ -61,8 +66,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
                 // If the user hit the BACK key, try to move to the parent folder.
                 if (action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    mOnPanelLevelChangeListener.onPanelLevelChange(PARENT);
-                    return ((CombinedHistoryAdapter) getAdapter()).exitChildView();
+                    return mOnPanelLevelChangeListener.changeLevel(PARENT);
                 }
                 return false;
             }
@@ -84,23 +88,27 @@ public class CombinedHistoryRecyclerView extends RecyclerView
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         final int viewType = getAdapter().getItemViewType(position);
-        final CombinedHistoryAdapter.ItemType itemType = CombinedHistoryAdapter.ItemType.viewTypeToItemType(viewType);
+        final CombinedHistoryItem.ItemType itemType = CombinedHistoryItem.ItemType.viewTypeToItemType(viewType);
 
         switch (itemType) {
-            case CLIENT:
-                mOnPanelLevelChangeListener.onPanelLevelChange(PanelLevel.CHILD);
-                ((CombinedHistoryAdapter) getAdapter()).showChildView(position);
+            case SYNCED_DEVICES:
+                mOnPanelLevelChangeListener.changeLevel(CHILD);
                 break;
+
+            case CLIENT:
+                ((ClientsAdapter) getAdapter()).toggleClient(position);
+                break;
+
             case HIDDEN_DEVICES:
                 if (mDialogBuilder != null) {
-                    mDialogBuilder.createAndShowDialog(((CombinedHistoryAdapter) getAdapter()).getHiddenClients());
+                    mDialogBuilder.createAndShowDialog(((ClientsAdapter) getAdapter()).getHiddenClients());
                 }
                 break;
 
             case NAVIGATION_BACK:
-                mOnPanelLevelChangeListener.onPanelLevelChange(PARENT);
-                ((CombinedHistoryAdapter) getAdapter()).exitChildView();
+                mOnPanelLevelChangeListener.changeLevel(PARENT);
                 break;
+
             case CHILD:
             case HISTORY:
                 if (mOnUrlOpenListener != null) {
@@ -114,7 +122,7 @@ public class CombinedHistoryRecyclerView extends RecyclerView
 
     @Override
     public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
-        mContextMenuInfo = ((CombinedHistoryAdapter) getAdapter()).makeContextMenuInfoFromPosition(v, position);
+        mContextMenuInfo = ((AdapterContextMenuBuilder) getAdapter()).makeContextMenuInfoFromPosition(v, position);
         return showContextMenuForChild(this);
     }
 

@@ -26,7 +26,7 @@ public class RemoteClient implements Parcelable {
         this.name = name;
         this.lastModified = lastModified;
         this.deviceType = deviceType;
-        this.tabs = new ArrayList<RemoteTab>();
+        this.tabs = new ArrayList<>();
     }
 
     @Override
@@ -62,4 +62,8 @@ public class RemoteClient implements Parcelable {
             return new RemoteClient[size];
         }
     };
+
+    public boolean isDesktop() {
+        return "desktop".equals(deviceType);
+    }
 }

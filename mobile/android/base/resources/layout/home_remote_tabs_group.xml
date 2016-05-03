@@ -18,8 +18,8 @@
         android:id="@+id/device_type"
         android:layout_width="@dimen/favicon_bg"
         android:layout_height="@dimen/favicon_bg"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
         android:layout_gravity="center_vertical"
         android:scaleType="center"
         tools:src="@drawable/sync_mobile"/>
@@ -32,7 +32,7 @@
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView
             android:id="@+id/client"
-            style="@style/Widget.TwoLinePageRow.Title"
+            style="@style/Widget.FolderTitle.TwoLine"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             gecko:fadeWidth="30dp"

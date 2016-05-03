@@ -44,7 +44,6 @@ public class TwoLinePageRow extends LinearLayout
     private int mSwitchToTabIconId;
 
     private final FaviconView mFavicon;
-    private final View mReaderCached;
 
     private boolean mShowIcons;
     private int mLoadFaviconJobId = Favicons.NOT_LOADING;
@@ -109,8 +108,6 @@ public class TwoLinePageRow extends LinearLayout
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
         mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
-
-        mReaderCached = findViewById(R.id.is_reader_cached);
     }
 
     @Override
@@ -201,9 +198,23 @@ public class TwoLinePageRow extends LinearLayout
         mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, 0, 0);
     }
 
-    private void showBookmarkIcon(boolean toShow) {
-        final int visibility = toShow ? VISIBLE : GONE;
-        mStatusIcon.setVisibility(visibility);
+    private void updateStatusIcon(boolean isBookmark, boolean isReaderItem) {
+        if (isReaderItem) {
+            mStatusIcon.setImageResource(R.drawable.status_icon_readercache);
+        } else if (isBookmark) {
+            mStatusIcon.setImageResource(R.drawable.star_blue);
+        }
+
+        if (mShowIcons && (isBookmark || isReaderItem)) {
+            mStatusIcon.setVisibility(View.VISIBLE);
+        } else if (mShowIcons) {
+            // We use INVISIBLE to have consistent padding for our items. This means text/URLs
+            // fade consistently in the same location, regardless of them being bookmarked.
+            mStatusIcon.setVisibility(View.INVISIBLE);
+        } else {
+            mStatusIcon.setVisibility(View.GONE);
+        }
+
     }
 
     /**
@@ -261,9 +272,10 @@ public class TwoLinePageRow extends LinearLayout
             // The bookmark id will be 0 (null in database) when the url
             // is not a bookmark.
             final boolean isBookmark = bookmarkId != 0;
-            showBookmarkIcon(isBookmark);
+
+            updateStatusIcon(isBookmark, hasReaderCacheItem);
         } else {
-            showBookmarkIcon(false);
+            updateStatusIcon(false, false);
         }
 
         // Use the URL instead of an empty title for consistency with the normal URL
@@ -286,8 +298,6 @@ public class TwoLinePageRow extends LinearLayout
         mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
 
         updateDisplayedUrl(url, hasReaderCacheItem);
-
-        mReaderCached.setVisibility(hasReaderCacheItem ? View.VISIBLE : View.INVISIBLE);
     }
 
     /**

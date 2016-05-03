@@ -33,7 +33,8 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
         }
         for (int i = 0; i < parent.getChildCount(); i++) {
             final View child = parent.getChildAt(i);
-            c.drawRect(0, child.getBottom(), parent.getWidth(), child.getBottom() + mDividerHeight, mDividerPaint);
+            final float bottom = child.getBottom() + child.getTranslationY();
+            c.drawRect(0, bottom, parent.getWidth(), bottom + mDividerHeight, mDividerPaint);
         }
     }
 }

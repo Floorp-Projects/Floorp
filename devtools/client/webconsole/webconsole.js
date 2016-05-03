@@ -198,6 +198,7 @@ const MIN_FONT_SIZE = 10;
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
+const PREF_NEW_FRONTEND_ENABLED = "devtools.webconsole.new-frontend-enabled";
 
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
@@ -508,6 +509,8 @@ WebConsoleFrame.prototype = {
   _initUI: function() {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
+    this.NEW_CONSOLE_OUTPUT_ENABLED = !this.owner._browserConsole &&
+      Services.prefs.getBoolPref(PREF_NEW_FRONTEND_ENABLED);
 
     this._initDefaultFilterPrefs();
 
@@ -567,6 +570,22 @@ WebConsoleFrame.prototype = {
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
+
+    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+      // @TODO Remove this once JSTerm is handled with React/Redux.
+      this.window.jsterm = this.jsterm;
+      console.log("Entering experimental mode for console frontend");
+
+      // XXX: We should actually stop output from happening on old output
+      // panel, but for now let's just hide it.
+      this.experimentalOutputNode = this.outputNode.cloneNode();
+      this.outputNode.hidden = true;
+      this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
+      // @TODO Once the toolbox has been converted to React, see if passing
+      // in JSTerm is still necessary.
+      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, this.jsterm);
+      console.log("Created newConsoleOutput", this.newConsoleOutput);
+    }
 
     this.resize();
     this.window.addEventListener("resize", this.resize, true);
@@ -3332,6 +3351,10 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onPageError: function(type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
+      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        return;
+      }
       this.webConsoleFrame.handlePageError(packet.pageError);
     }
   },
@@ -3364,7 +3387,11 @@ WebConsoleConnectionProxy.prototype = {
    */
   _onConsoleAPICall: function(type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
-      this.webConsoleFrame.handleConsoleAPICall(packet.message);
+      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+      } else {
+        this.webConsoleFrame.handleConsoleAPICall(packet.message);
+      }
     }
   },
 

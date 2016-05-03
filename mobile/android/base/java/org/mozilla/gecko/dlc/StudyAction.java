@@ -6,13 +6,13 @@
 package org.mozilla.gecko.dlc;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+import org.mozilla.gecko.util.ContextUtils;
 
 /**
  * Study: Scan the catalog for "new" content available for download.
@@ -64,14 +64,10 @@ public class StudyAction extends BaseAction {
 
         final String appVersionPattern = content.getAppVersionPattern();
         if (!TextUtils.isEmpty(appVersionPattern)) {
-            try {
-                final String appVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-                if (!appVersion.matches(appVersionPattern)) {
-                    Log.d(LOGTAG, String.format("App version (%s) does not match pattern: %s", appVersion, appVersionPattern));
-                    return false;
-                }
-            } catch (PackageManager.NameNotFoundException e) {
-                throw new AssertionError("Should not happen: Can't get package info of own package");
+            final String appVersion = ContextUtils.getCurrentPackageInfo(context).versionName;
+            if (!appVersion.matches(appVersionPattern)) {
+                Log.d(LOGTAG, String.format("App version (%s) does not match pattern: %s", appVersion, appVersionPattern));
+                return false;
             }
         }
 
