@@ -165,7 +165,9 @@ var gSecurityPane = {
 
       if (enableSafeBrowsing.checked) {
         blockDownloads.removeAttribute("disabled");
-        blockUncommonUnwanted.removeAttribute("disabled");
+        if (blockDownloads.checked) {
+          blockUncommonUnwanted.removeAttribute("disabled");
+        }
       } else {
         blockDownloads.setAttribute("disabled", "true");
         blockUncommonUnwanted.setAttribute("disabled", "true");
