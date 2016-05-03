@@ -714,7 +714,7 @@
         <body>
           <![CDATA[
             this._audioMuted = true;
-            this.messageManager.sendAsyncMessage("AudioPlaybackMute",
+            this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "mute"});
           ]]>
         </body>
@@ -724,8 +724,52 @@
         <body>
           <![CDATA[
             this._audioMuted = false;
-            this.messageManager.sendAsyncMessage("AudioPlaybackMute",
+            this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "unmute"});
+          ]]>
+        </body>
+      </method>
+
+      <method name="pauseMedia">
+        <parameter name="disposable"/>
+        <body>
+          <![CDATA[
+            let suspendedReason;
+            if (disposable) {
+              suspendedReason = "mediaControlPaused";
+            } else {
+              suspendedReason = "lostAudioFocusTransiently";
+            }
+
+            this.messageManager.sendAsyncMessage("AudioPlayback",
+                                                 {type: suspendedReason});
+          ]]>
+        </body>
+      </method>
+
+      <method name="stopMedia">
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("AudioPlayback",
+                                                 {type: "mediaControlStopped"});
+          ]]>
+        </body>
+      </method>
+
+      <method name="blockMedia">
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("AudioPlayback",
+                                                 {type: "blockInactivePageMedia"});
+          ]]>
+        </body>
+      </method>
+
+      <method name="resumeMedia">
+        <body>
+          <![CDATA[
+            this.messageManager.sendAsyncMessage("AudioPlayback",
+                                                 {type: "resumeMedia"});
           ]]>
         </body>
       </method>

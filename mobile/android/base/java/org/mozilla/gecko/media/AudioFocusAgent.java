@@ -49,16 +49,16 @@ public class AudioFocusAgent {
                 switch (focusChange) {
                     case AudioManager.AUDIOFOCUS_LOSS:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS");
-                        notifyObservers("AudioFocusChanged", "Loss");
+                        notifyObservers("AudioFocusChanged", "lostAudioFocus");
                         // TODO : to dispatch audio-stop from gecko to trigger abandonAudioFocusIfNeeded
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_LOSS_TRANSIENT");
-                        notifyObservers("AudioFocusChanged", "LossTransient");
+                        notifyObservers("AudioFocusChanged", "lostAudioFocusTransiently");
                         break;
                     case AudioManager.AUDIOFOCUS_GAIN:
                         Log.d(LOGTAG, "onAudioFocusChange, AUDIOFOCUS_GAIN");
-                        notifyObservers("AudioFocusChanged", "Gain");
+                        notifyObservers("AudioFocusChanged", "gainAudioFocus");
                         break;
                     default:
                 }
