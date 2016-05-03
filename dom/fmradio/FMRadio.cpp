@@ -452,10 +452,14 @@ FMRadio::EnableAudioChannelAgent()
 {
   NS_ENSURE_TRUE_VOID(mAudioChannelAgent);
 
-  float volume = 0.0;
-  bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
-  WindowVolumeChanged(volume, muted);
+  AudioPlaybackConfig config;
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  WindowVolumeChanged(config.mVolume, config.mMuted);
+  WindowSuspendChanged(config.mSuspend);
 
   mAudioChannelAgentEnabled = true;
 }
