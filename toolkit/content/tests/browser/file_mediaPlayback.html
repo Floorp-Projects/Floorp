@@ -3,10 +3,6 @@
 var audio = new Audio();
 audio.oncanplay = function() {
   audio.oncanplay = null;
-  audio.onplaying = function() {
-    audio.onplaying = null;
-    audio.pause();
-  };
   audio.play();
 };
 audio.src = "audio.ogg";
