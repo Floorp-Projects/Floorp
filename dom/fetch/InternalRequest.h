@@ -88,7 +88,7 @@ class InternalRequest final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalRequest)
 
-  InternalRequest()
+  explicit InternalRequest(const nsACString& aURL)
     : mMethod("GET")
     , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
     , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
@@ -112,6 +112,8 @@ public:
     , mUnsafeRequest(false)
     , mUseURLCredentials(false)
   {
+    MOZ_ASSERT(!aURL.IsEmpty());
+    AddURL(aURL);
   }
 
   InternalRequest(const nsACString& aURL,
@@ -125,7 +127,6 @@ public:
                   ReferrerPolicy aReferrerPolicy,
                   nsContentPolicyType aContentPolicyType)
     : mMethod(aMethod)
-    , mURL(aURL)
     , mHeaders(aHeaders)
     , mContentPolicyType(aContentPolicyType)
     , mReferrer(aReferrer)
@@ -145,12 +146,8 @@ public:
     , mUnsafeRequest(false)
     , mUseURLCredentials(false)
   {
-    // Normally we strip the fragment from the URL in Request::Constructor.
-    // If internal code is directly constructing this object they must
-    // strip the fragment first.  Since these should be well formed URLs we
-    // can use a simple check for a fragment here.  The full parser is
-    // difficult to use off the main thread.
-    MOZ_ASSERT(mURL.Find(NS_LITERAL_CSTRING("#")) == kNotFound);
+    MOZ_ASSERT(!aURL.IsEmpty());
+    AddURL(aURL);
   }
 
   already_AddRefed<InternalRequest> Clone();
@@ -175,16 +172,34 @@ public:
            mMethod.LowerCaseEqualsASCII("head");
   }
 
+  // GetURL should get the request's current url. A request has an associated
+  // current url. It is a pointer to the last fetch URL in request's url list.
   void
-  GetURL(nsCString& aURL) const
+  GetURL(nsACString& aURL) const
   {
-    aURL.Assign(mURL);
+    MOZ_RELEASE_ASSERT(!mURLList.IsEmpty(), "Internal Request's urlList should not be empty.");
+
+    aURL.Assign(mURLList.LastElement());
+  }
+
+  // AddURL should append the url into url list.
+  // Normally we strip the fragment from the URL in Request::Constructor.
+  // If internal code is directly constructing this object they must
+  // strip the fragment first.  Since these should be well formed URLs we
+  // can use a simple check for a fragment here.  The full parser is
+  // difficult to use off the main thread.
+  void
+  AddURL(const nsACString& aURL)
+  {
+    MOZ_ASSERT(!aURL.IsEmpty());
+    mURLList.AppendElement(aURL);
+    MOZ_ASSERT(mURLList.LastElement().Find(NS_LITERAL_CSTRING("#")) == kNotFound);
   }
 
   void
-  SetURL(const nsACString& aURL)
+  GetURLList(nsTArray<nsCString>& aURLList)
   {
-    mURL.Assign(aURL);
+    aURLList.Assign(mURLList);
   }
 
   void
@@ -459,8 +474,8 @@ private:
   IsWorkerContentPolicy(nsContentPolicyType aContentPolicyType);
 
   nsCString mMethod;
-  // mURL always stores the url with the ref stripped
-  nsCString mURL;
+  // mURLList: a list of one or more fetch URLs
+  nsTArray<nsCString> mURLList;
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBodyStream;
 

@@ -75,28 +75,56 @@ public:
     return Type() == ResponseType::Error;
   }
 
-  // FIXME(nsm): Return with exclude fragment.
+  // GetUrl should return last fetch URL in response's url list and null if
+  // response's url list is the empty list.
   void
-  GetUrl(nsCString& aURL) const
+  GetURL(nsCString& aURL) const
   {
-    aURL.Assign(mURL);
-  }
-
-  void
-  GetUnfilteredUrl(nsCString& aURL) const
-  {
-    if (mWrappedResponse) {
-      return mWrappedResponse->GetUrl(aURL);
+    // Empty urlList when response is a synthetic response.
+    if (mURLList.IsEmpty()) {
+      aURL.Truncate();
+      return;
     }
 
-    return GetUrl(aURL);
+    aURL.Assign(mURLList.LastElement());
   }
 
-  // SetUrl should only be called when the fragment has alredy been stripped
   void
-  SetUrl(const nsACString& aURL)
+  GetURLList(nsTArray<nsCString>& aURLList) const
   {
-    mURL.Assign(aURL);
+    aURLList.Assign(mURLList);
+  }
+
+  void
+  GetUnfilteredURL(nsCString& aURL) const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->GetURL(aURL);
+    }
+
+    return GetURL(aURL);
+  }
+
+  void
+  GetUnfilteredURLList(nsTArray<nsCString>& aURLList) const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->GetURLList(aURLList);
+    }
+
+    return GetURLList(aURLList);
+  }
+
+  void
+  SetURLList(const nsTArray<nsCString>& aURLList)
+  {
+    mURLList.Assign(aURLList);
+
+#ifdef DEBUG
+    for(uint32_t i = 0; i < mURLList.Length(); ++i) {
+      MOZ_ASSERT(mURLList[i].Find(NS_LITERAL_CSTRING("#")) == kNotFound);
+    }
+#endif
   }
 
   uint16_t
@@ -211,12 +239,15 @@ public:
     return mPrincipalInfo;
   }
 
+  bool
+  IsRedirected() const
+  {
+    return mURLList.Length() > 1;
+  }
+
   // Takes ownership of the principal info.
   void
   SetPrincipalInfo(UniquePtr<mozilla::ipc::PrincipalInfo> aPrincipalInfo);
-
-  nsresult
-  StripFragmentAndSetUrl(const nsACString& aUrl);
 
   LoadTainting
   GetTainting() const;
@@ -237,7 +268,10 @@ private:
 
   ResponseType mType;
   nsCString mTerminationReason;
-  nsCString mURL;
+  // A response has an associated url list (a list of zero or more fetch URLs).
+  // Unless stated otherwise, it is the empty list. The current url is the last
+  // element in mURLlist
+  nsTArray<nsCString> mURLList;
   const uint16_t mStatus;
   const nsCString mStatusText;
   RefPtr<InternalHeaders> mHeaders;
