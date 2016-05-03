@@ -304,6 +304,9 @@ public:
 
   bool IsInRefresh() { return mInRefresh; }
 
+  void SetIsResizeSuppressed() { mResizeSuppressed = true; }
+  bool IsResizeSuppressed() const { return mResizeSuppressed; }
+
   /**
    * The latest value of process-wide jank levels.
    *
@@ -419,6 +422,11 @@ private:
   // we should schedule a new Tick immediately when resumed instead
   // of waiting until the next interval.
   bool mSkippedPaints;
+
+  // True if view managers should delay any resize request until the
+  // next tick by the refresh driver. This flag will be reset at the
+  // start of every tick.
+  bool mResizeSuppressed;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
