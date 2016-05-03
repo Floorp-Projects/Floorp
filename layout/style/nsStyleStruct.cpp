@@ -1298,16 +1298,16 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
 // nsStyleSVGReset
 //
 nsStyleSVGReset::nsStyleSVGReset(StyleStructContext aContext)
+  : mStopColor(NS_RGB(0, 0, 0))
+  , mFloodColor(NS_RGB(0, 0, 0))
+  , mLightingColor(NS_RGB(255, 255, 255))
+  , mStopOpacity(1.0f)
+  , mFloodOpacity(1.0f)
+  , mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO)
+  , mVectorEffect(NS_STYLE_VECTOR_EFFECT_NONE)
+  , mMaskType(NS_STYLE_MASK_TYPE_LUMINANCE)
 {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
-  mStopColor               = NS_RGB(0,0,0);
-  mFloodColor              = NS_RGB(0,0,0);
-  mLightingColor           = NS_RGB(255,255,255);
-  mStopOpacity             = 1.0f;
-  mFloodOpacity            = 1.0f;
-  mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
-  mVectorEffect            = NS_STYLE_VECTOR_EFFECT_NONE;
-  mMaskType                = NS_STYLE_MASK_TYPE_LUMINANCE;
 }
 
 nsStyleSVGReset::~nsStyleSVGReset()
@@ -1317,17 +1317,17 @@ nsStyleSVGReset::~nsStyleSVGReset()
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
   : mMask(aSource.mMask)
+  , mClipPath(aSource.mClipPath)
+  , mStopColor(aSource.mStopColor)
+  , mFloodColor(aSource.mFloodColor)
+  , mLightingColor(aSource.mLightingColor)
+  , mStopOpacity(aSource.mStopOpacity)
+  , mFloodOpacity(aSource.mFloodOpacity)
+  , mDominantBaseline(aSource.mDominantBaseline)
+  , mVectorEffect(aSource.mVectorEffect)
+  , mMaskType(aSource.mMaskType)
 {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
-  mStopColor = aSource.mStopColor;
-  mFloodColor = aSource.mFloodColor;
-  mLightingColor = aSource.mLightingColor;
-  mClipPath = aSource.mClipPath;
-  mStopOpacity = aSource.mStopOpacity;
-  mFloodOpacity = aSource.mFloodOpacity;
-  mDominantBaseline = aSource.mDominantBaseline;
-  mVectorEffect = aSource.mVectorEffect;
-  mMaskType = aSource.mMaskType;
 }
 
 void nsStyleSVGReset::Destroy(nsPresContext* aContext) {
