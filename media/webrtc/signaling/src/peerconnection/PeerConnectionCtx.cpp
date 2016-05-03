@@ -4,7 +4,6 @@
 
 #include "CSFLog.h"
 
-#include "base/histogram.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
@@ -356,9 +355,6 @@ nsresult PeerConnectionCtx::Initialize() {
   initGMP();
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  mConnectionCounter = 0;
-  Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(0);
-
   mTelemetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   MOZ_ASSERT(mTelemetryTimer);
   nsresult rv = mTelemetryTimer->SetTarget(gMainThread);
