@@ -3889,27 +3889,27 @@ nsStyleUserInterface::CopyCursorArrayFrom(const nsStyleUserInterface& aSource)
 //
 
 nsStyleUIReset::nsStyleUIReset(StyleStructContext aContext)
-{ 
-  MOZ_COUNT_CTOR(nsStyleUIReset);
-  mUserSelect = NS_STYLE_USER_SELECT_AUTO;
-  mForceBrokenImageIcon = 0;
-  mIMEMode = NS_STYLE_IME_MODE_AUTO;
-  mWindowDragging = NS_STYLE_WINDOW_DRAGGING_DEFAULT;
-  mWindowShadow = NS_STYLE_WINDOW_SHADOW_DEFAULT;
-}
-
-nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
+  : mUserSelect(NS_STYLE_USER_SELECT_AUTO)
+  , mForceBrokenImageIcon(0)
+  , mIMEMode(NS_STYLE_IME_MODE_AUTO)
+  , mWindowDragging(NS_STYLE_WINDOW_DRAGGING_DEFAULT)
+  , mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 {
   MOZ_COUNT_CTOR(nsStyleUIReset);
-  mUserSelect = aSource.mUserSelect;
-  mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
-  mIMEMode = aSource.mIMEMode;
-  mWindowDragging = aSource.mWindowDragging;
-  mWindowShadow = aSource.mWindowShadow;
 }
 
-nsStyleUIReset::~nsStyleUIReset(void) 
-{ 
+nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
+  : mUserSelect(aSource.mUserSelect)
+  , mForceBrokenImageIcon(aSource.mForceBrokenImageIcon)
+  , mIMEMode(aSource.mIMEMode)
+  , mWindowDragging(aSource.mWindowDragging)
+  , mWindowShadow(aSource.mWindowShadow)
+{
+  MOZ_COUNT_CTOR(nsStyleUIReset);
+}
+
+nsStyleUIReset::~nsStyleUIReset(void)
+{
   MOZ_COUNT_DTOR(nsStyleUIReset);
 }
 
