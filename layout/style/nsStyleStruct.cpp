@@ -2724,9 +2724,6 @@ bool nsStyleBackground::IsTransparent() const
          NS_GET_A(mBackgroundColor) == 0;
 }
 
-// --------------------
-// nsStyleDisplay
-//
 void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
 {
   switch (aTimingFunctionType) {
@@ -2856,28 +2853,53 @@ mozilla::StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
          mIterationCount == aOther.mIterationCount;
 }
 
+// --------------------
+// nsStyleDisplay
+//
 nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
-  : mWillChangeBitField(0)
+  : mDisplay(NS_STYLE_DISPLAY_INLINE)
+  , mOriginalDisplay(NS_STYLE_DISPLAY_INLINE)
+  , mContain(NS_STYLE_CONTAIN_NONE)
+  , mAppearance(NS_THEME_NONE)
+  , mPosition(NS_STYLE_POSITION_STATIC)
+  , mFloats(NS_STYLE_FLOAT_NONE)
+  , mOriginalFloats(NS_STYLE_FLOAT_NONE)
+  , mBreakType(NS_STYLE_CLEAR_NONE)
+  , mBreakInside(NS_STYLE_PAGE_BREAK_AUTO)
+  , mBreakBefore(false)
+  , mBreakAfter(false)
+  , mOverflowX(NS_STYLE_OVERFLOW_VISIBLE)
+  , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
+  , mOverflowClipBox(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
+  , mResize(NS_STYLE_RESIZE_NONE)
+  , mOrient(NS_STYLE_ORIENT_INLINE)
+  , mIsolation(NS_STYLE_ISOLATION_AUTO)
+  , mTopLayer(NS_STYLE_TOP_LAYER_NONE)
+  , mWillChangeBitField(0)
+  , mTouchAction(NS_STYLE_TOUCH_ACTION_AUTO)
+  , mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO)
+  , mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  , mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE)
+  , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
+  , mTransformBox(NS_STYLE_TRANSFORM_BOX_BORDER_BOX)
+  , mSpecifiedTransform(nullptr)
   , mTransitions(nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT)
+  , mTransitionTimingFunctionCount(1)
+  , mTransitionDurationCount(1)
+  , mTransitionDelayCount(1)
+  , mTransitionPropertyCount(1)
   , mAnimations(nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT)
+  , mAnimationTimingFunctionCount(1)
+  , mAnimationDurationCount(1)
+  , mAnimationDelayCount(1)
+  , mAnimationNameCount(1)
+  , mAnimationDirectionCount(1)
+  , mAnimationFillModeCount(1)
+  , mAnimationPlayStateCount(1)
+  , mAnimationIterationCountCount(1)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-  mAppearance = NS_THEME_NONE;
-  mDisplay = NS_STYLE_DISPLAY_INLINE;
-  mOriginalDisplay = mDisplay;
-  mContain = NS_STYLE_CONTAIN_NONE;
-  mPosition = NS_STYLE_POSITION_STATIC;
-  mFloats = NS_STYLE_FLOAT_NONE;
-  mOriginalFloats = mFloats;
-  mBreakType = NS_STYLE_CLEAR_NONE;
-  mBreakInside = NS_STYLE_PAGE_BREAK_AUTO;
-  mBreakBefore = false;
-  mBreakAfter = false;
-  mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
-  mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
-  mOverflowClipBox = NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX;
-  mResize = NS_STYLE_RESIZE_NONE;
-  mSpecifiedTransform = nullptr;
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
   mTransformOrigin[1].SetPercentValue(0.5f);
   mTransformOrigin[2].SetCoordValue(0);
@@ -2885,36 +2907,13 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   mPerspectiveOrigin[1].SetPercentValue(0.5f);
   mChildPerspective.SetNoneValue();
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
-  mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
-  mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
-  mTransformBox = NS_STYLE_TRANSFORM_BOX_BORDER_BOX;
-  mOrient = NS_STYLE_ORIENT_INLINE;
-  mIsolation = NS_STYLE_ISOLATION_AUTO;
-  mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
-  mTopLayer = NS_STYLE_TOP_LAYER_NONE;
-  mScrollBehavior = NS_STYLE_SCROLL_BEHAVIOR_AUTO;
-  mScrollSnapTypeX = NS_STYLE_SCROLL_SNAP_TYPE_NONE;
-  mScrollSnapTypeY = NS_STYLE_SCROLL_SNAP_TYPE_NONE;
   mScrollSnapPointsX.SetNoneValue();
   mScrollSnapPointsY.SetNoneValue();
   // Initial value for mScrollSnapDestination is "0px 0px"
   mScrollSnapDestination.SetInitialZeroValues();
 
   mTransitions[0].SetInitialValues();
-  mTransitionTimingFunctionCount = 1;
-  mTransitionDurationCount = 1;
-  mTransitionDelayCount = 1;
-  mTransitionPropertyCount = 1;
-
   mAnimations[0].SetInitialValues();
-  mAnimationTimingFunctionCount = 1;
-  mAnimationDurationCount = 1;
-  mAnimationDelayCount = 1;
-  mAnimationNameCount = 1;
-  mAnimationDirectionCount = 1;
-  mAnimationFillModeCount = 1;
-  mAnimationPlayStateCount = 1;
-  mAnimationIterationCountCount = 1;
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
