@@ -80,6 +80,13 @@ void Accumulate(const char *name, const nsCString& key, uint32_t sample = 1);
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
+ * This clears the data for a histogram in TelemetryHistograms.h.
+ *
+ * @param id - histogram id
+ */
+void ClearHistogram(ID id);
+
+/**
  * Enable/disable recording for this histogram at runtime.
  * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
  * id must be a valid telemetry enum, otherwise an assertion is triggered.
