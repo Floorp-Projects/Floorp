@@ -322,17 +322,6 @@ public:
         // Clear everything so that we don't leak URIs and Principals.
         static void Shutdown();
 
-        // Memory-reporting support.
-        class MemoryReporter final : public nsIMemoryReporter
-        {
-        private:
-            ~MemoryReporter() { }
-
-        public:
-            NS_DECL_ISUPPORTS
-            NS_DECL_NSIMEMORYREPORTER
-        };
-
 #ifdef DEBUG_USERFONT_CACHE
         // dump contents
         static void Dump();
@@ -447,10 +436,6 @@ public:
 
             bool IsPersistent() const { return mPersistence == kPersistent; }
             bool IsPrivate() const { return mPrivate; }
-
-            nsresult ReportMemory(nsIMemoryReporterCallback* aCb,
-                                  nsISupports* aClosure,
-                                  bool aAnonymize);
 
 #ifdef DEBUG_USERFONT_CACHE
             void Dump();
