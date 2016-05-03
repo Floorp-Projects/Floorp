@@ -3944,9 +3944,9 @@ nsStyleVariables::nsStyleVariables(StyleStructContext aContext)
 }
 
 nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
+  : mVariables(aSource.mVariables)
 {
   MOZ_COUNT_CTOR(nsStyleVariables);
-  mVariables = aSource.mVariables;
 }
 
 nsStyleVariables::~nsStyleVariables(void)
