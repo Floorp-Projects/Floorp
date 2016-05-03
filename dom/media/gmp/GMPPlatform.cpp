@@ -24,12 +24,12 @@ IsOnChildMainThread()
 }
 
 // We just need a refcounted wrapper for GMPTask objects.
-class Runnable final
+class GMPRunnable final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Runnable)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPRunnable)
 
-  explicit Runnable(GMPTask* aTask)
+  explicit GMPRunnable(GMPTask* aTask)
   : mTask(aTask)
   {
     MOZ_ASSERT(mTask);
@@ -43,19 +43,19 @@ public:
   }
 
 private:
-  ~Runnable()
+  ~GMPRunnable()
   {
   }
 
   GMPTask* mTask;
 };
 
-class SyncRunnable final
+class GMPSyncRunnable final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SyncRunnable)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPSyncRunnable)
 
-  SyncRunnable(GMPTask* aTask, MessageLoop* aMessageLoop)
+  GMPSyncRunnable(GMPTask* aTask, MessageLoop* aMessageLoop)
   : mDone(false)
   , mTask(aTask)
   , mMessageLoop(aMessageLoop)
@@ -73,7 +73,7 @@ public:
     //    main thread tries to do a sync call back to the calling thread.
     MOZ_ASSERT(!IsOnChildMainThread());
 
-    mMessageLoop->PostTask(NewRunnableMethod(this, &SyncRunnable::Run));
+    mMessageLoop->PostTask(NewRunnableMethod(this, &GMPSyncRunnable::Run));
     MonitorAutoLock lock(mMonitor);
     while (!mDone) {
       lock.Wait();
@@ -91,7 +91,7 @@ public:
   }
 
 private:
-  ~SyncRunnable()
+  ~GMPSyncRunnable()
   {
   }
 
@@ -120,8 +120,8 @@ RunOnMainThread(GMPTask* aTask)
     return GMPGenericErr;
   }
 
-  RefPtr<Runnable> r = new Runnable(aTask);
-  sMainLoop->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
+  RefPtr<GMPRunnable> r = new GMPRunnable(aTask);
+  sMainLoop->PostTask(NewRunnableMethod(r.get(), &GMPRunnable::Run));
 
   return GMPNoErr;
 }
@@ -133,7 +133,7 @@ SyncRunOnMainThread(GMPTask* aTask)
     return GMPGenericErr;
   }
 
-  RefPtr<SyncRunnable> r = new SyncRunnable(aTask, sMainLoop);
+  RefPtr<GMPSyncRunnable> r = new GMPSyncRunnable(aTask, sMainLoop);
 
   r->Post();
 
@@ -252,9 +252,9 @@ GMPThreadImpl::Post(GMPTask* aTask)
     }
   }
 
-  RefPtr<Runnable> r = new Runnable(aTask);
+  RefPtr<GMPRunnable> r = new GMPRunnable(aTask);
 
-  mThread.message_loop()->PostTask(NewRunnableMethod(r.get(), &Runnable::Run));
+  mThread.message_loop()->PostTask(NewRunnableMethod(r.get(), &GMPRunnable::Run));
 }
 
 void
