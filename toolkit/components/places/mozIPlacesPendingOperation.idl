@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(ebd31374-3808-40e4-9e73-303bf70467c3)]
+interface mozIPlacesPendingOperation : nsISupports {
+  /**
+   * Cancels a pending operation, if possible.  This will only fail if you try
+   * to cancel more than once.
+   */
+   void cancel();
+};
