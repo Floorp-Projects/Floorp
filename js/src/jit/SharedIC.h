@@ -2595,65 +2595,6 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     ICGetPropNativeStub* getStub(ICStubSpace* space);
 };
 
-class ICGetProp_Unboxed : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    HeapPtrObjectGroup group_;
-    uint32_t fieldOffset_;
-
-    ICGetProp_Unboxed(JitCode* stubCode, ICStub* firstMonitorStub, ObjectGroup* group,
-                      uint32_t fieldOffset)
-      : ICMonitoredStub(ICStub::GetProp_Unboxed, stubCode, firstMonitorStub),
-        group_(group), fieldOffset_(fieldOffset)
-    {
-        (void) fieldOffset_; // Silence clang warning
-    }
-
-  public:
-    HeapPtrObjectGroup& group() {
-        return group_;
-    }
-
-    static size_t offsetOfGroup() {
-        return offsetof(ICGetProp_Unboxed, group_);
-    }
-    static size_t offsetOfFieldOffset() {
-        return offsetof(ICGetProp_Unboxed, fieldOffset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        ICStub* firstMonitorStub_;
-        RootedObjectGroup group_;
-        uint32_t fieldOffset_;
-        JSValueType fieldType_;
-
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(fieldType_) << 17);
-        }
-
-      public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
-                 ObjectGroup* group, uint32_t fieldOffset, JSValueType fieldType)
-          : ICStubCompiler(cx, ICStub::GetProp_Unboxed, engine),
-            firstMonitorStub_(firstMonitorStub),
-            group_(cx, group),
-            fieldOffset_(fieldOffset),
-            fieldType_(fieldType)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_Unboxed>(space, getStubCode(), firstMonitorStub_, group_,
-                                              fieldOffset_);
-        }
-    };
-};
-
 static uint32_t
 SimpleTypeDescrKey(SimpleTypeDescr* descr)
 {
@@ -2662,67 +2603,25 @@ SimpleTypeDescrKey(SimpleTypeDescr* descr)
     return (uint32_t(descr->as<ReferenceTypeDescr>().type()) << 1) | 1;
 }
 
-class ICGetProp_TypedObject : public ICMonitoredStub
+inline bool
+SimpleTypeDescrKeyIsScalar(uint32_t key)
 {
-    friend class ICStubSpace;
+    return !(key & 1);
+}
 
-    HeapPtrShape shape_;
-    uint32_t fieldOffset_;
+inline ScalarTypeDescr::Type
+ScalarTypeFromSimpleTypeDescrKey(uint32_t key)
+{
+    MOZ_ASSERT(SimpleTypeDescrKeyIsScalar(key));
+    return ScalarTypeDescr::Type(key >> 1);
+}
 
-    ICGetProp_TypedObject(JitCode* stubCode, ICStub* firstMonitorStub, Shape* shape,
-                          uint32_t fieldOffset)
-      : ICMonitoredStub(ICStub::GetProp_TypedObject, stubCode, firstMonitorStub),
-        shape_(shape), fieldOffset_(fieldOffset)
-    {
-        (void) fieldOffset_; // Silence clang warning
-    }
-
-  public:
-    HeapPtrShape& shape() {
-        return shape_;
-    }
-
-    static size_t offsetOfShape() {
-        return offsetof(ICGetProp_TypedObject, shape_);
-    }
-    static size_t offsetOfFieldOffset() {
-        return offsetof(ICGetProp_TypedObject, fieldOffset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        ICStub* firstMonitorStub_;
-        RootedShape shape_;
-        uint32_t fieldOffset_;
-        TypedThingLayout layout_;
-        Rooted<SimpleTypeDescr*> fieldDescr_;
-
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(SimpleTypeDescrKey(fieldDescr_)) << 17) |
-                  (static_cast<int32_t>(layout_) << 25);
-        }
-
-      public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
-                 Shape* shape, uint32_t fieldOffset, SimpleTypeDescr* fieldDescr)
-          : ICStubCompiler(cx, ICStub::GetProp_TypedObject, engine),
-            firstMonitorStub_(firstMonitorStub),
-            shape_(cx, shape),
-            fieldOffset_(fieldOffset),
-            layout_(GetTypedThingLayout(shape->getObjectClass())),
-            fieldDescr_(cx, fieldDescr)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICGetProp_TypedObject>(space, getStubCode(), firstMonitorStub_, shape_,
-                                                  fieldOffset_);
-        }
-    };
-};
+inline ReferenceTypeDescr::Type
+ReferenceTypeFromSimpleTypeDescrKey(uint32_t key)
+{
+    MOZ_ASSERT(!SimpleTypeDescrKeyIsScalar(key));
+    return ReferenceTypeDescr::Type(key >> 1);
+}
 
 class ICGetPropCallGetter : public ICMonitoredStub
 {

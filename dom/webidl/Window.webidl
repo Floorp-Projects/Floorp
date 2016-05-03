@@ -13,6 +13,7 @@
  * https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
  * https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html
  * http://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html
+ * https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
  */
 
 interface ApplicationCache;
@@ -416,6 +417,11 @@ partial interface Window {
 partial interface Window {
   [Replaceable, GetterThrows]
   readonly attribute Console console;
+};
+
+// https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
+partial interface Window {
+  readonly attribute boolean isSecureContext;
 };
 
 #ifdef HAVE_SIDEBAR

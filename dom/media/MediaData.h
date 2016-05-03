@@ -222,8 +222,8 @@ private:
     const CheckedInt<size_t> sizeNeeded =
       CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentPaddingSize();
 
-    if (!sizeNeeded.isValid()) {
-      // overflow.
+    if (!sizeNeeded.isValid() || sizeNeeded.value() >= INT32_MAX) {
+      // overflow or over an acceptable size.
       return false;
     }
     if (mData && mCapacity >= sizeNeeded.value()) {

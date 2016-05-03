@@ -73,7 +73,8 @@ public:
   InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsACString& aOrigin,
                      PrincipalInfo& aPrincipalInfo, bool& aPrivateBrowsing,
                      ErrorResult& aRv)
-    : WorkerMainThreadRunnable(aWorkerPrivate)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("BroadcastChannel :: Initialize"))
     , mWorkerPrivate(GetCurrentThreadWorkerPrivate())
     , mOrigin(aOrigin)
     , mPrincipalInfo(aPrincipalInfo)

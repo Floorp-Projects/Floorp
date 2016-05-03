@@ -93,9 +93,6 @@ public:
   IMPL_EVENT_HANDLER(error)
   void Close();
 
-  // Determine if preferences allow EventSource
-  static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
-
   virtual void DisconnectFromOwner() override;
 
 protected:

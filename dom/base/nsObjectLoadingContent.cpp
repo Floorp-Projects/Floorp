@@ -11,6 +11,7 @@
 
 // Interface headers
 #include "imgLoader.h"
+#include "nsIConsoleService.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
@@ -86,6 +87,8 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "mozilla/dom/HTMLSharedObjectElement.h"
+#include "nsChannelClassifier.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -105,6 +108,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static const char *kPrefJavaMIME = "plugin.java.mime";
 static const char *kPrefYoutubeRewrite = "plugins.rewrite_youtube_embeds";
+static const char *kPrefBlockURIs = "browser.safebrowsing.blockedURIs.enabled";
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1153,20 +1157,6 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest *aRequest,
     if (thisNode && thisNode->IsInComposedDoc()) {
       thisNode->GetComposedDoc()->AddBlockedTrackingNode(thisNode);
     }
-  } else if (aStatusCode == NS_ERROR_BLOCKED_URI) {
-    // Logging is temporarily disabled until after experiment phase.
-    //
-    // nsAutoCString uri;
-    // mURI->GetSpec(uri);
-    // nsCOMPtr<nsIConsoleService> console(
-    //   do_GetService("@mozilla.org/consoleservice;1"));
-    // if (console) {
-    //   nsString message = NS_LITERAL_STRING("Blocking ") +
-    //     NS_ConvertASCIItoUTF16(uri) +
-    //     NS_LITERAL_STRING(" since it was found on an internal Firefox blocklist.");
-    //   console->LogStringMessage(message.get());
-    // }
-    Telemetry::Accumulate(Telemetry::PLUGIN_BLOCKED_FOR_STABILITY, 1);
   }
 
   NS_ENSURE_TRUE(nsContentUtils::LegacyIsCallerChromeOrNativeCode(), NS_ERROR_NOT_AVAILABLE);
@@ -2286,6 +2276,32 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
       allowLoad = CheckProcessPolicy(&contentPolicy);
     }
 
+    // This needs to be reverted once the plugin stability experiment is over (see bug #1268120).
+    if (allowLoad && Preferences::GetBool(kPrefBlockURIs)) {
+      RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
+      nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
+      if (classifier) {
+        nsAutoCString tables;
+        Preferences::GetCString("urlclassifier.blockedTable", &tables);
+        nsAutoCString results;
+        rv = classifier->ClassifyLocalWithTables(mURI, tables, results);
+        if (NS_SUCCEEDED(rv) && !results.IsEmpty()) {
+          nsAutoCString uri;
+          mURI->GetSpec(uri);
+          nsCOMPtr<nsIConsoleService> console(
+            do_GetService("@mozilla.org/consoleservice;1"));
+          if (console) {
+            nsString message = NS_LITERAL_STRING("Blocking ") +
+              NS_ConvertASCIItoUTF16(uri) +
+              NS_LITERAL_STRING(" since it was found on an internal Firefox blocklist.");
+            console->LogStringMessage(message.get());
+          }
+          Telemetry::Accumulate(Telemetry::PLUGIN_BLOCKED_FOR_STABILITY, 1);
+          allowLoad = false;
+        }
+      }
+    }
+
     // Content policy implementations can mutate the DOM, check for re-entry
     if (!mIsLoading) {
       LOG(("OBJLC [%p]: We re-entered in content policy, leaving original load",
@@ -3093,24 +3109,35 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
     aType = eFallbackAlternate;
   }
 
+  // We'll set this to null no matter what now, doing it here means we'll load
+  // child embeds as we find them in the upcoming loop.
+  mType = eType_Null;
+
+  // Do a breadth-first traverse of node tree with the current element as root,
+  // looking for the first embed we can find.
+  nsTArray<nsINodeList*> childNodes;
   if ((thisContent->IsHTMLElement(nsGkAtoms::object) ||
        thisContent->IsHTMLElement(nsGkAtoms::applet)) &&
       (aType == eFallbackUnsupported ||
        aType == eFallbackDisabled ||
        aType == eFallbackBlocklisted))
   {
-    // Show alternate content instead, if it exists
-    for (nsIContent* child = thisContent->GetFirstChild();
-         child; child = child->GetNextSibling()) {
-      if (!child->IsHTMLElement(nsGkAtoms::param) &&
+    for (nsIContent* child = thisContent->GetFirstChild(); child;
+         child = child->GetNextNode(thisContent)) {
+      if (aType != eFallbackAlternate &&
+          !child->IsHTMLElement(nsGkAtoms::param) &&
           nsStyleUtil::IsSignificantChild(child, true, false)) {
         aType = eFallbackAlternate;
-        break;
+      }
+      if (child->IsHTMLElement(nsGkAtoms::embed)) {
+        HTMLSharedObjectElement* object = static_cast<HTMLSharedObjectElement*>(child);
+        if (object) {
+          object->StartObjectLoad(true, true);
+        }
       }
     }
   }
 
-  mType = eType_Null;
   mFallbackType = aType;
 
   // Notify

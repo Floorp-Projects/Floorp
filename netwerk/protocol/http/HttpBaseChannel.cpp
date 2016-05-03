@@ -52,6 +52,7 @@
 #include "nsIURL.h"
 #include "nsIConsoleService.h"
 #include "mozilla/BinarySearch.h"
+#include "nsIHttpHeaderVisitor.h"
 
 #include <algorithm>
 
@@ -189,7 +190,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
 
-  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead.Headers(), isHTTPS);
+  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead, isHTTPS);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString type;
@@ -1177,7 +1178,7 @@ HttpBaseChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize)
 NS_IMETHODIMP
 HttpBaseChannel::GetRequestMethod(nsACString& aMethod)
 {
-  aMethod = mRequestHead.Method();
+  mRequestHead.Method(aMethod);
   return NS_OK;
 }
 
@@ -1603,14 +1604,14 @@ HttpBaseChannel::SetEmptyRequestHeader(const nsACString& aHeader)
 NS_IMETHODIMP
 HttpBaseChannel::VisitRequestHeaders(nsIHttpHeaderVisitor *visitor)
 {
-  return mRequestHead.Headers().VisitHeaders(visitor);
+  return mRequestHead.VisitHeaders(visitor);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::VisitNonDefaultRequestHeaders(nsIHttpHeaderVisitor *visitor)
 {
-  return mRequestHead.Headers().VisitHeaders(
-      visitor, nsHttpHeaderArray::eFilterSkipDefault);
+  return mRequestHead.VisitHeaders(visitor,
+                                   nsHttpHeaderArray::eFilterSkipDefault);
 }
 
 NS_IMETHODIMP
@@ -2730,6 +2731,35 @@ bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader)
                         HttpAtomComparator(aHeader), &unused);
 }
 
+class SetupReplacementChannelHeaderVisitor final : public nsIHttpHeaderVisitor
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit SetupReplacementChannelHeaderVisitor(nsIHttpChannel *aChannel)
+    : mChannel(aChannel)
+  {
+  }
+
+  NS_IMETHOD VisitHeader(const nsACString& aHeader,
+                         const nsACString& aValue) override
+  {
+    nsHttpAtom atom = nsHttp::ResolveAtom(aHeader);
+    if (!IsHeaderBlacklistedForRedirectCopy(atom)) {
+      mChannel->SetRequestHeader(aHeader, aValue, false);
+    }
+    return NS_OK;
+  }
+private:
+  ~SetupReplacementChannelHeaderVisitor()
+  {
+  }
+
+  nsCOMPtr<nsIHttpChannel> mChannel;
+};
+
+NS_IMPL_ISUPPORTS(SetupReplacementChannelHeaderVisitor, nsIHttpHeaderVisitor)
+
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
                                          nsIChannel   *newChannel,
@@ -2808,31 +2838,35 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
 
       // replicate original call to SetUploadStream...
       if (uploadChannel2) {
-        const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
-        if (!ctype)
-          ctype = "";
-        const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
-        int64_t len = clen ? nsCRT::atoll(clen) : -1;
+        nsAutoCString ctype;
+        // If header is not present mRequestHead.HasHeaderValue will truncated
+        // it.
+        mRequestHead.GetHeader(nsHttp::Content_Type, ctype);
+        nsAutoCString clen;
+        mRequestHead.GetHeader(nsHttp::Content_Length, clen);
+        nsAutoCString method;
+        mRequestHead.Method(method);
+        int64_t len = clen.IsEmpty() ? -1 : nsCRT::atoll(clen.get());
         uploadChannel2->ExplicitSetUploadStream(
-                                  mUploadStream, nsDependentCString(ctype), len,
-                                  mRequestHead.Method(),
+                                  mUploadStream, ctype, len,
+                                  method,
                                   mUploadStreamHasHeaders);
       } else {
         if (mUploadStreamHasHeaders) {
           uploadChannel->SetUploadStream(mUploadStream, EmptyCString(),
                            -1);
         } else {
-          const char *ctype =
-            mRequestHead.PeekHeader(nsHttp::Content_Type);
-          const char *clen =
-            mRequestHead.PeekHeader(nsHttp::Content_Length);
-          if (!ctype) {
-            ctype = "application/octet-stream";
+          nsAutoCString ctype;
+          if (NS_FAILED(mRequestHead.GetHeader(nsHttp::Content_Type, ctype))) {
+            ctype =  NS_LITERAL_CSTRING("application/octet-stream");
           }
-          if (clen) {
+          nsAutoCString clen;
+          if (NS_SUCCEEDED(mRequestHead.GetHeader(nsHttp::Content_Length, clen))
+              &&
+              !clen.IsEmpty()) {
             uploadChannel->SetUploadStream(mUploadStream,
-                                           nsDependentCString(ctype),
-                                           nsCRT::atoll(clen));
+                                           ctype,
+                                           nsCRT::atoll(clen.get()));
           }
         }
       }
@@ -2842,7 +2876,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     // we set the upload stream above. This means SetRequestMethod() will
     // be called twice if ExplicitSetUploadStream() gets called above.
 
-    httpChannel->SetRequestMethod(mRequestHead.Method());
+    nsAutoCString method;
+    mRequestHead.Method(method);
+    httpChannel->SetRequestMethod(method);
   }
   // convey the referrer if one was used for this channel to the next one
   if (mReferrer)
@@ -2972,18 +3008,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   if (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                        nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
     // Copy non-origin related headers to the new channel.
-    nsHttpHeaderArray& requestHeaders = mRequestHead.Headers();
-    uint32_t requestHeaderCount = requestHeaders.Count();
-    for (uint32_t i = 0; i < requestHeaderCount; ++i) {
-      nsHttpAtom header;
-      const char *val = requestHeaders.PeekHeaderAt(i, header);
-      if (!val || IsHeaderBlacklistedForRedirectCopy(header)) {
-          continue;
-      }
-
-      httpChannel->SetRequestHeader(nsDependentCString(header.get()),
-                                    nsDependentCString(val), false);
-    }
+    nsCOMPtr<nsIHttpHeaderVisitor> visitor =
+      new SetupReplacementChannelHeaderVisitor(httpChannel);
+    mRequestHead.VisitHeaders(visitor);
   }
 
   // This channel has been redirected. Don't report timing info.

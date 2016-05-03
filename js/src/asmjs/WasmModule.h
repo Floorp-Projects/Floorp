@@ -552,6 +552,7 @@ class Module : public mozilla::LinkedListElement<Module>
     const AsmJSModule& asAsmJS() const { MOZ_ASSERT(isAsmJS()); return *(const AsmJSModule*)this; }
     virtual bool mutedErrors() const;
     virtual const char16_t* displayURL() const;
+    virtual ScriptSource* maybeScriptSource() const { return nullptr; }
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is

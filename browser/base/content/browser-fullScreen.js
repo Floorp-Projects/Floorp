@@ -131,22 +131,7 @@ var FullScreen = {
           let topWin = event.target.ownerDocument.defaultView.top;
           browser = gBrowser.getBrowserForContentWindow(topWin);
         }
-        if (!browser || !this.enterDomFullscreen(browser)) {
-          if (document.fullscreenElement) {
-            // MozDOMFullscreen:Entered is dispatched synchronously in
-            // fullscreen change, hence we have to avoid calling this
-            // method synchronously here.
-            setTimeout(() => document.exitFullscreen(), 0);
-          }
-          break;
-        }
-        // If it is a remote browser, send a message to ask the content
-        // to enter fullscreen state. We don't need to do so if it is an
-        // in-process browser, since all related document should have
-        // entered fullscreen state at this point.
-        if (this._isRemoteBrowser(browser)) {
-          browser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
-        }
+        this.enterDomFullscreen(browser);
         break;
       }
       case "MozDOMFullscreen:Exited":
@@ -178,22 +163,30 @@ var FullScreen = {
   },
 
   enterDomFullscreen : function(aBrowser) {
-    if (!document.fullscreenElement)
-      return false;
+    if (!document.fullscreenElement) {
+      return;
+    }
 
     // If we've received a fullscreen notification, we have to ensure that the
     // element that's requesting fullscreen belongs to the browser that's currently
     // active. If not, we exit fullscreen since the "full-screen document" isn't
     // actually visible now.
-    if (gBrowser.selectedBrowser != aBrowser) {
-      return false;
+    if (!aBrowser || gBrowser.selectedBrowser != aBrowser ||
+        // The top-level window has lost focus since the request to enter
+        // full-screen was made. Cancel full-screen.
+        Services.focus.activeWindow != window) {
+      // This function is called synchronously in fullscreen change, so
+      // we have to avoid calling exitFullscreen synchronously here.
+      setTimeout(() => document.exitFullscreen(), 0);
+      return;
     }
 
-    let focusManager = Services.focus;
-    if (focusManager.activeWindow != window) {
-      // The top-level window has lost focus since the request to enter
-      // full-screen was made. Cancel full-screen.
-      return false;
+    // If it is a remote browser, send a message to ask the content
+    // to enter fullscreen state. We don't need to do so if it is an
+    // in-process browser, since all related document should have
+    // entered fullscreen state at this point.
+    if (this._isRemoteBrowser(aBrowser)) {
+      aBrowser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
     }
 
     document.documentElement.setAttribute("inDOMFullscreen", true);
@@ -211,8 +204,6 @@ var FullScreen = {
     // If a fullscreen window loses focus, we show a warning when the
     // fullscreen window is refocused.
     window.addEventListener("activate", this);
-
-    return true;
   },
 
   cleanup: function () {
@@ -225,6 +216,9 @@ var FullScreen = {
   },
 
   cleanupDomFullscreen: function () {
+    window.messageManager
+          .broadcastAsyncMessage("DOMFullscreen:CleanUp");
+
     this._WarningBox.close();
     gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
@@ -232,9 +226,6 @@ var FullScreen = {
     window.removeEventListener("activate", this);
 
     document.documentElement.removeAttribute("inDOMFullscreen");
-
-    window.messageManager
-          .broadcastAsyncMessage("DOMFullscreen:CleanUp");
   },
 
   _isRemoteBrowser: function (aBrowser) {

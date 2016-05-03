@@ -7,6 +7,7 @@
 #include "HttpLog.h"
 
 #include "nsHttpRequestHead.h"
+#include "nsIHttpHeaderVisitor.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpRequestHead
@@ -20,6 +21,7 @@ nsHttpRequestHead::nsHttpRequestHead()
     , mVersion(NS_HTTP_VERSION_1_1)
     , mParsedMethod(kMethod_Get)
     , mHTTPS(false)
+    , mLock("nsHttpRequestHead.mLock")
 {
     MOZ_COUNT_CTOR(nsHttpRequestHead);
 }
@@ -29,9 +31,201 @@ nsHttpRequestHead::~nsHttpRequestHead()
     MOZ_COUNT_DTOR(nsHttpRequestHead);
 }
 
+// Don't use this function. It is only used by HttpChannelParent to avoid
+// copying of request headers!!!
+const nsHttpHeaderArray &
+nsHttpRequestHead::Headers() const
+{
+  mLock.AssertCurrentThreadOwns();
+  return mHeaders;
+}
+
+void
+nsHttpRequestHead::SetHeaders(const nsHttpHeaderArray& aHeaders)
+{
+  mHeaders = aHeaders;
+}
+
+void
+nsHttpRequestHead::SetVersion(nsHttpVersion version)
+{
+    MutexAutoLock lock(mLock);
+    mVersion = version;
+}
+
+void
+nsHttpRequestHead::SetRequestURI(const nsCSubstring &s)
+{
+    MutexAutoLock lock(mLock);
+    mRequestURI = s;
+}
+
+void
+nsHttpRequestHead::SetPath(const nsCSubstring &s)
+{
+    MutexAutoLock lock(mLock);
+    mPath = s;
+}
+
+uint32_t
+nsHttpRequestHead::HeaderCount()
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.Count();
+}
+
+nsresult
+nsHttpRequestHead::VisitHeaders(nsIHttpHeaderVisitor *visitor,
+                                nsHttpHeaderArray::VisitorFilter filter /* = nsHttpHeaderArray::eFilterAll*/)
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.VisitHeaders(visitor, filter);
+}
+
+void
+nsHttpRequestHead::Method(nsACString &aMethod)
+{
+    MutexAutoLock lock(mLock);
+    aMethod = mMethod;
+}
+
+nsHttpVersion
+nsHttpRequestHead::Version()
+{
+    MutexAutoLock lock(mLock);
+    return mVersion;
+}
+
+void
+nsHttpRequestHead::RequestURI(nsACString &aRequestURI)
+{
+    MutexAutoLock lock(mLock);
+    aRequestURI = mRequestURI;
+}
+
+void
+nsHttpRequestHead::Path(nsACString &aPath)
+{
+    MutexAutoLock lock(mLock);
+    aPath = mPath.IsEmpty() ? mRequestURI : mPath;
+}
+
+void
+nsHttpRequestHead::SetHTTPS(bool val)
+{
+    MutexAutoLock lock(mLock);
+    mHTTPS = val;
+}
+
+void
+nsHttpRequestHead::Origin(nsACString &aOrigin)
+{
+    MutexAutoLock lock(mLock);
+    aOrigin = mOrigin;
+}
+
+nsresult
+nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString &v,
+                             bool m /*= false*/)
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.SetHeader(h, v, m);
+}
+
+nsresult
+nsHttpRequestHead::SetHeader(nsHttpAtom h, const nsACString &v, bool m,
+                             nsHttpHeaderArray::HeaderVariety variety)
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.SetHeader(h, v, m, variety);
+}
+
+nsresult
+nsHttpRequestHead::SetEmptyHeader(nsHttpAtom h)
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.SetEmptyHeader(h);
+}
+
+nsresult
+nsHttpRequestHead::GetHeader(nsHttpAtom h, nsACString &v)
+{
+    v.Truncate();
+    MutexAutoLock lock(mLock);
+    return mHeaders.GetHeader(h, v);
+}
+
+void
+nsHttpRequestHead::ClearHeader(nsHttpAtom h)
+{
+    MutexAutoLock lock(mLock);
+    mHeaders.ClearHeader(h);
+}
+
+void
+nsHttpRequestHead::ClearHeaders()
+{
+    MutexAutoLock lock(mLock);
+    mHeaders.Clear();
+}
+
+bool
+nsHttpRequestHead::HasHeader(nsHttpAtom h)
+{
+  MutexAutoLock lock(mLock);
+  return mHeaders.HasHeader(h);
+}
+
+bool
+nsHttpRequestHead::HasHeaderValue(nsHttpAtom h, const char *v)
+{
+    MutexAutoLock lock(mLock);
+    return mHeaders.HasHeaderValue(h, v);
+}
+
+nsresult
+nsHttpRequestHead::SetHeaderOnce(nsHttpAtom h, const char *v,
+                                 bool merge /*= false */)
+{
+    MutexAutoLock lock(mLock);
+    if (!merge || !mHeaders.HasHeaderValue(h, v)) {
+        return mHeaders.SetHeader(h, nsDependentCString(v), merge);
+    }
+    return NS_OK;
+}
+
+nsHttpRequestHead::ParsedMethodType
+nsHttpRequestHead::ParsedMethod()
+{
+    MutexAutoLock lock(mLock);
+    return mParsedMethod;
+}
+
+bool
+nsHttpRequestHead::EqualsMethod(ParsedMethodType aType)
+{
+    MutexAutoLock lock(mLock);
+    return mParsedMethod == aType;
+}
+
+void
+nsHttpRequestHead::ParseHeaderSet(char *buffer)
+{
+    MutexAutoLock lock(mLock);
+    mHeaders.ParseHeaderSet(buffer);
+}
+
+bool
+nsHttpRequestHead::IsHTTPS()
+{
+    MutexAutoLock lock(mLock);
+    return mHTTPS;
+}
+
 void
 nsHttpRequestHead::SetMethod(const nsACString &method)
 {
+    MutexAutoLock lock(mLock);
     mParsedMethod = kMethod_Custom;
     mMethod = method;
     if (!strcmp(mMethod.get(), "GET")) {
@@ -52,8 +246,10 @@ nsHttpRequestHead::SetMethod(const nsACString &method)
 }
 
 void
-nsHttpRequestHead::SetOrigin(const nsACString &scheme, const nsACString &host, int32_t port)
+nsHttpRequestHead::SetOrigin(const nsACString &scheme, const nsACString &host,
+                             int32_t port)
 {
+    MutexAutoLock lock(mLock);
     mOrigin.Assign(scheme);
     mOrigin.Append(NS_LITERAL_CSTRING("://"));
     mOrigin.Append(host);
@@ -64,11 +260,14 @@ nsHttpRequestHead::SetOrigin(const nsACString &scheme, const nsACString &host, i
 }
 
 bool
-nsHttpRequestHead::IsSafeMethod() const
+nsHttpRequestHead::IsSafeMethod()
 {
-  // This code will need to be extended for new safe methods, otherwise
-  // they'll default to "not safe".
-    if (IsGet() || IsHead() || IsOptions() || IsTrace()) {
+    MutexAutoLock lock(mLock);
+    // This code will need to be extended for new safe methods, otherwise
+    // they'll default to "not safe".
+    if ((mParsedMethod == kMethod_Get) || (mParsedMethod == kMethod_Head) ||
+        (mParsedMethod == kMethod_Options) || (mParsedMethod == kMethod_Trace)
+       ) {
         return true;
     }
 
@@ -84,6 +283,7 @@ nsHttpRequestHead::IsSafeMethod() const
 void
 nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
 {
+    MutexAutoLock lock(mLock);
     // note: the first append is intentional.
 
     buf.Append(mMethod);
