@@ -3190,32 +3190,29 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 //
 
 nsStyleVisibility::nsStyleVisibility(StyleStructContext aContext)
+  : mDirection(aContext.GetBidi() == IBMBIDI_TEXTDIRECTION_RTL
+                 ? NS_STYLE_DIRECTION_RTL
+                 : NS_STYLE_DIRECTION_LTR)
+  , mVisible(NS_STYLE_VISIBILITY_VISIBLE)
+  , mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO)
+  , mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB)
+  , mTextOrientation(NS_STYLE_TEXT_ORIENTATION_MIXED)
+  , mColorAdjust(NS_STYLE_COLOR_ADJUST_ECONOMY)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
-  uint32_t bidiOptions = aContext.GetBidi();
-  if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
-    mDirection = NS_STYLE_DIRECTION_RTL;
-  else
-    mDirection = NS_STYLE_DIRECTION_LTR;
-
-  mVisible = NS_STYLE_VISIBILITY_VISIBLE;
-  mImageRendering = NS_STYLE_IMAGE_RENDERING_AUTO;
-  mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
-  mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
-  mColorAdjust = NS_STYLE_COLOR_ADJUST_ECONOMY;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
+  : mImageOrientation(aSource.mImageOrientation)
+  , mDirection(aSource.mDirection)
+  , mVisible(aSource.mVisible)
+  , mImageRendering(aSource.mImageRendering)
+  , mWritingMode(aSource.mWritingMode)
+  , mTextOrientation(aSource.mTextOrientation)
+  , mColorAdjust(aSource.mColorAdjust)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
-  mImageOrientation = aSource.mImageOrientation;
-  mDirection = aSource.mDirection;
-  mVisible = aSource.mVisible;
-  mImageRendering = aSource.mImageRendering;
-  mWritingMode = aSource.mWritingMode;
-  mTextOrientation = aSource.mTextOrientation;
-  mColorAdjust = aSource.mColorAdjust;
-} 
+}
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
