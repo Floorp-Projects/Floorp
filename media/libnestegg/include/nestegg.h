@@ -89,6 +89,13 @@ extern "C" {
 #define NESTEGG_LOG_ERROR    1000  /**< Error level log message. */
 #define NESTEGG_LOG_CRITICAL 10000 /**< Critical level log message. */
 
+#define NESTEGG_ENCODING_COMPRESSION 0 /**< Content encoding type is compression. */
+#define NESTEGG_ENCODING_ENCRYPTION  1 /**< Content encoding type is encryption. */
+
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE       0 /**< Packet does not have signal byte */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED 1 /**< Packet has signal byte and is unencrypted */
+#define NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED   2 /**< Packet has signal byte and is encrypted */
+
 #define NESTEGG_PACKET_HAS_KEYFRAME_FALSE   0 /**< Packet contains only keyframes. */
 #define NESTEGG_PACKET_HAS_KEYFRAME_TRUE    1 /**< Packet does not contain any keyframes */
 #define NESTEGG_PACKET_HAS_KEYFRAME_UNKNOWN 2 /**< Packet may or may not contain keyframes */
@@ -288,6 +295,28 @@ int nestegg_track_video_params(nestegg * context, unsigned int track,
 int nestegg_track_audio_params(nestegg * context, unsigned int track,
                                nestegg_audio_params * params);
 
+/** Query the encoding status for @a track. If a track has multiple encodings
+    the first will be returned.
+    @param context Stream context initialized by #nestegg_init.
+    @param track   Zero based track number.
+    @retval #NESTEGG_ENCODING_COMPRESSION The track is compressed, but not encrypted.
+    @retval #NESTEGG_ENCODING_ENCRYPTION The track is encrypted and compressed.
+    @retval -1 Error. */
+int nestegg_track_encoding(nestegg * context, unsigned int track);
+
+/** Query the ContentEncKeyId for @a track. Will return an error if the track
+    in not encrypted, or is not recognized.
+    @param context                   Stream context initialized by #nestegg_init.
+    @param track                     Zero based track number.
+    @param content_enc_key_id        Storage for queried id. The content encryption key used.
+                                     Owned by nestegg and will be freed separately.
+    @param content_enc_key_id_length Length of the queried ContentEncKeyId in bytes.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_track_content_enc_key_id(nestegg * context, unsigned int track,
+                                     unsigned char const ** content_enc_key_id,
+                                     size_t * content_enc_key_id_length);
+
 /** Query the default frame duration for @a track.  For a video track, this
     is typically the inverse of the video frame rate.
     @param context  Stream context initialized by #nestegg_init.
@@ -386,6 +415,29 @@ int nestegg_packet_additional_data(nestegg_packet * packet, unsigned int id,
     @retval -1 Error. */
 int nestegg_packet_discard_padding(nestegg_packet * packet,
                                    int64_t * discard_padding);
+
+/** Query if a packet is encrypted.
+    @param packet Packet initialized by #nestegg_read_packet.
+    @retval  #NESTEGG_PACKET_HAS_SIGNAL_BYTE_FALSE No signal byte, encryption
+             information not read from packet.
+    @retval  #NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED Encrypted bit not
+             set, encryption information not read from packet.
+    @retval  #NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED Encrypted bit set,
+             encryption infomation read from packet.
+    @retval -1 Error.*/
+int nestegg_packet_encryption(nestegg_packet * packet);
+
+/** Query the IV for an encrypted packet. Expects a packet from an encrypted
+    track, and will return error if given a packet that has no signal btye.
+    @param packet Packet initialized by #nestegg_read_packet.
+    @param iv     Storage for queried iv.
+    @param length Length of returned iv, may be 0.
+                  The data is owned by the #nestegg_packet packet.
+    @retval  0 Success.
+    @retval -1 Error.
+  */
+int nestegg_packet_iv(nestegg_packet * packet, unsigned char const ** iv,
+                      size_t * length);
 
 /** Returns reference_block given packet
     @param packet          Packet initialized by #nestegg_read_packet.
