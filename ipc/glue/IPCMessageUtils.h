@@ -426,6 +426,10 @@ struct ParamTraits<nsLiteralString> : ParamTraits<nsAString>
 // Otherwise, it returns |true| and places the byte length in |aByteLength|.
 bool ByteLengthIsValid(uint32_t aNumElements, size_t aElementSize, int* aByteLength);
 
+// Note: IPDL will sometimes codegen specialized implementations of
+// nsTArray serialization and deserialization code in
+// implementSpecialArrayPickling(). This is needed when ParamTraits<E>
+// is not defined.
 template <typename E>
 struct ParamTraits<nsTArray<E>>
 {
