@@ -95,7 +95,6 @@
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
         <item name="menuItemActionModeStyle">@style/GeckoActionBar.Button</item>
-        <item name="menuItemShareActionButtonStyle">@style/Widget.MenuItemSecondaryActionBar</item>
         <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
