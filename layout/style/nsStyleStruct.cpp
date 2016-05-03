@@ -3502,17 +3502,17 @@ nsresult nsStyleContent::AllocateContents(uint32_t aCount)
 //
 
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
-{ 
+  : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
+  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID |
+                         BORDER_COLOR_FOREGROUND)
+  , mTextDecorationColor(NS_RGB(0, 0, 0))
+{
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
-  mTextDecorationColor = NS_RGB(0,0,0);
-  mTextDecorationStyle =
-    NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND;
-  mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
 }
 
-nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource) 
-{ 
+nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
+{
   MOZ_COUNT_CTOR(nsStyleTextReset);
   *this = aSource;
 }
