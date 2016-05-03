@@ -1253,6 +1253,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // XXX how to handle collapsed borders?
     if (aBuilder->IsForEventDelivery()) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder, aFrame,
+                                                           aFrame->GetRectRelativeToSelf(),
                                                            lists->BorderBackground());
     }
 
