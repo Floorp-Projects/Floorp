@@ -69,7 +69,7 @@ interface CanvasRenderingContext2D {
   [NewObject, Throws]
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
   [NewObject, Throws]
-  CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
+  CanvasPattern createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
            [LenientFloat]
