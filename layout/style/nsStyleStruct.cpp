@@ -1385,19 +1385,47 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 }
 
 // nsStyleSVGPaint implementation
+nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
+  : mType(nsStyleSVGPaintType(0))
+  , mFallbackColor(NS_RGB(0, 0, 0))
+{
+  SetType(aType);
+}
+
+nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
+  : mType(nsStyleSVGPaintType(0))
+  , mFallbackColor(NS_RGB(0, 0, 0))
+{
+  SetType(aSource.mType);
+
+  mFallbackColor = aSource.mFallbackColor;
+  if (mType == eStyleSVGPaintType_Server) {
+    mPaint.mPaintServer = aSource.mPaint.mPaintServer;
+    NS_IF_ADDREF(mPaint.mPaintServer);
+  } else {
+    mPaint.mColor = aSource.mPaint.mColor;
+  }
+}
+
 nsStyleSVGPaint::~nsStyleSVGPaint()
 {
-  if (mType == eStyleSVGPaintType_Server) {
-    NS_IF_RELEASE(mPaint.mPaintServer);
-  }
+  Reset();
+}
+
+void
+nsStyleSVGPaint::Reset()
+{
+  SetType(nsStyleSVGPaintType(0));
 }
 
 void
 nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
 {
   if (mType == eStyleSVGPaintType_Server) {
-    this->~nsStyleSVGPaint();
-    new (this) nsStyleSVGPaint();
+    NS_IF_RELEASE(mPaint.mPaintServer);
+    mPaint.mPaintServer = nullptr;
+  } else {
+    mPaint.mColor = NS_RGB(0, 0, 0);
   }
   mType = aType;
 }
