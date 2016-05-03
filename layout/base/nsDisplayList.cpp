@@ -2310,11 +2310,9 @@ RegisterThemeGeometry(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
                                                    nsIFrame* aFrame,
                                                    uint32_t aLayer,
-                                                   const nsRect& aBackgroundRect,
                                                    const nsStyleBackground* aBackgroundStyle)
   : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
-  , mBackgroundRect(aBackgroundRect)
   , mLayer(aLayer)
   , mIsRasterImage(false)
 {
@@ -2382,12 +2380,13 @@ static nsStyleContext* GetBackgroundStyleContext(nsIFrame* aFrame)
 SetBackgroundClipRegion(DisplayListClipState::AutoSaveRestore& aClipState,
                         nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
                         const nsStyleImageLayers::Layer& aLayer,
-                        const nsRect& aBackgroundRect,
                         bool aWillPaintBorder)
 {
+  nsRect borderBox = nsRect(aToReferenceFrame, aFrame->GetSize());
+
   nsCSSRendering::ImageLayerClipState clip;
   nsCSSRendering::GetImageLayerClip(aLayer, aFrame, *aFrame->StyleBorder(),
-                                    aBackgroundRect, aBackgroundRect, aWillPaintBorder,
+                                    borderBox, borderBox, aWillPaintBorder,
                                     aFrame->PresContext()->AppUnitsPerDevPixel(),
                                     &clip);
 
@@ -2403,13 +2402,10 @@ SetBackgroundClipRegion(DisplayListClipState::AutoSaveRestore& aClipState,
 /*static*/ bool
 nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuilder,
                                                      nsIFrame* aFrame,
-                                                     const nsRect& aBackgroundRect,
-                                                     nsDisplayList* aList,
-                                                     bool aAllowWillPaintBorderOptimization)
+                                                     nsDisplayList* aList)
 {
   nsStyleContext* bgSC = nullptr;
   const nsStyleBackground* bg = nullptr;
-  nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
   nsPresContext* presContext = aFrame->PresContext();
   bool isThemed = aFrame->IsThemed();
   if (!isThemed) {
@@ -2434,8 +2430,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   const nsStyleEffects* effectsStyle = aFrame->StyleEffects();
   bool hasInsetShadow = effectsStyle->mBoxShadow &&
                         effectsStyle->mBoxShadow->HasShadowWithInset(true);
-  bool willPaintBorder = aAllowWillPaintBorderOptimization &&
-                         !isThemed && !hasInsetShadow &&
+  bool willPaintBorder = !isThemed && !hasInsetShadow &&
                          borderStyle->HasBorder();
 
   nsPoint toRef = aBuilder->ToReferenceFrame(aFrame);
@@ -2460,11 +2455,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
       bool useWillPaintBorderOptimization = willPaintBorder &&
           nsLayoutUtils::HasNonZeroCorner(borderStyle->mBorderRadius);
       SetBackgroundClipRegion(clipState, aFrame, toRef,
-                              bg->BottomLayer(), bgRect,
+                              bg->BottomLayer(),
                               useWillPaintBorderOptimization);
     }
     bgItemList.AppendNewToTop(
-        new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bgRect, bg,
+        new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bg,
                                                 drawBackgroundColor ? color : NS_RGBA(0, 0, 0, 0)));
   }
 
@@ -2476,7 +2471,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
     }
     nsDisplayThemedBackground* bgItem =
-      new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame, bgRect);
+      new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame);
     bgItemList.AppendNewToTop(bgItem);
     aList->AppendToTop(&bgItemList);
     return true;
@@ -2507,12 +2502,12 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     if (!aBuilder->IsForEventDelivery()) {
       const nsStyleImageLayers::Layer& layer = bg->mImage.mLayers[i];
       SetBackgroundClipRegion(clipState, aFrame, toRef,
-                              layer, bgRect, willPaintBorder);
+                              layer, willPaintBorder);
     }
 
     nsDisplayList thisItemList;
     nsDisplayBackgroundImage* bgItem =
-      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, bgRect, bg);
+      new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, bg);
 
     if (bgItem->ShouldFixToViewport(aBuilder)) {
       thisItemList.AppendNewToTop(
@@ -2779,8 +2774,7 @@ nsDisplayBackgroundImage::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 /* static */ nsRegion
 nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
                                               uint8_t aClip,
-                                              const nsRect& aRect,
-                                              const nsRect& aBackgroundRect)
+                                              const nsRect& aRect)
 {
   nsRegion result;
   if (aRect.IsEmpty())
@@ -2788,18 +2782,26 @@ nsDisplayBackgroundImage::GetInsideClipRegion(nsDisplayItem* aItem,
 
   nsIFrame *frame = aItem->Frame();
 
-  nsRect clipRect = aBackgroundRect;
+  nsRect clipRect;
   if (frame->GetType() == nsGkAtoms::canvasFrame) {
     nsCanvasFrame* canvasFrame = static_cast<nsCanvasFrame*>(frame);
     clipRect = canvasFrame->CanvasArea() + aItem->ToReferenceFrame();
-  } else if (aClip == NS_STYLE_IMAGELAYER_CLIP_PADDING ||
-             aClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT) {
-    nsMargin border = frame->GetUsedBorder();
-    if (aClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT) {
-      border += frame->GetUsedPadding();
+  } else {
+    switch (aClip) {
+    case NS_STYLE_IMAGELAYER_CLIP_BORDER:
+    case NS_STYLE_IMAGELAYER_CLIP_TEXT:
+      clipRect = nsRect(aItem->ToReferenceFrame(), frame->GetSize());
+      break;
+    case NS_STYLE_IMAGELAYER_CLIP_PADDING:
+      clipRect = frame->GetPaddingRect() - frame->GetPosition() + aItem->ToReferenceFrame();
+      break;
+    case NS_STYLE_IMAGELAYER_CLIP_CONTENT:
+      clipRect = frame->GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
+      break;
+    default:
+      NS_NOTREACHED("Unknown clip type");
+      return result;
     }
-    border.ApplySkipSides(frame->GetSkipSides());
-    clipRect.Deflate(border);
   }
 
   return clipRect.Intersect(aRect);
@@ -2827,7 +2829,7 @@ nsDisplayBackgroundImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
     const nsStyleImageLayers::Layer& layer = mBackgroundStyle->mImage.mLayers[mLayer];
     if (layer.mImage.IsOpaque() && layer.mBlendMode == NS_STYLE_BLEND_NORMAL &&
         layer.mClip != NS_STYLE_IMAGELAYER_CLIP_TEXT) {
-      result = GetInsideClipRegion(this, layer.mClip, mBounds, mBackgroundRect);
+      result = GetInsideClipRegion(this, layer.mClip, mBounds);
     }
   }
 
@@ -2853,7 +2855,7 @@ nsDisplayBackgroundImage::GetPositioningArea()
   bool transformedFixed;
   return nsCSSRendering::ComputeImageLayerPositioningArea(
       mFrame->PresContext(), mFrame,
-      mBackgroundRect,
+      nsRect(ToReferenceFrame(), mFrame->GetSize()),
       mBackgroundStyle->mImage.mLayers[mLayer],
       &attachedToFrame,
       &transformedFixed) + ToReferenceFrame();
@@ -2905,18 +2907,19 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
 
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
   gfxContext* ctx = aCtx->ThebesContext();
   uint8_t clip = mBackgroundStyle->mImage.mLayers[mLayer].mClip;
 
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
     ctx->Save();
-    ClipBackgroundByText(mFrame, aCtx, mBackgroundRect);
+    ClipBackgroundByText(mFrame, aCtx, borderBox);
   }
 
   image::DrawResult result =
     nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aBounds,
-                                    mBackgroundRect,
+                                    borderBox,
                                     flags, aClipRect, mLayer,
                                     CompositionOp::OP_OVER);
 
@@ -2991,7 +2994,8 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
     return nsRect();
   }
 
-  nsRect clipRect = mBackgroundRect;
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  nsRect clipRect = borderBox;
   if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
     nsCanvasFrame* frame = static_cast<nsCanvasFrame*>(mFrame);
     clipRect = frame->CanvasArea() + ToReferenceFrame();
@@ -3007,7 +3011,7 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
   }
   const nsStyleImageLayers::Layer& layer = mBackgroundStyle->mImage.mLayers[mLayer];
   return nsCSSRendering::GetBackgroundLayerRect(presContext, mFrame,
-                                                mBackgroundRect, clipRect, layer,
+                                                borderBox, clipRect, layer,
                                                 aBuilder->GetBackgroundPaintFlags());
 }
 
@@ -3019,10 +3023,8 @@ nsDisplayBackgroundImage::GetPerFrameKey()
 }
 
 nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuilder,
-                                                     nsIFrame* aFrame,
-                                                     const nsRect& aBackgroundRect)
+                                                     nsIFrame* aFrame)
   : nsDisplayItem(aBuilder, aFrame)
-  , mBackgroundRect(aBackgroundRect)
 {
   MOZ_COUNT_CTOR(nsDisplayThemedBackground);
 
@@ -3065,8 +3067,8 @@ nsDisplayThemedBackground::HitTest(nsDisplayListBuilder* aBuilder,
                                   HitTestState* aState,
                                   nsTArray<nsIFrame*> *aOutFrames)
 {
-  // Assume that any point in our background rect is a hit.
-  if (mBackgroundRect.Intersects(aRect)) {
+  // Assume that any point in our border rect is a hit.
+  if (nsRect(ToReferenceFrame(), mFrame->GetSize()).Intersects(aRect)) {
     aOutFrames->AppendElement(mFrame);
   }
 }
@@ -3078,7 +3080,7 @@ nsDisplayThemedBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   *aSnap = false;
 
   if (mThemeTransparency == nsITheme::eOpaque) {
-    result = mBackgroundRect;
+    result = nsRect(ToReferenceFrame(), mFrame->GetSize());
   }
   return result;
 }
@@ -3103,7 +3105,7 @@ nsDisplayThemedBackground::ProvidesFontSmoothingBackgroundColor(nscolor* aColor)
 nsRect
 nsDisplayThemedBackground::GetPositioningArea()
 {
-  return mBackgroundRect;
+  return nsRect(ToReferenceFrame(), mFrame->GetSize());
 }
 
 void
@@ -3122,11 +3124,12 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
   // XXXzw this ignores aClipRect.
   nsPresContext* presContext = mFrame->PresContext();
   nsITheme *theme = presContext->GetTheme();
-  nsRect drawing(mBackgroundRect);
+  nsRect borderArea(ToReferenceFrame(), mFrame->GetSize());
+  nsRect drawing(borderArea);
   theme->GetWidgetOverflow(presContext->DeviceContext(), mFrame, mAppearance,
                            &drawing);
   drawing.IntersectRect(drawing, aBounds);
-  theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, mBackgroundRect, drawing);
+  theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, borderArea, drawing);
 }
 
 bool nsDisplayThemedBackground::IsWindowActive()
@@ -3171,7 +3174,7 @@ nsRect
 nsDisplayThemedBackground::GetBoundsInternal() {
   nsPresContext* presContext = mFrame->PresContext();
 
-  nsRect r = mBackgroundRect - ToReferenceFrame();
+  nsRect r(nsPoint(0,0), mFrame->GetSize());
   presContext->GetTheme()->
       GetWidgetOverflow(presContext->DeviceContext(), mFrame,
                         mFrame->StyleDisplay()->mAppearance, &r);
@@ -3316,6 +3319,8 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
+
 #if 0
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1148418#c21 for why this
   // results in a precision induced rounding issue that makes the rect one
@@ -3329,7 +3334,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
   DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
 
-  Rect rect = NSRectToSnappedRect(mBackgroundRect,
+  Rect rect = NSRectToSnappedRect(borderBox,
                                   mFrame->PresContext()->AppUnitsPerDevPixel(),
                                   aDrawTarget);
   ColorPattern color(ToDeviceColor(mColor));
@@ -3341,7 +3346,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   if (clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
     gfxContextAutoSaveRestore save(ctx);
 
-    ClipBackgroundByText(mFrame, aCtx, mBackgroundRect);
+    ClipBackgroundByText(mFrame, aCtx, borderBox);
     ctx->SetColor(mColor);
     ctx->Fill();
 
@@ -3349,7 +3354,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   gfxRect bounds =
-    nsLayoutUtils::RectToGfxRect(mBackgroundRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
 
   ctx->SetColor(mColor);
   ctx->NewPath();
@@ -3374,8 +3379,9 @@ nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   *aSnap = true;
 
   const nsStyleImageLayers::Layer& bottomLayer = mBackgroundStyle->BottomLayer();
+  nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
   return nsDisplayBackgroundImage::GetInsideClipRegion(this, bottomLayer.mClip,
-                                                       mBackgroundRect, mBackgroundRect);
+                                                       borderBox);
 }
 
 bool
