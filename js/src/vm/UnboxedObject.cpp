@@ -509,25 +509,31 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     if (!nativeGroup)
         return false;
 
-    // Propagate all property types from the old group to the new group.
-    if (layout.isArray()) {
-        if (!PropagatePropertyTypes(cx, JSID_VOID, group, nativeGroup))
-            return false;
-    } else {
-        for (size_t i = 0; i < layout.properties().length(); i++) {
-            const UnboxedLayout::Property& property = layout.properties()[i];
-            jsid id = NameToId(property.name);
-            if (!PropagatePropertyTypes(cx, id, group, nativeGroup))
+    // No sense propagating if we don't know what we started with.
+    if (!group->unknownProperties()) {
+        // Propagate all property types from the old group to the new group.
+        if (layout.isArray()) {
+            if (!PropagatePropertyTypes(cx, JSID_VOID, group, nativeGroup))
                 return false;
+        } else {
+            for (size_t i = 0; i < layout.properties().length(); i++) {
+                const UnboxedLayout::Property& property = layout.properties()[i];
+                jsid id = NameToId(property.name);
+                if (!PropagatePropertyTypes(cx, id, group, nativeGroup))
+                    return false;
 
-            // If we are OOM we may not be able to propagate properties.
-            if (nativeGroup->unknownProperties())
-                break;
+                // If we are OOM we may not be able to propagate properties.
+                if (nativeGroup->unknownProperties())
+                    break;
 
-            HeapTypeSet* nativeProperty = nativeGroup->maybeGetProperty(id);
-            if (nativeProperty && nativeProperty->canSetDefinite(i))
-                nativeProperty->setDefinite(i);
+                HeapTypeSet* nativeProperty = nativeGroup->maybeGetProperty(id);
+                if (nativeProperty && nativeProperty->canSetDefinite(i))
+                    nativeProperty->setDefinite(i);
+            }
         }
+    } else {
+        // If we skip, though, the new group had better agree.
+        MOZ_ASSERT(nativeGroup->unknownProperties());
     }
 
     layout.nativeGroup_ = nativeGroup;
