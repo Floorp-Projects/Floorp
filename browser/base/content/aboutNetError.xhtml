@@ -217,15 +217,15 @@
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
-        var errTitle = document.getElementById("et_" + err).innerHTML;
-        var errDesc  = document.getElementById("ed_" + err).innerHTML;
+        var errTitle = document.getElementById("et_" + err);
+        var errDesc  = document.getElementById("ed_" + err);
         if (!errTitle || !errDesc)
         {
-          errTitle = document.getElementById("et_generic").innerHTML;
-          errDesc  = document.getElementById("ed_generic").innerHTML;
+          errTitle = document.getElementById("et_generic");
+          errDesc  = document.getElementById("ed_generic");
         }
 
-        document.querySelector(".title-text").innerHTML = errTitle;
+        document.querySelector(".title-text").innerHTML = errTitle.innerHTML;
 
         var sd = document.getElementById("errorShortDescText");
         if (sd) {
@@ -244,7 +244,7 @@
         var ld = document.getElementById("errorLongDesc");
         if (ld)
         {
-          ld.innerHTML = errDesc;
+          ld.innerHTML = errDesc.innerHTML;
         }
 
         if (err == "sslv3Used") {
