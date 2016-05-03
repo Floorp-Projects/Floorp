@@ -125,29 +125,42 @@ function test() {
     // The contents should be able to steal the focus from content.
 
     // in foreground tab
-    let e = tabs[0].linkedBrowser.contentDocument.activeElement;
-    is(e.tagName, testingList[testingIndex].tagName,
-       "the foreground tab's " + testingList[testingIndex].tagName +
-       " element is not active by the " + testingList[testingIndex].methodName +
-       " (Test1: content can steal focus)");
-    is(fm.focusedElement, e,
-       "the " + testingList[testingIndex].tagName +
-       " element isn't focused by the " + testingList[testingIndex].methodName +
-       " (Test1: content can steal focus)");
+    ContentTask.spawn(tabs[0].linkedBrowser, null, function (opts) {
+      let fm = Components.classes["@mozilla.org/focus-manager;1"]
+            .getService(Components.interfaces.nsIFocusManager);
+      let e = content.document.activeElement;
+      return [e.tagName, fm.focusedElement == e];
+    }).then(result => {
+      is(result[0], testingList[testingIndex].tagName,
+         "the foreground tab's " + testingList[testingIndex].tagName +
+         " element is not active by the " + testingList[testingIndex].methodName +
+         " (Test1: content can steal focus)");
+      ok(result[1],
+         "the " + testingList[testingIndex].tagName +
+         " element isn't focused by the " + testingList[testingIndex].methodName +
+         " (Test1: content can steal focus)");
 
-    // in background tab
-    e = tabs[1].linkedBrowser.contentDocument.activeElement;
-    is(e.tagName, testingList[testingIndex].tagName,
-       "the background tab's " + testingList[testingIndex].tagName +
-       " element is not active by the " + testingList[testingIndex].methodName +
-       " (Test1: content can steal focus)");
-    isnot(fm.focusedElement, e,
-          "the " + testingList[testingIndex].tagName +
-          " element is focused by the " + testingList[testingIndex].methodName +
-          " (Test1: content can steal focus)");
-
-    callback = doTest2;
-    loadTestPage(true);
+      // in background tab
+    }).then(() => ContentTask.spawn(tabs[1].linkedBrowser, null, function (opts) {
+      let fm = Components.classes["@mozilla.org/focus-manager;1"]
+            .getService(Components.interfaces.nsIFocusManager);
+      let e = content.document.activeElement;
+      return [e.tagName, fm.focusedElement == e];
+    })).then(result => {
+      is(result[0], testingList[testingIndex].tagName,
+         "the background tab's " + testingList[testingIndex].tagName +
+         " element is not active by the " + testingList[testingIndex].methodName +
+         " (Test1: content can steal focus)");
+      ok(!result[1],
+         "the " + testingList[testingIndex].tagName +
+         " element is focused by the " + testingList[testingIndex].methodName +
+         " (Test1: content can steal focus)");
+    }).then(() => {
+      callback = doTest2;
+      loadTestPage(true);
+    }).catch(err => {
+      ok(false, "Error: " + err);
+    });
   }
 
 
@@ -157,31 +170,44 @@ function test() {
       return;
     }
 
-    // The contents shouldn't be able to steal the focus from chrome.
+    // The contents shouldn't be able to steal the focus from content.
 
     // in foreground tab
-    let e = tabs[0].linkedBrowser.contentDocument.activeElement;
-    is(e.tagName, testingList[testingIndex].tagName,
-       "the foreground tab's " + testingList[testingIndex].tagName +
-       " element is not active by the " + testingList[testingIndex].methodName +
-       " (Test2: content can NOT steal focus)");
-    isnot(fm.focusedElement, e,
-          "the " + testingList[testingIndex].tagName +
-          " element is focused by the " + testingList[testingIndex].methodName +
-          " (Test2: content can NOT steal focus)");
+    ContentTask.spawn(tabs[0].linkedBrowser, null, function (opts) {
+      let fm = Components.classes["@mozilla.org/focus-manager;1"]
+            .getService(Components.interfaces.nsIFocusManager);
+      let e = content.document.activeElement;
+      return [e.tagName, fm.focusedElement == e];
+    }).then(result => {
+      is(result[0], testingList[testingIndex].tagName,
+         "the foreground tab's " + testingList[testingIndex].tagName +
+         " element is not active by the " + testingList[testingIndex].methodName +
+         " (Test2: content can NOT steal focus)");
+      ok(!result[1],
+         "the " + testingList[testingIndex].tagName +
+         " element is focused by the " + testingList[testingIndex].methodName +
+         " (Test2: content can NOT steal focus)");
 
-    // in background tab
-    e = tabs[1].linkedBrowser.contentDocument.activeElement;
-    is(e.tagName, testingList[testingIndex].tagName,
-       "the background tab's " + testingList[testingIndex].tagName +
-       " element is not active by the " + testingList[testingIndex].methodName +
-       " (Test2: content can NOT steal focus)");
-    isnot(fm.focusedElement, e,
-          "the " + testingList[testingIndex].tagName +
-          " element is focused by the " + testingList[testingIndex].methodName +
-          " (Test2: content can NOT steal focus)");
-
-    runNextTest();
+      // in background tab
+    }).then(() => ContentTask.spawn(tabs[1].linkedBrowser, null, function (opts) {
+      let fm = Components.classes["@mozilla.org/focus-manager;1"]
+            .getService(Components.interfaces.nsIFocusManager);
+      let e = content.document.activeElement;
+      return [e.tagName, fm.focusedElement == e];
+    })).then(result => {
+      is(result[0], testingList[testingIndex].tagName,
+         "the background tab's " + testingList[testingIndex].tagName +
+         " element is not active by the " + testingList[testingIndex].methodName +
+         " (Test2: content can NOT steal focus)");
+      ok(!result[1],
+         "the " + testingList[testingIndex].tagName +
+         " element is focused by the " + testingList[testingIndex].methodName +
+         " (Test2: content can NOT steal focus)");
+    }).then(() => {
+      runNextTest();
+    }).catch(err => {
+      ok(false, "Error: " + err);
+    });
   }
 
   runNextTest();
