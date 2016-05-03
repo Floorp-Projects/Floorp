@@ -41,6 +41,7 @@ interface nsIContentViewer : nsISupports
 
   [noscript,notxpcom,nostdcall] void loadStart(in nsIDocument aDoc);
   void loadComplete(in nsresult aStatus);
+  [noscript] readonly attribute boolean loadCompleted;
 
   /**
    * Checks if the document wants to prevent unloading by firing beforeunload on
