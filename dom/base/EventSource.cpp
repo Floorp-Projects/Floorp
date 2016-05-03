@@ -185,7 +185,7 @@ EventSource::Init(nsISupports* aOwner,
                   const nsAString& aURL,
                   bool aWithCredentials)
 {
-  if (mReadyState != CONNECTING || !PrefEnabled()) {
+  if (mReadyState != CONNECTING) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -570,13 +570,6 @@ EventSource::GetInterface(const nsIID & aIID,
   }
 
   return QueryInterface(aIID, aResult);
-}
-
-// static
-bool
-EventSource::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
-{
-  return Preferences::GetBool("dom.server-events.enabled", false);
 }
 
 nsresult
