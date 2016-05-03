@@ -3580,78 +3580,76 @@ AreShadowArraysEqual(nsCSSShadowArray* lhs,
 //
 
 nsStyleText::nsStyleText(StyleStructContext aContext)
-{ 
+  : mTextAlign(NS_STYLE_TEXT_ALIGN_DEFAULT)
+  , mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO)
+  , mTextAlignTrue(false)
+  , mTextAlignLastTrue(false)
+  , mTextEmphasisColorForeground(true)
+  , mWebkitTextFillColorForeground(true)
+  , mWebkitTextStrokeColorForeground(true)
+  , mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE)
+  , mWhiteSpace(NS_STYLE_WHITESPACE_NORMAL)
+  , mWordBreak(NS_STYLE_WORDBREAK_NORMAL)
+  , mWordWrap(NS_STYLE_WORDWRAP_NORMAL)
+  , mHyphens(NS_STYLE_HYPHENS_MANUAL)
+  , mRubyAlign(NS_STYLE_RUBY_ALIGN_SPACE_AROUND)
+  , mRubyPosition(NS_STYLE_RUBY_POSITION_OVER)
+  , mTextSizeAdjust(NS_STYLE_TEXT_SIZE_ADJUST_AUTO)
+  , mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE)
+  , mControlCharacterVisibility(nsCSSParser::ControlCharVisibilityDefault())
+  , mTextEmphasisStyle(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE)
+  , mTextRendering(NS_STYLE_TEXT_RENDERING_AUTO)
+  , mTabSize(NS_STYLE_TABSIZE_INITIAL)
+  , mTextEmphasisColor(aContext.DefaultColor())
+  , mWebkitTextFillColor(aContext.DefaultColor())
+  , mWebkitTextStrokeColor(aContext.DefaultColor())
+  , mTextShadow(nullptr)
+{
   MOZ_COUNT_CTOR(nsStyleText);
-  mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
-  mTextAlignLast = NS_STYLE_TEXT_ALIGN_AUTO;
-  mTextAlignTrue = false;
-  mTextAlignLastTrue = false;
-  mTextEmphasisColorForeground = true;
-  mWebkitTextFillColorForeground = true;
-  mWebkitTextStrokeColorForeground = true;
-  mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-  mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-  mWordBreak = NS_STYLE_WORDBREAK_NORMAL;
-  mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
-  mHyphens = NS_STYLE_HYPHENS_MANUAL;
-  mRubyAlign = NS_STYLE_RUBY_ALIGN_SPACE_AROUND;
-  mRubyPosition = NS_STYLE_RUBY_POSITION_OVER;
-  mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
-  mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
-  mTextEmphasisStyle = NS_STYLE_TEXT_EMPHASIS_STYLE_NONE;
-  mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
   nsCOMPtr<nsIAtom> language = aContext.GetContentLanguage();
   mTextEmphasisPosition = language &&
     nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh")) ?
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH :
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT;
-  mTextEmphasisColor = aContext.DefaultColor();
-  mWebkitTextFillColor = aContext.DefaultColor();
-  mWebkitTextStrokeColor = aContext.DefaultColor();
-  mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
-
   mWordSpacing.SetCoordValue(0);
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
   mTextIndent.SetCoordValue(0);
   mWebkitTextStrokeWidth.SetCoordValue(0);
-
-  mTextShadow = nullptr;
-  mTabSize = NS_STYLE_TABSIZE_INITIAL;
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
-  : mTextAlign(aSource.mTextAlign),
-    mTextAlignLast(aSource.mTextAlignLast),
-    mTextAlignTrue(false),
-    mTextAlignLastTrue(false),
-    mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground),
-    mWebkitTextFillColorForeground(aSource.mWebkitTextFillColorForeground),
-    mWebkitTextStrokeColorForeground(aSource.mWebkitTextStrokeColorForeground),
-    mTextTransform(aSource.mTextTransform),
-    mWhiteSpace(aSource.mWhiteSpace),
-    mWordBreak(aSource.mWordBreak),
-    mWordWrap(aSource.mWordWrap),
-    mHyphens(aSource.mHyphens),
-    mRubyAlign(aSource.mRubyAlign),
-    mRubyPosition(aSource.mRubyPosition),
-    mTextSizeAdjust(aSource.mTextSizeAdjust),
-    mTextCombineUpright(aSource.mTextCombineUpright),
-    mControlCharacterVisibility(aSource.mControlCharacterVisibility),
-    mTextEmphasisPosition(aSource.mTextEmphasisPosition),
-    mTextEmphasisStyle(aSource.mTextEmphasisStyle),
-    mTextRendering(aSource.mTextRendering),
-    mTabSize(aSource.mTabSize),
-    mTextEmphasisColor(aSource.mTextEmphasisColor),
-    mWebkitTextFillColor(aSource.mWebkitTextFillColor),
-    mWebkitTextStrokeColor(aSource.mWebkitTextStrokeColor),
-    mWordSpacing(aSource.mWordSpacing),
-    mLetterSpacing(aSource.mLetterSpacing),
-    mLineHeight(aSource.mLineHeight),
-    mTextIndent(aSource.mTextIndent),
-    mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
-    mTextShadow(aSource.mTextShadow),
-    mTextEmphasisStyleString(aSource.mTextEmphasisStyleString)
+  : mTextAlign(aSource.mTextAlign)
+  , mTextAlignLast(aSource.mTextAlignLast)
+  , mTextAlignTrue(false)
+  , mTextAlignLastTrue(false)
+  , mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground)
+  , mWebkitTextFillColorForeground(aSource.mWebkitTextFillColorForeground)
+  , mWebkitTextStrokeColorForeground(aSource.mWebkitTextStrokeColorForeground)
+  , mTextTransform(aSource.mTextTransform)
+  , mWhiteSpace(aSource.mWhiteSpace)
+  , mWordBreak(aSource.mWordBreak)
+  , mWordWrap(aSource.mWordWrap)
+  , mHyphens(aSource.mHyphens)
+  , mRubyAlign(aSource.mRubyAlign)
+  , mRubyPosition(aSource.mRubyPosition)
+  , mTextSizeAdjust(aSource.mTextSizeAdjust)
+  , mTextCombineUpright(aSource.mTextCombineUpright)
+  , mControlCharacterVisibility(aSource.mControlCharacterVisibility)
+  , mTextEmphasisPosition(aSource.mTextEmphasisPosition)
+  , mTextEmphasisStyle(aSource.mTextEmphasisStyle)
+  , mTextRendering(aSource.mTextRendering)
+  , mTabSize(aSource.mTabSize)
+  , mTextEmphasisColor(aSource.mTextEmphasisColor)
+  , mWebkitTextFillColor(aSource.mWebkitTextFillColor)
+  , mWebkitTextStrokeColor(aSource.mWebkitTextStrokeColor)
+  , mWordSpacing(aSource.mWordSpacing)
+  , mLetterSpacing(aSource.mLetterSpacing)
+  , mLineHeight(aSource.mLineHeight)
+  , mTextIndent(aSource.mTextIndent)
+  , mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth)
+  , mTextShadow(aSource.mTextShadow)
+  , mTextEmphasisStyleString(aSource.mTextEmphasisStyleString)
 {
   MOZ_COUNT_CTOR(nsStyleText);
 }
