@@ -381,10 +381,10 @@ private:
   struct ConstRemovingRefPtrTraits<const U>
   {
     static void AddRef(const U* aPtr) {
-      mozilla::RefPtrTraits<typename mozilla::RemoveConst<U>::Type>::AddRef(const_cast<U*>(aPtr));
+      mozilla::RefPtrTraits<U>::AddRef(const_cast<U*>(aPtr));
     }
     static void Release(const U* aPtr) {
-      mozilla::RefPtrTraits<typename mozilla::RemoveConst<U>::Type>::Release(const_cast<U*>(aPtr));
+      mozilla::RefPtrTraits<U>::Release(const_cast<U*>(aPtr));
     }
   };
 };
