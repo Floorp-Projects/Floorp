@@ -409,9 +409,7 @@ nsButtonFrameRenderer::GetButtonInnerFocusMargin()
 
   if (mInnerFocusStyle) {
     const nsStyleMargin* margin = mInnerFocusStyle->StyleMargin();
-    if (!margin->GetMargin(innerFocusMargin)) {
-      NS_NOTYETIMPLEMENTED("percentage margin");
-    }
+    margin->GetMarginNoPercentage(innerFocusMargin);
   }
 
   return innerFocusMargin;

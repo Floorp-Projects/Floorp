@@ -853,7 +853,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
   }
   void Destroy(nsPresContext* aContext);
 
-  void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
   static nsChangeHint MaxDifference() {
     return nsChangeHint_NeedReflow |
@@ -868,19 +867,27 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
 
   nsStyleSides  mMargin;          // [reset] coord, percent, calc, auto
 
-  bool IsWidthDependent() const { return !mHasCachedMargin; }
+  bool IsWidthDependent() const {
+    return !mMargin.ConvertsToLength();
+  }
+
   bool GetMargin(nsMargin& aMargin) const
   {
-    if (mHasCachedMargin) {
-      aMargin = mCachedMargin;
+    if (mMargin.ConvertsToLength()) {
+      GetMarginNoPercentage(aMargin);
       return true;
     }
+
     return false;
   }
 
-protected:
-  bool          mHasCachedMargin;
-  nsMargin      mCachedMargin;
+  void GetMarginNoPercentage(nsMargin& aMargin) const
+  {
+    MOZ_ASSERT(mMargin.ConvertsToLength());
+    NS_FOR_CSS_SIDES(side) {
+      aMargin.Side(side) = mMargin.Get(side).ToLength();
+    }
+  }
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
