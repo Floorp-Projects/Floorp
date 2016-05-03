@@ -1901,7 +1901,7 @@ void
 MediaDecoder::NotifyAudibleStateChanged()
 {
   MOZ_ASSERT(!mShuttingDown);
-  mOwner->NotifyAudibleStateChanged(mIsAudioDataAudible);
+  mOwner->SetAudibleState(mIsAudioDataAudible);
 }
 
 MediaMemoryTracker::MediaMemoryTracker()

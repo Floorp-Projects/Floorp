@@ -450,7 +450,7 @@ public:
 
   // Called by media decoder when the audible state changed or when input is
   // a media stream.
-  virtual void NotifyAudibleStateChanged(bool aAudible) final override;
+  virtual void SetAudibleState(bool aAudible) final override;
 
   // Notify agent when the MediaElement changes its audible state.
   void NotifyAudioPlaybackChanged();
