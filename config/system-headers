@@ -256,6 +256,7 @@ cairo-xlib-xrender.h
 cairo-directfb.h
 cairo-qpainter.h
 cairo-qt.h
+complex
 dfiff.h
 exception
 ffi.h
