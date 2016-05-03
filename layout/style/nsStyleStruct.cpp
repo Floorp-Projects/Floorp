@@ -1455,6 +1455,20 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(StyleStructContext aContext)
+  : mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW)
+  , mBoxSizing(StyleBoxSizing::Content)
+  , mAlignContent(NS_STYLE_ALIGN_NORMAL)
+  , mAlignItems(NS_STYLE_ALIGN_NORMAL)
+  , mAlignSelf(NS_STYLE_ALIGN_AUTO)
+  , mJustifyContent(NS_STYLE_JUSTIFY_NORMAL)
+  , mJustifyItems(NS_STYLE_JUSTIFY_AUTO)
+  , mJustifySelf(NS_STYLE_JUSTIFY_AUTO)
+  , mFlexDirection(NS_STYLE_FLEX_DIRECTION_ROW)
+  , mFlexWrap(NS_STYLE_FLEX_WRAP_NOWRAP)
+  , mObjectFit(NS_STYLE_OBJECT_FIT_FILL)
+  , mOrder(NS_STYLE_ORDER_INITIAL)
+  , mFlexGrow(0.0f)
+  , mFlexShrink(1.0f)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 
@@ -1482,20 +1496,6 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   mGridAutoRowsMin.SetAutoValue();
   mGridAutoRowsMax.SetAutoValue();
 
-  mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
-  mBoxSizing = StyleBoxSizing::Content;
-  mAlignContent = NS_STYLE_ALIGN_NORMAL;
-  mAlignItems = NS_STYLE_ALIGN_NORMAL;
-  mAlignSelf = NS_STYLE_ALIGN_AUTO;
-  mJustifyContent = NS_STYLE_JUSTIFY_NORMAL;
-  mJustifyItems = NS_STYLE_JUSTIFY_AUTO;
-  mJustifySelf = NS_STYLE_JUSTIFY_AUTO;
-  mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
-  mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
-  mObjectFit = NS_STYLE_OBJECT_FIT_FILL;
-  mOrder = NS_STYLE_ORDER_INITIAL;
-  mFlexGrow = 0.0f;
-  mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
