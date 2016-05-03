@@ -3803,32 +3803,30 @@ nsCursorImage::operator=(const nsCursorImage& aOther)
 }
 
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
-{ 
+  : mUserInput(NS_STYLE_USER_INPUT_AUTO)
+  , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
+  , mUserFocus(NS_STYLE_USER_FOCUS_NONE)
+  , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
+  , mCursor(NS_STYLE_CURSOR_AUTO)
+  , mCursorArrayLength(0)
+  , mCursorArray(nullptr)
+{
   MOZ_COUNT_CTOR(nsStyleUserInterface);
-  mUserInput = NS_STYLE_USER_INPUT_AUTO;
-  mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
-  mUserFocus = NS_STYLE_USER_FOCUS_NONE;
-  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
-
-  mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
-
-  mCursorArrayLength = 0;
-  mCursorArray = nullptr;
 }
 
-nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) :
-  mUserInput(aSource.mUserInput),
-  mUserModify(aSource.mUserModify),
-  mUserFocus(aSource.mUserFocus),
-  mPointerEvents(aSource.mPointerEvents),
-  mCursor(aSource.mCursor)
-{ 
+nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
+  : mUserInput(aSource.mUserInput)
+  , mUserModify(aSource.mUserModify)
+  , mUserFocus(aSource.mUserFocus)
+  , mPointerEvents(aSource.mPointerEvents)
+  , mCursor(aSource.mCursor)
+{
   MOZ_COUNT_CTOR(nsStyleUserInterface);
   CopyCursorArrayFrom(aSource);
 }
 
-nsStyleUserInterface::~nsStyleUserInterface(void) 
-{ 
+nsStyleUserInterface::~nsStyleUserInterface(void)
+{
   MOZ_COUNT_DTOR(nsStyleUserInterface);
   delete [] mCursorArray;
 }
