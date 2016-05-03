@@ -1744,7 +1744,7 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
   nsCOMArray<nsISupports> array;
   for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
     const nsID& id = iter.Key();
-    nsCOMPtr<nsISupportsID> wrapper = new nsSupportsIDImpl();
+    nsCOMPtr<nsISupportsID> wrapper = new nsSupportsID();
     wrapper->SetData(&id);
     array.AppendObject(wrapper);
   }
