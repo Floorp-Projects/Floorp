@@ -316,6 +316,8 @@ public:
 
   nsViewManager* GetViewManager() const { return mViewManager; }
 
+  nsRefreshDriver* GetRefreshDriver() const;
+
 #ifdef ACCESSIBILITY
   /**
    * Return the document accessible for this pres shell if there is one.
