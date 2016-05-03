@@ -276,6 +276,7 @@ NrIceCtx::NrIceCtx(const std::string& name,
     gathering_state_(ICE_CTX_GATHER_INIT),
     name_(name),
     offerer_(offerer),
+    ice_controlling_set_(false),
     streams_(),
     ctx_(nullptr),
     peer_(nullptr),
@@ -703,10 +704,13 @@ void NrIceCtx::destroy_peer_ctx() {
 }
 
 nsresult NrIceCtx::SetControlling(Controlling controlling) {
-  peer_->controlling = (controlling == ICE_CONTROLLING)? 1 : 0;
+  if (!ice_controlling_set_) {
+    peer_->controlling = (controlling == ICE_CONTROLLING)? 1 : 0;
+    ice_controlling_set_ = true;
 
-  MOZ_MTLOG(ML_DEBUG, "ICE ctx " << name_ << " setting controlling to" <<
-            controlling);
+    MOZ_MTLOG(ML_DEBUG, "ICE ctx " << name_ << " setting controlling to" <<
+              controlling);
+  }
   return NS_OK;
 }
 
