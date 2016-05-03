@@ -16,7 +16,12 @@ module.exports = createClass({
     let panelLinks = panels.map(({ id, panelId, name, icon }) => {
       let selected = id == selectedPanelId;
       return PanelMenuEntry({
-        id, panelId, name, icon, selected, selectTab
+        id,
+        panelId,
+        name,
+        icon,
+        selected,
+        selectPanel
       });
     });
 
