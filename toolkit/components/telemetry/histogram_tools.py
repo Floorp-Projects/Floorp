@@ -99,6 +99,7 @@ definition is a dict-like object that must contain at least the keys:
 The key 'cpp_guard' is optional; if present, it denotes a preprocessor
 symbol that should guard C/C++ definitions associated with the histogram."""
         self._strict_type_checks = strict_type_checks
+        self._is_use_counter = name.startswith("USE_COUNTER2_")
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
@@ -215,16 +216,19 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
-        if 'alert_emails' not in definition:
-            if whitelists is not None and name not in whitelists['alert_emails']:
-                raise KeyError, 'New histogram "%s" must have an alert_emails field.' % name
-        elif not isinstance(definition['alert_emails'], list):
-            raise KeyError, 'alert_emails must be an array (in histogram "%s")' % name
+        # Check for the alert_emails field. Use counters don't have any mechanism
+        # to add them, so skip the check for them.
+        if not self._is_use_counter:
+            if 'alert_emails' not in definition:
+                if whitelists is not None and name not in whitelists['alert_emails']:
+                    raise KeyError, 'New histogram "%s" must have an alert_emails field.' % name
+            elif not isinstance(definition['alert_emails'], list):
+                raise KeyError, 'alert_emails must be an array (in histogram "%s")' % name
 
         Histogram.check_name(name)
         self.check_field_types(name, definition)
         Histogram.check_expiration(name, definition)
-        Histogram.check_bug_numbers(name, definition)
+        self.check_bug_numbers(name, definition)
 
     @staticmethod
     def check_name(name):
@@ -245,8 +249,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         definition['expires_in_version'] = expiration
 
-    @staticmethod
-    def check_bug_numbers(name, definition):
+    def check_bug_numbers(self, name, definition):
+        # Use counters don't have any mechanism to add the bug numbers field.
+        if self._is_use_counter:
+            return
         bug_numbers = definition.get('bug_numbers')
         if not bug_numbers:
             if whitelists is None or name in whitelists['bug_numbers']:
