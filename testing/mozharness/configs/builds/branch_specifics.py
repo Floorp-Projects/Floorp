@@ -47,18 +47,23 @@ config = {
         'platform_overrides': {
             'linux': {
                 'src_mozconfig': 'browser/config/mozconfigs/linux32/release',
+                'force_clobber': True,
             },
             'linux64': {
                 'src_mozconfig': 'browser/config/mozconfigs/linux64/release',
+                'force_clobber': True,
             },
             'macosx64': {
                 'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/release',
+                'force_clobber': True,
             },
             'win32': {
                 'src_mozconfig': 'browser/config/mozconfigs/win32/release',
+                'force_clobber': True,
             },
             'win64': {
                 'src_mozconfig': 'browser/config/mozconfigs/win64/release',
+                'force_clobber': True,
             },
             'linux-debug': {
                 'update_channel': 'default',
@@ -117,18 +122,23 @@ config = {
         'platform_overrides': {
             'linux': {
                 'src_mozconfig': 'browser/config/mozconfigs/linux32/beta',
+                'force_clobber': True,
             },
             'linux64': {
                 'src_mozconfig': 'browser/config/mozconfigs/linux64/beta',
+                'force_clobber': True,
             },
             'macosx64': {
                 'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/beta',
+                'force_clobber': True,
             },
             'win32': {
                 'src_mozconfig': 'browser/config/mozconfigs/win32/beta',
+                'force_clobber': True,
             },
             'win64': {
                 'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
+                'force_clobber': True,
             },
             'linux-debug': {
                 'update_channel': 'default',
