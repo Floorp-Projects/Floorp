@@ -1041,8 +1041,7 @@ nsIFrame::GetUsedPadding() const
   if (p) {
     padding = *p;
   } else {
-    DebugOnly<bool> hasPadding = StylePadding()->GetPadding(padding);
-    NS_ASSERTION(hasPadding, "We should have padding here! (out of memory?)");
+    StylePadding()->GetPaddingNoPercentage(padding);
   }
   return padding;
 }

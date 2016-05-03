@@ -306,8 +306,6 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
 }
 
 nsStylePadding::nsStylePadding(StyleStructContext aContext)
-  : mHasCachedPadding(false)
-  , mCachedPadding(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStylePadding);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
@@ -318,8 +316,6 @@ nsStylePadding::nsStylePadding(StyleStructContext aContext)
 
 nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
   : mPadding(aSrc.mPadding)
-  , mHasCachedPadding(false)
-  , mCachedPadding(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
@@ -329,20 +325,6 @@ nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
   aContext->PresShell()->
     FreeByObjectID(eArenaObjectID_nsStylePadding, this);
-}
-
-void nsStylePadding::RecalcData()
-{
-  if (mPadding.ConvertsToLength()) {
-    NS_FOR_CSS_SIDES(side) {
-      // Clamp negative calc() to 0.
-      mCachedPadding.Side(side) =
-        std::max(CalcCoord(mPadding.Get(side), nullptr, 0), 0);
-    }
-    mHasCachedPadding = true;
-  }
-  else
-    mHasCachedPadding = false;
 }
 
 nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
