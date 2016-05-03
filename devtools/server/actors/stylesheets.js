@@ -28,6 +28,10 @@ const {
   getIndentationFromString
 } = require("devtools/shared/indentation");
 
+XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
+
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
@@ -41,9 +45,6 @@ transition-property: all !important;\
 }";
 
 var LOAD_ERROR = "error-load";
-
-types.addActorType("stylesheet");
-types.addActorType("originalsource");
 
 // The possible kinds of style-applied events.
 // UPDATE_PRESERVING_RULES means that the update is guaranteed to
@@ -62,210 +63,88 @@ exports.UPDATE_GENERAL = UPDATE_GENERAL;
 let modifiedStyleSheets = new WeakMap();
 
 /**
- * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
- * stylesheets of a document.
+ * Actor representing an original source of a style sheet that was specified
+ * in a source map.
  */
-var StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
-  typeName: "stylesheets",
+var OriginalSourceActor = protocol.ActorClass({
+  typeName: "originalsource",
 
-  /**
-   * The window we work with, taken from the parent actor.
-   */
-  get window() {
-    return this.parentActor.window;
-  },
-
-  /**
-   * The current content document of the window we work with.
-   */
-  get document() {
-    return this.window.document;
-  },
-
-  form: function()
-  {
-    return { actor: this.actorID };
-  },
-
-  initialize: function (conn, tabActor) {
+  initialize: function(aUrl, aSourceMap, aParentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
-    this.parentActor = tabActor;
+    this.url = aUrl;
+    this.sourceMap = aSourceMap;
+    this.parentActor = aParentActor;
+    this.conn = this.parentActor.conn;
+
+    this.text = null;
   },
 
-  /**
-   * Protocol method for getting a list of StyleSheetActors representing
-   * all the style sheets in this document.
-   */
-  getStyleSheets: method(Task.async(function* () {
-    // Iframe document can change during load (bug 1171919). Track their windows
-    // instead.
-    let windows = [this.window];
-    let actors = [];
+  form: function() {
+    return {
+      actor: this.actorID, // actorID is set when it's added to a pool
+      url: this.url,
+      relatedStyleSheet: this.parentActor.form()
+    };
+  },
 
-    for (let win of windows) {
-      let sheets = yield this._addStyleSheets(win);
-      actors = actors.concat(sheets);
-
-      // Recursively handle style sheets of the documents in iframes.
-      for (let iframe of win.document.querySelectorAll("iframe, browser, frame")) {
-        if (iframe.contentDocument && iframe.contentWindow) {
-          // Sometimes, iframes don't have any document, like the
-          // one that are over deeply nested (bug 285395)
-          windows.push(iframe.contentWindow);
-        }
-      }
+  _getText: function() {
+    if (this.text) {
+      return promise.resolve(this.text);
     }
-    return actors;
-  }), {
-    request: {},
-    response: { styleSheets: RetVal("array:stylesheet") }
-  }),
-
-  /**
-   * Check if we should be showing this stylesheet.
-   *
-   * @param {Document} doc
-   *        Document for which we're checking
-   * @param {DOMCSSStyleSheet} sheet
-   *        Stylesheet we're interested in
-   *
-   * @return boolean
-   *         Whether the stylesheet should be listed.
-   */
-  _shouldListSheet: function(doc, sheet) {
-    // Special case about:PreferenceStyleSheet, as it is generated on the
-    // fly and the URI is not registered with the about: handler.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-    if (sheet.href && sheet.href.toLowerCase() == "about:preferencestylesheet") {
-      return false;
+    let content = this.sourceMap.sourceContentFor(this.url);
+    if (content) {
+      this.text = content;
+      return promise.resolve(content);
     }
-
-    return true;
+    let options = {
+      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
+      window: this.window
+    };
+    return fetch(this.url, options).then(({content}) => {
+      this.text = content;
+      return content;
+    });
   },
 
   /**
-   * Add all the stylesheets for the document in this window to the map and
-   * create an actor for each one if not already created.
-   *
-   * @param {Window} win
-   *        Window for which to add stylesheets
-   *
-   * @return {Promise}
-   *         Promise that resolves to an array of StyleSheetActors
+   * Protocol method to get the text of this source.
    */
-  _addStyleSheets: function(win)
-  {
-    return Task.spawn(function*() {
-      let doc = win.document;
-      // readyState can be uninitialized if an iframe has just been created but
-      // it has not started to load yet.
-      if (doc.readyState === "loading" || doc.readyState === "uninitialized") {
-        // Wait for the document to load first.
-        yield listenOnce(win, "DOMContentLoaded", true);
-
-        // Make sure we have the actual document for this window. If the
-        // readyState was initially uninitialized, the initial dummy document
-        // was replaced with the actual document (bug 1171919).
-        doc = win.document;
-      }
-
-      let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
-      let actors = [];
-      for (let i = 0; i < styleSheets.length; i++) {
-        let sheet = styleSheets[i];
-        if (!this._shouldListSheet(doc, sheet)) {
-          continue;
-        }
-
-        let actor = this.parentActor.createStyleSheetActor(sheet);
-        actors.push(actor);
-
-        // Get all sheets, including imported ones
-        let imports = yield this._getImported(doc, actor);
-        actors = actors.concat(imports);
-      }
-      return actors;
-    }.bind(this));
-  },
-
-  /**
-   * Get all the stylesheets @imported from a stylesheet.
-   *
-   * @param  {Document} doc
-   *         The document including the stylesheet
-   * @param  {DOMStyleSheet} styleSheet
-   *         Style sheet to search
-   * @return {Promise}
-   *         A promise that resolves with an array of StyleSheetActors
-   */
-  _getImported: function(doc, styleSheet) {
-    return Task.spawn(function*() {
-      let rules = yield styleSheet.getCSSRules();
-      let imported = [];
-
-      for (let i = 0; i < rules.length; i++) {
-        let rule = rules[i];
-        if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
-          // Associated styleSheet may be null if it has already been seen due
-          // to duplicate @imports for the same URL.
-          if (!rule.styleSheet || !this._shouldListSheet(doc, rule.styleSheet)) {
-            continue;
-          }
-          let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
-          imported.push(actor);
-
-          // recurse imports in this stylesheet as well
-          let children = yield this._getImported(doc, actor);
-          imported = imported.concat(children);
-        }
-        else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
-          // @import rules must precede all others except @charset
-          break;
-        }
-      }
-
-      return imported;
-    }.bind(this));
-  },
-
-
-  /**
-   * Create a new style sheet in the document with the given text.
-   * Return an actor for it.
-   *
-   * @param  {object} request
-   *         Debugging protocol request object, with 'text property'
-   * @return {object}
-   *         Object with 'styelSheet' property for form on new actor.
-   */
-  addStyleSheet: method(function(text) {
-    let parent = this.document.documentElement;
-    let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
-    style.setAttribute("type", "text/css");
-
-    if (text) {
-      style.appendChild(this.document.createTextNode(text));
-    }
-    parent.appendChild(style);
-
-    let actor = this.parentActor.createStyleSheetActor(style.sheet);
-    return actor;
+  getText: method(function() {
+    return this._getText().then((text) => {
+      return new LongStringActor(this.conn, text || "");
+    });
   }, {
-    request: { text: Arg(0, "string") },
-    response: { styleSheet: RetVal("stylesheet") }
+    response: {
+      text: RetVal("longstring")
+    }
   })
-});
+})
 
 /**
- * The corresponding Front object for the StyleSheetsActor.
+ * The client-side counterpart for an OriginalSourceActor.
  */
-var StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
-  initialize: function(client, tabForm) {
-    protocol.Front.prototype.initialize.call(this, client);
-    this.actorID = tabForm.styleSheetsActor;
-    this.manage(this);
+var OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
+  initialize: function(client, form) {
+    protocol.Front.prototype.initialize.call(this, client, form);
+
+    this.isOriginalSource = true;
+  },
+
+  form: function(form, detail) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
+    this.actorID = form.actor;
+    this._form = form;
+  },
+
+  get href() {
+    return this._form.url;
+  },
+  get url() {
+    return this._form.url;
   }
 });
 
@@ -350,7 +229,7 @@ var MediaRuleActor = protocol.ActorClass({
 });
 
 /**
- * Cooresponding client-side front for a MediaRuleActor.
+ * Corresponding client-side front for a MediaRuleActor.
  */
 var MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
   initialize: function(client, form) {
@@ -392,6 +271,8 @@ var MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
     return this.conn.getActor(this._form.parentStyleSheet);
   }
 });
+
+types.addActorType("stylesheet");
 
 /**
  * A StyleSheetActor represents a stylesheet on the server.
@@ -1016,6 +897,8 @@ var StyleSheetActor = protocol.ActorClass({
   }
 })
 
+exports.StyleSheetActor = StyleSheetActor;
+
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
@@ -1091,103 +974,219 @@ var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
   }
 });
 
+exports.StyleSheetFront = StyleSheetFront;
+
 /**
- * Actor representing an original source of a style sheet that was specified
- * in a source map.
+ * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
+ * stylesheets of a document.
  */
-var OriginalSourceActor = protocol.ActorClass({
-  typeName: "originalsource",
+var StyleSheetsActor = protocol.ActorClass({
+  typeName: "stylesheets",
 
-  initialize: function(aUrl, aSourceMap, aParentActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this.url = aUrl;
-    this.sourceMap = aSourceMap;
-    this.parentActor = aParentActor;
-    this.conn = this.parentActor.conn;
-
-    this.text = null;
-  },
-
-  form: function() {
-    return {
-      actor: this.actorID, // actorID is set when it's added to a pool
-      url: this.url,
-      relatedStyleSheet: this.parentActor.form()
-    };
-  },
-
-  _getText: function() {
-    if (this.text) {
-      return promise.resolve(this.text);
-    }
-    let content = this.sourceMap.sourceContentFor(this.url);
-    if (content) {
-      this.text = content;
-      return promise.resolve(content);
-    }
-    let options = {
-      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-      window: this.window
-    };
-    return fetch(this.url, options).then(({content}) => {
-      this.text = content;
-      return content;
-    });
+  /**
+   * The window we work with, taken from the parent actor.
+   */
+  get window() {
+    return this.parentActor.window;
   },
 
   /**
-   * Protocol method to get the text of this source.
+   * The current content document of the window we work with.
    */
-  getText: method(function() {
-    return this._getText().then((text) => {
-      return new LongStringActor(this.conn, text || "");
-    });
+  get document() {
+    return this.window.document;
+  },
+
+  form: function()
+  {
+    return { actor: this.actorID };
+  },
+
+  initialize: function (conn, tabActor) {
+    protocol.Actor.prototype.initialize.call(this, null);
+
+    this.parentActor = tabActor;
+  },
+
+  /**
+   * Protocol method for getting a list of StyleSheetActors representing
+   * all the style sheets in this document.
+   */
+  getStyleSheets: method(Task.async(function* () {
+    // Iframe document can change during load (bug 1171919). Track their windows
+    // instead.
+    let windows = [this.window];
+    let actors = [];
+
+    for (let win of windows) {
+      let sheets = yield this._addStyleSheets(win);
+      actors = actors.concat(sheets);
+
+      // Recursively handle style sheets of the documents in iframes.
+      for (let iframe of win.document.querySelectorAll("iframe, browser, frame")) {
+        if (iframe.contentDocument && iframe.contentWindow) {
+          // Sometimes, iframes don't have any document, like the
+          // one that are over deeply nested (bug 285395)
+          windows.push(iframe.contentWindow);
+        }
+      }
+    }
+    return actors;
+  }), {
+    request: {},
+    response: { styleSheets: RetVal("array:stylesheet") }
+  }),
+
+  /**
+   * Check if we should be showing this stylesheet.
+   *
+   * @param {Document} doc
+   *        Document for which we're checking
+   * @param {DOMCSSStyleSheet} sheet
+   *        Stylesheet we're interested in
+   *
+   * @return boolean
+   *         Whether the stylesheet should be listed.
+   */
+  _shouldListSheet: function(doc, sheet) {
+    // Special case about:PreferenceStyleSheet, as it is generated on the
+    // fly and the URI is not registered with the about: handler.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
+    if (sheet.href && sheet.href.toLowerCase() == "about:preferencestylesheet") {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Add all the stylesheets for the document in this window to the map and
+   * create an actor for each one if not already created.
+   *
+   * @param {Window} win
+   *        Window for which to add stylesheets
+   *
+   * @return {Promise}
+   *         Promise that resolves to an array of StyleSheetActors
+   */
+  _addStyleSheets: function(win)
+  {
+    return Task.spawn(function*() {
+      let doc = win.document;
+      // readyState can be uninitialized if an iframe has just been created but
+      // it has not started to load yet.
+      if (doc.readyState === "loading" || doc.readyState === "uninitialized") {
+        // Wait for the document to load first.
+        yield listenOnce(win, "DOMContentLoaded", true);
+
+        // Make sure we have the actual document for this window. If the
+        // readyState was initially uninitialized, the initial dummy document
+        // was replaced with the actual document (bug 1171919).
+        doc = win.document;
+      }
+
+      let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
+      let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
+      let actors = [];
+      for (let i = 0; i < styleSheets.length; i++) {
+        let sheet = styleSheets[i];
+        if (!this._shouldListSheet(doc, sheet)) {
+          continue;
+        }
+
+        let actor = this.parentActor.createStyleSheetActor(sheet);
+        actors.push(actor);
+
+        // Get all sheets, including imported ones
+        let imports = yield this._getImported(doc, actor);
+        actors = actors.concat(imports);
+      }
+      return actors;
+    }.bind(this));
+  },
+
+  /**
+   * Get all the stylesheets @imported from a stylesheet.
+   *
+   * @param  {Document} doc
+   *         The document including the stylesheet
+   * @param  {DOMStyleSheet} styleSheet
+   *         Style sheet to search
+   * @return {Promise}
+   *         A promise that resolves with an array of StyleSheetActors
+   */
+  _getImported: function(doc, styleSheet) {
+    return Task.spawn(function*() {
+      let rules = yield styleSheet.getCSSRules();
+      let imported = [];
+
+      for (let i = 0; i < rules.length; i++) {
+        let rule = rules[i];
+        if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
+          // Associated styleSheet may be null if it has already been seen due
+          // to duplicate @imports for the same URL.
+          if (!rule.styleSheet || !this._shouldListSheet(doc, rule.styleSheet)) {
+            continue;
+          }
+          let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
+          imported.push(actor);
+
+          // recurse imports in this stylesheet as well
+          let children = yield this._getImported(doc, actor);
+          imported = imported.concat(children);
+        }
+        else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+          // @import rules must precede all others except @charset
+          break;
+        }
+      }
+
+      return imported;
+    }.bind(this));
+  },
+
+
+  /**
+   * Create a new style sheet in the document with the given text.
+   * Return an actor for it.
+   *
+   * @param  {object} request
+   *         Debugging protocol request object, with 'text property'
+   * @return {object}
+   *         Object with 'styelSheet' property for form on new actor.
+   */
+  addStyleSheet: method(function(text) {
+    let parent = this.document.documentElement;
+    let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+    style.setAttribute("type", "text/css");
+
+    if (text) {
+      style.appendChild(this.document.createTextNode(text));
+    }
+    parent.appendChild(style);
+
+    let actor = this.parentActor.createStyleSheetActor(style.sheet);
+    return actor;
   }, {
-    response: {
-      text: RetVal("longstring")
-    }
+    request: { text: Arg(0, "string") },
+    response: { styleSheet: RetVal("stylesheet") }
   })
-})
-
-/**
- * The client-side counterpart for an OriginalSourceActor.
- */
-var OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-
-    this.isOriginalSource = true;
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get href() {
-    return this._form.url;
-  },
-  get url() {
-    return this._form.url;
-  }
-});
-
-
-XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 
 exports.StyleSheetsActor = StyleSheetsActor;
+
+/**
+ * The corresponding Front object for the StyleSheetsActor.
+ */
+var StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
+  initialize: function(client, tabForm) {
+    protocol.Front.prototype.initialize.call(this, client);
+    this.actorID = tabForm.styleSheetsActor;
+    this.manage(this);
+  }
+});
+
 exports.StyleSheetsFront = StyleSheetsFront;
-
-exports.StyleSheetActor = StyleSheetActor;
-exports.StyleSheetFront = StyleSheetFront;
-
 
 /**
  * Normalize multiple relative paths towards the base paths on the right.
