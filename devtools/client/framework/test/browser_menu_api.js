@@ -71,6 +71,12 @@ function* testMenuPopup(toolbox) {
     menu.append(item);
   }
 
+  // Append an invisible MenuItem, which shouldn't show up in the DOM
+  menu.append(new MenuItem({
+    label: "Invisible",
+    visible: false,
+  }));
+
   menu.popup(0, 0, toolbox);
 
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
