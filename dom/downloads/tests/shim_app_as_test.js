@@ -1,11 +1,5 @@
 /**
- * Support logic to run a test file as an installed app.  This file is derived
- * from dom/requestsync/tests/test_basic_app.html but uses
- * DOMApplicationRegistry in a chrome script (shim_app_as_test_chrome.js) to
- * directly install the apps instead of mozApps.install because mozApps.install
- * can't install privileged/certified apps.  (This is the same mechanism used by
- * the Firefox OS Gaia email app's backend test runner.)
- *
+ * Support logic to run a test file as an installed app.
  * You really only want to do this if your test cares about the app's origin
  * or you REALLY want to double-check AvailableIn and other WebIDL-provided
  * security mechanisms.

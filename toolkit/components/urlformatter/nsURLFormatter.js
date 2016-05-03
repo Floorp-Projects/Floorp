@@ -104,6 +104,7 @@ nsURLFormatterService.prototype = {
     NAME:             function() { return this.appInfo.name; },
     ID:               function() { return this.appInfo.ID; },
     VERSION:          function() { return this.appInfo.version; },
+    MAJOR_VERSION:    function() { return this.appInfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1"); },
     APPBUILDID:       function() { return this.appInfo.appBuildID; },
     PLATFORMVERSION:  function() { return this.appInfo.platformVersion; },
     PLATFORMBUILDID:  function() { return this.appInfo.platformBuildID; },

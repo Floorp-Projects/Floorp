@@ -217,8 +217,7 @@ NetdClient::Start()
     }
 
     MessageLoopForIO::current()->
-      PostDelayedTask(FROM_HERE,
-                      NewRunnableFunction(NetdClient::Start),
+      PostDelayedTask(NewRunnableFunction(NetdClient::Start),
                       1000);
     return;
   }
@@ -334,7 +333,6 @@ StartNetd(NetdConsumer* aNetdConsumer)
 
   gNetdConsumer = aNetdConsumer;
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE,
     NewRunnableFunction(InitNetdIOThread));
 }
 
@@ -347,7 +345,6 @@ StopNetd()
   NS_ASSERTION(currentThread, "This should never be null!");
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE,
     NewRunnableFunction(ShutdownNetdIOThread));
 
   while (gNetdConsumer) {
@@ -370,7 +367,6 @@ SendNetdCommand(NetdCommand* aMessage)
   MOZ_ASSERT(aMessage);
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE,
     NewRunnableFunction(NetdClient::SendNetdCommandIOThread, aMessage));
 }
 

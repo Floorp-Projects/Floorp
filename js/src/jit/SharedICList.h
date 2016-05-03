@@ -37,8 +37,6 @@ namespace jit {
     _(GetProp_Fallback)                          \
     _(GetProp_Primitive)                         \
     _(GetProp_StringLength)                      \
-    _(GetProp_Unboxed)                           \
-    _(GetProp_TypedObject)                       \
     _(GetProp_CallScripted)                      \
     _(GetProp_CallNative)                        \
     _(GetProp_CallNativeGlobal)                  \

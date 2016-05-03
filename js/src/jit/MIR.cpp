@@ -4946,8 +4946,6 @@ MElements::mightAlias(const MDefinition* store) const
     if (!storeObj->resultTypeSet())
         return AliasType::MayAlias;
 
-        return AliasType::MayAlias;
-
     if (input()->resultTypeSet()->objectsIntersect(storeObj->resultTypeSet()))
         return AliasType::MayAlias;
     return AliasType::NoAlias;

@@ -61,6 +61,10 @@ private:
     // Sends the network event.
     nsresult SendEvent(const char *aEventID);
 
+    // Figure out the current "network identification"
+    void calculateNetworkId(void);
+    nsCString mNetworkId;
+
     // Checks if there's a network "link"
     void checkLink(void);
 

@@ -11,8 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Constructor(USVString url, optional EventSourceInit eventSourceInitDict),
- Func="mozilla::dom::EventSource::PrefEnabled"]
+[Constructor(USVString url, optional EventSourceInit eventSourceInitDict)]
 interface EventSource : EventTarget {
   [Constant]
   readonly attribute DOMString url;

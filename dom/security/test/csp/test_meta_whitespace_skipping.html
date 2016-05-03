@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1261634 - Update whitespace skipping for meta csp</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe" src="file_meta_whitespace_skipping.html"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * We load a site using meta CSP into an iframe. We make sure that all directives
+ * are parsed correclty by the CSP parser even though the directives are separated
+ * not only by whitespace but also by line breaks
+ */
+
+SimpleTest.waitForExplicitFinish();
+const EXPECTED_DIRS = [
+  "img-src", "script-src", "style-src", "child-src", "font-src"];
+
+function finishTest() {
+  window.removeEventListener("message", receiveMessage, false);
+  SimpleTest.finish();
+}
+
+function checkResults(result) {
+  // sanity check that the site was loaded and the meta csp was parsed.
+  is(result, "meta-csp-parsed", "loading images should be blocked by meta csp");
+
+  try {
+    // get the csp in JSON notation from the principal
+    var frame = document.getElementById("testframe");
+    var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
+    var cspJSON = principal.cspJSON;
+    ok(cspJSON, "CSP applied through meta element");
+
+    // parse the cspJSON in a csp-object
+    var cspOBJ = JSON.parse(cspJSON);
+    ok(cspOBJ, "was able to parse the JSON");
+
+    // make sure we only got one policy
+    var policies = cspOBJ["csp-policies"];
+    is(policies.length, 1, "there should be one policy applied");
+
+    // iterate the policy and make sure to only encounter
+    // expected directives.
+    var policy = policies[0];
+    for (var dir in policy) {
+      // special case handling for report-only which is not a directive
+      // but present in the JSON notation of the CSP.
+      if (dir === "report-only") {
+        continue;
+      }
+      var index = EXPECTED_DIRS.indexOf(dir);
+      isnot(index, -1, "meta csp contains directive: " + dir + "!");
+
+      // take the element out of the array so we can make sure
+      // that we have seen all the expected values in the end.
+      EXPECTED_DIRS.splice(index, 1);
+    }
+    is(EXPECTED_DIRS.length, 0, "have seen all the expected values");
+  }
+  catch (e) {
+    ok(false, "uuh, something went wrong within meta csp test");
+  }
+
+  finishTest();
+}
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  checkResults(event.data.result);
+}
+
+</script>
+</body>
+</html>

@@ -12,6 +12,13 @@
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
+  var ok = function (condition, name) {
+    SimpleTest.ok(condition, test.name + ": " + name);
+  }
+  var is = function (a, b, name) {
+    SimpleTest.is(a, b, test.name + ": " + name);
+  }
+
   var v = document.createElement("video");
   manager.started(token);
   v.addEventListener("error", function (event) {

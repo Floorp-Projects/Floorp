@@ -231,7 +231,8 @@ public:
   ReferrerSameOriginChecker(workers::WorkerPrivate* aWorkerPrivate,
                             const nsAString& aReferrerURL,
                             nsresult& aResult)
-    : workers::WorkerMainThreadRunnable(aWorkerPrivate),
+    : workers::WorkerMainThreadRunnable(aWorkerPrivate,
+                                        NS_LITERAL_CSTRING("Fetch :: Referrer same origin check")),
       mReferrerURL(aReferrerURL),
       mResult(aResult)
   {

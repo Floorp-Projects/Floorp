@@ -1,0 +1,53 @@
+<html class="reftest-wait">
+<!--
+For bug 1266833; syncing the scroll offset to APZ properly when the scroll
+position is clamped to a smaller value during a frame reconstruction.
+-->
+<script>
+    function run() {
+        document.body.scrollTop = document.body.scrollTopMax;
+
+        // Let the scroll position propagate to APZ before we do the frame
+        // reconstruction. Ideally we would wait for flushApzRepaints here but
+        // we don't have access to DOMWindowUtils in a reftest, so we just wait
+        // 100ms to approximate it. With bug 1266833 fixed, this test should
+        // never fail regardless of what this timeout value is.
+        setTimeout(frameReconstruction, 100);
+    }
+
+    function frameReconstruction() {
+        document.body.classList.toggle('noscroll');
+        document.documentElement.classList.toggle('reconstruct-body');
+        document.getElementById('spacer').style.height = '100%';
+        document.documentElement.classList.remove('reftest-wait');
+    }
+</script>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        background-color: green;
+    }
+
+    .noscroll {
+        overflow: hidden;
+        height: 100%;
+    }
+
+    /* Toggling this on and off triggers a frame reconstruction on the <body> */
+    html.reconstruct-body::before {
+        top: 0;
+        content: '';
+        display: block;
+        height: 2px;
+        position: absolute;
+        width: 100%;
+        z-index: 99;
+    }
+</style>
+<body onload="setTimeout(run, 0)">
+ <div id="spacer" style="height: 5000px">
+  This is the top of the page.
+ </div>
+ This is the bottom of the page.
+</body>
