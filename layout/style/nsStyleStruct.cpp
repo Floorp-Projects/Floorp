@@ -1864,15 +1864,15 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
 //
 
 nsStyleColor::nsStyleColor(StyleStructContext aContext)
+  : mColor(aContext.DefaultColor())
 {
   MOZ_COUNT_CTOR(nsStyleColor);
-  mColor = aContext.DefaultColor();
 }
 
 nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
+  : mColor(aSource.mColor)
 {
   MOZ_COUNT_CTOR(nsStyleColor);
-  mColor = aSource.mColor;
 }
 
 nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
