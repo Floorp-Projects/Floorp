@@ -198,9 +198,13 @@ nsViewManager::ShouldDelayResize() const
 {
   MOZ_ASSERT(mRootView);
   if (!mRootView->IsEffectivelyVisible() ||
-      !mPresShell || !mPresShell->IsVisible() ||
-      mPresShell->IsInFullscreenChange()) {
+      !mPresShell || !mPresShell->IsVisible()) {
     return true;
+  }
+  if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
+    if (rd->IsResizeSuppressed()) {
+      return true;
+    }
   }
   return false;
 }
