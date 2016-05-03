@@ -940,7 +940,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
   MOZ_ASSERT(bool(aSource.mStrokeDasharray) ==
              bool(aSource.mStrokeDasharrayLength),
-             "mStrokeDasharry has an inconsistent length in aSource!");
+             "aSource.mStrokeDasharray has an inconsistent length!");
   if (aSource.mStrokeDasharray) {
     mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
     mStrokeDasharray = new nsStyleCoord[mStrokeDasharrayLength];
@@ -1814,17 +1814,16 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 // nsStyleTableBorder
 
 nsStyleTableBorder::nsStyleTableBorder(StyleStructContext aContext)
-{ 
+  : mBorderSpacingCol(0)
+  , mBorderSpacingRow(0)
+  , mBorderCollapse(NS_STYLE_BORDER_SEPARATE)
+  , mCaptionSide(NS_STYLE_CAPTION_SIDE_TOP)
+  , mEmptyCells(NS_STYLE_TABLE_EMPTY_CELLS_SHOW)
+{
   MOZ_COUNT_CTOR(nsStyleTableBorder);
-  mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
-
-  mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-  mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
-  mBorderSpacingCol = 0;
-  mBorderSpacingRow = 0;
 }
 
-nsStyleTableBorder::~nsStyleTableBorder(void) 
+nsStyleTableBorder::~nsStyleTableBorder(void)
 {
   MOZ_COUNT_DTOR(nsStyleTableBorder);
 }
@@ -1848,7 +1847,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
   if (mBorderCollapse != aOther.mBorderCollapse) {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  
+
   if ((mCaptionSide == aOther.mCaptionSide) &&
       (mBorderSpacingCol == aOther.mBorderSpacingCol) &&
       (mBorderSpacingRow == aOther.mBorderSpacingRow)) {
