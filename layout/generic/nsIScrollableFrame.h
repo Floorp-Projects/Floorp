@@ -288,15 +288,6 @@ public:
   virtual void ScrollToRestoredPosition() = 0;
 
   /**
-   * Set whether or not the scrollframe should treat scroll position restoration
-   * as coming from history or not. This changes behaviour slightly, as history-
-   * basied scroll position restorations need to deal with incremental page
-   * loading, where the restore attempt might not work until more of the page
-   * is loaded.
-   */
-  virtual void SetRestoringHistoryScrollPosition(bool aValue) = 0;
-
-  /**
    * Add a scroll position listener. This listener must be removed
    * before it is destroyed.
    */
