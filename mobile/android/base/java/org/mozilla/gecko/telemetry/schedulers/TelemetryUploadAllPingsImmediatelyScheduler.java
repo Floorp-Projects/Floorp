@@ -23,10 +23,10 @@ public class TelemetryUploadAllPingsImmediatelyScheduler implements TelemetryUpl
     }
 
     @Override
-    public void scheduleUpload(final Context context, final TelemetryPingStore store) {
+    public void scheduleUpload(final Context applicationContext, final TelemetryPingStore store) {
         final Intent i = new Intent(TelemetryUploadService.ACTION_UPLOAD);
-        i.setClass(context, TelemetryUploadService.class);
+        i.setClass(applicationContext, TelemetryUploadService.class);
         i.putExtra(TelemetryUploadService.EXTRA_STORE, store);
-        context.startService(i);
+        applicationContext.startService(i);
     }
 }

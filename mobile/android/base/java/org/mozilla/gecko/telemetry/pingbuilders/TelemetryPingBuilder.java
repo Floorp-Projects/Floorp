@@ -27,10 +27,12 @@ abstract class TelemetryPingBuilder {
 
     private final String serverPath;
     protected final ExtendedJSONObject payload;
+    private final int uniqueID;
 
-    public TelemetryPingBuilder() {
+    public TelemetryPingBuilder(final int uniqueID) {
         serverPath = getTelemetryServerPath(getDocType());
         payload = new ExtendedJSONObject();
+        this.uniqueID = uniqueID;
     }
 
     /**
@@ -46,7 +48,7 @@ abstract class TelemetryPingBuilder {
 
     public TelemetryPing build() {
         validatePayload();
-        return new TelemetryPing(serverPath, payload);
+        return new TelemetryPing(serverPath, payload, uniqueID);
     }
 
     private void validatePayload() {
