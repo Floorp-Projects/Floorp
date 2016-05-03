@@ -1784,14 +1784,13 @@ nsStylePosition::ComputedJustifySelf(nsStyleContext* aParent) const
 //
 
 nsStyleTable::nsStyleTable(StyleStructContext aContext)
-{ 
+  : mLayoutStrategy(NS_STYLE_TABLE_LAYOUT_AUTO)
+  , mSpan(1)
+{
   MOZ_COUNT_CTOR(nsStyleTable);
-  // values not inherited
-  mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
-  mSpan = 1;
 }
 
-nsStyleTable::~nsStyleTable(void) 
+nsStyleTable::~nsStyleTable(void)
 {
   MOZ_COUNT_DTOR(nsStyleTable);
 }
