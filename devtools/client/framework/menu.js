@@ -92,6 +92,10 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
 Menu.prototype._createMenuItems = function(parent) {
   let doc = parent.ownerDocument;
   this.menuitems.forEach(item => {
+    if (!item.visible) {
+      return;
+    }
+
     if (item.submenu) {
       let menupopup = doc.createElement("menupopup");
       item.submenu._createMenuItems(menupopup);
