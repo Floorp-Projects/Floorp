@@ -429,8 +429,10 @@ class WorkerMainThreadRunnable : public Runnable
 protected:
   WorkerPrivate* mWorkerPrivate;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+  const nsCString mTelemetryKey;
 
-  explicit WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerMainThreadRunnable(WorkerPrivate* aWorkerPrivate,
+                                    const nsACString& aTelemetryKey);
   ~WorkerMainThreadRunnable() {}
 
   virtual bool MainThreadRun() = 0;
@@ -452,13 +454,14 @@ private:
 // them happen while a worker is shutting down.
 //
 // Do NOT copy what this class is doing elsewhere.  Just don't.
-class WorkerCheckAPIExposureOnMainThreadRunnable : public WorkerMainThreadRunnable
+class WorkerCheckAPIExposureOnMainThreadRunnable
+  : public WorkerMainThreadRunnable
 {
 public:
-  explicit WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate):
-    WorkerMainThreadRunnable(aWorkerPrivate)
-  {}
-  ~WorkerCheckAPIExposureOnMainThreadRunnable() {}
+  explicit
+  WorkerCheckAPIExposureOnMainThreadRunnable(WorkerPrivate* aWorkerPrivate);
+  virtual
+  ~WorkerCheckAPIExposureOnMainThreadRunnable();
 
   // Returns whether the dispatch succeeded.  If this returns false, the API
   // should not be exposed.

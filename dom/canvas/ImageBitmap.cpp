@@ -269,7 +269,8 @@ public:
                                              const gfx::IntSize& aSize,
                                              const Maybe<IntRect>& aCropRect,
                                              layers::Image** aImage)
-  : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate())
+  : WorkerMainThreadRunnable(GetCurrentThreadWorkerPrivate(),
+                               NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Raw Data"))
   , mImage(aImage)
   , mBuffer(aBuffer)
   , mBufferLength(aBufferLength)
@@ -1150,7 +1151,8 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
                                    Blob& aBlob,
                                    Maybe<IntRect>& aCropRect,
                                    layers::Image** aImage)
-    : WorkerMainThreadRunnable(aWorkerPrivate)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("ImageBitmap :: Create Image from Blob"))
     , mBlob(aBlob)
     , mCropRect(aCropRect)
     , mImage(aImage)

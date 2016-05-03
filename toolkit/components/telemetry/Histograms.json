@@ -10600,5 +10600,15 @@
     "expires_in_version": "55",
     "kind": "boolean",
     "description": "Result of call to SandboxBroker::Initialize"
+  },
+  "SYNC_WORKER_OPERATION": {
+    "alert_emails": ["amarchesini@mozilla.com", "khuey@mozilla.com" ],
+    "bug_numbers": [1267904],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Tracking how long a Worker thread is blocked when a sync operation is executed on the main-thread."
   }
 }
