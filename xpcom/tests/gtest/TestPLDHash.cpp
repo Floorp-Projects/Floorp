@@ -50,7 +50,9 @@ TestCrashyOperation(void (*aCrashyOperation)())
 #ifdef MOZ_CRASHREPORTER
     nsCOMPtr<nsICrashReporter> crashreporter =
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-    crashreporter->SetEnabled(false);
+    if (crashreporter) {
+      crashreporter->SetEnabled(false);
+    }
 #endif
 
     // Child: perform the crashy operation.
