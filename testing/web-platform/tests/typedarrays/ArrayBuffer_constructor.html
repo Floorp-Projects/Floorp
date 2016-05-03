@@ -8,30 +8,15 @@
 <div id="log"></div>
 <script>
 
-var badArgs = [
-  NaN, +Infinity, -Infinity,
-  -0.4, -0.9, 1.1, 2.9, -0xF1000000
-];
-
-badArgs.forEach(function (arg, i) {
-    test(function () {
-        try {
-            new ArrayBuffer(arg);
-            throw new AssertionError("no exception thrown");
-        } catch (exc) {
-            assert_equals(exc instanceof RangeError, true);
-        }
-    }, "The value " + format_value(arg) +
-       " is not a valid argument for ArrayBuffer constructor. " + i);
-});
-
 var args = [
   /* numbers */
-  [+0, 0], [-0, 0], [1, 1],
+  [NaN, 0], [+Infinity, 0], [-Infinity, 0], [+0, 0], [-0, 0],
+  [-0.4, 0], [-0.9, 0], [1.1, 1], [2.9, 2],
+  [1, 1], [-0xF1000000, 0],
   /* strings */
   ["1", 1], ["1e2", 100],
-  /* null, booleans */
-  [null, 0], [false, 0], [true, 1]
+  /* null, undefined, booleans */
+  [undefined, 0], [null, 0], [false, 0], [true, 1]
 ];
 
 args.forEach(function (arg, i) {

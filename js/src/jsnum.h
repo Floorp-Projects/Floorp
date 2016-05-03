@@ -266,19 +266,6 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
     return true;
 }
 
-/* ECMA-262 draft (2016 Mar 19) 7.1.15 ToLength ( argument ) */
-inline double
-ToLength(double argument)
-{
-    const double MAX_SAFE_INTEGER = 9007199254740991;
-    double len = JS::ToInteger(argument);
-    if (len <= 0)
-        return 0;
-    if (len > MAX_SAFE_INTEGER)
-        return MAX_SAFE_INTEGER;
-    return len;
-}
-
 /* ES6 7.1.15 ToLength, but clamped to the [0,2^32-2] range.  If the
  * return value is false then *overflow will be true iff the value was
  * not clampable to uint32_t range.
