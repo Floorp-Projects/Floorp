@@ -5169,9 +5169,6 @@ pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@m
 // the percentage of time addons are allowed to use without being labeled slow
 pref("browser.addon-watch.percentage-limit", 5);
 
-// RequestSync API is disabled by default.
-pref("dom.requestSync.enabled", false);
-
 // Search service settings
 pref("browser.search.log", false);
 pref("browser.search.update", true);
