@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1269539
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1269539</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1269539">Mozilla Bug 1269539</a>
+<p id="display"></p>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var loadCount = 0;
+var childWin = window.open('file_scroll_position_restore.html', '_blank');
+
+function handleLoad() {
+  if (loadCount == 0) {
+    loadCount++;
+    childWin.scrollTo(0, childWin.scrollMaxY);
+    childWin.waitForAllPaintsFlushed(function() {
+      childWin.location.reload();
+    });
+  } else {
+    childWin.waitForAllPaintsFlushed(function() {
+      // Verify that the scroll position was retained
+      is(childWin.scrollY, childWin.scrollMaxY);
+      childWin.close();
+      SimpleTest.finish();
+    });
+  }
+}
+
+</script>
+</body>
+</html>
