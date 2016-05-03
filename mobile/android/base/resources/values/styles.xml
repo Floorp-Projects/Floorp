@@ -82,7 +82,8 @@
 
     <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
         <item name="android:listSelector">@drawable/menu_item_action_bar_bg</item>
-        <item name="android:divider">@color/toolbar_divider_grey</item>
+        <item name="android:divider">@null</item>
+        <item name="android:dividerHeight">0dp</item>
     </style>
 
     <style name="Widget.MenuItemActionBar">
