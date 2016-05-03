@@ -433,50 +433,6 @@ mozilla::GetBuildId(JS::BuildIdCharVector* aBuildID)
   return true;
 }
 
-struct ClearJSHolder : public TraceCallbacks
-{
-  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const override
-  {
-    aPtr->setUndefined();
-  }
-
-  virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const override
-  {
-    *aPtr = JSID_VOID;
-  }
-
-  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const override
-  {
-    *aPtr = nullptr;
-  }
-
-  virtual void Trace(JSObject** aPtr, const char* aName,
-                     void* aClosure) const override
-  {
-    *aPtr = nullptr;
-  }
-
-  virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char*, void*) const override
-  {
-    *aPtr = nullptr;
-  }
-
-  virtual void Trace(JS::Heap<JSString*>* aPtr, const char*, void*) const override
-  {
-    *aPtr = nullptr;
-  }
-
-  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char*, void*) const override
-  {
-    *aPtr = nullptr;
-  }
-
-  virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char*, void*) const override
-  {
-    *aPtr = nullptr;
-  }
-};
-
 CycleCollectedJSRuntime::CycleCollectedJSRuntime()
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
@@ -514,14 +470,6 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 
   MOZ_ASSERT(mDebuggerPromiseMicroTaskQueue.empty());
   MOZ_ASSERT(mPromiseMicroTaskQueue.empty());
-
-  for (auto iter = mJSHolders.Iter(); !iter.Done(); iter.Next()) {
-    void* holder = iter.Key();
-    nsScriptObjectTracer*& tracer = iter.Data();
-    tracer->Trace(holder, ClearJSHolder(), nullptr);
-
-  }
-  mJSHolders.Clear();
 
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
@@ -1086,6 +1034,50 @@ CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTrace
   MOZ_ASSERT(mJSRuntime);
   mJSHolders.Put(aHolder, aTracer);
 }
+
+struct ClearJSHolder : public TraceCallbacks
+{
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const override
+  {
+    aPtr->setUndefined();
+  }
+
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const override
+  {
+    *aPtr = JSID_VOID;
+  }
+
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const override
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JSObject** aPtr, const char* aName,
+                     void* aClosure) const override
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char*, void*) const override
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char*, void*) const override
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char*, void*) const override
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char*, void*) const override
+  {
+    *aPtr = nullptr;
+  }
+};
 
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
