@@ -8,7 +8,6 @@ SOURCES += [
     'affentry.cxx',
     'affixmgr.cxx',
     'csutil.cxx',
-    'dictmgr.cxx',
     'filemgr.cxx',
     'hashmgr.cxx',
     'hunspell.cxx',
