@@ -23,8 +23,9 @@ namespace dom {
 already_AddRefed<InternalRequest>
 InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult& aRv) const
 {
-  RefPtr<InternalRequest> copy = new InternalRequest();
-  copy->mURL.Assign(mURL);
+  MOZ_RELEASE_ASSERT(!mURLList.IsEmpty(), "Internal Request's urlList should not be empty when copied from constructor.");
+
+  RefPtr<InternalRequest> copy = new InternalRequest(mURLList.LastElement());
   copy->SetMethod(mMethod);
   copy->mHeaders = new InternalHeaders(*mHeaders);
   copy->SetUnsafeRequest();
@@ -77,7 +78,7 @@ InternalRequest::Clone()
 
 InternalRequest::InternalRequest(const InternalRequest& aOther)
   : mMethod(aOther.mMethod)
-  , mURL(aOther.mURL)
+  , mURLList(aOther.mURLList)
   , mHeaders(new InternalHeaders(*aOther.mHeaders))
   , mContentPolicyType(aOther.mContentPolicyType)
   , mReferrer(aOther.mReferrer)

@@ -53,8 +53,14 @@ public:
   GetUrl(nsAString& aUrl) const
   {
     nsCString url;
-    mInternalResponse->GetUrl(url);
+    mInternalResponse->GetURL(url);
     CopyUTF8toUTF16(url, aUrl);
+  }
+
+  bool
+  Redirected() const
+  {
+    return mInternalResponse->IsRedirected();
   }
 
   uint16_t
