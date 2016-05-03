@@ -56,7 +56,7 @@ function* testShortcuts(toolbox, index, key, toolIDs) {
        " using key " + key);
 
   let onToolSelected = toolbox.once("select");
-  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.doc.defaultView);
+  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.win);
   let id = yield onToolSelected;
 
   info("toolbox-select event from " + id);

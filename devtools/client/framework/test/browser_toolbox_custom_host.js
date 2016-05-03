@@ -38,7 +38,7 @@ function test() {
 
   function testCustomHost(t) {
     toolbox = t;
-    is(toolbox.doc.defaultView.top, window, "Toolbox is included in browser.xul");
+    is(toolbox.win.top, window, "Toolbox is included in browser.xul");
     is(toolbox.doc, iframe.contentDocument, "Toolbox is in the custom iframe");
     executeSoon(() => gBrowser.removeCurrentTab());
   }

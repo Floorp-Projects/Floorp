@@ -988,8 +988,7 @@ InspectorPanel.prototype = {
 
     this._markupBox.removeAttribute("collapsed");
 
-    let controllerWindow = this._toolbox.doc.defaultView;
-    this.markup = new MarkupView(this, this._markupFrame, controllerWindow);
+    this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
 
     this.emit("markuploaded");
   },
