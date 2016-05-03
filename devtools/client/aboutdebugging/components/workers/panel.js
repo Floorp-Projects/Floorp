@@ -118,6 +118,7 @@ module.exports = createClass({
         client,
         id: "service-workers",
         name: Strings.GetStringFromName("serviceWorkers"),
+        sort: true,
         targetClass: ServiceWorkerTarget,
         targets: workers.service
       }),
@@ -125,6 +126,7 @@ module.exports = createClass({
         client,
         id: "shared-workers",
         name: Strings.GetStringFromName("sharedWorkers"),
+        sort: true,
         targetClass: WorkerTarget,
         targets: workers.shared
       }),
@@ -132,6 +134,7 @@ module.exports = createClass({
         client,
         id: "other-workers",
         name: Strings.GetStringFromName("otherWorkers"),
+        sort: true,
         targetClass: WorkerTarget,
         targets: workers.other
       })
