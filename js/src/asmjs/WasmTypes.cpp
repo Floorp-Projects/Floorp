@@ -66,13 +66,6 @@ OnOutOfBounds()
 }
 
 static void
-OnImpreciseConversion()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_FAILED_CONVERSION);
-}
-
-static void
 BadIndirectCall()
 {
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
@@ -80,24 +73,32 @@ BadIndirectCall()
 }
 
 static void
-UnreachableTrap()
+HandleTrap(int32_t trapIndex)
 {
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNREACHABLE);
-}
 
-static void
-IntegerOverflowTrap()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_INTEGER_OVERFLOW);
-}
+    MOZ_ASSERT(trapIndex < int32_t(Trap::Limit) && trapIndex >= 0);
+    Trap trap = Trap(trapIndex);
 
-static void
-InvalidConversionToIntegerTrap()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_INVALID_CONVERSION);
+    unsigned errorNumber;
+    switch (trap) {
+      case Trap::Unreachable:
+        errorNumber = JSMSG_WASM_UNREACHABLE;
+        break;
+      case Trap::IntegerOverflow:
+        errorNumber = JSMSG_WASM_INTEGER_OVERFLOW;
+        break;
+      case Trap::InvalidConversionToInteger:
+        errorNumber = JSMSG_WASM_INVALID_CONVERSION;
+        break;
+      case Trap::ImpreciseSimdConversion:
+        errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
+        break;
+      default:
+        MOZ_CRASH("unexpected trap");
+    }
+
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber);
 }
 
 static int32_t
@@ -246,18 +247,12 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::OnOutOfBounds:
         return FuncCast(OnOutOfBounds, Args_General0);
-      case SymbolicAddress::OnImpreciseConversion:
-        return FuncCast(OnImpreciseConversion, Args_General0);
       case SymbolicAddress::BadIndirectCall:
         return FuncCast(BadIndirectCall, Args_General0);
-      case SymbolicAddress::UnreachableTrap:
-        return FuncCast(UnreachableTrap, Args_General0);
-      case SymbolicAddress::IntegerOverflowTrap:
-        return FuncCast(IntegerOverflowTrap, Args_General0);
-      case SymbolicAddress::InvalidConversionToIntegerTrap:
-        return FuncCast(InvalidConversionToIntegerTrap, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
+      case SymbolicAddress::HandleTrap:
+        return FuncCast(HandleTrap, Args_General1);
       case SymbolicAddress::InvokeImport_Void:
         return FuncCast(InvokeImport_Void, Args_General3);
       case SymbolicAddress::InvokeImport_I32:
