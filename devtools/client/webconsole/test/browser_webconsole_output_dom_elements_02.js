@@ -107,7 +107,7 @@ function test() {
       let onNodeUnhighlight = toolbox.once("node-unhighlight");
       let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
       EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
-        inspector.toolbox.doc.defaultView);
+        inspector.toolbox.win);
       yield onNodeUnhighlight;
 
       info("Switching back to the console");

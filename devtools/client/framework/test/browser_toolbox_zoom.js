@@ -45,7 +45,7 @@ function testZoomLevel(type, times, expected) {
 function sendZoomKey(id, times) {
   let key = toolbox.doc.getElementById(id).getAttribute("key");
   for (let i = 0; i < times; i++) {
-    EventUtils.synthesizeKey(key, modifiers, toolbox.doc.defaultView);
+    EventUtils.synthesizeKey(key, modifiers, toolbox.win);
   }
 }
 

@@ -40,7 +40,7 @@ function zoomWithKey(toolbox, key) {
 
   info("Zooming with key: " + key);
   let currentZoom = toolbox.zoomValue;
-  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.doc.defaultView);
+  EventUtils.synthesizeKey(key, {accelKey: true}, toolbox.win);
   isnot(toolbox.zoomValue, currentZoom, "The zoom level was changed in the toolbox");
 }
 

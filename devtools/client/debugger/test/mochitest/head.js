@@ -1158,7 +1158,7 @@ function getSplitConsole(toolbox, win) {
   });
 
   if (!win) {
-    win = toolbox.doc.defaultView;
+    win = toolbox.win;
   }
 
   if (!toolbox.splitConsole) {

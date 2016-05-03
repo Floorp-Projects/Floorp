@@ -59,7 +59,7 @@ function testShortcuts(aToolbox, aIndex) {
   idIndex = aIndex;
   info("Testing shortcut for tool " + aIndex + ":" + toolIDs[aIndex] +
        " using key " + key);
-  EventUtils.synthesizeKey(key, modifiers, toolbox.doc.defaultView.parent);
+  EventUtils.synthesizeKey(key, modifiers, toolbox.win.parent);
 }
 
 function selectCB(event, id) {
