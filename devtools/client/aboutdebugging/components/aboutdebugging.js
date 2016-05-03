@@ -15,6 +15,8 @@ const PanelMenu = createFactory(require("./panel-menu"));
 
 loader.lazyGetter(this, "AddonsPanel",
   () => createFactory(require("./addons/panel")));
+loader.lazyGetter(this, "TabsPanel",
+  () => createFactory(require("./tabs/panel")));
 loader.lazyGetter(this, "WorkersPanel",
   () => createFactory(require("./workers/panel")));
 
@@ -27,6 +29,12 @@ const panels = [{
   name: Strings.GetStringFromName("addons"),
   icon: "chrome://devtools/skin/images/debugging-addons.svg",
   component: AddonsPanel
+}, {
+  id: "tabs",
+  panelId: "tabs-panel",
+  name: Strings.GetStringFromName("tabs"),
+  icon: "chrome://devtools/skin/images/debugging-tabs.svg",
+  component: TabsPanel
 }, {
   id: "workers",
   panelId: "workers-panel",

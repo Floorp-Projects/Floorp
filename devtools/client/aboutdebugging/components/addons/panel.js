@@ -123,7 +123,14 @@ module.exports = createClass({
     }),
     AddonsControls({ debugDisabled }),
     dom.div({ id: "addons" },
-      TargetList({ name, targets, client, debugDisabled, targetClass })
+      TargetList({
+        name,
+        targets,
+        client,
+        debugDisabled,
+        targetClass,
+        sort: true
+      })
     ));
   }
 });
