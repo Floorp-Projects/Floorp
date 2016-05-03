@@ -109,7 +109,8 @@ class GetUserAgentRunnable final : public WorkerMainThreadRunnable
 
 public:
   GetUserAgentRunnable(WorkerPrivate* aWorkerPrivate, nsString& aUA)
-    : WorkerMainThreadRunnable(aWorkerPrivate)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("UserAgent getter"))
     , mUA(aUA)
   {
     MOZ_ASSERT(aWorkerPrivate);

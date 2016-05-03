@@ -84,6 +84,7 @@ class ObjOperandId : public OperandId
     _(GuardProto)                         \
     _(GuardClass)                         \
     _(GuardSpecificObject)                \
+    _(GuardNoDetachedTypedObjects)        \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
@@ -91,6 +92,8 @@ class ObjOperandId : public OperandId
     _(LoadUnboxedExpando)                 \
     _(LoadFixedSlotResult)                \
     _(LoadDynamicSlotResult)              \
+    _(LoadUnboxedPropertyResult)          \
+    _(LoadTypedObjectResult)              \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
@@ -264,6 +267,9 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
         addStubWord(uintptr_t(expected), StubField::GCType::JSObject);
     }
+    void guardNoDetachedTypedObjects() {
+        writeOp(CacheOp::GuardNoDetachedTypedObjects);
+    }
     void guardNoUnboxedExpando(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::GuardNoUnboxedExpando, obj);
     }
@@ -302,6 +308,20 @@ class MOZ_RAII CacheIRWriter
     }
     void loadDynamicSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
+        addStubWord(offset, StubField::GCType::NoGCThing);
+    }
+    void loadUnboxedPropertyResult(ObjOperandId obj, JSValueType type, size_t offset) {
+        writeOpWithOperandId(CacheOp::LoadUnboxedPropertyResult, obj);
+        buffer_.writeByte(uint32_t(type));
+        addStubWord(offset, StubField::GCType::NoGCThing);
+    }
+    void loadTypedObjectResult(ObjOperandId obj, uint32_t offset, TypedThingLayout layout,
+                               uint32_t typeDescr) {
+        MOZ_ASSERT(uint32_t(layout) <= UINT8_MAX);
+        MOZ_ASSERT(typeDescr <= UINT8_MAX);
+        writeOpWithOperandId(CacheOp::LoadTypedObjectResult, obj);
+        buffer_.writeByte(uint32_t(layout));
+        buffer_.writeByte(typeDescr);
         addStubWord(offset, StubField::GCType::NoGCThing);
     }
     void loadInt32ArrayLengthResult(ObjOperandId obj) {
@@ -349,6 +369,9 @@ class MOZ_RAII CacheIRReader
 
     uint32_t stubOffset() { return buffer_.readByte(); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
+    JSValueType valueType() { return JSValueType(buffer_.readByte()); }
+    TypedThingLayout typedThingLayout() { return TypedThingLayout(buffer_.readByte()); }
+    uint32_t typeDescrKey() { return buffer_.readByte(); }
 
     bool matchOp(CacheOp op) {
         const uint8_t* pos = buffer_.currentPosition();
@@ -388,7 +411,9 @@ class MOZ_RAII GetPropIRGenerator
     PreliminaryObjectAction preliminaryObjectAction_;
 
     bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
     bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 

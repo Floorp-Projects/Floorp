@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- Test all the different space characters within the meta csp:
+       * U+0020 space           | &#x20;
+       * U+0009 tab             | &#x9;        
+       * U+000A line feed       | &#xa;  
+       * U+000C form feed       | &#xc;
+       * U+000D carriage return | &#xd;
+    !-->
+  <meta http-equiv="Content-Security-Policy"
+        content= "
+        img-src&#x20;       'none'; &#x20;
+        script-src 'unsafe-inline'  &#xd;
+        ;
+        style-src&#x9;&#x9;     https://example.com&#xa;
+        https://foo.com;&#xc;;;;&#xc;;;&#xc;     child-src    foo.com
+        bar.com
+            &#xd;;&#xd;
+                     font-src 'none'">
+  <title>Bug 1261634 - Update whitespace skipping for meta csp</title>
+</head>
+<body>
+  <script type="application/javascript">
+    // notify the including document that we are done parsing the meta csp
+    window.parent.postMessage({result: "meta-csp-parsed"}, "*");
+  </script>
+
+</body>
+</html>

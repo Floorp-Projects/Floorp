@@ -175,7 +175,7 @@ ListenSocketIO::OnListening()
 
   /* We signal a successful 'connection' to a local address for listening. */
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_SUCCESS));
 }
 
 void
@@ -197,7 +197,7 @@ ListenSocketIO::FireSocketError()
 
   // Tell the consumer thread we've errored
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_ERROR));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_ERROR));
 }
 
 void
@@ -289,13 +289,14 @@ public:
     MOZ_COUNT_DTOR(ListenTask);
   }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!GetIO()->IsConsumerThread());
 
     if (!IsCanceled()) {
       GetIO()->Listen(mCOSocketIO);
     }
+    return NS_OK;
   }
 
 private:
@@ -382,7 +383,7 @@ ListenSocket::Listen(ConnectionOrientedSocket* aCOSocket)
   SetConnectionStatus(SOCKET_LISTENING);
 
   mIO->GetIOLoop()->PostTask(
-    FROM_HERE, new ListenSocketIO::ListenTask(mIO, io));
+    MakeAndAddRef<ListenSocketIO::ListenTask>(mIO, io));
 
   return NS_OK;
 }
@@ -402,7 +403,7 @@ ListenSocket::Close()
   // the relationship here so any future calls to listen or connect
   // will create a new implementation.
   mIO->ShutdownOnConsumerThread();
-  mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
+  mIO->GetIOLoop()->PostTask(MakeAndAddRef<SocketIOShutdownTask>(mIO));
   mIO = nullptr;
 
   NotifyDisconnect();

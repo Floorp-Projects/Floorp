@@ -9,6 +9,9 @@
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
 #include "nsString.h"
+#include "mozilla/Mutex.h"
+
+class nsIHttpHeaderVisitor;
 
 namespace mozilla { namespace net {
 
@@ -23,57 +26,56 @@ public:
     nsHttpRequestHead();
     ~nsHttpRequestHead();
 
+    // The following function is only used in HttpChannelParent to avoid
+    // copying headers. If you use it be careful to do it only under
+    // nsHttpRequestHead lock!!!
+    const nsHttpHeaderArray &Headers() const;
+    void Lock() { mLock.Lock(); }
+    void Unlock() { mLock.Unlock(); }
+
+    void SetHeaders(const nsHttpHeaderArray& aHeaders);
+
     void SetMethod(const nsACString &method);
-    void SetVersion(nsHttpVersion version) { mVersion = version; }
-    void SetRequestURI(const nsCSubstring &s) { mRequestURI = s; }
-    void SetPath(const nsCSubstring &s) { mPath = s; }
+    void SetVersion(nsHttpVersion version);
+    void SetRequestURI(const nsCSubstring &s);
+    void SetPath(const nsCSubstring &s);
+    uint32_t HeaderCount();
 
-    const nsHttpHeaderArray &Headers() const { return mHeaders; }
-    nsHttpHeaderArray & Headers()          { return mHeaders; }
-    const nsCString &Method()        const { return mMethod; }
-    nsHttpVersion       Version()    const { return mVersion; }
-    const nsCSubstring &RequestURI() const { return mRequestURI; }
-    const nsCSubstring &Path()       const { return mPath.IsEmpty() ? mRequestURI : mPath; }
+    // Using this function it is possible to itereate through all headers
+    // automatically under one lock.
+    nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor,
+                          nsHttpHeaderArray::VisitorFilter filter =
+                              nsHttpHeaderArray::eFilterAll);
+    void Method(nsACString &aMethod);
+    nsHttpVersion Version();
+    void RequestURI(nsACString &RequestURI);
+    void Path(nsACString &aPath);
+    void SetHTTPS(bool val);
+    bool IsHTTPS();
 
-    void SetHTTPS(bool val) { mHTTPS = val; }
-    bool IsHTTPS() const { return mHTTPS; }
+    void SetOrigin(const nsACString &scheme, const nsACString &host,
+                   int32_t port);
+    void Origin(nsACString &aOrigin);
 
-    void SetOrigin(const nsACString &scheme, const nsACString &host, int32_t port);
-    const nsCString &Origin() const { return mOrigin; }
+    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false);
+    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m,
+                       nsHttpHeaderArray::HeaderVariety variety);
+    nsresult SetEmptyHeader(nsHttpAtom h);
+    nsresult GetHeader(nsHttpAtom h, nsACString &v);
 
-    const char *PeekHeader(nsHttpAtom h) const
-    {
-        return mHeaders.PeekHeader(h);
-    }
-    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false) { return mHeaders.SetHeader(h, v, m); }
-    nsresult SetEmptyHeader(nsHttpAtom h) { return mHeaders.SetEmptyHeader(h); }
-    nsresult GetHeader(nsHttpAtom h, nsACString &v) const
-    {
-        return mHeaders.GetHeader(h, v);
-    }
-    void ClearHeader(nsHttpAtom h)                                           { mHeaders.ClearHeader(h); }
-    void ClearHeaders()                                                      { mHeaders.Clear(); }
+    void ClearHeader(nsHttpAtom h);
+    void ClearHeaders();
 
-    const char *FindHeaderValue(nsHttpAtom h, const char *v) const
-    {
-        return mHeaders.FindHeaderValue(h, v);
-    }
-    bool HasHeaderValue(nsHttpAtom h, const char *v) const
-    {
-      return mHeaders.HasHeaderValue(h, v);
-    }
-
+    bool HasHeaderValue(nsHttpAtom h, const char *v);
+    // This function returns true if header is set even if it is an empty
+    // header.
+    bool HasHeader(nsHttpAtom h);
     void Flatten(nsACString &, bool pruneProxyHeaders = false);
 
     // Don't allow duplicate values
-    nsresult SetHeaderOnce(nsHttpAtom h, const char *v, bool merge = false)
-    {
-        if (!merge || !HasHeaderValue(h, v))
-            return mHeaders.SetHeader(h, nsDependentCString(v), merge);
-        return NS_OK;
-    }
+    nsresult SetHeaderOnce(nsHttpAtom h, const char *v, bool merge = false);
 
-    bool IsSafeMethod() const;
+    bool IsSafeMethod();
 
     enum ParsedMethodType
     {
@@ -87,17 +89,16 @@ public:
         kMethod_Trace
     };
 
-    ParsedMethodType ParsedMethod() const { return mParsedMethod; }
-    bool EqualsMethod(ParsedMethodType aType) const { return mParsedMethod == aType; }
-    bool IsGet() const { return EqualsMethod(kMethod_Get); }
-    bool IsPost() const { return EqualsMethod(kMethod_Post); }
-    bool IsOptions() const { return EqualsMethod(kMethod_Options); }
-    bool IsConnect() const { return EqualsMethod(kMethod_Connect); }
-    bool IsHead() const { return EqualsMethod(kMethod_Head); }
-    bool IsPut() const { return EqualsMethod(kMethod_Put); }
-    bool IsTrace() const { return EqualsMethod(kMethod_Trace); }
-    void ParseHeaderSet(char *buffer) { mHeaders.ParseHeaderSet(buffer); }
-
+    ParsedMethodType ParsedMethod();
+    bool EqualsMethod(ParsedMethodType aType);
+    bool IsGet() { return EqualsMethod(kMethod_Get); }
+    bool IsPost() { return EqualsMethod(kMethod_Post); }
+    bool IsOptions() { return EqualsMethod(kMethod_Options); }
+    bool IsConnect() { return EqualsMethod(kMethod_Connect); }
+    bool IsHead() { return EqualsMethod(kMethod_Head); }
+    bool IsPut() { return EqualsMethod(kMethod_Put); }
+    bool IsTrace() { return EqualsMethod(kMethod_Trace); }
+    void ParseHeaderSet(char *buffer);
 private:
     // All members must be copy-constructable and assignable
     nsHttpHeaderArray mHeaders;
@@ -112,6 +113,8 @@ private:
     nsCString         mOrigin;
     ParsedMethodType  mParsedMethod;
     bool              mHTTPS;
+
+    Mutex             mLock;
 };
 
 } // namespace net

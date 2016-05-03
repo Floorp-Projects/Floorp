@@ -41,7 +41,7 @@ public:
   void ShutdownComplete() override;
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  bool SetMacSandboxInfo();
+  bool SetMacSandboxInfo(MacSandboxPluginType aPluginType);
 #endif
 
 private:

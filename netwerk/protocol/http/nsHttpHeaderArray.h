@@ -59,6 +59,8 @@ public:
         return FindHeaderValue(header, value) != nullptr;
     }
 
+    bool HasHeader(nsHttpAtom header) const;
+
     enum VisitorFilter
     {
         eFilterAll,

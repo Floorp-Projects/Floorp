@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: Don't get stuck buffering for too long when we have frames to show</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test loads partial video, plays and waits until playback stalls.
+// It then loads only 3 frames of a video at higher resolution.
+
+var receivedSourceOpen = false;
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    ok(true, "Receive a sourceopen event");
+    ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
+    receivedSourceOpen = true;
+    var sb = ms.addSourceBuffer("video/mp4");
+    ok(sb, "Create a SourceBuffer");
+
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    function logEvent(e) {
+      var v = e.target;
+      info("got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent, false);
+    });
+
+    sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+    fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
+    .then(function() {
+      var promises = [];
+      promises.push(fetchAndLoad(sb, 'bipbop/bipbop', range(1,3), '.m4s'));
+      promises.push(once(v, "loadeddata"));
+      return Promise.all(promises);
+    }).then(function() {
+      is(sb.buffered.length, 1, "continuous range");
+      v.play();
+      // We have nothing to play, waiting will be fired.
+      return waitUntilTime(v, 1.5);
+    }).then(function() {
+      return fetchAndLoad(sb, 'bipbop/bipbop_480_624kbps-video', ['init'], '.mp4');
+    }).then(function() {
+      sb.timestampOffset = 1.601666; // End of the video track buffered - time of first video sample (0.095).
+      sb.appendWindowEnd = 1.796677; // Only allow room for three extra video frames (we need 3 as this video has b-frames).
+      return fetchAndLoad(sb, 'bipbop/bipbop_480_624kbps-video', ['1'], '.m4s');
+    }).then(function() {
+      ms.endOfStream();
+      var promises = [];
+      promises.push(once(ms, "sourceended"));
+      promises.push(once(v, "playing"));
+      promises.push(once(v, "ended"));
+      return Promise.all(promises);
+    }).then(function() {
+      if(v.width, 640, "has proper width");
+      if(v.height, 480, "has proper height");
+      SimpleTest.finish();
+    });
+  });
+});
+</script>
+</pre>
+</body>
+</html>

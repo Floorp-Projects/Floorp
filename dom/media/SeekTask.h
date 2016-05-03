@@ -8,6 +8,7 @@
 #define SEEK_TASK_H
 
 #include "mozilla/MozPromise.h"
+#include "MediaCallbackID.h"
 #include "MediaDecoderReader.h"
 #include "SeekJob.h"
 
@@ -127,6 +128,10 @@ protected:
 
   virtual void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
 
+  void SetMediaDecoderReaderWrapperCallback();
+
+  void CancelMediaDecoderReaderWrapperCallback();
+
   /*
    * Data shared with MDSM.
    */
@@ -157,8 +162,8 @@ protected:
    * Track the current seek promise made by the reader.
    */
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
-  MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mAudioDataRequest;
-  MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mVideoDataRequest;
+  CallbackID mAudioCallbackID;
+  CallbackID mVideoCallbackID;
   MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mAudioWaitRequest;
   MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise> mVideoWaitRequest;
 

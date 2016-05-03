@@ -866,43 +866,33 @@ BlobImplFile::GetSize(ErrorResult& aRv)
 
 namespace {
 
-class GetTypeRunnable final : public Runnable
+class GetTypeRunnable final : public WorkerMainThreadRunnable
 {
 public:
   GetTypeRunnable(WorkerPrivate* aWorkerPrivate,
-                  nsIEventTarget* aSyncLoopTarget,
                   BlobImpl* aBlobImpl)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mSyncLoopTarget(aSyncLoopTarget)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("BlobImplFile :: GetType"))
     , mBlobImpl(aBlobImpl)
   {
-    MOZ_ASSERT(aWorkerPrivate);
-    MOZ_ASSERT(aSyncLoopTarget);
     MOZ_ASSERT(aBlobImpl);
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
 
-  NS_IMETHOD
-  Run() override
+  bool
+  MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsAutoString type;
     mBlobImpl->GetType(type);
-
-    RefPtr<MainThreadStopSyncLoopRunnable> runnable =
-      new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
-                                         mSyncLoopTarget.forget(), true);
-    NS_WARN_IF(!runnable->Dispatch());
-    return NS_OK;
+    return true;
   }
 
 private:
   ~GetTypeRunnable()
   {}
 
-  WorkerPrivate* mWorkerPrivate;
-  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   RefPtr<BlobImpl> mBlobImpl;
 };
 
@@ -925,14 +915,12 @@ BlobImplFile::GetType(nsAString& aType)
         return;
       }
 
-      AutoSyncLoopHolder syncLoop(workerPrivate);
-
       RefPtr<GetTypeRunnable> runnable =
-        new GetTypeRunnable(workerPrivate, syncLoop.EventTarget(), this);
-      nsresult rv = NS_DispatchToMainThread(runnable);
-      NS_WARN_IF(NS_FAILED(rv));
+        new GetTypeRunnable(workerPrivate, this);
 
-      NS_WARN_IF(!syncLoop.Run());
+      ErrorResult rv;
+      runnable->Dispatch(rv);
+      NS_WARN_IF(rv.Failed());
       return;
     }
 

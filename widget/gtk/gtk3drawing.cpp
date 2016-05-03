@@ -1510,6 +1510,54 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static gint
+moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
+                        GtkWidgetState* state,
+                        GtkTextDirection direction)
+{
+    ensure_text_view_widget();
+    ensure_scrolled_window_widget();
+
+    gtk_widget_set_direction(gTextViewWidget, direction);
+    gtk_widget_set_direction(gScrolledWindowWidget, direction);
+
+    GtkStyleContext* style = gtk_widget_get_style_context(gTextViewWidget);
+    gtk_style_context_save(style);
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_VIEW);
+
+    GtkStyleContext* style_frame = gtk_widget_get_style_context(gScrolledWindowWidget);
+    gtk_style_context_save(style_frame);
+    gtk_style_context_add_class(style_frame, GTK_STYLE_CLASS_FRAME);
+
+    if (state->focused && !state->disabled) {
+        gtk_style_context_set_state(style, GTK_STATE_FLAG_FOCUSED);
+    }
+
+    if (state->disabled) {
+        gtk_style_context_set_state(style, GTK_STATE_FLAG_INSENSITIVE);
+        gtk_style_context_set_state(style_frame, GTK_STATE_FLAG_INSENSITIVE);
+    }
+    gtk_render_frame(style_frame, cr, rect->x, rect->y, rect->width, rect->height);
+
+    GtkBorder border, padding;
+    GtkStateFlags state_flags = gtk_style_context_get_state(style);
+    gtk_style_context_get_border(style_frame, state_flags, &border);
+    gtk_style_context_get_padding(style_frame, state_flags, &padding);
+
+    gint xthickness = border.left + padding.left;
+    gint ythickness = border.top + padding.top;
+
+    gtk_render_background(style, cr,
+                          rect->x + xthickness, rect->y + ythickness,
+                          rect->width - 2 * xthickness,
+                          rect->height - 2 * ythickness);
+
+    gtk_style_context_restore(style);
+    gtk_style_context_restore(style_frame);
+
+    return MOZ_GTK_SUCCESS;
+}
+
 static gint 
 moz_gtk_treeview_paint(cairo_t *cr, GdkRectangle* rect,
                        GtkWidgetState* state,
@@ -2736,6 +2784,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
             return MOZ_GTK_SUCCESS;
         }
+    case MOZ_GTK_TEXT_VIEW:
     case MOZ_GTK_TREEVIEW:
         {
             ensure_scrolled_window_widget();
@@ -3299,6 +3348,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
         ensure_entry_widget();
         return moz_gtk_entry_paint(cr, rect, state,
                                    gEntryWidget, direction);
+        break;
+    case MOZ_GTK_TEXT_VIEW:
+        return moz_gtk_text_view_paint(cr, rect, state, direction);
         break;
     case MOZ_GTK_DROPDOWN:
         return moz_gtk_combo_box_paint(cr, rect, state, direction);

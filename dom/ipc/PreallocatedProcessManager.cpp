@@ -68,7 +68,7 @@ private:
   void NuwaFork();
 
   // initialization off the critical path of app startup.
-  CancelableTask* mPreallocateAppProcessTask;
+  CancelableRunnable* mPreallocateAppProcessTask;
 
   // The array containing the preallocated processes. 4 as the inline storage size
   // should be enough so we don't need to grow the AutoTArray.
@@ -243,7 +243,7 @@ PreallocatedProcessManagerImpl::ScheduleDelayedNuwaFork()
     return;
   }
 
-  RefPtr<CancelableTask> task = NewRunnableMethod(
+  RefPtr<CancelableRunnable> task = NewRunnableMethod(
     this, &PreallocatedProcessManagerImpl::DelayedNuwaFork);
   mPreallocateAppProcessTask = task;
   MessageLoop::current()->PostDelayedTask(task.forget(),

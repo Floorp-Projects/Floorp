@@ -443,14 +443,15 @@ FakeSurfaceComposer::captureScreen(const sp<IBinder>& display
     return result;
 }
 
-class RunnableCallTask : public Task {
+class RunnableCallTask final : public Runnable
+{
 public:
     explicit RunnableCallTask(nsIRunnable* aRunnable)
         : mRunnable(aRunnable) {}
 
-    void Run() override
+    NS_IMETHOD Run() override
     {
-        mRunnable->Run();
+        return mRunnable->Run();
     }
 protected:
     nsCOMPtr<nsIRunnable> mRunnable;
@@ -525,7 +526,7 @@ FakeSurfaceComposer::captureScreenImp(const sp<IGraphicBufferProducer>& producer
         });
 
     mozilla::layers::CompositorBridgeParent::CompositorLoop()->PostTask(
-        FROM_HERE, new RunnableCallTask(runnable));
+        MakeAndAddRef<RunnableCallTask>(runnable));
 }
 
 #if ANDROID_VERSION >= 21

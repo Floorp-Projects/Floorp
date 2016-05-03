@@ -67,6 +67,11 @@ private:
     // Called for every detected network change
     nsresult NetworkChanged();
 
+    // Figure out the current network identification
+    void calculateNetworkId(void);
+    void findMac(char *gateway);
+    nsCString mNetworkId;
+
     HANDLE mCheckEvent;
 
     // set true when mCheckEvent means shutdown

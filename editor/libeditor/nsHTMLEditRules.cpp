@@ -7847,7 +7847,10 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   nsresult res = mHTMLEditor->GetStartNodeAndOffset(selection,
                                                     getter_AddRefs(selNode),
                                                     &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
   temp = selNode;
 
   // check that selNode is inside body
