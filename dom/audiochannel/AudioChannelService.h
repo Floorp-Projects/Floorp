@@ -16,6 +16,7 @@
 #include "AudioChannelAgent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/AudioChannelBinding.h"
+#include "mozilla/Function.h"
 
 class nsIRunnable;
 class nsPIDOMWindowOuter;
@@ -31,6 +32,33 @@ class SpeakerManagerService;
 class TabParent;
 
 #define NUMBER_OF_AUDIO_CHANNELS (uint32_t)AudioChannel::EndGuard_
+
+class AudioPlaybackConfig
+{
+public:
+  AudioPlaybackConfig()
+    : mVolume(1.0)
+    , mMuted(false)
+    , mSuspend(nsISuspendedTypes::NONE_SUSPENDED)
+  {}
+
+  AudioPlaybackConfig(float aVolume, bool aMuted, uint32_t aSuspended)
+    : mVolume(aVolume)
+    , mMuted(aMuted)
+    , mSuspend(aSuspended)
+  {}
+
+  void SetConfig(float aVolume, bool aMuted, uint32_t aSuspended)
+  {
+    mVolume = aVolume;
+    mMuted = aMuted;
+    mSuspend = aSuspended;
+  }
+
+  float mVolume;
+  bool mMuted;
+  uint32_t mSuspend;
+};
 
 class AudioChannelService final : public nsIAudioChannelService
                                 , public nsIObserver
@@ -72,10 +100,10 @@ public:
 
   /**
    * Return the state to indicate this audioChannel for his window should keep
-   * playing/muted.
+   * playing/muted/suspended.
    */
-  void GetState(nsPIDOMWindowOuter* aWindow, uint32_t aChannel,
-                float* aVolume, bool* aMuted);
+  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow,
+                                     uint32_t aAudioChannel) const;
 
   /* Methods for the BrowserElementAudioChannel */
   float GetAudioChannelVolume(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
@@ -114,6 +142,8 @@ public:
   bool AnyAudioChannelIsActive();
 
   void RefreshAgentsVolume(nsPIDOMWindowOuter* aWindow);
+  void RefreshAgentsSuspend(nsPIDOMWindowOuter* aWindow,
+                            nsSuspendedTypes aSuspend);
 
   void RefreshAgentsVolumeAndPropagate(AudioChannel aAudioChannel,
                                        nsPIDOMWindowOuter* aWindow);
@@ -155,6 +185,9 @@ private:
   AudioChannelService();
   ~AudioChannelService();
 
+  void RefreshAgents(nsPIDOMWindowOuter* aWindow,
+                     mozilla::function<void(AudioChannelAgent*)> aFunc);
+
   static void CreateServiceIfNeeded();
 
   /**
@@ -170,16 +203,14 @@ private:
   void SetDefaultVolumeControlChannelInternal(int32_t aChannel,
                                               bool aVisible, uint64_t aChildID);
 
-  struct AudioChannelConfig final
+  class AudioChannelConfig final : public AudioPlaybackConfig
   {
+  public:
     AudioChannelConfig()
-      : mVolume(1.0)
-      , mMuted(IsAudioChannelMutedByDefault())
+      : AudioPlaybackConfig(1.0, IsAudioChannelMutedByDefault(),
+                            nsISuspendedTypes::NONE_SUSPENDED)
       , mNumberOfAgents(0)
     {}
-
-    float mVolume;
-    bool mMuted;
 
     uint32_t mNumberOfAgents;
   };

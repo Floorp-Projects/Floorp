@@ -223,11 +223,16 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(float *aVolume,
   service->RegisterAudioChannelAgent(this,
     static_cast<AudioChannel>(mAudioChannelType));
 
-  service->GetState(mWindow, mAudioChannelType, aVolume, aMuted);
+  AudioPlaybackConfig config = service->GetMediaConfig(mWindow,
+                                                       mAudioChannelType);
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelAgent, NotifyStartedPlaying, this = %p, mute = %d, "
-          "volume = %f\n", this, *aMuted, *aVolume));
+         ("AudioChannelAgent, NotifyStartedPlaying, this = %p, "
+          "mute = %d, volume = %f, suspend = %d\n", this,
+          config.mMuted, config.mVolume, config.mSuspend));
+
+  *aVolume = config.mVolume;
+  *aMuted = config.mMuted;
 
   mIsRegToService = true;
   return NS_OK;
@@ -270,19 +275,49 @@ AudioChannelAgent::WindowVolumeChanged()
     return;
   }
 
-  float volume = 1.0;
-  bool muted = false;
+  AudioPlaybackConfig config = GetMediaConfig();
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %d, "
+          "volume = %f\n", this, config.mMuted, config.mVolume));
 
-  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  if (service) {
-    service->GetState(mWindow, mAudioChannelType, &volume, &muted);
+  callback->WindowVolumeChanged(config.mVolume, config.mMuted);
+}
+
+void
+AudioChannelAgent::WindowSuspendChanged(nsSuspendedTypes aSuspend)
+{
+  nsCOMPtr<nsIAudioChannelAgentCallback> callback = GetCallback();
+  if (!callback) {
+    return;
+  }
+
+  if (!IsDisposableSuspend(aSuspend)) {
+    aSuspend = GetMediaConfig().mSuspend;
   }
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %d, "
-          "volume = %f\n", this, muted, volume));
+         ("AudioChannelAgent, WindowSuspendChanged, this = %p, "
+          "suspended = %d\n", this, aSuspend));
 
-  callback->WindowVolumeChanged(volume, muted);
+  callback->WindowSuspendChanged(aSuspend);
+}
+
+AudioPlaybackConfig
+AudioChannelAgent::GetMediaConfig()
+{
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
+  if (service) {
+    config = service->GetMediaConfig(mWindow, mAudioChannelType);
+  }
+  return config;
+}
+
+bool
+AudioChannelAgent::IsDisposableSuspend(nsSuspendedTypes aSuspend) const
+{
+  return (aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE ||
+          aSuspend == nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
 }
 
 uint64_t
