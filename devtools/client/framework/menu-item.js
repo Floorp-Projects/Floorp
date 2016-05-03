@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * A partial implementation of the MenuItem API provided by electron:
  * https://github.com/electron/electron/blob/master/docs/api/menu-item.md.
@@ -22,19 +24,21 @@
  * Implemented features:
  *  @param Object options
  *    Function click
- *      Will be called with click(menuItem, browserWindow) when the menu item is clicked
+ *      Will be called with click(menuItem, browserWindow) when the menu item
+ *       is clicked
  *    String type
  *      Can be normal, separator, submenu, checkbox or radio
  *    String label
- *      Boolean enabled
- *    If false, the menu item will be greyed out and unclickable.
- *      Boolean checked
- *    Should only be specified for checkbox or radio type menu items.
- *      Menu submenu
- *    Should be specified for submenu type menu items. If submenu is specified, the type: 'submenu' can be omitted. If the value is not a Menu then it will be automatically converted to one using Menu.buildFromTemplate.
+ *    Boolean enabled
+ *      If false, the menu item will be greyed out and unclickable.
+ *    Boolean checked
+ *      Should only be specified for checkbox or radio type menu items.
+ *    Menu submenu
+ *      Should be specified for submenu type menu items. If submenu is specified,
+ *      the type: 'submenu' can be omitted. If the value is not a Menu then it
+ *      will be automatically converted to one using Menu.buildFromTemplate.
  *    Boolean visible
  *      If false, the menu item will be entirely hidden.
- *
  */
 function MenuItem({
     accesskey = null,
