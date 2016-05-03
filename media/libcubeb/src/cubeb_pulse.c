@@ -585,7 +585,7 @@ static int
 pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
 {
   // According to PulseAudio developers, this is a safe minimum.
-  *latency_ms = 25;
+  *latency_ms = 40;
 
   return CUBEB_OK;
 }
@@ -1056,7 +1056,7 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   devinfo->max_rate = PA_RATE_MAX;
   devinfo->default_rate = info->sample_spec.rate;
 
-  devinfo->latency_lo_ms = 25;
+  devinfo->latency_lo_ms = 40;
   devinfo->latency_hi_ms = 400;
 
   pulse_ensure_dev_list_data_list_size (list_data);
