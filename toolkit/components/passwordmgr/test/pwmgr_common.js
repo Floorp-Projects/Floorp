@@ -207,26 +207,19 @@ function disableMasterPassword() {
 }
 
 function setMasterPassword(enable) {
-  var oldPW, newPW;
-  if (enable) {
-    oldPW = "";
-    newPW = masterPassword;
-  } else {
-    oldPW = masterPassword;
-    newPW = "";
-  }
-  // Set master password. Note that this does not log you in, so the next
-  // invocation of pwmgr can trigger a MP prompt.
-
-  var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
-  var token = pk11db.findTokenByName("");
-  info("MP change from " + oldPW + " to " + newPW);
-  token.changePassword(oldPW, newPW);
+  chromeScript.sendSyncMessage("setMasterPassword", { enable });
 }
 
 function logoutMasterPassword() {
-  var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-  sdr.logoutAndTeardown();
+  runInParent(function parent_logoutMasterPassword() {
+    const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+    var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
+    sdr.logoutAndTeardown();
+  });
+}
+
+function isLoggedIn() {
+  return chromeScript.sendSyncMessage("isLoggedIn")[0][0];
 }
 
 function dumpLogins(pwmgr) {
@@ -361,6 +354,7 @@ if (this.addMessageListener) {
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
   ok = is = () => {}; // eslint-disable-line no-native-reassign
 
+  Cu.import("resource://gre/modules/LoginHelper.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
 
@@ -393,6 +387,32 @@ if (this.addMessageListener) {
 
   addMessageListener("countLogins", ({formOrigin, submitOrigin, httpRealm}) => {
     return Services.logins.countLogins(formOrigin, submitOrigin, httpRealm);
+  });
+
+  addMessageListener("getAllLogins", () => {
+    return LoginHelper.loginsToVanillaObjects(Services.logins.getAllLogins());
+  });
+
+  addMessageListener("isLoggedIn", () => {
+    return Services.logins.isLoggedIn;
+  });
+
+  addMessageListener("setMasterPassword", ({ enable }) => {
+    var oldPW, newPW;
+    if (enable) {
+      oldPW = "";
+      newPW = masterPassword;
+    } else {
+      oldPW = masterPassword;
+      newPW = "";
+    }
+    // Set master password. Note that this does not log you in, so the next
+    // invocation of pwmgr can trigger a MP prompt.
+
+    var pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+    var token = pk11db.findTokenByName("");
+    dump("MP change from " + oldPW + " to " + newPW + "\n");
+    token.changePassword(oldPW, newPW);
   });
 
   var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
