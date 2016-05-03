@@ -52,11 +52,7 @@ public:
    * string, or if any of the four rect values were too big to store in a
    * float, or the width/height are negative.
    */
-  bool HasRect() const
-    {
-      const nsSVGViewBoxRect& rect = GetAnimValue();
-      return !rect.none && rect.width >= 0 && rect.height >= 0;
-    }
+  bool HasRect() const;
 
   /**
    * Returns true if the corresponding "viewBox" attribute either defined a
