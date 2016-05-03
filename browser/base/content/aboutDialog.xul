@@ -67,7 +67,7 @@
               </hbox>
               <hbox id="downloadAndInstall" align="center">
                 <button id="downloadAndInstallButton" align="start"
-                        oncommand="gAppUpdater.doUpdate();"/>
+                        oncommand="gAppUpdater.startDownload();"/>
                         <!-- label and accesskey will be filled by JS -->
                 <spacer flex="1"/>
               </hbox>

@@ -86,11 +86,12 @@ option('--enable-replace-malloc',
 @depends('--enable-replace-malloc', jemalloc, milestone, build_project)
 def replace_malloc(value, jemalloc, milestone, build_project):
     # Enable on central for the debugging opportunities it adds.
-    if milestone.is_nightly and jemalloc and build_project != 'js':
-        return True
     if value and not jemalloc:
         die('--enable-replace-malloc requires --enable-jemalloc')
-    return bool(value) or None
+    if value.origin != 'default':
+        return bool(value) or None
+    if milestone.is_nightly and jemalloc and build_project != 'js':
+        return True
 
 set_config('MOZ_REPLACE_MALLOC', replace_malloc)
 set_define('MOZ_REPLACE_MALLOC', replace_malloc)

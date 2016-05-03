@@ -844,6 +844,101 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
 }
 
 bool
+BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    JSValueType fieldType = reader.valueType();
+
+    Address fieldOffset(stubAddress(reader.stubOffset()));
+    masm.load32(fieldOffset, scratch);
+    masm.loadUnboxedProperty(BaseIndex(obj, scratch, TimesOne), fieldType, R0);
+
+    if (fieldType == JSVAL_TYPE_OBJECT)
+        emitEnterTypeMonitorIC();
+    else
+        emitReturnFromIC();
+
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardNoDetachedTypedObjects()
+{
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    CheckForTypedObjectWithDetachedStorage(cx_, masm, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadTypedObjectResult()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    TypedThingLayout layout = reader.typedThingLayout();
+    uint32_t typeDescr = reader.typeDescrKey();
+    Address fieldOffset(stubAddress(reader.stubOffset()));
+
+    // Get the object's data pointer.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+
+    // Get the address being written to.
+    masm.load32(fieldOffset, scratch2);
+    masm.addPtr(scratch2, scratch1);
+
+    // Only monitor the result if the type produced by this stub might vary.
+    bool monitorLoad;
+    if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
+        Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
+        monitorLoad = type == Scalar::Uint32;
+
+        masm.loadFromTypedArray(type, Address(scratch1, 0), R0, /* allowDouble = */ true,
+                                scratch2, nullptr);
+    } else {
+        ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
+        monitorLoad = type != ReferenceTypeDescr::TYPE_STRING;
+
+        switch (type) {
+          case ReferenceTypeDescr::TYPE_ANY:
+            masm.loadValue(Address(scratch1, 0), R0);
+            break;
+
+          case ReferenceTypeDescr::TYPE_OBJECT: {
+            Label notNull, done;
+            masm.loadPtr(Address(scratch1, 0), scratch1);
+            masm.branchTestPtr(Assembler::NonZero, scratch1, scratch1, &notNull);
+            masm.moveValue(NullValue(), R0);
+            masm.jump(&done);
+            masm.bind(&notNull);
+            masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, R0);
+            masm.bind(&done);
+            break;
+          }
+
+          case ReferenceTypeDescr::TYPE_STRING:
+            masm.loadPtr(Address(scratch1, 0), scratch1);
+            masm.tagValue(JSVAL_TYPE_STRING, scratch1, R0);
+            break;
+
+          default:
+            MOZ_CRASH("Invalid ReferenceTypeDescr");
+        }
+    }
+
+    if (monitorLoad)
+        emitEnterTypeMonitorIC();
+    else
+        emitReturnFromIC();
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitLoadUndefinedResult()
 {
     masm.moveValue(UndefinedValue(), R0);

@@ -3666,7 +3666,9 @@ nsEditor::GetStartNodeAndOffset(Selection* aSelection,
   nsCOMPtr<nsINode> startNode;
   nsresult rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
                                       outStartOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (startNode) {
     NS_ADDREF(*outStartNode = startNode->AsDOMNode());
@@ -3687,7 +3689,9 @@ nsEditor::GetStartNodeAndOffset(Selection* aSelection, nsINode** aStartNode,
   *aStartNode = nullptr;
   *aStartOffset = 0;
 
-  NS_ENSURE_TRUE(aSelection->RangeCount(), NS_ERROR_FAILURE);
+  if (!aSelection->RangeCount()) {
+    return NS_ERROR_FAILURE;
+  }
 
   const nsRange* range = aSelection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);

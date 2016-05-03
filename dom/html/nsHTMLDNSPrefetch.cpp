@@ -320,7 +320,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
       if (link && link->HasDeferredDNSPrefetchRequest()) {
         nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nullptr);
         bool isLocalResource = false;
-        nsresult rv;
+        nsresult rv = NS_OK;
 
         hostName.Truncate();
         if (hrefURI) {

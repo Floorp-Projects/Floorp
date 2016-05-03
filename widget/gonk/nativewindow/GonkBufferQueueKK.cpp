@@ -423,9 +423,10 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
             if (mSlots[buf].mTextureClient) {
               mSlots[buf].mTextureClient->ClearRecycleCallback();
               // release TextureClient in ImageBridge thread
-              TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[buf].mTextureClient);
+              RefPtr<TextureClientReleaseTask> task =
+                MakeAndAddRef<TextureClientReleaseTask>(mSlots[buf].mTextureClient);
               mSlots[buf].mTextureClient = NULL;
-              ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+              ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(task.forget());
             }
             returnFlags |= IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION;
         }
@@ -869,9 +870,10 @@ void GonkBufferQueue::freeAllBuffersLocked()
         if (mSlots[i].mTextureClient) {
           mSlots[i].mTextureClient->ClearRecycleCallback();
           // release TextureClient in ImageBridge thread
-          TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
+          RefPtr<TextureClientReleaseTask> task =
+            MakeAndAddRef<TextureClientReleaseTask>(mSlots[i].mTextureClient);
           mSlots[i].mTextureClient = NULL;
-          ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+          ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(task.forget());
         }
         if (mSlots[i].mBufferState == BufferSlot::ACQUIRED) {
             mSlots[i].mNeedsCleanupOnRelease = true;

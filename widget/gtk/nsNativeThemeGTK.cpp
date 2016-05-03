@@ -510,8 +510,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_NUMBER_INPUT:
   case NS_THEME_TEXTFIELD:
-  case NS_THEME_TEXTFIELD_MULTILINE:
     aGtkWidgetType = MOZ_GTK_ENTRY;
+    break;
+  case NS_THEME_TEXTFIELD_MULTILINE:
+#if (MOZ_WIDGET_GTK == 3)
+    aGtkWidgetType = MOZ_GTK_TEXT_VIEW;
+#else
+    aGtkWidgetType = MOZ_GTK_ENTRY;
+#endif
     break;
   case NS_THEME_LISTBOX:
   case NS_THEME_TREEVIEW:

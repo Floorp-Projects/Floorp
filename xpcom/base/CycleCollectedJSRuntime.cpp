@@ -468,6 +468,9 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   // Clear mPendingException first, since it might be cycle collected.
   mPendingException = nullptr;
 
+  MOZ_ASSERT(mDebuggerPromiseMicroTaskQueue.empty());
+  MOZ_ASSERT(mPromiseMicroTaskQueue.empty());
+
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
   nsCycleCollector_forgetJSRuntime();

@@ -200,12 +200,14 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!GetIO()->IsConsumerThread());
     MOZ_ASSERT(!IsCanceled());
 
     GetIO()->Connect(mFd);
+
+    return NS_OK;
   }
 
 private:
@@ -220,13 +222,14 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!GetIO()->IsConsumerThread());
 
     if (!IsCanceled()) {
       GetIO()->Listen(mFd);
     }
+    return NS_OK;
   }
 
 private:
@@ -240,11 +243,13 @@ class SocketConnectClientFdTask final
   : SocketIOTask<DroidSocketImpl>(aImpl)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!GetIO()->IsConsumerThread());
 
     GetIO()->ConnectClientFd();
+
+    return NS_OK;
   }
 };
 
@@ -303,7 +308,7 @@ DroidSocketImpl::Accept(int aFd)
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -347,12 +352,14 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!GetIO()->IsConsumerThread());
     MOZ_ASSERT(!IsCanceled());
 
     GetIO()->Accept(mFd);
+
+    return NS_OK;
   }
 
 private:
@@ -386,8 +393,8 @@ public:
     }
 
     mImpl->mConsumer->SetAddress(aBdAddress);
-    mImpl->GetIOLoop()->PostTask(FROM_HERE,
-                                 new AcceptTask(mImpl, fd.forget()));
+    mImpl->GetIOLoop()->PostTask(
+      mozilla::MakeAndAddRef<AcceptTask>(mImpl, fd.forget()));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -416,11 +423,13 @@ public:
     , mListenFd(aListenFd)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(GetIO()->IsConsumerThread());
 
     GetIO()->mConsumer->Accept(mListenFd, new AcceptResultHandler(GetIO()));
+
+    return NS_OK;
   }
 
 private:
@@ -438,7 +447,7 @@ DroidSocketImpl::OnSocketCanAcceptWithoutBlocking(int aFd)
    */
 
   RemoveWatchers(READ_WATCHER);
-  GetConsumerThread()->PostTask(FROM_HERE, new InvokeAcceptTask(this, aFd));
+  GetConsumerThread()->PostTask(MakeAndAddRef<InvokeAcceptTask>(this, aFd));
 }
 
 void
@@ -483,7 +492,7 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
   GetConsumerThread()->PostTask(
-    FROM_HERE, new SocketEventTask(this, SocketEventTask::CONNECT_SUCCESS));
+    MakeAndAddRef<SocketEventTask>(this, SocketEventTask::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -519,7 +528,7 @@ public:
     , mBuffer(aBuffer)
   { }
 
-  void Run() override
+  NS_IMETHOD Run() override
   {
     DroidSocketImpl* io = SocketTask<DroidSocketImpl>::GetIO();
 
@@ -528,13 +537,15 @@ public:
     if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
       // Since we've already explicitly closed and the close
       // happened before this, this isn't really an error.
-      return;
+      return NS_OK;
     }
 
     BluetoothSocket* bluetoothSocket = io->GetBluetoothSocket();
     MOZ_ASSERT(bluetoothSocket);
 
     bluetoothSocket->ReceiveSocketData(mBuffer);
+
+    return NS_OK;
   }
 
 private:
@@ -544,8 +555,8 @@ private:
 void
 DroidSocketImpl::ConsumeBuffer()
 {
-  GetConsumerThread()->PostTask(FROM_HERE,
-                                new ReceiveTask(this, mBuffer.release()));
+  GetConsumerThread()->PostTask(
+    MakeAndAddRef<ReceiveTask>(this, mBuffer.release()));
 }
 
 void
@@ -605,8 +616,8 @@ public:
     }
 
     mImpl->mConsumer->SetAddress(aBdAddress);
-    mImpl->GetIOLoop()->PostTask(FROM_HERE,
-                                 new SocketConnectTask(mImpl, aFd));
+    mImpl->GetIOLoop()->PostTask(
+      mozilla::MakeAndAddRef<SocketConnectTask>(mImpl, aFd));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -682,7 +693,8 @@ public:
   {
     MOZ_ASSERT(mImpl->IsConsumerThread());
 
-    mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketListenTask(mImpl, aFd));
+    mImpl->GetIOLoop()->PostTask(
+      mozilla::MakeAndAddRef<SocketListenTask>(mImpl, aFd));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -776,8 +788,8 @@ BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
   MOZ_ASSERT(!mImpl->IsShutdownOnConsumerThread());
 
   mImpl->GetIOLoop()->PostTask(
-    FROM_HERE,
-    new SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>(mImpl, aBuffer));
+    MakeAndAddRef<SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>>(
+      mImpl, aBuffer));
 }
 
 // |SocketBase|
@@ -860,7 +872,7 @@ BluetoothSocket::Cleanup()
   // sever the relationship here so any future calls to listen
   // or connect will create a new implementation.
   mImpl->ShutdownOnConsumerThread();
-  mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
+  mImpl->GetIOLoop()->PostTask(MakeAndAddRef<SocketIOShutdownTask>(mImpl));
   mImpl = nullptr;
 
   mSocketInterface = nullptr;

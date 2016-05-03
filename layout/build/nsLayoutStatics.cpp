@@ -66,7 +66,6 @@
 #include "ActiveLayerTracker.h"
 #include "CounterStyleManager.h"
 #include "FrameLayerBuilder.h"
-#include "mozilla/dom/RequestSyncWifiService.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
 
@@ -302,10 +301,6 @@ nsLayoutStatics::Initialize()
   IMEStateManager::Init();
 
   ServiceWorkerRegistrar::Initialize();
-
-#ifdef MOZ_B2G
-  RequestSyncWifiService::Init();
-#endif
 
 #ifdef DEBUG
   nsStyleContext::Initialize();

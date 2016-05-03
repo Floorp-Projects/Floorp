@@ -35,6 +35,14 @@ function testSteps() {
 
   db = event.target.result;
 
+  try {
+    db.transaction(objectStoreName, "versionchange");
+    ok(false, "TypeError shall be thrown if transaction mode is wrong.");
+  } catch (e) {
+    ok(e instanceof DOMException, "got a database exception");
+    is(e.name, "TypeError", "correct error");
+  }
+
   let transaction = db.transaction(objectStoreName, "readwrite");
   transaction.onerror = grabEventAndContinueHandler;
   transaction.oncomplete = grabEventAndContinueHandler;

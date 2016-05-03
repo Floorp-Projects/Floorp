@@ -392,6 +392,9 @@ class js::AsmJSModule final : public Module
     virtual const char16_t* displayURL() const override {
         return scriptSource()->hasDisplayURL() ? scriptSource()->displayURL() : nullptr;
     }
+    virtual ScriptSource* maybeScriptSource() const override {
+        return scriptSource();
+    }
 
     uint32_t minHeapLength() const { return module_->minHeapLength; }
     uint32_t numFFIs() const { return module_->numFFIs; }

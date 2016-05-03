@@ -218,8 +218,8 @@ DaemonSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
   MOZ_ASSERT(mIO->IsConsumerThread());
 
   mIO->GetIOLoop()->PostTask(
-    FROM_HERE,
-    new SocketIOSendTask<DaemonSocketIO, UnixSocketIOBuffer>(mIO, aBuffer));
+    MakeAndAddRef<SocketIOSendTask<DaemonSocketIO, UnixSocketIOBuffer>>(
+      mIO, aBuffer));
 }
 
 // |SocketBase|
@@ -235,7 +235,7 @@ DaemonSocket::Close()
   MOZ_ASSERT(mIO->IsConsumerThread());
 
   mIO->ShutdownOnConsumerThread();
-  mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
+  mIO->GetIOLoop()->PostTask(MakeAndAddRef<SocketIOShutdownTask>(mIO));
   mIO = nullptr;
 
   NotifyDisconnect();
