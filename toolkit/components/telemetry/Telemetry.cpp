@@ -1207,6 +1207,20 @@ HistogramAdd(Histogram& histogram, int32_t value)
   return HistogramAdd(histogram, value, dataset);
 }
 
+void
+HistogramClear(Histogram& aHistogram, bool onlySubsession)
+{
+  if (!onlySubsession) {
+    aHistogram.Clear();
+  }
+
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+  if (Histogram* subsession = GetSubsessionHistogram(aHistogram)) {
+    subsession->Clear();
+  }
+#endif
+}
+
 bool
 FillRanges(JSContext *cx, JS::Handle<JSObject*> array, Histogram *h)
 {
@@ -1375,15 +1389,9 @@ JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   MOZ_ASSERT(h);
-  if(!onlySubsession) {
-    h->Clear();
+  if (h) {
+    HistogramClear(*h, onlySubsession);
   }
-
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-  if (Histogram* subsession = GetSubsessionHistogram(*h)) {
-    subsession->Clear();
-  }
-#endif
 
   return true;
 }
@@ -3955,6 +3963,20 @@ AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
              static_cast<uint32_t>((end - start).ToMilliseconds()));
+}
+
+void
+ClearHistogram(ID aId)
+{
+  if (!TelemetryImpl::CanRecordBase()) {
+    return;
+  }
+
+  Histogram *h;
+  nsresult rv = GetHistogramByEnumId(aId, &h);
+  if (NS_SUCCEEDED(rv) && h) {
+    HistogramClear(*h, false);
+  }
 }
 
 bool
