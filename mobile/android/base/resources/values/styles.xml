@@ -86,7 +86,7 @@
     </style>
 
     <style name="Widget.MenuItemActionBar">
-        <item name="android:padding">8dip</item>
+        <item name="android:padding">10dip</item>
         <item name="android:background">@drawable/menu_item_action_bar_bg</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>"
