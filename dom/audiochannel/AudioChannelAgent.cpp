@@ -214,8 +214,7 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig)
     return NS_ERROR_FAILURE;
   }
 
-  service->RegisterAudioChannelAgent(this,
-    static_cast<AudioChannel>(mAudioChannelType));
+  service->RegisterAudioChannelAgent(this);
 
   AudioPlaybackConfig config = service->GetMediaConfig(mWindow,
                                                        mAudioChannelType);
@@ -247,6 +246,23 @@ AudioChannelAgent::NotifyStoppedPlaying()
   }
 
   mIsRegToService = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AudioChannelAgent::NotifyStartedAudible(bool aAudible)
+{
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, NotifyStartedAudible, this = %p, "
+          "audible = %d\n", this, aAudible));
+
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  if (NS_WARN_IF(!service)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  service->AudioAudibleChanged(
+    this, static_cast<AudioChannelService::AudibleState>(aAudible));
   return NS_OK;
 }
 
