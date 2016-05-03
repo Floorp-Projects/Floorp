@@ -47,12 +47,6 @@ static_assert((((1 << nsStyleStructID_Length) - 1) &
 const int32_t nsStyleGridLine::kMinLine = -10000;
 const int32_t nsStyleGridLine::kMaxLine = 10000;
 
-inline bool IsFixedUnit(const nsStyleCoord& aCoord, bool aEnumOK)
-{
-  return aCoord.ConvertsToLength() || 
-         (aEnumOK && aCoord.GetUnit() == eStyleUnit_Enumerated);
-}
-
 static bool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 {
   bool eq;
@@ -243,15 +237,6 @@ nsStyleFont::GetLanguage(StyleStructContext aContext)
   return language.forget();
 }
 
-static bool IsFixedData(const nsStyleSides& aSides, bool aEnumOK)
-{
-  NS_FOR_CSS_SIDES(side) {
-    if (!IsFixedUnit(aSides.Get(side), aEnumOK))
-      return false;
-  }
-  return true;
-}
-
 static nscoord CalcCoord(const nsStyleCoord& aCoord, 
                          const nscoord* aEnumTable, 
                          int32_t aNumEnums)
@@ -298,7 +283,7 @@ nsStyleMargin::Destroy(nsPresContext* aContext) {
 
 void nsStyleMargin::RecalcData()
 {
-  if (IsFixedData(mMargin, false)) {
+  if (mMargin.ConvertsToLength()) {
     NS_FOR_CSS_SIDES(side) {
       mCachedMargin.Side(side) = CalcCoord(mMargin.Get(side), nullptr, 0);
     }
@@ -348,7 +333,7 @@ nsStylePadding::Destroy(nsPresContext* aContext) {
 
 void nsStylePadding::RecalcData()
 {
-  if (IsFixedData(mPadding, false)) {
+  if (mPadding.ConvertsToLength()) {
     NS_FOR_CSS_SIDES(side) {
       // Clamp negative calc() to 0.
       mCachedPadding.Side(side) =
@@ -601,7 +586,8 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
     mCachedOutlineWidth = 0;
   } else {
-    MOZ_ASSERT(IsFixedUnit(mOutlineWidth, true));
+    MOZ_ASSERT(mOutlineWidth.ConvertsToLength() ||
+               mOutlineWidth.GetUnit() == eStyleUnit_Enumerated);
     // Clamp negative calc() to 0.
     mCachedOutlineWidth =
       std::max(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
