@@ -2174,6 +2174,7 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
       nsLayoutUtils::SFE_WANT_FIRST_FRAME, mTarget);
 
   if (!res.GetSourceSurface()) {
+    aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
 
