@@ -68,6 +68,16 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUDIOCHANNELSERVICE
 
+  enum AudibleState : bool {
+    eAudible = true,
+    eNotAudible = false
+  };
+
+  enum AudioCaptureState : bool {
+    eCapturing = true,
+    eNotCapturing = false
+  };
+
   /**
    * Returns the AudioChannelServce singleton.
    * If AudioChannelServce is not exist, create and return new one.
@@ -83,8 +93,7 @@ public:
    * Any audio channel agent that starts playing should register itself to
    * this service, sharing the AudioChannel.
    */
-  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                 AudioChannel aChannel);
+  void RegisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
   /**
    * Any audio channel agent that stops playing should unregister itself to
@@ -104,6 +113,13 @@ public:
    */
   AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow,
                                      uint32_t aAudioChannel) const;
+
+  /**
+   * Called this method when the audible state of the audio playback changed,
+   * it would dispatch the playback event to observers which want to know the
+   * actual audible state of the window.
+   */
+  void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible);
 
   /* Methods for the BrowserElementAudioChannel */
   float GetAudioChannelVolume(nsPIDOMWindowOuter* aWindow, AudioChannel aChannel);
@@ -215,8 +231,9 @@ private:
     uint32_t mNumberOfAgents;
   };
 
-  struct AudioChannelWindow final
+  class AudioChannelWindow final
   {
+  public:
     explicit AudioChannelWindow(uint64_t aWindowID)
       : mWindowID(aWindowID),
         mIsAudioCaptured(false)
@@ -225,12 +242,36 @@ private:
       mChannels[(int16_t)AudioChannel::System].mMuted = false;
     }
 
+    void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible);
+
+    void AppendAgent(AudioChannelAgent* aAgent);
+    void RemoveAgent(AudioChannelAgent* aAgent);
+
     uint64_t mWindowID;
     bool mIsAudioCaptured;
     AudioChannelConfig mChannels[NUMBER_OF_AUDIO_CHANNELS];
 
     // Raw pointer because the AudioChannelAgent must unregister itself.
     nsTObserverArray<AudioChannelAgent*> mAgents;
+    nsTObserverArray<AudioChannelAgent*> mAudibleAgents;
+
+  private:
+    void AudioCapturedChanged(AudioChannelAgent* aAgent,
+                              AudioCaptureState aCapture);
+
+    void AppendAudibleAgentIfNotContained(AudioChannelAgent* aAgent);
+    void RemoveAudibleAgentIfContained(AudioChannelAgent* aAgent);
+
+    void AppendAgentAndIncreaseAgentsNum(AudioChannelAgent* aAgent);
+    void RemoveAgentAndReduceAgentsNum(AudioChannelAgent* aAgent);
+
+    bool IsFirstAudibleAgent() const;
+    bool IsLastAudibleAgent() const;
+
+    void NotifyAudioAudibleChanged(nsPIDOMWindowOuter* aWindow,
+                                   AudibleState aAudible);
+    void NotifyChannelActive(uint64_t aWindowID, AudioChannel aChannel,
+                             bool aActive);
   };
 
   AudioChannelWindow*
