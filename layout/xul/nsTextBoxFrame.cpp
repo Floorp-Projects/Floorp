@@ -926,7 +926,7 @@ nsTextBoxFrame::RecomputeTitle()
   }
   // We can't handle NS_STYLE_TEXT_TRANSFORM_CAPITALIZE because we
   // have no clue about word boundaries here.  We also don't handle
-  // NS_STYLE_TEXT_TRANSFORM_FULLWIDTH.
+  // NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH.
 }
 
 void
