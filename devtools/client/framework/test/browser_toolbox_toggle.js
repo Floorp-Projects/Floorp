@@ -71,7 +71,7 @@ function* testToggleDetachedToolbox(tab, key, modifiers) {
     "Toolbox opened on separate window");
 
   info("Wait for focus on the toolbox window");
-  yield new Promise(res => waitForFocus(res, toolbox.frame.contentWindow));
+  yield new Promise(res => waitForFocus(res, toolbox.win));
 
   info("Focus main window to put the toolbox window in the background");
 

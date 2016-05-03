@@ -285,8 +285,7 @@ var openToolboxForTab = Task.async(function* (tab, toolId, hostType) {
   toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
 
   // Make sure that the toolbox frame is focused.
-  yield new Promise(resolve => waitForFocus(resolve,
-    toolbox.frame.contentWindow));
+  yield new Promise(resolve => waitForFocus(resolve, toolbox.win));
 
   info("Toolbox opened and focused");
 
