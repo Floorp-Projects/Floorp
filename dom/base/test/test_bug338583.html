@@ -621,7 +621,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest()
   {
     // Allow all cookies, then run the actual test
-    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0], ["dom.server-events.enabled", true]]}, function() { SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], doTestCallback);});
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
+    function() {
+      SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}],
+        doTestCallback);
+    });
   }
 
   function doTestCallback()

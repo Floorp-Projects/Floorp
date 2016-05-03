@@ -60,7 +60,11 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
             return false;
         if (!emitted_ && !tryAttachNative(*writer, obj, objId))
             return false;
+        if (!emitted_ && !tryAttachUnboxed(*writer, obj, objId))
+            return false;
         if (!emitted_ && !tryAttachUnboxedExpando(*writer, obj, objId))
+            return false;
+        if (!emitted_ && !tryAttachTypedObject(*writer, obj, objId))
             return false;
         if (!emitted_ && !tryAttachModuleNamespace(*writer, obj, objId))
             return false;
@@ -258,6 +262,29 @@ GetPropIRGenerator::tryAttachNative(CacheIRWriter& writer, HandleObject obj, Obj
 }
 
 bool
+GetPropIRGenerator::tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (!obj->is<UnboxedPlainObject>())
+        return true;
+
+    const UnboxedLayout::Property* property = obj->as<UnboxedPlainObject>().layout().lookup(name_);
+    if (!property)
+        return true;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return true;
+
+    writer.guardGroup(objId, obj->group());
+    writer.loadUnboxedPropertyResult(objId, property->type,
+                                     UnboxedPlainObject::offsetOfData() + property->offset);
+    emitted_ = true;
+    preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
+    return true;
+}
+
+bool
 GetPropIRGenerator::tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
 {
     MOZ_ASSERT(!emitted_);
@@ -276,6 +303,44 @@ GetPropIRGenerator::tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject 
     emitted_ = true;
 
     EmitReadSlotResult(writer, obj, obj, shape, objId);
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (!obj->is<TypedObject>() ||
+        !cx_->runtime()->jitSupportsFloatingPoint ||
+        cx_->compartment()->detachedTypedObjects)
+    {
+        return true;
+    }
+
+    TypedObject* typedObj = &obj->as<TypedObject>();
+    if (!typedObj->typeDescr().is<StructTypeDescr>())
+        return true;
+
+    StructTypeDescr* structDescr = &typedObj->typeDescr().as<StructTypeDescr>();
+    size_t fieldIndex;
+    if (!structDescr->fieldIndex(NameToId(name_), &fieldIndex))
+        return true;
+
+    TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
+    if (!fieldDescr->is<SimpleTypeDescr>())
+        return true;
+
+    Shape* shape = typedObj->maybeShape();
+    TypedThingLayout layout = GetTypedThingLayout(shape->getObjectClass());
+
+    uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
+    uint32_t typeDescr = SimpleTypeDescrKey(&fieldDescr->as<SimpleTypeDescr>());
+
+    writer.guardNoDetachedTypedObjects();
+    writer.guardShape(objId, shape);
+    writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
+    emitted_ = true;
     return true;
 }
 

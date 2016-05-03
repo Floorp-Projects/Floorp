@@ -3,7 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsNetworkLinkService.h"
+#include <sys/socket.h>
+#include <sys/sysctl.h>
+
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <net/if_types.h>
+#include <net/route.h>
+
+#include <netinet/in.h>
+#include <netinet/if_ether.h>
+
+#include <arpa/inet.h>
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
@@ -11,6 +22,9 @@
 #include "nsCRT.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SHA1.h"
+#include "mozilla/Base64.h"
+#include "nsNetworkLinkService.h"
 
 #import <Cocoa/Cocoa.h>
 #import <netinet/in.h>
@@ -90,12 +104,179 @@ nsNetworkLinkService::GetLinkStatusKnown(bool *aIsUp)
 NS_IMETHODIMP
 nsNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
-  NS_ENSURE_ARG_POINTER(aLinkType);
+    NS_ENSURE_ARG_POINTER(aLinkType);
 
-  // XXX This function has not yet been implemented for this platform
-  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
-  return NS_OK;
+    // XXX This function has not yet been implemented for this platform
+    *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+    return NS_OK;
 }
+
+#ifndef SA_SIZE
+#define SA_SIZE(sa)                                                     \
+  (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?                \
+     sizeof(uint32_t)            :                                      \
+     1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(uint32_t) - 1) ) )
+#endif
+
+static char *getMac(struct sockaddr_dl *sdl, char *buf, size_t bufsize)
+{
+    char *cp;
+    int n, p = 0;
+
+    buf[0] = 0;
+    cp = (char *)LLADDR(sdl);
+    n = sdl->sdl_alen;
+    if (n > 0) {
+        while (--n >= 0) {
+            p += snprintf(&buf[p], bufsize - p, "%02x%s",
+                          *cp++ & 0xff, n > 0 ? ":" : "");
+        }
+    }
+    return buf;
+}
+
+/* If the IP matches, get the MAC and return true */
+static bool matchIp(struct sockaddr_dl *sdl, struct sockaddr_inarp *addr,
+                    char *ip, char *buf, size_t bufsize)
+{
+    if (sdl->sdl_alen) {
+        if (!strcmp(inet_ntoa(addr->sin_addr), ip)) {
+            getMac(sdl, buf, bufsize);
+            return true; /* done! */
+        }
+    }
+    return false; /* continue */
+}
+
+/*
+ * Scan for the 'IP' address in the ARP table and store the corresponding MAC
+ * address in 'mac'. The output buffer is 'maclen' bytes big.
+ *
+ * Returns 'true' if it found the IP and returns a MAC.
+ */
+static bool scanArp(char *ip, char *mac, size_t maclen)
+{
+    int mib[6];
+    char *lim, *next;
+    int st;
+
+    mib[0] = CTL_NET;
+    mib[1] = PF_ROUTE;
+    mib[2] = 0;
+    mib[3] = AF_INET;
+    mib[4] = NET_RT_FLAGS;
+    mib[5] = RTF_LLINFO;
+
+    size_t needed;
+    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+        return false;
+    }
+    if (needed == 0) {
+        // empty table
+        return false;
+    }
+
+    UniquePtr <char[]>buf(new char[needed]);
+
+    for (;;) {
+        st = sysctl(mib, 6, &buf[0], &needed, NULL, 0);
+        if (st == 0 || errno != ENOMEM) {
+            break;
+        }
+        needed += needed / 8;
+
+        auto tmp = MakeUnique<char[]>(needed);
+        memcpy(&tmp[0], &buf[0], needed);
+        buf = Move(tmp);
+    }
+    if (st == -1) {
+        return false;
+    }
+    lim = &buf[needed];
+
+    struct rt_msghdr *rtm;
+    for (next = &buf[0]; next < lim; next += rtm->rtm_msglen) {
+        rtm = reinterpret_cast<struct rt_msghdr *>(next);
+        struct sockaddr_inarp *sin2 =
+            reinterpret_cast<struct sockaddr_inarp *>(rtm + 1);
+        struct sockaddr_dl *sdl =
+            reinterpret_cast<struct sockaddr_dl *>
+            ((char *)sin2 + SA_SIZE(sin2));
+        if (matchIp(sdl, sin2, ip, mac, maclen)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static int routingTable(char *gw)
+{
+    size_t needed;
+    int mib[6];
+    struct rt_msghdr *rtm;
+    struct sockaddr *sa;
+    struct sockaddr_in *sockin;
+
+    mib[0] = CTL_NET;
+    mib[1] = PF_ROUTE;
+    mib[2] = 0;
+    mib[3] = 0;
+    mib[4] = NET_RT_DUMP;
+    mib[5] = 0;
+    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+        return 1;
+    }
+
+    UniquePtr <char[]>buf(new char[needed]);
+
+    if (sysctl(mib, 6, &buf[0], &needed, NULL, 0) < 0) {
+        return 3;
+    }
+
+    rtm = reinterpret_cast<struct rt_msghdr *>(&buf[0]);
+    sa = reinterpret_cast<struct sockaddr *>(rtm + 1);
+    sa = reinterpret_cast<struct sockaddr *>(SA_SIZE(sa) + (char *)sa);
+    sockin = reinterpret_cast<struct sockaddr_in *>(sa);
+    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, gw, MAXHOSTNAMELEN-1);
+
+    return 0;
+}
+
+//
+// Figure out the current "network identification" string.
+//
+// It detects the IP of the default gateway in the routing table, then the MAC
+// address of that IP in the ARP table before it hashes that string (to avoid
+// information leakage).
+//
+void nsNetworkLinkService::calculateNetworkId(void)
+{
+    char hw[MAXHOSTNAMELEN];
+    routingTable(hw);
+
+    char mac[256]; // big enough for a printable MAC address
+    if (scanArp(hw, mac, sizeof(mac))) {
+        LOG(("networkid: MAC %s\n", hw));
+        nsAutoCString mac(hw);
+        // This 'addition' could potentially be a
+        // fixed number from the profile or something.
+        nsAutoCString addition("local-rubbish");
+        nsAutoCString output;
+        SHA1Sum sha1;
+        nsCString combined(mac + addition);
+        sha1.update(combined.get(), combined.Length());
+        uint8_t digest[SHA1Sum::kHashSize];
+        sha1.finish(digest);
+        nsCString newString(reinterpret_cast<char*>(digest),
+                            SHA1Sum::kHashSize);
+        Base64Encode(newString, output);
+        LOG(("networkid: id %s\n", output.get()));
+        mNetworkId = output;
+    }
+
+}
+
 
 NS_IMETHODIMP
 nsNetworkLinkService::Observe(nsISupports *subject,
@@ -298,8 +479,9 @@ nsNetworkLinkService::SendEvent(bool aNetworkChanged)
 {
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
-    if (!observerService)
+    if (!observerService) {
         return;
+    }
 
     const char *event;
     if (aNetworkChanged) {
@@ -331,4 +513,5 @@ nsNetworkLinkService::ReachabilityChanged(SCNetworkReachabilityRef target,
 
     service->UpdateReachability();
     service->SendEvent(false);
+    service->calculateNetworkId();
 }

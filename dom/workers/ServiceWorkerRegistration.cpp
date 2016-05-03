@@ -1079,7 +1079,8 @@ class SyncStopListeningRunnable final : public WorkerMainThreadRunnable
 public:
   SyncStopListeningRunnable(WorkerPrivate* aWorkerPrivate,
                             WorkerListener* aListener)
-    : WorkerMainThreadRunnable(aWorkerPrivate)
+    : WorkerMainThreadRunnable(aWorkerPrivate,
+                               NS_LITERAL_CSTRING("ServiceWorkerRegistration :: StopListening"))
     , mListener(aListener)
   {}
 

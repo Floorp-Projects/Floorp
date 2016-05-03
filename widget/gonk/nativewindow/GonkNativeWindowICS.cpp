@@ -72,9 +72,10 @@ void GonkNativeWindow::freeAllBuffersLocked()
             if (mSlots[i].mTextureClient) {
               mSlots[i].mTextureClient->ClearRecycleCallback();
               // release TextureClient in ImageBridge thread
-              TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
+              RefPtr<TextureClientReleaseTask> task =
+                MakeAndAddRef<TextureClientReleaseTask>(mSlots[i].mTextureClient);
               mSlots[i].mTextureClient = NULL;
-              ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+              ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(task.forget());
             }
             mSlots[i].mGraphicBuffer = NULL;
             mSlots[i].mBufferState = BufferSlot::FREE;
@@ -94,9 +95,10 @@ void GonkNativeWindow::clearRenderingStateBuffersLocked()
                 if (mSlots[i].mTextureClient) {
                   mSlots[i].mTextureClient->ClearRecycleCallback();
                   // release TextureClient in ImageBridge thread
-                  TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
+                  RefPtr<TextureClientReleaseTask> task =
+                    MakeAndAddRef<TextureClientReleaseTask>(mSlots[i].mTextureClient);
                   mSlots[i].mTextureClient = NULL;
-                  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+                  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(task.forget());
                 }
                 mSlots[i].mGraphicBuffer = NULL;
                 mSlots[i].mBufferState = BufferSlot::FREE;
@@ -310,9 +312,10 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             if (mSlots[buf].mTextureClient) {
                 mSlots[buf].mTextureClient->ClearRecycleCallback();
                 // release TextureClient in ImageBridge thread
-                TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[buf].mTextureClient);
+                RefPtr<TextureClientReleaseTask> task =
+                  MakeAndAddRef<TextureClientReleaseTask>(mSlots[buf].mTextureClient);
                 mSlots[buf].mTextureClient = NULL;
-                ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+                ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(task.forget());
             }
             alloc = true;
         }

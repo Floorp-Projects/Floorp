@@ -250,8 +250,7 @@ ProcLoaderClientDeinit()
   sProcLoaderLoop = nullptr;
 
   MessageLoop::current()->
-    PostTask(FROM_HERE,
-             NewRunnableFunction(&_ProcLoaderParentDestroy,
+    PostTask(NewRunnableFunction(&_ProcLoaderParentDestroy,
                                  procLoaderParent));
 }
 
@@ -314,8 +313,7 @@ ProcLoaderLoad(const char *aArgv[],
   *aProcessHandle = sProcLoaderPid;
   sProcLoaderPid = 0;
 
-  sProcLoaderLoop->PostTask(FROM_HERE,
-                            NewRunnableFunction(AsyncSendLoad, load));
+  sProcLoaderLoop->PostTask(NewRunnableFunction(AsyncSendLoad, load));
   return true;
 }
 
@@ -491,9 +489,8 @@ ProcLoaderChild::RecvLoad(InfallibleTArray<nsCString>&& aArgv,
 
   SendLoadComplete(mPeerPid, aCookie);
 
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableFunction(_ProcLoaderChildDestroy,
-                                                       this));
+  MessageLoop::current()->PostTask(
+    NewRunnableFunction(_ProcLoaderChildDestroy, this));
   return true;
 }
 
@@ -510,9 +507,8 @@ ProcLoaderChild::OnChannelError()
   MOZ_ASSERT(sProcLoaderDispatchedTask == nullptr);
   sProcLoaderDispatchedTask = new ProcLoaderNoopRunner();
 
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableFunction(_ProcLoaderChildDestroy,
-                                                       this));
+  MessageLoop::current()->PostTask(
+    NewRunnableFunction(_ProcLoaderChildDestroy, this));
 }
 
 /**

@@ -124,7 +124,32 @@
       }
     }
 
+    function removeFirstChild(aContainer)
+    {
+      this.ht = getAccessible(aContainer, [ nsIAccessibleHyperText ]);
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, aContainer)
+      ];
 
+      this.invoke = function removeFirstChild_invoke()
+      {
+        is(this.ht.linkCount, 2, "Wrong embedded objects count before removal");
+
+        getNode(aContainer).removeChild(getNode(aContainer).firstElementChild);
+      }
+
+      this.finalCheck = function removeFirstChild_finalCheck()
+      {
+        // check list index before link count
+        is(this.ht.getLinkIndex(this.ht.firstChild), 0, "Wrong child index");
+        is(this.ht.linkCount, 1, "Wrong embedded objects count after removal");
+      }
+
+      this.getID = function removeFirstChild_getID()
+      {
+        return "Remove first child and check embedded object indeces";
+      }
+    }
 
     //gA11yEventDumpToConsole = true; // debug stuff
 
@@ -136,6 +161,7 @@
       gQueue.push(new updateText("p2"));
       gQueue.push(new removeChild("div1","div2",
                                   "hello my good friend", "hello friend"));
+      gQueue.push(new removeFirstChild("c4"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -169,5 +195,9 @@
   <p id="p1"></p>
   <p id="p2"><b>hello</b><a>friend</a></p>
   <div id="div1">hello<span id="div2"> my<span id="div3"> good</span></span> friend</span></div>
+  <form id="c4">
+    <label for="c4_input">label</label>
+    <input id="c4_input">
+  </form>
 </body>
 </html>

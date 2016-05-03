@@ -116,3 +116,16 @@ SimpleTest.registerTimeoutFunction(function() {
     a.mozDumpDebugInfo();
   }
 });
+
+function waitUntilTime(target, targetTime) {
+  return new Promise(function(resolve, reject) {
+    target.addEventListener("waiting", function onwaiting() {
+      info("Got a waiting event at " + target.currentTime);
+      if (target.currentTime >= targetTime) {
+        ok(true, "Reached target time of: " + targetTime);
+        target.removeEventListener("waiting", onwaiting);
+        resolve();
+      }
+    });
+  });
+}

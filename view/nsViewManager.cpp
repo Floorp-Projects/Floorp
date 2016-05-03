@@ -193,12 +193,27 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   }
 }
 
+bool
+nsViewManager::ShouldDelayResize() const
+{
+  MOZ_ASSERT(mRootView);
+  if (!mRootView->IsEffectivelyVisible() ||
+      !mPresShell || !mPresShell->IsVisible()) {
+    return true;
+  }
+  if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
+    if (rd->IsResizeSuppressed()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   if (mRootView) {
-    if (mRootView->IsEffectivelyVisible() && mPresShell &&
-        mPresShell->IsVisible() && !mPresShell->IsInFullscreenChange()) {
+    if (!ShouldDelayResize()) {
       if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           mDelayedResize != nsSize(aWidth, aHeight)) {
         // We have a delayed resize; that now obsolete size may already have

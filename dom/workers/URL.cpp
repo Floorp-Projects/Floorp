@@ -77,7 +77,8 @@ public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl,
                     const mozilla::dom::objectURLOptions& aOptions,
                     nsAString& aURL)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             NS_LITERAL_CSTRING("URL :: CreateURL"))
   , mBlobImpl(aBlobImpl)
   , mURL(aURL)
   {
@@ -168,7 +169,8 @@ private:
 public:
   RevokeURLRunnable(WorkerPrivate* aWorkerPrivate,
                     const nsAString& aURL)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             NS_LITERAL_CSTRING("URL :: RevokeURL"))
   , mURL(aURL)
   {}
 
@@ -229,7 +231,8 @@ public:
   ConstructorRunnable(WorkerPrivate* aWorkerPrivate,
                       const nsAString& aURL, const Optional<nsAString>& aBase,
                       mozilla::ErrorResult& aRv)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             NS_LITERAL_CSTRING("URL :: Constructor"))
   , mURL(aURL)
   , mRv(aRv)
   {
@@ -244,7 +247,8 @@ public:
   ConstructorRunnable(WorkerPrivate* aWorkerPrivate,
                       const nsAString& aURL, URLProxy* aBaseProxy,
                       mozilla::ErrorResult& aRv)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             NS_LITERAL_CSTRING("URL :: Constructor with BaseURL"))
   , mURL(aURL)
   , mBaseProxy(aBaseProxy)
   , mRv(aRv)
@@ -326,7 +330,10 @@ public:
   GetterRunnable(WorkerPrivate* aWorkerPrivate,
                  GetterType aType, nsAString& aValue,
                  URLProxy* aURLProxy)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             // We can have telemetry keys for each getter when
+                             // needed.
+                             NS_LITERAL_CSTRING("URL :: getter"))
   , mValue(aValue)
   , mType(aType)
   , mURLProxy(aURLProxy)
@@ -414,7 +421,10 @@ public:
   SetterRunnable(WorkerPrivate* aWorkerPrivate,
                  SetterType aType, const nsAString& aValue,
                  URLProxy* aURLProxy)
-  : WorkerMainThreadRunnable(aWorkerPrivate)
+  : WorkerMainThreadRunnable(aWorkerPrivate,
+                             // We can have telemetry keys for each setter when
+                             // needed.
+                             NS_LITERAL_CSTRING("URL :: setter"))
   , mValue(aValue)
   , mType(aType)
   , mURLProxy(aURLProxy)

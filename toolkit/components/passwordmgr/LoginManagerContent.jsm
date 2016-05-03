@@ -26,6 +26,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
+XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
+                                   "@mozilla.org/scriptsecuritymanager;1",
+                                   "nsIScriptSecurityManager");
 XPCOMUtils.defineLazyServiceGetter(this, "gNetUtil",
                                    "@mozilla.org/network/util;1",
                                    "nsINetUtil");
@@ -1135,7 +1138,8 @@ var LoginManagerContent = {
     // using a "javascript:" or "data:" URI from an HTTPS page. See bug 1162772
     // for defining "window.isSecureContext", that may help in these cases.
     if (!principal.isCodebasePrincipal) {
-      principal = getCodebasePrincipal(document.documentURIObject);
+      principal =
+        gScriptSecurityManager.getCodebasePrincipal(document.documentURIObject);
     }
 
     // These checks include "file", "resource", HTTPS, and HTTP to "localhost".

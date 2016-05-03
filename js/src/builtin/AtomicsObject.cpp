@@ -1118,9 +1118,7 @@ const JSFunctionSpec AtomicsMethods[] = {
     JS_INLINABLE_FN("xor",                atomics_xor,                3,0, AtomicsXor),
     JS_INLINABLE_FN("isLockFree",         atomics_isLockFree,         1,0, AtomicsIsLockFree),
     JS_FN("wait",                         atomics_wait,               4,0),
-    JS_FN("futexWait",                    atomics_wait,               4,0),
     JS_FN("wake",                         atomics_wake,               3,0),
-    JS_FN("futexWake",                    atomics_wake,               3,0),
     JS_FS_END
 };
 

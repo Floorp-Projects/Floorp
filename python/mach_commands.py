@@ -221,10 +221,10 @@ class MachCommands(MachCommandBase):
                         try:
                             output = subprocess.check_output([npmPath, "bin", "-g"],
                                                              stderr=subprocess.STDOUT)
-                            if minversion:
-                                base = output.split("\n").strip()
+                            if output:
+                                base = output.split("\n")[0].strip()
                                 binary = os.path.join(base, "eslint")
-                                if not os.path.is_file(binary):
+                                if not os.path.isfile(binary):
                                     binary = None
                         except (subprocess.CalledProcessError, WindowsError):
                             pass
