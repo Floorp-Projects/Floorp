@@ -3899,6 +3899,7 @@ this.XPIProvider = {
       throw new Error("Only restartless (bootstrap) add-ons"
                     + " can be temporarily installed:", addon.id);
     }
+    let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = yield new Promise(
                    resolve => XPIDatabase.getVisibleAddonForID(addon.id, resolve));
     if (oldAddon) {
@@ -3918,9 +3919,12 @@ this.XPIProvider = {
         // call its uninstall method
         let newVersion = addon.version;
         let oldVersion = oldAddon.version;
-        let uninstallReason = Services.vc.compare(oldVersion, newVersion) < 0 ?
-                              BOOTSTRAP_REASONS.ADDON_UPGRADE :
-                              BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+        if (Services.vc.compare(newVersion, oldVersion) >= 0) {
+          installReason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
+        } else {
+          installReason = BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+        }
+        let uninstallReason = installReason;
 
         if (oldAddon.active) {
           XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
@@ -3937,8 +3941,7 @@ this.XPIProvider = {
     let file = addon._sourceBundle;
 
     XPIProvider._addURIMapping(addon.id, file);
-    XPIProvider.callBootstrapMethod(addon, file, "install",
-                                    BOOTSTRAP_REASONS.ADDON_INSTALL);
+    XPIProvider.callBootstrapMethod(addon, file, "install", installReason);
     addon.state = AddonManager.STATE_INSTALLED;
     logger.debug("Install of temporary addon in " + aFile.path + " completed.");
     addon.visible = true;
@@ -6968,6 +6971,10 @@ AddonWrapper.prototype = {
     return getExternalType(addonFor(this).type);
   },
 
+  get temporarilyInstalled() {
+    return addonFor(this)._installLocation == TemporaryInstallLocation;
+  },
+
   get aboutURL() {
     return this.isActive ? addonFor(this)["aboutURL"] : null;
   },
@@ -7344,25 +7351,26 @@ AddonWrapper.prototype = {
     }
   },
 
+  /**
+   * Reloads the add-on as if one had uninstalled it then reinstalled it.
+   *
+   * Currently, only temporarily installed add-ons can be reloaded. Attempting
+   * to reload other kinds of add-ons will result in a rejected promise.
+   *
+   * @return Promise
+   */
   reload: function() {
-    return new Promise(resolve => {
-      if (this.appDisabled) {
-        throw new Error(
-          "cannot reload add-on because it is disabled by the application");
-      }
-
+    return new Promise((resolve) => {
       const addon = addonFor(this);
-      const isReloadable = (!XPIProvider.enableRequiresRestart(addon) &&
-                            !XPIProvider.disableRequiresRestart(addon));
-      if (!isReloadable) {
-        throw new Error(
-          "cannot reload add-on because it requires a browser restart");
+
+      if (!this.temporarilyInstalled) {
+        logger.debug(`Cannot reload add-on at ${addon._sourceBundle}`);
+        throw new Error("Only temporary add-ons can be reloaded");
       }
 
-      this.userDisabled = true;
-      flushChromeCaches();
-      this.userDisabled = false;
-      resolve();
+      logger.debug(`reloading add-on ${addon.id}`);
+      // This function supports re-installing an existing add-on.
+      resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
     });
   },
 
