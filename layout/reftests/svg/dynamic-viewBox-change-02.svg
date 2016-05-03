@@ -1,0 +1,24 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait"
+     id="target" viewBox="-50 -50 20 20"
+     preserveAspectRatio="none">
+  <script>
+  function doTest() {
+    var target = document.getElementById("target");
+    target.setAttribute("viewBox", "");
+    document.documentElement.removeAttribute("class");
+  }
+
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+  </script>
+
+  <!-- Lime background to match pass.svg -->
+  <rect height="100%" width="100%" fill="lime"/>
+
+  <!-- Offscreen red rect - the initial |viewBox| makes this visible,
+       but it shouldn't be visible after we clear that attribute: -->
+  <rect x="-50" y="-50" width="20" height="20" fill="red"/>
+</svg>
