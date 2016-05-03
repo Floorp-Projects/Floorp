@@ -41,7 +41,7 @@ function test() {
     });
 
     // Closes split console.
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
+    EventUtils.sendKey("ESCAPE", toolbox.win);
   }
 
   function checkAllTools() {
