@@ -5363,7 +5363,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 const bool& aCalledFromJS,
                                 const bool& aPositionSpecified,
                                 const bool& aSizeSpecified,
-                                const nsCString& aURI,
                                 const nsString& aName,
                                 const nsCString& aFeatures,
                                 const nsCString& aBaseURI,
@@ -5496,44 +5495,13 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     return true;
   }
 
-  // WindowWatcher is going to expect a valid URI to open a window
-  // to. If it can't find one, it's going to attempt to figure one
-  // out on its own, which is problematic because it can't access
-  // the document for the remote browser we're opening. Luckily,
-  // TabChild has sent us a baseURI with which we can ensure that
-  // the URI we pass to WindowWatcher is valid.
-  nsCOMPtr<nsIURI> baseURI;
-  *aResult = NS_NewURI(getter_AddRefs(baseURI), aBaseURI);
-
-  if (NS_WARN_IF(NS_FAILED(*aResult))) {
-    return true;
-  }
-
-  nsAutoCString finalURIString;
-  if (!aURI.IsEmpty()) {
-    nsCOMPtr<nsIURI> finalURI;
-    *aResult = NS_NewURI(getter_AddRefs(finalURI), aURI.get(), baseURI);
-
-    if (NS_WARN_IF(NS_FAILED(*aResult))) {
-      return true;
-    }
-
-    finalURI->GetSpec(finalURIString);
-  }
-
   nsCOMPtr<mozIDOMWindowProxy> window;
-
   TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
-  // If nsWindowWatcher::OpenWindowInternal was passed a nullptr for the URI
-  // to open in the content process, we indicate that by sending up a voided
-  // nsString (since primitives are not nullable). If we detect the voided
-  // nsString, we know that we need to send OpenWindow2 a nullptr for the URI.
-  const char* uri = aURI.IsVoid() ? nullptr : finalURIString.get();
   const char* name = aName.IsVoid() ? nullptr : NS_ConvertUTF16toUTF8(aName).get();
   const char* features = aFeatures.IsVoid() ? nullptr : aFeatures.get();
 
-  *aResult = pwwatch->OpenWindow2(parent, uri, name, features, aCalledFromJS,
+  *aResult = pwwatch->OpenWindow2(parent, nullptr, name, features, aCalledFromJS,
                                   false, false, thisTabParent, nullptr,
                                   aFullZoom, 1, getter_AddRefs(window));
 
