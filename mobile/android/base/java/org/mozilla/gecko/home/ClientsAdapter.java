@@ -96,7 +96,7 @@ public class ClientsAdapter extends RecyclerView.Adapter<CombinedHistoryItem> im
     }
 
     @Override
-    public void onBindViewHolder (CombinedHistoryItem holder, final int position){
+    public void onBindViewHolder(CombinedHistoryItem holder, final int position) {
        final CombinedHistoryItem.ItemType itemType = getItemTypeForPosition(position);
 
         switch (itemType) {
