@@ -1,4 +1,7 @@
-const { Cc, Ci } = SpecialPowers;
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+ok(Ci != null, "Access Ci");
+ok(Cc != null, "Access Cc");
 
 function hasTabModalPrompts() {
   var prefName = "prompts.tab_modal.enabled";
