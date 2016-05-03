@@ -1504,7 +1504,7 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   // mGrid{Column,Row}{Start,End}: false/0/empty values for 'auto'
 }
 
-nsStylePosition::~nsStylePosition(void)
+nsStylePosition::~nsStylePosition()
 {
   MOZ_COUNT_DTOR(nsStylePosition);
 }
@@ -1790,7 +1790,7 @@ nsStyleTable::nsStyleTable(StyleStructContext aContext)
   MOZ_COUNT_CTOR(nsStyleTable);
 }
 
-nsStyleTable::~nsStyleTable(void)
+nsStyleTable::~nsStyleTable()
 {
   MOZ_COUNT_DTOR(nsStyleTable);
 }
@@ -1823,7 +1823,7 @@ nsStyleTableBorder::nsStyleTableBorder(StyleStructContext aContext)
   MOZ_COUNT_CTOR(nsStyleTableBorder);
 }
 
-nsStyleTableBorder::~nsStyleTableBorder(void)
+nsStyleTableBorder::~nsStyleTableBorder()
 {
   MOZ_COUNT_DTOR(nsStyleTableBorder);
 }
@@ -1921,7 +1921,7 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
   return true;
 }
 
-nsStyleGradient::nsStyleGradient(void)
+nsStyleGradient::nsStyleGradient()
   : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
   , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
   , mRepeating(false)
@@ -3368,7 +3368,7 @@ nsStyleContent::nsStyleContent(StyleStructContext aContext)
   mMarkerOffset.SetAutoValue();
 }
 
-nsStyleContent::~nsStyleContent(void)
+nsStyleContent::~nsStyleContent()
 {
   MOZ_COUNT_DTOR(nsStyleContent);
   DELETE_ARRAY_IF(mContents);
@@ -3517,7 +3517,7 @@ nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
   *this = aSource;
 }
 
-nsStyleTextReset::~nsStyleTextReset(void)
+nsStyleTextReset::~nsStyleTextReset()
 {
   MOZ_COUNT_DTOR(nsStyleTextReset);
 }
@@ -3654,7 +3654,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
-nsStyleText::~nsStyleText(void)
+nsStyleText::~nsStyleText()
 {
   MOZ_COUNT_DTOR(nsStyleText);
 }
@@ -3825,7 +3825,7 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
   CopyCursorArrayFrom(aSource);
 }
 
-nsStyleUserInterface::~nsStyleUserInterface(void)
+nsStyleUserInterface::~nsStyleUserInterface()
 {
   MOZ_COUNT_DTOR(nsStyleUserInterface);
   delete [] mCursorArray;
@@ -3908,7 +3908,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
-nsStyleUIReset::~nsStyleUIReset(void)
+nsStyleUIReset::~nsStyleUIReset()
 {
   MOZ_COUNT_DTOR(nsStyleUIReset);
 }
@@ -3949,7 +3949,7 @@ nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
   MOZ_COUNT_CTOR(nsStyleVariables);
 }
 
-nsStyleVariables::~nsStyleVariables(void)
+nsStyleVariables::~nsStyleVariables()
 {
   MOZ_COUNT_DTOR(nsStyleVariables);
 }
