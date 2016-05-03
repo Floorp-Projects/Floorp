@@ -202,7 +202,8 @@ AudioChannelAgent::InitInternal(nsPIDOMWindowInner* aWindow,
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig)
+AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
+                                        bool aAudible)
 {
   if (NS_WARN_IF(!aConfig)) {
     return NS_ERROR_FAILURE;
@@ -214,7 +215,10 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig)
     return NS_ERROR_FAILURE;
   }
 
-  service->RegisterAudioChannelAgent(this);
+  MOZ_ASSERT(AudioChannelService::AudibleState::eAudible == true &&
+             AudioChannelService::AudibleState::eNotAudible == false);
+  service->RegisterAudioChannelAgent(this,
+    static_cast<AudioChannelService::AudibleState>(aAudible));
 
   AudioPlaybackConfig config = service->GetMediaConfig(mWindow,
                                                        mAudioChannelType);
