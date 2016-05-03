@@ -21,8 +21,8 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:layout_gravity="center_vertical"
-        android:scaleType="center"
-        tools:src="@drawable/sync_mobile"/>
+        android:scaleType="fitCenter"
+        tools:src="@drawable/cloud"/>
 
     <LinearLayout
         android:layout_width="0dp"
