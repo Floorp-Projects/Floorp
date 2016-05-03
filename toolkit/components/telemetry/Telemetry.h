@@ -12,10 +12,6 @@
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 
-namespace base {
-  class Histogram;
-} // namespace base
-
 namespace mozilla {
 namespace HangMonitor {
   class HangAnnotations;
@@ -93,17 +89,7 @@ void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now(
  */
 void SetHistogramRecordingEnabled(ID id, bool enabled);
 
-/**
- * Return a raw Histogram for direct manipulation for users who can not use Accumulate().
- */
-base::Histogram* GetHistogramById(ID id);
-
 const char* GetHistogramName(ID id);
-
-/**
- * Return a raw histogram for keyed histograms.
- */
-base::Histogram* GetKeyedHistogramById(ID id, const nsAString&);
 
 /**
  * Those wrappers are needed because the VS versions we use do not support free
