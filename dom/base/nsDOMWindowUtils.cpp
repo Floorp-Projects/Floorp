@@ -3066,32 +3066,25 @@ nsDOMWindowUtils::RemoteFrameFullscreenReverted()
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS FullscreenChangePrepare
+static void
+PrepareForFullscreenChange(nsIPresShell* aPresShell, const nsSize& aSize,
+                           nsSize* aOldSize = nullptr)
 {
-public:
-  FullscreenChangePrepare(nsIPresShell* aPresShell,
-                          const nsSize& aSize, nsSize* aOldSize = nullptr)
-    : mPresShell(aPresShell)
-  {
-    if (mPresShell) {
-      if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
-        rd->SetIsResizeSuppressed();
-      }
-    }
-    if (aSize.IsEmpty()) {
-      return;
-    }
-    if (nsViewManager* viewManager = mPresShell->GetViewManager()) {
+  if (!aPresShell) {
+    return;
+  }
+  if (nsRefreshDriver* rd = aPresShell->GetRefreshDriver()) {
+    rd->SetIsResizeSuppressed();
+  }
+  if (!aSize.IsEmpty()) {
+    if (nsViewManager* viewManager = aPresShell->GetViewManager()) {
       if (aOldSize) {
         viewManager->GetWindowDimensions(&aOldSize->width, &aOldSize->height);
       }
       viewManager->SetWindowDimensions(aSize.width, aSize.height);
     }
   }
-
-private:
-  nsCOMPtr<nsIPresShell> mPresShell;
-};
+}
 
 class OldWindowSize : public LinkedListElement<OldWindowSize>
 {
@@ -3165,7 +3158,7 @@ nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal)
     presContext->DeviceContext()->GetRect(screenRect);
   }
   nsSize oldSize;
-  FullscreenChangePrepare prepare(GetPresShell(), screenRect.Size(), &oldSize);
+  PrepareForFullscreenChange(GetPresShell(), screenRect.Size(), &oldSize);
   OldWindowSize::Set(doc->GetWindow(), oldSize);
 
   *aRetVal = nsIDocument::HandlePendingFullscreenRequests(doc);
@@ -3190,7 +3183,7 @@ nsDOMWindowUtils::ExitFullscreen()
   // set the window dimensions in advance. Since the resize message
   // comes after the fullscreen change call, doing so could avoid an
   // extra resize reflow after this point.
-  FullscreenChangePrepare prepare(GetPresShell(), oldSize);
+  PrepareForFullscreenChange(GetPresShell(), oldSize);
   nsIDocument::ExitFullscreenInDocTree(doc);
   return NS_OK;
 }
