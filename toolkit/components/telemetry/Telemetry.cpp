@@ -3969,14 +3969,6 @@ CanRecordExtended()
   return TelemetryImpl::CanRecordExtended();
 }
 
-base::Histogram*
-GetHistogramById(ID id)
-{
-  Histogram *h = nullptr;
-  GetHistogramByEnumId(id, &h);
-  return h;
-}
-
 const char*
 GetHistogramName(Telemetry::ID id)
 {
