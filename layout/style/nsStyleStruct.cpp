@@ -3357,13 +3357,12 @@ nsStyleContentData::UntrackImage(nsPresContext* aContext)
 //
 
 nsStyleContent::nsStyleContent(StyleStructContext aContext)
-  : mMarkerOffset(),
-    mContents(nullptr),
-    mIncrements(nullptr),
-    mResets(nullptr),
-    mContentCount(0),
-    mIncrementCount(0),
-    mResetCount(0)
+  : mContents(nullptr)
+  , mIncrements(nullptr)
+  , mResets(nullptr)
+  , mContentCount(0)
+  , mIncrementCount(0)
+  , mResetCount(0)
 {
   MOZ_COUNT_CTOR(nsStyleContent);
   mMarkerOffset.SetAutoValue();
@@ -3377,7 +3376,7 @@ nsStyleContent::~nsStyleContent(void)
   DELETE_ARRAY_IF(mResets);
 }
 
-void 
+void
 nsStyleContent::Destroy(nsPresContext* aContext)
 {
   // Unregister any images we might have with the document.
@@ -3394,17 +3393,16 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
-   :mMarkerOffset(),
-    mContents(nullptr),
-    mIncrements(nullptr),
-    mResets(nullptr),
-    mContentCount(0),
-    mIncrementCount(0),
-    mResetCount(0)
+  : mMarkerOffset(aSource.mMarkerOffset)
+  , mContents(nullptr)
+  , mIncrements(nullptr)
+  , mResets(nullptr)
+  , mContentCount(0)
+  , mIncrementCount(0)
+  , mResetCount(0)
 
 {
   MOZ_COUNT_CTOR(nsStyleContent);
-  mMarkerOffset = aSource.mMarkerOffset;
 
   uint32_t index;
   if (NS_SUCCEEDED(AllocateContents(aSource.ContentCount()))) {
