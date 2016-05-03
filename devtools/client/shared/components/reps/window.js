@@ -32,14 +32,6 @@ define(function(require, exports, module) {
       return cropString(grip.preview.url);
     },
 
-    getTitle: function(grip, context) {
-      return grip.class;
-    },
-
-    getTooltip: function(grip) {
-      return grip.preview.url;
-    },
-
     render: function() {
       let grip = this.props.object;
 
