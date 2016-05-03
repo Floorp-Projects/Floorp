@@ -71,6 +71,10 @@
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "ScrollSnap.h"                 // for ScrollSnapUtils
 #include "WheelScrollAnimation.h"
+#if defined(MOZ_ANDROID_APZ)
+#include "GeneratedJNIWrappers.h"
+#include "FlingOverScrollerAnimation.h"
+#endif // defined(MOZ_ANDROID_APZ)
 
 #define ENABLE_APZC_LOGGING 0
 // #define ENABLE_APZC_LOGGING 1
@@ -220,7 +224,8 @@ using mozilla::gfx::PointTyped;
  * formula: v(t1) = v(t0) * (1 - f)^(t1 - t0), where v(t1) is the velocity
  * for a new sample, v(t0) is the velocity at the previous sample, f is the
  * value of this pref, and (t1 - t0) is the amount of time, in milliseconds,
- * that has elapsed between the two samples.
+ * that has elapsed between the two samples.\n
+ * NOTE: Not currently used in Android fling calculations.
  *
  * \li\b apz.fling_stop_on_tap_threshold
  * When flinging, if the velocity is above this number, then a tap on the
@@ -234,7 +239,9 @@ using mozilla::gfx::PointTyped;
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
  * velocity and rerendering unnecessarily.\n
- * Units: screen pixels per millisecond
+ * Units: screen pixels per millisecond.\n
+ * NOTE: Should not be set to anything
+ * other than 0.0 for Android except for tests to disable flings.
  *
  * \li\b apz.max_velocity_inches_per_ms
  * Maximum velocity.  Velocity will be capped at this value if a faster fling
@@ -436,6 +443,7 @@ private:
   AsyncPanZoomController::PanZoomState mInitialState;
 };
 
+#if !defined(MOZ_ANDROID_APZ)
 class FlingAnimation: public AsyncPanZoomAnimation {
 public:
   FlingAnimation(AsyncPanZoomController& aApzc,
@@ -604,6 +612,7 @@ private:
   RefPtr<const OverscrollHandoffChain> mOverscrollHandoffChain;
   RefPtr<const AsyncPanZoomController> mScrolledApzc;
 };
+#endif
 
 class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
@@ -2610,10 +2619,25 @@ void AsyncPanZoomController::AcceptFling(FlingHandoffState& aHandoffState) {
   ScrollSnapToDestination();
   if (mState != SMOOTH_SCROLL) {
     SetState(FLING);
+#if defined(MOZ_ANDROID_APZ)
+    if (!mOverScroller) {
+      widget::sdk::OverScroller::LocalRef scroller;
+      if (widget::sdk::OverScroller::New(widget::GeckoAppShell::GetApplicationContext(), &scroller) != NS_OK) {
+        APZC_LOG("%p Failed to create Android OverScroller\n", this);
+        return;
+      }
+      mOverScroller = scroller;
+    }
+    FlingOverScrollerAnimation *fling = new FlingOverScrollerAnimation(*this,
+        mOverScroller,
+        aHandoffState.mChain,
+        aHandoffState.mScrolledApzc);
+#else
     FlingAnimation *fling = new FlingAnimation(*this,
         aHandoffState.mChain,
         !aHandoffState.mIsHandoff,  // only apply acceleration if this is an initial fling
         aHandoffState.mScrolledApzc);
+#endif
     StartAnimation(fling);
   }
 }
