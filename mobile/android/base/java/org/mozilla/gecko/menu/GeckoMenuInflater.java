@@ -130,10 +130,7 @@ public class GeckoMenuInflater extends MenuInflater {
         item.enabled = a.getBoolean(R.styleable.MenuItem_android_enabled, true);
         item.hasSubMenu = false;
         item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
-
-        if (Versions.feature11Plus) {
-            item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);
-        }
+        item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);
 
         a.recycle();
     }

@@ -9,39 +9,30 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:ignore="AlwaysShowAction">
 
-    <item android:id="@+id/back"
-          android:icon="@drawable/ic_menu_back"
-          android:title="@string/back"
-          android:showAsAction="always"/>
-
-    <item android:id="@+id/forward"
-          android:icon="@drawable/ic_menu_forward"
-          android:title="@string/forward"
-          android:showAsAction="always"/>
-
     <item android:id="@+id/reload"
           android:icon="@drawable/ic_menu_reload"
           android:title="@string/reload"
           android:showAsAction="always"/>
 
+    <item android:id="@+id/back"
+          android:icon="@drawable/ic_menu_back"
+          android:title="@string/back"
+          android:visible="false"/>
+
+    <item android:id="@+id/forward"
+          android:icon="@drawable/ic_menu_forward"
+          android:title="@string/forward"
+          android:visible="false"/>
+
     <item android:id="@+id/bookmark"
           android:icon="@drawable/ic_menu_bookmark_add"
           android:title="@string/bookmark"
-          android:showAsAction="ifRoom"/>
+          android:showAsAction="always"/>
 
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
           android:title="@string/share"
           android:showAsAction="ifRoom"/>
-
-    <!-- We only show the quick share items so no need for an icon or title.
-
-         The visibility is changed dynamically for v14+ - hide for previous versions. -->
-    <item android:id="@+id/quickshare"
-          android:visible="false"
-          android:enabled="false"
-          android:visibility="gone"
-          android:showAsAction="collapseActionView"/>
 
     <item android:id="@+id/new_tab"
           android:title="@string/new_tab"/>
@@ -61,6 +52,7 @@
     <item android:id="@+id/desktop_mode"
           android:title="@string/desktop_mode"
           android:checkable="true" />
+
 
     <item android:id="@+id/page"
           android:title="@string/page">

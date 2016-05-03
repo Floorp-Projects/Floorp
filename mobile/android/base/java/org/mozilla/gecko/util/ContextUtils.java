@@ -7,6 +7,7 @@
 package org.mozilla.gecko.util;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 public class ContextUtils {
@@ -17,11 +18,11 @@ public class ContextUtils {
      * @throws PackageManager.NameNotFoundException Unexpected - we get the package name from the context so
      *         it's expected to be found.
      */
-    public static long getPackageInstallTime(final Context context) {
+    public static PackageInfo getCurrentPackageInfo(final Context context) {
         try {
-            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).firstInstallTime;
-        } catch (final PackageManager.NameNotFoundException e) {
-            throw new AssertionError("Should not happen: could not get package info for own package");
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new AssertionError("Should not happen: Can't get package info of own package");
         }
     }
 }
