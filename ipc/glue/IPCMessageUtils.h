@@ -455,6 +455,8 @@ struct ParamTraits<nsTArray<E>>
     }
   }
 
+  // This method uses infallible allocation so that an OOM failure will
+  // show up as an OOM crash rather than an IPC FatalError.
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     uint32_t length;
@@ -473,20 +475,14 @@ struct ParamTraits<nsTArray<E>>
         return false;
       }
 
-      E* elements = aResult->AppendElements(length, mozilla::fallible);
-      if (!elements) {
-        return false;
-      }
+      E* elements = aResult->AppendElements(length);
 
       memcpy(elements, outdata, pickledLength);
     } else {
-      if (!aResult->SetCapacity(length, mozilla::fallible)) {
-        return false;
-      }
+      aResult->SetCapacity(length);
 
       for (uint32_t index = 0; index < length; index++) {
-        E* element = aResult->AppendElement(mozilla::fallible);
-        MOZ_ASSERT(element);
+        E* element = aResult->AppendElement();
         if (!ReadParam(aMsg, aIter, element)) {
           return false;
         }
