@@ -179,7 +179,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         cmd = self._query_cmd()
 
         parser = StructuredOutputParser(config=self.config,
-                                        log_obj=self.log_obj)
+                                        log_obj=self.log_obj,
+                                        log_compact=True)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
         env = self.query_env(partial_env=env, log_level=INFO)
