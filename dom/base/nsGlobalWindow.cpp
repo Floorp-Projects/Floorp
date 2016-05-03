@@ -6170,6 +6170,27 @@ private:
     MOZ_COUNT_DTOR(FullscreenTransitionTask);
   }
 
+  /**
+   * The flow of fullscreen transition:
+   *
+   *         parent process         |         child process
+   * ----------------------------------------------------------------
+   *
+   *                                    | request/exit fullscreen
+   *                              <-----|
+   *         BeforeToggle stage |
+   *                            |
+   *  ToggleFullscreen stage *1 |----->
+   *                                    | HandleFullscreenRequests
+   *                                    |
+   *                              <-----| MozAfterPaint event
+   *       AfterToggle stage *2 |
+   *                            |
+   *                  End stage |
+   *
+   * Note we also start a timer at *1 so that if we don't get MozAfterPaint
+   * from the child process in time, we continue going to *2.
+   */
   enum Stage {
     // BeforeToggle stage happens before we enter or leave fullscreen
     // state. In this stage, the task triggers the pre-toggle fullscreen
