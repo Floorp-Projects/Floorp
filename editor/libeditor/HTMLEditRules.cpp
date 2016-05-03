@@ -2294,24 +2294,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         if (leftBlockParent == rightBlockParent &&
             mHTMLEditor->NodesSameType(GetAsDOMNode(leftParent),
-                                       GetAsDOMNode(rightParent))) {
-          if (leftParent->IsHTMLElement(nsGkAtoms::p)) {
-            // First delete the selection
-            NS_ENSURE_STATE(mHTMLEditor);
-            res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
-            NS_ENSURE_SUCCESS(res, res);
-            // Then join paragraphs, insert break
-            NS_ENSURE_STATE(mHTMLEditor);
-            EditorDOMPoint pt =
-              mHTMLEditor->JoinNodeDeep(*leftParent, *rightParent);
-            NS_ENSURE_STATE(pt.node);
-            // Fix up selection
-            res = aSelection->Collapse(pt.node, pt.offset);
-            NS_ENSURE_SUCCESS(res, res);
-            return NS_OK;
-          }
-          if (HTMLEditUtils::IsListItem(leftParent) ||
-              HTMLEditUtils::IsHeader(*leftParent)) {
+                                       GetAsDOMNode(rightParent)) &&
+            // XXX What's special about these three types of block?
+            (leftParent->IsHTMLElement(nsGkAtoms::p) ||
+             HTMLEditUtils::IsListItem(leftParent) ||
+             HTMLEditUtils::IsHeader(*leftParent))) {
             // First delete the selection
             NS_ENSURE_STATE(mHTMLEditor);
             res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
@@ -2325,7 +2312,6 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
             res = aSelection->Collapse(pt.node, pt.offset);
             NS_ENSURE_SUCCESS(res, res);
             return NS_OK;
-          }
         }
 
         // Else blocks not same type, or not siblings.  Delete everything
