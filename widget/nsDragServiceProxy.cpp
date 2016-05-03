@@ -51,20 +51,21 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
       RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
         surface->GetDataSurface();
       mozilla::gfx::IntSize size = dataSurface->GetSize();
+      if (dataSurface) {
+        size_t length;
+        int32_t stride;
+        mozilla::UniquePtr<char[]> surfaceData =
+          nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
+        nsDependentCString dragImage(surfaceData.get(), length);
 
-      size_t length;
-      int32_t stride;
-      mozilla::UniquePtr<char[]> surfaceData =
-        nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
-      nsDependentCString dragImage(surfaceData.get(), length);
-
-      mozilla::Unused <<
-        child->SendInvokeDragSession(dataTransfers, aActionType, dragImage,
-                                     size.width, size.height, stride,
-                                     static_cast<uint8_t>(dataSurface->GetFormat()),
-                                     dragRect.x, dragRect.y);
-      StartDragSession();
-      return NS_OK;
+        mozilla::Unused <<
+          child->SendInvokeDragSession(dataTransfers, aActionType, dragImage,
+                                       size.width, size.height, stride,
+                                       static_cast<uint8_t>(dataSurface->GetFormat()),
+                                       dragRect.x, dragRect.y);
+        StartDragSession();
+        return NS_OK;
+      }
     }
   }
 
