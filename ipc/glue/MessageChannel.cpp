@@ -1141,6 +1141,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     IPC_LOG("Send seqno=%d, xid=%d", seqno, transaction);
 
+    // msg will be destroyed soon, but name() is not owned by msg.
+    const char* msgName = msg->name();
+
     mLink->SendMessage(msg.forget());
 
     while (true) {
@@ -1229,7 +1232,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     *aReply = Move(*reply);
     if (aReply->capacity() >= kMinTelemetryMessageSize) {
         Telemetry::Accumulate(Telemetry::IPC_REPLY_SIZE,
-                              nsDependentCString(aReply->name()), aReply->capacity());
+                              nsDependentCString(msgName), aReply->capacity());
     }
     return true;
 }
