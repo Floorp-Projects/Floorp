@@ -371,7 +371,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         }
 
         final boolean showEmptyView = showEmptyClientsView || showEmptyHistoryView;
-        mRecyclerView.setOverScrollMode(showEmptyView? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        mRecyclerView.setOverScrollMode(showEmptyView ? View.OVER_SCROLL_NEVER : View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
         mClientsEmptyView.setVisibility(showEmptyClientsView ? View.VISIBLE : View.GONE);
         mHistoryEmptyView.setVisibility(showEmptyHistoryView ? View.VISIBLE : View.GONE);
