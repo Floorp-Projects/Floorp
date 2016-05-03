@@ -3856,7 +3856,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         if (!GetProperty(cx, query, query, cx->names().global, &global))
             return false;
         if (global.isUndefined()) {
-            matchAllDebuggeeGlobals();
+            if (!matchAllDebuggeeGlobals())
+                return false;
         } else {
             GlobalObject* globalObject = debugger->unwrapDebuggeeArgument(cx, global);
             if (!globalObject)
