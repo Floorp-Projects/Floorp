@@ -11,7 +11,7 @@ Like any Gecko change, please create a patch or submit to Mozreview and
 open a Bugzilla ticket under the Mozharness component:
 https://bugzilla.mozilla.org/enter_bug.cgi?product=Release%20Engineering&component=Mozharness
 
-This bug will get triaged by Release Engineering
+This bug will get triaged by Release Engineering.
 
 ## Run unit tests
 To run the unit tests of mozharness the `tox` package needs to be installed:
