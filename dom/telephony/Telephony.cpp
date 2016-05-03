@@ -719,6 +719,13 @@ Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
+Telephony::WindowSuspendChanged(nsSuspendedTypes aSuspend)
+{
+  // Not support yet.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Telephony::WindowAudioCaptureChanged(bool aCapture)
 {
   // Do nothing, it's useless for the telephony object.
