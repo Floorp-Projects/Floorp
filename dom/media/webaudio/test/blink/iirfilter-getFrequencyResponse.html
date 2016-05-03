@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test IIRFilter getFrequencyResponse() functionality</title>
+    <script src="../resources/js-test.js"></script>
+    <script src="resources/compatibility.js"></script>
+    <script src="resources/audio-testing.js"></script>
+    <script src="resources/biquad-filters.js"></script>
+  </head>
+
+  <body>
+    <script>
+      description("Test IIRFilter getFrequencyResponse() functionality");
+      window.jsTestIsAsync = true;
+
+      var sampleRate = 48000;
+      // Some short duration; we're not actually looking at the rendered output.
+      var testDurationSec = 0.01;
+
+      // Number of frequency samples to take.
+      var numberOfFrequencies = 1000;
+
+      var audit = Audit.createTaskRunner();
+
+
+      // Compute a set of linearly spaced frequencies.
+      function createFrequencies(nFrequencies, sampleRate)
+      {
+          var frequencies = new Float32Array(nFrequencies);
+          var nyquist = sampleRate / 2;
+          var freqDelta = nyquist / nFrequencies;
+
+          for (var k = 0; k < nFrequencies; ++k) {
+              frequencies[k] = k * freqDelta;
+          }
+
+          return frequencies;
+      }
+
+      audit.defineTask("1-pole IIR", function (done) {
+        var context = new OfflineAudioContext(1, testDurationSec * sampleRate, sampleRate);
+
+        var iir = context.createIIRFilter([1], [1, -0.9]);
+        var frequencies = createFrequencies(numberOfFrequencies, context.sampleRate);
+        
+        var iirMag = new Float32Array(numberOfFrequencies);
+        var iirPhase = new Float32Array(numberOfFrequencies);
+        var trueMag = new Float32Array(numberOfFrequencies);
+        var truePhase = new Float32Array(numberOfFrequencies);
+
+        // The IIR filter is
+        //   H(z) = 1/(1 - 0.9*z^(-1)).
+        //
+        // The frequency response is
+        //   H(exp(j*w)) = 1/(1 - 0.9*exp(-j*w)).
+        //
+        // Thus, the magnitude is
+        //   |H(exp(j*w))| = 1/sqrt(1.81-1.8*cos(w)).
+        //
+        // The phase is
+        //   arg(H(exp(j*w)) = atan(0.9*sin(w)/(.9*cos(w)-1))
+
+        var frequencyScale = Math.PI / (sampleRate / 2);
+
+        for (var k = 0; k < frequencies.length; ++k) {
+          var omega = frequencyScale * frequencies[k];
+          trueMag[k] = 1/Math.sqrt(1.81-1.8*Math.cos(omega));
+          truePhase[k] = Math.atan(0.9 * Math.sin(omega) / (0.9 * Math.cos(omega) - 1));
+        }
+
+        iir.getFrequencyResponse(frequencies, iirMag, iirPhase);
+
+        var success = true;
+
+        // Thresholds were experimentally determined.
+        success = Should("1-pole IIR Magnitude Response", iirMag).beCloseToArray(trueMag, 2.8611e-6);
+        success = Should("1-pole IIR Phase Response", iirPhase).beCloseToArray(truePhase, 1.7882e-7)
+          && success;
+        if (success)
+          testPassed("1-pole IIR response matched expected response.\n");
+        else
+          testFailed("1-pole IIR response did not match expected response.\n");
+
+        done();
+      });
+
+      audit.defineTask("compare IIR and biquad", function(done) {
+        // Create an IIR filter equivalent to the biquad filter. Compute the frequency response for
+        // both and verify that they are the same.
+        var context = new OfflineAudioContext(1, testDurationSec * sampleRate, sampleRate);
+
+        var biquad = context.createBiquadFilter();
+        var coef = createFilter(biquad.type,
+          biquad.frequency.value / (context.sampleRate / 2),
+          biquad.Q.value,
+          biquad.gain.value);
+
+        var iir = context.createIIRFilter([coef.b0, coef.b1, coef.b2], [1, coef.a1, coef.a2]);
+
+        var frequencies = createFrequencies(numberOfFrequencies, context.sampleRate);
+        var biquadMag = new Float32Array(numberOfFrequencies);
+        var biquadPhase = new Float32Array(numberOfFrequencies);
+        var iirMag = new Float32Array(numberOfFrequencies);
+        var iirPhase = new Float32Array(numberOfFrequencies);
+
+        biquad.getFrequencyResponse(frequencies, biquadMag, biquadPhase);
+        iir.getFrequencyResponse(frequencies, iirMag, iirPhase);
+
+        var success = true;
+
+        // Thresholds were experimentally determined.
+        success = Should("IIR Magnitude Response", iirMag).beCloseToArray(biquadMag, 2.7419e-5);
+        success = Should("IIR Phase Response", iirPhase).beCloseToArray(biquadPhase, 2.7657e-5) && success;
+
+        if (success)
+          testPassed("IIR response matched equivalent " + biquad.type + " Biquad response.\n");
+        else
+          testFailed("IIR response did not equivalent " + biquad.type + " Biquad response.\n");
+
+        done();
+      });
+
+      audit.defineTask("finish", function (done) {
+        finishJSTest();
+        done();
+      });
+
+      audit.runTasks();
+      successfullyParsed = true;
+    </script>
+  </body>
+</html>
