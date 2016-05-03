@@ -112,18 +112,19 @@ nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                       buttonRect, mVisibleRect);
 }
 
-class nsDisplayButtonBorder : public nsDisplayItem {
+class nsDisplayButtonBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayButtonBorder(nsDisplayListBuilder* aBuilder,
+  nsDisplayButtonBorderBackground(nsDisplayListBuilder* aBuilder,
                                   nsButtonFrameRenderer* aRenderer)
     : nsDisplayItem(aBuilder, aRenderer->GetFrame()), mBFR(aRenderer) {
-    MOZ_COUNT_CTOR(nsDisplayButtonBorder);
+    MOZ_COUNT_CTOR(nsDisplayButtonBorderBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayButtonBorder() {
-    MOZ_COUNT_DTOR(nsDisplayButtonBorder);
+  virtual ~nsDisplayButtonBorderBackground() {
+    MOZ_COUNT_DTOR(nsDisplayButtonBorderBackground);
   }
-#endif
+#endif  
+  
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override {
@@ -143,13 +144,13 @@ private:
 };
 
 nsDisplayItemGeometry*
-nsDisplayButtonBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+nsDisplayButtonBorderBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
   return new nsDisplayItemGenericImageGeometry(this, aBuilder);
 }
 
 void
-nsDisplayButtonBorder::ComputeInvalidationRegion(
+nsDisplayButtonBorderBackground::ComputeInvalidationRegion(
   nsDisplayListBuilder* aBuilder,
   const nsDisplayItemGeometry* aGeometry,
   nsRegion *aInvalidRegion)
@@ -166,22 +167,22 @@ nsDisplayButtonBorder::ComputeInvalidationRegion(
   nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
 }
 
-void nsDisplayButtonBorder::Paint(nsDisplayListBuilder* aBuilder,
-                                  nsRenderingContext* aCtx)
+void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
+                                            nsRenderingContext* aCtx)
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
   nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
-
+  
   // draw the border and background inside the focus and outline borders
   DrawResult result =
-    mBFR->PaintBorder(aBuilder, pc, *aCtx, mVisibleRect, r);
+    mBFR->PaintBorderAndBackground(aBuilder, pc, *aCtx, mVisibleRect, r);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }
 
 nsRect
-nsDisplayButtonBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+nsDisplayButtonBorderBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   *aSnap = false;
   return aBuilder->IsForEventDelivery() ? nsRect(ToReferenceFrame(), mFrame->GetSize())
           : mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
@@ -263,14 +264,10 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
       nsDisplayButtonBoxShadowOuter(aBuilder, this));
   }
 
-  nsRect buttonRect;
-  GetButtonRect(mFrame->GetRectRelativeToSelf(), buttonRect);
-
-  nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-    aBuilder, mFrame, buttonRect, aBackground);
-
+  // Almost all buttons draw some kind of background so there's not much
+  // point in checking whether we should create this item.
   aBackground->AppendNewToTop(new (aBuilder)
-    nsDisplayButtonBorder(aBuilder, this));
+    nsDisplayButtonBorderBackground(aBuilder, this));
 
   // Only display focus rings if we actually have them. Since at most one
   // button would normally display a focus ring, most buttons won't have them.
@@ -328,8 +325,9 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(
   return result;
 }
 
+
 DrawResult
-nsButtonFrameRenderer::PaintBorder(
+nsButtonFrameRenderer::PaintBorderAndBackground(
   nsDisplayListBuilder* aBuilder,
   nsPresContext* aPresContext,
   nsRenderingContext& aRenderingContext,
@@ -342,14 +340,19 @@ nsButtonFrameRenderer::PaintBorder(
 
   nsStyleContext* context = mFrame->StyleContext();
 
+  uint32_t bgFlags = aBuilder->GetBackgroundPaintFlags();
   PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
                                ? PaintBorderFlags::SYNC_DECODE_IMAGES
                                : PaintBorderFlags();
 
+  DrawResult result =
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
+                                    aDirtyRect, buttonRect, bgFlags);
+
   nsCSSRendering::PaintBoxShadowInner(aPresContext, aRenderingContext,
                                       mFrame, buttonRect);
 
-  DrawResult result =
+  result &=
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, buttonRect, context, borderFlags);
 

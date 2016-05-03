@@ -194,15 +194,6 @@ enum nsChangeHint {
    */
   nsChangeHint_UpdateUsesOpacity = 1 << 25,
 
-  /**
-   * Indicates that the 'background-position' property changed.
-   * Regular frames can invalidate these changes using DLBI, but
-   * for some frame types we need to repaint the whole frame because
-   * the frame does not build individual background image display items
-   * for each background layer.
-   */
-  nsChangeHint_UpdateBackgroundPosition = 1 << 26,
-
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
   // add them to RestyleManager::ChangeHintToString.
@@ -312,8 +303,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_ReflowChangesSizeOrPosition | \
           nsChangeHint_ClearAncestorIntrinsics | \
           nsChangeHint_UpdateComputedBSize | \
-          nsChangeHint_UpdateUsesOpacity | \
-          nsChangeHint_UpdateBackgroundPosition)
+          nsChangeHint_UpdateUsesOpacity)
 
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
   nsChangeHint result = nsChangeHint(aChangeHint & (
@@ -329,8 +319,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
     nsChangeHint_UpdateContainingBlock |
     nsChangeHint_BorderStyleNoneChange |
     nsChangeHint_UpdateComputedBSize |
-    nsChangeHint_UpdateUsesOpacity | \
-    nsChangeHint_UpdateBackgroundPosition));
+    nsChangeHint_UpdateUsesOpacity));
 
   if (!NS_IsHintSubset(nsChangeHint_NeedDirtyReflow, aChangeHint)) {
     if (NS_IsHintSubset(nsChangeHint_NeedReflow, aChangeHint)) {
