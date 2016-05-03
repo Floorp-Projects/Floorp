@@ -2965,8 +2965,8 @@ CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* oo
 
     // Handle errors.
     masm.bind(&fail);
-    masm.jump(wasm::JumpTarget::IntegerOverflowTrap);
+    masm.jump(wasm::JumpTarget::IntegerOverflow);
 
     masm.bind(&inputIsNaN);
-    masm.jump(wasm::JumpTarget::InvalidConversionToIntegerTrap);
+    masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
 }

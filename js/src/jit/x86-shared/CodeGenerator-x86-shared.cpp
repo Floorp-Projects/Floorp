@@ -2498,7 +2498,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     masm.jump(ool->rejoin());
 
     if (gen->compilingAsmJS()) {
-        masm.bindLater(&onConversionError, wasm::JumpTarget::ConversionError);
+        masm.bindLater(&onConversionError, wasm::JumpTarget::ImpreciseSimdConversion);
     } else {
         masm.bind(&onConversionError);
         bailout(ool->ins()->snapshot());
@@ -2577,7 +2577,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.cmp32(temp, Imm32(0));
 
     if (gen->compilingAsmJS())
-        masm.j(Assembler::NotEqual, wasm::JumpTarget::ConversionError);
+        masm.j(Assembler::NotEqual, wasm::JumpTarget::ImpreciseSimdConversion);
     else
         bailoutIf(Assembler::NotEqual, ins->snapshot());
 }
@@ -4071,10 +4071,10 @@ CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateChe
 
     // Handle errors.
     masm.bind(&fail);
-    masm.jump(wasm::JumpTarget::IntegerOverflowTrap);
+    masm.jump(wasm::JumpTarget::IntegerOverflow);
 
     masm.bind(&inputIsNaN);
-    masm.jump(wasm::JumpTarget::InvalidConversionToIntegerTrap);
+    masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
 }
 
 void
