@@ -86,7 +86,6 @@ UNIFIED_SOURCES += [
     'testSymbol.cpp',
     'testThreadingConditionVariable.cpp',
     'testThreadingExclusiveData.cpp',
-    'testThreadingMultipleRuntimes.cpp',
     'testThreadingMutex.cpp',
     'testToIntWidth.cpp',
     'testTypedArrays.cpp',

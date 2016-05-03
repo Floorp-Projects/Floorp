@@ -76,7 +76,7 @@ class JSAPITest
     virtual bool init();
     virtual void uninit();
 
-    virtual const char* name() = 0;
+    virtual const char * name() = 0;
     virtual bool run(JS::HandleObject global) = 0;
 
 #define EXEC(s) do { if (!exec(s, __FILE__, __LINE__)) return false; } while (false)
@@ -225,7 +225,7 @@ class JSAPITest
 
     JSAPITestString messages() const { return msgs; }
 
-    static const JSClass* basicGlobalClass() {
+    static const JSClass * basicGlobalClass() {
         static const JSClassOps cOps = {
             nullptr, nullptr, nullptr, nullptr,
             nullptr, nullptr, nullptr, nullptr,
@@ -282,7 +282,7 @@ class JSAPITest
         JS_SetNativeStackQuota(rt, MAX_STACK_SIZE);
     }
 
-    virtual JSRuntime* createRuntime() {
+    virtual JSRuntime * createRuntime() {
         JSRuntime* rt = JS_NewRuntime(8L * 1024 * 1024);
         if (!rt)
             return nullptr;
@@ -305,21 +305,21 @@ class JSAPITest
                 message);
     }
 
-    virtual JSContext* createContext() {
+    virtual JSContext * createContext() {
         return JS_NewContext(rt, 8192);
     }
 
-    virtual const JSClass* getGlobalClass() {
+    virtual const JSClass * getGlobalClass() {
         return basicGlobalClass();
     }
 
-    virtual JSObject* createGlobal(JSPrincipals* principals = nullptr);
+    virtual JSObject * createGlobal(JSPrincipals* principals = nullptr);
 };
 
 #define BEGIN_TEST(testname)                                            \
     class cls_##testname : public JSAPITest {                           \
       public:                                                           \
-        virtual const char* name() override { return #testname; }      \
+        virtual const char * name() override { return #testname; }      \
         virtual bool run(JS::HandleObject global) override
 
 #define END_TEST(testname)                                              \
@@ -337,7 +337,7 @@ class JSAPITest
 #define BEGIN_FIXTURE_TEST(fixture, testname)                           \
     class cls_##testname : public fixture {                             \
       public:                                                           \
-        virtual const char* name() override { return #testname; }      \
+        virtual const char * name() override { return #testname; }      \
         virtual bool run(JS::HandleObject global) override
 
 #define END_FIXTURE_TEST(fixture, testname)                             \
