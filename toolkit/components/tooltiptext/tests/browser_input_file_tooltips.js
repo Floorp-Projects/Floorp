@@ -100,7 +100,7 @@ function* do_test(test) {
     EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 50, 5, resolve);
   });
   info("Waiting");
-  yield new Promise(resolve => setTimeout(resolve, 200));
+  yield new Promise(resolve => setTimeout(resolve, 400));
   info("Second mouse move");
   yield new Promise(resolve => {
     EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 70, 5, resolve);
