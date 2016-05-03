@@ -8,7 +8,7 @@
 
 const { createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
-const { debugWorker } = require("../modules/worker");
+const { debugWorker } = require("../../modules/worker");
 const Services = require("Services");
 
 const Strings = Services.strings.createBundle(

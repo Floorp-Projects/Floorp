@@ -9,10 +9,10 @@ const { createFactory, createClass, DOM: dom } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
 
-const AddonsControls = createFactory(require("./addons-controls"));
-const AddonTarget = createFactory(require("./addon-target"));
-const TabHeader = createFactory(require("./tab-header"));
-const TargetList = createFactory(require("./target-list"));
+const AddonsControls = createFactory(require("./controls"));
+const AddonTarget = createFactory(require("./target"));
+const PanelHeader = createFactory(require("../panel-header"));
+const TargetList = createFactory(require("../target-list"));
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
@@ -22,7 +22,7 @@ const CHROME_ENABLED_PREF = "devtools.chrome.enabled";
 const REMOTE_ENABLED_PREF = "devtools.debugger.remote-enabled";
 
 module.exports = createClass({
-  displayName: "AddonsTab",
+  displayName: "AddonsPanel",
 
   getInitialState() {
     return {
@@ -112,13 +112,13 @@ module.exports = createClass({
     let targetClass = AddonTarget;
 
     return dom.div({
-      id: id,
-      className: "tab",
+      id,
+      className: "panel",
       role: "tabpanel",
-      "aria-labelledby": "tab-addons-header-name"
+      "aria-labelledby": "panel-addons-header-name"
     },
-    TabHeader({
-      id: "tab-addons-header-name",
+    PanelHeader({
+      id: "addons-panel-header-name",
       name: Strings.GetStringFromName("addons")
     }),
     AddonsControls({ debugDisabled }),
