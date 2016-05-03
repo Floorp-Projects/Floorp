@@ -255,8 +255,6 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 }
 
 nsStyleMargin::nsStyleMargin(StyleStructContext aContext)
-  : mHasCachedMargin(false)
-  , mCachedMargin(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleMargin);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
@@ -267,8 +265,6 @@ nsStyleMargin::nsStyleMargin(StyleStructContext aContext)
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
   : mMargin(aSrc.mMargin)
-  , mHasCachedMargin(false)
-  , mCachedMargin(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
@@ -278,19 +274,6 @@ nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
   aContext->PresShell()->
     FreeByObjectID(eArenaObjectID_nsStyleMargin, this);
-}
-
-
-void nsStyleMargin::RecalcData()
-{
-  if (mMargin.ConvertsToLength()) {
-    NS_FOR_CSS_SIDES(side) {
-      mCachedMargin.Side(side) = CalcCoord(mMargin.Get(side), nullptr, 0);
-    }
-    mHasCachedMargin = true;
-  }
-  else
-    mHasCachedMargin = false;
 }
 
 nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
