@@ -43,7 +43,7 @@ function startReloadTest(aToolbox) {
   testAllTheTools("docked", () => {
     let origHostType = toolbox.hostType;
     toolbox.switchHost(Toolbox.HostType.WINDOW).then(() => {
-      toolbox.doc.defaultView.focus();
+      toolbox.win.focus();
       testAllTheTools("undocked", () => {
         toolbox.switchHost(origHostType).then(() => {
           gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", reloadCounter);

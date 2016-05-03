@@ -53,14 +53,14 @@ add_task(function*() {
   yield minimize(toolbox);
   onMaximized = toolbox._host.once("maximized");
   let tabButton = toolbox.doc.querySelector("#toolbox-tab-inspector");
-  EventUtils.synthesizeMouseAtCenter(tabButton, {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(tabButton, {}, toolbox.win);
   yield onMaximized;
 
   info("Minimize again and click on the settings tab");
   yield minimize(toolbox);
   onMaximized = toolbox._host.once("maximized");
   let settingsButton = toolbox.doc.querySelector("#toolbox-tab-options");
-  EventUtils.synthesizeMouseAtCenter(settingsButton, {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(settingsButton, {}, toolbox.win);
   yield onMaximized;
 
   info("Switch to a different host");
@@ -76,7 +76,7 @@ add_task(function*() {
 function* minimize(toolbox) {
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   let onMinimized = toolbox._host.once("minimized");
-  EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.win);
   yield onMinimized;
 }
 
@@ -85,14 +85,14 @@ function* minimizeWithShortcut(toolbox) {
                        .getAttribute("key");
   let onMinimized = toolbox._host.once("minimized");
   EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
-                           toolbox.doc.defaultView);
+                           toolbox.win);
   yield onMinimized;
 }
 
 function* maximize(toolbox) {
   let button = toolbox.doc.querySelector("#toolbox-dock-bottom-minimize");
   let onMaximized = toolbox._host.once("maximized");
-  EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(button, {}, toolbox.win);
   yield onMaximized;
 }
 
@@ -101,6 +101,6 @@ function* maximizeWithShortcut(toolbox) {
                        .getAttribute("key");
   let onMaximized = toolbox._host.once("maximized");
   EventUtils.synthesizeKey(key, {accelKey: true, shiftKey: true},
-                           toolbox.doc.defaultView);
+                           toolbox.win);
   yield onMaximized;
 }

@@ -436,7 +436,7 @@ function mouseLeaveMarkupView(inspector) {
   let btn = inspector.toolbox.doc.querySelector("#toolbox-controls");
 
   EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
-    inspector.toolbox.doc.defaultView);
+    inspector.toolbox.win);
   executeSoon(def.resolve);
 
   return def.promise;
