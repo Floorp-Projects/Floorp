@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_binary_iterator_h
-#define wasm_binary_iterator_h
+#ifndef wasm_iterator_h
+#define wasm_iterator_h
 
 #include "mozilla/Poison.h"
 
@@ -32,61 +32,38 @@ namespace wasm {
 // The kind of a control-flow stack item.
 enum class LabelKind : uint8_t { Block, Loop, Then, Else };
 
-#ifdef DEBUG
-// Families of opcodes that share a signature and validation logic.
-enum class ExprKind {
-    Block,
-    Loop,
-    Unreachable,
-    I32,
-    I64,
-    F32,
-    F64,
-    I32x4,
-    B32x4,
-    F32x4,
-    Br,
-    BrIf,
-    BrTable,
-    Nullary,
-    Unary,
-    Binary,
-    Comparison,
-    Conversion,
-    Load,
-    Store,
-    Select,
-    GetVar,
-    SetVar,
-    Call,
-    CallIndirect,
-    CallImport,
-    Return,
-    If,
-    Else,
-    End,
-    AtomicLoad,
-    AtomicStore,
-    AtomicBinOp,
-    AtomicCompareExchange,
-    AtomicExchange,
-    ExtractLane,
-    ReplaceLane,
-    Swizzle,
-    Shuffle,
-    Splat,
-    SimdSelect,
-    SimdCtor,
-    SimdBooleanReduction,
-    SimdShiftByScalar,
-    SimdComparison,
+// A description of a unary operator's parameters.
+template <typename Value>
+struct UnaryRecord
+{
+    Value op;
+
+    explicit UnaryRecord(Value op) : op(op) {}
 };
 
-// Return the ExprKind for a given Expr. This is used for sanity-checking that
-// API users use the correct read function for a given Expr.
-ExprKind
-Classify(Expr expr);
-#endif
+// A description of a binary operator's parameters.
+template <typename Value>
+struct BinaryRecord
+{
+    Value lhs;
+    Value rhs;
+
+    BinaryRecord(Value lhs, Value rhs) : lhs(lhs), rhs(rhs) {}
+};
+
+// A description of a select operator's parameters.
+template <typename Value>
+struct SelectRecord
+{
+    ExprType type;
+    Value trueValue;
+    Value falseValue;
+    Value condition;
+
+    SelectRecord(ExprType type, Value trueValue, Value falseValue, Value condition)
+      : type(type), trueValue(trueValue), falseValue(falseValue), condition(condition)
+    {}
+};
 
 // Common fields for linear memory access.
 template <typename Value>
@@ -96,11 +73,265 @@ struct LinearMemoryAddress
     uint32_t offset;
     uint32_t align;
 
-    LinearMemoryAddress()
-    {}
     LinearMemoryAddress(Value base, uint32_t offset, uint32_t align)
       : base(base), offset(offset), align(align)
     {}
+};
+
+// A description of a load operator's parameters.
+template <typename Value>
+struct LoadRecord
+{
+    LinearMemoryAddress<Value> addr;
+
+    LoadRecord(Value base, uint32_t offset, uint32_t align)
+      : addr(base, offset, align)
+    {}
+};
+
+// A description of a store operator's parameters.
+template <typename Value>
+struct StoreRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Value value;
+
+    StoreRecord(Value base, uint32_t offset, uint32_t align, Value value)
+      : addr(base, offset, align), value(value)
+    {}
+};
+
+// A description of an if operator's parameters.
+template <typename Value>
+struct IfRecord
+{
+    Value condition;
+
+    explicit IfRecord(Value condition) : condition(condition) {}
+};
+
+// A description of an else operator's parameters.
+template <typename Value>
+struct ElseRecord
+{
+    ExprType type;
+    Value thenValue;
+
+    ElseRecord(ExprType type, Value thenValue) : type(type), thenValue(thenValue) {}
+};
+
+// A description of a block, loop, if, or else operator's parameters.
+template <typename Value>
+struct EndRecord
+{
+    LabelKind kind;
+    ExprType type;
+    Value value;
+
+    explicit EndRecord(LabelKind kind, ExprType type, Value value)
+      : kind(kind), type(type), value(value)
+    {}
+};
+
+// A description of a br operator's parameters.
+template <typename Value>
+struct BrRecord
+{
+    uint32_t relativeDepth;
+    ExprType type;
+    Value value;
+
+    BrRecord(uint32_t relativeDepth, ExprType type, Value value)
+      : relativeDepth(relativeDepth), type(type), value(value) {}
+};
+
+// A description of a br_if operator's parameters.
+template <typename Value>
+struct BrIfRecord
+{
+    uint32_t relativeDepth;
+    ExprType type;
+    Value value;
+    Value condition;
+
+    BrIfRecord(uint32_t relativeDepth, ExprType type, Value value, Value condition)
+      : relativeDepth(relativeDepth), type(type), value(value), condition(condition)
+    {}
+};
+
+// A description of a br_table operator's parameters.
+template <typename Value>
+struct BrTableRecord
+{
+    uint32_t tableLength;
+    ExprType type;
+    Value value;
+    Value index;
+
+    BrTableRecord(uint32_t tableLength, ExprType type, Value value, Value index)
+      : tableLength(tableLength), type(type), value(value), index(index)
+    {}
+};
+
+// A description of a get_local or get_global operator's parameters.
+struct GetVarRecord
+{
+    uint32_t id;
+
+    explicit GetVarRecord(uint32_t id) : id(id) {}
+};
+
+// A description of a set_local or set_global operator's parameters.
+template <typename Value>
+struct SetVarRecord
+{
+    uint32_t id;
+    Value value;
+
+    SetVarRecord(uint32_t id, Value value) : id(id), value(value) {}
+};
+
+// A description of a call operator's parameters, not counting the call arguments.
+struct CallRecord
+{
+    uint32_t arity;
+    uint32_t callee;
+
+    CallRecord(uint32_t arity, uint32_t callee)
+      : arity(arity), callee(callee)
+    {}
+};
+
+// A description of a call_indirect operator's parameters, not counting the call arguments.
+template <typename Value>
+struct CallIndirectRecord
+{
+    uint32_t arity;
+    uint32_t sigIndex;
+
+    CallIndirectRecord(uint32_t arity, uint32_t sigIndex)
+      : arity(arity), sigIndex(sigIndex)
+    {}
+};
+
+// A description of a call_import operator's parameters, not counting the call arguments.
+struct CallImportRecord
+{
+    uint32_t arity;
+    uint32_t callee;
+
+    CallImportRecord(uint32_t arity, uint32_t callee)
+      : arity(arity), callee(callee)
+    {}
+};
+
+// A description of a return operator's parameters.
+template <typename Value>
+struct ReturnRecord
+{
+    Value value;
+
+    explicit ReturnRecord(Value value) : value(value) {}
+};
+
+template <typename Value>
+struct AtomicLoadRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Scalar::Type viewType;
+};
+
+template <typename Value>
+struct AtomicStoreRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Scalar::Type viewType;
+    Value value;
+};
+
+template <typename Value>
+struct AtomicBinOpRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Scalar::Type viewType;
+    jit::AtomicOp op;
+    Value value;
+};
+
+template <typename Value>
+struct AtomicCompareExchangeRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Scalar::Type viewType;
+    Value oldValue;
+    Value newValue;
+};
+
+template <typename Value>
+struct AtomicExchangeRecord
+{
+    LinearMemoryAddress<Value> addr;
+    Scalar::Type viewType;
+    Value value;
+};
+
+template <typename Value>
+struct ExtractLaneRecord
+{
+    jit::SimdLane lane;
+    Value vector;
+
+    ExtractLaneRecord(jit::SimdLane lane, Value vector) : lane(lane), vector(vector) {}
+};
+
+template <typename Value>
+struct ReplaceLaneRecord
+{
+    jit::SimdLane lane;
+    Value vector;
+    Value scalar;
+
+    ReplaceLaneRecord(jit::SimdLane lane, Value vector, Value scalar)
+      : lane(lane), vector(vector), scalar(scalar)
+    {}
+};
+
+template <typename Value>
+struct SwizzleRecord
+{
+    uint8_t lanes[4];
+    Value vector;
+
+    SwizzleRecord(uint8_t lanes[4], Value vector)
+      : vector(vector)
+    {
+        memcpy(this->lanes, lanes, sizeof(this->lanes));
+    }
+};
+
+template <typename Value>
+struct ShuffleRecord
+{
+    uint8_t lanes[4];
+    Value lhs;
+    Value rhs;
+
+    ShuffleRecord(uint8_t lanes[4], Value lhs, Value rhs)
+      : lhs(lhs), rhs(rhs)
+    {
+        memcpy(this->lanes, lanes, sizeof(this->lanes));
+    }
+};
+
+template <typename Value>
+struct SimdSelectRecord
+{
+    Value trueValue;
+    Value falseValue;
+    Value condition;
+
+    SimdSelectRecord(Value trueValue, Value falseValue, Value condition)
+      : trueValue(trueValue), falseValue(falseValue), condition(condition) {}
 };
 
 struct Nothing {};
@@ -197,9 +428,6 @@ struct ExprIterPolicy
     // validity checking?
     static const bool Validate = false;
 
-    // Should the iterator produce output values?
-    static const bool Output = false;
-
     // This function is called to report failures.
     static bool fail(const char*, Decoder&) {
         MOZ_CRASH("unexpected validation failure");
@@ -215,24 +443,67 @@ struct ExprIterPolicy
 
 // An iterator over the bytes of a function body. It performs validation
 // (if Policy::Validate is true) and unpacks the data into a usable form.
-//
-// The MOZ_STACK_CLASS attribute here is because of the use of DebugOnly.
-// There's otherwise nothing inherent in this class which would require
-// it to be used on the stack.
 template <typename Policy>
-class MOZ_STACK_CLASS ExprIter : private Policy
+class ExprIter : private Policy
 {
     static const bool Validate = Policy::Validate;
-    static const bool Output = Policy::Output;
     typedef typename Policy::Value Value;
     typedef typename Policy::ControlItem ControlItem;
+
+    // A union containing all the expression description types.
+    union ExprRecord {
+        ExprRecord() {
+#ifdef DEBUG
+            mozWritePoison(this, sizeof(*this));
+#endif
+        }
+
+        int32_t i32;
+        int64_t i64;
+        float f32;
+        double f64;
+        I32x4 i32x4;
+        F32x4 f32x4;
+        BrRecord<Value> br;
+        BrIfRecord<Value> brIf;
+        BrTableRecord<Value> brTable;
+        UnaryRecord<Value> unary;
+        BinaryRecord<Value> binary;
+        LoadRecord<Value> load;
+        StoreRecord<Value> store;
+        SelectRecord<Value> select;
+        GetVarRecord getVar;
+        SetVarRecord<Value> setVar;
+        CallRecord call;
+        CallIndirectRecord<Value> callIndirect;
+        CallImportRecord callImport;
+        ReturnRecord<Value> return_;
+        IfRecord<Value> if_;
+        ElseRecord<Value> else_;
+        EndRecord<Value> end;
+        AtomicLoadRecord<Value> atomicLoad;
+        AtomicStoreRecord<Value> atomicStore;
+        AtomicBinOpRecord<Value> atomicBinOp;
+        AtomicCompareExchangeRecord<Value> atomicCompareExchange;
+        AtomicExchangeRecord<Value> atomicExchange;
+        ExtractLaneRecord<Value> extractLane;
+        ReplaceLaneRecord<Value> replaceLane;
+        SwizzleRecord<Value> swizzle;
+        ShuffleRecord<Value> shuffle;
+        SimdSelectRecord<Value> simdSelect;
+    };
 
     Decoder& d_;
 
     Vector<TypeAndValue<Value>, 0, SystemAllocPolicy> valueStack_;
     Vector<ControlStackEntry<ControlItem>, 0, SystemAllocPolicy> controlStack_;
 
-    DebugOnly<Expr> expr_;
+    ExprRecord u_;
+
+#ifdef DEBUG
+    Expr expr_;
+    bool isInitialized_;
+#endif
 
     MOZ_MUST_USE bool readFixedU8(uint8_t* out) {
         if (Validate)
@@ -325,6 +596,232 @@ class MOZ_STACK_CLASS ExprIter : private Policy
         return true;
     }
 
+#ifdef DEBUG
+    bool isI32()     const { return isInitialized_ && expr_ == Expr::I32Const; }
+    bool isI64()     const { return isInitialized_ && expr_ == Expr::I64Const; }
+    bool isF32()     const { return isInitialized_ && expr_ == Expr::F32Const; }
+    bool isF64()     const { return isInitialized_ && expr_ == Expr::F64Const; }
+    bool isI32x4()   const { return isInitialized_ && (expr_ == Expr::I32x4Const ||
+                                                       expr_ == Expr::B32x4Const); }
+    bool isF32x4()   const { return isInitialized_ && expr_ == Expr::F32x4Const; }
+    bool isBr()      const { return isInitialized_ && expr_ == Expr::Br; }
+    bool isBrIf()    const { return isInitialized_ && expr_ == Expr::BrIf; }
+    bool isBrTable() const { return isInitialized_ && expr_ == Expr::BrTable; }
+    bool isUnary() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32Clz || expr_ == Expr::I32Ctz ||
+                expr_ == Expr::I32Popcnt || expr_ == Expr::I32Eqz ||
+                expr_ == Expr::I64Clz || expr_ == Expr::I64Ctz ||
+                expr_ == Expr::I64Popcnt || expr_ == Expr::I64Eqz ||
+                expr_ == Expr::F32Abs || expr_ == Expr::F32Neg ||
+                expr_ == Expr::F32Ceil || expr_ == Expr::F32Floor ||
+                expr_ == Expr::F32Sqrt || expr_ == Expr::F64Abs ||
+                expr_ == Expr::F64Neg || expr_ == Expr::F64Ceil ||
+                expr_ == Expr::F64Floor || expr_ == Expr::F64Sqrt ||
+                expr_ == Expr::I32WrapI64 || expr_ == Expr::I32TruncSF32 ||
+                expr_ == Expr::I32TruncUF32 || expr_ == Expr::I32ReinterpretF32 ||
+                expr_ == Expr::I32TruncSF64 || expr_ == Expr::I32TruncUF64 ||
+                expr_ == Expr::I64ExtendSI32 || expr_ == Expr::I64ExtendUI32 ||
+                expr_ == Expr::I64TruncSF32 || expr_ == Expr::I64TruncUF32 ||
+                expr_ == Expr::I64TruncSF64 || expr_ == Expr::I64TruncUF64 ||
+                expr_ == Expr::I64ReinterpretF64 || expr_ == Expr::F32ConvertSI32 ||
+                expr_ == Expr::F32ConvertUI32 || expr_ == Expr::F32ReinterpretI32 ||
+                expr_ == Expr::F32ConvertSI64 || expr_ == Expr::F32ConvertUI64 ||
+                expr_ == Expr::F32DemoteF64 || expr_ == Expr::F64ConvertSI32 ||
+                expr_ == Expr::F64ConvertUI32 || expr_ == Expr::F64ConvertSI64 ||
+                expr_ == Expr::F64ConvertUI64 || expr_ == Expr::F64ReinterpretI64 ||
+                expr_ == Expr::F64PromoteF32 ||
+                expr_ == Expr::I32BitNot || expr_ == Expr::I32Abs ||
+                expr_ == Expr::F64Sin || expr_ == Expr::F64Cos ||
+                expr_ == Expr::F64Tan || expr_ == Expr::F64Asin ||
+                expr_ == Expr::F64Acos || expr_ == Expr::F64Atan ||
+                expr_ == Expr::F64Exp || expr_ == Expr::F64Log ||
+                expr_ == Expr::I32Neg ||
+                expr_ == Expr::I32x4splat || expr_ == Expr::F32x4splat ||
+                expr_ == Expr::B32x4splat ||
+                expr_ == Expr::I32x4check || expr_ == Expr::F32x4check ||
+                expr_ == Expr::B32x4check ||
+                expr_ == Expr::I32x4fromFloat32x4 ||
+                expr_ == Expr::I32x4fromFloat32x4U ||
+                expr_ == Expr::F32x4fromInt32x4 ||
+                expr_ == Expr::F32x4fromUint32x4 ||
+                expr_ == Expr::I32x4fromFloat32x4Bits ||
+                expr_ == Expr::F32x4fromInt32x4Bits ||
+                expr_ == Expr::F32x4fromUint32x4Bits ||
+                expr_ == Expr::I32x4neg || expr_ == Expr::I32x4not ||
+                expr_ == Expr::F32x4neg || expr_ == Expr::F32x4sqrt ||
+                expr_ == Expr::F32x4abs ||
+                expr_ == Expr::F32x4reciprocalApproximation ||
+                expr_ == Expr::F32x4reciprocalSqrtApproximation ||
+                expr_ == Expr::B32x4not ||
+                expr_ == Expr::B32x4anyTrue ||
+                expr_ == Expr::B32x4allTrue);
+    }
+    bool isBinary() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32Add || expr_ == Expr::I32Sub ||
+                expr_ == Expr::I32Mul || expr_ == Expr::I32DivS ||
+                expr_ == Expr::I32DivU || expr_ == Expr::I32RemS ||
+                expr_ == Expr::I32RemU || expr_ == Expr::I32And ||
+                expr_ == Expr::I32Or || expr_ == Expr::I32Xor ||
+                expr_ == Expr::I32Shl || expr_ == Expr::I32ShrS ||
+                expr_ == Expr::I32ShrU || expr_ == Expr::I32Rotl ||
+                expr_ == Expr::I32Rotr || expr_ == Expr::I64Add ||
+                expr_ == Expr::I64Sub || expr_ == Expr::I64Mul ||
+                expr_ == Expr::I64DivS || expr_ == Expr::I64DivU ||
+                expr_ == Expr::I64RemS || expr_ == Expr::I64RemU ||
+                expr_ == Expr::I64And || expr_ == Expr::I64Or ||
+                expr_ == Expr::I64Xor || expr_ == Expr::I64Shl ||
+                expr_ == Expr::I64ShrS || expr_ == Expr::I64ShrU ||
+                expr_ == Expr::I64Rotl || expr_ == Expr::I64Rotr ||
+                expr_ == Expr::F32Add || expr_ == Expr::F32Sub ||
+                expr_ == Expr::F32Mul || expr_ == Expr::F32Div ||
+                expr_ == Expr::F32Min || expr_ == Expr::F32Max ||
+                expr_ == Expr::F32CopySign || expr_ == Expr::F64Add ||
+                expr_ == Expr::F64Sub || expr_ == Expr::F64Mul ||
+                expr_ == Expr::F64Div || expr_ == Expr::F64Min ||
+                expr_ == Expr::F64Max || expr_ == Expr::F64CopySign ||
+                expr_ == Expr::I32Eq || expr_ == Expr::I32Ne ||
+                expr_ == Expr::I32LtS || expr_ == Expr::I32LtU ||
+                expr_ == Expr::I32LeS || expr_ == Expr::I32LeU ||
+                expr_ == Expr::I32GtS || expr_ == Expr::I32GtU ||
+                expr_ == Expr::I32GeS || expr_ == Expr::I32GeU ||
+                expr_ == Expr::I64Eq || expr_ == Expr::I64Ne ||
+                expr_ == Expr::I64LtS || expr_ == Expr::I64LtU ||
+                expr_ == Expr::I64LeS || expr_ == Expr::I64LeU ||
+                expr_ == Expr::I64GtS || expr_ == Expr::I64GtU ||
+                expr_ == Expr::I64GeS || expr_ == Expr::I64GeU ||
+                expr_ == Expr::F32Eq || expr_ == Expr::F32Ne ||
+                expr_ == Expr::F32Lt || expr_ == Expr::F32Le ||
+                expr_ == Expr::F32Gt || expr_ == Expr::F32Ge ||
+                expr_ == Expr::F64Eq || expr_ == Expr::F64Ne ||
+                expr_ == Expr::F64Lt || expr_ == Expr::F64Le ||
+                expr_ == Expr::F64Gt || expr_ == Expr::F64Ge ||
+                expr_ == Expr::I32Min || expr_ == Expr::I32Max ||
+                expr_ == Expr::F64Mod || expr_ == Expr::F64Pow ||
+                expr_ == Expr::F64Atan2 ||
+                expr_ == Expr::I32x4add || expr_ == Expr::I32x4sub ||
+                expr_ == Expr::I32x4mul ||
+                expr_ == Expr::I32x4and || expr_ == Expr::I32x4or ||
+                expr_ == Expr::I32x4xor ||
+                expr_ == Expr::I32x4shiftLeftByScalar ||
+                expr_ == Expr::I32x4shiftRightByScalar ||
+                expr_ == Expr::I32x4shiftRightByScalarU ||
+                expr_ == Expr::I32x4equal || expr_ == Expr::I32x4notEqual ||
+                expr_ == Expr::I32x4greaterThan ||
+                expr_ == Expr::I32x4greaterThanOrEqual ||
+                expr_ == Expr::I32x4lessThan ||
+                expr_ == Expr::I32x4lessThanOrEqual ||
+                expr_ == Expr::I32x4greaterThanU ||
+                expr_ == Expr::I32x4greaterThanOrEqualU ||
+                expr_ == Expr::I32x4lessThanU ||
+                expr_ == Expr::I32x4lessThanOrEqualU ||
+                expr_ == Expr::F32x4add || expr_ == Expr::F32x4sub ||
+                expr_ == Expr::F32x4mul || expr_ == Expr::F32x4div ||
+                expr_ == Expr::F32x4min || expr_ == Expr::F32x4max ||
+                expr_ == Expr::F32x4minNum || expr_ == Expr::F32x4maxNum ||
+                expr_ == Expr::F32x4equal ||
+                expr_ == Expr::F32x4notEqual ||
+                expr_ == Expr::F32x4greaterThan ||
+                expr_ == Expr::F32x4greaterThanOrEqual ||
+                expr_ == Expr::F32x4lessThan ||
+                expr_ == Expr::F32x4lessThanOrEqual ||
+                expr_ == Expr::B32x4and || expr_ == Expr::B32x4or ||
+                expr_ == Expr::B32x4xor);
+    }
+    bool isLoad() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32Load8S || expr_ == Expr::I32Load8U ||
+                expr_ == Expr::I32Load16S || expr_ == Expr::I32Load16U ||
+                expr_ == Expr::I64Load8S || expr_ == Expr::I64Load8U ||
+                expr_ == Expr::I64Load16S || expr_ == Expr::I64Load16U ||
+                expr_ == Expr::I64Load32S || expr_ == Expr::I64Load32U ||
+                expr_ == Expr::I32Load || expr_ == Expr::I64Load ||
+                expr_ == Expr::F32Load || expr_ == Expr::F64Load ||
+                expr_ == Expr::I32x4load || expr_ == Expr::I32x4load1 ||
+                expr_ == Expr::I32x4load2 || expr_ == Expr::I32x4load3 ||
+                expr_ == Expr::F32x4load || expr_ == Expr::F32x4load1 ||
+                expr_ == Expr::F32x4load2 || expr_ == Expr::F32x4load3);
+    }
+    bool isStore() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32Store8 || expr_ == Expr::I32Store16 ||
+                expr_ == Expr::I64Store8 || expr_ == Expr::I64Store16 ||
+                expr_ == Expr::I64Store32 || expr_ == Expr::I32Store ||
+                expr_ == Expr::I64Store || expr_ == Expr::F32Store ||
+                expr_ == Expr::F64Store ||
+                expr_ == Expr::F32StoreF64 || expr_ == Expr::F64StoreF32 ||
+                expr_ == Expr::I32x4store || expr_ == Expr::I32x4store1 ||
+                expr_ == Expr::I32x4store2 || expr_ == Expr::I32x4store3 ||
+                expr_ == Expr::F32x4store || expr_ == Expr::F32x4store1 ||
+                expr_ == Expr::F32x4store2 || expr_ == Expr::F32x4store3);
+    }
+    bool isSelect()  const { return isInitialized_ && expr_ == Expr::Select; }
+    bool isGetVar()  const { return isInitialized_ &&
+                                    (expr_ == Expr::GetLocal ||
+                                     expr_ == Expr::LoadGlobal); }
+    bool isSetVar()  const { return isInitialized_ &&
+                                    (expr_ == Expr::SetLocal ||
+                                     expr_ == Expr::StoreGlobal); }
+    bool isCall()    const { return isInitialized_ && expr_ == Expr::Call; }
+    bool isCallIndirect() const { return isInitialized_ && expr_ == Expr::CallIndirect; }
+    bool isCallImport() const { return isInitialized_ && expr_ == Expr::CallImport; }
+    bool isReturn()  const {
+        // Accept Limit, for use in decoding the end of a function after the body.
+        return isInitialized_ &&
+               (expr_ == Expr::Return ||
+                expr_ == Expr::Limit);
+    }
+    bool isIf()      const { return isInitialized_ && expr_ == Expr::If; }
+    bool isElse()    const { return isInitialized_ && expr_ == Expr::Else; }
+    bool isEnd()     const { return isInitialized_ && expr_ == Expr::End; }
+    bool isAtomicLoad() const { return isInitialized_ && expr_ == Expr::I32AtomicsLoad; }
+    bool isAtomicStore() const { return isInitialized_ && expr_ == Expr::I32AtomicsStore; }
+    bool isAtomicBinOp() const { return isInitialized_ && expr_ == Expr::I32AtomicsBinOp; }
+    bool isAtomicCompareExchange() const {
+        return isInitialized_ && expr_ == Expr::I32AtomicsCompareExchange;
+    }
+    bool isAtomicExchange() const {
+        return isInitialized_ && expr_ == Expr::I32AtomicsExchange;
+    }
+    bool isExtractLane() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32x4extractLane ||
+                expr_ == Expr::F32x4extractLane ||
+                expr_ == Expr::B32x4extractLane);
+    }
+    bool isReplaceLane() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32x4replaceLane ||
+                expr_ == Expr::F32x4replaceLane ||
+                expr_ == Expr::B32x4replaceLane);
+    }
+    bool isSwizzle() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32x4swizzle ||
+                expr_ == Expr::F32x4swizzle);
+    }
+    bool isShuffle() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32x4shuffle ||
+                expr_ == Expr::F32x4shuffle);
+    }
+    bool isSimdSelect() const {
+        return isInitialized_ &&
+               (expr_ == Expr::I32x4select ||
+                expr_ == Expr::F32x4select);
+    }
+#endif
+
+#ifdef DEBUG
+    bool setInitialized() {
+        isInitialized_ = true;
+        return true;
+    }
+#else
+    bool setInitialized() { return true; }
+#endif
+
     MOZ_MUST_USE bool typeMismatch(ExprType actual, ExprType expected) MOZ_COLD;
     MOZ_MUST_USE bool checkType(ExprType actual, ExprType expected);
     MOZ_MUST_USE bool readFunctionReturnValue(ExprType ret);
@@ -334,7 +831,6 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool popControlAfterCheck(LabelKind* kind, ExprType* type, Value* value);
     MOZ_MUST_USE bool push(ExprType t) { return valueStack_.emplaceBack(t); }
     MOZ_MUST_USE bool push(TypeAndValue<Value> tv) { return valueStack_.append(tv); }
-
     MOZ_MUST_USE bool readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr);
 
     void infallibleCheckSuccessor(ControlStackEntry<ControlItem>& controlItem, ExprType type);
@@ -363,8 +859,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
         TypeAndValue<Value> tv = valueStack_.popCopy();
         if (!checkType(tv.type(), expectedType))
             return false;
-        if (Output)
-            *value = tv.value();
+        *value = tv.value();
         return true;
     }
 
@@ -384,8 +879,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
         TypeAndValue<Value>& tv = valueStack_.back();
         if (!checkType(tv.type(), expectedType))
             return false;
-        if (Output)
-            *value = tv.value();
+        *value = tv.value();
         return true;
     }
 
@@ -401,7 +895,10 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     ExprIter(Policy policy, Decoder& decoder)
       : Policy(policy), d_(decoder)
     {
+#ifdef DEBUG
         expr_ = Expr::Limit;
+        isInitialized_ = false;
+#endif
     }
 
     // Return the decoding byte offset.
@@ -424,85 +921,112 @@ class MOZ_STACK_CLASS ExprIter : private Policy
 
     MOZ_MUST_USE bool readExpr(Expr* expr);
     MOZ_MUST_USE bool readFunctionStart();
-    MOZ_MUST_USE bool readFunctionEnd(ExprType ret, Value* value);
-    MOZ_MUST_USE bool readReturn(Value* value);
+    MOZ_MUST_USE bool readFunctionEnd(ExprType ret);
+    MOZ_MUST_USE bool readReturn();
     MOZ_MUST_USE bool readBlock();
     MOZ_MUST_USE bool readLoop();
-    MOZ_MUST_USE bool readIf(Value* condition);
-    MOZ_MUST_USE bool readElse(ExprType* thenType, Value* thenValue);
-    MOZ_MUST_USE bool readEnd(LabelKind* kind, ExprType* type, Value* value);
-    MOZ_MUST_USE bool readBr(uint32_t* relativeDepth, ExprType* type, Value* value);
-    MOZ_MUST_USE bool readBrIf(uint32_t* relativeDepth, ExprType* type,
-                               Value* value, Value* condition);
-    MOZ_MUST_USE bool readBrTable(uint32_t* tableLength, ExprType* type,
-                                  Value* value, Value* index);
+    MOZ_MUST_USE bool readIf();
+    MOZ_MUST_USE bool readElse();
+    MOZ_MUST_USE bool readEnd();
+    MOZ_MUST_USE bool readBr();
+    MOZ_MUST_USE bool readBrIf();
+    MOZ_MUST_USE bool readBrTable();
     MOZ_MUST_USE bool readBrTableEntry(ExprType type, uint32_t* depth);
     MOZ_MUST_USE bool readUnreachable();
-    MOZ_MUST_USE bool readUnary(ValType operandType, Value* input);
-    MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType, Value* input);
-    MOZ_MUST_USE bool readBinary(ValType operandType, Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readComparison(ValType operandType, Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readLoad(ValType resultType, uint32_t byteSize,
-                               LinearMemoryAddress<Value>* addr);
-    MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize,
-                                LinearMemoryAddress<Value>* addr, Value* value);
-    MOZ_MUST_USE bool readNullary();
-    MOZ_MUST_USE bool readSelect(ExprType* type,
-                                 Value* trueValue, Value* falseValue, Value* condition);
-    MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
-    MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* value);
-    MOZ_MUST_USE bool readGetGlobal(const GlobalDescVector& globals, uint32_t* id);
-    MOZ_MUST_USE bool readSetGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value);
-    MOZ_MUST_USE bool readI32Const(int32_t* i32);
-    MOZ_MUST_USE bool readI64Const(int64_t* i64);
-    MOZ_MUST_USE bool readF32Const(float* f32);
-    MOZ_MUST_USE bool readF64Const(double* f64);
-    MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4);
-    MOZ_MUST_USE bool readF32x4Const(F32x4* f32x4);
-    MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
-    MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, uint32_t* arity);
-    MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, uint32_t* arity);
-    MOZ_MUST_USE bool readCallImport(uint32_t* importIndex, uint32_t* arity);
+    MOZ_MUST_USE bool readUnary(ValType operandType);
+    MOZ_MUST_USE bool readConversion(ValType operandType, ValType resultType);
+    MOZ_MUST_USE bool readBinary(ValType operandType);
+    MOZ_MUST_USE bool readComparison(ValType operandType);
+    MOZ_MUST_USE bool readLoad(ValType resultType, uint32_t byteSize);
+    MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize);
+    MOZ_MUST_USE bool readTrivial();
+    MOZ_MUST_USE bool readSelect();
+    MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals);
+    MOZ_MUST_USE bool readSetLocal(const ValTypeVector& locals);
+    MOZ_MUST_USE bool readGetGlobal(const GlobalDescVector& globals);
+    MOZ_MUST_USE bool readSetGlobal(const GlobalDescVector& globals);
+    MOZ_MUST_USE bool readI32Const();
+    MOZ_MUST_USE bool readI64Const();
+    MOZ_MUST_USE bool readF32Const();
+    MOZ_MUST_USE bool readF64Const();
+    MOZ_MUST_USE bool readI32x4Const();
+    MOZ_MUST_USE bool readF32x4Const();
+    MOZ_MUST_USE bool readB32x4Const();
+    MOZ_MUST_USE bool readCall();
+    MOZ_MUST_USE bool readCallIndirect();
+    MOZ_MUST_USE bool readCallImport();
     MOZ_MUST_USE bool readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg);
     MOZ_MUST_USE bool readCallArgsEnd(uint32_t numArgs);
     MOZ_MUST_USE bool readCallIndirectCallee(Value* callee);
     MOZ_MUST_USE bool readCallReturn(ExprType ret);
-    MOZ_MUST_USE bool readAtomicLoad(LinearMemoryAddress<Value>* addr,
-                                     Scalar::Type* viewType);
-    MOZ_MUST_USE bool readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
-                                      Value* value);
-    MOZ_MUST_USE bool readAtomicBinOp(LinearMemoryAddress<Value>* addr,
-                                      Scalar::Type* viewType,
-                                      jit::AtomicOp* op,
-                                      Value* value);
-    MOZ_MUST_USE bool readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                                Scalar::Type* viewType,
-                                                Value* oldValue,
-                                                Value* newValue);
-    MOZ_MUST_USE bool readAtomicExchange(LinearMemoryAddress<Value>* addr,
-                                         Scalar::Type* viewType,
-                                         Value* newValue);
-    MOZ_MUST_USE bool readSimdComparison(ValType simdType, Value* lhs,
-                                         Value* rhs);
-    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType, Value* lhs,
-                                            Value* rhs);
-    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType, Value* input);
-    MOZ_MUST_USE bool readExtractLane(ValType simdType, jit::SimdLane* lane,
-                                      Value* vector);
-    MOZ_MUST_USE bool readReplaceLane(ValType simdType, jit::SimdLane* lane,
-                                      Value* vector, Value* scalar);
-    MOZ_MUST_USE bool readSplat(ValType simdType, Value* scalar);
-    MOZ_MUST_USE bool readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector);
-    MOZ_MUST_USE bool readShuffle(ValType simdType, uint8_t (* lanes)[4],
-                                  Value* lhs, Value* rhs);
-    MOZ_MUST_USE bool readSimdSelect(ValType simdType, Value* trueValue,
-                                     Value* falseValue,
-                                     Value* condition);
+    MOZ_MUST_USE bool readAtomicLoad();
+    MOZ_MUST_USE bool readAtomicStore();
+    MOZ_MUST_USE bool readAtomicBinOp();
+    MOZ_MUST_USE bool readAtomicCompareExchange();
+    MOZ_MUST_USE bool readAtomicExchange();
+    MOZ_MUST_USE bool readSimdComparison(ValType simdType);
+    MOZ_MUST_USE bool readSimdShiftByScalar(ValType simdType);
+    MOZ_MUST_USE bool readSimdBooleanReduction(ValType simdType);
+    MOZ_MUST_USE bool readExtractLane(ValType simdType);
+    MOZ_MUST_USE bool readReplaceLane(ValType simdType);
+    MOZ_MUST_USE bool readSplat(ValType simdType);
+    MOZ_MUST_USE bool readSwizzle(ValType simdType);
+    MOZ_MUST_USE bool readShuffle(ValType simdType);
+    MOZ_MUST_USE bool readSimdSelect(ValType simdType);
     MOZ_MUST_USE bool readSimdCtor();
     MOZ_MUST_USE bool readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t argIndex, Value* arg);
     MOZ_MUST_USE bool readSimdCtorArgsEnd(uint32_t numElements);
     MOZ_MUST_USE bool readSimdCtorReturn(ValType simdType);
+
+    // ------------------------------------------------------------------------
+    // Translation interface. These methods provide the information obtained
+    // through decoding.
+
+    int32_t                     i32()     const { MOZ_ASSERT(isI32());     return u_.i32; }
+    int64_t                     i64()     const { MOZ_ASSERT(isI64());     return u_.i64; }
+    float                       f32()     const { MOZ_ASSERT(isF32());     return u_.f32; }
+    double                      f64()     const { MOZ_ASSERT(isF64());     return u_.f64; }
+    const I32x4&                i32x4()   const { MOZ_ASSERT(isI32x4());   return u_.i32x4; }
+    const F32x4&                f32x4()   const { MOZ_ASSERT(isF32x4());   return u_.f32x4; }
+    const BrRecord<Value>&      br()      const { MOZ_ASSERT(isBr());      return u_.br; }
+    const BrIfRecord<Value>&    brIf()    const { MOZ_ASSERT(isBrIf());    return u_.brIf; }
+    const BrTableRecord<Value>& brTable() const { MOZ_ASSERT(isBrTable()); return u_.brTable; }
+    const UnaryRecord<Value>&   unary()   const { MOZ_ASSERT(isUnary());   return u_.unary; }
+    const BinaryRecord<Value>&  binary()  const { MOZ_ASSERT(isBinary());  return u_.binary; }
+    const LoadRecord<Value>&    load()    const { MOZ_ASSERT(isLoad());    return u_.load; }
+    const StoreRecord<Value>&   store()   const { MOZ_ASSERT(isStore());   return u_.store; }
+    const SelectRecord<Value>&  select()  const { MOZ_ASSERT(isSelect());  return u_.select; }
+    const GetVarRecord&         getVar()  const { MOZ_ASSERT(isGetVar());  return u_.getVar; }
+    const SetVarRecord<Value>&  setVar()  const { MOZ_ASSERT(isSetVar());  return u_.setVar; }
+    const CallRecord&           call()    const { MOZ_ASSERT(isCall());    return u_.call; }
+    const CallIndirectRecord<Value>& callIndirect() const
+    { MOZ_ASSERT(isCallIndirect());          return u_.callIndirect; }
+    const CallImportRecord&     callImport() const
+    { MOZ_ASSERT(isCallImport());            return u_.callImport; }
+    const ReturnRecord<Value>&  return_() const { MOZ_ASSERT(isReturn());  return u_.return_; }
+    const IfRecord<Value>&      if_()     const { MOZ_ASSERT(isIf());      return u_.if_; }
+    const ElseRecord<Value>&    else_()   const { MOZ_ASSERT(isElse());    return u_.else_; }
+    const EndRecord<Value>&     end()     const { MOZ_ASSERT(isEnd());     return u_.end; }
+    const AtomicLoadRecord<Value>& atomicLoad() const
+    { MOZ_ASSERT(isAtomicLoad());            return u_.atomicLoad; }
+    const AtomicStoreRecord<Value>& atomicStore() const
+    { MOZ_ASSERT(isAtomicStore());           return u_.atomicStore; }
+    const AtomicBinOpRecord<Value>& atomicBinOp() const
+    { MOZ_ASSERT(isAtomicBinOp());           return u_.atomicBinOp; }
+    const AtomicCompareExchangeRecord<Value>& atomicCompareExchange() const
+    { MOZ_ASSERT(isAtomicCompareExchange()); return u_.atomicCompareExchange; }
+    const AtomicExchangeRecord<Value>& atomicExchange() const
+    { MOZ_ASSERT(isAtomicExchange());        return u_.atomicExchange; }
+    const ExtractLaneRecord<Value>& extractLane() const
+    { MOZ_ASSERT(isExtractLane()); return u_.extractLane; }
+    const ReplaceLaneRecord<Value>& replaceLane() const
+    { MOZ_ASSERT(isReplaceLane()); return u_.replaceLane; }
+    const SwizzleRecord<Value>& swizzle() const
+    { MOZ_ASSERT(isSwizzle()); return u_.swizzle; }
+    const ShuffleRecord<Value>& shuffle() const
+    { MOZ_ASSERT(isShuffle()); return u_.shuffle; }
+    const SimdSelectRecord<Value>& simdSelect() const
+    { MOZ_ASSERT(isSimdSelect()); return u_.simdSelect; }
 
     // ------------------------------------------------------------------------
     // Stack management.
@@ -589,7 +1113,11 @@ ExprIter<Policy>::readExpr(Expr* expr)
         *expr = d_.uncheckedReadExpr();
     }
 
+#ifdef DEBUG
     expr_ = *expr;
+    mozWritePoison(&u_, sizeof(u_));
+    isInitialized_ = false;
+#endif
 
     return true;
 }
@@ -607,9 +1135,12 @@ ExprIter<Policy>::readFunctionStart()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readFunctionEnd(ExprType ret, Value* value)
+ExprIter<Policy>::readFunctionEnd(ExprType ret)
 {
+#ifdef DEBUG
     expr_ = Expr::Limit;
+    mozWritePoison(&u_, sizeof(u_));
+#endif
 
     if (Validate) {
         MOZ_ASSERT(controlStack_.length() > 0);
@@ -620,8 +1151,9 @@ ExprIter<Policy>::readFunctionEnd(ExprType ret, Value* value)
     }
 
     ExprType type;
+    Value value;
     LabelKind kind;
-    if (!popControlAfterCheck(&kind, &type, value))
+    if (!popControlAfterCheck(&kind, &type, &value))
         return false;
 
     MOZ_ASSERT(kind == LabelKind::Block);
@@ -632,16 +1164,16 @@ ExprIter<Policy>::readFunctionEnd(ExprType ret, Value* value)
             return false;
     }
 
-    return true;
+    u_.return_ = ReturnRecord<Value>(value);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReturn(Value* value)
+ExprIter<Policy>::readReturn()
 {
     ControlStackEntry<ControlItem>& controlItem = controlStack_[0];
     MOZ_ASSERT(controlItem.kind() == LabelKind::Block);
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Return);
 
     uint32_t arity;
     if (!readVarU32(&arity))
@@ -662,10 +1194,8 @@ ExprIter<Policy>::readReturn(Value* value)
     if (!push(AnyType))
         return false;
 
-    if (Output)
-        *value = tv.value();
-
-    return true;
+    u_.return_ = ReturnRecord<Value>(tv.value());
+    return setInitialized();
 }
 
 template <typename Policy>
@@ -725,9 +1255,7 @@ ExprIter<Policy>::popControlAfterCheck(LabelKind* kind, ExprType* type, Value* v
     TypeAndValue<Value> tv;
     if (!pop(&tv))
         return false;
-
-    if (Output)
-        *value = tv.value();
+    *value = tv.value();
 
     ControlStackEntry<ControlItem> controlItem = controlStack_.popCopy();
     *kind = controlItem.kind();
@@ -747,8 +1275,6 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readBlock()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Block);
-
     return pushControl(LabelKind::Block);
 }
 
@@ -756,33 +1282,32 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readLoop()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Loop);
-
     return pushControl(LabelKind::Block) &&
            pushControl(LabelKind::Loop);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readIf(Value* condition)
+ExprIter<Policy>::readIf()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::If);
-
-    if (!popWithType(ExprType::I32, condition))
+    Value condition;
+    if (!popWithType(ExprType::I32, &condition))
         return false;
 
-    return pushControl(LabelKind::Then);
+    u_.if_ = IfRecord<Value>(condition);
+
+    return setInitialized() &&
+           pushControl(LabelKind::Then);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
+ExprIter<Policy>::readElse()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Else);
-
-    ExprType type;
+    ExprType thenType;
+    Value thenValue;
     LabelKind kind;
-    if (!popControl(&kind, &type, thenValue))
+    if (!popControl(&kind, &thenType, &thenValue))
         return false;
 
     if (Validate && kind != LabelKind::Then)
@@ -799,36 +1324,32 @@ ExprIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
     // Initialize the else block's type with the then block's type, so that
     // the two get unified.
     ControlStackEntry<ControlItem>& controlItem = controlStack_.back();
-    controlItem.type() = type;
+    controlItem.type() = thenType;
 
-    if (Output)
-        *thenType = type;
-
-    return true;
+    u_.else_ = ElseRecord<Value>(thenType, thenValue);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
+ExprIter<Policy>::readEnd()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::End);
-
-    LabelKind validateKind;
-    ExprType validateType;
-    if (!popControl(&validateKind, &validateType, value))
+    ExprType type;
+    Value value;
+    LabelKind kind;
+    if (!popControl(&kind, &type, &value))
         return false;
 
-    switch (validateKind) {
+    switch (kind) {
       case LabelKind::Block:
         break;
       case LabelKind::Loop: {
         // Note: Propose a spec change: loops don't implicitly have an end label.
 
-        if (Output)
-            setResult(*value);
+        setResult(value);
 
         LabelKind blockKind;
-        if (!popControl(&blockKind, &validateType, value))
+        if (!popControl(&blockKind, &type, &value))
             return false;
 
         MOZ_ASSERT(blockKind == LabelKind::Block);
@@ -836,35 +1357,28 @@ ExprIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
       }
       case LabelKind::Then:
         valueStack_.back() = TypeAndValue<Value>(ExprType::Void);
-        if (Output)
-            *type = ExprType::Void;
+        type = ExprType::Void;
         break;
       case LabelKind::Else:
         break;
     }
 
-    if (Output) {
-        *kind = validateKind;
-        *type = validateType;
-    }
-
-    return true;
+    u_.end = EndRecord<Value>(kind, type, value);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
+ExprIter<Policy>::readBr()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Br);
-
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("unable to read br arity");
     if (arity > 1)
         return fail("br arity too big");
 
-    uint32_t validateRelativeDepth;
-    if (!readVarU32(&validateRelativeDepth))
+    uint32_t relativeDepth;
+    if (!readVarU32(&relativeDepth))
         return fail("unable to read br depth");
 
     TypeAndValue<Value> tv;
@@ -875,38 +1389,32 @@ ExprIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
         tv = TypeAndValue<Value>(ExprType::Void);
     }
 
-    if (!checkBranch(validateRelativeDepth, tv.type()))
+    if (!checkBranch(relativeDepth, tv.type()))
         return false;
 
     if (!push(AnyType))
         return false;
 
-    if (Output) {
-        *relativeDepth = validateRelativeDepth;
-        *type = tv.type();
-        *value = tv.value();
-    }
-
-    return true;
+    u_.br = BrRecord<Value>(relativeDepth, tv.type(), tv.value());
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value, Value* condition)
+ExprIter<Policy>::readBrIf()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrIf);
-
     uint32_t arity;
     if (!readVarU32(&arity))
         return fail("unable to read br_if arity");
     if (arity > 1)
         return fail("br_if arity too big");
 
-    uint32_t validateRelativeDepth;
-    if (!readVarU32(&validateRelativeDepth))
+    uint32_t relativeDepth;
+    if (!readVarU32(&relativeDepth))
         return fail("unable to read br_if depth");
 
-    if (!popWithType(ExprType::I32, condition))
+    Value condition;
+    if (!popWithType(ExprType::I32, &condition))
         return false;
 
     TypeAndValue<Value> tv;
@@ -919,26 +1427,19 @@ ExprIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value
             return false;
     }
 
-    if (!checkBranch(validateRelativeDepth, tv.type()))
+    if (!checkBranch(relativeDepth, tv.type()))
         return false;
 
-    if (Output) {
-        *relativeDepth = validateRelativeDepth;
-        *type = tv.type();
-        *value = tv.value();
-    }
-
-    return true;
+    u_.brIf = BrIfRecord<Value>(relativeDepth, tv.type(), tv.value(), condition);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
-                              Value* value, Value* index)
+ExprIter<Policy>::readBrTable()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrTable);
-
-    if (!popWithType(ExprType::I32, index))
+    Value index;
+    if (!popWithType(ExprType::I32, &index))
         return false;
 
     uint32_t arity;
@@ -956,22 +1457,19 @@ ExprIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
         if (!push(tv))
             return false;
     }
-    *type = tv.type();
-    if (Output)
-        *value = tv.value();
 
-    if (!readVarU32(tableLength))
+    uint32_t tableLength;
+    if (!readVarU32(&tableLength))
         return fail("unable to read br_table table length");
 
-    return true;
+    u_.brTable = BrTableRecord<Value>(tableLength, tv.type(), tv.value(), index);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
 ExprIter<Policy>::readBrTableEntry(ExprType type, uint32_t* depth)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrTable);
-
     return readFixedU32(depth) &&
            checkBranch(*depth, type);
 }
@@ -980,79 +1478,79 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readUnreachable()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Unreachable);
-
     return push(AnyType);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readUnary(ValType operandType, Value* input)
+ExprIter<Policy>::readUnary(ValType operandType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Unary);
-
-    if (!popWithType(ToExprType(operandType), input))
+    Value op;
+    if (!popWithType(ToExprType(operandType), &op))
         return false;
 
     infalliblePush(ToExprType(operandType));
 
-    return true;
+    u_.unary = UnaryRecord<Value>(op);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readConversion(ValType operandType, ValType resultType, Value* input)
+ExprIter<Policy>::readConversion(ValType operandType, ValType resultType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Conversion);
-
-    if (!popWithType(ToExprType(operandType), input))
+    Value op;
+    if (!popWithType(ToExprType(operandType), &op))
         return false;
 
     infalliblePush(ToExprType(resultType));
 
-    return true;
+    u_.unary = UnaryRecord<Value>(op);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBinary(ValType operandType, Value* lhs, Value* rhs)
+ExprIter<Policy>::readBinary(ValType operandType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Binary);
-
-    if (!popWithType(ToExprType(operandType), rhs))
+    Value rhs;
+    if (!popWithType(ToExprType(operandType), &rhs))
         return false;
 
-    if (!popWithType(ToExprType(operandType), lhs))
+    Value lhs;
+    if (!popWithType(ToExprType(operandType), &lhs))
         return false;
 
     infalliblePush(ToExprType(operandType));
 
-    return true;
+    u_.binary = BinaryRecord<Value>(lhs, rhs);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readComparison(ValType operandType, Value* lhs, Value* rhs)
+ExprIter<Policy>::readComparison(ValType operandType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Comparison);
-
-    if (!popWithType(ToExprType(operandType), rhs))
+    Value rhs;
+    if (!popWithType(ToExprType(operandType), &rhs))
         return false;
 
-    if (!popWithType(ToExprType(operandType), lhs))
+    Value lhs;
+    if (!popWithType(ToExprType(operandType), &lhs))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    return true;
+    u_.binary = BinaryRecord<Value>(lhs, rhs);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
 ExprIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
-    Value unused;
-    if (!popWithType(ExprType::I32, Output ? &addr->base : &unused))
+    Value base;
+    if (!popWithType(ExprType::I32, &base))
         return false;
 
     uint8_t alignLog2;
@@ -1060,311 +1558,268 @@ ExprIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress
         return fail("unable to read load alignment");
     if (Validate && (alignLog2 >= 32 || (uint32_t(1) << alignLog2) > byteSize))
         return fail("greater than natural alignment");
-    if (Output)
-        addr->align = uint32_t(1) << alignLog2;
+    uint32_t align = uint32_t(1) << alignLog2;
 
-    uint32_t unusedOffset;
-    if (!readVarU32(Output ? &addr->offset : &unusedOffset))
+    uint32_t offset;
+    if (!readVarU32(&offset))
         return fail("unable to read load offset");
 
+    *addr = LinearMemoryAddress<Value>(base, offset, align);
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readLoad(ValType resultType, uint32_t byteSize,
-                           LinearMemoryAddress<Value>* addr)
+ExprIter<Policy>::readLoad(ValType resultType, uint32_t byteSize)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Load);
-
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, &u_.load.addr))
         return false;
 
     infalliblePush(ToExprType(resultType));
-
-    return true;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readStore(ValType resultType, uint32_t byteSize,
-                            LinearMemoryAddress<Value>* addr, Value* value)
+ExprIter<Policy>::readStore(ValType resultType, uint32_t byteSize)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Store);
-
-    if (!popWithType(ToExprType(resultType), value))
+    Value value;
+    if (!popWithType(ToExprType(resultType), &value))
         return false;
 
-    if (!readLinearMemoryAddress(byteSize, addr))
+    if (!readLinearMemoryAddress(byteSize, &u_.store.addr))
         return false;
 
-    infalliblePush(TypeAndValue<Value>(ToExprType(resultType), Output ? *value : Value()));
+    infalliblePush(TypeAndValue<Value>(ToExprType(resultType), value));
 
-    return true;
+    u_.store.value = value;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readNullary()
+ExprIter<Policy>::readTrivial()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Nullary);
-
     return push(ExprType::Void);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSelect(ExprType* type, Value* trueValue, Value* falseValue, Value* condition)
+ExprIter<Policy>::readSelect()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Select);
-
-    if (!popWithType(ExprType::I32, condition))
+    Value condition;
+    if (!popWithType(ExprType::I32, &condition))
         return false;
 
-    TypeAndValue<Value> false_;
-    if (!pop(&false_))
+    TypeAndValue<Value> falseValue;
+    if (!pop(&falseValue))
         return false;
 
-    TypeAndValue<Value> true_;
-    if (!pop(&true_))
+    TypeAndValue<Value> trueValue;
+    if (!pop(&trueValue))
         return false;
 
-    ExprType resultType = Unify(true_.type(), false_.type());
+    ExprType resultType = Unify(trueValue.type(), falseValue.type());
     infalliblePush(resultType);
 
-    if (Output) {
-        *type = resultType;
-        *trueValue = true_.value();
-        *falseValue = false_.value();
-    }
-
-    return true;
+    u_.select = SelectRecord<Value>(resultType, trueValue.value(), falseValue.value(),
+                                    condition);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readGetLocal(const ValTypeVector& locals, uint32_t* id)
+ExprIter<Policy>::readGetLocal(const ValTypeVector& locals)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::GetVar);
-
-    uint32_t validateId;
-    if (!readVarU32(&validateId))
+    uint32_t id;
+    if (!readVarU32(&id))
         return false;
 
-    if (Validate && validateId >= locals.length())
+    if (Validate && id >= locals.length())
         return fail("get_local index out of range");
 
-    if (!push(ToExprType(locals[validateId])))
+    if (!push(ToExprType(locals[id])))
         return false;
 
-    if (Output)
-        *id = validateId;
-
-    return true;
+    u_.getVar = GetVarRecord(id);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* value)
+ExprIter<Policy>::readSetLocal(const ValTypeVector& locals)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SetVar);
-
-    uint32_t validateId;
-    if (!readVarU32(&validateId))
+    uint32_t id;
+    if (!readVarU32(&id))
         return false;
 
-    if (Validate && validateId >= locals.length())
+    if (Validate && id >= locals.length())
         return fail("set_local index out of range");
 
-    if (!topWithType(ToExprType(locals[validateId]), value))
+    Value value;
+    if (!topWithType(ToExprType(locals[id]), &value))
         return false;
 
-    if (Output)
-        *id = validateId;
-
-    return true;
+    u_.setVar = SetVarRecord<Value>(id, value);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readGetGlobal(const GlobalDescVector& globals, uint32_t* id)
+ExprIter<Policy>::readGetGlobal(const GlobalDescVector& globals)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::GetVar);
-
-    uint32_t validateId;
-    if (!readVarU32(&validateId))
+    uint32_t id;
+    if (!readVarU32(&id))
         return false;
 
-    if (Validate && validateId >= globals.length())
-        return fail("get_global index out of range");
-
-    if (!push(ToExprType(globals[validateId].type)))
+    if (!push(ToExprType(globals[id].type)))
         return false;
 
-    if (Output)
-        *id = validateId;
-
-    return true;
+    u_.getVar = GetVarRecord(id);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value)
+ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SetVar);
-
-    uint32_t validateId;
-    if (!readVarU32(&validateId))
+    uint32_t id;
+    if (!readVarU32(&id))
         return false;
 
-    if (Validate && validateId >= globals.length())
-        return fail("set_global index out of range");
-
-    if (!topWithType(ToExprType(globals[validateId].type), value))
+    Value value;
+    if (!topWithType(ToExprType(globals[id].type), &value))
         return false;
 
-    if (Output)
-        *id = validateId;
-
-    return true;
+    u_.setVar = SetVarRecord<Value>(id, value);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readI32Const(int32_t* i32)
+ExprIter<Policy>::readI32Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I32);
-
-    int32_t unused;
-    return readVarS32(Output ? i32 : &unused) &&
+    return readVarS32(&u_.i32) &&
+           setInitialized() &&
            push(ExprType::I32);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readI64Const(int64_t* i64)
+ExprIter<Policy>::readI64Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I64);
-
-    int64_t unused;
-    return readVarS64(Output ? i64 : &unused) &&
+    return readVarS64(&u_.i64) &&
+           setInitialized() &&
            push(ExprType::I64);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readF32Const(float* f32)
+ExprIter<Policy>::readF32Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F32);
-
-    float validateF32;
-    if (!readFixedF32(Output ? f32 : &validateF32))
+    if (!readFixedF32(&u_.f32))
         return false;
 
-    if (Validate && mozilla::IsNaN(Output ? *f32 : validateF32)) {
+    if (Validate && mozilla::IsNaN(u_.f32)) {
         const float jsNaN = (float)JS::GenericNaN();
-        if (memcmp(Output ? f32 : &validateF32, &jsNaN, sizeof(*f32)) != 0)
+        if (memcmp(&u_.f32, &jsNaN, sizeof(u_.f32)) != 0)
             return notYetImplemented("NaN literals with custom payloads");
     }
 
-    return push(ExprType::F32);
+    return setInitialized() &&
+           push(ExprType::F32);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readF64Const(double* f64)
+ExprIter<Policy>::readF64Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F64);
-
-    double validateF64;
-    if (!readFixedF64(Output ? f64 : &validateF64))
+    if (!readFixedF64(&u_.f64))
        return false;
 
-    if (Validate && mozilla::IsNaN(Output ? *f64 : validateF64)) {
+    if (Validate && mozilla::IsNaN(u_.f64)) {
         const double jsNaN = JS::GenericNaN();
-        if (memcmp(Output ? f64 : &validateF64, &jsNaN, sizeof(*f64)) != 0)
+        if (memcmp(&u_.f64, &jsNaN, sizeof(u_.f64)) != 0)
             return notYetImplemented("NaN literals with custom payloads");
     }
 
-    return push(ExprType::F64);
+    return setInitialized() &&
+           push(ExprType::F64);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
+ExprIter<Policy>::readI32x4Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I32x4);
-
-    I32x4 unused;
-    return readFixedI32x4(Output ? i32x4 : &unused) &&
+    return readFixedI32x4(&u_.i32x4) &&
+           setInitialized() &&
            push(ExprType::I32x4);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
+ExprIter<Policy>::readF32x4Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F32x4);
-
-    F32x4 unused;
-    return readFixedF32x4(Output ? f32x4 : &unused) &&
+    return readFixedF32x4(&u_.f32x4) &&
+           setInitialized() &&
            push(ExprType::F32x4);
 }
 
 template <typename Policy>
 inline MOZ_MUST_USE bool
-ExprIter<Policy>::readB32x4Const(I32x4* i32x4)
+ExprIter<Policy>::readB32x4Const()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::B32x4);
-
-    I32x4 unused;
-    return readFixedI32x4(Output ? i32x4 : &unused) &&
+    return readFixedI32x4(&u_.i32x4) &&
+           setInitialized() &&
            push(ExprType::B32x4);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCall(uint32_t* calleeIndex, uint32_t* arity)
+ExprIter<Policy>::readCall()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Call);
-
-    if (!readVarU32(arity))
+    uint32_t arity;
+    if (!readVarU32(&arity))
         return fail("unable to read call arity");
 
-    if (!readVarU32(calleeIndex))
+    uint32_t funcIndex;
+    if (!readVarU32(&funcIndex))
         return fail("unable to read call function index");
 
-    return true;
+    u_.call = CallRecord(arity, funcIndex);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallIndirect(uint32_t* sigIndex, uint32_t* arity)
+ExprIter<Policy>::readCallIndirect()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CallIndirect);
-
-    if (!readVarU32(arity))
+    uint32_t arity;
+    if (!readVarU32(&arity))
         return fail("unable to read call_indirect arity");
 
-    if (!readVarU32(sigIndex))
+    uint32_t sigIndex;
+    if (!readVarU32(&sigIndex))
         return fail("unable to read call_indirect signature index");
 
-    return true;
+    u_.callIndirect = CallIndirectRecord<Value>(arity, sigIndex);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallImport(uint32_t* importIndex, uint32_t* arity)
+ExprIter<Policy>::readCallImport()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CallImport);
-
-    if (!readVarU32(arity))
+    uint32_t arity;
+    if (!readVarU32(&arity))
         return fail("unable to read call_import arity");
 
-    if (!readVarU32(importIndex))
+    uint32_t importIndex;
+    if (!readVarU32(&importIndex))
         return fail("unable to read call_import import index");
 
-    return true;
+    u_.callImport = CallImportRecord(arity, importIndex);
+    return setInitialized();
 }
 
 template <typename Policy>
@@ -1377,9 +1832,7 @@ ExprIter<Policy>::readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex,
     if (!checkType(tv.type(), ToExprType(type)))
         return false;
 
-    if (Output)
-        *arg = tv.value();
-
+    *arg = tv.value();
     return true;
 }
 
@@ -1388,7 +1841,6 @@ inline bool
 ExprIter<Policy>::readCallArgsEnd(uint32_t numArgs)
 {
     MOZ_ASSERT(numArgs <= valueStack_.length());
-
     valueStack_.shrinkBy(numArgs);
     return true;
 }
@@ -1409,325 +1861,309 @@ ExprIter<Policy>::readCallReturn(ExprType ret)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
+ExprIter<Policy>::readAtomicLoad()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicLoad);
-
-    Scalar::Type validateViewType;
-    if (!readAtomicViewType(&validateViewType))
+    Scalar::Type viewType;
+    if (!readAtomicViewType(&viewType))
         return false;
 
-    uint32_t byteSize = Scalar::byteSize(validateViewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
+    uint32_t byteSize = Scalar::byteSize(viewType);
+    if (!readLinearMemoryAddress(byteSize, &u_.atomicLoad.addr))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    if (Output)
-        *viewType = validateViewType;
-
-    return true;
+    u_.atomicLoad.viewType = viewType;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                  Scalar::Type* viewType, Value* value)
+ExprIter<Policy>::readAtomicStore()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicStore);
-
-    Scalar::Type validateViewType;
-    if (!readAtomicViewType(&validateViewType))
+    Scalar::Type viewType;
+    if (!readAtomicViewType(&viewType))
         return false;
 
-    uint32_t byteSize = Scalar::byteSize(validateViewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
+    uint32_t byteSize = Scalar::byteSize(viewType);
+    if (!readLinearMemoryAddress(byteSize, &u_.atomicStore.addr))
         return false;
 
-    if (!popWithType(ExprType::I32, value))
+    Value value;
+    if (!popWithType(ExprType::I32, &value))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    if (Output)
-        *viewType = validateViewType;
-
-    return true;
+    u_.atomicStore.viewType = viewType;
+    u_.atomicStore.value = value;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                  jit::AtomicOp* op, Value* value)
+ExprIter<Policy>::readAtomicBinOp()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicBinOp);
-
-    Scalar::Type validateViewType;
-    if (!readAtomicViewType(&validateViewType))
+    Scalar::Type viewType;
+    if (!readAtomicViewType(&viewType))
         return false;
 
-    if (!readAtomicBinOpOp(op))
+    jit::AtomicOp op;
+    if (!readAtomicBinOpOp(&op))
         return false;
 
-    uint32_t byteSize = Scalar::byteSize(validateViewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
+    uint32_t byteSize = Scalar::byteSize(viewType);
+    if (!readLinearMemoryAddress(byteSize, &u_.atomicStore.addr))
         return false;
 
-    if (!popWithType(ExprType::I32, value))
+    Value value;
+    if (!popWithType(ExprType::I32, &value))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    if (Output)
-        *viewType = validateViewType;
-
-    return true;
+    u_.atomicBinOp.viewType = viewType;
+    u_.atomicBinOp.op = op;
+    u_.atomicBinOp.value = value;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                            Scalar::Type* viewType,
-                                            Value* oldValue, Value* newValue)
+ExprIter<Policy>::readAtomicCompareExchange()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicCompareExchange);
-
-    Scalar::Type validateViewType;
-    if (!readAtomicViewType(&validateViewType))
+    Scalar::Type viewType;
+    if (!readAtomicViewType(&viewType))
         return false;
 
-    uint32_t byteSize = Scalar::byteSize(validateViewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
+    uint32_t byteSize = Scalar::byteSize(viewType);
+    if (!readLinearMemoryAddress(byteSize, &u_.atomicStore.addr))
         return false;
 
-    if (!popWithType(ExprType::I32, newValue))
+    Value new_;
+    if (!popWithType(ExprType::I32, &new_))
         return false;
 
-    if (!popWithType(ExprType::I32, oldValue))
+    Value old;
+    if (!popWithType(ExprType::I32, &old))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    if (Output)
-        *viewType = validateViewType;
-
-    return true;
+    u_.atomicCompareExchange.viewType = viewType;
+    u_.atomicCompareExchange.oldValue = old;
+    u_.atomicCompareExchange.newValue = new_;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicExchange(LinearMemoryAddress<Value>* addr,
-                                     Scalar::Type* viewType,
-                                     Value* value)
+ExprIter<Policy>::readAtomicExchange()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicExchange);
-
-    Scalar::Type validateViewType;
-    if (!readAtomicViewType(&validateViewType))
+    Scalar::Type viewType;
+    if (!readAtomicViewType(&viewType))
         return false;
 
-    uint32_t byteSize = Scalar::byteSize(validateViewType);
-    if (!readLinearMemoryAddress(byteSize, addr))
+    uint32_t byteSize = Scalar::byteSize(viewType);
+    if (!readLinearMemoryAddress(byteSize, &u_.atomicStore.addr))
         return false;
 
-    if (!popWithType(ExprType::I32, value))
+    Value value;
+    if (!popWithType(ExprType::I32, &value))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    if (Output)
-        *viewType = validateViewType;
-
-    return true;
+    u_.atomicExchange.viewType = viewType;
+    u_.atomicExchange.value = value;
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdComparison(ValType simdType, Value* lhs, Value* rhs)
+ExprIter<Policy>::readSimdComparison(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdComparison);
-
-    if (!popWithType(ToExprType(simdType), rhs))
+    Value rhs;
+    if (!popWithType(ToExprType(simdType), &rhs))
         return false;
 
-    if (!popWithType(ToExprType(simdType), lhs))
+    Value lhs;
+    if (!popWithType(ToExprType(simdType), &lhs))
         return false;
 
     infalliblePush(ToExprType(SimdBoolType(simdType)));
 
-    return true;
+    u_.binary = BinaryRecord<Value>(lhs, rhs);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdShiftByScalar(ValType simdType, Value* lhs, Value* rhs)
+ExprIter<Policy>::readSimdShiftByScalar(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdShiftByScalar);
-
-    if (!popWithType(ExprType::I32, rhs))
+    Value count;
+    if (!popWithType(ExprType::I32, &count))
         return false;
 
-    if (!popWithType(ToExprType(simdType), lhs))
+    Value vector;
+    if (!popWithType(ToExprType(simdType), &vector))
         return false;
 
     infalliblePush(ToExprType(simdType));
 
-    return true;
+    u_.binary = BinaryRecord<Value>(vector, count);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
+ExprIter<Policy>::readSimdBooleanReduction(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdBooleanReduction);
-
-    if (!popWithType(ToExprType(simdType), input))
+    Value op;
+    if (!popWithType(ToExprType(simdType), &op))
         return false;
 
     infalliblePush(ExprType::I32);
 
-    return true;
+    u_.unary = UnaryRecord<Value>(op);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExtractLane(ValType simdType, jit::SimdLane* lane, Value* vector)
+ExprIter<Policy>::readExtractLane(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::ExtractLane);
-
-    uint32_t laneBits;
-    if (!readVarU32(&laneBits))
+    uint32_t lane;
+    if (!readVarU32(&lane))
         return false;
-    if (Validate && laneBits >= NumSimdElements(simdType))
+    if (Validate && lane >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
-    if (Output)
-        *lane = jit::SimdLane(laneBits);
 
-    if (!popWithType(ToExprType(simdType), vector))
+    Value value;
+    if (!popWithType(ToExprType(simdType), &value))
         return false;
 
     infalliblePush(ToExprType(SimdElementType(simdType)));
 
-    return true;
+    u_.extractLane = ExtractLaneRecord<Value>(jit::SimdLane(lane), value);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReplaceLane(ValType simdType, jit::SimdLane* lane, Value* vector,
-                                  Value* scalar)
+ExprIter<Policy>::readReplaceLane(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::ReplaceLane);
-
-    uint32_t laneBits;
-    if (!readVarU32(&laneBits))
+    uint32_t lane;
+    if (!readVarU32(&lane))
         return false;
-    if (Validate && laneBits >= NumSimdElements(simdType))
+    if (Validate && lane >= NumSimdElements(simdType))
         return fail("simd lane out of bounds for simd type");
-    if (Output)
-        *lane = jit::SimdLane(laneBits);
 
-    if (!popWithType(ToExprType(SimdElementType(simdType)), scalar))
+    Value scalar;
+    if (!popWithType(ToExprType(SimdElementType(simdType)), &scalar))
         return false;
 
-    if (!popWithType(ToExprType(simdType), vector))
-        return false;
-
-    infalliblePush(ToExprType(simdType));
-
-    return true;
-}
-
-template <typename Policy>
-inline bool
-ExprIter<Policy>::readSplat(ValType simdType, Value* scalar)
-{
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Splat);
-
-    if (!popWithType(ToExprType(SimdElementType(simdType)), scalar))
+    Value vector;
+    if (!popWithType(ToExprType(simdType), &vector))
         return false;
 
     infalliblePush(ToExprType(simdType));
 
-    return true;
+    u_.replaceLane = ReplaceLaneRecord<Value>(jit::SimdLane(lane), vector, scalar);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[4], Value* vector)
+ExprIter<Policy>::readSplat(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Swizzle);
+    Value op;
+    if (!popWithType(ToExprType(SimdElementType(simdType)), &op))
+        return false;
 
+    infalliblePush(ToExprType(simdType));
+
+    u_.unary = UnaryRecord<Value>(op);
+    return setInitialized();
+}
+
+template <typename Policy>
+inline bool
+ExprIter<Policy>::readSwizzle(ValType simdType)
+{
+    uint8_t lanes[4];
     uint32_t numSimdLanes = NumSimdElements(simdType);
-    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
+    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(lanes));
     for (uint32_t i = 0; i < numSimdLanes; ++i) {
-        uint8_t validateLane;
-        if (!readFixedU8(Output ? &(*lanes)[i] : &validateLane))
+        if (!readFixedU8(&lanes[i]))
             return false;
-        if (Validate && (Output ? (*lanes)[i] : validateLane) >= numSimdLanes)
+        if (Validate && lanes[i] >= numSimdLanes)
             return fail("swizzle index out of bounds");
     }
 
-    if (!popWithType(ToExprType(simdType), vector))
+    Value vector;
+    if (!popWithType(ToExprType(simdType), &vector))
         return false;
 
     infalliblePush(ToExprType(simdType));
 
-    return true;
+    u_.swizzle = SwizzleRecord<Value>(lanes, vector);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[4], Value* lhs, Value* rhs)
+ExprIter<Policy>::readShuffle(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Shuffle);
-
+    uint8_t lanes[4];
     uint32_t numSimdLanes = NumSimdElements(simdType);
-    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
+    MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(lanes));
     for (uint32_t i = 0; i < numSimdLanes; ++i) {
-        uint8_t validateLane;
-        if (!readFixedU8(Output ? &(*lanes)[i] : &validateLane))
+        if (!readFixedU8(&lanes[i]))
             return false;
-        if (Validate && (Output ? (*lanes)[i] : validateLane) >= numSimdLanes * 2)
+        if (Validate && lanes[i] >= numSimdLanes * 2)
             return fail("shuffle index out of bounds");
     }
 
-    if (!popWithType(ToExprType(simdType), rhs))
+    Value rhs;
+    if (!popWithType(ToExprType(simdType), &rhs))
         return false;
 
-    if (!popWithType(ToExprType(simdType), lhs))
+    Value lhs;
+    if (!popWithType(ToExprType(simdType), &lhs))
         return false;
 
     infalliblePush(ToExprType(simdType));
 
-    return true;
+    u_.shuffle = ShuffleRecord<Value>(lanes, lhs, rhs);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdSelect(ValType simdType, Value* trueValue, Value* falseValue,
-                                 Value* condition)
+ExprIter<Policy>::readSimdSelect(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdSelect);
-
-    if (!popWithType(ToExprType(simdType), falseValue))
+    Value falseValue;
+    if (!popWithType(ToExprType(simdType), &falseValue))
         return false;
-    if (!popWithType(ToExprType(simdType), trueValue))
+    Value trueValue;
+    if (!popWithType(ToExprType(simdType), &trueValue))
         return false;
-    if (!popWithType(ToExprType(SimdBoolType(simdType)), condition))
+    Value condition;
+    if (!popWithType(ToExprType(SimdBoolType(simdType)), &condition))
         return false;
 
     infalliblePush(ToExprType(simdType));
 
-    return true;
+    u_.simdSelect = SimdSelectRecord<Value>(trueValue, falseValue, condition);
+    return setInitialized();
 }
 
 template <typename Policy>
 inline bool
 ExprIter<Policy>::readSimdCtor()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
-
-    return true;
+    return setInitialized();
 }
 
 template <typename Policy>
@@ -1735,8 +2171,6 @@ inline bool
 ExprIter<Policy>::readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t index,
                                       Value* arg)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
-
     TypeAndValue<Value> tv;
     if (!peek(numElements - index, &tv))
         return false;
@@ -1751,9 +2185,7 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readSimdCtorArgsEnd(uint32_t numElements)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
     MOZ_ASSERT(numElements <= valueStack_.length());
-
     valueStack_.shrinkBy(numElements);
     return true;
 }
@@ -1762,9 +2194,7 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readSimdCtorReturn(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
-
-    return push(ToExprType(simdType));
+   return push(ToExprType(simdType));
 }
 
 } // namespace wasm

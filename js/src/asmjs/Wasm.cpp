@@ -149,11 +149,12 @@ DecodeCallArgs(FunctionDecoder& f, uint32_t arity, const Sig& sig)
     if (arity != sig.args().length())
         return f.iter().fail("call arity out of range");
 
+    Nothing arg;
     const ValTypeVector& args = sig.args();
     uint32_t numArgs = args.length();
     for (size_t i = 0; i < numArgs; ++i) {
         ValType argType = args[i];
-        if (!f.iter().readCallArg(argType, numArgs, i, nullptr))
+        if (!f.iter().readCallArg(argType, numArgs, i, &arg))
             return false;
     }
 
@@ -169,35 +170,34 @@ DecodeCallReturn(FunctionDecoder& f, const Sig& sig)
 static bool
 DecodeCall(FunctionDecoder& f)
 {
-    uint32_t calleeIndex;
-    uint32_t arity;
-    if (!f.iter().readCall(&calleeIndex, &arity))
+    if (!f.iter().readCall())
         return false;
 
-    if (calleeIndex >= f.mg().numFuncSigs())
+    const CallRecord& call = f.iter().call();
+    if (call.callee >= f.mg().numFuncSigs())
         return f.iter().fail("callee index out of range");
 
-    const Sig& sig = f.mg().funcSig(calleeIndex);
-    return DecodeCallArgs(f, arity, sig) &&
+    const Sig& sig = f.mg().funcSig(call.callee);
+    return DecodeCallArgs(f, call.arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
 static bool
 DecodeCallIndirect(FunctionDecoder& f)
 {
-    uint32_t sigIndex;
-    uint32_t arity;
-    if (!f.iter().readCallIndirect(&sigIndex, &arity))
+    if (!f.iter().readCallIndirect())
         return false;
 
-    if (sigIndex >= f.mg().numSigs())
+    const CallIndirectRecord<Nothing>& callIndirect = f.iter().callIndirect();
+    if (callIndirect.sigIndex >= f.mg().numSigs())
         return f.iter().fail("signature index out of range");
 
-    const Sig& sig = f.mg().sig(sigIndex);
-    if (!DecodeCallArgs(f, arity, sig))
+    const Sig& sig = f.mg().sig(callIndirect.sigIndex);
+    if (!DecodeCallArgs(f, callIndirect.arity, sig))
         return false;
 
-    if (!f.iter().readCallIndirectCallee(nullptr))
+    Nothing callee;
+    if (!f.iter().readCallIndirectCallee(&callee))
         return false;
 
     return DecodeCallReturn(f, sig);
@@ -206,29 +206,28 @@ DecodeCallIndirect(FunctionDecoder& f)
 static bool
 DecodeCallImport(FunctionDecoder& f)
 {
-    uint32_t importIndex;
-    uint32_t arity;
-    if (!f.iter().readCallImport(&importIndex, &arity))
+    if (!f.iter().readCallImport())
         return false;
 
-    if (importIndex >= f.mg().numImports())
+    const CallImportRecord& callImport = f.iter().callImport();
+    if (callImport.callee >= f.mg().numImports())
         return f.iter().fail("import index out of range");
 
-    const Sig& sig = *f.mg().import(importIndex).sig;
-    return DecodeCallArgs(f, arity, sig) &&
+    const Sig& sig = *f.mg().import(callImport.callee).sig;
+    return DecodeCallArgs(f, callImport.arity, sig) &&
            DecodeCallReturn(f, sig);
 }
 
 static bool
 DecodeBrTable(FunctionDecoder& f)
 {
-    uint32_t tableLength;
-    ExprType type;
-    if (!f.iter().readBrTable(&tableLength, &type, nullptr, nullptr))
+    if (!f.iter().readBrTable())
         return false;
 
+    ExprType type = f.iter().brTable().type;
+
     uint32_t depth;
-    for (size_t i = 0, e = tableLength; i < e; ++i) {
+    for (size_t i = 0, e = f.iter().brTable().tableLength; i < e; ++i) {
         if (!f.iter().readBrTableEntry(type, &depth))
             return false;
     }
@@ -246,7 +245,7 @@ DecodeExpr(FunctionDecoder& f)
 
     switch (expr) {
       case Expr::Nop:
-        return f.iter().readNullary();
+        return f.iter().readTrivial();
       case Expr::Call:
         return DecodeCall(f);
       case Expr::CallIndirect:
@@ -254,45 +253,47 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::CallImport:
         return DecodeCallImport(f);
       case Expr::I32Const:
-        return f.iter().readI32Const(nullptr);
+        return f.iter().readI32Const();
       case Expr::I64Const:
         return f.checkI64Support() &&
-               f.iter().readI64Const(nullptr);
+               f.iter().readI64Const();
       case Expr::F32Const:
-        return f.iter().readF32Const(nullptr);
+        return f.iter().readF32Const();
       case Expr::F64Const:
-        return f.iter().readF64Const(nullptr);
+        return f.iter().readF64Const();
       case Expr::GetLocal:
-        return f.iter().readGetLocal(f.locals(), nullptr);
+        return f.iter().readGetLocal(f.locals());
       case Expr::SetLocal:
-        return f.iter().readSetLocal(f.locals(), nullptr, nullptr);
+        return f.iter().readSetLocal(f.locals());
       case Expr::Select:
-        return f.iter().readSelect(nullptr, nullptr, nullptr, nullptr);
+        return f.iter().readSelect();
       case Expr::Block:
         return f.iter().readBlock();
       case Expr::Loop:
         return f.iter().readLoop();
       case Expr::If:
-        return f.iter().readIf(nullptr);
+        return f.iter().readIf();
       case Expr::Else:
-        return f.iter().readElse(nullptr, nullptr);
+        return f.iter().readElse();
       case Expr::End:
-        return f.iter().readEnd(nullptr, nullptr, nullptr);
+        return f.iter().readEnd();
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
-        return f.iter().readUnary(ValType::I32, nullptr);
+      case Expr::I32Eqz:
+        return f.iter().readUnary(ValType::I32);
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
+      case Expr::I64Eqz:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readUnary(ValType::I64, nullptr);
+               f.iter().readUnary(ValType::I64);
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
       case Expr::F32Floor:
       case Expr::F32Sqrt:
-        return f.iter().readUnary(ValType::F32, nullptr);
+        return f.iter().readUnary(ValType::F32);
       case Expr::F32Trunc:
         return f.iter().notYetImplemented("trunc");
       case Expr::F32Nearest:
@@ -302,7 +303,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F64Ceil:
       case Expr::F64Floor:
       case Expr::F64Sqrt:
-        return f.iter().readUnary(ValType::F64, nullptr);
+        return f.iter().readUnary(ValType::F64);
       case Expr::F64Trunc:
         return f.iter().notYetImplemented("trunc");
       case Expr::F64Nearest:
@@ -322,7 +323,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32ShrU:
       case Expr::I32Rotl:
       case Expr::I32Rotr:
-        return f.iter().readBinary(ValType::I32, nullptr, nullptr);
+        return f.iter().readBinary(ValType::I32);
       case Expr::I64Add:
       case Expr::I64Sub:
       case Expr::I64Mul:
@@ -339,14 +340,14 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64Rotl:
       case Expr::I64Rotr:
         return f.checkI64Support() &&
-               f.iter().readBinary(ValType::I64, nullptr, nullptr);
+               f.iter().readBinary(ValType::I64);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
       case Expr::F32Div:
       case Expr::F32Min:
       case Expr::F32Max:
-        return f.iter().readBinary(ValType::F32, nullptr, nullptr);
+        return f.iter().readBinary(ValType::F32);
       case Expr::F32CopySign:
         return f.iter().notYetImplemented("copysign");
       case Expr::F64Add:
@@ -355,7 +356,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F64Div:
       case Expr::F64Min:
       case Expr::F64Max:
-        return f.iter().readBinary(ValType::F64, nullptr, nullptr);
+        return f.iter().readBinary(ValType::F64);
       case Expr::F64CopySign:
         return f.iter().notYetImplemented("copysign");
       case Expr::I32Eq:
@@ -368,7 +369,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32GtU:
       case Expr::I32GeS:
       case Expr::I32GeU:
-        return f.iter().readComparison(ValType::I32, nullptr, nullptr);
+        return f.iter().readComparison(ValType::I32);
       case Expr::I64Eq:
       case Expr::I64Ne:
       case Expr::I64LtS:
@@ -380,124 +381,119 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64GeS:
       case Expr::I64GeU:
         return f.checkI64Support() &&
-               f.iter().readComparison(ValType::I64, nullptr, nullptr);
+               f.iter().readComparison(ValType::I64);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
       case Expr::F32Le:
       case Expr::F32Gt:
       case Expr::F32Ge:
-        return f.iter().readComparison(ValType::F32, nullptr, nullptr);
+        return f.iter().readComparison(ValType::F32);
       case Expr::F64Eq:
       case Expr::F64Ne:
       case Expr::F64Lt:
       case Expr::F64Le:
       case Expr::F64Gt:
       case Expr::F64Ge:
-        return f.iter().readComparison(ValType::F64, nullptr, nullptr);
-      case Expr::I32Eqz:
-        return f.iter().readConversion(ValType::I32, ValType::I32, nullptr);
-      case Expr::I64Eqz:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
+        return f.iter().readComparison(ValType::F64);
       case Expr::I32WrapI64:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
+               f.iter().readConversion(ValType::I64, ValType::I32);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
       case Expr::I32ReinterpretF32:
-        return f.iter().readConversion(ValType::F32, ValType::I32, nullptr);
+        return f.iter().readConversion(ValType::F32, ValType::I32);
       case Expr::I32TruncSF64:
       case Expr::I32TruncUF64:
-        return f.iter().readConversion(ValType::F64, ValType::I32, nullptr);
+        return f.iter().readConversion(ValType::F64, ValType::I32);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I32, ValType::I64, nullptr);
+               f.iter().readConversion(ValType::I32, ValType::I64);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::F32, ValType::I64, nullptr);
+               f.iter().readConversion(ValType::F32, ValType::I64);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
       case Expr::I64ReinterpretF64:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::F64, ValType::I64, nullptr);
+               f.iter().readConversion(ValType::F64, ValType::I64);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
       case Expr::F32ReinterpretI32:
-        return f.iter().readConversion(ValType::I32, ValType::F32, nullptr);
+        return f.iter().readConversion(ValType::I32, ValType::F32);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::F32, nullptr);
+               f.iter().readConversion(ValType::I64, ValType::F32);
       case Expr::F32DemoteF64:
-        return f.iter().readConversion(ValType::F64, ValType::F32, nullptr);
+        return f.iter().readConversion(ValType::F64, ValType::F32);
       case Expr::F64ConvertSI32:
       case Expr::F64ConvertUI32:
-        return f.iter().readConversion(ValType::I32, ValType::F64, nullptr);
+        return f.iter().readConversion(ValType::I32, ValType::F64);
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
         return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::F64, nullptr);
+               f.iter().readConversion(ValType::I64, ValType::F64);
       case Expr::F64PromoteF32:
-        return f.iter().readConversion(ValType::F32, ValType::F64, nullptr);
+        return f.iter().readConversion(ValType::F32, ValType::F64);
       case Expr::I32Load8S:
       case Expr::I32Load8U:
-        return f.iter().readLoad(ValType::I32, 1, nullptr);
+        return f.iter().readLoad(ValType::I32, 1);
       case Expr::I32Load16S:
       case Expr::I32Load16U:
-        return f.iter().readLoad(ValType::I32, 2, nullptr);
+        return f.iter().readLoad(ValType::I32, 2);
       case Expr::I32Load:
-        return f.iter().readLoad(ValType::I32, 4, nullptr);
+        return f.iter().readLoad(ValType::I32, 4);
       case Expr::I64Load8S:
       case Expr::I64Load8U:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readLoad(ValType::I64, 1, nullptr);
+               f.iter().readLoad(ValType::I64, 1);
       case Expr::I64Load16S:
       case Expr::I64Load16U:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readLoad(ValType::I64, 2, nullptr);
+               f.iter().readLoad(ValType::I64, 2);
       case Expr::I64Load32S:
       case Expr::I64Load32U:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readLoad(ValType::I64, 4, nullptr);
+               f.iter().readLoad(ValType::I64, 4);
       case Expr::I64Load:
         return f.iter().notYetImplemented("i64");
       case Expr::F32Load:
-        return f.iter().readLoad(ValType::F32, 4, nullptr);
+        return f.iter().readLoad(ValType::F32, 4);
       case Expr::F64Load:
-        return f.iter().readLoad(ValType::F64, 8, nullptr);
+        return f.iter().readLoad(ValType::F64, 8);
       case Expr::I32Store8:
-        return f.iter().readStore(ValType::I32, 1, nullptr, nullptr);
+        return f.iter().readStore(ValType::I32, 1);
       case Expr::I32Store16:
-        return f.iter().readStore(ValType::I32, 2, nullptr, nullptr);
+        return f.iter().readStore(ValType::I32, 2);
       case Expr::I32Store:
-        return f.iter().readStore(ValType::I32, 4, nullptr, nullptr);
+        return f.iter().readStore(ValType::I32, 4);
       case Expr::I64Store8:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readStore(ValType::I64, 1, nullptr, nullptr);
+               f.iter().readStore(ValType::I64, 1);
       case Expr::I64Store16:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readStore(ValType::I64, 2, nullptr, nullptr);
+               f.iter().readStore(ValType::I64, 2);
       case Expr::I64Store32:
         return f.iter().notYetImplemented("i64") &&
-               f.iter().readStore(ValType::I64, 4, nullptr, nullptr);
+               f.iter().readStore(ValType::I64, 4);
       case Expr::I64Store:
         return f.iter().notYetImplemented("i64");
       case Expr::F32Store:
-        return f.iter().readStore(ValType::F32, 4, nullptr, nullptr);
+        return f.iter().readStore(ValType::F32, 4);
       case Expr::F64Store:
-        return f.iter().readStore(ValType::F64, 8, nullptr, nullptr);
+        return f.iter().readStore(ValType::F64, 8);
       case Expr::Br:
-        return f.iter().readBr(nullptr, nullptr, nullptr);
+        return f.iter().readBr();
       case Expr::BrIf:
-        return f.iter().readBrIf(nullptr, nullptr, nullptr, nullptr);
+        return f.iter().readBrIf();
       case Expr::BrTable:
         return DecodeBrTable(f);
       case Expr::Return:
-        return f.iter().readReturn(nullptr);
+        return f.iter().readReturn();
       case Expr::Unreachable:
         return f.iter().readUnreachable();
       default:
@@ -955,7 +951,7 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
             return false;
     }
 
-    if (!f.iter().readFunctionEnd(f.sig().ret(), nullptr))
+    if (!f.iter().readFunctionEnd(f.sig().ret()))
         return false;
 
     if (d.currentPosition() != bodyEnd)
