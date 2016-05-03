@@ -52,11 +52,11 @@ public:
         free(mPtr);
     }
 
-    // return the buffer, and give up ownership of it
-    // so the caller becomes responsible to call free
-    // when finished with it
+    // Return the buffer, resized to fit its contents (as it may have been
+    // over-allocated during growth), and give up ownership of it so the
+    // caller becomes responsible to call free() when finished with it.
     void* forget() {
-        void* p = mPtr;
+        void* p = moz_xrealloc(mPtr, mOff);
         mPtr = nullptr;
         return p;
     }
@@ -251,14 +251,14 @@ gfxUserFontEntry::SanitizeOpenTypeData(const uint8_t* aData,
     ExpandingMemoryStream output(lengthHint, 1024 * 1024 * 256);
 
     gfxOTSContext otsContext(this);
-
-    if (otsContext.Process(&output, aData, aLength)) {
-        aSaneLength = output.Tell();
-        return static_cast<uint8_t*>(output.forget());
-    } else {
+    if (!otsContext.Process(&output, aData, aLength)) {
+        // Failed to decode/sanitize the font, so discard it.
         aSaneLength = 0;
         return nullptr;
     }
+
+    aSaneLength = output.Tell();
+    return static_cast<const uint8_t*>(output.forget());
 }
 
 void
