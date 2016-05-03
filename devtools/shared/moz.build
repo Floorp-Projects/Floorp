@@ -24,7 +24,6 @@ DIRS += [
     'sourcemap',
     'specs',
     'shims',
-    'specs',
     'touch',
     'transport',
     'webconsole',
