@@ -53,11 +53,7 @@
 
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
-  <string name="reading_list_title">&reading_list_title;</string>
   <string name="recent_tabs_title">&recent_tabs_title;</string>
-
-  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/reading-list -->
-  <string name="migrated_reading_list_url">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/reading-list</string>
 
   <string name="switch_to_tab">&switch_to_tab;</string>
 
@@ -374,11 +370,6 @@
   <string name="site_settings_title">&site_settings_title3;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
-
-  <string name="reading_list_migration_title">&reading_list_migration_title;</string>
-  <string name="reading_list_migration_subtext">&reading_list_migration_subtext;</string>
-  <string name="reading_list_migration_goto_bookmarks">&reading_list_migration_goto_bookmarks;</string>
-  <string name="reading_list_migration_bookmarks_hidden">&reading_list_migration_bookmarks_hidden;</string>
 
   <string name="page_action_dropmarker_description">&page_action_dropmarker_description;</string>
 

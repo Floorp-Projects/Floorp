@@ -34,7 +34,7 @@ public class testShareLink extends AboutHomeTest {
         blockForGeckoReady();
 
         // FIXME: This is a temporary hack workaround for a permissions problem.
-        openAboutHomeTab(AboutHomeTabs.READING_LIST);
+        openAboutHomeTab(AboutHomeTabs.HISTORY);
 
         inputAndLoadUrl(url);
         verifyUrlBarTitle(url); // Waiting for page title to ensure the page is loaded
