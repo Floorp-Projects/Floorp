@@ -6,137 +6,94 @@ const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/cl
 const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 const AUTO_EXPAND_DEPTH = 0; // depth
-
-/**
- * An arrow that displays whether its node is expanded (▼) or collapsed
- * (▶). When its node has no children, it is hidden.
- */
-const ArrowExpander = createFactory(createClass({
-  displayName: "ArrowExpander",
-
-  shouldComponentUpdate(nextProps, nextState) {
-    return this.props.item !== nextProps.item
-      || this.props.visible !== nextProps.visible
-      || this.props.expanded !== nextProps.expanded;
-  },
-
-  render() {
-    const attrs = {
-      className: "arrow theme-twisty",
-      onClick: this.props.expanded
-        ? () => this.props.onCollapse(this.props.item)
-        : e => this.props.onExpand(this.props.item, e.altKey)
-    };
-
-    if (this.props.expanded) {
-      attrs.className += " open";
-    }
-
-    if (!this.props.visible) {
-      attrs.style = {
-        visibility: "hidden"
-      };
-    }
-
-    return dom.div(attrs);
-  }
-}));
-
-const TreeNode = createFactory(createClass({
-  componentDidMount() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
-
-  componentDidUpdate() {
-    if (this.props.focused) {
-      this.refs.button.focus();
-    }
-  },
-
-  render() {
-    const arrow = ArrowExpander({
-      item: this.props.item,
-      expanded: this.props.expanded,
-      visible: this.props.hasChildren,
-      onExpand: this.props.onExpand,
-      onCollapse: this.props.onCollapse,
-    });
-
-    let isOddRow = this.props.index % 2;
-    return dom.div(
-      {
-        className: `tree-node div ${isOddRow ? "tree-node-odd" : ""}`,
-        onFocus: this.props.onFocus,
-        onClick: this.props.onFocus,
-        onBlur: this.props.onBlur,
-        style: {
-          padding: 0,
-          margin: 0
-        }
-      },
-
-      this.props.renderItem(this.props.item,
-                            this.props.depth,
-                            this.props.focused,
-                            arrow,
-                            this.props.expanded),
-
-      // XXX: OSX won't focus/blur regular elements even if you set tabindex
-      // unless there is an input/button child.
-      dom.button(this._buttonAttrs)
-    );
-  },
-
-  _buttonAttrs: {
-    ref: "button",
-    style: {
-      opacity: 0,
-      width: "0 !important",
-      height: "0 !important",
-      padding: "0 !important",
-      outline: "none",
-      MozAppearance: "none",
-      // XXX: Despite resetting all of the above properties (and margin), the
-      // button still ends up with ~79px width, so we set a large negative
-      // margin to completely hide it.
-      MozMarginStart: "-1000px !important",
-    }
-  }
-}));
-
-/**
- * Create a function that calls the given function `fn` only once per animation
- * frame.
- *
- * @param {Function} fn
- * @returns {Function}
- */
-function oncePerAnimationFrame(fn) {
-  let animationId = null;
-  let argsToPass = null;
-  return function (...args) {
-    argsToPass = args;
-    if (animationId !== null) {
-      return;
-    }
-
-    animationId = requestAnimationFrame(() => {
-      fn.call(this, ...argsToPass);
-      animationId = null;
-      argsToPass = null;
-    });
-  };
-}
-
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
 
 /**
- * A generic tree component. See propTypes for the public API.
+ * A fast, generic, expandable and collapsible tree component.
  *
- * @see `devtools/client/memory/components/test/mochitest/head.js` for usage
- * @see `devtools/client/memory/components/heap.js` for usage
+ * This tree component is fast: it can handle trees with *many* items. It only
+ * renders the subset of those items which are visible in the viewport. It's
+ * been battle tested on huge trees in the memory panel. We've optimized tree
+ * traversal and rendering, even in the presence of cross-compartment wrappers.
+ *
+ * This tree component doesn't make any assumptions about the structure of your
+ * tree data. Whether children are computed on demand, or stored in an array in
+ * the parent's `_children` property, it doesn't matter. We only require the
+ * implementation of `getChildren`, `getRoots`, `getParent`, and `isExpanded`
+ * functions.
+ *
+ * This tree component is well tested and reliable. See
+ * devtools/client/shared/components/test/mochitest/test_tree_* and its usage in
+ * the performance and memory panels.
+ *
+ * This tree component doesn't make any assumptions about how to render items in
+ * the tree. You provide a `renderItem` function, and this component will ensure
+ * that only those items whose parents are expanded and which are visible in the
+ * viewport are rendered. The `renderItem` function could render the items as a
+ * "traditional" tree or as rows in a table or anything else. It doesn't
+ * restrict you to only one certain kind of tree.
+ *
+ * The only requirement is that every item in the tree render as the same
+ * height. This is required in order to compute which items are visible in the
+ * viewport in constant time.
+ *
+ * ### Example Usage
+ *
+ * Suppose we have some tree data where each item has this form:
+ *
+ *     {
+ *       id: Number,
+ *       label: String,
+ *       parent: Item or null,
+ *       children: Array of child items,
+ *       expanded: bool,
+ *     }
+ *
+ * Here is how we could render that data with this component:
+ *
+ *     const MyTree = createClass({
+ *       displayName: "MyTree",
+ *
+ *       propTypes: {
+ *         // The root item of the tree, with the form described above.
+ *         root: PropTypes.object.isRequired
+ *       },
+ *
+ *       render() {
+ *         return Tree({
+ *           itemHeight: 20, // px
+ *
+ *           getRoots: () => [this.props.root],
+ *
+ *           getParent: item => item.parent,
+ *           getChildren: item => item.children,
+ *           getKey: item => item.id,
+ *           isExpanded: item => item.expanded,
+ *
+ *           renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+ *             let className = "my-tree-item";
+ *             if (isFocused) {
+ *               className += " focused";
+ *             }
+ *             return dom.div(
+ *               {
+ *                 className,
+ *                 // Apply 10px nesting per expansion depth.
+ *                 style: { marginLeft: depth * 10 + "px" }
+ *               },
+ *               // Here is the expando arrow so users can toggle expansion and
+ *               // collapse state.
+ *               arrow,
+ *               // And here is the label for this item.
+ *               dom.span({ className: "my-tree-item-label" }, item.label)
+ *             );
+ *           },
+ *
+ *           onExpand: item => dispatchExpandActionToRedux(item),
+ *           onCollapse: item => dispatchCollapseActionToRedux(item),
+ *         });
+ *       }
+ *     });
  */
 const Tree = module.exports = createClass({
   displayName: "Tree",
@@ -145,19 +102,85 @@ const Tree = module.exports = createClass({
     // Required props
 
     // A function to get an item's parent, or null if it is a root.
+    //
+    // Type: getParent(item: Item) -> Maybe<Item>
+    //
+    // Example:
+    //
+    //     // The parent of this item is stored in its `parent` property.
+    //     getParent: item => item.parent
     getParent: PropTypes.func.isRequired,
+
     // A function to get an item's children.
+    //
+    // Type: getChildren(item: Item) -> [Item]
+    //
+    // Example:
+    //
+    //     // This item's children are stored in its `children` property.
+    //     getChildren: item => item.children
     getChildren: PropTypes.func.isRequired,
-    // A function which takes an item and ArrowExpander and returns a
-    // component.
+
+    // A function which takes an item and ArrowExpander component instance and
+    // returns a component, or text, or anything else that React considers
+    // renderable.
+    //
+    // Type: renderItem(item: Item,
+    //                  depth: Number,
+    //                  isFocused: Boolean,
+    //                  arrow: ReactComponent,
+    //                  isExpanded: Boolean) -> ReactRenderable
+    //
+    // Example:
+    //
+    //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+    //       let className = "my-tree-item";
+    //       if (isFocused) {
+    //         className += " focused";
+    //       }
+    //       return dom.div(
+    //         {
+    //           className,
+    //           style: { marginLeft: depth * 10 + "px" }
+    //         },
+    //         arrow,
+    //         dom.span({ className: "my-tree-item-label" }, item.label)
+    //       );
+    //     },
     renderItem: PropTypes.func.isRequired,
+
     // A function which returns the roots of the tree (forest).
+    //
+    // Type: getRoots() -> [Item]
+    //
+    // Example:
+    //
+    //     // In this case, we only have one top level, root item. You could
+    //     // return multiple items if you have many top level items in your
+    //     // tree.
+    //     getRoots: () => [this.props.rootOfMyTree]
     getRoots: PropTypes.func.isRequired,
-    // A function to get a unique key for the given item.
+
+    // A function to get a unique key for the given item. This helps speed up
+    // React's rendering a *TON*.
+    //
+    // Type: getKey(item: Item) -> String
+    //
+    // Example:
+    //
+    //     getKey: item => `my-tree-item-${item.uniqueId}`
     getKey: PropTypes.func.isRequired,
+
     // A function to get whether an item is expanded or not. If an item is not
     // expanded, then it must be collapsed.
+    //
+    // Type: isExpanded(item: Item) -> Boolean
+    //
+    // Example:
+    //
+    //     isExpanded: item => item.expanded,
     isExpanded: PropTypes.func.isRequired,
+
     // The height of an item in the tree including margin and padding, in
     // pixels.
     itemHeight: PropTypes.number.isRequired,
@@ -166,11 +189,24 @@ const Tree = module.exports = createClass({
 
     // The currently focused item, if any such item exists.
     focused: PropTypes.any,
+
     // Handle when a new item is focused.
     onFocus: PropTypes.func,
+
     // The depth to which we should automatically expand new items.
     autoExpandDepth: PropTypes.number,
-    // Optional event handlers for when items are expanded or collapsed.
+
+    // Optional event handlers for when items are expanded or collapsed. Useful
+    // for dispatching redux events and updating application state, maybe lazily
+    // loading subtrees from a worker, etc.
+    //
+    // Type:
+    //     onExpand(item: Item)
+    //     onCollapse(item: Item)
+    //
+    // Example:
+    //
+    //     onExpand: item => dispatchExpandActionToRedux(item)
     onExpand: PropTypes.func,
     onCollapse: PropTypes.func,
   },
@@ -574,3 +610,126 @@ const Tree = module.exports = createClass({
     this._focus(parentIndex, parent);
   }),
 });
+
+/**
+ * An arrow that displays whether its node is expanded (▼) or collapsed
+ * (▶). When its node has no children, it is hidden.
+ */
+const ArrowExpander = createFactory(createClass({
+  displayName: "ArrowExpander",
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.props.item !== nextProps.item
+      || this.props.visible !== nextProps.visible
+      || this.props.expanded !== nextProps.expanded;
+  },
+
+  render() {
+    const attrs = {
+      className: "arrow theme-twisty",
+      onClick: this.props.expanded
+        ? () => this.props.onCollapse(this.props.item)
+        : e => this.props.onExpand(this.props.item, e.altKey)
+    };
+
+    if (this.props.expanded) {
+      attrs.className += " open";
+    }
+
+    if (!this.props.visible) {
+      attrs.style = {
+        visibility: "hidden"
+      };
+    }
+
+    return dom.div(attrs);
+  }
+}));
+
+const TreeNode = createFactory(createClass({
+  componentDidMount() {
+    if (this.props.focused) {
+      this.refs.button.focus();
+    }
+  },
+
+  componentDidUpdate() {
+    if (this.props.focused) {
+      this.refs.button.focus();
+    }
+  },
+
+  render() {
+    const arrow = ArrowExpander({
+      item: this.props.item,
+      expanded: this.props.expanded,
+      visible: this.props.hasChildren,
+      onExpand: this.props.onExpand,
+      onCollapse: this.props.onCollapse,
+    });
+
+    let isOddRow = this.props.index % 2;
+    return dom.div(
+      {
+        className: `tree-node div ${isOddRow ? "tree-node-odd" : ""}`,
+        onFocus: this.props.onFocus,
+        onClick: this.props.onFocus,
+        onBlur: this.props.onBlur,
+        style: {
+          padding: 0,
+          margin: 0
+        }
+      },
+
+      this.props.renderItem(this.props.item,
+                            this.props.depth,
+                            this.props.focused,
+                            arrow,
+                            this.props.expanded),
+
+      // XXX: OSX won't focus/blur regular elements even if you set tabindex
+      // unless there is an input/button child.
+      dom.button(this._buttonAttrs)
+    );
+  },
+
+  _buttonAttrs: {
+    ref: "button",
+    style: {
+      opacity: 0,
+      width: "0 !important",
+      height: "0 !important",
+      padding: "0 !important",
+      outline: "none",
+      MozAppearance: "none",
+      // XXX: Despite resetting all of the above properties (and margin), the
+      // button still ends up with ~79px width, so we set a large negative
+      // margin to completely hide it.
+      MozMarginStart: "-1000px !important",
+    }
+  }
+}));
+
+/**
+ * Create a function that calls the given function `fn` only once per animation
+ * frame.
+ *
+ * @param {Function} fn
+ * @returns {Function}
+ */
+function oncePerAnimationFrame(fn) {
+  let animationId = null;
+  let argsToPass = null;
+  return function (...args) {
+    argsToPass = args;
+    if (animationId !== null) {
+      return;
+    }
+
+    animationId = requestAnimationFrame(() => {
+      fn.call(this, ...argsToPass);
+      animationId = null;
+      argsToPass = null;
+    });
+  };
+}
