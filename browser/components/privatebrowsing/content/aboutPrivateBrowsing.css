@@ -1,5 +1,5 @@
-body.private .showNormal,
-body.normal .showPrivate,
+html.private .showNormal,
+html.normal .showPrivate,
 body[tpEnabled] .showTpDisabled,
 body:not([tpEnabled]) .showTpEnabled {
   display: none !important;

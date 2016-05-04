@@ -5,10 +5,6 @@
 @import url("chrome://global/skin/in-content/info-pages.css");
 
 :root {
-  --color-background-light: #fff;
-  --color-background-dark: #303033;
-  --color-background-dark-purple: #1c023c;
-
   --color-grey-lightest: #fbfbfb;
   --color-grey: #b1b1b1;
 
@@ -16,21 +12,21 @@
   --color-blue-dark: #0670cc;
   --color-blue-darker: #005bab;
 
-  --color-darkTheme-purple-text: #beb8cc;
-  --color-darkTheme-purple-text-strong: #ebe3fc;
-
   --icon-margin: 64px;
+}
+
+html {
+  font-size: 1.5em;
+}
+
+html.private {
+  --in-content-page-color: #beb8cc;
+  --in-content-text-color: #beb8cc;
+  --in-content-page-background: #1c023c;
 }
 
 body {
   padding: 40px;
-  background-color: var(--color-background-light);
-  font-size: 1.5em;
-}
-
-body.private {
-  color: var(--color-darkTheme-purple-text);
-  background-color: var(--color-background-dark-purple);
 }
 
 a:link {
@@ -82,7 +78,6 @@ p {
   background-position: left, center;
   font-weight: lighter;
   line-height: 1.5em;
-  color: var(--color-darkTheme-purple-text);
   min-height: 64px;
   -moz-margin-start: 0;
   -moz-padding-start: calc(var(--icon-margin) + 24px);
