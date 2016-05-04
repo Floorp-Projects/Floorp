@@ -10028,8 +10028,13 @@ nsGlobalWindow::GetFocusMethod()
 void
 nsGlobalWindow::InitializeShowFocusRings()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
+  // Initialize the focus ring state from the parent window. For root windows,
+  // there is no need to do this as SetKeyboardIndicators will propogate any
+  // non-default value to child windows.
   nsPIDOMWindowOuter* root = GetPrivateRoot();
-  if (root) {
+  if (root && GetOuterWindow() != root) {
     bool showAccelerators = false, showFocusRings = false;
     root->GetKeyboardIndicators(&showAccelerators, &showFocusRings);
     mShowFocusRings = showFocusRings;
