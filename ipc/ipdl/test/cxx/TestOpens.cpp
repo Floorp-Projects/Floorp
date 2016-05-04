@@ -78,7 +78,6 @@ TestOpensParent::AllocPTestOpensOpenedParent(Transport* transport,
 
     TestOpensOpenedParent* a = new TestOpensOpenedParent(transport);
     gParentThread->message_loop()->PostTask(
-        FROM_HERE,
         NewRunnableFunction(OpenParent, a, transport, otherPid));
 
     return a;
@@ -126,8 +125,7 @@ ShutdownTestOpensOpenedParent(TestOpensOpenedParent* parent,
     // Now delete the transport, which has to happen after the
     // top-level actor is deleted.
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<Transport>(transport));
+        do_AddRef(new DeleteTask<Transport>(transport)));
 }
 
 void
@@ -142,7 +140,6 @@ TestOpensOpenedParent::ActorDestroy(ActorDestroyReason why)
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.
     gParentThread->message_loop()->PostTask(
-        FROM_HERE,
         NewRunnableFunction(ShutdownTestOpensOpenedParent,
                             this, mTransport));
 }
@@ -197,7 +194,6 @@ TestOpensChild::AllocPTestOpensOpenedChild(Transport* transport,
 
     TestOpensOpenedChild* a = new TestOpensOpenedChild(transport);
     gChildThread->message_loop()->PostTask(
-        FROM_HERE,
         NewRunnableFunction(OpenChild, a, transport, otherPid));
 
     return a;
@@ -229,7 +225,6 @@ TestOpensOpenedChild::RecvHi()
     // Need to close the channel without message-processing frames on
     // the C++ stack
     MessageLoop::current()->PostTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestOpensOpenedChild::Close));
     return true;
 }
@@ -252,12 +247,10 @@ ShutdownTestOpensOpenedChild(TestOpensOpenedChild* child,
     // Now delete the transport, which has to happen after the
     // top-level actor is deleted.
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<Transport>(transport));
+        do_AddRef(new DeleteTask<Transport>(transport)));
 
     // Kick off main-thread shutdown.
     gMainThread->PostTask(
-        FROM_HERE,
         NewRunnableMethod(gOpensChild, &TestOpensChild::Close));
 }
 
@@ -274,7 +267,6 @@ TestOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
     // longer so other things can be cleaned up.  Defer shutdown to
     // let cleanup finish.
     gChildThread->message_loop()->PostTask(
-        FROM_HERE,
         NewRunnableFunction(ShutdownTestOpensOpenedChild,
                             this, mTransport));
 }

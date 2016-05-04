@@ -56,7 +56,6 @@ TestUrgentHangsParent::Main()
 
     // Do a second round of testing once the reply to Test2 comes back.
     MessageLoop::current()->PostDelayedTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestUrgentHangsParent::SecondStage),
         3000);
 }
@@ -75,7 +74,6 @@ TestUrgentHangsParent::SecondStage()
         fail("sending Test4_1");
 
     MessageLoop::current()->PostDelayedTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestUrgentHangsParent::ThirdStage),
         3000);
 }
@@ -99,7 +97,6 @@ TestUrgentHangsParent::ThirdStage()
 
     // Close the channel after the child finishes its work in RecvTest5.
     MessageLoop::current()->PostDelayedTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestUrgentHangsParent::Close),
         3000);
 }
