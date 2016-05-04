@@ -105,10 +105,10 @@ RemotePages.prototype = {
 
   // A message has been received from one of the pages
   portMessageReceived: function(message) {
-    this.listener.callListeners(message);
-
     if (message.name == "RemotePage:Unload")
       this.removeMessagePort(message.target);
+
+    this.listener.callListeners(message);
   },
 
   // A page has closed
