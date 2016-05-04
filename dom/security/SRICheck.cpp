@@ -9,6 +9,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/SRILogHelper.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIDocument.h"
@@ -21,15 +22,10 @@
 #include "nsNetUtil.h"
 #include "nsWhitespaceTokenizer.h"
 
-static mozilla::LogModule*
-GetSriLog()
-{
-  static mozilla::LazyLogModule gSriPRLog("SRI");
-  return gSriPRLog;
-}
-
-#define SRILOG(args) MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug, args)
-#define SRIERROR(args) MOZ_LOG(GetSriLog(), mozilla::LogLevel::Error, args)
+#define SRILOG(args)                                                           \
+  MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug, args)
+#define SRIERROR(args)                                                         \
+  MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Error, args)
 
 namespace mozilla {
 namespace dom {
@@ -66,7 +62,7 @@ IsEligible(nsIChannel* aChannel, const CORSMode aCORSMode,
   rv = originalURI->GetSpec(requestSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     nsAutoCString documentSpec, finalSpec;
     aDocument->GetDocumentURI()->GetAsciiSpec(documentSpec);
     if (finalURI) {
@@ -150,7 +146,7 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
     }
 
     nsAutoCString alg1, alg2;
-    if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+    if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
       outMetadata->GetAlgorithm(&alg1);
       metadata.GetAlgorithm(&alg2);
     }
@@ -165,7 +161,7 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
     }
   }
 
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     if (outMetadata->IsValid()) {
       nsAutoCString alg;
       outMetadata->GetAlgorithm(&alg);
@@ -192,7 +188,7 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
   nsCOMPtr<nsIChannel> channel;
   aLoader->GetChannel(getter_AddRefs(channel));
 
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     nsAutoCString requestURL;
     nsCOMPtr<nsIURI> originalURI;
     if (channel &&
@@ -345,7 +341,7 @@ SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     nsAutoCString requestURL;
     nsCOMPtr<nsIRequest> request;
     request = do_QueryInterface(aChannel);
