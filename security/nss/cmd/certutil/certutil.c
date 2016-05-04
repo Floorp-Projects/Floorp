@@ -37,12 +37,14 @@
 #include "nss.h"
 #include "certutil.h"
 
-#define MIN_KEY_BITS		512
+#define MIN_KEY_BITS 512
 /* MAX_KEY_BITS should agree with MAX_RSA_MODULUS in freebl */
-#define MAX_KEY_BITS		8192
-#define DEFAULT_KEY_BITS	2048
+#define MAX_KEY_BITS 8192
+#define DEFAULT_KEY_BITS 2048
 
-#define GEN_BREAK(e) rv=e; break;
+#define GEN_BREAK(e) \
+    rv = e;          \
+    break;
 
 char *progName;
 
@@ -55,49 +57,48 @@ GetCertRequest(const SECItem *reqDER)
     SECStatus rv;
 
     do {
-	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	if (arena == NULL) {
-	    GEN_BREAK (SECFailure);
-	}
-	
-        certReq = (CERTCertificateRequest*) PORT_ArenaZAlloc
-		  (arena, sizeof(CERTCertificateRequest));
-        if (!certReq) { 
-	    GEN_BREAK(SECFailure);
-	}
-	certReq->arena = arena;
+        arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+        if (arena == NULL) {
+            GEN_BREAK(SECFailure);
+        }
 
-	/* Since cert request is a signed data, must decode to get the inner
-	   data
-	 */
-	PORT_Memset(&signedData, 0, sizeof(signedData));
-	rv = SEC_ASN1DecodeItem(arena, &signedData, 
-		SEC_ASN1_GET(CERT_SignedDataTemplate), reqDER);
-	if (rv) {
-	    break;
-	}
-	rv = SEC_ASN1DecodeItem(arena, certReq, 
-		SEC_ASN1_GET(CERT_CertificateRequestTemplate), &signedData.data);
-	if (rv) {
-	    break;
-	}
-   	rv = CERT_VerifySignedDataWithPublicKeyInfo(&signedData, 
-		&certReq->subjectPublicKeyInfo, NULL /* wincx */);
-   } while (0);
+        certReq = (CERTCertificateRequest *)PORT_ArenaZAlloc(arena, sizeof(CERTCertificateRequest));
+        if (!certReq) {
+            GEN_BREAK(SECFailure);
+        }
+        certReq->arena = arena;
 
-   if (rv) {
-   	SECU_PrintError(progName, "bad certificate request\n");
-   	if (arena) {
-   	    PORT_FreeArena(arena, PR_FALSE);
-   	}
-   	certReq = NULL;
-   }
+        /* Since cert request is a signed data, must decode to get the inner
+           data
+         */
+        PORT_Memset(&signedData, 0, sizeof(signedData));
+        rv = SEC_ASN1DecodeItem(arena, &signedData,
+                                SEC_ASN1_GET(CERT_SignedDataTemplate), reqDER);
+        if (rv) {
+            break;
+        }
+        rv = SEC_ASN1DecodeItem(arena, certReq,
+                                SEC_ASN1_GET(CERT_CertificateRequestTemplate), &signedData.data);
+        if (rv) {
+            break;
+        }
+        rv = CERT_VerifySignedDataWithPublicKeyInfo(&signedData,
+                                                    &certReq->subjectPublicKeyInfo, NULL /* wincx */);
+    } while (0);
 
-   return certReq;
+    if (rv) {
+        SECU_PrintError(progName, "bad certificate request\n");
+        if (arena) {
+            PORT_FreeArena(arena, PR_FALSE);
+        }
+        certReq = NULL;
+    }
+
+    return certReq;
 }
 
 static SECStatus
-AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts, 
+AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
         const SECItem *certDER, PRBool emailcert, void *pwdata)
 {
     CERTCertTrust *trust = NULL;
@@ -105,74 +106,74 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
     SECStatus rv;
 
     do {
-	/* Read in an ASCII cert and return a CERTCertificate */
-	cert = CERT_DecodeCertFromPackage((char *)certDER->data, certDER->len);
-	if (!cert) {
-	    SECU_PrintError(progName, "could not decode certificate");
-	    GEN_BREAK(SECFailure);
-	}
+        /* Read in an ASCII cert and return a CERTCertificate */
+        cert = CERT_DecodeCertFromPackage((char *)certDER->data, certDER->len);
+        if (!cert) {
+            SECU_PrintError(progName, "could not decode certificate");
+            GEN_BREAK(SECFailure);
+        }
 
-	/* Create a cert trust */
-	trust = (CERTCertTrust *)PORT_ZAlloc(sizeof(CERTCertTrust));
-	if (!trust) {
-	    SECU_PrintError(progName, "unable to allocate cert trust");
-	    GEN_BREAK(SECFailure);
-	}
+        /* Create a cert trust */
+        trust = (CERTCertTrust *)PORT_ZAlloc(sizeof(CERTCertTrust));
+        if (!trust) {
+            SECU_PrintError(progName, "unable to allocate cert trust");
+            GEN_BREAK(SECFailure);
+        }
 
-	rv = CERT_DecodeTrustString(trust, trusts);
-	if (rv) {
-	    SECU_PrintError(progName, "unable to decode trust string");
-	    GEN_BREAK(SECFailure);
-	}
+        rv = CERT_DecodeTrustString(trust, trusts);
+        if (rv) {
+            SECU_PrintError(progName, "unable to decode trust string");
+            GEN_BREAK(SECFailure);
+        }
 
-	rv =  PK11_ImportCert(slot, cert, CK_INVALID_HANDLE, name, PR_FALSE);
-	if (rv != SECSuccess) {
-	    /* sigh, PK11_Import Cert and CERT_ChangeCertTrust should have 
-	     * been coded to take a password arg. */
-	    if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
-		rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-		if (rv != SECSuccess) {
-                    SECU_PrintError(progName, 
-				"could not authenticate to token %s.",
-				PK11_GetTokenName(slot));
-		    GEN_BREAK(SECFailure);
-		}
-		rv = PK11_ImportCert(slot, cert, CK_INVALID_HANDLE, 
-				     name, PR_FALSE);
-	    }
-	    if (rv != SECSuccess) {
-		SECU_PrintError(progName, 
-			"could not add certificate to token or database");
-		GEN_BREAK(SECFailure);
-	    }
-	}
+        rv = PK11_ImportCert(slot, cert, CK_INVALID_HANDLE, name, PR_FALSE);
+        if (rv != SECSuccess) {
+            /* sigh, PK11_Import Cert and CERT_ChangeCertTrust should have
+             * been coded to take a password arg. */
+            if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+                rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName,
+                                    "could not authenticate to token %s.",
+                                    PK11_GetTokenName(slot));
+                    GEN_BREAK(SECFailure);
+                }
+                rv = PK11_ImportCert(slot, cert, CK_INVALID_HANDLE,
+                                     name, PR_FALSE);
+            }
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName,
+                                "could not add certificate to token or database");
+                GEN_BREAK(SECFailure);
+            }
+        }
 
-	rv = CERT_ChangeCertTrust(handle, cert, trust);
-	if (rv != SECSuccess) {
-	    if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
-		rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-		if (rv != SECSuccess) {
-                    SECU_PrintError(progName, 
-				"could not authenticate to token %s.",
-				PK11_GetTokenName(slot));
-		    GEN_BREAK(SECFailure);
-		}
-		rv = CERT_ChangeCertTrust(handle, cert, trust);
-	    }
-	    if (rv != SECSuccess) {
-		SECU_PrintError(progName, 
-			"could not change trust on certificate");
-		GEN_BREAK(SECFailure);
-	    }
-	}
+        rv = CERT_ChangeCertTrust(handle, cert, trust);
+        if (rv != SECSuccess) {
+            if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+                rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+                if (rv != SECSuccess) {
+                    SECU_PrintError(progName,
+                                    "could not authenticate to token %s.",
+                                    PK11_GetTokenName(slot));
+                    GEN_BREAK(SECFailure);
+                }
+                rv = CERT_ChangeCertTrust(handle, cert, trust);
+            }
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName,
+                                "could not change trust on certificate");
+                GEN_BREAK(SECFailure);
+            }
+        }
 
-	if ( emailcert ) {
-	    CERT_SaveSMimeProfile(cert, NULL, pwdata);
-	}
+        if (emailcert) {
+            CERT_SaveSMimeProfile(cert, NULL, pwdata);
+        }
 
     } while (0);
 
-    CERT_DestroyCertificate (cert);
+    CERT_DestroyCertificate(cert);
     PORT_Free(trust);
 
     return rv;
@@ -181,7 +182,7 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 static SECStatus
 CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         SECOidTag hashAlgTag, CERTName *subject, const char *phone, int ascii,
-	const char *emailAddrs, const char *dnsNames,
+        const char *emailAddrs, const char *dnsNames,
         certutilExtnList extnList, const char *extGeneric,
         /*out*/ SECItem *result)
 {
@@ -197,32 +198,32 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     /* Create info about public key */
     spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
     if (!spki) {
-	SECU_PrintError(progName, "unable to create subject public key");
-	return SECFailure;
+        SECU_PrintError(progName, "unable to create subject public key");
+        return SECFailure;
     }
-    
+
     /* Generate certificate request */
     cr = CERT_CreateCertificateRequest(subject, spki, NULL);
     SECKEY_DestroySubjectPublicKeyInfo(spki);
     if (!cr) {
-	SECU_PrintError(progName, "unable to make certificate request");
-	return SECFailure;
+        SECU_PrintError(progName, "unable to make certificate request");
+        return SECFailure;
     }
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
-	SECU_PrintError(progName, "out of memory");
-	return SECFailure;
+    if (!arena) {
+        SECU_PrintError(progName, "out of memory");
+        return SECFailure;
     }
-    
+
     extHandle = CERT_StartCertificateRequestAttributes(cr);
     if (extHandle == NULL) {
-        PORT_FreeArena (arena, PR_FALSE);
-	return SECFailure;
+        PORT_FreeArena(arena, PR_FALSE);
+        return SECFailure;
     }
-    if (AddExtensions(extHandle, emailAddrs, dnsNames, extnList, extGeneric)
-                  != SECSuccess) {
-        PORT_FreeArena (arena, PR_FALSE);
+    if (AddExtensions(extHandle, emailAddrs, dnsNames, extnList, extGeneric) !=
+        SECSuccess) {
+        PORT_FreeArena(arena, PR_FALSE);
         return SECFailure;
     }
     CERT_FinishExtensions(extHandle);
@@ -233,158 +234,159 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
                                   SEC_ASN1_GET(CERT_CertificateRequestTemplate));
     CERT_DestroyCertificateRequest(cr);
     if (encoding == NULL) {
-	PORT_FreeArena (arena, PR_FALSE);
-	SECU_PrintError(progName, "der encoding of request failed");
-	return SECFailure;
+        PORT_FreeArena(arena, PR_FALSE);
+        SECU_PrintError(progName, "der encoding of request failed");
+        return SECFailure;
     }
 
     /* Sign the request */
     signAlgTag = SEC_GetSignatureAlgorithmOidTag(keyType, hashAlgTag);
     if (signAlgTag == SEC_OID_UNKNOWN) {
-	PORT_FreeArena (arena, PR_FALSE);
-	SECU_PrintError(progName, "unknown Key or Hash type");
-	return SECFailure;
+        PORT_FreeArena(arena, PR_FALSE);
+        SECU_PrintError(progName, "unknown Key or Hash type");
+        return SECFailure;
     }
 
     rv = SEC_DerSignData(arena, &signedReq, encoding->data, encoding->len,
-			  privk, signAlgTag);
+                         privk, signAlgTag);
     if (rv) {
-	PORT_FreeArena (arena, PR_FALSE);
-	SECU_PrintError(progName, "signing of data failed");
-	return SECFailure;
+        PORT_FreeArena(arena, PR_FALSE);
+        SECU_PrintError(progName, "signing of data failed");
+        return SECFailure;
     }
 
     /* Encode request in specified format */
     if (ascii) {
-	char *obuf;
-	char *header, *name, *email, *org, *state, *country;
+        char *obuf;
+        char *header, *name, *email, *org, *state, *country;
 
-	obuf = BTOA_ConvertItemToAscii(&signedReq);
-	if (!obuf) {
-	    goto oom;
-	}
+        obuf = BTOA_ConvertItemToAscii(&signedReq);
+        if (!obuf) {
+            goto oom;
+        }
 
-	name = CERT_GetCommonName(subject);
-	if (!name) {
-	    name = PORT_Strdup("(not specified)");
-	}
+        name = CERT_GetCommonName(subject);
+        if (!name) {
+            name = PORT_Strdup("(not specified)");
+        }
 
-	if (!phone)
-	    phone = "(not specified)";
+        if (!phone)
+            phone = "(not specified)";
 
-	email = CERT_GetCertEmailAddress(subject);
-	if (!email)
-	    email = PORT_Strdup("(not specified)");
+        email = CERT_GetCertEmailAddress(subject);
+        if (!email)
+            email = PORT_Strdup("(not specified)");
 
-	org = CERT_GetOrgName(subject);
-	if (!org)
-	    org = PORT_Strdup("(not specified)");
+        org = CERT_GetOrgName(subject);
+        if (!org)
+            org = PORT_Strdup("(not specified)");
 
-	state = CERT_GetStateName(subject);
-	if (!state)
-	    state = PORT_Strdup("(not specified)");
+        state = CERT_GetStateName(subject);
+        if (!state)
+            state = PORT_Strdup("(not specified)");
 
-	country = CERT_GetCountryName(subject);
-	if (!country)
-	    country = PORT_Strdup("(not specified)");
+        country = CERT_GetCountryName(subject);
+        if (!country)
+            country = PORT_Strdup("(not specified)");
 
-	header = PR_smprintf(
-	    "\nCertificate request generated by Netscape certutil\n"
-	    "Phone: %s\n\n"
-	    "Common Name: %s\n"
-	    "Email: %s\n"
-	    "Organization: %s\n"
-	    "State: %s\n"
-	    "Country: %s\n\n"
-	    "%s\n",
-	    phone, name, email, org, state, country, NS_CERTREQ_HEADER);
+        header = PR_smprintf(
+            "\nCertificate request generated by Netscape certutil\n"
+            "Phone: %s\n\n"
+            "Common Name: %s\n"
+            "Email: %s\n"
+            "Organization: %s\n"
+            "State: %s\n"
+            "Country: %s\n\n"
+            "%s\n",
+            phone, name, email, org, state, country, NS_CERTREQ_HEADER);
 
-	PORT_Free(name);
-	PORT_Free(email);
-	PORT_Free(org);
-	PORT_Free(state);
-	PORT_Free(country);
+        PORT_Free(name);
+        PORT_Free(email);
+        PORT_Free(org);
+        PORT_Free(state);
+        PORT_Free(country);
 
-	if (header) {
-	    char * trailer = PR_smprintf("\n%s\n", NS_CERTREQ_TRAILER);
-	    if (trailer) {
-		PRUint32 headerLen = PL_strlen(header);
-		PRUint32 obufLen = PL_strlen(obuf);
-		PRUint32 trailerLen = PL_strlen(trailer);
-		SECITEM_AllocItem(NULL, result,
-				  headerLen + obufLen + trailerLen);
-		if (result->data) {
-		    PORT_Memcpy(result->data, header, headerLen);
-		    PORT_Memcpy(result->data + headerLen, obuf, obufLen);
-		    PORT_Memcpy(result->data + headerLen + obufLen,
-				trailer, trailerLen);
-		}
-		PR_smprintf_free(trailer);
-	    }
-	    PR_smprintf_free(header);
-	}
-	PORT_Free(obuf);
+        if (header) {
+            char *trailer = PR_smprintf("\n%s\n", NS_CERTREQ_TRAILER);
+            if (trailer) {
+                PRUint32 headerLen = PL_strlen(header);
+                PRUint32 obufLen = PL_strlen(obuf);
+                PRUint32 trailerLen = PL_strlen(trailer);
+                SECITEM_AllocItem(NULL, result,
+                                  headerLen + obufLen + trailerLen);
+                if (result->data) {
+                    PORT_Memcpy(result->data, header, headerLen);
+                    PORT_Memcpy(result->data + headerLen, obuf, obufLen);
+                    PORT_Memcpy(result->data + headerLen + obufLen,
+                                trailer, trailerLen);
+                }
+                PR_smprintf_free(trailer);
+            }
+            PR_smprintf_free(header);
+        }
+        PORT_Free(obuf);
     } else {
-	(void) SECITEM_CopyItem(NULL, result, &signedReq);
+        (void)SECITEM_CopyItem(NULL, result, &signedReq);
     }
 
     if (!result->data) {
-oom:    SECU_PrintError(progName, "out of memory");
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	rv = SECFailure;
+    oom:
+        SECU_PrintError(progName, "out of memory");
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        rv = SECFailure;
     }
 
-    PORT_FreeArena (arena, PR_FALSE);
+    PORT_FreeArena(arena, PR_FALSE);
     return rv;
 }
 
-static SECStatus 
+static SECStatus
 ChangeTrustAttributes(CERTCertDBHandle *handle, PK11SlotInfo *slot,
-			char *name, char *trusts, void *pwdata)
+                      char *name, char *trusts, void *pwdata)
 {
     SECStatus rv;
     CERTCertificate *cert;
     CERTCertTrust *trust;
-    
+
     cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
     if (!cert) {
-	SECU_PrintError(progName, "could not find certificate named \"%s\"",
-			name);
-	return SECFailure;
+        SECU_PrintError(progName, "could not find certificate named \"%s\"",
+                        name);
+        return SECFailure;
     }
 
     trust = (CERTCertTrust *)PORT_ZAlloc(sizeof(CERTCertTrust));
     if (!trust) {
-	SECU_PrintError(progName, "unable to allocate cert trust");
-	return SECFailure;
+        SECU_PrintError(progName, "unable to allocate cert trust");
+        return SECFailure;
     }
 
     /* This function only decodes these characters: pPwcTCu, */
     rv = CERT_DecodeTrustString(trust, trusts);
     if (rv) {
-	SECU_PrintError(progName, "unable to decode trust string");
-	return SECFailure;
+        SECU_PrintError(progName, "unable to decode trust string");
+        return SECFailure;
     }
 
     /* CERT_ChangeCertTrust API does not have a way to pass in
      * a context, so NSS can't prompt for the password if it needs to.
-     * check to see if the failure was token not logged in and 
+     * check to see if the failure was token not logged in and
      * log in if need be. */
     rv = CERT_ChangeCertTrust(handle, cert, trust);
     if (rv != SECSuccess) {
-	if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
-	    rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
-	    if (rv != SECSuccess) {
-		SECU_PrintError(progName, "could not authenticate to token %s.",
+        if (PORT_GetError() == SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+            rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName, "could not authenticate to token %s.",
                                 PK11_GetTokenName(slot));
-		return SECFailure;
-	    }
-	    rv = CERT_ChangeCertTrust(handle, cert, trust);
-	}
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "unable to modify trust attributes");
-	    return SECFailure;
-	}
+                return SECFailure;
+            }
+            rv = CERT_ChangeCertTrust(handle, cert, trust);
+        }
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "unable to modify trust attributes");
+            return SECFailure;
+        }
     }
     CERT_DestroyCertificate(cert);
 
@@ -400,21 +402,22 @@ DumpChain(CERTCertDBHandle *handle, char *name, PRBool ascii)
     the_cert = SECU_FindCertByNicknameOrFilename(handle, name,
                                                  ascii, NULL);
     if (!the_cert) {
-	SECU_PrintError(progName, "Could not find: %s\n", name);
-	return SECFailure;
+        SECU_PrintError(progName, "Could not find: %s\n", name);
+        return SECFailure;
     }
     chain = CERT_CertChainFromCert(the_cert, 0, PR_TRUE);
     CERT_DestroyCertificate(the_cert);
     if (!chain) {
-	SECU_PrintError(progName, "Could not obtain chain for: %s\n", name);
-	return SECFailure;
+        SECU_PrintError(progName, "Could not obtain chain for: %s\n", name);
+        return SECFailure;
     }
-    for (i=chain->len-1; i>=0; i--) {
-	CERTCertificate *c;
-	c = CERT_FindCertByDERCert(handle, &chain->certs[i]);
-	for (j=i; j<chain->len-1; j++) printf("  ");
-	printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
-	CERT_DestroyCertificate(c);
+    for (i = chain->len - 1; i >= 0; i--) {
+        CERTCertificate *c;
+        c = CERT_FindCertByDERCert(handle, &chain->certs[i]);
+        for (j = i; j < chain->len - 1; j++)
+            printf("  ");
+        printf("\"%s\" [%s]\n\n", c->nickname, c->subjectName);
+        CERT_DestroyCertificate(c);
     }
     CERT_DestroyCertificateList(chain);
     return SECSuccess;
@@ -428,55 +431,55 @@ outputCertOrExtension(CERTCertificate *the_cert, PRBool raw, PRBool ascii,
     PRInt32 numBytes;
     SECStatus rv = SECFailure;
     if (extensionOID) {
-	int i;
-	PRBool found = PR_FALSE;
-	for (i=0; the_cert->extensions[i] != NULL; i++) {
-	    CERTCertExtension *extension = the_cert->extensions[i];
-	    if (SECITEM_CompareItem(&extension->id, extensionOID) == SECEqual) {
-		found = PR_TRUE;
-		numBytes = PR_Write(outfile, extension->value.data,
-				    extension->value.len);
-		rv = SECSuccess;
-		if (numBytes != (PRInt32) extension->value.len) {
-		    SECU_PrintSystemError(progName, "error writing extension");
-		    rv = SECFailure;
-		}
-		break;
-	    }
-	}
-	if (!found) {
-	    SECU_PrintSystemError(progName, "extension not found");
-	    rv = SECFailure;
-	}
+        int i;
+        PRBool found = PR_FALSE;
+        for (i = 0; the_cert->extensions[i] != NULL; i++) {
+            CERTCertExtension *extension = the_cert->extensions[i];
+            if (SECITEM_CompareItem(&extension->id, extensionOID) == SECEqual) {
+                found = PR_TRUE;
+                numBytes = PR_Write(outfile, extension->value.data,
+                                    extension->value.len);
+                rv = SECSuccess;
+                if (numBytes != (PRInt32)extension->value.len) {
+                    SECU_PrintSystemError(progName, "error writing extension");
+                    rv = SECFailure;
+                }
+                break;
+            }
+        }
+        if (!found) {
+            SECU_PrintSystemError(progName, "extension not found");
+            rv = SECFailure;
+        }
     } else {
-	data.data = the_cert->derCert.data;
-	data.len = the_cert->derCert.len;
-	if (ascii) {
-	    PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
-		    BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
-	    rv = SECSuccess;
-	} else if (raw) {
-	    numBytes = PR_Write(outfile, data.data, data.len);
-	    rv = SECSuccess;
-	    if (numBytes != (PRInt32) data.len) {
-		SECU_PrintSystemError(progName, "error writing raw cert");
-		rv = SECFailure;
-	    }
-	} else {
-	    rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate", NULL);
-	    if (rv != SECSuccess) {
-		SECU_PrintError(progName, "problem printing certificate");
-	    }
-	}
+        data.data = the_cert->derCert.data;
+        data.len = the_cert->derCert.len;
+        if (ascii) {
+            PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER,
+                       BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
+            rv = SECSuccess;
+        } else if (raw) {
+            numBytes = PR_Write(outfile, data.data, data.len);
+            rv = SECSuccess;
+            if (numBytes != (PRInt32)data.len) {
+                SECU_PrintSystemError(progName, "error writing raw cert");
+                rv = SECFailure;
+            }
+        } else {
+            rv = SEC_PrintCertificateAndTrust(the_cert, "Certificate", NULL);
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName, "problem printing certificate");
+            }
+        }
     }
     return rv;
 }
 
 static SECStatus
 listCerts(CERTCertDBHandle *handle, char *name, char *email,
-	  PK11SlotInfo *slot, PRBool raw, PRBool ascii,
-	  SECItem *extensionOID,
-	  PRFileDesc *outfile, void *pwarg)
+          PK11SlotInfo *slot, PRBool raw, PRBool ascii,
+          SECItem *extensionOID,
+          PRFileDesc *outfile, void *pwarg)
 {
     SECStatus rv = SECFailure;
     CERTCertList *certs;
@@ -492,76 +495,76 @@ listCerts(CERTCertDBHandle *handle, char *name, char *email,
         }
     }
     if (name) {
-	CERTCertificate *the_cert =
+        CERTCertificate *the_cert =
             SECU_FindCertByNicknameOrFilename(handle, name, ascii, NULL);
         if (!the_cert) {
             SECU_PrintError(progName, "Could not find cert: %s\n", name);
             return SECFailure;
         }
-	/* Here, we have one cert with the desired nickname or email 
-	 * address.  Now, we will attempt to get a list of ALL certs 
-	 * with the same subject name as the cert we have.  That list 
-	 * should contain, at a minimum, the one cert we have already found.
-	 * If the list of certs is empty (NULL), the libraries have failed.
-	 */
-	certs = CERT_CreateSubjectCertList(NULL, handle, &the_cert->derSubject,
-		PR_Now(), PR_FALSE);
-	CERT_DestroyCertificate(the_cert);
-	if (!certs) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    SECU_PrintError(progName, "problem printing certificates");
-	    return SECFailure;
-	}
-	for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
-						node = CERT_LIST_NEXT(node)) {
-	    rv = outputCertOrExtension(node->cert, raw, ascii, extensionOID,
+        /* Here, we have one cert with the desired nickname or email
+         * address.  Now, we will attempt to get a list of ALL certs
+         * with the same subject name as the cert we have.  That list
+         * should contain, at a minimum, the one cert we have already found.
+         * If the list of certs is empty (NULL), the libraries have failed.
+         */
+        certs = CERT_CreateSubjectCertList(NULL, handle, &the_cert->derSubject,
+                                           PR_Now(), PR_FALSE);
+        CERT_DestroyCertificate(the_cert);
+        if (!certs) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            SECU_PrintError(progName, "problem printing certificates");
+            return SECFailure;
+        }
+        for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node, certs);
+             node = CERT_LIST_NEXT(node)) {
+            rv = outputCertOrExtension(node->cert, raw, ascii, extensionOID,
                                        outfile);
-	    if (rv != SECSuccess) {
-		break;
-	    }
-	}
+            if (rv != SECSuccess) {
+                break;
+            }
+        }
     } else if (email) {
-	certs = PK11_FindCertsFromEmailAddress(email, NULL);
-	if (!certs) {
-	    SECU_PrintError(progName, 
-			"Could not find certificates for email address: %s\n", 
-			email);
-	    return SECFailure;
-	}
-	for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
-						node = CERT_LIST_NEXT(node)) {
-	    rv = outputCertOrExtension(node->cert, raw, ascii, extensionOID,
+        certs = PK11_FindCertsFromEmailAddress(email, NULL);
+        if (!certs) {
+            SECU_PrintError(progName,
+                            "Could not find certificates for email address: %s\n",
+                            email);
+            return SECFailure;
+        }
+        for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node, certs);
+             node = CERT_LIST_NEXT(node)) {
+            rv = outputCertOrExtension(node->cert, raw, ascii, extensionOID,
                                        outfile);
-	    if (rv != SECSuccess) {
-		break;
-	    }
-	}
+            if (rv != SECSuccess) {
+                break;
+            }
+        }
     } else {
-	certs = PK11_ListCertsInSlot(slot);
-	if (certs) {
-	    for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
-						node = CERT_LIST_NEXT(node)) {
-		SECU_PrintCertNickname(node,stdout);
-	    }
-	    rv = SECSuccess;
-	}
+        certs = PK11_ListCertsInSlot(slot);
+        if (certs) {
+            for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node, certs);
+                 node = CERT_LIST_NEXT(node)) {
+                SECU_PrintCertNickname(node, stdout);
+            }
+            rv = SECSuccess;
+        }
     }
     if (certs) {
         CERT_DestroyCertList(certs);
     }
     if (rv) {
-	SECU_PrintError(progName, "problem printing certificate nicknames");
-	return SECFailure;
+        SECU_PrintError(progName, "problem printing certificate nicknames");
+        return SECFailure;
     }
 
-    return SECSuccess;	/* not rv ?? */
+    return SECSuccess; /* not rv ?? */
 }
 
 static SECStatus
-ListCerts(CERTCertDBHandle *handle, char *nickname, char *email, 
+ListCerts(CERTCertDBHandle *handle, char *nickname, char *email,
           PK11SlotInfo *slot, PRBool raw, PRBool ascii,
-	  SECItem *extensionOID,
-	  PRFileDesc *outfile, secuPWData *pwdata)
+          SECItem *extensionOID,
+          PRFileDesc *outfile, secuPWData *pwdata)
 {
     SECStatus rv;
 
@@ -571,23 +574,23 @@ ListCerts(CERTCertDBHandle *handle, char *nickname, char *email,
                    "SSL,S/MIME,JAR/XPI");
     }
     if (slot == NULL) {
-	CERTCertList *list;
-	CERTCertListNode *node;
+        CERTCertList *list;
+        CERTCertListNode *node;
 
-	list = PK11_ListCerts(PK11CertListAll, pwdata);
-	for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
-	     node = CERT_LIST_NEXT(node)) {
-	    SECU_PrintCertNickname(node, stdout);
-	}
-	CERT_DestroyCertList(list);
-	return SECSuccess;
-    } 
+        list = PK11_ListCerts(PK11CertListAll, pwdata);
+        for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
+             node = CERT_LIST_NEXT(node)) {
+            SECU_PrintCertNickname(node, stdout);
+        }
+        CERT_DestroyCertList(list);
+        return SECSuccess;
+    }
     rv = listCerts(handle, nickname, email, slot, raw, ascii,
                    extensionOID, outfile, pwdata);
     return rv;
 }
 
-static SECStatus 
+static SECStatus
 DeleteCert(CERTCertDBHandle *handle, char *name)
 {
     SECStatus rv;
@@ -595,20 +598,20 @@ DeleteCert(CERTCertDBHandle *handle, char *name)
 
     cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
     if (!cert) {
-	SECU_PrintError(progName, "could not find certificate named \"%s\"",
-			name);
-	return SECFailure;
+        SECU_PrintError(progName, "could not find certificate named \"%s\"",
+                        name);
+        return SECFailure;
     }
 
     rv = SEC_DeletePermCertificate(cert);
     CERT_DestroyCertificate(cert);
     if (rv) {
-	SECU_PrintError(progName, "unable to delete certificate");
+        SECU_PrintError(progName, "unable to delete certificate");
     }
     return rv;
 }
 
-static SECStatus 
+static SECStatus
 RenameCert(CERTCertDBHandle *handle, char *name, char *newName)
 {
     SECStatus rv;
@@ -616,15 +619,15 @@ RenameCert(CERTCertDBHandle *handle, char *name, char *newName)
 
     cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
     if (!cert) {
-	SECU_PrintError(progName, "could not find certificate named \"%s\"",
-			name);
-	return SECFailure;
+        SECU_PrintError(progName, "could not find certificate named \"%s\"",
+                        name);
+        return SECFailure;
     }
 
     rv = __PK11_SetCertificateNickname(cert, newName);
     CERT_DestroyCertificate(cert);
     if (rv) {
-	SECU_PrintError(progName, "unable to rename certificate");
+        SECU_PrintError(progName, "unable to rename certificate");
     }
     return rv;
 }
@@ -642,107 +645,107 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
     CERTVerifyLog *log = NULL;
 
     if (!certUsage) {
-	    PORT_SetError (SEC_ERROR_INVALID_ARGS);
-	    return (SECFailure);
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return (SECFailure);
     }
-    
+
     switch (*certUsage) {
-	case 'O':
-	    usage = certificateUsageStatusResponder;
-	    break;
-	case 'L':
-	    usage = certificateUsageSSLCA;
-	    break;
-	case 'A':
-	    usage = certificateUsageAnyCA;
-	    break;
-	case 'Y':
-	    usage = certificateUsageVerifyCA;
-	    break;
-	case 'C':
-	    usage = certificateUsageSSLClient;
-	    break;
-	case 'V':
-	    usage = certificateUsageSSLServer;
-	    break;
-	case 'S':
-	    usage = certificateUsageEmailSigner;
-	    break;
-	case 'R':
-	    usage = certificateUsageEmailRecipient;
-	    break;
-	case 'J':
-	    usage = certificateUsageObjectSigner;
-	    break;
-	default:
-	    PORT_SetError (SEC_ERROR_INVALID_ARGS);
-	    return (SECFailure);
+        case 'O':
+            usage = certificateUsageStatusResponder;
+            break;
+        case 'L':
+            usage = certificateUsageSSLCA;
+            break;
+        case 'A':
+            usage = certificateUsageAnyCA;
+            break;
+        case 'Y':
+            usage = certificateUsageVerifyCA;
+            break;
+        case 'C':
+            usage = certificateUsageSSLClient;
+            break;
+        case 'V':
+            usage = certificateUsageSSLServer;
+            break;
+        case 'S':
+            usage = certificateUsageEmailSigner;
+            break;
+        case 'R':
+            usage = certificateUsageEmailRecipient;
+            break;
+        case 'J':
+            usage = certificateUsageObjectSigner;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return (SECFailure);
     }
     do {
-	cert = SECU_FindCertByNicknameOrFilename(handle, name, ascii,
+        cert = SECU_FindCertByNicknameOrFilename(handle, name, ascii,
                                                  NULL);
-	if (!cert) {
-	    SECU_PrintError(progName, "could not find certificate named \"%s\"",
-			    name);
-	    GEN_BREAK (SECFailure)
-	}
+        if (!cert) {
+            SECU_PrintError(progName, "could not find certificate named \"%s\"",
+                            name);
+            GEN_BREAK(SECFailure)
+        }
 
-	if (date != NULL) {
-	    rv = DER_AsciiToTime(&timeBoundary, date);
-	    if (rv) {
-		SECU_PrintError(progName, "invalid input date");
-		GEN_BREAK (SECFailure)
-	    }
-	} else {
-	    timeBoundary = PR_Now();
-	}
+        if (date != NULL) {
+            rv = DER_AsciiToTime(&timeBoundary, date);
+            if (rv) {
+                SECU_PrintError(progName, "invalid input date");
+                GEN_BREAK(SECFailure)
+            }
+        } else {
+            timeBoundary = PR_Now();
+        }
 
-	if ( logit ) {
-	    log = &reallog;
-	    
-	    log->count = 0;
-	    log->head = NULL;
-	    log->tail = NULL;
-	    log->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	    if ( log->arena == NULL ) {
-		SECU_PrintError(progName, "out of memory");
-		GEN_BREAK (SECFailure)
-	    }
-	}
- 
-	rv = CERT_VerifyCertificate(handle, cert, checkSig, usage,
-			     timeBoundary, pwdata, log, &usage);
-	if ( log ) {
-	    if ( log->head == NULL ) {
-		fprintf(stdout, "%s: certificate is valid\n", progName);
-		GEN_BREAK (SECSuccess)
-	    } else {
-		char *name;
-		CERTVerifyLogNode *node;
-		
-		node = log->head;
-		while ( node ) {
-		    if ( node->cert->nickname != NULL ) {
-			name = node->cert->nickname;
-		    } else {
-			name = node->cert->subjectName;
-		    }
-		    fprintf(stderr, "%s : %s\n", name, 
-		    	SECU_Strerror(node->error));
-		    CERT_DestroyCertificate(node->cert);
-		    node = node->next;
-		}
-	    }
-	} else {
-	    if (rv != SECSuccess) {
-		PRErrorCode perr = PORT_GetError();
-		fprintf(stdout, "%s: certificate is invalid: %s\n",
-			progName, SECU_Strerror(perr));
-		GEN_BREAK (SECFailure)
-	    }
-	    fprintf(stdout, "%s: certificate is valid\n", progName);
-	    GEN_BREAK (SECSuccess)
-	}
+        if (logit) {
+            log = &reallog;
+
+            log->count = 0;
+            log->head = NULL;
+            log->tail = NULL;
+            log->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+            if (log->arena == NULL) {
+                SECU_PrintError(progName, "out of memory");
+                GEN_BREAK(SECFailure)
+            }
+        }
+
+        rv = CERT_VerifyCertificate(handle, cert, checkSig, usage,
+                                    timeBoundary, pwdata, log, &usage);
+        if (log) {
+            if (log->head == NULL) {
+                fprintf(stdout, "%s: certificate is valid\n", progName);
+                GEN_BREAK(SECSuccess)
+            } else {
+                char *name;
+                CERTVerifyLogNode *node;
+
+                node = log->head;
+                while (node) {
+                    if (node->cert->nickname != NULL) {
+                        name = node->cert->nickname;
+                    } else {
+                        name = node->cert->subjectName;
+                    }
+                    fprintf(stderr, "%s : %s\n", name,
+                            SECU_Strerror(node->error));
+                    CERT_DestroyCertificate(node->cert);
+                    node = node->next;
+                }
+            }
+        } else {
+            if (rv != SECSuccess) {
+                PRErrorCode perr = PORT_GetError();
+                fprintf(stdout, "%s: certificate is invalid: %s\n",
+                        progName, SECU_Strerror(perr));
+                GEN_BREAK(SECFailure)
+            }
+            fprintf(stdout, "%s: certificate is valid\n", progName);
+            GEN_BREAK(SECSuccess)
+        }
     } while (0);
 
     if (cert) {
@@ -753,65 +756,66 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 }
 
 static PRBool
-ItemIsPrintableASCII(const SECItem * item)
+ItemIsPrintableASCII(const SECItem *item)
 {
     unsigned char *src = item->data;
-    unsigned int   len = item->len;
+    unsigned int len = item->len;
     while (len-- > 0) {
         unsigned char uc = *src++;
-	if (uc < 0x20 || uc > 0x7e) 
-	    return PR_FALSE;
+        if (uc < 0x20 || uc > 0x7e)
+            return PR_FALSE;
     }
     return PR_TRUE;
 }
 
 /* Caller ensures that dst is at least item->len*2+1 bytes long */
 static void
-SECItemToHex(const SECItem * item, char * dst)
+SECItemToHex(const SECItem *item, char *dst)
 {
     if (dst && item && item->data) {
-	unsigned char * src = item->data;
-	unsigned int    len = item->len;
-	for (; len > 0; --len, dst += 2) {
-	    sprintf(dst, "%02x", *src++);
-	}
-	*dst = '\0';
+        unsigned char *src = item->data;
+        unsigned int len = item->len;
+        for (; len > 0; --len, dst += 2) {
+            sprintf(dst, "%02x", *src++);
+        }
+        *dst = '\0';
     }
 }
 
-static const char * const keyTypeName[] = {
-  "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec" };
+static const char *const keyTypeName[] = {
+    "null", "rsa", "dsa", "fortezza", "dh", "kea", "ec"
+};
 
 #define MAX_CKA_ID_BIN_LEN 20
 #define MAX_CKA_ID_STR_LEN 40
 
 /* print key number, key ID (in hex or ASCII), key label (nickname) */
 static SECStatus
-PrintKey(PRFileDesc *out, const char *nickName, int count, 
+PrintKey(PRFileDesc *out, const char *nickName, int count,
          SECKEYPrivateKey *key, void *pwarg)
 {
-    SECItem * ckaID;
+    SECItem *ckaID;
     char ckaIDbuf[MAX_CKA_ID_STR_LEN + 4];
 
     pwarg = NULL;
     ckaID = PK11_GetLowLevelKeyIDForPrivateKey(key);
     if (!ckaID) {
-	strcpy(ckaIDbuf, "(no CKA_ID)");
+        strcpy(ckaIDbuf, "(no CKA_ID)");
     } else if (ItemIsPrintableASCII(ckaID)) {
-	int len = PR_MIN(MAX_CKA_ID_STR_LEN, ckaID->len);
-	ckaIDbuf[0] = '"';
-	memcpy(ckaIDbuf + 1, ckaID->data, len);
-	ckaIDbuf[1 + len] = '"';
-	ckaIDbuf[2 + len] = '\0';
+        int len = PR_MIN(MAX_CKA_ID_STR_LEN, ckaID->len);
+        ckaIDbuf[0] = '"';
+        memcpy(ckaIDbuf + 1, ckaID->data, len);
+        ckaIDbuf[1 + len] = '"';
+        ckaIDbuf[2 + len] = '\0';
     } else {
-    	/* print ckaid in hex */
-	SECItem idItem = *ckaID;
-	if (idItem.len > MAX_CKA_ID_BIN_LEN)
-	    idItem.len = MAX_CKA_ID_BIN_LEN;
+        /* print ckaid in hex */
+        SECItem idItem = *ckaID;
+        if (idItem.len > MAX_CKA_ID_BIN_LEN)
+            idItem.len = MAX_CKA_ID_BIN_LEN;
         SECItemToHex(&idItem, ckaIDbuf);
     }
 
-    PR_fprintf(out, "<%2d> %-8.8s %-42.42s %s\n", count, 
+    PR_fprintf(out, "<%2d> %-8.8s %-42.42s %s\n", count,
                keyTypeName[key->keyType], ckaIDbuf, nickName);
     SECITEM_ZfreeItem(ckaID, PR_TRUE);
 
@@ -820,7 +824,7 @@ PrintKey(PRFileDesc *out, const char *nickName, int count,
 
 /* returns SECSuccess if ANY keys are found, SECFailure otherwise. */
 static SECStatus
-ListKeysInSlot(PK11SlotInfo *slot, const char *nickName, KeyType keyType, 
+ListKeysInSlot(PK11SlotInfo *slot, const char *nickName, KeyType keyType,
                void *pwarg)
 {
     SECKEYPrivateKeyList *list;
@@ -836,90 +840,90 @@ ListKeysInSlot(PK11SlotInfo *slot, const char *nickName, KeyType keyType,
         }
     }
 
-    if (nickName && nickName[0]) 
-	list = PK11_ListPrivKeysInSlot(slot, (char *)nickName, pwarg);
+    if (nickName && nickName[0])
+        list = PK11_ListPrivKeysInSlot(slot, (char *)nickName, pwarg);
     else
-	list = PK11_ListPrivateKeysInSlot(slot);
+        list = PK11_ListPrivateKeysInSlot(slot);
     if (list == NULL) {
-	SECU_PrintError(progName, "problem listing keys");
-	return SECFailure;
+        SECU_PrintError(progName, "problem listing keys");
+        return SECFailure;
     }
-    for (node=PRIVKEY_LIST_HEAD(list); 
-             !PRIVKEY_LIST_END(node,list);
-	 node=PRIVKEY_LIST_NEXT(node)) {
-	char * keyName;
-	static const char orphan[] = { "(orphan)" };
+    for (node = PRIVKEY_LIST_HEAD(list);
+         !PRIVKEY_LIST_END(node, list);
+         node = PRIVKEY_LIST_NEXT(node)) {
+        char *keyName;
+        static const char orphan[] = { "(orphan)" };
 
-	if (keyType != nullKey && keyType != node->key->keyType)
-	    continue;
+        if (keyType != nullKey && keyType != node->key->keyType)
+            continue;
         keyName = PK11_GetPrivateKeyNickname(node->key);
-	if (!keyName || !keyName[0]) {
-	    /* Try extra hard to find nicknames for keys that lack them. */
-	    CERTCertificate * cert;
-	    PORT_Free((void *)keyName);
-	    keyName = NULL;
-	    cert = PK11_GetCertFromPrivateKey(node->key);
-	    if (cert) {
-		if (cert->nickname && cert->nickname[0]) {
-		    keyName = PORT_Strdup(cert->nickname);
-		} else if (cert->emailAddr && cert->emailAddr[0]) {
-		    keyName = PORT_Strdup(cert->emailAddr);
-		}
-		CERT_DestroyCertificate(cert);
-	    }
-	}
-	if (nickName) {
-	    if (!keyName || PL_strcmp(keyName,nickName)) {
-		/* PKCS#11 module returned unwanted keys */
-	        PORT_Free((void *)keyName);
-		continue;
-	    }
-	}
-	if (!keyName)
-	    keyName = (char *)orphan;
+        if (!keyName || !keyName[0]) {
+            /* Try extra hard to find nicknames for keys that lack them. */
+            CERTCertificate *cert;
+            PORT_Free((void *)keyName);
+            keyName = NULL;
+            cert = PK11_GetCertFromPrivateKey(node->key);
+            if (cert) {
+                if (cert->nickname && cert->nickname[0]) {
+                    keyName = PORT_Strdup(cert->nickname);
+                } else if (cert->emailAddr && cert->emailAddr[0]) {
+                    keyName = PORT_Strdup(cert->emailAddr);
+                }
+                CERT_DestroyCertificate(cert);
+            }
+        }
+        if (nickName) {
+            if (!keyName || PL_strcmp(keyName, nickName)) {
+                /* PKCS#11 module returned unwanted keys */
+                PORT_Free((void *)keyName);
+                continue;
+            }
+        }
+        if (!keyName)
+            keyName = (char *)orphan;
 
-	PrintKey(PR_STDOUT, keyName, count, node->key, pwarg);
+        PrintKey(PR_STDOUT, keyName, count, node->key, pwarg);
 
-	if (keyName != (char *)orphan)
-	    PORT_Free((void *)keyName);
-	count++;
+        if (keyName != (char *)orphan)
+            PORT_Free((void *)keyName);
+        count++;
     }
     SECKEY_DestroyPrivateKeyList(list);
 
     if (count == 0) {
-	PR_fprintf(PR_STDOUT, "%s: no keys found\n", progName);
-	return SECFailure;
+        PR_fprintf(PR_STDOUT, "%s: no keys found\n", progName);
+        return SECFailure;
     }
     return SECSuccess;
 }
 
 /* returns SECSuccess if ANY keys are found, SECFailure otherwise. */
 static SECStatus
-ListKeys(PK11SlotInfo *slot, const char *nickName, int index, 
+ListKeys(PK11SlotInfo *slot, const char *nickName, int index,
          KeyType keyType, PRBool dopriv, secuPWData *pwdata)
 {
     SECStatus rv = SECFailure;
-    static const char fmt[] = \
-    	"%s: Checking token \"%.33s\" in slot \"%.65s\"\n";
+    static const char fmt[] =
+        "%s: Checking token \"%.33s\" in slot \"%.65s\"\n";
 
     if (slot == NULL) {
-	PK11SlotList *list;
-	PK11SlotListElement *le;
+        PK11SlotList *list;
+        PK11SlotListElement *le;
 
-	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_FALSE,pwdata);
-	if (list) {
-	    for (le = list->head; le; le = le->next) {
-		PR_fprintf(PR_STDOUT, fmt, progName, 
-			   PK11_GetTokenName(le->slot), 
-			   PK11_GetSlotName(le->slot));
-		rv &= ListKeysInSlot(le->slot,nickName,keyType,pwdata);
-	    }
-	    PK11_FreeSlotList(list);
-	}
+        list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, pwdata);
+        if (list) {
+            for (le = list->head; le; le = le->next) {
+                PR_fprintf(PR_STDOUT, fmt, progName,
+                           PK11_GetTokenName(le->slot),
+                           PK11_GetSlotName(le->slot));
+                rv &= ListKeysInSlot(le->slot, nickName, keyType, pwdata);
+            }
+            PK11_FreeSlotList(list);
+        }
     } else {
-	PR_fprintf(PR_STDOUT, fmt, progName, PK11_GetTokenName(slot), 
-	           PK11_GetSlotName(slot));
-	rv = ListKeysInSlot(slot,nickName,keyType,pwdata);
+        PR_fprintf(PR_STDOUT, fmt, progName, PK11_GetTokenName(slot),
+                   PK11_GetSlotName(slot));
+        rv = ListKeysInSlot(slot, nickName, keyType, pwdata);
     }
     return rv;
 }
@@ -942,18 +946,17 @@ DeleteKey(char *nickname, secuPWData *pwdata)
     }
     cert = PK11_FindCertFromNickname(nickname, pwdata);
     if (!cert) {
-	PK11_FreeSlot(slot);
-	return SECFailure;
+        PK11_FreeSlot(slot);
+        return SECFailure;
     }
     rv = PK11_DeleteTokenCertAndKey(cert, pwdata);
     if (rv != SECSuccess) {
-	SECU_PrintError("problem deleting private key \"%s\"\n", nickname);
+        SECU_PrintError("problem deleting private key \"%s\"\n", nickname);
     }
     CERT_DestroyCertificate(cert);
     PK11_FreeSlot(slot);
     return rv;
 }
-
 
 /*
  *  L i s t M o d u l e s
@@ -970,104 +973,107 @@ ListModules(void)
     PK11SlotListElement *le;
 
     /* get them all! */
-    list = PK11_GetAllTokens(CKM_INVALID_MECHANISM,PR_FALSE,PR_FALSE,NULL);
-    if (list == NULL) return SECFailure;
+    list = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, NULL);
+    if (list == NULL)
+        return SECFailure;
 
     /* look at each slot*/
-    for (le = list->head ; le; le = le->next) {
-      printf ("\n");
-      printf ("    slot: %s\n", PK11_GetSlotName(le->slot));
-      printf ("   token: %s\n", PK11_GetTokenName(le->slot));
+    for (le = list->head; le; le = le->next) {
+        printf("\n");
+        printf("    slot: %s\n", PK11_GetSlotName(le->slot));
+        printf("   token: %s\n", PK11_GetTokenName(le->slot));
     }
     PK11_FreeSlotList(list);
 
     return SECSuccess;
 }
 
-static void 
+static void
 PrintSyntax(char *progName)
 {
-#define FPS fprintf(stderr, 
+#define FPS fprintf(stderr,
     FPS "Type %s -H for more detailed descriptions\n", progName);
     FPS "Usage:  %s -N [-d certdir] [-P dbprefix] [-f pwfile] [--empty-password]\n", progName);
     FPS "Usage:  %s -T [-d certdir] [-P dbprefix] [-h token-name]\n"
-	"\t\t [-f pwfile] [-0 SSO-password]\n", progName);
+        "\t\t [-f pwfile] [-0 SSO-password]\n", progName);
     FPS "\t%s -A -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n",
-    	progName);
+        progName);
     FPS "\t%s -B -i batch-file\n", progName);
     FPS "\t%s -C [-c issuer-name | -x] -i cert-request-file -o cert-file\n"
-	"\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
+        "\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
         "\t\t [-f pwfile] [-d certdir] [-P dbprefix] [-Z hashAlg]\n"
         "\t\t [-1 | --keyUsage [keyUsageKeyword,..]] [-2] [-3] [-4]\n"
         "\t\t [-5 | --nsCertType [nsCertTypeKeyword,...]]\n"
         "\t\t [-6 | --extKeyUsage [extKeyUsageKeyword,...]] [-7 emailAddrs]\n"
         "\t\t [-8 dns-names] [-a]\n",
-	progName);
+        progName);
     FPS "\t%s -D -n cert-name [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s --rename -n cert-name --new-n new-cert-name\n"
         "\t\t [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -E -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n",
-	progName);
-    FPS "\t%s -F -n nickname [-d certdir] [-P dbprefix]\n", 
-	progName);
-    FPS "\t%s -G -n key-name [-h token-name] [-k rsa] [-g key-size] [-y exp]\n" 
-	"\t\t [-f pwfile] [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
+        progName);
+    FPS "\t%s -F -n nickname [-d certdir] [-P dbprefix]\n",
+        progName);
+    FPS "\t%s -G -n key-name [-h token-name] [-k rsa] [-g key-size] [-y exp]\n"
+        "\t\t [-f pwfile] [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -G [-h token-name] -k dsa [-q pqgfile -g key-size] [-f pwfile]\n"
-	"\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
+        "\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
 #ifndef NSS_DISABLE_ECC
     FPS "\t%s -G [-h token-name] -k ec -q curve [-f pwfile]\n"
-	"\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
-    FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|ec|rsa|all]\n", 
-	progName);
+        "\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
+    FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|ec|rsa|all]\n",
+        progName);
 #else
-    FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|rsa|all]\n", 
-	progName);
+    FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|rsa|all]\n",
+        progName);
 #endif /* NSS_DISABLE_ECC */
     FPS "\t\t [-f pwfile] [-X] [-d certdir] [-P dbprefix]\n");
     FPS "\t%s --upgrade-merge --source-dir upgradeDir --upgrade-id uniqueID\n",
-	progName);
+        progName);
     FPS "\t\t [--upgrade-token-name tokenName] [-d targetDBDir]\n");
     FPS "\t\t [-P targetDBPrefix] [--source-prefix upgradeDBPrefix]\n");
     FPS "\t\t [-f targetPWfile] [-@ upgradePWFile]\n");
     FPS "\t%s --merge --source-dir sourceDBDir [-d targetDBdir]\n",
-	progName);
+        progName);
     FPS "\t\t [-P targetDBPrefix] [--source-prefix sourceDBPrefix]\n");
     FPS "\t\t [-f targetPWfile] [-@ sourcePWFile]\n");
     FPS "\t%s -L [-n cert-name] [-h token-name] [--email email-address]\n",
-	progName);
+        progName);
     FPS "\t\t [-X] [-r] [-a] [--dump-ext-val OID] [-d certdir] [-P dbprefix]\n");
     FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
-	progName);
+        progName);
     FPS "\t%s -O -n cert-name [-X] [-d certdir] [-a] [-P dbprefix]\n", progName);
     FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-P dbprefix] [-p phone] [-a]\n"
         "\t\t [-7 emailAddrs] [-k key-type-or-id] [-h token-name] [-f pwfile]\n"
         "\t\t [-g key-size] [-Z hashAlg]\n",
-	progName);
+        progName);
     FPS "\t%s -V -n cert-name -u usage [-b time] [-e] [-a]\n"
-	"\t\t[-X] [-d certdir] [-P dbprefix]\n",
-	progName);
+        "\t\t[-X] [-d certdir] [-P dbprefix]\n",
+        progName);
     FPS "Usage:  %s -W [-d certdir] [-f pwfile] [-@newpwfile]\n",
-	progName);
+        progName);
     FPS "\t%s -S -n cert-name -s subj [-c issuer-name | -x]  -t trustargs\n"
-	"\t\t [-k key-type-or-id] [-q key-params] [-h token-name] [-g key-size]\n"
+        "\t\t [-k key-type-or-id] [-q key-params] [-h token-name] [-g key-size]\n"
         "\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
         "\t\t [-f pwfile] [-d certdir] [-P dbprefix] [-Z hashAlg]\n"
         "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6] [-7 emailAddrs]\n"
         "\t\t [-8 DNS-names]\n"
         "\t\t [--extAIA] [--extSIA] [--extCP] [--extPM] [--extPC] [--extIA]\n"
         "\t\t [--extSKID] [--extNC] [--extSAN type:name[,type:name]...]\n"
-	"\t\t [--extGeneric OID:critical-flag:filename[,OID:critical-flag:filename]...]\n", progName);
+        "\t\t [--extGeneric OID:critical-flag:filename[,OID:critical-flag:filename]...]\n", progName);
     FPS "\t%s -U [-X] [-d certdir] [-P dbprefix]\n", progName);
     exit(1);
 }
 
 enum usage_level {
-    usage_all = 0, usage_selected = 1
+    usage_all = 0,
+    usage_selected = 1
 };
 
 static void luCommonDetailsAE();
 
-static void luA(enum usage_level ul, const char *command)
+static void
+luA(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "A"));
     if (ul == usage_all || !command || is_my_command)
@@ -1077,13 +1083,13 @@ static void luA(enum usage_level ul, const char *command)
         return;
     if (ul == usage_all) {
     FPS "%-20s\n", "   All options under -E apply");
-    }
-    else {
+    } else {
         luCommonDetailsAE();
     }
 }
 
-static void luB(enum usage_level ul, const char *command)
+static void
+luB(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "B"));
     if (ul == usage_all || !command || is_my_command)
@@ -1093,7 +1099,8 @@ static void luB(enum usage_level ul, const char *command)
     FPS "%-20s Specify the batch file\n", "   -i batch-file");
 }
 
-static void luE(enum usage_level ul, const char *command)
+static void
+luE(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "E"));
     if (ul == usage_all || !command || is_my_command)
@@ -1104,7 +1111,8 @@ static void luE(enum usage_level ul, const char *command)
     luCommonDetailsAE();
 }
 
-static void luCommonDetailsAE()
+static void
+luCommonDetailsAE()
 {
     FPS "%-20s Specify the nickname of the certificate to add\n",
         "   -n cert-name");
@@ -1133,7 +1141,8 @@ static void luCommonDetailsAE()
     FPS "\n");
 }
 
-static void luC(enum usage_level ul, const char *command)
+static void
+luC(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "C"));
     if (ul == usage_all || !command || is_my_command)
@@ -1198,7 +1207,8 @@ static void luC(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luG(enum usage_level ul, const char *command)
+static void
+luG(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "G"));
     if (ul == usage_all || !command || is_my_command)
@@ -1273,7 +1283,8 @@ static void luG(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luD(enum usage_level ul, const char *command)
+static void
+luD(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "D"));
     if (ul == usage_all || !command || is_my_command)
@@ -1288,10 +1299,10 @@ static void luD(enum usage_level ul, const char *command)
     FPS "%-20s Cert & Key database prefix\n",
         "   -P dbprefix");
     FPS "\n");
-
 }
 
-static void luF(enum usage_level ul, const char *command)
+static void
+luF(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "F"));
     if (ul == usage_all || !command || is_my_command)
@@ -1306,10 +1317,10 @@ static void luF(enum usage_level ul, const char *command)
     FPS "%-20s Cert & Key database prefix\n",
         "   -P dbprefix");
     FPS "\n");
-
 }
 
-static void luU(enum usage_level ul, const char *command)
+static void
+luU(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "U"));
     if (ul == usage_all || !command || is_my_command)
@@ -1324,10 +1335,10 @@ static void luU(enum usage_level ul, const char *command)
     FPS "%-20s force the database to open R/W\n",
         "   -X");
     FPS "\n");
-
 }
 
-static void luK(enum usage_level ul, const char *command)
+static void
+luK(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "K"));
     if (ul == usage_all || !command || is_my_command)
@@ -1357,7 +1368,8 @@ static void luK(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luL(enum usage_level ul, const char *command)
+static void
+luL(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "L"));
     if (ul == usage_all || !command || is_my_command)
@@ -1388,7 +1400,8 @@ static void luL(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luM(enum usage_level ul, const char *command)
+static void
+luM(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "M"));
     if (ul == usage_all || !command || is_my_command)
@@ -1407,7 +1420,8 @@ static void luM(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luN(enum usage_level ul, const char *command)
+static void
+luN(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "N"));
     if (ul == usage_all || !command || is_my_command)
@@ -1426,7 +1440,8 @@ static void luN(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luT(enum usage_level ul, const char *command)
+static void
+luT(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "T"));
     if (ul == usage_all || !command || is_my_command)
@@ -1445,7 +1460,8 @@ static void luT(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luO(enum usage_level ul, const char *command)
+static void
+luO(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "O"));
     if (ul == usage_all || !command || is_my_command)
@@ -1466,7 +1482,8 @@ static void luO(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luR(enum usage_level ul, const char *command)
+static void
+luR(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "R"));
     if (ul == usage_all || !command || is_my_command)
@@ -1520,7 +1537,8 @@ static void luR(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luV(enum usage_level ul, const char *command)
+static void
+luV(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "V"));
     if (ul == usage_all || !command || is_my_command)
@@ -1533,7 +1551,7 @@ static void luV(enum usage_level ul, const char *command)
     FPS "%-20s validity time (\"YYMMDDHHMMSS[+HHMM|-HHMM|Z]\")\n",
         "   -b time");
     FPS "%-20s Check certificate signature \n",
-        "   -e ");   
+        "   -e ");
     FPS "%-20s Specify certificate usage:\n", "   -u certusage");
     FPS "%-25s C \t SSL Client\n", "");
     FPS "%-25s V \t SSL Server\n", "");
@@ -1541,9 +1559,9 @@ static void luV(enum usage_level ul, const char *command)
     FPS "%-25s A \t Any CA\n", "");
     FPS "%-25s Y \t Verify CA\n", "");
     FPS "%-25s S \t Email signer\n", "");
-    FPS "%-25s R \t Email Recipient\n", "");   
-    FPS "%-25s O \t OCSP status responder\n", "");   
-    FPS "%-25s J \t Object signer\n", "");   
+    FPS "%-25s R \t Email Recipient\n", "");
+    FPS "%-25s O \t OCSP status responder\n", "");
+    FPS "%-25s J \t Object signer\n", "");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
         "   -d certdir");
     FPS "%-20s Input the certificate in ASCII (RFC1113); default is binary\n",
@@ -1555,7 +1573,8 @@ static void luV(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luW(enum usage_level ul, const char *command)
+static void
+luW(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "W"));
     if (ul == usage_all || !command || is_my_command)
@@ -1572,7 +1591,8 @@ static void luW(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luRename(enum usage_level ul, const char *command)
+static void
+luRename(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "rename"));
     if (ul == usage_all || !command || is_my_command)
@@ -1591,7 +1611,8 @@ static void luRename(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luUpgradeMerge(enum usage_level ul, const char *command)
+static void
+luUpgradeMerge(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "upgrade-merge"));
     if (ul == usage_all || !command || is_my_command)
@@ -1618,7 +1639,8 @@ static void luUpgradeMerge(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luMerge(enum usage_level ul, const char *command)
+static void
+luMerge(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "merge"));
     if (ul == usage_all || !command || is_my_command)
@@ -1641,7 +1663,8 @@ static void luMerge(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void luS(enum usage_level ul, const char *command)
+static void
+luS(enum usage_level ul, const char *command)
 {
     int is_my_command = (command && 0 == strcmp(command, "S"));
     if (ul == usage_all || !command || is_my_command)
@@ -1732,12 +1755,12 @@ static void luS(enum usage_level ul, const char *command)
         "   --extNC ");
     FPS "%-20s \n"
         "%-20s Create a Subject Alt Name extension with one or multiple names\n",
-	"   --extSAN type:name[,type:name]...", "");
+        "   --extSAN type:name[,type:name]...", "");
     FPS "%-20s - type: directory, dn, dns, edi, ediparty, email, ip, ipaddr,\n", "");
     FPS "%-20s         other, registerid, rfc822, uri, x400, x400addr\n", "");
     FPS "%-20s \n"
         "%-20s Add one or multiple extensions that certutil cannot encode yet,\n"
-	"%-20s by loading their encodings from external files.\n",
+        "%-20s by loading their encodings from external files.\n",
         "   --extGeneric OID:critical-flag:filename[,OID:critical-flag:filename]...", "", "");
     FPS "%-20s - OID (example): 1.2.3.4\n", "");
     FPS "%-20s - critical-flag: critical or not-critical\n", "");
@@ -1745,7 +1768,8 @@ static void luS(enum usage_level ul, const char *command)
     FPS "\n");
 }
 
-static void LongUsage(char *progName, enum usage_level ul, const char *command)
+static void
+LongUsage(char *progName, enum usage_level ul, const char *command)
 {
     luA(ul, command);
     luB(ul, command);
@@ -1775,26 +1799,27 @@ static void
 Usage(char *progName)
 {
     PR_fprintf(PR_STDERR,
-        "%s - Utility to manipulate NSS certificate databases\n\n"
-        "Usage:  %s <command> -d <database-directory> <options>\n\n"
-        "Valid commands:\n", progName, progName);
+               "%s - Utility to manipulate NSS certificate databases\n\n"
+               "Usage:  %s <command> -d <database-directory> <options>\n\n"
+               "Valid commands:\n",
+               progName, progName);
     LongUsage(progName, usage_selected, NULL);
     PR_fprintf(PR_STDERR, "\n"
-        "%s -H <command> : Print available options for the given command\n"
-        "%s -H : Print complete help output of all commands and options\n"
-        "%s --syntax : Print a short summary of all commands and options\n",
-        progName, progName, progName);
+                          "%s -H <command> : Print available options for the given command\n"
+                          "%s -H : Print complete help output of all commands and options\n"
+                          "%s --syntax : Print a short summary of all commands and options\n",
+               progName, progName, progName);
     exit(1);
 }
 
 static CERTCertificate *
-MakeV1Cert(	CERTCertDBHandle *	handle, 
-		CERTCertificateRequest *req,
-	    	char *			issuerNickName, 
-		PRBool 			selfsign, 
-		unsigned int 		serialNumber,
-		int 			warpmonths,
-                int                     validityMonths)
+MakeV1Cert(CERTCertDBHandle *handle,
+           CERTCertificateRequest *req,
+           char *issuerNickName,
+           PRBool selfsign,
+           unsigned int serialNumber,
+           int warpmonths,
+           int validityMonths)
 {
     CERTCertificate *issuerCert = NULL;
     CERTValidity *validity;
@@ -1802,185 +1827,184 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
     PRExplodedTime printableTime;
     PRTime now, after;
 
-    if ( !selfsign ) {
-	issuerCert = CERT_FindCertByNicknameOrEmailAddr(handle, issuerNickName);
-	if (!issuerCert) {
-	    SECU_PrintError(progName, "could not find certificate named \"%s\"",
-			    issuerNickName);
-	    return NULL;
-	}
+    if (!selfsign) {
+        issuerCert = CERT_FindCertByNicknameOrEmailAddr(handle, issuerNickName);
+        if (!issuerCert) {
+            SECU_PrintError(progName, "could not find certificate named \"%s\"",
+                            issuerNickName);
+            return NULL;
+        }
     }
 
     now = PR_Now();
-    PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
-    if ( warpmonths ) {
-	printableTime.tm_month += warpmonths;
-	now = PR_ImplodeTime (&printableTime);
-	PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
+    PR_ExplodeTime(now, PR_GMTParameters, &printableTime);
+    if (warpmonths) {
+        printableTime.tm_month += warpmonths;
+        now = PR_ImplodeTime(&printableTime);
+        PR_ExplodeTime(now, PR_GMTParameters, &printableTime);
     }
     printableTime.tm_month += validityMonths;
-    after = PR_ImplodeTime (&printableTime);
+    after = PR_ImplodeTime(&printableTime);
 
     /* note that the time is now in micro-second unit */
-    validity = CERT_CreateValidity (now, after);
+    validity = CERT_CreateValidity(now, after);
     if (validity) {
-        cert = CERT_CreateCertificate(serialNumber, 
-				      (selfsign ? &req->subject 
-				                : &issuerCert->subject), 
-	                              validity, req);
-    
+        cert = CERT_CreateCertificate(serialNumber,
+                                      (selfsign ? &req->subject
+                                                : &issuerCert->subject),
+                                      validity, req);
+
         CERT_DestroyValidity(validity);
     }
-    if ( issuerCert ) {
-	CERT_DestroyCertificate (issuerCert);
+    if (issuerCert) {
+        CERT_DestroyCertificate(issuerCert);
     }
-    
-    return(cert);
+
+    return (cert);
 }
 
 static SECStatus
-SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign, 
+SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
          SECOidTag hashAlgTag,
          SECKEYPrivateKey *privKey, char *issuerNickName,
          int certVersion, void *pwarg)
 {
     SECItem der;
-    SECKEYPrivateKey *caPrivateKey = NULL;    
+    SECKEYPrivateKey *caPrivateKey = NULL;
     SECStatus rv;
     PLArenaPool *arena;
     SECOidTag algID;
     void *dummy;
 
-    if( !selfsign ) {
-      CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
-      if( (CERTCertificate *)NULL == issuer ) {
-        SECU_PrintError(progName, "unable to find issuer with nickname %s", 
-	                issuerNickName);
-        return SECFailure;
-      }
+    if (!selfsign) {
+        CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
+        if ((CERTCertificate *)NULL == issuer) {
+            SECU_PrintError(progName, "unable to find issuer with nickname %s",
+                            issuerNickName);
+            return SECFailure;
+        }
 
-      privKey = caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
-      CERT_DestroyCertificate(issuer);
-      if (caPrivateKey == NULL) {
-	SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
-	return SECFailure;
-      }
+        privKey = caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
+        CERT_DestroyCertificate(issuer);
+        if (caPrivateKey == NULL) {
+            SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
+            return SECFailure;
+        }
     }
-	
+
     arena = cert->arena;
 
     algID = SEC_GetSignatureAlgorithmOidTag(privKey->keyType, hashAlgTag);
     if (algID == SEC_OID_UNKNOWN) {
-	fprintf(stderr, "Unknown key or hash type for issuer.");
-	rv = SECFailure;
-	goto done;
+        fprintf(stderr, "Unknown key or hash type for issuer.");
+        rv = SECFailure;
+        goto done;
     }
 
     rv = SECOID_SetAlgorithmID(arena, &cert->signature, algID, 0);
     if (rv != SECSuccess) {
-	fprintf(stderr, "Could not set signature algorithm id.");
-	goto done;
+        fprintf(stderr, "Could not set signature algorithm id.");
+        goto done;
     }
 
-    switch(certVersion) {
-      case (SEC_CERTIFICATE_VERSION_1):
-        /* The initial version for x509 certificates is version one
+    switch (certVersion) {
+        case (SEC_CERTIFICATE_VERSION_1):
+            /* The initial version for x509 certificates is version one
          * and this default value must be an implicit DER encoding. */
-        cert->version.data = NULL;
-        cert->version.len = 0;
-        break;
-      case (SEC_CERTIFICATE_VERSION_2):
-      case (SEC_CERTIFICATE_VERSION_3):
-      case 3: /* unspecified format (would be version 4 certificate). */
-        *(cert->version.data) = certVersion;
-        cert->version.len = 1;
-        break;
-      default:
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
+            cert->version.data = NULL;
+            cert->version.len = 0;
+            break;
+        case (SEC_CERTIFICATE_VERSION_2):
+        case (SEC_CERTIFICATE_VERSION_3):
+        case 3: /* unspecified format (would be version 4 certificate). */
+            *(cert->version.data) = certVersion;
+            cert->version.len = 1;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
     }
 
     der.len = 0;
     der.data = NULL;
-    dummy = SEC_ASN1EncodeItem (arena, &der, cert,
-			 	SEC_ASN1_GET(CERT_CertificateTemplate));
+    dummy = SEC_ASN1EncodeItem(arena, &der, cert,
+                               SEC_ASN1_GET(CERT_CertificateTemplate));
     if (!dummy) {
-	fprintf (stderr, "Could not encode certificate.\n");
-	rv = SECFailure;
-	goto done;
+        fprintf(stderr, "Could not encode certificate.\n");
+        rv = SECFailure;
+        goto done;
     }
 
     rv = SEC_DerSignData(arena, &cert->derCert, der.data, der.len, privKey, algID);
     if (rv != SECSuccess) {
-	fprintf (stderr, "Could not sign encoded certificate data.\n");
-	/* result allocated out of the arena, it will be freed
-	 * when the arena is freed */
-	goto done;
+        fprintf(stderr, "Could not sign encoded certificate data.\n");
+        /* result allocated out of the arena, it will be freed
+         * when the arena is freed */
+        goto done;
     }
 done:
     if (caPrivateKey) {
-	SECKEY_DestroyPrivateKey(caPrivateKey);
+        SECKEY_DestroyPrivateKey(caPrivateKey);
     }
     return rv;
 }
 
 static SECStatus
 CreateCert(
-	CERTCertDBHandle *handle, 
-	PK11SlotInfo *slot,
-	char *  issuerNickName, 
-	const SECItem * certReqDER,
-	SECKEYPrivateKey **selfsignprivkey,
-	void 	*pwarg,
-	SECOidTag hashAlgTag,
-	unsigned int serialNumber, 
-	int     warpmonths,
-	int     validityMonths,
-	const char *emailAddrs,
-	const char *dnsNames,
-	PRBool ascii,
-	PRBool  selfsign,
-	certutilExtnList extnList,
-	const char *extGeneric,
-        int certVersion,
-	SECItem * certDER)
+    CERTCertDBHandle *handle,
+    PK11SlotInfo *slot,
+    char *issuerNickName,
+    const SECItem *certReqDER,
+    SECKEYPrivateKey **selfsignprivkey,
+    void *pwarg,
+    SECOidTag hashAlgTag,
+    unsigned int serialNumber,
+    int warpmonths,
+    int validityMonths,
+    const char *emailAddrs,
+    const char *dnsNames,
+    PRBool ascii,
+    PRBool selfsign,
+    certutilExtnList extnList,
+    const char *extGeneric,
+    int certVersion,
+    SECItem *certDER)
 {
-    void *	extHandle;
-    CERTCertificate *subjectCert 	= NULL;
-    CERTCertificateRequest *certReq	= NULL;
-    SECStatus 	rv 			= SECSuccess;
+    void *extHandle;
+    CERTCertificate *subjectCert = NULL;
+    CERTCertificateRequest *certReq = NULL;
+    SECStatus rv = SECSuccess;
     CERTCertExtension **CRexts;
 
     do {
-	/* Create a certrequest object from the input cert request der */
-	certReq = GetCertRequest(certReqDER);
-	if (certReq == NULL) {
-	    GEN_BREAK (SECFailure)
-	}
+        /* Create a certrequest object from the input cert request der */
+        certReq = GetCertRequest(certReqDER);
+        if (certReq == NULL) {
+            GEN_BREAK(SECFailure)
+        }
 
-	subjectCert = MakeV1Cert (handle, certReq, issuerNickName, selfsign,
-				  serialNumber, warpmonths, validityMonths);
-	if (subjectCert == NULL) {
-	    GEN_BREAK (SECFailure)
-	}
-        
-        
-	extHandle = CERT_StartCertExtensions (subjectCert);
-	if (extHandle == NULL) {
-	    GEN_BREAK (SECFailure)
-	}
-        
+        subjectCert = MakeV1Cert(handle, certReq, issuerNickName, selfsign,
+                                 serialNumber, warpmonths, validityMonths);
+        if (subjectCert == NULL) {
+            GEN_BREAK(SECFailure)
+        }
+
+        extHandle = CERT_StartCertExtensions(subjectCert);
+        if (extHandle == NULL) {
+            GEN_BREAK(SECFailure)
+        }
+
         rv = AddExtensions(extHandle, emailAddrs, dnsNames, extnList, extGeneric);
         if (rv != SECSuccess) {
-	    GEN_BREAK (SECFailure)
-	}
-        
+            GEN_BREAK(SECFailure)
+        }
+
         if (certReq->attributes != NULL &&
-	    certReq->attributes[0] != NULL &&
-	    certReq->attributes[0]->attrType.data != NULL &&
-	    certReq->attributes[0]->attrType.len   > 0    &&
-            SECOID_FindOIDTag(&certReq->attributes[0]->attrType)
-                == SEC_OID_PKCS9_EXTENSION_REQUEST) {
+            certReq->attributes[0] != NULL &&
+            certReq->attributes[0]->attrType.data != NULL &&
+            certReq->attributes[0]->attrType.len > 0 &&
+            SECOID_FindOIDTag(&certReq->attributes[0]->attrType) ==
+                SEC_OID_PKCS9_EXTENSION_REQUEST) {
             rv = CERT_GetCertificateRequestExtensions(certReq, &CRexts);
             if (rv != SECSuccess)
                 break;
@@ -1989,91 +2013,89 @@ CreateCert(
                 break;
         }
 
-	CERT_FinishExtensions(extHandle);
+        CERT_FinishExtensions(extHandle);
 
-	/* self-signing a cert request, find the private key */
-	if (selfsign && *selfsignprivkey == NULL) {
-	    *selfsignprivkey = PK11_FindKeyByDERCert(slot, subjectCert, pwarg);
-	    if (!*selfsignprivkey) {
-		fprintf(stderr, "Failed to locate private key.\n");
-		rv = SECFailure;
-		break;
-	    }
-	}
+        /* self-signing a cert request, find the private key */
+        if (selfsign && *selfsignprivkey == NULL) {
+            *selfsignprivkey = PK11_FindKeyByDERCert(slot, subjectCert, pwarg);
+            if (!*selfsignprivkey) {
+                fprintf(stderr, "Failed to locate private key.\n");
+                rv = SECFailure;
+                break;
+            }
+        }
 
-	rv = SignCert(handle, subjectCert, selfsign, hashAlgTag,
-		      *selfsignprivkey, issuerNickName,
+        rv = SignCert(handle, subjectCert, selfsign, hashAlgTag,
+                      *selfsignprivkey, issuerNickName,
                       certVersion, pwarg);
-	if (rv != SECSuccess)
-	    break;
+        if (rv != SECSuccess)
+            break;
 
-	rv = SECFailure;
-	if (ascii) {
-	    char * asciiDER = BTOA_DataToAscii(subjectCert->derCert.data,
-					       subjectCert->derCert.len);
-	    if (asciiDER) {
-	        char * wrapped = PR_smprintf("%s\n%s\n%s\n",
-					     NS_CERT_HEADER,
-					     asciiDER,
-					     NS_CERT_TRAILER);
-	        if (wrapped) {
-		    PRUint32 wrappedLen = PL_strlen(wrapped);
-		    if (SECITEM_AllocItem(NULL, certDER, wrappedLen)) {
-		        PORT_Memcpy(certDER->data, wrapped, wrappedLen);
-		        rv = SECSuccess;
-		    }
-		    PR_smprintf_free(wrapped);
-	        }
-		PORT_Free(asciiDER);
-	    }
-	} else {
-	    rv = SECITEM_CopyItem(NULL, certDER, &subjectCert->derCert);
-	}
+        rv = SECFailure;
+        if (ascii) {
+            char *asciiDER = BTOA_DataToAscii(subjectCert->derCert.data,
+                                              subjectCert->derCert.len);
+            if (asciiDER) {
+                char *wrapped = PR_smprintf("%s\n%s\n%s\n",
+                                            NS_CERT_HEADER,
+                                            asciiDER,
+                                            NS_CERT_TRAILER);
+                if (wrapped) {
+                    PRUint32 wrappedLen = PL_strlen(wrapped);
+                    if (SECITEM_AllocItem(NULL, certDER, wrappedLen)) {
+                        PORT_Memcpy(certDER->data, wrapped, wrappedLen);
+                        rv = SECSuccess;
+                    }
+                    PR_smprintf_free(wrapped);
+                }
+                PORT_Free(asciiDER);
+            }
+        } else {
+            rv = SECITEM_CopyItem(NULL, certDER, &subjectCert->derCert);
+        }
     } while (0);
-    CERT_DestroyCertificateRequest (certReq);
-    CERT_DestroyCertificate (subjectCert);
+    CERT_DestroyCertificateRequest(certReq);
+    CERT_DestroyCertificate(subjectCert);
     if (rv != SECSuccess) {
-	PRErrorCode  perr = PR_GetError();
+        PRErrorCode perr = PR_GetError();
         fprintf(stderr, "%s: unable to create cert (%s)\n", progName,
-               SECU_Strerror(perr));
+                SECU_Strerror(perr));
     }
     return (rv);
 }
-
 
 /*
  * map a class to a user presentable string
  */
 static const char *objClassArray[] = {
-   "Data",
-   "Certificate",
-   "Public Key",
-   "Private Key",
-   "Secret Key",
-   "Hardware Feature",
-   "Domain Parameters",
-   "Mechanism"
+    "Data",
+    "Certificate",
+    "Public Key",
+    "Private Key",
+    "Secret Key",
+    "Hardware Feature",
+    "Domain Parameters",
+    "Mechanism"
 };
 
 static const char *objNSSClassArray[] = {
-   "CKO_NSS",
-   "Crl",
-   "SMIME Record",
-   "Trust",
-   "Builtin Root List"
+    "CKO_NSS",
+    "Crl",
+    "SMIME Record",
+    "Trust",
+    "Builtin Root List"
 };
-
 
 const char *
 getObjectClass(CK_ULONG classType)
 {
-    static char buf[sizeof(CK_ULONG)*2+3];
+    static char buf[sizeof(CK_ULONG) * 2 + 3];
 
     if (classType <= CKO_MECHANISM) {
-	return objClassArray[classType];
+        return objClassArray[classType];
     }
     if (classType >= CKO_NSS && classType <= CKO_NSS_BUILTIN_ROOT_LIST) {
-	return objNSSClassArray[classType - CKO_NSS];
+        return objNSSClassArray[classType - CKO_NSS];
     }
     sprintf(buf, "0x%lx", classType);
     return buf;
@@ -2081,83 +2103,83 @@ getObjectClass(CK_ULONG classType)
 
 typedef struct {
     char *name;
-    int  nameSize;
+    int nameSize;
     CK_ULONG value;
 } flagArray;
 
-#define NAME_SIZE(x) #x,sizeof(#x)-1
+#define NAME_SIZE(x) #x, sizeof(#x) - 1
 
 flagArray opFlagsArray[] =
-{
-    {NAME_SIZE(encrypt), CKF_ENCRYPT},
-    {NAME_SIZE(decrypt), CKF_DECRYPT},
-    {NAME_SIZE(sign), CKF_SIGN},
-    {NAME_SIZE(sign_recover), CKF_SIGN_RECOVER},
-    {NAME_SIZE(verify), CKF_VERIFY},
-    {NAME_SIZE(verify_recover), CKF_VERIFY_RECOVER},
-    {NAME_SIZE(wrap), CKF_WRAP},
-    {NAME_SIZE(unwrap), CKF_UNWRAP},
-    {NAME_SIZE(derive), CKF_DERIVE},
-};
+    {
+      { NAME_SIZE(encrypt), CKF_ENCRYPT },
+      { NAME_SIZE(decrypt), CKF_DECRYPT },
+      { NAME_SIZE(sign), CKF_SIGN },
+      { NAME_SIZE(sign_recover), CKF_SIGN_RECOVER },
+      { NAME_SIZE(verify), CKF_VERIFY },
+      { NAME_SIZE(verify_recover), CKF_VERIFY_RECOVER },
+      { NAME_SIZE(wrap), CKF_WRAP },
+      { NAME_SIZE(unwrap), CKF_UNWRAP },
+      { NAME_SIZE(derive), CKF_DERIVE },
+    };
 
-int opFlagsCount = sizeof(opFlagsArray)/sizeof(flagArray);
+int opFlagsCount = sizeof(opFlagsArray) / sizeof(flagArray);
 
 flagArray attrFlagsArray[] =
-{
-    {NAME_SIZE(token), PK11_ATTR_TOKEN},
-    {NAME_SIZE(session), PK11_ATTR_SESSION},
-    {NAME_SIZE(private), PK11_ATTR_PRIVATE},
-    {NAME_SIZE(public), PK11_ATTR_PUBLIC},
-    {NAME_SIZE(modifiable), PK11_ATTR_MODIFIABLE},
-    {NAME_SIZE(unmodifiable), PK11_ATTR_UNMODIFIABLE},
-    {NAME_SIZE(sensitive), PK11_ATTR_SENSITIVE},
-    {NAME_SIZE(insensitive), PK11_ATTR_INSENSITIVE},
-    {NAME_SIZE(extractable), PK11_ATTR_EXTRACTABLE},
-    {NAME_SIZE(unextractable), PK11_ATTR_UNEXTRACTABLE}
+    {
+      { NAME_SIZE(token), PK11_ATTR_TOKEN },
+      { NAME_SIZE(session), PK11_ATTR_SESSION },
+      { NAME_SIZE(private), PK11_ATTR_PRIVATE },
+      { NAME_SIZE(public), PK11_ATTR_PUBLIC },
+      { NAME_SIZE(modifiable), PK11_ATTR_MODIFIABLE },
+      { NAME_SIZE(unmodifiable), PK11_ATTR_UNMODIFIABLE },
+      { NAME_SIZE(sensitive), PK11_ATTR_SENSITIVE },
+      { NAME_SIZE(insensitive), PK11_ATTR_INSENSITIVE },
+      { NAME_SIZE(extractable), PK11_ATTR_EXTRACTABLE },
+      { NAME_SIZE(unextractable), PK11_ATTR_UNEXTRACTABLE }
 
-};
+    };
 
-int attrFlagsCount = sizeof(attrFlagsArray)/sizeof(flagArray);
+int attrFlagsCount = sizeof(attrFlagsArray) / sizeof(flagArray);
 
 #define MAX_STRING 30
 CK_ULONG
 GetFlags(char *flagsString, flagArray *flagArray, int count)
 {
-   CK_ULONG flagsValue = strtol(flagsString, NULL, 0);
-   int i;
+    CK_ULONG flagsValue = strtol(flagsString, NULL, 0);
+    int i;
 
-   if ((flagsValue != 0) || (*flagsString == 0)) {
-	return flagsValue;
-   }
-   while (*flagsString) {
-	for (i=0; i < count; i++) {
-	    if (strncmp(flagsString, flagArray[i].name, flagArray[i].nameSize) 
-								== 0) {
-		flagsValue |= flagArray[i].value;
-		flagsString += flagArray[i].nameSize;
-		if (*flagsString != 0) {
-		    flagsString++;
-		}
-		break;
-	    }
-	}
-	if (i == count) {
-	    char name[MAX_STRING];
-	    char *tok;
+    if ((flagsValue != 0) || (*flagsString == 0)) {
+        return flagsValue;
+    }
+    while (*flagsString) {
+        for (i = 0; i < count; i++) {
+            if (strncmp(flagsString, flagArray[i].name, flagArray[i].nameSize) ==
+                0) {
+                flagsValue |= flagArray[i].value;
+                flagsString += flagArray[i].nameSize;
+                if (*flagsString != 0) {
+                    flagsString++;
+                }
+                break;
+            }
+        }
+        if (i == count) {
+            char name[MAX_STRING];
+            char *tok;
 
-	    strncpy(name,flagsString, MAX_STRING);
-	    name[MAX_STRING-1] = 0;
-	    tok = strchr(name, ',');
-	    if (tok) {
-		*tok = 0;
-	    }
-	    fprintf(stderr,"Unknown flag (%s)\n",name);
-	    tok = strchr(flagsString, ',');
-	    if (tok == NULL)  {
-		break;
-	    }
-	    flagsString = tok+1;
-	}
+            strncpy(name, flagsString, MAX_STRING);
+            name[MAX_STRING - 1] = 0;
+            tok = strchr(name, ',');
+            if (tok) {
+                *tok = 0;
+            }
+            fprintf(stderr, "Unknown flag (%s)\n", name);
+            tok = strchr(flagsString, ',');
+            if (tok == NULL) {
+                break;
+            }
+            flagsString = tok + 1;
+        }
     }
     return flagsValue;
 }
@@ -2174,15 +2196,16 @@ GetAttrFlags(char *flags)
     return GetFlags(flags, attrFlagsArray, attrFlagsCount);
 }
 
-char *mkNickname(unsigned char *data, int len)
+char *
+mkNickname(unsigned char *data, int len)
 {
-   char *nick = PORT_Alloc(len+1);
-   if (!nick) {
-	return nick;
-   }
-   PORT_Memcpy(nick, data, len);
-   nick[len] = 0;
-   return nick;
+    char *nick = PORT_Alloc(len + 1);
+    if (!nick) {
+        return nick;
+    }
+    PORT_Memcpy(nick, data, len);
+    nick[len] = 0;
+    return nick;
 }
 
 /*
@@ -2194,37 +2217,37 @@ DumpMergeLog(const char *progname, PK11MergeLog *log)
     PK11MergeLogNode *node;
 
     for (node = log->head; node; node = node->next) {
-	SECItem  attrItem;
-	char *nickname = NULL;
-	const char *objectClass = NULL;
-	SECStatus rv;
+        SECItem attrItem;
+        char *nickname = NULL;
+        const char *objectClass = NULL;
+        SECStatus rv;
 
-	attrItem.data = NULL;
-	rv = PK11_ReadRawAttribute(PK11_TypeGeneric, node->object, 
-				   CKA_LABEL, &attrItem);
-	if (rv == SECSuccess) {
-	    nickname = mkNickname(attrItem.data, attrItem.len);
-	    PORT_Free(attrItem.data);
-	}
-	attrItem.data = NULL;
-	rv = PK11_ReadRawAttribute(PK11_TypeGeneric, node->object, 
-				   CKA_CLASS, &attrItem);
-	if (rv == SECSuccess) {
-	     if (attrItem.len == sizeof(CK_ULONG)) {
-		objectClass = getObjectClass(*(CK_ULONG *)attrItem.data);
-	     }
-	     PORT_Free(attrItem.data);
-	}
+        attrItem.data = NULL;
+        rv = PK11_ReadRawAttribute(PK11_TypeGeneric, node->object,
+                                   CKA_LABEL, &attrItem);
+        if (rv == SECSuccess) {
+            nickname = mkNickname(attrItem.data, attrItem.len);
+            PORT_Free(attrItem.data);
+        }
+        attrItem.data = NULL;
+        rv = PK11_ReadRawAttribute(PK11_TypeGeneric, node->object,
+                                   CKA_CLASS, &attrItem);
+        if (rv == SECSuccess) {
+            if (attrItem.len == sizeof(CK_ULONG)) {
+                objectClass = getObjectClass(*(CK_ULONG *)attrItem.data);
+            }
+            PORT_Free(attrItem.data);
+        }
 
-	fprintf(stderr, "%s: Could not merge object %s (type %s): %s\n",
-		progName,
-		nickname ? nickname : "unnamed",
-		objectClass ? objectClass : "unknown",
-		SECU_Strerror(node->error));
+        fprintf(stderr, "%s: Could not merge object %s (type %s): %s\n",
+                progName,
+                nickname ? nickname : "unnamed",
+                objectClass ? objectClass : "unknown",
+                SECU_Strerror(node->error));
 
-	if (nickname) {
-	    PORT_Free(nickname);
-	}
+        if (nickname) {
+            PORT_Free(nickname);
+        }
     }
 }
 
@@ -2326,176 +2349,174 @@ enum certutilOpts {
     opt_Help
 };
 
-static const
-secuCommandFlag commands_init[] =
-{
-	{ /* cmd_AddCert             */  'A', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_CreateNewCert       */  'C', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DeleteCert          */  'D', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_AddEmailCert        */  'E', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DeleteKey           */  'F', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_GenKeyPair          */  'G', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_PrintHelp           */  'H', PR_FALSE, 0, PR_FALSE, "help" },
-        { /* cmd_PrintSyntax         */   0,  PR_FALSE, 0, PR_FALSE,
-                                                   "syntax" },
-	{ /* cmd_ListKeys            */  'K', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_ListCerts           */  'L', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_ModifyCertTrust     */  'M', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_NewDBs              */  'N', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DumpChain           */  'O', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_CertReq             */  'R', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_CreateAndAddCert    */  'S', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_TokenReset          */  'T', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_ListModules         */  'U', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_CheckCertValidity   */  'V', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_ChangePassword      */  'W', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_Version             */  'Y', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_Batch               */  'B', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_Merge               */   0,  PR_FALSE, 0, PR_FALSE, "merge" },
-	{ /* cmd_UpgradeMerge        */   0,  PR_FALSE, 0, PR_FALSE, 
-                                                   "upgrade-merge" },
-	{ /* cmd_Rename              */   0,  PR_FALSE, 0, PR_FALSE, 
-                                                   "rename" }
-};
+static const secuCommandFlag commands_init[] =
+    {
+      { /* cmd_AddCert             */ 'A', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_CreateNewCert       */ 'C', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_DeleteCert          */ 'D', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_AddEmailCert        */ 'E', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_DeleteKey           */ 'F', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_GenKeyPair          */ 'G', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_PrintHelp           */ 'H', PR_FALSE, 0, PR_FALSE, "help" },
+      { /* cmd_PrintSyntax         */ 0, PR_FALSE, 0, PR_FALSE,
+        "syntax" },
+      { /* cmd_ListKeys            */ 'K', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_ListCerts           */ 'L', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_ModifyCertTrust     */ 'M', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_NewDBs              */ 'N', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_DumpChain           */ 'O', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_CertReq             */ 'R', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_CreateAndAddCert    */ 'S', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_TokenReset          */ 'T', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_ListModules         */ 'U', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_CheckCertValidity   */ 'V', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_ChangePassword      */ 'W', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_Version             */ 'Y', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_Batch               */ 'B', PR_FALSE, 0, PR_FALSE },
+      { /* cmd_Merge               */ 0, PR_FALSE, 0, PR_FALSE, "merge" },
+      { /* cmd_UpgradeMerge        */ 0, PR_FALSE, 0, PR_FALSE,
+        "upgrade-merge" },
+      { /* cmd_Rename              */ 0, PR_FALSE, 0, PR_FALSE,
+        "rename" }
+    };
 #define NUM_COMMANDS ((sizeof commands_init) / (sizeof commands_init[0]))
- 
-static const 
-secuCommandFlag options_init[] =
-{
-	{ /* opt_SSOPass             */  '0', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_AddKeyUsageExt      */  '1', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_AddBasicConstraintExt*/ '2', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_AddAuthorityKeyIDExt*/  '3', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_AddCRLDistPtsExt    */  '4', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_AddNSCertTypeExt    */  '5', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_AddExtKeyUsageExt   */  '6', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_ExtendedEmailAddrs  */  '7', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_ExtendedDNSNames    */  '8', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_ASCIIForIO          */  'a', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_ValidityTime        */  'b', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_IssuerName          */  'c', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_CertDir             */  'd', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_VerifySig           */  'e', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_PasswordFile        */  'f', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_KeySize             */  'g', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_TokenName           */  'h', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_InputFile           */  'i', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Emailaddress        */  0,   PR_TRUE,  0, PR_FALSE, "email" },
-	{ /* opt_KeyIndex            */  'j', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_KeyType             */  'k', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_DetailedInfo        */  'l', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_SerialNumber        */  'm', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Nickname            */  'n', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_OutputFile          */  'o', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_PhoneNumber         */  'p', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_DBPrefix            */  'P', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_PQGFile             */  'q', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_BinaryDER           */  'r', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_Subject             */  's', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Trust               */  't', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Usage               */  'u', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Validity            */  'v', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_OffsetMonths        */  'w', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_SelfSign            */  'x', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_RW                  */  'X', PR_FALSE, 0, PR_FALSE },
-	{ /* opt_Exponent            */  'y', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_NoiseFile           */  'z', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Hash                */  'Z', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_NewPasswordFile     */  '@', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_AddAuthInfoAccExt   */  0,   PR_FALSE, 0, PR_FALSE, "extAIA" },
-	{ /* opt_AddSubjInfoAccExt   */  0,   PR_FALSE, 0, PR_FALSE, "extSIA" },
-	{ /* opt_AddCertPoliciesExt  */  0,   PR_FALSE, 0, PR_FALSE, "extCP" },
-	{ /* opt_AddPolicyMapExt     */  0,   PR_FALSE, 0, PR_FALSE, "extPM" },
-	{ /* opt_AddPolicyConstrExt  */  0,   PR_FALSE, 0, PR_FALSE, "extPC" },
-	{ /* opt_AddInhibAnyExt      */  0,   PR_FALSE, 0, PR_FALSE, "extIA" },
-	{ /* opt_AddNameConstraintsExt*/ 0,   PR_FALSE, 0, PR_FALSE, "extNC" },
-	{ /* opt_AddSubjectKeyIDExt  */  0,   PR_FALSE, 0, PR_FALSE, 
-						   "extSKID" },
-	{ /* opt_AddCmdKeyUsageExt   */  0,   PR_TRUE,  0, PR_FALSE,
-                                                   "keyUsage" },
-	{ /* opt_AddCmdNSCertTypeExt */   0,   PR_TRUE,  0, PR_FALSE,
-                                                   "nsCertType" },
-	{ /* opt_AddCmdExtKeyUsageExt*/  0,   PR_TRUE,  0, PR_FALSE,
-                                                   "extKeyUsage" },
 
-	{ /* opt_SourceDir           */  0,   PR_TRUE,  0, PR_FALSE,
-                                                   "source-dir"},
-	{ /* opt_SourcePrefix        */  0,   PR_TRUE,  0, PR_FALSE, 
-						   "source-prefix"},
-	{ /* opt_UpgradeID           */  0,   PR_TRUE,  0, PR_FALSE, 
-                                                   "upgrade-id"},
-	{ /* opt_UpgradeTokenName    */  0,   PR_TRUE,  0, PR_FALSE, 
-                                                   "upgrade-token-name"},
-	{ /* opt_KeyOpFlagsOn        */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "keyOpFlagsOn"},
-	{ /* opt_KeyOpFlagsOff       */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "keyOpFlagsOff"},
-	{ /* opt_KeyAttrFlags        */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "keyAttrFlags"},
-	{ /* opt_EmptyPassword       */  0,   PR_FALSE, 0, PR_FALSE, 
-                                                   "empty-password"},
-        { /* opt_CertVersion         */  0,   PR_TRUE, 0, PR_FALSE,
-                                                   "certVersion"},
-	{ /* opt_AddSubjectAltExt    */  0,   PR_TRUE,  0, PR_FALSE, "extSAN"},
-	{ /* opt_DumpExtensionValue  */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "dump-ext-val"},
-	{ /* opt_GenericExtensions   */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "extGeneric"},
-	{ /* opt_NewNickname         */  0,   PR_TRUE, 0, PR_FALSE, 
-                                                   "new-n"},
-};
-#define NUM_OPTIONS ((sizeof options_init)  / (sizeof options_init[0]))
+static const secuCommandFlag options_init[] =
+    {
+      { /* opt_SSOPass             */ '0', PR_TRUE, 0, PR_FALSE },
+      { /* opt_AddKeyUsageExt      */ '1', PR_FALSE, 0, PR_FALSE },
+      { /* opt_AddBasicConstraintExt*/ '2', PR_FALSE, 0, PR_FALSE },
+      { /* opt_AddAuthorityKeyIDExt*/ '3', PR_FALSE, 0, PR_FALSE },
+      { /* opt_AddCRLDistPtsExt    */ '4', PR_FALSE, 0, PR_FALSE },
+      { /* opt_AddNSCertTypeExt    */ '5', PR_FALSE, 0, PR_FALSE },
+      { /* opt_AddExtKeyUsageExt   */ '6', PR_FALSE, 0, PR_FALSE },
+      { /* opt_ExtendedEmailAddrs  */ '7', PR_TRUE, 0, PR_FALSE },
+      { /* opt_ExtendedDNSNames    */ '8', PR_TRUE, 0, PR_FALSE },
+      { /* opt_ASCIIForIO          */ 'a', PR_FALSE, 0, PR_FALSE },
+      { /* opt_ValidityTime        */ 'b', PR_TRUE, 0, PR_FALSE },
+      { /* opt_IssuerName          */ 'c', PR_TRUE, 0, PR_FALSE },
+      { /* opt_CertDir             */ 'd', PR_TRUE, 0, PR_FALSE },
+      { /* opt_VerifySig           */ 'e', PR_FALSE, 0, PR_FALSE },
+      { /* opt_PasswordFile        */ 'f', PR_TRUE, 0, PR_FALSE },
+      { /* opt_KeySize             */ 'g', PR_TRUE, 0, PR_FALSE },
+      { /* opt_TokenName           */ 'h', PR_TRUE, 0, PR_FALSE },
+      { /* opt_InputFile           */ 'i', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Emailaddress        */ 0, PR_TRUE, 0, PR_FALSE, "email" },
+      { /* opt_KeyIndex            */ 'j', PR_TRUE, 0, PR_FALSE },
+      { /* opt_KeyType             */ 'k', PR_TRUE, 0, PR_FALSE },
+      { /* opt_DetailedInfo        */ 'l', PR_FALSE, 0, PR_FALSE },
+      { /* opt_SerialNumber        */ 'm', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Nickname            */ 'n', PR_TRUE, 0, PR_FALSE },
+      { /* opt_OutputFile          */ 'o', PR_TRUE, 0, PR_FALSE },
+      { /* opt_PhoneNumber         */ 'p', PR_TRUE, 0, PR_FALSE },
+      { /* opt_DBPrefix            */ 'P', PR_TRUE, 0, PR_FALSE },
+      { /* opt_PQGFile             */ 'q', PR_TRUE, 0, PR_FALSE },
+      { /* opt_BinaryDER           */ 'r', PR_FALSE, 0, PR_FALSE },
+      { /* opt_Subject             */ 's', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Trust               */ 't', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Usage               */ 'u', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Validity            */ 'v', PR_TRUE, 0, PR_FALSE },
+      { /* opt_OffsetMonths        */ 'w', PR_TRUE, 0, PR_FALSE },
+      { /* opt_SelfSign            */ 'x', PR_FALSE, 0, PR_FALSE },
+      { /* opt_RW                  */ 'X', PR_FALSE, 0, PR_FALSE },
+      { /* opt_Exponent            */ 'y', PR_TRUE, 0, PR_FALSE },
+      { /* opt_NoiseFile           */ 'z', PR_TRUE, 0, PR_FALSE },
+      { /* opt_Hash                */ 'Z', PR_TRUE, 0, PR_FALSE },
+      { /* opt_NewPasswordFile     */ '@', PR_TRUE, 0, PR_FALSE },
+      { /* opt_AddAuthInfoAccExt   */ 0, PR_FALSE, 0, PR_FALSE, "extAIA" },
+      { /* opt_AddSubjInfoAccExt   */ 0, PR_FALSE, 0, PR_FALSE, "extSIA" },
+      { /* opt_AddCertPoliciesExt  */ 0, PR_FALSE, 0, PR_FALSE, "extCP" },
+      { /* opt_AddPolicyMapExt     */ 0, PR_FALSE, 0, PR_FALSE, "extPM" },
+      { /* opt_AddPolicyConstrExt  */ 0, PR_FALSE, 0, PR_FALSE, "extPC" },
+      { /* opt_AddInhibAnyExt      */ 0, PR_FALSE, 0, PR_FALSE, "extIA" },
+      { /* opt_AddNameConstraintsExt*/ 0, PR_FALSE, 0, PR_FALSE, "extNC" },
+      { /* opt_AddSubjectKeyIDExt  */ 0, PR_FALSE, 0, PR_FALSE,
+        "extSKID" },
+      { /* opt_AddCmdKeyUsageExt   */ 0, PR_TRUE, 0, PR_FALSE,
+        "keyUsage" },
+      { /* opt_AddCmdNSCertTypeExt */ 0, PR_TRUE, 0, PR_FALSE,
+        "nsCertType" },
+      { /* opt_AddCmdExtKeyUsageExt*/ 0, PR_TRUE, 0, PR_FALSE,
+        "extKeyUsage" },
+
+      { /* opt_SourceDir           */ 0, PR_TRUE, 0, PR_FALSE,
+        "source-dir" },
+      { /* opt_SourcePrefix        */ 0, PR_TRUE, 0, PR_FALSE,
+        "source-prefix" },
+      { /* opt_UpgradeID           */ 0, PR_TRUE, 0, PR_FALSE,
+        "upgrade-id" },
+      { /* opt_UpgradeTokenName    */ 0, PR_TRUE, 0, PR_FALSE,
+        "upgrade-token-name" },
+      { /* opt_KeyOpFlagsOn        */ 0, PR_TRUE, 0, PR_FALSE,
+        "keyOpFlagsOn" },
+      { /* opt_KeyOpFlagsOff       */ 0, PR_TRUE, 0, PR_FALSE,
+        "keyOpFlagsOff" },
+      { /* opt_KeyAttrFlags        */ 0, PR_TRUE, 0, PR_FALSE,
+        "keyAttrFlags" },
+      { /* opt_EmptyPassword       */ 0, PR_FALSE, 0, PR_FALSE,
+        "empty-password" },
+      { /* opt_CertVersion         */ 0, PR_TRUE, 0, PR_FALSE,
+        "certVersion" },
+      { /* opt_AddSubjectAltExt    */ 0, PR_TRUE, 0, PR_FALSE, "extSAN" },
+      { /* opt_DumpExtensionValue  */ 0, PR_TRUE, 0, PR_FALSE,
+        "dump-ext-val" },
+      { /* opt_GenericExtensions   */ 0, PR_TRUE, 0, PR_FALSE,
+        "extGeneric" },
+      { /* opt_NewNickname         */ 0, PR_TRUE, 0, PR_FALSE,
+        "new-n" },
+    };
+#define NUM_OPTIONS ((sizeof options_init) / (sizeof options_init[0]))
 
 static secuCommandFlag certutil_commands[NUM_COMMANDS];
-static secuCommandFlag certutil_options [NUM_OPTIONS ];
+static secuCommandFlag certutil_options[NUM_OPTIONS];
 
 static const secuCommand certutil = {
-    NUM_COMMANDS, 
-    NUM_OPTIONS, 
-    certutil_commands, 
+    NUM_COMMANDS,
+    NUM_OPTIONS,
+    certutil_commands,
     certutil_options
 };
 
 static certutilExtnList certutil_extns;
 
-static int 
+static int
 certutil_main(int argc, char **argv, PRBool initialize)
 {
     CERTCertDBHandle *certHandle;
     PK11SlotInfo *slot = NULL;
-    CERTName *  subject         = 0;
-    PRFileDesc *inFile          = PR_STDIN;
-    PRFileDesc *outFile         = PR_STDOUT;
-    SECItem     certReqDER      = { siBuffer, NULL, 0 };
-    SECItem     certDER         = { siBuffer, NULL, 0 };
-    const char *slotname        = "internal";
-    const char *certPrefix      = "";
-    char *      sourceDir       = "";
-    const char *srcCertPrefix   = "";
-    char *      upgradeID        = "";
-    char *      upgradeTokenName     = "";
-    KeyType     keytype         = rsaKey;
-    char *      name            = NULL;
-    char *      newName         = NULL;
-    char *      email            = NULL;
-    char *      keysource       = NULL;
-    SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
-    int	        keysize	        = DEFAULT_KEY_BITS;
-    int         publicExponent  = 0x010001;
-    int         certVersion     = SEC_CERTIFICATE_VERSION_3;
-    unsigned int serialNumber   = 0;
-    int         warpmonths      = 0;
-    int         validityMonths  = 3;
-    int         commandsEntered = 0;
-    char        commandToRun    = '\0';
-    secuPWData  pwdata          = { PW_NONE, 0 };
-    secuPWData  pwdata2         = { PW_NONE, 0 };
-    PRBool      readOnly        = PR_FALSE;
-    PRBool      initialized     = PR_FALSE;
-    CK_FLAGS    keyOpFlagsOn = 0;
-    CK_FLAGS    keyOpFlagsOff = 0;
-    PK11AttrFlags    keyAttrFlags = 
-		PK11_ATTR_TOKEN | PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE;
+    CERTName *subject = 0;
+    PRFileDesc *inFile = PR_STDIN;
+    PRFileDesc *outFile = PR_STDOUT;
+    SECItem certReqDER = { siBuffer, NULL, 0 };
+    SECItem certDER = { siBuffer, NULL, 0 };
+    const char *slotname = "internal";
+    const char *certPrefix = "";
+    char *sourceDir = "";
+    const char *srcCertPrefix = "";
+    char *upgradeID = "";
+    char *upgradeTokenName = "";
+    KeyType keytype = rsaKey;
+    char *name = NULL;
+    char *newName = NULL;
+    char *email = NULL;
+    char *keysource = NULL;
+    SECOidTag hashAlgTag = SEC_OID_UNKNOWN;
+    int keysize = DEFAULT_KEY_BITS;
+    int publicExponent = 0x010001;
+    int certVersion = SEC_CERTIFICATE_VERSION_3;
+    unsigned int serialNumber = 0;
+    int warpmonths = 0;
+    int validityMonths = 3;
+    int commandsEntered = 0;
+    char commandToRun = '\0';
+    secuPWData pwdata = { PW_NONE, 0 };
+    secuPWData pwdata2 = { PW_NONE, 0 };
+    PRBool readOnly = PR_FALSE;
+    PRBool initialized = PR_FALSE;
+    CK_FLAGS keyOpFlagsOn = 0;
+    CK_FLAGS keyOpFlagsOff = 0;
+    PK11AttrFlags keyAttrFlags =
+        PK11_ATTR_TOKEN | PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE;
 
     SECKEYPrivateKey *privkey = NULL;
     SECKEYPublicKey *pubkey = NULL;
@@ -2504,14 +2525,14 @@ certutil_main(int argc, char **argv, PRBool initialize)
     SECStatus rv;
 
     progName = PORT_Strrchr(argv[0], '/');
-    progName = progName ? progName+1 : argv[0];
+    progName = progName ? progName + 1 : argv[0];
     memcpy(certutil_commands, commands_init, sizeof commands_init);
-    memcpy(certutil_options,  options_init,  sizeof options_init);
+    memcpy(certutil_options, options_init, sizeof options_init);
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &certutil);
 
     if (rv != SECSuccess)
-	Usage(progName);
+        Usage(progName);
 
     if (certutil.commands[cmd_PrintSyntax].activated) {
         PrintSyntax(progName);
@@ -2529,115 +2550,113 @@ certutil_main(int argc, char **argv, PRBool initialize)
                     buf[0] = certutil.commands[i].flag;
                     buf[1] = 0;
                     command = buf;
-                }
-                else {
+                } else {
                     command = certutil.commands[i].longform;
                 }
                 break;
             }
         }
-	LongUsage(progName, (command ? usage_selected : usage_all), command);
+        LongUsage(progName, (command ? usage_selected : usage_all), command);
         exit(1);
     }
 
     if (certutil.options[opt_PasswordFile].arg) {
-	pwdata.source = PW_FROMFILE;
-	pwdata.data = certutil.options[opt_PasswordFile].arg;
+        pwdata.source = PW_FROMFILE;
+        pwdata.data = certutil.options[opt_PasswordFile].arg;
     }
     if (certutil.options[opt_NewPasswordFile].arg) {
-	pwdata2.source = PW_FROMFILE;
-	pwdata2.data = certutil.options[opt_NewPasswordFile].arg;
+        pwdata2.source = PW_FROMFILE;
+        pwdata2.data = certutil.options[opt_NewPasswordFile].arg;
     }
 
     if (certutil.options[opt_CertDir].activated)
-	SECU_ConfigDirectory(certutil.options[opt_CertDir].arg);
+        SECU_ConfigDirectory(certutil.options[opt_CertDir].arg);
 
     if (certutil.options[opt_SourceDir].activated)
-	sourceDir = certutil.options[opt_SourceDir].arg;
+        sourceDir = certutil.options[opt_SourceDir].arg;
 
     if (certutil.options[opt_UpgradeID].activated)
-	upgradeID = certutil.options[opt_UpgradeID].arg;
+        upgradeID = certutil.options[opt_UpgradeID].arg;
 
     if (certutil.options[opt_UpgradeTokenName].activated)
-	upgradeTokenName = certutil.options[opt_UpgradeTokenName].arg;
+        upgradeTokenName = certutil.options[opt_UpgradeTokenName].arg;
 
     if (certutil.options[opt_KeySize].activated) {
-	keysize = PORT_Atoi(certutil.options[opt_KeySize].arg);
-	if ((keysize < MIN_KEY_BITS) || (keysize > MAX_KEY_BITS)) {
-	    PR_fprintf(PR_STDERR, 
+        keysize = PORT_Atoi(certutil.options[opt_KeySize].arg);
+        if ((keysize < MIN_KEY_BITS) || (keysize > MAX_KEY_BITS)) {
+            PR_fprintf(PR_STDERR,
                        "%s -g:  Keysize must be between %d and %d.\n",
-		       progName, MIN_KEY_BITS, MAX_KEY_BITS);
-	    return 255;
-	}
+                       progName, MIN_KEY_BITS, MAX_KEY_BITS);
+            return 255;
+        }
 #ifndef NSS_DISABLE_ECC
-	if (keytype == ecKey) {
-	    PR_fprintf(PR_STDERR, "%s -g:  Not for ec keys.\n", progName);
-	    return 255;
-	}
+        if (keytype == ecKey) {
+            PR_fprintf(PR_STDERR, "%s -g:  Not for ec keys.\n", progName);
+            return 255;
+        }
 #endif /* NSS_DISABLE_ECC */
-
     }
 
     /*  -h specify token name  */
     if (certutil.options[opt_TokenName].activated) {
-	if (PL_strcmp(certutil.options[opt_TokenName].arg, "all") == 0)
-	    slotname = NULL;
-	else
-	    slotname = certutil.options[opt_TokenName].arg;
+        if (PL_strcmp(certutil.options[opt_TokenName].arg, "all") == 0)
+            slotname = NULL;
+        else
+            slotname = certutil.options[opt_TokenName].arg;
     }
 
     /*  -Z hash type  */
     if (certutil.options[opt_Hash].activated) {
-	char * arg = certutil.options[opt_Hash].arg;
+        char *arg = certutil.options[opt_Hash].arg;
         hashAlgTag = SECU_StringToSignatureAlgTag(arg);
         if (hashAlgTag == SEC_OID_UNKNOWN) {
-	    PR_fprintf(PR_STDERR, "%s -Z:  %s is not a recognized type.\n",
-	               progName, arg);
-	    return 255;
-	}
+            PR_fprintf(PR_STDERR, "%s -Z:  %s is not a recognized type.\n",
+                       progName, arg);
+            return 255;
+        }
     }
 
     /*  -k key type  */
     if (certutil.options[opt_KeyType].activated) {
-	char * arg = certutil.options[opt_KeyType].arg;
-	if (PL_strcmp(arg, "rsa") == 0) {
-	    keytype = rsaKey;
-	} else if (PL_strcmp(arg, "dsa") == 0) {
-	    keytype = dsaKey;
+        char *arg = certutil.options[opt_KeyType].arg;
+        if (PL_strcmp(arg, "rsa") == 0) {
+            keytype = rsaKey;
+        } else if (PL_strcmp(arg, "dsa") == 0) {
+            keytype = dsaKey;
 #ifndef NSS_DISABLE_ECC
-	} else if (PL_strcmp(arg, "ec") == 0) {
-	    keytype = ecKey;
+        } else if (PL_strcmp(arg, "ec") == 0) {
+            keytype = ecKey;
 #endif /* NSS_DISABLE_ECC */
-	} else if (PL_strcmp(arg, "all") == 0) {
-	    keytype = nullKey;
-	} else {
-	    /* use an existing private/public key pair */
-	    keysource = arg;
-	}
+        } else if (PL_strcmp(arg, "all") == 0) {
+            keytype = nullKey;
+        } else {
+            /* use an existing private/public key pair */
+            keysource = arg;
+        }
     } else if (certutil.commands[cmd_ListKeys].activated) {
-	keytype = nullKey;
+        keytype = nullKey;
     }
 
     if (certutil.options[opt_KeyOpFlagsOn].activated) {
-	keyOpFlagsOn = GetOpFlags(certutil.options[opt_KeyOpFlagsOn].arg);
+        keyOpFlagsOn = GetOpFlags(certutil.options[opt_KeyOpFlagsOn].arg);
     }
     if (certutil.options[opt_KeyOpFlagsOff].activated) {
-	keyOpFlagsOff = GetOpFlags(certutil.options[opt_KeyOpFlagsOff].arg);
-	keyOpFlagsOn &=~keyOpFlagsOff; /* make off override on */
+        keyOpFlagsOff = GetOpFlags(certutil.options[opt_KeyOpFlagsOff].arg);
+        keyOpFlagsOn &= ~keyOpFlagsOff; /* make off override on */
     }
     if (certutil.options[opt_KeyAttrFlags].activated) {
-	keyAttrFlags = GetAttrFlags(certutil.options[opt_KeyAttrFlags].arg);
+        keyAttrFlags = GetAttrFlags(certutil.options[opt_KeyAttrFlags].arg);
     }
 
     /*  -m serial number */
     if (certutil.options[opt_SerialNumber].activated) {
-	int sn = PORT_Atoi(certutil.options[opt_SerialNumber].arg);
-	if (sn < 0) {
-	    PR_fprintf(PR_STDERR, "%s -m:  %s is not a valid serial number.\n",
-	               progName, certutil.options[opt_SerialNumber].arg);
-	    return 255;
-	}
-	serialNumber = sn;
+        int sn = PORT_Atoi(certutil.options[opt_SerialNumber].arg);
+        if (sn < 0) {
+            PR_fprintf(PR_STDERR, "%s -m:  %s is not a valid serial number.\n",
+                       progName, certutil.options[opt_SerialNumber].arg);
+            return 255;
+        }
+        serialNumber = sn;
     }
 
     /*  -P certdb name prefix */
@@ -2661,54 +2680,54 @@ certutil_main(int argc, char **argv, PRBool initialize)
     /*  -q PQG file or curve name */
     if (certutil.options[opt_PQGFile].activated) {
 #ifndef NSS_DISABLE_ECC
-	if ((keytype != dsaKey) && (keytype != ecKey)) {
-	    PR_fprintf(PR_STDERR, "%s -q: specifies a PQG file for DSA keys" \
-		       " (-k dsa) or a named curve for EC keys (-k ec)\n)",
-	               progName);
-#else   /* } */
-	if (keytype != dsaKey) {
-	    PR_fprintf(PR_STDERR, "%s -q: PQG file is for DSA key (-k dsa).\n)",
-	               progName);
+        if ((keytype != dsaKey) && (keytype != ecKey)) {
+            PR_fprintf(PR_STDERR, "%s -q: specifies a PQG file for DSA keys"
+                                  " (-k dsa) or a named curve for EC keys (-k ec)\n)",
+                       progName);
+#else  /* } */
+        if (keytype != dsaKey) {
+            PR_fprintf(PR_STDERR, "%s -q: PQG file is for DSA key (-k dsa).\n)",
+                       progName);
 #endif /* NSS_DISABLE_ECC */
-	    return 255;
-	}
+            return 255;
+        }
     }
 
     /*  -s subject name  */
     if (certutil.options[opt_Subject].activated) {
-	subject = CERT_AsciiToName(certutil.options[opt_Subject].arg);
-	if (!subject) {
-	    PR_fprintf(PR_STDERR, "%s -s: improperly formatted name: \"%s\"\n",
-	               progName, certutil.options[opt_Subject].arg);
-	    return 255;
-	}
+        subject = CERT_AsciiToName(certutil.options[opt_Subject].arg);
+        if (!subject) {
+            PR_fprintf(PR_STDERR, "%s -s: improperly formatted name: \"%s\"\n",
+                       progName, certutil.options[opt_Subject].arg);
+            return 255;
+        }
     }
 
     /*  -v validity period  */
     if (certutil.options[opt_Validity].activated) {
-	validityMonths = PORT_Atoi(certutil.options[opt_Validity].arg);
-	if (validityMonths < 0) {
-	    PR_fprintf(PR_STDERR, "%s -v: incorrect validity period: \"%s\"\n",
-	               progName, certutil.options[opt_Validity].arg);
-	    return 255;
-	}
+        validityMonths = PORT_Atoi(certutil.options[opt_Validity].arg);
+        if (validityMonths < 0) {
+            PR_fprintf(PR_STDERR, "%s -v: incorrect validity period: \"%s\"\n",
+                       progName, certutil.options[opt_Validity].arg);
+            return 255;
+        }
     }
 
     /*  -w warp months  */
     if (certutil.options[opt_OffsetMonths].activated)
-	warpmonths = PORT_Atoi(certutil.options[opt_OffsetMonths].arg);
+        warpmonths = PORT_Atoi(certutil.options[opt_OffsetMonths].arg);
 
     /*  -y public exponent (for RSA)  */
     if (certutil.options[opt_Exponent].activated) {
-	publicExponent = PORT_Atoi(certutil.options[opt_Exponent].arg);
-	if ((publicExponent != 3) &&
-	    (publicExponent != 17) &&
-	    (publicExponent != 65537)) {
-	    PR_fprintf(PR_STDERR, "%s -y: incorrect public exponent %d.", 
-	                           progName, publicExponent);
-	    PR_fprintf(PR_STDERR, "Must be 3, 17, or 65537.\n");
-	    return 255;
-	}
+        publicExponent = PORT_Atoi(certutil.options[opt_Exponent].arg);
+        if ((publicExponent != 3) &&
+            (publicExponent != 17) &&
+            (publicExponent != 65537)) {
+            PR_fprintf(PR_STDERR, "%s -y: incorrect public exponent %d.",
+                       progName, publicExponent);
+            PR_fprintf(PR_STDERR, "Must be 3, 17, or 65537.\n");
+            return 255;
+        }
     }
 
     /*  --certVersion */
@@ -2716,60 +2735,59 @@ certutil_main(int argc, char **argv, PRBool initialize)
         certVersion = PORT_Atoi(certutil.options[opt_CertVersion].arg);
         if (certVersion < 1 || certVersion > 4) {
             PR_fprintf(PR_STDERR, "%s -certVersion: incorrect certificate version %d.",
-                                   progName, certVersion);
+                       progName, certVersion);
             PR_fprintf(PR_STDERR, "Must be 1, 2, 3 or 4.\n");
             return 255;
         }
         certVersion = certVersion - 1;
     }
 
-
     /*  Check number of commands entered.  */
     commandsEntered = 0;
-    for (i=0; i< certutil.numCommands; i++) {
-	if (certutil.commands[i].activated) {
-	    commandToRun = certutil.commands[i].flag;
-	    commandsEntered++;
-	}
-	if (commandsEntered > 1)
-	    break;
+    for (i = 0; i < certutil.numCommands; i++) {
+        if (certutil.commands[i].activated) {
+            commandToRun = certutil.commands[i].flag;
+            commandsEntered++;
+        }
+        if (commandsEntered > 1)
+            break;
     }
     if (commandsEntered > 1) {
-	PR_fprintf(PR_STDERR, "%s: only one command at a time!\n", progName);
-	PR_fprintf(PR_STDERR, "You entered: ");
-	for (i=0; i< certutil.numCommands; i++) {
-	    if (certutil.commands[i].activated)
-		PR_fprintf(PR_STDERR, " -%c", certutil.commands[i].flag);
-	}
-	PR_fprintf(PR_STDERR, "\n");
-	return 255;
+        PR_fprintf(PR_STDERR, "%s: only one command at a time!\n", progName);
+        PR_fprintf(PR_STDERR, "You entered: ");
+        for (i = 0; i < certutil.numCommands; i++) {
+            if (certutil.commands[i].activated)
+                PR_fprintf(PR_STDERR, " -%c", certutil.commands[i].flag);
+        }
+        PR_fprintf(PR_STDERR, "\n");
+        return 255;
     }
     if (commandsEntered == 0) {
-	Usage(progName);
+        Usage(progName);
     }
 
     if (certutil.commands[cmd_ListCerts].activated ||
-         certutil.commands[cmd_PrintHelp].activated ||
-         certutil.commands[cmd_ListKeys].activated ||
-         certutil.commands[cmd_ListModules].activated ||
-         certutil.commands[cmd_CheckCertValidity].activated ||
-         certutil.commands[cmd_Version].activated ) {
-	readOnly = !certutil.options[opt_RW].activated;
+        certutil.commands[cmd_PrintHelp].activated ||
+        certutil.commands[cmd_ListKeys].activated ||
+        certutil.commands[cmd_ListModules].activated ||
+        certutil.commands[cmd_CheckCertValidity].activated ||
+        certutil.commands[cmd_Version].activated) {
+        readOnly = !certutil.options[opt_RW].activated;
     }
 
     /*  -A, -D, -F, -M, -S, -V, and all require -n  */
     if ((certutil.commands[cmd_AddCert].activated ||
          certutil.commands[cmd_DeleteCert].activated ||
          certutil.commands[cmd_DeleteKey].activated ||
-	 certutil.commands[cmd_DumpChain].activated ||
+         certutil.commands[cmd_DumpChain].activated ||
          certutil.commands[cmd_ModifyCertTrust].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_CheckCertValidity].activated) &&
         !certutil.options[opt_Nickname].activated) {
-	PR_fprintf(PR_STDERR, 
-	          "%s -%c: nickname is required for this command (-n).\n",
-	           progName, commandToRun);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: nickname is required for this command (-n).\n",
+                   progName, commandToRun);
+        return 255;
     }
 
     /*  -A, -E, -M, -S require trust  */
@@ -2778,10 +2796,10 @@ certutil_main(int argc, char **argv, PRBool initialize)
          certutil.commands[cmd_ModifyCertTrust].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
         !certutil.options[opt_Trust].activated) {
-	PR_fprintf(PR_STDERR, 
-	          "%s -%c: trust is required for this command (-t).\n",
-	           progName, commandToRun);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: trust is required for this command (-t).\n",
+                   progName, commandToRun);
+        return 255;
     }
 
     /*  if -L is given raw, ascii or dump mode, it must be for only one cert. */
@@ -2790,49 +2808,49 @@ certutil_main(int argc, char **argv, PRBool initialize)
          certutil.options[opt_DumpExtensionValue].activated ||
          certutil.options[opt_BinaryDER].activated) &&
         !certutil.options[opt_Nickname].activated) {
-	PR_fprintf(PR_STDERR, 
-	        "%s: nickname is required to dump cert in raw or ascii mode.\n",
-	           progName);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s: nickname is required to dump cert in raw or ascii mode.\n",
+                   progName);
+        return 255;
     }
-    
+
     /*  -L can only be in (raw || ascii).  */
     if (certutil.commands[cmd_ListCerts].activated &&
         certutil.options[opt_ASCIIForIO].activated &&
         certutil.options[opt_BinaryDER].activated) {
-	PR_fprintf(PR_STDERR, 
-	           "%s: cannot specify both -r and -a when dumping cert.\n",
-	           progName);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s: cannot specify both -r and -a when dumping cert.\n",
+                   progName);
+        return 255;
     }
 
     /*  If making a cert request, need a subject.  */
     if ((certutil.commands[cmd_CertReq].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
         !(certutil.options[opt_Subject].activated || keysource)) {
-	PR_fprintf(PR_STDERR, 
-	           "%s -%c: subject is required to create a cert request.\n",
-	           progName, commandToRun);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: subject is required to create a cert request.\n",
+                   progName, commandToRun);
+        return 255;
     }
 
     /*  If making a cert, need a serial number.  */
     if ((certutil.commands[cmd_CreateNewCert].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
-         !certutil.options[opt_SerialNumber].activated) {
-	/*  Make a default serial number from the current time.  */
-	PRTime now = PR_Now();
-	LL_USHR(now, now, 19);
-	LL_L2UI(serialNumber, now);
+        !certutil.options[opt_SerialNumber].activated) {
+        /*  Make a default serial number from the current time.  */
+        PRTime now = PR_Now();
+        LL_USHR(now, now, 19);
+        LL_L2UI(serialNumber, now);
     }
 
     /*  Validation needs the usage to validate for.  */
     if (certutil.commands[cmd_CheckCertValidity].activated &&
         !certutil.options[opt_Usage].activated) {
-	PR_fprintf(PR_STDERR, 
-	           "%s -V: specify a usage to validate the cert for (-u).\n",
-	           progName);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -V: specify a usage to validate the cert for (-u).\n",
+                   progName);
+        return 255;
     }
 
     /* Rename needs an old and a new nickname */
@@ -2840,92 +2858,90 @@ certutil_main(int argc, char **argv, PRBool initialize)
         !(certutil.options[opt_Nickname].activated &&
           certutil.options[opt_NewNickname].activated)) {
 
-	PR_fprintf(PR_STDERR, 
-	           "%s --rename: specify an old nickname (-n) and\n"
+        PR_fprintf(PR_STDERR,
+                   "%s --rename: specify an old nickname (-n) and\n"
                    "   a new nickname (--new-n).\n",
-	           progName);
-	return 255;
+                   progName);
+        return 255;
     }
-
 
     /* Upgrade/Merge needs a source database and a upgrade id. */
     if (certutil.commands[cmd_UpgradeMerge].activated &&
         !(certutil.options[opt_SourceDir].activated &&
           certutil.options[opt_UpgradeID].activated)) {
 
-	PR_fprintf(PR_STDERR, 
-	           "%s --upgrade-merge: specify an upgrade database directory "
-		   "(--source-dir) and\n"
+        PR_fprintf(PR_STDERR,
+                   "%s --upgrade-merge: specify an upgrade database directory "
+                   "(--source-dir) and\n"
                    "   an upgrade ID (--upgrade-id).\n",
-	           progName);
-	return 255;
+                   progName);
+        return 255;
     }
 
     /* Merge needs a source database */
     if (certutil.commands[cmd_Merge].activated &&
         !certutil.options[opt_SourceDir].activated) {
 
-
-	PR_fprintf(PR_STDERR, 
-	           "%s --merge: specify an source database directory "
-		   "(--source-dir)\n",
-	           progName);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s --merge: specify an source database directory "
+                   "(--source-dir)\n",
+                   progName);
+        return 255;
     }
 
-    
     /*  To make a cert, need either a issuer or to self-sign it.  */
     if (certutil.commands[cmd_CreateAndAddCert].activated &&
-	!(certutil.options[opt_IssuerName].activated ||
+        !(certutil.options[opt_IssuerName].activated ||
           certutil.options[opt_SelfSign].activated)) {
-	PR_fprintf(PR_STDERR,
-	           "%s -S: must specify issuer (-c) or self-sign (-x).\n",
-	           progName);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -S: must specify issuer (-c) or self-sign (-x).\n",
+                   progName);
+        return 255;
     }
 
-    /*  Using slotname == NULL for listing keys and certs on all slots, 
+    /*  Using slotname == NULL for listing keys and certs on all slots,
      *  but only that. */
     if (!(certutil.commands[cmd_ListKeys].activated ||
-	  certutil.commands[cmd_DumpChain].activated ||
-    	  certutil.commands[cmd_ListCerts].activated) && slotname == NULL) {
-	PR_fprintf(PR_STDERR,
-	           "%s -%c: cannot use \"-h all\" for this command.\n",
-	           progName, commandToRun);
-	return 255;
+          certutil.commands[cmd_DumpChain].activated ||
+          certutil.commands[cmd_ListCerts].activated) &&
+        slotname == NULL) {
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: cannot use \"-h all\" for this command.\n",
+                   progName, commandToRun);
+        return 255;
     }
 
     /*  Using keytype == nullKey for list all key types, but only that.  */
     if (!certutil.commands[cmd_ListKeys].activated && keytype == nullKey) {
-	PR_fprintf(PR_STDERR,
-	           "%s -%c: cannot use \"-k all\" for this command.\n",
-	           progName, commandToRun);
-	return 255;
+        PR_fprintf(PR_STDERR,
+                   "%s -%c: cannot use \"-k all\" for this command.\n",
+                   progName, commandToRun);
+        return 255;
     }
 
     /*  Open the input file.  */
     if (certutil.options[opt_InputFile].activated) {
-	inFile = PR_Open(certutil.options[opt_InputFile].arg, PR_RDONLY, 0);
-	if (!inFile) {
-	    PR_fprintf(PR_STDERR,
-	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
-	               progName, certutil.options[opt_InputFile].arg,
-	               PR_GetError(), PR_GetOSError());
-	    return 255;
-	}
+        inFile = PR_Open(certutil.options[opt_InputFile].arg, PR_RDONLY, 0);
+        if (!inFile) {
+            PR_fprintf(PR_STDERR,
+                       "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
+                       progName, certutil.options[opt_InputFile].arg,
+                       PR_GetError(), PR_GetOSError());
+            return 255;
+        }
     }
 
     /*  Open the output file.  */
     if (certutil.options[opt_OutputFile].activated) {
-	outFile = PR_Open(certutil.options[opt_OutputFile].arg, 
+        outFile = PR_Open(certutil.options[opt_OutputFile].arg,
                           PR_CREATE_FILE | PR_RDWR | PR_TRUNCATE, 00660);
-	if (!outFile) {
-	    PR_fprintf(PR_STDERR,
-	               "%s:  unable to open \"%s\" for writing (%ld, %ld).\n",
-	               progName, certutil.options[opt_OutputFile].arg,
-	               PR_GetError(), PR_GetOSError());
-	    return 255;
-	}
+        if (!outFile) {
+            PR_fprintf(PR_STDERR,
+                       "%s:  unable to open \"%s\" for writing (%ld, %ld).\n",
+                       progName, certutil.options[opt_OutputFile].arg,
+                       PR_GetError(), PR_GetOSError());
+            return 255;
+        }
     }
 
     name = SECU_GetOptionArg(&certutil, opt_Nickname);
@@ -2937,58 +2953,58 @@ certutil_main(int argc, char **argv, PRBool initialize)
     if (PR_TRUE == initialize) {
         /*  Initialize NSPR and NSS.  */
         PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-	if (!certutil.commands[cmd_UpgradeMerge].activated) {
-            rv = NSS_Initialize(SECU_ConfigDirectory(NULL), 
-			    certPrefix, certPrefix,
-                            "secmod.db", readOnly ? NSS_INIT_READONLY: 0);
-	} else {
-            rv = NSS_InitWithMerge(SECU_ConfigDirectory(NULL), 
-			    certPrefix, certPrefix, "secmod.db",
-			    sourceDir, srcCertPrefix, srcCertPrefix, 
-			    upgradeID, upgradeTokenName,
-                            readOnly ? NSS_INIT_READONLY: 0);
-	}
+        if (!certutil.commands[cmd_UpgradeMerge].activated) {
+            rv = NSS_Initialize(SECU_ConfigDirectory(NULL),
+                                certPrefix, certPrefix,
+                                "secmod.db", readOnly ? NSS_INIT_READONLY : 0);
+        } else {
+            rv = NSS_InitWithMerge(SECU_ConfigDirectory(NULL),
+                                   certPrefix, certPrefix, "secmod.db",
+                                   sourceDir, srcCertPrefix, srcCertPrefix,
+                                   upgradeID, upgradeTokenName,
+                                   readOnly ? NSS_INIT_READONLY : 0);
+        }
         if (rv != SECSuccess) {
-	    SECU_PrintPRandOSError(progName);
-	    rv = SECFailure;
-	    goto shutdown;
+            SECU_PrintPRandOSError(progName);
+            rv = SECFailure;
+            goto shutdown;
         }
         initialized = PR_TRUE;
-    	SECU_RegisterDynamicOids();
+        SECU_RegisterDynamicOids();
     }
     certHandle = CERT_GetDefaultCertDB();
 
     if (certutil.commands[cmd_Version].activated) {
-	printf("Certificate database content version: command not implemented.\n");
+        printf("Certificate database content version: command not implemented.\n");
     }
 
     if (PL_strcmp(slotname, "internal") == 0)
-	slot = PK11_GetInternalKeySlot();
+        slot = PK11_GetInternalKeySlot();
     else if (slotname != NULL)
-	slot = PK11_FindSlotByName(slotname);
+        slot = PK11_FindSlotByName(slotname);
 
-    if ( !slot && (certutil.commands[cmd_NewDBs].activated ||
-         certutil.commands[cmd_ModifyCertTrust].activated  || 
-         certutil.commands[cmd_ChangePassword].activated   ||
-         certutil.commands[cmd_TokenReset].activated       ||
-         certutil.commands[cmd_CreateAndAddCert].activated ||
-         certutil.commands[cmd_AddCert].activated          ||
-         certutil.commands[cmd_Merge].activated          ||
-         certutil.commands[cmd_UpgradeMerge].activated          ||
-         certutil.commands[cmd_AddEmailCert].activated)) {
-      
-         SECU_PrintError(progName, "could not find the slot %s",slotname);
-         rv = SECFailure;
-         goto shutdown;
+    if (!slot && (certutil.commands[cmd_NewDBs].activated ||
+                  certutil.commands[cmd_ModifyCertTrust].activated ||
+                  certutil.commands[cmd_ChangePassword].activated ||
+                  certutil.commands[cmd_TokenReset].activated ||
+                  certutil.commands[cmd_CreateAndAddCert].activated ||
+                  certutil.commands[cmd_AddCert].activated ||
+                  certutil.commands[cmd_Merge].activated ||
+                  certutil.commands[cmd_UpgradeMerge].activated ||
+                  certutil.commands[cmd_AddEmailCert].activated)) {
+
+        SECU_PrintError(progName, "could not find the slot %s", slotname);
+        rv = SECFailure;
+        goto shutdown;
     }
 
     /*  If creating new database, initialize the password.  */
     if (certutil.commands[cmd_NewDBs].activated) {
-	if(certutil.options[opt_EmptyPassword].activated && (PK11_NeedUserInit(slot)))
-	    PK11_InitPin(slot, (char*)NULL, "");
-	else
-	    SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
-				certutil.options[opt_NewPasswordFile].arg);
+        if (certutil.options[opt_EmptyPassword].activated && (PK11_NeedUserInit(slot)))
+            PK11_InitPin(slot, (char *)NULL, "");
+        else
+            SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
+                           certutil.options[opt_NewPasswordFile].arg);
     }
 
     /* walk through the upgrade merge if necessary.
@@ -2997,215 +3013,215 @@ certutil_main(int argc, char **argv, PRBool initialize)
      * the general case where 2 database need to be merged together.
      */
     if (certutil.commands[cmd_UpgradeMerge].activated) {
-	if (*upgradeTokenName == 0) {
-	    upgradeTokenName = upgradeID;
-	}
-	if (!PK11_IsInternal(slot)) {
-	    fprintf(stderr, "Only internal DB's can be upgraded\n");
-	    rv = SECSuccess;
-	    goto shutdown;
-	}
-	if (!PK11_IsRemovable(slot)) {
-	    printf("database already upgraded.\n");
-	    rv = SECSuccess;
-	    goto shutdown;
-	}
-	if (!PK11_NeedLogin(slot)) {
-	    printf("upgrade complete!\n");
-	    rv = SECSuccess;
-	    goto shutdown;
-	}
-	/* authenticate to the old DB if necessary */
-	if (PORT_Strcmp(PK11_GetTokenName(slot), upgradeTokenName) ==  0) {
-	    /* if we need a password, supply it. This will be the password
-	     * for the old database */
-	    rv = PK11_Authenticate(slot, PR_FALSE, &pwdata2);
-	    if (rv != SECSuccess) {
-         	SECU_PrintError(progName, "Could not get password for %s",
-				upgradeTokenName);
-		goto shutdown;
-	    }
-	    /* 
-	     * if we succeeded above, but still aren't logged in, that means
-	     * we just supplied the password for the old database. We may
-	     * need the password for the new database. NSS will automatically
-	     * change the token names at this point
-	     */
-	    if (PK11_IsLoggedIn(slot, &pwdata)) {
-		printf("upgrade complete!\n");
-		rv = SECSuccess;
-		goto shutdown;
-	    }
- 	}
+        if (*upgradeTokenName == 0) {
+            upgradeTokenName = upgradeID;
+        }
+        if (!PK11_IsInternal(slot)) {
+            fprintf(stderr, "Only internal DB's can be upgraded\n");
+            rv = SECSuccess;
+            goto shutdown;
+        }
+        if (!PK11_IsRemovable(slot)) {
+            printf("database already upgraded.\n");
+            rv = SECSuccess;
+            goto shutdown;
+        }
+        if (!PK11_NeedLogin(slot)) {
+            printf("upgrade complete!\n");
+            rv = SECSuccess;
+            goto shutdown;
+        }
+        /* authenticate to the old DB if necessary */
+        if (PORT_Strcmp(PK11_GetTokenName(slot), upgradeTokenName) == 0) {
+            /* if we need a password, supply it. This will be the password
+             * for the old database */
+            rv = PK11_Authenticate(slot, PR_FALSE, &pwdata2);
+            if (rv != SECSuccess) {
+                SECU_PrintError(progName, "Could not get password for %s",
+                                upgradeTokenName);
+                goto shutdown;
+            }
+            /*
+             * if we succeeded above, but still aren't logged in, that means
+             * we just supplied the password for the old database. We may
+             * need the password for the new database. NSS will automatically
+             * change the token names at this point
+             */
+            if (PK11_IsLoggedIn(slot, &pwdata)) {
+                printf("upgrade complete!\n");
+                rv = SECSuccess;
+                goto shutdown;
+            }
+        }
 
-	/* call PK11_IsPresent to update our cached token information */
-	if (!PK11_IsPresent(slot)) {
-	    /* this shouldn't happen. We call isPresent to force a token
-	     * info update */
-	    fprintf(stderr, "upgrade/merge internal error\n");
-	    rv = SECFailure;
-	    goto shutdown;
-	}
+        /* call PK11_IsPresent to update our cached token information */
+        if (!PK11_IsPresent(slot)) {
+            /* this shouldn't happen. We call isPresent to force a token
+             * info update */
+            fprintf(stderr, "upgrade/merge internal error\n");
+            rv = SECFailure;
+            goto shutdown;
+        }
 
-	/* the token is now set to the state of the source database,
-	 * if we need a password for it, PK11_Authenticate will 
-	 * automatically prompt us */
-	rv = PK11_Authenticate(slot, PR_FALSE, &pwdata);
-	if (rv == SECSuccess) {
-	    printf("upgrade complete!\n");
-	} else {
+        /* the token is now set to the state of the source database,
+         * if we need a password for it, PK11_Authenticate will
+         * automatically prompt us */
+        rv = PK11_Authenticate(slot, PR_FALSE, &pwdata);
+        if (rv == SECSuccess) {
+            printf("upgrade complete!\n");
+        } else {
             SECU_PrintError(progName, "Could not get password for %s",
-				PK11_GetTokenName(slot));
-	}
-	goto shutdown;
+                            PK11_GetTokenName(slot));
+        }
+        goto shutdown;
     }
 
     /*
      * merge 2 databases.
      */
     if (certutil.commands[cmd_Merge].activated) {
-	PK11SlotInfo *sourceSlot = NULL;
-	PK11MergeLog *log;
-	char *modspec = PR_smprintf(
-		"configDir='%s' certPrefix='%s' tokenDescription='%s'",
-		sourceDir, srcCertPrefix, 
-		*upgradeTokenName ? upgradeTokenName : "Source Database");
+        PK11SlotInfo *sourceSlot = NULL;
+        PK11MergeLog *log;
+        char *modspec = PR_smprintf(
+            "configDir='%s' certPrefix='%s' tokenDescription='%s'",
+            sourceDir, srcCertPrefix,
+            *upgradeTokenName ? upgradeTokenName : "Source Database");
 
-	if (!modspec) {
-	    rv = SECFailure;
-	    goto shutdown;
-	}
+        if (!modspec) {
+            rv = SECFailure;
+            goto shutdown;
+        }
 
-	sourceSlot = SECMOD_OpenUserDB(modspec);
-	PR_smprintf_free(modspec);
-	if (!sourceSlot) {
-	    SECU_PrintError(progName, "couldn't open source database");
-	    rv = SECFailure;
-	    goto shutdown;
-	}
+        sourceSlot = SECMOD_OpenUserDB(modspec);
+        PR_smprintf_free(modspec);
+        if (!sourceSlot) {
+            SECU_PrintError(progName, "couldn't open source database");
+            rv = SECFailure;
+            goto shutdown;
+        }
 
-	rv = PK11_Authenticate(slot, PR_FALSE, &pwdata);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "Couldn't get password for %s",
-					PK11_GetTokenName(slot));
-	    goto merge_fail;
-	}
+        rv = PK11_Authenticate(slot, PR_FALSE, &pwdata);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "Couldn't get password for %s",
+                            PK11_GetTokenName(slot));
+            goto merge_fail;
+        }
 
-	rv = PK11_Authenticate(sourceSlot, PR_FALSE, &pwdata2);
-	if (rv != SECSuccess) {
-	    SECU_PrintError(progName, "Couldn't get password for %s",
-					PK11_GetTokenName(sourceSlot));
-	    goto merge_fail;
-	}
+        rv = PK11_Authenticate(sourceSlot, PR_FALSE, &pwdata2);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "Couldn't get password for %s",
+                            PK11_GetTokenName(sourceSlot));
+            goto merge_fail;
+        }
 
-	log = PK11_CreateMergeLog();
-	if (!log) {
-	    rv = SECFailure;
-	    SECU_PrintError(progName, "couldn't create error log");
-	    goto merge_fail;
-	}
+        log = PK11_CreateMergeLog();
+        if (!log) {
+            rv = SECFailure;
+            SECU_PrintError(progName, "couldn't create error log");
+            goto merge_fail;
+        }
 
-	rv = PK11_MergeTokens(slot, sourceSlot, log, &pwdata, &pwdata2);
-	if (rv != SECSuccess) {
-	    DumpMergeLog(progName, log);
-	}
-	PK11_DestroyMergeLog(log);
+        rv = PK11_MergeTokens(slot, sourceSlot, log, &pwdata, &pwdata2);
+        if (rv != SECSuccess) {
+            DumpMergeLog(progName, log);
+        }
+        PK11_DestroyMergeLog(log);
 
-merge_fail:
-	SECMOD_CloseUserDB(sourceSlot);
-	PK11_FreeSlot(sourceSlot);
-	goto shutdown;
+    merge_fail:
+        SECMOD_CloseUserDB(sourceSlot);
+        PK11_FreeSlot(sourceSlot);
+        goto shutdown;
     }
 
     /* The following 8 options are mutually exclusive with all others. */
 
     /*  List certs (-L)  */
     if (certutil.commands[cmd_ListCerts].activated) {
-	if (certutil.options[opt_DumpExtensionValue].activated) {
-	    const char *oid_str;
-	    SECItem oid_item;
+        if (certutil.options[opt_DumpExtensionValue].activated) {
+            const char *oid_str;
+            SECItem oid_item;
             SECStatus srv;
-	    oid_item.data = NULL;
-	    oid_item.len = 0;
-	    oid_str = certutil.options[opt_DumpExtensionValue].arg;
-	    srv = GetOidFromString(NULL, &oid_item, oid_str, strlen(oid_str));
-	    if (srv != SECSuccess) {
-         	SECU_PrintError(progName, "malformed extension OID %s",
-				oid_str);
-		goto shutdown;
-	    }
-	    rv = ListCerts(certHandle, name, email, slot,
-			   PR_TRUE /*binary*/, PR_FALSE /*ascii*/,
-			   &oid_item,
-			   outFile, &pwdata);
-	} else {
-	    rv = ListCerts(certHandle, name, email, slot,
-			   certutil.options[opt_BinaryDER].activated,
-			   certutil.options[opt_ASCIIForIO].activated,
-			   NULL, outFile, &pwdata);
-	}
-	goto shutdown;
+            oid_item.data = NULL;
+            oid_item.len = 0;
+            oid_str = certutil.options[opt_DumpExtensionValue].arg;
+            srv = GetOidFromString(NULL, &oid_item, oid_str, strlen(oid_str));
+            if (srv != SECSuccess) {
+                SECU_PrintError(progName, "malformed extension OID %s",
+                                oid_str);
+                goto shutdown;
+            }
+            rv = ListCerts(certHandle, name, email, slot,
+                           PR_TRUE /*binary*/, PR_FALSE /*ascii*/,
+                           &oid_item,
+                           outFile, &pwdata);
+        } else {
+            rv = ListCerts(certHandle, name, email, slot,
+                           certutil.options[opt_BinaryDER].activated,
+                           certutil.options[opt_ASCIIForIO].activated,
+                           NULL, outFile, &pwdata);
+        }
+        goto shutdown;
     }
     if (certutil.commands[cmd_DumpChain].activated) {
-	rv = DumpChain(certHandle, name,
+        rv = DumpChain(certHandle, name,
                        certutil.options[opt_ASCIIForIO].activated);
-	goto shutdown;
+        goto shutdown;
     }
     /*  XXX needs work  */
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
-	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
-	              &pwdata);
-	goto shutdown;
+        rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
+                      &pwdata);
+        goto shutdown;
     }
     /*  List modules (-U)  */
     if (certutil.commands[cmd_ListModules].activated) {
-	rv = ListModules();
-	goto shutdown;
+        rv = ListModules();
+        goto shutdown;
     }
     /*  Delete cert (-D)  */
     if (certutil.commands[cmd_DeleteCert].activated) {
-	rv = DeleteCert(certHandle, name);
-	goto shutdown;
+        rv = DeleteCert(certHandle, name);
+        goto shutdown;
     }
     /*  Rename cert (--rename)  */
     if (certutil.commands[cmd_Rename].activated) {
-	rv = RenameCert(certHandle, name, newName);
-	goto shutdown;
+        rv = RenameCert(certHandle, name, newName);
+        goto shutdown;
     }
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
-	rv = DeleteKey(name, &pwdata);
-	goto shutdown;
+        rv = DeleteKey(name, &pwdata);
+        goto shutdown;
     }
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
-	rv = ChangeTrustAttributes(certHandle, slot, name, 
-	                           certutil.options[opt_Trust].arg, &pwdata);
-	goto shutdown;
+        rv = ChangeTrustAttributes(certHandle, slot, name,
+                                   certutil.options[opt_Trust].arg, &pwdata);
+        goto shutdown;
     }
     /*  Change key db password (-W) (future - change pw to slot?)  */
     if (certutil.commands[cmd_ChangePassword].activated) {
-	rv = SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
-				certutil.options[opt_NewPasswordFile].arg);
-	goto shutdown;
+        rv = SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
+                            certutil.options[opt_NewPasswordFile].arg);
+        goto shutdown;
     }
     /*  Reset the a token */
     if (certutil.commands[cmd_TokenReset].activated) {
-	char *sso_pass = "";
+        char *sso_pass = "";
 
-	if (certutil.options[opt_SSOPass].activated) {
-	    sso_pass = certutil.options[opt_SSOPass].arg;
- 	}
-	rv = PK11_ResetToken(slot,sso_pass);
+        if (certutil.options[opt_SSOPass].activated) {
+            sso_pass = certutil.options[opt_SSOPass].arg;
+        }
+        rv = PK11_ResetToken(slot, sso_pass);
 
-	goto shutdown;
+        goto shutdown;
     }
     /*  Check cert validity against current time (-V)  */
     if (certutil.commands[cmd_CheckCertValidity].activated) {
-	/* XXX temporary hack for fips - must log in to get priv key */
-	if (certutil.options[opt_VerifySig].activated) {
-	    if (slot && PK11_NeedLogin(slot)) {
+        /* XXX temporary hack for fips - must log in to get priv key */
+        if (certutil.options[opt_VerifySig].activated) {
+            if (slot && PK11_NeedLogin(slot)) {
                 SECStatus newrv = PK11_Authenticate(slot, PR_TRUE, &pwdata);
                 if (newrv != SECSuccess) {
                     SECU_PrintError(progName, "could not authenticate to token %s.",
@@ -3213,17 +3229,17 @@ merge_fail:
                     goto shutdown;
                 }
             }
-	}
-	rv = ValidateCert(certHandle, name, 
-	                  certutil.options[opt_ValidityTime].arg,
-			  certutil.options[opt_Usage].arg,
-			  certutil.options[opt_VerifySig].activated,
-			  certutil.options[opt_DetailedInfo].activated,
-			  certutil.options[opt_ASCIIForIO].activated,
-	                  &pwdata);
-	if (rv != SECSuccess && PR_GetError() == SEC_ERROR_INVALID_ARGS)
+        }
+        rv = ValidateCert(certHandle, name,
+                          certutil.options[opt_ValidityTime].arg,
+                          certutil.options[opt_Usage].arg,
+                          certutil.options[opt_VerifySig].activated,
+                          certutil.options[opt_DetailedInfo].activated,
+                          certutil.options[opt_ASCIIForIO].activated,
+                          &pwdata);
+        if (rv != SECSuccess && PR_GetError() == SEC_ERROR_INVALID_ARGS)
             SECU_PrintError(progName, "validation failed");
-	goto shutdown;
+        goto shutdown;
     }
 
     /*
@@ -3233,68 +3249,68 @@ merge_fail:
     /*  These commands may require keygen.  */
     if (certutil.commands[cmd_CertReq].activated ||
         certutil.commands[cmd_CreateAndAddCert].activated ||
-	certutil.commands[cmd_GenKeyPair].activated) {
-	if (keysource) {
-	    CERTCertificate *keycert;
-	    keycert = CERT_FindCertByNicknameOrEmailAddr(certHandle, keysource);
-	    if (!keycert) {
-		keycert = PK11_FindCertFromNickname(keysource, NULL);
-		if (!keycert) {
-		    SECU_PrintError(progName,
-			    "%s is neither a key-type nor a nickname", keysource);
-		    return SECFailure;
-		}
-	    }
-	    privkey = PK11_FindKeyByDERCert(slot, keycert, &pwdata);
-	    if (privkey)
-		pubkey = CERT_ExtractPublicKey(keycert);
-	    if (!pubkey) {
-		SECU_PrintError(progName,
-				"Could not get keys from cert %s", keysource);
-		rv = SECFailure;
-		CERT_DestroyCertificate(keycert);
-		goto shutdown;
-	    }
-	    keytype = privkey->keyType;
-	    /* On CertReq for renewal if no subject has been
-	     * specified obtain it from the certificate. 
-	     */
-	    if (certutil.commands[cmd_CertReq].activated && !subject) {
-	        subject = CERT_AsciiToName(keycert->subjectName);
-	        if (!subject) {
-	            SECU_PrintError(progName,
-			"Could not get subject from certificate %s", keysource);
-	            CERT_DestroyCertificate(keycert);
-	            rv = SECFailure;
-	            goto shutdown;
-	        }
-	    }
-	    CERT_DestroyCertificate(keycert);
-	} else {
-	    privkey = 
-		CERTUTIL_GeneratePrivateKey(keytype, slot, keysize,
-					    publicExponent, 
-					    certutil.options[opt_NoiseFile].arg,
-					    &pubkey, 
-					    certutil.options[opt_PQGFile].arg,
-					    keyAttrFlags,
-					    keyOpFlagsOn,
-					    keyOpFlagsOff,
-					    &pwdata);
-	    if (privkey == NULL) {
-		SECU_PrintError(progName, "unable to generate key(s)\n");
-		rv = SECFailure;
-		goto shutdown;
-	    }
-	}
-	privkey->wincx = &pwdata;
-	PORT_Assert(pubkey != NULL);
+        certutil.commands[cmd_GenKeyPair].activated) {
+        if (keysource) {
+            CERTCertificate *keycert;
+            keycert = CERT_FindCertByNicknameOrEmailAddr(certHandle, keysource);
+            if (!keycert) {
+                keycert = PK11_FindCertFromNickname(keysource, NULL);
+                if (!keycert) {
+                    SECU_PrintError(progName,
+                                    "%s is neither a key-type nor a nickname", keysource);
+                    return SECFailure;
+                }
+            }
+            privkey = PK11_FindKeyByDERCert(slot, keycert, &pwdata);
+            if (privkey)
+                pubkey = CERT_ExtractPublicKey(keycert);
+            if (!pubkey) {
+                SECU_PrintError(progName,
+                                "Could not get keys from cert %s", keysource);
+                rv = SECFailure;
+                CERT_DestroyCertificate(keycert);
+                goto shutdown;
+            }
+            keytype = privkey->keyType;
+            /* On CertReq for renewal if no subject has been
+             * specified obtain it from the certificate.
+             */
+            if (certutil.commands[cmd_CertReq].activated && !subject) {
+                subject = CERT_AsciiToName(keycert->subjectName);
+                if (!subject) {
+                    SECU_PrintError(progName,
+                                    "Could not get subject from certificate %s", keysource);
+                    CERT_DestroyCertificate(keycert);
+                    rv = SECFailure;
+                    goto shutdown;
+                }
+            }
+            CERT_DestroyCertificate(keycert);
+        } else {
+            privkey =
+                CERTUTIL_GeneratePrivateKey(keytype, slot, keysize,
+                                            publicExponent,
+                                            certutil.options[opt_NoiseFile].arg,
+                                            &pubkey,
+                                            certutil.options[opt_PQGFile].arg,
+                                            keyAttrFlags,
+                                            keyOpFlagsOn,
+                                            keyOpFlagsOff,
+                                            &pwdata);
+            if (privkey == NULL) {
+                SECU_PrintError(progName, "unable to generate key(s)\n");
+                rv = SECFailure;
+                goto shutdown;
+            }
+        }
+        privkey->wincx = &pwdata;
+        PORT_Assert(pubkey != NULL);
 
-	/*  If all that was needed was keygen, exit.  */
-	if (certutil.commands[cmd_GenKeyPair].activated) {
-	    rv = SECSuccess;
-	    goto shutdown;
-	}
+        /*  If all that was needed was keygen, exit.  */
+        if (certutil.commands[cmd_GenKeyPair].activated) {
+            rv = SECSuccess;
+            goto shutdown;
+        }
     }
 
     /* If we need a list of extensions convert the flags into list format */
@@ -3311,15 +3327,15 @@ merge_fail:
                 certutil.options[opt_AddCmdKeyUsageExt].arg;
         }
         certutil_extns[ext_basicConstraint].activated =
-				certutil.options[opt_AddBasicConstraintExt].activated;
+            certutil.options[opt_AddBasicConstraintExt].activated;
         certutil_extns[ext_nameConstraints].activated =
-                                certutil.options[opt_AddNameConstraintsExt].activated;
+            certutil.options[opt_AddNameConstraintsExt].activated;
         certutil_extns[ext_authorityKeyID].activated =
-				certutil.options[opt_AddAuthorityKeyIDExt].activated;
+            certutil.options[opt_AddAuthorityKeyIDExt].activated;
         certutil_extns[ext_subjectKeyID].activated =
-				certutil.options[opt_AddSubjectKeyIDExt].activated;
+            certutil.options[opt_AddSubjectKeyIDExt].activated;
         certutil_extns[ext_CRLDistPts].activated =
-				certutil.options[opt_AddCRLDistPtsExt].activated;
+            certutil.options[opt_AddCRLDistPtsExt].activated;
         certutil_extns[ext_NSCertType].activated =
             certutil.options[opt_AddCmdNSCertTypeExt].activated;
         if (!certutil_extns[ext_NSCertType].activated) {
@@ -3340,36 +3356,36 @@ merge_fail:
                 certutil.options[opt_AddCmdExtKeyUsageExt].arg;
         }
         certutil_extns[ext_subjectAltName].activated =
-                certutil.options[opt_AddSubjectAltNameExt].activated;
+            certutil.options[opt_AddSubjectAltNameExt].activated;
         if (certutil_extns[ext_subjectAltName].activated) {
             certutil_extns[ext_subjectAltName].arg =
                 certutil.options[opt_AddSubjectAltNameExt].arg;
         }
 
         certutil_extns[ext_authInfoAcc].activated =
-				certutil.options[opt_AddAuthInfoAccExt].activated;
+            certutil.options[opt_AddAuthInfoAccExt].activated;
         certutil_extns[ext_subjInfoAcc].activated =
-				certutil.options[opt_AddSubjInfoAccExt].activated;
+            certutil.options[opt_AddSubjInfoAccExt].activated;
         certutil_extns[ext_certPolicies].activated =
-				certutil.options[opt_AddCertPoliciesExt].activated;
+            certutil.options[opt_AddCertPoliciesExt].activated;
         certutil_extns[ext_policyMappings].activated =
-				certutil.options[opt_AddPolicyMapExt].activated;
+            certutil.options[opt_AddPolicyMapExt].activated;
         certutil_extns[ext_policyConstr].activated =
-				certutil.options[opt_AddPolicyConstrExt].activated;
+            certutil.options[opt_AddPolicyConstrExt].activated;
         certutil_extns[ext_inhibitAnyPolicy].activated =
-				certutil.options[opt_AddInhibAnyExt].activated;
+            certutil.options[opt_AddInhibAnyExt].activated;
     }
 
     /* -A -C or -E    Read inFile */
     if (certutil.commands[cmd_CreateNewCert].activated ||
-	certutil.commands[cmd_AddCert].activated ||
-	certutil.commands[cmd_AddEmailCert].activated) {
-	PRBool isCreate = certutil.commands[cmd_CreateNewCert].activated;
-	rv = SECU_ReadDERFromFile(isCreate ? &certReqDER : &certDER, inFile,
-				  certutil.options[opt_ASCIIForIO].activated,
-				  PR_TRUE);
-	if (rv)
-	    goto shutdown;
+        certutil.commands[cmd_AddCert].activated ||
+        certutil.commands[cmd_AddEmailCert].activated) {
+        PRBool isCreate = certutil.commands[cmd_CreateNewCert].activated;
+        rv = SECU_ReadDERFromFile(isCreate ? &certReqDER : &certDER, inFile,
+                                  certutil.options[opt_ASCIIForIO].activated,
+                                  PR_TRUE);
+        if (rv)
+            goto shutdown;
     }
 
     /*
@@ -3378,18 +3394,19 @@ merge_fail:
 
     /*  Make a cert request (-R).  */
     if (certutil.commands[cmd_CertReq].activated) {
-	rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
-	             certutil.options[opt_PhoneNumber].arg,
-	             certutil.options[opt_ASCIIForIO].activated,
-		     certutil.options[opt_ExtendedEmailAddrs].arg,
-		     certutil.options[opt_ExtendedDNSNames].arg,
+        rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
+                     certutil.options[opt_PhoneNumber].arg,
+                     certutil.options[opt_ASCIIForIO].activated,
+                     certutil.options[opt_ExtendedEmailAddrs].arg,
+                     certutil.options[opt_ExtendedDNSNames].arg,
                      certutil_extns,
-		     (certutil.options[opt_GenericExtensions].activated ?
-		         certutil.options[opt_GenericExtensions].arg : NULL),
+                     (certutil.options[opt_GenericExtensions].activated ?
+                                                                        certutil.options[opt_GenericExtensions].arg
+                                                                        : NULL),
                      &certReqDER);
-	if (rv)
-	    goto shutdown;
-	privkey->wincx = &pwdata;
+        if (rv)
+            goto shutdown;
+        privkey->wincx = &pwdata;
     }
 
     /*
@@ -3401,105 +3418,107 @@ merge_fail:
      *  and output the cert to another file.
      */
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
-	static certutilExtnList nullextnlist = {{PR_FALSE, NULL}};
-	rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
-	             certutil.options[opt_PhoneNumber].arg,
-		     PR_FALSE, /* do not BASE64-encode regardless of -a option */
-		     NULL,
-		     NULL,
+        static certutilExtnList nullextnlist = { { PR_FALSE, NULL } };
+        rv = CertReq(privkey, pubkey, keytype, hashAlgTag, subject,
+                     certutil.options[opt_PhoneNumber].arg,
+                     PR_FALSE, /* do not BASE64-encode regardless of -a option */
+                     NULL,
+                     NULL,
                      nullextnlist,
-		     (certutil.options[opt_GenericExtensions].activated ?
-		         certutil.options[opt_GenericExtensions].arg : NULL),
-		     &certReqDER);
-	if (rv) 
-	    goto shutdown;
-	privkey->wincx = &pwdata;
+                     (certutil.options[opt_GenericExtensions].activated ?
+                                                                        certutil.options[opt_GenericExtensions].arg
+                                                                        : NULL),
+                     &certReqDER);
+        if (rv)
+            goto shutdown;
+        privkey->wincx = &pwdata;
     }
 
     /*  Create a certificate (-C or -S).  */
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
-         certutil.commands[cmd_CreateNewCert].activated) {
-	rv = CreateCert(certHandle, slot,
-	                certutil.options[opt_IssuerName].arg,
-			&certReqDER, &privkey, &pwdata, hashAlgTag,
-	                serialNumber, warpmonths, validityMonths,
-		        certutil.options[opt_ExtendedEmailAddrs].arg,
-		        certutil.options[opt_ExtendedDNSNames].arg,
-		        certutil.options[opt_ASCIIForIO].activated &&
-			    certutil.commands[cmd_CreateNewCert].activated,
-	                certutil.options[opt_SelfSign].activated,
-	                certutil_extns,
-			(certutil.options[opt_GenericExtensions].activated ?
-			    certutil.options[opt_GenericExtensions].arg : NULL),
+        certutil.commands[cmd_CreateNewCert].activated) {
+        rv = CreateCert(certHandle, slot,
+                        certutil.options[opt_IssuerName].arg,
+                        &certReqDER, &privkey, &pwdata, hashAlgTag,
+                        serialNumber, warpmonths, validityMonths,
+                        certutil.options[opt_ExtendedEmailAddrs].arg,
+                        certutil.options[opt_ExtendedDNSNames].arg,
+                        certutil.options[opt_ASCIIForIO].activated &&
+                            certutil.commands[cmd_CreateNewCert].activated,
+                        certutil.options[opt_SelfSign].activated,
+                        certutil_extns,
+                        (certutil.options[opt_GenericExtensions].activated ?
+                                                                           certutil.options[opt_GenericExtensions].arg
+                                                                           : NULL),
                         certVersion,
-			&certDER);
-	if (rv) 
-	    goto shutdown;
+                        &certDER);
+        if (rv)
+            goto shutdown;
     }
 
-    /* 
+    /*
      * Adding a cert to the database (or slot)
      */
 
     /* -A -E or -S    Add the cert to the DB */
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
-         certutil.commands[cmd_AddCert].activated ||
-	 certutil.commands[cmd_AddEmailCert].activated) {
-	if (strstr(certutil.options[opt_Trust].arg, "u")) {
-	    fprintf(stderr, "Notice: Trust flag u is set automatically if the "
-			    "private key is present.\n");
-	}
-	rv = AddCert(slot, certHandle, name, 
-	             certutil.options[opt_Trust].arg,
-	             &certDER,
-	             certutil.commands[cmd_AddEmailCert].activated,&pwdata);
-	if (rv) 
-	    goto shutdown;
+        certutil.commands[cmd_AddCert].activated ||
+        certutil.commands[cmd_AddEmailCert].activated) {
+        if (strstr(certutil.options[opt_Trust].arg, "u")) {
+            fprintf(stderr, "Notice: Trust flag u is set automatically if the "
+                            "private key is present.\n");
+        }
+        rv = AddCert(slot, certHandle, name,
+                     certutil.options[opt_Trust].arg,
+                     &certDER,
+                     certutil.commands[cmd_AddEmailCert].activated, &pwdata);
+        if (rv)
+            goto shutdown;
     }
 
     if (certutil.commands[cmd_CertReq].activated ||
-	certutil.commands[cmd_CreateNewCert].activated) {
-	SECItem * item = certutil.commands[cmd_CertReq].activated ? &certReqDER
-								  : &certDER;
-	PRInt32 written = PR_Write(outFile, item->data, item->len);
-	if (written < 0 || (PRUint32) written != item->len) {
-	    rv = SECFailure;
-	}
+        certutil.commands[cmd_CreateNewCert].activated) {
+        SECItem *item = certutil.commands[cmd_CertReq].activated ? &certReqDER
+                                                                 : &certDER;
+        PRInt32 written = PR_Write(outFile, item->data, item->len);
+        if (written < 0 || (PRUint32)written != item->len) {
+            rv = SECFailure;
+        }
     }
 
 shutdown:
     if (slot) {
-	PK11_FreeSlot(slot);
+        PK11_FreeSlot(slot);
     }
     if (privkey) {
-	SECKEY_DestroyPrivateKey(privkey);
+        SECKEY_DestroyPrivateKey(privkey);
     }
     if (pubkey) {
-	SECKEY_DestroyPublicKey(pubkey);
+        SECKEY_DestroyPublicKey(pubkey);
     }
     if (subject) {
-	CERT_DestroyName(subject);
+        CERT_DestroyName(subject);
     }
     if (name) {
-	PL_strfree(name);
+        PL_strfree(name);
     }
     if (newName) {
-	PL_strfree(newName);
+        PL_strfree(newName);
     }
     if (inFile && inFile != PR_STDIN) {
-	PR_Close(inFile);
+        PR_Close(inFile);
     }
     if (outFile && outFile != PR_STDOUT) {
-	PR_Close(outFile);
+        PR_Close(outFile);
     }
     SECITEM_FreeItem(&certReqDER, PR_FALSE);
     SECITEM_FreeItem(&certDER, PR_FALSE);
     if (pwdata.data && pwdata.source == PW_PLAINTEXT) {
-	/* Allocated by a PL_strdup call in SECU_GetModulePassword. */
-	PL_strfree(pwdata.data);
+        /* Allocated by a PL_strdup call in SECU_GetModulePassword. */
+        PL_strfree(pwdata.data);
     }
     if (email) {
-	PL_strfree(email);
+        PL_strfree(email);
     }
 
     /* Open the batch command file.
@@ -3520,106 +3539,106 @@ shutdown:
     */
 
     if ((SECSuccess == rv) && certutil.commands[cmd_Batch].activated) {
-	FILE* batchFile = NULL;
+        FILE *batchFile = NULL;
         char *nextcommand = NULL;
-	PRInt32 cmd_len = 0, buf_size = 0;
-	static const int increment = 512;
+        PRInt32 cmd_len = 0, buf_size = 0;
+        static const int increment = 512;
 
         if (!certutil.options[opt_InputFile].activated ||
             !certutil.options[opt_InputFile].arg) {
-	    PR_fprintf(PR_STDERR,
-	               "%s:  no batch input file specified.\n",
-	               progName);
-	    return 255;
+            PR_fprintf(PR_STDERR,
+                       "%s:  no batch input file specified.\n",
+                       progName);
+            return 255;
         }
         batchFile = fopen(certutil.options[opt_InputFile].arg, "r");
         if (!batchFile) {
-	    PR_fprintf(PR_STDERR,
-	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
-	               progName, certutil.options[opt_InputFile].arg,
-	               PR_GetError(), PR_GetOSError());
-	    return 255;
+            PR_fprintf(PR_STDERR,
+                       "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
+                       progName, certutil.options[opt_InputFile].arg,
+                       PR_GetError(), PR_GetOSError());
+            return 255;
         }
         /* read and execute command-lines in a loop */
-        while ( SECSuccess == rv ) {
+        while (SECSuccess == rv) {
             PRBool invalid = PR_FALSE;
             int newargc = 2;
-            char* space = NULL;
-            char* nextarg = NULL;
-            char** newargv = NULL;
-            char* crlf;
+            char *space = NULL;
+            char *nextarg = NULL;
+            char **newargv = NULL;
+            char *crlf;
 
-	    if (cmd_len + increment > buf_size) {
-	        char * new_buf;
-		buf_size += increment;
-	        new_buf = PORT_Realloc(nextcommand, buf_size);
-		if (!new_buf) {
-		    PR_fprintf(PR_STDERR, "%s: PORT_Realloc(%ld) failed\n",
-			       progName, buf_size);
-		    break;
-		}
-		nextcommand = new_buf;
-		nextcommand[cmd_len] = '\0';
-	    }
-	    if (!fgets(nextcommand + cmd_len, buf_size - cmd_len, batchFile)) {
-		break;
-	    }
+            if (cmd_len + increment > buf_size) {
+                char *new_buf;
+                buf_size += increment;
+                new_buf = PORT_Realloc(nextcommand, buf_size);
+                if (!new_buf) {
+                    PR_fprintf(PR_STDERR, "%s: PORT_Realloc(%ld) failed\n",
+                               progName, buf_size);
+                    break;
+                }
+                nextcommand = new_buf;
+                nextcommand[cmd_len] = '\0';
+            }
+            if (!fgets(nextcommand + cmd_len, buf_size - cmd_len, batchFile)) {
+                break;
+            }
             crlf = PORT_Strrchr(nextcommand, '\n');
             if (crlf) {
                 *crlf = '\0';
             }
-	    cmd_len = strlen(nextcommand);
-	    if (cmd_len && nextcommand[cmd_len - 1] == '\\') {
-	        nextcommand[--cmd_len] = '\0';
-		continue;
-	    }
+            cmd_len = strlen(nextcommand);
+            if (cmd_len && nextcommand[cmd_len - 1] == '\\') {
+                nextcommand[--cmd_len] = '\0';
+                continue;
+            }
 
             /* we now need to split the command into argc / argv format */
 
-            newargv = PORT_Alloc(sizeof(char*)*(newargc+1));
+            newargv = PORT_Alloc(sizeof(char *) * (newargc + 1));
             newargv[0] = progName;
             newargv[1] = nextcommand;
             nextarg = nextcommand;
-            while ((space = PORT_Strpbrk(nextarg, " \f\n\r\t\v")) ) {
-                while (isspace(*space) ) {
+            while ((space = PORT_Strpbrk(nextarg, " \f\n\r\t\v"))) {
+                while (isspace(*space)) {
                     *space = '\0';
-                    space ++;
+                    space++;
                 }
                 if (*space == '\0') {
                     break;
                 } else if (*space != '\"') {
                     nextarg = space;
                 } else {
-                    char* closingquote = strchr(space+1, '\"');
+                    char *closingquote = strchr(space + 1, '\"');
                     if (closingquote) {
                         *closingquote = '\0';
                         space++;
-                        nextarg = closingquote+1;
+                        nextarg = closingquote + 1;
                     } else {
                         invalid = PR_TRUE;
                         nextarg = space;
                     }
                 }
                 newargc++;
-                newargv = PORT_Realloc(newargv, sizeof(char*)*(newargc+1));
-                newargv[newargc-1] = space;
+                newargv = PORT_Realloc(newargv, sizeof(char *) * (newargc + 1));
+                newargv[newargc - 1] = space;
             }
             newargv[newargc] = NULL;
-            
+
             /* invoke next command */
             if (PR_TRUE == invalid) {
                 PR_fprintf(PR_STDERR, "Missing closing quote in batch command :\n%s\nNot executed.\n",
                            nextcommand);
                 rv = SECFailure;
             } else {
-                if (0 != certutil_main(newargc, newargv, PR_FALSE) )
+                if (0 != certutil_main(newargc, newargv, PR_FALSE))
                     rv = SECFailure;
             }
             PORT_Free(newargv);
-	    cmd_len = 0;
-	    nextcommand[0] = '\0';
+            cmd_len = 0;
+            nextcommand[0] = '\0';
         }
-	PORT_Free(nextcommand);
+        PORT_Free(nextcommand);
         fclose(batchFile);
     }
 
@@ -3627,9 +3646,9 @@ shutdown:
         exit(1);
     }
     if (rv == SECSuccess) {
-	return 0;
+        return 0;
     } else {
-	return 255;
+        return 255;
     }
 }
 
@@ -3641,4 +3660,3 @@ main(int argc, char **argv)
     PR_Cleanup();
     return rv;
 }
-

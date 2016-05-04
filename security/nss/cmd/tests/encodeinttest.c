@@ -13,7 +13,7 @@ struct TestCase {
 };
 
 static struct TestCase testCase[] = {
-    /* XXX NSS doesn't generate the shortest encoding for negative values. */
+/* XXX NSS doesn't generate the shortest encoding for negative values. */
 #if 0
     { -128, { 0x80 }, 1 },
     { -129, { 0xFF, 0x7F }, 2 },
@@ -26,13 +26,14 @@ static struct TestCase testCase[] = {
     { 32768, { 0x00, 0x80, 0x00 }, 3 }
 };
 
-int main()
+int
+main()
 {
     PRBool failed = PR_FALSE;
     unsigned int i;
     unsigned int j;
 
-    for (i = 0; i < sizeof(testCase)/sizeof(testCase[0]); i++) {
+    for (i = 0; i < sizeof(testCase) / sizeof(testCase[0]); i++) {
         SECItem encoded;
         if (SEC_ASN1EncodeInteger(NULL, &encoded, testCase[i].value) == NULL) {
             fprintf(stderr, "SEC_ASN1EncodeInteger failed\n");
@@ -45,7 +46,7 @@ int main()
                     testCase[i].value);
             for (j = 0; j < encoded.len; j++) {
                 fprintf(stderr, " 0x%02X", (unsigned int)encoded.data[j]);
-            } 
+            }
             fputs("\n", stderr);
             failed = PR_TRUE;
         }

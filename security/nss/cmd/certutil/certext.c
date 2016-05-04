@@ -30,12 +30,15 @@
 #include "genname.h"
 #include "prnetdb.h"
 
-#define GEN_BREAK(e) rv=e; break;
+#define GEN_BREAK(e) \
+    rv = e;          \
+    break;
 
 static char *
-Gets_s(char *buff, size_t size) {
+Gets_s(char *buff, size_t size)
+{
     char *str;
-    
+
     if (buff == NULL || size < 1) {
         PORT_Assert(0);
         return NULL;
@@ -46,7 +49,7 @@ Gets_s(char *buff, size_t size) {
          * fgets() automatically converts native text file
          * line endings to '\n'.  As defensive programming
          * (just in case fgets has a bug or we put stdin in
-         * binary mode by mistake), we handle three native 
+         * binary mode by mistake), we handle three native
          * text file line endings here:
          *   '\n'      Unix (including Linux and Mac OS X)
          *   '\r''\n'  DOS/Windows & OS/2
@@ -65,13 +68,12 @@ Gets_s(char *buff, size_t size) {
     return str;
 }
 
-
 static SECStatus
-PrintChoicesAndGetAnswer(char* str, char* rBuff, int rSize)
+PrintChoicesAndGetAnswer(char *str, char *rBuff, int rSize)
 {
     fputs(str, stdout);
     fputs(" > ", stdout);
-    fflush (stdout);
+    fflush(stdout);
     if (Gets_s(rBuff, rSize) == NULL) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         return SECFailure;
@@ -90,114 +92,116 @@ GetGeneralName(PLArenaPool *arena, CERTGeneralName *useExistingName, PRBool only
     char buffer[512];
     void *mark;
 
-    PORT_Assert (arena);
-    mark = PORT_ArenaMark (arena);
+    PORT_Assert(arena);
+    mark = PORT_ArenaMark(arena);
     do {
         if (PrintChoicesAndGetAnswer(
-		"\nSelect one of the following general name type: \n"
-		"\t2 - rfc822Name\n"
-		"\t3 - dnsName\n"
-		"\t5 - directoryName\n"
-		"\t7 - uniformResourceidentifier\n"
-		"\t8 - ipAddress\n"
-		"\t9 - registerID\n"
-		"\tAny other number to finish\n"
-		"\t\tChoice:", buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK (SECFailure);
+                "\nSelect one of the following general name type: \n"
+                "\t2 - rfc822Name\n"
+                "\t3 - dnsName\n"
+                "\t5 - directoryName\n"
+                "\t7 - uniformResourceidentifier\n"
+                "\t8 - ipAddress\n"
+                "\t9 - registerID\n"
+                "\tAny other number to finish\n"
+                "\t\tChoice:",
+                buffer, sizeof(buffer)) == SECFailure) {
+            GEN_BREAK(SECFailure);
         }
-        intValue = PORT_Atoi (buffer);
+        intValue = PORT_Atoi(buffer);
         /*
          * Should use ZAlloc instead of Alloc to avoid problem with garbage
          * initialized pointers in CERT_CopyName
          */
         switch (intValue) {
-        case certRFC822Name:
-        case certDNSName:
-        case certDirectoryName:
-        case certURI:
-        case certIPAddress:
-        case certRegisterID:
-	    break;
-	default:
-	    intValue = 0;   /* force a break for anything else */
-	}
+            case certRFC822Name:
+            case certDNSName:
+            case certDirectoryName:
+            case certURI:
+            case certIPAddress:
+            case certRegisterID:
+                break;
+            default:
+                intValue = 0; /* force a break for anything else */
+        }
 
         if (intValue == 0)
-	    break;
-	
-	if (namesList == NULL) {
+            break;
+
+        if (namesList == NULL) {
             if (useExistingName) {
                 namesList = current = tail = useExistingName;
             } else {
                 namesList = current = tail =
                     PORT_ArenaZNew(arena, CERTGeneralName);
             }
-	} else {
-	    current = PORT_ArenaZNew(arena, CERTGeneralName);
-	}
-	if (current == NULL) {
-	    GEN_BREAK (SECFailure);
-	}
+        } else {
+            current = PORT_ArenaZNew(arena, CERTGeneralName);
+        }
+        if (current == NULL) {
+            GEN_BREAK(SECFailure);
+        }
 
         current->type = intValue;
-        puts ("\nEnter data:");
-        fflush (stdout);
-        if (Gets_s (buffer, sizeof(buffer)) == NULL) {
+        puts("\nEnter data:");
+        fflush(stdout);
+        if (Gets_s(buffer, sizeof(buffer)) == NULL) {
             PORT_SetError(SEC_ERROR_INPUT_LEN);
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
         switch (current->type) {
-        case certURI:
-        case certDNSName:
-        case certRFC822Name:
-            current->name.other.data =
-                PORT_ArenaAlloc (arena, strlen (buffer));
-            if (current->name.other.data == NULL) {
-                GEN_BREAK (SECFailure);
-            }
-            PORT_Memcpy(current->name.other.data, buffer,
-                        current->name.other.len = strlen(buffer));
-            break;
+            case certURI:
+            case certDNSName:
+            case certRFC822Name:
+                current->name.other.data =
+                    PORT_ArenaAlloc(arena, strlen(buffer));
+                if (current->name.other.data == NULL) {
+                    GEN_BREAK(SECFailure);
+                }
+                PORT_Memcpy(current->name.other.data, buffer,
+                            current->name.other.len = strlen(buffer));
+                break;
 
-        case certEDIPartyName:
-        case certIPAddress:
-        case certOtherName:
-        case certRegisterID:
-        case certX400Address: {
+            case certEDIPartyName:
+            case certIPAddress:
+            case certOtherName:
+            case certRegisterID:
+            case certX400Address: {
 
-            current->name.other.data =
-                PORT_ArenaAlloc (arena, strlen (buffer) + 2);
-            if (current->name.other.data == NULL) {
-                GEN_BREAK (SECFailure);
-            }
-            
-            PORT_Memcpy (current->name.other.data + 2, buffer,
-                         strlen (buffer));
-            /* This may not be accurate for all cases.  For now,
-             * use this tag type */
-            current->name.other.data[0] =
-                (char)(((current->type - 1) & 0x1f)| 0x80);
-            current->name.other.data[1] = (char)strlen (buffer);
-            current->name.other.len = strlen (buffer) + 2;
-            break;
-        }
+                current->name.other.data =
+                    PORT_ArenaAlloc(arena, strlen(buffer) + 2);
+                if (current->name.other.data == NULL) {
+                    GEN_BREAK(SECFailure);
+                }
 
-        case certDirectoryName: {
-            CERTName *directoryName = NULL;
-            
-            directoryName = CERT_AsciiToName (buffer);
-            if (!directoryName) {
-                fprintf(stderr, "certutil: improperly formatted name: "
-                        "\"%s\"\n", buffer);
+                PORT_Memcpy(current->name.other.data + 2, buffer,
+                            strlen(buffer));
+                /* This may not be accurate for all cases.  For now,
+                 * use this tag type */
+                current->name.other.data[0] =
+                    (char)(((current->type - 1) & 0x1f) | 0x80);
+                current->name.other.data[1] = (char)strlen(buffer);
+                current->name.other.len = strlen(buffer) + 2;
                 break;
             }
-            
-            rv = CERT_CopyName (arena, &current->name.directoryName,
-                                directoryName);
-            CERT_DestroyName (directoryName);
-            
-            break;
-        }
+
+            case certDirectoryName: {
+                CERTName *directoryName = NULL;
+
+                directoryName = CERT_AsciiToName(buffer);
+                if (!directoryName) {
+                    fprintf(stderr, "certutil: improperly formatted name: "
+                                    "\"%s\"\n",
+                            buffer);
+                    break;
+                }
+
+                rv = CERT_CopyName(arena, &current->name.directoryName,
+                                   directoryName);
+                CERT_DestroyName(directoryName);
+
+                break;
+            }
         }
         if (rv != SECSuccess)
             break;
@@ -205,11 +209,11 @@ GetGeneralName(PLArenaPool *arena, CERTGeneralName *useExistingName, PRBool only
         current->l.prev = &(tail->l);
         tail->l.next = &(current->l);
         tail = current;
-        
-    }while (!onlyOne);
+
+    } while (!onlyOne);
 
     if (rv != SECSuccess) {
-        PORT_ArenaRelease (arena, mark);
+        PORT_ArenaRelease(arena, mark);
         namesList = NULL;
     }
     return (namesList);
@@ -218,10 +222,10 @@ GetGeneralName(PLArenaPool *arena, CERTGeneralName *useExistingName, PRBool only
 static CERTGeneralName *
 CreateGeneralName(PLArenaPool *arena)
 {
-  return GetGeneralName(arena, NULL, PR_FALSE);
+    return GetGeneralName(arena, NULL, PR_FALSE);
 }
 
-static SECStatus 
+static SECStatus
 GetString(PLArenaPool *arena, char *prompt, SECItem *value)
 {
     char buffer[251];
@@ -230,23 +234,23 @@ GetString(PLArenaPool *arena, char *prompt, SECItem *value)
     buffer[0] = '\0';
     value->data = NULL;
     value->len = 0;
-    
-    puts (prompt);
-    buffPrt = Gets_s (buffer, sizeof(buffer));
+
+    puts(prompt);
+    buffPrt = Gets_s(buffer, sizeof(buffer));
     /* returned NULL here treated the same way as empty string */
-    if (buffPrt && strlen (buffer) > 0) {
-        value->data = PORT_ArenaAlloc (arena, strlen (buffer));
+    if (buffPrt && strlen(buffer) > 0) {
+        value->data = PORT_ArenaAlloc(arena, strlen(buffer));
         if (value->data == NULL) {
-            PORT_SetError (SEC_ERROR_NO_MEMORY);
+            PORT_SetError(SEC_ERROR_NO_MEMORY);
             return (SECFailure);
         }
-        PORT_Memcpy (value->data, buffer, value->len = strlen(buffer));
+        PORT_Memcpy(value->data, buffer, value->len = strlen(buffer));
     }
     return (SECSuccess);
 }
 
-static PRBool 
-GetYesNo(char *prompt) 
+static PRBool
+GetYesNo(char *prompt)
 {
     char buf[3];
     char *buffPrt;
@@ -265,7 +269,7 @@ GetYesNo(char *prompt)
  * A special value "critical" can be parsed out from the supplied sting.*/
 
 static SECStatus
-parseNextCmdInput(const char * const *valueArray, int *value,  char **nextPos,
+parseNextCmdInput(const char *const *valueArray, int *value, char **nextPos,
                   PRBool *critical)
 {
     char *thisPos = *nextPos;
@@ -306,24 +310,24 @@ parseNextCmdInput(const char * const *valueArray, int *value,  char **nextPos,
     return SECFailure;
 }
 
-static const char * const
-keyUsageKeyWordArray[] = { "digitalSignature",
-                           "nonRepudiation",
-                           "keyEncipherment",
-                           "dataEncipherment",
-                           "keyAgreement",
-                           "certSigning",
-                           "crlSigning",
-                           NULL};
+static const char *const
+    keyUsageKeyWordArray[] = { "digitalSignature",
+                               "nonRepudiation",
+                               "keyEncipherment",
+                               "dataEncipherment",
+                               "keyAgreement",
+                               "certSigning",
+                               "crlSigning",
+                               NULL };
 
-static SECStatus 
-AddKeyUsage (void *extHandle, const char *userSuppliedValue)
+static SECStatus
+AddKeyUsage(void *extHandle, const char *userSuppliedValue)
 {
     SECItem bitStringValue;
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
-    char *nextPos = (char*)userSuppliedValue;
+    char *nextPos = (char *)userSuppliedValue;
     PRBool isCriticalExt = PR_FALSE;
 
     if (!userSuppliedValue) {
@@ -332,15 +336,15 @@ AddKeyUsage (void *extHandle, const char *userSuppliedValue)
                     "\t\t0 - Digital Signature\n"
                     "\t\t1 - Non-repudiation\n"
                     "\t\t2 - Key encipherment\n"
-                    "\t\t3 - Data encipherment\n"   
+                    "\t\t3 - Data encipherment\n"
                     "\t\t4 - Key agreement\n"
-                    "\t\t5 - Cert signing key\n"   
+                    "\t\t5 - Cert signing key\n"
                     "\t\t6 - CRL signing key\n"
                     "\t\tOther to finish\n",
                     buffer, sizeof(buffer)) == SECFailure) {
                 return SECFailure;
             }
-            value = PORT_Atoi (buffer);
+            value = PORT_Atoi(buffer);
             if (value < 0 || value > 6)
                 break;
             if (value == 0) {
@@ -369,12 +373,9 @@ AddKeyUsage (void *extHandle, const char *userSuppliedValue)
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
 
-    return (CERT_EncodeAndAddBitStrExtension
-            (extHandle, SEC_OID_X509_KEY_USAGE, &bitStringValue,
-             isCriticalExt));
-
+    return (CERT_EncodeAndAddBitStrExtension(extHandle, SEC_OID_X509_KEY_USAGE, &bitStringValue,
+                                             isCriticalExt));
 }
-
 
 static CERTOidSequence *
 CreateOidSequence(void)
@@ -383,17 +384,17 @@ CreateOidSequence(void)
     PLArenaPool *arena = (PLArenaPool *)NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if( (PLArenaPool *)NULL == arena ) {
+    if ((PLArenaPool *)NULL == arena) {
         goto loser;
     }
 
     rv = (CERTOidSequence *)PORT_ArenaZNew(arena, CERTOidSequence);
-    if( (CERTOidSequence *)NULL == rv ) {
+    if ((CERTOidSequence *)NULL == rv) {
         goto loser;
     }
 
     rv->oids = (SECItem **)PORT_ArenaZNew(arena, SECItem *);
-    if( (SECItem **)NULL == rv->oids ) {
+    if ((SECItem **)NULL == rv->oids) {
         goto loser;
     }
 
@@ -401,7 +402,7 @@ CreateOidSequence(void)
     return rv;
 
 loser:
-    if( (PLArenaPool *)NULL != arena ) {
+    if ((PLArenaPool *)NULL != arena) {
         PORT_FreeArena(arena, PR_FALSE);
     }
 
@@ -424,11 +425,11 @@ AddOidToSequence(CERTOidSequence *os, SECOidTag oidTag)
     SECOidData *od;
 
     od = SECOID_FindOIDByTag(oidTag);
-    if( (SECOidData *)NULL == od ) {
+    if ((SECOidData *)NULL == od) {
         return SECFailure;
     }
 
-    for( oids = os->oids; (SECItem *)NULL != *oids; oids++ ) {
+    for (oids = os->oids; (SECItem *)NULL != *oids; oids++) {
         if (*oids == &od->oid) {
             /* We already have this oid */
             return SECSuccess;
@@ -442,11 +443,11 @@ AddOidToSequence(CERTOidSequence *os, SECOidTag oidTag)
         PRUint32 i;
 
         oids = (SECItem **)PORT_ArenaZNewArray(os->arena, SECItem *, count + 2);
-        if( (SECItem **)NULL == oids ) {
+        if ((SECItem **)NULL == oids) {
             return SECFailure;
         }
-    
-        for( i = 0; i < count; i++ ) {
+
+        for (i = 0; i < count; i++) {
             oids[i] = os->oids[i];
         }
 
@@ -466,18 +467,17 @@ const SEC_ASN1Template CERT_OidSeqTemplate[] = {
       SEC_ASN1_SUB(SEC_ObjectIDTemplate) }
 };
 
-
 static SECItem *
 EncodeOidSequence(CERTOidSequence *os)
 {
     SECItem *rv;
 
     rv = (SECItem *)PORT_ArenaZNew(os->arena, SECItem);
-    if( (SECItem *)NULL == rv ) {
+    if ((SECItem *)NULL == rv) {
         goto loser;
     }
 
-    if( !SEC_ASN1EncodeItem(os->arena, rv, os, CERT_OidSeqTemplate) ) {
+    if (!SEC_ASN1EncodeItem(os->arena, rv, os, CERT_OidSeqTemplate)) {
         goto loser;
     }
 
@@ -487,19 +487,19 @@ loser:
     return (SECItem *)NULL;
 }
 
-static const char * const 
-extKeyUsageKeyWordArray[] = { "serverAuth",
-                              "clientAuth",
-                              "codeSigning",
-                              "emailProtection",
-                              "timeStamp",
-                              "ocspResponder",
-                              "stepUp",
-                              "msTrustListSigning",
-                              NULL};
+static const char *const
+    extKeyUsageKeyWordArray[] = { "serverAuth",
+                                  "clientAuth",
+                                  "codeSigning",
+                                  "emailProtection",
+                                  "timeStamp",
+                                  "ocspResponder",
+                                  "stepUp",
+                                  "msTrustListSigning",
+                                  NULL };
 
-static SECStatus 
-AddExtKeyUsage (void *extHandle, const char *userSuppliedValue)
+static SECStatus
+AddExtKeyUsage(void *extHandle, const char *userSuppliedValue)
 {
     char buffer[5];
     int value;
@@ -507,10 +507,10 @@ AddExtKeyUsage (void *extHandle, const char *userSuppliedValue)
     SECStatus rv;
     SECItem *item;
     PRBool isCriticalExt = PR_FALSE;
-    char *nextPos = (char*)userSuppliedValue;
-    
+    char *nextPos = (char *)userSuppliedValue;
+
     os = CreateOidSequence();
-    if( (CERTOidSequence *)NULL == os ) {
+    if ((CERTOidSequence *)NULL == os) {
         return SECFailure;
     }
 
@@ -530,7 +530,7 @@ AddExtKeyUsage (void *extHandle, const char *userSuppliedValue)
                 GEN_BREAK(SECFailure);
             }
             value = PORT_Atoi(buffer);
-            
+
             if (value == 0) {
                 /* Checking that zero value of variable 'value'
                  * corresponds to '0' input made by user */
@@ -546,38 +546,38 @@ AddExtKeyUsage (void *extHandle, const char *userSuppliedValue)
             }
         }
 
-        switch( value ) {
-        case 0:
-            rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_SERVER_AUTH);
-            break;
-        case 1:
-            rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH);
-            break;
-        case 2:
-            rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_CODE_SIGN);
-            break;
-        case 3:
-            rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT);
-            break;
-        case 4:
-            rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_TIME_STAMP);
-            break;
-        case 5:
-            rv = AddOidToSequence(os, SEC_OID_OCSP_RESPONDER);
-            break;
-        case 6:
-            rv = AddOidToSequence(os, SEC_OID_NS_KEY_USAGE_GOVT_APPROVED);
-            break;
-        case 7:
-            rv = AddOidToSequence(os, SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING);
-            break;
-        default:
-            goto endloop;
+        switch (value) {
+            case 0:
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_SERVER_AUTH);
+                break;
+            case 1:
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH);
+                break;
+            case 2:
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_CODE_SIGN);
+                break;
+            case 3:
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT);
+                break;
+            case 4:
+                rv = AddOidToSequence(os, SEC_OID_EXT_KEY_USAGE_TIME_STAMP);
+                break;
+            case 5:
+                rv = AddOidToSequence(os, SEC_OID_OCSP_RESPONDER);
+                break;
+            case 6:
+                rv = AddOidToSequence(os, SEC_OID_NS_KEY_USAGE_GOVT_APPROVED);
+                break;
+            case 7:
+                rv = AddOidToSequence(os, SEC_OID_MS_EXT_KEY_USAGE_CTL_SIGNING);
+                break;
+            default:
+                goto endloop;
         }
 
         if (userSuppliedValue && !nextPos)
             break;
-        if( SECSuccess != rv )
+        if (SECSuccess != rv)
             goto loser;
     }
 
@@ -590,31 +590,31 @@ endloop:
 
     rv = CERT_AddExtension(extHandle, SEC_OID_X509_EXT_KEY_USAGE, item,
                            isCriticalExt, PR_TRUE);
-    /*FALLTHROUGH*/
+/*FALLTHROUGH*/
 loser:
     DestroyOidSequence(os);
     return rv;
 }
 
-static const char * const
-nsCertTypeKeyWordArray[] = { "sslClient",
-                             "sslServer",
-                             "smime",
-                             "objectSigning",
-                             "Not!Used",
-                             "sslCA",
-                             "smimeCA",
-                             "objectSigningCA",
-                            NULL };
+static const char *const
+    nsCertTypeKeyWordArray[] = { "sslClient",
+                                 "sslServer",
+                                 "smime",
+                                 "objectSigning",
+                                 "Not!Used",
+                                 "sslCA",
+                                 "smimeCA",
+                                 "objectSigningCA",
+                                 NULL };
 
-static SECStatus 
-AddNscpCertType (void *extHandle, const char *userSuppliedValue)
+static SECStatus
+AddNscpCertType(void *extHandle, const char *userSuppliedValue)
 {
     SECItem bitStringValue;
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
-    char *nextPos = (char*)userSuppliedValue;
+    char *nextPos = (char *)userSuppliedValue;
     PRBool isCriticalExt = PR_FALSE;
 
     if (!userSuppliedValue) {
@@ -623,16 +623,16 @@ AddNscpCertType (void *extHandle, const char *userSuppliedValue)
                     "\t\t0 - SSL Client\n"
                     "\t\t1 - SSL Server\n"
                     "\t\t2 - S/MIME\n"
-                    "\t\t3 - Object Signing\n"   
+                    "\t\t3 - Object Signing\n"
                     "\t\t4 - Reserved for future use\n"
-                    "\t\t5 - SSL CA\n"   
+                    "\t\t5 - SSL CA\n"
                     "\t\t6 - S/MIME CA\n"
                     "\t\t7 - Object Signing CA\n"
                     "\t\tOther to finish\n",
                     buffer, sizeof(buffer)) == SECFailure) {
                 return SECFailure;
             }
-            value = PORT_Atoi (buffer);
+            value = PORT_Atoi(buffer);
             if (value < 0 || value > 7)
                 break;
             if (value == 0) {
@@ -661,10 +661,8 @@ AddNscpCertType (void *extHandle, const char *userSuppliedValue)
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
 
-    return (CERT_EncodeAndAddBitStrExtension
-            (extHandle, SEC_OID_NS_CERT_EXT_CERT_TYPE, &bitStringValue,
-             isCriticalExt));
-
+    return (CERT_EncodeAndAddBitStrExtension(extHandle, SEC_OID_NS_CERT_EXT_CERT_TYPE, &bitStringValue,
+                                             isCriticalExt));
 }
 
 SECStatus
@@ -686,7 +684,7 @@ GetOidFromString(PLArenaPool *arena, SECItem *to,
      */
     tag = SEC_OID_UNKNOWN;
     coid = SECOID_FindOIDByTag(tag);
-    for ( ; coid; coid = SECOID_FindOIDByTag(++tag)) {
+    for (; coid; coid = SECOID_FindOIDByTag(++tag)) {
         if (PORT_Strncasecmp(from, coid->desc, fromLen) == 0) {
             break;
         }
@@ -698,7 +696,7 @@ GetOidFromString(PLArenaPool *arena, SECItem *to,
     return SECITEM_CopyItem(arena, to, &coid->oid);
 }
 
-static SECStatus 
+static SECStatus
 AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
                    const char *constNames, CERTGeneralNameType type)
 {
@@ -707,9 +705,9 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
     PRCList *prev = NULL;
     char *cp, *nextName = NULL;
     SECStatus rv = SECSuccess;
-    PRBool readTypeFromName = (PRBool) (type == 0);
+    PRBool readTypeFromName = (PRBool)(type == 0);
     char *names = NULL;
-    
+
     if (constNames)
         names = PORT_Strdup(constNames);
 
@@ -728,7 +726,7 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
      * as a parameter to this function will be used.
      * If the type value is zero (undefined), we'll fail.
      */
-    for (cp=names; cp; cp=nextName) {
+    for (cp = names; cp; cp = nextName) {
         int len;
         char *oidString;
         char *nextComma;
@@ -744,13 +742,13 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
         nextComma = PORT_Strchr(cp, ',');
         if (nextComma) {
             *nextComma = 0;
-            nextName = nextComma+1;
+            nextName = nextComma + 1;
         }
         if ((*cp) == 0) {
             continue;
         }
         if (readTypeFromName) {
-            char *save=cp;
+            char *save = cp;
             /* Because we already replaced nextComma with end-of-string,
              * a found colon belongs to the current name */
             cp = PORT_Strchr(cp, ':');
@@ -779,92 +777,92 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
 
         current->type = type;
         switch (type) {
-        /* string types */
-        case certRFC822Name:
-        case certDNSName:
-        case certURI:
-            current->name.other.data =
-                (unsigned char *) PORT_ArenaStrdup(arena,cp);
-            current->name.other.len = PORT_Strlen(cp);
-            break;
-        /* unformated data types */
-        case certX400Address:
-        case certEDIPartyName:
-            /* turn a string into a data and len */
-            rv = SECFailure; /* punt on these for now */
-            fprintf(stderr,"EDI Party Name and X.400 Address not supported\n");
-            break;
-        case certDirectoryName:
-            /* certDirectoryName */
-            name = CERT_AsciiToName(cp);
-            if (name == NULL) {
-                rv = SECFailure;
-                fprintf(stderr, "Invalid Directory Name (\"%s\")\n", cp);
+            /* string types */
+            case certRFC822Name:
+            case certDNSName:
+            case certURI:
+                current->name.other.data =
+                    (unsigned char *)PORT_ArenaStrdup(arena, cp);
+                current->name.other.len = PORT_Strlen(cp);
                 break;
-            }
-            rv = CERT_CopyName(arena,&current->name.directoryName,name);
-            CERT_DestroyName(name);
-            break;
-        /* types that require more processing */
-        case certIPAddress:
-            /* convert the string to an ip address */
-            status = PR_StringToNetAddr(cp, &addr);
-            if (status != PR_SUCCESS) {
-                rv = SECFailure;
-                fprintf(stderr, "Invalid IP Address (\"%s\")\n", cp);
+            /* unformated data types */
+            case certX400Address:
+            case certEDIPartyName:
+                /* turn a string into a data and len */
+                rv = SECFailure; /* punt on these for now */
+                fprintf(stderr, "EDI Party Name and X.400 Address not supported\n");
                 break;
-            }
+            case certDirectoryName:
+                /* certDirectoryName */
+                name = CERT_AsciiToName(cp);
+                if (name == NULL) {
+                    rv = SECFailure;
+                    fprintf(stderr, "Invalid Directory Name (\"%s\")\n", cp);
+                    break;
+                }
+                rv = CERT_CopyName(arena, &current->name.directoryName, name);
+                CERT_DestroyName(name);
+                break;
+            /* types that require more processing */
+            case certIPAddress:
+                /* convert the string to an ip address */
+                status = PR_StringToNetAddr(cp, &addr);
+                if (status != PR_SUCCESS) {
+                    rv = SECFailure;
+                    fprintf(stderr, "Invalid IP Address (\"%s\")\n", cp);
+                    break;
+                }
 
-            if (PR_NetAddrFamily(&addr) == PR_AF_INET) {
-                len = sizeof(addr.inet.ip);
-                data = (unsigned char *)&addr.inet.ip;
-            } else if (PR_NetAddrFamily(&addr) == PR_AF_INET6) {
-                len = sizeof(addr.ipv6.ip);
-                data = (unsigned char *)&addr.ipv6.ip;
-            } else {
-                fprintf(stderr, "Invalid IP Family\n");
-                rv = SECFailure;
+                if (PR_NetAddrFamily(&addr) == PR_AF_INET) {
+                    len = sizeof(addr.inet.ip);
+                    data = (unsigned char *)&addr.inet.ip;
+                } else if (PR_NetAddrFamily(&addr) == PR_AF_INET6) {
+                    len = sizeof(addr.ipv6.ip);
+                    data = (unsigned char *)&addr.ipv6.ip;
+                } else {
+                    fprintf(stderr, "Invalid IP Family\n");
+                    rv = SECFailure;
+                    break;
+                }
+                current->name.other.data = PORT_ArenaAlloc(arena, len);
+                if (current->name.other.data == NULL) {
+                    rv = SECFailure;
+                    break;
+                }
+                current->name.other.len = len;
+                PORT_Memcpy(current->name.other.data, data, len);
                 break;
-            }
-            current->name.other.data =  PORT_ArenaAlloc(arena, len);
-            if (current->name.other.data == NULL) {
-                rv = SECFailure;
+            case certRegisterID:
+                rv = GetOidFromString(arena, &current->name.other, cp, strlen(cp));
                 break;
-            }
-            current->name.other.len = len;
-            PORT_Memcpy(current->name.other.data,data, len);
-            break;
-        case certRegisterID:
-            rv = GetOidFromString(arena, &current->name.other, cp, strlen(cp));
-            break;
-        case certOtherName:
-            oidString = cp;
-            cp = PORT_Strchr(cp,';');
-            if (cp == NULL) {
-                rv = SECFailure;
-                fprintf(stderr, "missing name in other name\n");
+            case certOtherName:
+                oidString = cp;
+                cp = PORT_Strchr(cp, ';');
+                if (cp == NULL) {
+                    rv = SECFailure;
+                    fprintf(stderr, "missing name in other name\n");
+                    break;
+                }
+                *cp++ = 0;
+                current->name.OthName.name.data =
+                    (unsigned char *)PORT_ArenaStrdup(arena, cp);
+                if (current->name.OthName.name.data == NULL) {
+                    rv = SECFailure;
+                    break;
+                }
+                current->name.OthName.name.len = PORT_Strlen(cp);
+                rv = GetOidFromString(arena, &current->name.OthName.oid,
+                                      oidString, strlen(oidString));
                 break;
-            }
-            *cp++ = 0;
-            current->name.OthName.name.data =
-                (unsigned char *) PORT_ArenaStrdup(arena,cp);
-            if (current->name.OthName.name.data == NULL) {
+            default:
                 rv = SECFailure;
+                fprintf(stderr, "Missing or invalid Subject Alternate Name type\n");
                 break;
-            }
-            current->name.OthName.name.len = PORT_Strlen(cp);
-            rv = GetOidFromString(arena, &current->name.OthName.oid,
-                                  oidString, strlen(oidString));
-            break;
-        default:
-            rv = SECFailure;
-            fprintf(stderr, "Missing or invalid Subject Alternate Name type\n");
-            break;
         }
         if (rv == SECFailure) {
             break;
         }
-        
+
         if (prev) {
             current->l.prev = prev;
             prev->next = &(current->l);
@@ -885,8 +883,7 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
             nameList->l.prev = existingprev;
             existingprev->next = &(nameList->l);
             current->l.next = &((*existingListp)->l);
-        }
-        else {
+        } else {
             /* make nameList circular and set it as the new existingList */
             nameList->l.prev = prev;
             current->l.next = &(nameList->l);
@@ -896,39 +893,39 @@ AddSubjectAltNames(PLArenaPool *arena, CERTGeneralName **existingListp,
     return rv;
 }
 
-static SECStatus 
+static SECStatus
 AddEmailSubjectAlt(PLArenaPool *arena, CERTGeneralName **existingListp,
                    const char *emailAddrs)
 {
-    return AddSubjectAltNames(arena, existingListp, emailAddrs, 
+    return AddSubjectAltNames(arena, existingListp, emailAddrs,
                               certRFC822Name);
 }
 
-static SECStatus 
+static SECStatus
 AddDNSSubjectAlt(PLArenaPool *arena, CERTGeneralName **existingListp,
                  const char *dnsNames)
 {
     return AddSubjectAltNames(arena, existingListp, dnsNames, certDNSName);
 }
 
-static SECStatus 
+static SECStatus
 AddGeneralSubjectAlt(PLArenaPool *arena, CERTGeneralName **existingListp,
                      const char *altNames)
 {
     return AddSubjectAltNames(arena, existingListp, altNames, 0);
 }
 
-static SECStatus 
+static SECStatus
 AddBasicConstraint(void *extHandle)
 {
-    CERTBasicConstraints basicConstraint;    
+    CERTBasicConstraints basicConstraint;
     SECStatus rv;
     char buffer[10];
     PRBool yesNoAns;
 
     do {
         basicConstraint.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
-        basicConstraint.isCA = GetYesNo ("Is this a CA certificate [y/N]?");
+        basicConstraint.isCA = GetYesNo("Is this a CA certificate [y/N]?");
 
         buffer[0] = '\0';
         if (PrintChoicesAndGetAnswer("Enter the path length constraint, "
@@ -936,39 +933,39 @@ AddBasicConstraint(void *extHandle)
                                      buffer, sizeof(buffer)) == SECFailure) {
             GEN_BREAK(SECFailure);
         }
-        if (PORT_Strlen (buffer) > 0)
-            basicConstraint.pathLenConstraint = PORT_Atoi (buffer);
+        if (PORT_Strlen(buffer) > 0)
+            basicConstraint.pathLenConstraint = PORT_Atoi(buffer);
 
-        yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
+        yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
         rv = SECU_EncodeAndAddExtensionValue(NULL, extHandle,
-		 &basicConstraint, yesNoAns, SEC_OID_X509_BASIC_CONSTRAINTS,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeBasicConstraintValue);
+                                             &basicConstraint, yesNoAns, SEC_OID_X509_BASIC_CONSTRAINTS,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeBasicConstraintValue);
     } while (0);
 
     return (rv);
 }
 
-static SECStatus 
+static SECStatus
 AddNameConstraints(void *extHandle)
 {
-    PLArenaPool              *arena = NULL;
-    CERTNameConstraints      *constraints = NULL;
+    PLArenaPool *arena = NULL;
+    CERTNameConstraints *constraints = NULL;
 
-    CERTNameConstraint       *current = NULL;
-    CERTNameConstraint       *last_permited = NULL;
-    CERTNameConstraint       *last_excluded = NULL;
-    SECStatus                rv = SECSuccess;
+    CERTNameConstraint *current = NULL;
+    CERTNameConstraint *last_permited = NULL;
+    CERTNameConstraint *last_excluded = NULL;
+    SECStatus rv = SECSuccess;
 
     char buffer[512];
     int intValue = 0;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena) {
-      constraints = PORT_ArenaZNew(arena, CERTNameConstraints);
+        constraints = PORT_ArenaZNew(arena, CERTNameConstraints);
     }
 
-    if (!arena || ! constraints) {
+    if (!arena || !constraints) {
         SECU_PrintError(progName, "out of memory");
         PORT_FreeArena(arena, PR_FALSE);
         return SECFailure;
@@ -982,43 +979,44 @@ AddNameConstraints(void *extHandle)
             GEN_BREAK(SECFailure);
         }
 
-        (void) SEC_ASN1EncodeInteger(arena, &current->min, 0);
+        (void)SEC_ASN1EncodeInteger(arena, &current->min, 0);
 
         if (!GetGeneralName(arena, &current->name, PR_TRUE)) {
             GEN_BREAK(SECFailure);
         }
 
         if (PrintChoicesAndGetAnswer("Type of Name Constraint?\n"
-            "\t1 - permitted\n\t2 - excluded\n\tAny"
-            "other number to finish\n\tChoice",
-            buffer, sizeof(buffer)) != SECSuccess) {
+                                     "\t1 - permitted\n\t2 - excluded\n\tAny"
+                                     "other number to finish\n\tChoice",
+                                     buffer, sizeof(buffer)) !=
+            SECSuccess) {
             GEN_BREAK(SECFailure);
         }
 
         intValue = PORT_Atoi(buffer);
         switch (intValue) {
-        case 1:
-            if (constraints->permited == NULL) {
-                constraints->permited = last_permited = current;
-            }
-            last_permited->l.next = &(current->l);
-            current->l.prev = &(last_permited->l);
-            last_permited = current;
-            break;
-        case 2:
-            if (constraints->excluded == NULL) {
-                constraints->excluded = last_excluded = current;
-            }
-            last_excluded->l.next = &(current->l);
-            current->l.prev = &(last_excluded->l);
-            last_excluded = current;
-            break;
+            case 1:
+                if (constraints->permited == NULL) {
+                    constraints->permited = last_permited = current;
+                }
+                last_permited->l.next = &(current->l);
+                current->l.prev = &(last_permited->l);
+                last_permited = current;
+                break;
+            case 2:
+                if (constraints->excluded == NULL) {
+                    constraints->excluded = last_excluded = current;
+                }
+                last_excluded->l.next = &(current->l);
+                current->l.prev = &(last_excluded->l);
+                last_excluded = current;
+                break;
         }
-        
-        PR_snprintf(buffer, sizeof(buffer), "Add another entry to the"
-                    " Name Constraint Extension [y/N]");
 
-        if (GetYesNo (buffer) == 0) {
+        PR_snprintf(buffer, sizeof(buffer), "Add another entry to the"
+                                            " Name Constraint Extension [y/N]");
+
+        if (GetYesNo(buffer) == 0) {
             break;
         }
 
@@ -1039,69 +1037,70 @@ AddNameConstraints(void *extHandle)
         }
 
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, constraints,
-                 yesNoAns, oidIdent,
-                 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeNameConstraintsExtension);
+                                             yesNoAns, oidIdent,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeNameConstraintsExtension);
     }
     if (arena)
         PORT_FreeArena(arena, PR_FALSE);
     return (rv);
 }
 
-static SECStatus 
-AddAuthKeyID (void *extHandle)
+static SECStatus
+AddAuthKeyID(void *extHandle)
 {
-    CERTAuthKeyID *authKeyID = NULL;    
+    CERTAuthKeyID *authKeyID = NULL;
     PLArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
     PRBool yesNoAns;
 
     do {
         arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-        if ( !arena ) {
+        if (!arena) {
             SECU_PrintError(progName, "out of memory");
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
 
-        if (GetYesNo ("Enter value for the authKeyID extension [y/N]?") == 0)
+        if (GetYesNo("Enter value for the authKeyID extension [y/N]?") == 0)
             break;
 
         authKeyID = PORT_ArenaZNew(arena, CERTAuthKeyID);
         if (authKeyID == NULL) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
 
-        rv = GetString (arena, "Enter value for the key identifier fields,"
-                        "enter to omit:", &authKeyID->keyID);
+        rv = GetString(arena, "Enter value for the key identifier fields,"
+                              "enter to omit:",
+                       &authKeyID->keyID);
         if (rv != SECSuccess)
             break;
 
         SECU_SECItemHexStringToBinary(&authKeyID->keyID);
 
-        authKeyID->authCertIssuer = CreateGeneralName (arena);
-        if (authKeyID->authCertIssuer == NULL && 
-            SECFailure == PORT_GetError ())
+        authKeyID->authCertIssuer = CreateGeneralName(arena);
+        if (authKeyID->authCertIssuer == NULL &&
+            SECFailure == PORT_GetError())
             break;
 
+        rv = GetString(arena, "Enter value for the authCertSerial field, "
+                              "enter to omit:",
+                       &authKeyID->authCertSerialNumber);
 
-        rv = GetString (arena, "Enter value for the authCertSerial field, "
-                        "enter to omit:", &authKeyID->authCertSerialNumber);
-
-        yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
+        yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle,
-		     authKeyID, yesNoAns, SEC_OID_X509_AUTH_KEY_ID, 
-		     (EXTEN_EXT_VALUE_ENCODER) CERT_EncodeAuthKeyID);
+                                             authKeyID, yesNoAns, SEC_OID_X509_AUTH_KEY_ID,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeAuthKeyID);
         if (rv)
             break;
 
     } while (0);
     if (arena)
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     return (rv);
-}   
-    
-static SECStatus 
-AddSubjKeyID (void *extHandle)
+}
+
+static SECStatus
+AddSubjKeyID(void *extHandle)
 {
     SECItem keyID;
     PLArenaPool *arena = NULL;
@@ -1110,34 +1109,35 @@ AddSubjKeyID (void *extHandle)
 
     do {
         arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-        if ( !arena ) {
+        if (!arena) {
             SECU_PrintError(progName, "out of memory");
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
         printf("Adding Subject Key ID extension.\n");
 
-        rv = GetString (arena, "Enter value for the key identifier fields,"
-                        "enter to omit:", &keyID);
+        rv = GetString(arena, "Enter value for the key identifier fields,"
+                              "enter to omit:",
+                       &keyID);
         if (rv != SECSuccess)
             break;
 
         SECU_SECItemHexStringToBinary(&keyID);
 
-        yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
+        yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle,
-		     &keyID, yesNoAns, SEC_OID_X509_SUBJECT_KEY_ID, 
-		     (EXTEN_EXT_VALUE_ENCODER) CERT_EncodeSubjectKeyID);
+                                             &keyID, yesNoAns, SEC_OID_X509_SUBJECT_KEY_ID,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeSubjectKeyID);
         if (rv)
             break;
 
     } while (0);
     if (arena)
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     return (rv);
-}   
+}
 
-static SECStatus 
+static SECStatus
 AddCrlDistPoint(void *extHandle)
 {
     PLArenaPool *arena = NULL;
@@ -1148,7 +1148,7 @@ AddCrlDistPoint(void *extHandle)
     char buffer[512];
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena )
+    if (!arena)
         return (SECFailure);
 
     do {
@@ -1156,8 +1156,8 @@ AddCrlDistPoint(void *extHandle)
 
         current = PORT_ArenaZNew(arena, CRLDistributionPoint);
         if (current == NULL) {
-            GEN_BREAK (SECFailure);
-        }   
+            GEN_BREAK(SECFailure);
+        }
 
         /* Get the distributionPointName fields - this field is optional */
         if (PrintChoicesAndGetAnswer(
@@ -1165,36 +1165,36 @@ AddCrlDistPoint(void *extHandle)
                 "\t1 - Full Name\n\t2 - Relative Name\n\tAny other "
                 "number to finish\n\t\tChoice: ",
                 buffer, sizeof(buffer)) == SECFailure) {
-	    GEN_BREAK (SECFailure);
-	}
-        intValue = PORT_Atoi (buffer);
+            GEN_BREAK(SECFailure);
+        }
+        intValue = PORT_Atoi(buffer);
         switch (intValue) {
-        case generalName:
-            current->distPointType = intValue;
-            current->distPoint.fullName = CreateGeneralName (arena);
-            rv = PORT_GetError();
-            break;
+            case generalName:
+                current->distPointType = intValue;
+                current->distPoint.fullName = CreateGeneralName(arena);
+                rv = PORT_GetError();
+                break;
 
-        case relativeDistinguishedName: {
-            CERTName *name;
+            case relativeDistinguishedName: {
+                CERTName *name;
 
-            current->distPointType = intValue;
-            puts ("Enter the relative name: ");
-            fflush (stdout);
-            if (Gets_s (buffer, sizeof(buffer)) == NULL) {
-                GEN_BREAK (SECFailure);
-            }
-            /* For simplicity, use CERT_AsciiToName to converse from a string
+                current->distPointType = intValue;
+                puts("Enter the relative name: ");
+                fflush(stdout);
+                if (Gets_s(buffer, sizeof(buffer)) == NULL) {
+                    GEN_BREAK(SECFailure);
+                }
+                /* For simplicity, use CERT_AsciiToName to converse from a string
                to NAME, but we only interest in the first RDN */
-            name = CERT_AsciiToName (buffer);
-            if (!name) {
-                GEN_BREAK (SECFailure);
+                name = CERT_AsciiToName(buffer);
+                if (!name) {
+                    GEN_BREAK(SECFailure);
+                }
+                rv = CERT_CopyRDN(arena, &current->distPoint.relativeName,
+                                  name->rdns[0]);
+                CERT_DestroyName(name);
+                break;
             }
-            rv = CERT_CopyRDN (arena, &current->distPoint.relativeName,
-                               name->rdns[0]);
-            CERT_DestroyName (name);
-            break;
-          }
         }
         if (rv != SECSuccess)
             break;
@@ -1210,7 +1210,7 @@ AddCrlDistPoint(void *extHandle)
                 buffer, sizeof(buffer)) == SECFailure) {
             GEN_BREAK(SECFailure);
         }
-        intValue = PORT_Atoi (buffer);
+        intValue = PORT_Atoi(buffer);
         if (intValue == 0) {
             /* Checking that zero value of variable 'value'
              * corresponds to '0' input made by user */
@@ -1219,65 +1219,62 @@ AddCrlDistPoint(void *extHandle)
                 intValue = -1;
             }
         }
-        if (intValue >= 0 && intValue <8) {
-            current->reasons.data = PORT_ArenaAlloc (arena, sizeof(char));
+        if (intValue >= 0 && intValue < 8) {
+            current->reasons.data = PORT_ArenaAlloc(arena, sizeof(char));
             if (current->reasons.data == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
             *current->reasons.data = (char)(0x80 >> intValue);
             current->reasons.len = 1;
         }
-        puts ("Enter value for the CRL Issuer name:\n");
-        current->crlIssuer = CreateGeneralName (arena);
+        puts("Enter value for the CRL Issuer name:\n");
+        current->crlIssuer = CreateGeneralName(arena);
         if (current->crlIssuer == NULL && (rv = PORT_GetError()) == SECFailure)
             break;
 
         if (crlDistPoints == NULL) {
             crlDistPoints = PORT_ArenaZNew(arena, CERTCrlDistributionPoints);
             if (crlDistPoints == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
         }
 
         crlDistPoints->distPoints =
-            PORT_ArenaGrow (arena, crlDistPoints->distPoints,
-                            sizeof (*crlDistPoints->distPoints) * count,
-                            sizeof (*crlDistPoints->distPoints) *(count + 1));
+            PORT_ArenaGrow(arena, crlDistPoints->distPoints,
+                           sizeof(*crlDistPoints->distPoints) * count,
+                           sizeof(*crlDistPoints->distPoints) * (count + 1));
         if (crlDistPoints->distPoints == NULL) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
 
         crlDistPoints->distPoints[count] = current;
         ++count;
         if (GetYesNo("Enter another value for the CRLDistributionPoint "
-                      "extension [y/N]?") == 0) {
+                     "extension [y/N]?") == 0) {
             /* Add null to the end to mark end of data */
             crlDistPoints->distPoints =
                 PORT_ArenaGrow(arena, crlDistPoints->distPoints,
-			   sizeof (*crlDistPoints->distPoints) * count,
-			   sizeof (*crlDistPoints->distPoints) *(count + 1));
-            crlDistPoints->distPoints[count] = NULL;    
+                               sizeof(*crlDistPoints->distPoints) * count,
+                               sizeof(*crlDistPoints->distPoints) * (count + 1));
+            crlDistPoints->distPoints[count] = NULL;
             break;
         }
 
-
     } while (1);
-    
+
     if (rv == SECSuccess) {
-        PRBool yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
+        PRBool yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle,
-		 crlDistPoints, yesNoAns, SEC_OID_X509_CRL_DIST_POINTS,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeCRLDistributionPoints);
+                                             crlDistPoints, yesNoAns, SEC_OID_X509_CRL_DIST_POINTS,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeCRLDistributionPoints);
     }
     if (arena)
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     return (rv);
 }
 
-
-
-static SECStatus 
+static SECStatus
 AddPolicyConstraints(void *extHandle)
 {
     CERTCertificatePolicyConstraints *policyConstr;
@@ -1290,7 +1287,7 @@ AddPolicyConstraints(void *extHandle)
     PRBool skipExt = PR_TRUE;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
+    if (!arena) {
         SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
@@ -1302,14 +1299,15 @@ AddPolicyConstraints(void *extHandle)
     }
 
     if (PrintChoicesAndGetAnswer("for requireExplicitPolicy enter the number "
-               "of certs in path\nbefore explicit policy is required\n"
-               "(press Enter to omit)", buffer, sizeof(buffer)) == SECFailure) {
+                                 "of certs in path\nbefore explicit policy is required\n"
+                                 "(press Enter to omit)",
+                                 buffer, sizeof(buffer)) == SECFailure) {
         goto loser;
     }
 
     if (PORT_Strlen(buffer)) {
         value = PORT_Atoi(buffer);
-	if (value < 0) {
+        if (value < 0) {
             goto loser;
         }
         item = &policyConstr->explicitPolicySkipCerts;
@@ -1321,15 +1319,16 @@ AddPolicyConstraints(void *extHandle)
     }
 
     if (PrintChoicesAndGetAnswer("for inihibitPolicyMapping enter "
-               "the number of certs in path\n"
-	       "after which policy mapping is not allowed\n"
-               "(press Enter to omit)", buffer, sizeof(buffer)) == SECFailure) {
+                                 "the number of certs in path\n"
+                                 "after which policy mapping is not allowed\n"
+                                 "(press Enter to omit)",
+                                 buffer, sizeof(buffer)) == SECFailure) {
         goto loser;
     }
 
     if (PORT_Strlen(buffer)) {
         value = PORT_Atoi(buffer);
-	if (value < 0) {
+        if (value < 0) {
             goto loser;
         }
         item = &policyConstr->inhibitMappingSkipCerts;
@@ -1339,29 +1338,27 @@ AddPolicyConstraints(void *extHandle)
         }
         skipExt = PR_FALSE;
     }
- 
-    
+
     if (!skipExt) {
         yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, policyConstr,
-	     yesNoAns, SEC_OID_X509_POLICY_CONSTRAINTS,
-	     (EXTEN_EXT_VALUE_ENCODER)CERT_EncodePolicyConstraintsExtension);
+                                             yesNoAns, SEC_OID_X509_POLICY_CONSTRAINTS,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodePolicyConstraintsExtension);
     } else {
-	fprintf(stdout, "Policy Constraint extensions must contain "
+        fprintf(stdout, "Policy Constraint extensions must contain "
                         "at least one policy field\n");
-	rv = SECFailure;
+        rv = SECFailure;
     }
-   
+
 loser:
     if (arena) {
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     }
     return (rv);
 }
 
-
-static SECStatus 
+static SECStatus
 AddInhibitAnyPolicy(void *extHandle)
 {
     CERTCertificateInhibitAny certInhibitAny;
@@ -1371,10 +1368,9 @@ AddInhibitAnyPolicy(void *extHandle)
     char buffer[10];
     int value;
     PRBool yesNoAns;
-    
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
+    if (!arena) {
         SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
@@ -1395,21 +1391,20 @@ AddInhibitAnyPolicy(void *extHandle)
     if (!dummy) {
         goto loser;
     }
-    
+
     yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
-    
+
     rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, &certInhibitAny,
-		 yesNoAns, SEC_OID_X509_INHIBIT_ANY_POLICY,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeInhibitAnyExtension);
+                                         yesNoAns, SEC_OID_X509_INHIBIT_ANY_POLICY,
+                                         (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeInhibitAnyExtension);
 loser:
     if (arena) {
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     }
     return (rv);
 }
 
-
-static SECStatus 
+static SECStatus
 AddPolicyMappings(void *extHandle)
 {
     CERTPolicyMap **policyMapArr = NULL;
@@ -1418,9 +1413,9 @@ AddPolicyMappings(void *extHandle)
     SECStatus rv = SECSuccess;
     int count = 0;
     char buffer[512];
-    
+
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
+    if (!arena) {
         SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
@@ -1429,7 +1424,7 @@ AddPolicyMappings(void *extHandle)
         if (PrintChoicesAndGetAnswer("Enter an Object Identifier (dotted "
                                      "decimal format) for Issuer Domain Policy",
                                      buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
 
         current = PORT_ArenaZNew(arena, CERTPolicyMap);
@@ -1445,7 +1440,7 @@ AddPolicyMappings(void *extHandle)
         if (PrintChoicesAndGetAnswer("Enter an Object Identifier for "
                                      "Subject Domain Policy",
                                      buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
 
         rv = SEC_StringToOID(arena, &current->subjectDomainPolicy, buffer, 0);
@@ -1456,29 +1451,29 @@ AddPolicyMappings(void *extHandle)
         if (policyMapArr == NULL) {
             policyMapArr = PORT_ArenaZNew(arena, CERTPolicyMap *);
             if (policyMapArr == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
         }
 
         policyMapArr = PORT_ArenaGrow(arena, policyMapArr,
-                                         sizeof (current) * count,
-                                         sizeof (current) *(count + 1));
+                                      sizeof(current) * count,
+                                      sizeof(current) * (count + 1));
         if (policyMapArr == NULL) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
-    
+
         policyMapArr[count] = current;
         ++count;
-        
+
         if (!GetYesNo("Enter another Policy Mapping [y/N]")) {
             /* Add null to the end to mark end of data */
-            policyMapArr = PORT_ArenaGrow (arena, policyMapArr,
-                                           sizeof (current) * count,
-                                           sizeof (current) *(count + 1));
+            policyMapArr = PORT_ArenaGrow(arena, policyMapArr,
+                                          sizeof(current) * count,
+                                          sizeof(current) * (count + 1));
             if (policyMapArr == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
-            policyMapArr[count] = NULL;        
+            policyMapArr[count] = NULL;
             break;
         }
 
@@ -1491,11 +1486,11 @@ AddPolicyMappings(void *extHandle)
         mappings.arena = arena;
         mappings.policyMaps = policyMapArr;
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, &mappings,
-		 yesNoAns, SEC_OID_X509_POLICY_MAPPINGS,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodePolicyMappingExtension);
+                                             yesNoAns, SEC_OID_X509_POLICY_MAPPINGS,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodePolicyMappingExtension);
     }
     if (arena)
-        PORT_FreeArena (arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     return (rv);
 }
 
@@ -1503,7 +1498,6 @@ enum PoliciQualifierEnum {
     cpsPointer = 1,
     userNotice = 2
 };
-
 
 static CERTPolicyQualifier **
 RequestPolicyQualifiers(PLArenaPool *arena, SECItem *policyID)
@@ -1528,175 +1522,178 @@ RequestPolicyQualifiers(PLArenaPool *arena, SECItem *policyID)
 
         /* Get the accessMethod fields */
         SECU_PrintObjectID(stdout, policyID,
-                           "Choose the type of qualifier for policy" , 0);
+                           "Choose the type of qualifier for policy", 0);
 
         if (PrintChoicesAndGetAnswer(
                 "\t1 - CPS Pointer qualifier\n"
                 "\t2 - User notice qualifier\n"
                 "\tAny other number to finish\n"
-                "\t\tChoice: ", buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK (SECFailure);
+                "\t\tChoice: ",
+                buffer, sizeof(buffer)) == SECFailure) {
+            GEN_BREAK(SECFailure);
         }
         intValue = PORT_Atoi(buffer);
         switch (intValue) {
-        case cpsPointer: {
-            SECItem input;
+            case cpsPointer: {
+                SECItem input;
 
-            oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CPS_POINTER_QUALIFIER);
-            if (PrintChoicesAndGetAnswer("Enter CPS pointer URI: ",
-				     buffer, sizeof(buffer)) == SECFailure) {
-                GEN_BREAK (SECFailure);
+                oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CPS_POINTER_QUALIFIER);
+                if (PrintChoicesAndGetAnswer("Enter CPS pointer URI: ",
+                                             buffer, sizeof(buffer)) == SECFailure) {
+                    GEN_BREAK(SECFailure);
+                }
+                input.len = PORT_Strlen(buffer);
+                input.data = (void *)PORT_ArenaStrdup(arena, buffer);
+                if (input.data == NULL ||
+                    SEC_ASN1EncodeItem(arena, &current->qualifierValue, &input,
+                                       SEC_ASN1_GET(SEC_IA5StringTemplate)) == NULL) {
+                    GEN_BREAK(SECFailure);
+                }
+                break;
             }
-            input.len = PORT_Strlen(buffer);
-            input.data = (void*)PORT_ArenaStrdup(arena, buffer);
-            if (input.data == NULL ||
-	        SEC_ASN1EncodeItem(arena, &current->qualifierValue, &input,
-			       SEC_ASN1_GET(SEC_IA5StringTemplate)) == NULL) {
-                GEN_BREAK (SECFailure);
-	    }
-            break;
-        }
-        case userNotice: {
-            SECItem **noticeNumArr;
-            CERTUserNotice *notice = PORT_ArenaZNew(arena, CERTUserNotice);
-            if (!notice) {
-                GEN_BREAK(SECFailure);
-            }
-            
-            oid = SECOID_FindOIDByTag(SEC_OID_PKIX_USER_NOTICE_QUALIFIER);
-
-            if (GetYesNo("\t add a User Notice reference? [y/N]")) {
-
-                if (PrintChoicesAndGetAnswer("Enter user organization string: ",
-				 buffer, sizeof(buffer)) == SECFailure) {
-                    GEN_BREAK (SECFailure);
+            case userNotice: {
+                SECItem **noticeNumArr;
+                CERTUserNotice *notice = PORT_ArenaZNew(arena, CERTUserNotice);
+                if (!notice) {
+                    GEN_BREAK(SECFailure);
                 }
 
-                notice->noticeReference.organization.type = siAsciiString;
-                notice->noticeReference.organization.len =
-                    PORT_Strlen(buffer);
-                notice->noticeReference.organization.data =
-                    (void*)PORT_ArenaStrdup(arena, buffer);
+                oid = SECOID_FindOIDByTag(SEC_OID_PKIX_USER_NOTICE_QUALIFIER);
 
+                if (GetYesNo("\t add a User Notice reference? [y/N]")) {
 
-                noticeNumArr = PORT_ArenaZNewArray(arena, SECItem *, 2);
-		if (!noticeNumArr) {
-                    GEN_BREAK (SECFailure);
-		}
-                
-                do {
-                    SECItem *noticeNum;
-                    
-                    noticeNum = PORT_ArenaZNew(arena, SECItem);
-                    
-                    if (PrintChoicesAndGetAnswer(
-				      "Enter User Notice reference number "
-				      "(or -1 to quit): ",
-                                      buffer, sizeof(buffer)) == SECFailure) {
-                        GEN_BREAK (SECFailure);
+                    if (PrintChoicesAndGetAnswer("Enter user organization string: ",
+                                                 buffer, sizeof(buffer)) ==
+                        SECFailure) {
+                        GEN_BREAK(SECFailure);
                     }
-                    
-                    intValue = PORT_Atoi(buffer);
-		    if (noticeNum == NULL) {
-			if (intValue < 0) {
-			    fprintf(stdout, "a noticeReference must have at "
-                                    "least one reference number\n");
-                            GEN_BREAK (SECFailure);
-			}
-		    } else {
-			if (intValue >= 0) {
-                            noticeNumArr = PORT_ArenaGrow(arena, noticeNumArr,
-					      sizeof (current) * inCount,
-					      sizeof (current) *(inCount + 1));
-                            if (noticeNumArr == NULL) {
-                                GEN_BREAK (SECFailure);
+
+                    notice->noticeReference.organization.type = siAsciiString;
+                    notice->noticeReference.organization.len =
+                        PORT_Strlen(buffer);
+                    notice->noticeReference.organization.data =
+                        (void *)PORT_ArenaStrdup(arena, buffer);
+
+                    noticeNumArr = PORT_ArenaZNewArray(arena, SECItem *, 2);
+                    if (!noticeNumArr) {
+                        GEN_BREAK(SECFailure);
+                    }
+
+                    do {
+                        SECItem *noticeNum;
+
+                        noticeNum = PORT_ArenaZNew(arena, SECItem);
+
+                        if (PrintChoicesAndGetAnswer(
+                                "Enter User Notice reference number "
+                                "(or -1 to quit): ",
+                                buffer, sizeof(buffer)) == SECFailure) {
+                            GEN_BREAK(SECFailure);
+                        }
+
+                        intValue = PORT_Atoi(buffer);
+                        if (noticeNum == NULL) {
+                            if (intValue < 0) {
+                                fprintf(stdout, "a noticeReference must have at "
+                                                "least one reference number\n");
+                                GEN_BREAK(SECFailure);
                             }
-			} else {
-			    break;
-			}
+                        } else {
+                            if (intValue >= 0) {
+                                noticeNumArr = PORT_ArenaGrow(arena, noticeNumArr,
+                                                              sizeof(current) *
+                                                                  inCount,
+                                                              sizeof(current) *
+                                                                  (inCount + 1));
+                                if (noticeNumArr == NULL) {
+                                    GEN_BREAK(SECFailure);
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                        if (!SEC_ASN1EncodeInteger(arena, noticeNum, intValue)) {
+                            GEN_BREAK(SECFailure);
+                        }
+                        noticeNumArr[inCount++] = noticeNum;
+                        noticeNumArr[inCount] = NULL;
+
+                    } while (1);
+                    if (rv == SECFailure) {
+                        GEN_BREAK(SECFailure);
                     }
-                    if (!SEC_ASN1EncodeInteger(arena, noticeNum, intValue)) {
-                        GEN_BREAK (SECFailure);
-		    }
-                    noticeNumArr[inCount++] = noticeNum;
-                    noticeNumArr[inCount] = NULL;
-                    
-                } while (1);
+                    notice->noticeReference.noticeNumbers = noticeNumArr;
+                    rv = CERT_EncodeNoticeReference(arena, &notice->noticeReference,
+                                                    &notice->derNoticeReference);
+                    if (rv == SECFailure) {
+                        GEN_BREAK(SECFailure);
+                    }
+                }
+                if (GetYesNo("\t EnterUser Notice explicit text? [y/N]")) {
+                    /* Getting only 200 bytes - RFC limitation */
+                    if (PrintChoicesAndGetAnswer(
+                            "\t", buffer, 200) == SECFailure) {
+                        GEN_BREAK(SECFailure);
+                    }
+                    notice->displayText.type = siAsciiString;
+                    notice->displayText.len = PORT_Strlen(buffer);
+                    notice->displayText.data =
+                        (void *)PORT_ArenaStrdup(arena, buffer);
+                    if (notice->displayText.data == NULL) {
+                        GEN_BREAK(SECFailure);
+                    }
+                }
+
+                rv = CERT_EncodeUserNotice(arena, notice, &current->qualifierValue);
                 if (rv == SECFailure) {
                     GEN_BREAK(SECFailure);
                 }
-                notice->noticeReference.noticeNumbers = noticeNumArr;
-                rv = CERT_EncodeNoticeReference(arena, &notice->noticeReference,
-                                                &notice->derNoticeReference);
-                if (rv == SECFailure) {
-                    GEN_BREAK(SECFailure);
-                }
-            }
-            if (GetYesNo("\t EnterUser Notice explicit text? [y/N]")) {
-                /* Getting only 200 bytes - RFC limitation */
-                if (PrintChoicesAndGetAnswer(
-                        "\t", buffer, 200) == SECFailure) {
-                        GEN_BREAK (SECFailure);
-                }
-                notice->displayText.type = siAsciiString;
-                notice->displayText.len = PORT_Strlen(buffer);
-                notice->displayText.data = 
-		                        (void*)PORT_ArenaStrdup(arena, buffer);
-		if (notice->displayText.data == NULL) {
-		    GEN_BREAK(SECFailure);
-		}
-            }
 
-            rv = CERT_EncodeUserNotice(arena, notice, &current->qualifierValue);
-            if (rv == SECFailure) {
-                GEN_BREAK(SECFailure);
+                break;
             }
-
-            break;
-        }
         }
         if (rv == SECFailure || oid == NULL ||
-            SECITEM_CopyItem(arena, &current->qualifierID, &oid->oid) 
-	    == SECFailure) {
-            GEN_BREAK (SECFailure);
+            SECITEM_CopyItem(arena, &current->qualifierID, &oid->oid) ==
+                SECFailure) {
+            GEN_BREAK(SECFailure);
         }
 
         if (!policyQualifArr) {
             policyQualifArr = PORT_ArenaZNew(arena, CERTPolicyQualifier *);
         } else {
-	    policyQualifArr = PORT_ArenaGrow (arena, policyQualifArr,
-                                         sizeof (current) * count,
-                                         sizeof (current) *(count + 1));
-	}
-        if (policyQualifArr == NULL) {
-            GEN_BREAK (SECFailure);
+            policyQualifArr = PORT_ArenaGrow(arena, policyQualifArr,
+                                             sizeof(current) * count,
+                                             sizeof(current) * (count + 1));
         }
-    
+        if (policyQualifArr == NULL) {
+            GEN_BREAK(SECFailure);
+        }
+
         policyQualifArr[count] = current;
         ++count;
 
-        if (!GetYesNo ("Enter another policy qualifier [y/N]")) {
+        if (!GetYesNo("Enter another policy qualifier [y/N]")) {
             /* Add null to the end to mark end of data */
             policyQualifArr = PORT_ArenaGrow(arena, policyQualifArr,
-                                              sizeof (current) * count,
-                                              sizeof (current) *(count + 1));
+                                             sizeof(current) * count,
+                                             sizeof(current) * (count + 1));
             if (policyQualifArr == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
-            policyQualifArr[count] = NULL;        
+            policyQualifArr[count] = NULL;
             break;
         }
 
     } while (1);
 
     if (rv != SECSuccess) {
-        PORT_ArenaRelease (arena, mark);
+        PORT_ArenaRelease(arena, mark);
         policyQualifArr = NULL;
     }
     return (policyQualifArr);
 }
 
-static SECStatus 
+static SECStatus
 AddCertPolicies(void *extHandle)
 {
     CERTPolicyInfo **certPoliciesArr = NULL;
@@ -1707,7 +1704,7 @@ AddCertPolicies(void *extHandle)
     char buffer[512];
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
+    if (!arena) {
         SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
@@ -1720,47 +1717,47 @@ AddCertPolicies(void *extHandle)
 
         if (PrintChoicesAndGetAnswer("Enter a CertPolicy Object Identifier "
                                      "(dotted decimal format)\n"
-				     "or \"any\" for AnyPolicy:",
+                                     "or \"any\" for AnyPolicy:",
                                      buffer, sizeof(buffer)) == SECFailure) {
-            GEN_BREAK (SECFailure);
+            GEN_BREAK(SECFailure);
         }
-	
-	if (strncmp(buffer, "any", 3) == 0) {
-	    /* use string version of X509_CERTIFICATE_POLICIES.anyPolicy */
-	    strcpy(buffer, "OID.2.5.29.32.0");
-	}
+
+        if (strncmp(buffer, "any", 3) == 0) {
+            /* use string version of X509_CERTIFICATE_POLICIES.anyPolicy */
+            strcpy(buffer, "OID.2.5.29.32.0");
+        }
         rv = SEC_StringToOID(arena, &current->policyID, buffer, 0);
 
         if (rv == SECFailure) {
             GEN_BREAK(SECFailure);
         }
-        
-        current->policyQualifiers = 
-            RequestPolicyQualifiers(arena, &current->policyID); 
+
+        current->policyQualifiers =
+            RequestPolicyQualifiers(arena, &current->policyID);
 
         if (!certPoliciesArr) {
             certPoliciesArr = PORT_ArenaZNew(arena, CERTPolicyInfo *);
         } else {
-	    certPoliciesArr = PORT_ArenaGrow(arena, certPoliciesArr,
-                                         sizeof (current) * count,
-                                         sizeof (current) *(count + 1));
-	}
-        if (certPoliciesArr == NULL) {
-            GEN_BREAK (SECFailure);
+            certPoliciesArr = PORT_ArenaGrow(arena, certPoliciesArr,
+                                             sizeof(current) * count,
+                                             sizeof(current) * (count + 1));
         }
-    
+        if (certPoliciesArr == NULL) {
+            GEN_BREAK(SECFailure);
+        }
+
         certPoliciesArr[count] = current;
         ++count;
-        
-        if (!GetYesNo ("Enter another PolicyInformation field [y/N]?")) {
+
+        if (!GetYesNo("Enter another PolicyInformation field [y/N]?")) {
             /* Add null to the end to mark end of data */
             certPoliciesArr = PORT_ArenaGrow(arena, certPoliciesArr,
-                                              sizeof (current) * count,
-                                              sizeof (current) *(count + 1));
+                                             sizeof(current) * count,
+                                             sizeof(current) * (count + 1));
             if (certPoliciesArr == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
-            certPoliciesArr[count] = NULL;        
+            certPoliciesArr[count] = NULL;
             break;
         }
 
@@ -1772,13 +1769,13 @@ AddCertPolicies(void *extHandle)
 
         policies.arena = arena;
         policies.policyInfos = certPoliciesArr;
-        
+
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, &policies,
-		 yesNoAns, SEC_OID_X509_CERTIFICATE_POLICIES,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeCertPoliciesExtension);
+                                             yesNoAns, SEC_OID_X509_CERTIFICATE_POLICIES,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeCertPoliciesExtension);
     }
     if (arena)
-	PORT_FreeArena(arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     return (rv);
 }
 
@@ -1791,9 +1788,9 @@ enum SubjInfoAccessTypesEnum {
     caRepository = 1,
     timeStamping = 2
 };
-    
+
 /* Encode and add an AIA or SIA extension */
-static SECStatus 
+static SECStatus
 AddInfoAccess(void *extHandle, PRBool addSIAExt, PRBool isCACert)
 {
     CERTAuthInfoAccess **infoAccArr = NULL;
@@ -1806,7 +1803,7 @@ AddInfoAccess(void *extHandle, PRBool addSIAExt, PRBool isCACert)
     int intValue = 0;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) {
+    if (!arena) {
         SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
@@ -1822,82 +1819,83 @@ AddInfoAccess(void *extHandle, PRBool addSIAExt, PRBool isCACert)
         if (addSIAExt) {
             if (isCACert) {
                 puts("Adding \"CA Repository\" access method type for "
-                    "Subject Information Access extension:\n");
+                     "Subject Information Access extension:\n");
                 intValue = caRepository;
             } else {
                 puts("Adding \"Time Stamping Services\" access method type for "
-                    "Subject Information Access extension:\n");
+                     "Subject Information Access extension:\n");
                 intValue = timeStamping;
             }
         } else {
             if (PrintChoicesAndGetAnswer("Enter access method type "
-                "for Authority Information Access extension:\n"
-                "\t1 - CA Issuers\n\t2 - OCSP\n\tAny"
-                "other number to finish\n\tChoice",
-                buffer, sizeof(buffer)) != SECSuccess) {
-                GEN_BREAK (SECFailure);
+                                         "for Authority Information Access extension:\n"
+                                         "\t1 - CA Issuers\n\t2 - OCSP\n\tAny"
+                                         "other number to finish\n\tChoice",
+                                         buffer, sizeof(buffer)) !=
+                SECSuccess) {
+                GEN_BREAK(SECFailure);
             }
             intValue = PORT_Atoi(buffer);
         }
         if (addSIAExt) {
             switch (intValue) {
-              case caRepository:
-                  oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CA_REPOSITORY);
-                  break;
-                  
-              case timeStamping:
-                  oid = SECOID_FindOIDByTag(SEC_OID_PKIX_TIMESTAMPING);
-                  break;
-            } 
+                case caRepository:
+                    oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CA_REPOSITORY);
+                    break;
+
+                case timeStamping:
+                    oid = SECOID_FindOIDByTag(SEC_OID_PKIX_TIMESTAMPING);
+                    break;
+            }
         } else {
             switch (intValue) {
-              case caIssuers:
-                  oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CA_ISSUERS);
-                  break;
-                  
-              case ocsp:
-                  oid = SECOID_FindOIDByTag(SEC_OID_PKIX_OCSP);
-                  break;
-            } 
+                case caIssuers:
+                    oid = SECOID_FindOIDByTag(SEC_OID_PKIX_CA_ISSUERS);
+                    break;
+
+                case ocsp:
+                    oid = SECOID_FindOIDByTag(SEC_OID_PKIX_OCSP);
+                    break;
+            }
         }
         if (oid == NULL ||
-            SECITEM_CopyItem(arena, &current->method, &oid->oid) 
-	    == SECFailure) {
-            GEN_BREAK (SECFailure);
+            SECITEM_CopyItem(arena, &current->method, &oid->oid) ==
+                SECFailure) {
+            GEN_BREAK(SECFailure);
         }
 
         current->location = CreateGeneralName(arena);
         if (!current->location) {
             GEN_BREAK(SECFailure);
         }
-       
+
         if (infoAccArr == NULL) {
             infoAccArr = PORT_ArenaZNew(arena, CERTAuthInfoAccess *);
         } else {
-	    infoAccArr = PORT_ArenaGrow(arena, infoAccArr,
-                                     sizeof (current) * count,
-                                     sizeof (current) *(count + 1));
-	}
-        if (infoAccArr == NULL) {
-            GEN_BREAK (SECFailure);
+            infoAccArr = PORT_ArenaGrow(arena, infoAccArr,
+                                        sizeof(current) * count,
+                                        sizeof(current) * (count + 1));
         }
-    
+        if (infoAccArr == NULL) {
+            GEN_BREAK(SECFailure);
+        }
+
         infoAccArr[count] = current;
         ++count;
-        
+
         PR_snprintf(buffer, sizeof(buffer), "Add another location to the %s"
-                    " Information Access extension [y/N]",
+                                            " Information Access extension [y/N]",
                     (addSIAExt) ? "Subject" : "Authority");
 
-        if (GetYesNo (buffer) == 0) {
+        if (GetYesNo(buffer) == 0) {
             /* Add null to the end to mark end of data */
             infoAccArr = PORT_ArenaGrow(arena, infoAccArr,
-                                         sizeof (current) * count,
-                                         sizeof (current) *(count + 1));
+                                        sizeof(current) * count,
+                                        sizeof(current) * (count + 1));
             if (infoAccArr == NULL) {
-                GEN_BREAK (SECFailure);
+                GEN_BREAK(SECFailure);
             }
-            infoAccArr[count] = NULL;        
+            infoAccArr[count] = NULL;
             break;
         }
 
@@ -1907,13 +1905,13 @@ AddInfoAccess(void *extHandle, PRBool addSIAExt, PRBool isCACert)
         int oidIdent = SEC_OID_X509_AUTH_INFO_ACCESS;
 
         PRBool yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
-        
+
         if (addSIAExt) {
             oidIdent = SEC_OID_X509_SUBJECT_INFO_ACCESS;
         }
         rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, infoAccArr,
-		 yesNoAns, oidIdent,
-		 (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeInfoAccessExtension);
+                                             yesNoAns, oidIdent,
+                                             (EXTEN_EXT_VALUE_ENCODER)CERT_EncodeInfoAccessExtension);
     }
     if (arena)
         PORT_FreeArena(arena, PR_FALSE);
@@ -1932,7 +1930,7 @@ parseNextGenericExt(const char *nextExtension, const char **oid, int *oidLen,
     const char *nextColon;
     const char *nextComma;
     const char *iter = nextExtension;
-    
+
     if (!iter || !*iter)
         return SECFailure;
 
@@ -1987,33 +1985,33 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
     SECStatus rv = SECSuccess;
     char *errstring = NULL;
     const char *nextExtension = NULL;
-    
+
     do {
         /* Add key usage extension */
         if (extList[ext_keyUsage].activated) {
             rv = AddKeyUsage(extHandle, extList[ext_keyUsage].arg);
             if (rv) {
-		errstring = "KeyUsage";
+                errstring = "KeyUsage";
                 break;
-	    }
+            }
         }
 
         /* Add extended key usage extension */
         if (extList[ext_extKeyUsage].activated) {
             rv = AddExtKeyUsage(extHandle, extList[ext_extKeyUsage].arg);
             if (rv) {
-		errstring = "ExtendedKeyUsage";
+                errstring = "ExtendedKeyUsage";
                 break;
-	    }
+            }
         }
 
         /* Add basic constraint extension */
         if (extList[ext_basicConstraint].activated) {
             rv = AddBasicConstraint(extHandle);
             if (rv) {
-		errstring = "BasicConstraint";
+                errstring = "BasicConstraint";
                 break;
-	    }
+            }
         }
 
         /* Add name constraints extension */
@@ -2028,88 +2026,88 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
         if (extList[ext_authorityKeyID].activated) {
             rv = AddAuthKeyID(extHandle);
             if (rv) {
-		errstring = "AuthorityKeyID";
+                errstring = "AuthorityKeyID";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_subjectKeyID].activated) {
             rv = AddSubjKeyID(extHandle);
             if (rv) {
-		errstring = "SubjectKeyID";
+                errstring = "SubjectKeyID";
                 break;
-	    }
-        }    
+            }
+        }
 
         if (extList[ext_CRLDistPts].activated) {
             rv = AddCrlDistPoint(extHandle);
             if (rv) {
-		errstring = "CRLDistPoints";
+                errstring = "CRLDistPoints";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_NSCertType].activated) {
             rv = AddNscpCertType(extHandle, extList[ext_NSCertType].arg);
             if (rv) {
-		errstring = "NSCertType";
+                errstring = "NSCertType";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_authInfoAcc].activated ||
             extList[ext_subjInfoAcc].activated) {
             rv = AddInfoAccess(extHandle, extList[ext_subjInfoAcc].activated,
-	                       extList[ext_basicConstraint].activated);
+                               extList[ext_basicConstraint].activated);
             if (rv) {
-		errstring = "InformationAccess";
+                errstring = "InformationAccess";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_certPolicies].activated) {
             rv = AddCertPolicies(extHandle);
             if (rv) {
-		errstring = "Policies";
+                errstring = "Policies";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_policyMappings].activated) {
             rv = AddPolicyMappings(extHandle);
             if (rv) {
-		errstring = "PolicyMappings";
+                errstring = "PolicyMappings";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_policyConstr].activated) {
             rv = AddPolicyConstraints(extHandle);
             if (rv) {
-		errstring = "PolicyConstraints";
+                errstring = "PolicyConstraints";
                 break;
-	    }
+            }
         }
 
         if (extList[ext_inhibitAnyPolicy].activated) {
             rv = AddInhibitAnyPolicy(extHandle);
             if (rv) {
-		errstring = "InhibitAnyPolicy";
+                errstring = "InhibitAnyPolicy";
                 break;
-	    }
+            }
         }
 
         if (emailAddrs || dnsNames || extList[ext_subjectAltName].activated) {
             PLArenaPool *arena;
             CERTGeneralName *namelist = NULL;
             SECItem item = { 0, NULL, 0 };
-            
+
             arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
             if (arena == NULL) {
                 rv = SECFailure;
                 break;
             }
-            
+
             rv = SECSuccess;
 
             if (emailAddrs) {
@@ -2121,26 +2119,26 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
             }
 
             if (extList[ext_subjectAltName].activated) {
-                rv |= AddGeneralSubjectAlt(arena, &namelist, 
+                rv |= AddGeneralSubjectAlt(arena, &namelist,
                                            extList[ext_subjectAltName].arg);
             }
 
             if (rv == SECSuccess) {
-		rv = CERT_EncodeAltNameExtension(arena, namelist, &item);
-	        if (rv == SECSuccess) {
+                rv = CERT_EncodeAltNameExtension(arena, namelist, &item);
+                if (rv == SECSuccess) {
                     rv = CERT_AddExtension(extHandle,
-                                          SEC_OID_X509_SUBJECT_ALT_NAME,
-                                          &item, PR_FALSE, PR_TRUE);
-		}
+                                           SEC_OID_X509_SUBJECT_ALT_NAME,
+                                           &item, PR_FALSE, PR_TRUE);
+                }
             }
-	    PORT_FreeArena(arena, PR_FALSE);
-	    if (rv) {
+            PORT_FreeArena(arena, PR_FALSE);
+            if (rv) {
                 errstring = "SubjectAltName";
                 break;
-	    }
+            }
         }
     } while (0);
-    
+
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "Problem creating %s extension", errstring);
     }
@@ -2156,7 +2154,7 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 
         rv = parseNextGenericExt(nextExtension, &oid, &oidLen, &crit, &critLen,
                                  &filename, &filenameLen, &next);
-        if (rv!= SECSuccess) {
+        if (rv != SECSuccess) {
             SECU_PrintError(progName,
                             "error parsing generic extension parameter %s",
                             nextExtension);

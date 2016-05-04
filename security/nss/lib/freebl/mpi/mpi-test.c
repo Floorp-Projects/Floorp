@@ -1685,15 +1685,6 @@ int test_cmp(void)
     return 1;
   }
 
-  mp_read_radix(&a, mp5a, 16);
-  if(mp_cmp_int(&a, 1000000) >= 0 ||
-     (mp_cmp_int(&a, -5000000) <= 0) ||
-     (mp_cmp_int(&a, -4938110) != 0)) {
-    reason("error: long integer comparison failed (%s)", mp5a);
-    mp_clear(&a); mp_clear(&b);
-    return 1;
-  }
-
   mp_clear(&a); mp_clear(&b);
   return 0;
 }

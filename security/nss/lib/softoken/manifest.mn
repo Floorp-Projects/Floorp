@@ -18,12 +18,12 @@ INCLUDES += -I$(SQLITE_INCLUDE_DIR)
 endif
 
 EXPORTS = \
+	lowkeyi.h \
+	lowkeyti.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
 	lgglue.h  \
-	lowkeyi.h \
-	lowkeyti.h \
 	pkcs11ni.h \
 	softoken.h \
 	softoknt.h \

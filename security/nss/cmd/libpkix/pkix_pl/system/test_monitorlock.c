@@ -13,99 +13,92 @@
 
 static void *plContext = NULL;
 
-static
-void createMonitorLockes(
-        PKIX_PL_MonitorLock **monitorLock,
-        PKIX_PL_MonitorLock **monitorLock2,
-        PKIX_PL_MonitorLock **monitorLock3)
+static void
+createMonitorLockes(
+    PKIX_PL_MonitorLock **monitorLock,
+    PKIX_PL_MonitorLock **monitorLock2,
+    PKIX_PL_MonitorLock **monitorLock3)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Create
-                (monitorLock, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Create
-                (monitorLock2, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Create(monitorLock, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Create(monitorLock2, plContext));
 
-        *monitorLock3 = *monitorLock;
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_IncRef
-                ((PKIX_PL_Object*)*monitorLock3, plContext));
+    *monitorLock3 = *monitorLock;
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_Object_IncRef((PKIX_PL_Object *)*monitorLock3, plContext));
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-static
-void testLock(PKIX_PL_MonitorLock *monitorLock)
+static void
+testLock(PKIX_PL_MonitorLock *monitorLock)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Enter
-                (monitorLock, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Enter
-                (monitorLock, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Exit
-                (monitorLock, plContext));
-        PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Exit
-                (monitorLock, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Enter(monitorLock, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Enter(monitorLock, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Exit(monitorLock, plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(PKIX_PL_MonitorLock_Exit(monitorLock, plContext));
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-static
-void testDestroy(
-        PKIX_PL_MonitorLock *monitorLock,
-        PKIX_PL_MonitorLock *monitorLock2,
-        PKIX_PL_MonitorLock *monitorLock3)
+static void
+testDestroy(
+    PKIX_PL_MonitorLock *monitorLock,
+    PKIX_PL_MonitorLock *monitorLock2,
+    PKIX_PL_MonitorLock *monitorLock3)
 {
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        PKIX_TEST_DECREF_BC(monitorLock);
-        PKIX_TEST_DECREF_BC(monitorLock2);
-        PKIX_TEST_DECREF_BC(monitorLock3);
+    PKIX_TEST_DECREF_BC(monitorLock);
+    PKIX_TEST_DECREF_BC(monitorLock2);
+    PKIX_TEST_DECREF_BC(monitorLock3);
 
 cleanup:
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 }
 
-int test_monitorlock(int argc, char *argv[]) {
+int
+test_monitorlock(int argc, char *argv[])
+{
 
-        PKIX_PL_MonitorLock *monitorLock, *monitorLock2, *monitorLock3;
-        PKIX_UInt32 actualMinorVersion;
-        PKIX_UInt32 j = 0;
+    PKIX_PL_MonitorLock *monitorLock, *monitorLock2, *monitorLock3;
+    PKIX_UInt32 actualMinorVersion;
+    PKIX_UInt32 j = 0;
 
-        PKIX_TEST_STD_VARS();
+    PKIX_TEST_STD_VARS();
 
-        startTests("MonitorLocks");
+    startTests("MonitorLocks");
 
-        PKIX_TEST_EXPECT_NO_ERROR(
-            PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
+    PKIX_TEST_EXPECT_NO_ERROR(
+        PKIX_PL_NssContext_Create(0, PKIX_FALSE, NULL, &plContext));
 
-        subTest("PKIX_PL_MonitorLock_Create");
-        createMonitorLockes(&monitorLock, &monitorLock2, &monitorLock3);
+    subTest("PKIX_PL_MonitorLock_Create");
+    createMonitorLockes(&monitorLock, &monitorLock2, &monitorLock3);
 
-        PKIX_TEST_EQ_HASH_TOSTR_DUP
-                (monitorLock,
-                monitorLock3,
-                monitorLock2,
-                NULL,
-                MonitorLock,
-                PKIX_FALSE);
+    PKIX_TEST_EQ_HASH_TOSTR_DUP(monitorLock,
+                                monitorLock3,
+                                monitorLock2,
+                                NULL,
+                                MonitorLock,
+                                PKIX_FALSE);
 
-        subTest("PKIX_PL_MonitorLock_Lock/Unlock");
-        testLock(monitorLock);
+    subTest("PKIX_PL_MonitorLock_Lock/Unlock");
+    testLock(monitorLock);
 
-        subTest("PKIX_PL_MonitorLock_Destroy");
-        testDestroy(monitorLock, monitorLock2, monitorLock3);
+    subTest("PKIX_PL_MonitorLock_Destroy");
+    testDestroy(monitorLock, monitorLock2, monitorLock3);
 
 cleanup:
 
-        PKIX_Shutdown(plContext);
+    PKIX_Shutdown(plContext);
 
-        PKIX_TEST_RETURN();
+    PKIX_TEST_RETURN();
 
-        endTests("MonitorLockes");
+    endTests("MonitorLockes");
 
-        return (0);
-
+    return (0);
 }

@@ -196,6 +196,7 @@ SSL_SetSignedCertTimestamps;
 ;+};
 ;+NSS_3.23 {    # NSS 3.23 release
 ;+    global:
+SSL_ConfigServerCert;
 SSL_SetDowngradeCheckVersion;
 ;+    local:
 ;+*;

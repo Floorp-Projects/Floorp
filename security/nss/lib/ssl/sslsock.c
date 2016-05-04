@@ -127,7 +127,11 @@ int ssl_lock_readers = 1; /* default true. */
 char ssl_debug;
 char ssl_trace;
 FILE *ssl_trace_iob;
+
+#ifdef NSS_ALLOW_SSLKEYLOGFILE
 FILE *ssl_keylog_iob;
+#endif
+
 char lockStatus[] = "Locks are ENABLED.  ";
 #define LOCKSTATUS_OFFSET 10 /* offset of ENABLED */
 
@@ -212,6 +216,7 @@ ssl_DupSocket(sslSocket *os)
 {
     sslSocket *ss;
     SECStatus rv;
+    sslServerCert *sc = NULL;
 
     ss = ssl_NewSocket((PRBool)(!os->opt.noLocks), os->protocolVariant);
     if (ss) {
@@ -254,14 +259,13 @@ ssl_DupSocket(sslSocket *os)
         }
 
         if (ss->opt.useSecurity) {
-            /* This int should be SSLKEAType, but CC on Irix complains,
-             * during the for loop.
-             */
-            int i;
-            sslServerCerts *oc = os->serverCerts;
-            sslServerCerts *sc = ss->serverCerts;
+            PRCList *cursor;
+            for (cursor = PR_NEXT_LINK(&os->serverCerts);
+                 cursor != &os->serverCerts;
+                 cursor = PR_NEXT_LINK(cursor)) {
+                sslServerCert *oc = (sslServerCert*)cursor;
+                sc = ssl_NewServerCert(&oc->certType);
 
-            for (i = kt_null; i < kt_kea_size; i++, oc++, sc++) {
                 if (oc->serverCert && oc->serverCertChain) {
                     sc->serverCert = CERT_DupCertificate(oc->serverCert);
                     sc->serverCertChain = CERT_DupCertList(oc->serverCertChain);
@@ -271,16 +275,26 @@ ssl_DupSocket(sslSocket *os)
                     sc->serverCert = NULL;
                     sc->serverCertChain = NULL;
                 }
-                sc->serverKeyPair = oc->serverKeyPair ? ssl3_GetKeyPairRef(oc->serverKeyPair)
-                                                      : NULL;
+                sc->serverKeyPair = oc->serverKeyPair ?
+                        ssl3_GetKeyPairRef(oc->serverKeyPair) : NULL;
                 if (oc->serverKeyPair && !sc->serverKeyPair)
                     goto loser;
                 sc->serverKeyBits = oc->serverKeyBits;
-                ss->certStatusArray[i] = !os->certStatusArray[i] ? NULL : SECITEM_DupArray(NULL, os->certStatusArray[i]);
+                sc->certStatusArray = !oc->certStatusArray ? NULL :
+                        SECITEM_DupArray(NULL, oc->certStatusArray);
+                if (SECITEM_CopyItem(NULL, &sc->signedCertTimestamps,
+                                     &oc->signedCertTimestamps) != SECSuccess)
+                    goto loser;
+                PR_APPEND_LINK(&sc->link, &ss->serverCerts);
             }
-            ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL : ssl3_GetKeyPairRef(os->stepDownKeyPair);
-            ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL : ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
-            ss->dheKeyPair = !os->dheKeyPair ? NULL : ssl3_GetKeyPairRef(os->dheKeyPair);
+            sc = NULL;
+
+            ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL :
+                                  ssl3_GetKeyPairRef(os->stepDownKeyPair);
+            ss->ephemeralECDHKeyPair = !os->ephemeralECDHKeyPair ? NULL :
+                                  ssl3_GetKeyPairRef(os->ephemeralECDHKeyPair);
+            ss->dheKeyPair = !os->dheKeyPair ? NULL :
+                             ssl3_GetKeyPairRef(os->dheKeyPair);
             ss->dheParams = os->dheParams;
 
             /*
@@ -312,6 +326,7 @@ ssl_DupSocket(sslSocket *os)
 
 loser:
     ssl_FreeSocket(ss);
+    ssl_FreeServerCert(sc);
     return NULL;
 }
 
@@ -354,10 +369,7 @@ ssl_DestroyLocks(sslSocket *ss)
 static void
 ssl_DestroySocketContents(sslSocket *ss)
 {
-    /* "i" should be of type SSLKEAType, but CC on IRIX complains during
-     * the for loop.
-     */
-    int i;
+    PRCList *cursor;
 
     /* Free up socket */
     ssl_DestroySecurityInfo(&ss->sec);
@@ -373,22 +385,11 @@ ssl_DestroySocketContents(sslSocket *ss)
     if (ss->url != NULL)
         PORT_Free((void *)ss->url); /* CONST */
 
-    /* Clean up server configuration */
-    for (i = kt_null; i < kt_kea_size; i++) {
-        sslServerCerts *sc = ss->serverCerts + i;
-        if (sc->serverCert != NULL)
-            CERT_DestroyCertificate(sc->serverCert);
-        if (sc->serverCertChain != NULL)
-            CERT_DestroyCertificateList(sc->serverCertChain);
-        if (sc->serverKeyPair != NULL)
-            ssl3_FreeKeyPair(sc->serverKeyPair);
-        if (ss->certStatusArray[i] != NULL) {
-            SECITEM_FreeArray(ss->certStatusArray[i], PR_TRUE);
-            ss->certStatusArray[i] = NULL;
-        }
-        if (ss->signedCertTimestamps[i].data) {
-            SECITEM_FreeItem(&ss->signedCertTimestamps[i], PR_FALSE);
-        }
+    /* Clean up server certificates and sundries. */
+    while (!PR_CLIST_IS_EMPTY(&ss->serverCerts)) {
+        cursor = PR_LIST_TAIL(&ss->serverCerts);
+        PR_REMOVE_LINK(cursor);
+        ssl_FreeServerCert((sslServerCert *)cursor);
     }
     if (ss->stepDownKeyPair) {
         ssl3_FreeKeyPair(ss->stepDownKeyPair);
@@ -1899,9 +1900,8 @@ PRFileDesc *
 SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
 {
     sslSocket *sm = NULL, *ss = NULL;
-    int i;
-    sslServerCerts *mc = NULL;
-    sslServerCerts *sc = NULL;
+    PRCList *cursor;
+    sslServerCert *sc = NULL;
 
     if (model == NULL) {
         PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
@@ -1936,52 +1936,44 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return NULL;
     }
-    /* This int should be SSLKEAType, but CC on Irix complains,
-     * during the for loop.
-     */
-    for (i = kt_null; i < kt_kea_size; i++) {
-        mc = &(sm->serverCerts[i]);
-        sc = &(ss->serverCerts[i]);
+    while (!PR_CLIST_IS_EMPTY(&ss->serverCerts)) {
+        cursor = PR_LIST_TAIL(&ss->serverCerts);
+        PR_REMOVE_LINK(cursor);
+        ssl_FreeServerCert((sslServerCert *)cursor);
+    }
+    for (cursor = PR_NEXT_LINK(&sm->serverCerts);
+         cursor != &sm->serverCerts;
+         cursor = PR_NEXT_LINK(cursor)) {
+        sslServerCert *mc = (sslServerCert*)cursor;
+
+        sc = ssl_NewServerCert(&mc->certType);
         if (mc->serverCert && mc->serverCertChain) {
-            if (sc->serverCert) {
-                CERT_DestroyCertificate(sc->serverCert);
-            }
-            sc->serverCert = CERT_DupCertificate(mc->serverCert);
-            if (sc->serverCertChain) {
-                CERT_DestroyCertificateList(sc->serverCertChain);
-            }
+            sc->serverCert      = CERT_DupCertificate(mc->serverCert);
             sc->serverCertChain = CERT_DupCertList(mc->serverCertChain);
             if (!sc->serverCertChain)
                 goto loser;
-            if (sm->certStatusArray[i]) {
-                if (ss->certStatusArray[i]) {
-                    SECITEM_FreeArray(ss->certStatusArray[i], PR_TRUE);
-                    ss->certStatusArray[i] = NULL;
-                }
-                ss->certStatusArray[i] = SECITEM_DupArray(NULL, sm->certStatusArray[i]);
-                if (!ss->certStatusArray[i])
+            if (mc->certStatusArray) {
+                sc->certStatusArray = SECITEM_DupArray(NULL, mc->certStatusArray);
+                if (!sc->certStatusArray)
                     goto loser;
             }
-            if (sm->signedCertTimestamps[i].data) {
-                if (ss->signedCertTimestamps[i].data) {
-                    SECITEM_FreeItem(&ss->signedCertTimestamps[i], PR_FALSE);
-                }
+            if (mc->signedCertTimestamps.data) {
                 if (SECITEM_CopyItem(NULL,
-                                     &ss->signedCertTimestamps[i],
-                                     &sm->signedCertTimestamps[i]) !=
+                                     &sc->signedCertTimestamps,
+                                     &mc->signedCertTimestamps) !=
                     SECSuccess) {
                     goto loser;
                 }
             }
         }
         if (mc->serverKeyPair) {
-            if (sc->serverKeyPair) {
-                ssl3_FreeKeyPair(sc->serverKeyPair);
-            }
             sc->serverKeyPair = ssl3_GetKeyPairRef(mc->serverKeyPair);
             sc->serverKeyBits = mc->serverKeyBits;
         }
+        PR_APPEND_LINK(&sc->link, &ss->serverCerts);
     }
+    sc = NULL;
+
     if (sm->stepDownKeyPair) {
         if (ss->stepDownKeyPair) {
             ssl3_FreeKeyPair(ss->stepDownKeyPair);
@@ -2030,6 +2022,7 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
         ss->pkcs11PinArg = sm->pkcs11PinArg;
     return fd;
 loser:
+    ssl_FreeServerCert(sc);
     return NULL;
 }
 
@@ -2685,64 +2678,6 @@ ssl_GetSockName(PRFileDesc *fd, PRNetAddr *name)
 }
 
 SECStatus
-SSL_SetStapledOCSPResponses(PRFileDesc *fd, const SECItemArray *responses,
-                            SSLKEAType kea)
-{
-    sslSocket *ss;
-
-    ss = ssl_FindSocket(fd);
-    if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetStapledOCSPResponses",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (kea <= 0 || kea >= kt_kea_size) {
-        SSL_DBG(("%d: SSL[%d]: invalid key type in SSL_SetStapledOCSPResponses",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (ss->certStatusArray[kea]) {
-        SECITEM_FreeArray(ss->certStatusArray[kea], PR_TRUE);
-        ss->certStatusArray[kea] = NULL;
-    }
-    if (responses) {
-        ss->certStatusArray[kea] = SECITEM_DupArray(NULL, responses);
-    }
-    return (ss->certStatusArray[kea] || !responses) ? SECSuccess : SECFailure;
-}
-
-SECStatus
-SSL_SetSignedCertTimestamps(PRFileDesc *fd, const SECItem *scts, SSLKEAType kea)
-{
-    sslSocket *ss;
-
-    ss = ssl_FindSocket(fd);
-    if (!ss) {
-        SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetSignedCertTimestamps",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (kea <= 0 || kea >= kt_kea_size) {
-        SSL_DBG(("%d: SSL[%d]: invalid key type in SSL_SetSignedCertTimestamps",
-                 SSL_GETPID(), fd));
-        return SECFailure;
-    }
-
-    if (ss->signedCertTimestamps[kea].data) {
-        SECITEM_FreeItem(&ss->signedCertTimestamps[kea], PR_FALSE);
-    }
-
-    if (!scts) {
-        return SECSuccess;
-    }
-
-    return SECITEM_CopyItem(NULL, &ss->signedCertTimestamps[kea], scts);
-}
-
-SECStatus
 SSL_SetSockPeerID(PRFileDesc *fd, const char *peerID)
 {
     sslSocket *ss;
@@ -3361,6 +3296,7 @@ ssl_SetDefaultsFromEnvironment(void)
             SSL_TRACE(("SSL: debugging set to %d", ssl_debug));
         }
 #endif /* DEBUG */
+#ifdef NSS_ALLOW_SSLKEYLOGFILE
         ev = PR_GetEnvSecure("SSLKEYLOGFILE");
         if (ev && ev[0]) {
             ssl_keylog_iob = fopen(ev, "a");
@@ -3374,6 +3310,7 @@ ssl_SetDefaultsFromEnvironment(void)
                 SSL_TRACE(("SSL: logging SSL/TLS secrets to %s", ev));
             }
         }
+#endif
 #ifndef NO_PKCS11_BYPASS
         ev = PR_GetEnvSecure("SSLBYPASS");
         if (ev && ev[0]) {
@@ -3433,10 +3370,9 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
     /* Make a new socket and get it ready */
     ss = (sslSocket *)PORT_ZAlloc(sizeof(sslSocket));
     if (ss) {
-        /* This should be of type SSLKEAType, but CC on IRIX
+        /* This should be of type SSLAuthType, but CC on IRIX
          * complains during the for loop.
          */
-        int i;
         SECStatus status;
 
         ss->opt = ssl_defaults;
@@ -3451,14 +3387,7 @@ ssl_NewSocket(PRBool makeLocks, SSLProtocolVariant protocolVariant)
         ss->cTimeout = PR_INTERVAL_NO_TIMEOUT;
         ss->url = NULL;
 
-        for (i = kt_null; i < kt_kea_size; i++) {
-            sslServerCerts *sc = ss->serverCerts + i;
-            sc->serverCert = NULL;
-            sc->serverCertChain = NULL;
-            sc->serverKeyPair = NULL;
-            sc->serverKeyBits = 0;
-            ss->certStatusArray[i] = NULL;
-        }
+        PR_INIT_CLIST(&ss->serverCerts);
         ss->stepDownKeyPair = NULL;
 
         ss->dheParams = NULL;

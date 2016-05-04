@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef _CRLGEN_H_
 #define _CRLGEN_H_
 
@@ -13,31 +12,29 @@
 #include "certt.h"
 #include "secoidt.h"
 
+#define CRLGEN_UNKNOWN_CONTEXT 0
+#define CRLGEN_ISSUER_CONTEXT 1
+#define CRLGEN_UPDATE_CONTEXT 2
+#define CRLGEN_NEXT_UPDATE_CONTEXT 3
+#define CRLGEN_ADD_EXTENSION_CONTEXT 4
+#define CRLGEN_ADD_CERT_CONTEXT 6
+#define CRLGEN_CHANGE_RANGE_CONTEXT 7
+#define CRLGEN_RM_CERT_CONTEXT 8
 
-#define CRLGEN_UNKNOWN_CONTEXT                   0
-#define CRLGEN_ISSUER_CONTEXT                    1
-#define CRLGEN_UPDATE_CONTEXT                    2
-#define CRLGEN_NEXT_UPDATE_CONTEXT               3
-#define CRLGEN_ADD_EXTENSION_CONTEXT             4
-#define CRLGEN_ADD_CERT_CONTEXT                  6
-#define CRLGEN_CHANGE_RANGE_CONTEXT              7
-#define CRLGEN_RM_CERT_CONTEXT                   8
+#define CRLGEN_TYPE_DATE 0
+#define CRLGEN_TYPE_ZDATE 1
+#define CRLGEN_TYPE_DIGIT 2
+#define CRLGEN_TYPE_DIGIT_RANGE 3
+#define CRLGEN_TYPE_OID 4
+#define CRLGEN_TYPE_STRING 5
+#define CRLGEN_TYPE_ID 6
 
-#define CRLGEN_TYPE_DATE                         0
-#define CRLGEN_TYPE_ZDATE                        1
-#define CRLGEN_TYPE_DIGIT                        2
-#define CRLGEN_TYPE_DIGIT_RANGE                  3
-#define CRLGEN_TYPE_OID                          4
-#define CRLGEN_TYPE_STRING                       5
-#define CRLGEN_TYPE_ID                           6
-
-
-typedef struct CRLGENGeneratorDataStr          CRLGENGeneratorData;
-typedef struct CRLGENEntryDataStr              CRLGENEntryData;
-typedef struct CRLGENExtensionEntryStr         CRLGENExtensionEntry;
-typedef struct CRLGENCertEntrySrt              CRLGENCertEntry;
-typedef struct CRLGENCrlFieldStr               CRLGENCrlField;
-typedef struct CRLGENEntriesSortedDataStr      CRLGENEntriesSortedData;
+typedef struct CRLGENGeneratorDataStr CRLGENGeneratorData;
+typedef struct CRLGENEntryDataStr CRLGENEntryData;
+typedef struct CRLGENExtensionEntryStr CRLGENExtensionEntry;
+typedef struct CRLGENCertEntrySrt CRLGENCertEntry;
+typedef struct CRLGENCrlFieldStr CRLGENCrlField;
+typedef struct CRLGENEntriesSortedDataStr CRLGENEntriesSortedData;
 
 /* Exported functions */
 
@@ -56,16 +53,14 @@ extern void CRLGEN_FinalizeCrlGeneration(CRLGENGeneratorData *crlGenData);
 
 /* Parser initialization function. Creates CRLGENGeneratorData structure
  *  for the current thread */
-extern CRLGENGeneratorData* CRLGEN_InitCrlGeneration(CERTSignedCrl *newCrl,
+extern CRLGENGeneratorData *CRLGEN_InitCrlGeneration(CERTSignedCrl *newCrl,
                                                      PRFileDesc *src);
-
 
 /* This lock is defined in crlgen_lex.c(derived from crlgen_lex.l).
  * It controls access to invocation of yylex, allows to parse one
  * script at a time */
 extern void CRLGEN_InitCrlGenParserLock();
 extern void CRLGEN_DestroyCrlGenParserLock();
-
 
 /* The following function types are used to define functions for each of
  * CRLGENExtensionEntryStr, CRLGENCertEntrySrt, CRLGENCrlFieldStr to
@@ -77,13 +72,13 @@ typedef SECStatus createNewLangStructFn_t(CRLGENGeneratorData *crlGenData,
                                           void *str, unsigned i);
 
 /* Sets reports failure to parser if anything goes wrong */
-extern void      crlgen_setFailure(CRLGENGeneratorData *str, char *);
+extern void crlgen_setFailure(CRLGENGeneratorData *str, char *);
 
 /* Collects data in to one of the current data structure that corresponds
  * to the correct context type. This function gets called after each token
  * is found for a particular line */
 extern SECStatus crlgen_setNextData(CRLGENGeneratorData *str, void *data,
-                             unsigned short dtype);
+                                    unsigned short dtype);
 
 /* initiates crl update with collected data. This function is called at the
  * end of each line */
@@ -94,8 +89,7 @@ extern SECStatus crlgen_updateCrl(CRLGENGeneratorData *str);
 extern SECStatus crlgen_createNewLangStruct(CRLGENGeneratorData *str,
                                             unsigned structType);
 
-
-/* CRLGENExtensionEntry is used to store addext request data for either 
+/* CRLGENExtensionEntry is used to store addext request data for either
  * CRL extensions or CRL entry extensions. The differentiation between
  * is based on order and type of extension been added.
  *    - extData : all data in request staring from name of the extension are
@@ -104,9 +98,9 @@ extern SECStatus crlgen_createNewLangStruct(CRLGENGeneratorData *str,
  */
 struct CRLGENExtensionEntryStr {
     char **extData;
-    int    nextUpdatedData;
-    updateCrlFn_t    *updateCrlFn;
-    setNextDataFn_t  *setNextDataFn;
+    int nextUpdatedData;
+    updateCrlFn_t *updateCrlFn;
+    setNextDataFn_t *setNextDataFn;
 };
 
 /* CRLGENCeryestEntry is used to store addcert request data
@@ -117,17 +111,16 @@ struct CRLGENExtensionEntryStr {
 struct CRLGENCertEntrySrt {
     char *certId;
     char *revocationTime;
-    updateCrlFn_t   *updateCrlFn;
+    updateCrlFn_t *updateCrlFn;
     setNextDataFn_t *setNextDataFn;
 };
-
 
 /* CRLGENCrlField is used to store crl fields record like update time, next
  * update time, etc.
  *  - value: value of the parsed field data*/
 struct CRLGENCrlFieldStr {
     char *value;
-    updateCrlFn_t   *updateCrlFn;
+    updateCrlFn_t *updateCrlFn;
     setNextDataFn_t *setNextDataFn;
 };
 
@@ -166,21 +159,20 @@ struct CRLGENEntryDataStr {
  *  - parserStatus  : current status of parser. Triggers parser to abort when
  *                    set to SECFailure
  *  - src : PRFileDesc structure pointer of crl generator config file
- *  - parsedLineNum : currently parsing line. Keeping it to report errors */ 
+ *  - parsedLineNum : currently parsing line. Keeping it to report errors */
 struct CRLGENGeneratorDataStr {
     unsigned short contextId;
-    CRLGENCrlField       *crlField;
-    CRLGENCertEntry      *certEntry;
-    CRLGENExtensionEntry *extensionEntry;	
+    CRLGENCrlField *crlField;
+    CRLGENCertEntry *certEntry;
+    CRLGENExtensionEntry *extensionEntry;
     PRUint64 rangeFrom;
     PRUint64 rangeTo;
     CERTSignedCrl *signCrl;
     void *crlExtHandle;
     PLHashTable *entryDataHashTable;
-    
+
     PRFileDesc *src;
     int parsedLineNum;
 };
-
 
 #endif /* _CRLGEN_H_ */
