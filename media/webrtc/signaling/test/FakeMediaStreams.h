@@ -92,8 +92,13 @@ public:
                                         uint32_t aTrackEvents,
                                         const mozilla::MediaSegment& aQueuedMedia,
                                         Fake_MediaStream* aInputStream,
-                                        mozilla::TrackID aInputTrackID) = 0;
+                                        mozilla::TrackID aInputTrackID) {}
   virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph, mozilla::StreamTime aDesiredTime) = 0;
+  virtual void NotifyQueuedAudioData(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
+                                       mozilla::StreamTime aTrackOffset,
+                                       const mozilla::AudioSegment& aQueuedMedia,
+                                       Fake_MediaStream* aInputStream,
+                                       mozilla::TrackID aInputTrackID) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamListener)
 };
