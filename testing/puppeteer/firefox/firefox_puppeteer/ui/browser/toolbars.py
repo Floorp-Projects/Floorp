@@ -424,14 +424,6 @@ class IdentityPopup(UIBaseLib):
         self._view = None
 
     @property
-    def host(self):
-        """The DOM element which represents the identity-popup content host.
-
-        :returns: Reference to the identity-popup content host.
-        """
-        return self.marionette.find_element(By.ID, 'identity-popup-content-host')
-
-    @property
     def is_open(self):
         """Returns whether this popup is currently open.
 
@@ -538,6 +530,14 @@ class IdentityPopupMainView(IdentityPopupView):
         return self.element.find_element(By.CLASS_NAME, 'identity-popup-expander')
 
     @property
+    def host(self):
+        """The DOM element which represents the identity-popup content host.
+
+        :returns: Reference to the identity-popup content host.
+        """
+        return self.element.find_element(By.CLASS_NAME, 'identity-popup-headline host')
+
+    @property
     def insecure_connection_label(self):
         """The DOM element which represents the identity popup insecure connection label.
 
@@ -589,6 +589,14 @@ class IdentityPopupSecurityView(IdentityPopupView):
         """
         return self.element.find_element(By.CSS_SELECTOR,
                                          'button[when-mixedcontent=active-loaded]')
+
+    @property
+    def host(self):
+        """The DOM element which represents the identity-popup content host.
+
+        :returns: Reference to the identity-popup content host.
+        """
+        return self.element.find_element(By.CLASS_NAME, 'identity-popup-headline host')
 
     @property
     def insecure_connection_label(self):
