@@ -648,7 +648,7 @@ bool get_input_buffer(cubeb_stream * stm)
   }
 
   assert(stm->linear_input_buffer.length() >= total_available_input &&
-         offset == total_available_input);
+         offset == total_available_input * input_channel_count);
 
   return true;
 }
