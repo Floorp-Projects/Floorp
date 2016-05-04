@@ -30,6 +30,7 @@ public:
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify) override;
 
   static bool IsPictureEnabled();
 
