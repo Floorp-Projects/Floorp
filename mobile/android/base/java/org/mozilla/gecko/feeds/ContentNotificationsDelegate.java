@@ -7,7 +7,6 @@ package org.mozilla.gecko.feeds;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import org.mozilla.gecko.AppConstants;
