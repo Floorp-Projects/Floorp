@@ -328,6 +328,7 @@ Blocklist.prototype = {
    *                                 (default = *)
    */
   _addonEntries: null,
+  _gfxEntries: null,
   _pluginEntries: null,
 
   shutdown: function() {
@@ -660,9 +661,12 @@ Blocklist.prototype = {
     var oldAddonEntries = this._addonEntries;
     var oldPluginEntries = this._pluginEntries;
     this._addonEntries = [];
+    this._gfxEntries = [];
     this._pluginEntries = [];
 
     this._loadBlocklistFromString(request.responseText);
+    // We don't inform the users when the graphics blocklist changed at runtime.
+    // However addons and plugins blocking status is refreshed.
     this._blocklistUpdated(oldAddonEntries, oldPluginEntries);
 
     try {
@@ -701,6 +705,7 @@ Blocklist.prototype = {
    */
   _loadBlocklist: function() {
     this._addonEntries = [];
+    this._gfxEntries = [];
     this._pluginEntries = [];
     var profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
     if (profFile.exists()) {
@@ -837,7 +842,7 @@ Blocklist.prototype = {
   },
 
   _isBlocklistLoaded: function() {
-    return this._addonEntries != null && this._pluginEntries != null;
+    return this._addonEntries != null && this._gfxEntries != null && this._pluginEntries != null;
   },
 
   _isBlocklistPreloaded: function() {
@@ -847,6 +852,7 @@ Blocklist.prototype = {
   /* Used for testing */
   _clear: function() {
     this._addonEntries = null;
+    this._gfxEntries = null;
     this._pluginEntries = null;
     this._preloadedBlocklistContent = null;
   },
@@ -912,12 +918,12 @@ Blocklist.prototype = {
         case "emItems":
           // Special case for b2g, since we don't use the addon manager.
           if (AppConstants.MOZ_B2G) {
-            let extensions = this._processItemNodes(element.childNodes, "em",
+            let extensions = this._processItemNodes(element.childNodes, "emItem",
                                                     this._handleEmItemNode);
             DOMApplicationRegistry.blockExtensions(extensions);
             return;
           }
-          this._addonEntries = this._processItemNodes(element.childNodes, "em",
+          this._addonEntries = this._processItemNodes(element.childNodes, "emItem",
                                                       this._handleEmItemNode);
           break;
         case "pluginItems":
@@ -925,23 +931,29 @@ Blocklist.prototype = {
           if (AppConstants.MOZ_B2G) {
             return;
           }
-          this._pluginEntries = this._processItemNodes(element.childNodes, "plugin",
+          this._pluginEntries = this._processItemNodes(element.childNodes, "pluginItem",
                                                        this._handlePluginItemNode);
           break;
         case "certItems":
           if (populateCertBlocklist) {
-            this._processItemNodes(element.childNodes, "cert",
+            this._processItemNodes(element.childNodes, "certItem",
                                    this._handleCertItemNode.bind(this));
           }
           break;
+        case "gfxItems":
+          // Parse as simple list of objects.
+          this._gfxEntries = this._processItemNodes(element.childNodes, "gfxBlacklistEntry",
+                                                    this._handleGfxBlacklistNode);
+          break;
         default:
-          Services.obs.notifyObservers(element,
-                                       "blocklist-data-" + element.localName,
-                                       null);
+          LOG("Blocklist::_loadBlocklistFromString: ignored entries " + element.localName);
         }
       }
       if (populateCertBlocklist) {
         gCertBlocklistService.saveEntries();
+      }
+      if (this._gfxEntries.length > 0) {
+        this._notifyObserversBlocklistGFX();
       }
     }
     catch (e) {
@@ -950,9 +962,8 @@ Blocklist.prototype = {
     }
   },
 
-  _processItemNodes: function(itemNodes, prefix, handler) {
+  _processItemNodes: function(itemNodes, itemName, handler) {
     var result = [];
-    var itemName = prefix + "Item";
     for (var i = 0; i < itemNodes.length; ++i) {
       var blocklistElement = itemNodes.item(i);
       if (!(blocklistElement instanceof Ci.nsIDOMElement) ||
@@ -1086,6 +1097,75 @@ Blocklist.prototype = {
 
     blockEntry.blockID = blocklistElement.getAttribute("blockID");
 
+    result.push(blockEntry);
+  },
+
+  // <gfxBlacklistEntry blockID="g60">
+  //   <os>WINNT 6.0</os>
+  //   <osversion>14</osversion> currently only used for Android
+  //   <versionRange minVersion="42.0" maxVersion="13.0b2"/>
+  //   <vendor>0x8086</vendor>
+  //   <devices>
+  //     <device>0x2582</device>
+  //     <device>0x2782</device>
+  //   </devices>
+  //   <feature> DIRECT3D_10_LAYERS </feature>
+  //   <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+  //   <driverVersion> 8.52.322.2202 </driverVersion>
+  //   <driverVersionMax> 8.52.322.2202 </driverVersionMax>
+  //   <driverVersionComparator> LESS_THAN_OR_EQUAL </driverVersionComparator>
+  //   <model>foo</model>
+  //   <product>foo</product>
+  //   <manufacturer>foo</manufacturer>
+  //   <hardware>foo</hardware>
+  // </gfxBlacklistEntry>
+  _handleGfxBlacklistNode: function (blocklistElement, result) {
+    const blockEntry = {};
+
+    // The blockID attribute is always present in the actual data produced on server
+    // (see https://github.com/mozilla/addons-server/blob/2016.05.05/src/olympia/blocklist/templates/blocklist/blocklist.xml#L74)
+    // But it is sometimes missing in test fixtures.
+    if (blocklistElement.hasAttribute("blockID")) {
+      blockEntry.blockID = blocklistElement.getAttribute("blockID");
+    }
+
+    // Trim helper (spaces, tabs, no-break spaces..)
+    const trim = (s) => (s || '').replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
+
+    for (let i = 0; i < blocklistElement.childNodes.length; ++i) {
+      var matchElement = blocklistElement.childNodes.item(i);
+      if (!(matchElement instanceof Ci.nsIDOMElement))
+        continue;
+
+      let value;
+      if (matchElement.localName == "devices") {
+        value = [];
+        for (let j = 0; j < matchElement.childNodes.length; j++) {
+          const childElement = matchElement.childNodes.item(j);
+          const childValue = trim(childElement.textContent);
+          // Make sure no empty value is added.
+          if (childValue) {
+            if (/,/.test(childValue)) {
+              // Devices can't contain comma.
+              // (c.f serialization in _notifyObserversBlocklistGFX)
+              const e = new Error(`Unsupported device name ${childValue}`);
+              Components.utils.reportError(e);
+            }
+            else {
+              value.push(childValue);
+            }
+          }
+        }
+      } else if (matchElement.localName == "versionRange") {
+        value = {minVersion: trim(matchElement.getAttribute("minVersion")) || "0",
+                 maxVersion: trim(matchElement.getAttribute("maxVersion")) || "*"};
+      } else {
+        value = trim(matchElement.textContent);
+      }
+      if (value) {
+        blockEntry[matchElement.localName] = value;
+      }
+    }
     result.push(blockEntry);
   },
 
@@ -1229,6 +1309,24 @@ Blocklist.prototype = {
     }
 
     return blockEntry.infoURL;
+  },
+
+  _notifyObserversBlocklistGFX: function () {
+    // Notify `GfxInfoBase`, by passing a string serialization.
+    // This way we avoid spreading XML structure logics there.
+    const payload = this._gfxEntries.map((r) => {
+      return Object.keys(r).sort().filter((k) => !/id|last_modified/.test(k)).map((key) => {
+        let value = r[key];
+        if (Array.isArray(value)) {
+          value = value.join(",");
+        } else if (value.hasOwnProperty("minVersion")) {
+          // When XML is parsed, both minVersion and maxVersion are set.
+          value = `${value.minVersion},${value.maxVersion}`;
+        }
+        return `${key}:${value}`;
+      }).join("\t");
+    }).join("\n");
+    Services.obs.notifyObservers(null, "blocklist-data-gfxItems", payload);
   },
 
   _notifyObserversBlocklistUpdated: function() {
