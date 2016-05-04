@@ -63,7 +63,7 @@ function startTest()
   }
 
   // Listen for MozLocalStorageChanged
-  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onStorageChanged, false);
+  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onStorageChanged, true);
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -153,38 +153,38 @@ function startTest()
   is(localStorage.key(-1), null, "key() should return null for out-of-bounds access");
   is(localStorage.key(1), null, "key() should return null for out-of-bounds access");
   is(localStorage.getItem("key1"), "value1-2");
-  
+
   // JS property test
   localStorage.testA = "valueA";
   is(localStorage.testA, "valueA");
   is(localStorage["testA"], "valueA");
   is(localStorage.getItem("testA"), "valueA");
-  
+
   localStorage.testA = "valueA2";
   is(localStorage.testA, "valueA2");
   is(localStorage["testA"], "valueA2");
   is(localStorage.getItem("testA"), "valueA2");
-  
+
   localStorage["testB"] = "valueB";
   is(localStorage.testB, "valueB");
   is(localStorage["testB"], "valueB");
   is(localStorage.getItem("testB"), "valueB");
-  
+
   localStorage["testB"] = "valueB2";
   is(localStorage.testB, "valueB2");
   is(localStorage["testB"], "valueB2");
   is(localStorage.getItem("testB"), "valueB2");
-  
+
   localStorage.setItem("testC", "valueC");
   is(localStorage.testC, "valueC");
   is(localStorage["testC"], "valueC");
   is(localStorage.getItem("testC"), "valueC");
-  
+
   localStorage.setItem("testC", "valueC2");
   is(localStorage.testC, "valueC2");
   is(localStorage["testC"], "valueC2");
   is(localStorage.getItem("testC"), "valueC2");
-  
+
   localStorage.setItem("testC", null);
   is("testC" in localStorage, true);
   is(localStorage.getItem("testC"), "null");
@@ -227,7 +227,7 @@ function startTest()
   localStorage.removeItem("key2"); // Just check there is no exception
 
   SimpleTest.executeSoon(function () {
-    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onStorageChanged, false);
+    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onStorageChanged, true);
     is(expectedEvents.length, 0, "received the correct number of events");
 
     localStorage.clear();
