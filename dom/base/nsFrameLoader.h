@@ -25,6 +25,7 @@
 #include "nsStubMutationObserver.h"
 #include "Units.h"
 #include "nsIWebBrowserPersistable.h"
+#include "nsIFrame.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -191,23 +192,23 @@ public:
   nsresult SwapRemoteBrowser(nsITabParent* aTabParent);
 
   /**
-   * Stashes a detached view on the frame loader. We do this when we're
+   * Stashes a detached nsIFrame on the frame loader. We do this when we're
    * destroying the nsSubDocumentFrame. If the nsSubdocumentFrame is
-   * being reframed we'll restore the detached view when it's recreated,
+   * being reframed we'll restore the detached nsIFrame when it's recreated,
    * otherwise we'll discard the old presentation and set the detached
-   * subdoc view to null. aContainerDoc is the document containing the
+   * subdoc nsIFrame to null. aContainerDoc is the document containing the
    * the subdoc frame. This enables us to detect when the containing
    * document has changed during reframe, so we can discard the presentation
    * in that case.
    */
-  void SetDetachedSubdocView(nsView* aDetachedView,
-                             nsIDocument* aContainerDoc);
+  void SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
+                              nsIDocument* aContainerDoc);
 
   /**
-   * Retrieves the detached view and the document containing the view,
-   * as set by SetDetachedSubdocView().
+   * Retrieves the detached nsIFrame and the document containing the nsIFrame,
+   * as set by SetDetachedSubdocFrame().
    */
-  nsView* GetDetachedSubdocView(nsIDocument** aContainerDoc) const;
+  nsIFrame* GetDetachedSubdocFrame(nsIDocument** aContainerDoc) const;
 
   /**
    * Applies a new set of sandbox flags. These are merged with the sandbox
@@ -357,12 +358,12 @@ private:
   // Note: this variable must be modified only by ResetPermissionManagerStatus()
   uint32_t mAppIdSentToPermissionManager;
 
-  // Stores the root view of the subdocument while the subdocument is being
+  // Stores the root frame of the subdocument while the subdocument is being
   // reframed. Used to restore the presentation after reframing.
-  nsView* mDetachedSubdocViews;
+  nsWeakFrame mDetachedSubdocFrame;
   // Stores the containing document of the frame corresponding to this
   // frame loader. This is reference is kept valid while the subframe's
-  // presentation is detached and stored in mDetachedSubdocViews. This
+  // presentation is detached and stored in mDetachedSubdocFrame. This
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   nsCOMPtr<nsIDocument> mContainerDocWhileDetached;
