@@ -735,6 +735,10 @@ WorkerTarget.prototype = {
     return true;
   },
 
+  get name() {
+    return "Worker";
+  },
+
   get url() {
     return this._workerClient.url;
   },
