@@ -2867,36 +2867,36 @@ class ICCall_StringSplit : public ICMonitoredStub
 
   protected:
     uint32_t pcOffset_;
-    HeapPtrString expectedStr_;
-    HeapPtrString expectedSep_;
+    HeapPtrString expectedThis_;
+    HeapPtrString expectedArg_;
     HeapPtrObject templateObject_;
 
-    ICCall_StringSplit(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t pcOffset, JSString* str,
-                       JSString* sep, JSObject* templateObject)
+    ICCall_StringSplit(JitCode* stubCode, ICStub* firstMonitorStub, uint32_t pcOffset, JSString* thisString,
+                       JSString* argString, JSObject* templateObject)
       : ICMonitoredStub(ICStub::Call_StringSplit, stubCode, firstMonitorStub),
-        pcOffset_(pcOffset), expectedStr_(str), expectedSep_(sep),
+        pcOffset_(pcOffset), expectedThis_(thisString), expectedArg_(argString),
         templateObject_(templateObject)
     { }
 
   public:
-    static size_t offsetOfExpectedStr() {
-        return offsetof(ICCall_StringSplit, expectedStr_);
+    static size_t offsetOfExpectedThis() {
+        return offsetof(ICCall_StringSplit, expectedThis_);
     }
 
-    static size_t offsetOfExpectedSep() {
-        return offsetof(ICCall_StringSplit, expectedSep_);
+    static size_t offsetOfExpectedArg() {
+        return offsetof(ICCall_StringSplit, expectedArg_);
     }
 
     static size_t offsetOfTemplateObject() {
         return offsetof(ICCall_StringSplit, templateObject_);
     }
 
-    HeapPtrString& expectedStr() {
-        return expectedStr_;
+    HeapPtrString& expectedThis() {
+        return expectedThis_;
     }
 
-    HeapPtrString& expectedSep() {
-        return expectedSep_;
+    HeapPtrString& expectedArg() {
+        return expectedArg_;
     }
 
     HeapPtrObject& templateObject() {
@@ -2907,8 +2907,8 @@ class ICCall_StringSplit : public ICMonitoredStub
       protected:
         ICStub* firstMonitorStub_;
         uint32_t pcOffset_;
-        RootedString expectedStr_;
-        RootedString expectedSep_;
+        RootedString expectedThis_;
+        RootedString expectedArg_;
         RootedObject templateObject_;
 
         bool generateStubCode(MacroAssembler& masm);
@@ -2919,19 +2919,19 @@ class ICCall_StringSplit : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset, HandleString str,
-                 HandleString sep, HandleValue templateObject)
+        Compiler(JSContext* cx, ICStub* firstMonitorStub, uint32_t pcOffset, HandleString thisString,
+                 HandleString argString, HandleValue templateObject)
           : ICCallStubCompiler(cx, ICStub::Call_StringSplit),
             firstMonitorStub_(firstMonitorStub),
             pcOffset_(pcOffset),
-            expectedStr_(cx, str),
-            expectedSep_(cx, sep),
+            expectedThis_(cx, thisString),
+            expectedArg_(cx, argString),
             templateObject_(cx, &templateObject.toObject())
         { }
 
         ICStub* getStub(ICStubSpace* space) {
             return newStub<ICCall_StringSplit>(space, getStubCode(), firstMonitorStub_, pcOffset_,
-                                               expectedStr_, expectedSep_, templateObject_);
+                                               expectedThis_, expectedArg_, templateObject_);
         }
    };
 };

@@ -115,7 +115,7 @@ function split_join_multiple(i) {
     assertEq(s2.replace("", "" + i, "g") , i + "a" + i + "b" + i + "c" + i);
 }
 
-for (var i = 0; i < 1000; ++i) {
+for (var i = 0; i < 100; ++i) {
     join_check(i);
     split(i);
     join(i);

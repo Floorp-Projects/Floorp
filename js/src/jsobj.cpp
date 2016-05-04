@@ -2280,87 +2280,66 @@ bool
 js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** objp,
                        Shape** propp)
 {
-    bool isTypedArrayOutOfRange = false;
     do {
-        if (!LookupOwnPropertyPure(cx, obj, id, propp, &isTypedArrayOutOfRange))
+        if (obj->isNative()) {
+            /* Search for a native dense element, typed array element, or property. */
+
+            if (JSID_IS_INT(id) && obj->as<NativeObject>().containsDenseElement(JSID_TO_INT(id))) {
+                *objp = obj;
+                MarkDenseOrTypedArrayElementFound<NoGC>(propp);
+                return true;
+            }
+
+            if (obj->is<TypedArrayObject>()) {
+                uint64_t index;
+                if (IsTypedArrayIndex(id, &index)) {
+                    if (index < obj->as<TypedArrayObject>().length()) {
+                        *objp = obj;
+                        MarkDenseOrTypedArrayElementFound<NoGC>(propp);
+                    } else {
+                        *objp = nullptr;
+                        *propp = nullptr;
+                    }
+                    return true;
+                }
+            }
+
+            if (Shape* shape = obj->as<NativeObject>().lookupPure(id)) {
+                *objp = obj;
+                *propp = shape;
+                return true;
+            }
+
+            // Fail if there's a resolve hook, unless the mayResolve hook tells
+            // us the resolve hook won't define a property with this id.
+            if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
+                return false;
+        } else if (obj->is<UnboxedPlainObject>()) {
+            if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
+                return true;
+            }
+        } else if (obj->is<UnboxedArrayObject>()) {
+            if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
+                return true;
+            }
+        } else if (obj->is<TypedObject>()) {
+            if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
+                return true;
+            }
+        } else {
             return false;
-
-        if (*propp) {
-            *objp = obj;
-            return true;
-        }
-
-        if (isTypedArrayOutOfRange) {
-            *objp = nullptr;
-            return true;
         }
 
         obj = obj->getProto();
     } while (obj);
 
     *objp = nullptr;
-    *propp = nullptr;
-    return true;
-}
-
-bool
-js::LookupOwnPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Shape** propp,
-                          bool* isTypedArrayOutOfRange /* = nullptr */)
-{
-    JS::AutoCheckCannotGC nogc;
-    if (isTypedArrayOutOfRange)
-        *isTypedArrayOutOfRange = false;
-
-    if (obj->isNative()) {
-        // Search for a native dense element, typed array element, or property.
-
-        if (JSID_IS_INT(id) && obj->as<NativeObject>().containsDenseElement(JSID_TO_INT(id))) {
-            MarkDenseOrTypedArrayElementFound<NoGC>(propp);
-            return true;
-        }
-
-        if (obj->is<TypedArrayObject>()) {
-            uint64_t index;
-            if (IsTypedArrayIndex(id, &index)) {
-                if (index < obj->as<TypedArrayObject>().length()) {
-                    MarkDenseOrTypedArrayElementFound<NoGC>(propp);
-                } else {
-                    *propp = nullptr;
-                    if (isTypedArrayOutOfRange)
-                        *isTypedArrayOutOfRange = true;
-                }
-                return true;
-            }
-        }
-
-        if (Shape* shape = obj->as<NativeObject>().lookupPure(id)) {
-            *propp = shape;
-            return true;
-        }
-
-        // Fail if there's a resolve hook, unless the mayResolve hook tells
-        // us the resolve hook won't define a property with this id.
-        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
-            return false;
-    } else if (obj->is<UnboxedPlainObject>()) {
-        if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
-            MarkNonNativePropertyFound<NoGC>(propp);
-            return true;
-        }
-    } else if (obj->is<UnboxedArrayObject>()) {
-        if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {
-            MarkNonNativePropertyFound<NoGC>(propp);
-            return true;
-        }
-    } else if (obj->is<TypedObject>()) {
-        if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
-            MarkNonNativePropertyFound<NoGC>(propp);
-            return true;
-        }
-    } else {
-        return false;
-    }
-
     *propp = nullptr;
     return true;
 }
@@ -2429,42 +2408,6 @@ js::GetGetterPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSFunction** fp)
 
     return pobj->isNative() &&
            NativeGetGetterPureInline(&pobj->as<NativeObject>(), shape, fp);
-}
-
-bool
-js::GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id, JSNative* native)
-{
-    JS::AutoCheckCannotGC nogc;
-    *native = nullptr;
-    Shape* shape;
-    if (!LookupOwnPropertyPure(cx, obj, id, &shape))
-        return false;
-
-    if (!shape || IsImplicitDenseOrTypedArrayElement(shape) || !shape->hasGetterObject())
-        return true;
-
-    JSObject* getterObj = shape->getterObject();
-    if (!getterObj->is<JSFunction>())
-        return true;
-
-    JSFunction* getter = &getterObj->as<JSFunction>();
-    if (!getter->isNative())
-        return true;
-
-    *native = getter->native();
-    return true;
-}
-
-bool
-js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result)
-{
-    Shape* shape = nullptr;
-    if (!LookupOwnPropertyPure(cx, obj, id, &shape))
-        return false;
-
-    *result = shape && !IsImplicitDenseOrTypedArrayElement(shape) && shape->hasDefaultGetter() &&
-              shape->hasSlot();
-    return true;
 }
 
 bool
