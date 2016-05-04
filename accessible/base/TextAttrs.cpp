@@ -78,7 +78,7 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     return; // XXX: we don't support text attrs on document with no body
 
   nsIFrame* rootFrame = mHyperTextAcc->GetFrame();
-  NS_ASSERTION(rootFrame, "No frame for accessible!");
+  MOZ_ASSERT(rootFrame, "No frame for accessible!");
   if (!rootFrame)
     return;
 
@@ -87,9 +87,10 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   if (mOffsetAcc) {
     offsetNode = mOffsetAcc->GetContent();
     offsetElm = nsCoreUtils::GetDOMElementFor(offsetNode);
-    NS_ASSERTION(offsetElm, "No element for offset accessible!");
+    MOZ_ASSERT(offsetElm, "No element for offset accessible!");
     if (!offsetElm)
       return;
+
     frame = offsetElm->GetPrimaryFrame();
   }
 
@@ -165,6 +166,9 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
     if (!currAcc->IsText())
       break;
 
+    MOZ_ASSERT(nsCoreUtils::GetDOMElementFor(currAcc->GetContent()),
+               "Text accessible has to have an associated DOM element");
+
     bool offsetFound = false;
     for (uint32_t attrIdx = 0; attrIdx < aAttrArrayLen; attrIdx++) {
       TextAttr* textAttr = aAttrArray[attrIdx];
@@ -186,6 +190,9 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], uint32_t aAttrArrayLen,
     Accessible* currAcc = mHyperTextAcc->GetChildAt(childIdx);
     if (!currAcc->IsText())
       break;
+
+    MOZ_ASSERT(nsCoreUtils::GetDOMElementFor(currAcc->GetContent()),
+               "Text accessible has to have an associated DOM element");
 
     bool offsetFound = false;
     for (uint32_t attrIdx = 0; attrIdx < aAttrArrayLen; attrIdx++) {
@@ -344,8 +351,13 @@ TextAttrsMgr::BGColorTextAttr::
   GetValueFor(Accessible* aAccessible, nscolor* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  return frame ? GetColor(frame, aValue) : false;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      return GetColor(frame, aValue);
+    }
+  }
+  return false;
 }
 
 void
@@ -407,12 +419,13 @@ TextAttrsMgr::ColorTextAttr::
   GetValueFor(Accessible* aAccessible, nscolor* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  if (frame) {
-    *aValue = frame->StyleColor()->mColor;
-    return true;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      *aValue = frame->StyleColor()->mColor;
+      return true;
+    }
   }
-
   return false;
 }
 
@@ -445,8 +458,13 @@ TextAttrsMgr::FontFamilyTextAttr::
   GetValueFor(Accessible* aAccessible, nsString* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  return frame ? GetFontFamily(frame, *aValue) : false;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      return GetFontFamily(frame, *aValue);
+    }
+  }
+  return false;
 }
 
 void
@@ -494,13 +512,14 @@ bool
 TextAttrsMgr::FontSizeTextAttr::
   GetValueFor(Accessible* aAccessible, nscoord* aValue)
 {
-  nsIContent* content = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = content->GetPrimaryFrame();
-  if (frame) {
-    *aValue = frame->StyleFont()->mSize;
-    return true;
+  nsIContent* el = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
+  if (el) {
+    nsIFrame* frame = el->GetPrimaryFrame();
+    if (frame) {
+      *aValue = frame->StyleFont()->mSize;
+      return true;
+    }
   }
-
   return false;
 }
 
@@ -551,12 +570,13 @@ TextAttrsMgr::FontStyleTextAttr::
   GetValueFor(Accessible* aAccessible, nscoord* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  if (frame) {
-    *aValue = frame->StyleFont()->mFont.style;
-    return true;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      *aValue = frame->StyleFont()->mFont.style;
+      return true;
+    }
   }
-
   return false;
 }
 
@@ -593,12 +613,13 @@ TextAttrsMgr::FontWeightTextAttr::
   GetValueFor(Accessible* aAccessible, int32_t* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  if (frame) {
-    *aValue = GetFontWeight(frame);
-    return true;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      *aValue = GetFontWeight(frame);
+      return true;
+    }
   }
-
   return false;
 }
 
@@ -727,12 +748,13 @@ TextAttrsMgr::TextDecorTextAttr::
   GetValueFor(Accessible* aAccessible, TextDecorValue* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  if (frame) {
-    *aValue = TextDecorValue(frame);
-    return aValue->IsDefined();
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      *aValue = TextDecorValue(frame);
+      return aValue->IsDefined();
+    }
   }
-
   return false;
 }
 
@@ -790,12 +812,13 @@ TextAttrsMgr::TextPosTextAttr::
   GetValueFor(Accessible* aAccessible, TextPosValue* aValue)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
-  nsIFrame* frame = elm->GetPrimaryFrame();
-  if (frame) {
-    *aValue = GetTextPosValue(frame);
-    return *aValue != eTextPosNone;
+  if (elm) {
+    nsIFrame* frame = elm->GetPrimaryFrame();
+    if (frame) {
+      *aValue = GetTextPosValue(frame);
+      return *aValue != eTextPosNone;
+    }
   }
-
   return false;
 }
 

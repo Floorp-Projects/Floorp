@@ -43,6 +43,10 @@
   --theme-highlight-red: #ed2655;
   --theme-highlight-pink: #b82ee5;
 
+  /* For accessibility purposes we want to enhance the focus styling. This
+   * should improve keyboard navigation usability. */
+  --theme-focus-outline-color: #000000;
+
   /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
   --theme-graphs-green: #85d175;
   --theme-graphs-blue: #83b7f6;
@@ -88,6 +92,10 @@
   --theme-highlight-orange: #d96629;
   --theme-highlight-red: #eb5368;
   --theme-highlight-pink: #df80ff;
+
+  /* For accessibility purposes we want to enhance the focus styling. This
+   * should improve keyboard navigation usability. */
+  --theme-focus-outline-color: #ced3d9;
 
   /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
   --theme-graphs-green: #70bf53;
@@ -157,4 +165,16 @@
   --theme-header-background: #F0F0F0 linear-gradient(to top,
                                                      rgba(0, 0, 0, 0.1),
                                                      transparent) repeat-x;
+}
+
+:root {
+  --theme-focus-border-color-textbox: #0675d3;
+  --theme-textbox-box-shadow: rgba(97,181,255,.75);
+
+  /* For accessibility purposes we want to enhance the focus styling. This
+   * should improve keyboard navigation usability. */
+  --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
+  --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
+  --theme-focus-box-shadow-inset-bottom: 0 -2px 1px var(--theme-textbox-box-shadow) inset,
+    0px -2px var(--theme-highlight-blue) inset;
 }

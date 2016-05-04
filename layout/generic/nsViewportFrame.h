@@ -76,7 +76,7 @@ public:
    */
   virtual nsIAtom* GetType() const override;
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   /**
    * Adjust aReflowState to account for scrollbars and pres shell

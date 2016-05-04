@@ -475,7 +475,7 @@ bool EHInterp::unwind() {
 
 
 bool operator<(const EHTable &lhs, const EHTable &rhs) {
-  return lhs.startPC() < rhs.endPC();
+  return lhs.startPC() < rhs.startPC();
 }
 
 // Async signal unsafe.

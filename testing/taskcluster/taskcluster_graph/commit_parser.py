@@ -250,6 +250,8 @@ def parse_commit(message, jobs):
     parser.add_argument('-j', '--job', dest='jobs', action='append')
     # In order to run test jobs multiple times
     parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
+    # Once bug 1250993 is fixed we can only use --trigger-tests
+    parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
     args, unknown = parser.parse_known_args(parts[try_idx:])
 
     # Normalize default value to something easier to detect.

@@ -784,43 +784,37 @@ nsMathMLContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
 {
+  mBlockStartAscent = aMetrics->BlockStartAscent();
+
   // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
   // frame rectangle.
   aMetrics->SetOverflowAreasToDesiredBounds();
 
-  // All non-child-frame content such as nsMathMLChars (and most child-frame
-  // content) is included in mBoundingMetrics.
-  nsRect boundingBox(mBoundingMetrics.leftBearing,
-                     aMetrics->BlockStartAscent() - mBoundingMetrics.ascent,
-                     mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing,
-                     mBoundingMetrics.ascent + mBoundingMetrics.descent);
-
-  // REVIEW: Maybe this should contribute only to visual overflow
-  // and not scrollable?
-  aMetrics->mOverflowAreas.UnionAllWith(boundingBox);
+  ComputeCustomOverflow(aMetrics->mOverflowAreas);
 
   // mBoundingMetrics does not necessarily include content of <mpadded>
   // elements whose mBoundingMetrics may not be representative of the true
   // bounds, and doesn't include the CSS2 outline rectangles of children, so
   // make such to include child overflow areas.
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    ConsiderChildOverflow(aMetrics->mOverflowAreas, childFrame);
-    childFrame = childFrame->GetNextSibling();
-  }
+  UnionChildOverflow(aMetrics->mOverflowAreas);
 
   FinishAndStoreOverflow(aMetrics);
 }
 
 bool
-nsMathMLContainerFrame::UpdateOverflow()
+nsMathMLContainerFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
-  // Our overflow areas may have changed, so reflow the frame.
-  PresContext()->PresShell()->FrameNeedsReflow(
-    this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  // All non-child-frame content such as nsMathMLChars (and most child-frame
+  // content) is included in mBoundingMetrics.
+  nsRect boundingBox(mBoundingMetrics.leftBearing,
+                     mBlockStartAscent - mBoundingMetrics.ascent,
+                     mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing,
+                     mBoundingMetrics.ascent + mBoundingMetrics.descent);
 
-  // As we're reflowing, there's no need to propagate this change.
-  return false;
+  // REVIEW: Maybe this should contribute only to visual overflow
+  // and not scrollable?
+  aOverflowAreas.UnionAllWith(boundingBox);
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 void

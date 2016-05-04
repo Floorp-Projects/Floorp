@@ -1722,12 +1722,9 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
   aOverflowAreas = areas;
 }
 
-bool
-nsBlockFrame::UpdateOverflow()
+void
+nsBlockFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas)
 {
-  nsRect rect(nsPoint(0, 0), GetSize());
-  nsOverflowAreas overflowAreas(rect, rect);
-
   // We need to update the overflow areas of lines manually, as they
   // get cached and re-used otherwise. Lines aren't exposed as normal
   // frame children, so calling UnionChildOverflow alone will end up
@@ -1752,27 +1749,30 @@ nsBlockFrame::UpdateOverflow()
     }
 
     line->SetOverflowAreas(lineAreas);
-    overflowAreas.UnionWith(lineAreas);
+    aOverflowAreas.UnionWith(lineAreas);
   }
-
-  // Line cursor invariants depend on the overflow areas of the lines, so
-  // we must clear the line cursor since those areas may have changed.
-  ClearLineCursor();
 
   // Union with child frames, skipping the principal and float lists
   // since we already handled those using the line boxes.
-  nsLayoutUtils::UnionChildOverflow(this, overflowAreas,
+  nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas,
                                     kPrincipalList | kFloatList);
+}
 
+bool
+nsBlockFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
+{
   bool found;
   nscoord blockEndEdgeOfChildren =
     Properties().Get(BlockEndEdgeOfChildrenProperty(), &found);
   if (found) {
     ConsiderBlockEndEdgeOfChildren(GetWritingMode(),
-                                   blockEndEdgeOfChildren, overflowAreas);
+                                   blockEndEdgeOfChildren, aOverflowAreas);
   }
 
-  return FinishAndStoreOverflow(overflowAreas, GetSize());
+  // Line cursor invariants depend on the overflow areas of the lines, so
+  // we must clear the line cursor since those areas may have changed.
+  ClearLineCursor();
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 void

@@ -14,6 +14,7 @@ EXPORTS.mozilla.dom += [
     'nsCSPUtils.h',
     'nsMixedContentBlocker.h',
     'SRICheck.h',
+    'SRILogHelper.h',
     'SRIMetadata.h',
 ]
 

@@ -530,7 +530,8 @@ class TypedObject : public JSObject
 
   public:
     TypedProto& typedProto() const {
-        return getProto()->as<TypedProto>();
+        // Typed objects' prototypes can't be modified.
+        return staticPrototype()->as<TypedProto>();
     }
 
     TypeDescr& typeDescr() const {

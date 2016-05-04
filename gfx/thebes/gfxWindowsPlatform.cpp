@@ -1957,6 +1957,11 @@ gfxWindowsPlatform::InitializeD3D11Config()
 
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
+  if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    d3d11.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled");
+    return;
+  }
+
   d3d11.EnableByDefault();
 
   // If the user prefers D3D9, act as though they disabled D3D11.
@@ -2297,10 +2302,7 @@ gfxWindowsPlatform::InitializeDevices()
   UpdateDeviceInitData();
 
   // If acceleration is disabled, we refuse to initialize anything.
-  FeatureStatus compositing = gfxConfig::GetValue(Feature::HW_COMPOSITING);
-  if (IsFeatureStatusFailure(compositing)) {
-    gfxConfig::DisableByDefault(Feature::D3D11_COMPOSITING, compositing, "Hardware compositing is disabled");
-    gfxConfig::DisableByDefault(Feature::DIRECT2D, compositing, "Hardware compositing is disabled");
+  if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     return;
   }
 

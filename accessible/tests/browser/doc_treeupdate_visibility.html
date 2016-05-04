@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Tree Update Visibility Test</title>
+  </head>
+  <body id="body">
+    <!-- hide parent while child stays visible -->
+    <div id="t1_container">
+      <div id="t1_parent">
+        <div id="t1_child" style="visibility: visible">text</div>
+      </div>
+    </div>
+
+    <!-- hide grandparent while its children stay visible -->
+    <div id="t2_container">
+      <div id="t2_grandparent">
+        <div>
+          <div id="t2_child" style="visibility: visible">text</div>
+          <div id="t2_child2" style="visibility: visible">text</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- change container style, hide parents while their children stay visible -->
+    <div id="t3_container">
+      <div id="t3_parent">
+        <div id="t3_child" style="visibility: visible">text</div>
+      </div>
+      <div id="t3_parent2">
+        <div id="t3_child2" style="visibility: visible">text</div>
+      </div>
+    </div>
+
+    <!-- change container style, show child inside the table -->
+    <div id="t4_container">
+      <table>
+        <tr>
+          <td id="t4_parent">
+            <div id="t4_child" style="visibility: hidden;">text</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- hide subcontainer while child inside the table stays visible -->
+    <div id="t5_container">
+      <div id="t5_subcontainer">
+        <table>
+          <tr>
+            <td>
+              <div id="t5_child" style="visibility: visible;">text</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- hide subcontainer while its child and child inside the nested table stays visible -->
+    <div id="t6_container">
+      <div id="t6_subcontainer">
+        <table>
+          <tr>
+            <td>
+              <table>
+                <tr>
+                  <td>
+                    <div id="t6_child" style="visibility: visible;">text</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <div id="t6_child2" style="visibility: visible">text</div>
+      </div>
+    </div>
+  </body>
+</html>

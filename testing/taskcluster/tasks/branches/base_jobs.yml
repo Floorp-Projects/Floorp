@@ -455,6 +455,7 @@ tasks:
     when:
         file_patterns:
           - 'testing/marionette/harness/**'
+          - 'testing/mozharness/scripts/marionette_harness_tests.py'
   linux64-gcc:
     task: tasks/builds/linux64_gcc.yml
     root: true
