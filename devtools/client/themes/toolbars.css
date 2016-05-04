@@ -213,14 +213,14 @@
   min-width: 32px;
 }
 
-#toolbox-buttons .devtools-toolbarbutton[text-as-image] {
-  padding-inline-start: 5px;
-  padding-inline-end: 5px;
-  min-width: inherit;
+/* Set flex attribute to Toolbox buttons and Picker container so,
+   they don't overlapp with the tab bar */
+#toolbox-buttons {
+  display: flex;
 }
 
-#toolbox-buttons .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
-  padding: 0 2px;
+#toolbox-picker-container {
+  display: flex;
 }
 
 /* Invert toolbox button icons in Firebug theme. */
@@ -306,50 +306,42 @@
 
 /* Text-only buttons */
 .theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
-.theme-light .devtools-toolbarbutton[data-text-only],
-.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
+.theme-light .devtools-toolbarbutton[data-text-only] {
   background-color: var(--toolbar-tab-hover);
 }
 .theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
-.theme-dark .devtools-toolbarbutton[data-text-only],
-.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
+.theme-dark .devtools-toolbarbutton[data-text-only] {
   background-color: rgba(0, 0, 0, .2); /* Splitter */
 }
 
 /* Text-only button states */
 .theme-dark .devtools-button:not(:empty):not([disabled]):hover,
-.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
 .theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
   background: rgba(0, 0, 0, .3); /* Splitters */
 }
 .theme-light .devtools-button:not(:empty):not([disabled]):hover,
-.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
 .theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
   background: rgba(170, 170, 170, .3); /* Splitters */
 }
 
 .theme-dark .devtools-button:not(:empty):not([disabled]):hover:active,
-.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
 .theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
   background: rgba(0, 0, 0, .4); /* Splitters */
 }
 .theme-light .devtools-button:not(:empty):not([disabled]):hover:active,
-.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
 .theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
   background: var(--toolbar-tab-hover-active);
 }
 
 .theme-dark .devtools-toolbarbutton:not([disabled])[label][checked=true],
 .theme-dark .devtools-toolbarbutton:not([disabled])[label][open],
-.theme-dark .devtools-button:not(:empty)[checked=true],
-.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked=true] {
+.theme-dark .devtools-button:not(:empty)[checked=true] {
   background: var(--theme-selection-background-semitransparent);
   color: var(--theme-selection-color);
 }
 .theme-light .devtools-toolbarbutton:not([disabled])[label][checked=true],
 .theme-light .devtools-toolbarbutton:not([disabled])[label][open],
-.theme-light .devtools-button:not(:empty)[checked=true],
-.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked=true] {
+.theme-light .devtools-button:not(:empty)[checked=true] {
   background: rgba(76, 158, 217, .3); /* Select highlight blue */
 }
 
@@ -539,37 +531,8 @@
 
 /* Close button */
 
-.devtools-closebutton {
-  -moz-appearance: none;
-  border: none;
-  margin: 0 4px;
-  min-width: 16px;
-  width: 16px;
-  opacity: 0.8;
-}
-
-.devtools-closebutton > image {
-  width: 16px;
-  height: 16px;
-  -moz-appearance: none;
-  background-size: cover;
+#toolbox-close::before {
   background-image: var(--close-button-image);
-  background-position: center center;
-  background-repeat: no-repeat;
-}
-
-.devtools-closebutton > .toolbarbutton-icon {
-  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
-     use evil CSS to give the impression of smaller content */
-  margin: -4px;
-}
-
-.devtools-closebutton > .toolbarbutton-text {
-  display: none;
-}
-
-.devtools-closebutton:hover {
-  opacity: 1;
 }
 
 /* In-tools sidebar */
@@ -669,8 +632,8 @@
  * Rules that apply to the global toolbox like command buttons,
  * devtools tabs, docking buttons, etc. */
 
-#toolbox-controls > toolbarbutton,
-#toolbox-dock-buttons > toolbarbutton {
+#toolbox-controls > button,
+#toolbox-dock-buttons > button {
   -moz-appearance: none;
   -moz-user-focus: normal;
   border: none;
@@ -679,41 +642,22 @@
   width: 16px;
 }
 
-#toolbox-controls > toolbarbutton > .toolbarbutton-text,
-#toolbox-dock-buttons > toolbarbutton > .toolbarbutton-text,
-.command-button > .toolbarbutton-text {
-  display: none;
-}
-
 /* Save space in Firebug theme */
-.theme-firebug #toolbox-controls toolbarbutton {
+.theme-firebug #toolbox-controls button {
   margin-inline-start: 0 !important;
-  width: 12px;
   min-width: 12px;
+  margin: 0 1px;
 }
 
-.theme-firebug #toolbox-controls toolbarbutton:hover {
-  background: none;
-}
-
-#toolbox-dock-buttons > toolbarbutton > image {
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
-  background-size: 16px 16px;
-  background-position: 0 center;
-  background-repeat: no-repeat;
-}
-
-#toolbox-dock-bottom > image {
+#toolbox-dock-bottom::before {
   background-image: var(--dock-bottom-image);
 }
 
-#toolbox-dock-side  > image {
+#toolbox-dock-side::before {
   background-image: var(--dock-side-image);
 }
 
-#toolbox-dock-window > image {
+#toolbox-dock-window::before {
   background-image: var(--dock-undock-image);
 }
 
@@ -723,11 +667,11 @@
   display: none;
 }
 
-#toolbox-dock-bottom-minimize > image {
+#toolbox-dock-bottom-minimize::before {
   background-image: url("chrome://devtools/skin/images/dock-bottom-minimize@2x.png");
 }
 
-#toolbox-dock-bottom-minimize.minimized > image {
+#toolbox-dock-bottom-minimize.minimized::before {
   background-image: url("chrome://devtools/skin/images/dock-bottom-maximize@2x.png");
 }
 
@@ -764,87 +708,91 @@
 /* Command buttons */
 
 .command-button {
-  -moz-appearance: none;
-  border: none;
-  padding: 0 8px;
+  padding: 0;
   margin: 0;
-  width: 32px;
   position: relative;
   -moz-user-focus: normal;
+}
+
+.command-button::before {
+  opacity: 0.7;
 }
 
 .command-button:hover {
   background-color: var(--toolbar-tab-hover);
 }
-.command-button:hover:active, .command-button[checked=true]:not(:hover) {
+
+.command-button:hover:active,
+.command-button[checked=true]:not(:hover) {
   background-color: var(--toolbar-tab-hover-active)
 }
 
-.command-button > image {
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
-  background-size: cover;
-  background-position: 0 center;
-  background-repeat: no-repeat;
-  opacity: 0.7;
-}
-.command-button:hover > image {
+.command-button:hover::before {
   opacity: 0.85;
 }
-.command-button:hover:active > image,
-.command-button[checked=true] > image,
-.command-button[open=true] > image {
+
+.command-button:hover:active::before,
+.command-button[checked=true]::before,
+.command-button[open=true]::before {
   opacity: 1;
 }
-.command-button[checked=true] > image {
-  filter: url(images/filters.svg#checked-icon-state) !important;
-}
 
-/* Toolbox buttons images */
+/* Toolbox command buttons */
 
-#command-button-paintflashing > image {
+#command-button-paintflashing::before {
   background-image: var(--command-paintflashing-image);
 }
 
-#command-button-screenshot > image {
+#command-button-screenshot::before {
   background-image: var(--command-screenshot-image);
 }
 
-#command-button-responsive > image {
+#command-button-responsive::before {
   background-image: var(--command-responsive-image);
 }
 
-#command-button-scratchpad > image {
+#command-button-scratchpad::before {
   background-image: var(--command-scratchpad-image);
 }
 
-#command-button-pick > image {
+#command-button-pick::before {
   background-image: var(--command-pick-image);
 }
 
-#command-button-frames > image {
-  background-image: var(--command-frames-image);
-}
-
-#command-button-splitconsole > image {
+#command-button-splitconsole::before {
   background-image: var(--command-splitconsole-image);
 }
 
-#command-button-noautohide > image {
+#command-button-noautohide::before {
   background-image: var(--command-noautohide-image);
 }
 
-#command-button-eyedropper > image {
+#command-button-eyedropper::before {
   background-image: var(--command-eyedropper-image);
 }
 
-#command-button-rulers > image {
+#command-button-rulers::before {
   background-image: var(--command-rulers-image);
 }
 
-#command-button-measure > image {
+#command-button-measure::before {
   background-image: var(--command-measure-image);
+}
+
+#command-button-frames::before {
+  background-image: var(--command-frames-image);
+}
+
+#command-button-frames {
+  background: url("chrome://devtools/skin/images/dropmarker.svg") no-repeat right;
+
+  /* Override background-size from the command-button.
+    The drop down arrow is smaller */
+  background-size: 8px 4px !important;
+}
+
+#command-button-frames:-moz-dir(rtl) {
+  background-position: left;
 }
 
 /* Tabs */
@@ -1017,9 +965,6 @@
  * inside of the light theme.
  */
 .theme-light .devtools-tab[icon-invertable] > image,
-.theme-light #toolbox-dock-buttons > toolbarbutton > image,
-.theme-light .command-button-invertable > image,
-.theme-light .devtools-closebutton > image,
 .theme-light .devtools-toolbarbutton > image,
 .theme-light .devtools-button::before,
 .theme-light #breadcrumb-separator-normal,
@@ -1031,6 +976,11 @@
 .theme-light #toggle-breakpoints[checked] > image,
 .theme-light .event-tooltip-debugger-icon {
   filter: var(--icon-filter);
+}
+
+/* Reset the filter defined above */
+.theme-light .command-button:not(.command-button-invertable) {
+  filter: none !important;
 }
 
 /* Since selected backgrounds are blue, we want to use the normal

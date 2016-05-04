@@ -15,6 +15,7 @@ const MAX_ZOOM = 2;
 const OS_HISTOGRAM = "DEVTOOLS_OS_ENUMERATED_PER_USER";
 const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 var {Cc, Ci, Cu} = require("chrome");
 var promise = require("promise");
@@ -411,7 +412,7 @@ Toolbox.prototype = {
       let framesPromise = this._listFrames();
 
       this.closeButton = this.doc.getElementById("toolbox-close");
-      this.closeButton.addEventListener("command", this.destroy, true);
+      this.closeButton.addEventListener("click", this.destroy, true);
 
       gDevTools.on("pref-changed", this._prefChanged);
 
@@ -419,7 +420,7 @@ Toolbox.prototype = {
       framesMenu.addEventListener("click", this.showFramesMenu, false);
 
       let noautohideMenu = this.doc.getElementById("command-button-noautohide");
-      noautohideMenu.addEventListener("command", this._toggleAutohide, true);
+      noautohideMenu.addEventListener("click", this._toggleAutohide, true);
 
       this.textboxContextMenuPopup =
         this.doc.getElementById("toolbox-textbox-context-popup");
@@ -845,10 +846,11 @@ Toolbox.prototype = {
 
     // Bottom-type host can be minimized, add a button for this.
     if (this.hostType == Toolbox.HostType.BOTTOM) {
-      let minimizeBtn = this.doc.createElement("toolbarbutton");
+      let minimizeBtn = this.doc.createElementNS(HTML_NS, "button");
       minimizeBtn.id = "toolbox-dock-bottom-minimize";
+      minimizeBtn.className = "devtools-button";
 
-      minimizeBtn.addEventListener("command", this._toggleMinimizeMode);
+      minimizeBtn.addEventListener("click", this._toggleMinimizeMode);
       dockBox.appendChild(minimizeBtn);
       // Show the button in its maximized state.
       this._onBottomHostMaximized();
@@ -878,12 +880,12 @@ Toolbox.prototype = {
         continue;
       }
 
-      let button = this.doc.createElement("toolbarbutton");
+      let button = this.doc.createElementNS(HTML_NS, "button");
       button.id = "toolbox-dock-" + position;
-      button.className = "toolbox-dock-button";
-      button.setAttribute("tooltiptext", toolboxStrings("toolboxDockButtons." +
-                                                        position + ".tooltip"));
-      button.addEventListener("command", () => {
+      button.className = "toolbox-dock-button devtools-button";
+      button.setAttribute("title", toolboxStrings("toolboxDockButtons." +
+                                                  position + ".tooltip"));
+      button.addEventListener("click", () => {
         this.switchHost(position);
       });
 
@@ -901,7 +903,7 @@ Toolbox.prototype = {
     let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
     btn.className = "minimized";
 
-    btn.setAttribute("tooltiptext",
+    btn.setAttribute("title",
       toolboxStrings("toolboxDockButtons.bottom.maximize") + " " +
       this._getMinimizeButtonShortcutTooltip());
   },
@@ -910,7 +912,7 @@ Toolbox.prototype = {
     let btn = this.doc.querySelector("#toolbox-dock-bottom-minimize");
     btn.className = "maximized";
 
-    btn.setAttribute("tooltiptext",
+    btn.setAttribute("title",
       toolboxStrings("toolboxDockButtons.bottom.minimize") + " " +
       this._getMinimizeButtonShortcutTooltip());
   },
@@ -1059,17 +1061,17 @@ Toolbox.prototype = {
    * since we want it to work for remote targets too
    */
   _buildPickerButton: function () {
-    this._pickerButton = this.doc.createElement("toolbarbutton");
+    this._pickerButton = this.doc.createElementNS(HTML_NS, "button");
     this._pickerButton.id = "command-button-pick";
-    this._pickerButton.className = "command-button command-button-invertable";
-    this._pickerButton.setAttribute("tooltiptext", toolboxStrings("pickButton.tooltip"));
+    this._pickerButton.className = "command-button command-button-invertable devtools-button";
+    this._pickerButton.setAttribute("title", toolboxStrings("pickButton.tooltip"));
     this._pickerButton.setAttribute("hidden", "true");
 
     let container = this.doc.querySelector("#toolbox-picker-container");
     container.appendChild(this._pickerButton);
 
     this._togglePicker = this.highlighterUtils.togglePicker.bind(this.highlighterUtils);
-    this._pickerButton.addEventListener("command", this._togglePicker, false);
+    this._pickerButton.addEventListener("click", this._togglePicker, false);
   },
 
   /**
@@ -1128,7 +1130,7 @@ Toolbox.prototype = {
       return {
         id: options.id,
         button: button,
-        label: button.getAttribute("tooltiptext"),
+        label: button.getAttribute("title"),
         visibilityswitch: "devtools." + options.id + ".enabled",
         isTargetSupported: options.isTargetSupported
                            ? options.isTargetSupported
@@ -1777,12 +1779,18 @@ Toolbox.prototype = {
     // Store (synchronize) data about all existing frames on the backend
     if (data.destroyAll) {
       this.frameMap.clear();
+      this.selectedFrameId = null;
     } else if (data.selected) {
       this.selectedFrameId = data.selected;
     } else if (data.frames) {
       data.frames.forEach(frame => {
         if (frame.destroy) {
           this.frameMap.delete(frame.id);
+
+          // Reset the currently selected frame if it's destroyed.
+          if (this.selectedFrameId == frame.id) {
+            this.selectedFrameId = null;
+          }
         } else {
           this.frameMap.set(frame.id, frame);
         }
@@ -1793,21 +1801,21 @@ Toolbox.prototype = {
     // frame by default. Note that there might be more top level
     // frames in case of the BrowserToolbox.
     if (!this.selectedFrameId) {
-      this.selectedFrameId = [...this.frameMap.values()].filter(
-        frame => !frame.parentID)[0].id;
+      let frames = [...this.frameMap.values()];
+      let topFrames = frames.filter(frame => !frame.parentID);
+      this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
     }
 
     // Check out whether top frame is currently selected.
     // Note that only child frame has parentID.
     let frame = this.frameMap.get(this.selectedFrameId);
-    let topFrameSelected = !frame.parentID;
+    let topFrameSelected = frame ? !frame.parentID : false;
+    let button = this.doc.getElementById("command-button-frames");
+    button.removeAttribute("checked");
 
     // If non-top level frame is selected the toolbar button is
     // marked as 'checked' indicating that a child frame is active.
-    let button = this.doc.getElementById("command-button-frames");
-    if (topFrameSelected) {
-      button.removeAttribute("checked");
-    } else {
+    if (!topFrameSelected && this.selectedFrameId) {
       button.setAttribute("checked", "true");
     }
   },
@@ -2114,7 +2122,7 @@ Toolbox.prototype = {
       this.webconsolePanel.removeEventListener("resize",
         this._saveSplitConsoleHeight);
     }
-    this.closeButton.removeEventListener("command", this.destroy, true);
+    this.closeButton.removeEventListener("click", this.destroy, true);
     this.textboxContextMenuPopup.removeEventListener("popupshowing",
       this._updateTextboxMenuItems, true);
 
@@ -2147,7 +2155,7 @@ Toolbox.prototype = {
     outstanding.push(this.destroyInspector().then(() => {
       // Removing buttons
       if (this._pickerButton) {
-        this._pickerButton.removeEventListener("command", this._togglePicker, false);
+        this._pickerButton.removeEventListener("click", this._togglePicker, false);
         this._pickerButton = null;
       }
     }));

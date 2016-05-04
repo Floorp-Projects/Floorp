@@ -115,7 +115,7 @@ function testToggleToolboxButtons() {
 
     is(matchedCheckboxes[0].nextSibling.textContent, tool.label,
       "The label for checkbox matches the tool definition.");
-    is(matchedButtons[0].getAttribute("tooltiptext"), tool.label,
+    is(matchedButtons[0].getAttribute("title"), tool.label,
       "The tooltip for button matches the tool definition.");
   }
 

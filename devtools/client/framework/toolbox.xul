@@ -16,7 +16,8 @@
 %globalKeysDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
@@ -50,22 +51,22 @@
       <hbox id="toolbox-picker-container" />
       <hbox id="toolbox-tabs" flex="1" role="tablist" />
       <hbox id="toolbox-buttons" pack="end">
-        <toolbarbutton id="command-button-frames"
-                       class="command-button command-button-invertable devtools-toolbarbutton"
-                       tooltiptext="&toolboxFramesTooltip;"
-                       hidden="true" />
-        <toolbarbutton id="command-button-noautohide"
-                       class="command-button command-button-invertable"
-                       tooltiptext="&toolboxNoAutoHideTooltip;"
-                       hidden="true" />
+        <html:button id="command-button-frames"
+                     class="command-button command-button-invertable devtools-button"
+                     title="&toolboxFramesTooltip;"
+                     hidden="true" />
+        <html:button id="command-button-noautohide"
+                     class="command-button command-button-invertable devtools-button"
+                     title="&toolboxNoAutoHideTooltip;"
+                     hidden="true" />
       </hbox>
       <vbox id="toolbox-controls-separator" class="devtools-separator"/>
       <hbox id="toolbox-option-container"/>
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
-        <toolbarbutton id="toolbox-close"
-                       class="devtools-closebutton"
-                       tooltiptext="&toolboxCloseButton.tooltip;"/>
+        <html:button id="toolbox-close"
+                     class="devtools-button"
+                     title="&toolboxCloseButton.tooltip;"/>
       </hbox>
     </toolbar>
     <vbox flex="1" class="theme-body">

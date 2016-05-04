@@ -76,7 +76,7 @@ var CommandUtils = {
     return util.promiseEach(toolbarSpec, typed => {
       // Ask GCLI to parse the typed string (doesn't execute it)
       return requisition.update(typed).then(() => {
-        let button = document.createElement("toolbarbutton");
+        let button = document.createElementNS(NS_XHTML, "button");
 
         // Ignore invalid commands
         let command = requisition.commandAssignment.value;
@@ -93,13 +93,15 @@ var CommandUtils = {
         else {
           button.setAttribute("text-as-image", "true");
           button.setAttribute("label", command.name);
-          button.className = "devtools-toolbarbutton";
         }
+
+        button.classList.add("devtools-button");
+
         if (command.tooltipText != null) {
-          button.setAttribute("tooltiptext", command.tooltipText);
+          button.setAttribute("title", command.tooltipText);
         }
         else if (command.description != null) {
-          button.setAttribute("tooltiptext", command.description);
+          button.setAttribute("title", command.description);
         }
 
         button.addEventListener("click", () => {

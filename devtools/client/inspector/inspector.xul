@@ -149,24 +149,23 @@
 
   <box flex="1" class="devtools-responsive-container theme-body">
     <vbox flex="1" class="devtools-main-content">
-      <toolbar id="inspector-toolbar"
+      <html:div id="inspector-toolbar"
         class="devtools-toolbar"
         nowindowdrag="true">
-        <toolbarbutton id="inspector-element-add-button"
-          class="devtools-toolbarbutton"
-          tooltiptext="&inspectorAddNode.label;"
-          oncommand="inspector.addNode()" />
-        <spacer flex="1"/>
-        <box id="inspector-searchlabel" />
+        <html:button id="inspector-element-add-button"
+          title="&inspectorAddNode.label;"
+          class="devtools-button" />
+        <html:div class="devtools-toolbar-spacer" />
+        <html:span id="inspector-searchlabel" />
         <textbox id="inspector-searchbox"
           type="search"
           timeout="50"
           class="devtools-searchinput"
           placeholder="&inspectorSearchHTML.label3;"/>
-        <toolbarbutton id="inspector-pane-toggle"
-          class="devtools-toolbarbutton"
+        <html:button id="inspector-pane-toggle"
+          class="devtools-button"
           tabindex="0" />
-      </toolbar>
+      </html:div>
       <vbox flex="1" id="markup-box">
       </vbox>
       <toolbar id="inspector-breadcrumbs-toolbar"
