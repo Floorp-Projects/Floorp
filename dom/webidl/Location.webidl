@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Unforgeable]
+[Unforgeable, NonOrdinaryGetPrototypeOf]
 interface Location {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute USVString href;

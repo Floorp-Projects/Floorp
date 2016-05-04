@@ -10,6 +10,7 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1170817</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/dom/push/test/test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -24,65 +25,54 @@ http://creativecommons.org/licenses/publicdomain/
 
 <script class="testbody" type="text/javascript">
 
+  function generateURL() {
+    return "worker.js" + "?" + (Math.random());
+  }
+
   var registration;
+  add_task(function* start() {
+    yield setupPrefsAndMockSocket(new MockWebSocket());
+    yield setPushPermission(true);
 
-  function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
-    .then(swr => { registration = swr; return swr; });
-  }
+    registration = yield navigator.serviceWorker.register(
+      generateURL(), {scope: "."});
+  });
 
-  function unregisterSW() {
-    return registration.unregister().then(function(result) {
-      ok(result, "Unregister should return true.");
-    }, function(e) {
-      dump("Unregistering the SW failed with " + e + "\n");
-    });
-  }
+  var pushSubscription;
+  add_task(function* setupPushNotification() {
+    pushSubscription = yield registration.pushManager.subscribe();
+    ok(pushSubscription, "successful registered for push notification");
+  });
 
-  function setupPushNotification(swr) {
-    return swr.pushManager.subscribe().then(
-      pushSubscription => {
-        ok(true, "successful registered for push notification");
-        return pushSubscription;
-      }, error => {
-        ok(false, "could not register for push notification");
-      });
-  }
+  add_task(function* unregisterPushNotification() {
+    var result = yield pushSubscription.unsubscribe();
+    ok(result, "unsubscribe() on existing subscription should return true.");
+  });
 
-  function unregisterPushNotification(pushSubscription) {
-    return pushSubscription.unsubscribe().then(
-      result => {
-      ok(result, "unsubscribe() on existing subscription should return true.");
-      return pushSubscription;
-    }, error => {
-      ok(false, "unsubscribe() should never fail.");
-    });
-  }
+  add_task(function* unregisterAgain() {
+    var result = yield pushSubscription.unsubscribe();
+    ok(!result, "unsubscribe() on previously unsubscribed subscription should return false.");
+  });
 
-  function unregisterAgain(pushSubscription) {
-    return pushSubscription.unsubscribe().then(
-      result => {
-      ok(!result, "unsubscribe() on previously unsubscribed subscription should return false.");
-      return pushSubscription;
-    }, error => {
-      ok(false, "unsubscribe() should never fail.");
-    });
-  }
+  add_task(function* subscribeAgain() {
+    pushSubscription = yield registration.pushManager.subscribe();
+    ok(pushSubscription, "Should create a new push subscription");
 
-  function runTest() {
-    start()
-    .then(setupPushNotification)
-    .then(unregisterPushNotification)
-    .then(unregisterAgain)
-    .then(unregisterSW)
-    .catch(function(e) {
-      ok(false, "Some test failed with error " + e);
-    }).then(SimpleTest.finish);
-  }
+    var result = yield registration.unregister();
+    ok(result, "Should unregister the service worker");
 
-  setupPrefsAndMockSocket(new MockWebSocket()).then(_ => runTest());
-  SpecialPowers.addPermission("desktop-notification", true, document);
-  SimpleTest.waitForExplicitFinish();
+    registration = yield navigator.serviceWorker.register(
+      generateURL(), {scope: "."});
+    var pushSubscription = yield registration.pushManager.getSubscription();
+    ok(!pushSubscription,
+      "Unregistering a service worker should drop its subscription");
+  });
+
+  add_task(function* unregister() {
+    var result = yield registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+
 </script>
 </body>
 </html>

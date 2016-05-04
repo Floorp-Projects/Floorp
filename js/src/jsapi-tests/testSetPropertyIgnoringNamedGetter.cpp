@@ -11,9 +11,10 @@
 using namespace js;
 using namespace JS;
 
-class CustomProxyHandler : public DirectProxyHandler {
+class CustomProxyHandler : public Wrapper
+{
   public:
-    CustomProxyHandler() : DirectProxyHandler(nullptr) {}
+    CustomProxyHandler() : Wrapper(0) {}
 
     bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
                                MutableHandle<PropertyDescriptor> desc) const override
@@ -31,7 +32,7 @@ class CustomProxyHandler : public DirectProxyHandler {
              ObjectOpResult& result) const override
     {
         Rooted<PropertyDescriptor> desc(cx);
-        if (!DirectProxyHandler::getPropertyDescriptor(cx, proxy, id, &desc))
+        if (!Wrapper::getPropertyDescriptor(cx, proxy, id, &desc))
             return false;
         return SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, desc, result);
     }
@@ -53,8 +54,8 @@ class CustomProxyHandler : public DirectProxyHandler {
         }
 
         if (ownOnly)
-            return DirectProxyHandler::getOwnPropertyDescriptor(cx, proxy, id, desc);
-        return DirectProxyHandler::getPropertyDescriptor(cx, proxy, id, desc);
+            return Wrapper::getOwnPropertyDescriptor(cx, proxy, id, desc);
+        return Wrapper::getPropertyDescriptor(cx, proxy, id, desc);
     }
 
 };

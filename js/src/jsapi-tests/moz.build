@@ -84,6 +84,7 @@ UNIFIED_SOURCES += [
     'testStringBuffer.cpp',
     'testStructuredClone.cpp',
     'testSymbol.cpp',
+    'testThreadingConditionVariable.cpp',
     'testThreadingExclusiveData.cpp',
     'testThreadingMutex.cpp',
     'testToIntWidth.cpp',

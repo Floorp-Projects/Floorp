@@ -371,6 +371,8 @@ public:
       mPanDisplacement(aPanDisplacement),
       mLineOrPageDeltaX(0),
       mLineOrPageDeltaY(0),
+      mUserDeltaMultiplierX(1.0),
+      mUserDeltaMultiplierY(1.0),
       mHandledByAPZ(false),
       mFollowedByMomentum(false),
       mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection(false)
@@ -382,6 +384,9 @@ public:
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
 
   bool TransformToLocal(const ScreenToParentLayerMatrix4x4& aTransform);
+
+  ScreenPoint UserMultipliedPanDisplacement() const;
+  ParentLayerPoint UserMultipliedLocalPanDisplacement() const;
 
   PanGestureType mType;
   ScreenPoint mPanStartPoint;
@@ -397,6 +402,10 @@ public:
   // See lineOrPageDeltaX/Y on WidgetWheelEvent.
   int32_t mLineOrPageDeltaX;
   int32_t mLineOrPageDeltaY;
+
+  // User-set delta multipliers.
+  double mUserDeltaMultiplierX;
+  double mUserDeltaMultiplierY;
 
   bool mHandledByAPZ;
 

@@ -511,7 +511,8 @@ ClipBackgroundByText(nsIFrame* aFrame, nsRenderingContext* aContext,
   ctx->SetMatrix(ctx->CurrentMatrix().Translate(bounds.TopLeft()));
   ctx->NewPath();
 
-  nsLayoutUtils::PaintFrame(aContext, aFrame, aFrame->GetRect(),
+  nsLayoutUtils::PaintFrame(aContext, aFrame,
+                            nsRect(nsPoint(0, 0), aFrame->GetSize()),
                             NS_RGB(255, 255, 255),
                             nsDisplayListBuilderMode::GENERATE_GLYPH);
 

@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Tree Update ARIA Owns Test</title>
+  </head>
+  <body id="body">
+    <div id="t1_container" aria-owns="t1_checkbox t1_button">
+      <div role="button" id="t1_button"></div>
+      <div role="checkbox" id="t1_checkbox">
+        <span id="t1_span">
+          <div id="t1_subdiv"></div>
+        </span>
+      </div>
+    </div>
+    <div id="t1_group" role="group"></div>
+    <div id="t1_grouptmp" role="group"></div>
+
+    <div id="t2_container1" aria-owns="t2_owned"></div>
+    <div id="t2_container2">
+      <div id="t2_container3"><div id="t2_owned" role="checkbox"></div></div>
+    </div>
+
+    <div id="t3_container1" aria-owns="t3_child"></div>
+    <div id="t3_child" role="checkbox"></div>
+    <div id="t3_container2"></div>
+
+    <div id="t4_container1" aria-owns="t4_child1 t4_child2"></div>
+    <div id="t4_container2">
+      <div id="t4_child1" style="display:none" role="checkbox"></div>
+      <div id="t4_child2" role="radio"></div>
+    </div>
+
+    <div id="t5_container">
+      <div role="button" id="t5_button"></div>
+      <div role="checkbox" id="t5_checkbox"></div>
+      <div role="radio" id="t5_radio"></div>
+    </div>
+
+    <div id="t6_container" aria-owns="t6_fake">
+      <span id="t6_span">hey</span>
+    </div>
+    <div id="t6_fake" role="group"></div>
+  </body>
+</html>

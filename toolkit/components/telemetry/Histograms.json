@@ -27,6 +27,14 @@
     "n_buckets": 50,
     "description": "time spent updating accessibility (ms)"
   },
+  "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Recorded when the addon manager shows the modal upgrade UI. Should only be recorded once per upgrade.",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1268548],
+    "alert_emails": ["kev@mozilla.com"]
+  },
   "ADDON_SHIM_USAGE": {
     "expires_in_version": "never",
     "kind": "enumerated",

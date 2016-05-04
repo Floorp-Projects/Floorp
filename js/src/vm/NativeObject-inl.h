@@ -566,7 +566,7 @@ LookupPropertyInline(ExclusiveContext* cx,
             return true;
         }
 
-        typename MaybeRooted<JSObject*, allowGC>::RootType proto(cx, current->getProto());
+        typename MaybeRooted<JSObject*, allowGC>::RootType proto(cx, current->staticPrototype());
 
         if (!proto)
             break;

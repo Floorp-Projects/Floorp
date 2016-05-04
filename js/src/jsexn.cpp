@@ -305,7 +305,13 @@ js::ErrorFromException(JSContext* cx, HandleObject objArg)
     if (!obj->is<ErrorObject>())
         return nullptr;
 
-    return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
+    JSErrorReport* report = obj->as<ErrorObject>().getOrCreateErrorReport(cx);
+    if (!report) {
+        MOZ_ASSERT(cx->isThrowingOutOfMemory());
+        cx->recoverFromOutOfMemory();
+    }
+
+    return report;
 }
 
 JS_PUBLIC_API(JSObject*)

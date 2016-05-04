@@ -24,10 +24,15 @@ public:
   GetResult() const;
 
 private:
+  class PushUnsubscribeCallback;
+
   virtual ~ServiceWorkerUnregisterJob();
 
   virtual void
   AsyncExecute() override;
+
+  void
+  Unregister();
 
   bool mResult;
   bool mSendToParent;

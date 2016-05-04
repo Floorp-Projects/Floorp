@@ -1020,10 +1020,28 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   ourDoc->FlushPendingNotifications(Flush_Layout);
   otherDoc->FlushPendingNotifications(Flush_Layout);
 
+  // Initialize browser API if needed now that owner content has changed.
+  InitializeBrowserAPI();
+  aOther->InitializeBrowserAPI();
+
   mInSwap = aOther->mInSwap = false;
 
-  Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
-  Unused << aOther->mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
+  // Send an updated tab context since owner content type may have changed.
+  MutableTabContext ourContext;
+  rv = GetNewTabContext(&ourContext);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  MutableTabContext otherContext;
+  rv = aOther->GetNewTabContext(&otherContext);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
+    ourContext.AsIPCTabContext());
+  Unused << aOther->mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
+    otherContext.AsIPCTabContext());
   return NS_OK;
 }
 
@@ -1428,6 +1446,10 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 
   ourParentDocument->FlushPendingNotifications(Flush_Layout);
   otherParentDocument->FlushPendingNotifications(Flush_Layout);
+
+  // Initialize browser API if needed now that owner content has changed
+  InitializeBrowserAPI();
+  aOther->InitializeBrowserAPI();
 
   return NS_OK;
 }

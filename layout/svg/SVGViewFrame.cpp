@@ -61,7 +61,7 @@ public:
                                     nsIAtom* aAttribute,
                                     int32_t  aModType) override;
 
-  virtual bool UpdateOverflow() override {
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     // We don't maintain a visual overflow rect
     return false;
   }

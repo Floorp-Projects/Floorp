@@ -28,6 +28,7 @@ class nsAutoRollup;
 class gfxContext;
 
 namespace mozilla {
+class CompositorVsyncDispatcher;
 #ifdef ACCESSIBILITY
 namespace a11y {
 class Accessible;
@@ -167,7 +168,7 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr) override;
 
-  CompositorVsyncDispatcher* GetCompositorVsyncDispatcher() override;
+  mozilla::CompositorVsyncDispatcher* GetCompositorVsyncDispatcher();
   void            CreateCompositorVsyncDispatcher();
   virtual CompositorBridgeParent* NewCompositorBridgeParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();

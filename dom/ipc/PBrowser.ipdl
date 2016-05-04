@@ -19,6 +19,7 @@ include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
 include BrowserConfiguration;
+include PTabContext;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -724,7 +725,7 @@ child:
      * Tell the browser that its frame loader has been swapped
      * with another.
      */
-    async SwappedWithOtherRemoteLoader();
+    async SwappedWithOtherRemoteLoader(IPCTabContext context);
 
     /**
      * A potential accesskey was just pressed. Look for accesskey targets

@@ -36,6 +36,20 @@ Test swapFrameLoaders with different frame types and remoteness
     ["html", "html", "remote"],
   ];
 
+  const HEIGHTS = [
+    200,
+    400
+  ];
+
+  function frameScript() {
+    addEventListener("load", function onLoad() {
+      sendAsyncMessage("test:load");
+    }, true);
+  }
+
+  // Watch for loads in new frames
+  window.messageManager.loadFrameScript(`data:,(${frameScript})();`, true);
+
   function once(target, eventName, useCapture = false) {
     info("Waiting for event: '" + eventName + "' on " + target + ".");
 
@@ -56,7 +70,7 @@ Test swapFrameLoaders with different frame types and remoteness
     });
   }
 
-  function* addFrame(type, remote) {
+  function* addFrame(type, remote, height) {
     let frame = document.createElementNS(NS[type], TAG[type]);
     frame.setAttribute("remote", remote);
     if (remote && type == "xul") {
@@ -69,8 +83,12 @@ Test swapFrameLoaders with different frame types and remoteness
     } else if (type == "xul") {
       frame.setAttribute("type", "content");
     }
-    frame.setAttribute("src", "about:blank");
+    let src = `data:text/html,<!doctype html>` +
+              `<body style="height:${height}px"/>`;
+    frame.setAttribute("src", src);
     document.documentElement.appendChild(frame);
+    let mm = frame.frameLoader.messageManager;
+    yield once(mm, "test:load");
     return frame;
   }
 
@@ -86,11 +104,13 @@ Test swapFrameLoaders with different frame types and remoteness
     for (let scenario of SCENARIOS) {
       let [ typeA, typeB, remote ] = scenario;
       remote = !!remote;
-      info(`Adding frame A, type ${typeA}, remote ${remote}`);
-      let frameA = yield addFrame(typeA, remote);
+      let heightA = HEIGHTS[0];
+      info(`Adding frame A, type ${typeA}, remote ${remote}, height ${heightA}`);
+      let frameA = yield addFrame(typeA, remote, heightA);
 
-      info(`Adding frame B, type ${typeB}, remote ${remote}`);
-      let frameB = yield addFrame(typeB, remote);
+      let heightB = HEIGHTS[1];
+      info(`Adding frame B, type ${typeB}, remote ${remote}, height ${heightB}`);
+      let frameB = yield addFrame(typeB, remote, heightB);
 
       let frameScriptFactory = function(name) {
         return `function() {
@@ -128,6 +148,18 @@ Test swapFrameLoaders with different frame types and remoteness
         is(pongB, "B", "Frame B message manager gets reply B before swap");
       }
 
+      // Check height before swap
+      {
+        if (frameA.getContentDimensions) {
+          let { height } = yield frameA.getContentDimensions();
+          is(height, heightA, "Frame A's content height is 200px before swap");
+        }
+        if (frameB.getContentDimensions) {
+          let { height } = yield frameB.getContentDimensions();
+          is(height, heightB, "Frame B's content height is 400px before swap");
+        }
+      }
+
       // Ping after swap using message managers acquired before
       {
         let mmA = frameA.frameLoader.messageManager;
@@ -148,6 +180,18 @@ Test swapFrameLoaders with different frame types and remoteness
         mmB.sendAsyncMessage("ping");
         let [ { data: pongB } ] = yield inflightB;
         is(pongB, "A", "Frame B message manager acquired before swap gets reply A after swap");
+      }
+
+      // Check height after swap
+      {
+        if (frameA.getContentDimensions) {
+          let { height } = yield frameA.getContentDimensions();
+          is(height, heightB, "Frame A's content height is 400px after swap");
+        }
+        if (frameB.getContentDimensions) {
+          let { height } = yield frameB.getContentDimensions();
+          is(height, heightA, "Frame B's content height is 200px after swap");
+        }
       }
 
       // Ping after swap using message managers acquired after

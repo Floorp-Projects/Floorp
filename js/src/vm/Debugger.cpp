@@ -398,6 +398,14 @@ Debugger::slowPathCheckNoExecute(JSContext* cx, HandleScript script)
     return EnterDebuggeeNoExecute::reportIfFoundInStack(cx, script);
 }
 
+static inline void
+NukeDebuggerWrapper(NativeObject *wrapper)
+{
+    // In some OOM failure cases, we need to destroy the edge to the referent,
+    // to avoid trying to trace it during untimely collections.
+    wrapper->setPrivate(nullptr);
+}
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -934,14 +942,19 @@ Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!p.add(cx, environments, env, envobj))
+
+        if (!p.add(cx, environments, env, envobj)) {
+            NukeDebuggerWrapper(envobj);
             return false;
+        }
 
         CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
+            NukeDebuggerWrapper(envobj);
             environments.remove(env);
             return false;
         }
+
     }
     rval.setObject(*envobj);
     return true;
@@ -976,12 +989,15 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
             dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
 
-            if (!p.add(cx, objects, obj, dobj))
+            if (!p.add(cx, objects, obj, dobj)) {
+                NukeDebuggerWrapper(dobj);
                 return false;
+            }
 
             if (obj->compartment() != object->compartment()) {
                 CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
                 if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
+                    NukeDebuggerWrapper(dobj);
                     objects.remove(obj);
                     ReportOutOfMemory(cx);
                     return false;
@@ -3856,7 +3872,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         if (!GetProperty(cx, query, query, cx->names().global, &global))
             return false;
         if (global.isUndefined()) {
-            matchAllDebuggeeGlobals();
+            if (!matchAllDebuggeeGlobals())
+                return false;
         } else {
             GlobalObject* globalObject = debugger->unwrapDebuggeeArgument(cx, global);
             if (!globalObject)
@@ -5028,7 +5045,7 @@ class DebuggerScriptSetPrivateMatcher
     ReturnType match(Handle<WasmModuleObject*> module) { obj_->setPrivateGCThing(module); }
 };
 
-JSObject*
+NativeObject*
 Debugger::newDebuggerScript(JSContext* cx, Handle<DebuggerScriptReferent> referent)
 {
     assertSameCompartment(cx, object.get());
@@ -5058,19 +5075,23 @@ Debugger::wrapVariantReferent(JSContext* cx, Map& map, CrossCompartmentKey::Kind
 
     DependentAddPtr<Map> p(cx, map, untaggedReferent);
     if (!p) {
-        JSObject* wrapper = newVariantWrapper(cx, referent);
+        NativeObject* wrapper = newVariantWrapper(cx, referent);
         if (!wrapper)
             return nullptr;
 
-        if (!p.add(cx, map, untaggedReferent, wrapper))
+        if (!p.add(cx, map, untaggedReferent, wrapper)) {
+            NukeDebuggerWrapper(wrapper);
             return nullptr;
+        }
 
         CrossCompartmentKey key(keyKind, object, untaggedReferent);
         if (!object->compartment()->putWrapper(cx, key, ObjectValue(*wrapper))) {
+            NukeDebuggerWrapper(wrapper);
             map.remove(untaggedReferent);
             ReportOutOfMemory(cx);
             return nullptr;
         }
+
     }
 
     return p->value();
@@ -6300,7 +6321,7 @@ class SetDebuggerSourcePrivateMatcher
     ReturnType match(Handle<WasmModuleObject*> module) { obj_->setPrivateGCThing(module); }
 };
 
-JSObject*
+NativeObject*
 Debugger::newDebuggerSource(JSContext* cx, Handle<DebuggerSourceReferent> referent)
 {
     assertSameCompartment(cx, object.get());
