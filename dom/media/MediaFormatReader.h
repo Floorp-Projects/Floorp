@@ -137,15 +137,12 @@ private:
       : mTime(aTime)
       , mDropTarget(aDropTarget)
       , mWaiting(false)
-      , mHasSeeked(false)
     {}
 
     media::TimeUnit mTime;
     bool mDropTarget;
     bool mWaiting;
-    bool mHasSeeked;
   };
-
   // Perform an internal seek to aTime. If aDropTarget is true then
   // the first sample past the target will be dropped.
   void InternalSeek(TrackType aTrack, const InternalSeekTarget& aTarget);
