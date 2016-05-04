@@ -1,0 +1,37 @@
+<html><body>
+<script>
+function checkPaste(event)
+{
+  let output = document.getElementById("output");
+  output.textContent = checkPasteHelper(event);
+}
+
+function checkPasteHelper(event)
+{
+  let dt = event.clipboardData;
+  if (dt.types.length != 2)
+    return "Wrong number of types; got " + dt.types.length;
+
+  for (let type of dt.types) {
+    if (type != "Files" && type != "application/x-moz-file")
+      return "Invalid type for types; got" + type;
+  }
+
+  for (let type of dt.mozTypesAt(0)) {
+    if (type != "Files" && type != "application/x-moz-file")
+      return "Invalid type for mozTypesAt; got" + type;
+  }
+
+  if (dt.getData("text/plain"))
+    return "text/plain found with getData";
+  if (dt.mozGetDataAt("text/plain", 0))
+    return "text/plain found with mozGetDataAt";
+
+  return "Passed";
+}
+</script>
+
+<input id="input" onpaste="checkPaste(event)">
+<div id="output"></div>
+
+</body></html>
