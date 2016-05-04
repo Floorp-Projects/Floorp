@@ -29,89 +29,88 @@ extern "C" {
 
 PKIX_PL_Cert *
 createCert(
-        char *dirName,
-        char *certFile,
-        void *plContext);
+    char *dirName,
+    char *certFile,
+    void *plContext);
 
 PKIX_PL_CRL *
 createCRL(
-        char *dirName,
-        char *crlFileName,
-        void *plContext);
+    char *dirName,
+    char *crlFileName,
+    void *plContext);
 
 PKIX_TrustAnchor *
 createTrustAnchor(
-        char *dirName,
-        char *taFileName,
-        PKIX_Boolean useCert,
-        void *plContext);
+    char *dirName,
+    char *taFileName,
+    PKIX_Boolean useCert,
+    void *plContext);
 
 PKIX_List *
 createCertChain(
-        char *dirName,
-        char *firstCertFileName,
-        char *secondCertFileName,
-        void *plContext);
+    char *dirName,
+    char *firstCertFileName,
+    char *secondCertFileName,
+    void *plContext);
 
 PKIX_List *
 createCertChainPlus(
-        char *dirName,
-        char *certNames[],
-        PKIX_PL_Cert *certs[],
-        PKIX_UInt32 numCerts,
-        void *plContext);
+    char *dirName,
+    char *certNames[],
+    PKIX_PL_Cert *certs[],
+    PKIX_UInt32 numCerts,
+    void *plContext);
 
 PKIX_PL_Date *
 createDate(
-        char *asciiDate,
-        void *plContext);
-
+    char *asciiDate,
+    void *plContext);
 
 PKIX_ProcessingParams *
 createProcessingParams(
-        char *dirName,
-        char *firstAnchorFileName,
-        char *secondAnchorFileName,
-        char *dateAscii,
-        PKIX_List *initialPolicies, /* List of PKIX_PL_OID */
-        PKIX_Boolean isCrlEnabled,
-        void *plContext);
+    char *dirName,
+    char *firstAnchorFileName,
+    char *secondAnchorFileName,
+    char *dateAscii,
+    PKIX_List *initialPolicies, /* List of PKIX_PL_OID */
+    PKIX_Boolean isCrlEnabled,
+    void *plContext);
 
 PKIX_ValidateParams *
 createValidateParams(
-        char *dirName,
-        char *firstAnchorFileName,
-        char *secondAnchorFileName,
-        char *dateAscii,
-        PKIX_List *initialPolicies, /* List of PKIX_PL_OID */
-        PKIX_Boolean initialPolicyMappingInhibit,
-        PKIX_Boolean initialAnyPolicyInhibit,
-        PKIX_Boolean initialExplicitPolicy,
-        PKIX_Boolean isCrlEnabled,
-        PKIX_List *chain,
-        void *plContext);
+    char *dirName,
+    char *firstAnchorFileName,
+    char *secondAnchorFileName,
+    char *dateAscii,
+    PKIX_List *initialPolicies, /* List of PKIX_PL_OID */
+    PKIX_Boolean initialPolicyMappingInhibit,
+    PKIX_Boolean initialAnyPolicyInhibit,
+    PKIX_Boolean initialExplicitPolicy,
+    PKIX_Boolean isCrlEnabled,
+    PKIX_List *chain,
+    void *plContext);
 
 PKIX_ValidateResult *
 createValidateResult(
-        char *dirName,
-        char *anchorFileName,
-        char *pubKeyCertFileName,
-        void *plContext);
+    char *dirName,
+    char *anchorFileName,
+    char *pubKeyCertFileName,
+    void *plContext);
 
 PKIX_BuildResult *
 createBuildResult(
-        char *dirName,
-        char *anchorFileName,
-        char *pubKeyCertFileName,
-        char *firstChainCertFileName,
-        char *secondChainCertFileName,
-        void *plContext);
+    char *dirName,
+    char *anchorFileName,
+    char *pubKeyCertFileName,
+    char *firstChainCertFileName,
+    char *secondChainCertFileName,
+    void *plContext);
 
 PKIX_PL_GeneralName *
 createGeneralName(
-        PKIX_UInt32 nameType,
-        char *asciiName,
-        void *plContext);
+    PKIX_UInt32 nameType,
+    char *asciiName,
+    void *plContext);
 
 #ifdef __cplusplus
 }
