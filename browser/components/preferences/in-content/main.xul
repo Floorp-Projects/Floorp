@@ -192,7 +192,7 @@
         <textbox id="browserHomePage"
                  class="padded uri-element content-cell-item"
                  type="autocomplete"
-                 autocompletesearch="history"
+                 autocompletesearch="unifiedcomplete"
                  onsyncfrompreference="return gMainPane.syncFromHomePref();"
                  onsynctopreference="return gMainPane.syncToHomePref(this.value);"
                  placeholder="&abouthome.pageTitle;"

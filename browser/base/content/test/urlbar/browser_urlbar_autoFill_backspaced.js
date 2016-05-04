@@ -26,16 +26,14 @@ function* test_autocomplete(data) {
   gURLBar.popup.hidePopup();
   yield promisePopupHidden(gURLBar.popup);
   gURLBar.blur();
-};
+}
 
 add_task(function* () {
   registerCleanupFunction(function* () {
-    Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     gURLBar.handleRevert();
     yield PlacesTestUtils.clearHistory();
   });
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
   Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
 
   // Add a typed visit, so it will be autofilled.
