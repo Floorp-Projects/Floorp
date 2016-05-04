@@ -40,8 +40,11 @@ var Pocket = {
         window.pktUI.tryToSaveCurrentPage();
       }
 
+      // pocketPanelDidHide in main.js set iframe to about:blank when it was
+      // hidden, make sure we're loading the save panel.
       if (iframe.contentDocument &&
-          iframe.contentDocument.readyState == "complete") {
+          iframe.contentDocument.readyState == "complete" &&
+          iframe.contentDocument.documentURI != "about:blank") {
         window.pktUI.pocketPanelDidShow();
       } else {
         // iframe didn't load yet. This seems to always be the case when in
