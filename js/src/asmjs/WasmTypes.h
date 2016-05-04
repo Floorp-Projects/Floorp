@@ -627,7 +627,6 @@ enum class SymbolicAddress
     RuntimeInterruptUint32,
     StackLimit,
     ReportOverRecursed,
-    OnOutOfBounds,
     BadIndirectCall,
     HandleExecutionInterrupt,
     HandleTrap,
@@ -660,6 +659,8 @@ enum class Trap
     InvalidConversionToInteger,
     // Integer division by zero.
     IntegerDivideByZero,
+    // Out of bounds on wasm memory accesses and asm.js SIMD/atomic accesses.
+    OutOfBounds,
 
     // (asm.js only) SIMD float to int conversion failed because the input
     // wasn't in bounds.
@@ -680,10 +681,10 @@ enum class JumpTarget
     IntegerOverflow = unsigned(Trap::IntegerOverflow),
     InvalidConversionToInteger = unsigned(Trap::InvalidConversionToInteger),
     IntegerDivideByZero = unsigned(Trap::IntegerDivideByZero),
+    OutOfBounds = unsigned(Trap::OutOfBounds),
     ImpreciseSimdConversion = unsigned(Trap::ImpreciseSimdConversion),
     // Non-traps
     StackOverflow,
-    OutOfBounds,
     BadIndirectCall,
     Throw,
     Limit
