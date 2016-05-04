@@ -13,7 +13,7 @@ add_task(function* () {
   yield addJsonViewTab(TEST_JSON_URL);
 
   let count = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
-  is(count, 3, "There must be three rows");
+  is(count, 6, "There must be expected number of rows");
 
   // XXX use proper shortcut to focus the filter box
   // as soon as bug Bug 1178771 is fixed.
@@ -24,5 +24,5 @@ add_task(function* () {
 
   let hiddenCount = yield getElementCount(
     ".jsonPanelBox .treeTable .treeRow.hidden");
-  is(hiddenCount, 2, "There must be two hidden rows");
+  is(hiddenCount, 4, "There must be expected number of hidden rows");
 });
