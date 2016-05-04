@@ -1332,11 +1332,16 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
   PREDICTOR_LOG(("Predictor::Prefetch uri=%s referrer=%s verifier=%p",
                  strUri.get(), strReferrer.get(), verifier));
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, nullptr,
-                                      nullptr, nullptr,
-                                      nsIRequest::LOAD_BACKGROUND);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel), uri,
+                              nsContentUtils::GetSystemPrincipal(),
+                              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                              nsIContentPolicy::TYPE_OTHER,
+                              nullptr, /* aLoadGroup */
+                              nullptr, /* aCallbacks */
+                              nsIRequest::LOAD_BACKGROUND);
+
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    NS_NewChannelInternal failed rv=0x%X", rv));
+    PREDICTOR_LOG(("    NS_NewChannel failed rv=0x%X", rv));
     return rv;
   }
 
@@ -1352,11 +1357,11 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
 
   nsCOMPtr<nsIStreamListener> listener = new PrefetchListener(verifier, uri,
                                                               this);
-  PREDICTOR_LOG(("    calling AsyncOpen listener=%p channel=%p", listener.get(),
+  PREDICTOR_LOG(("    calling AsyncOpen2 listener=%p channel=%p", listener.get(),
                  channel.get()));
-  rv = channel->AsyncOpen(listener, nullptr);
+  rv = channel->AsyncOpen2(listener);
   if (NS_FAILED(rv)) {
-    PREDICTOR_LOG(("    AsyncOpen failed rv=0x%X", rv));
+    PREDICTOR_LOG(("    AsyncOpen2 failed rv=0x%X", rv));
   }
 
   return rv;
