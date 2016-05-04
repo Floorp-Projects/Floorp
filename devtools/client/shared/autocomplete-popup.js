@@ -36,9 +36,9 @@ function AutocompletePopup(document, options = {}) {
   this.position = options.position || "after_start";
   this.direction = options.direction || "ltr";
 
-  this.onSelect = options.onSelect;
-  this.onClick = options.onClick;
-  this.onKeypress = options.onKeypress;
+  this.onSelectCallback = options.onSelect;
+  this.onClickCallback = options.onClick;
+  this.onKeypressCallback = options.onKeypress;
 
   let id = options.panelId || "devtools_autoCompletePopup";
   let theme = options.theme || "dark";
@@ -93,17 +93,13 @@ function AutocompletePopup(document, options = {}) {
   }
   this._list.className = "devtools-autocomplete-listbox " + theme + "-theme";
 
-  if (this.onSelect) {
-    this._list.addEventListener("select", this.onSelect, false);
-  }
+  this.onSelect = this.onSelect.bind(this);
+  this.onClick = this.onClick.bind(this);
+  this.onKeypress = this.onKeypress.bind(this);
+  this._list.addEventListener("select", this.onSelect, false);
+  this._list.addEventListener("click", this.onClick, false);
+  this._list.addEventListener("keypress", this.onKeypress, false);
 
-  if (this.onClick) {
-    this._list.addEventListener("click", this.onClick, false);
-  }
-
-  if (this.onKeypress) {
-    this._list.addEventListener("keypress", this.onKeypress, false);
-  }
   this._itemIdCounter = 0;
 
   events.decorate(this);
@@ -117,9 +113,26 @@ AutocompletePopup.prototype = {
   __scrollbarWidth: null,
 
   // Event handlers.
-  onSelect: null,
-  onClick: null,
-  onKeypress: null,
+  onSelect: function (e) {
+    this.emit("popup-select");
+    if (this.onSelectCallback) {
+      this.onSelectCallback(e);
+    }
+  },
+
+  onClick: function (e) {
+    this.emit("popup-click");
+    if (this.onClickCallback) {
+      this.onClickCallback(e);
+    }
+  },
+
+  onKeypress: function (e) {
+    this.emit("popup-keypress");
+    if (this.onKeypressCallback) {
+      this.onKeypressCallback(e);
+    }
+  },
 
   /**
    * Open the autocomplete popup panel.
@@ -191,17 +204,9 @@ AutocompletePopup.prototype = {
       this.hidePopup();
     }
 
-    if (this.onSelect) {
-      this._list.removeEventListener("select", this.onSelect, false);
-    }
-
-    if (this.onClick) {
-      this._list.removeEventListener("click", this.onClick, false);
-    }
-
-    if (this.onKeypress) {
-      this._list.removeEventListener("keypress", this.onKeypress, false);
-    }
+    this._list.removeEventListener("select", this.onSelect, false);
+    this._list.removeEventListener("click", this.onClick, false);
+    this._list.removeEventListener("keypress", this.onKeypress, false);
 
     if (this.autoThemeEnabled) {
       gDevTools.off("pref-changed", this._handleThemeChange);
