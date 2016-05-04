@@ -368,7 +368,9 @@ public:
 
   virtual bool CanContinueTextRun() const override;
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+
+  virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   // Selection Methods
 

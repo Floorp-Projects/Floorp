@@ -475,7 +475,9 @@ public:
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+
+  virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   /** Load all of aFrame's floats into the float manager iff aFrame is not a
    *  block formatting context. Handles all necessary float manager translations;

@@ -5913,8 +5913,8 @@ nsIFrame::GetPreEffectsVisualOverflowRect() const
   return r ? *r : GetVisualOverflowRectRelativeToSelf();
 }
 
-/* virtual */ bool
-nsFrame::UpdateOverflow()
+bool
+nsIFrame::UpdateOverflow()
 {
   MOZ_ASSERT(FrameMaintainsOverflow(),
              "Non-display SVG do not maintain visual overflow rects");
@@ -5922,16 +5922,16 @@ nsFrame::UpdateOverflow()
   nsRect rect(nsPoint(0, 0), GetSize());
   nsOverflowAreas overflowAreas(rect, rect);
 
-  if (!DoesClipChildren() &&
-      !(IsXULCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
-    nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
+  if (!ComputeCustomOverflow(overflowAreas)) {
+    return false;
   }
+
+  UnionChildOverflow(overflowAreas);
 
   if (FinishAndStoreOverflow(overflowAreas, GetSize())) {
     nsView* view = GetView();
     if (view) {
-      uint32_t flags = 0;
-      GetLayoutFlags(flags);
+      uint32_t flags = GetXULLayoutFlags();
 
       if ((flags & NS_FRAME_NO_SIZE_VIEW) == 0) {
         // Make sure the frame's view is properly sized.
@@ -5945,6 +5945,22 @@ nsFrame::UpdateOverflow()
 
   return false;
 }
+
+/* virtual */ bool
+nsFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
+{
+  return true;
+}
+
+/* virtual */ void
+nsFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas)
+{
+  if (!DoesClipChildren() &&
+      !(IsXULCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
+    nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas);
+  }
+}
+
 
 // Define the MAX_FRAME_DEPTH to be the ContentSink's MAX_REFLOW_DEPTH plus
 // 4 for the frames above the document's frames: 

@@ -598,7 +598,7 @@ public:
                                    const nsRect& aOrigVisualOverflow,
                                    bool aIsFirstReflow);
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
 protected:
 

@@ -230,7 +230,7 @@ public:
 
   void DecorateForSelection(DrawTarget* aDrawTarget, nsPoint aPt);
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

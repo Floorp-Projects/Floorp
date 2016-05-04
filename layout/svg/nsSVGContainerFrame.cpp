@@ -71,14 +71,14 @@ nsSVGContainerFrame::RemoveFrame(ChildListID aListID,
 }
 
 bool
-nsSVGContainerFrame::UpdateOverflow()
+nsSVGContainerFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
     // We don't maintain overflow rects.
     // XXX It would have be better if the restyle request hadn't even happened.
     return false;
   }
-  return nsContainerFrame::UpdateOverflow();
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 /**

@@ -129,7 +129,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   virtual void MarkIntrinsicISizesDirty() override;
 
@@ -379,8 +379,6 @@ protected:
   // overflows, the frame bounds, and mBoundingMetrics to set and store the
   // overflow.
   void GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics);
-
-  void ComputeOverflow(nsOverflowAreas& aOverflowAreas);
 
   /**
    * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst and
