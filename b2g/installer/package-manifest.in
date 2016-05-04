@@ -216,7 +216,6 @@
 @RESPATH@/components/dom_xpath.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_time.xpt
-@RESPATH@/components/dom_engineeringmode.xpt
 @RESPATH@/components/dom_presentation.xpt
 @RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
@@ -663,10 +662,6 @@
 #ifdef MOZ_B2G
 @RESPATH@/components/inputmethod.xpt
 #endif
-
-@RESPATH@/components/EngineeringMode.manifest
-@RESPATH@/components/EngineeringModeAPI.js
-@RESPATH@/components/EngineeringModeService.js
 
 @RESPATH@/components/SystemUpdate.manifest
 @RESPATH@/components/SystemUpdateManager.js
