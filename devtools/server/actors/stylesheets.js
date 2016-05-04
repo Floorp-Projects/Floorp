@@ -14,13 +14,13 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const promise = require("promise");
 const events = require("sdk/event/core");
-const {OriginalSourceFront} = require("devtools/client/fronts/stylesheets");
+const {OriginalSourceFront, MediaRuleFront} = require("devtools/client/fronts/stylesheets");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {listenOnce} = require("devtools/shared/async-utils");
-const {originalSourceSpec} = require("devtools/shared/specs/stylesheets");
+const {originalSourceSpec, mediaRuleSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
@@ -121,16 +121,7 @@ var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
  * A MediaRuleActor lives on the server and provides access to properties
  * of a DOM @media rule and emits events when it changes.
  */
-var MediaRuleActor = protocol.ActorClass({
-  typeName: "mediarule",
-
-  events: {
-    "matches-change" : {
-      type: "matchesChange",
-      matches: Arg(0, "boolean"),
-    }
-  },
-
+var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   get window() {
     return this.parentActor.window;
   },
@@ -194,50 +185,6 @@ var MediaRuleActor = protocol.ActorClass({
 
   _matchesChange: function() {
     events.emit(this, "matches-change", this.matches);
-  }
-});
-
-/**
- * Corresponding client-side front for a MediaRuleActor.
- */
-var MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-
-    this._onMatchesChange = this._onMatchesChange.bind(this);
-    events.on(this, "matches-change", this._onMatchesChange);
-  },
-
-  _onMatchesChange: function(matches) {
-    this._form.matches = matches;
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get mediaText() {
-    return this._form.mediaText;
-  },
-  get conditionText() {
-    return this._form.conditionText;
-  },
-  get matches() {
-    return this._form.matches;
-  },
-  get line() {
-    return this._form.line || -1;
-  },
-  get column() {
-    return this._form.column || -1;
-  },
-  get parentStyleSheet() {
-    return this.conn.getActor(this._form.parentStyleSheet);
   }
 });
 
