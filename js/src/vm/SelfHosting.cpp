@@ -18,7 +18,6 @@
 #include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jshashutil.h"
-#include "jsstr.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
 #include "selfhosted.out.h"
@@ -41,7 +40,6 @@
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
-#include "vm/RegExpObject.h"
 #include "vm/String.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
@@ -584,22 +582,6 @@ intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setUndefined();
-    return true;
-}
-
-static bool
-intrinsic_ObjectHasPrototype(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    RootedObject obj(cx, &args[0].toObject());
-    RootedObject proto(cx, &args[1].toObject());
-
-    RootedObject actualProto(cx);
-    if (!GetPrototype(cx, obj, &actualProto))
-        return false;
-
-    args.rval().setBoolean(actualProto == proto);
     return true;
 }
 
@@ -1560,137 +1542,6 @@ intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[1].isString() || args[1].isUndefined());
-    MOZ_ASSERT(!args.isConstructing());
-
-    return RegExpCreate(cx, args[0], args[1], args.rval());
-}
-
-static bool
-intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    MOZ_ASSERT(args.length() == 6);
-
-    RootedString matched(cx, args[0].toString());
-    RootedString string(cx, args[1].toString());
-
-    int32_t position = int32_t(args[2].toNumber());
-    MOZ_ASSERT(position >= 0);
-
-    RootedObject captures(cx, &args[3].toObject());
-#ifdef DEBUG
-    bool isArray = false;
-    MOZ_ALWAYS_TRUE(IsArray(cx, captures, &isArray));
-    MOZ_ASSERT(isArray);
-#endif
-
-    RootedString replacement(cx, args[4].toString());
-
-    int32_t firstDollarIndex = int32_t(args[5].toNumber());
-    MOZ_ASSERT(firstDollarIndex >= 0);
-
-    RootedLinearString matchedLinear(cx, matched->ensureLinear(cx));
-    if (!matchedLinear)
-        return false;
-    RootedLinearString stringLinear(cx, string->ensureLinear(cx));
-    if (!stringLinear)
-        return false;
-    RootedLinearString replacementLinear(cx, replacement->ensureLinear(cx));
-    if (!replacementLinear)
-        return false;
-
-    return RegExpGetSubstitution(cx, matchedLinear, stringLinear, size_t(position), captures,
-                                 replacementLinear, size_t(firstDollarIndex), args.rval());
-}
-
-static bool
-intrinsic_StringReplaceString(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 3);
-
-    RootedString string(cx, args[0].toString());
-    RootedString pattern(cx, args[1].toString());
-    RootedString replacement(cx, args[2].toString());
-    JSString* result = str_replace_string_raw(cx, string, pattern, replacement);
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
-    return true;
-}
-
-static bool
-intrinsic_RegExpEscapeMetaChars(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-
-    RootedString string(cx, args[0].toString());
-    JSString* result = RegExpEscapeMetaChars(cx, string);
-    if (!result)
-        return false;
-
-    args.rval().setString(result);
-    return true;
-}
-
-bool
-js::intrinsic_StringSplitString(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-
-    RootedString string(cx, args[0].toString());
-    RootedString sep(cx, args[1].toString());
-
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-    if (!group)
-        return false;
-
-    RootedObject aobj(cx);
-    aobj = str_split_string(cx, group, string, sep, INT32_MAX);
-    if (!aobj)
-        return false;
-
-    args.rval().setObject(*aobj);
-    return true;
-}
-
-static bool
-intrinsic_StringSplitStringLimit(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 3);
-
-    RootedString string(cx, args[0].toString());
-    RootedString sep(cx, args[1].toString());
-
-    // args[2] should be already in UInt32 range, but it could be double typed,
-    // because of Ion optimization.
-    uint32_t limit = uint32_t(args[2].toNumber());
-
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
-    if (!group)
-        return false;
-
-    RootedObject aobj(cx);
-    aobj = str_split_string(cx, group, string, sep, limit);
-    if (!aobj)
-        return false;
-
-    args.rval().setObject(*aobj);
-    return true;
-}
-
 bool
 CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
 {
@@ -2202,32 +2053,6 @@ intrinsic_captureCurrentStack(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-IsMatchFlagsArgumentEnabled(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
-
-    args.rval().setBoolean(cx->runtime()->options().matchFlagArgument());
-    return true;
-}
-
-static bool
-WarnOnceAboutFlagsArgument(JSContext* cx, unsigned argc, Value* vp)
-{
-    if (!cx->compartment()->warnedAboutFlagsArgument) {
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
-                                          cx->runtime()->options().matchFlagArgument()
-                                          ? JSMSG_DEPRECATED_FLAGS_ARG
-                                          : JSMSG_OBSOLETE_FLAGS_ARG))
-        {
-            return false;
-        }
-        cx->compartment()->warnedAboutFlagsArgument = true;
-    }
-    return true;
-}
-
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2288,6 +2113,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_includes",                 str_includes,                 1,0),
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
+    JS_FN("std_String_match",                    str_match,                    1,0),
+    JS_FN("std_String_search",                   str_search,                   1,0),
+    JS_INLINABLE_FN("std_String_replace",        str_replace,                  2,0, StringReplace),
+    JS_INLINABLE_FN("std_String_split",          str_split,                    2,0, StringSplit),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
     JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
     JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
@@ -2360,8 +2189,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IntrinsicSubstringKernel),
     JS_INLINABLE_FN("_DefineDataProperty",              intrinsic_DefineDataProperty,      4,0,
                     IntrinsicDefineDataProperty),
-    JS_INLINABLE_FN("ObjectHasPrototype",               intrinsic_ObjectHasPrototype,      2,0,
-                    IntrinsicObjectHasPrototype),
     JS_INLINABLE_FN("UnsafeSetReservedSlot",            intrinsic_UnsafeSetReservedSlot,   3,0,
                     IntrinsicUnsafeSetReservedSlot),
     JS_INLINABLE_FN("UnsafeGetReservedSlot",            intrinsic_UnsafeGetReservedSlot,   2,0,
@@ -2555,36 +2382,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2,0),
     JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 4,0,
                     RegExpMatcher),
-    JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 4,0,
-                    RegExpSearcher),
     JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
-    JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2,0),
-    JS_INLINABLE_FN("RegExpPrototypeOptimizable", RegExpPrototypeOptimizable, 1,0,
-                    RegExpPrototypeOptimizable),
-    JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,0,
-                    RegExpInstanceOptimizable),
-    JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 6,0),
-    JS_FN("RegExpEscapeMetaChars", intrinsic_RegExpEscapeMetaChars, 1,0),
-    JS_FN("GetElemBaseForLambda", intrinsic_GetElemBaseForLambda, 1,0),
-    JS_FN("GetStringDataProperty", intrinsic_GetStringDataProperty, 2,0),
-
-    JS_FN("FlatStringMatch", FlatStringMatch, 2,0),
-    JS_FN("FlatStringSearch", FlatStringSearch, 2,0),
-    JS_INLINABLE_FN("StringReplaceString", intrinsic_StringReplaceString, 3, 0,
-                    IntrinsicStringReplaceString),
-    JS_INLINABLE_FN("StringSplitString", intrinsic_StringSplitString, 2, 0,
-                    IntrinsicStringSplitString),
-    JS_FN("StringSplitStringLimit", intrinsic_StringSplitStringLimit, 3, 0),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct", regexp_construct_self_hosting, 2,0),
-    JS_FN("regexp_construct_no_sticky", regexp_construct_no_sticky, 2,0),
-
-    JS_FN("IsMatchFlagsArgumentEnabled", IsMatchFlagsArgumentEnabled, 0,0),
-    JS_FN("WarnOnceAboutFlagsArgument", WarnOnceAboutFlagsArgument, 0,0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
     JS_FN("CallModuleMethodIfWrapped",
