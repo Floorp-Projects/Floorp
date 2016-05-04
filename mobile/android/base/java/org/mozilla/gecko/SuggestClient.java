@@ -57,6 +57,10 @@ public class SuggestClient {
         mCheckNetwork = checkNetwork;
     }
 
+    public String getSuggestTemplate() {
+        return mSuggestTemplate;
+    }
+
     /**
      * Queries for a given search term and returns an ArrayList of suggestions.
      */
