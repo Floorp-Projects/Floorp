@@ -6,6 +6,7 @@
 
 SOURCES += [
     'nsOSXSystemProxySettings.mm',
+    'ProxyUtils.mm',
 ]
 
 FINAL_LIBRARY = 'xul'
