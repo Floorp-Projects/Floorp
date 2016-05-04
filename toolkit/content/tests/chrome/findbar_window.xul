@@ -18,8 +18,6 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;

@@ -4,23 +4,21 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<window title="Test ChromeUtils functions" 
+<window title="Test EventUtils functions"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <!-- ChromeUtils.js depends on EventUtils.js -->
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript">
   var start = new Date();
   </script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript">
   var loadTime = new Date();
   </script>
   <script type="application/javascript">
   <![CDATA[
-    info("\nProfile::ChromeUtilsLoadTime: " + (loadTime - start) + "\n");
+    info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
     var testFile = Components.classes["@mozilla.org/file/directory_service;1"].
                       getService(Components.interfaces.nsIProperties).
                       get("CurWorkD", Components.interfaces.nsIFile);
@@ -167,7 +165,7 @@
       is(content, true, "synthesizeSelectionSet should succeed");
 
       var endTime = new Date();
-      info("\nProfile::ChromeUtilsRunTime: " + (endTime-startTime) + "\n");
+      info("\nProfile::EventUtilsRunTime: " + (endTime-startTime) + "\n");
       SimpleTest.finish();
     };
   ]]>

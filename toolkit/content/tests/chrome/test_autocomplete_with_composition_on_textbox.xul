@@ -10,8 +10,6 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
   <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js" />
-  <script type="text/javascript"
           src="file_autocomplete_with_composition.js" />
 
   <textbox id="textbox" type="autocomplete"
