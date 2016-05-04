@@ -29,8 +29,8 @@ function* drop(text, valid = false) {
   info(`Starting test for text:${text}; valid:${valid}`);
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-  let ChromeUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
+  let EventUtils = {};
+  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
   let awaitTabOpen = valid && BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
@@ -46,7 +46,7 @@ function* drop(text, valid = false) {
     screenX: 0,
     screenY: 0,
   };
-  ChromeUtils.synthesizeDrop(gBrowser.selectedTab, gBrowser.selectedTab, [[{type: "text/plain", data: text}]], "link", window, undefined, event);
+  EventUtils.synthesizeDrop(gBrowser.selectedTab, gBrowser.selectedTab, [[{type: "text/plain", data: text}]], "link", window, undefined, event);
   let tabOpened = false;
   if (awaitTabOpen) {
     let tabOpenEvent = yield awaitTabOpen;
