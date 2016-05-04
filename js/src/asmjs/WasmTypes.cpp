@@ -59,13 +59,6 @@ WasmHandleExecutionInterrupt()
 }
 
 static void
-OnOutOfBounds()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-}
-
-static void
 BadIndirectCall()
 {
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
@@ -96,6 +89,9 @@ HandleTrap(int32_t trapIndex)
         break;
       case Trap::ImpreciseSimdConversion:
         errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
+        break;
+      case Trap::OutOfBounds:
+        errorNumber = JSMSG_BAD_INDEX;
         break;
       default:
         MOZ_CRASH("unexpected trap");
@@ -248,8 +244,6 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case SymbolicAddress::ReportOverRecursed:
         return FuncCast(WasmReportOverRecursed, Args_General0);
-      case SymbolicAddress::OnOutOfBounds:
-        return FuncCast(OnOutOfBounds, Args_General0);
       case SymbolicAddress::BadIndirectCall:
         return FuncCast(BadIndirectCall, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:

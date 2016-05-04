@@ -934,12 +934,11 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
     switch (target) {
       case JumpTarget::StackOverflow:
         return GenerateStackOverflow(masm);
-      case JumpTarget::OutOfBounds:
-        return GenerateErrorStub(masm, SymbolicAddress::OnOutOfBounds);
       case JumpTarget::BadIndirectCall:
         return GenerateErrorStub(masm, SymbolicAddress::BadIndirectCall);
       case JumpTarget::Throw:
         return GenerateThrow(masm);
+      case JumpTarget::OutOfBounds:
       case JumpTarget::Unreachable:
       case JumpTarget::IntegerOverflow:
       case JumpTarget::InvalidConversionToInteger:
