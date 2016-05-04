@@ -464,7 +464,7 @@ public:
     uint32_t mSize;
   };
 
-  explicit FixedSizeSmallShmemSectionAllocator(ShmemAllocator* aShmProvider);
+  explicit FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider);
 
   ~FixedSizeSmallShmemSectionAllocator();
 
@@ -479,9 +479,13 @@ public:
 
   void ShrinkShmemSectionHeap();
 
+  ShmemAllocator* GetShmAllocator() { return mShmProvider->AsShmemAllocator(); }
+
+  bool IPCOpen() const { return mShmProvider->IPCOpen(); }
+
 protected:
   std::vector<mozilla::ipc::Shmem> mUsedShmems;
-  ShmemAllocator* mShmProvider;
+  ClientIPCAllocator* mShmProvider;
 };
 
 } // namespace layers
