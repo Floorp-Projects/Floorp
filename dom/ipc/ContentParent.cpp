@@ -1060,7 +1060,10 @@ ContentParent::RecvUngrabPointer(const uint32_t& aTime)
   NS_RUNTIMEABORT("This message only makes sense on GTK platforms");
   return false;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   gdk_pointer_ungrab(aTime);
+#pragma GCC diagnostic pop
   return true;
 #endif
 }
