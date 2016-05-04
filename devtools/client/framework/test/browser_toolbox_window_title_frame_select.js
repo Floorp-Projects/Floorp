@@ -27,7 +27,7 @@ add_task(function* () {
   yield toolbox.selectTool("inspector");
   yield toolbox.switchHost(Toolbox.HostType.WINDOW);
 
-  is(getTitle(), "Inspector - Page title",
+  is(getTitle(), `Developer Tools - Page title - ${URL}`,
     "Devtools title correct after switching to detached window host");
 
   // Verify that the frame list button is visible and populated
@@ -53,7 +53,7 @@ add_task(function* () {
   yield newRoot;
 
   info("Navigation to the iframe is done, the inspector should be back up");
-  is(getTitle(), "Inspector - Page title",
+  is(getTitle(), `Developer Tools - Page title - ${URL}`,
     "Devtools title was not updated after changing inspected frame");
 
   info("Cleanup toolbox and test preferences.");

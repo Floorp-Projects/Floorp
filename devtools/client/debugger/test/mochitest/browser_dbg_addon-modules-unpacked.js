@@ -14,7 +14,8 @@ function test() {
 
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
 
-    is(addonDebugger.title, "Debugger - Test unpacked add-on with JS Modules", "Saw the right toolbox title.");
+    is(addonDebugger.title, `Developer Tools - Test unpacked add-on with JS Modules - ${ADDON_URL}`,
+       "Saw the right toolbox title.");
 
     // Check the inital list of sources is correct
     let groups = yield addonDebugger.getSourceGroups();
