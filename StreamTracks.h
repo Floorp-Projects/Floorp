@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_STREAMBUFFER_H_
-#define MOZILLA_STREAMBUFFER_H_
+#ifndef MOZILLA_STREAMTRACKS_H_
+#define MOZILLA_STREAMTRACKS_H_
 
 #include "MediaSegment.h"
 #include "nsAutoPtr.h"
@@ -12,8 +12,8 @@
 namespace mozilla {
 
 /**
- * Unique ID for track within a StreamBuffer. Tracks from different
- * StreamBuffers may have the same ID; this matters when appending StreamBuffers,
+ * Unique ID for track within a StreamTracks. Tracks from different
+ * StreamTrackss may have the same ID; this matters when appending StreamTrackss,
  * since tracks with the same ID are matched. Only IDs greater than 0 are allowed.
  */
 typedef int32_t TrackID;
@@ -45,25 +45,25 @@ inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate,
 
 /**
  * This object contains the decoded data for a stream's tracks.
- * A StreamBuffer can be appended to. Logically a StreamBuffer only gets longer,
+ * A StreamTracks can be appended to. Logically a StreamTracks only gets longer,
  * but we also have the ability to "forget" data before a certain time that
  * we know won't be used again. (We prune a whole number of seconds internally.)
  *
- * StreamBuffers should only be used from one thread at a time.
+ * StreamTrackss should only be used from one thread at a time.
  *
- * A StreamBuffer has a set of tracks that can be of arbitrary types ---
+ * A StreamTracks has a set of tracks that can be of arbitrary types ---
  * the data for each track is a MediaSegment. The set of tracks can vary
- * over the timeline of the StreamBuffer.
+ * over the timeline of the StreamTracks.
  */
-class StreamBuffer
+class StreamTracks
 {
 public:
   /**
-   * Every track has a start time --- when it started in the StreamBuffer.
+   * Every track has a start time --- when it started in the StreamTracks.
    * It has an end flag; when false, no end point is known; when true,
    * the track ends when the data we have for the track runs out.
    * Tracks have a unique ID assigned at creation. This allows us to identify
-   * the same track across StreamBuffers. A StreamBuffer should never have
+   * the same track across StreamTrackss. A StreamTracks should never have
    * two tracks with the same ID (even if they don't overlap in time).
    * TODO Tracks can also be enabled and disabled over time.
    * Takes ownership of aSegment.
@@ -139,11 +139,11 @@ public:
     }
 
   private:
-    friend class StreamBuffer;
+    friend class StreamTracks;
 
     // Start offset is in ticks at rate mRate
     StreamTime mStart;
-    // The segment data starts at the start of the owning StreamBuffer, i.e.,
+    // The segment data starts at the start of the owning StreamTracks, i.e.,
     // there's mStart silence/no video at the beginning.
     nsAutoPtr<MediaSegment> mSegment;
     // Unique ID
@@ -163,7 +163,7 @@ public:
     }
   };
 
-  StreamBuffer()
+  StreamTracks()
     : mGraphRate(0)
     , mTracksKnownTime(0)
     , mForgottenTime(0)
@@ -172,11 +172,11 @@ public:
     , mGraphRateIsSet(false)
 #endif
   {
-    MOZ_COUNT_CTOR(StreamBuffer);
+    MOZ_COUNT_CTOR(StreamTracks);
   }
-  ~StreamBuffer()
+  ~StreamTracks()
   {
-    MOZ_COUNT_DTOR(StreamBuffer);
+    MOZ_COUNT_DTOR(StreamTracks);
   }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
@@ -224,7 +224,7 @@ public:
     if (mTracksKnownTime == STREAM_TIME_MAX) {
       // There exists code like
       // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
-      NS_WARNING("Adding track to StreamBuffer that should have no more tracks");
+      NS_WARNING("Adding track to StreamTracks that should have no more tracks");
     } else {
       NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
     }
@@ -238,7 +238,7 @@ public:
   }
 
   /**
-   * The end time for the StreamBuffer is the latest time for which we have
+   * The end time for the StreamTracks is the latest time for which we have
    * data for all tracks that haven't ended by that time.
    */
   StreamTime GetEnd() const;
@@ -262,12 +262,12 @@ public:
     /**
      * Iterate through the tracks of aBuffer in order of ID.
      */
-    explicit TrackIter(const StreamBuffer& aBuffer) :
+    explicit TrackIter(const StreamTracks& aBuffer) :
       mBuffer(&aBuffer.mTracks), mIndex(0), mMatchType(false) {}
     /**
      * Iterate through the tracks of aBuffer with type aType, in order of ID.
      */
-    TrackIter(const StreamBuffer& aBuffer, MediaSegment::Type aType) :
+    TrackIter(const StreamTracks& aBuffer, MediaSegment::Type aType) :
       mBuffer(&aBuffer.mTracks), mIndex(0), mType(aType), mMatchType(true) { FindMatch(); }
     bool IsEnded() { return mIndex >= mBuffer->Length(); }
     void Next()
@@ -328,7 +328,7 @@ protected:
   StreamTime mForgottenTime;
 
 private:
-  // All known tracks for this StreamBuffer
+  // All known tracks for this StreamTracks
   nsTArray<nsAutoPtr<Track>> mTracks;
   bool mTracksDirty;
 
@@ -339,5 +339,5 @@ private:
 
 } // namespace mozilla
 
-#endif /* MOZILLA_STREAMBUFFER_H_ */
+#endif /* MOZILLA_STREAMTRACKS_H_ */
 
