@@ -200,7 +200,6 @@
       },
       {
         "name": "deleteUrl",
-        "unsupported": true,
         "type": "function",
         "description": "Removes all occurrences of the given URL from the history.",
         "async": "callback",

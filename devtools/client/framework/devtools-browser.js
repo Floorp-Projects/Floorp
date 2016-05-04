@@ -584,11 +584,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
 
       let hasToolbox = gDevToolsBrowser.hasToolboxOpened(win);
 
-      let broadcaster = win.document.getElementById("menu_devToolbox");
+      let menu = win.document.getElementById("menu_devToolbox");
       if (hasToolbox) {
-        broadcaster.setAttribute("checked", "true");
+        menu.setAttribute("checked", "true");
       } else {
-        broadcaster.removeAttribute("checked");
+        menu.removeAttribute("checked");
       }
     }
   },

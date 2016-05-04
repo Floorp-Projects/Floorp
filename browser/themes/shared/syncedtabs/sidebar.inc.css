@@ -126,6 +126,7 @@ body {
   text-overflow: ellipsis;
   margin: 0px;
   line-height: 1.3;
+  cursor: default;
 }
 
 .item[hidden] {

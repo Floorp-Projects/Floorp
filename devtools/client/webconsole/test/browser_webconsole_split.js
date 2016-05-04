@@ -41,7 +41,7 @@ function test() {
     });
 
     // Closes split console.
-    EventUtils.sendKey("ESCAPE", toolbox.frame.contentWindow);
+    EventUtils.sendKey("ESCAPE", toolbox.win);
   }
 
   function checkAllTools() {
@@ -60,7 +60,7 @@ function test() {
   }
 
   function getCurrentUIState() {
-    let win = toolbox.doc.defaultView;
+    let win = toolbox.win;
     let deck = toolbox.doc.querySelector("#toolbox-deck");
     let webconsolePanel = toolbox.webconsolePanel;
     let splitter = toolbox.doc.querySelector("#toolbox-console-splitter");
