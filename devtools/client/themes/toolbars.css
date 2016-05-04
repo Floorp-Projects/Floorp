@@ -390,7 +390,7 @@
   border: 1px solid;
   border-radius: 2px;
   padding: 4px 6px;
-  border-color: var(--theme-body-background);
+  border-color: var(--theme-splitter-color);
 }
 
 :root[platform="mac"] .devtools-textinput,
