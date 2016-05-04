@@ -2566,6 +2566,12 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   if (!mActiveMenuBar && (!item || item->PopupType() != ePopupTypeMenu))
     return NS_OK;
 
+  // Since a menu was open, stop propagation of the event to keep other event
+  // listeners from becoming confused.
+  if (!item || item->IgnoreKeys() != eIgnoreKeys_Handled) {
+    aKeyEvent->AsEvent()->StopPropagation();
+  }
+
   int32_t menuAccessKey = -1;
 
   // If the key just pressed is the access key (usually Alt),
@@ -2596,17 +2602,13 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
           Rollup(0, false, nullptr, nullptr);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
+
+        // Clear the item to avoid bugs as it may have been deleted during rollup.
+        item = nullptr; 
       }
       aKeyEvent->AsEvent()->StopPropagation();
       aKeyEvent->AsEvent()->PreventDefault();
     }
-  }
-
-  // Since a menu was open, stop propagation of the event to keep other event
-  // listeners from becoming confused.
-
-  if (!item || item->IgnoreKeys() != eIgnoreKeys_Handled) {
-    aKeyEvent->AsEvent()->StopPropagation();
   }
 
   aKeyEvent->AsEvent()->StopCrossProcessForwarding();
