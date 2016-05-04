@@ -20,3 +20,15 @@ self.addEventListener('fetch', function (event) {
     })
   );
 });
+
+self.addEventListener('message', function (event) {
+  if (event.data.type === 'GET_UNCONTROLLED_CLIENTS') {
+    event.waitUntil(clients.matchAll({ includeUncontrolled: true })
+      .then(function(clientList) {
+        var resultList = clientList.map(function(c) {
+          return { url: c.url, frameType: c.frameType };
+        });
+        event.source.postMessage({ type: 'CLIENTS', detail: resultList });
+      }));
+  }
+});
