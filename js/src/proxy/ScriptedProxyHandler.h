@@ -4,17 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef proxy_ScriptedDirectProxyHandler_h
-#define proxy_ScriptedDirectProxyHandler_h
+#ifndef proxy_ScriptedProxyHandler_h
+#define proxy_ScriptedProxyHandler_h
 
 #include "js/Proxy.h"
 
 namespace js {
 
-/* Derived class for all scripted direct proxy handlers. */
-class ScriptedDirectProxyHandler : public BaseProxyHandler {
+/* Derived class for all scripted proxy handlers. */
+class ScriptedProxyHandler : public BaseProxyHandler
+{
   public:
-    MOZ_CONSTEXPR ScriptedDirectProxyHandler()
+    MOZ_CONSTEXPR ScriptedProxyHandler()
       : BaseProxyHandler(&family)
     { }
 
@@ -29,12 +30,11 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     virtual bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                          ObjectOpResult& result) const override;
 
-    /* These two are standard internal methods but aren't implemented to spec yet. */
     virtual bool getPrototype(JSContext* cx, HandleObject proxy,
                               MutableHandleObject protop) const override;
     virtual bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
                               ObjectOpResult& result) const override;
-    /* Non-standard, but needed to implement OrdinaryGetPrototypeOf. */
+    /* Non-standard, but needed to correctly implement OrdinaryGetPrototypeOf. */
     virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
                                        MutableHandleObject protop) const override;
     /* Non-standard, but needed to handle revoked proxies. */
@@ -56,15 +56,6 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     /* SpiderMonkey extensions. */
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override {
         return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
-    }
-
-
-    // Kick getOwnEnumerablePropertyKeys out to ownPropertyKeys and then
-    // filter. [[GetOwnProperty]] could potentially change the enumerability of
-    // the target's properties.
-    virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                              AutoIdVector& props) const override {
-        return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
     }
 
     // A scripted proxy should not be treated as generic in most contexts.
@@ -90,7 +81,7 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     virtual bool isScripted() const override { return true; }
 
     static const char family;
-    static const ScriptedDirectProxyHandler singleton;
+    static const ScriptedProxyHandler singleton;
 
     // The "proxy extra" slot index in which the handler is stored. Revocable proxies need to set
     // this at revocation time.
@@ -112,4 +103,4 @@ proxy_revocable(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 
-#endif /* proxy_ScriptedDirectProxyHandler_h */
+#endif /* proxy_ScriptedProxyHandler_h */

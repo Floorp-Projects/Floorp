@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "proxy/ScriptedDirectProxyHandler.h"
+#include "proxy/ScriptedProxyHandler.h"
 
 #include "jsapi.h"
 
@@ -125,12 +125,12 @@ IsCompatiblePropertyDescriptor(JSContext* cx, bool extensible, Handle<PropertyDe
     return true;
 }
 
-// Get the [[ProxyHandler]] of a scripted direct proxy.
+// Get the [[ProxyHandler]] of a scripted proxy.
 static JSObject*
-GetDirectProxyHandlerObject(JSObject* proxy)
+GetScriptedProxyHandlerObject(JSObject* proxy)
 {
-    MOZ_ASSERT(proxy->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
-    return proxy->as<ProxyObject>().extra(ScriptedDirectProxyHandler::HANDLER_EXTRA).toObjectOrNull();
+    MOZ_ASSERT(proxy->as<ProxyObject>().handler() == &ScriptedProxyHandler::singleton);
+    return proxy->as<ProxyObject>().extra(ScriptedProxyHandler::HANDLER_EXTRA).toObjectOrNull();
 }
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.9 GetMethod,
@@ -167,11 +167,11 @@ GetProxyTrap(JSContext* cx, HandleObject handler, HandlePropertyName name, Mutab
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.1 Proxy.[[GetPrototypeOf]].
 bool
-ScriptedDirectProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
-                                         MutableHandleObject protop) const
+ScriptedProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
+                                   MutableHandleObject protop) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -238,11 +238,11 @@ ScriptedDirectProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.2 Proxy.[[SetPrototypeOf]].
 bool
-ScriptedDirectProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
-                                         ObjectOpResult& result) const
+ScriptedProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
+                                   ObjectOpResult& result) const
 {
     // Steps 1-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -305,9 +305,8 @@ ScriptedDirectProxyHandler::setPrototype(JSContext* cx, HandleObject proxy, Hand
 }
 
 bool
-ScriptedDirectProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy,
-                                                   bool* isOrdinary,
-                                                   MutableHandleObject protop) const
+ScriptedProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                             MutableHandleObject protop) const
 {
     *isOrdinary = false;
     return true;
@@ -316,8 +315,8 @@ ScriptedDirectProxyHandler::getPrototypeIfOrdinary(JSContext* cx, HandleObject p
 // Not yet part of ES6, but hopefully to be standards-tracked -- and needed to
 // handle revoked proxies in any event.
 bool
-ScriptedDirectProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy,
-                                                  bool* succeeded) const
+ScriptedProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy,
+                                            bool* succeeded) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!target) {
@@ -330,11 +329,11 @@ ScriptedDirectProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject pr
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.4 Proxy.[[PreventExtensions]]()
 bool
-ScriptedDirectProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
-                                              ObjectOpResult& result) const
+ScriptedProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
+                                        ObjectOpResult& result) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -387,10 +386,10 @@ ScriptedDirectProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.3 Proxy.[[IsExtensible]]()
 bool
-ScriptedDirectProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const
+ScriptedProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -438,11 +437,11 @@ ScriptedDirectProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.5 Proxy.[[GetOwnProperty]](P)
 bool
-ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                                     MutableHandle<PropertyDescriptor> desc) const
+ScriptedProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                               MutableHandle<PropertyDescriptor> desc) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -557,12 +556,11 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.6 Proxy.[[DefineOwnProperty]](P, Desc)
 bool
-ScriptedDirectProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                                           Handle<PropertyDescriptor> desc,
-                                           ObjectOpResult& result) const
+ScriptedProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
+                                     Handle<PropertyDescriptor> desc, ObjectOpResult& result) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -698,11 +696,10 @@ CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v, AutoIdVector& prop
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.11 Proxy.[[OwnPropertyKeys]]()
 bool
-ScriptedDirectProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                            AutoIdVector& props) const
+ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdVector& props) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -837,11 +834,11 @@ ScriptedDirectProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.10 Proxy.[[Delete]](P)
 bool
-ScriptedDirectProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId id,
-                                    ObjectOpResult& result) const
+ScriptedProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                              ObjectOpResult& result) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -897,10 +894,10 @@ ScriptedDirectProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId 
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.7 Proxy.[[HasProperty]](P)
 bool
-ScriptedDirectProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
+ScriptedProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -966,11 +963,11 @@ ScriptedDirectProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, 
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.8 Proxy.[[GetP]](P, Receiver)
 bool
-ScriptedDirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
-                                HandleId id, MutableHandleValue vp) const
+ScriptedProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
+                          MutableHandleValue vp) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -1041,11 +1038,11 @@ ScriptedDirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue r
 
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.9 Proxy.[[Set]](P, V, Receiver)
 bool
-ScriptedDirectProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
-                                HandleValue receiver, ObjectOpResult& result) const
+ScriptedProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                          HandleValue receiver, ObjectOpResult& result) const
 {
     // Steps 2-4.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -1118,10 +1115,10 @@ ScriptedDirectProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, 
 
 // ES7 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.13 Proxy.[[Call]]
 bool
-ScriptedDirectProxyHandler::call(JSContext* cx, HandleObject proxy, const CallArgs& args) const
+ScriptedProxyHandler::call(JSContext* cx, HandleObject proxy, const CallArgs& args) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -1165,10 +1162,10 @@ ScriptedDirectProxyHandler::call(JSContext* cx, HandleObject proxy, const CallAr
 
 // ES7 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.14 Proxy.[[Construct]]
 bool
-ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const
+ScriptedProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const
 {
     // Steps 1-3.
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+    RootedObject handler(cx, GetScriptedProxyHandlerObject(proxy));
     if (!handler) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
         return false;
@@ -1227,16 +1224,16 @@ ScriptedDirectProxyHandler::construct(JSContext* cx, HandleObject proxy, const C
 }
 
 bool
-ScriptedDirectProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                                       const CallArgs& args) const
+ScriptedProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
+                                 const CallArgs& args) const
 {
     ReportIncompatible(cx, args);
     return false;
 }
 
 bool
-ScriptedDirectProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
-                                        bool* bp) const
+ScriptedProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
+                                  bool* bp) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!target) {
@@ -1248,16 +1245,15 @@ ScriptedDirectProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, Mutab
 }
 
 bool
-ScriptedDirectProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
-                                            ESClassValue* classValue) const
+ScriptedProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                      ESClassValue* classValue) const
 {
     *classValue = ESClass_Other;
     return true;
 }
 
 bool
-ScriptedDirectProxyHandler::isArray(JSContext* cx, HandleObject proxy,
-                                    IsArrayAnswer* answer) const
+ScriptedProxyHandler::isArray(JSContext* cx, HandleObject proxy, IsArrayAnswer* answer) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (target)
@@ -1268,7 +1264,7 @@ ScriptedDirectProxyHandler::isArray(JSContext* cx, HandleObject proxy,
 }
 
 const char*
-ScriptedDirectProxyHandler::className(JSContext* cx, HandleObject proxy) const
+ScriptedProxyHandler::className(JSContext* cx, HandleObject proxy) const
 {
     // Right now the caller is not prepared to handle failures.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
@@ -1278,8 +1274,7 @@ ScriptedDirectProxyHandler::className(JSContext* cx, HandleObject proxy) const
     return GetObjectClassName(cx, target);
 }
 JSString*
-ScriptedDirectProxyHandler::fun_toString(JSContext* cx, HandleObject proxy,
-                                         unsigned indent) const
+ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                          js_Function_str, js_toString_str, "object");
@@ -1287,39 +1282,38 @@ ScriptedDirectProxyHandler::fun_toString(JSContext* cx, HandleObject proxy,
 }
 
 bool
-ScriptedDirectProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
-                                            RegExpGuard* g) const
+ScriptedProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const
 {
-    MOZ_CRASH("Should not end up in ScriptedDirectProxyHandler::regexp_toShared");
+    MOZ_CRASH("Should not end up in ScriptedProxyHandler::regexp_toShared");
     return false;
 }
 
 bool
-ScriptedDirectProxyHandler::boxedValue_unbox(JSContext* cx, HandleObject proxy,
-                                             MutableHandleValue vp) const
+ScriptedProxyHandler::boxedValue_unbox(JSContext* cx, HandleObject proxy,
+                                       MutableHandleValue vp) const
 {
-    MOZ_CRASH("Should not end up in ScriptedDirectProxyHandler::boxedValue_unbox");
+    MOZ_CRASH("Should not end up in ScriptedProxyHandler::boxedValue_unbox");
     return false;
 }
 
 bool
-ScriptedDirectProxyHandler::isCallable(JSObject* obj) const
+ScriptedProxyHandler::isCallable(JSObject* obj) const
 {
-    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
+    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedProxyHandler::singleton);
     uint32_t callConstruct = obj->as<ProxyObject>().extra(IS_CALLCONSTRUCT_EXTRA).toPrivateUint32();
     return !!(callConstruct & IS_CALLABLE);
 }
 
 bool
-ScriptedDirectProxyHandler::isConstructor(JSObject* obj) const
+ScriptedProxyHandler::isConstructor(JSObject* obj) const
 {
-    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedDirectProxyHandler::singleton);
+    MOZ_ASSERT(obj->as<ProxyObject>().handler() == &ScriptedProxyHandler::singleton);
     uint32_t callConstruct = obj->as<ProxyObject>().extra(IS_CALLCONSTRUCT_EXTRA).toPrivateUint32();
     return !!(callConstruct & IS_CONSTRUCTOR);
 }
 
-const char ScriptedDirectProxyHandler::family = 0;
-const ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
+const char ScriptedProxyHandler::family = 0;
+const ScriptedProxyHandler ScriptedProxyHandler::singleton;
 
 bool
 IsRevokedScriptedProxy(JSObject* obj)
@@ -1363,19 +1357,18 @@ ProxyCreate(JSContext* cx, CallArgs& args, const char* callerName)
     // Steps 5-6, 8.
     RootedValue priv(cx, ObjectValue(*target));
     JSObject* proxy_ =
-        NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
-                       priv, TaggedProto::LazyProto);
+        NewProxyObject(cx, &ScriptedProxyHandler::singleton, priv, TaggedProto::LazyProto);
     if (!proxy_)
         return false;
 
     // Step 9 (reordered).
     Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
-    proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
+    proxy->setExtra(ScriptedProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
 
     // Step 7.
-    uint32_t callable = target->isCallable() ? ScriptedDirectProxyHandler::IS_CALLABLE : 0;
-    uint32_t constructor = target->isConstructor() ? ScriptedDirectProxyHandler::IS_CONSTRUCTOR : 0;
-    proxy->setExtra(ScriptedDirectProxyHandler::IS_CALLCONSTRUCT_EXTRA,
+    uint32_t callable = target->isCallable() ? ScriptedProxyHandler::IS_CALLABLE : 0;
+    uint32_t constructor = target->isConstructor() ? ScriptedProxyHandler::IS_CONSTRUCTOR : 0;
+    proxy->setExtra(ScriptedProxyHandler::IS_CALLCONSTRUCT_EXTRA,
                     PrivateUint32Value(callable | constructor));
 
     // Step 10.
@@ -1400,15 +1393,15 @@ RevokeProxy(JSContext* cx, unsigned argc, Value* vp)
     CallReceiver rec = CallReceiverFromVp(vp);
 
     RootedFunction func(cx, &rec.callee().as<JSFunction>());
-    RootedObject p(cx, func->getExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT).toObjectOrNull());
+    RootedObject p(cx, func->getExtendedSlot(ScriptedProxyHandler::REVOKE_SLOT).toObjectOrNull());
 
     if (p) {
-        func->setExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT, NullValue());
+        func->setExtendedSlot(ScriptedProxyHandler::REVOKE_SLOT, NullValue());
 
         MOZ_ASSERT(p->is<ProxyObject>());
 
         p->as<ProxyObject>().setSameCompartmentPrivate(NullValue());
-        p->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, NullValue());
+        p->as<ProxyObject>().setExtra(ScriptedProxyHandler::HANDLER_EXTRA, NullValue());
     }
 
     rec.rval().setUndefined();
@@ -1431,7 +1424,7 @@ js::proxy_revocable(JSContext* cx, unsigned argc, Value* vp)
     if (!revoker)
         return false;
 
-    revoker->as<JSFunction>().initExtendedSlot(ScriptedDirectProxyHandler::REVOKE_SLOT, proxyVal);
+    revoker->as<JSFunction>().initExtendedSlot(ScriptedProxyHandler::REVOKE_SLOT, proxyVal);
 
     RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!result)
