@@ -260,8 +260,10 @@ class ShellPrincipals final : public JSPrincipals {
     }
 
     bool write(JSContext* cx, JSStructuredCloneWriter* writer) override {
-        MOZ_ASSERT(false, "not implemented");
-        return false;
+        // The shell doesn't have a read principals hook, so it doesn't really
+        // matter what we write here, but we have to write something so the
+        // fuzzer is happy.
+        return JS_WriteUint32Pair(writer, bits, 0);
     }
 
     static void destroy(JSPrincipals* principals) {
