@@ -112,6 +112,7 @@ UNIFIED_SOURCES += [
     'WebGLExtensionDisjointTimerQuery.cpp',
     'WebGLExtensionDrawBuffers.cpp',
     'WebGLExtensionElementIndexUint.cpp',
+    'WebGLExtensionEXTColorBufferFloat.cpp',
     'WebGLExtensionFragDepth.cpp',
     'WebGLExtensionInstancedArrays.cpp',
     'WebGLExtensionLoseContext.cpp',

@@ -32,6 +32,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
 
         WEBGL_EXTENSION_IDENTIFIER(ANGLE_instanced_arrays)
         WEBGL_EXTENSION_IDENTIFIER(EXT_blend_minmax)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_float)
         WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_half_float)
         WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
         WEBGL_EXTENSION_IDENTIFIER(EXT_shader_texture_lod)
@@ -151,7 +152,18 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         break;
     }
 
-    if (!IsWebGL2()) {
+    if (IsWebGL2()) {
+        // WebGL2-only extensions
+        switch (ext) {
+        // EXT_
+        case WebGLExtensionID::EXT_color_buffer_float:
+            return WebGLExtensionEXTColorBufferFloat::IsSupported(this);
+
+        default:
+            // For warnings-as-errors.
+            break;
+        }
+    } else {
         // WebGL1-only extensions
         switch (ext) {
         // ANGLE_
@@ -330,6 +342,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
     // EXT_
     case WebGLExtensionID::EXT_blend_minmax:
         obj = new WebGLExtensionBlendMinMax(this);
+        break;
+    case WebGLExtensionID::EXT_color_buffer_float:
+        obj = new WebGLExtensionEXTColorBufferFloat(this);
         break;
     case WebGLExtensionID::EXT_color_buffer_half_float:
         obj = new WebGLExtensionColorBufferHalfFloat(this);
