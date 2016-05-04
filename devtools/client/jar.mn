@@ -129,6 +129,7 @@ devtools.jar:
     content/shared/widgets/spectrum-frame.xhtml (shared/widgets/spectrum-frame.xhtml)
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)
     content/shared/widgets/cubic-bezier-frame.xhtml (shared/widgets/cubic-bezier-frame.xhtml)
+    content/shared/widgets/tooltip-frame.xhtml (shared/widgets/tooltip-frame.xhtml)
     content/shared/widgets/cubic-bezier.css (shared/widgets/cubic-bezier.css)
     content/shared/widgets/mdn-docs-frame.xhtml (shared/widgets/mdn-docs-frame.xhtml)
     content/shared/widgets/mdn-docs.css (shared/widgets/mdn-docs.css)
