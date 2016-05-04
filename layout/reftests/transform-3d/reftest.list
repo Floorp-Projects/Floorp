@@ -45,6 +45,7 @@ fuzzy(3,99) random-if(Android&&!browserIsRemote) == perspective-origin-2a.html p
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html perspective-origin-3-ref.html
 == perspective-origin-4a.html perspective-origin-4-ref.html
 == perspective-zindex.html green-rect.html
+== perspective-zindex-2.html green-rect.html
 != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
 == sorting-2a.html sorting-2-ref.html
