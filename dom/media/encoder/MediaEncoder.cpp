@@ -106,6 +106,17 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 }
 
 void
+MediaEncoder::NotifyQueuedAudioData(MediaStreamGraph* aGraph, TrackID aID,
+                                    StreamTime aTrackOffset,
+                                    const AudioSegment& aQueuedMedia,
+                                    MediaStream* aInputStream,
+                                    TrackID aInputTrackID)
+{
+  mAudioEncoder->NotifyQueuedTrackChanges(aGraph, aID, aTrackOffset, 0,
+                                          aQueuedMedia);
+}
+
+void
 MediaEncoder::NotifyEvent(MediaStreamGraph* aGraph,
                           MediaStreamListener::MediaStreamGraphEvent event)
 {
