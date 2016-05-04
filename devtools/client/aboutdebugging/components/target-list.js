@@ -19,8 +19,11 @@ module.exports = createClass({
   displayName: "TargetList",
 
   render() {
-    let { client, debugDisabled, targetClass } = this.props;
-    let targets = this.props.targets.sort(LocaleCompare).map(target => {
+    let { client, debugDisabled, targetClass, targets, sort } = this.props;
+    if (sort) {
+      targets = targets.sort(LocaleCompare);
+    }
+    targets = targets.map(target => {
       return targetClass({ client, target, debugDisabled });
     });
 

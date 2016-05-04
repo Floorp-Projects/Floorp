@@ -275,7 +275,6 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestCombinedView());
         mTests.add(new TestCombinedViewDisplay());
         mTests.add(new TestCombinedViewWithDeletedBookmark());
-        mTests.add(new TestExpireHistory());
 
         mTests.add(new TestBrowserProviderNotifications());
     }
@@ -1684,121 +1683,6 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(c.getLong(c.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)), 0L,
                          "Bookmark id should not be set to removed bookmark id");
             c.close();
-        }
-    }
-
-    private class TestExpireHistory extends TestCase {
-        private void createFakeHistory(long timeShift, int count) {
-            // Insert a bunch of very new entries
-            ContentValues[] allVals = new ContentValues[count];
-            long time = System.currentTimeMillis() - timeShift;
-            for (int i = 0; i < count; i++) {
-                allVals[i] = new ContentValues();
-                allVals[i].put(BrowserContract.History.TITLE, "Test " + i);
-                allVals[i].put(BrowserContract.History.URL, "http://www.test.org/" + i);
-                allVals[i].put(BrowserContract.History.VISITS, i);
-                allVals[i].put(BrowserContract.History.DATE_LAST_VISITED, time);
-            }
-
-            int inserts = mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, allVals);
-            mAsserter.is(inserts, count, "Expected number of inserts matches");
-
-            // inserting a new entry sets the date created and modified automatically
-            // reset all of them
-            for (int i = 0; i < count; i++) {
-                ContentValues cv = new ContentValues();
-                cv.put(BrowserContract.History.DATE_CREATED, time);
-                cv.put(BrowserContract.History.DATE_MODIFIED, time);
-                mProvider.update(BrowserContract.History.CONTENT_URI, cv, BrowserContract.History.URL + " = ?",
-                                 new String[] { "http://www.test.org/" + i });
-            }
-
-            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
-
-            assertCountIsAndClose(c, count, count + " history entries found");
-
-            // add thumbnails for each entry
-            allVals = new ContentValues[count];
-            for (int i = 0; i < count; i++) {
-                allVals[i] = new ContentValues();
-                allVals[i].put(BrowserContract.Thumbnails.DATA, i);
-                allVals[i].put(BrowserContract.Thumbnails.URL, "http://www.test.org/" + i);
-            }
-
-            inserts = mProvider.bulkInsert(BrowserContract.Thumbnails.CONTENT_URI, allVals);
-            mAsserter.is(inserts, count, "Expected number of inserts matches");
-
-            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
-            assertCountIsAndClose(c, count, count + " thumbnails entries found");
-        }
-
-        @Override
-        public void test() throws Exception {
-            final int count = 3000;
-            final int thumbCount = 15;
-
-            // insert a bunch of new entries
-            createFakeHistory(0, count);
-
-            // expiring with a normal priority should not delete new entries
-            Uri url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "NORMAL");
-            mProvider.delete(url, null, null);
-            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
-            assertCountIsAndClose(c, count, count + " history entries found");
-
-            // expiring with a normal priority should delete all but 10 thumbnails
-            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
-            assertCountIsAndClose(c, thumbCount, thumbCount + " thumbnails found");
-
-            ensureEmptyDatabase();
-
-            // Insert a bunch of new entries.
-            createFakeHistory(0, count);
-
-            // Expiring with a aggressive priority should leave 500 entries.
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "AGGRESSIVE");
-            mProvider.delete(url, null, null);
-
-            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
-            assertCountIsAndClose(c, 500, "500 history entries found");
-
-            // Expiring with a aggressive priority should delete all but 10 thumbnails.
-            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
-            assertCountIsAndClose(c, thumbCount, thumbCount + " thumbnails found");
-
-            ensureEmptyDatabase();
-
-            // Insert a bunch of entries with an old time created/modified.
-            long time = 1000L * 60L * 60L * 24L * 30L * 3L;
-            createFakeHistory(time, count);
-
-            // Expiring with an normal priority should remove at most 1000 entries,
-            // entries leaving at least 2000.
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "NORMAL");
-            mProvider.delete(url, null, null);
-
-            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
-            assertCountIsAndClose(c, 2000, "2000 history entries found");
-
-            // Expiring with a normal priority should delete all but 10 thumbnails.
-            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
-            assertCountIsAndClose(c, thumbCount, thumbCount + " thumbnails found");
-
-            ensureEmptyDatabase();
-            // insert a bunch of entries with an old time created/modified
-            time = 1000L * 60L * 60L * 24L * 30L * 3L;
-            createFakeHistory(time, count);
-
-            // Expiring with an aggressive priority should remove old
-            // entries, leaving at least 500.
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "AGGRESSIVE");
-            mProvider.delete(url, null, null);
-            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
-            assertCountIsAndClose(c, 500, "500 history entries found");
-
-            // expiring with an aggressive priority should delete all but 10 thumbnails
-            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
-            assertCountIsAndClose(c, thumbCount, thumbCount + " thumbnails found");
         }
     }
 

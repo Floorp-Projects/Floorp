@@ -6,7 +6,6 @@
 
 background_junit3_sources = [
     'src/org/mozilla/gecko/background/common/TestAndroidLogWriters.java',
-    'src/org/mozilla/gecko/background/common/TestBrowserContractHelpers.java',
     'src/org/mozilla/gecko/background/common/TestUtils.java',
     'src/org/mozilla/gecko/background/common/TestWaitHelper.java',
     'src/org/mozilla/gecko/background/db/AndroidBrowserRepositoryTestCase.java',
@@ -23,7 +22,6 @@ background_junit3_sources = [
     'src/org/mozilla/gecko/background/fxa/TestAccountLoader.java',
     'src/org/mozilla/gecko/background/fxa/TestBrowserIDKeyPairGeneration.java',
     'src/org/mozilla/gecko/background/helpers/AndroidSyncTestCase.java',
-    'src/org/mozilla/gecko/background/helpers/BackgroundServiceTestCase.java',
     'src/org/mozilla/gecko/background/helpers/DBHelpers.java',
     'src/org/mozilla/gecko/background/helpers/DBProviderTestCase.java',
     'src/org/mozilla/gecko/background/nativecode/test/TestNativeCrypto.java',

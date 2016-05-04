@@ -12,10 +12,6 @@
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 
-namespace base {
-  class Histogram;
-} // namespace base
-
 namespace mozilla {
 namespace HangMonitor {
   class HangAnnotations;
@@ -84,6 +80,13 @@ void Accumulate(const char *name, const nsCString& key, uint32_t sample = 1);
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
+ * This clears the data for a histogram in TelemetryHistograms.h.
+ *
+ * @param id - histogram id
+ */
+void ClearHistogram(ID id);
+
+/**
  * Enable/disable recording for this histogram at runtime.
  * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
  * id must be a valid telemetry enum, otherwise an assertion is triggered.
@@ -93,17 +96,7 @@ void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now(
  */
 void SetHistogramRecordingEnabled(ID id, bool enabled);
 
-/**
- * Return a raw Histogram for direct manipulation for users who can not use Accumulate().
- */
-base::Histogram* GetHistogramById(ID id);
-
 const char* GetHistogramName(ID id);
-
-/**
- * Return a raw histogram for keyed histograms.
- */
-base::Histogram* GetKeyedHistogramById(ID id, const nsAString&);
 
 /**
  * Those wrappers are needed because the VS versions we use do not support free
