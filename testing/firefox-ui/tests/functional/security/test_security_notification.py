@@ -35,7 +35,7 @@ class TestSecurityNotification(FirefoxTestCase):
             time.sleep(1)
 
             # Verify the text in Technical Content contains the page with invalid cert
-            text = self.marionette.find_element(By.ID, 'technicalContentText')
+            text = self.marionette.find_element(By.ID, 'badCertTechnicalInfo')
             self.assertIn(self.urls[0][8:], text.get_attribute('textContent'))
 
             # Verify the "Go Back" and "Advanced" buttons appear
