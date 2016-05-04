@@ -147,8 +147,10 @@ namespace jit {
     _(LimitedTruncate)                                                      \
     _(RegExp)                                                               \
     _(RegExpMatcher)                                                        \
+    _(RegExpSearcher)                                                       \
     _(RegExpTester)                                                         \
-    _(RegExpReplace)                                                        \
+    _(RegExpPrototypeOptimizable)                                           \
+    _(RegExpInstanceOptimizable)                                            \
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \

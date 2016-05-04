@@ -4875,7 +4875,10 @@ GetSymbolDescription(HandleSymbol symbol);
     macro(isConcatSpreadable) \
     macro(iterator) \
     macro(match) \
+    macro(replace) \
+    macro(search) \
     macro(species) \
+    macro(split) \
     macro(toPrimitive) \
     macro(unscopables)
 

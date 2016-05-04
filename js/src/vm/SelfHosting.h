@@ -41,6 +41,9 @@ bool
 CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, HandleValue thisv,
                        const AnyInvokeArgs& args, MutableHandleValue rval);
 
+bool
+intrinsic_StringSplitString(JSContext* cx, unsigned argc, JS::Value* vp);
+
 } /* namespace js */
 
 #endif /* vm_SelfHosting_h_ */

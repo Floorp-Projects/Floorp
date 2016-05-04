@@ -207,8 +207,10 @@
     _(OsrArgumentsObject)           \
     _(RegExp)                       \
     _(RegExpMatcher)                \
+    _(RegExpSearcher)               \
     _(RegExpTester)                 \
-    _(RegExpReplace)                \
+    _(RegExpPrototypeOptimizable)   \
+    _(RegExpInstanceOptimizable)    \
     _(StringReplace)                \
     _(Substr)                       \
     _(BinarySharedStub)             \

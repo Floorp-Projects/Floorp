@@ -5,7 +5,10 @@ var names = [
     "isConcatSpreadable",
     "iterator",
     "match",
+    "replace",
+    "search",
     "species",
+    "split",
     "toPrimitive",
     "unscopables"
 ];
