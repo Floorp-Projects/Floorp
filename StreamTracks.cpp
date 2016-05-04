@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StreamBuffer.h"
+#include "StreamTracks.h"
 #include "mozilla/Logging.h"
 #include <algorithm>
 
@@ -14,7 +14,7 @@ extern LazyLogModule gMediaStreamGraphLog;
 
 #ifdef DEBUG
 void
-StreamBuffer::DumpTrackInfo() const
+StreamTracks::DumpTrackInfo() const
 {
   STREAM_LOG(LogLevel::Info, ("DumpTracks: mTracksKnownTime %lld", mTracksKnownTime));
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
@@ -30,7 +30,7 @@ StreamBuffer::DumpTrackInfo() const
 #endif
 
 StreamTime
-StreamBuffer::GetEnd() const
+StreamTracks::GetEnd() const
 {
   StreamTime t = mTracksKnownTime;
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
@@ -43,7 +43,7 @@ StreamBuffer::GetEnd() const
 }
 
 StreamTime
-StreamBuffer::GetAllTracksEnd() const
+StreamTracks::GetAllTracksEnd() const
 {
   if (mTracksKnownTime < STREAM_TIME_MAX) {
     // A track might be added.
@@ -60,8 +60,8 @@ StreamBuffer::GetAllTracksEnd() const
   return t;
 }
 
-StreamBuffer::Track*
-StreamBuffer::FindTrack(TrackID aID)
+StreamTracks::Track*
+StreamTracks::FindTrack(TrackID aID)
 {
   if (aID == TRACK_NONE || mTracks.IsEmpty()) {
     return nullptr;
@@ -91,7 +91,7 @@ StreamBuffer::FindTrack(TrackID aID)
 }
 
 void
-StreamBuffer::ForgetUpTo(StreamTime aTime)
+StreamTracks::ForgetUpTo(StreamTime aTime)
 {
   // Only prune if there is a reasonable chunk (50ms @ 48kHz) to forget, so we
   // don't spend too much time pruning segments.
