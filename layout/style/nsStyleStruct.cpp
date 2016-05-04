@@ -2651,7 +2651,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aOthe
   }
 
   if (mPosition != aOther.mPosition) {
-    hint |= nsChangeHint_UpdateBackgroundPosition;
+    hint |= nsChangeHint_SchedulePaint;
   }
 
   return hint;
