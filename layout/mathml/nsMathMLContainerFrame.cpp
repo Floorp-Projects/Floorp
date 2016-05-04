@@ -782,22 +782,18 @@ nsMathMLContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
+nsMathMLContainerFrame::ComputeOverflow(nsOverflowAreas& aOverflowAreas)
 {
-  // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
-  // frame rectangle.
-  aMetrics->SetOverflowAreasToDesiredBounds();
-
   // All non-child-frame content such as nsMathMLChars (and most child-frame
   // content) is included in mBoundingMetrics.
   nsRect boundingBox(mBoundingMetrics.leftBearing,
-                     aMetrics->BlockStartAscent() - mBoundingMetrics.ascent,
+                     mBlockStartAscent - mBoundingMetrics.ascent,
                      mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing,
                      mBoundingMetrics.ascent + mBoundingMetrics.descent);
 
   // REVIEW: Maybe this should contribute only to visual overflow
   // and not scrollable?
-  aMetrics->mOverflowAreas.UnionAllWith(boundingBox);
+  aOverflowAreas.UnionAllWith(boundingBox);
 
   // mBoundingMetrics does not necessarily include content of <mpadded>
   // elements whose mBoundingMetrics may not be representative of the true
@@ -805,9 +801,21 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
   // make such to include child overflow areas.
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
-    ConsiderChildOverflow(aMetrics->mOverflowAreas, childFrame);
+    ConsiderChildOverflow(aOverflowAreas, childFrame);
     childFrame = childFrame->GetNextSibling();
   }
+}
+
+void
+nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
+{
+  mBlockStartAscent = aMetrics->BlockStartAscent();
+
+  // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
+  // frame rectangle.
+  aMetrics->SetOverflowAreasToDesiredBounds();
+
+  ComputeOverflow(aMetrics->mOverflowAreas);
 
   FinishAndStoreOverflow(aMetrics);
 }
@@ -815,12 +823,12 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
 bool
 nsMathMLContainerFrame::UpdateOverflow()
 {
-  // Our overflow areas may have changed, so reflow the frame.
-  PresContext()->PresShell()->FrameNeedsReflow(
-    this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+  nsRect bounds(nsPoint(0, 0), GetSize());
+  nsOverflowAreas overflowAreas(bounds, bounds);
 
-  // As we're reflowing, there's no need to propagate this change.
-  return false;
+  ComputeOverflow(overflowAreas);
+
+  return FinishAndStoreOverflow(overflowAreas, GetSize());
 }
 
 void
