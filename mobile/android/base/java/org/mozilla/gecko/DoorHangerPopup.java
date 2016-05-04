@@ -309,10 +309,6 @@ public class DoorHangerPopup extends AnchoredPopup
         }
 
         showDividers();
-        if (isShowing()) {
-            show();
-            return;
-        }
 
         final String baseDomain = tab.getBaseDomain();
 
@@ -320,6 +316,11 @@ public class DoorHangerPopup extends AnchoredPopup
             firstDoorhanger.hideTitle();
         } else {
             firstDoorhanger.showTitle(tab.getFavicon(), baseDomain);
+        }
+
+        if (isShowing()) {
+            show();
+            return;
         }
 
         // Make the popup focusable for accessibility. This gets done here
