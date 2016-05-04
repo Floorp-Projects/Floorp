@@ -102,16 +102,25 @@
 
       function toggleDisplay(node) {
         toggle = {
-          '': 'block',
-          'none': 'block',
-          'block': 'none'
+          "": "block",
+          "none": "block",
+          "block": "none"
         };
         return (node.style.display = toggle[node.style.display]);
       }
 
       function showCertificateErrorReporting() {
         // Display error reporting UI
-        document.getElementById('certificateErrorReporting').style.display = 'block';
+        document.getElementById("certificateErrorReporting").style.display = "block";
+      }
+
+      function showPrefChangeContainer() {
+        const panel = document.getElementById("prefChangeContainer");
+        panel.style.display = "block";
+        document.getElementById("prefResetButton").addEventListener("click", function resetPreferences(e) {
+          const event = new CustomEvent("AboutNetErrorResetPreferences", {bubbles:true});
+          document.dispatchEvent(event);
+        });
       }
 
       function showAdvancedButton(allowOverride) {
@@ -307,18 +316,29 @@
 
             var options = JSON.parse(evt.detail);
             if (options && options.enabled) {
-              var checkbox = document.getElementById('automaticallyReportInFuture');
+              var checkbox = document.getElementById("automaticallyReportInFuture");
               showCertificateErrorReporting();
               if (options.automatic) {
                 // set the checkbox
                 checkbox.checked = true;
               }
 
-              checkbox.addEventListener('change', function(evt) {
+              checkbox.addEventListener("change", function(evt) {
                   var event = new CustomEvent("AboutNetErrorSetAutomatic",
                     {bubbles:true, detail:evt.target.checked});
                   document.dispatchEvent(event);
                 }, false);
+            }
+            const hasPrefStyleError = [
+              "interrupted", // This happens with subresources that are above the max tls
+              "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+              "SSL_ERROR_UNSUPPORTED_VERSION",
+              "SSL_ERROR_NO_CYPHER_OVERLAP",
+              "SSL_ERROR_NO_CIPHERS_SUPPORTED"
+            ].some((substring) => getDescription().includes(substring));
+            // If it looks like an error that is user config based
+            if (getErrorCode() == "nssFailure2" && hasPrefStyleError && options && options.changedCertPrefs) {
+              showPrefChangeContainer();
             }
           }
           if (getErrorCode() == "weakCryptoUsed" || getErrorCode() == "sslv3Used") {
@@ -409,7 +429,7 @@
         }
 
         // Initialize the cert domain link.
-        var link = document.getElementById('cert_domain_link');
+        var link = document.getElementById("cert_domain_link");
         if (!link)
           return;
 
@@ -560,6 +580,11 @@
 
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc" />
+
+        <div id="prefChangeContainer">
+          <p>&prefReset.longDesc;</p>
+          <button id="prefResetButton" autocomplete="off">&prefReset.label;</button>
+        </div>
 
         <div id="learnMoreContainer">
           <p><a href="https://support.mozilla.org/kb/what-does-your-connection-is-not-secure-mean" id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
