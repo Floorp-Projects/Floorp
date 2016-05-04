@@ -1,6 +1,12 @@
 // Bug 1267364 - GetStringDataProperty should return undefined when the object
 // is non-native.
 
+/*
+ * Temporary disabled, since this has been backed out.
+ * This will ride the train till it is eventually not in the tree
+ * anymore.
+ */
+/*
 var GetStringDataProperty = getSelfHostedValue("GetStringDataProperty");
 
 function testProxy() {
@@ -31,3 +37,4 @@ testProxy();
 testMaybeUnboxed();
 if (typeof TypedObject !== "undefined")
     testTypedObject();
+*/
