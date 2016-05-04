@@ -6,10 +6,44 @@
 
 #include "ServiceWorkerUnregisterJob.h"
 
+#include "nsIPushService.h"
+
 namespace mozilla {
 namespace dom {
 namespace workers {
 
+class ServiceWorkerUnregisterJob::PushUnsubscribeCallback final :
+        public nsIUnsubscribeResultCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit PushUnsubscribeCallback(ServiceWorkerUnregisterJob* aJob)
+    : mJob(aJob)
+  {
+    AssertIsOnMainThread();
+  }
+
+  NS_IMETHODIMP
+  OnUnsubscribe(nsresult aStatus, bool) override
+  {
+    // Warn if unsubscribing fails, but don't prevent the worker from
+    // unregistering.
+    Unused << NS_WARN_IF(NS_FAILED(aStatus));
+    mJob->Unregister();
+    return NS_OK;
+  }
+
+private:
+  ~PushUnsubscribeCallback()
+  {
+  }
+
+  RefPtr<ServiceWorkerUnregisterJob> mJob;
+};
+
+NS_IMPL_ISUPPORTS(ServiceWorkerUnregisterJob::PushUnsubscribeCallback,
+                  nsIUnsubscribeResultCallback)
 
 ServiceWorkerUnregisterJob::ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
                                                        const nsACString& aScope,
@@ -33,6 +67,35 @@ ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob()
 
 void
 ServiceWorkerUnregisterJob::AsyncExecute()
+{
+  AssertIsOnMainThread();
+
+  if (Canceled()) {
+    Finish(NS_ERROR_DOM_ABORT_ERR);
+    return;
+  }
+
+  // Push API, section 5: "When a service worker registration is unregistered,
+  // any associated push subscription must be deactivated." To ensure the
+  // service worker registration isn't cleared as we're unregistering, we
+  // unsubscribe first.
+  nsCOMPtr<nsIPushService> pushService =
+    do_GetService("@mozilla.org/push/Service;1");
+  if (NS_WARN_IF(!pushService)) {
+    Unregister();
+    return;
+  }
+  nsCOMPtr<nsIUnsubscribeResultCallback> unsubscribeCallback =
+    new PushUnsubscribeCallback(this);
+  nsresult rv = pushService->Unsubscribe(NS_ConvertUTF8toUTF16(mScope),
+                                         mPrincipal, unsubscribeCallback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Unregister();
+  }
+}
+
+void
+ServiceWorkerUnregisterJob::Unregister()
 {
   AssertIsOnMainThread();
 

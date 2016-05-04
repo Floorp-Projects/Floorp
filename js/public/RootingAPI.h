@@ -641,14 +641,8 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
         *stack = reinterpret_cast<Rooted<void*>*>(this);
     }
 
-    js::RootLists& rootLists(js::ContextFriendFields* cx) {
-        return rootLists(reinterpret_cast<JSContext*>(cx));
-    }
-    js::RootLists& rootLists(JSContext* cx) {
-        if (JS::Zone* zone = js::GetContextZone(cx))
-            return JS::shadow::Zone::asShadowZone(zone)->roots;
-        return rootLists(js::GetRuntime(cx));
-    }
+    js::RootLists& rootLists(js::ContextFriendFields* cx) { return cx->roots; }
+    js::RootLists& rootLists(JSContext* cx) { return js::ContextFriendFields::get(cx)->roots; }
     js::RootLists& rootLists(js::PerThreadDataFriendFields* pt) { return pt->roots; }
     js::RootLists& rootLists(JSRuntime* rt) {
         return js::PerThreadDataFriendFields::getMainThread(rt)->roots;

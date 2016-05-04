@@ -334,7 +334,7 @@ MSG_DEF(JSMSG_YIELD_IN_DEFAULT,        0, JSEXN_SYNTAXERR, "yield in default exp
 MSG_DEF(JSMSG_BAD_COLUMN_NUMBER,       0, JSEXN_RANGEERR, "column number out of range")
 MSG_DEF(JSMSG_COMPUTED_NAME_IN_PATTERN,0, JSEXN_SYNTAXERR, "computed property names aren't supported in this destructuring declaration")
 MSG_DEF(JSMSG_DEFAULT_IN_PATTERN,      0, JSEXN_SYNTAXERR, "destructuring defaults aren't supported in this destructuring declaration")
-MSG_DEF(JSMSG_BAD_NEWTARGET,           0, JSEXN_SYNTAXERR, "new.target only allowed in non-exotic functions")
+MSG_DEF(JSMSG_BAD_NEWTARGET,           0, JSEXN_SYNTAXERR, "new.target only allowed within functions")
 MSG_DEF(JSMSG_ESCAPED_KEYWORD,         0, JSEXN_SYNTAXERR, "keywords must be written literally, without embedded escapes")
 
 // asm.js

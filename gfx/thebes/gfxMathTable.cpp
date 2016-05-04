@@ -474,3 +474,13 @@ gfxMathTable::SelectGlyphConstruction(uint32_t aGlyphID, bool aVertical)
   mGlyphConstruction =
     reinterpret_cast<const MathGlyphConstruction*>(start + offset);
 }
+
+size_t
+gfxMathTable::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // We don't include the size of mMathTable here, because (depending on the
+  // font backend implementation) it will either wrap a block of data owned
+  // by the system (and potentially shared), or a table that's in our font
+  // table cache and therefore already counted.
+  return aMallocSizeOf(this);
+}

@@ -8,8 +8,8 @@
 
 #include "WebGLElementArrayCache.cpp"
 
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include "nscore.h"
 #include "nsTArray.h"
 
@@ -21,7 +21,7 @@ VerifyImplFunction(bool condition, const char* file, int line)
   if (condition) {
     gTestsPassed++;
   } else {
-    std::cerr << "Test failed at " << file << ":" << line << std::endl;
+    std::fprintf(stderr, "Test failed at %s:%d\n", file, line);
     abort();
   }
 }
@@ -226,7 +226,7 @@ main(int argc, char* argv[])
     } // i
   } // maxBufferSize
 
-  std::cerr << argv[0] << ": all " << gTestsPassed << " tests passed" << std::endl;
+  std::fprintf(stderr, "%s: all %d tests passed\n", argv[0], gTestsPassed);
   return 0;
 }
 

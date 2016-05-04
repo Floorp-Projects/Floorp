@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Tree Update Imagemap Test</title>
+  </head>
+  <body id="body">
+    <map name="atoz_map" id="map">
+      <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+            coords="17,0,30,14" alt="b" shape="rect">
+    </map>
+
+    <div id="container">
+      <img id="imgmap" width="447" height="15"
+           usemap="#atoz_map"
+           src="http://example.com/a11y/accessible/tests/mochitest/letters.gif"><!--
+      Important: no whitespace between the <img> and the </div>, so we
+      don't end up with textframes there, because those would be reflected
+      in our accessible tree in some cases.
+      --></div>
+  </body>
+</html>

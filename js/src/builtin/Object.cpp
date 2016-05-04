@@ -611,7 +611,7 @@ js::ObjectCreateImpl(JSContext* cx, HandleObject proto, NewObjectKind newKind,
 PlainObject*
 js::ObjectCreateWithTemplate(JSContext* cx, HandlePlainObject templateObj)
 {
-    RootedObject proto(cx, templateObj->getProto());
+    RootedObject proto(cx, templateObj->staticPrototype());
     RootedObjectGroup group(cx, templateObj->group());
     return ObjectCreateImpl(cx, proto, GenericObject, group);
 }

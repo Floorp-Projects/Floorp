@@ -20,6 +20,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Atomics.h"
 
 class nsPACMan;
 class nsISystemProxySettings;
@@ -232,7 +233,7 @@ private:
 
   nsCOMPtr<nsIStreamLoader>    mLoader;
   bool                         mLoadPending;
-  bool                         mShutdown;
+  mozilla::Atomic<bool, mozilla::Relaxed> mShutdown;
   mozilla::TimeStamp           mScheduledReload;
   uint32_t                     mLoadFailureCount;
 

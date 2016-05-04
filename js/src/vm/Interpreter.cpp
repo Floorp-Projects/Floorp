@@ -3363,7 +3363,8 @@ CASE(JSOP_LAMBDA)
     JSObject* obj = Lambda(cx, fun, REGS.fp()->scopeChain());
     if (!obj)
         goto error;
-    MOZ_ASSERT(obj->getProto());
+
+    MOZ_ASSERT(obj->staticPrototype());
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
@@ -3376,7 +3377,8 @@ CASE(JSOP_LAMBDA_ARROW)
     JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->scopeChain(), newTarget);
     if (!obj)
         goto error;
-    MOZ_ASSERT(obj->getProto());
+
+    MOZ_ASSERT(obj->staticPrototype());
     REGS.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_LAMBDA_ARROW)

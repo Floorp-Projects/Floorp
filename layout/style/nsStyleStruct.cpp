@@ -566,6 +566,12 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 }
 
 nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
+  : mOutlineWidth(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated)
+  , mOutlineOffset(0)
+  , mCachedOutlineWidth(0)
+  , mOutlineColor(NS_RGB(0, 0, 0))
+  , mOutlineStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mTwipsPerPixel(aContext.DevPixelsToAppUnits(1))
 {
   MOZ_COUNT_CTOR(nsStyleOutline);
   // spacing values not inherited
@@ -573,14 +579,6 @@ nsStyleOutline::nsStyleOutline(StyleStructContext aContext)
   NS_FOR_CSS_HALF_CORNERS(corner) {
     mOutlineRadius.Set(corner, zero);
   }
-
-  mOutlineOffset = 0;
-
-  mOutlineWidth = nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
-  mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
-  mOutlineColor = NS_RGB(0, 0, 0);
-
-  mTwipsPerPixel = aContext.DevPixelsToAppUnits(1);
 
   SetOutlineInitialColor();
 }
@@ -759,18 +757,18 @@ nsStyleList::sNoneQuotes;
 // nsStyleXUL
 //
 nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
-{ 
+  : mBoxFlex(0.0f)
+  , mBoxOrdinal(1)
+  , mBoxAlign(NS_STYLE_BOX_ALIGN_STRETCH)
+  , mBoxDirection(NS_STYLE_BOX_DIRECTION_NORMAL)
+  , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
+  , mBoxPack(NS_STYLE_BOX_PACK_START)
+  , mStretchStack(true)
+{
   MOZ_COUNT_CTOR(nsStyleXUL);
-  mBoxAlign  = NS_STYLE_BOX_ALIGN_STRETCH;
-  mBoxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
-  mBoxFlex = 0.0f;
-  mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
-  mBoxPack   = NS_STYLE_BOX_PACK_START;
-  mBoxOrdinal = 1;
-  mStretchStack = true;
 }
 
-nsStyleXUL::~nsStyleXUL() 
+nsStyleXUL::~nsStyleXUL()
 {
   MOZ_COUNT_DTOR(nsStyleXUL);
 }
@@ -808,23 +806,21 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 /* static */ const uint32_t nsStyleColumn::kMaxColumnCount = 1000;
 
 nsStyleColumn::nsStyleColumn(StyleStructContext aContext)
+  : mColumnCount(NS_STYLE_COLUMN_COUNT_AUTO)
+  , mColumnWidth(eStyleUnit_Auto)
+  , mColumnGap(eStyleUnit_Normal)
+  , mColumnRuleColor(NS_RGB(0, 0, 0))
+  , mColumnRuleStyle(NS_STYLE_BORDER_STYLE_NONE)
+  , mColumnFill(NS_STYLE_COLUMN_FILL_BALANCE)
+  , mColumnRuleColorIsForeground(true)
+  , mColumnRuleWidth((StaticPresData::Get()
+                        ->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM])
+  , mTwipsPerPixel(aContext.AppUnitsPerDevPixel())
 {
   MOZ_COUNT_CTOR(nsStyleColumn);
-  mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
-  mColumnWidth.SetAutoValue();
-  mColumnGap.SetNormalValue();
-  mColumnFill = NS_STYLE_COLUMN_FILL_BALANCE;
-
-  mColumnRuleWidth =
-    (StaticPresData::Get()->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
-  mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
-  mColumnRuleColor = NS_RGB(0, 0, 0);
-  mColumnRuleColorIsForeground = true;
-
-  mTwipsPerPixel = aContext.AppUnitsPerDevPixel();
 }
 
-nsStyleColumn::~nsStyleColumn() 
+nsStyleColumn::~nsStyleColumn()
 {
   MOZ_COUNT_DTOR(nsStyleColumn);
 }
@@ -878,39 +874,34 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 // nsStyleSVG
 //
 nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
+  : mFill(eStyleSVGPaintType_Color) // Will be initialized to NS_RGB(0, 0, 0)
+  , mStroke(eStyleSVGPaintType_None)
+  , mStrokeDasharray(nullptr)
+  , mStrokeDashoffset(0, nsStyleCoord::CoordConstructor)
+  , mStrokeWidth(nsPresContext::CSSPixelsToAppUnits(1),
+                 nsStyleCoord::CoordConstructor)
+  , mFillOpacity(1.0f)
+  , mStrokeMiterlimit(4.0f)
+  , mStrokeOpacity(1.0f)
+  , mStrokeDasharrayLength(0)
+  , mClipRule(NS_STYLE_FILL_RULE_NONZERO)
+  , mColorInterpolation(NS_STYLE_COLOR_INTERPOLATION_SRGB)
+  , mColorInterpolationFilters(NS_STYLE_COLOR_INTERPOLATION_LINEARRGB)
+  , mFillRule(NS_STYLE_FILL_RULE_NONZERO)
+  , mPaintOrder(NS_STYLE_PAINT_ORDER_NORMAL)
+  , mShapeRendering(NS_STYLE_SHAPE_RENDERING_AUTO)
+  , mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT)
+  , mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER)
+  , mTextAnchor(NS_STYLE_TEXT_ANCHOR_START)
+  , mFillOpacitySource(eStyleSVGOpacitySource_Normal)
+  , mStrokeOpacitySource(eStyleSVGOpacitySource_Normal)
+  , mStrokeDasharrayFromObject(false)
+  , mStrokeDashoffsetFromObject(false)
+  , mStrokeWidthFromObject(false)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-  mFill.mType              = eStyleSVGPaintType_Color;
-  mFill.mPaint.mColor      = NS_RGB(0,0,0);
-  mFill.mFallbackColor     = NS_RGB(0,0,0);
-  mStroke.mType            = eStyleSVGPaintType_None;
-  mStroke.mPaint.mColor    = NS_RGB(0,0,0);
-  mStroke.mFallbackColor   = NS_RGB(0,0,0);
-  mStrokeDasharray         = nullptr;
+}
 
-  mStrokeDashoffset.SetCoordValue(0);
-  mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
-
-  mFillOpacity             = 1.0f;
-  mStrokeMiterlimit        = 4.0f;
-  mStrokeOpacity           = 1.0f;
-
-  mStrokeDasharrayLength   = 0;
-  mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
-  mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
-  mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
-  mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
-  mPaintOrder              = NS_STYLE_PAINT_ORDER_NORMAL;
-  mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
-  mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
-  mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
-  mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
-  mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
-  mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
-  mStrokeDasharrayFromObject = false;
-  mStrokeDashoffsetFromObject = false;
-  mStrokeWidthFromObject   = false;
-} 
 nsStyleSVG::~nsStyleSVG()
 {
   MOZ_COUNT_DTOR(nsStyleSVG);
@@ -918,54 +909,51 @@ nsStyleSVG::~nsStyleSVG()
 }
 
 nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
+  : mFill(aSource.mFill)
+  , mStroke(aSource.mStroke)
+  , mMarkerEnd(aSource.mMarkerEnd)
+  , mMarkerMid(aSource.mMarkerMid)
+  , mMarkerStart(aSource.mMarkerStart)
+  , mStrokeDasharray(nullptr)
+  , mStrokeDashoffset(aSource.mStrokeDashoffset)
+  , mStrokeWidth(aSource.mStrokeWidth)
+  , mFillOpacity(aSource.mFillOpacity)
+  , mStrokeMiterlimit(aSource.mStrokeMiterlimit)
+  , mStrokeOpacity(aSource.mStrokeOpacity)
+  , mStrokeDasharrayLength(0)
+  , mClipRule(aSource.mClipRule)
+  , mColorInterpolation(aSource.mColorInterpolation)
+  , mColorInterpolationFilters(aSource.mColorInterpolationFilters)
+  , mFillRule(aSource.mFillRule)
+  , mPaintOrder(aSource.mPaintOrder)
+  , mShapeRendering(aSource.mShapeRendering)
+  , mStrokeLinecap(aSource.mStrokeLinecap)
+  , mStrokeLinejoin(aSource.mStrokeLinejoin)
+  , mTextAnchor(aSource.mTextAnchor)
+  , mFillOpacitySource(aSource.mFillOpacitySource)
+  , mStrokeOpacitySource(aSource.mStrokeOpacitySource)
+  , mStrokeDasharrayFromObject(aSource.mStrokeDasharrayFromObject)
+  , mStrokeDashoffsetFromObject(aSource.mStrokeDashoffsetFromObject)
+  , mStrokeWidthFromObject(aSource.mStrokeWidthFromObject)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
-  mFill = aSource.mFill;
-  mStroke = aSource.mStroke;
 
-  mMarkerEnd = aSource.mMarkerEnd;
-  mMarkerMid = aSource.mMarkerMid;
-  mMarkerStart = aSource.mMarkerStart;
-
-  mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
+  MOZ_ASSERT(bool(aSource.mStrokeDasharray) ==
+             bool(aSource.mStrokeDasharrayLength),
+             "aSource.mStrokeDasharray has an inconsistent length!");
   if (aSource.mStrokeDasharray) {
+    mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
     mStrokeDasharray = new nsStyleCoord[mStrokeDasharrayLength];
     if (mStrokeDasharray) {
       for (size_t i = 0; i < mStrokeDasharrayLength; i++) {
         mStrokeDasharray[i] = aSource.mStrokeDasharray[i];
       }
-    } else {
-      mStrokeDasharrayLength = 0;
     }
-  } else {
-    mStrokeDasharray = nullptr;
   }
-
-  mStrokeDashoffset = aSource.mStrokeDashoffset;
-  mStrokeWidth = aSource.mStrokeWidth;
-
-  mFillOpacity = aSource.mFillOpacity;
-  mStrokeMiterlimit = aSource.mStrokeMiterlimit;
-  mStrokeOpacity = aSource.mStrokeOpacity;
-
-  mClipRule = aSource.mClipRule;
-  mColorInterpolation = aSource.mColorInterpolation;
-  mColorInterpolationFilters = aSource.mColorInterpolationFilters;
-  mFillRule = aSource.mFillRule;
-  mPaintOrder = aSource.mPaintOrder;
-  mShapeRendering = aSource.mShapeRendering;
-  mStrokeLinecap = aSource.mStrokeLinecap;
-  mStrokeLinejoin = aSource.mStrokeLinejoin;
-  mTextAnchor = aSource.mTextAnchor;
-  mFillOpacitySource = aSource.mFillOpacitySource;
-  mStrokeOpacitySource = aSource.mStrokeOpacitySource;
-  mStrokeDasharrayFromObject = aSource.mStrokeDasharrayFromObject;
-  mStrokeDashoffsetFromObject = aSource.mStrokeDashoffsetFromObject;
-  mStrokeWidthFromObject = aSource.mStrokeWidthFromObject;
 }
 
 static bool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
-                              const nsStyleSVGPaint& aPaint2)
+                            const nsStyleSVGPaint& aPaint2)
 {
   if (aPaint1.mType != aPaint2.mType) {
     return aPaint1.mType == eStyleSVGPaintType_Server ||
@@ -1310,16 +1298,16 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
 // nsStyleSVGReset
 //
 nsStyleSVGReset::nsStyleSVGReset(StyleStructContext aContext)
+  : mStopColor(NS_RGB(0, 0, 0))
+  , mFloodColor(NS_RGB(0, 0, 0))
+  , mLightingColor(NS_RGB(255, 255, 255))
+  , mStopOpacity(1.0f)
+  , mFloodOpacity(1.0f)
+  , mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO)
+  , mVectorEffect(NS_STYLE_VECTOR_EFFECT_NONE)
+  , mMaskType(NS_STYLE_MASK_TYPE_LUMINANCE)
 {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
-  mStopColor               = NS_RGB(0,0,0);
-  mFloodColor              = NS_RGB(0,0,0);
-  mLightingColor           = NS_RGB(255,255,255);
-  mStopOpacity             = 1.0f;
-  mFloodOpacity            = 1.0f;
-  mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
-  mVectorEffect            = NS_STYLE_VECTOR_EFFECT_NONE;
-  mMaskType                = NS_STYLE_MASK_TYPE_LUMINANCE;
 }
 
 nsStyleSVGReset::~nsStyleSVGReset()
@@ -1329,17 +1317,17 @@ nsStyleSVGReset::~nsStyleSVGReset()
 
 nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
   : mMask(aSource.mMask)
+  , mClipPath(aSource.mClipPath)
+  , mStopColor(aSource.mStopColor)
+  , mFloodColor(aSource.mFloodColor)
+  , mLightingColor(aSource.mLightingColor)
+  , mStopOpacity(aSource.mStopOpacity)
+  , mFloodOpacity(aSource.mFloodOpacity)
+  , mDominantBaseline(aSource.mDominantBaseline)
+  , mVectorEffect(aSource.mVectorEffect)
+  , mMaskType(aSource.mMaskType)
 {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
-  mStopColor = aSource.mStopColor;
-  mFloodColor = aSource.mFloodColor;
-  mLightingColor = aSource.mLightingColor;
-  mClipPath = aSource.mClipPath;
-  mStopOpacity = aSource.mStopOpacity;
-  mFloodOpacity = aSource.mFloodOpacity;
-  mDominantBaseline = aSource.mDominantBaseline;
-  mVectorEffect = aSource.mVectorEffect;
-  mMaskType = aSource.mMaskType;
 }
 
 void nsStyleSVGReset::Destroy(nsPresContext* aContext) {
@@ -1389,19 +1377,47 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 }
 
 // nsStyleSVGPaint implementation
+nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
+  : mType(nsStyleSVGPaintType(0))
+  , mFallbackColor(NS_RGB(0, 0, 0))
+{
+  SetType(aType);
+}
+
+nsStyleSVGPaint::nsStyleSVGPaint(const nsStyleSVGPaint& aSource)
+  : mType(nsStyleSVGPaintType(0))
+  , mFallbackColor(NS_RGB(0, 0, 0))
+{
+  SetType(aSource.mType);
+
+  mFallbackColor = aSource.mFallbackColor;
+  if (mType == eStyleSVGPaintType_Server) {
+    mPaint.mPaintServer = aSource.mPaint.mPaintServer;
+    NS_IF_ADDREF(mPaint.mPaintServer);
+  } else {
+    mPaint.mColor = aSource.mPaint.mColor;
+  }
+}
+
 nsStyleSVGPaint::~nsStyleSVGPaint()
 {
-  if (mType == eStyleSVGPaintType_Server) {
-    NS_IF_RELEASE(mPaint.mPaintServer);
-  }
+  Reset();
+}
+
+void
+nsStyleSVGPaint::Reset()
+{
+  SetType(nsStyleSVGPaintType(0));
 }
 
 void
 nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
 {
   if (mType == eStyleSVGPaintType_Server) {
-    this->~nsStyleSVGPaint();
-    new (this) nsStyleSVGPaint();
+    NS_IF_RELEASE(mPaint.mPaintServer);
+    mPaint.mPaintServer = nullptr;
+  } else {
+    mPaint.mColor = NS_RGB(0, 0, 0);
   }
   mType = aType;
 }
@@ -1439,6 +1455,32 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(StyleStructContext aContext)
+  : mWidth(eStyleUnit_Auto)
+  , mMinWidth(eStyleUnit_Auto)
+  , mMaxWidth(eStyleUnit_None)
+  , mHeight(eStyleUnit_Auto)
+  , mMinHeight(eStyleUnit_Auto)
+  , mMaxHeight(eStyleUnit_None)
+  , mFlexBasis(eStyleUnit_Auto)
+  , mGridAutoColumnsMin(eStyleUnit_Auto)
+  , mGridAutoColumnsMax(eStyleUnit_Auto)
+  , mGridAutoRowsMin(eStyleUnit_Auto)
+  , mGridAutoRowsMax(eStyleUnit_Auto)
+  , mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW)
+  , mBoxSizing(StyleBoxSizing::Content)
+  , mAlignContent(NS_STYLE_ALIGN_NORMAL)
+  , mAlignItems(NS_STYLE_ALIGN_NORMAL)
+  , mAlignSelf(NS_STYLE_ALIGN_AUTO)
+  , mJustifyContent(NS_STYLE_JUSTIFY_NORMAL)
+  , mJustifyItems(NS_STYLE_JUSTIFY_AUTO)
+  , mJustifySelf(NS_STYLE_JUSTIFY_AUTO)
+  , mFlexDirection(NS_STYLE_FLEX_DIRECTION_ROW)
+  , mFlexWrap(NS_STYLE_FLEX_WRAP_NOWRAP)
+  , mObjectFit(NS_STYLE_OBJECT_FIT_FILL)
+  , mOrder(NS_STYLE_ORDER_INITIAL)
+  , mFlexGrow(0.0f)
+  , mFlexShrink(1.0f)
+  , mZIndex(eStyleUnit_Auto)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 
@@ -1447,40 +1489,13 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   mObjectPosition.SetInitialPercentValues(0.5f);
 
   nsStyleCoord  autoCoord(eStyleUnit_Auto);
-  mOffset.SetLeft(autoCoord);
-  mOffset.SetTop(autoCoord);
-  mOffset.SetRight(autoCoord);
-  mOffset.SetBottom(autoCoord);
-  mWidth.SetAutoValue();
-  mMinWidth.SetAutoValue();
-  mMaxWidth.SetNoneValue();
-  mHeight.SetAutoValue();
-  mMinHeight.SetAutoValue();
-  mMaxHeight.SetNoneValue();
-  mFlexBasis.SetAutoValue();
+  NS_FOR_CSS_SIDES(side) {
+    mOffset.Set(side, autoCoord);
+  }
 
   // The initial value of grid-auto-columns and grid-auto-rows is 'auto',
   // which computes to 'minmax(auto, auto)'.
-  mGridAutoColumnsMin.SetAutoValue();
-  mGridAutoColumnsMax.SetAutoValue();
-  mGridAutoRowsMin.SetAutoValue();
-  mGridAutoRowsMax.SetAutoValue();
 
-  mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
-  mBoxSizing = StyleBoxSizing::Content;
-  mAlignContent = NS_STYLE_ALIGN_NORMAL;
-  mAlignItems = NS_STYLE_ALIGN_NORMAL;
-  mAlignSelf = NS_STYLE_ALIGN_AUTO;
-  mJustifyContent = NS_STYLE_JUSTIFY_NORMAL;
-  mJustifyItems = NS_STYLE_JUSTIFY_AUTO;
-  mJustifySelf = NS_STYLE_JUSTIFY_AUTO;
-  mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
-  mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
-  mObjectFit = NS_STYLE_OBJECT_FIT_FILL;
-  mOrder = NS_STYLE_ORDER_INITIAL;
-  mFlexGrow = 0.0f;
-  mFlexShrink = 1.0f;
-  mZIndex.SetAutoValue();
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
   // mGridTemplateAreas: nullptr for 'none'
@@ -1488,7 +1503,7 @@ nsStylePosition::nsStylePosition(StyleStructContext aContext)
   // mGrid{Column,Row}{Start,End}: false/0/empty values for 'auto'
 }
 
-nsStylePosition::~nsStylePosition(void)
+nsStylePosition::~nsStylePosition()
 {
   MOZ_COUNT_DTOR(nsStylePosition);
 }
@@ -1768,14 +1783,13 @@ nsStylePosition::ComputedJustifySelf(nsStyleContext* aParent) const
 //
 
 nsStyleTable::nsStyleTable(StyleStructContext aContext)
-{ 
+  : mLayoutStrategy(NS_STYLE_TABLE_LAYOUT_AUTO)
+  , mSpan(1)
+{
   MOZ_COUNT_CTOR(nsStyleTable);
-  // values not inherited
-  mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
-  mSpan = 1;
 }
 
-nsStyleTable::~nsStyleTable(void) 
+nsStyleTable::~nsStyleTable()
 {
   MOZ_COUNT_DTOR(nsStyleTable);
 }
@@ -1799,17 +1813,16 @@ nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 // nsStyleTableBorder
 
 nsStyleTableBorder::nsStyleTableBorder(StyleStructContext aContext)
-{ 
+  : mBorderSpacingCol(0)
+  , mBorderSpacingRow(0)
+  , mBorderCollapse(NS_STYLE_BORDER_SEPARATE)
+  , mCaptionSide(NS_STYLE_CAPTION_SIDE_TOP)
+  , mEmptyCells(NS_STYLE_TABLE_EMPTY_CELLS_SHOW)
+{
   MOZ_COUNT_CTOR(nsStyleTableBorder);
-  mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
-
-  mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-  mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
-  mBorderSpacingCol = 0;
-  mBorderSpacingRow = 0;
 }
 
-nsStyleTableBorder::~nsStyleTableBorder(void) 
+nsStyleTableBorder::~nsStyleTableBorder()
 {
   MOZ_COUNT_DTOR(nsStyleTableBorder);
 }
@@ -1833,7 +1846,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
   if (mBorderCollapse != aOther.mBorderCollapse) {
     return NS_STYLE_HINT_FRAMECHANGE;
   }
-  
+
   if ((mCaptionSide == aOther.mCaptionSide) &&
       (mBorderSpacingCol == aOther.mBorderSpacingCol) &&
       (mBorderSpacingRow == aOther.mBorderSpacingRow)) {
@@ -1850,15 +1863,15 @@ nsChangeHint nsStyleTableBorder::CalcDifference(const nsStyleTableBorder& aOther
 //
 
 nsStyleColor::nsStyleColor(StyleStructContext aContext)
+  : mColor(aContext.DefaultColor())
 {
   MOZ_COUNT_CTOR(nsStyleColor);
-  mColor = aContext.DefaultColor();
 }
 
 nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
+  : mColor(aSource.mColor)
 {
   MOZ_COUNT_CTOR(nsStyleColor);
-  mColor = aSource.mColor;
 }
 
 nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aOther) const
@@ -1907,7 +1920,7 @@ nsStyleGradient::operator==(const nsStyleGradient& aOther) const
   return true;
 }
 
-nsStyleGradient::nsStyleGradient(void)
+nsStyleGradient::nsStyleGradient()
   : mShape(NS_STYLE_GRADIENT_SHAPE_LINEAR)
   , mSize(NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER)
   , mRepeating(false)
@@ -2710,9 +2723,6 @@ bool nsStyleBackground::IsTransparent() const
          NS_GET_A(mBackgroundColor) == 0;
 }
 
-// --------------------
-// nsStyleDisplay
-//
 void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
 {
   switch (aTimingFunctionType) {
@@ -2842,65 +2852,68 @@ mozilla::StyleAnimation::operator==(const mozilla::StyleAnimation& aOther) const
          mIterationCount == aOther.mIterationCount;
 }
 
+// --------------------
+// nsStyleDisplay
+//
 nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
-  : mWillChangeBitField(0)
+  : mDisplay(NS_STYLE_DISPLAY_INLINE)
+  , mOriginalDisplay(NS_STYLE_DISPLAY_INLINE)
+  , mContain(NS_STYLE_CONTAIN_NONE)
+  , mAppearance(NS_THEME_NONE)
+  , mPosition(NS_STYLE_POSITION_STATIC)
+  , mFloats(NS_STYLE_FLOAT_NONE)
+  , mOriginalFloats(NS_STYLE_FLOAT_NONE)
+  , mBreakType(NS_STYLE_CLEAR_NONE)
+  , mBreakInside(NS_STYLE_PAGE_BREAK_AUTO)
+  , mBreakBefore(false)
+  , mBreakAfter(false)
+  , mOverflowX(NS_STYLE_OVERFLOW_VISIBLE)
+  , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
+  , mOverflowClipBox(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
+  , mResize(NS_STYLE_RESIZE_NONE)
+  , mOrient(NS_STYLE_ORIENT_INLINE)
+  , mIsolation(NS_STYLE_ISOLATION_AUTO)
+  , mTopLayer(NS_STYLE_TOP_LAYER_NONE)
+  , mWillChangeBitField(0)
+  , mTouchAction(NS_STYLE_TOUCH_ACTION_AUTO)
+  , mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO)
+  , mScrollSnapTypeX(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  , mScrollSnapTypeY(NS_STYLE_SCROLL_SNAP_TYPE_NONE)
+  , mScrollSnapPointsX(eStyleUnit_None)
+  , mScrollSnapPointsY(eStyleUnit_None)
+  , mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE)
+  , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
+  , mTransformBox(NS_STYLE_TRANSFORM_BOX_BORDER_BOX)
+  , mSpecifiedTransform(nullptr)
+  , mTransformOrigin{ {0.5f, eStyleUnit_Percent}, // Transform is centered on origin
+                      {0.5f, eStyleUnit_Percent},
+                      {0, nsStyleCoord::CoordConstructor} }
+  , mChildPerspective(eStyleUnit_None)
+  , mPerspectiveOrigin{ {0.5f, eStyleUnit_Percent},
+                        {0.5f, eStyleUnit_Percent} }
+  , mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated)
   , mTransitions(nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT)
+  , mTransitionTimingFunctionCount(1)
+  , mTransitionDurationCount(1)
+  , mTransitionDelayCount(1)
+  , mTransitionPropertyCount(1)
   , mAnimations(nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT)
+  , mAnimationTimingFunctionCount(1)
+  , mAnimationDurationCount(1)
+  , mAnimationDelayCount(1)
+  , mAnimationNameCount(1)
+  , mAnimationDirectionCount(1)
+  , mAnimationFillModeCount(1)
+  , mAnimationPlayStateCount(1)
+  , mAnimationIterationCountCount(1)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-  mAppearance = NS_THEME_NONE;
-  mDisplay = NS_STYLE_DISPLAY_INLINE;
-  mOriginalDisplay = mDisplay;
-  mContain = NS_STYLE_CONTAIN_NONE;
-  mPosition = NS_STYLE_POSITION_STATIC;
-  mFloats = NS_STYLE_FLOAT_NONE;
-  mOriginalFloats = mFloats;
-  mBreakType = NS_STYLE_CLEAR_NONE;
-  mBreakInside = NS_STYLE_PAGE_BREAK_AUTO;
-  mBreakBefore = false;
-  mBreakAfter = false;
-  mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
-  mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
-  mOverflowClipBox = NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX;
-  mResize = NS_STYLE_RESIZE_NONE;
-  mSpecifiedTransform = nullptr;
-  mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
-  mTransformOrigin[1].SetPercentValue(0.5f);
-  mTransformOrigin[2].SetCoordValue(0);
-  mPerspectiveOrigin[0].SetPercentValue(0.5f);
-  mPerspectiveOrigin[1].SetPercentValue(0.5f);
-  mChildPerspective.SetNoneValue();
-  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
-  mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
-  mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
-  mTransformBox = NS_STYLE_TRANSFORM_BOX_BORDER_BOX;
-  mOrient = NS_STYLE_ORIENT_INLINE;
-  mIsolation = NS_STYLE_ISOLATION_AUTO;
-  mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
-  mTopLayer = NS_STYLE_TOP_LAYER_NONE;
-  mScrollBehavior = NS_STYLE_SCROLL_BEHAVIOR_AUTO;
-  mScrollSnapTypeX = NS_STYLE_SCROLL_SNAP_TYPE_NONE;
-  mScrollSnapTypeY = NS_STYLE_SCROLL_SNAP_TYPE_NONE;
-  mScrollSnapPointsX.SetNoneValue();
-  mScrollSnapPointsY.SetNoneValue();
+
   // Initial value for mScrollSnapDestination is "0px 0px"
   mScrollSnapDestination.SetInitialZeroValues();
 
   mTransitions[0].SetInitialValues();
-  mTransitionTimingFunctionCount = 1;
-  mTransitionDurationCount = 1;
-  mTransitionDelayCount = 1;
-  mTransitionPropertyCount = 1;
-
   mAnimations[0].SetInitialValues();
-  mAnimationTimingFunctionCount = 1;
-  mAnimationDurationCount = 1;
-  mAnimationDelayCount = 1;
-  mAnimationNameCount = 1;
-  mAnimationDirectionCount = 1;
-  mAnimationFillModeCount = 1;
-  mAnimationPlayStateCount = 1;
-  mAnimationIterationCountCount = 1;
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
@@ -2937,7 +2950,12 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformStyle(aSource.mTransformStyle)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
+  , mTransformOrigin{ aSource.mTransformOrigin[0],
+                      aSource.mTransformOrigin[1],
+                      aSource.mTransformOrigin[2] }
   , mChildPerspective(aSource.mChildPerspective)
+  , mPerspectiveOrigin{ aSource.mPerspectiveOrigin[0],
+                        aSource.mPerspectiveOrigin[1] }
   , mVerticalAlign(aSource.mVerticalAlign)
   , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
@@ -2955,13 +2973,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-
-  /* Copy over transform origin. */
-  mTransformOrigin[0] = aSource.mTransformOrigin[0];
-  mTransformOrigin[1] = aSource.mTransformOrigin[1];
-  mTransformOrigin[2] = aSource.mTransformOrigin[2];
-  mPerspectiveOrigin[0] = aSource.mPerspectiveOrigin[0];
-  mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
@@ -3177,32 +3188,29 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 //
 
 nsStyleVisibility::nsStyleVisibility(StyleStructContext aContext)
+  : mDirection(aContext.GetBidi() == IBMBIDI_TEXTDIRECTION_RTL
+                 ? NS_STYLE_DIRECTION_RTL
+                 : NS_STYLE_DIRECTION_LTR)
+  , mVisible(NS_STYLE_VISIBILITY_VISIBLE)
+  , mImageRendering(NS_STYLE_IMAGE_RENDERING_AUTO)
+  , mWritingMode(NS_STYLE_WRITING_MODE_HORIZONTAL_TB)
+  , mTextOrientation(NS_STYLE_TEXT_ORIENTATION_MIXED)
+  , mColorAdjust(NS_STYLE_COLOR_ADJUST_ECONOMY)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
-  uint32_t bidiOptions = aContext.GetBidi();
-  if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
-    mDirection = NS_STYLE_DIRECTION_RTL;
-  else
-    mDirection = NS_STYLE_DIRECTION_LTR;
-
-  mVisible = NS_STYLE_VISIBILITY_VISIBLE;
-  mImageRendering = NS_STYLE_IMAGE_RENDERING_AUTO;
-  mWritingMode = NS_STYLE_WRITING_MODE_HORIZONTAL_TB;
-  mTextOrientation = NS_STYLE_TEXT_ORIENTATION_MIXED;
-  mColorAdjust = NS_STYLE_COLOR_ADJUST_ECONOMY;
 }
 
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
+  : mImageOrientation(aSource.mImageOrientation)
+  , mDirection(aSource.mDirection)
+  , mVisible(aSource.mVisible)
+  , mImageRendering(aSource.mImageRendering)
+  , mWritingMode(aSource.mWritingMode)
+  , mTextOrientation(aSource.mTextOrientation)
+  , mColorAdjust(aSource.mColorAdjust)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
-  mImageOrientation = aSource.mImageOrientation;
-  mDirection = aSource.mDirection;
-  mVisible = aSource.mVisible;
-  mImageRendering = aSource.mImageRendering;
-  mWritingMode = aSource.mWritingMode;
-  mTextOrientation = aSource.mTextOrientation;
-  mColorAdjust = aSource.mColorAdjust;
-} 
+}
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
@@ -3347,19 +3355,18 @@ nsStyleContentData::UntrackImage(nsPresContext* aContext)
 //
 
 nsStyleContent::nsStyleContent(StyleStructContext aContext)
-  : mMarkerOffset(),
-    mContents(nullptr),
-    mIncrements(nullptr),
-    mResets(nullptr),
-    mContentCount(0),
-    mIncrementCount(0),
-    mResetCount(0)
+  : mMarkerOffset(eStyleUnit_Auto)
+  , mContents(nullptr)
+  , mIncrements(nullptr)
+  , mResets(nullptr)
+  , mContentCount(0)
+  , mIncrementCount(0)
+  , mResetCount(0)
 {
   MOZ_COUNT_CTOR(nsStyleContent);
-  mMarkerOffset.SetAutoValue();
 }
 
-nsStyleContent::~nsStyleContent(void)
+nsStyleContent::~nsStyleContent()
 {
   MOZ_COUNT_DTOR(nsStyleContent);
   DELETE_ARRAY_IF(mContents);
@@ -3367,7 +3374,7 @@ nsStyleContent::~nsStyleContent(void)
   DELETE_ARRAY_IF(mResets);
 }
 
-void 
+void
 nsStyleContent::Destroy(nsPresContext* aContext)
 {
   // Unregister any images we might have with the document.
@@ -3384,17 +3391,16 @@ nsStyleContent::Destroy(nsPresContext* aContext)
 }
 
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
-   :mMarkerOffset(),
-    mContents(nullptr),
-    mIncrements(nullptr),
-    mResets(nullptr),
-    mContentCount(0),
-    mIncrementCount(0),
-    mResetCount(0)
+  : mMarkerOffset(aSource.mMarkerOffset)
+  , mContents(nullptr)
+  , mIncrements(nullptr)
+  , mResets(nullptr)
+  , mContentCount(0)
+  , mIncrementCount(0)
+  , mResetCount(0)
 
 {
   MOZ_COUNT_CTOR(nsStyleContent);
-  mMarkerOffset = aSource.mMarkerOffset;
 
   uint32_t index;
   if (NS_SUCCEEDED(AllocateContents(aSource.ContentCount()))) {
@@ -3494,22 +3500,22 @@ nsresult nsStyleContent::AllocateContents(uint32_t aCount)
 //
 
 nsStyleTextReset::nsStyleTextReset(StyleStructContext aContext)
-{ 
+  : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
+  , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID |
+                         BORDER_COLOR_FOREGROUND)
+  , mTextDecorationColor(NS_RGB(0, 0, 0))
+{
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
-  mTextDecorationColor = NS_RGB(0,0,0);
-  mTextDecorationStyle =
-    NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND;
-  mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
 }
 
-nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource) 
-{ 
+nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
+{
   MOZ_COUNT_CTOR(nsStyleTextReset);
   *this = aSource;
 }
 
-nsStyleTextReset::~nsStyleTextReset(void)
+nsStyleTextReset::~nsStyleTextReset()
 {
   MOZ_COUNT_DTOR(nsStyleTextReset);
 }
@@ -3572,83 +3578,81 @@ AreShadowArraysEqual(nsCSSShadowArray* lhs,
 //
 
 nsStyleText::nsStyleText(StyleStructContext aContext)
-{ 
+  : mTextAlign(NS_STYLE_TEXT_ALIGN_DEFAULT)
+  , mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO)
+  , mTextAlignTrue(false)
+  , mTextAlignLastTrue(false)
+  , mTextEmphasisColorForeground(true)
+  , mWebkitTextFillColorForeground(true)
+  , mWebkitTextStrokeColorForeground(true)
+  , mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE)
+  , mWhiteSpace(NS_STYLE_WHITESPACE_NORMAL)
+  , mWordBreak(NS_STYLE_WORDBREAK_NORMAL)
+  , mWordWrap(NS_STYLE_WORDWRAP_NORMAL)
+  , mHyphens(NS_STYLE_HYPHENS_MANUAL)
+  , mRubyAlign(NS_STYLE_RUBY_ALIGN_SPACE_AROUND)
+  , mRubyPosition(NS_STYLE_RUBY_POSITION_OVER)
+  , mTextSizeAdjust(NS_STYLE_TEXT_SIZE_ADJUST_AUTO)
+  , mTextCombineUpright(NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE)
+  , mControlCharacterVisibility(nsCSSParser::ControlCharVisibilityDefault())
+  , mTextEmphasisStyle(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE)
+  , mTextRendering(NS_STYLE_TEXT_RENDERING_AUTO)
+  , mTabSize(NS_STYLE_TABSIZE_INITIAL)
+  , mTextEmphasisColor(aContext.DefaultColor())
+  , mWebkitTextFillColor(aContext.DefaultColor())
+  , mWebkitTextStrokeColor(aContext.DefaultColor())
+  , mWordSpacing(0, nsStyleCoord::CoordConstructor)
+  , mLetterSpacing(eStyleUnit_Normal)
+  , mLineHeight(eStyleUnit_Normal)
+  , mTextIndent(0, nsStyleCoord::CoordConstructor)
+  , mWebkitTextStrokeWidth(0, nsStyleCoord::CoordConstructor)
+  , mTextShadow(nullptr)
+{
   MOZ_COUNT_CTOR(nsStyleText);
-  mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
-  mTextAlignLast = NS_STYLE_TEXT_ALIGN_AUTO;
-  mTextAlignTrue = false;
-  mTextAlignLastTrue = false;
-  mTextEmphasisColorForeground = true;
-  mWebkitTextFillColorForeground = true;
-  mWebkitTextStrokeColorForeground = true;
-  mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-  mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-  mWordBreak = NS_STYLE_WORDBREAK_NORMAL;
-  mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
-  mHyphens = NS_STYLE_HYPHENS_MANUAL;
-  mRubyAlign = NS_STYLE_RUBY_ALIGN_SPACE_AROUND;
-  mRubyPosition = NS_STYLE_RUBY_POSITION_OVER;
-  mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
-  mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
-  mTextEmphasisStyle = NS_STYLE_TEXT_EMPHASIS_STYLE_NONE;
-  mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
   nsCOMPtr<nsIAtom> language = aContext.GetContentLanguage();
   mTextEmphasisPosition = language &&
     nsStyleUtil::MatchesLanguagePrefix(language, MOZ_UTF16("zh")) ?
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT_ZH :
     NS_STYLE_TEXT_EMPHASIS_POSITION_DEFAULT;
-  mTextEmphasisColor = aContext.DefaultColor();
-  mWebkitTextFillColor = aContext.DefaultColor();
-  mWebkitTextStrokeColor = aContext.DefaultColor();
-  mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
-
-  mWordSpacing.SetCoordValue(0);
-  mLetterSpacing.SetNormalValue();
-  mLineHeight.SetNormalValue();
-  mTextIndent.SetCoordValue(0);
-  mWebkitTextStrokeWidth.SetCoordValue(0);
-
-  mTextShadow = nullptr;
-  mTabSize = NS_STYLE_TABSIZE_INITIAL;
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
-  : mTextAlign(aSource.mTextAlign),
-    mTextAlignLast(aSource.mTextAlignLast),
-    mTextAlignTrue(false),
-    mTextAlignLastTrue(false),
-    mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground),
-    mWebkitTextFillColorForeground(aSource.mWebkitTextFillColorForeground),
-    mWebkitTextStrokeColorForeground(aSource.mWebkitTextStrokeColorForeground),
-    mTextTransform(aSource.mTextTransform),
-    mWhiteSpace(aSource.mWhiteSpace),
-    mWordBreak(aSource.mWordBreak),
-    mWordWrap(aSource.mWordWrap),
-    mHyphens(aSource.mHyphens),
-    mRubyAlign(aSource.mRubyAlign),
-    mRubyPosition(aSource.mRubyPosition),
-    mTextSizeAdjust(aSource.mTextSizeAdjust),
-    mTextCombineUpright(aSource.mTextCombineUpright),
-    mControlCharacterVisibility(aSource.mControlCharacterVisibility),
-    mTextEmphasisPosition(aSource.mTextEmphasisPosition),
-    mTextEmphasisStyle(aSource.mTextEmphasisStyle),
-    mTextRendering(aSource.mTextRendering),
-    mTabSize(aSource.mTabSize),
-    mTextEmphasisColor(aSource.mTextEmphasisColor),
-    mWebkitTextFillColor(aSource.mWebkitTextFillColor),
-    mWebkitTextStrokeColor(aSource.mWebkitTextStrokeColor),
-    mWordSpacing(aSource.mWordSpacing),
-    mLetterSpacing(aSource.mLetterSpacing),
-    mLineHeight(aSource.mLineHeight),
-    mTextIndent(aSource.mTextIndent),
-    mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
-    mTextShadow(aSource.mTextShadow),
-    mTextEmphasisStyleString(aSource.mTextEmphasisStyleString)
+  : mTextAlign(aSource.mTextAlign)
+  , mTextAlignLast(aSource.mTextAlignLast)
+  , mTextAlignTrue(false)
+  , mTextAlignLastTrue(false)
+  , mTextEmphasisColorForeground(aSource.mTextEmphasisColorForeground)
+  , mWebkitTextFillColorForeground(aSource.mWebkitTextFillColorForeground)
+  , mWebkitTextStrokeColorForeground(aSource.mWebkitTextStrokeColorForeground)
+  , mTextTransform(aSource.mTextTransform)
+  , mWhiteSpace(aSource.mWhiteSpace)
+  , mWordBreak(aSource.mWordBreak)
+  , mWordWrap(aSource.mWordWrap)
+  , mHyphens(aSource.mHyphens)
+  , mRubyAlign(aSource.mRubyAlign)
+  , mRubyPosition(aSource.mRubyPosition)
+  , mTextSizeAdjust(aSource.mTextSizeAdjust)
+  , mTextCombineUpright(aSource.mTextCombineUpright)
+  , mControlCharacterVisibility(aSource.mControlCharacterVisibility)
+  , mTextEmphasisPosition(aSource.mTextEmphasisPosition)
+  , mTextEmphasisStyle(aSource.mTextEmphasisStyle)
+  , mTextRendering(aSource.mTextRendering)
+  , mTabSize(aSource.mTabSize)
+  , mTextEmphasisColor(aSource.mTextEmphasisColor)
+  , mWebkitTextFillColor(aSource.mWebkitTextFillColor)
+  , mWebkitTextStrokeColor(aSource.mWebkitTextStrokeColor)
+  , mWordSpacing(aSource.mWordSpacing)
+  , mLetterSpacing(aSource.mLetterSpacing)
+  , mLineHeight(aSource.mLineHeight)
+  , mTextIndent(aSource.mTextIndent)
+  , mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth)
+  , mTextShadow(aSource.mTextShadow)
+  , mTextEmphasisStyleString(aSource.mTextEmphasisStyleString)
 {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
-nsStyleText::~nsStyleText(void)
+nsStyleText::~nsStyleText()
 {
   MOZ_COUNT_DTOR(nsStyleText);
 }
@@ -3797,32 +3801,30 @@ nsCursorImage::operator=(const nsCursorImage& aOther)
 }
 
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
-{ 
+  : mUserInput(NS_STYLE_USER_INPUT_AUTO)
+  , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
+  , mUserFocus(NS_STYLE_USER_FOCUS_NONE)
+  , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
+  , mCursor(NS_STYLE_CURSOR_AUTO)
+  , mCursorArrayLength(0)
+  , mCursorArray(nullptr)
+{
   MOZ_COUNT_CTOR(nsStyleUserInterface);
-  mUserInput = NS_STYLE_USER_INPUT_AUTO;
-  mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
-  mUserFocus = NS_STYLE_USER_FOCUS_NONE;
-  mPointerEvents = NS_STYLE_POINTER_EVENTS_AUTO;
-
-  mCursor = NS_STYLE_CURSOR_AUTO; // fix for bugzilla bug 51113
-
-  mCursorArrayLength = 0;
-  mCursorArray = nullptr;
 }
 
-nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource) :
-  mUserInput(aSource.mUserInput),
-  mUserModify(aSource.mUserModify),
-  mUserFocus(aSource.mUserFocus),
-  mPointerEvents(aSource.mPointerEvents),
-  mCursor(aSource.mCursor)
-{ 
+nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
+  : mUserInput(aSource.mUserInput)
+  , mUserModify(aSource.mUserModify)
+  , mUserFocus(aSource.mUserFocus)
+  , mPointerEvents(aSource.mPointerEvents)
+  , mCursor(aSource.mCursor)
+{
   MOZ_COUNT_CTOR(nsStyleUserInterface);
   CopyCursorArrayFrom(aSource);
 }
 
-nsStyleUserInterface::~nsStyleUserInterface(void) 
-{ 
+nsStyleUserInterface::~nsStyleUserInterface()
+{
   MOZ_COUNT_DTOR(nsStyleUserInterface);
   delete [] mCursorArray;
 }
@@ -3885,27 +3887,27 @@ nsStyleUserInterface::CopyCursorArrayFrom(const nsStyleUserInterface& aSource)
 //
 
 nsStyleUIReset::nsStyleUIReset(StyleStructContext aContext)
-{ 
-  MOZ_COUNT_CTOR(nsStyleUIReset);
-  mUserSelect = NS_STYLE_USER_SELECT_AUTO;
-  mForceBrokenImageIcon = 0;
-  mIMEMode = NS_STYLE_IME_MODE_AUTO;
-  mWindowDragging = NS_STYLE_WINDOW_DRAGGING_DEFAULT;
-  mWindowShadow = NS_STYLE_WINDOW_SHADOW_DEFAULT;
-}
-
-nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
+  : mUserSelect(NS_STYLE_USER_SELECT_AUTO)
+  , mForceBrokenImageIcon(0)
+  , mIMEMode(NS_STYLE_IME_MODE_AUTO)
+  , mWindowDragging(NS_STYLE_WINDOW_DRAGGING_DEFAULT)
+  , mWindowShadow(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 {
   MOZ_COUNT_CTOR(nsStyleUIReset);
-  mUserSelect = aSource.mUserSelect;
-  mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
-  mIMEMode = aSource.mIMEMode;
-  mWindowDragging = aSource.mWindowDragging;
-  mWindowShadow = aSource.mWindowShadow;
 }
 
-nsStyleUIReset::~nsStyleUIReset(void) 
-{ 
+nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
+  : mUserSelect(aSource.mUserSelect)
+  , mForceBrokenImageIcon(aSource.mForceBrokenImageIcon)
+  , mIMEMode(aSource.mIMEMode)
+  , mWindowDragging(aSource.mWindowDragging)
+  , mWindowShadow(aSource.mWindowShadow)
+{
+  MOZ_COUNT_CTOR(nsStyleUIReset);
+}
+
+nsStyleUIReset::~nsStyleUIReset()
+{
   MOZ_COUNT_DTOR(nsStyleUIReset);
 }
 
@@ -3940,12 +3942,12 @@ nsStyleVariables::nsStyleVariables(StyleStructContext aContext)
 }
 
 nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
+  : mVariables(aSource.mVariables)
 {
   MOZ_COUNT_CTOR(nsStyleVariables);
-  mVariables = aSource.mVariables;
 }
 
-nsStyleVariables::~nsStyleVariables(void)
+nsStyleVariables::~nsStyleVariables()
 {
   MOZ_COUNT_DTOR(nsStyleVariables);
 }

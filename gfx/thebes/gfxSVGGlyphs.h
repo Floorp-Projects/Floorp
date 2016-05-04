@@ -49,6 +49,8 @@ public:
 
     virtual void DidRefresh() override;
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 private:
     nsresult ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen);
 
@@ -127,6 +129,8 @@ public:
      */
     bool GetGlyphExtents(uint32_t aGlyphId, const gfxMatrix& aSVGToAppSpace,
                          gfxRect *aResult);
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
     Element *GetGlyphElement(uint32_t aGlyphId);

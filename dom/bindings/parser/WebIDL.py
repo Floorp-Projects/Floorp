@@ -1464,7 +1464,8 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                   identifier == "Unforgeable" or
                   identifier == "UnsafeInPrerendering" or
                   identifier == "LegacyEventInit" or
-                  identifier == "ProbablyShortLivingObject"):
+                  identifier == "ProbablyShortLivingObject" or
+                  identifier == "NonOrdinaryGetPrototypeOf"):
                 # Known extended attributes that do not take values
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must take no arguments" % identifier,

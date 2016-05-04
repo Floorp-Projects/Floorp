@@ -114,10 +114,10 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
 
         # 2. The user may have an external Android SDK (in which case we save
         # them a lengthy download), or they may have already completed the
-        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r10e}.
+        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r11b}.
         mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(os.path.join('~', '.mozbuild')))
         self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
-        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r10e'))
+        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r11b'))
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
         self.ndk_url = android.android_ndk_url('linux')
 

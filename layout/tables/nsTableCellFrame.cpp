@@ -660,15 +660,13 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent)
 }
 
 bool
-nsTableCellFrame::UpdateOverflow()
+nsTableCellFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   nsRect bounds(nsPoint(0,0), GetSize());
   bounds.Inflate(GetBorderOverflow());
-  nsOverflowAreas overflowAreas(bounds, bounds);
 
-  nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
-
-  return FinishAndStoreOverflow(overflowAreas, GetSize());
+  aOverflowAreas.UnionAllWith(bounds);
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 // Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',

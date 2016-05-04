@@ -118,7 +118,7 @@ NS_IMETHODIMP
 nsStringEnumerator::GetNext(nsISupports** aResult)
 {
   if (mIsUnicode) {
-    nsSupportsStringImpl* stringImpl = new nsSupportsStringImpl();
+    nsSupportsString* stringImpl = new nsSupportsString();
     if (!stringImpl) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -126,7 +126,7 @@ nsStringEnumerator::GetNext(nsISupports** aResult)
     stringImpl->SetData(mArray->ElementAt(mIndex++));
     *aResult = stringImpl;
   } else {
-    nsSupportsCStringImpl* cstringImpl = new nsSupportsCStringImpl();
+    nsSupportsCString* cstringImpl = new nsSupportsCString();
     if (!cstringImpl) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

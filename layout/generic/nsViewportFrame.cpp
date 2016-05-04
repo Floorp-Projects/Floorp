@@ -389,7 +389,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 bool
-ViewportFrame::UpdateOverflow()
+ViewportFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   nsIScrollableFrame* rootScrollFrame =
     PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
@@ -397,7 +397,7 @@ ViewportFrame::UpdateOverflow()
     return false;
   }
 
-  return nsFrame::UpdateOverflow();
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 nsIAtom*
