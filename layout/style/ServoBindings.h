@@ -93,7 +93,10 @@ ServoComputedValues* Servo_GetComputedValuesForPseudoElement(ServoComputedValues
 void Servo_AddRefComputedValues(ServoComputedValues*);
 void Servo_ReleaseComputedValues(ServoComputedValues*);
 
-// Servo API.
+// Initialize Servo components. Should be called exactly once at startup.
+void Servo_Initialize();
+
+// Restyle the given document.
 void Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set);
 
 // Style-struct management.
