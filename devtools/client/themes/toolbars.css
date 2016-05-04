@@ -410,7 +410,7 @@
 }
 
 .devtools-searchinput:-moz-locale-dir(rtl),
-.devtools-searchinput:-moz-dir(rtl) {
+.devtools-searchinput:dir(rtl) {
   background-position: calc(100% - 8px) center;
 }
 
@@ -492,7 +492,7 @@
   background-color: transparent;
 }
 
-.devtools-searchinput-clear:-moz-dir(rtl) {
+.devtools-searchinput-clear:dir(rtl) {
   right: unset;
   left: 7px;
 }
