@@ -19,15 +19,14 @@
 #include "sslerr.h"
 #include "sslt.h"
 
-
-#define SEC_CT_PRIVATE_KEY		"private-key"
-#define SEC_CT_PUBLIC_KEY		"public-key"
-#define SEC_CT_CERTIFICATE		"certificate"
-#define SEC_CT_CERTIFICATE_REQUEST	"certificate-request"
-#define SEC_CT_CERTIFICATE_ID           "certificate-identity"
-#define SEC_CT_PKCS7			"pkcs7"
-#define SEC_CT_CRL			"crl"
-#define SEC_CT_NAME			"name"
+#define SEC_CT_PRIVATE_KEY "private-key"
+#define SEC_CT_PUBLIC_KEY "public-key"
+#define SEC_CT_CERTIFICATE "certificate"
+#define SEC_CT_CERTIFICATE_REQUEST "certificate-request"
+#define SEC_CT_CERTIFICATE_ID "certificate-identity"
+#define SEC_CT_PKCS7 "pkcs7"
+#define SEC_CT_CRL "crl"
+#define SEC_CT_NAME "name"
 
 #define NS_CERTREQ_HEADER "-----BEGIN NEW CERTIFICATE REQUEST-----"
 #define NS_CERTREQ_TRAILER "-----END NEW CERTIFICATE REQUEST-----"
@@ -35,18 +34,17 @@
 #define NS_CERT_HEADER "-----BEGIN CERTIFICATE-----"
 #define NS_CERT_TRAILER "-----END CERTIFICATE-----"
 
-#define NS_CRL_HEADER  "-----BEGIN CRL-----"
+#define NS_CRL_HEADER "-----BEGIN CRL-----"
 #define NS_CRL_TRAILER "-----END CRL-----"
 
 #define SECU_Strerror PORT_ErrorToString
 
-
 typedef struct {
     enum {
-	PW_NONE = 0,
-	PW_FROMFILE = 1,
-	PW_PLAINTEXT = 2,
-	PW_EXTERNAL = 3
+        PW_NONE = 0,
+        PW_FROMFILE = 1,
+        PW_PLAINTEXT = 2,
+        PW_EXTERNAL = 3
     } source;
     char *data;
 } secuPWData;
@@ -67,7 +65,7 @@ SECStatus SECU_ChangePW(PK11SlotInfo *slot, char *passwd, char *pwFile);
 ** be prompted for
 */
 SECStatus SECU_ChangePW2(PK11SlotInfo *slot, char *oldPass, char *newPass,
-                        char *oldPwFile, char *newPwFile);
+                         char *oldPwFile, char *newPwFile);
 
 /*  These were stolen from the old sec.h... */
 /*
@@ -78,7 +76,7 @@ SECStatus SECU_ChangePW2(PK11SlotInfo *slot, char *oldPass, char *newPass,
 extern PRBool SEC_CheckPassword(char *password);
 
 /*
-** Blind check of a password. Complement to SEC_CheckPassword which 
+** Blind check of a password. Complement to SEC_CheckPassword which
 ** ignores length and content type, just retuning DSTrue is the password
 ** exists, DSFalse if NULL
 */
@@ -90,7 +88,7 @@ extern PRBool SEC_BlindCheckPassword(char *password);
 ** The password is then checked using "chkpw".
 */
 extern char *SEC_GetPassword(FILE *in, FILE *out, char *msg,
-				      PRBool (*chkpw)(char *));
+                             PRBool (*chkpw)(char *));
 
 char *SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg);
 
@@ -110,7 +108,6 @@ extern SECStatus SEC_WriteDongleFile(int fd, char *pw);
 */
 extern char *SEC_ReadDongleFile(int fd);
 
-
 /* End stolen headers */
 
 /* Just sticks the two strings together with a / if needed */
@@ -120,21 +117,21 @@ char *SECU_AppendFilenameToDir(char *dir, char *filename);
 extern char *SECU_DefaultSSLDir(void);
 
 /*
-** Should be called once during initialization to set the default 
+** Should be called once during initialization to set the default
 **    directory for looking for cert.db, key.db, and cert-nameidx.db files
-** Removes trailing '/' in 'base' 
+** Removes trailing '/' in 'base'
 ** If 'base' is NULL, defaults to set to .netscape in home directory.
 */
-extern char *SECU_ConfigDirectory(const char* base);
+extern char *SECU_ConfigDirectory(const char *base);
 
-/* 
+/*
 ** Basic callback function for SSL_GetClientAuthDataHook
 */
 extern int
 SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
-		       struct CERTDistNamesStr *caNames,
-		       struct CERTCertificateStr **pRetCert,
-		       struct SECKEYPrivateKeyStr **pRetKey);
+                       struct CERTDistNamesStr *caNames,
+                       struct CERTCertificateStr **pRetCert,
+                       struct SECKEYPrivateKeyStr **pRetKey);
 
 extern PRBool SECU_GetWrapEnabled(void);
 extern void SECU_EnableWrap(PRBool enable);
@@ -145,16 +142,16 @@ extern void SECU_EnableUtf8Display(PRBool enable);
 /* revalidate the cert and print information about cert verification
  * failure at time == now */
 extern void
-SECU_printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
-	CERTCertificate *cert, PRBool checksig, 
-	SECCertificateUsage certUsage, void *pinArg, PRBool verbose);
+SECU_printCertProblems(FILE *outfile, CERTCertDBHandle *handle,
+                       CERTCertificate *cert, PRBool checksig,
+                       SECCertificateUsage certUsage, void *pinArg, PRBool verbose);
 
 /* revalidate the cert and print information about cert verification
  * failure at specified time */
 extern void
-SECU_printCertProblemsOnDate(FILE *outfile, CERTCertDBHandle *handle, 
-	CERTCertificate *cert, PRBool checksig, SECCertificateUsage certUsage, 
-	void *pinArg, PRBool verbose, PRTime datetime);
+SECU_printCertProblemsOnDate(FILE *outfile, CERTCertDBHandle *handle,
+                             CERTCertificate *cert, PRBool checksig, SECCertificateUsage certUsage,
+                             void *pinArg, PRBool verbose, PRTime datetime);
 
 /* print out CERTVerifyLog info. */
 extern void
@@ -162,9 +159,9 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
                       PRBool verbose);
 
 /* Read in a DER from a file, may be ascii  */
-extern SECStatus 
+extern SECStatus
 SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii,
-		     PRBool warnOnPrivateKeyInAsciiFile);
+                     PRBool warnOnPrivateKeyInAsciiFile);
 
 /* Print integer value and hex */
 extern void SECU_PrintInteger(FILE *out, const SECItem *i, const char *m,
@@ -176,7 +173,7 @@ extern SECOidTag SECU_PrintObjectID(FILE *out, const SECItem *oid,
 
 /* Print AlgorithmIdentifier symbolically */
 extern void SECU_PrintAlgorithmID(FILE *out, SECAlgorithmID *a, char *m,
-				  int level);
+                                  int level);
 
 /*
  * Format and print the UTC Time "t".  If the tag message "m" is not NULL,
@@ -203,11 +200,11 @@ extern void SECU_PrintTimeChoice(FILE *out, const SECItem *t, const char *m,
                                  int level);
 
 /* callback for listing certs through pkcs11 */
-extern SECStatus SECU_PrintCertNickname(CERTCertListNode* cert, void *data);
+extern SECStatus SECU_PrintCertNickname(CERTCertListNode *cert, void *data);
 
 /* Dump all certificate nicknames in a database */
 extern SECStatus
-SECU_PrintCertificateNames(CERTCertDBHandle *handle, PRFileDesc* out, 
+SECU_PrintCertificateNames(CERTCertDBHandle *handle, PRFileDesc *out,
                            PRBool sortByName, PRBool sortByTrust);
 
 /* See if nickname already in database. Return 1 true, 0 false, -1 error */
@@ -215,26 +212,26 @@ int SECU_CheckCertNameExists(CERTCertDBHandle *handle, char *nickname);
 
 /* Dump contents of cert req */
 extern int SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m,
-	int level);
+                                        int level);
 
 /* Dump contents of certificate */
 extern int SECU_PrintCertificate(FILE *out, const SECItem *der, const char *m,
                                  int level);
 
 extern int SECU_PrintCertificateBasicInfo(FILE *out, const SECItem *der, const char *m,
-                                 int level);
+                                          int level);
 
 extern int SECU_PrintDumpDerIssuerAndSerial(FILE *out, SECItem *der, char *m,
-                                 int level);
+                                            int level);
 
 /* Dump contents of a DER certificate name (issuer or subject) */
 extern int SECU_PrintDERName(FILE *out, SECItem *der, const char *m, int level);
 
 /* print trust flags on a cert */
-extern void SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m, 
+extern void SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m,
                                  int level);
 
-extern int SECU_PrintSubjectPublicKeyInfo(FILE *out, SECItem *der, char *m, 
+extern int SECU_PrintSubjectPublicKeyInfo(FILE *out, SECItem *der, char *m,
                                           int level);
 
 #ifdef HAVE_EPV_TEMPLATE
@@ -253,14 +250,14 @@ extern int SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m,
                                   int level);
 
 /* Pretty-print any PKCS7 thing */
-extern int SECU_PrintPKCS7ContentInfo(FILE *out, SECItem *der, char *m, 
-				      int level);
+extern int SECU_PrintPKCS7ContentInfo(FILE *out, SECItem *der, char *m,
+                                      int level);
 
 /* Init PKCS11 stuff */
 extern SECStatus SECU_PKCS11Init(PRBool readOnly);
 
 /* Dump contents of signed data */
-extern int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m, 
+extern int SECU_PrintSignedData(FILE *out, SECItem *der, const char *m,
                                 int level, SECU_PPFunc inner);
 
 /* Dump contents of signed data, excluding the signature */
@@ -283,14 +280,14 @@ extern void SECU_PrintAny(FILE *out, const SECItem *i, const char *m, int level)
 
 extern void SECU_PrintPolicy(FILE *out, SECItem *value, char *msg, int level);
 extern void SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, SECItem *value,
-                                 char *msg, int level);
+                                                  char *msg, int level);
 
 extern void SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
-				 char *msg, int level);
+                                 char *msg, int level);
 
-extern void SECU_PrintNameQuotesOptional(FILE *out, CERTName *name, 
-					 const char *msg, int level, 
-					 PRBool quotes);
+extern void SECU_PrintNameQuotesOptional(FILE *out, CERTName *name,
+                                         const char *msg, int level,
+                                         PRBool quotes);
 extern void SECU_PrintName(FILE *out, CERTName *name, const char *msg,
                            int level);
 extern void SECU_PrintRDN(FILE *out, CERTRDN *rdn, const char *msg, int level);
@@ -320,14 +317,13 @@ extern SECOidTag SECU_StringToSignatureAlgTag(const char *alg);
 extern SECStatus SECU_StoreCRL(PK11SlotInfo *slot, SECItem *derCrl,
                                PRFileDesc *outFile, PRBool ascii, char *url);
 
-
 /*
 ** DER sign a single block of data using private key encryption and the
 ** MD5 hashing algorithm. This routine first computes a digital signature
 ** using SEC_SignData, then wraps it with an CERTSignedData and then der
 ** encodes the result.
 **	"arena" is the memory arena to use to allocate data from
-**      "sd" returned CERTSignedData 
+**      "sd" returned CERTSignedData
 ** 	"result" the final der encoded data (memory is allocated)
 ** 	"buf" the input data to sign
 ** 	"len" the amount of data to sign
@@ -337,7 +333,7 @@ extern SECStatus SECU_DerSignDataCRL(PLArenaPool *arena, CERTSignedData *sd,
                                      unsigned char *buf, int len,
                                      SECKEYPrivateKey *pk, SECOidTag algID);
 
-typedef enum  {
+typedef enum {
     noKeyFound = 1,
     noSignatureMatch = 2,
     failToEncode = 3,
@@ -357,35 +353,34 @@ SECU_CopyCRL(PLArenaPool *destArena, CERTCrl *destCrl, CERTCrl *srcCrl);
 ** was found.
 */
 CERTAuthKeyID *
-SECU_FindCRLAuthKeyIDExten (PLArenaPool *arena, CERTSignedCrl *crl);
+SECU_FindCRLAuthKeyIDExten(PLArenaPool *arena, CERTSignedCrl *crl);
 
 /*
  * Find the issuer of a crl. Cert usage should be checked before signing a crl.
  */
 CERTCertificate *
-SECU_FindCrlIssuer(CERTCertDBHandle *dbHandle, SECItem* subject,
-                   CERTAuthKeyID* id, PRTime validTime);
-
+SECU_FindCrlIssuer(CERTCertDBHandle *dbHandle, SECItem *subject,
+                   CERTAuthKeyID *id, PRTime validTime);
 
 /* call back function used in encoding of an extension. Called from
  * SECU_EncodeAndAddExtensionValue */
-typedef SECStatus (* EXTEN_EXT_VALUE_ENCODER) (PLArenaPool *extHandleArena,
-                                               void *value, SECItem *encodedValue);
+typedef SECStatus (*EXTEN_EXT_VALUE_ENCODER)(PLArenaPool *extHandleArena,
+                                             void *value, SECItem *encodedValue);
 
 /* Encodes and adds extensions to the CRL or CRL entries. */
-SECStatus 
-SECU_EncodeAndAddExtensionValue(PLArenaPool *arena, void *extHandle, 
-                                void *value, PRBool criticality, int extenType, 
+SECStatus
+SECU_EncodeAndAddExtensionValue(PLArenaPool *arena, void *extHandle,
+                                void *value, PRBool criticality, int extenType,
                                 EXTEN_EXT_VALUE_ENCODER EncodeValueFn);
 
 /* Caller ensures that dst is at least item->len*2+1 bytes long */
 void
-SECU_SECItemToHex(const SECItem * item, char * dst);
+SECU_SECItemToHex(const SECItem *item, char *dst);
 
 /* Requires 0x prefix. Case-insensitive. Will do in-place replacement if
  * successful */
 SECStatus
-SECU_SECItemHexStringToBinary(SECItem* srcdest);
+SECU_SECItemHexStringToBinary(SECItem *srcdest);
 
 /* Parse a version range string, with "min" and "max" version numbers,
  * separated by colon (":"), and return the result in vr and v2.
@@ -422,7 +417,7 @@ extern int ffs(unsigned int i);
 
 /* Finds certificate by searching it in the DB or by examinig file
  * in the local directory. */
-CERTCertificate*
+CERTCertificate *
 SECU_FindCertByNicknameOrFilename(CERTCertDBHandle *handle,
                                   char *name, PRBool ascii,
                                   void *pwarg);

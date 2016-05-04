@@ -20,7 +20,8 @@ typedef struct {
 
 Lock lock;
 
-int main()
+int
+main()
 {
     return 0;
 }

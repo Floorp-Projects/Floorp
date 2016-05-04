@@ -15,7 +15,8 @@
  * if the directory <dbdir> doesn't exist.
  */
 
-int main()
+int
+main()
 {
     SECStatus status;
     int error;
@@ -28,7 +29,8 @@ int main()
     error = PORT_GetError();
     if (error != SEC_ERROR_BAD_DATABASE) {
         fprintf(stderr, "NSS_InitReadWrite failed with the wrong error code: "
-                "%d\n", error);
+                        "%d\n",
+                error);
         exit(1);
     }
     printf("PASS\n");

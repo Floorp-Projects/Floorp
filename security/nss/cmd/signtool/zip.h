@@ -18,34 +18,33 @@
  * put the central directory entries for each file.
  */
 typedef struct ZIPentry_s {
-	struct ZipLocal local;		/* local header info */
-	struct ZipCentral central;	/* central directory info */
-	char *filename;				/* name of file */
-	char *comment;				/* comment for this file -- optional */
+    struct ZipLocal local;     /* local header info */
+    struct ZipCentral central; /* central directory info */
+    char *filename;            /* name of file */
+    char *comment;             /* comment for this file -- optional */
 
-	struct ZIPentry_s *next;
+    struct ZIPentry_s *next;
 } ZIPentry;
 
 /* This structure contains the necessary data for putting a ZIP file
  * together.  Has some overall information and a list of ZIPentrys.
  */
 typedef struct ZIPfile_s {
-	char *filename;	/* ZIP file name */
-	char *comment;	/* ZIP file comment -- may be NULL */
-	PRFileDesc *fp;	/* ZIP file pointer */
-	ZIPentry *list;	/* one entry for each file in the archive */
-	unsigned int time;	/* the GMT time of creation, in DOS format */
-	unsigned int date;  /* the GMT date of creation, in DOS format */
-	unsigned long central_start; /* starting offset of central directory */
-	unsigned long central_end; /*index right after the last byte of central*/
+    char *filename;              /* ZIP file name */
+    char *comment;               /* ZIP file comment -- may be NULL */
+    PRFileDesc *fp;              /* ZIP file pointer */
+    ZIPentry *list;              /* one entry for each file in the archive */
+    unsigned int time;           /* the GMT time of creation, in DOS format */
+    unsigned int date;           /* the GMT date of creation, in DOS format */
+    unsigned long central_start; /* starting offset of central directory */
+    unsigned long central_end;   /*index right after the last byte of central*/
 } ZIPfile;
-
 
 /* Open a new ZIP file.  Takes the name of the zip file and an optional
  * comment to be included in the file.  Returns a new ZIPfile structure
  * which is used by JzipAdd and JzipClose
  */
-ZIPfile* JzipOpen(char *filename, char *comment);
+ZIPfile *JzipOpen(char *filename, char *comment);
 
 /* Add a file to a ZIP archive.  Fullname is the path relative to the
  * current directory.  Filename is what the name will be stored as in the
@@ -56,7 +55,7 @@ ZIPfile* JzipOpen(char *filename, char *comment);
  * call exit() rather than return an error--gotta fix this).
  */
 int JzipAdd(char *fullname, char *filename, ZIPfile *zipfile,
-	int compression_level);
+            int compression_level);
 
 /* Finalize a ZIP archive.  Adds all the footer information to the end of
  * the file and closes it.  Also DELETES THE ZIPFILE STRUCTURE that was
@@ -65,7 +64,6 @@ int JzipAdd(char *fullname, char *filename, ZIPfile *zipfile,
  * Non-zero return code means error (although usually the function will
  * call exit() rather than return an error--gotta fix this).
  */
-int JzipClose (ZIPfile *zipfile);
-
+int JzipClose(ZIPfile *zipfile);
 
 #endif /* ZIP_H */

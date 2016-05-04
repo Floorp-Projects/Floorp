@@ -42,16 +42,16 @@ extern int ssl3CipherSuites[];
 
 /* Data buffer read from a socket. */
 typedef struct DataBufferStr {
-	char data[BUFFER_SIZE];
-	int  index;
-	int  remaining;
-	int  dataStart;
-	int  dataEnd;
+    char data[BUFFER_SIZE];
+    int index;
+    int remaining;
+    int dataStart;
+    int dataEnd;
 } DataBuffer;
 
 /* SSL callback routines. */
 
-char * myPasswd(PK11SlotInfo *info, PRBool retry, void *arg);
+char *myPasswd(PK11SlotInfo *info, PRBool retry, void *arg);
 
 SECStatus myAuthCertificate(void *arg, PRFileDesc *socket,
                             PRBool checksig, PRBool isServer);
@@ -69,7 +69,6 @@ SECStatus myGetClientAuthData(void *arg, PRFileDesc *socket,
 
 void disableAllSSLCiphers(void);
 
-
 /* Error and information utilities. */
 
 void errWarn(char *function);
@@ -84,31 +83,33 @@ void printSecurityInfo(FILE *outfile, PRFileDesc *fd);
 
 typedef SECStatus startFn(void *a, int b);
 
-typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
+typedef enum { rs_idle = 0,
+               rs_running = 1,
+               rs_zombie = 2 } runState;
 
 typedef struct perThreadStr {
-	PRFileDesc *a;
-	int         b;
-	int         rv;
-	startFn    *startFunc;
-	PRThread   *prThread;
-	PRBool      inUse;
-	runState    running;
+    PRFileDesc *a;
+    int b;
+    int rv;
+    startFn *startFunc;
+    PRThread *prThread;
+    PRBool inUse;
+    runState running;
 } perThread;
 
 typedef struct GlobalThreadMgrStr {
-	PRLock	  *threadLock;
-	PRCondVar *threadStartQ;
-	PRCondVar *threadEndQ;
-	perThread  threads[MAX_THREADS];
-	int        index;
-	int        numUsed;
-	int        numRunning;
+    PRLock *threadLock;
+    PRCondVar *threadStartQ;
+    PRCondVar *threadEndQ;
+    perThread threads[MAX_THREADS];
+    int index;
+    int numUsed;
+    int numRunning;
 } GlobalThreadMgr;
 
-void thread_wrapper(void * arg);
+void thread_wrapper(void *arg);
 
-SECStatus launch_thread(GlobalThreadMgr *threadMGR, 
+SECStatus launch_thread(GlobalThreadMgr *threadMGR,
                         startFn *startFunc, void *a, int b);
 
 SECStatus reap_threads(GlobalThreadMgr *threadMGR);
@@ -118,10 +119,10 @@ void destroy_thread_data(GlobalThreadMgr *threadMGR);
 /* Management of locked variables. */
 
 struct lockedVarsStr {
-	PRLock *    lock;
-	int         count;
-	int         waiters;
-	PRCondVar * condVar;
+    PRLock *lock;
+    int count;
+    int waiters;
+    PRCondVar *condVar;
 };
 
 typedef struct lockedVarsStr lockedVars;

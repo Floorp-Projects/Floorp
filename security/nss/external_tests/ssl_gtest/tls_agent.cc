@@ -20,16 +20,24 @@ extern "C" {
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
+#include "scoped_ptrs.h"
 
 namespace nss_test {
 
 
 const char* TlsAgent::states[] = {"INIT", "CONNECTING", "CONNECTED", "ERROR"};
 
-TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea)
+const std::string TlsAgent::kClient = "client"; // both sign and encrypt
+const std::string TlsAgent::kServerRsa = "rsa"; // both sign and encrypt
+const std::string TlsAgent::kServerRsaSign = "rsa_sign";
+const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
+const std::string TlsAgent::kServerEcdsa = "ecdsa";
+const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa"; // not supported yet
+const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
+
+TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
   : name_(name),
     mode_(mode),
-    kea_(kea),
     server_key_bits_(0),
     pr_fd_(nullptr),
     adapter_(nullptr),
@@ -50,7 +58,8 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea
     recv_ctr_(0),
     expected_read_error_(false),
     handshake_callback_(),
-    auth_certificate_callback_() {
+    auth_certificate_callback_(),
+    sni_callback_() {
 
   memset(&info_, 0, sizeof(info_));
   memset(&csinfo_, 0, sizeof(csinfo_));
@@ -77,6 +86,30 @@ TlsAgent::~TlsAgent() {
   }
 }
 
+bool TlsAgent::ConfigServerCert(const std::string& name, bool updateKeyBits) {
+  ScopedCERTCertificate cert(PK11_FindCertFromNickname(name.c_str(), nullptr));
+  EXPECT_NE(nullptr, cert.get());
+  if (!cert.get()) return false;
+
+  ScopedSECKEYPublicKey pub(CERT_ExtractPublicKey(cert.get()));
+  EXPECT_NE(nullptr, pub.get());
+  if (!pub.get()) return false;
+  if (updateKeyBits) {
+    server_key_bits_ = SECKEY_PublicKeyStrengthInBits(pub.get());
+  }
+
+  ScopedSECKEYPrivateKey priv(PK11_FindKeyByAnyCert(cert.get(), nullptr));
+  EXPECT_NE(nullptr, priv.get());
+  if (!priv.get()) return false;
+
+  SECStatus rv = SSL_ConfigSecureServer(ssl_fd_, nullptr, nullptr, ssl_kea_null);
+  EXPECT_EQ(SECFailure, rv);
+  rv = SSL_ConfigServerCert(ssl_fd_, cert.get(), priv.get(), nullptr, 0);
+  EXPECT_EQ(SECSuccess, rv);
+
+  return rv == SECSuccess;
+}
+
 bool TlsAgent::EnsureTlsSetup() {
   // Don't set up twice
   if (ssl_fd_) return true;
@@ -91,39 +124,21 @@ bool TlsAgent::EnsureTlsSetup() {
   if (!ssl_fd_) return false;
   pr_fd_ = nullptr;
 
-  if (role_ == SERVER) {
-    CERTCertificate* cert = PK11_FindCertFromNickname(name_.c_str(), nullptr);
-    EXPECT_NE(nullptr, cert);
-    if (!cert) return false;
-
-    SECKEYPublicKey* pub = CERT_ExtractPublicKey(cert);
-    EXPECT_NE(nullptr, pub);
-    if (!pub) return false;  // Leak cert.
-    server_key_bits_ = SECKEY_PublicKeyStrengthInBits(pub);
-    SECKEY_DestroyPublicKey(pub);
-
-    SECKEYPrivateKey* priv = PK11_FindKeyByAnyCert(cert, nullptr);
-    EXPECT_NE(nullptr, priv);
-    if (!priv) return false;  // Leak cert.
-
-    SECStatus rv = SSL_ConfigSecureServer(ssl_fd_, cert, priv, kea_);
-    EXPECT_EQ(SECSuccess, rv);
-    if (rv != SECSuccess) return false;  // Leak cert and key.
-
-    SECKEY_DestroyPrivateKey(priv);
-    CERT_DestroyCertificate(cert);
-
-    rv = SSL_SNISocketConfigHook(ssl_fd_, SniHook, this);
-    EXPECT_EQ(SECSuccess, rv);  // don't abort, just fail
-  } else {
-    SECStatus rv = SSL_SetURL(ssl_fd_, "server");
-    EXPECT_EQ(SECSuccess, rv);
-    if (rv != SECSuccess) return false;
-  }
-
   SECStatus rv = SSL_VersionRangeSet(ssl_fd_, &vrange_);
   EXPECT_EQ(SECSuccess, rv);
   if (rv != SECSuccess) return false;
+
+  if (role_ == SERVER) {
+    EXPECT_TRUE(ConfigServerCert(name_, true));
+
+    rv = SSL_SNISocketConfigHook(ssl_fd_, SniHook, this);
+    EXPECT_EQ(SECSuccess, rv);
+    if (rv != SECSuccess) return false;
+  } else {
+    rv = SSL_SetURL(ssl_fd_, "server");
+    EXPECT_EQ(SECSuccess, rv);
+    if (rv != SECSuccess) return false;
+  }
 
   rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook, this);
   EXPECT_EQ(SECSuccess, rv);
@@ -210,6 +225,30 @@ void TlsAgent::DisableCiphersByKeyExchange(SSLKEAType kea) {
       rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], PR_FALSE);
       EXPECT_EQ(SECSuccess, rv);
     }
+  }
+}
+
+void TlsAgent::EnableCiphersByAuthType(SSLAuthType authType) {
+  EXPECT_TRUE(EnsureTlsSetup());
+
+  for (size_t i = 0; i < SSL_NumImplementedCiphers; ++i) {
+    SSLCipherSuiteInfo csinfo;
+
+    SECStatus rv = SSL_GetCipherSuiteInfo(SSL_ImplementedCiphers[i],
+                                          &csinfo, sizeof(csinfo));
+    ASSERT_EQ(SECSuccess, rv);
+
+    bool enable = csinfo.authType == authType;
+    rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], enable);
+    EXPECT_EQ(SECSuccess, rv);
+  }
+}
+
+void TlsAgent::EnableSingleCipher(uint16_t cipher) {
+  for (size_t i = 0; i < SSL_NumImplementedCiphers; ++i) {
+    bool enable = SSL_ImplementedCiphers[i] == cipher;
+    SECStatus rv = SSL_CipherPrefSet(ssl_fd_, SSL_ImplementedCiphers[i], enable);
+    EXPECT_EQ(SECSuccess, rv);
   }
 }
 
@@ -302,7 +341,7 @@ void TlsAgent::CheckKEAType(SSLKEAType type) const {
   EXPECT_EQ(type, csinfo_.keaType);
 
   PRUint32 ecKEAKeyBits = SSLInt_DetermineKEABits(server_key_bits_,
-                                                  csinfo_.authAlgorithm);
+                                                  csinfo_.authType);
 
   switch (type) {
       case ssl_kea_ecdh:
@@ -321,14 +360,37 @@ void TlsAgent::CheckKEAType(SSLKEAType type) const {
 
 void TlsAgent::CheckAuthType(SSLAuthType type) const {
   EXPECT_EQ(STATE_CONNECTED, state_);
-  EXPECT_EQ(type, csinfo_.authAlgorithm);
+  EXPECT_EQ(type, csinfo_.authType);
   EXPECT_EQ(server_key_bits_, info_.authKeyBits);
+
+  // Do some extra checks based on type.
   switch (type) {
       case ssl_auth_ecdsa:
           // extra check for P-256
           EXPECT_EQ(256U, info_.authKeyBits);
           break;
+    default:
+      break;
+  }
+
+  // Check authAlgorithm, which is the old value for authType.  This is a second switch
+  // statement because default label is different.
+  switch (type) {
+      case ssl_auth_rsa_sign:
+          EXPECT_EQ(ssl_auth_rsa_decrypt, csinfo_.authAlgorithm)
+                  << "authAlgorithm for RSA is always decrypt";
+          break;
+      case ssl_auth_ecdh_rsa:
+          EXPECT_EQ(ssl_auth_rsa_decrypt, csinfo_.authAlgorithm)
+                  << "authAlgorithm for ECDH_RSA is RSA decrypt (i.e., wrong)";
+          break;
+      case ssl_auth_ecdh_ecdsa:
+          EXPECT_EQ(ssl_auth_ecdsa, csinfo_.authAlgorithm)
+                  << "authAlgorithm for ECDH_ECDSA is ECDSA (i.e., wrong)";
+          break;
       default:
+          EXPECT_EQ(type, csinfo_.authAlgorithm)
+                  << "authAlgorithm is (usually) the same as authType";
           break;
   }
 }
@@ -639,8 +701,8 @@ static const std::string kTlsRolesAllArr[] = {"CLIENT", "SERVER"};
 
 void TlsAgentTestBase::Init() {
   agent_ = new TlsAgent(
-      role_ == TlsAgent::CLIENT ? "client" : "server",
-      role_, mode_, kea_);
+      role_ == TlsAgent::CLIENT ? TlsAgent::kClient : TlsAgent::kServerRsa,
+      role_, mode_);
   agent_->Init();
   fd_ = DummyPrSocket::CreateFD("dummy", mode_);
   agent_->adapter()->SetPeer(

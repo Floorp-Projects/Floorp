@@ -282,7 +282,6 @@ mp_cmp_z(a)             - compare a <=> 0
 mp_cmp_d(a, d)          - compare a <=> d, d is a single digit
 mp_cmp(a, b)            - compare a <=> b
 mp_cmp_mag(a, b)        - compare |a| <=> |b|
-mp_cmp_int(a, z)        - compare a <=> z, z is a signed long integer
 mp_isodd(a)             - return nonzero if odd, zero otherwise
 mp_iseven(a)            - return nonzero if even, zero otherwise
 
