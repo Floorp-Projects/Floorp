@@ -70,7 +70,7 @@ function checkAutocompleteResults(aExpected, aCallback) {
   gController.input = {
     timeout: 10,
     textValue: "",
-    searches: ["history"],
+    searches: ["unifiedcomplete"],
     searchParam: "enable-actions",
     popupOpen: false,
     minResultsForPopup: 0,
@@ -84,7 +84,12 @@ function checkAutocompleteResults(aExpected, aCallback) {
       info("Found " + gController.matchCount + " matches.");
       // Check to see the expected uris and titles match up (in any order)
       for (let i = 0; i < gController.matchCount; i++) {
-        let uri = gController.getValueAt(i).replace(/^moz-action:[^,]+,/i, "");
+        if (gController.getStyleAt(i).includes("heuristic")) {
+          info("Skip heuristic match");
+          continue;
+        }
+        let action = gURLBar.popup.input._parseActionUrl(gController.getValueAt(i));
+        let uri = action.params.url;
 
         info("Search for '" + uri + "' in open tabs.");
         ok(uri in aExpected, "Registered open page found in autocomplete.");

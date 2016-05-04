@@ -5,13 +5,10 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 // Must run first.
 add_task(function* prepare() {
-  // The test makes only sense if unified complete is enabled.
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
   let engine = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
   let oldCurrentEngine = Services.search.currentEngine;
   Services.search.currentEngine = engine;
-  registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
+  registerCleanupFunction(function* () {
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);

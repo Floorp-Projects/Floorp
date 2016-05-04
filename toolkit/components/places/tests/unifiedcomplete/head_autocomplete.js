@@ -119,7 +119,7 @@ function _check_autocomplete_matches(match, result) {
   else
     style = ["favicon"];
 
-  do_print("Checking against expected '" + uri.spec + "', '" + title + "'...");
+  do_print(`Checking against expected "${uri.spec}", "${title}"`);
   // Got a match on both uri and title?
   if (stripPrefix(uri.spec) != stripPrefix(result.value) || title != result.comment) {
     return false;
@@ -193,47 +193,49 @@ function* check_autocomplete(test) {
     // Do not modify the test original matches.
     let matches = test.matches.slice();
 
-    let firstIndexToCheck = 0;
-    if (test.searchParam && test.searchParam == "enable-actions") {
-      firstIndexToCheck = 1;
-      do_print("Checking first match is first autocomplete entry")
-      let result = {
-        value: controller.getValueAt(0),
-        comment: controller.getCommentAt(0),
-        style: controller.getStyleAt(0),
-        image: controller.getImageAt(0),
-      }
-      do_print(`First match is "${result.value}", " ${result.comment}"`);
-      Assert.ok(_check_autocomplete_matches(matches[0], result), "first item is correct");
-      do_print("Checking rest of the matches");
-    }
-
-    for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
-      let result = {
-        value: controller.getValueAt(i),
-        comment: controller.getCommentAt(i),
-        style: controller.getStyleAt(i),
-        image: controller.getImageAt(i),
-      }
-      do_print(`Looking for "${result.value}", "${result.comment}" in expected results...`);
-      let lowerBound = test.checkSorting ? i : firstIndexToCheck;
-      let upperBound = test.checkSorting ? i + 1 : matches.length;
-      let found = false;
-      for (let j = lowerBound; j < upperBound; ++j) {
-        // Skip processed expected results
-        if (matches[j] == undefined)
-          continue;
-        if (_check_autocomplete_matches(matches[j], result)) {
-          do_print("Got a match at index " + j + "!");
-          // Make it undefined so we don't process it again
-          matches[j] = undefined;
-          found = true;
-          break;
+    if (matches.length) {
+      let firstIndexToCheck = 0;
+      if (test.searchParam && test.searchParam.includes("enable-actions")) {
+        firstIndexToCheck = 1;
+        do_print("Checking first match is first autocomplete entry")
+        let result = {
+          value: controller.getValueAt(0),
+          comment: controller.getCommentAt(0),
+          style: controller.getStyleAt(0),
+          image: controller.getImageAt(0),
         }
+        do_print(`First match is "${result.value}", "${result.comment}"`);
+        Assert.ok(_check_autocomplete_matches(matches[0], result), "first item is correct");
+        do_print("Checking rest of the matches");
       }
 
-      if (!found)
-        do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); //' (Emacs syntax highlighting fix)
+      for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
+        let result = {
+          value: controller.getValueAt(i),
+          comment: controller.getCommentAt(i),
+          style: controller.getStyleAt(i),
+          image: controller.getImageAt(i),
+        }
+        do_print(`Looking for "${result.value}", "${result.comment}" in expected results...`);
+        let lowerBound = test.checkSorting ? i : firstIndexToCheck;
+        let upperBound = test.checkSorting ? i + 1 : matches.length;
+        let found = false;
+        for (let j = lowerBound; j < upperBound; ++j) {
+          // Skip processed expected results
+          if (matches[j] == undefined)
+            continue;
+          if (_check_autocomplete_matches(matches[j], result)) {
+            do_print("Got a match at index " + j + "!");
+            // Make it undefined so we don't process it again
+            matches[j] = undefined;
+            found = true;
+            break;
+          }
+        }
+
+        if (!found)
+          do_throw(`Didn't find the current result ("${result.value}", "${result.comment}") in matches`); //' (Emacs syntax highlighting fix)
+      }
     }
 
     Assert.equal(controller.matchCount, matches.length,
