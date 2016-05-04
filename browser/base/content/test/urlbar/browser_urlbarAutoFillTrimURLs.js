@@ -54,10 +54,7 @@ function continue_test() {
     test_autoFill("http://au", "http://autofilltrimurl.com/", function () {
       test_autoFill("http://www.autofilltrimurl.com", "http://www.autofilltrimurl.com/", function () {
         // Now ensure selecting from the popup correctly trims.
-        if (Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
-          is(gURLBar.controller.matchCount, 2, "Found the expected number of matches");
-        else
-          is(gURLBar.controller.matchCount, 1, "Found the expected number of matches");
+        is(gURLBar.controller.matchCount, 2, "Found the expected number of matches");
         EventUtils.synthesizeKey("VK_DOWN", {});
         is(gURLBar.textValue, "www.autofilltrimurl.com/whatever", "trim was applied correctly");
         gURLBar.closePopup();

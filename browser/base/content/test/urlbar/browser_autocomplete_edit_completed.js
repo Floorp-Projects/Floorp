@@ -6,18 +6,10 @@ add_task(function*() {
     { uri: makeURI("http://example.com/foo/bar") },
   ]);
 
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-  yield* do_test();
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", false);
-  yield* do_test();
-});
+  registerCleanupFunction(function* () {
+    yield PlacesTestUtils.clearHistory();
+  });
 
-registerCleanupFunction(function* () {
-  Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
-  yield PlacesTestUtils.clearHistory();
-});
-
-function* do_test() {
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   gURLBar.focus();
 
@@ -50,4 +42,4 @@ function* do_test() {
     waitForDocLoadAndStopIt("http://" + editedValue)]);
 
   gBrowser.removeTab(gBrowser.selectedTab);
-}
+});
