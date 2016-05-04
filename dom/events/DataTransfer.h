@@ -180,7 +180,7 @@ public:
   }
 
   already_AddRefed<DOMStringList> MozTypesAt(uint32_t aIndex,
-                                             mozilla::ErrorResult& aRv) const;
+                                             mozilla::ErrorResult& aRv);
 
   void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
                       mozilla::ErrorResult& aRv);
