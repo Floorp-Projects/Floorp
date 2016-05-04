@@ -3545,6 +3545,8 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
   self->KillHard("ShutDownKill");
 }
 
+// WARNING: aReason appears in telemetry, so any new value passed in requires
+// data review.
 void
 ContentParent::KillHard(const char* aReason)
 {
@@ -3575,11 +3577,6 @@ ContentParent::KillHard(const char* aReason)
     crashReporter->AnnotateCrashReport(
       NS_LITERAL_CSTRING("additional_minidumps"),
       additionalDumps);
-    if (IsKillHardAnnotationSet()) {
-      crashReporter->AnnotateCrashReport(
-        NS_LITERAL_CSTRING("kill_hard"),
-        GetKillHardAnnotation());
-    }
     nsDependentCString reason(aReason);
     crashReporter->AnnotateCrashReport(
       NS_LITERAL_CSTRING("ipc_channel_error"),
@@ -3587,6 +3584,8 @@ ContentParent::KillHard(const char* aReason)
 
     // Generate the report and insert into the queue for submittal.
     mCreatedPairedMinidumps = crashReporter->GenerateCompleteMinidump(this);
+
+    Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
   }
 #endif
   ProcessHandle otherProcessHandle;
