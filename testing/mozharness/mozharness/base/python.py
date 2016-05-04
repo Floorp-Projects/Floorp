@@ -157,7 +157,7 @@ class VirtualenvMixin(object):
             if not pip:
                 self.log("package_versions: Program pip not in path", level=error_level)
                 return {}
-            pip_freeze_output = self.get_output_from_command([pip, "freeze"], silent=True)
+            pip_freeze_output = self.get_output_from_command([pip, "freeze"], silent=True, ignore_errors=True)
             if not isinstance(pip_freeze_output, basestring):
                 self.fatal("package_versions: Error encountered running `pip freeze`: %s" % pip_freeze_output)
 
