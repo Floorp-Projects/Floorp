@@ -178,25 +178,28 @@ class TestAutoCompleteResults(FirefoxTestCase):
         self.autocomplete_results.close(force=True)
 
     def test_matching_text(self):
-        # The default profile always has links to mozilla.org. So multiple results
-        # will be found with 'moz'.
-        input_text = 'moz'
+        # The default profile always has existing bookmarks. So no sites have to
+        # be visited and bookmarked.
+        for input_text in ('about', 'zilla'):
+            self.browser.navbar.locationbar.urlbar.clear()
+            self.browser.navbar.locationbar.urlbar.send_keys(input_text)
+            Wait(self.marionette).until(lambda _: self.autocomplete_results.is_open)
+            Wait(self.marionette).until(lambda _: self.autocomplete_results.is_complete)
+            visible_results = self.autocomplete_results.visible_results
+            self.assertTrue(len(visible_results) > 0)
 
-        self.browser.navbar.locationbar.urlbar.send_keys(input_text)
-        Wait(self.marionette).until(lambda _: self.autocomplete_results.is_complete)
-        visible_results = self.autocomplete_results.visible_results
-        self.assertTrue(len(visible_results) > 0)
+            for result in visible_results:
+                # check matching text only for results of type bookmark
+                if result.get_attribute('type') != 'bookmark':
+                    continue
+                title_matches = self.autocomplete_results.get_matching_text(result, "title")
+                url_matches = self.autocomplete_results.get_matching_text(result, "url")
+                all_matches = title_matches + url_matches
+                self.assertTrue(len(all_matches) > 0)
+                for match_fragment in all_matches:
+                    self.assertIn(match_fragment.lower(), input_text)
 
-        for result in visible_results:
-            # check matching text only for results of type bookmark
-            if result.get_attribute('type') != 'bookmark':
-                continue
-            title_matches = self.autocomplete_results.get_matching_text(result, "title")
-            url_matches = self.autocomplete_results.get_matching_text(result, "url")
-            all_matches = title_matches + url_matches
-            self.assertTrue(len(all_matches) > 0)
-            for match_fragment in all_matches:
-                self.assertIn(match_fragment.lower(), input_text)
+            self.autocomplete_results.close()
 
 
 class TestIdentityPopup(FirefoxTestCase):
