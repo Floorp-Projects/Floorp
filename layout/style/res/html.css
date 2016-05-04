@@ -17,8 +17,8 @@
   direction: ltr;
 }
 
-bdi:-moz-dir(ltr), [dir="auto"]:-moz-dir(ltr) { direction: ltr; }
-bdi:-moz-dir(rtl), [dir="auto"]:-moz-dir(rtl) { direction: rtl; }
+bdi:dir(ltr), [dir="auto"]:dir(ltr) { direction: ltr; }
+bdi:dir(rtl), [dir="auto"]:dir(rtl) { direction: rtl; }
 
 /* To ensure http://www.w3.org/TR/REC-html40/struct/dirlang.html#style-bidi:
  *
@@ -419,17 +419,17 @@ table[align="center"] > caption {
   -moz-margin-end: auto;
 }
 
-table[align="center"] > caption[align="left"]:-moz-dir(ltr) {
+table[align="center"] > caption[align="left"]:dir(ltr) {
   -moz-margin-end: 0;
 }
-table[align="center"] > caption[align="left"]:-moz-dir(rtl) {
+table[align="center"] > caption[align="left"]:dir(rtl) {
   -moz-margin-start: 0;
 }
 
-table[align="center"] > caption[align="right"]:-moz-dir(ltr) {
+table[align="center"] > caption[align="right"]:dir(ltr) {
   -moz-margin-start: 0;
 }
-table[align="center"] > caption[align="right"]:-moz-dir(rtl) {
+table[align="center"] > caption[align="right"]:dir(rtl) {
   -moz-margin-end: 0;
 }
 
