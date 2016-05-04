@@ -32,8 +32,10 @@ const {
   PRESETS,
   DEFAULT_PRESET_CATEGORY
 } = require("devtools/client/shared/widgets/CubicBezierPresets");
-const {getCSSLexer} = require("devtools/shared/css-lexer");
 const {Cc, Ci} = require('chrome');
+loader.lazyGetter(this, "DOMUtils", () => {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
 
 /**
  * CubicBezier data structure helper
@@ -827,7 +829,7 @@ function parseTimingFunction(value) {
     return PREDEFINED[value];
   }
 
-  let tokenStream = getCSSLexer(value);
+  let tokenStream = DOMUtils.getCSSLexer(value);
   let getNextToken = () => {
     while (true) {
       let token = tokenStream.nextToken();
