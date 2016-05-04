@@ -1,6 +1,3 @@
 component {d0272978-beab-4adc-a3d4-04b76acfa4e7} nsPlacesAutoComplete.js
 contract @mozilla.org/autocomplete/search;1?name=history {d0272978-beab-4adc-a3d4-04b76acfa4e7}
 
-component {c88fae2d-25cf-4338-a1f4-64a320ea7440} nsPlacesAutoComplete.js
-contract @mozilla.org/autocomplete/search;1?name=urlinline {c88fae2d-25cf-4338-a1f4-64a320ea7440}
-

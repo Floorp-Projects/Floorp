@@ -310,8 +310,6 @@ The following is a partial list of collected preferences.
 
 - ``browser.urlbar.suggest.searches``: True if search suggestions are enabled in the urlbar. Defaults to false.
 
-- ``browser.urlbar.unifiedcomplete``: True if the urlbar's UnifiedComplete back-end is enabled.
-
 - ``browser.urlbar.userMadeSearchSuggestionsChoice``: True if the user has clicked Yes or No in the urlbar's opt-in notification. Defaults to false.
 
 partner
