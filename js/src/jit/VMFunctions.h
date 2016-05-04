@@ -693,8 +693,6 @@ bool ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t 
 
 bool Recompile(JSContext* cx);
 bool ForcedRecompile(JSContext* cx);
-JSString* RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp,
-                        HandleString repl);
 JSString* StringReplace(JSContext* cx, HandleString string, HandleString pattern,
                         HandleString repl);
 

@@ -402,6 +402,7 @@ JitCompartment::JitCompartment()
     baselineSetPropReturnAddr_(nullptr),
     stringConcatStub_(nullptr),
     regExpMatcherStub_(nullptr),
+    regExpSearcherStub_(nullptr),
     regExpTesterStub_(nullptr)
 {
     baselineCallReturnAddrs_[0] = baselineCallReturnAddrs_[1] = nullptr;
@@ -663,6 +664,9 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
     if (regExpMatcherStub_ && !IsMarkedUnbarriered(&regExpMatcherStub_))
         regExpMatcherStub_ = nullptr;
 
+    if (regExpSearcherStub_ && !IsMarkedUnbarriered(&regExpSearcherStub_))
+        regExpSearcherStub_ = nullptr;
+
     if (regExpTesterStub_ && !IsMarkedUnbarriered(&regExpTesterStub_))
         regExpTesterStub_ = nullptr;
 
@@ -678,6 +682,8 @@ JitCompartment::toggleBarriers(bool enabled)
     // Toggle barriers in compartment wide stubs that have patchable pre barriers.
     if (regExpMatcherStub_)
         regExpMatcherStub_->togglePreBarriers(enabled, Reprotect);
+    if (regExpSearcherStub_)
+        regExpSearcherStub_->togglePreBarriers(enabled, Reprotect);
     if (regExpTesterStub_)
         regExpTesterStub_->togglePreBarriers(enabled, Reprotect);
 

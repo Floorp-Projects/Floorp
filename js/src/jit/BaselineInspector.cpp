@@ -573,7 +573,7 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode* pc, Native native)
 }
 
 bool
-BaselineInspector::isOptimizableCallStringSplit(jsbytecode* pc, JSString** stringOut, JSString** stringArg,
+BaselineInspector::isOptimizableCallStringSplit(jsbytecode* pc, JSString** strOut, JSString** sepOut,
                                                 JSObject** objOut)
 {
     if (!hasBaselineScript())
@@ -589,8 +589,8 @@ BaselineInspector::isOptimizableCallStringSplit(jsbytecode* pc, JSString** strin
     if (stub->kind() != ICStub::Call_StringSplit)
         return false;
 
-    *stringOut = stub->toCall_StringSplit()->expectedThis();
-    *stringArg = stub->toCall_StringSplit()->expectedArg();
+    *strOut = stub->toCall_StringSplit()->expectedStr();
+    *sepOut = stub->toCall_StringSplit()->expectedSep();
     *objOut = stub->toCall_StringSplit()->templateObject();
     return true;
 }

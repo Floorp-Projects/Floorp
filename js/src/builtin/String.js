@@ -4,6 +4,73 @@
 
 /*global intl_Collator: false, */
 
+function StringProtoHasNoMatch() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_match in StringProto);
+}
+
+function IsStringMatchOptimizable() {
+    var RegExpProto = GetBuiltinPrototype("RegExp");
+    // If RegExpPrototypeOptimizable succeeds, `exec` and `@@match` are
+    // guaranteed to be data properties.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec &&
+           RegExpProto[std_match] === RegExpMatch;
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.11.
+function String_match(regexp) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    var isPatternString = (typeof regexp === "string");
+    if (!(isPatternString && StringProtoHasNoMatch()) && regexp !== undefined && regexp !== null) {
+        // Step 2.a.
+        var matcher = GetMethod(regexp, std_match);
+
+        // Step 2.b.
+        if (matcher !== undefined)
+            return callContentFunction(matcher, regexp, this);
+    }
+
+    // Step 3.
+    var S = ToString(this);
+
+    // FIXME: Non-standard flags argument (bug 1108382).
+    var flags = undefined;
+    if (arguments.length > 1) {
+        if (IsMatchFlagsArgumentEnabled())
+            flags = ToString(arguments[1]);
+        WarnOnceAboutFlagsArgument();
+    } else {
+        if (isPatternString && IsStringMatchOptimizable()) {
+            var flatResult = FlatStringMatch(S, regexp);
+            if (flatResult !== undefined)
+                return flatResult;
+        }
+    }
+
+    // Step 4.
+    var rx = RegExpCreate(regexp, flags);
+
+    // Step 5 (optimized case).
+    if (IsStringMatchOptimizable() && !flags)
+        return RegExpMatcher(rx, S, 0);
+
+    // Step 5.
+    return callContentFunction(GetMethod(rx, std_match), rx, S);
+}
+
+function String_generic_match(thisValue, regexp) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.match');
+    return callFunction(String_match, thisValue, regexp);
+}
+
 /**
  * A helper function implementing the logic for both String.prototype.padStart
  * and String.prototype.padEnd as described in ES7 Draft March 29, 2016
@@ -51,6 +118,243 @@ function String_pad_start(maxLength, fillString=" ") {
 
 function String_pad_end(maxLength, fillString=" ") {
     return callFunction(String_pad, this, maxLength, fillString, true);
+}
+
+function StringProtoHasNoReplace() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_replace in StringProto);
+}
+
+// A thin wrapper to call SubstringKernel with int32-typed arguments.
+// Caller should check the range of |from| and |length|.
+function Substring(str, from, length) {
+    assert(typeof str === "string", "|str| should be a string");
+    assert(from | 0 === from, "coercing |from| into int32 should not change the value");
+    assert(length | 0 === length, "coercing |length| into int32 should not change the value");
+
+    return SubstringKernel(str, from | 0, length | 0);
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.14.
+function String_replace(searchValue, replaceValue) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    if (!(typeof searchValue === "string" && StringProtoHasNoReplace()) &&
+        searchValue !== undefined && searchValue !== null)
+    {
+        // Step 2.a.
+        var replacer = searchValue[std_replace];
+
+        // Step 2.b.
+        if (replacer !== undefined)
+            return callContentFunction(replacer, searchValue, this, replaceValue);
+    }
+
+    // Step 3.
+    var string = ToString(this);
+
+    // Step 4.
+    var searchString = ToString(searchValue);
+
+    // FIXME: Non-standard flags argument (bug 1108382).
+    var flags = undefined;
+    if (arguments.length > 2) {
+        WarnOnceAboutFlagsArgument();
+        if (IsMatchFlagsArgumentEnabled()) {
+            flags = ToString(arguments[2]);
+            var rx = RegExpCreate(RegExpEscapeMetaChars(searchString), flags);
+
+            return callContentFunction(GetMethod(rx, std_replace), rx, string, replaceValue);
+        }
+    }
+
+    if (typeof replaceValue === "string") {
+        // Steps 6-12: Optimized for string case.
+        return StringReplaceString(string, searchString, replaceValue);
+    }
+
+    // Step 5.
+    if (!IsCallable(replaceValue)) {
+        // Steps 6-12.
+        return StringReplaceString(string, searchString, ToString(replaceValue));
+    }
+
+    // Step 7.
+    var pos = callFunction(std_String_indexOf, string, searchString);
+    if (pos === -1)
+        return string;
+
+    // Step 8.
+    var replStr = ToString(callContentFunction(replaceValue, undefined, searchString, pos, string));
+
+    // Step 10.
+    var tailPos = pos + searchString.length;
+
+    // Step 11.
+    var newString;
+    if (pos === 0)
+        newString = "";
+    else
+        newString = Substring(string, 0, pos);
+
+    newString += replStr;
+    var stringLength = string.length;
+    if (tailPos < stringLength)
+        newString += Substring(string, tailPos, stringLength - tailPos);
+
+    // Step 12.
+    return newString;
+}
+
+function String_generic_replace(thisValue, searchValue, replaceValue) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.replace');
+    return callFunction(String_replace, thisValue, searchValue, replaceValue);
+}
+
+function StringProtoHasNoSearch() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_search in StringProto);
+}
+
+function IsStringSearchOptimizable() {
+    var RegExpProto = GetBuiltinPrototype("RegExp");
+    // If RegExpPrototypeOptimizable succeeds, `exec` and `@@search` are
+    // guaranteed to be data properties.
+    return RegExpPrototypeOptimizable(RegExpProto) &&
+           RegExpProto.exec === RegExp_prototype_Exec &&
+           RegExpProto[std_search] === RegExpSearch;
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.15.
+function String_search(regexp) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    var isPatternString = (typeof regexp === "string");
+    if (!(isPatternString && StringProtoHasNoSearch()) && regexp !== undefined && regexp !== null) {
+        // Step 2.a.
+        var searcher = regexp[std_search];
+
+        // Step 2.b.
+        if (searcher !== undefined)
+            return callContentFunction(searcher, regexp, this);
+    }
+
+    // Step 3.
+    var string = ToString(this);
+
+    // FIXME: Non-standard flags argument (bug 1108382).
+    var flags = undefined;
+    if (arguments.length > 1) {
+        if (IsMatchFlagsArgumentEnabled())
+            flags = ToString(arguments[1]);
+        WarnOnceAboutFlagsArgument();
+    } else {
+        if (isPatternString && IsStringSearchOptimizable()) {
+            var flatResult = FlatStringSearch(string, regexp);
+            if (flatResult !== -2)
+                return flatResult;
+        }
+    }
+
+    // Step 4.
+    var rx = RegExpCreate(regexp, flags);
+
+    // Step 5.
+    return callContentFunction(GetMethod(rx, std_search), rx, string);
+}
+
+function String_generic_search(thisValue, regexp) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.search');
+    return callFunction(String_search, thisValue, regexp);
+}
+
+function StringProtoHasNoSplit() {
+    var ObjectProto = GetBuiltinPrototype("Object");
+    var StringProto = GetBuiltinPrototype("String");
+    if (!ObjectHasPrototype(StringProto, ObjectProto))
+        return false;
+    return !(std_split in StringProto);
+}
+
+// ES 2016 draft Mar 25, 2016 21.1.3.17.
+function String_split(separator, limit) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Optimized path for string.split(string), especially when both strings
+    // are constants.  Following sequence of if's cannot be put together in
+    // order that IonMonkey sees the constant if present (bug 1246141).
+    if (typeof this === "string") {
+        if (StringProtoHasNoSplit()) {
+            if (typeof separator === "string") {
+                if (limit === undefined) {
+                    // inlineConstantStringSplitString needs both arguments to
+                    // be MConstant, so pass them directly.
+                    return StringSplitString(this, separator);
+                }
+            }
+        }
+    }
+
+    // Step 2.
+    if (!(typeof separator == "string" && StringProtoHasNoSplit()) &&
+        separator !== undefined && separator !== null)
+    {
+        // Step 2.a.
+        var splitter = separator[std_split];
+
+        // Step 2.b.
+        if (splitter !== undefined)
+            return callContentFunction(splitter, separator, this, limit);
+    }
+
+    // Step 3.
+    var S = ToString(this);
+
+    // Step 9 (reordered).
+    var R = ToString(separator);
+
+    // Step 6.
+    if (limit !== undefined) {
+        var lim = limit >>> 0;
+
+        // Step 10.
+        if (lim === 0)
+            return [];
+
+        // Step 11.
+        if (separator === undefined)
+            return [S];
+
+        // Steps 4, 8, 12-18.
+        return StringSplitStringLimit(S, R, lim);
+    }
+
+    // Step 11.
+    if (separator === undefined)
+        return [S];
+
+    // Optimized path.
+    // Steps 4, 8, 12-18.
+    return StringSplitString(S, R);
+}
+
+function String_generic_split(thisValue, separator, limit) {
+    if (thisValue === undefined)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.split');
+    return callFunction(String_split, thisValue, separator, limit);
 }
 
 /* ES6 Draft Oct 14, 2014 21.1.3.19 */
@@ -523,32 +827,6 @@ function String_link(url) {
     RequireObjectCoercible(this);
     var S = ToString(this);
     return '<a href="' + EscapeAttributeValue(url) + '">' + S + "</a>";
-}
-
-function String_static_match(string, regexp) {
-    if (arguments.length < 1)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.match');
-    return callFunction(std_String_match, string, regexp);
-}
-
-function String_static_replace(string, find, replacement) {
-    if (arguments.length < 1)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.replace');
-    return callFunction(std_String_replace, string, find, replacement);
-}
-
-function String_static_search(string, regexp) {
-    if (arguments.length < 1)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.search');
-    return callFunction(std_String_search, string, regexp);
-}
-
-function String_static_split(string) {
-    if (arguments.length < 1)
-        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.split');
-    var seperator = arguments.length > 1 ? arguments[1] : undefined;
-    var limit = arguments.length > 2 ? arguments[2] : undefined;
-    return callFunction(std_String_split, string, seperator, limit);
 }
 
 function String_static_toLowerCase(string) {

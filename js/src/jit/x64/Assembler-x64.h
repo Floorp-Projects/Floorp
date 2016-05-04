@@ -167,13 +167,11 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = rbx;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = CallTempReg4;
 
 // Registerd used in RegExpTester instruction (do not use ReturnReg).
 static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg1;
 static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg2;
 static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg3;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = CallTempReg4;
 
 class ABIArgGenerator
 {

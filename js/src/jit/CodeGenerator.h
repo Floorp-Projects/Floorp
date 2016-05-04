@@ -47,7 +47,10 @@ class OutOfLineCallPostWriteElementBarrier;
 class OutOfLineIsCallable;
 class OutOfLineIsConstructor;
 class OutOfLineRegExpMatcher;
+class OutOfLineRegExpSearcher;
 class OutOfLineRegExpTester;
+class OutOfLineRegExpPrototypeOptimizable;
+class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineLambdaArrow;
 
 class CodeGenerator : public CodeGeneratorSpecific
@@ -111,9 +114,14 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitRegExp(LRegExp* lir);
     void visitRegExpMatcher(LRegExpMatcher* lir);
     void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
+    void visitRegExpSearcher(LRegExpSearcher* lir);
+    void visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool);
     void visitRegExpTester(LRegExpTester* lir);
     void visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool);
-    void visitRegExpReplace(LRegExpReplace* lir);
+    void visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* lir);
+    void visitOutOfLineRegExpPrototypeOptimizable(OutOfLineRegExpPrototypeOptimizable* ool);
+    void visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* lir);
+    void visitOutOfLineRegExpInstanceOptimizable(OutOfLineRegExpInstanceOptimizable* ool);
     void visitStringReplace(LStringReplace* lir);
     void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
     void visitBinarySharedStub(LBinarySharedStub* lir);
