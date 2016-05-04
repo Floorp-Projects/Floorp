@@ -35,14 +35,6 @@ add_task(function*() {
   });
   yield PlacesTestUtils.addVisits(visits);
 
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-  yield* do_test();
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", false);
-  yield* do_test();
-  Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
-});
-
-function* do_test() {
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield promiseAutoComplete("http://example.com/autocomplete/");
 
@@ -75,4 +67,4 @@ function* do_test() {
   yield Promise.all([autocompletePopupHidden, openedExpectedPage]);
 
   gBrowser.removeCurrentTab();
-}
+});

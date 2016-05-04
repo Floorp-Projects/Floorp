@@ -6,13 +6,6 @@ function is_selected(index) {
 }
 
 add_task(function*() {
-  // This test is only relevant if UnifiedComplete is enabled.
-  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
-  registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
-  });
-
   let bookmarks = [];
   bookmarks.push((yield PlacesUtils.bookmarks
                                    .insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
