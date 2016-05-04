@@ -90,6 +90,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
         // We don't want to run script in windows that have been navigated away
         // from.
         if (!win->AsInner()->HasActiveDocument()) {
+          aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+            NS_LITERAL_CSTRING("Refusing to execute function from window "
+                               "whose document is no longer active."));
           return;
         }
         globalObject = win;
@@ -109,6 +112,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // on gaia-ui tests, probably because nsInProcessTabChildGlobal is returning
     // null in some kind of teardown state.
     if (!globalObject->GetGlobalJSObject()) {
+      aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("Refusing to execute function from global which is "
+                           "being torn down."));
       return;
     }
 
@@ -125,6 +131,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       // nsIGlobalObject has severed its reference to the JS global. Let's just
       // be safe here, so that nobody has to waste a day debugging gaia-ui tests.
       if (!incumbent->GetGlobalJSObject()) {
+      aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("Refusing to execute function because our "
+                           "incumbent global is being torn down."));
         return;
       }
       mAutoIncumbentScript.emplace(incumbent);
@@ -151,6 +160,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       ScriptAllowed(js::GetGlobalForObjectCrossCompartment(realCallback));
 
     if (!allowed) {
+      aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("Refusing to execute function from global in which "
+                           "script is disabled."));
       return;
     }
   }

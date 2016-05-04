@@ -14879,7 +14879,7 @@ class CGCallback(CGClass):
             }
             CallSetup s(this, aRv, aExecutionReason, aExceptionHandling, aCompartment);
             if (!s.GetContext()) {
-              aRv.Throw(NS_ERROR_UNEXPECTED);
+              MOZ_ASSERT(aRv.Failed());
               return${errorReturn};
             }
             """,
@@ -15244,7 +15244,7 @@ class CallbackMember(CGNativeMember):
             $*{callSetup}
             JSContext* cx = s.GetContext();
             if (!cx) {
-              aRv.Throw(NS_ERROR_UNEXPECTED);
+              MOZ_ASSERT(aRv.Failed());
               return${errorReturn};
             }
             """,
