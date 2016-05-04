@@ -87,7 +87,7 @@ a {
   color: inherit;
 }
 
-#searchText:-moz-dir(rtl) {
+#searchText:dir(rtl) {
   border-radius: 0 2px 2px 0;
 }
 
@@ -95,7 +95,7 @@ a {
   border-radius: 2px 0 0 0;
 }
 
-#searchText[aria-expanded="true"]:-moz-dir(rtl) {
+#searchText[aria-expanded="true"]:dir(rtl) {
   border-radius: 0 2px 0 0;
 }
 
@@ -122,7 +122,7 @@ a {
   width: 50px;
 }
 
-#searchSubmit:-moz-dir(rtl) {
+#searchSubmit:dir(rtl) {
   border-radius: 2px 0 0 2px;
 }
 
@@ -171,9 +171,9 @@ a {
   display: none;
 }
 
-#defaultSnippet1:-moz-dir(rtl),
-#defaultSnippet2:-moz-dir(rtl),
-#rightsSnippet:-moz-dir(rtl) {
+#defaultSnippet1:dir(rtl),
+#defaultSnippet2:dir(rtl),
+#rightsSnippet:dir(rtl) {
   background-position: right 0 center;
 }
 
@@ -333,7 +333,7 @@ body[narrow] #restorePreviousSession {
   -moz-margin-end: 8px;
 }
 
-#restorePreviousSession:-moz-dir(rtl)::before {
+#restorePreviousSession:dir(rtl)::before {
   transform: scaleX(-1);
 }
 
@@ -394,8 +394,8 @@ body[narrow] #restorePreviousSession::before {
     transform-origin: 0 0;
   }
 
-  .launchButton:-moz-dir(rtl)::before,
-  #aboutMozilla:-moz-dir(rtl)::before {
+  .launchButton:dir(rtl)::before,
+  #aboutMozilla:dir(rtl)::before {
     transform: scale(.5) translateX(32px);
   }
 
@@ -431,7 +431,7 @@ body[narrow] #restorePreviousSession::before {
     content: url("chrome://browser/content/abouthome/restore@2x.png");
   }
 
-  #restorePreviousSession:-moz-dir(rtl)::before {
+  #restorePreviousSession:dir(rtl)::before {
     transform: scale(-0.5, 0.5) translateX(24px);
     transform-origin: top center;
   }
