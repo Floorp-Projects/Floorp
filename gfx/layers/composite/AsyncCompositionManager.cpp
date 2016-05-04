@@ -382,6 +382,22 @@ AsyncTransformShouldBeUnapplied(Layer* aFixedLayer,
   return false;
 }
 
+// If |aLayer| is fixed or sticky, returns the scroll id of the scroll frame
+// that it's fixed or sticky to. Otherwise, returns Nothing().
+static Maybe<FrameMetrics::ViewID>
+IsFixedOrSticky(Layer* aLayer)
+{
+  bool isRootOfFixedSubtree = aLayer->GetIsFixedPosition() &&
+    !aLayer->GetParent()->GetIsFixedPosition();
+  if (isRootOfFixedSubtree) {
+    return Some(aLayer->GetFixedPositionScrollContainerId());
+  }
+  if (aLayer->GetIsStickyPosition()) {
+    return Some(aLayer->GetStickyScrollContainerId());
+  }
+  return Nothing();
+}
+
 void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    Layer* aTransformedSubtreeRoot,
@@ -391,20 +407,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const ScreenMargin& aFixedLayerMargins,
                                                    bool aTransformAffectsLayerClip)
 {
-  FrameMetrics::ViewID fixedTo;  // the scroll id of the scroll frame we are fixed/sticky to
-  bool isRootOfFixedSubtree = aLayer->GetIsFixedPosition() &&
-    !aLayer->GetParent()->GetIsFixedPosition();
-  if (isRootOfFixedSubtree) {
-    fixedTo = aLayer->GetFixedPositionScrollContainerId();
-  }
-  bool isSticky = aLayer->GetIsStickyPosition();
-  if (isSticky) {
-    fixedTo = aLayer->GetStickyScrollContainerId();
-  }
   bool needsAsyncTransformUnapplied = false;
-  if (isRootOfFixedSubtree || isSticky) {
+  if (Maybe<FrameMetrics::ViewID> fixedTo = IsFixedOrSticky(aLayer)) {
     needsAsyncTransformUnapplied = AsyncTransformShouldBeUnapplied(aLayer,
-        fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
+        *fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
   }
 
   // We want to process all the fixed and sticky descendants of
