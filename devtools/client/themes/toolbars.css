@@ -150,13 +150,6 @@
   margin: 2px 1px;
 }
 
-.devtools-menulist:-moz-focusring,
-.devtools-toolbarbutton:-moz-focusring,
-.devtools-button:-moz-focusring {
-  outline: 1px dotted hsla(210,30%,85%,0.7);
-  outline-offset: -1px;
-}
-
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
 .devtools-button::before {
   width: 16px;
@@ -183,6 +176,10 @@
   background-size: cover;
   background-repeat: no-repeat;
   transition: opacity 0.05s ease-in-out;
+}
+
+.devtools-button:-moz-focusring {
+  outline: none;
 }
 
 /* Standalone buttons */
@@ -434,6 +431,14 @@
 .devtools-searchbox > .devtools-searchinput {
   margin-left: 0;
   margin-right: 0;
+}
+
+.devtools-searchbox > .devtools-textinput:-moz-focusring,
+.devtools-searchbox > .devtools-searchinput:-moz-focusring {
+  border-color: var(--theme-focus-border-color-textbox);
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out;
+  outline: none;
 }
 
 /* Don't add 'double spacing' for inputs that are at beginning / end

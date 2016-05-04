@@ -1098,6 +1098,44 @@ gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
         aSizes->mFontTableCacheSize +=
             mFontTableCache->SizeOfIncludingThis(aMallocSizeOf);
     }
+
+    // If the font has UVS data, we count that as part of the character map.
+    if (mUVSData) {
+        aSizes->mCharMapsSize += aMallocSizeOf(mUVSData.get());
+    }
+
+    // The following, if present, are essentially cached forms of font table
+    // data, so we'll accumulate them together with the basic table cache.
+    if (mUserFontData) {
+        aSizes->mFontTableCacheSize +=
+            mUserFontData->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mSVGGlyphs) {
+        aSizes->mFontTableCacheSize +=
+            mSVGGlyphs->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mMathTable) {
+        aSizes->mFontTableCacheSize +=
+            mMathTable->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mSupportedFeatures) {
+        aSizes->mFontTableCacheSize +=
+            mSupportedFeatures->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mFeatureInputs) {
+        aSizes->mFontTableCacheSize +=
+            mFeatureInputs->ShallowSizeOfIncludingThis(aMallocSizeOf);
+        for (auto iter = mFeatureInputs->ConstIter(); !iter.Done();
+             iter.Next()) {
+            // There's no API to get the real size of an hb_set, so we'll use
+            // an approximation based on knowledge of the implementation.
+            aSizes->mFontTableCacheSize += 8192; // vector of 64K bits
+        }
+    }
+    // We don't include the size of mCOLR/mCPAL here, because (depending on the
+    // font backend implementation) they will either wrap blocks of data owned
+    // by the system (and potentially shared), or tables that are in our font
+    // table cache and therefore already counted.
 }
 
 void

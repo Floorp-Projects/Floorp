@@ -110,7 +110,8 @@ class CompositorVsyncScheduler
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncScheduler)
 
 public:
-  explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent, nsIWidget* aWidget);
+  explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
+                                    widget::CompositorWidgetProxy* aWidgetProxy);
 
 #ifdef MOZ_WIDGET_GONK
   // emulator-ics never trigger the display on/off, so compositor will always
@@ -516,6 +517,9 @@ public:
                                             dom::ContentParent* aContentParent,
                                             const dom::TabId& aTabId,
                                             dom::TabParent* aBrowserParent);
+  bool AsyncPanZoomEnabled() const {
+    return !!mApzcTreeManager;
+  }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():

@@ -44,6 +44,7 @@ private:
   Mutex(const Mutex&) = delete;
   void operator=(const Mutex&) = delete;
 
+  friend class ConditionVariable;
   PlatformData* platformData() {
     MOZ_ASSERT(platformData_);
     return platformData_;

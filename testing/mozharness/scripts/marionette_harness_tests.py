@@ -35,11 +35,10 @@ marionette_harness_tests_config_options = [
 ] + copy.deepcopy(virtualenv_config_options)
 
 marionette_harness_tests_config = {
-# TODO - mirror pytest dependencies in internal PyPI
-#    "find_links": [
-#        "http://pypi.pub.build.mozilla.org/pub",
-#    ],
-#    "pip_index": False,
+    "find_links": [
+        "http://pypi.pub.build.mozilla.org/pub",
+    ],
+    "pip_index": False,
     # relative to workspace
     "rel_src_dir": os.path.join("build", "src"),
 }

@@ -86,7 +86,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override {}
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
 protected:
   /**

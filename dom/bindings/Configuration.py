@@ -515,7 +515,8 @@ class Descriptor(DescriptorProvider):
 
             self.proxy = (self.supportsIndexedProperties() or
                           (self.supportsNamedProperties() and
-                           not self.hasNamedPropertiesObject))
+                           not self.hasNamedPropertiesObject) or
+                          self.hasNonOrdinaryGetPrototypeOf())
 
             if self.proxy:
                 if (not self.operations['IndexedGetter'] and
@@ -746,6 +747,9 @@ class Descriptor(DescriptorProvider):
 
     def supportsNamedProperties(self):
         return self.operations['NamedGetter'] is not None
+
+    def hasNonOrdinaryGetPrototypeOf(self):
+        return self.interface.getExtendedAttribute("NonOrdinaryGetPrototypeOf")
 
     def needsConstructHookHolder(self):
         assert self.interface.hasInterfaceObject()

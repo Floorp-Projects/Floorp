@@ -2050,14 +2050,28 @@ public:
                          const nsHTMLReflowState* aReflowState,
                          nsDidReflowStatus        aStatus) = 0;
 
-  // XXX Maybe these three should be a separate interface?
-
   /**
    * Updates the overflow areas of the frame. This can be called if an
    * overflow area of the frame's children has changed without reflowing.
    * @return true if either of the overflow areas for this frame have changed.
    */
-  virtual bool UpdateOverflow() = 0;
+  bool UpdateOverflow();
+
+  /**
+   * Computes any overflow area created by the frame itself (outside of the
+   * frame bounds) and includes it into aOverflowAreas.
+   *
+   * Returns false if updating overflow isn't supported for this frame.
+   * If the frame requires a reflow instead, then it is responsible
+   * for scheduling one.
+   */
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) = 0;
+
+  /**
+   * Computes any overflow area created by children of this frame and
+   * includes it into aOverflowAreas.
+   */
+  virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) = 0;
 
   /**
    * Helper method used by block reflow to identify runs of text so
@@ -2947,6 +2961,9 @@ public:
   virtual void SetXULLayoutManager(nsBoxLayout* aLayout) { }
   virtual nsBoxLayout* GetXULLayoutManager() { return nullptr; }
   nsresult GetXULClientRect(nsRect& aContentRect);
+
+  virtual uint32_t GetXULLayoutFlags()
+  { return 0; }
 
   // For nsSprocketLayout
   virtual Valignment GetXULVAlign() const = 0;

@@ -463,7 +463,9 @@ static bool SaveMemoryReportNearOOM()
   if (needMemoryReport) {
     nsCOMPtr<nsICrashReporter> cr =
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-    cr->SaveMemoryReport();
+    if (cr) {
+      cr->SaveMemoryReport();
+    }
   }
 
   return needMemoryReport;

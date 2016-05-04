@@ -21,6 +21,7 @@ add_task(function* () {
                                  .rootTreeItem
                                  .QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDocShell);
+      let defaultAppType = rootDocShell.appType;
 
       rootDocShell.appType = Ci.nsIDocShell.APP_TYPE_EDITOR;
 
@@ -32,10 +33,14 @@ add_task(function* () {
         let image = doc.createElement("img");
         image.onload = function() {
           ok(true, "APP_TYPE_EDITOR is allowed to load privileged image");
+          // restore appType of rootDocShell before moving on to the next test
+          rootDocShell.appType = defaultAppType;
           resolve();
         }
         image.onerror = function() {
           ok(false, "APP_TYPE_EDITOR is allowed to load privileged image");
+          // restore appType of rootDocShell before moving on to the next test
+          rootDocShell.appType = defaultAppType;
           resolve();
         }
         doc.body.appendChild(image);
@@ -57,6 +62,7 @@ add_task(function* () {
                                  .rootTreeItem
                                  .QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDocShell);
+      let defaultAppType = rootDocShell.appType;
 
       rootDocShell.appType = Ci.nsIDocShell.APP_TYPE_UNKNOWN;
 
@@ -68,10 +74,14 @@ add_task(function* () {
         let image = doc.createElement("img");
         image.onload = function() {
           ok(false, "APP_TYPE_UNKNOWN is *not* allowed to acces privileged image");
+          // restore appType of rootDocShell before moving on to the next test
+          rootDocShell.appType = defaultAppType;
           resolve();
         }
         image.onerror = function() {
           ok(true, "APP_TYPE_UNKNOWN is *not* allowed to acces privileged image");
+          // restore appType of rootDocShell before moving on to the next test
+          rootDocShell.appType = defaultAppType;
           resolve();
         }
         doc.body.appendChild(image);

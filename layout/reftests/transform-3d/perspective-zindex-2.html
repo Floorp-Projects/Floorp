@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>z-index should work correctly for elements with perspective</title>
+
+<style>
+
+#perspective {
+  z-index: 2;
+  perspective: 300px;
+  perspective-origin: top left;
+}
+
+#front {
+  width: 100px;
+  height: 100px;
+  background-color: #00FF00;
+  transform: translateX(0px);
+}
+
+#back {
+  z-index: 1;
+  width: 100px;
+  height: 100px;
+  background-color: #FF0000;
+  transform: translateY(-100px);
+}
+
+</style>
+
+<div id="perspective">
+  <div id="front"></div>
+</div>
+<div id="back"></div>

@@ -252,6 +252,16 @@ BaseDOMProxyHandler::ownPropertyKeys(JSContext* cx,
 }
 
 bool
+BaseDOMProxyHandler::getPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                            bool* isOrdinary,
+                                            JS::MutableHandle<JSObject*> proto) const
+{
+  *isOrdinary = true;
+  proto.set(GetStaticPrototype(proxy));
+  return true;
+}
+
+bool
 BaseDOMProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
                                                   JS::Handle<JSObject*> proxy,
                                                   JS::AutoIdVector& props) const

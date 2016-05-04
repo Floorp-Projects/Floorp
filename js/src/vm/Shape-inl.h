@@ -134,7 +134,7 @@ EmptyShape::ensureInitialCustomShape(ExclusiveContext* cx, Handle<ObjectSubclass
 
     // Cache the initial shape for non-prototype objects, however, so that
     // future instances will begin life with that shape.
-    RootedObject proto(cx, obj->getProto());
+    RootedObject proto(cx, obj->staticPrototype());
     EmptyShape::insertInitialShape(cx, shape, proto);
     return true;
 }

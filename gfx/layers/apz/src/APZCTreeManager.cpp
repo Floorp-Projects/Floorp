@@ -781,6 +781,16 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         return result;
       }
 
+      // If/when we enable support for pan inputs off-main-thread, we'll need
+      // to duplicate this EventStateManager code or something. See the other
+      // call to GetUserPrefsForWheelEvent in this file for why these fields
+      // are stored separately.
+      MOZ_ASSERT(NS_IsMainThread());
+      WidgetWheelEvent wheelEvent = panInput.ToWidgetWheelEvent(nullptr);
+      EventStateManager::GetUserPrefsForWheelEvent(&wheelEvent,
+        &panInput.mUserDeltaMultiplierX,
+        &panInput.mUserDeltaMultiplierY);
+
       RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &hitResult);
       if (apzc) {

@@ -17,8 +17,8 @@ enum class FeatureStatus
   // This feature has not been requested.
   Unused,
 
-  // This feature is unavailable due to Safe Mode or not being included with
-  // the operating system.
+  // This feature is unavailable due to Safe Mode, not being included with
+  // the operating system, or a dependent feature being disabled.
   Unavailable,
 
   // This feature crashed immediately when we tried to initialize it, but we

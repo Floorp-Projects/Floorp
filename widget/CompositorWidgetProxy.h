@@ -15,6 +15,7 @@ class nsIWidget;
 class nsBaseWidget;
 
 namespace mozilla {
+class CompositorVsyncDispatcher;
 namespace layers {
 class Compositor;
 class LayerManagerComposite;
@@ -170,6 +171,11 @@ public:
                              const LayoutDeviceIntRect& aRect,
                              const LayoutDeviceIntRect& aClearRect);
 
+  /**
+   * Return a compositor vsync dispatcher for this widget.
+   */
+  virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
+
 protected:
   virtual ~CompositorWidgetProxy();
 
@@ -204,6 +210,7 @@ public:
   virtual LayoutDeviceIntSize GetClientSize() override;
   virtual uint32_t GetGLFrameBufferFormat() override;
   virtual layers::Composer2D* GetComposer2D() override;
+  virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
 
   // If you can override this method, inherit from CompositorWidgetProxy instead.
   nsIWidget* RealWidget() override;
