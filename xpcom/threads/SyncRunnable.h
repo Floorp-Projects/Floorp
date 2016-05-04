@@ -8,6 +8,7 @@
 #define mozilla_SyncRunnable_h
 
 #include "nsThreadUtils.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Monitor.h"
 
 namespace mozilla {
@@ -61,7 +62,33 @@ public:
     }
   }
 
+  void DispatchToThread(AbstractThread* aThread, bool aForceDispatch = false)
+  {
+    if (!aForceDispatch && aThread->IsCurrentThreadIn()) {
+      mRunnable->Run();
+      return;
+    }
+
+    // Check we don't have tail dispatching here. Otherwise we will deadlock
+    // ourself when spinning the loop below.
+    MOZ_ASSERT(!aThread->RequiresTailDispatchFromCurrentThread());
+
+    aThread->Dispatch(RefPtr<nsIRunnable>(this).forget());
+    mozilla::MonitorAutoLock lock(mMonitor);
+    while (!mDone) {
+      lock.Wait();
+    }
+  }
+
   static void DispatchToThread(nsIEventTarget* aThread,
+                               nsIRunnable* aRunnable,
+                               bool aForceDispatch = false)
+  {
+    RefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
+    s->DispatchToThread(aThread, aForceDispatch);
+  }
+
+  static void DispatchToThread(AbstractThread* aThread,
                                nsIRunnable* aRunnable,
                                bool aForceDispatch = false)
   {
