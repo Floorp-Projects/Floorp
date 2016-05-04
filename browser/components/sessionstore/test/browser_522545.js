@@ -159,16 +159,13 @@ function test() {
 
       ok(hasUTV, "At least one tab has a userTypedValue with userTypedClear with no loaded URL");
 
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(firstLoad);
+      BrowserTestUtils.waitForMessage(gBrowser.selectedBrowser.messageManager, "SessionStore:update").then(firstLoad);
     }
 
     function firstLoad() {
-      let state = JSON.parse(ss.getBrowserState());
-      let hasSH = state.windows[0].tabs.some(function(aTab) {
-        return !("userTypedValue" in aTab) && aTab.entries[0].url;
-      });
-
-      ok(hasSH, "At least one tab has its entry in SH");
+      let state = JSON.parse(ss.getTabState(gBrowser.selectedTab));
+      let hasSH = !("userTypedValue" in state) && state.entries[0].url;
+      ok(hasSH, "The selected tab has its entry in SH");
 
       runNextTest();
     }
@@ -252,9 +249,17 @@ function test() {
   };
   function runNextTest() {
     if (tests.length) {
-      waitForBrowserState(state, tests.shift());
+      waitForBrowserState(state, function() {
+        gBrowser.selectedBrowser.userTypedValue = null;
+        URLBarSetURI();
+        (tests.shift())();
+      });
     } else {
-      waitForBrowserState(originalState, finish);
+      waitForBrowserState(originalState, function() {
+        gBrowser.selectedBrowser.userTypedValue = null;
+        URLBarSetURI();
+        finish();
+      });
     }
   }
 
