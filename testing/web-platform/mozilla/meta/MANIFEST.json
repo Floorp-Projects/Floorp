@@ -328,6 +328,12 @@
             "url": "/_mozilla/service-workers/service-worker/multiple-update.https.html"
           }
         ],
+        "service-workers/service-worker/navigate-window.https.html": [
+          {
+            "path": "service-workers/service-worker/navigate-window.https.html",
+            "url": "/_mozilla/service-workers/service-worker/navigate-window.https.html"
+          }
+        ],
         "service-workers/service-worker/navigation-redirect.https.html": [
           {
             "path": "service-workers/service-worker/navigation-redirect.https.html",
