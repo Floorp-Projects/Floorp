@@ -839,13 +839,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // Each layer has multiple clips:
   //  - Its local clip, which is fixed to the layer contents, i.e. it moves
   //    with those async transforms which the layer contents move with.
+  //  - Its scrolled clip, which moves with all async transforms.
   //  - For each ScrollMetadata on the layer, a scroll clip. This includes
   //    the composition bounds and any other clips induced by layout. This
   //    moves with async transforms from ScrollMetadatas above it.
   // In this function, these clips are combined into two shadow clip parts:
   //  - The fixed clip, which consists of the local clip only, initially
   //    transformed by all async transforms.
-  //  - The scrolled clip, which consists of the scroll clips, transformed by
+  //  - The scrolled clip, which consists of the other clips, transformed by
   //    the appropriate transforms.
   // These two parts are kept separate for now, because for fixed layers, we
   // need to adjust the fixed clip (to cancel out some async transforms).
@@ -855,13 +856,15 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // adjusted) fixed clip and the scrolled clip.
   ClipParts& clipParts = clipPartsCache[aLayer];
   clipParts.mFixedClip = aLayer->GetClipRect();
+  clipParts.mScrolledClip = aLayer->GetScrolledClipRect();
 
   // If we are a perspective transform ContainerLayer, apply the clip deferred
   // from our child (if there is any) before we iterate over our frame metrics,
   // because this clip is subject to all async transforms of this layer.
   // Since this clip came from the a scroll clip on the child, it becomes part
   // of our scrolled clip.
-  clipParts.mScrolledClip = clipDeferredFromChildren;
+  clipParts.mScrolledClip = IntersectMaybeRects(
+      clipDeferredFromChildren, clipParts.mScrolledClip);
 
   // The transform of a mask layer is relative to the masked layer's parent
   // layer. So whenever we apply an async transform to a layer, we need to
@@ -874,6 +877,15 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
   // At each iteration, this array contains the layer's ancestor mask layers
   // of all scroll frames inside the current one.
   nsTArray<Layer*> ancestorMaskLayers;
+
+  // The layer's scrolled clip can have an ancestor mask layer as well,
+  // which is moved by all async scrolls on this layer.
+  if (const Maybe<LayerClip>& scrolledClip = aLayer->GetScrolledClip()) {
+    if (scrolledClip->GetMaskLayerIndex()) {
+      ancestorMaskLayers.AppendElement(
+          aLayer->GetAncestorMaskLayerAt(*scrolledClip->GetMaskLayerIndex()));
+    }
+  }
 
   for (uint32_t i = 0; i < aLayer->GetScrollMetadataCount(); i++) {
     AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController(i);
