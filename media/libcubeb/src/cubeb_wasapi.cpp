@@ -587,7 +587,9 @@ bool get_input_buffer(cubeb_stream * stm)
   /* Get input packets until we have captured enough frames, and put them in a
    * contiguous buffer. */
   uint32_t offset = 0;
-  while (offset != total_available_input) {
+  uint32_t input_channel_count = stm->input_mix_params.channels;
+  while (offset != total_available_input * input_channel_count &&
+      total_available_input) {
     hr = stm->capture_client->GetNextPacketSize(&next);
     if (FAILED(hr)) {
       LOG("cannot get next packet size: %x\n", hr);
@@ -620,7 +622,7 @@ bool get_input_buffer(cubeb_stream * stm)
         assert(ok);
         upmix(reinterpret_cast<float*>(input_packet), packet_size,
               stm->linear_input_buffer.data() + stm->linear_input_buffer.length(),
-              stm->input_mix_params.channels,
+              input_channel_count,
               stm->input_stream_params.channels);
         stm->linear_input_buffer.set_length(stm->linear_input_buffer.length() + packet_size * stm->input_stream_params.channels);
       } else if (should_downmix(stm->input_mix_params, stm->input_stream_params)) {
@@ -629,7 +631,7 @@ bool get_input_buffer(cubeb_stream * stm)
         assert(ok);
         downmix(reinterpret_cast<float*>(input_packet), packet_size,
                 stm->linear_input_buffer.data() + stm->linear_input_buffer.length(),
-                stm->input_mix_params.channels,
+                input_channel_count,
                 stm->input_stream_params.channels);
         stm->linear_input_buffer.set_length(stm->linear_input_buffer.length() + packet_size * stm->input_stream_params.channels);
       } else {
@@ -642,11 +644,11 @@ bool get_input_buffer(cubeb_stream * stm)
       LOG("FAILED to release intput buffer");
       return false;
     }
-    offset += packet_size;
+    offset += packet_size * input_channel_count;
   }
 
   assert(stm->linear_input_buffer.length() >= total_available_input &&
-         offset == total_available_input);
+         offset == total_available_input * input_channel_count);
 
   return true;
 }
@@ -675,7 +677,7 @@ bool get_output_buffer(cubeb_stream * stm, size_t max_frames, float *& buffer, s
     return true;
   }
 
-  frame_count = std::min(max_frames, stm->output_buffer_frame_count - padding_out);
+  frame_count = std::min<size_t>(max_frames, stm->output_buffer_frame_count - padding_out);
   BYTE * output_buffer;
 
   hr = stm->render_client->GetBuffer(frame_count, &output_buffer);
