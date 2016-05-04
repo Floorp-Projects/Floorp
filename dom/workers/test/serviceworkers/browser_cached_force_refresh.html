@@ -8,9 +8,56 @@
 </head>
 <body>
 <script type="text/javascript">
-addEventListener('load', function(event) {
-  var custom = new Event('cached-load', { bubbles: true });
+function ok(exp, msg) {
+  if (!exp) {
+    throw(msg);
+  }
+}
+
+function is(actual, expected, msg) {
+  if (actual !== expected) {
+    throw('got "' + actual + '", but expected "' + expected + '" - ' + msg);
+  }
+}
+
+function fail(err) {
+  var custom = new CustomEvent('cached-failure', {
+    bubbles: true,
+    detail: err
+  });
   document.dispatchEvent(custom);
+}
+
+function getUncontrolledClients(sw) {
+  return new Promise(function(resolve, reject) {
+    navigator.serviceWorker.addEventListener('message', function onMsg(evt) {
+      if (evt.data.type === 'CLIENTS') {
+        navigator.serviceWorker.removeEventListener('message', onMsg);
+        resolve(evt.data.detail);
+      }
+    });
+    sw.postMessage({ type: 'GET_UNCONTROLLED_CLIENTS' })
+  });
+}
+
+addEventListener('load', function(event) {
+  if (!navigator.serviceWorker.controller) {
+    return fail(window.location.href + ' is not controlled!');
+  }
+
+  getUncontrolledClients(navigator.serviceWorker.controller)
+    .then(function(clientList) {
+      is(clientList.length, 1, 'should only have one client');
+      is(clientList[0].url, window.location.href,
+         'client url should match current window');
+      is(clientList[0].frameType, 'top-level',
+         'client should be a top-level window');
+      var custom = new Event('cached-load', { bubbles: true });
+      document.dispatchEvent(custom);
+    })
+    .catch(function(err) {
+      fail(err);
+    });
 });
 </script>
 </body>
