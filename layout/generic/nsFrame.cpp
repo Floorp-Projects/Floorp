@@ -2573,8 +2573,21 @@ WrapInWrapList(nsDisplayListBuilder* aBuilder,
                nsIFrame* aFrame, nsDisplayList* aList)
 {
   nsDisplayItem* item = aList->GetBottom();
-  if (!item || item->GetAbove() ||
-      (item->Frame() != aFrame && item->GetType() != nsDisplayItem::TYPE_PERSPECTIVE)) {
+  if (!item) {
+    return nullptr;
+  }
+
+  // For perspective items we want to treat the 'frame' as being the transform
+  // frame that created it. This stops the transform frame from wrapping another
+  // nsDisplayWrapList around it (with mismatching reference frames), but still
+  // makes the perspective frame create one (so we have an atomic entry for z-index
+  // sorting).
+  nsIFrame *itemFrame = item->Frame();
+  if (item->GetType() == nsDisplayItem::TYPE_PERSPECTIVE) {
+    itemFrame = static_cast<nsDisplayPerspective*>(item)->TransformFrame();
+  }
+
+  if (item->GetAbove() || itemFrame != aFrame) {
     return new (aBuilder) nsDisplayWrapList(aBuilder, aFrame, aList);
   }
   aList->RemoveBottom();
