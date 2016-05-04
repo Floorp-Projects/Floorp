@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
@@ -27,9 +26,6 @@ public class testAboutHomePageNavigation extends UITest {
         mAboutHome.swipeToPanelOnRight();
         mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
-        mAboutHome.swipeToPanelOnRight();
-        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
-
         // Ideally these helpers would just be their own tests. However, by keeping this within
         // one method, we're saving test setUp and tearDown resources.
         if (DeviceHelper.isTablet()) {
@@ -48,9 +44,6 @@ public class testAboutHomePageNavigation extends UITest {
         mAboutHome.assertCurrentPanel(PanelType.COMBINED_HISTORY);
 
         mAboutHome.swipeToPanelOnLeft();
-        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
-
-        mAboutHome.swipeToPanelOnLeft();
         mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
         mAboutHome.swipeToPanelOnLeft();
@@ -63,9 +56,6 @@ public class testAboutHomePageNavigation extends UITest {
 
     private void helperTestPhone() {
         // Edge case.
-        mAboutHome.swipeToPanelOnRight();
-        mAboutHome.assertCurrentPanel(PanelType.READING_LIST);
-
         mAboutHome.swipeToPanelOnLeft();
         mAboutHome.assertCurrentPanel(PanelType.BOOKMARKS);
 
