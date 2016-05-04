@@ -516,6 +516,9 @@ public:
                                             dom::ContentParent* aContentParent,
                                             const dom::TabId& aTabId,
                                             dom::TabParent* aBrowserParent);
+  bool AsyncPanZoomEnabled() const {
+    return !!mApzcTreeManager;
+  }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
