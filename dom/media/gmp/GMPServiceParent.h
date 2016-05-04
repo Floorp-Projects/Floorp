@@ -14,6 +14,7 @@
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MozPromise.h"
+#include "GMPStorage.h"
 
 template <class> struct already_AddRefed;
 
@@ -58,6 +59,8 @@ public:
 #endif // MOZ_CRASHREPORTER
   RefPtr<GenericPromise> EnsureInitialized();
   RefPtr<GenericPromise> AsyncAddPluginDirectory(const nsAString& aDirectory);
+
+  already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId);
 
 private:
   friend class GMPServiceParent;
@@ -204,6 +207,9 @@ private:
   Monitor mInitPromiseMonitor;
   MozPromiseHolder<GenericPromise> mInitPromise;
   bool mLoadPluginsFromDiskComplete;
+
+  // Hashes nodeId to the hashtable of storage for that nodeId.
+  nsRefPtrHashtable<nsCStringHashKey, GMPStorage> mTempGMPStorage;
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
