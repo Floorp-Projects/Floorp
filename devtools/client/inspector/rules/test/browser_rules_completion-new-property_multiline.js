@@ -94,10 +94,10 @@ add_task(function* () {
 
   info("Select the background-color suggestion with a mouse click.");
   let onRuleviewChanged = view.once("ruleview-changed");
-  let onInputFocus = once(editor.input, "focus", true);
+  let onSuggest = editor.once("after-suggest");
   let node = editor.popup._list.childNodes[editor.popup.selectedIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, view.styleWindow);
-  yield onInputFocus;
+  yield onSuggest;
   yield onRuleviewChanged;
 
   is(editor.input.value, EXPECTED_CSS_VALUE,

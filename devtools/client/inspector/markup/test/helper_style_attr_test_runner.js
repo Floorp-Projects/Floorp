@@ -91,7 +91,6 @@ function clickOnSuggestion(index, editor) {
     info("Clicking on item " + index + " in the list");
     editor.once("after-suggest", () => executeSoon(resolve));
     editor.popup._list.childNodes[index].click();
-    editor.input.blur();
   });
 }
 
