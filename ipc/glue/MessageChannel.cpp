@@ -521,13 +521,20 @@ MessageChannel::~MessageChannel()
     MOZ_COUNT_DTOR(ipc::MessageChannel);
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
-    BOOL ok = CloseHandle(mEvent);
-    if (!ok) {
+    if (mEvent) {
+        BOOL ok = CloseHandle(mEvent);
+        mEvent = nullptr;
+
+        if (!ok) {
+            gfxDevCrash(mozilla::gfx::LogReason::MessageChannelCloseFailure) <<
+                "MessageChannel failed to close. GetLastError: " <<
+                GetLastError();
+        }
+        MOZ_RELEASE_ASSERT(ok);
+    } else {
         gfxDevCrash(mozilla::gfx::LogReason::MessageChannelCloseFailure) <<
-            "MessageChannel failed to close. GetLastError: " <<
-            GetLastError();
+                "MessageChannel destructor ran without an mEvent Handle";
     }
-    MOZ_RELEASE_ASSERT(ok);
 #endif
     Clear();
 }
