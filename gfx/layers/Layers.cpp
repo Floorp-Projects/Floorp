@@ -851,6 +851,12 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   return currentClip.Intersect(scissor);
 }
 
+Maybe<ParentLayerIntRect>
+Layer::GetScrolledClipRect() const
+{
+  return mScrolledClip ? Some(mScrolledClip->GetClipRect()) : Nothing();
+}
+
 const ScrollMetadata&
 Layer::GetScrollMetadata(uint32_t aIndex) const
 {
