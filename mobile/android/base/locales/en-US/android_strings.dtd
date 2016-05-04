@@ -24,16 +24,10 @@
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
-<!ENTITY  reading_list_migration_title "Reading List connected">
-<!ENTITY  reading_list_migration_subtext "Your Reading List items will now be added to your Bookmarks">
-<!ENTITY  reading_list_migration_goto_bookmarks "Go to Bookmarks">
-<!ENTITY  reading_list_migration_bookmarks_hidden "Your Bookmarks panel is hidden">
-
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
 <!ENTITY  history_title "History">
-<!ENTITY  reading_list_title "Reading List">
 <!ENTITY  recent_tabs_title "Recent Tabs">
 
 <!ENTITY  switch_to_tab "Switch to tab">
