@@ -4637,8 +4637,12 @@ nsWindow::GrabPointer(guint32 aTime)
         LOG(("GrabPointer: pointer grab failed: %i\n", retval));
         // A failed grab indicates that another app has grabbed the pointer.
         // Check for rollup now, because, without the grab, we likely won't
-        // get subsequent button press events.
-        CheckForRollup(0, 0, false, true);
+        // get subsequent button press events. Do this with an event so that
+        // popups don't rollup while potentially adjusting the grab for
+        // this popup.
+        nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethod(this, &nsWindow::CheckForRollupDuringGrab);
+        NS_DispatchToCurrentThread(event.forget());
     }
 }
 
