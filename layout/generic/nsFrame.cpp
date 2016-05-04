@@ -2771,6 +2771,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       &savedOutOfFlowData->mContainingBlockClip);
     clipState.SetScrollClipForContainingBlockDescendants(
       savedOutOfFlowData->mContainingBlockScrollClip);
+  } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) {
+    // If we have nested out-of-flow frames and the outer one isn't visible
+    // then we won't have stored clip data for it. We can just clear the clip
+    // instead since we know we won't render anything, and the inner out-of-flow
+    // frame will setup the correct clip for itself.
+    clipState.Clear();
   }
 
   // Setup clipping for the parent's overflow:-moz-hidden-unscrollable,
