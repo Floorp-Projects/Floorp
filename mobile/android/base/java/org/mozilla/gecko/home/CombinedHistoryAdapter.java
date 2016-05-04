@@ -224,13 +224,14 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
     @Override
     public HomeContextMenuInfo makeContextMenuInfoFromPosition(View view, int position) {
-        if (position == 0) {
-            // No context menu for smartfolders.
-            return null;
+        final CombinedHistoryItem.ItemType itemType = getItemTypeForPosition(position);
+        if (itemType == CombinedHistoryItem.ItemType.HISTORY) {
+            final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, -1);
+
+            historyCursor.moveToPosition(transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType.HISTORY, position));
+            return populateHistoryInfoFromCursor(info, historyCursor);
         }
-        HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, -1);
-        historyCursor.moveToPosition(transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType.HISTORY, position));
-        return populateHistoryInfoFromCursor(info, historyCursor);
+        return null;
     }
 
     protected static HomeContextMenuInfo populateHistoryInfoFromCursor(HomeContextMenuInfo info, Cursor cursor) {
