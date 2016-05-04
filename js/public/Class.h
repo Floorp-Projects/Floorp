@@ -9,8 +9,6 @@
 #ifndef js_Class_h
 #define js_Class_h
 
-#include "mozilla/DebugOnly.h"
-
 #include "jstypes.h"
 
 #include "js/CallArgs.h"
@@ -453,15 +451,25 @@ class JS_FRIEND_API(ElementAdder)
     JS::Value* vp_;
 
     uint32_t index_;
-    mozilla::DebugOnly<uint32_t> length_;
+#ifdef DEBUG
+    uint32_t length_;
+#endif
     GetBehavior getBehavior_;
 
   public:
     ElementAdder(JSContext* cx, JSObject* obj, uint32_t length, GetBehavior behavior)
-      : resObj_(cx, obj), vp_(nullptr), index_(0), length_(length), getBehavior_(behavior)
+      : resObj_(cx, obj), vp_(nullptr), index_(0),
+#ifdef DEBUG
+        length_(length),
+#endif
+        getBehavior_(behavior)
     {}
     ElementAdder(JSContext* cx, JS::Value* vp, uint32_t length, GetBehavior behavior)
-      : resObj_(cx), vp_(vp), index_(0), length_(length), getBehavior_(behavior)
+      : resObj_(cx), vp_(vp), index_(0),
+#ifdef DEBUG
+        length_(length),
+#endif
+        getBehavior_(behavior)
     {}
 
     GetBehavior getBehavior() const { return getBehavior_; }
