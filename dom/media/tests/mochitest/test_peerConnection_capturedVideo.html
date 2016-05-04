@@ -73,8 +73,8 @@ function startTest(media, token) {
                         (e.code ? " (code=" + e.code + ")" : "") +
                         " in test for " + media.name +
                         (e.stack ? ":\n" + e.stack : "")))
+  .then(() => test && test.close())
   .then(() => {
-    if (test) { test.close(); }
     removeNodeAndSource(video);
     manager.finished(token);
   })
