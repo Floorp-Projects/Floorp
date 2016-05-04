@@ -49,6 +49,7 @@ public:
   }
 
   void Close(nsresult reason);
+  void SetResponseIsComplete();
 
   void SetRecvdFin(bool aStatus) { mRecvdFin = aStatus ? 1 : 0; }
   bool RecvdFin() { return mRecvdFin; }
