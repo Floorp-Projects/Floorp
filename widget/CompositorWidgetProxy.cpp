@@ -5,6 +5,7 @@
 #include "CompositorWidgetProxy.h"
 #include "GLConsts.h"
 #include "nsBaseWidget.h"
+#include "VsyncDispatcher.h"
 
 namespace mozilla {
 namespace widget {
@@ -200,6 +201,16 @@ nsIWidget*
 CompositorWidgetProxyWrapper::RealWidget()
 {
   return mWidget;
+}
+
+already_AddRefed<CompositorVsyncDispatcher>
+CompositorWidgetProxyWrapper::GetCompositorVsyncDispatcher()
+{
+  if (!mWidget) {
+    return nullptr;
+  }
+  RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher();
+  return cvd.forget();
 }
 
 } // namespace widget
