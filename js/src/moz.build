@@ -305,7 +305,7 @@ UNIFIED_SOURCES += [
     'proxy/DeadObjectProxy.cpp',
     'proxy/OpaqueCrossCompartmentWrapper.cpp',
     'proxy/Proxy.cpp',
-    'proxy/ScriptedDirectProxyHandler.cpp',
+    'proxy/ScriptedProxyHandler.cpp',
     'proxy/SecurityWrapper.cpp',
     'proxy/Wrapper.cpp',
     'vm/ArgumentsObject.cpp',

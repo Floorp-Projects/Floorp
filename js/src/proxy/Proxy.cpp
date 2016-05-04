@@ -16,7 +16,7 @@
 
 #include "gc/Marking.h"
 #include "proxy/DeadObjectProxy.h"
-#include "proxy/ScriptedDirectProxyHandler.h"
+#include "proxy/ScriptedProxyHandler.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
