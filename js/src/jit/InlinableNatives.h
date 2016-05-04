@@ -65,19 +65,15 @@
     _(MathCbrt)                     \
                                     \
     _(RegExpMatcher)                \
-    _(RegExpSearcher)               \
     _(RegExpTester)                 \
     _(IsRegExpObject)               \
-    _(RegExpPrototypeOptimizable)   \
-    _(RegExpInstanceOptimizable)    \
                                     \
     _(String)                       \
+    _(StringSplit)                  \
     _(StringCharCodeAt)             \
     _(StringFromCharCode)           \
     _(StringCharAt)                 \
-                                    \
-    _(IntrinsicStringReplaceString) \
-    _(IntrinsicStringSplitString)   \
+    _(StringReplace)                \
                                     \
     _(ObjectCreate)                 \
                                     \
@@ -107,7 +103,6 @@
     _(IntrinsicIsConstructing)      \
     _(IntrinsicSubstringKernel)     \
     _(IntrinsicDefineDataProperty)  \
-    _(IntrinsicObjectHasPrototype)  \
                                     \
     _(IntrinsicIsArrayIterator)     \
     _(IntrinsicIsMapIterator)       \

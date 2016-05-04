@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsmath.h"
-#include "jsobj.h"
-#include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
@@ -20,7 +18,6 @@
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
-#include "vm/SelfHosting.h"
 
 #include "jsscriptinlines.h"
 
@@ -178,32 +175,24 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // RegExp natives.
       case InlinableNative::RegExpMatcher:
         return inlineRegExpMatcher(callInfo);
-      case InlinableNative::RegExpSearcher:
-        return inlineRegExpSearcher(callInfo);
       case InlinableNative::RegExpTester:
         return inlineRegExpTester(callInfo);
       case InlinableNative::IsRegExpObject:
         return inlineIsRegExpObject(callInfo);
-      case InlinableNative::RegExpPrototypeOptimizable:
-        return inlineRegExpPrototypeOptimizable(callInfo);
-      case InlinableNative::RegExpInstanceOptimizable:
-        return inlineRegExpInstanceOptimizable(callInfo);
 
       // String natives.
       case InlinableNative::String:
         return inlineStringObject(callInfo);
+      case InlinableNative::StringSplit:
+        return inlineStringSplit(callInfo);
       case InlinableNative::StringCharCodeAt:
         return inlineStrCharCodeAt(callInfo);
       case InlinableNative::StringFromCharCode:
         return inlineStrFromCharCode(callInfo);
       case InlinableNative::StringCharAt:
         return inlineStrCharAt(callInfo);
-
-      // String intrinsics.
-      case InlinableNative::IntrinsicStringReplaceString:
-        return inlineStringReplaceString(callInfo);
-      case InlinableNative::IntrinsicStringSplitString:
-        return inlineStringSplitString(callInfo);
+      case InlinableNative::StringReplace:
+        return inlineStrReplace(callInfo);
 
       // Object natives.
       case InlinableNative::ObjectCreate:
@@ -270,8 +259,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineHasClass(callInfo, &ListIteratorObject::class_);
       case InlinableNative::IntrinsicDefineDataProperty:
         return inlineDefineDataProperty(callInfo);
-      case InlinableNative::IntrinsicObjectHasPrototype:
-        return inlineObjectHasPrototype(callInfo);
 
       // Map intrinsics.
       case InlinableNative::IntrinsicGetNextMapEntryForIterator:
@@ -1384,37 +1371,37 @@ IonBuilder::inlineStringObject(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
+IonBuilder::inlineConstantStringSplit(CallInfo& callInfo)
 {
+    if (!callInfo.thisArg()->isConstant())
+        return InliningStatus_NotInlined;
+
     if (!callInfo.getArg(0)->isConstant())
         return InliningStatus_NotInlined;
 
-    if (!callInfo.getArg(1)->isConstant())
+    MConstant* argval = callInfo.getArg(0)->toConstant();
+    if (argval->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    MConstant* strval = callInfo.getArg(0)->toConstant();
-    if (strval->type() != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    MConstant* sepval = callInfo.getArg(1)->toConstant();
+    MConstant* strval = callInfo.thisArg()->toConstant();
     if (strval->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
     // Check if exist a template object in stub.
-    JSString* stringStr = nullptr;
-    JSString* stringSep = nullptr;
+    JSString* stringThis = nullptr;
+    JSString* stringArg = nullptr;
     JSObject* templateObject = nullptr;
-    if (!inspector->isOptimizableCallStringSplit(pc, &stringStr, &stringSep, &templateObject))
+    if (!inspector->isOptimizableCallStringSplit(pc, &stringThis, &stringArg, &templateObject))
         return InliningStatus_NotInlined;
 
-    MOZ_ASSERT(stringStr);
-    MOZ_ASSERT(stringSep);
+    MOZ_ASSERT(stringThis);
+    MOZ_ASSERT(stringArg);
     MOZ_ASSERT(templateObject);
 
-    if (strval->toString() != stringStr)
+    if (strval->toString() != stringThis)
         return InliningStatus_NotInlined;
 
-    if (sepval->toString() != stringSep)
+    if (argval->toString() != stringArg)
         return InliningStatus_NotInlined;
 
     // Check if |templateObject| is valid.
@@ -1485,27 +1472,23 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineStringSplitString(CallInfo& callInfo)
+IonBuilder::inlineStringSplit(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
+    if (callInfo.argc() != 1 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    MDefinition* strArg = callInfo.getArg(0);
-    MDefinition* sepArg = callInfo.getArg(1);
-
-    if (strArg->type() != MIRType_String)
+    if (callInfo.thisArg()->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    if (sepArg->type() != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    IonBuilder::InliningStatus resultConstStringSplit = inlineConstantStringSplitString(callInfo);
+    IonBuilder::InliningStatus resultConstStringSplit = inlineConstantStringSplit(callInfo);
     if (resultConstStringSplit != InliningStatus_NotInlined)
         return resultConstStringSplit;
 
-    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_StringSplitString);
+    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::str_split);
     if (!templateObject)
         return InliningStatus_NotInlined;
 
@@ -1527,63 +1510,11 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
                                                   constraints());
     current->add(templateObjectDef);
 
-    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), strArg, sepArg,
-                                          templateObjectDef);
+    MStringSplit* ins = MStringSplit::New(alloc(), constraints(), callInfo.thisArg(),
+                                          callInfo.getArg(0), templateObjectDef);
     current->add(ins);
     current->push(ins);
 
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineObjectHasPrototype(CallInfo& callInfo)
-{
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
-    MDefinition* objArg = callInfo.getArg(0);
-    MDefinition* protoArg = callInfo.getArg(1);
-
-    if (objArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-    if (protoArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    // Inline only when both obj and proto are singleton objects and
-    // obj does not have uncacheable proto and obj.__proto__ is proto.
-    TemporaryTypeSet* objTypes = objArg->resultTypeSet();
-    if (!objTypes || objTypes->unknownObject() || objTypes->getObjectCount() != 1)
-        return InliningStatus_NotInlined;
-
-    TypeSet::ObjectKey* objKey = objTypes->getObject(0);
-    if (!objKey || !objKey->hasStableClassAndProto(constraints()))
-        return InliningStatus_NotInlined;
-    if (!objKey->isSingleton() || !objKey->singleton()->is<NativeObject>())
-        return InliningStatus_NotInlined;
-
-    JSObject* obj = &objKey->singleton()->as<NativeObject>();
-    if (obj->hasUncacheableProto())
-        return InliningStatus_NotInlined;
-
-    JSObject* actualProto = checkNurseryObject(objKey->proto().toObjectOrNull());
-    if (actualProto == nullptr)
-        return InliningStatus_NotInlined;
-
-    TemporaryTypeSet* protoTypes = protoArg->resultTypeSet();
-    if (!protoTypes || protoTypes->unknownObject() || protoTypes->getObjectCount() != 1)
-        return InliningStatus_NotInlined;
-
-    TypeSet::ObjectKey* protoKey = protoTypes->getObject(0);
-    if (!protoKey || !protoKey->hasStableClassAndProto(constraints()))
-        return InliningStatus_NotInlined;
-    if (!protoKey->isSingleton() || !protoKey->singleton()->is<NativeObject>())
-        return InliningStatus_NotInlined;
-
-    JSObject* proto = &protoKey->singleton()->as<NativeObject>();
-    pushConstant(BooleanValue(proto == actualProto));
-    callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
 
@@ -1727,27 +1658,30 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
     // This is called from Self-hosted JS, after testing each argument,
     // most of following tests should be passed.
 
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
+    if (callInfo.argc() != 4 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    MDefinition* rxArg = callInfo.getArg(0);
-    MDefinition* strArg = callInfo.getArg(1);
-    MDefinition* lastIndexArg = callInfo.getArg(2);
-
-    if (rxArg->type() != MIRType_Object)
+    // regexp
+    if (callInfo.getArg(0)->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* rxTypes = rxArg->resultTypeSet();
-    const Class* clasp = rxTypes ? rxTypes->getKnownClass(constraints()) : nullptr;
+    TemporaryTypeSet* arg0Types = callInfo.getArg(0)->resultTypeSet();
+    const Class* clasp = arg0Types ? arg0Types->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (strArg->mightBeType(MIRType_Object))
+    // string
+    if (callInfo.getArg(1)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    if (lastIndexArg->type() != MIRType_Int32)
+    // lastIndex: Only inline if it's Int32.
+    if (callInfo.getArg(2)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // sticky
+    if (callInfo.getArg(3)->type() != MIRType_Boolean)
         return InliningStatus_NotInlined;
 
     JSContext* cx = GetJitContext()->cx;
@@ -1758,7 +1692,8 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* matcher = MRegExpMatcher::New(alloc(), rxArg, strArg, lastIndexArg);
+    MInstruction* matcher = MRegExpMatcher::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
+                                                callInfo.getArg(2), callInfo.getArg(3));
     current->add(matcher);
     current->push(matcher);
 
@@ -1772,82 +1707,35 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
-{
-    // This is called from Self-hosted JS, after testing each argument,
-    // most of following tests should be passed.
-
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
-    MDefinition* rxArg = callInfo.getArg(0);
-    MDefinition* strArg = callInfo.getArg(1);
-    MDefinition* lastIndexArg = callInfo.getArg(2);
-
-    if (rxArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    TemporaryTypeSet* regexpTypes = rxArg->resultTypeSet();
-    const Class* clasp = regexpTypes ? regexpTypes->getKnownClass(constraints()) : nullptr;
-    if (clasp != &RegExpObject::class_)
-        return InliningStatus_NotInlined;
-
-    if (strArg->mightBeType(MIRType_Object))
-        return InliningStatus_NotInlined;
-
-    if (lastIndexArg->type() != MIRType_Int32)
-        return InliningStatus_NotInlined;
-
-    JSContext* cx = GetJitContext()->cx;
-    if (!cx->compartment()->jitCompartment()->ensureRegExpSearcherStubExists(cx)) {
-        cx->clearPendingException(); // OOM or overrecursion.
-        return InliningStatus_Error;
-    }
-
-    callInfo.setImplicitlyUsedUnchecked();
-
-    MInstruction* searcher = MRegExpSearcher::New(alloc(), rxArg, strArg, lastIndexArg);
-    current->add(searcher);
-    current->push(searcher);
-
-    if (!resumeAfter(searcher))
-        return InliningStatus_Error;
-
-    if (!pushTypeBarrier(searcher, getInlineReturnTypeSet(), BarrierKind::TypeSet))
-        return InliningStatus_Error;
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
 IonBuilder::inlineRegExpTester(CallInfo& callInfo)
 {
     // This is called from Self-hosted JS, after testing each argument,
     // most of following tests should be passed.
 
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
+    if (callInfo.argc() != 4 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    MDefinition* rxArg = callInfo.getArg(0);
-    MDefinition* strArg = callInfo.getArg(1);
-    MDefinition* lastIndexArg = callInfo.getArg(2);
-
-    if (rxArg->type() != MIRType_Object)
+    // regexp
+    if (callInfo.getArg(0)->type() != MIRType_Object)
         return InliningStatus_NotInlined;
 
-    TemporaryTypeSet* rxTypes = rxArg->resultTypeSet();
-    const Class* clasp = rxTypes ? rxTypes->getKnownClass(constraints()) : nullptr;
+    TemporaryTypeSet* arg0Types = callInfo.getArg(0)->resultTypeSet();
+    const Class* clasp = arg0Types ? arg0Types->getKnownClass(constraints()) : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
 
-    if (strArg->mightBeType(MIRType_Object))
+    // string
+    if (callInfo.getArg(1)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    if (lastIndexArg->type() != MIRType_Int32)
+    // lastIndex: Only inline if it's Int32.
+    if (callInfo.getArg(2)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // sticky
+    if (callInfo.getArg(3)->type() != MIRType_Boolean)
         return InliningStatus_NotInlined;
 
     JSContext* cx = GetJitContext()->cx;
@@ -1858,7 +1746,8 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* tester = MRegExpTester::New(alloc(), rxArg, strArg, lastIndexArg);
+    MInstruction* tester = MRegExpTester::New(alloc(), callInfo.getArg(0), callInfo.getArg(1),
+                                              callInfo.getArg(2), callInfo.getArg(3));
     current->add(tester);
     current->push(tester);
 
@@ -1903,86 +1792,41 @@ IonBuilder::inlineIsRegExpObject(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineRegExpPrototypeOptimizable(CallInfo& callInfo)
-{
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
-    MDefinition* protoArg = callInfo.getArg(0);
-
-    if (protoArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    if (getInlineReturnType() != MIRType_Boolean)
-        return InliningStatus_NotInlined;
-
-    callInfo.setImplicitlyUsedUnchecked();
-
-    MInstruction* opt = MRegExpPrototypeOptimizable::New(alloc(), protoArg);
-    current->add(opt);
-    current->push(opt);
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
+IonBuilder::inlineStrReplace(CallInfo& callInfo)
 {
     if (callInfo.argc() != 2 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    MDefinition* rxArg = callInfo.getArg(0);
-    MDefinition* protoArg = callInfo.getArg(1);
-
-    if (rxArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    if (protoArg->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    if (getInlineReturnType() != MIRType_Boolean)
-        return InliningStatus_NotInlined;
-
-    callInfo.setImplicitlyUsedUnchecked();
-
-    MInstruction* opt = MRegExpInstanceOptimizable::New(alloc(), rxArg, protoArg);
-    current->add(opt);
-    current->push(opt);
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineStringReplaceString(CallInfo& callInfo)
-{
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
-
+    // Return: String.
     if (getInlineReturnType() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    MDefinition* strArg = callInfo.getArg(0);
-    MDefinition* patArg = callInfo.getArg(1);
-    MDefinition* replArg = callInfo.getArg(2);
-
-    if (strArg->type() != MIRType_String)
+    // This: String.
+    if (callInfo.thisArg()->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    if (patArg->type() != MIRType_String)
+    // Arg 0: RegExp.
+    TemporaryTypeSet* arg0Type = callInfo.getArg(0)->resultTypeSet();
+    const Class* clasp = arg0Type ? arg0Type->getKnownClass(constraints()) : nullptr;
+    if (clasp != &RegExpObject::class_ && callInfo.getArg(0)->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
-    if (replArg->type() != MIRType_String)
+    // Arg 1: String.
+    if (callInfo.getArg(1)->type() != MIRType_String)
         return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* cte = MStringReplace::New(alloc(), strArg, patArg, replArg);
+    MInstruction* cte;
+    if (callInfo.getArg(0)->type() == MIRType_String) {
+        cte = MStringReplace::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
+                                  callInfo.getArg(1));
+    } else {
+        cte = MRegExpReplace::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
+                                  callInfo.getArg(1));
+    }
     current->add(cte);
     current->push(cte);
     if (cte->isEffectful() && !resumeAfter(cte))
