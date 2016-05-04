@@ -421,3 +421,21 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
                              button.ownerDocument.defaultView);
   return deferred.promise;
 }
+
+/**
+ * Simple helper to push a temporary preference. Wrapper on SpecialPowers
+ * pushPrefEnv that returns a promise resolving when the preferences have been
+ * updated.
+ *
+ * @param {String} preferenceName
+ *        The name of the preference to updated
+ * @param {} value
+ *        The preference value, type can vary
+ * @return {Promise} resolves when the preferences have been updated
+ */
+function pushPref(preferenceName, value) {
+  return new Promise(resolve => {
+    let options = {"set": [[preferenceName, value]]};
+    SpecialPowers.pushPrefEnv(options, resolve);
+  });
+}

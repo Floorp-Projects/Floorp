@@ -20,6 +20,7 @@ DevToolsModules(
     'FlameGraph.js',
     'Graphs.js',
     'GraphsWorker.js',
+    'HTMLTooltip.js',
     'LineGraphWidget.js',
     'MdnDocsWidget.js',
     'MountainGraphWidget.js',
