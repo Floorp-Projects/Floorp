@@ -929,6 +929,12 @@ nsHttpTransaction::Close(nsresult reason)
             PR_Now(), 0, EmptyCString());
     }
 
+    // we must no longer reference the connection!  find out if the
+    // connection was being reused before letting it go.
+    bool connReused = false;
+    if (mConnection) {
+        connReused = mConnection->IsReused();
+    }
     mConnected = false;
     mTunnelProvider = nullptr;
 
@@ -982,7 +988,7 @@ nsHttpTransaction::Close(nsresult reason)
 
         if (!mReceivedData &&
             ((mRequestHead && mRequestHead->IsSafeMethod()) ||
-             !reallySentData)) {
+             !reallySentData || connReused)) {
             // if restarting fails, then we must proceed to close the pipe,
             // which will notify the channel that the transaction failed.
 

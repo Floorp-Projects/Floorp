@@ -1891,7 +1891,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mTransformingByAPZ(false)
   , mScrollableByAPZ(false)
   , mZoomableByAPZ(false)
-  , mRestoringHistoryScrollPosition(true)
   , mVelocityQueue(aOuter->PresContext())
   , mAsyncScrollEvent(END_DOM)
 {
@@ -4065,7 +4064,7 @@ ScrollFrameHelper::ScrollToRestoredPosition()
       if (!weakFrame.IsAlive()) {
         return;
       }
-      if (mRestoringHistoryScrollPosition) {
+      if (PageIsStillLoading()) {
         // If we're trying to do a history scroll restore, then we want to
         // keep trying this until we succeed, because the page can be loading
         // incrementally. So re-get the scroll position for the next iteration,
@@ -4081,19 +4080,24 @@ ScrollFrameHelper::ScrollToRestoredPosition()
     mRestorePos.y = -1;
     mLastPos.x = -1;
     mLastPos.y = -1;
-    mRestoringHistoryScrollPosition = false;
   } else {
     // user moved the position, so we won't need to restore
     mLastPos.x = -1;
     mLastPos.y = -1;
-    mRestoringHistoryScrollPosition = false;
   }
 }
 
-void
-ScrollFrameHelper::SetRestoringHistoryScrollPosition(bool aValue)
+bool
+ScrollFrameHelper::PageIsStillLoading()
 {
-  mRestoringHistoryScrollPosition = aValue;
+  bool loadCompleted = false;
+  nsCOMPtr<nsIDocShell> ds = mOuter->GetContent()->GetComposedDoc()->GetDocShell();
+  if (ds) {
+    nsCOMPtr<nsIContentViewer> cv;
+    ds->GetContentViewer(getter_AddRefs(cv));
+    cv->GetLoadCompleted(&loadCompleted);
+  }
+  return !loadCompleted;
 }
 
 nsresult
@@ -5170,7 +5174,7 @@ ScrollFrameHelper::ReflowCallbackCanceled()
 }
 
 bool
-ScrollFrameHelper::UpdateOverflow()
+ScrollFrameHelper::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   nsIScrollableFrame* sf = do_QueryFrame(mOuter);
   ScrollbarStyles ss = sf->GetScrollbarStyles();
@@ -5210,7 +5214,7 @@ ScrollFrameHelper::UpdateOverflow()
     return false;  // reflowing will update overflow
   }
   PostOverflowEvent();
-  return mOuter->nsContainerFrame::UpdateOverflow();
+  return mOuter->nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 void
@@ -5677,7 +5681,7 @@ ScrollFrameHelper::SaveState() const
   if (mRestorePos.y != -1 && pt == mLastPos) {
     pt = mRestorePos;
   }
-  state->SetScrollState(pt, mRestoringHistoryScrollPosition);
+  state->SetScrollState(pt);
   if (mIsRoot) {
     // Only save resolution properties for root scroll frames
     nsIPresShell* shell = mOuter->PresContext()->PresShell();
@@ -5691,7 +5695,6 @@ void
 ScrollFrameHelper::RestoreState(nsPresState* aState)
 {
   mRestorePos = aState->GetScrollPosition();
-  mRestoringHistoryScrollPosition = aState->GetRestoringHistoryScrollPosition();
   mDidHistoryRestore = true;
   mLastPos = mScrolledFrame ? GetLogicalScrollPosition() : nsPoint(0,0);
 

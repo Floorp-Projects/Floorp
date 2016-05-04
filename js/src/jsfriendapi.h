@@ -720,6 +720,9 @@ FunctionHasNativeReserved(JSObject* fun);
 JS_FRIEND_API(bool)
 GetObjectProto(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject proto);
 
+extern JS_FRIEND_API(JSObject*)
+GetStaticPrototype(JSObject* obj);
+
 JS_FRIEND_API(bool)
 GetOriginalEval(JSContext* cx, JS::HandleObject scope,
                 JS::MutableHandleObject eval);

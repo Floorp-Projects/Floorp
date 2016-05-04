@@ -16,6 +16,8 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 if CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
     DEFINES['USE_STLPORT'] = True
+if CONFIG['MOZ_ANDROID_CXX_STL'] == 'libc++':
+    DEFINES['MOZ_USE_LIBCXX'] = True
 
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     DEFINES['MOZ_FENNEC'] = True

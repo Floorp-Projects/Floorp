@@ -14,6 +14,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsILoadContext.h"
@@ -52,13 +53,6 @@
 #include "nsSandboxFlags.h"
 
 using namespace mozilla;
-
-static LogModule*
-GetSriLog()
-{
-  static LazyLogModule gSriPRLog("SRI");
-  return gSriPRLog;
-}
 
 LazyLogModule gContentSinkLogModuleInfo("nscontentsink");
 
@@ -762,7 +756,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity, integrity);
   }
   if (!integrity.IsEmpty()) {
-    MOZ_LOG(GetSriLog(), mozilla::LogLevel::Debug,
+    MOZ_LOG(dom::SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
             ("nsContentSink::ProcessStyleLink, integrity=%s",
              NS_ConvertUTF16toUTF8(integrity).get()));
   }

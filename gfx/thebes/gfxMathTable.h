@@ -76,6 +76,8 @@ public:
     bool GetMathVariantsParts(uint32_t aGlyphID, bool aVertical,
                               uint32_t aGlyphs[4]);
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 protected:
     friend class gfxFontEntry;
     // This allows gfxFontEntry to verify the validity of the main headers

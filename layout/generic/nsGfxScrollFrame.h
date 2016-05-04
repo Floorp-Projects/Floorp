@@ -257,7 +257,7 @@ public:
    */
   void ScrollToRestoredPosition();
 
-  void SetRestoringHistoryScrollPosition(bool aValue);
+  bool PageIsStillLoading();
 
   /**
    * GetSnapPointForDestination determines which point to snap to after
@@ -341,7 +341,7 @@ public:
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
   }
 
-  bool UpdateOverflow();
+  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas);
 
   void UpdateSticky();
 
@@ -581,11 +581,6 @@ public:
   // True if we don't want the scrollbar to repaint itself right now.
   bool mSuppressScrollbarRepaints:1;
 
-  // True if the calls to ScrollToRestoredPosition() are trying to restore the
-  // scroll position from history, and need to account for incremental page
-  // load.
-  bool mRestoringHistoryScrollPosition:1;
-
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
 protected:
@@ -712,8 +707,8 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus) override;
 
-  virtual bool UpdateOverflow() override {
-    return mHelper.UpdateOverflow();
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
+    return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 
   // Called to set the child frames. We typically have three: the scroll area,
@@ -849,9 +844,6 @@ public:
    */
   virtual void ScrollToRestoredPosition() override {
     mHelper.ScrollToRestoredPosition();
-  }
-  virtual void SetRestoringHistoryScrollPosition(bool aValue) override {
-    mHelper.SetRestoringHistoryScrollPosition(aValue);
   }
   virtual void AddScrollPositionListener(nsIScrollPositionListener* aListener) override {
     mHelper.AddScrollPositionListener(aListener);
@@ -1090,8 +1082,8 @@ public:
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
 #endif
 
-  virtual bool UpdateOverflow() override {
-    return mHelper.UpdateOverflow();
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
+    return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
 
   // Called to set the child frames. We typically have three: the scroll area,
@@ -1261,9 +1253,6 @@ public:
    */
   virtual void ScrollToRestoredPosition() override {
     mHelper.ScrollToRestoredPosition();
-  }
-  virtual void SetRestoringHistoryScrollPosition(bool aValue) override {
-    mHelper.SetRestoringHistoryScrollPosition(aValue);
   }
   virtual void AddScrollPositionListener(nsIScrollPositionListener* aListener) override {
     mHelper.AddScrollPositionListener(aListener);

@@ -44,17 +44,87 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
 
 /*
  * A wrapper is a proxy with a target object to which it generally forwards
- * operations, but may restrict access to certain operations or instrument the
- * methods in various ways. A wrapper is distinct from a Direct Proxy Handler
- * in the sense that it can be "unwrapped" in C++, exposing the underlying
- * object (Direct Proxy Handlers have an underlying target object, but don't
- * expect to expose this object via any kind of unwrapping operation). Callers
- * should be careful to avoid unwrapping security wrappers in the wrong
+ * operations, but may restrict access to certain operations or augment those
+ * operations in various ways.
+ *
+ * A wrapper can be "unwrapped" in C++, exposing the underlying object.
+ * Callers should be careful to avoid unwrapping security wrappers in the wrong
  * context.
+ *
+ * Important: If you add a method implementation here, you probably also need
+ * to add an override in CrossCompartmentWrapper. If you don't, you risk
+ * compartment mismatches. See bug 945826 comment 0.
  */
-class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
+class JS_FRIEND_API(Wrapper) : public BaseProxyHandler
 {
     unsigned mFlags;
+
+  public:
+    explicit MOZ_CONSTEXPR Wrapper(unsigned aFlags, bool aHasPrototype = false,
+                                   bool aHasSecurityPolicy = false)
+      : BaseProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
+        mFlags(aFlags)
+    { }
+
+    virtual bool finalizeInBackground(Value priv) const override;
+
+    /* Standard internal methods. */
+    virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                          MutableHandle<PropertyDescriptor> desc) const override;
+    virtual bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
+                                Handle<PropertyDescriptor> desc,
+                                ObjectOpResult& result) const override;
+    virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
+                                 AutoIdVector& props) const override;
+    virtual bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult& result) const override;
+    virtual bool enumerate(JSContext* cx, HandleObject proxy,
+                           MutableHandleObject objp) const override;
+    virtual bool getPrototype(JSContext* cx, HandleObject proxy,
+                              MutableHandleObject protop) const override;
+    virtual bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
+                              ObjectOpResult& result) const override;
+    virtual bool getPrototypeIfOrdinary(JSContext* cx, HandleObject proxy, bool* isOrdinary,
+                                        MutableHandleObject protop) const override;
+    virtual bool setImmutablePrototype(JSContext* cx, HandleObject proxy,
+                                       bool* succeeded) const override;
+    virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
+                                   ObjectOpResult& result) const override;
+    virtual bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;
+    virtual bool has(JSContext* cx, HandleObject proxy, HandleId id,
+                     bool* bp) const override;
+    virtual bool get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                     HandleId id, MutableHandleValue vp) const override;
+    virtual bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult& result) const override;
+    virtual bool call(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
+    virtual bool construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
+
+    /* SpiderMonkey extensions. */
+    virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                       MutableHandle<PropertyDescriptor> desc) const override;
+    virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
+                        bool* bp) const override;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
+                                              AutoIdVector& props) const override;
+    virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
+                            const CallArgs& args) const override;
+    virtual bool hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
+                             bool* bp) const override;
+    virtual bool getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                 ESClassValue* classValue) const override;
+    virtual bool isArray(JSContext* cx, HandleObject proxy,
+                         JS::IsArrayAnswer* answer) const override;
+    virtual const char* className(JSContext* cx, HandleObject proxy) const override;
+    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
+                                   unsigned indent) const override;
+    virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
+                                 RegExpGuard* g) const override;
+    virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy,
+                                  MutableHandleValue vp) const override;
+    virtual bool isCallable(JSObject* obj) const override;
+    virtual bool isConstructor(JSObject* obj) const override;
+    virtual JSObject* weakmapKeyDelegate(JSObject* proxy) const override;
 
   public:
     using BaseProxyHandler::Action;
@@ -76,15 +146,6 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     unsigned flags() const {
         return mFlags;
     }
-
-    explicit MOZ_CONSTEXPR Wrapper(unsigned aFlags, bool aHasPrototype = false,
-                                   bool aHasSecurityPolicy = false)
-      : DirectProxyHandler(&family, aHasPrototype, aHasSecurityPolicy),
-        mFlags(aFlags)
-    { }
-
-    virtual bool finalizeInBackground(Value priv) const override;
-    virtual bool isConstructor(JSObject* obj) const override;
 
     static const char family;
     static const Wrapper singleton;

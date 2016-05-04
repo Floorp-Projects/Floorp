@@ -1750,7 +1750,7 @@ AsyncPanZoomController::CanScroll(const InputData& aEvent) const
     delta = GetScrollWheelDelta(aEvent.AsScrollWheelInput());
   } else if (aEvent.mInputType == PANGESTURE_INPUT) {
     const PanGestureInput& panInput = aEvent.AsPanGestureInput();
-    delta = ToParentLayerCoordinates(panInput.mPanDisplacement, panInput.mPanStartPoint);
+    delta = ToParentLayerCoordinates(panInput.UserMultipliedPanDisplacement(), panInput.mPanStartPoint);
   }
   if (!delta.x && !delta.y) {
     return false;
@@ -2019,19 +2019,27 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
     return OnPanBegin(aEvent);
   }
 
+  // Note that there is a multiplier that applies onto the "physical" pan
+  // displacement (how much the user's fingers moved) that produces the "logical"
+  // pan displacement (how much the page should move). For some of the code
+  // below it makes more sense to use the physical displacement rather than
+  // the logical displacement, and vice-versa.
+  ScreenPoint physicalPanDisplacement = aEvent.mPanDisplacement;
+  ParentLayerPoint logicalPanDisplacement = aEvent.UserMultipliedLocalPanDisplacement();
+
   // We need to update the axis velocity in order to get a useful display port
   // size and position. We need to do so even if this is a momentum pan (i.e.
   // aFingersOnTouchpad == false); in that case the "with touch" part is not
   // really appropriate, so we may want to rethink this at some point.
-  mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.x, aEvent.mLocalPanDisplacement.x, aEvent.mTime);
-  mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.y, aEvent.mLocalPanDisplacement.y, aEvent.mTime);
+  mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.x, logicalPanDisplacement.x, aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalPanStartPoint.y, logicalPanDisplacement.y, aEvent.mTime);
 
-  HandlePanningUpdate(aEvent.mPanDisplacement);
+  HandlePanningUpdate(physicalPanDisplacement);
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzPanGesture);
 
-  ScreenPoint panDistance(fabs(aEvent.mPanDisplacement.x), fabs(aEvent.mPanDisplacement.y));
+  ScreenPoint panDistance(fabs(physicalPanDisplacement.x), fabs(physicalPanDisplacement.y));
   OverscrollHandoffState handoffState(
       *CurrentPanGestureBlock()->GetOverscrollHandoffChain(),
       panDistance,
@@ -2045,7 +2053,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   // the motion of the scrolled contents, not of the scroll position, they need
   // to move in the opposite direction of the pan displacement.
   ParentLayerPoint startPoint = aEvent.mLocalPanStartPoint;
-  ParentLayerPoint endPoint = aEvent.mLocalPanStartPoint - aEvent.mLocalPanDisplacement;
+  ParentLayerPoint endPoint = aEvent.mLocalPanStartPoint - logicalPanDisplacement;
   CallDispatchScroll(startPoint, endPoint, handoffState);
 
   return nsEventStatus_eConsumeNoDefault;
