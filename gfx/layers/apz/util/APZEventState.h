@@ -84,7 +84,6 @@ private:
   bool mEndTouchIsClick;
   bool mTouchEndCancelled;
   int mActiveAPZTransforms;
-  int32_t mLastTouchIdentifier;
 };
 
 } // namespace layers
