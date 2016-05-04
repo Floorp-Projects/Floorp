@@ -8,6 +8,8 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.AppConstants;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+
 import org.mozilla.gecko.annotation.RobocopTarget;
 
 @RobocopTarget
@@ -57,17 +59,73 @@ public class BrowserContract {
         AGGRESSIVE
     }
 
-    static public String getFrecencySortOrder(boolean includesBookmarks, boolean asc) {
-        final String age = "(" + Combined.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000";
-
-        StringBuilder order = new StringBuilder(Combined.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) ");
+    /**
+     * Produces a SQL expression used for sorting results of the "combined" view by frecency.
+     * Combines remote and local frecency calculations, weighting local visits much heavier.
+     *
+     * @param includesBookmarks When URL is bookmarked, should we give it bonus frecency points?
+     * @param ascending Indicates if sorting order ascending
+     * @return Combined frecency sorting expression
+     */
+    static public String getCombinedFrecencySortOrder(boolean includesBookmarks, boolean ascending) {
+        final long now = System.currentTimeMillis();
+        StringBuilder order = new StringBuilder(getRemoteFrecencySQL(now) + " + " + getLocalFrecencySQL(now));
 
         if (includesBookmarks) {
             order.insert(0, "(CASE WHEN " + Combined.BOOKMARK_ID + " > -1 THEN 100 ELSE 0 END) + ");
         }
 
-        order.append(asc ? " ASC" : " DESC");
+        order.append(ascending ? " ASC" : " DESC");
         return order.toString();
+    }
+
+    /**
+     * See Bug 1265525 for details (explanation + graphs) on how Remote frecency compares to Local frecency for different
+     * combinations of visits count and age.
+     *
+     * @param now Base time in milliseconds for age calculation
+     * @return remote frecency SQL calculation
+     */
+    static public String getRemoteFrecencySQL(final long now) {
+        return getFrecencyCalculation(now, 1, 110, Combined.REMOTE_VISITS_COUNT, Combined.REMOTE_DATE_LAST_VISITED);
+    }
+
+    /**
+     * Local frecency SQL calculation. Note higher scale factor and squared visit count which achieve
+     * visits generated locally being much preferred over remote visits.
+     * See Bug 1265525 for details (explanation + comparison graphs).
+     *
+     * @param now Base time in milliseconds for age calculation
+     * @return local frecency SQL calculation
+     */
+    static public String getLocalFrecencySQL(final long now) {
+        String visitCountExpr = "(" + Combined.LOCAL_VISITS_COUNT + " + 2)";
+        visitCountExpr = visitCountExpr + " * " + visitCountExpr;
+
+        return getFrecencyCalculation(now, 2, 225, visitCountExpr, Combined.LOCAL_DATE_LAST_VISITED);
+    }
+
+    /**
+     * Our version of frecency is computed by scaling the number of visits by a multiplier
+     * that approximates Gaussian decay, based on how long ago the entry was last visited.
+     * Since we're limited by the math we can do with sqlite, we're calculating this
+     * approximation using the Cauchy distribution: multiplier = scale_const / (age^2 + scale_const).
+     * For example, with 15 as our scale parameter, we get a scale constant 15^2 = 225. Then:
+     * frecencyScore = numVisits * max(1, 100 * 225 / (age*age + 225)). (See bug 704977)
+     *
+     * @param now Base time in milliseconds for age calculation
+     * @param minFrecency Minimum allowed frecency value
+     * @param multiplier Scale constant
+     * @param visitCountExpr Expression which will produce a visit count
+     * @param lastVisitExpr Expression which will produce "last-visited" timestamp
+     * @return Frecency SQL calculation
+     */
+    static public String getFrecencyCalculation(final long now, final int minFrecency, final int multiplier, @NonNull  final String visitCountExpr, @NonNull final String lastVisitExpr) {
+        final long nowInMicroseconds = now * 1000;
+        final long microsecondsPerDay = 86400000000L;
+        final String ageExpr = "(" + nowInMicroseconds + " - " + lastVisitExpr + ") / " + microsecondsPerDay;
+
+        return visitCountExpr + " * MAX(" + minFrecency + ", 100 * " + multiplier + " / (" + ageExpr + " * " + ageExpr + " + " + multiplier + "))";
     }
 
     @RobocopTarget
@@ -245,6 +303,12 @@ public class BrowserContract {
 
         public static final String BOOKMARK_ID = "bookmark_id";
         public static final String HISTORY_ID = "history_id";
+
+        public static final String REMOTE_VISITS_COUNT = "remoteVisitCount";
+        public static final String REMOTE_DATE_LAST_VISITED = "remoteDateLastVisited";
+
+        public static final String LOCAL_VISITS_COUNT = "localVisitCount";
+        public static final String LOCAL_DATE_LAST_VISITED = "localDateLastVisited";
     }
 
     public static final class Schema {

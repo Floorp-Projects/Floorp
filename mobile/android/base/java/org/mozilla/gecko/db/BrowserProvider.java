@@ -248,6 +248,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(Combined.FAVICON, Combined.FAVICON);
         map.put(Combined.FAVICON_ID, Combined.FAVICON_ID);
         map.put(Combined.FAVICON_URL, Combined.FAVICON_URL);
+        map.put(Combined.LOCAL_DATE_LAST_VISITED, Combined.LOCAL_DATE_LAST_VISITED);
+        map.put(Combined.REMOTE_DATE_LAST_VISITED, Combined.REMOTE_DATE_LAST_VISITED);
+        map.put(Combined.LOCAL_VISITS_COUNT, Combined.LOCAL_VISITS_COUNT);
+        map.put(Combined.REMOTE_VISITS_COUNT, Combined.REMOTE_VISITS_COUNT);
         COMBINED_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
@@ -310,7 +314,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      *
      * Provide <code>keepAfter</code> less than or equal to zero to skip that check.
      *
-     * Items will be removed according to an approximate frecency calculation.
+     * Items will be removed according to last visited date.
      */
     private void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
         Log.d(LOGTAG, "Expiring history.");
@@ -321,7 +325,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             return;
         }
 
-        final String sortOrder = BrowserContract.getFrecencySortOrder(false, true);
         final long toRemove = rows - retain;
         debug("Expiring at most " + toRemove + " rows earlier than " + keepAfter + ".");
 
@@ -331,12 +334,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                   "WHERE MAX(" + History.DATE_LAST_VISITED + ", " + History.DATE_MODIFIED + ") < " + keepAfter + " " +
                   " AND " + History._ID + " IN ( SELECT " +
                     History._ID + " FROM " + TABLE_HISTORY + " " +
-                    "ORDER BY " + sortOrder + " LIMIT " + toRemove +
+                    "ORDER BY " + History.DATE_LAST_VISITED + " ASC LIMIT " + toRemove +
                   ")";
         } else {
             sql = "DELETE FROM " + TABLE_HISTORY + " WHERE " + History._ID + " " +
                   "IN ( SELECT " + History._ID + " FROM " + TABLE_HISTORY + " " +
-                  "ORDER BY " + sortOrder + " LIMIT " + toRemove + ")";
+                  "ORDER BY " + History.DATE_LAST_VISITED + " ASC LIMIT " + toRemove + ")";
         }
         trace("Deleting using query: " + sql);
 
@@ -352,7 +355,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      */
     private void expireThumbnails(final SQLiteDatabase db) {
         Log.d(LOGTAG, "Expiring thumbnails.");
-        final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
+        final String sortOrder = BrowserContract.getCombinedFrecencySortOrder(true, false);
         final String sql = "DELETE FROM " + TABLE_THUMBNAILS +
                            " WHERE " + Thumbnails.URL + " NOT IN ( " +
                              " SELECT " + Combined.URL +
@@ -898,7 +901,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                        TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
                        " FROM " + Combined.VIEW_NAME +
                        " WHERE " + ignoreForTopSitesWhereClause +
-                       " ORDER BY " + BrowserContract.getFrecencySortOrder(true, false) +
+                       " ORDER BY " + BrowserContract.getCombinedFrecencySortOrder(true, false) +
                        " LIMIT " + totalLimit,
 
                        ignoreForTopSitesArgs);

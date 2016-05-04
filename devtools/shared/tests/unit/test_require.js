@@ -9,10 +9,10 @@ function testBug1091706() {
   let loader = new DevToolsLoader();
   let require = loader.require;
 
-  let color1 = require("devtools/shared/css-color");
-  let color2 = require("devtools/shared/css-color");
+  let indent1 = require("devtools/shared/indentation");
+  let indent2 = require("devtools/shared/indentation");
 
-  do_check_true(color1 === color2);
+  do_check_true(indent1 === indent2);
 }
 
 function run_test() {

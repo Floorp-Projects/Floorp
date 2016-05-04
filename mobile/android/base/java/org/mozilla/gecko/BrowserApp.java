@@ -30,6 +30,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
@@ -77,8 +78,8 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
-import org.mozilla.gecko.telemetry.TelemetryConstants;
-import org.mozilla.gecko.telemetry.TelemetryUploadService;
+import org.mozilla.gecko.telemetry.TelemetryDispatcher;
+import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -167,7 +168,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -311,11 +311,14 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new AddToHomeScreenPromotion(),
             (BrowserAppDelegate) new ScreenshotDelegate(),
             (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
-            (BrowserAppDelegate) new ReaderViewBookmarkPromotion()
+            (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
+            (BrowserAppDelegate) new ContentNotificationsDelegate()
     ));
 
     @NonNull
     private SearchEngineManager searchEngineManager; // Contains reference to Context - DO NOT LEAK!
+
+    private TelemetryDispatcher mTelemetryDispatcher;
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -686,23 +689,26 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch");
 
+        final GeckoProfile profile = getProfile();
+
         // We want to upload the telemetry core ping as soon after startup as possible. It relies on the
         // Distribution being initialized. If you move this initialization, ensure it plays well with telemetry.
         final Distribution distribution = Distribution.init(this);
-        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, getProfile().getName()));
+        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
 
         searchEngineManager = new SearchEngineManager(this, distribution);
+        mTelemetryDispatcher = new TelemetryDispatcher(profile.getDir().getAbsolutePath());
 
         // Init suggested sites engine in BrowserDB.
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
-        final BrowserDB db = getProfile().getDB();
+        final BrowserDB db = profile.getDB();
         db.setSuggestedSites(suggestedSites);
 
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
-        mReadingListHelper = new ReadingListHelper(appContext, getProfile());
-        mAccountsHelper = new AccountsHelper(appContext, getProfile());
+        mReadingListHelper = new ReadingListHelper(appContext, profile);
+        mAccountsHelper = new AccountsHelper(appContext, profile);
 
         final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
         adjustHelper.onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
@@ -983,16 +989,6 @@ public class BrowserApp extends GeckoApp
         if (urls != null) {
             openUrls(urls);
         }
-
-        // Launched from a "content notification"
-        if (intent.hasExtra(CheckForUpdatesAction.EXTRA_CONTENT_NOTIFICATION)) {
-            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.NOTIFICATION, "content_update");
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "content_update");
-
-            Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FeedService.getEnabledExperiment(this));
-        }
     }
 
     @Override
@@ -1081,7 +1077,7 @@ public class BrowserApp extends GeckoApp
         // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
         //
         // So we're left with onStart/onStop.
-        searchEngineManager.getEngine(new UploadTelemetryCallback(BrowserApp.this));
+        searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(BrowserApp.this));
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onStart(this);
@@ -3710,6 +3706,10 @@ public class BrowserApp extends GeckoApp
             openMultipleTabsFromIntent(intent);
         }
 
+        for (final BrowserAppDelegate delegate : delegates) {
+            delegate.onNewIntent(this, intent);
+        }
+
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
             return;
         }
@@ -3737,7 +3737,7 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void openUrls(List<String> urls) {
+    public void openUrls(List<String> urls) {
         try {
             JSONArray array = new JSONArray();
             for (String url : urls) {
@@ -3866,6 +3866,10 @@ public class BrowserApp extends GeckoApp
     @Override
     public int getLayout() { return R.layout.gecko_app; }
 
+    public TelemetryDispatcher getTelemetryDispatcher() {
+        return mTelemetryDispatcher;
+    }
+
     // For use from tests only.
     @RobocopTarget
     public ReadingListHelper getReadingListHelper() {
@@ -3941,62 +3945,6 @@ public class BrowserApp extends GeckoApp
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
-    }
-
-    @WorkerThread // synchronous SharedPrefs write.
-    private static void uploadTelemetry(final Context context, final GeckoProfile profile,
-            final org.mozilla.gecko.search.SearchEngine defaultEngine) {
-        if (!TelemetryUploadService.isUploadEnabledByProfileConfig(context, profile)) {
-            return;
-        }
-
-        final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(context, profile.getName());
-        final int seq = sharedPrefs.getInt(TelemetryConstants.PREF_SEQ_COUNT, 1);
-
-        // We store synchronously before sending the Intent to ensure this sequence number will not be re-used.
-        sharedPrefs.edit().putInt(TelemetryConstants.PREF_SEQ_COUNT, seq + 1).commit();
-
-        final Intent i = new Intent(TelemetryConstants.ACTION_UPLOAD_CORE);
-        i.setClass(context, TelemetryUploadService.class);
-        i.putExtra(TelemetryConstants.EXTRA_DEFAULT_SEARCH_ENGINE, (defaultEngine == null) ? null : defaultEngine.getIdentifier());
-        i.putExtra(TelemetryConstants.EXTRA_DOC_ID, UUID.randomUUID().toString());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_NAME, profile.getName());
-        i.putExtra(TelemetryConstants.EXTRA_PROFILE_PATH, profile.getDir().getAbsolutePath());
-        i.putExtra(TelemetryConstants.EXTRA_SEQ, seq);
-        context.startService(i);
-    }
-
-    private static class UploadTelemetryCallback implements SearchEngineManager.SearchEngineCallback {
-        private final WeakReference<BrowserApp> activityWeakReference;
-
-        public UploadTelemetryCallback(final BrowserApp activity) {
-            this.activityWeakReference = new WeakReference<>(activity);
-        }
-
-        // May be called from any thread.
-        @Override
-        public void execute(final org.mozilla.gecko.search.SearchEngine engine) {
-            // Don't waste resources queueing to the background thread if we don't have a reference.
-            if (this.activityWeakReference.get() == null) {
-                return;
-            }
-
-            // The containing method can be called from onStart: queue this work so that
-            // the first launch of the activity doesn't trigger profile init too early.
-            //
-            // Additionally, uploadTelemetry must be called from a worker thread.
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @WorkerThread
-                @Override
-                public void run() {
-                    final BrowserApp activity = activityWeakReference.get();
-                    if (activity == null) {
-                        return;
-                    }
-                    uploadTelemetry(activity, activity.getProfile(), engine);
-                }
-            });
-        }
     }
 
     public static interface TabStripInterface {

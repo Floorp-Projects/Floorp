@@ -180,6 +180,7 @@ SelectorAutocompleter.prototype = {
     CLASS: "class",
     ID: "id",
     TAG: "tag",
+    ATTRIBUTE: "attribute",
   },
 
   // The current state of the query.
@@ -228,32 +229,59 @@ SelectorAutocompleter.prototype = {
           // This will happen only in the first iteration of the for loop.
           lastChar = secondLastChar;
         case this.States.TAG:
-          this._state = lastChar == "."
-            ? this.States.CLASS
-            : lastChar == "#"
-              ? this.States.ID
-              : this.States.TAG;
+          if (lastChar == ".") {
+            this._state = this.States.CLASS;
+          } else if (lastChar == "#") {
+            this._state = this.States.ID;
+          } else if (lastChar == "[") {
+            this._state = this.States.ATTRIBUTE;
+          } else {
+            this._state = this.States.TAG;
+          }
           break;
 
         case this.States.CLASS:
           if (subQuery.match(/[\.]+[^\.]*$/)[0].length > 2) {
             // Checks whether the subQuery has atleast one [a-zA-Z] after the '.'.
-            this._state = (lastChar == " " || lastChar == ">")
-            ? this.States.TAG
-            : lastChar == "#"
-              ? this.States.ID
-              : this.States.CLASS;
+            if (lastChar == " " || lastChar == ">") {
+              this._state = this.States.TAG;
+            } else if(lastChar == "#") {
+              this._state = this.States.ID;
+            } else if(lastChar == "[") {
+              this._state = this.States.ATTRIBUTE;
+            } else {
+              this._state = this.States.CLASS;
+            }
           }
           break;
 
         case this.States.ID:
           if (subQuery.match(/[#]+[^#]*$/)[0].length > 2) {
             // Checks whether the subQuery has atleast one [a-zA-Z] after the '#'.
-            this._state = (lastChar == " " || lastChar == ">")
-            ? this.States.TAG
-            : lastChar == "."
-              ? this.States.CLASS
-              : this.States.ID;
+            if (lastChar == " " || lastChar == ">") {
+              this._state = this.States.TAG;
+            } else if (lastChar == ".") {
+              this._state = this.States.CLASS;
+            } else if (lastChar == "[") {
+              this._state = this.States.ATTRIBUTE;
+            } else {
+              this._state = this.States.ID;
+            }
+          }
+          break;
+
+        case this.States.ATTRIBUTE:
+          if (subQuery.match(/[\[][^\]]+[\]]/) != null) {
+            // Checks whether the subQuery has at least one ']' after the '['.
+            if (lastChar == " " || lastChar == ">") {
+              this._state = this.States.TAG;
+            } else if (lastChar == ".") {
+              this._state = this.States.CLASS;
+            } else if (lastChar == "#") {
+              this._state = this.States.ID;
+            } else {
+              this._state = this.States.ATTRIBUTE;
+            }
           }
           break;
       }
@@ -412,9 +440,10 @@ SelectorAutocompleter.prototype = {
         // for cases like 'div.class' or '#foo.bar' and likewise
         let lastPart = query.match(/[a-zA-Z][#\.][^#\.\s+>]*$/)[0];
         value = query.slice(0, -1 * lastPart.length + 1) + value;
-      } else if (query.match(/[a-zA-Z]\[[^\]]*\]?$/)) {
-        // for cases like 'div[foo=bar]' and likewise
-        value = query;
+      } else if (query.match(/[a-zA-Z]*\[[^\]]*\][^\]]*/)) {
+        // for cases like '[foo].bar' and likewise
+        let attrPart = query.substring(0, query.lastIndexOf("]") + 1);
+        value = attrPart + value;
       }
 
       let item = {
@@ -469,9 +498,10 @@ SelectorAutocompleter.prototype = {
     let state = this.state;
     let firstPart = "";
 
-    if (query.endsWith("*")) {
-      // Hide the popup if the query ends with * because we don't want to
-      // suggest all nodes.
+    if (query.endsWith("*") || state === this.States.ATTRIBUTE) {
+      // Hide the popup if the query ends with * (because we don't want to
+      // suggest all nodes) or if it is an attribute selector (because
+      // it would give a lot of useless results).
       this.hidePopup();
       return;
     }

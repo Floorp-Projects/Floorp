@@ -136,4 +136,3 @@ function closePageAction(extension, win = window) {
 
   return Promise.resolve();
 }
-

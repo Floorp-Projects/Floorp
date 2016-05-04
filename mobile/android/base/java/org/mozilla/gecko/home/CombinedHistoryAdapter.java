@@ -132,7 +132,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     private int transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType type, int position) {
         if (type == CombinedHistoryItem.ItemType.SECTION_HEADER) {
             return position;
-        } else if (type == CombinedHistoryItem.ItemType.HISTORY){
+        } else if (type == CombinedHistoryItem.ItemType.HISTORY) {
             return position - getHeadersBefore(position) - CombinedHistoryPanel.NUM_SMART_FOLDERS;
         } else {
             return position;

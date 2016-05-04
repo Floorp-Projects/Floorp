@@ -11,7 +11,7 @@ const URL = "data:text/html;charset=utf8,test page for menu api";
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-add_task(function*() {
+add_task(function* () {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
   let target = TargetFactory.forTab(tab);
@@ -71,11 +71,18 @@ function* testMenuPopup(toolbox) {
     menu.append(item);
   }
 
+  // Append an invisible MenuItem, which shouldn't show up in the DOM
+  menu.append(new MenuItem({
+    label: "Invisible",
+    visible: false,
+  }));
+
   menu.popup(0, 0, toolbox);
 
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
 
-  let menuSeparators = toolbox.doc.querySelectorAll("#menu-popup > menuseparator");
+  let menuSeparators =
+    toolbox.doc.querySelectorAll("#menu-popup > menuseparator");
   is(menuSeparators.length, 1, "A separator is in the menu");
 
   let menuItems = toolbox.doc.querySelectorAll("#menu-popup > menuitem");
@@ -85,23 +92,23 @@ function* testMenuPopup(toolbox) {
   is(menuItems[0].getAttribute("label"), MENU_ITEMS[0].label, "Correct label");
 
   is(menuItems[1].getAttribute("label"), MENU_ITEMS[1].label, "Correct label");
-  is(menuItems[1].getAttribute("type"), "checkbox", "Correct type attribute");
-  is(menuItems[1].getAttribute("checked"), "true", "Has checked attribute");
+  is(menuItems[1].getAttribute("type"), "checkbox", "Correct type attr");
+  is(menuItems[1].getAttribute("checked"), "true", "Has checked attr");
 
   is(menuItems[2].getAttribute("label"), MENU_ITEMS[2].label, "Correct label");
-  is(menuItems[2].getAttribute("type"), "radio", "Correct type attribute");
-  ok(!menuItems[2].hasAttribute("checked"), "Doesn't have checked attribute");
+  is(menuItems[2].getAttribute("type"), "radio", "Correct type attr");
+  ok(!menuItems[2].hasAttribute("checked"), "Doesn't have checked attr");
 
   is(menuItems[3].getAttribute("label"), MENU_ITEMS[3].label, "Correct label");
-  is(menuItems[3].getAttribute("disabled"), "true", "disabled attribute menuitem");
+  is(menuItems[3].getAttribute("disabled"), "true", "disabled attr menuitem");
 
   yield once(menu, "open");
   let closed = once(menu, "close");
-  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(menuItems[0], {}, toolbox.win);
   yield closed;
   ok(clickFired, "Click has fired");
 
-  ok(!toolbox.doc.querySelector("#menu-popup"), "The popup is removed from the DOM");
+  ok(!toolbox.doc.querySelector("#menu-popup"), "Popup removed from the DOM");
 }
 
 function* testSubmenu(toolbox) {
@@ -126,11 +133,12 @@ function* testSubmenu(toolbox) {
 
   menu.popup(0, 0, toolbox);
   ok(toolbox.doc.querySelector("#menu-popup"), "A popup is in the DOM");
-  is(toolbox.doc.querySelectorAll("#menu-popup > menuitem").length, 0, "No menuitem children");
+  is(toolbox.doc.querySelectorAll("#menu-popup > menuitem").length, 0,
+    "No menuitem children");
 
   let menus = toolbox.doc.querySelectorAll("#menu-popup > menu");
   is(menus.length, 1, "Correct number of menus");
-  is(menus[0].getAttribute("label"), "Submenu parent", "Correct label for menus");
+  is(menus[0].getAttribute("label"), "Submenu parent", "Correct label");
 
   let subMenuItems = menus[0].querySelectorAll("menupopup > menuitem");
   is(subMenuItems.length, 1, "Correct number of submenu items");
@@ -154,7 +162,7 @@ function* testSubmenu(toolbox) {
   yield shown;
 
   info("Clicking the submenu item");
-  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(subMenuItems[0], {}, toolbox.win);
 
   yield closed;
   ok(clickFired, "Click has fired");

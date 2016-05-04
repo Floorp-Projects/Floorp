@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const MenuItem = require("./menu-item");
+"use strict";
+
 const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
@@ -17,7 +18,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * @param String id (non standard)
  *        Needed so tests can confirm the XUL implementation is working
  */
-function Menu({id=null} = {}) {
+function Menu({ id = null } = {}) {
   this.menuitems = [];
   this.id = id;
 
@@ -35,7 +36,7 @@ function Menu({id=null} = {}) {
  *
  * @param {MenuItem} menuItem
  */
-Menu.prototype.append = function(menuItem) {
+Menu.prototype.append = function (menuItem) {
   this.menuitems.push(menuItem);
 };
 
@@ -45,8 +46,8 @@ Menu.prototype.append = function(menuItem) {
  * @param {int} pos
  * @param {MenuItem} menuItem
  */
-Menu.prototype.insert = function(pos, menuItem) {
-  throw "Not implemented";
+Menu.prototype.insert = function (pos, menuItem) {
+  throw Error("Not implemented");
 };
 
 /**
@@ -61,7 +62,7 @@ Menu.prototype.insert = function(pos, menuItem) {
  * @param Toolbox toolbox (non standard)
  *        Needed so we in which window to inject XUL
  */
-Menu.prototype.popup = function(screenX, screenY, toolbox) {
+Menu.prototype.popup = function (screenX, screenY, toolbox) {
   let doc = toolbox.doc;
   let popup = doc.createElement("menupopup");
   popup.setAttribute("menu-api", "true");
@@ -89,9 +90,13 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
   popup.openPopupAtScreen(screenX, screenY, true);
 };
 
-Menu.prototype._createMenuItems = function(parent) {
+Menu.prototype._createMenuItems = function (parent) {
   let doc = parent.ownerDocument;
   this.menuitems.forEach(item => {
+    if (!item.visible) {
+      return;
+    }
+
     if (item.submenu) {
       let menupopup = doc.createElement("menupopup");
       item.submenu._createMenuItems(menupopup);
@@ -135,15 +140,15 @@ Menu.prototype._createMenuItems = function(parent) {
 };
 
 Menu.setApplicationMenu = () => {
-  throw "Not implemented";
+  throw Error("Not implemented");
 };
 
 Menu.sendActionToFirstResponder = () => {
-  throw "Not implemented";
+  throw Error("Not implemented");
 };
 
 Menu.buildFromTemplate = () => {
-  throw "Not implemented";
+  throw Error("Not implemented");
 };
 
 module.exports = Menu;
