@@ -34,6 +34,7 @@ public:
   explicit nsMathMLContainerFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mBlockStartAscent(0)
   {}
 
   NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
@@ -379,6 +380,8 @@ protected:
   // overflow.
   void GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics);
 
+  void ComputeOverflow(nsOverflowAreas& aOverflowAreas);
+
   /**
    * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst and
    * all its next siblings up to, but not including, aStop.
@@ -393,6 +396,8 @@ protected:
   void UpdateIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   nscoord mIntrinsicWidth;
+
+  nscoord mBlockStartAscent;
 
 private:
   class RowChildFrameIterator;
