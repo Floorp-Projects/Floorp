@@ -44,8 +44,8 @@ function setFavIcon(url) {
 
 document.addEventListener("DOMContentLoaded", function () {
  if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
-   document.body.classList.remove("private");
-   document.body.classList.add("normal");
+   document.documentElement.classList.remove("private");
+   document.documentElement.classList.add("normal");
    document.title = stringBundle.GetStringFromName("title.normal");
    document.getElementById("favicon")
            .setAttribute("href", FAVICON_QUESTION);
