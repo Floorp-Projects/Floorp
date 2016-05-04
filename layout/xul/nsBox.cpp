@@ -236,8 +236,7 @@ nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveO
 
     nsRect rect(mRect);
 
-    uint32_t flags = 0;
-    GetLayoutFlags(flags);
+    uint32_t flags = GetXULLayoutFlags();
 
     uint32_t stateFlags = aState.LayoutFlags();
 
@@ -275,13 +274,6 @@ nsBox::SetXULBounds(nsBoxLayoutState& aState, const nsRect& aRect, bool aRemoveO
     }
     */
 }
-
-void
-nsBox::GetLayoutFlags(uint32_t& aFlags)
-{
-  aFlags = 0;
-}
-
 
 nsresult
 nsIFrame::GetXULBorderAndPadding(nsMargin& aBorderAndPadding)
@@ -542,8 +534,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
   nsPresContext* presContext = aState.PresContext();
 
-  uint32_t flags = 0;
-  GetLayoutFlags(flags);
+  uint32_t flags = GetXULLayoutFlags();
 
   uint32_t stateFlags = aState.LayoutFlags();
 
