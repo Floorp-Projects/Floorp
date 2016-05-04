@@ -706,6 +706,30 @@ var popupTests = [
   }
 },
 
+{
+  testname: "Open menu and press alt key by itself - open menu",
+  events: [ "DOMMenuBarActive menubar",
+            "popupshowing filepopup", "DOMMenuItemActive filemenu",
+            "DOMMenuItemActive item1", "popupshown filepopup" ],
+  test: function() { synthesizeKey("F", { altKey: true }); },
+  result: function (testname) {
+    checkOpen("filemenu", testname);
+  }
+},
+{
+  testname: "Open menu and press alt key by itself - close menu",
+  events: [ "popuphiding filepopup", "popuphidden filepopup",
+            "DOMMenuItemInactive item1", "DOMMenuInactive filepopup",
+            "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu",
+            "DOMMenuItemInactive filemenu" ],
+  test: function() {
+    synthesizeKey("VK_ALT", { });
+  },
+  result: function (testname) {
+    checkClosed("filemenu", testname);
+  }
+},
+
 // Fllowing 4 tests are a test of bug 616797, don't insert any new tests
 // between them.
 {
