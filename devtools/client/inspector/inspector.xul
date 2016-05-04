@@ -38,7 +38,7 @@
   </keyset>
 
   <popupset id="inspectorPopupSet">
-    <!-- Used by the Markup Panel, the Highlighter and the Breadcrumbs -->
+    <!-- Used by the Markup Panel and the Highlighter -->
     <menupopup id="inspector-node-popup">
       <menuitem id="node-menu-edithtml"
         label="&inspectorHTMLEdit.label;"
