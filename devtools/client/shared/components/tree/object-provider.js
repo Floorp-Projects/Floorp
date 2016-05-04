@@ -55,7 +55,7 @@ define(function(require, exports, module) {
         return false;
       }
 
-      return Object.keys(object).length > 0;
+      return Object.keys(object).length > 1;
     },
 
     getLabel: function(object) {
