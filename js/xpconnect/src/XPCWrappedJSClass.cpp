@@ -168,11 +168,8 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
 {
     if (mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
-
-    if (mRuntime) {
-        if (auto map = mRuntime->GetWrappedJSClassMap())
-            map->Remove(this);
-    }
+    if (mRuntime)
+        mRuntime->GetWrappedJSClassMap()->Remove(this);
 
     if (mName)
         free(mName);
