@@ -105,8 +105,8 @@ case $cmd in
 		${tgtpath}/testing
 	${MKDIR} -p ${tgtpath}/modules
 	cp -pPR \
-		${TOPSRCDIR}/modules/zlib/src \
-		${tgtpath}/modules
+		${TOPSRCDIR}/modules/zlib/src/ \
+		${tgtpath}/modules/zlib
 	${MKDIR} -p ${tgtpath}/layout/tools/reftest
 	cp -pPR \
 		${TOPSRCDIR}/layout/tools/reftest/reftest \
