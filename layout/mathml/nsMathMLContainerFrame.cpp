@@ -782,7 +782,27 @@ nsMathMLContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 void
-nsMathMLContainerFrame::ComputeOverflow(nsOverflowAreas& aOverflowAreas)
+nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
+{
+  mBlockStartAscent = aMetrics->BlockStartAscent();
+
+  // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
+  // frame rectangle.
+  aMetrics->SetOverflowAreasToDesiredBounds();
+
+  ComputeCustomOverflow(aMetrics->mOverflowAreas);
+
+  // mBoundingMetrics does not necessarily include content of <mpadded>
+  // elements whose mBoundingMetrics may not be representative of the true
+  // bounds, and doesn't include the CSS2 outline rectangles of children, so
+  // make such to include child overflow areas.
+  UnionChildOverflow(aMetrics->mOverflowAreas);
+
+  FinishAndStoreOverflow(aMetrics);
+}
+
+bool
+nsMathMLContainerFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   // All non-child-frame content such as nsMathMLChars (and most child-frame
   // content) is included in mBoundingMetrics.
@@ -794,41 +814,7 @@ nsMathMLContainerFrame::ComputeOverflow(nsOverflowAreas& aOverflowAreas)
   // REVIEW: Maybe this should contribute only to visual overflow
   // and not scrollable?
   aOverflowAreas.UnionAllWith(boundingBox);
-
-  // mBoundingMetrics does not necessarily include content of <mpadded>
-  // elements whose mBoundingMetrics may not be representative of the true
-  // bounds, and doesn't include the CSS2 outline rectangles of children, so
-  // make such to include child overflow areas.
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    ConsiderChildOverflow(aOverflowAreas, childFrame);
-    childFrame = childFrame->GetNextSibling();
-  }
-}
-
-void
-nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
-{
-  mBlockStartAscent = aMetrics->BlockStartAscent();
-
-  // nsIFrame::FinishAndStoreOverflow likes the overflow area to include the
-  // frame rectangle.
-  aMetrics->SetOverflowAreasToDesiredBounds();
-
-  ComputeOverflow(aMetrics->mOverflowAreas);
-
-  FinishAndStoreOverflow(aMetrics);
-}
-
-bool
-nsMathMLContainerFrame::UpdateOverflow()
-{
-  nsRect bounds(nsPoint(0, 0), GetSize());
-  nsOverflowAreas overflowAreas(bounds, bounds);
-
-  ComputeOverflow(overflowAreas);
-
-  return FinishAndStoreOverflow(overflowAreas, GetSize());
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 void

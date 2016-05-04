@@ -9636,10 +9636,10 @@ nsTextFrame::HasAnyNoncollapsedCharacters()
 }
 
 bool
-nsTextFrame::UpdateOverflow()
+nsTextFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    return false;
+    return true;
   }
 
   nsIFrame* decorationsBlock;
@@ -9657,14 +9657,13 @@ nsTextFrame::UpdateOverflow()
       f = f->GetParent();
       if (!f) {
         NS_ERROR("Couldn't find any block ancestor (for text decorations)");
-        return false;
+        return nsFrame::ComputeCustomOverflow(aOverflowAreas);
       }
     }
   }
 
-  nsOverflowAreas overflowAreas = RecomputeOverflow(decorationsBlock);
-
-  return FinishAndStoreOverflow(overflowAreas, GetSize());
+  aOverflowAreas = RecomputeOverflow(decorationsBlock);
+  return nsFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(JustificationAssignmentProperty, int32_t)
