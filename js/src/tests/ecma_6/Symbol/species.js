@@ -5,7 +5,7 @@ print(BUGNUMBER + ": " + summary);
 
 var TypedArray = Object.getPrototypeOf(Int8Array);
 
-for (var C of [Array, Map, Set,
+for (var C of [Array, Map, Set, RegExp,
                Int8Array, Uint8Array, Uint8ClampedArray,
                Int16Array, Uint16Array, Int32Array, Uint32Array,
                Float32Array, Float64Array,
@@ -13,7 +13,7 @@ for (var C of [Array, Map, Set,
   assertEq(C[Symbol.species], C);
 }
 
-for (C of [Array, Map, Set,
+for (C of [Array, Map, Set, RegExp,
            TypedArray,
            ArrayBuffer]) {
   var desc = Object.getOwnPropertyDescriptor(C, Symbol.species);

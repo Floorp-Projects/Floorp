@@ -22,13 +22,10 @@ var myRegExp = {
         };
     }
 };
-if (Symbol.split) {
-    var result = RegExp.prototype[Symbol.split].call(myRegExp, "abcde");;
-    var result = "abcde".split(myRegExp);
-    assertEq(result.length, 2);
-    assertEq(result[0], "");
-    assertEq(result[1], "");
-}
+var result = RegExp.prototype[Symbol.split].call(myRegExp, "abcde");;
+assertEq(result.length, 2);
+assertEq(result[0], "");
+assertEq(result[1], "");
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

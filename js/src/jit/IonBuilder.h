@@ -825,18 +825,23 @@ class IonBuilder
 
     // String natives.
     InliningStatus inlineStringObject(CallInfo& callInfo);
-    InliningStatus inlineConstantStringSplit(CallInfo& callInfo);
-    InliningStatus inlineStringSplit(CallInfo& callInfo);
     InliningStatus inlineStrCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineConstantCharCodeAt(CallInfo& callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo& callInfo);
     InliningStatus inlineStrCharAt(CallInfo& callInfo);
-    InliningStatus inlineStrReplace(CallInfo& callInfo);
+
+    // String intrinsics.
+    InliningStatus inlineStringReplaceString(CallInfo& callInfo);
+    InliningStatus inlineConstantStringSplitString(CallInfo& callInfo);
+    InliningStatus inlineStringSplitString(CallInfo& callInfo);
 
     // RegExp intrinsics.
     InliningStatus inlineRegExpMatcher(CallInfo& callInfo);
+    InliningStatus inlineRegExpSearcher(CallInfo& callInfo);
     InliningStatus inlineRegExpTester(CallInfo& callInfo);
     InliningStatus inlineIsRegExpObject(CallInfo& callInfo);
+    InliningStatus inlineRegExpPrototypeOptimizable(CallInfo& callInfo);
+    InliningStatus inlineRegExpInstanceOptimizable(CallInfo& callInfo);
 
     // Object natives and intrinsics.
     InliningStatus inlineObjectCreate(CallInfo& callInfo);
@@ -933,6 +938,7 @@ class IonBuilder
                                   const Class* clasp4 = nullptr);
     InliningStatus inlineIsConstructing(CallInfo& callInfo);
     InliningStatus inlineSubstringKernel(CallInfo& callInfo);
+    InliningStatus inlineObjectHasPrototype(CallInfo& callInfo);
 
     // Testing functions.
     InliningStatus inlineBailout(CallInfo& callInfo);

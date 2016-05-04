@@ -444,6 +444,7 @@ MSG_DEF(JSMSG_UNDEFINED_CURRENCY,      0, JSEXN_TYPEERR, "undefined currency in 
 MSG_DEF(JSMSG_BACK_REF_OUT_OF_RANGE,   0, JSEXN_SYNTAXERR, "back reference out of range in regular expression")
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         0, JSEXN_SYNTAXERR, "invalid range in character class")
 MSG_DEF(JSMSG_ESCAPE_AT_END_OF_REGEXP, 0, JSEXN_SYNTAXERR, "\\ at end of pattern")
+MSG_DEF(JSMSG_EXEC_NOT_OBJORNULL,      0, JSEXN_TYPEERR, "RegExp exec method should return object or null")
 MSG_DEF(JSMSG_INVALID_DECIMAL_ESCAPE, 0, JSEXN_SYNTAXERR, "invalid decimal escape in regular expression")
 MSG_DEF(JSMSG_INVALID_GROUP,           0, JSEXN_SYNTAXERR, "invalid regexp group")
 MSG_DEF(JSMSG_INVALID_IDENTITY_ESCAPE, 0, JSEXN_SYNTAXERR, "invalid identity escape in regular expression")

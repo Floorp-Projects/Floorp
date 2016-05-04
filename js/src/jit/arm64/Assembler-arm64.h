@@ -138,13 +138,11 @@ static constexpr Register AsmJSIonExitRegD2 = r4;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
 static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
-static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = CallTempReg3;
 
 // Registerd used in RegExpTester instruction (do not use ReturnReg).
 static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg0;
 static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg1;
 static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg2;
-static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = CallTempReg3;
 
 static constexpr Register JSReturnReg_Type = r3;
 static constexpr Register JSReturnReg_Data = r2;

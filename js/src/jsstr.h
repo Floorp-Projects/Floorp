@@ -238,13 +238,6 @@ StringFindPattern(JSLinearString* text, JSLinearString* pat, size_t start);
 extern bool
 HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start);
 
-template <typename CharT>
-extern bool
-HasRegExpMetaChars(const CharT* chars, size_t length);
-
-extern bool
-StringHasRegExpMetaChars(JSLinearString* str);
-
 template <typename Char1, typename Char2>
 inline bool
 EqualChars(const Char1* s1, const Char2* s2, size_t len);
@@ -312,13 +305,6 @@ template <typename CharT>
 extern bool
 DeflateStringToBuffer(JSContext* maybecx, const CharT* chars,
                       size_t charsLength, char* bytes, size_t* length);
-
-/*
- * The String.prototype.replace fast-native entry point is exported for joined
- * function optimization in js{interp,tracer}.cpp.
- */
-extern bool
-str_replace(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern bool
 str_fromCharCode(JSContext* cx, unsigned argc, Value* vp);
@@ -471,17 +457,9 @@ FileEscapedString(FILE* fp, const char* chars, size_t length, uint32_t quote)
     return res;
 }
 
-bool
-str_match(JSContext* cx, unsigned argc, Value* vp);
-
-bool
-str_search(JSContext* cx, unsigned argc, Value* vp);
-
-bool
-str_split(JSContext* cx, unsigned argc, Value* vp);
-
 JSObject*
-str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep);
+str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep,
+                 uint32_t limit);
 
 JSString *
 str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern,
@@ -493,6 +471,12 @@ str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
 
 extern bool
 StringConstructor(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+FlatStringMatch(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+FlatStringSearch(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 

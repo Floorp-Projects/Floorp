@@ -1,4 +1,13 @@
 // |jit-test| error: TypeError;
+
+// String.prototype.replace takes too long time with gczeal(4) if
+// --no-baseline --no-ion options.
+if (typeof inJit == "function" && typeof inJit() == "string") {
+  assertEq(inJit(), "Baseline is disabled.");
+  // This test expects TypeError.
+  toPrinted(null);
+}
+
 function printStatus (msg) {}
 function toPrinted(value) {
   value = value.replace(/\\n/g, 'NL')
