@@ -264,6 +264,7 @@ nsHttpChannel::nsHttpChannel()
     , mLocalBlocklist(false)
     , mWarningReporter(nullptr)
     , mDidReval(false)
+    , mStronglyFramed(false)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
     mChannelCreationTime = PR_Now();
@@ -3558,6 +3559,12 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     mCachedContentIsValid = !doValidation;
 
     if (doValidation) {
+        nsXPIDLCString buf;
+        rv = entry->GetMetaDataElement("strongly-framed", getter_Copies(buf));
+        // describe this in terms of explicitly weakly framed so as to be backwards
+        // compatible with old cache contents which dont have strongly-framed makers
+        bool weaklyFramed = NS_SUCCEEDED(rv) && buf.EqualsLiteral("0");
+
         //
         // now, we are definitely going to issue a HTTP request to the server.
         // make it conditional if possible.
@@ -3569,10 +3576,12 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         // the request method MUST be either GET or HEAD (see bug 175641) and
         // the cached response code must be < 400
         //
+        // the cached content must not be weakly framed
+        //
         // do not override conditional headers when consumer has defined its own
         if (!mCachedResponseHead->NoStore() &&
             (mRequestHead.IsGet() || mRequestHead.IsHead()) &&
-            !mCustomConditionalRequest &&
+            !mCustomConditionalRequest && !weaklyFramed &&
             (mCachedResponseHead->Status() < 400)) {
 
             if (mConcurentCacheAccess) {
@@ -4357,6 +4366,9 @@ nsHttpChannel::InitCacheEntry()
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
+    // mark this weakly framed until a response body is seen
+    mCacheEntry->SetMetaDataElement("strongly-framed", "0");
+
     rv = AddCacheEntryHeaders(mCacheEntry);
     if (NS_FAILED(rv)) return rv;
 
@@ -4560,6 +4572,12 @@ nsresult
 nsHttpChannel::FinalizeCacheEntry()
 {
     LOG(("nsHttpChannel::FinalizeCacheEntry [this=%p]\n", this));
+
+    // Don't update this meta-data on 304
+    if (mStronglyFramed && !mCachedContentIsValid && mCacheEntry) {
+        LOG(("nsHttpChannel::FinalizeCacheEntry [this=%p] Is Strongly Framed\n", this));
+        mCacheEntry->SetMetaDataElement("strongly-framed", "1");
+    }
 
     if (mResponseHead && mResponseHeadersModified) {
         // Set the expiration time for this cache entry
@@ -6068,6 +6086,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mTransaction) {
         // determine if we should call DoAuthRetry
         bool authRetry = mAuthRetryPending && NS_SUCCEEDED(status);
+        mStronglyFramed = mTransaction->ResponseIsComplete();
+        LOG(("nsHttpChannel %p has a strongly framed transaction: %d",
+             this, mStronglyFramed));
 
         //
         // grab references to connection in case we need to retry an
