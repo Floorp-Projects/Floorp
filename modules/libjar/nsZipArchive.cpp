@@ -219,7 +219,12 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret,
   handle->mFile.Init(file);
   handle->mTotalLen = (uint32_t) size;
   handle->mFileStart = buf;
-  handle->findDataStart();
+  rv = handle->findDataStart();
+  if (NS_FAILED(rv)) {
+    PR_MemUnmap(buf, (uint32_t) size);
+    PR_CloseFileMap(map);
+    return rv;
+  }
   handle.forget(ret);
   return NS_OK;
 }
@@ -242,7 +247,10 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
   handle->mFile.Init(zip, entry);
   handle->mTotalLen = handle->mBuf->Length();
   handle->mFileStart = handle->mBuf->Buffer();
-  handle->findDataStart();
+  nsresult rv = handle->findDataStart();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   handle.forget(ret);
   return NS_OK;
 }
@@ -254,7 +262,10 @@ nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
 
   handle->mFileStart = aData;
   handle->mTotalLen = aLen;
-  handle->findDataStart();
+  nsresult rv = handle->findDataStart();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   handle.forget(aRet);
   return NS_OK;
 }
@@ -276,12 +287,13 @@ nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
 //    sigLength     : signature     - Signature of the ZIP content.
 //                                    Signature is created using the RSA
 //                                    algorighm with the SHA-1 hash function.
-void nsZipHandle::findDataStart()
+nsresult nsZipHandle::findDataStart()
 {
   // In the CRX header, integers are 32 bits. Our pointer to the file is of
   // type |uint8_t|, which is guaranteed to be 8 bits.
   const uint32_t CRXIntSize = 4;
 
+MOZ_WIN_MEM_TRY_BEGIN
   if (mTotalLen > CRXIntSize * 4 && xtolong(mFileStart) == kCRXMagic) {
     const uint8_t* headerData = mFileStart;
     headerData += CRXIntSize * 2; // Skip magic number and version number
@@ -292,11 +304,13 @@ void nsZipHandle::findDataStart()
     if (mTotalLen > headerSize) {
       mLen = mTotalLen - headerSize;
       mFileData = mFileStart + headerSize;
-      return;
+      return NS_OK;
     }
   }
   mLen = mTotalLen;
   mFileData = mFileStart;
+MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
+  return NS_OK;
 }
 
 int64_t nsZipHandle::SizeOfMapping()
