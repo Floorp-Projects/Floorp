@@ -33,7 +33,7 @@ add_task(function* () {
 
   let toolbar = doc.querySelector(".devtools-tabbar");
   let toolbarControls = [...toolbar.querySelectorAll(
-    ".devtools-tab, toolbarbutton")].filter(elm =>
+    ".devtools-tab, button")].filter(elm =>
       !elm.hidden && doc.defaultView.getComputedStyle(elm).getPropertyValue(
         "display") !== "none");
 

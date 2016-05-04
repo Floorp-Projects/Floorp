@@ -3,6 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Use flex layout for the Inspector toolbar. For now, it's done
+   specifically for the Inspector toolbar since general rule applied
+   on .devtools-toolbar breaks breadcrubs and also toolbars in other
+   panels (e.g. webconsole, debugger), these are not ready for HTML
+   layout yet. */
+#inspector-toolbar.devtools-toolbar {
+  display: flex;
+}
+
+#inspector-toolbar.devtools-toolbar .devtools-toolbar-spacer {
+  flex-grow: 1;
+  display: inline-block;
+}
+
 #inspector-searchlabel {
   overflow: hidden;
 }
@@ -15,12 +29,12 @@
 
 /* Expand/collapse panel toolbar button */
 
-#inspector-pane-toggle {
-  list-style-image: var(--theme-pane-collapse-image);
+#inspector-pane-toggle::before {
+  background-image: var(--theme-pane-collapse-image);
 }
 
-#inspector-pane-toggle[pane-collapsed] {
-  list-style-image: var(--theme-pane-expand-image);
+#inspector-pane-toggle[pane-collapsed]::before {
+  background-image: var(--theme-pane-expand-image);
 }
 
 @media (max-width: 700px) {
@@ -31,8 +45,8 @@
 
 /* Add element toolbar button */
 
-#inspector-element-add-button {
-  list-style-image: url("chrome://devtools/skin/images/add.svg");
+#inspector-element-add-button::before {
+  background-image: url("chrome://devtools/skin/images/add.svg");
 }
 
 /* Tooltip: Events */
