@@ -1397,12 +1397,12 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 bool
-nsTableRowGroupFrame::UpdateOverflow()
+nsTableRowGroupFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 {
   // Row cursor invariants depend on the visual overflow area of the rows,
   // which may have changed, so we need to clear the cursor now.
   ClearRowCursor();
-  return nsContainerFrame::UpdateOverflow();
+  return nsContainerFrame::ComputeCustomOverflow(aOverflowAreas);
 }
 
 /* virtual */ void

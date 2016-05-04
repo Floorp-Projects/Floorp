@@ -88,8 +88,6 @@ protected:
 
   virtual void ListBox(nsAutoString& aResult);
 #endif
-  
-  virtual void GetLayoutFlags(uint32_t& aFlags);
 
   nsresult BeginXULLayout(nsBoxLayoutState& aState);
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState);

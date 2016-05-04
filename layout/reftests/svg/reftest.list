@@ -135,6 +135,9 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x2
 random == dynamic-use-nested-01a.svg dynamic-use-nested-01-ref.svg
 random == dynamic-use-nested-01b.svg dynamic-use-nested-01-ref.svg
 == dynamic-use-remove-width.svg dynamic-use-remove-width-ref.svg
+== dynamic-viewBox-change-01.svg pass.svg
+== dynamic-viewBox-change-02.svg pass.svg
+== dynamic-viewBox-change-03.svg pass.svg
 == fragmentIdentifier-01.xhtml pass.svg
 == linked-filter-01.svg pass.svg
 == linked-pattern-01.svg pass.svg

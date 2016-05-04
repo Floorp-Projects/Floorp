@@ -15,6 +15,7 @@ template <typename Mutex>
 class MOZ_RAII LockGuard
 {
   friend class UnlockGuard<Mutex>;
+  friend class ConditionVariable;
   Mutex& lock;
 
 public:

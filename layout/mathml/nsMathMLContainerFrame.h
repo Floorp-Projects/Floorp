@@ -34,6 +34,7 @@ public:
   explicit nsMathMLContainerFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mBlockStartAscent(0)
   {}
 
   NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
@@ -128,7 +129,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual bool UpdateOverflow() override;
+  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   virtual void MarkIntrinsicISizesDirty() override;
 
@@ -393,6 +394,8 @@ protected:
   void UpdateIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   nscoord mIntrinsicWidth;
+
+  nscoord mBlockStartAscent;
 
 private:
   class RowChildFrameIterator;

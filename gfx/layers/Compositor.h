@@ -389,7 +389,7 @@ public:
    */
   virtual void EndFrame() = 0;
 
-  virtual void SetDispAcquireFence(Layer* aLayer, nsIWidget* aWidget);
+  virtual void SetDispAcquireFence(Layer* aLayer);
 
   virtual FenceHandle GetReleaseFence();
 
@@ -533,6 +533,9 @@ public:
   // frames and should not be used.
   void SetInvalid();
   bool IsValid() const;
+  CompositorBridgeParent* GetCompositorBridgeParent() const {
+    return mParent;
+  }
 
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
