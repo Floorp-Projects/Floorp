@@ -305,12 +305,14 @@ CompositorVsyncScheduler::Observer::Destroy()
   mOwner = nullptr;
 }
 
-CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent, nsIWidget* aWidget)
+CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
+                                                   widget::CompositorWidgetProxy* aWidgetProxy)
   : mCompositorBridgeParent(aCompositorBridgeParent)
   , mLastCompose(TimeStamp::Now())
   , mIsObservingVsync(false)
   , mNeedsComposite(0)
   , mVsyncNotificationsSkipped(0)
+  , mCompositorVsyncDispatcher(aWidgetProxy->GetCompositorVsyncDispatcher())
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
   , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
@@ -324,9 +326,7 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aComp
 #endif
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWidget != nullptr);
   mVsyncObserver = new Observer(this);
-  mCompositorVsyncDispatcher = aWidget->GetCompositorVsyncDispatcher();
 #ifdef MOZ_WIDGET_GONK
   GeckoTouchDispatcher::GetInstance()->SetCompositorVsyncScheduler(this);
 
@@ -348,7 +348,6 @@ CompositorVsyncScheduler::~CompositorVsyncScheduler()
   MOZ_ASSERT(!mVsyncObserver);
   // The CompositorVsyncDispatcher is cleaned up before this in the nsBaseWidget, which stops vsync listeners
   mCompositorBridgeParent = nullptr;
-  mCompositorVsyncDispatcher = nullptr;
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -733,7 +732,7 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aW
     mApzcTreeManager = new APZCTreeManager();
   }
 
-  mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget->RealWidget());
+  mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget);
   LayerScope::SetPixelScale(aScale.scale);
 
   // mSelfRef is cleared in DeferredDestroy.
