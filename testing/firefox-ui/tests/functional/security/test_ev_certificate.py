@@ -54,7 +54,7 @@ class TestEVCertificate(FirefoxTestCase):
         self.assertEqual(self.identity_popup.element.get_attribute('connection'), 'secure-ev')
 
         # For EV certificates no hostname but the organization name is shown
-        self.assertEqual(self.identity_popup.host.get_attribute('value'),
+        self.assertEqual(self.identity_popup.view.main.host.get_attribute('textContent'),
                          cert['organization'])
 
         # Only the secure label is visible in the main view

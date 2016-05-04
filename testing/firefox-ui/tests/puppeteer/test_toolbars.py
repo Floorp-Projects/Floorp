@@ -220,13 +220,12 @@ class TestIdentityPopup(FirefoxTestCase):
     def test_elements(self):
         self.locationbar.open_identity_popup()
 
-        self.assertEqual(self.identity_popup.host.get_attribute('localName'), 'broadcaster')
-
         # Test main view elements
         main = self.identity_popup.view.main
         self.assertEqual(main.element.get_attribute('localName'), 'panelview')
 
         self.assertEqual(main.expander.get_attribute('localName'), 'button')
+        self.assertEqual(main.host.get_attribute('localName'), 'label')
         self.assertEqual(main.insecure_connection_label.get_attribute('localName'),
                          'description')
         self.assertEqual(main.internal_connection_label.get_attribute('localName'),
@@ -240,6 +239,7 @@ class TestIdentityPopup(FirefoxTestCase):
         security = self.identity_popup.view.security
         self.assertEqual(security.element.get_attribute('localName'), 'panelview')
 
+        self.assertEqual(security.host.get_attribute('localName'), 'label')
         self.assertEqual(security.insecure_connection_label.get_attribute('localName'),
                          'description')
         self.assertEqual(security.secure_connection_label.get_attribute('localName'),
