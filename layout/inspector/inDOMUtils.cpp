@@ -1211,16 +1211,15 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
                 "Length of PseudoClassStates array is incorrect");
 
   nsCOMPtr<nsIAtom> atom = NS_Atomize(aStatePseudo);
+  CSSPseudoClassType type = nsCSSPseudoClasses::GetPseudoType(atom, true, true);
 
   // Ignore :moz-any-link so we don't give the element simultaneous
   // visited and unvisited style state
-  if (nsCSSPseudoClasses::GetPseudoType(atom) ==
-      CSSPseudoClassType::mozAnyLink) {
+  if (type == CSSPseudoClassType::mozAnyLink) {
     return EventStates();
   }
   // Our array above is long enough that indexing into it with
   // NotPseudo is ok.
-  CSSPseudoClassType type = nsCSSPseudoClasses::GetPseudoType(atom);
   return sPseudoClassStates[static_cast<CSSPseudoClassTypeBase>(type)];
 }
 
