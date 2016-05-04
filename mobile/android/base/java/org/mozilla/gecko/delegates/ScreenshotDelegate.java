@@ -3,12 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.delegates;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.ScreenshotObserver;
+import org.mozilla.gecko.SnackbarHelper;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.delegates.BrowserAppDelegate;
 
 import java.lang.ref.WeakReference;
 
