@@ -87,7 +87,7 @@ public:
 
   mozilla::CounterStyle* BuildCounterStyle(const nsSubstring& aName)
   {
-    SERVO_DEFAULT(nullptr);
+    SERVO_DEFAULT(mozilla::CounterStyleManager::GetBuiltinStyle(NS_STYLE_LIST_STYLE_DISC));
     return mPresContext->CounterStyleManager()->BuildCounterStyle(aName);
   }
 
