@@ -1305,6 +1305,17 @@ ReadSalt(nsIFile* aPath, nsACString& aOutData)
 
 }
 
+already_AddRefed<GMPStorage>
+GeckoMediaPluginServiceParent::GetMemoryStorageFor(const nsACString& aNodeId)
+{
+  RefPtr<GMPStorage> s;
+  if (!mTempGMPStorage.Get(aNodeId, getter_AddRefs(s))) {
+    s = CreateGMPMemoryStorage();
+    mTempGMPStorage.Put(aNodeId, s);
+  }
+  return s.forget();
+}
+
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::IsPersistentStorageAllowed(const nsACString& aNodeId,
                                                           bool* aOutAllowed)
@@ -1781,6 +1792,10 @@ GeckoMediaPluginServiceParent::ClearStorage()
   if (NS_FAILED(DeleteDir(path))) {
     NS_WARNING("Failed to delete GMP storage directory");
   }
+
+  // Clear private-browsing storage.
+  mTempGMPStorage.Clear();
+
   NS_DispatchToMainThread(new NotifyObserversTask("gmp-clear-storage-complete"), NS_DISPATCH_NORMAL);
 }
 
