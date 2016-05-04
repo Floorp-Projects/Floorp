@@ -593,9 +593,10 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       mInDocResponsiveContent = true;
     }
 
-    bool forceLoadEvent = HTMLPictureElement::IsPictureEnabled() &&
-      aParent && aParent->IsHTMLElement(nsGkAtoms::picture);
-    QueueImageLoadTask(forceLoadEvent);
+    // Run selection algorithm when an img element is inserted into a document
+    // in order to react to changes in the environment. See note of
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#img-environment-changes
+    QueueImageLoadTask(false);
   } else if (!InResponsiveMode() &&
              HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
     // We skip loading when our attributes were set from parser land,
@@ -1068,6 +1069,10 @@ HTMLImageElement::PictureSourceAdded(nsIContent *aSourceNode)
   if (!HTMLPictureElement::IsPictureEnabled()) {
     return;
   }
+
+  MOZ_ASSERT(aSourceNode == this ||
+             IsPreviousSibling(aSourceNode, this),
+             "Should not be getting notifications for non-previous-siblings");
 
   QueueImageLoadTask(true);
 }
