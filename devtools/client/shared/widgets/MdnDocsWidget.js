@@ -27,7 +27,8 @@
 const {Cc, Cu, Ci} = require("chrome");
 const Services = require("Services");
 const Promise = require("promise");
-const {getCSSLexer} = require("devtools/shared/css-lexer");
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                 .getService(Ci.inIDOMUtils);
 
 // Parameters for the XHR request
 // see https://developer.mozilla.org/en-US/docs/MDN/Kuma/API#Document_parameters
@@ -82,7 +83,7 @@ const COMMENT_COLOR = "theme-comment";
 function appendSyntaxHighlightedCSS(cssText, parentElement) {
   let doc = parentElement.ownerDocument;
   let identClass = PROPERTY_NAME_COLOR;
-  let lexer = getCSSLexer(cssText);
+  let lexer = DOMUtils.getCSSLexer(cssText);
 
   /**
    * Create a SPAN node with the given text content and class.

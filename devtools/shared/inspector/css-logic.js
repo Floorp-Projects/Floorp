@@ -49,8 +49,6 @@ const { getRootBindingParent } = require("devtools/shared/layout/utils");
 // on the worker thread, where Cu is not available.
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
-loader.lazyRequireGetter(this, "CSSLexer", "devtools/shared/css-lexer");
-
 function CssLogic() {
   // The cache of examined CSS properties.
   this._propertyInfos = {};
@@ -994,7 +992,7 @@ CssLogic.prettifyCSS = function(text, ruleCount) {
   // minified file.
   let indent = "";
   let indentLevel = 0;
-  let tokens = CSSLexer.getCSSLexer(text);
+  let tokens = domUtils.getCSSLexer(text);
   let result = "";
   let pushbackToken = undefined;
 
