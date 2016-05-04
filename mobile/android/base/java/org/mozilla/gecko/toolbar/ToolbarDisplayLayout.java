@@ -265,6 +265,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return;
         }
 
+        final boolean isHttpOrHttps = StringUtils.isHttpOrHttps(url);
         final String baseDomain = tab.getBaseDomain();
 
         String strippedURL = stripAboutReaderURL(url);
@@ -282,12 +283,15 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         if (siteIdentity.hasOwner()) {
             // Show Owner of EV certificate as title
             updateTitleFromSiteIdentity(siteIdentity);
-        } else if (!HardwareUtils.isTablet() && !TextUtils.isEmpty(baseDomain)) {
+        } else if (isHttpOrHttps && !HardwareUtils.isTablet() && !TextUtils.isEmpty(baseDomain)) {
             // Show just the base domain as title
             setTitle(baseDomain);
-        } else {
-            // Display full URL as title
+        } else if (isHttpOrHttps) {
+            // Display full URL with base domain highlighted as title
             updateAndColorTitleFromFullURL(strippedURL, baseDomain, tab.isPrivate());
+        } else {
+            // Not http(s): Just show the full URL as title
+            setTitle(url);
         }
     }
 
