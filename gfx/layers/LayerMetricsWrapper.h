@@ -372,10 +372,14 @@ public:
 
     Maybe<ParentLayerIntRect> result;
 
-    // The layer can have a clip rect, which is considered to apply
-    // only to the bottommost LayerMetrics.
+    // The layer can have a clip rect and a scrolled clip, which are considered
+    // to apply only to the bottommost LayerMetricsWrapper.
+    // TODO: These actually apply in a different coordinate space than the
+    // scroll clip of the bottommost metrics, so we shouldn't be intersecting
+    // them with the scroll clip; bug 1269537 tracks fixing this.
     if (AtBottomLayer()) {
       result = mLayer->GetClipRect();
+      result = IntersectMaybeRects(result, mLayer->GetScrolledClipRect());
     }
 
     // The scroll metadata can have a clip rect as well.
