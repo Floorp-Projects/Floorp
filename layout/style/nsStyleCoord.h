@@ -174,9 +174,14 @@ public:
            (IsCalcUnit() && CalcHasPercent());
   }
 
+  static bool ConvertsToLength(const nsStyleUnit aUnit,
+                               const nsStyleUnion aValue) {
+    return aUnit == eStyleUnit_Coord ||
+           (IsCalcUnit(aUnit) && !AsCalcValue(aValue)->mHasPercent);
+  }
+
   bool ConvertsToLength() const {
-    return mUnit == eStyleUnit_Coord ||
-           (IsCalcUnit() && !CalcHasPercent());
+    return ConvertsToLength(mUnit, mValue);
   }
 
   nscoord ToLength() const {
@@ -186,6 +191,11 @@ public:
     }
     MOZ_ASSERT(IsCalcUnit() && !CalcHasPercent());
     return GetCalcValue()->ToLength();
+  }
+
+  // Callers must verify IsCalcUnit before calling this function.
+  static Calc* AsCalcValue(nsStyleUnion aValue) {
+    return static_cast<Calc*>(aValue.mPointer);
   }
 
   nscoord     GetCoordValue() const;
@@ -292,7 +302,7 @@ public:
 
   bool ConvertsToLength() const {
     NS_FOR_CSS_SIDES(side) {
-      if (!Get(side).ConvertsToLength()) {
+      if (!nsStyleCoord::ConvertsToLength(mUnits[side], mValues[side])) {
         return false;
       }
     }
@@ -435,7 +445,7 @@ inline nsStyleCoord::Calc* nsStyleCoord::GetCalcValue() const
 {
   NS_ASSERTION(IsCalcUnit(), "not a pointer value");
   if (IsCalcUnit()) {
-    return static_cast<Calc*>(mValue.mPointer);
+    return AsCalcValue(mValue);
   }
   return nullptr;
 }
