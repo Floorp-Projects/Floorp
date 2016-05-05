@@ -30,8 +30,7 @@ add_task(function* () {
       category: CATEGORY_SERVER,
       severity: SEVERITY_LOG,
     }],
-  })
-
+  });
   // Clean up filter
   hud.setFilterState("serverlog", false);
   yield updateServerLoggingListener(hud);
@@ -49,11 +48,10 @@ add_task(function* () {
   yield updateServerLoggingListener(hud);
 
   BrowserReloadSkipCache();
-
   // Note that the test is also checking out the (printf like)
   // formatters and encoding of UTF8 characters (see the one at the end).
-  let text = "Object { best: \"Firefox\", reckless: \"Chrome\", new_ie: \"Safari\", new_new_ie: \"Edge\" }";
-
+  let text = "Object { best: \"Firefox\", reckless: \"Chrome\", " +
+    "new_ie: \"Safari\", new_new_ie: \"Edge\" }";
   yield waitForMessages({
     webconsole: hud,
     messages: [{
@@ -61,8 +59,7 @@ add_task(function* () {
       category: CATEGORY_SERVER,
       severity: SEVERITY_LOG,
     }],
-  })
-
+  });
   // Clean up filter
   hud.setFilterState("serverlog", false);
   yield updateServerLoggingListener(hud);
