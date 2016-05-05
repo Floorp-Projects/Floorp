@@ -17,7 +17,7 @@ const SPECIALVALUES = new Set([
  *
  * Usage:
  *   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
- *   let {angleUtils} = require("devtools/shared/css-angle");
+ *   let {angleUtils} = require("devtools/client/shared/css-angle");
  *   let angle = new angleUtils.CssAngle("180deg");
  *
  *   angle.authored === "180deg"
