@@ -101,7 +101,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
     auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p FAILED to create cdm",
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p FAILED to find CreateCdmInstance",
         aAPIName, aHostAPI, aPluginAPI, this);
       return GMPGenericErr;
     }
@@ -114,6 +114,11 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
              strlen(WidevineKeySystem),
              &GetCdmHost,
              decryptor));
+    if (!cdm) {
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p FAILED to create cdm",
+          aAPIName, aHostAPI, aPluginAPI, this);
+      return GMPGenericErr;
+    }
     Log("cdm: 0x%x", cdm);
     sCDMWrapper = new CDMWrapper(cdm);
     decryptor->SetCDM(RefPtr<CDMWrapper>(sCDMWrapper));
