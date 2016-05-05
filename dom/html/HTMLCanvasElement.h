@@ -151,7 +151,7 @@ public:
       return;
     }
 
-    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
   }
   uint32_t Width()
   {
@@ -164,7 +164,7 @@ public:
       return;
     }
 
-    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
   }
 
   virtual already_AddRefed<nsISupports>
