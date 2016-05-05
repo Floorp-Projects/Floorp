@@ -391,6 +391,12 @@ test(function () {
   assert_throws('INVALID_CHARACTER_ERR', function () { foo.classList.replace('t with space', 'foo') });
   assert_throws('SYNTAX_ERR', function () { foo.classList.replace('', 'foo') });
 }, 'classList.replace should work');
+
+test(function() {
+  var foo = document.createElement('div');
+  assert_throws(new TypeError(),
+                function() { foo.classList.supports('hello') });
+}, 'classList.supports should throw');
     </script>
   </head>
   <body>
