@@ -462,11 +462,17 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold)
 {
-  bool found;
-  uint32_t parsed =
-    mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
-  if (found) {
-    return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
+  uint32_t parsed = 0;
+  // Ensure that the data we are about to skip to is still available.
+  TimeIntervals buffered = mManager->Buffered(mType);
+  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
+  if (buffered.Contains(aTimeThreadshold)) {
+    bool found;
+    parsed =
+      mManager->SkipToNextRandomAccessPoint(mType, aTimeThreadshold, found);
+    if (found) {
+      return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
+    }
   }
   SkipFailureHolder holder(
     mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
