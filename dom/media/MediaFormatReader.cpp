@@ -114,7 +114,7 @@ MediaFormatReader::Shutdown()
     mAudio.mTaskQueue->AwaitShutdownAndIdle();
     mAudio.mTaskQueue = nullptr;
   }
-  MOZ_ASSERT(mAudio.mPromise.IsEmpty());
+  MOZ_ASSERT(!mAudio.HasPromise());
 
   if (mVideo.mDecoder) {
     Reset(TrackInfo::kVideoTrack);
@@ -134,7 +134,7 @@ MediaFormatReader::Shutdown()
     mVideo.mTaskQueue->AwaitShutdownAndIdle();
     mVideo.mTaskQueue = nullptr;
   }
-  MOZ_ASSERT(mVideo.mPromise.IsEmpty());
+  MOZ_ASSERT(!mVideo.HasPromise());
 
   mDemuxer = nullptr;
 
@@ -541,7 +541,7 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
     return p;
   }
 
-  RefPtr<MediaDataPromise> p = mVideo.mPromise.Ensure(__func__);
+  RefPtr<MediaDataPromise> p = mVideo.EnsurePromise(__func__);
   NotifyDecodingRequested(TrackInfo::kVideoTrack);
 
   return p;
@@ -627,7 +627,7 @@ MediaFormatReader::RequestAudioData()
     return MediaDataPromise::CreateAndReject(CANCELED, __func__);
   }
 
-  RefPtr<MediaDataPromise> p = mAudio.mPromise.Ensure(__func__);
+  RefPtr<MediaDataPromise> p = mAudio.EnsurePromise(__func__);
   NotifyDecodingRequested(TrackInfo::kAudioTrack);
 
   return p;
@@ -740,7 +740,6 @@ MediaFormatReader::NotifyDecodingRequested(TrackType aTrack)
 bool
 MediaFormatReader::NeedInput(DecoderData& aDecoder)
 {
-  MOZ_ASSERT(OnTaskQueue());
   // We try to keep a few more compressed samples input than decoded samples
   // have been output, provided the state machine has requested we send it a
   // decoded sample. To account for H.264 streams which may require a longer
@@ -1237,7 +1236,7 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
         mInfo.mAudio.mChannels = audioData->mChannels;
       }
     }
-    mAudio.mPromise.Resolve(aData, __func__);
+    mAudio.ResolvePromise(aData, __func__);
   } else if (aTrack == TrackInfo::kVideoTrack) {
     if (aData->mType != MediaData::RAW_DATA) {
       VideoData* videoData = static_cast<VideoData*>(aData);
@@ -1249,7 +1248,7 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
         mInfo.mVideo.mDisplay = videoData->mDisplay;
       }
     }
-    mVideo.mPromise.Resolve(aData, __func__);
+    mVideo.ResolvePromise(aData, __func__);
   }
   LOG("Resolved data promise for %s", TrackTypeToStr(aTrack));
 }
@@ -1770,12 +1769,48 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
   result += nsPrintfCString("audio decoder: %s\n", audioName);
   result += nsPrintfCString("audio frames decoded: %lld\n",
                             mAudio.mNumSamplesOutputTotal);
+  if (HasAudio()) {
+    result += nsPrintfCString("audio state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d decoder:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+                              NeedInput(mAudio), mAudio.HasPromise(),
+                              mAudio.mInputExhausted,
+                              mAudio.mDemuxRequest.Exists(),
+                              int(mAudio.mQueuedSamples.Length()),
+                              mAudio.mDecodingRequested,
+                              mAudio.mTimeThreshold
+                              ? mAudio.mTimeThreshold.ref().mTime.ToSeconds()
+                              : -1.0,
+                              mAudio.mTimeThreshold
+                              ? mAudio.mTimeThreshold.ref().mHasSeeked
+                              : -1,
+                              mAudio.mNumSamplesInput, mAudio.mNumSamplesOutput,
+                              unsigned(size_t(mAudio.mSizeOfQueue)),
+                              unsigned(mAudio.mOutput.Length()),
+                              mAudio.mWaitingForData, mAudio.mLastStreamSourceID);
+  }
   result += nsPrintfCString("video decoder: %s\n", videoName);
   result += nsPrintfCString("hardware video decoding: %s\n",
                             VideoIsHardwareAccelerated() ? "enabled" : "disabled");
   result += nsPrintfCString("video frames decoded: %lld (skipped:%lld)\n",
                             mVideo.mNumSamplesOutputTotal,
                             mVideo.mNumSamplesSkippedTotal);
+  if (HasVideo()) {
+    result += nsPrintfCString("video state: ni=%d no=%d ie=%d demuxr:%d demuxq:%d decoder:%d tt:%f tths:%d in:%llu out:%llu qs=%u pending:%u waiting:%d sid:%u\n",
+                              NeedInput(mVideo), mVideo.HasPromise(),
+                              mVideo.mInputExhausted,
+                              mVideo.mDemuxRequest.Exists(),
+                              int(mVideo.mQueuedSamples.Length()),
+                              mVideo.mDecodingRequested,
+                              mVideo.mTimeThreshold
+                              ? mVideo.mTimeThreshold.ref().mTime.ToSeconds()
+                              : -1.0,
+                              mVideo.mTimeThreshold
+                              ? mVideo.mTimeThreshold.ref().mHasSeeked
+                              : -1,
+                              mVideo.mNumSamplesInput, mVideo.mNumSamplesOutput,
+                              unsigned(size_t(mVideo.mSizeOfQueue)),
+                              unsigned(mVideo.mOutput.Length()),
+                              mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
+  }
   aString += NS_ConvertUTF8toUTF16(result);
 }
 

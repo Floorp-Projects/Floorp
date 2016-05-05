@@ -325,7 +325,9 @@ private:
     // These get overriden in the templated concrete class.
     // Indicate if we have a pending promise for decoded frame.
     // Rejecting the promise will stop the reader from decoding ahead.
-    virtual bool HasPromise() = 0;
+    virtual bool HasPromise() const = 0;
+    virtual RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) = 0;
+    virtual void ResolvePromise(MediaData* aData, const char* aMethodName) = 0;
     virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
                                const char* aMethodName) = 0;
 
@@ -402,19 +404,33 @@ private:
     RefPtr<SharedTrackInfo> mInfo;
   };
 
-  struct DecoderDataWithPromise : public DecoderData {
+  class DecoderDataWithPromise : public DecoderData {
+  public:
     DecoderDataWithPromise(MediaFormatReader* aOwner,
                            MediaData::Type aType,
-                           uint32_t aDecodeAhead) :
-      DecoderData(aOwner, aType, aDecodeAhead)
+                           uint32_t aDecodeAhead)
+      : DecoderData(aOwner, aType, aDecodeAhead)
+      , mHasPromise(false)
+
     {}
 
-    MozPromiseHolder<MediaDataPromise> mPromise;
+    bool HasPromise() const override
+    {
+      return mHasPromise;
+    }
 
-    bool HasPromise() override
+    RefPtr<MediaDataPromise> EnsurePromise(const char* aMethodName) override
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      return !mPromise.IsEmpty();
+      mHasPromise = true;
+      return mPromise.Ensure(aMethodName);
+    }
+
+    void ResolvePromise(MediaData* aData, const char* aMethodName) override
+    {
+      MOZ_ASSERT(mOwner->OnTaskQueue());
+      mPromise.Resolve(aData, aMethodName);
+      mHasPromise = false;
     }
 
     void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
@@ -423,7 +439,12 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mPromise.Reject(aReason, aMethodName);
       mDecodingRequested = false;
+      mHasPromise = false;
     }
+
+  private:
+    MozPromiseHolder<MediaDataPromise> mPromise;
+    Atomic<bool> mHasPromise;
   };
 
   DecoderDataWithPromise mAudio;
