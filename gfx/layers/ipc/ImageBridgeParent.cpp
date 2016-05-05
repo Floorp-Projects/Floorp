@@ -106,8 +106,8 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
     mSubprocess = nullptr;
   }
 
-  MessageLoop::current()->PostTask(
-    NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
+  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy);
+  MessageLoop::current()->PostTask(runnable.forget());
 
   // It is very important that this method gets called at shutdown (be it a clean
   // or an abnormal shutdown), because DeferredDestroy is what clears mSelfRef.
