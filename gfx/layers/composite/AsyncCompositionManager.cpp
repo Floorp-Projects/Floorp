@@ -530,12 +530,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // clip rect, we need to apply the same translation to said clip rect, so
   // that the effective transform on the clip rect takes it back to where it was
   // originally, had there been no async scroll.
-  // Also, some layers want async scrolling to move their clip rect
-  // (IsClipFixed() = false), so we don't make a compensating adjustment for
-  // those.
-  bool adjustClipRect = aTransformAffectsLayerClip && aLayer->IsClipFixed();
   TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()),
-      adjustClipRect, aClipPartsCache);
+      aTransformAffectsLayerClip, aClipPartsCache);
 }
 
 static void
