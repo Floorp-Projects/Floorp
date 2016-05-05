@@ -24,7 +24,7 @@ class WeakSetObject : public NativeObject
     static const JSFunctionSpec methods[];
 
     static WeakSetObject* create(JSContext* cx, HandleObject proto = nullptr);
-    static bool construct(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 };
 
 extern JSObject*
