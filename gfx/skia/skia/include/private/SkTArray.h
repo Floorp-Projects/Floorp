@@ -160,7 +160,7 @@ public:
      */
     T& push_back(T&& t) {
         T* newT = reinterpret_cast<T*>(this->push_back_raw(1));
-        new (newT) T(std::move(t));
+        new (newT) T(std__move(t));
         return *newT;
     }
 
@@ -169,7 +169,7 @@ public:
      */
     template<class... Args> T& emplace_back(Args&&... args) {
         T* newT = reinterpret_cast<T*>(this->push_back_raw(1));
-        return *new (newT) T(std::forward<Args>(args)...);
+        return *new (newT) T(std__forward<Args>(args)...);
     }
 
     /**
@@ -415,12 +415,12 @@ private:
         }
     }
     template <bool E = MEM_COPY> SK_WHEN(!E, void) move(int dst, int src) {
-        new (&fItemArray[dst]) T(std::move(fItemArray[src]));
+        new (&fItemArray[dst]) T(std__move(fItemArray[src]));
         fItemArray[src].~T();
     }
     template <bool E = MEM_COPY> SK_WHEN(!E, void) move(char* dst) {
         for (int i = 0; i < fCount; ++i) {
-            new (dst + sizeof(T) * i) T(std::move(fItemArray[i]));
+            new (dst + sizeof(T) * i) T(std__move(fItemArray[i]));
             fItemArray[i].~T();
         }
     }
