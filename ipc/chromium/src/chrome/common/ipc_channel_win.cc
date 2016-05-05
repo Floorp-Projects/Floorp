@@ -371,6 +371,12 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
       // more data comes in.
       uint32_t length = Message::GetLength(p, end);
       if (length) {
+        if (length > kMaximumMessageSize) {
+          input_overflow_buf_.clear();
+          CHROMIUM_LOG(ERROR) << "IPC message is too big";
+          return false;
+        }
+
         input_overflow_buf_.reserve(length + kReadBufferSize);
 
         // Recompute these pointers in case the buffer moved.
