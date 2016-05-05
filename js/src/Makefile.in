@@ -228,20 +228,6 @@ $(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 # Force auto-header generation before compiling any source that may use them
 $(OBJS): $(CURDIR)/jsautokw.h
 
-ifdef MOZ_ETW
-ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
-	$(MC) -um -mof $^
-
-ETWProvider.res: ETWProvider.rc
-	$(RC) -r -i '$(SDKDIR)Include' $^
-
-export:: ETWProvider.res
-
-install:: ETWProvider.mof ETWProvider.man
-	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
-
-endif
-
 ifdef HAVE_DTRACE
 javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 	dtrace -x nolibs -h -s $(srcdir)/devtools/javascript-trace.d -o javascript-trace.h.in
