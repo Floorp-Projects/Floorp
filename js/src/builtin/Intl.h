@@ -38,7 +38,7 @@ InitIntlClass(JSContext* cx, HandleObject obj);
  *
  * Usage: collator = intl_Collator(locales, options)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_Collator(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -49,7 +49,7 @@ intl_Collator(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: availableLocales = intl_Collator_availableLocales()
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_Collator_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -60,7 +60,7 @@ intl_Collator_availableLocales(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: collations = intl_availableCollations(locale)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_availableCollations(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -73,7 +73,7 @@ intl_availableCollations(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: result = intl_CompareStrings(collator, x, y)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
 
 
@@ -86,7 +86,7 @@ intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: numberFormat = intl_NumberFormat(locales, options)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -97,7 +97,7 @@ intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: availableLocales = intl_NumberFormat_availableLocales()
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -107,7 +107,7 @@ intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: defaultNumberingSystem = intl_numberingSystem(locale)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -118,7 +118,7 @@ intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: formatted = intl_FormatNumber(numberFormat, x)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
 
 
@@ -131,7 +131,7 @@ intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -142,7 +142,7 @@ intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: availableLocales = intl_DateTimeFormat_availableLocales()
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -153,7 +153,7 @@ intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: calendars = intl_availableCalendars(locale)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -164,7 +164,7 @@ intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: pattern = intl_patternForSkeleton(locale, skeleton)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
 
 /**
@@ -176,7 +176,7 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
  *
  * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x)
  */
-extern bool
+extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
 /**
