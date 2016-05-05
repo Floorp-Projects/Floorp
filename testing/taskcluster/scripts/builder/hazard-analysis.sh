@@ -18,7 +18,11 @@ fi
 
 
 function check_commit_msg () {
-    hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -q -- "$1"
+    if [[ -n "$AUTOMATION" ]]; then
+        hg --cwd "$GECKO_DIR" log -r. --template '{desc}\n' | grep -F -q -- "$1"
+    else
+        echo -- "$SCRIPT_FLAGS" | grep -f -q -- "$1"
+    fi
 }
 
 if check_commit_msg "--dep"; then
@@ -55,6 +59,16 @@ source = "$GECKO_DIR"
 sixgill = "$TOOLTOOL_DIR/sixgill/usr/libexec/sixgill"
 sixgill_bin = "$TOOLTOOL_DIR/sixgill/usr/bin"
 EOF
+
+        cat > run-analysis.sh <<EOF
+#!/bin/sh
+if [ \$# -eq 0 ]; then
+  set gcTypes
+fi
+export ANALYSIS_SCRIPTDIR="$ANALYSIS_SRCDIR"
+exec "$ANALYSIS_SRCDIR/analyze.py" "\$@"
+EOF
+        chmod +x run-analysis.sh
     )
 }
 
