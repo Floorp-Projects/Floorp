@@ -292,6 +292,22 @@ var tests = [
 
     gContentAPI.getConfiguration("appinfo", callback);
   },
+  function test_getConfigurationDistribution(done) {
+    gContentAPI.getConfiguration("appinfo", (result) => {
+      ok(typeof(result.distribution) !== "undefined", "Check distribution isn't undefined.");
+      is(result.distribution, "default", "Should be \"default\" without preference set.");
+
+      let defaults = Services.prefs.getDefaultBranch("distribution.");
+      let testDistributionID = "TestDistribution";
+      defaults.setCharPref("id", testDistributionID);
+      gContentAPI.getConfiguration("appinfo", (result) => {
+        ok(typeof(result.distribution) !== "undefined", "Check distribution isn't undefined.");
+        is(result.distribution, testDistributionID, "Should have the distribution as set in preference.");
+
+        done();
+      });
+    });
+  },
   function test_addToolbarButton(done) {
     let placement = CustomizableUI.getPlacementOfWidget("panic-button");
     is(placement, null, "default UI has panic button in the palette");

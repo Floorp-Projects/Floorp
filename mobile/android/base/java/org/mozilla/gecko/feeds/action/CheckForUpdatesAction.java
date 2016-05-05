@@ -7,12 +7,10 @@ package org.mozilla.gecko.feeds.action;
 
 import android.app.Notification;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
@@ -21,7 +19,6 @@ import android.text.format.DateFormat;
 import org.json.JSONException;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -37,7 +34,6 @@ import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.StringUtils;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

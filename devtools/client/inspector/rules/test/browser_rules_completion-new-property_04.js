@@ -38,10 +38,10 @@ add_task(function* () {
   editor.popup.selectedIndex = itemIndex;
 
   info("Select the background-color suggestion with a mouse click.");
-  let onInputFocus = once(editor.input, "focus", true);
+  let onSuggest = editor.once("after-suggest");
   let node = editor.popup._list.childNodes[itemIndex];
   EventUtils.synthesizeMouseAtCenter(node, {}, view.styleWindow);
-  yield onInputFocus;
+  yield onSuggest;
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 
   info("Press RETURN to move the focus to a property value editor.");

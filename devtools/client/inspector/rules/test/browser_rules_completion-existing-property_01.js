@@ -7,8 +7,6 @@
 // Tests that CSS property names are autocompleted and cycled correctly when
 // editing an existing property in the rule view.
 
-const MAX_ENTRIES = 10;
-
 // format :
 //  [
 //    what key to press,
@@ -18,7 +16,7 @@ const MAX_ENTRIES = 10;
 //  ]
 var testData = [
   ["VK_RIGHT", "font", -1, 0],
-  ["-", "font-size", 4, MAX_ENTRIES],
+  ["-", "font-size", 4, 17],
   ["f", "font-family", 0, 2],
   ["VK_BACK_SPACE", "font-f", -1, 0],
   ["VK_BACK_SPACE", "font-", -1, 0],
@@ -45,7 +43,7 @@ var testData = [
   ["VK_END", "", -1, 0],
   ["VK_PAGE_UP", "", -1, 0],
   ["VK_PAGE_DOWN", "", -1, 0],
-  ["f", "filter", 3, MAX_ENTRIES],
+  ["f", "font-size", 19, 32],
   ["i", "filter", 3, 4],
   ["VK_LEFT", "filter", -1, 0],
   ["VK_LEFT", "filter", -1, 0],

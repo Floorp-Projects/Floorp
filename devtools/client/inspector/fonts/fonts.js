@@ -7,8 +7,6 @@
 "use strict";
 
 const {Cu} = require("chrome");
-const {setTimeout, clearTimeout} =
-      Cu.import("resource://gre/modules/Timer.jsm", {});
 const {gDevTools} = require("devtools/client/framework/devtools");
 const Services = require("Services");
 

@@ -33,7 +33,11 @@ const CONTENT_TYPES = {
   CSS_MIXED: 2,
   CSS_PROPERTY: 3,
 };
-const MAX_POPUP_ENTRIES = 10;
+const AUTOCOMPLETE_POPUP_CLASSNAME = "inplace-editor-autocomplete-popup";
+
+// The limit of 500 autocomplete suggestions should not be reached but is kept
+// for safety.
+const MAX_POPUP_ENTRIES = 500;
 
 const FOCUS_FORWARD = Ci.nsIFocusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
@@ -241,6 +245,7 @@ function InplaceEditor(options, event) {
   this._onKeyPress = this._onKeyPress.bind(this);
   this._onInput = this._onInput.bind(this);
   this._onKeyup = this._onKeyup.bind(this);
+  this._onAutocompletePopupClick = this._onAutocompletePopupClick.bind(this);
 
   this._createInput();
 
@@ -728,6 +733,8 @@ InplaceEditor.prototype = {
         };
       }
     }
+
+    return null;
   },
 
   /**
@@ -943,59 +950,70 @@ InplaceEditor.prototype = {
   },
 
   /**
-   * Handle loss of focus by calling done if it hasn't been called yet.
+   * Event handler called when the inplace-editor's input loses focus.
    */
   _onBlur: function(event) {
     if (event && this.popup && this.popup.isOpen &&
-        this.popup.selectedIndex >= 0) {
-      let label, preLabel;
+      this.popup.selectedIndex >= 0) {
+      this._acceptPopupSuggestion();
+    } else {
+      this._apply();
+      this._clear();
+    }
+  },
 
-      if (this._selectedIndex === undefined) {
-        ({label, preLabel} =
-          this.popup.getItemAtIndex(this.popup.selectedIndex));
-      } else {
-        ({label, preLabel} = this.popup.getItemAtIndex(this._selectedIndex));
-      }
+  /**
+   * Event handler called by the autocomplete popup when receiving a click
+   * event.
+   */
+  _onAutocompletePopupClick: function() {
+    this._acceptPopupSuggestion();
+  },
 
-      let input = this.input;
-      let pre = "";
+  _acceptPopupSuggestion: function() {
+    let label, preLabel;
 
-      // CSS_MIXED needs special treatment here to make it so that
-      // multiple presses of tab will cycle through completions, but
-      // without selecting the completed text.  However, this same
-      // special treatment will do the wrong thing for other editing
-      // styles.
-      if (input.selectionStart < input.selectionEnd ||
-          this.contentType !== CONTENT_TYPES.CSS_MIXED) {
-        pre = input.value.slice(0, input.selectionStart);
-      } else {
-        pre = input.value.slice(0, input.selectionStart - label.length +
-                                preLabel.length);
-      }
-      let post = input.value.slice(input.selectionEnd, input.value.length);
-      let item = this.popup.selectedItem;
-      this._selectedIndex = this.popup.selectedIndex;
-      let toComplete = item.label.slice(item.preLabel.length);
-      input.value = pre + toComplete + post;
-      input.setSelectionRange(pre.length + toComplete.length,
-                              pre.length + toComplete.length);
-      this._updateSize();
-      // Wait for the popup to hide and then focus input async otherwise it does
-      // not work.
-      let onPopupHidden = () => {
-        this.popup._panel.removeEventListener("popuphidden", onPopupHidden);
-        this.doc.defaultView.setTimeout(()=> {
-          input.focus();
-          this.emit("after-suggest");
-        }, 0);
-      };
-      this.popup._panel.addEventListener("popuphidden", onPopupHidden);
-      this.popup.hidePopup();
-      return;
+    if (this._selectedIndex === undefined) {
+      ({label, preLabel} =
+        this.popup.getItemAtIndex(this.popup.selectedIndex));
+    } else {
+      ({label, preLabel} = this.popup.getItemAtIndex(this._selectedIndex));
     }
 
-    this._apply();
-    this._clear();
+    let input = this.input;
+    let pre = "";
+
+    // CSS_MIXED needs special treatment here to make it so that
+    // multiple presses of tab will cycle through completions, but
+    // without selecting the completed text.  However, this same
+    // special treatment will do the wrong thing for other editing
+    // styles.
+    if (input.selectionStart < input.selectionEnd ||
+        this.contentType !== CONTENT_TYPES.CSS_MIXED) {
+      pre = input.value.slice(0, input.selectionStart);
+    } else {
+      pre = input.value.slice(0, input.selectionStart - label.length +
+                              preLabel.length);
+    }
+    let post = input.value.slice(input.selectionEnd, input.value.length);
+    let item = this.popup.selectedItem;
+    this._selectedIndex = this.popup.selectedIndex;
+    let toComplete = item.label.slice(item.preLabel.length);
+    input.value = pre + toComplete + post;
+    input.setSelectionRange(pre.length + toComplete.length,
+                            pre.length + toComplete.length);
+    this._updateSize();
+    // Wait for the popup to hide and then focus input async otherwise it does
+    // not work.
+    let onPopupHidden = () => {
+      this.popup._panel.removeEventListener("popuphidden", onPopupHidden);
+      this.doc.defaultView.setTimeout(()=> {
+        input.focus();
+        this.emit("after-suggest");
+      }, 0);
+    };
+    this.popup._panel.addEventListener("popuphidden", onPopupHidden);
+    this._hideAutocompletePopup();
   },
 
   /**
@@ -1037,7 +1055,7 @@ InplaceEditor.prototype = {
 
     if (isKeyIn(key, "BACK_SPACE", "DELETE", "LEFT", "RIGHT")) {
       if (isPopupOpen) {
-        this.popup.hidePopup();
+        this._hideAutocompletePopup();
       }
     } else if (!cycling && !multilineNavigation &&
       !event.metaKey && !event.altKey && !event.ctrlKey) {
@@ -1088,7 +1106,7 @@ InplaceEditor.prototype = {
 
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
-        this.popup.hidePopup();
+        this._hideAutocompletePopup();
       }
 
       if (direction !== null && focusManager.focusedElement === input) {
@@ -1112,7 +1130,7 @@ InplaceEditor.prototype = {
       this._preventSuggestions = true;
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
-        this.popup.hidePopup();
+        this._hideAutocompletePopup();
       }
       prevent = true;
       this.cancelled = true;
@@ -1129,6 +1147,31 @@ InplaceEditor.prototype = {
     if (prevent) {
       event.preventDefault();
     }
+  },
+
+  /**
+   * Open the autocomplete popup, adding a custom click handler and classname.
+   *
+   * @param {Number} offset
+   *        X-offset relative to the input starting edge.
+   * @param {Number} selectedIndex
+   *        The index of the item that should be selected. Use -1 to have no
+   *        item selected.
+   */
+  _openAutocompletePopup: function(offset, selectedIndex) {
+    this.popup._panel.classList.add(AUTOCOMPLETE_POPUP_CLASSNAME);
+    this.popup.on("popup-click", this._onAutocompletePopupClick);
+    this.popup.openPopup(this.input, offset, 0, selectedIndex);
+  },
+
+  /**
+   * Remove the custom classname and click handler and close the autocomplete
+   * popup.
+   */
+  _hideAutocompletePopup: function() {
+    this.popup._panel.classList.remove(AUTOCOMPLETE_POPUP_CLASSNAME);
+    this.popup.off("popup-click", this._onAutocompletePopupClick);
+    this.popup.hidePopup();
   },
 
   /**
@@ -1337,13 +1380,28 @@ InplaceEditor.prototype = {
         }
       }
 
-      // Pick the best first suggestion from the provided list of suggestions.
-      let cssValues = finalList.map(item => item.label);
-      let mostRelevantIndex = findMostRelevantCssPropertyIndex(cssValues);
+      // Sort items starting with [a-z0-9] first, to make sure vendor-prefixed
+      // values and "!important" are suggested only after standard values.
+      finalList.sort((item1, item2) => {
+        // Get the expected alphabetical comparison between the items.
+        let comparison = item1.label.localeCompare(item2.label);
+        if (/^\w/.test(item1.label) != /^\w/.test(item2.label)) {
+          // One starts with [a-z0-9], one does not: flip the comparison.
+          comparison = -1 * comparison;
+        }
+        return comparison;
+      });
+
+      let index = 0;
+      if (startCheckQuery) {
+        // Only select a "best" suggestion when the user started a query.
+        let cssValues = finalList.map(item => item.label);
+        index = findMostRelevantCssPropertyIndex(cssValues);
+      }
 
       // Insert the most relevant item from the final list as the input value.
-      if (autoInsert && finalList[mostRelevantIndex]) {
-        let item = finalList[mostRelevantIndex].label;
+      if (autoInsert && finalList[index]) {
+        let item = finalList[index].label;
         input.value = query + item.slice(startCheckQuery.length) +
                       input.value.slice(query.length);
         input.setSelectionRange(query.length, query.length + item.length -
@@ -1359,13 +1417,13 @@ InplaceEditor.prototype = {
         offset = this._isSingleLine() ? offset : 0;
 
         // Select the most relevantItem if autoInsert is allowed
-        let selectedIndex = autoInsert ? mostRelevantIndex : -1;
+        let selectedIndex = autoInsert ? index : -1;
 
         // Open the suggestions popup.
         this.popup.setItems(finalList);
-        this.popup.openPopup(this.input, offset, 0, selectedIndex);
+        this._openAutocompletePopup(offset, selectedIndex);
       } else {
-        this.popup.hidePopup();
+        this._hideAutocompletePopup();
       }
       // This emit is mainly for the purpose of making the test flow simpler.
       this.emit("after-suggest");

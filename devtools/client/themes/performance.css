@@ -8,8 +8,8 @@
   --cell-border-color: rgba(255,255,255,0.15);
   --cell-border-color-light: rgba(255,255,255,0.1);
   --focus-cell-border-color: rgba(255,255,255,0.5);
-  --row-alt-background-color: rgba(29,79,115,0.15);
-  --row-hover-background-color: rgba(29,79,115,0.25);
+  --row-alt-background-color: rgba(86, 117, 185, 0.15);
+  --row-hover-background-color: rgba(86, 117, 185, 0.25);
   --filter-image: url(chrome://devtools/skin/images/timeline-filter.svg);
 }
 

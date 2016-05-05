@@ -9,7 +9,6 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
 const promise = require("promise");
 const Services = require("Services");
-const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 loader.lazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"]

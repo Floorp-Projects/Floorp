@@ -13,8 +13,10 @@ const promise = require("promise");
 const FocusManager = Services.focus;
 const {waitForTick} = require("devtools/shared/DevToolsUtils");
 
-const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+const ENSURE_SELECTION_VISIBLE_DELAY_MS = 50;
+const ELLIPSIS = Services.prefs.getComplexValue(
+    "intl.ellipsis",
+    Ci.nsIPrefLocalizedString).data;
 const MAX_LABEL_LENGTH = 40;
 const LOW_PRIORITY_ELEMENTS = {
   "HEAD": true,
@@ -57,7 +59,7 @@ HTMLBreadcrumbs.prototype = {
     return this.inspector.walker;
   },
 
-  _init: function() {
+  _init: function () {
     this.container = this.chromeDoc.getElementById("inspector-breadcrumbs");
 
     // These separators are used for CSS purposes only, and are positioned
@@ -70,7 +72,7 @@ HTMLBreadcrumbs.prototype = {
                       "<box id='breadcrumb-separator-normal'></box>";
     this.container.parentNode.appendChild(this.separators);
 
-    this.container.addEventListener("mousedown", this, true);
+    this.container.addEventListener("click", this, true);
     this.container.addEventListener("keypress", this, true);
     this.container.addEventListener("mouseover", this, true);
     this.container.addEventListener("mouseleave", this, true);
@@ -113,7 +115,7 @@ HTMLBreadcrumbs.prototype = {
    * when the breadcrumbs' selection has changed while the promise
    * was outstanding.
    */
-  selectionGuard: function() {
+  selectionGuard: function () {
     let selection = this.selection.nodeFront;
     return result => {
       if (selection != this.selection.nodeFront) {
@@ -127,7 +129,7 @@ HTMLBreadcrumbs.prototype = {
    * Warn if rejection was caused by selection change, print an error otherwise.
    * @param {Error} err
    */
-  selectionGuardEnd: function(err) {
+  selectionGuardEnd: function (err) {
     // If the error is selection-changed, this is expected, the selection
     // changed while we were waiting for a promise to resolve, so there's no
     // need to proceed with the current update, and we should be silent.
@@ -141,7 +143,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node The node to pretty-print
    * @return {String}
    */
-  prettyPrintNodeAsText: function(node) {
+  prettyPrintNodeAsText: function (node) {
     let text = node.tagName.toLowerCase();
     if (node.isPseudoElement) {
       text = node.isBeforePseudoElement ? "::before" : "::after";
@@ -173,7 +175,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node The node to pretty-print
    * @returns {DocumentFragment}
    */
-  prettyPrintNodeAsXUL: function(node) {
+  prettyPrintNodeAsXUL: function (node) {
     let fragment = this.chromeDoc.createDocumentFragment();
 
     let tagLabel = this.chromeDoc.createElement("label");
@@ -233,61 +235,12 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * Open the sibling menu.
-   * @param {DOMNode} button the button representing the node.
-   * @param {NodeFront} node the node we want the siblings from.
-   */
-  openSiblingMenu: function(button, node) {
-    // We make sure that the targeted node is selected
-    // because we want to use the nodemenu that only works
-    // for inspector.selection
-    this.navigateTo(node);
-
-    // Build a list of extra menu items that will be appended at the end of the
-    // inspector node context menu.
-    let items = [this.chromeDoc.createElement("menuseparator")];
-
-    this.walker.siblings(node, {
-      whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
-    }).then(siblings => {
-      let nodes = siblings.nodes;
-      for (let i = 0; i < nodes.length; i++) {
-        // Skip siblings of the documentElement node.
-        if (nodes[i].nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
-          continue;
-        }
-
-        let item = this.chromeDoc.createElement("menuitem");
-        if (nodes[i] === node) {
-          item.setAttribute("disabled", "true");
-          item.setAttribute("checked", "true");
-        }
-
-        item.setAttribute("type", "radio");
-        item.setAttribute("label", this.prettyPrintNodeAsText(nodes[i]));
-
-        let self = this;
-        item.onmouseup = (function(node) {
-          return function() {
-            self.navigateTo(node);
-          };
-        })(nodes[i]);
-
-        items.push(item);
-      }
-
-      // Append the items to the inspector node context menu and show the menu.
-      this.inspector.showNodeMenu(button, "before_start", items);
-    });
-  },
-
-  /**
    * Generic event handler.
    * @param {DOMEvent} event.
    */
-  handleEvent: function(event) {
-    if (event.type == "mousedown" && event.button == 0) {
-      this.handleMouseDown(event);
+  handleEvent: function (event) {
+    if (event.type == "click" && event.button == 0) {
+      this.handleClick(event);
     } else if (event.type == "keypress" && this.selection.isElementNode()) {
       this.handleKeyPress(event);
     } else if (event.type == "mouseover") {
@@ -304,7 +257,7 @@ HTMLBreadcrumbs.prototype = {
    * already selected breadcrumb, move focus to it.
    * @param {DOMEvent} event.
    */
-  handleFocus: function(event) {
+  handleFocus: function (event) {
     let control = this.container.querySelector(
       ".breadcrumbs-widget-item[checked]");
     if (control && control !== event.target) {
@@ -316,46 +269,21 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * On click and hold, open the siblings menu.
+   * On click navigate to the correct node.
    * @param {DOMEvent} event.
    */
-  handleMouseDown: function(event) {
-    let timer;
-    let container = this.container;
-
-    function openMenu(event) {
-      cancelHold();
-      let target = event.originalTarget;
-      if (target.tagName == "button") {
-        target.onBreadcrumbsHold();
-      }
+  handleClick: function (event) {
+    let target = event.originalTarget;
+    if (target.tagName == "button") {
+      target.onBreadcrumbsClick();
     }
-
-    function handleClick(event) {
-      cancelHold();
-      let target = event.originalTarget;
-      if (target.tagName == "button") {
-        target.onBreadcrumbsClick();
-      }
-    }
-
-    let window = this.chromeWin;
-    function cancelHold(event) {
-      window.clearTimeout(timer);
-      container.removeEventListener("mouseout", cancelHold, false);
-      container.removeEventListener("mouseup", handleClick, false);
-    }
-
-    container.addEventListener("mouseout", cancelHold, false);
-    container.addEventListener("mouseup", handleClick, false);
-    timer = window.setTimeout(openMenu, 500, event);
   },
 
   /**
    * On mouse over, highlight the corresponding content DOM Node.
    * @param {DOMEvent} event.
    */
-  handleMouseOver: function(event) {
+  handleMouseOver: function (event) {
     let target = event.originalTarget;
     if (target.tagName == "button") {
       target.onBreadcrumbsHover();
@@ -366,7 +294,7 @@ HTMLBreadcrumbs.prototype = {
    * On mouse leave, make sure to unhighlight.
    * @param {DOMEvent} event.
    */
-  handleMouseLeave: function(event) {
+  handleMouseLeave: function (event) {
     this.inspector.toolbox.highlighterUtils.unhighlight();
   },
 
@@ -374,7 +302,7 @@ HTMLBreadcrumbs.prototype = {
    * On key press, navigate the node hierarchy.
    * @param {DOMEvent} event.
    */
-  handleKeyPress: function(event) {
+  handleKeyPress: function (event) {
     let navigate = promise.resolve(null);
 
     this._keyPromise = (this._keyPromise || promise.resolve(null)).then(() => {
@@ -433,15 +361,17 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Remove nodes and clean up.
    */
-  destroy: function() {
+  destroy: function () {
     this.selection.off("new-node-front", this.update);
     this.selection.off("pseudoclass", this.updateSelectors);
     this.selection.off("attribute-changed", this.updateSelectors);
     this.inspector.off("markupmutation", this.update);
 
-    this.container.removeEventListener("underflow", this.onscrollboxreflow, false);
-    this.container.removeEventListener("overflow", this.onscrollboxreflow, false);
-    this.container.removeEventListener("mousedown", this, true);
+    this.container.removeEventListener("underflow",
+        this.onscrollboxreflow, false);
+    this.container.removeEventListener("overflow",
+        this.onscrollboxreflow, false);
+    this.container.removeEventListener("click", this, true);
     this.container.removeEventListener("keypress", this, true);
     this.container.removeEventListener("mouseover", this, true);
     this.container.removeEventListener("mouseleave", this, true);
@@ -461,7 +391,7 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Empty the breadcrumbs container.
    */
-  empty: function() {
+  empty: function () {
     while (this.container.hasChildNodes()) {
       this.container.firstChild.remove();
     }
@@ -471,9 +401,10 @@ HTMLBreadcrumbs.prototype = {
    * Set which button represent the selected node.
    * @param {Number} index Index of the displayed-button to select.
    */
-  setCursor: function(index) {
+  setCursor: function (index) {
     // Unselect the previously selected button
-    if (this.currentIndex > -1 && this.currentIndex < this.nodeHierarchy.length) {
+    if (this.currentIndex > -1
+        && this.currentIndex < this.nodeHierarchy.length) {
       this.nodeHierarchy[this.currentIndex].button.removeAttribute("checked");
     }
     if (index > -1) {
@@ -490,7 +421,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node.
    * @returns {Number} The index for this node or -1 if not found.
    */
-  indexOf: function(node) {
+  indexOf: function (node) {
     for (let i = this.nodeHierarchy.length - 1; i >= 0; i--) {
       if (this.nodeHierarchy[i].node === node) {
         return i;
@@ -504,14 +435,14 @@ HTMLBreadcrumbs.prototype = {
    * index.
    * @param {Number} index.
    */
-  cutAfter: function(index) {
+  cutAfter: function (index) {
     while (this.nodeHierarchy.length > (index + 1)) {
       let toRemove = this.nodeHierarchy.pop();
       this.container.removeChild(toRemove.button);
     }
   },
 
-  navigateTo: function(node) {
+  navigateTo: function (node) {
     if (node) {
       this.selection.setNodeFront(node, "breadcrumbs");
     } else {
@@ -524,7 +455,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node The node from the page.
    * @return {DOMNode} The <button> for this node.
    */
-  buildButton: function(node) {
+  buildButton: function (node) {
     let button = this.chromeDoc.createElement("button");
     button.appendChild(this.prettyPrintNodeAsXUL(node));
     button.className = "breadcrumbs-widget-item";
@@ -538,6 +469,10 @@ HTMLBreadcrumbs.prototype = {
       }
     };
 
+    button.onclick = () => {
+      button.focus();
+    };
+
     button.onBreadcrumbsClick = () => {
       this.navigateTo(node);
     };
@@ -546,16 +481,6 @@ HTMLBreadcrumbs.prototype = {
       this.inspector.toolbox.highlighterUtils.highlightNodeFront(node);
     };
 
-    button.onclick = (function _onBreadcrumbsRightClick(event) {
-      button.focus();
-      if (event.button == 2) {
-        this.openSiblingMenu(button, node);
-      }
-    }).bind(this);
-
-    button.onBreadcrumbsHold = (function _onBreadcrumbsHold() {
-      this.openSiblingMenu(button, node);
-    }).bind(this);
     return button;
   },
 
@@ -563,7 +488,7 @@ HTMLBreadcrumbs.prototype = {
    * Connecting the end of the breadcrumbs to a node.
    * @param {NodeFront} node The node to reach.
    */
-  expand: function(node) {
+  expand: function (node) {
     let fragment = this.chromeDoc.createDocumentFragment();
     let lastButtonInserted = null;
     let originalLength = this.nodeHierarchy.length;
@@ -593,7 +518,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node The parent node.
    * @return {Promise} Resolves to the NodeFront.
    */
-  getInterestingFirstNode: function(node) {
+  getInterestingFirstNode: function (node) {
     let deferred = promise.defer();
 
     let fallback = null;
@@ -605,15 +530,15 @@ HTMLBreadcrumbs.prototype = {
         maxNodes: 10,
         whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
       }).then(this.selectionGuard()).then(response => {
-        for (let node of response.nodes) {
-          if (!(node.tagName in LOW_PRIORITY_ELEMENTS)) {
-            deferred.resolve(node);
+        for (let childNode of response.nodes) {
+          if (!(childNode.tagName in LOW_PRIORITY_ELEMENTS)) {
+            deferred.resolve(childNode);
             return;
           }
           if (!fallback) {
-            fallback = node;
+            fallback = childNode;
           }
-          lastNode = node;
+          lastNode = childNode;
         }
         if (response.hasLast) {
           deferred.resolve(fallback);
@@ -632,7 +557,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node.
    * @return {Number} Index of the ancestor in the cache, or -1 if not found.
    */
-  getCommonAncestor: function(node) {
+  getCommonAncestor: function (node) {
     while (node) {
       let idx = this.indexOf(node);
       if (idx > -1) {
@@ -648,7 +573,7 @@ HTMLBreadcrumbs.prototype = {
    * if the selected node still has children.
    * @return {Promise}
    */
-  ensureFirstChild: function() {
+  ensureFirstChild: function () {
     // If the last displayed node is the selected node
     if (this.currentIndex == this.nodeHierarchy.length - 1) {
       let node = this.nodeHierarchy[this.currentIndex].node;
@@ -667,7 +592,7 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Ensure the selected node is visible.
    */
-  scroll: function() {
+  scroll: function () {
     // FIXME bug 684352: make sure its immediate neighbors are visible too.
 
     let scrollbox = this.container;
@@ -676,15 +601,15 @@ HTMLBreadcrumbs.prototype = {
     // Repeated calls to ensureElementIsVisible would interfere with each other
     // and may sometimes result in incorrect scroll positions.
     this.chromeWin.clearTimeout(this._ensureVisibleTimeout);
-    this._ensureVisibleTimeout = this.chromeWin.setTimeout(function() {
+    this._ensureVisibleTimeout = this.chromeWin.setTimeout(function () {
       scrollbox.ensureElementIsVisible(element);
-    }, ENSURE_SELECTION_VISIBLE_DELAY);
+    }, ENSURE_SELECTION_VISIBLE_DELAY_MS);
   },
 
   /**
    * Update all button outputs.
    */
-  updateSelectors: function() {
+  updateSelectors: function () {
     if (this.isDestroyed) {
       return;
     }
@@ -717,7 +642,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {Array} mutations The mutations array.
    * @return {Boolean}
    */
-  _hasInterestingMutations: function(mutations) {
+  _hasInterestingMutations: function (mutations) {
     if (!mutations || !mutations.length) {
       return false;
     }
@@ -748,7 +673,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {Array} mutations An array of mutations in case this was called as
    * the "markupmutation" event listener.
    */
-  update: function(reason, mutations) {
+  update: function (reason, mutations) {
     if (this.isDestroyed) {
       return;
     }
@@ -791,8 +716,8 @@ HTMLBreadcrumbs.prototype = {
         // No. We drop all the element that are not direct ancestors
         // of the selection
         let parent = this.selection.nodeFront.parentNode();
-        let idx = this.getCommonAncestor(parent);
-        this.cutAfter(idx);
+        let ancestorIdx = this.getCommonAncestor(parent);
+        this.cutAfter(ancestorIdx);
       }
       // we append the missing button between the end of the breadcrumbs display
       // and the current node.
@@ -807,7 +732,7 @@ HTMLBreadcrumbs.prototype = {
     // Add the first child of the very last node of the breadcrumbs if possible.
     this.ensureFirstChild().then(this.selectionGuard()).then(() => {
       if (this.isDestroyed) {
-        return;
+        return null;
       }
 
       this.updateSelectors();
