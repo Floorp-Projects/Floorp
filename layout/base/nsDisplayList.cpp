@@ -4913,7 +4913,7 @@ nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   anchorRect.MoveTo(viewportFrame->GetOffsetToCrossDoc(ReferenceFrame()));
 
   nsLayoutUtils::SetFixedPositionLayerData(layer,
-      viewportFrame, anchorRect, fixedFrame, presContext, aContainerParameters, true);
+      viewportFrame, anchorRect, fixedFrame, presContext, aContainerParameters);
 
   return layer.forget();
 }
@@ -4972,7 +4972,7 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame,
     nsRect(scrollFrame->GetOffsetToCrossDoc(ReferenceFrame()), scrollFrameSize),
-    mFrame, presContext, aContainerParameters, /* clip is fixed = */ true);
+    mFrame, presContext, aContainerParameters);
 
   ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
