@@ -973,9 +973,8 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
     if (!IsBuildingCaret()) {
       nsIContent* content = e->GetContent();
       if (content && content->IsInNativeAnonymousSubtree() && content->IsElement()) {
-        ErrorResult rv;
         auto classList = content->AsElement()->ClassList();
-        if (classList->Contains(NS_LITERAL_STRING("moz-accessiblecaret"), rv)) {
+        if (classList->Contains(NS_LITERAL_STRING("moz-accessiblecaret"))) {
           continue;
         }
       }
