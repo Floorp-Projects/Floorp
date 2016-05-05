@@ -10,64 +10,69 @@ import org.mozilla.gecko.R;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class BookmarkFolderView extends TextView {
+public class BookmarkFolderView extends LinearLayout {
     public enum FolderState {
         /**
          * A standard folder, i.e. a folder in a list of bookmarks and folders.
          */
-        FOLDER(0),
+        FOLDER(R.drawable.folder_closed),
 
         /**
          * The parent folder: this indicates that you are able to return to the previous
          * folder ("Back to {name}").
          */
-        PARENT(R.attr.parent),
+        PARENT(R.drawable.bookmark_folder_arrow_up),
 
         /**
          * The reading list smartfolder: this displays a reading list icon instead of the
          * normal folder icon.
          */
-        READING_LIST(R.attr.reading_list);
+        READING_LIST(R.drawable.reading_list_folder);
 
-        public final int state;
+        public final int image;
 
-        FolderState(final int state) { this.state = state; }
+        FolderState(final int image) { this.image = image; }
     }
 
-    private FolderState mState;
+    private final TextView mTitle;
+    private final TextView mSubtitle;
+
+    private final ImageView mIcon;
 
     public BookmarkFolderView(Context context) {
-        super(context);
-        mState = FolderState.FOLDER;
+        this(context, null);
     }
 
     public BookmarkFolderView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mState = FolderState.FOLDER;
+
+        LayoutInflater.from(context).inflate(R.layout.two_line_folder_row, this);
+
+        mTitle = (TextView) findViewById(R.id.title);
+        mSubtitle = (TextView) findViewById(R.id.subtitle);
+        mIcon =  (ImageView) findViewById(R.id.icon);
     }
 
-    public BookmarkFolderView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        mState = FolderState.FOLDER;
+    public void update(String title, int folderID) {
+        setTitle(title);
     }
 
-    @Override
-    public int[] onCreateDrawableState(int extraSpace) {
-        final int[] drawableState = super.onCreateDrawableState(extraSpace + 1);
+    private void setTitle(String title) {
+        mTitle.setText(title);
+    }
 
-        if (mState != null && mState != FolderState.FOLDER) {
-            mergeDrawableStates(drawableState, new int[] {  mState.state });
         }
 
-        return drawableState;
+        mSubtitle.setVisibility(View.GONE);
     }
 
     public void setState(@NonNull FolderState state) {
-        if (state != mState) {
-            mState = state;
-            refreshDrawableState();
-        }
+        mIcon.setImageResource(state.image);
     }
 }

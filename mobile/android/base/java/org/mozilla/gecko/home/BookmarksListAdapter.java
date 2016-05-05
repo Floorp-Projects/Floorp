@@ -334,12 +334,13 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
             final BookmarkFolderView row = (BookmarkFolderView) view;
             if (cursor == null) {
                 final Resources res = context.getResources();
-                row.setText(res.getString(R.string.home_move_back_to_filter, mParentStack.get(1).title));
+                row.update(res.getString(R.string.home_move_back_to_filter, mParentStack.get(1).title), -1);
                 row.setState(FolderState.PARENT);
             } else {
-                row.setText(getFolderTitle(context, cursor));
-
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+
+                row.update(getFolderTitle(context, cursor), id);
+
                 if (id == Bookmarks.FAKE_READINGLIST_SMARTFOLDER_ID) {
                     row.setState(FolderState.READING_LIST);
                 } else {
