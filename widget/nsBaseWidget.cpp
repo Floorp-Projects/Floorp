@@ -981,9 +981,10 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
                     bool aPreventDefault)
       {
         MOZ_ASSERT(NS_IsMainThread());
-        APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-            treeManager.get(), &APZCTreeManager::ContentReceivedInputBlock,
-            aInputBlockId, aPreventDefault));
+        RefPtr<Runnable> runnable =
+          NS_NewRunnableMethodWithArgs<uint64_t, bool>(treeManager, &APZCTreeManager::ContentReceivedInputBlock,
+                                                       aInputBlockId, aPreventDefault);
+        APZThreadUtils::RunOnControllerThread(runnable.forget());
       });
   mAPZEventState = new APZEventState(this, mozilla::Move(callback));
 
@@ -991,9 +992,12 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        treeManager.get(), &APZCTreeManager::SetAllowedTouchBehavior,
-        aInputBlockId, aFlags));
+    RefPtr<Runnable> runnable =
+      NS_NewRunnableMethodWithArgs<uint64_t,
+                                   StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(treeManager,
+                                                                                      &APZCTreeManager::SetAllowedTouchBehavior,
+                                                                                      aInputBlockId, aFlags);
+    APZThreadUtils::RunOnControllerThread(runnable.forget());
   };
 
   mRootContentController = CreateRootContentController();
@@ -1024,8 +1028,12 @@ nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
   // Need to specifically bind this since it's overloaded.
   void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
           = &APZCTreeManager::SetTargetAPZC;
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-    mAPZC.get(), setTargetApzcFunc, aInputBlockId, aTargets));
+  RefPtr<Runnable> runnable =
+    NS_NewRunnableMethodWithArgs<uint64_t,
+                                 StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(mAPZC,
+                                                                                     setTargetApzcFunc,
+                                                                                     aInputBlockId, aTargets);
+  APZThreadUtils::RunOnControllerThread(runnable.forget());
 }
 
 void
@@ -1913,8 +1921,11 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
   int layersId = mCompositorBridgeParent->RootLayerTreeId();;
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableMethod(mAPZC.get(), &APZCTreeManager::StartScrollbarDrag, guid, aDragMetrics));
+  RefPtr<Runnable> runnable =
+    NS_NewRunnableMethodWithArgs<ScrollableLayerGuid,
+                                 AsyncDragMetrics>(mAPZC, &APZCTreeManager::StartScrollbarDrag,
+                                                   guid, aDragMetrics);
+  APZThreadUtils::RunOnControllerThread(runnable.forget());
 }
 
 already_AddRefed<nsIScreen>
