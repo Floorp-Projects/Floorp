@@ -775,12 +775,10 @@ var SessionStoreInternal = {
         let tabData = TabState.collect(tab);
 
         // wall-paper fix for bug 439675: make sure that the URL to be loaded
-        // is always visible in the address bar if no other value is present
+        // is always visible in the address bar
         let activePageData = tabData.entries[tabData.index - 1] || null;
         let uri = activePageData ? activePageData.url || null : null;
-        if (!browser.userTypedValue) {
-          browser.userTypedValue = uri;
-        }
+        browser.userTypedValue = uri;
 
         // If the page has a title, set it.
         if (activePageData) {
@@ -820,8 +818,11 @@ var SessionStoreInternal = {
           // loading anything. This must happen after the load, as the load will clear
           // userTypedValue.
           let tabData = TabState.collect(tab);
-          if (tabData.userTypedValue && !tabData.userTypedClear && !browser.userTypedValue) {
+          if (tabData.userTypedValue && !tabData.userTypedClear) {
             browser.userTypedValue = tabData.userTypedValue;
+            if (data.didStartLoad) {
+              browser.userTypedClear++;
+            }
             win.URLBarSetURI();
           }
 
