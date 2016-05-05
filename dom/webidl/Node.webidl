@@ -36,7 +36,7 @@ interface Node : EventTarget {
 
   [Pure]
   readonly attribute Document? ownerDocument;
-  [Pure]
+  [Pure, Pref="dom.node.rootNode.enabled"]
   readonly attribute Node rootNode;
   [Pure]
   readonly attribute Node? parentNode;
