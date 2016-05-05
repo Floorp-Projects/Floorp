@@ -64,14 +64,13 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
     nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-    ScopedCERTCertList allcerts(PK11_ListCerts(PK11CertListUnique, ctx));
+    UniqueCERTCertList allcerts(PK11_ListCerts(PK11CertListUnique, ctx));
   }
 
   /* find all user certs that are valid for the specified usage */
   /* note that we are allowing expired certs in this list */
-
-  ScopedCERTCertList certList(
-    CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
+  UniqueCERTCertList certList(
+    CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(),
                               (SECCertUsage)certUsage,
                               !allowDuplicateNicknames,
                               !allowInvalid,
@@ -106,8 +105,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     }
   }
 
-  UniqueCERTCertNicknames nicknames(
-    getNSSCertNicknamesFromCertList(certList.get()));
+  UniqueCERTCertNicknames nicknames(getNSSCertNicknamesFromCertList(certList));
   if (!nicknames) {
     return NS_ERROR_NOT_AVAILABLE;
   }
