@@ -153,7 +153,7 @@ HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
   if (mIsDoneAddingChildren && !pluginDoc) {
     void (HTMLSharedObjectElement::*start)() =
       &HTMLSharedObjectElement::StartObjectLoad;
-    nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(this, start));
   }
 
   return NS_OK;

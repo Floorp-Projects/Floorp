@@ -1553,7 +1553,7 @@ nsXMLContentSink::ContinueInterruptedParsingIfEnabled()
 void
 nsXMLContentSink::ContinueInterruptedParsingAsync()
 {
-  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
+  nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(this,
     &nsXMLContentSink::ContinueInterruptedParsingIfEnabled);
 
   NS_DispatchToCurrentThread(ev);

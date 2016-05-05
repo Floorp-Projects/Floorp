@@ -5040,20 +5040,27 @@ nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
 
 /* static */
 bool
-nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
+nsContentUtils::AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable)
 {
-  if (!aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
+  if (!runnable) {
     return false;
   }
 
   if (sScriptBlockerCount) {
-    return sBlockedScriptRunners->AppendElement(aRunnable) != nullptr;
+    return sBlockedScriptRunners->AppendElement(runnable.forget()) != nullptr;
   }
   
-  nsCOMPtr<nsIRunnable> run = aRunnable;
-  run->Run();
+  runnable->Run();
 
   return true;
+}
+
+/* static */
+bool
+nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
+  return AddScriptRunner(runnable.forget());
 }
 
 /* static */

@@ -46,6 +46,7 @@
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStructuredCloneContainer.h"
+#include "nsThreadUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsXULAppAPI.h"
 #include "ServiceWorkerManager.h"
@@ -646,9 +647,8 @@ NotificationPermissionRequest::GetRequester(nsIContentPermissionRequester** aReq
 inline nsresult
 NotificationPermissionRequest::DispatchResolvePromise()
 {
-  nsCOMPtr<nsIRunnable> resolveRunnable = NS_NewRunnableMethod(this,
-    &NotificationPermissionRequest::ResolvePromise);
-  return NS_DispatchToMainThread(resolveRunnable);
+  return NS_DispatchToMainThread(NewRunnableMethod(this,
+                                                   &NotificationPermissionRequest::ResolvePromise));
 }
 
 nsresult

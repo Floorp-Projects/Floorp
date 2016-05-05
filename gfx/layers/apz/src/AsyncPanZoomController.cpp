@@ -516,9 +516,9 @@ public:
       //   is this one, then the SetState(NOTHING) in UpdateAnimation will
       //   stomp on the SetState(SNAP_BACK) it does.
       mDeferredTasks.AppendElement(
-            NS_NewRunnableMethodWithArg<AsyncPanZoomController*>(mOverscrollHandoffChain.get(),
-                                                                 &OverscrollHandoffChain::SnapBackOverscrolledApzc,
-                                                                 &mApzc));
+            NewRunnableMethod<AsyncPanZoomController*>(mOverscrollHandoffChain.get(),
+                                                       &OverscrollHandoffChain::SnapBackOverscrolledApzc,
+                                                       &mApzc));
       return false;
     }
 
@@ -568,13 +568,13 @@ public:
       // called after mMonitor is released.
       APZC_LOG("%p fling went into overscroll, handing off with velocity %s\n", &mApzc, Stringify(velocity).c_str());
       mDeferredTasks.AppendElement(
-          NS_NewRunnableMethodWithArgs<ParentLayerPoint,
-                                       RefPtr<const OverscrollHandoffChain>,
-                                       RefPtr<const AsyncPanZoomController>>(&mApzc,
-                                                                             &AsyncPanZoomController::HandleFlingOverscroll,
-                                                                             velocity,
-                                                                             mOverscrollHandoffChain,
-                                                                             mScrolledApzc));
+          NewRunnableMethod<ParentLayerPoint,
+                            RefPtr<const OverscrollHandoffChain>,
+                            RefPtr<const AsyncPanZoomController>>(&mApzc,
+                                                                  &AsyncPanZoomController::HandleFlingOverscroll,
+                                                                  velocity,
+                                                                  mOverscrollHandoffChain,
+                                                                  mScrolledApzc));
 
       // If there is a remaining velocity on this APZC, continue this fling
       // as well. (This fling and the handed-off fling will run concurrently.)
@@ -702,7 +702,7 @@ public:
       // The scroll snapping is done in a deferred task, otherwise the state
       // change to NOTHING caused by the overscroll animation ending would
       // clobber a possible state change to SMOOTH_SCROLL in ScrollSnap().
-      mDeferredTasks.AppendElement(NS_NewRunnableMethod(&mApzc, &AsyncPanZoomController::ScrollSnap));
+      mDeferredTasks.AppendElement(NewRunnableMethod(&mApzc, &AsyncPanZoomController::ScrollSnap));
       return false;
     }
     return true;
@@ -819,9 +819,9 @@ public:
       // the lock ordering. Instead we schedule HandleSmoothScrollOverscroll() to be
       // called after mMonitor is released.
       mDeferredTasks.AppendElement(
-          NS_NewRunnableMethodWithArgs<ParentLayerPoint>(&mApzc,
-                                                         &AsyncPanZoomController::HandleSmoothScrollOverscroll,
-                                                         velocity));
+          NewRunnableMethod<ParentLayerPoint>(&mApzc,
+                                              &AsyncPanZoomController::HandleSmoothScrollOverscroll,
+                                              velocity));
       return false;
     }
 
@@ -2181,11 +2181,11 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
       // schedule the singletap message to run on the next spin of the event loop.
       // See bug 965381 for the issue this was causing.
       RefPtr<Runnable> runnable =
-        NS_NewRunnableMethodWithArgs<CSSPoint,
-                                     mozilla::Modifiers,
-                                     ScrollableLayerGuid>(controller, &GeckoContentController::HandleSingleTap,
-                                                          geckoScreenPoint, aModifiers,
-                                                          GetGuid());
+        NewRunnableMethod<CSSPoint,
+                          mozilla::Modifiers,
+                          ScrollableLayerGuid>(controller, &GeckoContentController::HandleSingleTap,
+                                               geckoScreenPoint, aModifiers,
+                                               GetGuid());
 
       controller->PostDelayedTask(runnable.forget(), 0);
       return nsEventStatus_eConsumeNoDefault;
@@ -2995,7 +2995,7 @@ void AsyncPanZoomController::RequestContentRepaint() {
     // use the local variable to resolve the function overload.
     auto func = static_cast<void (AsyncPanZoomController::*)()>
         (&AsyncPanZoomController::RequestContentRepaint);
-    NS_DispatchToMainThread(NS_NewRunnableMethod(this, func));
+    NS_DispatchToMainThread(NewRunnableMethod(this, func));
     return;
   }
 
@@ -3728,7 +3728,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
       auto func = static_cast<void (AsyncPanZoomController::*)(const FrameMetrics&, const ParentLayerPoint&)>
           (&AsyncPanZoomController::RequestContentRepaint);
       NS_DispatchToMainThread(
-          NS_NewRunnableMethodWithArgs<FrameMetrics, ParentLayerPoint>(
+          NewRunnableMethod<FrameMetrics, ParentLayerPoint>(
               this, func, endZoomToMetrics, velocity));
     }
   }

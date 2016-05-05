@@ -112,8 +112,7 @@ void
 VRManagerParent::ActorDestroy(ActorDestroyReason why)
 {
   UnregisterFromManager();
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &VRManagerParent::DeferredDestroy);
-  MessageLoop::current()->PostTask(runnable.forget());
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &VRManagerParent::DeferredDestroy));
 }
 
 mozilla::ipc::IToplevelProtocol*

@@ -912,7 +912,7 @@ private:
     // May be on any thread, including STS event target.  Non-owning runnable
     // here since we are guaranteed the Action will survive until
     // CompleteOnInitiatingThread is called.
-    nsCOMPtr<nsIRunnable> runnable = NS_NewNonOwningRunnableMethodWithArgs<nsresult>(
+    nsCOMPtr<nsIRunnable> runnable = NewNonOwningRunnableMethod<nsresult>(
       this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
     MOZ_ALWAYS_SUCCEEDS(
       mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
@@ -1761,9 +1761,7 @@ Manager::~Manager()
 
   // Don't spin the event loop in the destructor waiting for the thread to
   // shutdown.  Defer this to the main thread, instead.
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(ioThread, &nsIThread::Shutdown);
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(ioThread, &nsIThread::Shutdown)));
 }
 
 void

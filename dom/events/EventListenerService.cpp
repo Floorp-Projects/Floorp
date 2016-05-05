@@ -371,9 +371,8 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
 
   if (!mPendingListenerChanges) {
     mPendingListenerChanges = nsArrayBase::Create();
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableMethod(this,
-      &EventListenerService::NotifyPendingChanges);
-    NS_DispatchToCurrentThread(runnable);
+    NS_DispatchToCurrentThread(NewRunnableMethod(this,
+                                                 &EventListenerService::NotifyPendingChanges));
   }
 
   RefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);

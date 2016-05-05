@@ -171,12 +171,10 @@ GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
   if (!ON_GMP_THREAD()) {
     // We should run this whole method on the GMP thread since the buffer needs
     // to be deleted after the SendDecrypted call.
-    RefPtr<Runnable> t =
-      NS_NewRunnableMethodWithArgs<GMPBuffer*,
-                                   GMPErr>(this,
-                                           &GMPDecryptorChild::Decrypted,
-                                           aBuffer, aResult);
-    mPlugin->GMPMessageLoop()->PostTask(t.forget());
+    mPlugin->GMPMessageLoop()->PostTask(NewRunnableMethod
+                                        <GMPBuffer*, GMPErr>(this,
+                                                             &GMPDecryptorChild::Decrypted,
+                                                             aBuffer, aResult));
     return;
   }
 

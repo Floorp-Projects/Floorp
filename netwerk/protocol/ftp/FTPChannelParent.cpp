@@ -740,7 +740,7 @@ FTPChannelParent::DivertTo(nsIStreamListener *aListener)
   // Call OnStartRequest and SendDivertMessages asynchronously to avoid
   // reentering client context.
   NS_DispatchToCurrentThread(
-    NS_NewRunnableMethod(this, &FTPChannelParent::StartDiversion));
+    NewRunnableMethod(this, &FTPChannelParent::StartDiversion));
   return;
 }
 
