@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
 
 #include <string.h>
@@ -31,8 +32,6 @@ StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
   , mFrame(NULL)
   , mExtraData(nullptr)
   , mCodecID(aCodecID)
-  , mMonitor("FFMpegaDataDecoder")
-  , mIsFlushing(false)
 {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
@@ -116,15 +115,10 @@ nsresult
 FFmpegDataDecoder<LIBAV_VER>::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  mIsFlushing = true;
   mTaskQueue->Flush();
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &FFmpegDataDecoder<LIBAV_VER>::ProcessFlush);
-  MonitorAutoLock mon(mMonitor);
-  mTaskQueue->Dispatch(runnable.forget());
-  while (mIsFlushing) {
-    mon.Wait();
-  }
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   return NS_OK;
 }
 
@@ -145,9 +139,6 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessFlush()
   if (mCodecContext) {
     mLib->avcodec_flush_buffers(mCodecContext);
   }
-  MonitorAutoLock mon(mMonitor);
-  mIsFlushing = false;
-  mon.NotifyAll();
 }
 
 void
