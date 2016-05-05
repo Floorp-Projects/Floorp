@@ -65,7 +65,7 @@ GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2);
  * every input channel is multiplied by the same coefficient for every output
  * channel it contributes to.
  */
-const float SQRT_ONE_HALF = sqrt(0.5);
+const float SQRT_ONE_HALF = 0.7071067811865476f;
 
 struct DownMixMatrix {
   // Every input channel c is copied to output channel mInputDestination[c]
