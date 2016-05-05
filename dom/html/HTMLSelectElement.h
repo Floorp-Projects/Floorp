@@ -210,7 +210,7 @@ public:
   }
   void SetSize(uint32_t aSize, ErrorResult& aRv)
   {
-    SetUnsignedIntAttr(nsGkAtoms::size, aSize, aRv);
+    SetUnsignedIntAttr(nsGkAtoms::size, aSize, 0, aRv);
   }
 
   // Uses XPCOM GetType.
