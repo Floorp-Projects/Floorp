@@ -174,6 +174,7 @@ private:
   void DrainComplete(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
+  void ResetDemuxers();
 
   size_t SizeOfQueue(TrackType aTrack);
 
@@ -462,6 +463,7 @@ private:
 
   // Seeking objects.
   bool IsSeeking() const { return mPendingSeekTime.isSome(); }
+  void ScheduleSeek();
   void AttemptSeek();
   void OnSeekFailed(TrackType aTrack, DemuxerFailureReason aFailure);
   void DoVideoSeek();
@@ -470,6 +472,7 @@ private:
   {
     OnSeekFailed(TrackType::kVideoTrack, aFailure);
   }
+  bool mSeekScheduled;
 
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);
