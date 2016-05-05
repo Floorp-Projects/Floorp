@@ -228,4 +228,26 @@ public class LocalUrlAnnotations implements UrlAnnotations {
     public void deleteReaderViewUrl(ContentResolver cr, String pageURL) {
         deleteAnnotation(cr, pageURL, Key.READER_VIEW);
     }
+
+    public int getAnnotationCount(ContentResolver cr, Key key) {
+        final String countColumnname = "count";
+        final Cursor c = queryByKey(cr,
+                key,
+                new String[] {
+                        "COUNT(*) AS " + countColumnname
+                },
+                null);
+
+        try {
+            if (c != null && c.moveToFirst()) {
+                return c.getInt(c.getColumnIndexOrThrow(countColumnname));
+            } else {
+                return 0;
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+    }
 }
