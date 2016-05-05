@@ -21,9 +21,9 @@
     <div id='host'>
     </div>
     <script>
-      var shadowRoot = document.getElementById('host').attachShadow({mode: 'open'});
+      var shadowRoot = document.getElementById('host').createShadowRoot();
       shadowRoot.innerHTML = '<div id="sub" style="width: 100%;height:100%;"></div>';
-      var nestedRoot = shadowRoot.getElementById('sub').attachShadow({mode: 'open'});
+      var nestedRoot = shadowRoot.getElementById('sub').createShadowRoot();
       nestedRoot.innerHTML = '<div style="width:100%; height:100%;background-color: green;"></div>';
     </script>
   </body>
