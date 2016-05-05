@@ -145,26 +145,9 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
         final File[] files = storeDir.listFiles(new PingFileFilter());
         final ArrayList<TelemetryPing> out = new ArrayList<>(files.length);
         for (final File file : files) {
-            final FileInputStream inputStream;
-            try {
-                inputStream = new FileInputStream(file);
-            } catch (final FileNotFoundException e) {
-                throw new IllegalStateException("Expected file to exist");
-            }
-
-            final JSONObject obj;
-            try {
-                // Potential optimization: re-use the same buffer for reading from files.
-                obj = lockAndReadFileAndCloseStream(inputStream, (int) file.length());
-            } catch (final IOException | JSONException e) {
-                // We couldn't read this file so let's just skip it. These potentially
-                // corrupted files should be removed when the data is pruned.
-                Log.w(LOGTAG, "Error when reading file: " + file.getName() + " Likely corrupted. Ignoring");
-                continue;
-            }
-
+            final JSONObject obj = lockAndReadJSONFromFile(file);
             if (obj == null) {
-                Log.d(LOGTAG, "Could not read given file: " + file.getName() + " File is locked. Ignoring");
+                // We log in the method to get the JSONObject if we return null.
                 continue;
             }
 
@@ -183,6 +166,36 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
             }
         }
         return out;
+    }
+
+    /**
+     * Logs if there is an error.
+     *
+     * @return the JSON object from the given file or null if there is an error.
+     */
+    private JSONObject lockAndReadJSONFromFile(final File file) {
+        final FileInputStream inputStream;
+        try {
+            inputStream = new FileInputStream(file);
+        } catch (final FileNotFoundException e) {
+            throw new IllegalStateException("Expected file to exist");
+        }
+
+        final JSONObject obj;
+        try {
+            // Potential optimization: re-use the same buffer for reading from files.
+            obj = lockAndReadFileAndCloseStream(inputStream, (int) file.length());
+        } catch (final IOException | JSONException e) {
+            // We couldn't read this file so let's just skip it. These potentially
+            // corrupted files should be removed when the data is pruned.
+            Log.w(LOGTAG, "Error when reading file: " + file.getName() + " Likely corrupted. Ignoring");
+            return null;
+        }
+
+        if (obj == null) {
+            Log.d(LOGTAG, "Could not read given file: " + file.getName() + " File is locked. Ignoring");
+        }
+        return obj;
     }
 
     @Override
