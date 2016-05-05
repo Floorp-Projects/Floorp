@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.util.FileUtils.FileLastModifiedComparator;
 import org.mozilla.gecko.util.FileUtils.FilenameRegexFilter;
 import org.mozilla.gecko.util.FileUtils.FilenameWhitelistFilter;
 
@@ -319,5 +320,20 @@ public class TestFileUtils {
         for (final String str : notExpectedToAccept) {
             assertFalse("Filename, " + str + ", not matching regex not expected to accept", testFilter.accept(testFile, str));
         }
+    }
+
+    @Test
+    public void testFileLastModifiedComparator() {
+        final FileLastModifiedComparator testComparator = new FileLastModifiedComparator();
+        final File oldFile = mock(File.class);
+        final File newFile = mock(File.class);
+        final File equallyNewFile = mock(File.class);
+        when(oldFile.lastModified()).thenReturn(10L);
+        when(newFile.lastModified()).thenReturn(100L);
+        when(equallyNewFile.lastModified()).thenReturn(100L);
+
+        assertTrue("Old file is less than new file", testComparator.compare(oldFile, newFile) < 0);
+        assertTrue("New file is greater than old file", testComparator.compare(newFile, oldFile) > 0);
+        assertTrue("New files are equal", testComparator.compare(newFile, equallyNewFile) == 0);
     }
 }
