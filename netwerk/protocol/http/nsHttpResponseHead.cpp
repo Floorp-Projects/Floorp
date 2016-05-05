@@ -643,6 +643,7 @@ nsHttpResponseHead::Reset()
     mCacheControlPrivate = false;
     mCacheControlNoStore = false;
     mCacheControlNoCache = false;
+    mCacheControlImmutable = false;
     mPragmaNoCache = false;
     mStatusText.Truncate();
     mContentType.Truncate();
@@ -812,6 +813,7 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
         mCacheControlPrivate = false;
         mCacheControlNoCache = false;
         mCacheControlNoStore = false;
+        mCacheControlImmutable = false;
         return;
     }
 
@@ -827,6 +829,11 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
     // search header value for occurrence of "no-store"
     if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoStore = true;
+
+    // search header value for occurrence of "immutable"
+    if (nsHttp::FindToken(val, "immutable", HTTP_HEADER_VALUE_SEPS)) {
+        mCacheControlImmutable = true;
+    }
 }
 
 void
