@@ -221,3 +221,26 @@ class BuildbotMixin(object):
         except:
             self.fatal('Could not parse buildid into YYYYMMDDHHMMSS: %s' % buildid)
         return buildidDict
+
+    def query_who(self):
+        """ looks for who triggered the build with a change.
+
+        This is used for things like try builds where the upload dir is
+        associated with who pushed to try. First it will look in self.config
+        and failing that, will poll buildbot_config
+        If nothing is found, it will default to returning "nobody@example.com"
+        """
+        if self.config.get('who'):
+            return self.config['who']
+        self.read_buildbot_config()
+        try:
+            return self.buildbot_config['sourcestamp']['changes'][0]['who']
+        except (KeyError, IndexError):
+            # KeyError: "sourcestamp" or "changes" or "who" not in buildbot_config
+            # IndexError: buildbot_config['sourcestamp']['changes'] is empty
+            pass
+        try:
+            return str(self.buildbot_config['properties']['who'])
+        except KeyError:
+            pass
+        return "nobody@example.com"
