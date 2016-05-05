@@ -71,6 +71,8 @@ public:
   bool Toggle(const nsAString& aToken,
               const mozilla::dom::Optional<bool>& force,
               mozilla::ErrorResult& aError);
+  bool Supports(const nsAString& aToken,
+                mozilla::ErrorResult& aError);
 
   void GetValue(nsAString& aResult) { Stringify(aResult); }
   void SetValue(const nsAString& aValue, mozilla::ErrorResult& rv);

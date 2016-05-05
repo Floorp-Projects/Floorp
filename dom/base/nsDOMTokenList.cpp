@@ -347,6 +347,28 @@ nsDOMTokenList::Replace(const nsAString& aToken,
   AddInternal(attr, tokens);
 }
 
+bool
+nsDOMTokenList::Supports(const nsAString& aToken,
+                         ErrorResult& aError)
+{
+  if (!mSupportedTokens) {
+    aError.ThrowTypeError<MSG_TOKENLIST_NO_SUPPORTED_TOKENS>(
+      mElement->LocalName(),
+      nsDependentAtomString(mAttrAtom));
+    return false;
+  }
+
+  for (DOMTokenListSupportedToken* supportedToken = mSupportedTokens;
+       *supportedToken;
+       ++supportedToken) {
+    if (aToken.LowerCaseEqualsASCII(*supportedToken)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 nsDOMTokenList::Stringify(nsAString& aResult)
 {
