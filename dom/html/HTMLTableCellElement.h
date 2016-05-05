@@ -66,10 +66,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::abbr, aAbbr, aError);
   }
-  void GetScope(DOMString& aScope)
-  {
-    GetHTMLAttr(nsGkAtoms::scope, aScope);
-  }
+  void GetScope(DOMString& aScope);
   void SetScope(const nsAString& aScope, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::scope, aScope, aError);
