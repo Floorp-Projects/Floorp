@@ -34,6 +34,7 @@
 #include "mozilla/dom/TypedArray.h"
 
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h" // Required for nsContentUtils::PushEnabled
 #include "mozilla/RefPtr.h"
 
 class nsIGlobalObject;

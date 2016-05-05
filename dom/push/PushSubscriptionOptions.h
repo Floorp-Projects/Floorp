@@ -5,7 +5,17 @@
 #ifndef mozilla_dom_PushSubscriptionOptions_h
 #define mozilla_dom_PushSubscriptionOptions_h
 
+#include "nsCycleCollectionParticipant.h"
+#include "nsContentUtils.h" // Required for nsContentUtils::PushEnabled
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
+
+class nsIGlobalObject;
+
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
 class PushSubscriptionOptions final : public nsISupports
