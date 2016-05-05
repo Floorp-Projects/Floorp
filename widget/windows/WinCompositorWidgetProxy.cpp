@@ -11,10 +11,12 @@ namespace mozilla {
 namespace widget {
 
 WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
- : mWindow(aWindow)
+ : mWindow(aWindow),
+   mWnd(reinterpret_cast<HWND>(aWindow->GetNativeData(NS_NATIVE_WINDOW)))
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(!aWindow->Destroyed());
+  MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
 }
 
 bool
@@ -44,7 +46,13 @@ WinCompositorWidgetProxy::RealWidget()
 LayoutDeviceIntSize
 WinCompositorWidgetProxy::GetClientSize()
 {
-  return mWindow->GetClientSize();
+  RECT r;
+  if (!::GetClientRect(mWnd, &r)) {
+    return LayoutDeviceIntSize();
+  }
+  return LayoutDeviceIntSize(
+    r.right - r.left,
+    r.bottom - r.top);
 }
 
 already_AddRefed<gfx::DrawTarget>

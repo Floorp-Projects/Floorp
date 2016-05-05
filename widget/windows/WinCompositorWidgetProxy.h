@@ -34,6 +34,7 @@ public:
 
 private:
   nsWindow* mWindow;
+  HWND mWnd;
 };
 
 } // namespace widget
