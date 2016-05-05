@@ -390,7 +390,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     }
 
     // Read the value stack entry at depth |index|.
-    bool peek(uint32_t index, TypeAndValue<Value>* tv) {
+    MOZ_MUST_USE bool peek(uint32_t index, TypeAndValue<Value>* tv) {
         if (Validate && valueStack_.length() - controlStack_.back().valueStackStart() <= index)
             return fail("peeking at value from outside block");
         *tv = valueStack_[valueStack_.length() - index];
@@ -536,7 +536,7 @@ ExprIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::checkType(ExprType actual, ExprType expected)
 {
     if (!Validate) {
@@ -1230,7 +1230,7 @@ ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, V
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI32Const(int32_t* i32)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I32);
@@ -1241,7 +1241,7 @@ ExprIter<Policy>::readI32Const(int32_t* i32)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI64Const(int64_t* i64)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I64);
@@ -1252,7 +1252,7 @@ ExprIter<Policy>::readI64Const(int64_t* i64)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF32Const(float* f32)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F32);
@@ -1271,7 +1271,7 @@ ExprIter<Policy>::readF32Const(float* f32)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF64Const(double* f64)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F64);
@@ -1290,7 +1290,7 @@ ExprIter<Policy>::readF64Const(double* f64)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::I32x4);
@@ -1301,7 +1301,7 @@ ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::F32x4);
@@ -1312,7 +1312,7 @@ ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
 }
 
 template <typename Policy>
-inline MOZ_MUST_USE bool
+inline bool
 ExprIter<Policy>::readB32x4Const(I32x4* i32x4)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::B32x4);
