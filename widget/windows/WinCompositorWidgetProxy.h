@@ -53,6 +53,9 @@ public:
   HDC GetTransparentDC() const {
     return mMemoryDC;
   }
+  HWND GetHwnd() const {
+    return mWnd;
+  }
 
 private:
   HDC GetWindowSurface();
