@@ -145,8 +145,8 @@ html|span.ac-tag {
 }
 
 .ac-separator {
-  padding-left: 0;
-  padding-right: 6px;
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
 }
 
 /* Better align the URL/action with the title. */
