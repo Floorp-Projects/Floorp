@@ -135,6 +135,13 @@ runTest(function() {
                              () => (new AudioContext())
                                  .createMediaStreamDestination().stream
                                  .getAudioTracks()[0].applyConstraints()))
+    .then(() => mustFailWith(
+        "getUserMedia with unsatisfied required constraint",
+        "OverconstrainedError", "deviceId",
+        () => navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: { deviceId: { exact: "unheardof" } },
+        })));
 });
 
 </script>
