@@ -31,6 +31,8 @@ class ServoRestyleManager
 public:
   NS_INLINE_DECL_REFCOUNTING(ServoRestyleManager)
 
+  ServoRestyleManager();
+
   void Disconnect();
   void PostRestyleEvent(dom::Element* aElement,
                         nsRestyleHint aRestyleHint,
@@ -66,6 +68,8 @@ public:
 
 protected:
   ~ServoRestyleManager() {}
+
+  uint64_t mRestyleGeneration;
 };
 
 } // namespace mozilla
