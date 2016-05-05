@@ -20,7 +20,7 @@ namespace mozilla { namespace psm {
 static LazyLogModule gTrustDomainPRLog("CSTrustDomain");
 #define CSTrust_LOG(args) MOZ_LOG(gTrustDomainPRLog, LogLevel::Debug, args)
 
-CSTrustDomain::CSTrustDomain(ScopedCERTCertList& certChain)
+CSTrustDomain::CSTrustDomain(UniqueCERTCertList& certChain)
   : mCertChain(certChain)
   , mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID))
 {

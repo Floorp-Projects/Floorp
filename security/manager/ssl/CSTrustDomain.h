@@ -22,7 +22,7 @@ class CSTrustDomain final : public mozilla::pkix::TrustDomain
 public:
   typedef mozilla::pkix::Result Result;
 
-  explicit CSTrustDomain(ScopedCERTCertList& certChain);
+  explicit CSTrustDomain(UniqueCERTCertList& certChain);
 
   virtual Result GetCertTrust(
     mozilla::pkix::EndEntityOrCA endEntityOrCA,
@@ -66,7 +66,7 @@ public:
                            size_t digestBufLen) override;
 
 private:
-  /*out*/ ScopedCERTCertList& mCertChain;
+  /*out*/ UniqueCERTCertList& mCertChain;
   nsCOMPtr<nsICertBlocklist> mCertBlocklist;
 };
 

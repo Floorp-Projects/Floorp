@@ -61,7 +61,7 @@ InitCertVerifierLog()
 }
 
 Result
-IsCertChainRootBuiltInRoot(CERTCertList* chain, bool& result)
+IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain, bool& result)
 {
   if (!chain || CERT_LIST_EMPTY(chain)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -181,7 +181,7 @@ static const unsigned int MIN_RSA_BITS_WEAK = 1024;
 SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                          Time time, void* pinArg, const char* hostname,
-                 /*out*/ ScopedCERTCertList& builtChain,
+                 /*out*/ UniqueCERTCertList& builtChain,
             /*optional*/ const Flags flags,
             /*optional*/ const SECItem* stapledOCSPResponseSECItem,
         /*optional out*/ SECOidTag* evOidPolicy,
@@ -650,7 +650,7 @@ CertVerifier::VerifySSLServerCert(const UniqueCERTCertificate& peerCert,
                                   Time time,
                      /*optional*/ void* pinarg,
                                   const char* hostname,
-                          /*out*/ ScopedCERTCertList& builtChain,
+                          /*out*/ UniqueCERTCertList& builtChain,
                      /*optional*/ bool saveIntermediatesInPermanentDatabase,
                      /*optional*/ Flags flags,
                  /*optional out*/ SECOidTag* evOidPolicy,

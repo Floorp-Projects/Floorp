@@ -13,7 +13,6 @@
 #include "pkix/pkixtypes.h"
 #include "mozilla/Logging.h"
 #include "RootCertificateTelemetryUtils.h"
-#include "ScopedNSSTypes.h"
 #include "seccomon.h"
 #include "sechash.h"
 
@@ -98,7 +97,8 @@ EvalCert(const CERTCertificate* cert, const StaticFingerprints* fingerprints,
  * dynamicFingerprints array, or to false otherwise.
  */
 static nsresult
-EvalChain(const CERTCertList* certList, const StaticFingerprints* fingerprints,
+EvalChain(const UniqueCERTCertList& certList,
+          const StaticFingerprints* fingerprints,
           const nsTArray<nsCString>* dynamicFingerprints,
   /*out*/ bool& certListIntersectsPinset)
 {
@@ -144,7 +144,7 @@ TransportSecurityPreloadCompare(const void *key, const void *entry) {
 }
 
 nsresult
-PublicKeyPinningService::ChainMatchesPinset(const CERTCertList* certList,
+PublicKeyPinningService::ChainMatchesPinset(const UniqueCERTCertList& certList,
                                             const nsTArray<nsCString>& aSHA256keys,
                                     /*out*/ bool& chainMatchesPinset)
 {
@@ -231,7 +231,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
 // subject public key info data in the list and the most relevant non-expired
 // pinset for the host or there is no pinning information for the host.
 static nsresult
-CheckPinsForHostname(const CERTCertList* certList, const char* hostname,
+CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
                      bool enforceTestMode, mozilla::pkix::Time time,
              /*out*/ bool& chainHasValidPins,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
@@ -318,7 +318,7 @@ CheckPinsForHostname(const CERTCertList* certList, const char* hostname,
 }
 
 nsresult
-PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
+PublicKeyPinningService::ChainHasValidPins(const UniqueCERTCertList& certList,
                                            const char* hostname,
                                            mozilla::pkix::Time time,
                                            bool enforceTestMode,

@@ -554,7 +554,7 @@ ImportCertsIntoTempStorage(int numcerts, SECItem* certs,
 }
 
 static SECStatus
-ImportCertsIntoPermanentStorage(const ScopedCERTCertList& certChain,
+ImportCertsIntoPermanentStorage(const UniqueCERTCertList& certChain,
                                 const SECCertUsage usage, const bool caOnly)
 {
   int chainLen = 0;
@@ -630,7 +630,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
       continue;
     }
 
-    ScopedCERTCertList certChain;
+    UniqueCERTCertList certChain;
     SECStatus srv = certVerifier->VerifyCert(node->cert,
                                              certificateUsageEmailRecipient,
                                              mozilla::pkix::Now(), ctx,
@@ -686,7 +686,7 @@ nsNSSCertificateDB::ImportValidCACertsInList(const UniqueCERTCertList& filteredC
   for (CERTCertListNode* node = CERT_LIST_HEAD(filteredCerts.get());
        !CERT_LIST_END(node, filteredCerts.get());
        node = CERT_LIST_NEXT(node)) {
-    ScopedCERTCertList certChain;
+    UniqueCERTCertList certChain;
     SECStatus rv = certVerifier->VerifyCert(node->cert,
                                             certificateUsageVerifyCA,
                                             mozilla::pkix::Now(), ctx,
@@ -1142,7 +1142,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
-  ScopedCERTCertList certlist(
+  UniqueCERTCertList certlist(
       PK11_FindCertsFromEmailAddress(aEmailAddress, nullptr));
   if (!certlist)
     return NS_ERROR_FAILURE;
@@ -1159,7 +1159,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
        !CERT_LIST_END(node, certlist);
        node = CERT_LIST_NEXT(node)) {
 
-    ScopedCERTCertList unusedCertChain;
+    UniqueCERTCertList unusedCertChain;
     SECStatus srv = certVerifier->VerifyCert(node->cert,
                                              certificateUsageEmailRecipient,
                                              mozilla::pkix::Now(),
@@ -1471,15 +1471,15 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
-  }  
+  }
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsCOMPtr<nsIX509CertList> nssCertList;
-  ScopedCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
+  UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, ctx));
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
   // (returns an empty list) 
-  nssCertList = new nsNSSCertList(certList, locker);
+  nssCertList = new nsNSSCertList(Move(certList), locker);
 
   nssCertList.forget(_retval);
   return NS_OK;
@@ -1517,7 +1517,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
-  ScopedCERTCertList resultChain;
+  UniqueCERTCertList resultChain;
   SECOidTag evOidPolicy;
   SECStatus srv;
 
@@ -1545,7 +1545,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
 
   nsCOMPtr<nsIX509CertList> nssCertList;
   // This adopts the list
-  nssCertList = new nsNSSCertList(resultChain, locker);
+  nssCertList = new nsNSSCertList(Move(resultChain), locker);
   NS_ENSURE_TRUE(nssCertList, NS_ERROR_FAILURE);
 
   if (srv == SECSuccess) {

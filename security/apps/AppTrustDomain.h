@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_psm_AppsTrustDomain_h
-#define mozilla_psm_AppsTrustDomain_h
+#ifndef AppTrustDomain_h
+#define AppTrustDomain_h
 
 #include "pkix/pkixtypes.h"
 #include "mozilla/StaticMutex.h"
@@ -21,7 +21,7 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain
 public:
   typedef mozilla::pkix::Result Result;
 
-  AppTrustDomain(ScopedCERTCertList&, void* pinArg);
+  AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg);
 
   SECStatus SetTrustedRoot(AppTrustedRoot trustedRoot);
 
@@ -67,7 +67,7 @@ public:
                            size_t digestBufLen) override;
 
 private:
-  /*out*/ ScopedCERTCertList& mCertChain;
+  /*out*/ UniqueCERTCertList& mCertChain;
   void* mPinArg; // non-owning!
   UniqueCERTCertificate mTrustedRoot;
   unsigned int mMinRSABits;
@@ -79,4 +79,4 @@ private:
 
 } } // namespace mozilla::psm
 
-#endif // mozilla_psm_AppsTrustDomain_h
+#endif // AppTrustDomain_h
