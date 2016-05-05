@@ -305,9 +305,19 @@ class RunnableMethod : public mozilla::CancelableRunnable,
 
 template <class T, class Method, typename... Args>
 inline already_AddRefed<mozilla::CancelableRunnable>
-NewRunnableMethod(T* object, Method method, Args&&... args) {
+NewCancelableRunnableMethod(T* object, Method method, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::CancelableRunnable> t =
+    new RunnableMethod<T, Method, ArgsTuple>(object, method,
+                                             mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  return t.forget();
+}
+
+template <class T, class Method, typename... Args>
+inline already_AddRefed<mozilla::Runnable>
+NewRunnableMethod(T* object, Method method, Args&&... args) {
+  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  RefPtr<mozilla::Runnable> t =
     new RunnableMethod<T, Method, ArgsTuple>(object, method,
                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
   return t.forget();
@@ -342,9 +352,19 @@ class RunnableFunction : public mozilla::CancelableRunnable {
 
 template <class Function, typename... Args>
 inline already_AddRefed<mozilla::CancelableRunnable>
-NewRunnableFunction(Function function, Args&&... args) {
+NewCancelableRunnableFunction(Function function, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::CancelableRunnable> t =
+    new RunnableFunction<Function, ArgsTuple>(function,
+                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  return t.forget();
+}
+
+template <class Function, typename... Args>
+inline already_AddRefed<mozilla::Runnable>
+NewRunnableFunction(Function function, Args&&... args) {
+  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  RefPtr<mozilla::Runnable> t =
     new RunnableFunction<Function, ArgsTuple>(function,
                                               mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
   return t.forget();
