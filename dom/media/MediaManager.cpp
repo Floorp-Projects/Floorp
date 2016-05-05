@@ -1095,13 +1095,15 @@ MediaManager::SelectSettings(
     if (videos.Length() && IsOn(aConstraints.mVideo)) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
           GetInvariant(aConstraints.mVideo), videos);
+    }
+    if (!badConstraint && audios.Length() && IsOn(aConstraints.mAudio)) {
+      badConstraint = MediaConstraintsHelper::SelectSettings(
+          GetInvariant(aConstraints.mAudio), audios);
+    }
+    if (!badConstraint) {
       for (auto& video : videos) {
         sources.AppendElement(video);
       }
-    }
-    if (audios.Length() && IsOn(aConstraints.mAudio)) {
-      badConstraint = MediaConstraintsHelper::SelectSettings(
-          GetInvariant(aConstraints.mAudio), audios);
       for (auto& audio : audios) {
         sources.AppendElement(audio);
       }
