@@ -646,7 +646,8 @@ MediaDecoder::Shutdown()
              &MediaDecoder::FinishShutdown,
              &MediaDecoder::FinishShutdown);
   } else {
-    // Ensure we always unregister MediaShutdownManager asynchronously.
+    // Ensure we always unregister asynchronously in order not to disrupt
+    // the hashtable iterating in MediaShutdownManager::Shutdown().
     RefPtr<MediaDecoder> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
       MediaShutdownManager::Instance().Unregister(self);
