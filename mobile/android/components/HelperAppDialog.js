@@ -206,7 +206,9 @@ HelperAppLauncherDialog.prototype = {
       buttons: [
         bundle.GetStringFromName("helperapps.alwaysUse"),
         bundle.GetStringFromName("helperapps.useJustOnce")
-      ]
+      ],
+      // Tapping an app twice should choose "Just once".
+      doubleTapButton: 1
     }, (data) => {
       if (data.button < 0) {
         return;
