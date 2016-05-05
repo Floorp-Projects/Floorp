@@ -35,7 +35,7 @@ task:
       - >
         tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF" &&
         cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
-        ./build-shell-haz-linux.sh $HOME/workspace
+        ./build-haz-linux.sh --project shell $HOME/workspace
 
   extra:
     treeherderEnv:
