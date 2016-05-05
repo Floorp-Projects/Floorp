@@ -82,10 +82,6 @@ struct GenericParseContext
     {}
 };
 
-template <typename ParseHandler>
-bool
-GenerateBlockId(TokenStream& ts, ParseContext<ParseHandler>* pc, uint32_t& blockid);
-
 /*
  * The struct ParseContext stores information about the current parsing context,
  * which is part of the parser state (see the field Parser::pc). The current
