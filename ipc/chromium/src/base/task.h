@@ -304,16 +304,6 @@ class RunnableMethod : public mozilla::CancelableRunnable,
 };
 
 template <class T, class Method, typename... Args>
-inline already_AddRefed<mozilla::CancelableRunnable>
-NewCancelableRunnableMethod(T* object, Method method, Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  RefPtr<mozilla::CancelableRunnable> t =
-    new RunnableMethod<T, Method, ArgsTuple>(object, method,
-                                             mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
-  return t.forget();
-}
-
-template <class T, class Method, typename... Args>
 inline already_AddRefed<mozilla::Runnable>
 NewRunnableMethod(T* object, Method method, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
