@@ -628,7 +628,7 @@ ModuleGenerator::sig(uint32_t index) const
     return shared_->sigs[index];
 }
 
-bool
+void
 ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 {
     MOZ_ASSERT(isAsmJS());
@@ -637,7 +637,6 @@ ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 
     module_->numFuncs++;
     shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
-    return true;
 }
 
 void

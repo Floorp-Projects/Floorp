@@ -33,7 +33,7 @@ namespace wasm {
 // Translate the given binary representation of a wasm module into the module's textual
 // representation.
 
-bool
+MOZ_MUST_USE bool
 BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer);
 
 }  // namespace wasm
