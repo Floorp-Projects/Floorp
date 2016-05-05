@@ -7,6 +7,7 @@
 
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
+const { Task } = require("resource://gre/modules/Task.jsm");
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;

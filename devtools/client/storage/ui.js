@@ -5,6 +5,7 @@
 
 "use strict";
 
+const {Task} = require("resource://gre/modules/Task.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 

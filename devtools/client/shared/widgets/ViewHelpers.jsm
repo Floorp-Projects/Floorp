@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
@@ -16,9 +15,7 @@ const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-Cu.import("resource://devtools/shared/event-emitter.js");
 
 this.EXPORTED_SYMBOLS = [
   "Heritage", "ViewHelpers", "WidgetMethods",

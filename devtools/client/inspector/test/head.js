@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ../../framework/test/shared-head.js */
+/* import-globals-from ../../commandline/test/helpers.js */
+/* import-globals-from ../../shared/test/test-actor-registry.js */
 "use strict";
 
 // Load the shared-head file first.

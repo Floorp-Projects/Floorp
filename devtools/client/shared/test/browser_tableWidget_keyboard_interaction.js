@@ -20,7 +20,6 @@ const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
 const TEST_OPT = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 const {TableWidget} = require("devtools/client/shared/widgets/TableWidget");
-var {Task} = require("resource://gre/modules/Task.jsm");
 
 var doc, table;
 

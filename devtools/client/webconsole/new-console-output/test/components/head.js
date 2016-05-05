@@ -9,13 +9,13 @@
 var { utils: Cu } = Components;
 
 Cu.import("resource://testing-common/Assert.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var {DebuggerServer} = require("devtools/server/main");
-var {DebuggerClient} = require("devtools/shared/client/main");
+var { Task } = require("resource://gre/modules/Task.jsm");
+var { DebuggerServer } = require("devtools/server/main");
+var { DebuggerClient } = require("devtools/shared/client/main");
 
 const Services = require("Services");
 
