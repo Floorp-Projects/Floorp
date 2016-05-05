@@ -554,8 +554,6 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);
     offset += sampleSize;
 
-    sample.mDecodeTime =
-      aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
     sample.mCompositionRange = Interval<Microseconds>(
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset),
       aMdhd.ToMicroseconds((int64_t)decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart) + aMvhd.ToMicroseconds(aEdts.mEmptyOffset));
@@ -583,9 +581,32 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
       ctsOrder[i]->mCompositionRange.end = ctsOrder[i + 1]->mCompositionRange.start;
     }
   }
+  // In MP4, the duration of a sample is defined as the delta between two decode
+  // timestamps. The operation above has updated the duration of each sample
+  // as a Sample's duration is mCompositionRange.end - mCompositionRange.start
+  // MSE's TrackBuffersManager expects dts that increased by the sample's
+  // duration, so we rewrite the dts accordingly.
+  int64_t presentationDuration = ctsOrder.LastElement()->mCompositionRange.end
+                                 - ctsOrder[0]->mCompositionRange.start;
+  int64_t decodeDuration = aMdhd.ToMicroseconds(decodeTime - *aDecodeTime);
+  float adjust = (float)decodeDuration / presentationDuration;
+  int64_t dtsOffset =
+    aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart)
+    + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
+  int64_t compositionDuration = 0;
+  // Adjust the dts, ensuring that the new adjusted dts will never be greater
+  // than decodeTime (the next moof's decode start time).
+  for (auto& sample : mIndex) {
+    sample.mDecodeTime = dtsOffset + compositionDuration * adjust;
+    compositionDuration += sample.mCompositionRange.Length();
+  }
   mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
       ctsOrder.LastElement()->mCompositionRange.end);
   *aDecodeTime = decodeTime;
+  MOZ_ASSERT(aMdhd.ToMicroseconds((int64_t)decodeTime - aEdts.mMediaStart)
+             + aMvhd.ToMicroseconds(aEdts.mEmptyOffset)
+             >= mIndex[mIndex.Length() -1].mDecodeTime,
+             "Adjusted dts is too high");
   return true;
 }
 

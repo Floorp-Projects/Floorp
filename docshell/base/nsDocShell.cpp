@@ -134,6 +134,7 @@
 #include "nsIStructuredCloneContainer.h"
 #ifdef MOZ_PLACES
 #include "nsIFaviconService.h"
+#include "mozIPlacesPendingOperation.h"
 #include "mozIAsyncFavicons.h"
 #endif
 #include "nsINetworkPredictor.h"
@@ -9412,11 +9413,12 @@ public:
     MOZ_ASSERT(aDataLen == 0,
                "We weren't expecting the callback to deliver data.");
 
+    nsCOMPtr<mozIPlacesPendingOperation> po;
     return mSvc->SetAndFetchFaviconForPage(
       mNewURI, aFaviconURI, false,
       mInPrivateBrowsing ? nsIFaviconService::FAVICON_LOAD_PRIVATE :
                            nsIFaviconService::FAVICON_LOAD_NON_PRIVATE,
-      nullptr, mLoadingPrincipal);
+      nullptr, mLoadingPrincipal, getter_AddRefs(po));
   }
 
 private:

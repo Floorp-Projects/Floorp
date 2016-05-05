@@ -1380,12 +1380,20 @@ function test_clip_path_equals(computedValStr, expectedList)
 
   // Found a reference box? Format: "shape()" or "shape() reference-box"
   if (matches.length > 1) {
+    // Our split() did actually split the string, which means computedValStr
+    // contains a reference box. That reference box should be at the end,
+    // which means split() will have produced an empty string as the final
+    // entry in |matches|. Let's first ditch that empty string.
+    var trailingJunk = matches.pop();
+    is(trailingJunk, "", "reference box shouldn't have anything after it");
+
     // Do we expect a reference box?
     if (!expectRefBox) {
       ok(false, "unexpected reference box found");
+      matches.pop(); // Get rid of it, so we can test the rest...
+    } else {
+      is(matches.pop(), expectedList.pop(), "Reference boxes should match");
     }
-    matches.pop();
-    is(matches.pop(), expectedList.pop(), "Reference boxes should match");
   } else {
     // No reference box found. Did we expect one?
     if (expectRefBox) {

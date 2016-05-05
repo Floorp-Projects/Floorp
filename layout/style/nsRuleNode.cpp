@@ -5316,6 +5316,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     StyleTransition *transition = &display->mTransitions[i];
 
     if (i >= delay.num) {
+      MOZ_ASSERT(delay.num, "delay.num must be greater than 0");
       transition->SetDelay(display->mTransitions[i % delay.num].GetDelay());
     } else if (delay.unit == eCSSUnit_Inherit) {
       // FIXME (Bug 522599) (for all transition properties): write a test that
@@ -5344,6 +5345,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= duration.num) {
+      MOZ_ASSERT(duration.num, "duration.num must be greater than 0");
       transition->SetDuration(
         display->mTransitions[i % duration.num].GetDuration());
     } else if (duration.unit == eCSSUnit_Inherit) {
@@ -5370,6 +5372,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= property.num) {
+      MOZ_ASSERT(property.num, "property.num must be greater than 0");
       transition->CopyPropertyFrom(display->mTransitions[i % property.num]);
     } else if (property.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mTransitionPropertyCount,
@@ -5405,6 +5408,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= timingFunction.num) {
+      MOZ_ASSERT(timingFunction.num,
+        "timingFunction.num must be greater than 0");
       transition->SetTimingFunction(
         display->mTransitions[i % timingFunction.num].GetTimingFunction());
     } else if (timingFunction.unit == eCSSUnit_Inherit) {
@@ -5473,6 +5478,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     StyleAnimation *animation = &display->mAnimations[i];
 
     if (i >= animDelay.num) {
+      MOZ_ASSERT(animDelay.num, "animDelay.num must be greater than 0");
       animation->SetDelay(display->mAnimations[i % animDelay.num].GetDelay());
     } else if (animDelay.unit == eCSSUnit_Inherit) {
       // FIXME (Bug 522599) (for all animation properties): write a test that
@@ -5501,6 +5507,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animDuration.num) {
+      MOZ_ASSERT(animDuration.num, "animDuration.num must be greater than 0");
       animation->SetDuration(
         display->mAnimations[i % animDuration.num].GetDuration());
     } else if (animDuration.unit == eCSSUnit_Inherit) {
@@ -5527,6 +5534,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animName.num) {
+      MOZ_ASSERT(animName.num, "animName.num must be greater than 0");
       animation->SetName(display->mAnimations[i % animName.num].GetName());
     } else if (animName.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mAnimationNameCount,
@@ -5555,6 +5563,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animTimingFunction.num) {
+      MOZ_ASSERT(animTimingFunction.num,
+        "animTimingFunction.num must be greater than 0");
       animation->SetTimingFunction(
         display->mAnimations[i % animTimingFunction.num].GetTimingFunction());
     } else if (animTimingFunction.unit == eCSSUnit_Inherit) {
@@ -5574,6 +5584,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animDirection.num) {
+      MOZ_ASSERT(animDirection.num,
+        "animDirection.num must be greater than 0");
       animation->SetDirection(display->mAnimations[i % animDirection.num].GetDirection());
     } else if (animDirection.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mAnimationDirectionCount,
@@ -5593,6 +5605,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animFillMode.num) {
+      MOZ_ASSERT(animFillMode.num, "animFillMode.num must be greater than 0");
       animation->SetFillMode(display->mAnimations[i % animFillMode.num].GetFillMode());
     } else if (animFillMode.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mAnimationFillModeCount,
@@ -5612,6 +5625,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animPlayState.num) {
+      MOZ_ASSERT(animPlayState.num,
+        "animPlayState.num must be greater than 0");
       animation->SetPlayState(display->mAnimations[i % animPlayState.num].GetPlayState());
     } else if (animPlayState.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mAnimationPlayStateCount,
@@ -5630,6 +5645,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
     if (i >= animIterationCount.num) {
+      MOZ_ASSERT(animIterationCount.num,
+        "animIterationCount.num must be greater than 0");
       animation->SetIterationCount(display->mAnimations[i % animIterationCount.num].GetIterationCount());
     } else if (animIterationCount.unit == eCSSUnit_Inherit) {
       MOZ_ASSERT(i < parentDisplay->mAnimationIterationCountCount,
@@ -7200,7 +7217,6 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
     }
   }
 
-  margin->RecalcData();
   COMPUTE_END_RESET(Margin, margin)
 }
 
@@ -7622,7 +7638,6 @@ nsRuleNode::ComputePaddingData(void* aStartStruct,
     }
   }
 
-  padding->RecalcData();
   COMPUTE_END_RESET(Padding, padding)
 }
 

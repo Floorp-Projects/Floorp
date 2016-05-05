@@ -150,9 +150,7 @@ static void
 GetBorderPadding(nsStyleContext* aContext, nsMargin& aMargin)
 {
   aMargin.SizeTo(0, 0, 0, 0);
-  if (!aContext->StylePadding()->GetPadding(aMargin)) {
-    NS_NOTYETIMPLEMENTED("percentage padding");
-  }
+  aContext->StylePadding()->GetPaddingNoPercentage(aMargin);
   aMargin += aContext->StyleBorder()->GetComputedBorder();
 }
 

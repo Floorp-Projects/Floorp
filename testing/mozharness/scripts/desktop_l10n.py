@@ -387,29 +387,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.bootstrap_env = bootstrap_env
         return self.bootstrap_env
 
-    def _query_who(self):
-        """ looks for who triggered the build with a change.
-
-        This is used for things like try builds where the upload dir is
-        associated with who pushed to try. First it will look in self.config
-        and failing that, will poll buildbot_config
-        If nothing is found, it will default to returning "nobody@example.com"
-        """
-        if self.config.get('who'):
-            return self.config['who']
-        self.read_buildbot_config()
-        try:
-            return self.buildbot_config['sourcestamp']['changes'][0]['who']
-        except (KeyError, IndexError):
-            # KeyError: "sourcestamp" or "changes" or "who" not in buildbot_config
-            # IndexError: buildbot_config['sourcestamp']['changes'] is empty
-            pass
-        try:
-            return str(self.buildbot_config['properties']['who'])
-        except KeyError:
-            pass
-        return "nobody@example.com"
-
     def _query_upload_env(self):
         """returns the environment used for the upload step"""
         if self.upload_env:
@@ -424,7 +401,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         }
         if config['branch'] == 'try':
             replace_dict.update({
-                'who': self._query_who(),
+                'who': self.query_who(),
                 'revision': self._query_revision(),
             })
         upload_env = self.query_env(partial_env=config.get("upload_env"),

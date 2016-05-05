@@ -301,9 +301,7 @@ nsProcess::Monitor(void* aArg)
   if (NS_IsMainThread()) {
     process->ProcessComplete();
   } else {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(process, &nsProcess::ProcessComplete);
-    NS_DispatchToMainThread(event);
+    NS_DispatchToMainThread(NewRunnableMethod(process, &nsProcess::ProcessComplete));
   }
 }
 

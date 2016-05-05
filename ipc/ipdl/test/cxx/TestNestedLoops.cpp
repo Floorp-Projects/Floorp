@@ -53,7 +53,6 @@ TestNestedLoopsParent::RecvNonce()
     // to the inherent race condition in this test, then this event
     // must be ordered after it in the queue
     MessageLoop::current()->PostTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestNestedLoopsParent::BreakNestedLoop));
 
     // sigh ... spin for a while to let the reply to R arrive

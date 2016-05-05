@@ -137,7 +137,7 @@ MediaSourceDecoder::GetBuffered()
   return buffered;
 }
 
-RefPtr<ShutdownPromise>
+void
 MediaSourceDecoder::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -149,7 +149,7 @@ MediaSourceDecoder::Shutdown()
   }
   mDemuxer = nullptr;
 
-  return MediaDecoder::Shutdown();
+  MediaDecoder::Shutdown();
 }
 
 /*static*/

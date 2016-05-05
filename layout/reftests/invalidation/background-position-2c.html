@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Changes to background-position should invalidate properly for input type=button.</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+#background {
+  width: 100px;
+  height: 100px;
+  background-image: url(image_rgrg-256x256.png);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
+</style>
+
+<input type="button" id="background">
+
+<script>
+
+function doTest() {
+  document.querySelector("#background").style.backgroundPosition = "-140px 0";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+
+</script>

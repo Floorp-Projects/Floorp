@@ -18,6 +18,14 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 namespace mozilla {
 namespace dom {
 
+// static
+const DOMTokenListSupportedToken HTMLIFrameElement::sSupportedSandboxTokens[] = {
+#define SANDBOX_KEYWORD(string, atom, flags) string,
+#include "IframeSandboxKeywordList.h"
+#undef SANDBOX_KEYWORD
+  nullptr
+};
+
 HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)

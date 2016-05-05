@@ -62,14 +62,6 @@ ActivityProxy.prototype = {
       return;
     }
 
-    // Only let certified app to initiate this activitiy.
-    if (aOptions.name === 'internal-system-engineering-mode' &&
-        principal.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
-      Services.DOMRequest.fireErrorAsync(this.activity, "SecurityError");
-      Services.obs.notifyObservers(null, "Activity:Error", null);
-      return;
-    }
-
     // Check the activities that are restricted to be used in dev mode.
     let devMode = false;
     let isDevModeActivity = false;

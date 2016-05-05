@@ -452,10 +452,14 @@ FMRadio::EnableAudioChannelAgent()
 {
   NS_ENSURE_TRUE_VOID(mAudioChannelAgent);
 
-  float volume = 0.0;
-  bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
-  WindowVolumeChanged(volume, muted);
+  AudioPlaybackConfig config;
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  WindowVolumeChanged(config.mVolume, config.mMuted);
+  WindowSuspendChanged(config.mSuspend);
 
   mAudioChannelAgentEnabled = true;
 }
@@ -463,8 +467,16 @@ FMRadio::EnableAudioChannelAgent()
 NS_IMETHODIMP
 FMRadio::WindowVolumeChanged(float aVolume, bool aMuted)
 {
+  // TODO : Not support to change volume now, so we just close it.
   IFMRadioService::Singleton()->EnableAudio(!aMuted);
-  // TODO: what about the volume?
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FMRadio::WindowSuspendChanged(nsSuspendedTypes aSuspend)
+{
+  bool enable = (aSuspend == nsISuspendedTypes::NONE_SUSPENDED);
+  IFMRadioService::Singleton()->EnableAudio(enable);
   return NS_OK;
 }
 

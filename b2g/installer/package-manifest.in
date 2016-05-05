@@ -216,7 +216,6 @@
 @RESPATH@/components/dom_xpath.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_time.xpt
-@RESPATH@/components/dom_engineeringmode.xpt
 @RESPATH@/components/dom_presentation.xpt
 @RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
@@ -627,11 +626,6 @@
 @RESPATH@/components/PushComponents.js
 #endif
 
-@RESPATH@/components/InterAppComm.manifest
-@RESPATH@/components/InterAppCommService.js
-@RESPATH@/components/InterAppConnection.js
-@RESPATH@/components/InterAppMessagePort.js
-
 @RESPATH@/components/nsDOMIdentity.js
 @RESPATH@/components/nsIDService.js
 @RESPATH@/components/Identity.manifest
@@ -663,10 +657,6 @@
 #ifdef MOZ_B2G
 @RESPATH@/components/inputmethod.xpt
 #endif
-
-@RESPATH@/components/EngineeringMode.manifest
-@RESPATH@/components/EngineeringModeAPI.js
-@RESPATH@/components/EngineeringModeService.js
 
 @RESPATH@/components/SystemUpdate.manifest
 @RESPATH@/components/SystemUpdateManager.js
@@ -915,7 +905,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/FilePicker.js
 @RESPATH@/components/HelperAppDialog.js
 @RESPATH@/components/DownloadsUI.js
-@RESPATH@/components/InterAppCommUIGlue.js
 @RESPATH@/components/SystemMessageGlue.js
 @RESPATH@/components/B2GAppMigrator.js
 @RESPATH@/components/B2GPresentationDevicePrompt.js

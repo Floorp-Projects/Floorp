@@ -83,7 +83,14 @@ tasks:
             --owner='{{owner}}'
             --level='{{level}}'
             --revision-hash='{{revision_hash}}'
-            --extend-graph > /home/worker/artifacts/graph.json
+            --extend-graph > /home/worker/artifacts/graph.json &&
+            ./mach taskcluster-graph
+            --pushlog-id='{{pushlog_id}}'
+            --project='{{project}}'
+            --message='try: -b do -p all -u all'
+            --owner='{{owner}}'
+            --revision-hash='{{revision_hash}}'
+            --extend-graph > /home/worker/artifacts/all_tasks.json
 
         graphs:
           - /home/worker/artifacts/graph.json

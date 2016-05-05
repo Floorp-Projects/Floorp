@@ -190,8 +190,7 @@ TestDemonParent::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableMethod(this, &TestDemonParent::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &TestDemonParent::RunUnlimitedSequence));
 }
 
 void
@@ -335,8 +334,7 @@ TestDemonChild::RunUnlimitedSequence()
   gFlushStack = false;
   DoAction();
 
-  MessageLoop::current()->PostTask(FROM_HERE,
-                                   NewRunnableMethod(this, &TestDemonChild::RunUnlimitedSequence));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &TestDemonChild::RunUnlimitedSequence));
 }
 
 void

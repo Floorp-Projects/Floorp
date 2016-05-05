@@ -303,15 +303,20 @@ class RunnableMethod : public mozilla::CancelableRunnable,
   Params params_;
 };
 
+namespace dont_add_new_uses_of_this {
+
+// Don't add new uses of this!!!!
 template <class T, class Method, typename... Args>
-inline already_AddRefed<mozilla::CancelableRunnable>
+inline already_AddRefed<mozilla::Runnable>
 NewRunnableMethod(T* object, Method method, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  RefPtr<mozilla::CancelableRunnable> t =
+  RefPtr<mozilla::Runnable> t =
     new RunnableMethod<T, Method, ArgsTuple>(object, method,
                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
   return t.forget();
 }
+
+} // namespace dont_add_new_uses_of_this
 
 // RunnableFunction and NewRunnableFunction implementation ---------------------
 
@@ -342,9 +347,19 @@ class RunnableFunction : public mozilla::CancelableRunnable {
 
 template <class Function, typename... Args>
 inline already_AddRefed<mozilla::CancelableRunnable>
-NewRunnableFunction(Function function, Args&&... args) {
+NewCancelableRunnableFunction(Function function, Args&&... args) {
   typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
   RefPtr<mozilla::CancelableRunnable> t =
+    new RunnableFunction<Function, ArgsTuple>(function,
+                                              mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+  return t.forget();
+}
+
+template <class Function, typename... Args>
+inline already_AddRefed<mozilla::Runnable>
+NewRunnableFunction(Function function, Args&&... args) {
+  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
+  RefPtr<mozilla::Runnable> t =
     new RunnableFunction<Function, ArgsTuple>(function,
                                               mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
   return t.forget();

@@ -125,7 +125,7 @@ public:
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
-  virtual RefPtr<ShutdownPromise> Shutdown();
+  virtual void Shutdown();
 
   // Start downloading the media. Decode the downloaded data up to the
   // point of the first frame of data.
@@ -595,7 +595,7 @@ private:
     SetMediaSeekable(false);
   }
 
-  RefPtr<ShutdownPromise> FinishShutdown();
+  void FinishShutdown();
 
   MediaEventProducer<void> mDataArrivedEvent;
 

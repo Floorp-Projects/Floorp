@@ -886,6 +886,19 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         hint |= nsChangeHint_RepaintFrame;
       }
 
+      if (hint & nsChangeHint_UpdateBackgroundPosition) {
+        // For most frame types, DLBI can detect background position changes,
+        // so we only need to schedule a paint.
+        hint |= nsChangeHint_SchedulePaint;
+        if (frame->IsFrameOfType(nsIFrame::eTablePart) ||
+            frame->IsFrameOfType(nsIFrame::eMathML)) {
+          // Table parts and MathML frames don't build display items for their
+          // backgrounds, so DLBI can't detect background-position changes for
+          // these frames. Repaint the whole frame.
+          hint |= nsChangeHint_RepaintFrame;
+        }
+      }
+
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView |
                   nsChangeHint_UpdateOpacityLayer | nsChangeHint_UpdateTransformLayer |
                   nsChangeHint_ChildrenOnlyTransform | nsChangeHint_SchedulePaint)) {

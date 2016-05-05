@@ -556,3 +556,5 @@
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
+
+@BINPATH@/components/dom_audiochannel.xpt

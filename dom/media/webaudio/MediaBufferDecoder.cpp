@@ -122,7 +122,7 @@ private:
       mDecodeJob.OnFailure(aErrorCode);
     } else {
       // Take extra care to cleanup on the main thread
-      NS_DispatchToMainThread(NS_NewRunnableMethod(this, &MediaDecodeTask::Cleanup));
+      NS_DispatchToMainThread(NewRunnableMethod(this, &MediaDecodeTask::Cleanup));
 
       nsCOMPtr<nsIRunnable> event =
         new ReportResultTask(mDecodeJob, &WebAudioDecodeJob::OnFailure, aErrorCode);

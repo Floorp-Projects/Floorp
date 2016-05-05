@@ -659,8 +659,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         method = &nsJSChannel::NotifyListener;            
     }
 
-    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, method);
-    nsresult rv = NS_DispatchToCurrentThread(ev);
+    nsresult rv = NS_DispatchToCurrentThread(mozilla::NewRunnableMethod(this, method));
 
     if (NS_FAILED(rv)) {
         loadGroup->RemoveRequest(this, nullptr, rv);

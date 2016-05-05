@@ -1,6 +1,0 @@
-component {27e55b94-fc43-42b3-b0f0-28bebdd804f1} EngineeringModeAPI.js
-contract @mozilla.org/dom/engineering-mode-api;1 {27e55b94-fc43-42b3-b0f0-28bebdd804f1}
-
-component {1345a96a-7b8d-4017-a776-07d918f14d84} EngineeringModeService.js
-contract @mozilla.org/engineering-mode-service;1 {1345a96a-7b8d-4017-a776-07d918f14d84}
-category profile-after-change EngineeringModeService @mozilla.org/engineering-mode-service;1

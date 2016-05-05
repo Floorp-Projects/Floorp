@@ -486,23 +486,21 @@ Shutdown(void)
 
 class ShutdownRunnable : public Runnable {
 public:
-  ShutdownRunnable(RefPtr<Runnable> aReplyEvent,
-                   nsIThread* aReplyThread)
-    : mReplyEvent(aReplyEvent), mReplyThread(aReplyThread) {};
+  explicit
+  ShutdownRunnable(RefPtr<Runnable> aReplyEvent)
+    : mReplyEvent(aReplyEvent) {};
 
   NS_IMETHOD Run() override {
     LOG(("Closing BackgroundChild"));
     ipc::BackgroundChild::CloseForCurrentThread();
 
-    LOG(("PBackground thread exists, shutting down thread"));
-    mReplyThread->Dispatch(mReplyEvent, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(mReplyEvent);
 
     return NS_OK;
   }
 
 private:
   RefPtr<Runnable> mReplyEvent;
-  nsIThread* mReplyThread;
 };
 
 void
@@ -548,8 +546,7 @@ CamerasChild::ShutdownChild()
     // BackgroundChild is closed.
     RefPtr<Runnable> event =
       new ThreadDestructor(CamerasSingleton::Thread());
-    RefPtr<ShutdownRunnable> runnable =
-      new ShutdownRunnable(event, NS_GetCurrentThread());
+    RefPtr<ShutdownRunnable> runnable = new ShutdownRunnable(event);
     CamerasSingleton::Thread()->Dispatch(runnable, NS_DISPATCH_NORMAL);
   } else {
     LOG(("Shutdown called without PBackground thread"));

@@ -269,9 +269,7 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter *aPrinter,
       // misunderstanding what the capabilities of the printer are due to a
       // GTK bug (https://bugzilla.gnome.org/show_bug.cgi?id=753041). We
       // sidestep this by deferring the print to the next tick.
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(spec, &nsDeviceContextSpecGTK::StartPrintJob);
-      NS_DispatchToCurrentThread(event);
+      NS_DispatchToCurrentThread(NewRunnableMethod(spec, &nsDeviceContextSpecGTK::StartPrintJob));
       return TRUE;
     }
   }
@@ -329,9 +327,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     } else {
       // We don't have a printer. We have to enumerate the printers and find
       // one with a matching name.
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(this, &nsDeviceContextSpecGTK::EnumeratePrinters);
-      NS_DispatchToCurrentThread(event);
+      NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsDeviceContextSpecGTK::EnumeratePrinters));
     }
   } else {
     // Handle print-to-file ourselves for the benefit of embedders

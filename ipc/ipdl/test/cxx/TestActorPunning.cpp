@@ -1,6 +1,7 @@
 #include "TestActorPunning.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
+#include "mozilla/unused.h"
 
 namespace mozilla {
 namespace _ipdltest {
@@ -123,7 +124,7 @@ ParamTraits<Bad>::Read(const Message* aMsg, void** aIter, paramType* aResult)
 {
     const char* ptr;
     int len;
-    aMsg->ReadData(aIter, &ptr, &len);
+    mozilla::Unused << aMsg->ReadData(aIter, &ptr, &len);
     return true;
 }
 

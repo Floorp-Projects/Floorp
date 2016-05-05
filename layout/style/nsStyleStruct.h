@@ -801,7 +801,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   static nsChangeHint MaxDifference() {
      return nsChangeHint_UpdateEffects |
            nsChangeHint_RepaintFrame |
-           nsChangeHint_SchedulePaint |
+           nsChangeHint_UpdateBackgroundPosition |
            nsChangeHint_NeutralChange;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
@@ -853,7 +853,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
   }
   void Destroy(nsPresContext* aContext);
 
-  void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
   static nsChangeHint MaxDifference() {
     return nsChangeHint_NeedReflow |
@@ -868,21 +867,28 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin
 
   nsStyleSides  mMargin;          // [reset] coord, percent, calc, auto
 
-  bool IsWidthDependent() const { return !mHasCachedMargin; }
+  bool IsWidthDependent() const {
+    return !mMargin.ConvertsToLength();
+  }
+
   bool GetMargin(nsMargin& aMargin) const
   {
-    if (mHasCachedMargin) {
-      aMargin = mCachedMargin;
+    if (mMargin.ConvertsToLength()) {
+      GetMarginNoPercentage(aMargin);
       return true;
     }
+
     return false;
   }
 
-protected:
-  bool          mHasCachedMargin;
-  nsMargin      mCachedMargin;
+  void GetMarginNoPercentage(nsMargin& aMargin) const
+  {
+    MOZ_ASSERT(mMargin.ConvertsToLength());
+    NS_FOR_CSS_SIDES(side) {
+      aMargin.Side(side) = mMargin.Get(side).ToLength();
+    }
+  }
 };
-
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 {
@@ -899,7 +905,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
   }
   void Destroy(nsPresContext* aContext);
 
-  void RecalcData();
   nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
@@ -919,19 +924,28 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePadding
 
   nsStyleSides  mPadding;         // [reset] coord, percent, calc
 
-  bool IsWidthDependent() const { return !mHasCachedPadding; }
+  bool IsWidthDependent() const {
+    return !mPadding.ConvertsToLength();
+  }
+
   bool GetPadding(nsMargin& aPadding) const
   {
-    if (mHasCachedPadding) {
-      aPadding = mCachedPadding;
+    if (mPadding.ConvertsToLength()) {
+      GetPaddingNoPercentage(aPadding);
       return true;
     }
+
     return false;
   }
 
-protected:
-  bool          mHasCachedPadding;
-  nsMargin      mCachedPadding;
+  void GetPaddingNoPercentage(nsMargin& aPadding) const
+  {
+    MOZ_ASSERT(mPadding.ConvertsToLength());
+    NS_FOR_CSS_SIDES(side) {
+      // Clamp negative calc() to 0.
+      aPadding.Side(side) = std::max(mPadding.Get(side).ToLength(), 0);
+    }
+  }
 };
 
 struct nsBorderColors

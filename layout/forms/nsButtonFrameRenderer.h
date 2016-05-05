@@ -45,11 +45,11 @@ public:
                                          const nsRect& aDirtyRect,
                                          const nsRect& aRect);
 
-  DrawResult PaintBorderAndBackground(nsDisplayListBuilder* aBuilder,
-                                      nsPresContext* aPresContext,
-                                      nsRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect,
-                                      const nsRect& aRect);
+  DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
+                         nsPresContext* aPresContext,
+                         nsRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect,
+                         const nsRect& aRect);
 
   void SetFrame(nsFrame* aFrame, nsPresContext* aPresContext);
  

@@ -432,7 +432,7 @@ template <typename T> inline bool operator>=(std::nullptr_t, const sk_sp<T>& b) 
 
 template <typename T, typename... Args>
 sk_sp<T> sk_make_sp(Args&&... args) {
-    return sk_sp<T>(new T(std::forward<Args>(args)...));
+    return sk_sp<T>(new T(std__forward<Args>(args)...));
 }
 
 #ifdef SK_SUPPORT_TRANSITION_TO_SP_INTERFACES

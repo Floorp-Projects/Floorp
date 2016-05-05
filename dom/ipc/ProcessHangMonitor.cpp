@@ -230,22 +230,6 @@ public:
 
 } // namespace
 
-template<>
-struct RunnableMethodTraits<HangMonitorChild>
-{
-  typedef HangMonitorChild Class;
-  static void RetainCallee(Class* obj) { }
-  static void ReleaseCallee(Class* obj) { }
-};
-
-template<>
-struct RunnableMethodTraits<HangMonitorParent>
-{
-  typedef HangMonitorParent Class;
-  static void RetainCallee(Class* obj) { }
-  static void ReleaseCallee(Class* obj) { }
-};
-
 /* HangMonitorChild implementation */
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
@@ -303,8 +287,7 @@ HangMonitorChild::ActorDestroy(ActorDestroyReason aWhy)
 
   // We use a task here to ensure that IPDL is finished with this
   // HangMonitorChild before it gets deleted on the main thread.
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorChild::ShutdownOnThread));
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod(this, &HangMonitorChild::ShutdownOnThread));
 }
 
 bool
@@ -390,9 +373,10 @@ HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
   }
   nsAutoCString filename(aFileName);
 
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorChild::NotifySlowScriptAsync,
-                      id, filename, aLineNo));
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod
+                          <TabId, nsCString, unsigned>(this,
+                                                       &HangMonitorChild::NotifySlowScriptAsync,
+                                                       id, filename, aLineNo));
   return SlowScriptAction::Continue;
 }
 
@@ -420,10 +404,9 @@ HangMonitorChild::NotifyPluginHang(uint32_t aPluginId)
   mSentReport = true;
 
   // bounce to background thread
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this,
-                      &HangMonitorChild::NotifyPluginHangAsync,
-                      aPluginId));
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod<uint32_t>(this,
+                                                               &HangMonitorChild::NotifyPluginHangAsync,
+                                                               aPluginId));
 }
 
 void
@@ -445,8 +428,7 @@ HangMonitorChild::ClearHang()
 
   if (mSentReport) {
     // bounce to background thread
-    MonitorLoop()->PostTask(
-      NewRunnableMethod(this, &HangMonitorChild::ClearHangAsync));
+    MonitorLoop()->PostTask(NewNonOwningRunnableMethod(this, &HangMonitorChild::ClearHangAsync));
 
     MonitorAutoLock lock(mMonitor);
     mSentReport = false;
@@ -511,8 +493,8 @@ HangMonitorParent::Shutdown()
     mProcess = nullptr;
   }
 
-  MonitorLoop()->PostTask(
-    NewRunnableMethod(this, &HangMonitorParent::ShutdownOnThread));
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod(this,
+                                                     &HangMonitorParent::ShutdownOnThread));
 
   while (!mShutdownDone) {
     mMonitor.Wait();
@@ -832,8 +814,8 @@ HangMonitoredProcess::TerminateScript()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::TerminateScript));
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(NewNonOwningRunnableMethod(mActor,
+                                                                                &HangMonitorParent::TerminateScript));
   return NS_OK;
 }
 
@@ -849,8 +831,8 @@ HangMonitoredProcess::BeginStartingDebugger()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::BeginStartingDebugger));
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(NewNonOwningRunnableMethod(mActor,
+                                                                                &HangMonitorParent::BeginStartingDebugger));
   return NS_OK;
 }
 
@@ -866,8 +848,8 @@ HangMonitoredProcess::EndStartingDebugger()
     return NS_ERROR_UNEXPECTED;
   }
 
-  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(
-    NewRunnableMethod(mActor, &HangMonitorParent::EndStartingDebugger));
+  ProcessHangMonitor::Get()->MonitorLoop()->PostTask(NewNonOwningRunnableMethod(mActor,
+                                                                                &HangMonitorParent::EndStartingDebugger));
   return NS_OK;
 }
 
@@ -1045,9 +1027,13 @@ mozilla::CreateHangMonitorParent(ContentParent* aContentParent,
   HangMonitoredProcess* process = new HangMonitoredProcess(parent, aContentParent);
   parent->SetProcess(process);
 
-  monitor->MonitorLoop()->PostTask(
-    NewRunnableMethod(parent, &HangMonitorParent::Open,
-                      aTransport, aOtherPid, XRE_GetIOMessageLoop()));
+  monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
+                                   <mozilla::ipc::Transport*,
+                                    base::ProcessId,
+                                    MessageLoop*>(parent,
+                                                  &HangMonitorParent::Open,
+                                                  aTransport, aOtherPid,
+                                                  XRE_GetIOMessageLoop()));
 
   return parent;
 }
@@ -1061,9 +1047,13 @@ mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
   HangMonitorChild* child = new HangMonitorChild(monitor);
 
-  monitor->MonitorLoop()->PostTask(
-    NewRunnableMethod(child, &HangMonitorChild::Open,
-                      aTransport, aOtherPid, XRE_GetIOMessageLoop()));
+  monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
+                                   <mozilla::ipc::Transport*,
+                                    base::ProcessId,
+                                    MessageLoop*>(child,
+                                                  &HangMonitorChild::Open,
+                                                  aTransport, aOtherPid,
+                                                  XRE_GetIOMessageLoop()));
 
   return child;
 }

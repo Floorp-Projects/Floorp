@@ -1204,8 +1204,8 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
 #endif
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-  return NS_NewThread(getter_AddRefs(mProcessWatcher),
-                      NS_NewRunnableMethod(this, &nsUpdateProcessor::StartStagedUpdate));
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &nsUpdateProcessor::StartStagedUpdate);
+  return NS_NewThread(getter_AddRefs(mProcessWatcher), r);
 }
 
 
@@ -1229,13 +1229,13 @@ nsUpdateProcessor::StartStagedUpdate()
 
   if (mUpdaterPID) {
     // Track the state of the updater process while it is staging an update.
-    rv = NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &nsUpdateProcessor::WaitForProcess));
+    rv = NS_DispatchToCurrentThread(NewRunnableMethod(this, &nsUpdateProcessor::WaitForProcess));
     NS_ENSURE_SUCCESS_VOID(rv);
   } else {
     // Failed to launch the updater process for some reason.
     // We need to shutdown the current thread as there isn't anything more for
     // us to do...
-    rv = NS_DispatchToMainThread(NS_NewRunnableMethod(this, &nsUpdateProcessor::ShutdownWatcherThread));
+    rv = NS_DispatchToMainThread(NewRunnableMethod(this, &nsUpdateProcessor::ShutdownWatcherThread));
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 }
@@ -1253,7 +1253,7 @@ nsUpdateProcessor::WaitForProcess()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "main thread");
   ::WaitForProcess(mUpdaterPID);
-  NS_DispatchToMainThread(NS_NewRunnableMethod(this, &nsUpdateProcessor::UpdateDone));
+  NS_DispatchToMainThread(NewRunnableMethod(this, &nsUpdateProcessor::UpdateDone));
 }
 
 void

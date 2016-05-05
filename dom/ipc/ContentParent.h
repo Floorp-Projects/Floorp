@@ -340,21 +340,11 @@ public:
    * Kill our subprocess and make sure it dies.  Should only be used
    * in emergency situations since it bypasses the normal shutdown
    * process.
+   *
+   * WARNING: aReason appears in telemetry, so any new value passed in requires
+   * data review.
    */
   void KillHard(const char* aWhy);
-
-  /**
-   * API for adding a crash reporter annotation that provides a reason
-   * for a listener request to abort the child.
-   */
-  bool IsKillHardAnnotationSet() const { return mKillHardAnnotation.IsEmpty(); }
-
-  const nsCString& GetKillHardAnnotation() const { return mKillHardAnnotation; }
-
-  void SetKillHardAnnotation(const nsACString& aReason)
-  {
-    mKillHardAnnotation = aReason;
-  }
 
   ContentParentId ChildID() const override { return mChildID; }
 

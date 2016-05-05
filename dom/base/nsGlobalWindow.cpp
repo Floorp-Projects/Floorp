@@ -615,7 +615,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMayHavePointerEnterLeaveEventListener(false),
   mInnerObjectsFreed(false),
   mIsModalContentWindow(false),
-  mIsActive(false), mIsBackground(false), mMediaSuspended(false),
+  mIsActive(false), mIsBackground(false),
+  mMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED),
   mAudioMuted(false), mAudioVolume(1.0), mAudioCaptured(false),
   mDesktopModeViewport(false), mInnerWindow(nullptr),
   mOuterWindow(aOuterWindow),
@@ -2678,7 +2679,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
      under normal circumstances, but bug 49615 describes a case.) */
 
   nsContentUtils::AddScriptRunner(
-    NS_NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
+    NewRunnableMethod(this, &nsGlobalWindow::ClearStatus));
 
   // Sometimes, WouldReuseInnerWindow() returns true even if there's no inner
   // window (see bug 776497). Be safe.
@@ -2984,8 +2985,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // up with the outer. See bug 969156.
   if (createdInnerWindow) {
     nsContentUtils::AddScriptRunner(
-      NS_NewRunnableMethod(newInnerWindow,
-                           &nsGlobalWindow::FireOnNewGlobalObject));
+      NewRunnableMethod(newInnerWindow,
+                        &nsGlobalWindow::FireOnNewGlobalObject));
   }
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
@@ -2998,7 +2999,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         nsContentUtils::IsSystemPrincipal(mDoc->NodePrincipal())) {
       newInnerWindow->mHasNotifiedGlobalCreated = true;
       nsContentUtils::AddScriptRunner(
-        NS_NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
+        NewRunnableMethod(this, &nsGlobalWindow::DispatchDOMWindowCreated));
     }
   }
 
@@ -3890,30 +3891,29 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
   }
 }
 
-bool
-nsPIDOMWindowOuter::GetMediaSuspended() const
+SuspendTypes
+nsPIDOMWindowOuter::GetMediaSuspend() const
 {
   if (IsInnerWindow()) {
-    return mOuterWindow->GetMediaSuspended();
+    return mOuterWindow->GetMediaSuspend();
   }
 
-  return mMediaSuspended;
+  return mMediaSuspend;
 }
 
 void
-nsPIDOMWindowOuter::SetMediaSuspended(bool aSuspended)
+nsPIDOMWindowOuter::SetMediaSuspend(SuspendTypes aSuspend)
 {
   if (IsInnerWindow()) {
-    mOuterWindow->SetMediaSuspended(aSuspended);
+    mOuterWindow->SetMediaSuspend(aSuspend);
     return;
   }
 
-  if (mMediaSuspended == aSuspended) {
-    return;
+  if (!IsDisposableSuspend(aSuspend)) {
+    mMediaSuspend = aSuspend;
   }
 
-  mMediaSuspended = aSuspended;
-  RefreshMediaElements();
+  RefreshMediaElementsSuspend(aSuspend);
 }
 
 bool
@@ -3939,7 +3939,7 @@ nsPIDOMWindowOuter::SetAudioMuted(bool aMuted)
   }
 
   mAudioMuted = aMuted;
-  RefreshMediaElements();
+  RefreshMediaElementsVolume();
 }
 
 float
@@ -3968,17 +3968,33 @@ nsPIDOMWindowOuter::SetAudioVolume(float aVolume)
   }
 
   mAudioVolume = aVolume;
-  RefreshMediaElements();
+  RefreshMediaElementsVolume();
   return NS_OK;
 }
 
 void
-nsPIDOMWindowOuter::RefreshMediaElements()
+nsPIDOMWindowOuter::RefreshMediaElementsVolume()
 {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
     service->RefreshAgentsVolume(GetOuterWindow());
   }
+}
+
+void
+nsPIDOMWindowOuter::RefreshMediaElementsSuspend(SuspendTypes aSuspend)
+{
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  if (service) {
+    service->RefreshAgentsSuspend(GetOuterWindow(), aSuspend);
+  }
+}
+
+bool
+nsPIDOMWindowOuter::IsDisposableSuspend(SuspendTypes aSuspend) const
+{
+  return (aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE ||
+          aSuspend == nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
 }
 
 void
@@ -10012,8 +10028,13 @@ nsGlobalWindow::GetFocusMethod()
 void
 nsGlobalWindow::InitializeShowFocusRings()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
+  // Initialize the focus ring state from the parent window. For root windows,
+  // there is no need to do this as SetKeyboardIndicators will propogate any
+  // non-default value to child windows.
   nsPIDOMWindowOuter* root = GetPrivateRoot();
-  if (root) {
+  if (root && GetOuterWindow() != root) {
     bool showAccelerators = false, showFocusRings = false;
     root->GetKeyboardIndicators(&showAccelerators, &showFocusRings);
     mShowFocusRings = showFocusRings;
@@ -11707,7 +11728,7 @@ public:
   ~AutoUnblockScriptClosing()
   {
     void (nsGlobalWindow::*run)() = &nsGlobalWindow::UnblockScriptedClosing;
-    NS_DispatchToCurrentThread(NS_NewRunnableMethod(mWin, run));
+    NS_DispatchToCurrentThread(NewRunnableMethod(mWin, run));
   }
 };
 

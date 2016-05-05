@@ -47,12 +47,6 @@ static_assert((((1 << nsStyleStructID_Length) - 1) &
 const int32_t nsStyleGridLine::kMinLine = -10000;
 const int32_t nsStyleGridLine::kMaxLine = 10000;
 
-inline bool IsFixedUnit(const nsStyleCoord& aCoord, bool aEnumOK)
-{
-  return aCoord.ConvertsToLength() || 
-         (aEnumOK && aCoord.GetUnit() == eStyleUnit_Enumerated);
-}
-
 static bool EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 {
   bool eq;
@@ -243,15 +237,6 @@ nsStyleFont::GetLanguage(StyleStructContext aContext)
   return language.forget();
 }
 
-static bool IsFixedData(const nsStyleSides& aSides, bool aEnumOK)
-{
-  NS_FOR_CSS_SIDES(side) {
-    if (!IsFixedUnit(aSides.Get(side), aEnumOK))
-      return false;
-  }
-  return true;
-}
-
 static nscoord CalcCoord(const nsStyleCoord& aCoord, 
                          const nscoord* aEnumTable, 
                          int32_t aNumEnums)
@@ -270,8 +255,6 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 }
 
 nsStyleMargin::nsStyleMargin(StyleStructContext aContext)
-  : mHasCachedMargin(false)
-  , mCachedMargin(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleMargin);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
@@ -282,8 +265,6 @@ nsStyleMargin::nsStyleMargin(StyleStructContext aContext)
 
 nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
   : mMargin(aSrc.mMargin)
-  , mHasCachedMargin(false)
-  , mCachedMargin(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
@@ -293,19 +274,6 @@ nsStyleMargin::Destroy(nsPresContext* aContext) {
   this->~nsStyleMargin();
   aContext->PresShell()->
     FreeByObjectID(eArenaObjectID_nsStyleMargin, this);
-}
-
-
-void nsStyleMargin::RecalcData()
-{
-  if (IsFixedData(mMargin, false)) {
-    NS_FOR_CSS_SIDES(side) {
-      mCachedMargin.Side(side) = CalcCoord(mMargin.Get(side), nullptr, 0);
-    }
-    mHasCachedMargin = true;
-  }
-  else
-    mHasCachedMargin = false;
 }
 
 nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
@@ -321,8 +289,6 @@ nsChangeHint nsStyleMargin::CalcDifference(const nsStyleMargin& aOther) const
 }
 
 nsStylePadding::nsStylePadding(StyleStructContext aContext)
-  : mHasCachedPadding(false)
-  , mCachedPadding(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStylePadding);
   nsStyleCoord zero(0, nsStyleCoord::CoordConstructor);
@@ -333,8 +299,6 @@ nsStylePadding::nsStylePadding(StyleStructContext aContext)
 
 nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
   : mPadding(aSrc.mPadding)
-  , mHasCachedPadding(false)
-  , mCachedPadding(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStylePadding);
 }
@@ -344,20 +308,6 @@ nsStylePadding::Destroy(nsPresContext* aContext) {
   this->~nsStylePadding();
   aContext->PresShell()->
     FreeByObjectID(eArenaObjectID_nsStylePadding, this);
-}
-
-void nsStylePadding::RecalcData()
-{
-  if (IsFixedData(mPadding, false)) {
-    NS_FOR_CSS_SIDES(side) {
-      // Clamp negative calc() to 0.
-      mCachedPadding.Side(side) =
-        std::max(CalcCoord(mPadding.Get(side), nullptr, 0), 0);
-    }
-    mHasCachedPadding = true;
-  }
-  else
-    mHasCachedPadding = false;
 }
 
 nsChangeHint nsStylePadding::CalcDifference(const nsStylePadding& aOther) const
@@ -601,7 +551,8 @@ nsStyleOutline::RecalcData(nsPresContext* aContext)
   if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) {
     mCachedOutlineWidth = 0;
   } else {
-    MOZ_ASSERT(IsFixedUnit(mOutlineWidth, true));
+    MOZ_ASSERT(mOutlineWidth.ConvertsToLength() ||
+               mOutlineWidth.GetUnit() == eStyleUnit_Enumerated);
     // Clamp negative calc() to 0.
     mCachedOutlineWidth =
       std::max(CalcCoord(mOutlineWidth, aContext->GetBorderWidthTable(), 3), 0);
@@ -2651,7 +2602,7 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aOthe
   }
 
   if (mPosition != aOther.mPosition) {
-    hint |= nsChangeHint_SchedulePaint;
+    hint |= nsChangeHint_UpdateBackgroundPosition;
   }
 
   return hint;
@@ -2885,12 +2836,7 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT)
   , mTransformBox(NS_STYLE_TRANSFORM_BOX_BORDER_BOX)
   , mSpecifiedTransform(nullptr)
-  , mTransformOrigin{ {0.5f, eStyleUnit_Percent}, // Transform is centered on origin
-                      {0.5f, eStyleUnit_Percent},
-                      {0, nsStyleCoord::CoordConstructor} }
   , mChildPerspective(eStyleUnit_None)
-  , mPerspectiveOrigin{ {0.5f, eStyleUnit_Percent},
-                        {0.5f, eStyleUnit_Percent} }
   , mVerticalAlign(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated)
   , mTransitions(nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT)
   , mTransitionTimingFunctionCount(1)
@@ -2908,6 +2854,11 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mAnimationIterationCountCount(1)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
+  mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
+  mTransformOrigin[1].SetPercentValue(0.5f);
+  mTransformOrigin[2].SetCoordValue(0);
+  mPerspectiveOrigin[0].SetPercentValue(0.5f);
+  mPerspectiveOrigin[1].SetPercentValue(0.5f);
 
   // Initial value for mScrollSnapDestination is "0px 0px"
   mScrollSnapDestination.SetInitialZeroValues();
@@ -2950,12 +2901,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransformStyle(aSource.mTransformStyle)
   , mTransformBox(aSource.mTransformBox)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
-  , mTransformOrigin{ aSource.mTransformOrigin[0],
-                      aSource.mTransformOrigin[1],
-                      aSource.mTransformOrigin[2] }
   , mChildPerspective(aSource.mChildPerspective)
-  , mPerspectiveOrigin{ aSource.mPerspectiveOrigin[0],
-                        aSource.mPerspectiveOrigin[1] }
   , mVerticalAlign(aSource.mVerticalAlign)
   , mTransitions(aSource.mTransitions)
   , mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount)
@@ -2973,6 +2919,13 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
+
+  /* Copy over transform origin. */
+  mTransformOrigin[0] = aSource.mTransformOrigin[0];
+  mTransformOrigin[1] = aSource.mTransformOrigin[1];
+  mTransformOrigin[2] = aSource.mTransformOrigin[2];
+  mPerspectiveOrigin[0] = aSource.mPerspectiveOrigin[0];
+  mPerspectiveOrigin[1] = aSource.mPerspectiveOrigin[1];
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const

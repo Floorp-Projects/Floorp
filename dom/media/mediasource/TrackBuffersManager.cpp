@@ -201,9 +201,7 @@ TrackBuffersManager::ProcessTasks()
         NS_WARNING("Invalid Task");
     }
   }
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks);
-  GetTaskQueue()->Dispatch(task.forget());
+  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::ProcessTasks));
 }
 
 // A PromiseHolder will assert upon destruction if it has a pending promise
@@ -793,9 +791,7 @@ TrackBuffersManager::ScheduleSegmentParserLoop()
   if (mDetached) {
     return;
   }
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop);
-  GetTaskQueue()->Dispatch(task.forget());
+  GetTaskQueue()->Dispatch(NewRunnableMethod(this, &TrackBuffersManager::SegmentParserLoop));
 }
 
 void
@@ -971,11 +967,10 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   int64_t duration = std::max(videoDuration, audioDuration);
   // 1. Update the duration attribute if it currently equals NaN.
   // Those steps are performed by the MediaSourceDecoder::SetInitialDuration
-  nsCOMPtr<nsIRunnable> task =
-    NS_NewRunnableMethodWithArg<int64_t>(mParentDecoder,
-                                         &MediaSourceDecoder::SetInitialDuration,
-                                         duration ? duration : -1);
-  AbstractThread::MainThread()->Dispatch(task.forget());
+  AbstractThread::MainThread()->Dispatch(NewRunnableMethod<int64_t>
+                                         (mParentDecoder,
+                                          &MediaSourceDecoder::SetInitialDuration,
+                                          duration ? duration : -1));
 
   // 2. If the initialization segment has no audio, video, or text tracks, then
   // run the append error algorithm with the decode error parameter set to true
@@ -1397,6 +1392,11 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
   TrackBuffer samples; // array that will contain the frames to be added
                        // to our track buffer.
 
+  // We assume that no frames are contiguous within a media segment and as such
+  // don't need to check for discontinuity except for the first frame and should
+  // a frame be ignored due to the target window.
+  bool needDiscontinuityCheck = true;
+
   if (aSamples.Length()) {
     aTrackData.mLastParsedEndTime = TimeUnit();
   }
@@ -1461,7 +1461,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     // OR
     // If last decode timestamp for track buffer is set and the difference between decode timestamp and last decode timestamp is greater than 2 times last frame duration:
 
-    if (trackBuffer.mLastDecodeTimestamp.isSome() &&
+    if (needDiscontinuityCheck && trackBuffer.mLastDecodeTimestamp.isSome() &&
         (decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref() ||
          (decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref()
           > 2 * trackBuffer.mLongestFrameDuration))) {
@@ -1512,6 +1512,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
             : timestampOffset + sampleTimecode;
       }
       trackBuffer.mNeedRandomAccessPoint = false;
+      needDiscontinuityCheck = false;
     }
 
     // 7. Let frame end timestamp equal the sum of presentation timestamp and frame duration.
@@ -1530,6 +1531,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
         sizeNewSamples = 0;
       }
       trackBuffer.mNeedRandomAccessPoint = true;
+      needDiscontinuityCheck = true;
       continue;
     }
 

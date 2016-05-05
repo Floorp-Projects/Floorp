@@ -6,6 +6,65 @@
 
 interface mozIDOMWindow;
 
+typedef uint32_t nsSuspendedTypes;
+
+[scriptable, builtinclass, uuid(2822a840-f009-11e5-a837-0800200c9a66)]
+interface nsISuspendedTypes : nsISupports
+{
+  /**
+   * The suspended enum is used in three different situations,
+   * - platform audio focus (Fennec/B2G)
+   * - remote media control (Fennec)
+   * - block auto-play video in non-active page
+   *
+   * Note: the "remote side" must control the AudioChannelAgent using
+   * nsIAudioChannelAgentCallback.windowSuspendChanged() callback instead using
+   * play/pause methods or any button in the webpage.
+   *
+   * - SUSPENDED_PAUSE :
+   * It's used when transiently losing audio focus, the media can't be resumed
+   * until we gain the audio focus again. It would change the internal state of
+   * MediaElement when it's being suspended/resumed, and it would trigger the
+   * related JS event. eg. "play" and "pause" event.
+   *
+   * - SUSPENDED_BLOCK
+   * It's used to prevent auto-playing media in inactive page in order to
+   * reduce the power consumption, and the media can't be resumed until the
+   * page becomes active again. It would change the internal state of
+   * MediaElement when it's being blocked/resumed, so it won't trigger the
+   * related JS event. eg. "play" and "pause" event.
+   *
+   * - SUSPENDED_PAUSE_DISPOSABLE
+   * It's used for remote media-control to pause the playing media and when we
+   * lose audio focus permanently. It's disposable suspended, so the media can
+   * be resumed arbitrary after that. Same as SUSPENDED_PAUSE, it would change
+   * the internal state of MediaElement when it's being suspended.
+   *
+   * - SUSPENDED_STOP_DISPOSABLE
+   * It's used for remote media-control to stop the playing media. The remote
+   * control would disappear after stopping the media, so we would disconnect
+   * the audio channel agent. It's disposable suspended, so the media can be
+   * resumed arbitrary after that. Same as SUSPENDED_PAUSE, it would change
+   * the internal state of MediaElement when it's being suspended.
+   */
+
+  const uint32_t NONE_SUSPENDED             = 0;
+  const uint32_t SUSPENDED_PAUSE            = 1;
+  const uint32_t SUSPENDED_BLOCK            = 2;
+  const uint32_t SUSPENDED_PAUSE_DISPOSABLE = 3;
+  const uint32_t SUSPENDED_STOP_DISPOSABLE  = 4;
+};
+
+%{C++
+namespace mozilla {
+namespace dom {
+// It's defined in dom/audiochannel/AudioChannelService.h.
+class AudioPlaybackConfig;
+}
+}
+%}
+[ptr] native AudioPlaybackConfig(mozilla::dom::AudioPlaybackConfig);
+
 [uuid(15c05894-408e-4798-b527-a8c32d9c5f8c)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
@@ -13,6 +72,11 @@ interface nsIAudioChannelAgentCallback : nsISupports
    * Notified when the window volume/mute is changed
    */
   void windowVolumeChanged(in float aVolume, in bool aMuted);
+
+   /**
+   * Notified when the window needs to be suspended or resumed.
+   */
+  void windowSuspendChanged(in uint32_t aSuspend);
 
   /**
    * Notified when the capture state is changed.
@@ -98,15 +162,10 @@ interface nsIAudioChannelAgent : nsISupports
    * Note: Gecko component SHOULD call this function first then start to
    *          play audio stream only when return value is true.
    *
-   * @return
-   *    normal state: the agent has registered with audio channel service and
-   *          the component should start playback.
-   *    muted state: the agent has registered with audio channel service but
-   *          the component should not start playback.
-   *    faded state: the agent has registered with audio channel service the
-   *          component should start playback as well as reducing the volume.
+   * @param config
+   *    It contains the playback related states (volume/mute/suspend)
    */
-  void notifyStartedPlaying(out float volume, out bool muted);
+  void notifyStartedPlaying(in AudioPlaybackConfig config);
 
   /**
    * Notify the agent we no longer want to play.

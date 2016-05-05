@@ -517,7 +517,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
       }
       else {
         nsContentUtils::AddScriptRunner(
-          NS_NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
+          NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
       }
     }
   }
@@ -3094,7 +3094,8 @@ Element::HTMLSVGPropertiesToTraverseAndUnlink()
 }
 
 nsDOMTokenList*
-Element::GetTokenList(nsIAtom* aAtom)
+Element::GetTokenList(nsIAtom* aAtom,
+                      const DOMTokenListSupportedTokenArray aSupportedTokens)
 {
 #ifdef DEBUG
   nsIAtom*** props =
@@ -3114,7 +3115,7 @@ Element::GetTokenList(nsIAtom* aAtom)
     list = static_cast<nsDOMTokenList*>(GetProperty(aAtom));
   }
   if (!list) {
-    list = new nsDOMTokenList(this, aAtom);
+    list = new nsDOMTokenList(this, aAtom, aSupportedTokens);
     NS_ADDREF(list);
     SetProperty(aAtom, list, nsDOMTokenListPropertyDestructor);
   }

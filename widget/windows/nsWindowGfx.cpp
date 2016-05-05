@@ -240,7 +240,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     ::BeginPaint(mWnd, &ps);
     ::EndPaint(mWnd, &ps);
 
-    aDC = mMemoryDC;
+    // We're guaranteed to have a widget proxy since we called GetLayerManager().
+    aDC = GetCompositorWidgetProxy()->GetTransparentDC();
   }
 #endif
 
@@ -312,10 +313,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
           if (eTransparencyTransparent == mTransparencyMode) {
-            if (mTransparentSurface == nullptr) {
-              SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
-            }
-            targetSurface = mTransparentSurface;
+            targetSurface = GetCompositorWidgetProxy()->EnsureTransparentSurface();
           }
 #endif
 
@@ -380,7 +378,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             // Data from offscreen drawing surface was copied to memory bitmap of transparent
             // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
             // that displayed on the screen.
-            UpdateTranslucentWindow();
+            GetCompositorWidgetProxy()->RedrawTransparentWindow();
           }
 #endif
         }
@@ -391,7 +389,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             this, LayoutDeviceIntRegion::FromUnknownRegion(region));
           if (!gfxEnv::DisableForcePresent() && gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
             nsCOMPtr<nsIRunnable> event =
-              NS_NewRunnableMethod(this, &nsWindow::ForcePresent);
+              NewRunnableMethod(this, &nsWindow::ForcePresent);
             NS_DispatchToMainThread(event);
           }
         }

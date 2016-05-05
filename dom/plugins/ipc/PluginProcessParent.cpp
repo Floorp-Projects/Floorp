@@ -27,13 +27,6 @@ using mozilla::plugins::LaunchCompleteTask;
 using mozilla::plugins::PluginProcessParent;
 using base::ProcessArchitecture;
 
-template<>
-struct RunnableMethodTraits<PluginProcessParent>
-{
-    static void RetainCallee(PluginProcessParent* obj) { }
-    static void ReleaseCallee(PluginProcessParent* obj) { }
-};
-
 PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
     GeckoChildProcessHost(GeckoProcessType_Plugin),
     mPluginFilePath(aPluginFilePath),
@@ -202,7 +195,7 @@ PluginProcessParent::Delete()
       return;
   }
 
-  ioLoop->PostTask(NewRunnableMethod(this, &PluginProcessParent::Delete));
+  ioLoop->PostTask(NewNonOwningRunnableMethod(this, &PluginProcessParent::Delete));
 }
 
 void
