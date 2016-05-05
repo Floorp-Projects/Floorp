@@ -342,6 +342,15 @@ struct nsRunnableMethodTraits<R(C::*)(As...), Owning, Cancelable>
   static const bool can_cancel = Cancelable;
 };
 
+template<class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<R(C::*)(As...) const, Owning, Cancelable>
+{
+  typedef const C class_type;
+  typedef R return_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
+};
+
 #ifdef NS_HAVE_STDCALL
 template<class C, typename R, bool Owning, bool Cancelable, typename... As>
 struct nsRunnableMethodTraits<R(__stdcall C::*)(As...), Owning, Cancelable>
@@ -356,6 +365,23 @@ template<class C, typename R, bool Owning, bool Cancelable>
 struct nsRunnableMethodTraits<R(NS_STDCALL C::*)(), Owning, Cancelable>
 {
   typedef C class_type;
+  typedef R return_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
+};
+template<class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<R(__stdcall C::*)(As...) const, Owning, Cancelable>
+{
+  typedef const C class_type;
+  typedef R return_type;
+  typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
+  static const bool can_cancel = Cancelable;
+};
+
+template<class C, typename R, bool Owning, bool Cancelable>
+struct nsRunnableMethodTraits<R(NS_STDCALL C::*)() const, Owning, Cancelable>
+{
+  typedef const C class_type;
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
