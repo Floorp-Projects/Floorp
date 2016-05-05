@@ -34,13 +34,42 @@ public:
     return this;
   }
 
+  // Callbacks for nsWindow.
   void EnterPresentLock();
   void LeavePresentLock();
+  void OnDestroyWindow();
+
+  // Transparency handling.
+  void UpdateTransparency(nsTransparencyMode aMode);
+  void ClearTransparentWindow();
+  bool RedrawTransparentWindow();
+
+  // Update the bounds of the transparent surface.
+  void ResizeTransparentWindow(int32_t aNewWidth, int32_t aNewHeight);
+
+  // Ensure that a transparent surface exists, then return it.
+  RefPtr<gfxASurface> EnsureTransparentSurface();
+
+  HDC GetTransparentDC() const {
+    return mMemoryDC;
+  }
+
+private:
+  HDC GetWindowSurface();
+  void FreeWindowSurface(HDC dc);
+
+  void CreateTransparentSurface(int32_t aWidth, int32_t aHeight);
 
 private:
   nsWindow* mWindow;
   HWND mWnd;
   gfx::CriticalSection mPresentLock;
+
+  // Transparency handling.
+  nsTransparencyMode mTransparencyMode;
+  RefPtr<gfxASurface> mTransparentSurface;
+  HDC mMemoryDC;
+  HDC mCompositeDC;
 };
 
 } // namespace widget
