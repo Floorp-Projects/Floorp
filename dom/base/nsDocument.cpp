@@ -2813,11 +2813,19 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // Check if this is part of the Loop/Hello service
   bool applyLoopCSP = IsLoopDocument(aChannel);
 
+  // Check if this is a signed content to apply default CSP.
+  bool applySignedContentCSP = false;
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (loadInfo && loadInfo->GetVerifySignedContent()) {
+    applySignedContentCSP = true;
+  }
+
   // If there's no CSP to apply, go ahead and return early
   if (!applyAppDefaultCSP &&
       !applyAppManifestCSP &&
       !applyAddonCSP &&
       !applyLoopCSP &&
+      !applySignedContentCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty()) {
     if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
@@ -2888,6 +2896,15 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     if (NS_SUCCEEDED(rv)) {
       csp->AppendPolicy(addonCSP, false, false);
     }
+  }
+
+  // ----- if the doc is a signed content, apply the default CSP.
+  // Note that when the content signing becomes a standard, we might have
+  // to restrict this enforcement to "remote content" only.
+  if (applySignedContentCSP) {
+    nsAdoptingString signedContentCSP =
+      Preferences::GetString("security.signed_content.CSP.default");
+    csp->AppendPolicy(signedContentCSP, false, false);
   }
 
   // ----- if the doc is part of Loop, apply the loop CSP
