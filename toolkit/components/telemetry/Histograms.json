@@ -10503,6 +10503,5 @@
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
->>>>>>> graft
   }
 }
