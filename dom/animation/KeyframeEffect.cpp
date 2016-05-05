@@ -710,6 +710,38 @@ KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
 }
 
+static const KeyframeEffectOptions&
+KeyframeEffectOptionsFromUnion(
+  const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
+  return aOptions.GetAsKeyframeEffectOptions();
+}
+
+static const KeyframeEffectOptions&
+KeyframeEffectOptionsFromUnion(
+  const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
+  return aOptions.GetAsKeyframeAnimationOptions();
+}
+
+template <class OptionsType>
+static KeyframeEffectParams
+KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
+                              ErrorResult& aRv)
+{
+  KeyframeEffectParams result;
+  if (!aOptions.IsUnrestrictedDouble()) {
+    const KeyframeEffectOptions& options =
+      KeyframeEffectOptionsFromUnion(aOptions);
+    // TODO: If the grammar of spacing is not correct, we should throw a
+    //       TypeError, aRv.Throw(NS_ERROR_TYPE_ERR). Parse spacing string and
+    //       handle TypeError in the next patch.
+  }
+  return result;
+}
+
 static Maybe<OwningAnimationTarget>
 ConvertTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 {
@@ -754,9 +786,9 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
+  KeyframeEffectParams effectOptions =
+    KeyframeEffectParamsFromUnion(aOptions, aRv);
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
-  // TODO: Use options data from input in the next patch.
-  KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffectType> effect =
     new KeyframeEffectType(doc, target, timingParams, effectOptions);
 
