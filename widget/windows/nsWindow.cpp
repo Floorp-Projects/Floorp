@@ -3638,10 +3638,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
   RECT windowRect;
   ::GetClientRect(mWnd, &windowRect);
 
-  if (!mCompositorWidgetProxy) {
-    mCompositorWidgetProxy = new WinCompositorWidgetProxy(this);
-  }
-
   // Try OMTC first.
   if (!mLayerManager && ShouldUseOffMainThreadCompositing()) {
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
@@ -3654,6 +3650,13 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
   if (!mLayerManager) {
     MOZ_ASSERT(!mCompositorBridgeParent && !mCompositorBridgeChild);
+
+    // Ensure we have a widget proxy even if we're not using the compositor,
+    // since that's where we handle transparent windows.
+    if (!mCompositorWidgetProxy) {
+      mCompositorWidgetProxy = new WinCompositorWidgetProxy(this);
+    }
+
     mLayerManager = CreateBasicLayerManager();
   }
 
@@ -3718,6 +3721,12 @@ mozilla::widget::CompositorWidgetProxy*
 nsWindow::NewCompositorWidgetProxy()
 {
   return new WinCompositorWidgetProxy(this);
+}
+
+mozilla::widget::WinCompositorWidgetProxy*
+nsWindow::GetCompositorWidgetProxy()
+{
+  return mCompositorWidgetProxy ? mCompositorWidgetProxy->AsWindowsProxy() : nullptr;
 }
 
 already_AddRefed<mozilla::gfx::DrawTarget>
@@ -4973,13 +4982,18 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         //
         // To do this we take mPresentLock in nsWindow::PreRender and
         // if that lock is taken we wait before doing WM_SETTEXT
-        mPresentLock.Enter();
+        RefPtr<WinCompositorWidgetProxy> proxy = GetCompositorWidgetProxy();
+        if (proxy) {
+          proxy->EnterPresentLock();
+        }
         DWORD style = GetWindowLong(mWnd, GWL_STYLE);
         SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
         *aRetValue = CallWindowProcW(GetPrevWindowProc(), mWnd,
                                      msg, wParam, lParam);
         SetWindowLong(mWnd, GWL_STYLE, style);
-        mPresentLock.Leave();
+        if (proxy) {
+          proxy->LeavePresentLock();
+        }
 
         return true;
       }
@@ -7812,21 +7826,6 @@ void nsWindow::PickerClosed()
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
-}
-
-bool nsWindow::PreRender(LayerManagerComposite*)
-{
-  // This can block waiting for WM_SETTEXT to finish
-  // Using PreRender is unnecessarily pessimistic because
-  // we technically only need to block during the present call
-  // not all of compositor rendering
-  mPresentLock.Enter();
-  return true;
-}
-
-void nsWindow::PostRender(LayerManagerComposite*)
-{
-  mPresentLock.Leave();
 }
 
 bool

@@ -7,6 +7,7 @@
 #define _widget_windows_WinCompositorWidget_h__
 
 #include "CompositorWidgetProxy.h"
+#include "mozilla/gfx/CriticalSection.h"
 
 class nsWindow;
 
@@ -29,12 +30,17 @@ public:
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
   nsIWidget* RealWidget() override;
+  WinCompositorWidgetProxy* AsWindowsProxy() override {
+    return this;
+  }
 
-  NS_INLINE_DECL_REFCOUNTING(mozilla::Widget::WinCompositorWidgetProxy)
+  void EnterPresentLock();
+  void LeavePresentLock();
 
 private:
   nsWindow* mWindow;
   HWND mWnd;
+  gfx::CriticalSection mPresentLock;
 };
 
 } // namespace widget
