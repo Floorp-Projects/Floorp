@@ -10,6 +10,7 @@ TEST_DIRS += ['compiledtest']
 # 12
 
 MOCHITEST_MANIFESTS += [
+    'test/crash/mochitest.ini',
     'test/crossorigin/mochitest.ini',
     'test/mochitest.ini',
     'test/webgl-conf/generated-mochitest.ini',
