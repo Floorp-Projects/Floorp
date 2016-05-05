@@ -122,9 +122,6 @@ AppleVTDecoder::ProcessFlush()
         "with error:%d.", rv);
   }
   ClearReorderedFrames();
-  MonitorAutoLock mon(mMonitor);
-  mIsFlushing = false;
-  mon.NotifyAll();
 }
 
 void
