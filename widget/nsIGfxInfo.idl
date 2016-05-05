@@ -185,6 +185,16 @@ interface nsIGfxInfo : nsISupports
   //       "message": <string>
   //     ]
   //   }
+  //
+  // When a message is prefixed with a '#', it is a special status code. Status
+  // codes are unique identifiers that can be searched in the codebase to find
+  // which line of code caused the message. Some codes are standardized to
+  // improve about:support messaging:
+  //
+  //   "[CONTEXT_]FEATURE_FAILURE_BUG_<number>"
+  //     CONTEXT is optional and can currently only be "BLOCKLIST".
+  //     <number> refers to a bug number in Bugzilla.
+  //
   [implicit_jscontext]
   jsval getFeatureLog();
 
