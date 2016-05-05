@@ -834,7 +834,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
       common.fixedPositionScrollContainerId() = mutant->GetFixedPositionScrollContainerId();
       common.fixedPositionAnchor() = mutant->GetFixedPositionAnchor();
       common.fixedPositionSides() = mutant->GetFixedPositionSides();
-      common.isClipFixed() = mutant->IsClipFixed();
     }
     common.isStickyPosition() = mutant->GetIsStickyPosition();
     if (mutant->GetIsStickyPosition()) {
