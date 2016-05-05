@@ -31,6 +31,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "mozilla/Services.h"
+#include "nsWindowsHelpers.h"
 
 // For NS_CopyNativeToUnicode
 #include "nsNativeCharsetUtils.h"
@@ -371,6 +372,20 @@ nsDeviceContextSpecWin::GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* 
       dwRet = ::DocumentPropertiesW(nullptr, hPrinter, name,
                                    pDevMode, pDevMode,
                                    DM_IN_BUFFER | DM_OUT_BUFFER);
+
+      // We need to copy the final DEVMODE settings back to our print settings,
+      // because they may have been set from invalid prefs.
+      if (dwRet == IDOK) {
+        // We need to get information from the device as well.
+        nsAutoHDC printerDC(::CreateICW(kDriverName, aName, nullptr, pDevMode));
+        if (NS_WARN_IF(!printerDC)) {
+          ::HeapFree(::GetProcessHeap(), 0, pDevMode);
+          ::ClosePrinter(hPrinter);
+          return NS_ERROR_FAILURE;
+        }
+
+        psWin->CopyFromNative(printerDC, pDevMode);
+      }
     }
 
     if (dwRet != IDOK) {
