@@ -227,6 +227,8 @@ public:
     GetHref(aResult);
   }
 
+  static DOMTokenListSupportedToken sSupportedRelValues[];
+
 protected:
   virtual ~HTMLAnchorElement();
 
