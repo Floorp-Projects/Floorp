@@ -6,6 +6,8 @@
 
 "use strict";
 
+const {Task} = require("resource://gre/modules/Task.jsm");
+
 const DEFAULT_SHOW_DELAY = 50;
 
 /**
@@ -46,14 +48,14 @@ TooltipToggle.prototype = {
    * @param {node} baseNode
    *        The container for all target nodes
    * @param {Function} targetNodeCb
-   *        A function that accepts a node argument and returns true or false
-   *        (or a promise that resolves or rejects) to signify if the tooltip
-   *        should be shown on that node or not.
-   *        If the promise rejects, it must reject `false` as value.
-   *        Any other value is going to be logged as unexpected error.
-   *        Additionally, the function receives a second argument which is the
-   *        tooltip instance itself, to be used to add/modify the content of the
-   *        tooltip if needed. If omitted, the tooltip will be shown everytime.
+   *        A function that accepts a node argument and that checks if a tooltip
+   *        should be displayed. Possible return values are:
+   *        - false (or a falsy value) if the tooltip should not be displayed
+   *        - true if the tooltip should be displayed
+   *        - a DOM node to display the tooltip on the returned anchor
+   *        The function can also return a promise that will resolve to one of
+   *        the values listed above.
+   *        If omitted, the tooltip will be shown everytime.
    * @param {Number} showDelay
    *        An optional delay that will be observed before showing the tooltip.
    *        Defaults to DEFAULT_SHOW_DELAY.
@@ -102,13 +104,11 @@ TooltipToggle.prototype = {
       this.win.clearTimeout(this.toggleTimer);
       this.toggleTimer = this.win.setTimeout(() => {
         this.isValidHoverTarget(event.target).then(target => {
-          this.tooltip.show(target);
-        }, reason => {
-          if (reason === false) {
-            // isValidHoverTarget rejects with false if the tooltip should
-            // not be shown. This can be safely ignored.
+          if (target === null) {
             return;
           }
+          this.tooltip.show(target);
+        }, reason => {
           console.error("isValidHoverTarget rejected with unexpected reason:");
           console.error(reason);
         });
@@ -119,26 +119,17 @@ TooltipToggle.prototype = {
   /**
    * Is the given target DOMNode a valid node for toggling the tooltip on hover.
    * This delegates to the user-defined _targetNodeCb callback.
-   * @return a promise that resolves or rejects depending if the tooltip should
-   * be shown or not. If it resolves, it does to the actual anchor to be used
+   * @return {Promise} a promise that will resolve the anchor to use for the
+   *         tooltip or null if no valid target was found.
    */
-  isValidHoverTarget: function (target) {
-    // Execute the user-defined callback which should return either true/false
-    // or a promise that resolves or rejects
-    let res = this._targetNodeCb(target, this.tooltip);
-
-    // The callback can additionally return a DOMNode to replace the anchor of
-    // the tooltip when shown
-    if (res && res.then) {
-      return res.then(arg => {
-        return arg && arg.nodeName ? arg : target;
-      });
+  isValidHoverTarget: Task.async(function* (target) {
+    let res = yield this._targetNodeCb(target, this.tooltip);
+    if (res) {
+      return res.nodeName ? res : target;
     }
-    let newTarget = res && res.nodeName ? res : target;
-    return new Promise((resolve, reject) => {
-      res ? resolve(newTarget) : reject(false);
-    });
-  },
+
+    return null;
+  }),
 
   _onMouseLeave: function () {
     this.win.clearTimeout(this.toggleTimer);
