@@ -13,8 +13,8 @@
  */
 
 /**
- * Test that an element created using the Document object doc has the namespace
- * that would be expected for the given contentType.
+ * Test that an element created using the Document object doc has the HTML
+ * namespace.
  */
 function testDoc(doc, contentType) {
   if (doc.contentType !== undefined) {
@@ -23,11 +23,7 @@ function testDoc(doc, contentType) {
                   "Wrong MIME type -- incorrect server config?");
   }
 
-  var expectedNamespace = contentType == "text/html" ||
-                          contentType == "application/xhtml+xml"
-                          ? "http://www.w3.org/1999/xhtml" : null;
-
-  assert_equals(doc.createElement("x").namespaceURI, expectedNamespace);
+  assert_equals(doc.createElement("x").namespaceURI, "http://www.w3.org/1999/xhtml");
 }
 
 // First test various objects we create in JS
@@ -43,11 +39,11 @@ test(function() {
 }, "Created element's namespace in created XML document");
 test(function() {
   testDoc(document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null),
-          "application/xhtml+xml");
+          "application/xml");
 }, "Created element's namespace in created XHTML document");
 test(function() {
   testDoc(document.implementation.createDocument("http://www.w3.org/2000/svg", "svg", null),
-          "image/svg+xml");
+          "application/xml");
 }, "Created element's namespace in created SVG document");
 test(function() {
   testDoc(document.implementation.createDocument("http://www.w3.org/1998/Math/MathML", "math", null),

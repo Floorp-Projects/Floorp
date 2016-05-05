@@ -27,7 +27,7 @@ test(unit(function (ctx) {
 
     var host = d.createElement('div');
     d.body.appendChild(host);
-    var s = host.attachShadow({mode: 'open'});
+    var s = host.createShadowRoot();
 
     var span = d.createElement('span');
     span.innerHTML = 'Some text';
@@ -57,11 +57,10 @@ test(unit(function (ctx) {
 
     var span = d.createElement('span');
     span.innerHTML = 'Some text';
-    span.setAttribute('slot', 'span');
     host.appendChild(span);
 
-    var s = host.attachShadow({mode: 'open'});
-    s.innerHTML = '<slot name="span"></slot>';
+    var s = host.createShadowRoot();
+    s.innerHTML = '<content select="span"></content>';
 
     var range = d.createRange();
     range.setStart(span.firstChild, 0);

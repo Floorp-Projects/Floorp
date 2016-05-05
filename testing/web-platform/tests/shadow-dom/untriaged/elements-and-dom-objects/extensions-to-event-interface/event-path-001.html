@@ -28,7 +28,7 @@ t.step(unit(function(ctx) {
     var doc = newRenderedHTMLDocument(ctx);
     var host = doc.createElement('div');
 
-    var shadowRoot = host.attachShadow({mode: 'open'});
+    var shadowRoot = host.createShadowRoot();
     var child = doc.createElement('div');
 
     doc.body.appendChild(host);
