@@ -657,15 +657,12 @@ this.PushService = {
    * once the permission is reinstated.
    */
   dropUnexpiredRegistrations: function() {
-    let subscriptionChanges = [];
     return this._db.clearIf(record => {
       if (record.isExpired()) {
         return false;
       }
-      subscriptionChanges.push(record);
+      this._notifySubscriptionChangeObservers(record);
       return true;
-    }).then(() => {
-      this.notifySubscriptionChanges(subscriptionChanges);
     });
   },
 
@@ -715,12 +712,6 @@ this.PushService = {
         this._notifySubscriptionChangeObservers(record);
         return record;
       });
-  },
-
-  notifySubscriptionChanges: function(records) {
-    records.forEach(record => {
-      this._notifySubscriptionChangeObservers(record);
-    });
   },
 
   ensureCrypto: function(record) {
@@ -1307,7 +1298,6 @@ this.PushService = {
   _clearPermissions() {
     console.debug("clearPermissions()");
 
-    let subscriptionModifications = [];
     return this._db.clearIf(record => {
       if (!record.quotaApplies()) {
         // Only drop registrations that are subject to quota.
@@ -1315,18 +1305,15 @@ this.PushService = {
       }
       if (record.isExpired()) {
         // Fire subscription modified notifications for expired
-        // records after the IndexedDB transaction has committed.
-        subscriptionModifications.push(record);
+        // records.
+        gPushNotifier.notifySubscriptionModified(record.scope,
+                                                 record.principal);
       } else {
         // Drop unexpired registrations in the background.
         this._backgroundUnregister(record,
           Ci.nsIPushErrorReporter.UNSUBSCRIBE_PERMISSION_REVOKED);
       }
       return true;
-    }).then(() => {
-      subscriptionModifications.forEach(record =>
-        gPushNotifier.notifySubscriptionModified(record.scope, record.principal)
-      );
     });
   },
 
@@ -1341,34 +1328,27 @@ this.PushService = {
       // Permission set to "allow". Drop all expired registrations for this
       // site, notify the associated service workers, and reset the quota
       // for active registrations.
-      return this._reduceByPrincipal(
+      return this._forEachPrincipal(
         permission.principal,
-        (subscriptionChanges, record, cursor) => {
-          this._permissionAllowed(subscriptionChanges, record, cursor);
-          return subscriptionChanges;
-        },
-        []
-      ).then(subscriptionChanges => {
-        this.notifySubscriptionChanges(subscriptionChanges);
-      });
+        (record, cursor) => this._permissionAllowed(record, cursor)
+      );
     } else if (isChange || (isAllow && type == "deleted")) {
       // Permission set to "block" or "always ask," or "allow" permission
       // removed. Expire all registrations for this site.
-      return this._reduceByPrincipal(
+      return this._forEachPrincipal(
         permission.principal,
-        (memo, record, cursor) => this._permissionDenied(record, cursor)
+        (record, cursor) => this._permissionDenied(record, cursor)
       );
     }
 
     return Promise.resolve();
   },
 
-  _reduceByPrincipal: function(principal, callback, initialValue) {
-    return this._db.reduceByOrigin(
+  _forEachPrincipal: function(principal, callback) {
+    return this._db.forEachOrigin(
       principal.URI.prePath,
       ChromeUtils.originAttributesToSuffix(principal.originAttributes),
-      callback,
-      initialValue
+      callback
     );
   },
 
@@ -1401,12 +1381,10 @@ this.PushService = {
    * permission is granted. If the record has expired, it will be dropped;
    * otherwise, its quota will be reset to the default value.
    *
-   * @param {Array} subscriptionChanges A list of records whose associated
-   *  service workers should be notified once the transaction has committed.
    * @param {PushRecord} record The record to update.
    * @param {IDBCursor} cursor The IndexedDB cursor.
    */
-  _permissionAllowed: function(subscriptionChanges, record, cursor) {
+  _permissionAllowed(record, cursor) {
     console.debug("permissionAllowed()");
 
     if (!record.quotaApplies()) {
@@ -1415,7 +1393,7 @@ this.PushService = {
     if (record.isExpired()) {
       // If the registration has expired, drop and notify the worker
       // unconditionally.
-      subscriptionChanges.push(record);
+      this._notifySubscriptionChangeObservers(record);
       cursor.delete();
       return;
     }
