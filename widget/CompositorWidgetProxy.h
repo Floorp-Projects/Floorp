@@ -166,6 +166,19 @@ public:
   virtual void CleanupRemoteDrawing();
 
   /**
+   * Return a key that can represent the widget object round-trip across the
+   * CompositorBridge channel. This only needs to be implemented on GTK and
+   * Windows.
+   *
+   * The key must be the nsIWidget pointer cast to a uintptr_t. See
+   * CompositorBridgeChild::RecvHideAllPlugins and
+   * CompositorBridgeParent::SendHideAllPlugins.
+   */
+  virtual uintptr_t GetWidgetKey() {
+    return 0;
+  }
+
+  /**
    * Create a backbuffer for the software compositor.
    */
   virtual already_AddRefed<gfx::DrawTarget>
@@ -217,6 +230,7 @@ public:
   virtual uint32_t GetGLFrameBufferFormat() override;
   virtual layers::Composer2D* GetComposer2D() override;
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
+  virtual uintptr_t GetWidgetKey() override;
 
   // If you can override this method, inherit from CompositorWidgetProxy instead.
   nsIWidget* RealWidget() override;
