@@ -135,8 +135,8 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   NSPoint screenPoint =
-    [[gLastDragView window] convertBaseToScreen:
-      [gLastDragMouseDownEvent locationInWindow]];
+    nsCocoaUtils::ConvertPointToScreen([gLastDragView window],
+                                       [gLastDragMouseDownEvent locationInWindow]);
   // Y coordinates are bottom to top, so reverse this
   screenPoint.y = nsCocoaUtils::FlippedScreenY(screenPoint.y);
 
@@ -347,7 +347,7 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* aTransferableArray,
   NSPoint point = nsCocoaUtils::DevPixelsToCocoaPoints(pt, scaleFactor);
   point.y = nsCocoaUtils::FlippedScreenY(point.y);
 
-  point = [[gLastDragView window] convertScreenToBase: point];
+  point = nsCocoaUtils::ConvertPointFromScreen([gLastDragView window], point);
   NSPoint localPoint = [gLastDragView convertPoint:point fromView:nil];
  
   // Save the transferables away in case a promised file callback is invoked.
