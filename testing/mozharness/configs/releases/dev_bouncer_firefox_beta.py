@@ -3,6 +3,7 @@ config = {
     "products": {
         "installer": {
             "product-name": "Firefox-%(version)s",
+            "check_uptake": True,
             "alias": "firefox-beta-latest",
             "ssl-only": False,
             "add-locales": False,
@@ -31,6 +32,7 @@ config = {
         },
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
+            "check_uptake": True,
             "ssl-only": True,
             "add-locales": False,
             "paths": {
@@ -58,6 +60,7 @@ config = {
         },
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
+            "check_uptake": True,
             "alias": "firefox-beta-stub",
             "ssl-only": True,
             "add-locales": False,
@@ -70,6 +73,7 @@ config = {
         },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
+            "check_uptake": True,
             "ssl-only": False,
             "add-locales": False,
             "paths": {
@@ -99,6 +103,7 @@ config = {
     "partials": {
         "releases-dir": {
             "product-name": "Firefox-%(version)s-Partial-%(prev_version)s",
+            "check_uptake": True,
             "ssl-only": False,
             "add-locales": False,
             "paths": {
