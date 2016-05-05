@@ -118,13 +118,6 @@ PluginInstanceParent::LookupPluginInstanceByID(uintptr_t aId)
 }
 #endif
 
-template<>
-struct RunnableMethodTraits<PluginInstanceParent>
-{
-    static void RetainCallee(PluginInstanceParent* obj) { }
-    static void ReleaseCallee(PluginInstanceParent* obj) { }
-};
-
 PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
                                            NPP npp,
                                            const nsCString& aMimeType,
@@ -1223,7 +1216,7 @@ PluginInstanceParent::ScheduleScrollCapture(int aTimeout)
     }
     CAPTURE_LOG("delayed scroll capture requested.");
     mCaptureRefreshTask =
-        NewCancelableRunnableMethod(this, &PluginInstanceParent::ScheduledUpdateScrollCaptureCallback);
+        NS_NewNonOwningCancelableRunnableMethod(this, &PluginInstanceParent::ScheduledUpdateScrollCaptureCallback);
     RefPtr<Runnable> addrefedTask = mCaptureRefreshTask;
     MessageLoop::current()->PostDelayedTask(addrefedTask.forget(),
                                             kScrollCaptureDelayMs);
