@@ -1918,7 +1918,7 @@ bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
 }
 
 static inline bool
-IsGfxInfoStatusOkay(int32_t aFeature)
+IsGfxInfoStatusOkay(int32_t aFeature, nsCString* aOutMessage)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (!gfxInfo) {
@@ -1926,12 +1926,16 @@ IsGfxInfoStatusOkay(int32_t aFeature)
   }
 
   int32_t status;
-  nsCString discardFailureId;
-  if (FAILED(gfxInfo->GetFeatureStatus(aFeature, discardFailureId, &status))) {
-    return true;
+  nsCString failureId;
+  if (SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, failureId, &status)) &&
+      status != nsIGfxInfo::FEATURE_STATUS_OK)
+  {
+    aOutMessage->AssignLiteral("#BLOCKLIST_");
+    aOutMessage->AppendASCII(failureId.get());
+    return false;
   }
 
-  return status == nsIGfxInfo::FEATURE_STATUS_OK;
+  return true;
 }
 
 static inline bool
@@ -1976,15 +1980,14 @@ gfxWindowsPlatform::InitializeD3D11Config()
     return;
   }
 
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
+  nsCString message;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message)) {
     if (IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
       // We do not expect hardware D3D11 to work, so we'll try WARP.
-      gfxConfig::EnableFallback(
-        Fallback::USE_D3D11_WARP_COMPOSITOR,
-        "Hardware-accelerated Direct3D11 compositing is blocklisted");
+      gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, message.get());
     } else {
       // There is little to no chance of D3D11 working, so just disable it.
-      d3d11.Disable(FeatureStatus::Blacklisted, "Hardware-accelerated Direct3D11 compositing is blocklisted");
+      d3d11.Disable(FeatureStatus::Blacklisted, message.get());
     }
   }
 
@@ -2470,22 +2473,6 @@ gfxWindowsPlatform::ResetD3D11Devices()
   Factory::SetDirect3D11Device(nullptr);
 }
 
-static bool
-IsD2DBlacklisted()
-{
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  if (gfxInfo) {
-    int32_t status;
-    nsCString discardFailureId;
-    if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT2D, discardFailureId, &status))) {
-      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 void
 gfxWindowsPlatform::InitializeD2DConfig()
 {
@@ -2501,9 +2488,10 @@ gfxWindowsPlatform::InitializeD2DConfig()
       false,
       gfxPrefs::GetDirect2DDisabledPrefDefault());
   }
-  
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D)) {
-    d2d1.Disable(FeatureStatus::Blacklisted, "Direct2D is blacklisted on this hardware");
+
+  nsCString message;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message)) {
+    d2d1.Disable(FeatureStatus::Blacklisted, message.get());
   }
 
   if (!d2d1.IsEnabled() && gfxPrefs::Direct2DForceEnabled()) {
