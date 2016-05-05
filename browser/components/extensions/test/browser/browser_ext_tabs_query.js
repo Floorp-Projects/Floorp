@@ -132,45 +132,9 @@ add_task(function* () {
   yield extension.awaitFinish("tabs.query");
   yield extension.unload();
 
-  // test width and height
-  extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "permissions": ["tabs"],
-    },
-
-    background: function() {
-      browser.test.onMessage.addListener((msg) => {
-        browser.tabs.query({active: true}).then(tabs => {
-          browser.test.assertEq(tabs.length, 1, "should have one tab");
-          browser.test.sendMessage("dims", {width: tabs[0].width, height: tabs[0].height});
-        });
-      });
-      browser.test.sendMessage("ready");
-    },
-  });
-
-  const RESOLUTION_PREF = "layout.css.devPixelsPerPx";
-  registerCleanupFunction(() => {
-    SpecialPowers.clearUserPref(RESOLUTION_PREF);
-  });
-
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
-
-  for (let resolution of [2, 1]) {
-    SpecialPowers.setCharPref(RESOLUTION_PREF, String(resolution));
-    is(window.devicePixelRatio, resolution, "window has the required resolution");
-    extension.sendMessage("check-size");
-    let dims = yield extension.awaitMessage("dims");
-    is(dims.width, gBrowser.selectedBrowser.clientWidth, "tab reports expected width");
-    is(dims.height, gBrowser.selectedBrowser.clientHeight, "tab reports expected height");
-  }
-
-  yield extension.unload();
-
   yield BrowserTestUtils.removeTab(tab1);
   yield BrowserTestUtils.removeTab(tab2);
   yield BrowserTestUtils.removeTab(tab3);
-  SpecialPowers.clearUserPref(RESOLUTION_PREF);
 });
 
 add_task(function* testQueryPermissions() {
