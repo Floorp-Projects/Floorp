@@ -46,4 +46,6 @@ public interface UrlAnnotations {
      *                           if the user has actively declined to create a shortcut for this URL.
      */
     void insertHomeScreenShortcut(ContentResolver cr, String url, boolean hasCreatedShortCut);
+
+    int getAnnotationCount(ContentResolver cr, BrowserContract.UrlAnnotations.Key key);
 }
