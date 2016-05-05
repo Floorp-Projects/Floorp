@@ -1,0 +1,51 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <script type="text/javascript">
+var gl;
+
+function start() {
+  var canvas = document.getElementById("glcanvas");
+  gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+
+  if (gl) {
+    initTextures();
+  } else {
+    finish();
+  }
+}
+
+function initTextures() {
+  var cubeTexture = gl.createTexture();
+  var cubeImage = document.getElementById("i");
+  cubeImage.onload = function() { handleTextureLoaded(cubeImage, cubeTexture); }
+  cubeImage.onerror = function() { finish(); }
+  cubeImage.src = "1251091-1.png";
+}
+
+function handleTextureLoaded(image, texture) {
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  setTimeout(showit,0);
+}
+
+function showit() {
+  document.getElementById("i").style.display = "";
+  finish();
+}
+
+function finish() {
+  document.documentElement.removeAttribute("class");
+}
+    </script>
+  </head>
+
+  <body onload="start()">
+    <canvas id="glcanvas" width="640" height="480"></canvas>
+    <img id="i" style="display: none;">
+  </body>
+</html>
