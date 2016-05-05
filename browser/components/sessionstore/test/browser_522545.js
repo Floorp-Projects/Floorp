@@ -28,8 +28,8 @@ function test() {
          "No history entries still sets currentURI to about:blank");
       is(browser.userTypedValue, "example.com",
          "userTypedValue was correctly restored");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "We still know that no load is ongoing");
+      is(browser.userTypedClear, 0,
+         "userTypeClear restored as expected");
       is(gURLBar.value, "example.com",
          "Address bar's value correctly restored");
       // Change tabs to make sure address bar value gets updated
@@ -60,8 +60,8 @@ function test() {
          "No history entries still sets currentURI to about:blank");
       is(browser.userTypedValue, "example.org",
          "userTypedValue was correctly restored");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "We still know that no load is ongoing");
+      is(browser.userTypedClear, 0,
+         "userTypeClear restored as expected");
       is(gURLBar.value, "about:mozilla",
          "Address bar's value correctly restored");
       // Change tabs to make sure address bar value gets updated
@@ -93,8 +93,8 @@ function test() {
          "browser.currentURI set to current entry in SH");
       is(browser.userTypedValue, "example.com",
          "userTypedValue was correctly restored");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "We still know that no load is ongoing");
+      is(browser.userTypedClear, 0,
+         "userTypeClear restored as expected");
       is(gURLBar.value, "example.com",
          "Address bar's value correctly restored to userTypedValue");
       runNextTest();
@@ -122,8 +122,8 @@ function test() {
          "browser.currentURI set to current entry in SH");
       is(browser.userTypedValue, "example.org",
          "userTypedValue was correctly restored");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "We still know that no load is ongoing");
+      is(browser.userTypedClear, 0,
+         "userTypeClear restored as expected");
       is(gURLBar.value, "example.org",
          "Address bar's value correctly restored to userTypedValue");
       runNextTest();
@@ -186,8 +186,7 @@ function test() {
       let browser = gBrowser.selectedBrowser;
       // Make sure this tab isn't loading and state is clear before we test.
       is(browser.userTypedValue, null, "userTypedValue is empty to start");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "Initially, no load should be ongoing");
+      is(browser.userTypedClear, 0, "userTypedClear is 0 to start");
 
       let inputText = "example.org";
       gURLBar.focus();
@@ -197,8 +196,8 @@ function test() {
       executeSoon(function () {
         is(browser.userTypedValue, "example.org",
            "userTypedValue was set when changing URLBar value");
-        ok(!browser.didStartLoadSinceLastUserTyping(),
-           "No load started since changing URLBar value");
+        is(browser.userTypedClear, 0,
+           "userTypedClear was not changed when changing URLBar value");
 
         // Now make sure ss gets these values too
         let newState = JSON.parse(ss.getBrowserState());
@@ -229,8 +228,8 @@ function test() {
          "userTypedClear=2 caused userTypedValue to be loaded");
       is(browser.userTypedValue, null,
          "userTypedValue was null after loading a URI");
-      ok(!browser.didStartLoadSinceLastUserTyping(),
-         "We should have reset the load state when the tab loaded");
+      is(browser.userTypedClear, 0,
+         "userTypeClear reset to 0");
       is(gURLBar.textValue, gURLBar.trimValue("http://example.com/"),
          "Address bar's value set after loading URI");
       runNextTest();
