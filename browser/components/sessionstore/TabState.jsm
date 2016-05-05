@@ -129,17 +129,12 @@ var TabStateInternal = {
     }
 
     // If there is a userTypedValue set, then either the user has typed something
-    // in the URL bar, or a new tab was opened with a URI to load.
-    // If so, we also track whether we were still in the process of loading something.
+    // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
+    // is used to indicate whether the tab was in some sort of loading state with
+    // userTypedValue.
     if (!("userTypedValue" in tabData) && browser.userTypedValue) {
       tabData.userTypedValue = browser.userTypedValue;
-      // We always used to keep track of the loading state as an integer, where
-      // '0' indicated the user had typed since the last load (or no load was
-      // ongoing), and any positive value indicated we had started a load since
-      // the last time the user typed in the URL bar. Mimic this to keep the
-      // session store representation in sync, even though we now represent this
-      // more explicitly:
-      tabData.userTypedClear = browser.didStartLoadSinceLastUserTyping() ? 1 : 0;
+      tabData.userTypedClear = browser.userTypedClear;
     }
 
     return tabData;
