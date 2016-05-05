@@ -70,6 +70,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
   , mDemuxOnly(false)
+  , mSeekScheduled(false)
   , mVideoFrameContainer(aVideoFrameContainer)
 {
   MOZ_ASSERT(aDemuxer);
@@ -829,6 +830,20 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     return false;
   }
 
+  if (!mSeekPromise.IsEmpty()) {
+    MOZ_ASSERT(!decoder.HasPromise());
+    MOZ_DIAGNOSTIC_ASSERT(!mAudio.mTimeThreshold && !mVideo.mTimeThreshold,
+                          "InternalSeek must have been aborted when Seek was first called");
+    MOZ_DIAGNOSTIC_ASSERT(!mAudio.HasWaitingPromise() && !mVideo.HasWaitingPromise(),
+                          "Waiting promises must have been rejected when Seek was first called");
+    if (mVideo.mSeekRequest.Exists() || mAudio.mSeekRequest.Exists()) {
+      // Already waiting for a seek to complete. Nothing more to do.
+      return true;
+    }
+    LOG("Attempting Seek");
+    ScheduleSeek();
+    return true;
+  }
   if (decoder.HasInternalSeekPending() || decoder.HasWaitingPromise()) {
     if (decoder.HasInternalSeekPending()) {
       LOG("Attempting Internal Seek");
@@ -839,16 +854,6 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
       LOG("We have new data. Resolving WaitingPromise");
       decoder.mWaitingPromise.Resolve(decoder.mType, __func__);
     }
-    return true;
-  }
-  if (!mSeekPromise.IsEmpty()) {
-    MOZ_ASSERT(!decoder.HasPromise());
-    if (mVideo.mSeekRequest.Exists() || mAudio.mSeekRequest.Exists()) {
-      // Already waiting for a seek to complete. Nothing more to do.
-      return true;
-    }
-    LOG("Attempting Seek");
-    AttemptSeek();
     return true;
   }
   return false;
@@ -1301,21 +1306,34 @@ MediaFormatReader::ResetDecode()
   // Reset miscellaneous seeking state.
   mPendingSeekTime.reset();
 
+  ResetDemuxers();
+
   if (HasVideo()) {
-    mVideo.ResetDemuxer();
     Flush(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
     }
   }
   if (HasAudio()) {
-    mAudio.ResetDemuxer();
     Flush(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
   }
   return MediaDecoderReader::ResetDecode();
+}
+
+void
+MediaFormatReader::ResetDemuxers()
+{
+  if (HasVideo()) {
+    mVideo.ResetDemuxer();
+    mVideo.ResetState();
+  }
+  if (HasAudio()) {
+    mAudio.ResetDemuxer();
+    mAudio.ResetState();
+  }
 }
 
 void
@@ -1479,22 +1497,32 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
-  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaFormatReader::AttemptSeek));
+  ScheduleSeek();
 
   return p;
+}
+
+void
+MediaFormatReader::ScheduleSeek()
+{
+  if (mSeekScheduled) {
+    return;
+  }
+  mSeekScheduled = true;
+  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaFormatReader::AttemptSeek));
 }
 
 void
 MediaFormatReader::AttemptSeek()
 {
   MOZ_ASSERT(OnTaskQueue());
+
+  mSeekScheduled = false;
+
   if (mPendingSeekTime.isNothing()) {
     return;
   }
-  // An internal seek may be pending due to Seek queueing multiple tasks calling
-  // AttemptSeek ; we can ignore those by resetting any pending demuxer's seek.
-  mAudio.mSeekRequest.DisconnectIfExists();
-  mVideo.mSeekRequest.DisconnectIfExists();
+  ResetDemuxers();
   if (HasVideo()) {
     DoVideoSeek();
   } else if (HasAudio()) {
