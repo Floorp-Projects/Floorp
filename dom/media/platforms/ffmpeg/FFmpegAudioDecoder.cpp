@@ -108,7 +108,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
-    mCallback->Error();
+    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
     return;
   }
 
@@ -122,7 +122,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
-      mCallback->Error();
+      mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
       return;
     }
 
@@ -130,7 +130,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
       uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
-        mCallback->Error();
+        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
         return;
       }
 
@@ -143,7 +143,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
         FramesToTimeUnit(mFrame->nb_samples, samplingRate);
       if (!audio || !duration.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        mCallback->Error();
+        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
         return;
       }
 
@@ -158,7 +158,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
       pts += duration;
       if (!pts.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
-        mCallback->Error();
+        mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
         return;
       }
     }
