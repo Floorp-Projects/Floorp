@@ -40,7 +40,8 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            uint32_t certShortLifetimeInDays,
                            PinningMode pinningMode,
                            SHA1Mode sha1Mode,
-                           BRNameMatchingPolicy::Mode nameMatchingMode)
+                           BRNameMatchingPolicy::Mode nameMatchingMode,
+                           NetscapeStepUpPolicy netscapeStepUpPolicy)
   : mOCSPDownloadConfig(odc)
   , mOCSPStrict(osc == ocspStrict)
   , mOCSPGETEnabled(ogc == ocspGetEnabled)
@@ -48,6 +49,7 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc,
   , mPinningMode(pinningMode)
   , mSHA1Mode(sha1Mode)
   , mNameMatchingMode(nameMatchingMode)
+  , mNetscapeStepUpPolicy(netscapeStepUpPolicy)
 {
 }
 
@@ -273,8 +275,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed, builtChain, nullptr,
-                                       nullptr);
+                                       SHA1Mode::Allowed,
+                                       NetscapeStepUpPolicy::NeverMatch,
+                                       builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -347,8 +350,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                       mOCSPCache, pinArg, ocspGETConfig,
                       mCertShortLifetimeInDays, mPinningMode, MIN_RSA_BITS,
                       ValidityCheckingMode::CheckForEV,
-                      sha1ModeConfigurations[i], builtChain,
-                      pinningTelemetryInfo, hostname);
+                      sha1ModeConfigurations[i], mNetscapeStepUpPolicy,
+                      builtChain, pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                           KeyUsage::digitalSignature,// (EC)DHE
                                           KeyUsage::keyEncipherment, // RSA
@@ -438,8 +441,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                            mPinningMode, keySizeOptions[i],
                                            ValidityCheckingMode::CheckingOff,
                                            sha1ModeConfigurations[j],
-                                           builtChain, pinningTelemetryInfo,
-                                           hostname);
+                                           mNetscapeStepUpPolicy, builtChain,
+                                           pinningTelemetryInfo, hostname);
           rv = BuildCertChainForOneKeyUsage(trustDomain, certDER, time,
                                             KeyUsage::digitalSignature,//(EC)DHE
                                             KeyUsage::keyEncipherment,//RSA
@@ -502,7 +505,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       mSHA1Mode, builtChain, nullptr, nullptr);
+                                       mSHA1Mode, mNetscapeStepUpPolicy,
+                                       builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeCA, KeyUsage::keyCertSign,
                           KeyPurposeId::id_kp_serverAuth,
@@ -516,8 +520,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed, builtChain, nullptr,
-                                       nullptr);
+                                       SHA1Mode::Allowed,
+                                       NetscapeStepUpPolicy::NeverMatch,
+                                       builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -542,8 +547,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed, builtChain, nullptr,
-                                       nullptr);
+                                       SHA1Mode::Allowed,
+                                       NetscapeStepUpPolicy::NeverMatch,
+                                       builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment, // RSA
@@ -565,8 +571,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                        mCertShortLifetimeInDays,
                                        pinningDisabled, MIN_RSA_BITS_WEAK,
                                        ValidityCheckingMode::CheckingOff,
-                                       SHA1Mode::Allowed, builtChain, nullptr,
-                                       nullptr);
+                                       SHA1Mode::Allowed,
+                                       NetscapeStepUpPolicy::NeverMatch,
+                                       builtChain, nullptr, nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::digitalSignature,
@@ -597,8 +604,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                     pinArg, ocspGETConfig, mCertShortLifetimeInDays,
                                     pinningDisabled, MIN_RSA_BITS_WEAK,
                                     ValidityCheckingMode::CheckingOff,
-                                    SHA1Mode::Allowed, builtChain, nullptr,
-                                    nullptr);
+                                    SHA1Mode::Allowed,
+                                    NetscapeStepUpPolicy::NeverMatch,
+                                    builtChain, nullptr, nullptr);
       rv = BuildCertChain(sslTrust, certDER, time, endEntityOrCA,
                           keyUsage, eku, CertPolicyId::anyPolicy,
                           stapledOCSPResponse);
@@ -608,8 +616,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                         mCertShortLifetimeInDays,
                                         pinningDisabled, MIN_RSA_BITS_WEAK,
                                         ValidityCheckingMode::CheckingOff,
-                                        SHA1Mode::Allowed, builtChain, nullptr,
-                                        nullptr);
+                                        SHA1Mode::Allowed,
+                                        NetscapeStepUpPolicy::NeverMatch,
+                                        builtChain, nullptr, nullptr);
         rv = BuildCertChain(emailTrust, certDER, time, endEntityOrCA,
                             keyUsage, eku, CertPolicyId::anyPolicy,
                             stapledOCSPResponse);
@@ -621,8 +630,9 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
                                                   pinningDisabled,
                                                   MIN_RSA_BITS_WEAK,
                                                   ValidityCheckingMode::CheckingOff,
-                                                  SHA1Mode::Allowed, builtChain,
-                                                  nullptr, nullptr);
+                                                  SHA1Mode::Allowed,
+                                                  NetscapeStepUpPolicy::NeverMatch,
+                                                  builtChain, nullptr, nullptr);
           rv = BuildCertChain(objectSigningTrust, certDER, time,
                               endEntityOrCA, keyUsage, eku,
                               CertPolicyId::anyPolicy, stapledOCSPResponse);

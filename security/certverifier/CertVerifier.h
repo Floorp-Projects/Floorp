@@ -33,6 +33,8 @@ enum class SHA1ModeResult {
   Failed = 5,
 };
 
+enum class NetscapeStepUpPolicy : uint32_t;
+
 class PinningTelemetryInfo
 {
 public:
@@ -123,7 +125,8 @@ public:
   CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
                PinningMode pinningMode, SHA1Mode sha1Mode,
-               BRNameMatchingPolicy::Mode nameMatchingMode);
+               BRNameMatchingPolicy::Mode nameMatchingMode,
+               NetscapeStepUpPolicy netscapeStepUpPolicy);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -135,6 +138,7 @@ public:
   const PinningMode mPinningMode;
   const SHA1Mode mSHA1Mode;
   const BRNameMatchingPolicy::Mode mNameMatchingMode;
+  const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
 
 private:
   OCSPCache mOCSPCache;

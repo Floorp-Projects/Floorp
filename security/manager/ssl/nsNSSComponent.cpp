@@ -1348,6 +1348,21 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
       break;
   }
 
+  NetscapeStepUpPolicy netscapeStepUpPolicy =
+    static_cast<NetscapeStepUpPolicy>
+      (Preferences::GetUint("security.pki.netscape_step_up_policy",
+                            static_cast<uint32_t>(NetscapeStepUpPolicy::AlwaysMatch)));
+  switch (netscapeStepUpPolicy) {
+    case NetscapeStepUpPolicy::AlwaysMatch:
+    case NetscapeStepUpPolicy::MatchBefore23August2016:
+    case NetscapeStepUpPolicy::MatchBefore23August2015:
+    case NetscapeStepUpPolicy::NeverMatch:
+      break;
+    default:
+      netscapeStepUpPolicy = NetscapeStepUpPolicy::AlwaysMatch;
+      break;
+  }
+
   CertVerifier::OcspDownloadConfig odc;
   CertVerifier::OcspStrictConfig osc;
   CertVerifier::OcspGetConfig ogc;
@@ -1358,7 +1373,8 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc,
                                                 certShortLifetimeInDays,
                                                 pinningMode, sha1Mode,
-                                                nameMatchingMode);
+                                                nameMatchingMode,
+                                                netscapeStepUpPolicy);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -1751,7 +1767,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.ssl.enable_ocsp_must_staple") ||
                prefName.EqualsLiteral("security.cert_pinning.enforcement_level") ||
                prefName.EqualsLiteral("security.pki.sha1_enforcement_level") ||
-               prefName.EqualsLiteral("security.pki.name_matching_mode")) {
+               prefName.EqualsLiteral("security.pki.name_matching_mode") ||
+               prefName.EqualsLiteral("security.pki.netscape_step_up_policy")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
 #ifdef DEBUG
