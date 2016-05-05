@@ -6331,14 +6331,16 @@ HTMLInputElement::SaveState()
         return rv;
       }
 
-      rv = nsLinebreakConverter::ConvertStringLineBreaks(
-             value,
-             nsLinebreakConverter::eLinebreakPlatform,
-             nsLinebreakConverter::eLinebreakContent);
+      if (!IsSingleLineTextControl(false)) {
+        rv = nsLinebreakConverter::ConvertStringLineBreaks(
+               value,
+               nsLinebreakConverter::eLinebreakPlatform,
+               nsLinebreakConverter::eLinebreakContent);
 
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Converting linebreaks failed!");
-        return rv;
+        if (NS_FAILED(rv)) {
+          NS_ERROR("Converting linebreaks failed!");
+          return rv;
+        }
       }
 
       inputState->SetValue(value);
