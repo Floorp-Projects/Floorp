@@ -1,0 +1,107 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import json
+import os
+import subprocess
+
+from mozlint import result
+
+
+FLAKE8_NOT_FOUND = """
+Could not find flake8! Install flake8 and try again.
+
+    $ pip install flake8
+""".strip()
+
+
+LINE_OFFSETS = {
+    # continuation line under-indented for hanging indent
+    'E121': (-1, 2),
+    # continuation line missing indentation or outdented
+    'E122': (-1, 2),
+    # continuation line over-indented for hanging indent
+    'E126': (-1, 2),
+    # continuation line over-indented for visual indent
+    'E127': (-1, 2),
+    # continuation line under-indented for visual indent
+    'E128': (-1, 2),
+    # continuation line unaligned for hanging indend
+    'E131': (-1, 2),
+    # expected 1 blank line, found 0
+    'E301': (-1, 2),
+    # expected 2 blank lines, found 1
+    'E302': (-2, 3),
+}
+"""Maps a flake8 error to a lineoffset tuple.
+
+The offset is of the form (lineno_offset, num_lines) and is passed
+to the lineoffset property of `ResultContainer`.
+"""
+
+
+def lint(files, **lintargs):
+    import which
+
+    binary = os.environ.get('FLAKE8')
+    if not binary:
+        try:
+            binary = which.which('flake8')
+        except which.WhichError:
+            pass
+
+    if not binary:
+        print(FLAKE8_NOT_FOUND)
+        return 1
+
+    cmdargs = [
+        binary,
+        '--format', '{"path":"%(path)s","lineno":%(row)s,'
+                    '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
+    ]
+
+    exclude = lintargs.get('exclude')
+    if exclude:
+        cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
+
+    cmdargs += files
+
+    proc = subprocess.Popen(cmdargs, stdout=subprocess.PIPE, env=os.environ)
+    output = proc.communicate()[0]
+
+    if not output:
+        return []
+
+    results = []
+    for line in output.splitlines():
+        try:
+            res = json.loads(line)
+        except ValueError:
+            continue
+
+        if 'code' in res:
+            if res['code'].startswith('W'):
+                res['level'] = 'warning'
+
+            if res['code'] in LINE_OFFSETS:
+                res['lineoffset'] = LINE_OFFSETS[res['code']]
+
+        results.append(result.from_linter(LINTER, **res))
+
+    return results
+
+
+LINTER = {
+    'name': "flake8",
+    'description': "Python linter",
+    'include': [
+        'python/mozlint',
+        'tools/lint',
+    ],
+    'exclude': [],
+    'type': 'external',
+    'payload': lint,
+}
