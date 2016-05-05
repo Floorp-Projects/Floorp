@@ -9,6 +9,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "chrome/common/ipc_channel.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
@@ -157,6 +158,7 @@ ProcessLink::EchoMessage(Message *msg)
 void
 ProcessLink::SendMessage(Message *msg)
 {
+    MOZ_RELEASE_ASSERT(msg->size() < IPC::Channel::kMaximumMessageSize);
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
