@@ -198,12 +198,11 @@ MediaSystemResourceManager::Acquire(MediaSystemResourceClient* aClient)
     return;
   }
   aClient->mResourceState = MediaSystemResourceClient::RESOURCE_STATE_WAITING;
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableMethodWithArgs<uint32_t>(
+  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+    NewRunnableMethod<uint32_t>(
       this,
       &MediaSystemResourceManager::DoAcquire,
-      aClient->mId);
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(runnable.forget());
+      aClient->mId));
 }
 
 bool
@@ -242,12 +241,11 @@ MediaSystemResourceManager::AcquireSyncNoWait(MediaSystemResourceClient* aClient
     aClient->mResourceState = MediaSystemResourceClient::RESOURCE_STATE_WAITING;
   }
 
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableMethodWithArgs<uint32_t>(
+  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+    NewRunnableMethod<uint32_t>(
       this,
       &MediaSystemResourceManager::DoAcquire,
-      aClient->mId);
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(runnable.forget());
+      aClient->mId));
 
   // should stop the thread until done.
   while (!done) {
@@ -310,12 +308,11 @@ MediaSystemResourceManager::ReleaseResource(MediaSystemResourceClient* aClient)
 
     aClient->mResourceState = MediaSystemResourceClient::RESOURCE_STATE_END;
 
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<uint32_t>(
+    ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+      NewRunnableMethod<uint32_t>(
         this,
         &MediaSystemResourceManager::DoRelease,
-        aClient->mId);
-    ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(runnable.forget());
+        aClient->mId));
   }
 }
 
@@ -339,13 +336,12 @@ void
 MediaSystemResourceManager::HandleAcquireResult(uint32_t aId, bool aSuccess)
 {
   if (!InImageBridgeChildThread()) {
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<uint32_t, bool>(
+    ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
+      NewRunnableMethod<uint32_t, bool>(
         this,
         &MediaSystemResourceManager::HandleAcquireResult,
         aId,
-        aSuccess);
-    ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(runnable.forget());
+        aSuccess));
     return;
   }
 

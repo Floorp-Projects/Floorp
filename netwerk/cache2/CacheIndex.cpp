@@ -346,7 +346,7 @@ CacheIndex::PreShutdown()
   }
 
   nsCOMPtr<nsIRunnable> event;
-  event = NS_NewRunnableMethod(index, &CacheIndex::PreShutdownInternal);
+  event = NewRunnableMethod(index, &CacheIndex::PreShutdownInternal);
 
   RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   MOZ_ASSERT(ioThread);

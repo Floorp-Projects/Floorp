@@ -1216,7 +1216,7 @@ PluginInstanceParent::ScheduleScrollCapture(int aTimeout)
     }
     CAPTURE_LOG("delayed scroll capture requested.");
     mCaptureRefreshTask =
-        NS_NewNonOwningCancelableRunnableMethod(this, &PluginInstanceParent::ScheduledUpdateScrollCaptureCallback);
+        NewNonOwningCancelableRunnableMethod(this, &PluginInstanceParent::ScheduledUpdateScrollCaptureCallback);
     RefPtr<Runnable> addrefedTask = mCaptureRefreshTask;
     MessageLoop::current()->PostDelayedTask(addrefedTask.forget(),
                                             kScrollCaptureDelayMs);

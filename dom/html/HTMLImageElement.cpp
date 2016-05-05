@@ -619,7 +619,7 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // loading.
     if (LoadingEnabled()) {
       nsContentUtils::AddScriptRunner(
-          NS_NewRunnableMethod(this, &HTMLImageElement::MaybeLoadImage));
+          NewRunnableMethod(this, &HTMLImageElement::MaybeLoadImage));
     }
   }
 
@@ -816,7 +816,7 @@ HTMLImageElement::CopyInnerTo(Element* aDest)
     if (!dest->InResponsiveMode() &&
         dest->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
       nsContentUtils::AddScriptRunner(
-        NS_NewRunnableMethod(dest, &HTMLImageElement::MaybeLoadImage));
+        NewRunnableMethod(dest, &HTMLImageElement::MaybeLoadImage));
     }
   }
 

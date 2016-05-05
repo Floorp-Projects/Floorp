@@ -622,7 +622,7 @@ public:
       return;
     }
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArg<uint16_t>(this,
+      NewRunnableMethod<uint16_t>(this,
         &PushErrorReporter::ReportOnMainThread, aReason);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       NS_DispatchToMainThread(runnable.forget())));
@@ -1457,7 +1457,7 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   // if the ServiceWorker script fails to load for some reason, just resume
   // the original channel.
   nsCOMPtr<nsIRunnable> failRunnable =
-    NS_NewRunnableMethod(aChannel, &nsIInterceptedChannel::ResetInterception);
+    NewRunnableMethod(aChannel, &nsIInterceptedChannel::ResetInterception);
 
   nsresult rv = SpawnWorkerIfNeeded(FetchEvent, failRunnable, aLoadGroup);
   NS_ENSURE_SUCCESS(rv, rv);

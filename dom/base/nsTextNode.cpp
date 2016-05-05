@@ -273,8 +273,7 @@ nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
     // that if we get unbound while the event is up that's ok -- we'll just
     // have no grandparent when it fires, and will do nothing.
     void (nsAttributeTextNode::*update)() = &nsAttributeTextNode::UpdateText;
-    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, update);
-    nsContentUtils::AddScriptRunner(ev);
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(this, update));
   }
 }
 

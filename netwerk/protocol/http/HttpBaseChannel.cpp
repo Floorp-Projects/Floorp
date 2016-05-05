@@ -666,7 +666,7 @@ void
 CopyComplete(void* aClosure, nsresult aStatus) {
   // Called on the STS thread by NS_AsyncCopy
   auto channel = static_cast<HttpBaseChannel*>(aClosure);
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableMethodWithArg<nsresult>(
+  nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<nsresult>(
     channel, &HttpBaseChannel::EnsureUploadStreamIsCloneableComplete, aStatus);
   NS_DispatchToMainThread(runnable.forget());
 }

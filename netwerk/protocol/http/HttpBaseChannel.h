@@ -582,11 +582,11 @@ inline void HttpAsyncAborter<T>::HandleAsyncAbort()
 
 template <class T>
 nsresult HttpAsyncAborter<T>::AsyncCall(void (T::*funcPtr)(),
-                                   nsRunnableMethod<T> **retval)
+                                        nsRunnableMethod<T> **retval)
 {
   nsresult rv;
 
-  RefPtr<nsRunnableMethod<T> > event = NS_NewRunnableMethod(mThis, funcPtr);
+  RefPtr<nsRunnableMethod<T>> event = NewRunnableMethod(mThis, funcPtr);
   rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv) && retval) {
     *retval = event;

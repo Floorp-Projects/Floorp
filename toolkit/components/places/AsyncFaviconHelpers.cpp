@@ -488,7 +488,7 @@ AsyncFetchAndSetIconForPage::Run()
   // Fetch the icon from the network, the request starts from the main-thread.
   // When done this will associate the icon to the page and notify.
   nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &AsyncFetchAndSetIconForPage::FetchFromNetwork);
+    NewRunnableMethod(this, &AsyncFetchAndSetIconForPage::FetchFromNetwork);
   return NS_DispatchToMainThread(event);
 }
 

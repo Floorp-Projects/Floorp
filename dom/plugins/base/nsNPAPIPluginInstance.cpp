@@ -891,7 +891,7 @@ already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceText
     return nullptr;
   }
 
-  nsCOMPtr<nsIRunnable> frameCallback = NS_NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
+  nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
   surface->SetFrameAvailableCallback(frameCallback);
   return surface.forget();
 }

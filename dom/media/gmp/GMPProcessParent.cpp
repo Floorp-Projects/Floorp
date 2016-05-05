@@ -78,8 +78,7 @@ void
 GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback)
 {
   mDeletedCallback = aCallback;
-  RefPtr<mozilla::Runnable> task = NS_NewNonOwningRunnableMethod(this, &GMPProcessParent::DoDelete);
-  XRE_GetIOMessageLoop()->PostTask(task.forget());
+  XRE_GetIOMessageLoop()->PostTask(NewNonOwningRunnableMethod(this, &GMPProcessParent::DoDelete));
 }
 
 void
