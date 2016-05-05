@@ -1116,7 +1116,7 @@ MediaFormatReader::Update(TrackType aTrack)
       // We have reached our internal seek target.
       decoder.mTimeThreshold.reset();
     }
-    if (time < target.mTime || target.mDropTarget) {
+    if (time < target.mTime || (target.mDropTarget && time == target.mTime)) {
       LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
            TrackTypeToStr(aTrack),
            media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
