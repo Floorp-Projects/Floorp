@@ -6,11 +6,10 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const {Task} = require("resource://gre/modules/Task.jsm");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
 exports.OptionsPanel = OptionsPanel;

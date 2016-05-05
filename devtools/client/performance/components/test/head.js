@@ -6,11 +6,11 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://testing-common/Assert.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 var { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var { Task } = require("resource://gre/modules/Task.jsm");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 
@@ -105,9 +105,9 @@ let OPTS_DATA_GENERAL = [{
       mirType: "Object",
       typeset: [
         { id: 2, keyedBy: "primitive" },
-        { id: 2, keyedBy: "constructor", name: "B", location: "http://mypage.com/file.js", line: "2" }, 
-        { id: 2, keyedBy: "constructor", name: "C", location: "http://mypage.com/file.js", line: "3" }, 
-        { id: 2, keyedBy: "constructor", name: "D", location: "http://mypage.com/file.js", line: "4" }, 
+        { id: 2, keyedBy: "constructor", name: "B", location: "http://mypage.com/file.js", line: "2" },
+        { id: 2, keyedBy: "constructor", name: "C", location: "http://mypage.com/file.js", line: "3" },
+        { id: 2, keyedBy: "constructor", name: "D", location: "http://mypage.com/file.js", line: "4" },
       ],
     }]
   }
@@ -181,4 +181,3 @@ function checkOptimizationTree (rowData) {
     }
   }
 }
-
