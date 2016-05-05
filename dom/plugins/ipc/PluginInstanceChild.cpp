@@ -3299,9 +3299,9 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     // RPC call, and both Flash and Java don't expect to receive setwindow calls
     // at arbitrary times.
     mCurrentAsyncSetWindowTask =
-        NewRunnableMethod<PluginInstanceChild,
-                          void (PluginInstanceChild::*)(const gfxSurfaceType&, const NPRemoteWindow&, bool),
-                          const gfxSurfaceType&, const NPRemoteWindow&, bool>
+        NewCancelableRunnableMethod<PluginInstanceChild,
+                                    void (PluginInstanceChild::*)(const gfxSurfaceType&, const NPRemoteWindow&, bool),
+                                    const gfxSurfaceType&, const NPRemoteWindow&, bool>
         (this, &PluginInstanceChild::DoAsyncSetWindow,
          aSurfaceType, aWindow, true);
     RefPtr<Runnable> addrefedTask = mCurrentAsyncSetWindowTask;
@@ -4223,7 +4223,7 @@ PluginInstanceChild::AsyncShowPluginFrame(void)
     }
 
     mCurrentInvalidateTask =
-        NewRunnableMethod(this, &PluginInstanceChild::InvalidateRectDelayed);
+        NewCancelableRunnableMethod(this, &PluginInstanceChild::InvalidateRectDelayed);
     RefPtr<Runnable> addrefedTask = mCurrentInvalidateTask;
     MessageLoop::current()->PostTask(addrefedTask.forget());
 }

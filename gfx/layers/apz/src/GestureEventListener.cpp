@@ -498,7 +498,7 @@ void GestureEventListener::CancelLongTapTimeoutTask()
 void GestureEventListener::CreateLongTapTimeoutTask()
 {
   RefPtr<CancelableRunnable> task =
-    NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutLongTap);
+    NewCancelableRunnableMethod(this, &GestureEventListener::HandleInputTimeoutLongTap);
 
   mLongTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(
@@ -525,8 +525,8 @@ void GestureEventListener::CreateMaxTapTimeoutTask()
 
   TouchBlockState* block = mAsyncPanZoomController->GetInputQueue()->CurrentTouchBlock();
   RefPtr<CancelableRunnable> task =
-    NewRunnableMethod(this, &GestureEventListener::HandleInputTimeoutMaxTap,
-                      block->IsDuringFastFling());
+    NewCancelableRunnableMethod(this, &GestureEventListener::HandleInputTimeoutMaxTap,
+                                block->IsDuringFastFling());
 
   mMaxTapTimeoutTask = task;
   mAsyncPanZoomController->PostDelayedTask(
