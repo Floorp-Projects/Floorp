@@ -195,7 +195,7 @@ class ZoneCellIterImpl
     ZoneCellIterImpl(JS::Zone* zone, AllocKind kind) {
         JSRuntime* rt = zone->runtimeFromAnyThread();
         MOZ_ASSERT(zone);
-        MOZ_ASSERT(rt->gc.nursery.isEmpty());
+        MOZ_ASSERT_IF(IsNurseryAllocable(kind), rt->gc.nursery.isEmpty());
 
         // We have a single-threaded runtime, so there's no need to protect
         // against other threads iterating or allocating. However, we do have
@@ -256,8 +256,10 @@ class ZoneCellIter
         // that allows us to iterate.
         JSRuntime* rt = zone->runtimeFromMainThread();
         if (!rt->isHeapBusy()) {
-            // Evict the nursery before iterating so we can see all things.
-            rt->gc.evictNursery();
+            // If we are iterating a nursery-allocated kind then we need to
+            // evict first so that we can see all things.
+            if (IsNurseryAllocable(kind))
+                rt->gc.evictNursery();
 
             // Assert that no GCs can occur while a ZoneCellIter is live.
             noAlloc.disallowAlloc(rt);
