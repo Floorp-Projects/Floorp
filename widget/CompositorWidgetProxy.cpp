@@ -155,6 +155,12 @@ CompositorWidgetProxyWrapper::GetComposer2D()
   return mWidget->GetComposer2D();
 }
 
+uintptr_t
+CompositorWidgetProxyWrapper::GetWidgetKey()
+{
+  return reinterpret_cast<uintptr_t>(mWidget);
+}
+
 nsIWidget*
 CompositorWidgetProxyWrapper::RealWidget()
 {

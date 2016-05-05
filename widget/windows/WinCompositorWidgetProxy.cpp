@@ -15,6 +15,7 @@ using namespace mozilla::gfx;
 
 WinCompositorWidgetProxy::WinCompositorWidgetProxy(nsWindow* aWindow)
  : mWindow(aWindow),
+   mWidgetKey(reinterpret_cast<uintptr_t>(aWindow)),
    mWnd(reinterpret_cast<HWND>(aWindow->GetNativeData(NS_NATIVE_WINDOW))),
    mTransparencyMode(aWindow->GetTransparencyMode()),
    mMemoryDC(nullptr),
@@ -121,6 +122,12 @@ WinCompositorWidgetProxy::GetCompositorVsyncDispatcher()
 {
   RefPtr<CompositorVsyncDispatcher> cvd = mWindow->GetCompositorVsyncDispatcher();
   return cvd.forget();
+}
+
+uintptr_t
+WinCompositorWidgetProxy::GetWidgetKey()
+{
+  return mWidgetKey;
 }
 
 void

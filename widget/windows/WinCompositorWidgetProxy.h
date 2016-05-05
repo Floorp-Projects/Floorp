@@ -29,6 +29,7 @@ public:
   void EndRemoteDrawing() override;
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
+  uintptr_t GetWidgetKey() override;
   nsIWidget* RealWidget() override;
   WinCompositorWidgetProxy* AsWindowsProxy() override {
     return this;
@@ -65,6 +66,7 @@ private:
 
 private:
   nsWindow* mWindow;
+  uintptr_t mWidgetKey;
   HWND mWnd;
   gfx::CriticalSection mPresentLock;
 

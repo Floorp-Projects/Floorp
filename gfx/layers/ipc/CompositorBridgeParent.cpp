@@ -1238,8 +1238,7 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   // to local pages, hide every plugin associated with the window.
   if (!hasRemoteContent && BrowserTabsRemoteAutostart() &&
       mCachedPluginData.Length()) {
-    nsIWidget* widget = GetWidgetProxy()->RealWidget();
-    Unused << SendHideAllPlugins(reinterpret_cast<uintptr_t>(widget));
+    Unused << SendHideAllPlugins(GetWidgetProxy()->GetWidgetKey());
     mCachedPluginData.Clear();
   }
 #endif
@@ -2468,8 +2467,7 @@ CompositorBridgeParent::UpdatePluginWindowState(uint64_t aId)
       return false;
     }
 
-    nsIWidget* widget = GetWidgetProxy()->RealWidget();
-    uintptr_t parentWidget = reinterpret_cast<uintptr_t>(widget);
+    uintptr_t parentWidget = GetWidgetProxy()->GetWidgetKey();
 
     // We will pass through here in cases where the previous shadow layer
     // tree contained visible plugins and the new tree does not. All we need
@@ -2554,8 +2552,7 @@ CompositorBridgeParent::HideAllPluginWindows()
     return;
   }
 
-  nsIWidget* widget = GetWidgetProxy()->RealWidget();
-  uintptr_t parentWidget = reinterpret_cast<uintptr_t>(widget);
+  uintptr_t parentWidget = GetWidgetProxy()->GetWidgetKey();
 
   mDeferPluginWindows = true;
   mPluginWindowsHidden = true;
