@@ -217,8 +217,7 @@ PreallocatedProcessManagerImpl::AllocateOnIdle()
     return;
   }
 
-  MessageLoop::current()->PostIdleTask(
-    NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow));
+  MessageLoop::current()->PostIdleTask(NewRunnableMethod(this, &PreallocatedProcessManagerImpl::AllocateNow));
 }
 
 void
@@ -243,7 +242,7 @@ PreallocatedProcessManagerImpl::ScheduleDelayedNuwaFork()
     return;
   }
 
-  RefPtr<CancelableRunnable> task = NewRunnableMethod(
+  RefPtr<CancelableRunnable> task = NS_NewCancelableRunnableMethod(
     this, &PreallocatedProcessManagerImpl::DelayedNuwaFork);
   mPreallocateAppProcessTask = task;
   MessageLoop::current()->PostDelayedTask(task.forget(),

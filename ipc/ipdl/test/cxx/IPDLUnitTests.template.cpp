@@ -47,7 +47,7 @@ DeleteChildActor();
 
 char* gIPDLUnitTestName = nullptr;
 
-const char* const
+const char*
 IPDLUnitTestName()
 {
     if (!gIPDLUnitTestName) {
@@ -97,7 +97,7 @@ ${STRING_TO_ENUMS}
 }
 
 
-const char* const
+const char*
 IPDLUnitTestToString(IPDLUnitTestType aTest)
 {
     switch (aTest) {
@@ -273,7 +273,7 @@ DeleteSubprocess(MessageLoop* uiLoop)
 {
   // pong to QuitXPCOM
   delete gSubprocess;
-  uiLoop->PostTask(FROM_HERE, NewRunnableFunction(QuitXPCOM));
+  uiLoop->PostTask(NewRunnableFunction(QuitXPCOM));
 }
 
 void
@@ -281,7 +281,6 @@ DeferredParentShutdown()
 {
     // ping to DeleteSubprocess
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
         NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
 }
 
@@ -316,12 +315,12 @@ QuitParent()
     if (gChildThread) {
         gParentDone = true;
         MessageLoop::current()->PostTask(
-            FROM_HERE, NewRunnableFunction(TryThreadedShutdown));
+            NewRunnableFunction(TryThreadedShutdown));
     } else {
         // defer "real" shutdown to avoid *Channel::Close() racing with the
         // deletion of the subprocess
         MessageLoop::current()->PostTask(
-            FROM_HERE, NewRunnableFunction(DeferredParentShutdown));
+            NewRunnableFunction(DeferredParentShutdown));
     }
 }
 
@@ -337,10 +336,10 @@ QuitChild()
 {
     if (gChildThread) { // Threaded-mode test
         gParentMessageLoop->PostTask(
-            FROM_HERE, NewRunnableFunction(ChildCompleted));
+            NewRunnableFunction(ChildCompleted));
     } else { // Process-mode test
         MessageLoop::current()->PostTask(
-            FROM_HERE, NewRunnableFunction(ChildDie));
+            NewRunnableFunction(ChildDie));
     }
 }
 

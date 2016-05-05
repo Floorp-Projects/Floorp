@@ -248,13 +248,13 @@ PackagedAppVerifier::FireVerifiedEvent(bool aForManifest, bool aSuccess)
   nsCOMPtr<nsIRunnable> r;
 
   if (aForManifest) {
-    r = NS_NewRunnableMethodWithArgs<bool>(this,
-                                           &PackagedAppVerifier::OnManifestVerified,
-                                           aSuccess);
+    r = NewRunnableMethod<bool>(this,
+                                &PackagedAppVerifier::OnManifestVerified,
+                                aSuccess);
   } else {
-    r = NS_NewRunnableMethodWithArgs<bool>(this,
-                                           &PackagedAppVerifier::OnResourceVerified,
-                                           aSuccess);
+    r = NewRunnableMethod<bool>(this,
+                                &PackagedAppVerifier::OnResourceVerified,
+                                aSuccess);
   }
 
   NS_DispatchToMainThread(r);

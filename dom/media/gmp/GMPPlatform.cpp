@@ -121,7 +121,7 @@ RunOnMainThread(GMPTask* aTask)
   }
 
   RefPtr<GMPRunnable> r = new GMPRunnable(aTask);
-  sMainLoop->PostTask(NewRunnableMethod(r.get(), &GMPRunnable::Run));
+  sMainLoop->PostTask(NewRunnableMethod(r, &GMPRunnable::Run));
 
   return GMPNoErr;
 }
@@ -253,7 +253,6 @@ GMPThreadImpl::Post(GMPTask* aTask)
   }
 
   RefPtr<GMPRunnable> r = new GMPRunnable(aTask);
-
   mThread.message_loop()->PostTask(NewRunnableMethod(r.get(), &GMPRunnable::Run));
 }
 

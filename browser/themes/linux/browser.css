@@ -815,11 +815,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* Location bar */
-#nav-bar {
+#main-window {
   --urlbar-border-color: ThreeDShadow;
 }
 
-#nav-bar:-moz-lwtheme {
+#main-window:-moz-lwtheme {
   --urlbar-border-color: rgba(0,0,0,.3);
 }
 

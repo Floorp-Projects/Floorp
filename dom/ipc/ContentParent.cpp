@@ -1060,7 +1060,10 @@ ContentParent::RecvUngrabPointer(const uint32_t& aTime)
   NS_RUNTIMEABORT("This message only makes sense on GTK platforms");
   return false;
 #else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   gdk_pointer_ungrab(aTime);
+#pragma GCC diagnostic pop
   return true;
 #endif
 }
@@ -2177,9 +2180,10 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   // Destroy any processes created by this ContentParent
   for(uint32_t i = 0; i < childIDArray.Length(); i++) {
     ContentParent* cp = cpm->GetContentProcessById(childIDArray[i]);
-    MessageLoop::current()->PostTask(
-      NewRunnableMethod(cp, &ContentParent::ShutDownProcess,
-                        SEND_SHUTDOWN_MESSAGE));
+    MessageLoop::current()->PostTask(NewRunnableMethod
+                                     <ShutDownMethod>(cp,
+                                                      &ContentParent::ShutDownProcess,
+                                                      SEND_SHUTDOWN_MESSAGE));
   }
   cpm->RemoveContentProcess(this->ChildID());
 
@@ -2260,9 +2264,10 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   if (tabIds.Length() == 1) {
     // In the case of normal shutdown, send a shutdown message to child to
     // allow it to perform shutdown tasks.
-    MessageLoop::current()->PostTask(
-      NewRunnableMethod(this, &ContentParent::ShutDownProcess,
-                        SEND_SHUTDOWN_MESSAGE));
+    MessageLoop::current()->PostTask(NewRunnableMethod
+                                     <ShutDownMethod>(this,
+                                                      &ContentParent::ShutDownProcess,
+                                                      SEND_SHUTDOWN_MESSAGE));
   }
 }
 
@@ -3542,6 +3547,8 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
   self->KillHard("ShutDownKill");
 }
 
+// WARNING: aReason appears in telemetry, so any new value passed in requires
+// data review.
 void
 ContentParent::KillHard(const char* aReason)
 {
@@ -3572,11 +3579,6 @@ ContentParent::KillHard(const char* aReason)
     crashReporter->AnnotateCrashReport(
       NS_LITERAL_CSTRING("additional_minidumps"),
       additionalDumps);
-    if (IsKillHardAnnotationSet()) {
-      crashReporter->AnnotateCrashReport(
-        NS_LITERAL_CSTRING("kill_hard"),
-        GetKillHardAnnotation());
-    }
     nsDependentCString reason(aReason);
     crashReporter->AnnotateCrashReport(
       NS_LITERAL_CSTRING("ipc_channel_error"),
@@ -3584,6 +3586,8 @@ ContentParent::KillHard(const char* aReason)
 
     // Generate the report and insert into the queue for submittal.
     mCreatedPairedMinidumps = crashReporter->GenerateCompleteMinidump(this);
+
+    Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
   }
 #endif
   ProcessHandle otherProcessHandle;

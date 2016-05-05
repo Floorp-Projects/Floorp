@@ -27,6 +27,7 @@
  */
 
 #include "DynamicsCompressor.h"
+#include "AlignmentUtils.h"
 #include "AudioBlock.h"
 
 #include <cmath>
@@ -198,7 +199,9 @@ void DynamicsCompressor::process(const AudioBlock* sourceChunk, AudioBlock* dest
         setEmphasisParameters(filterStageGain, anchor, filterStageRatio);
     }
 
-    float sourceWithVolume[WEBAUDIO_BLOCK_SIZE];
+    float sourceWithVolume[WEBAUDIO_BLOCK_SIZE + 4];
+    float* alignedSourceWithVolume = ALIGNED16(sourceWithVolume);
+    ASSERT_ALIGNED16(alignedSourceWithVolume);
 
     // Apply pre-emphasis filter.
     // Note that the final three stages are computed in-place in the destination buffer.
@@ -210,8 +213,8 @@ void DynamicsCompressor::process(const AudioBlock* sourceChunk, AudioBlock* dest
         } else {
           AudioBlockCopyChannelWithScale(m_sourceChannels[i],
                                          sourceChunk->mVolume,
-                                         sourceWithVolume);
-          sourceData = sourceWithVolume;
+                                         alignedSourceWithVolume);
+          sourceData = alignedSourceWithVolume;
         }
 
         float* destinationData = m_destinationChannels[i];

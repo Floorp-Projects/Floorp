@@ -173,15 +173,6 @@ HTMLSourceElement::BindToTree(nsIDocument *aDocument,
   if (aParent && aParent->IsNodeOfType(nsINode::eMEDIA)) {
     HTMLMediaElement* media = static_cast<HTMLMediaElement*>(aParent);
     media->NotifyAddedSource();
-  } else if (aParent && aParent->IsHTMLElement(nsGkAtoms::picture)) {
-    // Find any img siblings after this <source> and notify them
-    nsCOMPtr<nsIContent> sibling = AsContent();
-    while ( (sibling = sibling->GetNextSibling()) ) {
-      if (sibling->IsHTMLElement(nsGkAtoms::img)) {
-        HTMLImageElement *img = static_cast<HTMLImageElement*>(sibling.get());
-        img->PictureSourceAdded(AsContent());
-      }
-    }
   }
 
   return NS_OK;

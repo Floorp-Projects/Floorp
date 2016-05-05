@@ -24,13 +24,6 @@ using mozilla::gmp::GMPProcessParent;
 using mozilla::ipc::GeckoChildProcessHost;
 using base::ProcessArchitecture;
 
-template<>
-struct RunnableMethodTraits<GMPProcessParent>
-{
-  static void RetainCallee(GMPProcessParent* obj) { }
-  static void ReleaseCallee(GMPProcessParent* obj) { }
-};
-
 namespace mozilla {
 namespace gmp {
 
@@ -85,7 +78,7 @@ void
 GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback)
 {
   mDeletedCallback = aCallback;
-  XRE_GetIOMessageLoop()->PostTask(NewRunnableMethod(this, &GMPProcessParent::DoDelete));
+  XRE_GetIOMessageLoop()->PostTask(NewNonOwningRunnableMethod(this, &GMPProcessParent::DoDelete));
 }
 
 void

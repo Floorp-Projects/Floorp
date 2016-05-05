@@ -96,14 +96,6 @@ static const char kHangUIMinDisplayPref[] = "dom.ipc.plugins.hangUIMinDisplaySec
 #define CHILD_TIMEOUT_PREF kChildTimeoutPref
 #endif
 
-template<>
-struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
-{
-    typedef mozilla::plugins::PluginModuleParent Class;
-    static void RetainCallee(Class* obj) { }
-    static void ReleaseCallee(Class* obj) { }
-};
-
 bool
 mozilla::plugins::SetupBridge(uint32_t aPluginId,
                               dom::ContentParent* aContentParent,

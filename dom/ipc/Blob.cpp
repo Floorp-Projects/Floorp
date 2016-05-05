@@ -293,7 +293,7 @@ ReleaseOnTarget(SmartPtr<T>& aDoomed, nsIEventTarget* aTarget)
   auto* doomedSupports = static_cast<nsISupports*>(doomedRaw);
 
   nsCOMPtr<nsIRunnable> releaseRunnable =
-    NS_NewNonOwningRunnableMethod(doomedSupports, &nsISupports::Release);
+    NewNonOwningRunnableMethod(doomedSupports, &nsISupports::Release);
   MOZ_ASSERT(releaseRunnable);
 
   if (aTarget) {
@@ -1600,11 +1600,7 @@ private:
 
     NS_WARN_IF_FALSE(NS_SUCCEEDED(stream->Close()), "Failed to close stream!");
 
-    nsCOMPtr<nsIRunnable> shutdownRunnable =
-      NS_NewRunnableMethod(ioTarget, &nsIThread::Shutdown);
-    MOZ_ASSERT(shutdownRunnable);
-
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(shutdownRunnable));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(ioTarget, &nsIThread::Shutdown)));
 
     return NS_OK;
   }
@@ -2138,7 +2134,7 @@ RemoteBlobImpl::Destroy()
   }
 
   nsCOMPtr<nsIRunnable> destroyRunnable =
-    NS_NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
+    NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
 
   if (mActorTarget) {
     destroyRunnable =
@@ -2566,7 +2562,7 @@ RemoteBlobImpl::Destroy()
   }
 
   nsCOMPtr<nsIRunnable> destroyRunnable =
-    NS_NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
+    NewNonOwningRunnableMethod(this, &RemoteBlobImpl::Destroy);
 
   if (mActorTarget) {
     destroyRunnable =
@@ -3422,7 +3418,7 @@ BlobChild::NoteDyingRemoteBlobImpl()
   // on the owning thread, so we proxy here if necessary.
   if (!IsOnOwningThread()) {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewNonOwningRunnableMethod(this, &BlobChild::NoteDyingRemoteBlobImpl);
+      NewNonOwningRunnableMethod(this, &BlobChild::NoteDyingRemoteBlobImpl);
 
     if (mEventTarget) {
       runnable = new CancelableRunnableWrapper(runnable, mEventTarget);
@@ -4001,7 +3997,7 @@ BlobParent::NoteDyingRemoteBlobImpl()
   // on the main thread, so we proxy here if necessary.
   if (!IsOnOwningThread()) {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewNonOwningRunnableMethod(this, &BlobParent::NoteDyingRemoteBlobImpl);
+      NewNonOwningRunnableMethod(this, &BlobParent::NoteDyingRemoteBlobImpl);
 
     if (mEventTarget) {
       runnable = new CancelableRunnableWrapper(runnable, mEventTarget);

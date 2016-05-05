@@ -49,8 +49,10 @@ DEFINES['SQLITE_MAX_SCHEMA_RETRY'] = 25
 # -DSQLITE_WIN32_GETVERSIONEX=0 avoids using deprecated functions.
 # SQLite will just assume we are running on NT kinds of Windows. That's fine
 # because we don't support Win9x.
+# -DSQLITE_ALLOW_URI_AUTHORITY=1 enables uri authorities. See bug 879133.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['SQLITE_WIN32_GETVERSIONEX'] = 0
+    DEFINES['SQLITE_ALLOW_URI_AUTHORITY'] = 1
 
 # -DSQLITE_ENABLE_LOCKING_STYLE=1 to help with AFP folders
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

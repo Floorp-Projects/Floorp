@@ -92,8 +92,6 @@ private:
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
   bool CheckAudioChannelPermissions(AudioChannel aValue);
 
-  void SetCanPlay(float aVolume, bool aMuted);
-
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
@@ -105,7 +103,7 @@ private:
   // Audio Channel Type.
   AudioChannel mAudioChannel;
   bool mIsOffline;
-  bool mAudioChannelAgentPlaying;
+  bool mAudioChannelSuspended;
 
   bool mCaptured;
 };

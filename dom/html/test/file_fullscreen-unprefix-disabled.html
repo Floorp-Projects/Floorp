@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1268749</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<script>
+
+var gWindow = null;
+
+function begin() {
+  SpecialPowers.pushPrefEnv({
+    "set": [["full-screen-api.unprefix.enabled", false]]
+  }, () => {
+    gWindow = window.open("file_fullscreen-unprefix-disabled-inner.html",
+                          "", "width=500,height=500");
+    gWindow.addEventListener("load", () => {
+      gWindow.focus();
+      SimpleTest.waitForFocus(() => gWindow.begin(), gWindow);
+    });
+  });
+}
+
+function finish() {
+  gWindow.close();
+  SpecialPowers.popPrefEnv(opener.nextTest);
+}
+
+</script>
+</body>
+</html>

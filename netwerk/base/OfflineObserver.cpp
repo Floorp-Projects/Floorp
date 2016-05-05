@@ -21,9 +21,8 @@ OfflineObserver::RegisterOfflineObserver()
   if (NS_IsMainThread()) {
     RegisterOfflineObserverMainThread();
   } else {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &OfflineObserver::RegisterOfflineObserverMainThread);
-    NS_DispatchToMainThread(event);
+    NS_DispatchToMainThread(NewRunnableMethod(this,
+                                              &OfflineObserver::RegisterOfflineObserverMainThread));
   }
 }
 
@@ -33,9 +32,8 @@ OfflineObserver::RemoveOfflineObserver()
   if (NS_IsMainThread()) {
     RemoveOfflineObserverMainThread();
   } else {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &OfflineObserver::RemoveOfflineObserverMainThread);
-    NS_DispatchToMainThread(event);
+    NS_DispatchToMainThread(NewRunnableMethod(this,
+                                              &OfflineObserver::RemoveOfflineObserverMainThread));
   }
 }
 

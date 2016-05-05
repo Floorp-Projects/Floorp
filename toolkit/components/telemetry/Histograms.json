@@ -10679,5 +10679,38 @@
     "n_buckets": 20,
     "keyed": true,
     "description": "Tracking how long a Worker thread is blocked when a sync operation is executed on the main-thread."
+  },
+  "SUBPROCESS_KILL_HARD": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1269961],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times a subprocess was forcibly killed, and the reason."
+  },
+  "FX_CONTENT_CRASH_DUMP_UNAVAILABLE": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1269961],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times that about:tabcrashed was unable to find a crash dump."
+  },
+  "FX_CONTENT_CRASH_PRESENTED": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1269961],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times that about:tabcrashed appeared and found a crash dump."
+  },
+  "FX_CONTENT_CRASH_NOT_SUBMITTED": {
+    "alert_emails": ["wmccloskey@mozilla.com"],
+    "bug_numbers": [1269961],
+    "expires_in_version": "never",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
   }
 }

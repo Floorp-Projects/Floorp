@@ -15,6 +15,12 @@ function Deferred() {
   });
 }
 
+function checkIsChromeFullscreen(win, inFullscreen) {
+  return SimpleTest.promiseWaitForCondition(
+    () => win.fullScreen == inFullscreen,
+    "The window should exit fullscreen state");
+}
+
 SimpleTest.waitForExplicitFinish();
 // XXX This actually exposes a true race condition, but it could rarely
 // happen in real world, because it only happens when requestFullscreen
@@ -27,7 +33,10 @@ SimpleTest.requestFlakyTimeout(
   "Need to wait for potential fullscreen transition");
 addLoadEvent(function () {
   SpecialPowers.pushPrefEnv({
-    "set": [["full-screen-api.allow-trusted-requests-only", false]]
+    "set": [
+      ["full-screen-api.unprefix.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false]
+    ]
   }, next);
 });
 
@@ -47,9 +56,10 @@ const ACTION_FUNCS = [
     win.location = "data:text/html,<html>";
     setTimeout(() => {
       SimpleTest.waitForFocus(() => {
-        ok(!win.fullScreen, "The window should no longer be in fullscreen");
-        win.close();
-        deferred.resolve();
+        checkIsChromeFullscreen(win, false).then(() => {
+          win.close();
+          deferred.resolve();
+        });
       }, win);
     }, 0);
     return deferred.promise;
@@ -65,9 +75,10 @@ const ACTION_FUNCS = [
     function listener() {
       win.removeEventListener("fullscreenchange", listener);
       ok(!win.document.fullscreenElement, "Should exit fullscreen");
-      ok(!win.fullScreen, "The window should no longer be in fullscreen");
-      win.close();
-      deferred.resolve();
+      checkIsChromeFullscreen(win, false).then(() => {
+        win.close();
+        deferred.resolve();
+      });
     }
     win.addEventListener("fullscreenchange", listener);
     win.document.exitFullscreen();

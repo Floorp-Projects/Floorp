@@ -6,6 +6,7 @@
 
 using namespace mozilla::ipc;
 typedef mozilla::ipc::MessageChannel::Message Message;
+typedef mozilla::ipc::MessageChannel::MessageInfo MessageInfo;
 
 namespace mozilla {
 namespace _ipdltest {

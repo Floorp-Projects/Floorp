@@ -84,7 +84,7 @@ bool
 TestCancelParent::RecvDone()
 {
     MessageLoop::current()->PostTask(
-	FROM_HERE, NewRunnableMethod(this, &TestCancelParent::Close));
+	NewRunnableMethod(this, &TestCancelParent::Close));
     return true;
 }
 

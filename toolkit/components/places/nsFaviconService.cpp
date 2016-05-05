@@ -212,10 +212,12 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
                                             bool aForceReload,
                                             uint32_t aFaviconLoadType,
                                             nsIFaviconDataCallback* aCallback,
-                                            nsIPrincipal* aLoadingPrincipal)
+                                            nsIPrincipal* aLoadingPrincipal,
+                                            mozIPlacesPendingOperation **_canceler)
 {
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aFaviconURI);
+  NS_ENSURE_ARG_POINTER(_canceler);
 
   // If a favicon is in the failed cache, only load it during a forced reload.
   bool previouslyFailed;
@@ -239,9 +241,10 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
 
   // Check if the icon already exists and fetch it from the network, if needed.
   // Finally associate the icon to the requested page if not yet associated.
+  bool loadPrivate = aFaviconLoadType == nsIFaviconService::FAVICON_LOAD_PRIVATE;
   rv = AsyncFetchAndSetIconForPage::start(
     aFaviconURI, aPageURI, aForceReload ? FETCH_ALWAYS : FETCH_IF_MISSING,
-    aFaviconLoadType, aCallback, loadingPrincipal
+    loadPrivate, aCallback, loadingPrincipal, _canceler
   );
   NS_ENSURE_SUCCESS(rv, rv);
 

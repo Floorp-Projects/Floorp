@@ -535,13 +535,6 @@
 @RESPATH@/components/TVSimulatorService.js
 @RESPATH@/components/TVSimulatorService.manifest
 
-#ifndef RELEASE_BUILD
-@RESPATH@/components/InterAppComm.manifest
-@RESPATH@/components/InterAppCommService.js
-@RESPATH@/components/InterAppConnection.js
-@RESPATH@/components/InterAppMessagePort.js
-#endif
-
 #ifdef MOZ_ACTIVITIES
 @RESPATH@/components/SystemMessageCache.js
 @RESPATH@/components/SystemMessageInternal.js

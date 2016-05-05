@@ -39,6 +39,16 @@ HOST_CXXFLAGS += [
     '-g',
 ]
 
+if CONFIG['OS_TARGET'] == 'Android':
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/gonk-include',
+        ]
+    else:
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
+
 Library('breakpad_linux_common_s')
 
 FINAL_LIBRARY = 'xul'

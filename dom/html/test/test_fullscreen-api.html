@@ -43,6 +43,7 @@ var gTestWindows = [
   "file_fullscreen-backdrop.html",
   "file_fullscreen-nested.html",
   "file_fullscreen-prefixed.html",
+  "file_fullscreen-unprefix-disabled.html",
 ];
 
 var testWindow = null;
@@ -91,6 +92,7 @@ addLoadEvent(function() {
   SpecialPowers.pushPrefEnv({
       "set": [
         ["full-screen-api.enabled", true],
+        ["full-screen-api.unprefix.enabled", true],
         ["full-screen-api.allow-trusted-requests-only", false],
         ["full-screen-api.transition-duration.enter", "0 0"],
         ["full-screen-api.transition-duration.leave", "0 0"]

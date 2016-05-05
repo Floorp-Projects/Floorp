@@ -929,7 +929,7 @@ OpenDebugFiles(Aec* aecpc,
       return; // avoid a lot of snprintf's and checks lower
     }
     if (filename > path) {
-#ifdef XP_WIN
+#ifdef WEBRTC_WIN
       if (*(filename-1) != '\\') {
         *filename++ = '\\';
       }

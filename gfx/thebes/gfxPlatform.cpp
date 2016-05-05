@@ -890,8 +890,8 @@ gfxPlatform::ShutdownLayersIPC()
     } else if (XRE_IsParentProcess()) {
 
         gfx::VRManagerChild::ShutDown();
-        layers::ImageBridgeChild::ShutDown();
         layers::CompositorBridgeChild::ShutDown();
+        layers::ImageBridgeChild::ShutDown();
 
 #ifdef MOZ_WIDGET_GONK
         layers::SharedBufferManagerChild::ShutDown();
@@ -2171,13 +2171,6 @@ gfxPlatform::CanUseHardwareVideoDecoding()
   // safe to init the prefs etc. from here.
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return sLayersSupportsHardwareVideoDecoding && !sLayersHardwareVideoDecodingFailed;
-}
-
-bool
-gfxPlatform::CanUseDirect3D11ANGLE()
-{
-  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
-  return gANGLESupportsD3D11;
 }
 
 bool

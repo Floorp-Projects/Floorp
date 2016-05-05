@@ -101,13 +101,6 @@ using mozilla::dom::ScriptSettingsInitialized;
 using mozilla::MonitorAutoLock;
 using mozilla::MonitorAutoUnlock;
 
-template<>
-struct RunnableMethodTraits<mozilla::ipc::MessageChannel>
-{
-    static void RetainCallee(mozilla::ipc::MessageChannel* obj) { }
-    static void ReleaseCallee(mozilla::ipc::MessageChannel* obj) { }
-};
-
 #define IPC_ASSERT(_cond, ...)                                      \
     do {                                                            \
         if (!(_cond))                                               \
@@ -502,13 +495,12 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mIsSyncWaitingOnNonMainThread = false;
 #endif
 
-    mDequeueOneTask = new RefCountedTask(NewRunnableMethod(
-                                                 this,
-                                                 &MessageChannel::OnMaybeDequeueOne));
+    RefPtr<CancelableRunnable> runnable =
+        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnMaybeDequeueOne);
+    mDequeueOneTask = new RefCountedTask(runnable.forget());
 
-    mOnChannelConnectedTask = new RefCountedTask(NewRunnableMethod(
-        this,
-        &MessageChannel::DispatchOnChannelConnected));
+    runnable = NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
+    mOnChannelConnectedTask = new RefCountedTask(runnable.forget());
 
 #ifdef OS_WIN
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
@@ -521,13 +513,20 @@ MessageChannel::~MessageChannel()
     MOZ_COUNT_DTOR(ipc::MessageChannel);
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
-    BOOL ok = CloseHandle(mEvent);
-    if (!ok) {
+    if (mEvent) {
+        BOOL ok = CloseHandle(mEvent);
+        mEvent = nullptr;
+
+        if (!ok) {
+            gfxDevCrash(mozilla::gfx::LogReason::MessageChannelCloseFailure) <<
+                "MessageChannel failed to close. GetLastError: " <<
+                GetLastError();
+        }
+        MOZ_RELEASE_ASSERT(ok);
+    } else {
         gfxDevCrash(mozilla::gfx::LogReason::MessageChannelCloseFailure) <<
-            "MessageChannel failed to close. GetLastError: " <<
-            GetLastError();
+                "MessageChannel destructor ran without an mEvent Handle";
     }
-    MOZ_RELEASE_ASSERT(ok);
 #endif
     Clear();
 }
@@ -693,8 +692,10 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
-    aTargetLoop->PostTask(
-        NewRunnableMethod(aTargetChan, &MessageChannel::OnOpenAsSlave, this, oppSide));
+    aTargetLoop->PostTask(NewNonOwningRunnableMethod
+                          <MessageChannel*, Side>(aTargetChan,
+                                                  &MessageChannel::OnOpenAsSlave,
+                                                  this, oppSide));
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
@@ -2094,7 +2095,7 @@ MessageChannel::OnNotifyMaybeChannelError()
 
     if (IsOnCxxStack()) {
         mChannelErrorTask =
-            NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+            NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
         RefPtr<Runnable> task = mChannelErrorTask;
         // 10 ms delay is completely arbitrary
         mWorkerLoop->PostDelayedTask(task.forget(), 10);
@@ -2114,7 +2115,7 @@ MessageChannel::PostErrorNotifyTask()
 
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
-        NewRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
     RefPtr<Runnable> task = mChannelErrorTask;
     mWorkerLoop->PostTask(task.forget());
 }

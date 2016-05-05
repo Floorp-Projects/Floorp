@@ -429,6 +429,12 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 }
 
 bool
+gfxWindowsPlatform::CanUseDirect3D11ANGLE()
+{
+  return gANGLESupportsD3D11 && gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING);
+}
+
+bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
   MOZ_ASSERT(!mDWriteFactory && IsVistaOrLater());
