@@ -184,13 +184,17 @@ public:
     return ConvertsToLength(mUnit, mValue);
   }
 
-  nscoord ToLength() const {
-    MOZ_ASSERT(ConvertsToLength());
-    if (GetUnit() == eStyleUnit_Coord) {
-      return GetCoordValue();
+  static nscoord ToLength(nsStyleUnit aUnit, nsStyleUnion aValue) {
+    MOZ_ASSERT(ConvertsToLength(aUnit, aValue));
+    if (aUnit == eStyleUnit_Coord) {
+      return aValue.mInt;
     }
-    MOZ_ASSERT(IsCalcUnit() && !CalcHasPercent());
-    return GetCalcValue()->ToLength();
+    MOZ_ASSERT(IsCalcUnit(aUnit) && !AsCalcValue(aValue)->mHasPercent);
+    return AsCalcValue(aValue)->ToLength();
+  }
+
+  nscoord ToLength() const {
+    return ToLength(GetUnit(), mValue);
   }
 
   // Callers must verify IsCalcUnit before calling this function.
@@ -299,6 +303,10 @@ public:
   inline void SetTop(const nsStyleCoord& aCoord);
   inline void SetRight(const nsStyleCoord& aCoord);
   inline void SetBottom(const nsStyleCoord& aCoord);
+
+  nscoord ToLength(mozilla::css::Side aSide) const {
+    return nsStyleCoord::ToLength(mUnits[aSide], mValues[aSide]);
+  }
 
   bool ConvertsToLength() const {
     NS_FOR_CSS_SIDES(side) {
