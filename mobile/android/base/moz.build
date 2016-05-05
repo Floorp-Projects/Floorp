@@ -126,6 +126,7 @@ gujar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UIAsyncTask.java',
+    'util/UUIDUtil.java',
     'util/WeakReferenceHandler.java',
     'util/WebActivityMapper.java',
     'util/WindowUtils.java',
