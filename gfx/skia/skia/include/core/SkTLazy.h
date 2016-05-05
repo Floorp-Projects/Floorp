@@ -51,7 +51,7 @@ public:
         if (this->isValid()) {
             fPtr->~T();
         }
-        fPtr = new (SkTCast<T*>(fStorage.get())) T(std::forward<Args>(args)...);
+        fPtr = new (SkTCast<T*>(fStorage.get())) T(std__forward<Args>(args)...);
         return fPtr;
     }
 
