@@ -1373,19 +1373,13 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
                | SANDBOXED_DOMAIN;
 
 // Macro for updating the flag according to the keywords
-#define IF_KEYWORD(atom, flags) \
+#define SANDBOX_KEYWORD(string, atom, flags)                             \
   if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
 
-  IF_KEYWORD(allowsameorigin, SANDBOXED_ORIGIN)
-  IF_KEYWORD(allowforms,  SANDBOXED_FORMS)
-  IF_KEYWORD(allowscripts, SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
-  IF_KEYWORD(allowtopnavigation, SANDBOXED_TOPLEVEL_NAVIGATION)
-  IF_KEYWORD(allowpointerlock, SANDBOXED_POINTER_LOCK)
-  IF_KEYWORD(alloworientationlock, SANDBOXED_ORIENTATION_LOCK)
-  IF_KEYWORD(allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
+#include "IframeSandboxKeywordList.h"
 
   return out;
-#undef IF_KEYWORD
+#undef SANDBOX_KEYWORD
 }
 
 nsIBidiKeyboard*

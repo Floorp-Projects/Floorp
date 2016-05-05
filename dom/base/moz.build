@@ -46,6 +46,7 @@ EXPORTS += [
     'AutocompleteFieldList.h',
     'Crypto.h',
     'HTMLSplitOnSpacesTokenizer.h',
+    'IframeSandboxKeywordList.h',
     'mozAutoDocUpdate.h',
     'mozFlushType.h',
     'nsAtomListUtils.h',
