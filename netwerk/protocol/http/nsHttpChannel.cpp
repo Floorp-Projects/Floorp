@@ -3407,6 +3407,13 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     bool isForcedValid = false;
     entry->GetIsForcedValid(&isForcedValid);
 
+    nsXPIDLCString framedBuf;
+    rv = entry->GetMetaDataElement("strongly-framed", getter_Copies(framedBuf));
+    // describe this in terms of explicitly weakly framed so as to be backwards
+    // compatible with old cache contents which dont have strongly-framed makers
+    bool weaklyFramed = NS_SUCCEEDED(rv) && framedBuf.EqualsLiteral("0");
+    bool isImmutable = !weaklyFramed && isHttps && mCachedResponseHead->Immutable();
+
     // Cached entry is not the entity we request (see bug #633743)
     if (ResponseWouldVary(entry)) {
         LOG(("Validating based on Vary headers returning TRUE\n"));
@@ -3432,7 +3439,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     }
     // If the VALIDATE_ALWAYS flag is set, any cached data won't be used until
     // it's revalidated with the server.
-    else if (mLoadFlags & nsIRequest::VALIDATE_ALWAYS) {
+    else if ((mLoadFlags & nsIRequest::VALIDATE_ALWAYS) && !isImmutable) {
         LOG(("Validating based on VALIDATE_ALWAYS load flag\n"));
         doValidation = true;
     }
@@ -3559,12 +3566,6 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     mCachedContentIsValid = !doValidation;
 
     if (doValidation) {
-        nsXPIDLCString buf;
-        rv = entry->GetMetaDataElement("strongly-framed", getter_Copies(buf));
-        // describe this in terms of explicitly weakly framed so as to be backwards
-        // compatible with old cache contents which dont have strongly-framed makers
-        bool weaklyFramed = NS_SUCCEEDED(rv) && buf.EqualsLiteral("0");
-
         //
         // now, we are definitely going to issue a HTTP request to the server.
         // make it conditional if possible.
@@ -3576,12 +3577,12 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         // the request method MUST be either GET or HEAD (see bug 175641) and
         // the cached response code must be < 400
         //
-        // the cached content must not be weakly framed
+        // the cached content must not be weakly framed or marked immutable
         //
         // do not override conditional headers when consumer has defined its own
         if (!mCachedResponseHead->NoStore() &&
             (mRequestHead.IsGet() || mRequestHead.IsHead()) &&
-            !mCustomConditionalRequest && !weaklyFramed &&
+            !mCustomConditionalRequest && !weaklyFramed && !isImmutable &&
             (mCachedResponseHead->Status() < 400)) {
 
             if (mConcurentCacheAccess) {
