@@ -4,6 +4,7 @@
 
 #include "nsUsageArrayHelper.h"
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -103,7 +104,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
     MOZ_CRASH("unknown cert usage passed to check()");
   }
 
-  ScopedCERTCertList unusedBuiltChain;
+  UniqueCERTCertList unusedBuiltChain;
   SECStatus rv = certVerifier->VerifyCert(mCert, aCertUsage, time,
                                           nullptr /*XXX:wincx*/,
                                           nullptr /*hostname*/,
