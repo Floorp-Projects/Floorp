@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1265808
+-->
+<head>
+  <title>Test for Bug 1265808 - replace Services.prefs</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+<script type="application/javascript;version=1.8">
+"use strict";
+var exports = {};
+
+ // Add some starter prefs.
+localStorage.setItem("devtools.branch1.somebool", JSON.stringify({
+  // bool
+  type: 128,
+  defaultValue: false,
+  hasUserValue: false,
+  userValue: false
+}));
+
+localStorage.setItem("devtools.branch1.somestring", JSON.stringify({
+  // string
+  type: 32,
+  defaultValue: "dinosaurs",
+  hasUserValue: true,
+  userValue: "elephants"
+}));
+
+localStorage.setItem("devtools.branch2.someint", JSON.stringify({
+  // string
+  type: 64,
+  defaultValue: -16,
+  hasUserValue: false,
+  userValue: null
+}));
+
+</script>
+
+  <script type="application/javascript;version=1.8"
+	  src="prefs-wrapper.js"></script>
+  <script type="application/javascript;version=1.8"
+	  src="resource://devtools/client/shared/shim/Services.js"></script>
+</head>
+<body>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function do_tests() {
+  is(Services.prefs.getBoolPref("devtools.branch1.somebool"), false,
+    "bool pref value");
+  Services.prefs.setBoolPref("devtools.branch1.somebool", true);
+  is(Services.prefs.getBoolPref("devtools.branch1.somebool"), true,
+    "bool pref value after setting");
+
+  let threw;
+
+  try {
+    threw = false;
+    WrappedPrefs.getIntPref("devtools.branch1.somebool");
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for bool pref");
+
+  try {
+    threw = false;
+    Services.prefs.setIntPref("devtools.branch1.somebool", 27);
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for setting bool pref");
+
+  try {
+    threw = false;
+    Services.prefs.setBoolPref("devtools.branch1.somebool", 27);
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "setting bool pref to wrong type");
+
+  try {
+    threw = false;
+    Services.prefs.getCharPref("devtools.branch2.someint");
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for int pref");
+
+  try {
+    threw = false;
+    Services.prefs.setCharPref("devtools.branch2.someint", "whatever");
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for setting int pref");
+
+  try {
+    threw = false;
+    Services.prefs.setIntPref("devtools.branch2.someint", "whatever");
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "setting int pref to wrong type");
+
+  try {
+    threw = false;
+    Services.prefs.getBoolPref("devtools.branch1.somestring");
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for char pref");
+
+  try {
+    threw = false;
+    Services.prefs.setBoolPref("devtools.branch1.somestring", true);
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "type-checking for setting char pref");
+
+  try {
+    threw = false;
+    Services.prefs.setCharPref("devtools.branch1.somestring", true);
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "setting char pref to wrong type");
+
+  is(Services.prefs.getPrefType("devtools.branch1.somebool"),
+    Services.prefs.PREF_BOOL, "type of bool pref");
+  is(Services.prefs.getPrefType("devtools.branch2.someint"),
+    Services.prefs.PREF_INT, "type of int pref");
+  is(Services.prefs.getPrefType("devtools.branch1.somestring"),
+    Services.prefs.PREF_STRING, "type of string pref");
+
+  WrappedPrefs.setBoolPref("devtools.branch1.somebool", true);
+  ok(WrappedPrefs.getBoolPref("devtools.branch1.somebool"), "set bool pref");
+  WrappedPrefs.setIntPref("devtools.branch2.someint", -93);
+  is(WrappedPrefs.getIntPref("devtools.branch2.someint"), -93, "set int pref");
+  WrappedPrefs.setCharPref("devtools.branch1.somestring", "hello");
+  ok(WrappedPrefs.getCharPref("devtools.branch1.somestring"), "hello",
+    "set string pref");
+
+  Services.prefs.clearUserPref("devtools.branch1.somestring");
+  ok(Services.prefs.getCharPref("devtools.branch1.somestring"), "dinosaurs",
+    "clear string pref");
+
+  ok(Services.prefs.prefHasUserValue("devtools.branch1.somebool"),
+    "bool pref has user value");
+  ok(!Services.prefs.prefHasUserValue("devtools.branch1.somestring"),
+    "string pref does not have user value");
+
+
+  Services.prefs.savePrefFile(null);
+  ok(true, "saved pref file without error");
+
+
+  let branch0 = Services.prefs.getBranch(null);
+  let branch1 = Services.prefs.getBranch("devtools.branch1.");
+
+  branch1.setCharPref("somestring", "octopus");
+  Services.prefs.setCharPref("devtools.branch1.somestring", "octopus");
+  is(Services.prefs.getCharPref("devtools.branch1.somestring"), "octopus",
+    "set correctly via branch");
+  ok(branch0.getCharPref("devtools.branch1.somestring"), "octopus",
+    "get via base branch");
+  ok(branch1.getCharPref("somestring"), "octopus", "get via branch");
+
+
+  let notifications = {};
+  let clearNotificationList = () => { notifications = {}; }
+  let observer = {
+    observe: function (subject, topic, data) {
+      notifications[data] = true;
+    }
+  };
+
+  try {
+    threw = false;
+    branch0.addObserver("devtools.branch1", null, null);
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "invalid branch name to addObserver");
+
+  branch0.addObserver("devtools.branch1.", observer, false);
+  branch1.addObserver("", observer, false);
+
+  Services.prefs.setCharPref("devtools.branch1.somestring", "elf owl");
+  isDeeply(notifications, {
+    "devtools.branch1.somestring": true,
+    "somestring": true
+  }, "notifications sent to two listeners");
+
+  clearNotificationList();
+  Services.prefs.setIntPref("devtools.branch2.someint", 1729);
+  isDeeply(notifications, {}, "no notifications sent");
+
+  clearNotificationList();
+  branch0.removeObserver("devtools.branch1.", observer);
+  Services.prefs.setCharPref("devtools.branch1.somestring", "tapir");
+  isDeeply(notifications, {
+    "somestring": true
+  }, "removeObserver worked");
+
+  // Make sure we update if the pref change comes from somewhere else.
+  clearNotificationList();
+  pref("devtools.branch1.someotherstring", "lazuli bunting");
+  isDeeply(notifications, {
+    "someotherstring": true
+  }, "pref worked");
+
+
+  // Clean up.
+  localStorage.clear();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [
+    ["devtools.branch1.somestring", "elephants"],
+    ["devtools.branch1.somebool", false],
+    ["devtools.branch2.someint", "-16"],
+  ]},
+  do_tests);
+
+</script>
+</body>
