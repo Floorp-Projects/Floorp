@@ -97,7 +97,7 @@ MediaFormatReader::Shutdown()
   mSkipRequest.DisconnectIfExists();
 
   if (mAudio.mDecoder) {
-    Flush(TrackInfo::kAudioTrack);
+    Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
@@ -117,7 +117,7 @@ MediaFormatReader::Shutdown()
   MOZ_ASSERT(mAudio.mPromise.IsEmpty());
 
   if (mVideo.mDecoder) {
-    Flush(TrackInfo::kVideoTrack);
+    Reset(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
     }
@@ -535,8 +535,8 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
     // This code will count that as dropped, which was the intent, but not quite true.
     mDecoder->NotifyDecodedFrames(0, 0, SizeOfVideoQueueInFrames());
 
-    Flush(TrackInfo::kVideoTrack);
-    RefPtr<MediaDataPromise> p = mVideo.mPromise.Ensure(__func__);
+    Reset(TrackInfo::kVideoTrack);
+    RefPtr<MediaDataPromise> p = mVideo.EnsurePromise(__func__);
     SkipVideoDemuxToNextKeyFrame(timeThreshold);
     return p;
   }
@@ -954,9 +954,9 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
       decoder.mInfo = info;
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
-      // Flush will clear our array of queued samples. So make a copy now.
+      // Reset will clear our array of queued samples. So make a copy now.
       nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
-      Flush(aTrack);
+      Reset(aTrack);
       decoder.ShutdownDecoder();
       if (sample->mKeyframe) {
         decoder.mQueuedSamples.AppendElements(Move(samples));
@@ -1008,8 +1008,7 @@ MediaFormatReader::InternalSeek(TrackType aTrack, const InternalSeekTarget& aTar
       TrackTypeToStr(aTrack), aTarget.mTime.ToSeconds());
 
   auto& decoder = GetDecoderData(aTrack);
-  decoder.mTimeThreshold = Some(aTarget);
-  RefPtr<MediaFormatReader> self = this;
+  decoder.Flush();
   decoder.ResetDemuxer();
   decoder.mTimeThreshold = Some(aTarget);
   RefPtr<MediaFormatReader> self = this;
@@ -1309,13 +1308,13 @@ MediaFormatReader::ResetDecode()
   ResetDemuxers();
 
   if (HasVideo()) {
-    Flush(TrackInfo::kVideoTrack);
+    Reset(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
     }
   }
   if (HasAudio()) {
-    Flush(TrackInfo::kAudioTrack);
+    Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
@@ -1383,23 +1382,17 @@ MediaFormatReader::Error(TrackType aTrack)
 }
 
 void
-MediaFormatReader::Flush(TrackType aTrack)
+MediaFormatReader::Reset(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOG("Flush(%s) BEGIN", TrackTypeToStr(aTrack));
+  LOG("Reset(%s) BEGIN", TrackTypeToStr(aTrack));
 
   auto& decoder = GetDecoderData(aTrack);
-  if (!decoder.mDecoder) {
-    decoder.ResetState();
-    return;
-  }
 
-  decoder.mDecoder->Flush();
-  // Purge the current decoder's state.
-  // ResetState clears mOutputRequested flag so that we ignore all output until
-  // the next request for more data.
   decoder.ResetState();
-  LOG("Flush(%s) END", TrackTypeToStr(aTrack));
+  decoder.Flush();
+
+  LOG("Reset(%s) END", TrackTypeToStr(aTrack));
 }
 
 void

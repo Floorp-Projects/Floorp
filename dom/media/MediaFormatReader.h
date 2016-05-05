@@ -170,7 +170,7 @@ private:
   void Output(TrackType aType, MediaData* aSample);
   void InputExhausted(TrackType aTrack);
   void Error(TrackType aTrack);
-  void Flush(TrackType aTrack);
+  void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
@@ -329,14 +329,38 @@ private:
     virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
                                const char* aMethodName) = 0;
 
+    // Clear track demuxer related data.
     void ResetDemuxer()
     {
-      // Clear demuxer related data.
       mDemuxRequest.DisconnectIfExists();
       mSeekRequest.DisconnectIfExists();
       mTrackDemuxer->Reset();
+      mQueuedSamples.Clear();
     }
 
+    // Flush the decoder if present and reset decoding related data.
+    // Decoding will be suspended until mInputRequested is set again.
+    // Following a flush, the decoder is ready to accept any new data.
+    void Flush()
+    {
+      if (mDecoder) {
+        mDecoder->Flush();
+      }
+      mDecodingRequested = false;
+      mOutputRequested = false;
+      mInputExhausted = false;
+      mOutput.Clear();
+      mNumSamplesInput = 0;
+      mNumSamplesOutput = 0;
+      mSizeOfQueue = 0;
+      mDraining = false;
+      mDrainComplete = false;
+    }
+
+    // Reset the state of the DecoderData, clearing all queued frames
+    // (pending demuxed and decoded).
+    // Decoding will be suspended until mInputRequested is set again.
+    // The track demuxer is *not* reset.
     void ResetState()
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
