@@ -295,6 +295,10 @@ js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClassValue* classValue)
         *classValue = ESClass_Map;
     else if (obj->is<PromiseObject>())
         *classValue = ESClass_Promise;
+    else if (obj->is<MapIteratorObject>())
+        *classValue = ESClass_MapIterator;
+    else if (obj->is<SetIteratorObject>())
+        *classValue = ESClass_SetIterator;
     else
         *classValue = ESClass_Other;
 
