@@ -1091,16 +1091,20 @@ MediaManager::SelectSettings(
     }
     sources.Clear();
     const char* badConstraint = nullptr;
+    bool needVideo = IsOn(aConstraints.mVideo);
+    bool needAudio = IsOn(aConstraints.mAudio);
 
-    if (videos.Length() && IsOn(aConstraints.mVideo)) {
+    if (needVideo && videos.Length()) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
           GetInvariant(aConstraints.mVideo), videos);
     }
-    if (!badConstraint && audios.Length() && IsOn(aConstraints.mAudio)) {
+    if (!badConstraint && needAudio && audios.Length()) {
       badConstraint = MediaConstraintsHelper::SelectSettings(
           GetInvariant(aConstraints.mAudio), audios);
     }
-    if (!badConstraint) {
+    if (!badConstraint &&
+        !needVideo == !videos.Length() &&
+        !needAudio == !audios.Length()) {
       for (auto& video : videos) {
         sources.AppendElement(video);
       }
