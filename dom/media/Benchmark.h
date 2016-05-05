@@ -32,7 +32,7 @@ class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
   // MediaDataDecoderCallback
   // Those methods are called on the MediaDataDecoder's task queue.
   void Output(MediaData* aData) override;
-  void Error() override;
+  void Error(MediaDataDecoderError aError) override;
   void InputExhausted() override;
   void DrainComplete() override;
   bool OnReaderTaskQueue() override;

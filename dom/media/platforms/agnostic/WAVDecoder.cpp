@@ -81,7 +81,7 @@ void
 WaveDataDecoder::Decode(MediaRawData* aSample)
 {
   if (!DoDecode(aSample)) {
-    mCallback->Error();
+    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
   } else if (mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
