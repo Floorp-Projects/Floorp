@@ -1948,6 +1948,7 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   uint32_t parsed = 0;
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
+  aFound = false;
 
   uint32_t nextSampleIndex = trackData.mNextGetSampleIndex.valueOr(0);
   for (uint32_t i = nextSampleIndex; i < track.Length(); i++) {
