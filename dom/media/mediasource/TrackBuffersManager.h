@@ -145,7 +145,8 @@ public:
   already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz,
                                            bool& aError);
-  media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack);
+  media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
+                                           const media::TimeUnit& aFuzz);
 
   void AddSizeOfResources(MediaSourceDecoder::ResourceSizes* aSizes);
 
