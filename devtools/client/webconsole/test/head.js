@@ -3,6 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../../framework/test/shared-head.js */
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
