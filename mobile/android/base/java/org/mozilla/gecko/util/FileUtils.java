@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -237,6 +238,13 @@ public class FileUtils {
                 mCachedMatcher.reset(filename);
             }
             return mCachedMatcher.matches();
+        }
+    }
+
+    public static class FileLastModifiedComparator implements Comparator<File> {
+        @Override
+        public int compare(final File lhs, final File rhs) {
+            return Long.compare(lhs.lastModified(), rhs.lastModified());
         }
     }
 }
