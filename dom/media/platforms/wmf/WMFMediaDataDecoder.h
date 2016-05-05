@@ -125,12 +125,10 @@ private:
   // This is used to approximate the decoder's position in the media resource.
   int64_t mLastStreamOffset;
 
-  // For access to and waiting on mIsFlushing
-  Monitor mMonitor;
   // Set on reader/decode thread calling Flush() to indicate that output is
   // not required and so input samples on mTaskQueue need not be processed.
   // Cleared on mTaskQueue.
-  bool mIsFlushing;
+  Atomic<bool> mIsFlushing;
 
   bool mIsShutDown;
 
