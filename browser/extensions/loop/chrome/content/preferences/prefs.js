@@ -17,6 +17,7 @@ pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);
 pref("loop.ping.interval", 1800000);
 pref("loop.ping.timeout", 10000);
+pref("loop.copy.showLimit", 3);
 pref("loop.copy.shown", false);
 pref("loop.copy.throttler", "copy.loop.services.mozilla.com");
 pref("loop.copy.ticket", -1);
@@ -26,7 +27,7 @@ pref("loop.debug.sdk", false);
 pref("loop.debug.twoWayMediaTelemetry", false);
 pref("loop.feedback.dateLastSeenSec", 0);
 pref("loop.feedback.periodSec", 15770000); // 6 months.
-pref("loop.feedback.formURL", "https://www.surveygizmo.com/s3/2651383/Firefox-Hello-Product-Survey-II");
+pref("loop.feedback.formURL", "https://www.surveygizmo.com/s3/2651383/Firefox-Hello-Product-Survey-II?version=%APP_VERSION%");
 pref("loop.feedback.manualFormURL", "https://www.mozilla.org/firefox/hello/feedbacksurvey/");
 pref("loop.logDomains", false);
 pref("loop.mau.openPanel", 0);
