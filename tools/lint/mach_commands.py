@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import argparse
 import os
 
 from mozbuild.base import (
@@ -49,8 +48,8 @@ class MachCommands(MachCommandBase):
 
         lint_files = self.find_linters(linters)
 
-        lintargs['exclude'] = 'obj*'
-        lint = LintRoller(lintargs=lintargs)
+        lintargs['exclude'] = ['obj*']
+        lint = LintRoller(**lintargs)
         lint.read(lint_files)
 
         # run all linters
