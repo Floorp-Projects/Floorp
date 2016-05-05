@@ -6315,12 +6315,17 @@ HTMLInputElement::SaveState()
       inputState = new HTMLInputElementState();
       nsAutoString value;
       GetValue(value);
-      DebugOnly<nsresult> rv =
+      nsresult rv =
         nsLinebreakConverter::ConvertStringLineBreaks(
              value,
              nsLinebreakConverter::eLinebreakPlatform,
              nsLinebreakConverter::eLinebreakContent);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+
+      if (NS_FAILED(rv)) {
+        NS_ERROR("Converting linebreaks failed!");
+        return rv;
+      }
+
       inputState->SetValue(value);
       break;
   }
