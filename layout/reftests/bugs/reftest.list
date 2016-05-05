@@ -1197,9 +1197,9 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 455280-1.xhtml 455280-1-ref.xhtml
 skip-if(B2G||Mulet) == 455826-1.html 455826-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047 # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,1,1) fuzzy-if(d2d,1,69) fuzzy-if(gtkWidget,4,3) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,1,1) fuzzy-if(d2d,1,69) fuzzy-if(gtkWidget,4,3) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,1,1) fuzzy-if(d2d,1,69) fuzzy-if(gtkWidget,4,3) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,2,3) fuzzy-if(d2d,2,69) fuzzy-if(gtkWidget,4,6) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,2,3) fuzzy-if(d2d,2,69) fuzzy-if(gtkWidget,4,6) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android||B2G,11,41) fuzzy-if(winWidget,2,3) fuzzy-if(d2d,2,69) fuzzy-if(gtkWidget,4,6) == 456219-1c.html 456219-1-ref.html # bug 1128229
 fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
@@ -1797,7 +1797,7 @@ fuzzy-if(OSX==1006,2,30) skip-if((B2G&&browserIsRemote)||Mulet) == 933264-1.html
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
-fuzzy-if(B2G,1,7) fuzzy-if(skiaContent,1,160000) == 942672-1.html 942672-1-ref.html
+fuzzy-if(Android,1,1) fuzzy-if(B2G,1,7) fuzzy-if(skiaContent,1,160000) == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html

@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Testpage for CSP violation (inline script)</title>
+</head>
+<body>
+  CSP violation test succeeded.
+  <script>
+    // This inline script would override the success string if loaded.
+    document.body.innerHTML = "CSP violation test failed.";
+  </script>
+</body>
+</html>

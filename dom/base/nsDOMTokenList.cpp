@@ -19,9 +19,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsDOMTokenList::nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom)
+nsDOMTokenList::nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom,
+                               const DOMTokenListSupportedTokenArray aSupportedTokens)
   : mElement(aElement),
-    mAttrAtom(aAttrAtom)
+    mAttrAtom(aAttrAtom),
+    mSupportedTokens(aSupportedTokens)
 {
   // We don't add a reference to our element. If it goes away,
   // we'll be told to drop our reference
@@ -343,6 +345,28 @@ nsDOMTokenList::Replace(const nsAString& aToken,
 
   tokens[0] = aNewToken;
   AddInternal(attr, tokens);
+}
+
+bool
+nsDOMTokenList::Supports(const nsAString& aToken,
+                         ErrorResult& aError)
+{
+  if (!mSupportedTokens) {
+    aError.ThrowTypeError<MSG_TOKENLIST_NO_SUPPORTED_TOKENS>(
+      mElement->LocalName(),
+      nsDependentAtomString(mAttrAtom));
+    return false;
+  }
+
+  for (DOMTokenListSupportedToken* supportedToken = mSupportedTokens;
+       *supportedToken;
+       ++supportedToken) {
+    if (aToken.LowerCaseEqualsASCII(*supportedToken)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void

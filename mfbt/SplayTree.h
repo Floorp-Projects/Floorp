@@ -76,19 +76,19 @@ public:
     return Comparator::compare(aValue, *last) == 0 ? last : nullptr;
   }
 
-  bool insert(T* aValue)
+  void insert(T* aValue)
   {
     MOZ_ASSERT(!find(*aValue), "Duplicate elements are not allowed.");
 
     if (!mRoot) {
       mRoot = aValue;
-      return true;
+      return;
     }
     T* last = lookup(*aValue);
     int cmp = Comparator::compare(*aValue, *last);
 
     finishInsertion(last, cmp, aValue);
-    return true;
+    return;
   }
 
   T* findOrInsert(const T& aValue);
@@ -194,7 +194,7 @@ private:
     return parent;
   }
 
-  T* finishInsertion(T* aLast, int32_t aCmp, T* aNew)
+  void finishInsertion(T* aLast, int32_t aCmp, T* aNew)
   {
     MOZ_ASSERT(aCmp, "Nodes shouldn't be equal!");
 
@@ -204,7 +204,6 @@ private:
     aNew->mParent = aLast;
 
     splay(aNew);
-    return aNew;
   }
 
   /**
@@ -321,7 +320,9 @@ SplayTree<T, Comparator>::findOrInsert(const T& aValue)
     return last;
   }
 
-  return finishInsertion(last, cmp, new T(aValue));
+  T* t = new T(aValue);
+  finishInsertion(last, cmp, t);
+  return t;
 }
 
 }  /* namespace mozilla */

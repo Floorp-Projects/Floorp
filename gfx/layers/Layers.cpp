@@ -884,7 +884,7 @@ Layer::IsScrollInfoLayer() const
       && !GetFirstChild();
 }
 
-const Matrix4x4
+Matrix4x4
 Layer::GetTransform() const
 {
   Matrix4x4 transform = mTransform;
@@ -901,7 +901,7 @@ Layer::GetTransformTyped() const
   return ViewAs<CSSTransformMatrix>(GetTransform());
 }
 
-const Matrix4x4
+Matrix4x4
 Layer::GetLocalTransform()
 {
   if (LayerComposite* shadow = AsLayerComposite())

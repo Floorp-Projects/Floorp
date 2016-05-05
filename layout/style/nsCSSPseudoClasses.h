@@ -10,10 +10,20 @@
 
 #include "nsStringFwd.h"
 
-// This pseudo-class is accepted only in UA style sheets.
-#define CSS_PSEUDO_CLASS_UA_SHEET_ONLY                 (1<<0)
-// This pseudo-class is accepted only in UA style sheets and chrome.
-#define CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME           (1<<1)
+// The following two flags along with the pref defines where this pseudo
+// class can be used:
+// * If none of the two flags is presented, the pref completely controls
+//   the availability of this pseudo class. And in that case, if it has
+//   no pref, this property is usable everywhere.
+// * If any of the flags is set, this pseudo class is always enabled in
+//   the specific contexts regardless of the value of the pref. If there
+//   is no pref for this pseudo class at all in this case, it is an
+//   internal-only pseudo class, which cannot be used anywhere else.
+#define CSS_PSEUDO_CLASS_ENABLED_MASK                  (3<<0)
+#define CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS          (1<<0)
+#define CSS_PSEUDO_CLASS_ENABLED_IN_CHROME             (1<<1)
+#define CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME \
+  (CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS | CSS_PSEUDO_CLASS_ENABLED_IN_CHROME)
 
 class nsIAtom;
 
@@ -42,7 +52,8 @@ class nsCSSPseudoClasses
 public:
   static void AddRefAtoms();
 
-  static Type GetPseudoType(nsIAtom* aAtom);
+  static Type GetPseudoType(nsIAtom* aAtom,
+                            bool aAgentEnabled, bool aChromeEnabled);
   static bool HasStringArg(Type aType);
   static bool HasNthPairArg(Type aType);
   static bool HasSelectorListArg(Type aType) {
@@ -50,24 +61,11 @@ public:
   }
   static bool IsUserActionPseudoClass(Type aType);
 
-  static bool PseudoClassIsUASheetOnly(Type aType) {
-    return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_ONLY);
-  }
-  static bool PseudoClassIsUASheetAndChromeOnly(Type aType) {
-    return PseudoClassHasFlags(aType, CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME);
-  }
-
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);
 
 private:
   static uint32_t FlagsForPseudoClass(const Type aType);
-
-  // Does the given pseudo-class have all of the flags given?
-  static bool PseudoClassHasFlags(const Type aType, uint32_t aFlags)
-  {
-    return (FlagsForPseudoClass(aType) & aFlags) == aFlags;
-  }
 };
 
 #endif /* nsCSSPseudoClasses_h___ */

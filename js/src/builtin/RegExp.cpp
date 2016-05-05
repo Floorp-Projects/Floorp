@@ -1355,6 +1355,28 @@ DoReplace(HandleLinearString matched, HandleLinearString string,
     sb.infallibleAppend(currentChar, replacement->length() - (currentChar - replacementBegin));
 }
 
+static bool
+NeedTwoBytes(HandleLinearString string, HandleLinearString replacement,
+             HandleLinearString matched, Handle<GCVector<Value>> captures)
+{
+    if (string->hasTwoByteChars())
+        return true;
+    if (replacement->hasTwoByteChars())
+        return true;
+    if (matched->hasTwoByteChars())
+        return true;
+
+    for (size_t i = 0, len = captures.length(); i < len; i++) {
+        Value capture = captures[i];
+        if (capture.isUndefined())
+            continue;
+        if (capture.toString()->hasTwoByteChars())
+            return true;
+    }
+
+    return false;
+}
+
 /* ES 2016 draft Mar 25, 2016 21.1.3.14.1. */
 bool
 js::RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinearString string,
@@ -1421,7 +1443,7 @@ js::RegExpGetSubstitution(JSContext* cx, HandleLinearString matched, HandleLinea
     }
 
     StringBuffer result(cx);
-    if (string->hasTwoByteChars() || replacement->hasTwoByteChars()) {
+    if (NeedTwoBytes(string, replacement, matched, captures)) {
         if (!result.ensureTwoByteChars())
             return false;
     }

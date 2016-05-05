@@ -191,13 +191,13 @@ public:
   {
     if (aTrackEvents & TRACK_EVENT_CREATED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethodWithArgs<TrackID, MediaSegment::Type, MediaStream*, TrackID>(
+        NewRunnableMethod<TrackID, MediaSegment::Type, MediaStream*, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackCreated,
           aID, aQueuedMedia.GetType(), aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     } else if (aTrackEvents & TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethodWithArgs<MediaStream*, TrackID>(
+        NewRunnableMethod<MediaStream*, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackEnded,
           aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
@@ -281,7 +281,7 @@ public:
   {
     if (aTrackEvents & TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethodWithArgs<StorensRefPtrPassByPtr<MediaStream>, TrackID>(
+        NewRunnableMethod<StorensRefPtrPassByPtr<MediaStream>, TrackID>(
           this, &PlaybackStreamListener::DoNotifyTrackEnded, aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
@@ -290,7 +290,7 @@ public:
   void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override
   {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation);
+      NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
   }
 

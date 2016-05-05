@@ -12,6 +12,16 @@
 
 namespace mozilla {
 
+/*
+ * |RefPtrTraits<DBusConnection>| specializes |RefPtrTraits<>|
+ * for managing |DBusConnection| with |RefPtr|.
+ *
+ * |RefPtrTraits<DBusConnection>| will _not_ close the DBus
+ * connection upon the final unref. The caller is responsible
+ * for closing the connection.
+ *
+ * See |DBusConnectionDelete| for auto-closing of connections.
+ */
 template<>
 struct RefPtrTraits<DBusConnection>
 {

@@ -8,6 +8,7 @@
 #include "mozilla/widget/IMEData.h"
 #include "nsWindow.h"
 #include "WinIMEHandler.h"
+#include "WinTextEventDispatcherListener.h"
 
 namespace mozilla {
 namespace widget {

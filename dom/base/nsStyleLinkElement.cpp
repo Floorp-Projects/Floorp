@@ -144,7 +144,8 @@ nsStyleLinkElement::IsImportEnabled()
 }
 
 static uint32_t ToLinkMask(const nsAString& aLink, nsIPrincipal* aPrincipal)
-{ 
+{
+  // Keep this in sync with sRelValues in HTMLLinkElement.cpp
   if (aLink.EqualsLiteral("prefetch"))
     return nsStyleLinkElement::ePREFETCH;
   else if (aLink.EqualsLiteral("dns-prefetch"))

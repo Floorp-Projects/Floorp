@@ -145,8 +145,8 @@ CompositorOGL::CreateContext()
   }
 
 #ifdef MOZ_WIDGET_GONK
-  mWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
-                         reinterpret_cast<uintptr_t>(context.get()));
+  mWidget->RealWidget()->SetNativeData(
+    NS_NATIVE_OPENGL_CONTEXT, reinterpret_cast<uintptr_t>(context.get()));
 #endif
 
   return context.forget();
@@ -173,8 +173,8 @@ CompositorOGL::CleanupResources()
     return;
 
 #ifdef MOZ_WIDGET_GONK
-  mWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
-                         reinterpret_cast<uintptr_t>(nullptr));
+  mWidget->RealWidget()->SetNativeData(
+    NS_NATIVE_OPENGL_CONTEXT, reinterpret_cast<uintptr_t>(nullptr));
 #endif
 
   RefPtr<GLContext> ctx = mGLContext->GetSharedContext();

@@ -22,6 +22,7 @@
 #include "gfxVR.h"
 #include "mozilla/gfx/StackArray.h"
 #include "mozilla/Services.h"
+#include "mozilla/widget/WinCompositorWidgetProxy.h"
 
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Telemetry.h"
@@ -215,7 +216,7 @@ CompositorD3D11::Initialize()
 
   mFeatureLevel = mDevice->GetFeatureLevel();
 
-  mHwnd = (HWND)mWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW);
+  mHwnd = mWidget->AsWindowsProxy()->GetHwnd();
 
   memset(&mVSConstants, 0, sizeof(VertexShaderConstants));
 

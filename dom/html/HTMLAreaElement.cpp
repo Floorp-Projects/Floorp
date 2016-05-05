@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLAreaElement.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -122,7 +123,8 @@ nsDOMTokenList*
 HTMLAreaElement::RelList()
 {
   if (!mRelList) {
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel);
+    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
+                                  HTMLAnchorElement::sSupportedRelValues);
   }
   return mRelList;
 }

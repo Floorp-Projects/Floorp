@@ -1096,12 +1096,12 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 /* ::::: Location Bar ::::: */
 
-#nav-bar {
+#main-window {
   --urlbar-border-color: ThreeDShadow;
   --urlbar-border-color-hover: var(--urlbar-border-color);
 }
 
-#nav-bar:-moz-lwtheme {
+#main-window:-moz-lwtheme {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
@@ -1109,14 +1109,14 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7),
          (-moz-os-version: windows-win8) {
-    #nav-bar:not(:-moz-lwtheme) {
+    #main-window:not(:-moz-lwtheme) {
       --urlbar-border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
       --urlbar-border-color-hover: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
     }
   }
 
   @media (-moz-os-version: windows-win10) {
-    #nav-bar:not(:-moz-lwtheme) {
+    #main-window:not(:-moz-lwtheme) {
       --urlbar-border-color: hsl(0,0%,90%);
       --urlbar-border-color-hover: hsl(0,0%,80%);
     }

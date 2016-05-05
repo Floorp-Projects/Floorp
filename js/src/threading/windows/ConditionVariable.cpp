@@ -9,7 +9,7 @@
 #include <float.h>
 #include <intrin.h>
 #include <stdlib.h>
-#include <Windows.h>
+#include <windows.h>
 
 #include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
@@ -61,7 +61,7 @@ public:
 private:
   template <typename T>
   inline bool loadSymbol(HMODULE module, const char* name, T& fn) {
-    void* ptr = GetProcAddress(module, name);
+    FARPROC ptr = GetProcAddress(module, name);
     if (!ptr)
       return false;
 

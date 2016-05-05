@@ -297,6 +297,13 @@ Servo_ReleaseComputedValues(ServoComputedValues*)
 }
 
 void
+Servo_Initialize()
+{
+  MOZ_CRASH("stylo: shouldn't be calling Servo_Initialize in a "
+            "non-MOZ_STYLO build");
+}
+
+void
 Servo_RestyleDocument(RawGeckoDocument* doc, RawServoStyleSet* set)
 {
   MOZ_CRASH("stylo: shouldn't be calling Servo_RestyleDocument in a "

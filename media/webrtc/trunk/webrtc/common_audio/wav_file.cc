@@ -99,17 +99,19 @@ WavWriter::WavWriter(const std::string& filename, int sample_rate,
       num_channels_(num_channels),
       num_samples_(0),
       file_handle_(fopen(filename.c_str(), "wb")) {
-  CHECK(file_handle_ && "Could not open wav file for writing.");
-  CHECK(CheckWavParameters(num_channels_,
-                           sample_rate_,
-                           kWavFormat,
-                           kBytesPerSample,
-                           num_samples_));
+  if (file_handle_) {
+    CHECK(file_handle_ && "Could not open wav file for writing.");
+    CHECK(CheckWavParameters(num_channels_,
+                             sample_rate_,
+                             kWavFormat,
+                             kBytesPerSample,
+                             num_samples_));
 
-  // Write a blank placeholder header, since we need to know the total number
-  // of samples before we can fill in the real data.
-  static const uint8_t blank_header[kWavHeaderSize] = {0};
-  CHECK_EQ(1u, fwrite(blank_header, kWavHeaderSize, 1, file_handle_));
+    // Write a blank placeholder header, since we need to know the total number
+    // of samples before we can fill in the real data.
+    static const uint8_t blank_header[kWavHeaderSize] = {0};
+    CHECK_EQ(1u, fwrite(blank_header, kWavHeaderSize, 1, file_handle_));
+  }
 }
 
 WavWriter::~WavWriter() {
@@ -117,6 +119,9 @@ WavWriter::~WavWriter() {
 }
 
 void WavWriter::WriteSamples(const int16_t* samples, size_t num_samples) {
+  if (!file_handle_) {
+    return;
+  }
 #ifndef WEBRTC_ARCH_LITTLE_ENDIAN
   int16_t * le_samples = new int16_t[num_samples];
   for(size_t idx = 0; idx < num_samples; idx++) {
@@ -151,6 +156,9 @@ void WavWriter::WriteSamples(const float* samples, size_t num_samples) {
 }
 
 void WavWriter::Close() {
+  if (!file_handle_) {
+    return;
+  }
   CHECK_EQ(0, fseek(file_handle_, 0, SEEK_SET));
   uint8_t header[kWavHeaderSize];
   WriteWavHeader(header, num_channels_, sample_rate_, kWavFormat,

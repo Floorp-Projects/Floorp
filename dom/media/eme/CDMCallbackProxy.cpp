@@ -222,16 +222,16 @@ CDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
   }
   if (keyStatusesChange) {
     nsCOMPtr<nsIRunnable> task;
-    task = NS_NewRunnableMethodWithArg<nsString>(mProxy,
+    task = NewRunnableMethod<nsString>(mProxy,
       &CDMProxy::OnKeyStatusesChange,
       NS_ConvertUTF8toUTF16(aSessionId));
     NS_DispatchToMainThread(task);
   }
 
   nsCOMPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethodWithArg<nsString>(mProxy,
-                                               &CDMProxy::OnSessionClosed,
-                                               NS_ConvertUTF8toUTF16(aSessionId));
+  task = NewRunnableMethod<nsString>(mProxy,
+                                     &CDMProxy::OnSessionClosed,
+                                     NS_ConvertUTF8toUTF16(aSessionId));
   NS_DispatchToMainThread(task);
 }
 
@@ -295,9 +295,9 @@ CDMCallbackProxy::KeyStatusChanged(const nsCString& aSessionId,
   }
   if (keyStatusesChange) {
     nsCOMPtr<nsIRunnable> task;
-    task = NS_NewRunnableMethodWithArg<nsString>(mProxy,
-                                                 &CDMProxy::OnKeyStatusesChange,
-                                                 NS_ConvertUTF8toUTF16(aSessionId));
+    task = NewRunnableMethod<nsString>(mProxy,
+                                       &CDMProxy::OnKeyStatusesChange,
+                                       NS_ConvertUTF8toUTF16(aSessionId));
     NS_DispatchToMainThread(task);
   }
 }
@@ -325,7 +325,7 @@ void
 CDMCallbackProxy::Terminated()
 {
   MOZ_ASSERT(mProxy->IsOnGMPThread());
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(mProxy, &CDMProxy::Terminated);
+  nsCOMPtr<nsIRunnable> task = NewRunnableMethod(mProxy, &CDMProxy::Terminated);
   NS_DispatchToMainThread(task);
 }
 

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1268749</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+  <div id="fullscreen"></div>
+<script>
+
+function ok(condition, msg) {
+  opener.opener.ok(condition, "[unprefix-disabled] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.opener.is(a, b, "[unprefix-disabled] " + msg);
+}
+
+function info(msg) {
+  opener.opener.info("[unprefix-disabled] " + msg);
+}
+
+SimpleTest.requestFlakyTimeout(
+  "need to wait for a while to confirm no unexpected event is dispatched");
+
+let div = document.getElementById("fullscreen");
+let unattachedDiv = document.createElement('div');
+
+function begin() {
+  ok(!("requestFullscreen" in div), "No element.requestFullscreen");
+  ok(!("exitFullscreen" in document), "No document.exitFullscreen");
+  ok(!("fullscreenElement" in document), "No document.fullscreenElement");
+  ok(!("fullscreenEnabled" in document), "No document.fullscreenEnabled");
+  ok(!("onfullscreenchange" in document), "No document.onfullscreenchange");
+  ok(!("onfullscreenerror" in document), "No document.onfullscreenerror");
+
+  for (var event of ["fullscreenchange", "fullscreenerror"]) {
+    let customEvent = new Event(event, {bubbles: true});
+    let gotCustomEventFromWindow = false;
+    let gotCustomEventFromDocument = false;
+    let listenerForWindow = evt => {
+      ok(!gotCustomEventFromWindow,
+         "Should get custom event from window only once");
+      ok(evt == customEvent, "Should get the desired custom event");
+      gotCustomEventFromWindow = true;
+    };
+    let listenerForDocument = evt => {
+      ok(!gotCustomEventFromDocument,
+         "Should get custom event from document only once");
+      ok(evt == customEvent, "Should get the desired custom event");
+      gotCustomEventFromDocument = true;
+    };
+    window.addEventListener(event, listenerForWindow);
+    document.addEventListener(event, listenerForDocument);
+    document.dispatchEvent(customEvent);
+    ok(gotCustomEventFromWindow, "Should get the custom event from window");
+    ok(gotCustomEventFromDocument, "Should get the custom event from document");
+    window.removeEventListener(event, listenerForWindow);
+    document.removeEventListener(event, listenerForDocument);
+
+    for (var target of [window, document]) {
+      target.addEventListener(event, () => {
+        ok(false, `No ${event} should be triggered on ${target}`);
+      });
+    }
+  }
+
+  document.addEventListener("mozfullscreenchange", enteredFullscreen);
+  SimpleTest.executeSoon(() => div.mozRequestFullScreen());
+}
+
+function enteredFullscreen() {
+  document.removeEventListener("mozfullscreenchange", enteredFullscreen);
+  document.addEventListener("mozfullscreenchange", exitedFullscreen);
+  SimpleTest.executeSoon(() => document.mozCancelFullScreen());
+}
+
+function exitedFullscreen() {
+  document.removeEventListener("mozfullscreenchange", exitedFullscreen);
+  document.addEventListener("mozfullscreenerror", errorFullscreen);
+  SimpleTest.executeSoon(() => unattachedDiv.mozRequestFullScreen());
+}
+
+function errorFullscreen() {
+  document.removeEventListener("mozfullscreenerror", errorFullscreen);
+  // Wait a short time before exiting this test to confirm that there is
+  // really no unwanted event gets dispatched.
+  setTimeout(() => opener.finish(), 200);
+}
+
+</script>
+</body>
+</html>

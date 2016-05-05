@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <dbus/dbus.h>
-#include "mozilla/ipc/DBusConnectionRefPtr.h"
+#include "mozilla/ipc/DBusConnectionDelete.h"
 #include "mozilla/ipc/DBusMessageRefPtr.h"
 #include "nsDBusHandlerApp.h"
 #include "nsIURI.h"
@@ -88,8 +88,8 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   DBusError err;
   dbus_error_init(&err);
 
-  RefPtr<DBusConnection> connection = already_AddRefed<DBusConnection>(
-    dbus_bus_get_private(DBUS_BUS_SESSION, &err));
+  mozilla::UniquePtr<DBusConnection, mozilla::DBusConnectionDelete>
+    connection(dbus_bus_get_private(DBUS_BUS_SESSION, &err));
 
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
@@ -98,7 +98,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   if (nullptr == connection) {
     return NS_ERROR_FAILURE;
   }
-  dbus_connection_set_exit_on_disconnect(connection,false);
+  dbus_connection_set_exit_on_disconnect(connection.get(),false);
 
   RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
     dbus_message_new_method_call(mService.get(),
@@ -115,13 +115,12 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &uri);
 
-  if (dbus_connection_send(connection, msg, nullptr)) {
-    dbus_connection_flush(connection);
+  if (dbus_connection_send(connection.get(), msg, nullptr)) {
+    dbus_connection_flush(connection.get());
   } else {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

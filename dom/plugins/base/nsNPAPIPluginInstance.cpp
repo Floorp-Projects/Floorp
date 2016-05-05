@@ -891,7 +891,7 @@ already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceText
     return nullptr;
   }
 
-  nsCOMPtr<nsIRunnable> frameCallback = NS_NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
+  nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
   surface->SetFrameAvailableCallback(frameCallback);
   return surface.forget();
 }
@@ -1846,6 +1846,15 @@ nsNPAPIPluginInstance::WindowVolumeChanged(float aVolume, bool aMuted)
   nsresult rv = SetMuted(aMuted);
   NS_WARN_IF(NS_FAILED(rv));
   return rv;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginInstance::WindowSuspendChanged(nsSuspendedTypes aSuspend)
+{
+  // It doesn't support suspended, so we just do something like mute/unmute.
+  WindowVolumeChanged(1.0, /* useless */
+                      aSuspend != nsISuspendedTypes::NONE_SUSPENDED);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

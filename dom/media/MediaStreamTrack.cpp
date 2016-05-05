@@ -89,7 +89,7 @@ public:
                                     const PrincipalHandle& aNewPrincipalHandle) override
   {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArgs<StoreCopyPassByConstLRef<PrincipalHandle>>(
+      NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
         this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged, aNewPrincipalHandle);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
   }

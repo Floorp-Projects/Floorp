@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Ensure we get a touch-cancel after a contextmenu comes up</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function longPressLink() {
+  if (!window.TouchEvent) {
+    window.opener.ok(true, "Touch events are not supported on this platform, sorry!\n");
+    window.opener.testDone();
+    return;
+  }
+
+  synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+    dump("Finished synthesizing touch-start, waiting for events...\n");
+  });
+}
+
+var eventsFired = 0;
+function recordEvent(e) {
+  switch (eventsFired) {
+    case 0: window.opener.is(e.type, 'touchstart', 'Got a touchstart'); break;
+    case 1: window.opener.is(e.type, 'contextmenu', 'Got a contextmenu'); e.preventDefault(); break;
+    case 2: window.opener.is(e.type, 'touchcancel', 'Got a touchcancel'); break;
+    default: window.opener.ok(false, 'Got an unexpected event of type ' + e.type); break;
+  }
+  eventsFired++;
+
+  if (eventsFired == 3) {
+    synthesizeNativeTouch(document.getElementById('b'), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+      dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
+      flushApzRepaints(function() {
+        dump("Done APZ flush, ending test...\n");
+        window.opener.testDone(); // closing the window should dismiss the context menu dialog
+      });
+    });
+  }
+}
+
+function registerListeners() {
+  window.addEventListener('touchstart', recordEvent, { passive: true, capture: true });
+  window.addEventListener('touchend', recordEvent, { passive: true, capture: true });
+  window.addEventListener('touchcancel', recordEvent, true);
+  window.addEventListener('contextmenu', recordEvent, true);
+}
+
+window.onload = function() {
+  registerListeners();
+  waitForAllPaints(function() {
+    flushApzRepaints(longPressLink);
+  });
+}
+
+  </script>
+</head>
+<body>
+ <a id="b" href="#">Link to nowhere</a>
+</body>
+</html>

@@ -264,6 +264,7 @@ nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
 bool nsContentUtils::sIsFullScreenApiEnabled = false;
+bool nsContentUtils::sIsUnprefixedFullscreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullScreenOnly = true;
 bool nsContentUtils::sIsCutCopyAllowed = true;
 bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
@@ -538,6 +539,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsFullScreenApiEnabled,
                                "full-screen-api.enabled");
+
+  Preferences::AddBoolVarCache(&sIsUnprefixedFullscreenApiEnabled,
+                               "full-screen-api.unprefix.enabled");
 
   Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
                                "full-screen-api.allow-trusted-requests-only");
@@ -1369,19 +1373,13 @@ nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
                | SANDBOXED_DOMAIN;
 
 // Macro for updating the flag according to the keywords
-#define IF_KEYWORD(atom, flags) \
+#define SANDBOX_KEYWORD(string, atom, flags)                             \
   if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
 
-  IF_KEYWORD(allowsameorigin, SANDBOXED_ORIGIN)
-  IF_KEYWORD(allowforms,  SANDBOXED_FORMS)
-  IF_KEYWORD(allowscripts, SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
-  IF_KEYWORD(allowtopnavigation, SANDBOXED_TOPLEVEL_NAVIGATION)
-  IF_KEYWORD(allowpointerlock, SANDBOXED_POINTER_LOCK)
-  IF_KEYWORD(alloworientationlock, SANDBOXED_ORIENTATION_LOCK)
-  IF_KEYWORD(allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
+#include "IframeSandboxKeywordList.h"
 
   return out;
-#undef IF_KEYWORD
+#undef SANDBOX_KEYWORD
 }
 
 nsIBidiKeyboard*
@@ -5042,20 +5040,27 @@ nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
 
 /* static */
 bool
-nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
+nsContentUtils::AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable)
 {
-  if (!aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
+  if (!runnable) {
     return false;
   }
 
   if (sScriptBlockerCount) {
-    return sBlockedScriptRunners->AppendElement(aRunnable) != nullptr;
+    return sBlockedScriptRunners->AppendElement(runnable.forget()) != nullptr;
   }
   
-  nsCOMPtr<nsIRunnable> run = aRunnable;
-  run->Run();
+  runnable->Run();
 
   return true;
+}
+
+/* static */
+bool
+nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
+  return AddScriptRunner(runnable.forget());
 }
 
 /* static */

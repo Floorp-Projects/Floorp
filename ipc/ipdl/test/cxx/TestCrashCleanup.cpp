@@ -44,7 +44,6 @@ void DeleteTheWorld()
     MutexAutoLock lock(mutex);
 
     XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
       NewRunnableFunction(DeleteSubprocess, &mutex, &cvar));
 
     cvar.Wait();
@@ -79,14 +78,14 @@ TestCrashCleanupParent::Main()
 {
     // NB: has to be enqueued before IO thread's error notification
     MessageLoop::current()->PostTask(
-        FROM_HERE, NewRunnableFunction(DeleteTheWorld));
+        NewRunnableFunction(DeleteTheWorld));
 
     if (CallDIEDIEDIE())
         fail("expected an error!");
 
     Close();
 
-    MessageLoop::current()->PostTask(FROM_HERE, NewRunnableFunction(Done));
+    MessageLoop::current()->PostTask(NewRunnableFunction(Done));
 }
 
 

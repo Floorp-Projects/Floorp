@@ -97,7 +97,7 @@ CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html", 0, "")
 // a subtree of C++ anonymous content constructed by Gecko for its own
 // purposes).
 CSS_PSEUDO_CLASS(mozNativeAnonymous, ":-moz-native-anonymous",
-                 CSS_PSEUDO_CLASS_UA_SHEET_ONLY, "")
+                 CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS, "")
 
 // Matches anything when the specified look-and-feel metric is set
 CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric", 0, "")
@@ -124,7 +124,7 @@ CSS_PSEUDO_CLASS(mozTableBorderNonzero, ":-moz-table-border-nonzero", 0, "")
 
 // Matches HTML frame/iframe elements which are mozbrowser.
 CSS_PSEUDO_CLASS(mozBrowserFrame, ":-moz-browser-frame",
-                 CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "")
+                 CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "")
 
 // Matches whatever the contextual reference elements are for the
 // matching operation.
@@ -161,7 +161,10 @@ CSS_STATE_PSEUDO_CLASS(mozDevtoolsHighlighted, ":-moz-devtools-highlighted", 0, 
 
 // Matches the element which is being displayed full-screen, and
 // any containing frames.
-CSS_STATE_PSEUDO_CLASS(fullscreen, ":fullscreen", 0, "", NS_EVENT_STATE_FULL_SCREEN)
+CSS_STATE_PSEUDO_CLASS(fullscreen, ":fullscreen",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME,
+                       "full-screen-api.unprefix.enabled",
+                       NS_EVENT_STATE_FULL_SCREEN)
 CSS_STATE_PSEUDO_CLASS(mozFullScreen, ":-moz-full-screen", 0, "", NS_EVENT_STATE_FULL_SCREEN)
 
 // Matches any element which is an ancestor of the DOM full-screen element,
@@ -176,34 +179,34 @@ CSS_STATE_PSEUDO_CLASS(mozBroken, ":-moz-broken", 0, "", NS_EVENT_STATE_BROKEN)
 CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", 0, "", NS_EVENT_STATE_LOADING)
 
 CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_USERDISABLED)
 CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_SUPPRESSED)
 CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_UNSUPPORTED)
 CSS_STATE_PSEUDO_CLASS(mozTypeUnsupportedPlatform, ":-moz-type-unsupported-platform",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_UNSUPPORTED_PLATFORM)
 CSS_STATE_PSEUDO_CLASS(mozHandlerClickToPlay, ":-moz-handler-clicktoplay",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_TYPE_CLICK_TO_PLAY)
 CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableUpdatable, ":-moz-handler-vulnerable-updatable",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_VULNERABLE_UPDATABLE)
 CSS_STATE_PSEUDO_CLASS(mozHandlerVulnerableNoUpdate, ":-moz-handler-vulnerable-no-update",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_VULNERABLE_NO_UPDATE)
 CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_DISABLED)
 CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_BLOCKED)
 CSS_STATE_PSEUDO_CLASS(mozHandlerCrashed, ":-moz-handler-crashed",
-                       CSS_PSEUDO_CLASS_UA_SHEET_AND_CHROME, "",
+                       CSS_PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME, "",
                        NS_EVENT_STATE_HANDLER_CRASHED)
 
 CSS_STATE_PSEUDO_CLASS(mozMathIncrementScriptLevel,

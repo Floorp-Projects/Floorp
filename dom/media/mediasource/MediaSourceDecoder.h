@@ -51,7 +51,7 @@ public:
     mDormantSupported = aSupported;
   }
 
-  RefPtr<ShutdownPromise> Shutdown() override;
+  void Shutdown() override;
 
   static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);
 

@@ -522,7 +522,7 @@ CacheFileContextEvictor::StartEvicting()
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NS_NewRunnableMethod(this, &CacheFileContextEvictor::EvictEntries);
+  ev = NewRunnableMethod(this, &CacheFileContextEvictor::EvictEntries);
 
   RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
 

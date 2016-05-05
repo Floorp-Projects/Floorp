@@ -587,9 +587,7 @@ bool get_input_buffer(cubeb_stream * stm)
   /* Get input packets until we have captured enough frames, and put them in a
    * contiguous buffer. */
   uint32_t offset = 0;
-  uint32_t input_channel_count = stm->input_mix_params.channels;
-  while (offset != total_available_input * input_channel_count &&
-      total_available_input) {
+  while (offset != total_available_input) {
     hr = stm->capture_client->GetNextPacketSize(&next);
     if (FAILED(hr)) {
       LOG("cannot get next packet size: %x\n", hr);
@@ -622,7 +620,7 @@ bool get_input_buffer(cubeb_stream * stm)
         assert(ok);
         upmix(reinterpret_cast<float*>(input_packet), packet_size,
               stm->linear_input_buffer.data() + stm->linear_input_buffer.length(),
-              input_channel_count,
+              stm->input_mix_params.channels,
               stm->input_stream_params.channels);
         stm->linear_input_buffer.set_length(stm->linear_input_buffer.length() + packet_size * stm->input_stream_params.channels);
       } else if (should_downmix(stm->input_mix_params, stm->input_stream_params)) {
@@ -631,7 +629,7 @@ bool get_input_buffer(cubeb_stream * stm)
         assert(ok);
         downmix(reinterpret_cast<float*>(input_packet), packet_size,
                 stm->linear_input_buffer.data() + stm->linear_input_buffer.length(),
-                input_channel_count,
+                stm->input_mix_params.channels,
                 stm->input_stream_params.channels);
         stm->linear_input_buffer.set_length(stm->linear_input_buffer.length() + packet_size * stm->input_stream_params.channels);
       } else {
@@ -644,11 +642,11 @@ bool get_input_buffer(cubeb_stream * stm)
       LOG("FAILED to release intput buffer");
       return false;
     }
-    offset += packet_size * input_channel_count;
+    offset += packet_size;
   }
 
   assert(stm->linear_input_buffer.length() >= total_available_input &&
-         offset == total_available_input * input_channel_count);
+         offset == total_available_input);
 
   return true;
 }
@@ -698,8 +696,8 @@ bool
 refill_callback_duplex(cubeb_stream * stm)
 {
   HRESULT hr;
-  float * output_buffer;
-  size_t output_frames;
+  float * output_buffer = nullptr;
+  size_t output_frames = 0;
   size_t input_frames;
   bool rv;
 
@@ -782,8 +780,8 @@ refill_callback_output(cubeb_stream * stm)
 {
   bool rv;
   HRESULT hr;
-  float * output_buffer;
-  size_t output_frames;
+  float * output_buffer = nullptr;
+  size_t output_frames = 0;
 
   XASSERT(!has_input(stm) && has_output(stm));
 
@@ -792,10 +790,10 @@ refill_callback_output(cubeb_stream * stm)
   if (!rv) {
     return rv;
   }
+
   if (stm->draining || output_frames == 0) {
     return true;
   }
-
 
   long got = refill(stm,
                     nullptr,

@@ -372,9 +372,9 @@ TVSource::DispatchCurrentChannelChangedEvent(TVChannel* aChannel)
                                               NS_LITERAL_STRING("currentchannelchanged"),
                                               init);
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<nsCOMPtr<nsIDOMEvent>>(this,
-                                                       &TVSource::DispatchTVEvent,
-                                                       event);
+    NewRunnableMethod<nsCOMPtr<nsIDOMEvent>>(this,
+                                             &TVSource::DispatchTVEvent,
+                                             event);
   return NS_DispatchToCurrentThread(runnable);
 }
 
@@ -390,9 +390,9 @@ TVSource::DispatchScanningStateChangedEvent(TVScanningState aState,
                                              NS_LITERAL_STRING("scanningstatechanged"),
                                              init);
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<nsCOMPtr<nsIDOMEvent>>(this,
-                                                       &TVSource::DispatchTVEvent,
-                                                       event);
+    NewRunnableMethod<nsCOMPtr<nsIDOMEvent>>(this,
+                                             &TVSource::DispatchTVEvent,
+                                             event);
   return NS_DispatchToCurrentThread(runnable);
 }
 
@@ -406,9 +406,9 @@ TVSource::DispatchEITBroadcastedEvent(const Sequence<OwningNonNull<TVProgram>>& 
                                        NS_LITERAL_STRING("eitbroadcasted"),
                                        init);
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<nsCOMPtr<nsIDOMEvent>>(this,
-                                                       &TVSource::DispatchTVEvent,
-                                                       event);
+    NewRunnableMethod<nsCOMPtr<nsIDOMEvent>>(this,
+                                             &TVSource::DispatchTVEvent,
+                                             event);
   return NS_DispatchToCurrentThread(runnable);
 }
 

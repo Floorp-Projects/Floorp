@@ -2061,7 +2061,7 @@ const KTableEntry nsCSSProps::kTextTransformKTable[] = {
   { eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE },
   { eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE },
   { eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE },
-  { eCSSKeyword_full_width, NS_STYLE_TEXT_TRANSFORM_FULLWIDTH },
+  { eCSSKeyword_full_width, NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

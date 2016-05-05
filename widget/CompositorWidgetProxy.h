@@ -27,6 +27,8 @@ class DrawTarget;
 } // namespace gfx
 namespace widget {
 
+class WinCompositorWidgetProxy;
+
 /**
  * Access to a widget from the compositor is restricted to these methods.
  */
@@ -164,6 +166,19 @@ public:
   virtual void CleanupRemoteDrawing();
 
   /**
+   * Return a key that can represent the widget object round-trip across the
+   * CompositorBridge channel. This only needs to be implemented on GTK and
+   * Windows.
+   *
+   * The key must be the nsIWidget pointer cast to a uintptr_t. See
+   * CompositorBridgeChild::RecvHideAllPlugins and
+   * CompositorBridgeParent::SendHideAllPlugins.
+   */
+  virtual uintptr_t GetWidgetKey() {
+    return 0;
+  }
+
+  /**
    * Create a backbuffer for the software compositor.
    */
   virtual already_AddRefed<gfx::DrawTarget>
@@ -175,6 +190,10 @@ public:
    * Return a compositor vsync dispatcher for this widget.
    */
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() = 0;
+
+  virtual WinCompositorWidgetProxy* AsWindowsProxy() {
+    return nullptr;
+  }
 
 protected:
   virtual ~CompositorWidgetProxy();
@@ -211,6 +230,7 @@ public:
   virtual uint32_t GetGLFrameBufferFormat() override;
   virtual layers::Composer2D* GetComposer2D() override;
   virtual already_AddRefed<CompositorVsyncDispatcher> GetCompositorVsyncDispatcher() override;
+  virtual uintptr_t GetWidgetKey() override;
 
   // If you can override this method, inherit from CompositorWidgetProxy instead.
   nsIWidget* RealWidget() override;

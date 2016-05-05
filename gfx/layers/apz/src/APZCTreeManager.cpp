@@ -649,8 +649,8 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   const CompositorBridgeParent::LayerTreeState* state =
     CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   MOZ_ASSERT(state && state->mController);
-  NS_DispatchToMainThread(NS_NewRunnableMethod(
-    state->mController.get(), &GeckoContentController::NotifyFlushComplete));
+  NS_DispatchToMainThread(NewRunnableMethod(
+    state->mController, &GeckoContentController::NotifyFlushComplete));
 }
 
 nsEventStatus
@@ -1345,8 +1345,7 @@ APZCTreeManager::ClearTree()
   // Ensure that no references to APZCs are alive in any lingering input
   // blocks. This breaks cycles from InputBlockState::mTargetApzc back to
   // the InputQueue.
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-    mInputQueue.get(), &InputQueue::Clear));
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(mInputQueue, &InputQueue::Clear));
 
   MutexAutoLock lock(mTreeLock);
 

@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/Selection.h"      // local var
 #include "mozilla/dom/Text.h"           // mTextNode
-#include "mozilla/Preferences.h"        // nsCaret Visibility
 #include "nsAString.h"                  // params
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsEditor.h"                   // mEditor
@@ -18,10 +17,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-/*static*/ bool
-IMETextTxn::sCaretsExtendedVisibility = false;
-
 
 IMETextTxn::IMETextTxn(Text& aTextNode, uint32_t aOffset,
                        uint32_t aReplaceLength,
@@ -37,12 +32,6 @@ IMETextTxn::IMETextTxn(Text& aTextNode, uint32_t aOffset,
   , mEditor(aEditor)
   , mFixed(false)
 {
-  static bool addedPrefs = false;
-  if (!addedPrefs) {
-    mozilla::Preferences::AddBoolVarCache(&sCaretsExtendedVisibility,
-                                          "layout.accessiblecaret.extendedvisibility");
-    addedPrefs = true;
-  }
 }
 
 IMETextTxn::~IMETextTxn()
@@ -310,11 +299,8 @@ IMETextTxn::SetIMESelection(nsEditor& aEditor,
                  "Failed to set caret at the end of composition string");
 
     // If caret range isn't specified explicitly, we should hide the caret.
-    // Hiding the caret benefits a Windows build (see bug 555642 comment #6),
-    // but causes loss of Fennec AccessibleCaret visibility during Caret drag.
-    if (!sCaretsExtendedVisibility) {
-      aEditor.HideCaret(true);
-    }
+    // Hiding the caret benefits a Windows build (see bug 555642 comment #6).
+    aEditor.HideCaret(true);
   }
 
   rv = selection->EndBatchChangesInternal();

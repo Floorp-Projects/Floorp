@@ -966,7 +966,7 @@ static void ReopenWav(rtc_WavWriter** wav_file,
   AECDebugFilenameBase(path, sizeof(path));
   filename = path + strlen(path);
   if (filename > path) {
-#ifdef XP_WIN
+#ifdef WEBRTC_WIN
     if (*(filename-1) != '\\') {
       *filename++ = '\\';
     }

@@ -273,7 +273,7 @@ void DesktopDeviceInfoImpl::InitializeWindowList() {
       pWinDevice->setDeviceName(itr->title.c_str());
 
       char idStr[BUFSIZ];
-#if XP_WIN
+#if WEBRTC_WIN
       _snprintf_s(idStr, sizeof(idStr), sizeof(idStr) - 1, "%ld", pWinDevice->getScreenId());
 #else
       snprintf(idStr, sizeof(idStr), "%ld", pWinDevice->getScreenId());

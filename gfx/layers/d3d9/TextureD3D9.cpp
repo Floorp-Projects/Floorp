@@ -497,7 +497,13 @@ static CompositorD3D9* AssertD3D9Compositor(Compositor* aCompositor)
 {
   CompositorD3D9* compositor = aCompositor ? aCompositor->AsCompositorD3D9()
                                            : nullptr;
-  MOZ_DIAGNOSTIC_ASSERT(!!compositor);
+  if (!compositor) {
+    // We probably had a device reset and this D3D9 texture was already sent but
+    // we are now falling back to a basic compositor. That can happen if a video
+    // is playing while the device reset occurs and it's not too bad if we miss a
+    // few frames.
+    gfxCriticalNote << "[D3D9] Attempt to set an incompatible compositor";
+  }
   return compositor;
 }
 

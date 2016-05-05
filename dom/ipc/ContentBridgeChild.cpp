@@ -34,8 +34,7 @@ ContentBridgeChild::~ContentBridgeChild()
 void
 ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MessageLoop::current()->PostTask(
-    NewRunnableMethod(this, &ContentBridgeChild::DeferredDestroy));
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &ContentBridgeChild::DeferredDestroy));
 }
 
 /*static*/ ContentBridgeChild*

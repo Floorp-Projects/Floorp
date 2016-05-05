@@ -73,11 +73,9 @@ TestBridgeMainSubParent::ActorDestroy(ActorDestroyReason why)
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.
     MessageLoop::current()->PostTask(
-        FROM_HERE,
-        new DeleteTask<TestBridgeMainSubParent>(this));
+        do_AddRef(new DeleteTask<TestBridgeMainSubParent>(this)));
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<Transport>(mTransport));
+        do_AddRef(new DeleteTask<Transport>(mTransport)));
 }
 
 //-----------------------------------------------------------------------------
@@ -118,8 +116,7 @@ TestBridgeMainChild::ActorDestroy(ActorDestroyReason why)
         fail("unexpected destruction!");  
     // NB: this is kosher because QuitChild() joins with the IO thread
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<IPDLUnitTestSubprocess>(mSubprocess));
+        do_AddRef(new DeleteTask<IPDLUnitTestSubprocess>(mSubprocess)));
     QuitChild();
 }
 
@@ -149,8 +146,7 @@ TestBridgeSubParent::ActorDestroy(ActorDestroyReason why)
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.
     MessageLoop::current()->PostTask(
-        FROM_HERE,
-        new DeleteTask<TestBridgeSubParent>(this));
+        do_AddRef(new DeleteTask<TestBridgeSubParent>(this)));
 }
 
 //-----------------------------------------------------------------------------
@@ -207,7 +203,6 @@ TestBridgeMainSubChild::RecvHi()
     // Need to close the channel without message-processing frames on
     // the C++ stack
     MessageLoop::current()->PostTask(
-        FROM_HERE,
         NewRunnableMethod(this, &TestBridgeMainSubChild::Close));
     return true;
 }
@@ -231,11 +226,9 @@ TestBridgeMainSubChild::ActorDestroy(ActorDestroyReason why)
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.
     MessageLoop::current()->PostTask(
-        FROM_HERE,
-        new DeleteTask<TestBridgeMainSubChild>(this));
+        do_AddRef(new DeleteTask<TestBridgeMainSubChild>(this)));
     XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<Transport>(mTransport));
+        do_AddRef(new DeleteTask<Transport>(mTransport)));
 }
 
 } // namespace mozilla

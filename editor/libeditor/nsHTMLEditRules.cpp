@@ -8731,7 +8731,7 @@ nsHTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
 NS_IMETHODIMP
 nsHTMLEditRules::DocumentModified()
 {
-  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, &nsHTMLEditRules::DocumentModifiedWorker));
+  nsContentUtils::AddScriptRunner(NewRunnableMethod(this, &nsHTMLEditRules::DocumentModifiedWorker));
   return NS_OK;
 }
 

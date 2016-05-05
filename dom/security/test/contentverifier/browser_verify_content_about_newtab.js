@@ -36,6 +36,7 @@ const URI_BROKEN_SIG = BASE + "sig=broken&key=good&file=good&header=good";
 const URI_BAD_KEY = BASE + "sig=good&key=bad&file=good&header=good";
 const URI_BAD_FILE = BASE + "sig=good&key=good&file=bad&header=good";
 const URI_BAD_ALL = BASE + "sig=bad&key=bad&file=bad&header=bad";
+const URI_BAD_CSP = BASE + "sig=bad-csp&key=good&file=bad-csp&header=good";
 
 const URI_BAD_FILE_CACHED = BASE + "sig=good&key=good&file=bad&header=good&cached=true";
 
@@ -53,6 +54,11 @@ const STYLESHEET_WITH_SRI_LOADED = "Stylesheet with SRI loaded";
 const SCRIPT_WITHOUT_SRI_BLOCKED = "Script without SRI blocked";
 const SCRIPT_WITH_SRI_BLOCKED = "Script with SRI blocked";
 const SCRIPT_WITH_SRI_LOADED = "Script with SRI loaded";
+
+const CSP_TEST_SUCCESS_STRING = "CSP violation test succeeded.";
+
+// Needs to sync with pref "security.signed_content.CSP.default".
+const SIGNED_CONTENT_CSP = `{"csp-policies":[{"report-only":false,"script-src":["https://example.com","'unsafe-inline'"],"style-src":["https://example.com"]}]}`;
 
 const TESTS = [
   // { newtab (aboutURI) or regular load (url) : url,
@@ -76,6 +82,7 @@ const TESTS = [
     SCRIPT_WITHOUT_SRI_BLOCKED,
     SCRIPT_WITH_SRI_LOADED,
     ]},
+  { "aboutURI" : URI_BAD_CSP, "testStrings" : [CSP_TEST_SUCCESS_STRING] },
   { "url" : URI_CLEANUP, "testStrings" : [CLEANUP_DONE] },
 ];
 
@@ -113,6 +120,14 @@ function doTest(aExpectedStrings, reload, aUrl, aNewTabPref) {
         "Me1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
       ]);
 
+  if (aNewTabPref === URI_BAD_CSP) {
+    // Use stricter CSP to test CSP violation.
+    yield pushPrefs(["security.signed_content.CSP.default", "script-src 'self'; style-src 'self'"]);
+  } else {
+    // Use weaker CSP to test normal content.
+    yield pushPrefs(["security.signed_content.CSP.default", "script-src 'self' 'unsafe-inline'; style-src 'self'"]);
+  }
+
   // start the test
   yield BrowserTestUtils.withNewTab({
       gBrowser,
@@ -132,6 +147,16 @@ function doTest(aExpectedStrings, reload, aUrl, aNewTabPref) {
         is(aboutNewTabService.newTabURL, aNewTabPref,
             "sanity check: default URL for about:newtab should return the new URL");
       }
+
+      // Every valid remote newtab page must have built-in CSP.
+      let shouldHaveCSP = ((aUrl === ABOUT_NEWTAB_URI) &&
+                          (aNewTabPref === URI_GOOD || aNewTabPref === URI_SRI));
+
+      if (shouldHaveCSP) {
+        is(browser.contentDocument.nodePrincipal.cspJSON, SIGNED_CONTENT_CSP,
+           "Valid remote newtab page must have built-in CSP.");
+      }
+
       yield ContentTask.spawn(
           browser, aExpectedStrings, function * (aExpectedStrings) {
             for (let expectedString of aExpectedStrings) {

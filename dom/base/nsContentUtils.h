@@ -1608,6 +1608,7 @@ public:
    *                   has not yet been AddRefed.
    * @return false on out of memory, true otherwise.
    */
+  static bool AddScriptRunner(already_AddRefed<nsIRunnable> aRunnable);
   static bool AddScriptRunner(nsIRunnable* aRunnable);
 
   /**
@@ -1911,6 +1912,12 @@ public:
    * Returns true if the DOM full-screen API is enabled.
    */
   static bool IsFullScreenApiEnabled();
+
+  /**
+   * Returns true if the unprefixed fullscreen API is enabled.
+   */
+  static bool IsUnprefixedFullscreenApiEnabled()
+    { return sIsUnprefixedFullscreenApiEnabled; }
 
   /**
    * Returns true if requests for full-screen are allowed in the current
@@ -2661,6 +2668,7 @@ private:
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static bool sIsFullScreenApiEnabled;
+  static bool sIsUnprefixedFullscreenApiEnabled;
   static bool sTrustedFullScreenOnly;
   static bool sIsCutCopyAllowed;
   static uint32_t sHandlingInputTimeout;

@@ -175,7 +175,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 nsresult
 FFmpegAudioDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+  nsCOMPtr<nsIRunnable> runnable(NewRunnableMethod<RefPtr<MediaRawData>>(
     this, &FFmpegAudioDecoder::DecodePacket, RefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;

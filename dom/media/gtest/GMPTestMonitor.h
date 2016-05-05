@@ -36,8 +36,8 @@ private:
 public:
   void SetFinished()
   {
-    NS_DispatchToMainThread(NS_NewNonOwningRunnableMethod(this,
-                                                          &GMPTestMonitor::MarkFinished));
+    NS_DispatchToMainThread(mozilla::NewNonOwningRunnableMethod(this,
+                                                                &GMPTestMonitor::MarkFinished));
   }
 
 private:

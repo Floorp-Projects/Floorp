@@ -8,6 +8,7 @@
 interface nsIURI;
 interface nsIFaviconDataCallback;
 interface nsIPrincipal;
+interface mozIPlacesPendingOperation;
 
 [scriptable, uuid(a9c81797-9133-4823-b55f-3646e67cfd41)]
 interface mozIAsyncFavicons : nsISupports
@@ -56,13 +57,13 @@ interface mozIAsyncFavicons : nsISupports
    *
    * @see nsIFaviconDataCallback in nsIFaviconService.idl.
    */
-  void setAndFetchFaviconForPage(in nsIURI aPageURI,
-                                 in nsIURI aFaviconURI,
-                                 in boolean aForceReload,
-                                 in unsigned long aFaviconLoadType,
-                                 [optional] in nsIFaviconDataCallback aCallback,
-                                 [optional] in nsIPrincipal aLoadingPrincipal);
-
+  mozIPlacesPendingOperation setAndFetchFaviconForPage(
+    in nsIURI aPageURI,
+    in nsIURI aFaviconURI,
+    in boolean aForceReload,
+    in unsigned long aFaviconLoadType,
+    [optional] in nsIFaviconDataCallback aCallback,
+    [optional] in nsIPrincipal aLoadingPrincipal);
   /**
    * Sets the data for a given favicon URI either by replacing existing data in
    * the database or taking the place of otherwise fetched icon data when
