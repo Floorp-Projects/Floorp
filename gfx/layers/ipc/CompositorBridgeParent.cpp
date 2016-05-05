@@ -361,7 +361,7 @@ CompositorVsyncScheduler::SetDisplay(bool aDisplayEnable)
     MOZ_ASSERT(NS_IsMainThread());
     MonitorAutoLock lock(mSetDisplayMonitor);
     RefPtr<CancelableRunnable> task =
-      NS_NewCancelableRunnableMethodWithArgs<bool>(this, &CompositorVsyncScheduler::SetDisplay, aDisplayEnable);
+      NewCancelableRunnableMethod<bool>(this, &CompositorVsyncScheduler::SetDisplay, aDisplayEnable);
     mSetDisplayTask = task;
     ScheduleTask(task.forget(), 0);
     return;
@@ -426,8 +426,8 @@ CompositorVsyncScheduler::PostCompositeTask(TimeStamp aCompositeTimestamp)
   MonitorAutoLock lock(mCurrentCompositeTaskMonitor);
   if (mCurrentCompositeTask == nullptr) {
     RefPtr<CancelableRunnable> task =
-      NS_NewCancelableRunnableMethodWithArgs<TimeStamp>(this, &CompositorVsyncScheduler::Composite,
-                                                        aCompositeTimestamp);
+      NewCancelableRunnableMethod<TimeStamp>(this, &CompositorVsyncScheduler::Composite,
+                                             aCompositeTimestamp);
     mCurrentCompositeTask = task;
     ScheduleTask(task.forget(), 0);
   }
@@ -480,7 +480,7 @@ CompositorVsyncScheduler::SetNeedsComposite()
   if (!CompositorBridgeParent::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
     RefPtr<CancelableRunnable> task =
-      NS_NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
+      NewCancelableRunnableMethod(this, &CompositorVsyncScheduler::SetNeedsComposite);
     mSetNeedsCompositeTask = task;
     ScheduleTask(task.forget(), 0);
     return;
@@ -980,8 +980,7 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   // We must keep the compositor parent alive untill the code handling message
   // reception is finished on this thread.
   mSelfRef = this;
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::DeferredDestroy);
-  MessageLoop::current()->PostTask(runnable.forget());
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::DeferredDestroy));
 }
 
 
@@ -989,16 +988,14 @@ void
 CompositorBridgeParent::ScheduleRenderOnCompositorThread()
 {
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::ScheduleComposition);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ScheduleComposition));
 }
 
 void
 CompositorBridgeParent::InvalidateOnCompositorThread()
 {
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::Invalidate);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::Invalidate));
 }
 
 void
@@ -1089,8 +1086,7 @@ CompositorBridgeParent::SchedulePauseOnCompositorThread()
   MonitorAutoLock lock(mPauseCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::PauseComposition);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::PauseComposition));
 
   // Wait until the pause has actually been processed by the compositor thread
   lock.Wait();
@@ -1102,8 +1098,7 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread()
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::ResumeComposition);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ResumeComposition));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -1117,10 +1112,10 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread(int width, int height)
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable =
-    NS_NewRunnableMethodWithArgs<int, int>(this, &CompositorBridgeParent::ResumeCompositionAndResize,
-                                           width, height);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod
+                             <int, int>(this,
+                                        &CompositorBridgeParent::ResumeCompositionAndResize,
+                                        width, height));
 
   // Wait until the resume has actually been processed by the compositor thread
   lock.Wait();
@@ -1372,7 +1367,7 @@ CompositorBridgeParent::ScheduleRotationOnCompositorThread(const TargetConfig& a
       mForceCompositionTask->Cancel();
     }
     RefPtr<CancelableRunnable> task =
-      NS_NewCancelableRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
+      NewCancelableRunnableMethod(this, &CompositorBridgeParent::ForceComposition);
     mForceCompositionTask = task;
     ScheduleTask(task.forget(), gfxPrefs::OrientationSyncMillis());
   }
@@ -2113,13 +2108,12 @@ CompositorBridgeParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendH
   {
     MonitorAutoLock lock(mResetCompositorMonitor);
 
-    RefPtr<Runnable> runnable =
-      NS_NewRunnableMethodWithArgs<StoreCopyPassByConstLRef<nsTArray<LayersBackend>>,
-                                   Maybe<TextureFactoryIdentifier>*>(this,
-                                                                     &CompositorBridgeParent::ResetCompositorTask,
-                                                                     aBackendHints,
-                                                                     &newIdentifier);
-    CompositorLoop()->PostTask(runnable.forget());
+    CompositorLoop()->PostTask(NewRunnableMethod
+                               <StoreCopyPassByConstLRef<nsTArray<LayersBackend>>,
+                                Maybe<TextureFactoryIdentifier>*>(this,
+                                                                  &CompositorBridgeParent::ResetCompositorTask,
+                                                                  aBackendHints,
+                                                                  &newIdentifier));
 
     mResetCompositorMonitor.Wait();
   }
@@ -2287,8 +2281,7 @@ CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy);
-  MessageLoop::current()->PostTask(runnable.forget());
+  MessageLoop::current()->PostTask(NewRunnableMethod(this, &CrossProcessCompositorBridgeParent::DeferredDestroy));
 }
 
 PLayerTransactionParent*
@@ -2535,8 +2528,7 @@ void
 CompositorBridgeParent::ScheduleShowAllPluginWindows()
 {
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::ShowAllPluginWindows);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::ShowAllPluginWindows));
 }
 
 void
@@ -2551,8 +2543,7 @@ void
 CompositorBridgeParent::ScheduleHideAllPluginWindows()
 {
   MOZ_ASSERT(CompositorLoop());
-  RefPtr<Runnable> runnable = NS_NewRunnableMethod(this, &CompositorBridgeParent::HideAllPluginWindows);
-  CompositorLoop()->PostTask(runnable.forget());
+  CompositorLoop()->PostTask(NewRunnableMethod(this, &CompositorBridgeParent::HideAllPluginWindows));
 }
 
 void

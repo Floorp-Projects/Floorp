@@ -496,11 +496,10 @@ MessageChannel::MessageChannel(MessageListener *aListener)
 #endif
 
     RefPtr<CancelableRunnable> runnable =
-        NS_NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnMaybeDequeueOne);
+        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnMaybeDequeueOne);
     mDequeueOneTask = new RefCountedTask(runnable.forget());
 
-    runnable = NS_NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
-
+    runnable = NewNonOwningCancelableRunnableMethod(this, &MessageChannel::DispatchOnChannelConnected);
     mOnChannelConnectedTask = new RefCountedTask(runnable.forget());
 
 #ifdef OS_WIN
@@ -693,11 +692,10 @@ MessageChannel::Open(MessageChannel *aTargetChan, MessageLoop *aTargetLoop, Side
 
     MonitorAutoLock lock(*mMonitor);
     mChannelState = ChannelOpening;
-    RefPtr<Runnable> runnable =
-        NS_NewNonOwningRunnableMethodWithArgs<MessageChannel*, Side>(aTargetChan,
-                                                                     &MessageChannel::OnOpenAsSlave,
-                                                                     this, oppSide);
-    aTargetLoop->PostTask(runnable.forget());
+    aTargetLoop->PostTask(NewNonOwningRunnableMethod
+                          <MessageChannel*, Side>(aTargetChan,
+                                                  &MessageChannel::OnOpenAsSlave,
+                                                  this, oppSide));
 
     while (ChannelOpening == mChannelState)
         mMonitor->Wait();
@@ -2097,7 +2095,7 @@ MessageChannel::OnNotifyMaybeChannelError()
 
     if (IsOnCxxStack()) {
         mChannelErrorTask =
-            NS_NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+            NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
         RefPtr<Runnable> task = mChannelErrorTask;
         // 10 ms delay is completely arbitrary
         mWorkerLoop->PostDelayedTask(task.forget(), 10);
@@ -2117,7 +2115,7 @@ MessageChannel::PostErrorNotifyTask()
 
     // This must be the last code that runs on this thread!
     mChannelErrorTask =
-        NS_NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
+        NewNonOwningCancelableRunnableMethod(this, &MessageChannel::OnNotifyMaybeChannelError);
     RefPtr<Runnable> task = mChannelErrorTask;
     mWorkerLoop->PostTask(task.forget());
 }

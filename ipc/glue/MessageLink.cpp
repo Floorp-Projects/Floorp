@@ -118,14 +118,12 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
             // Transport::Connect() has not been called.  Call it so
             // we start polling our pipe and processing outgoing
             // messages.
-            RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &ProcessLink::OnChannelOpened);
-            mIOLoop->PostTask(runnable.forget());
+            mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnChannelOpened));
         } else {
             // Transport::Connect() has already been called.  Take
             // over the channel from the previous listener and process
             // any queued messages.
-            RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &ProcessLink::OnTakeConnectedChannel);
-            mIOLoop->PostTask(runnable.forget());
+            mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnTakeConnectedChannel));
         }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -152,9 +150,7 @@ ProcessLink::EchoMessage(Message *msg)
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    RefPtr<Runnable> runnable =
-        NS_NewNonOwningRunnableMethodWithArgs<Message*>(this, &ProcessLink::OnEchoMessage, msg);
-    mIOLoop->PostTask(runnable.forget());
+    mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(this, &ProcessLink::OnEchoMessage, msg));
     // OnEchoMessage takes ownership of |msg|
 }
 
@@ -200,9 +196,7 @@ ProcessLink::SendMessage(Message *msg)
 #endif
 #endif
 
-    RefPtr<Runnable> runnable =
-        NS_NewNonOwningRunnableMethodWithArgs<Message*>(mTransport, &Transport::Send, msg);
-    mIOLoop->PostTask(runnable.forget());
+    mIOLoop->PostTask(NewNonOwningRunnableMethod<Message*>(mTransport, &Transport::Send, msg));
 }
 
 void
@@ -211,8 +205,7 @@ ProcessLink::SendClose()
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
 
-    RefPtr<Runnable> runnable = NS_NewNonOwningRunnableMethod(this, &ProcessLink::OnCloseChannel);
-    mIOLoop->PostTask(runnable.forget());
+    mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnCloseChannel));
 }
 
 ThreadLink::ThreadLink(MessageChannel *aChan, MessageChannel *aTargetChan)

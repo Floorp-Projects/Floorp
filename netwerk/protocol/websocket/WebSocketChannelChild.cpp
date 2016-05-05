@@ -107,9 +107,9 @@ WebSocketChannelChild::MaybeReleaseIPCObject()
   }
 
   if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &WebSocketChannelChild::MaybeReleaseIPCObject);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+    MOZ_ALWAYS_SUCCEEDS(
+      NS_DispatchToMainThread(NewRunnableMethod(this,
+                                                &WebSocketChannelChild::MaybeReleaseIPCObject)));
     return;
   }
 

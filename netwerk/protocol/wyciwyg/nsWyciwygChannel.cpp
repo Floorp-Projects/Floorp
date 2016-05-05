@@ -700,7 +700,7 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntry *aCacheEntry,
     if (!aNew) {
       // Since OnCacheEntryAvailable can be called directly from AsyncOpen
       // we must dispatch.
-      NS_DispatchToCurrentThread(NS_NewRunnableMethod(
+      NS_DispatchToCurrentThread(mozilla::NewRunnableMethod(
         this, &nsWyciwygChannel::NotifyListener));
     }
   }

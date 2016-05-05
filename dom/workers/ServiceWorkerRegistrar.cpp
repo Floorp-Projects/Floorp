@@ -540,7 +540,7 @@ public:
     service->SaveData();
 
     RefPtr<Runnable> runnable =
-      NS_NewRunnableMethod(service, &ServiceWorkerRegistrar::DataSaved);
+      NewRunnableMethod(service, &ServiceWorkerRegistrar::DataSaved);
     nsresult rv = mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -614,7 +614,7 @@ ServiceWorkerRegistrar::MaybeScheduleShutdownCompleted()
   }
 
   RefPtr<Runnable> runnable =
-     NS_NewRunnableMethod(this, &ServiceWorkerRegistrar::ShutdownCompleted);
+     NewRunnableMethod(this, &ServiceWorkerRegistrar::ShutdownCompleted);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -744,7 +744,7 @@ ServiceWorkerRegistrar::ProfileStarted()
   MOZ_ASSERT(target, "Must have stream transport service");
 
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(this, &ServiceWorkerRegistrar::LoadData);
+    NewRunnableMethod(this, &ServiceWorkerRegistrar::LoadData);
   rv = target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the LoadDataRunnable.");

@@ -223,7 +223,7 @@ HTMLCanvasPrintState::Done()
       mCanvas->InvalidateCanvas();
     }
     RefPtr<nsRunnableMethod<HTMLCanvasPrintState> > doneEvent =
-      NS_NewRunnableMethod(this, &HTMLCanvasPrintState::NotifyDone);
+      NewRunnableMethod(this, &HTMLCanvasPrintState::NotifyDone);
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(doneEvent))) {
       mPendingNotify = true;
     }
@@ -503,7 +503,7 @@ HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback)
   mPrintState = new HTMLCanvasPrintState(this, mCurrentContext, aCallback);
 
   RefPtr<nsRunnableMethod<HTMLCanvasElement> > renderEvent =
-        NS_NewRunnableMethod(this, &HTMLCanvasElement::CallPrintCallback);
+        NewRunnableMethod(this, &HTMLCanvasElement::CallPrintCallback);
   return NS_DispatchToCurrentThread(renderEvent);
 }
 

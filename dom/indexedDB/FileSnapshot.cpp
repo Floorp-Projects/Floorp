@@ -87,7 +87,7 @@ private:
     }
 
     nsCOMPtr<nsIRunnable> destroyRunnable =
-      NS_NewNonOwningRunnableMethod(this, &StreamWrapper::Destroy);
+      NewNonOwningRunnableMethod(this, &StreamWrapper::Destroy);
 
     MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(destroyRunnable,
                                                 NS_DISPATCH_NORMAL));
