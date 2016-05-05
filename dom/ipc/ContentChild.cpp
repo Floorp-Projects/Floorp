@@ -1580,7 +1580,7 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
       hasRunOnce = true;
 
     MOZ_ASSERT(!sFirstIdleTask);
-    RefPtr<CancelableRunnable> firstIdleTask = NewRunnableFunction(FirstIdle);
+    RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction(FirstIdle);
     sFirstIdleTask = firstIdleTask;
     MessageLoop::current()->PostIdleTask(firstIdleTask.forget());
 
