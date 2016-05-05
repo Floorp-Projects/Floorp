@@ -478,7 +478,7 @@ nsLinebreakConverter::ConvertStringLineBreaks(nsString& aIoString,
   }
 
   if (stringBuf != aIoString.get()) {
-    aIoString.Adopt(stringBuf);
+    aIoString.Adopt(stringBuf, newLen - 1);
   }
 
   return NS_OK;
