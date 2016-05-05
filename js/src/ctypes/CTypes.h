@@ -177,7 +177,7 @@ GetDeflatedUTF8StringLength(JSContext* maybecx, const CharT* chars,
                             size_t charsLength);
 
 template <typename CharT>
-bool
+MOZ_MUST_USE bool
 DeflateStringToUTF8Buffer(JSContext* maybecx, const CharT* src, size_t srclen,
                           char* dst, size_t* dstlenp);
 
@@ -454,7 +454,7 @@ namespace CType {
   TypeCode GetTypeCode(JSObject* typeObj);
   bool TypesEqual(JSObject* t1, JSObject* t2);
   size_t GetSize(JSObject* obj);
-  bool GetSafeSize(JSObject* obj, size_t* result);
+  MOZ_MUST_USE bool GetSafeSize(JSObject* obj, size_t* result);
   bool IsSizeDefined(JSObject* obj);
   size_t GetAlignment(JSObject* obj);
   ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
@@ -478,12 +478,12 @@ namespace ArrayType {
 
   JSObject* GetBaseType(JSObject* obj);
   size_t GetLength(JSObject* obj);
-  bool GetSafeLength(JSObject* obj, size_t* result);
+  MOZ_MUST_USE bool GetSafeLength(JSObject* obj, size_t* result);
   UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
 } // namespace ArrayType
 
 namespace StructType {
-  bool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
+  MOZ_MUST_USE bool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
 
   const FieldInfoHash* GetFieldInfo(JSObject* obj);
   const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString* name);
@@ -519,9 +519,9 @@ namespace CData {
   bool IsCDataProto(JSObject* obj);
 
   // Attached by JSAPI as the function 'ctypes.cast'
-  bool Cast(JSContext* cx, unsigned argc, Value* vp);
+  MOZ_MUST_USE bool Cast(JSContext* cx, unsigned argc, Value* vp);
   // Attached by JSAPI as the function 'ctypes.getRuntime'
-  bool GetRuntime(JSContext* cx, unsigned argc, Value* vp);
+  MOZ_MUST_USE bool GetRuntime(JSContext* cx, unsigned argc, Value* vp);
 } // namespace CData
 
 namespace Int64 {
