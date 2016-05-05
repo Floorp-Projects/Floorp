@@ -1136,12 +1136,19 @@ protected:
    *
    * @param aAttr    name of attribute.
    * @param aValue   Integer value of attribute.
+   * @param aDefault Default value (in case value is out of range).  If the spec
+   *                 doesn't provide one, should be 1 if the value is limited to
+   *                 nonzero values, and 0 otherwise.
    */
-  void SetUnsignedIntAttr(nsIAtom* aName, uint32_t aValue,
+  void SetUnsignedIntAttr(nsIAtom* aName, uint32_t aValue, uint32_t aDefault,
                           mozilla::ErrorResult& aError)
   {
     nsAutoString value;
-    value.AppendInt(aValue);
+    if (aValue > INT32_MAX) {
+      value.AppendInt(aDefault);
+    } else {
+      value.AppendInt(aValue);
+    }
 
     SetHTMLAttr(aName, value, aError);
   }
@@ -1555,7 +1562,7 @@ protected:
   _class::Set##_method(uint32_t aValue)                                   \
   {                                                                       \
     mozilla::ErrorResult rv;                                              \
-    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, rv);                     \
+    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, _default, rv);           \
     return rv.StealNSResult();                                            \
   }
 
@@ -1582,7 +1589,7 @@ protected:
       return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
     }                                                                     \
     mozilla::ErrorResult rv;                                              \
-    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, rv);                     \
+    SetUnsignedIntAttr(nsGkAtoms::_atom, aValue, _default, rv);           \
     return rv.StealNSResult();                                            \
   }
 
