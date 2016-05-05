@@ -101,6 +101,7 @@ devtools/client/scratchpad/**
 devtools/client/shadereditor/**
 devtools/client/shared/*.js
 devtools/client/shared/*.jsm
+!devtools/client/shared/css-angle.js
 !devtools/client/shared/css-color.js
 !devtools/client/shared/css-color-db.js
 !devtools/client/shared/css-parsing-utils.js
