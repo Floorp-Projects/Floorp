@@ -566,6 +566,14 @@
                             this.updateMuteButtonState();
                             this.volumeControl.value = volumePercentage;
                             this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
+                            // Show the controls to highlight the changing volume,
+                            // but only if the click-to-play overlay has already
+                            // been hidden (we don't hide controls when the overlay is visible).
+                            if (this.clickToPlay.hidden) {
+                                this.startFadeIn(this.controlBar);
+                                clearTimeout(this._hideControlsTimeout);
+                                this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                            }
                             break;
                         case "loadedmetadata":
                             this.adjustControlSize();
