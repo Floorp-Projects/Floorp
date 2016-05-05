@@ -26,6 +26,7 @@ like mach, mozreview and taskcluster.
 
   usage
   create
+  linters/flake8
 
 Indices and tables
 ==================
