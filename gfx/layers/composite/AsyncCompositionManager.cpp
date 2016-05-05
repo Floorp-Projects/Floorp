@@ -428,7 +428,6 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                                    const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                                    const ScreenMargin& aFixedLayerMargins,
-                                                   bool aTransformAffectsLayerClip,
                                                    ClipPartsCache* aClipPartsCache)
 {
   bool needsAsyncTransformUnapplied = false;
@@ -446,7 +445,6 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
                                 aCurrentTransformForRoot, aFixedLayerMargins,
-                                true /* descendants' clip rects are always affected */,
                                 aClipPartsCache);
     }
     return;
@@ -531,7 +529,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // that the effective transform on the clip rect takes it back to where it was
   // originally, had there been no async scroll.
   TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()),
-      aTransformAffectsLayerClip, aClipPartsCache);
+      true, aClipPartsCache);
 }
 
 static void
@@ -985,7 +983,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // we use the ViewID from the bottommost scrollable metrics here.
     AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                               transformWithoutOverscrollOrOmta, fixedLayerMargins,
-                              clipParts.IsSome(), &aClipPartsCache);
+                              &aClipPartsCache);
 
     // Combine the scrolled portion of the local clip with the ancestor
     // scroll clip. This is not included in the async transform above, since
@@ -1425,7 +1423,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // when we're asynchronously panning or zooming
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
                             aLayer->GetLocalTransformTyped(),
-                            fixedLayerMargins, false, nullptr);
+                            fixedLayerMargins, nullptr);
 
   ExpandRootClipRect(aLayer, fixedLayerMargins);
 }

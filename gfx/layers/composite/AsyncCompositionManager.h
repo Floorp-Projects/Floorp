@@ -130,10 +130,6 @@ public:
     Maybe<ParentLayerIntRect> Intersect() const {
       return IntersectMaybeRects(mFixedClip, mScrolledClip);
     }
-
-    bool IsSome() const {
-      return mFixedClip.isSome() || mScrolledClip.isSome();
-    }
   };
 
   typedef std::map<Layer*, ClipParts> ClipPartsCache;
@@ -203,7 +199,6 @@ private:
                                  const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
                                  const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                  const ScreenMargin& aFixedLayerMargins,
-                                 bool aTransformAffectsLayerClip,
                                  ClipPartsCache* aClipPartsCache);
 
   /**
