@@ -11,6 +11,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/SyncRunnable.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -22,7 +23,6 @@ WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager,
   : mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mMFTManager(aMFTManager)
-  , mMonitor("WMFMediaDataDecoder")
   , mIsFlushing(false)
   , mIsShutDown(false)
 {
@@ -119,12 +119,9 @@ WMFMediaDataDecoder::Input(MediaRawData* aSample)
 void
 WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  {
-    MonitorAutoLock mon(mMonitor);
-    if (mIsFlushing) {
-      // Skip sample, to be released by runnable.
-      return;
-    }
+  if (mIsFlushing) {
+    // Skip sample, to be released by runnable.
+    return;
   }
 
   HRESULT hr = mMFTManager->Input(aSample);
@@ -173,9 +170,6 @@ WMFMediaDataDecoder::ProcessFlush()
   if (mMFTManager) {
     mMFTManager->Flush();
   }
-  MonitorAutoLock mon(mMonitor);
-  mIsFlushing = false;
-  mon.NotifyAll();
 }
 
 nsresult
@@ -184,26 +178,18 @@ WMFMediaDataDecoder::Flush()
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
+  mIsFlushing = true;
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessFlush);
-  MonitorAutoLock mon(mMonitor);
-  mIsFlushing = true;
-  mTaskQueue->Dispatch(runnable.forget());
-  while (mIsFlushing) {
-    mon.Wait();
-  }
+  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
+  mIsFlushing = false;
   return NS_OK;
 }
 
 void
 WMFMediaDataDecoder::ProcessDrain()
 {
-  bool isFlushing;
-  {
-    MonitorAutoLock mon(mMonitor);
-    isFlushing = mIsFlushing;
-  }
-  if (!isFlushing && mMFTManager) {
+  if (!mIsFlushing && mMFTManager) {
     // Order the decoder to drain...
     mMFTManager->Drain();
     // Then extract all available output.
