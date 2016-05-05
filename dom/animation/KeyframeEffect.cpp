@@ -77,20 +77,24 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   const Maybe<OwningAnimationTarget>& aTarget,
-  const TimingParams& aTiming)
+  const TimingParams& aTiming,
+  const KeyframeEffectParams& aOptions)
   : KeyframeEffectReadOnly(aDocument, aTarget,
                            new AnimationEffectTimingReadOnly(aDocument,
-                                                             aTiming))
+                                                             aTiming),
+                           aOptions)
 {
 }
 
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   const Maybe<OwningAnimationTarget>& aTarget,
-  AnimationEffectTimingReadOnly* aTiming)
+  AnimationEffectTimingReadOnly* aTiming,
+  const KeyframeEffectParams& aOptions)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
   , mTiming(aTiming)
+  , mEffectOptions(aOptions)
   , mInEffectOnLastAnimationTimingUpdate(false)
   , mCumulativeChangeHint(nsChangeHint(0))
 {
@@ -751,8 +755,10 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   }
 
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
+  // TODO: Use options data from input in the next patch.
+  KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(doc, target, timingParams);
+    new KeyframeEffectType(doc, target, timingParams, effectOptions);
 
   effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
@@ -1367,9 +1373,11 @@ KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
 
 KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
                                const Maybe<OwningAnimationTarget>& aTarget,
-                               const TimingParams& aTiming)
+                               const TimingParams& aTiming,
+                               const KeyframeEffectParams& aOptions)
   : KeyframeEffectReadOnly(aDocument, aTarget,
-                           new AnimationEffectTiming(aDocument, aTiming, this))
+                           new AnimationEffectTiming(aDocument, aTiming, this),
+                           aOptions)
 {
 }
 

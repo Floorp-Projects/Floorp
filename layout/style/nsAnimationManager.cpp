@@ -638,8 +638,10 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   // mTarget is non-null here, so we emplace it directly.
   Maybe<OwningAnimationTarget> target;
   target.emplace(mTarget, mStyleContext->GetPseudoType());
+  KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffectReadOnly> effect =
-    new KeyframeEffectReadOnly(aPresContext->Document(), target, timing);
+    new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
+                               effectOptions);
 
   effect->SetKeyframes(Move(keyframes), mStyleContext);
 
