@@ -486,6 +486,7 @@ Shutdown(void)
 
 class ShutdownRunnable : public Runnable {
 public:
+  explicit
   ShutdownRunnable(RefPtr<Runnable> aReplyEvent)
     : mReplyEvent(aReplyEvent) {};
 
