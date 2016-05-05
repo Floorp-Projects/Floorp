@@ -2831,7 +2831,8 @@ GeckoDriver.prototype.receiveMessage = function(message) {
               "host": cookie.host,
               "secure": cookie.isSecure,
               "expiry": cookie.expires,
-              "httpOnly": cookie.isHttpOnly
+              "httpOnly": cookie.isHttpOnly,
+              "originAttributes": cookie.originAttributes
             });
             break;
           }
