@@ -32,6 +32,7 @@ public:
                          , mCacheControlPrivate(false)
                          , mCacheControlNoStore(false)
                          , mCacheControlNoCache(false)
+                         , mCacheControlImmutable(false)
                          , mPragmaNoCache(false) {}
 
     const nsHttpHeaderArray & Headers()   const { return mHeaders; }
@@ -47,6 +48,7 @@ public:
     bool                  Private() const { return mCacheControlPrivate; }
     bool                  NoStore() const { return mCacheControlNoStore; }
     bool                  NoCache() const { return (mCacheControlNoCache || mPragmaNoCache); }
+    bool                  Immutable() const { return mCacheControlImmutable; }
     /**
      * Full length of the entity. For byte-range requests, this may be larger
      * than ContentLength(), which will only represent the requested part of the
@@ -133,6 +135,7 @@ public:
                mCacheControlPrivate == aOther.mCacheControlPrivate &&
                mCacheControlNoCache == aOther.mCacheControlNoCache &&
                mCacheControlNoStore == aOther.mCacheControlNoStore &&
+               mCacheControlImmutable == aOther.mCacheControlImmutable &&
                mPragmaNoCache == aOther.mPragmaNoCache;
     }
 
@@ -154,6 +157,7 @@ private:
     bool              mCacheControlPrivate;
     bool              mCacheControlNoStore;
     bool              mCacheControlNoCache;
+    bool              mCacheControlImmutable;
     bool              mPragmaNoCache;
 
     friend struct IPC::ParamTraits<nsHttpResponseHead>;
